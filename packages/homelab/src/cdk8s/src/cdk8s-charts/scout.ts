@@ -1,6 +1,7 @@
 import { Chart } from "cdk8s";
 import type { App } from "cdk8s";
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
+import { createScoutPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/scout-db.ts";
 import { Namespace } from "cdk8s-plus-31";
 import {
   KubeNetworkPolicy,
@@ -22,6 +23,7 @@ export function createScoutChart(app: App, stage: Stage) {
   });
 
   createScoutDeployment(chart, stage);
+  createScoutPostgreSQLDatabase(chart, stage);
 
   // NetworkPolicy: Allow ingress from Prometheus (scrapes scout-backend
   // metrics on :3000), in-namespace pods, and the shared s3-static-sites
@@ -31,7 +33,10 @@ export function createScoutChart(app: App, stage: Stage) {
   new KubeNetworkPolicy(chart, "scout-ingress-netpol", {
     metadata: { name: "scout-ingress-netpol" },
     spec: {
-      podSelector: {},
+      // Backend pods only: the Patroni/Spilo postgres pods stay unselected
+      // (default-allow, like every other postgres namespace) — selecting
+      // them would sever Patroni's Kubernetes API access.
+      podSelector: { matchLabels: { app: "scout-backend" } },
       policyTypes: ["Ingress"],
       ingress: [
         {
@@ -59,7 +64,8 @@ export function createScoutChart(app: App, stage: Stage) {
   new KubeNetworkPolicy(chart, "scout-egress-netpol", {
     metadata: { name: "scout-egress-netpol" },
     spec: {
-      podSelector: {},
+      // Same scoping rationale as the ingress policy above.
+      podSelector: { matchLabels: { app: "scout-backend" } },
       policyTypes: ["Egress"],
       egress: [
         // DNS
@@ -85,6 +91,11 @@ export function createScoutChart(app: App, stage: Stage) {
             },
           ],
           ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
+        },
+        // In-namespace Postgres (scout-<stage>-postgresql:5432)
+        {
+          to: [{ podSelector: {} }],
+          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
         },
         // External HTTPS (Riot API, Discord, Sentry, OpenAI, Gemini, ElevenLabs)
         {
