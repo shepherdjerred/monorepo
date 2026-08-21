@@ -21,6 +21,8 @@ import {
 const CONSUMER_NAMESPACES = [
   "starlight-karma-bot-beta",
   "starlight-karma-bot-prod",
+  "scout-beta",
+  "scout-prod",
 ] as const;
 
 export function createFliptChart(app: App) {

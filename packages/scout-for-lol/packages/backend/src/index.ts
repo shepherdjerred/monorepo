@@ -4,6 +4,7 @@ import { createLogger } from "#src/logger.ts";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
 import { initializeTracing } from "#src/observability/tracing.ts";
 import { shutdownProductAnalytics } from "#src/analytics/product-analytics.ts";
+import { shutdownDynamicConfig } from "#src/config/dynamic.ts";
 
 // Initialize OTel tracing first so any subsequent module that opens a span
 // has a tracer provider attached. No-op when TELEMETRY_ENABLED is unset.
@@ -60,6 +61,18 @@ import "@scout-for-lol/backend/metrics/index.ts";
 // Dragon assets or checksum-pinned private Classic fonts are unavailable.
 logger.info("🖼️  Validating startup assets before starting runtime services");
 import { startBackendRuntime } from "#src/startup.ts";
+// Before the HTTP server and the Discord gateway: guild command registration
+// reads the explore allowlist, and it must see a resolved value. Seeded with
+// the env-derived values, so an unreachable Flipt changes nothing.
+const { initializeDynamicConfig } = await import("#src/config/dynamic.ts");
+await initializeDynamicConfig({
+  seed: {
+    exploreGuildAllowlist: configuration.exploreGuildAllowlist,
+    llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
+    llmDailyTokenBudget: configuration.llmDailyTokenBudget,
+  },
+});
+
 const { shutdownHttpServer } = await startBackendRuntime();
 
 logger.info("🌱 Seeding Season table from SEASONS constant");
@@ -101,6 +114,9 @@ process.on("SIGTERM", () => {
   logger.info("🛑 Received SIGTERM, shutting down gracefully");
   void (async () => {
     await shutdownHttpServer();
+    // Stops the config poller before analytics flushes, so a refresh cannot
+    // race the exit.
+    await shutdownDynamicConfig();
     await shutdownProductAnalytics();
     process.exit(0);
   })();
@@ -110,6 +126,9 @@ process.on("SIGINT", () => {
   logger.info("🛑 Received SIGINT, shutting down gracefully");
   void (async () => {
     await shutdownHttpServer();
+    // Stops the config poller before analytics flushes, so a refresh cannot
+    // race the exit.
+    await shutdownDynamicConfig();
     await shutdownProductAnalytics();
     process.exit(0);
   })();

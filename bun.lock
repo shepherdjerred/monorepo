@@ -1175,6 +1175,8 @@
         "@scout-for-lol/data": "workspace:*",
         "@scout-for-lol/report": "workspace:*",
         "@sentry/bun": "^10.0.0",
+        "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
         "@trpc/server": "11",
