@@ -6,17 +6,19 @@
  * Run against prod (or a read replica) before applying the FK migration.
  * Non-zero exit blocks the deploy.
  *
- *   DATABASE_URL=file:./prod.db bun run scripts/check-orphan-seasonids.ts
+ *   DATABASE_URL=postgres://… bun run scripts/check-orphan-seasonids.ts
  */
 
 import { SEASONS } from "@scout-for-lol/data";
 import { PrismaClient } from "#generated/prisma/client/index.js";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
 
+const databaseUrl = Bun.env["DATABASE_URL"];
+if (databaseUrl === undefined || databaseUrl === "") {
+  throw new Error("DATABASE_URL is required (postgres:// URL)");
+}
 const prisma = new PrismaClient({
-  adapter: new PrismaLibSql({
-    url: Bun.env["DATABASE_URL"] ?? "file:./db.sqlite",
-  }),
+  adapter: new PrismaPg({ connectionString: databaseUrl }),
 });
 
 const knownIds = Object.keys(SEASONS);

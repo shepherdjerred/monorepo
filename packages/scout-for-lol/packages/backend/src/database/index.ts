@@ -1,5 +1,5 @@
 import { PrismaClient } from "#generated/prisma/client/index.js";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
 import {
   type DiscordChannelId,
   type LeaguePuuid,
@@ -21,21 +21,15 @@ const logger = createLogger("database");
 logger.info("🗄️  Initializing Prisma database client");
 
 const basePrisma = new PrismaClient({
-  // `timestampFormat: "unixepoch-ms"` matches the legacy Prisma 6 SQLite engine
-  // behavior — Date parameters bind as INTEGER ms. The adapter default
-  // (`iso8601`) binds as TEXT, which triggers a SQLite type-affinity bug when
-  // comparing against legacy INTEGER columns: `INTEGER <= TEXT` is always TRUE.
-  adapter: new PrismaLibSql(
-    { url: Bun.env["DATABASE_URL"] ?? "file:./db.sqlite" },
-    { timestampFormat: "unixepoch-ms" },
-  ),
+  // The pg pool connects lazily on first query, so importing this module does
+  // not require the database to be reachable — test-setup.ts relies on that to
+  // stub DATABASE_URL before mocks intercept the singleton.
+  adapter: new PrismaPg({
+    connectionString:
+      Bun.env["DATABASE_URL"] ??
+      `postgres://scout@127.0.0.1:${Bun.env["SCOUT_PG_PORT"] ?? "5471"}/scout_dev_3000`,
+  }),
 });
-
-// SQLite is single-writer. Post-match/prematch polls issue many Account
-// updateMany calls; wait up to 5s on lock contention instead of timing out
-// immediately under concurrent writers.
-await basePrisma.$executeRawUnsafe("PRAGMA busy_timeout = 5000");
-await basePrisma.$executeRawUnsafe("PRAGMA journal_mode = WAL");
 
 export const prisma = basePrisma.$extends({
   query: {
