@@ -1,6 +1,13 @@
 # Database Schema
 
-Scout for LoL uses SQLite with Prisma ORM. This document describes the data model and relationships.
+Scout for LoL uses PostgreSQL 16 with Prisma ORM (via `@prisma/adapter-pg`;
+`datasource provider = "postgresql"`). This document describes the data model
+and relationships.
+
+The 67 SQLite-era migrations were squashed into a single baseline migration
+(`prisma/migrations/20260820000000_postgresql_baseline/`). Deployments run a
+boot-time importer (`scripts/import-legacy-sqlite.ts`) that reads the legacy
+SQLite file exactly once, tracked by the `_legacy_sqlite_import` marker table.
 
 ## Entity Relationship Diagram
 
@@ -360,14 +367,15 @@ flowchart TD
 
 ```bash
 cd packages/backend
-bun run db:push    # Push schema changes
+bun run db:push    # Push schema changes to the shared local dev Postgres
+bun run db:migrate # Create/apply migrations (prisma migrate dev)
 bun run db:studio  # Open Prisma Studio
 ```
 
 ### Production
 
 ```bash
-bun run db:migrate deploy  # Apply migrations
+bunx prisma migrate deploy  # Apply migrations (runs in the container entrypoint)
 ```
 
 ## Indices

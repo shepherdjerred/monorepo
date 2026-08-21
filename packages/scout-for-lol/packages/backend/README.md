@@ -8,8 +8,9 @@ The Scout for LoL backend service. A single Bun process that runs:
 - The DuckDB "report lake" (Parquet, derived from S3) that executes ScoutQL report queries
 - Server-side product analytics (PostHog) and metrics (Prometheus) / error tracking (Sentry)
 
-Application state (subscriptions, competitions, guilds) is SQLite managed by
-Prisma. Report images are rendered by `@scout-for-lol/report`.
+Application state (subscriptions, competitions, guilds) is PostgreSQL 16
+managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
+`@scout-for-lol/report`.
 
 ## Commands
 
@@ -18,13 +19,13 @@ bun run dev              # Start with hot reload
 bun run start            # Start once
 bun run build            # Bundle to dist/
 
-bun run test             # bun run test against a local test.db
+bun run test             # bun test; each test clones a hash-scoped template database
 bun run typecheck        # tsc --noEmit
 bun run lint             # ESLint
 bun run format           # Prettier check
 
-bun run db:generate      # Generate the Prisma client (+ branded types + test template DB)
-bun run db:push          # Push schema to the database (development)
+bun run db:generate      # Generate the Prisma client (+ branded types)
+bun run db:push          # Push schema to the shared local dev Postgres (development)
 bun run db:migrate       # Create/apply migrations (prisma migrate dev)
 bun run db:studio        # Open Prisma Studio
 

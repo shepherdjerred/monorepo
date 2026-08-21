@@ -41,7 +41,7 @@ graph TB
             LCU[LCU Client]
         end
 
-        DB[(SQLite)]
+        DB[(PostgreSQL)]
     end
 
     RIOT --> CRON
@@ -60,7 +60,7 @@ graph TB
 The backend polls the Riot API for tracked players, stores raw match JSON in
 S3 (the canonical match store), and posts notifications and report images to
 Discord. Application state (subscriptions, competitions, guilds) lives in
-SQLite via Prisma. Scheduled and user-authored ScoutQL reports compile to SQL
+PostgreSQL via Prisma. Scheduled and user-authored ScoutQL reports compile to SQL
 executed by embedded DuckDB over a Parquet "report lake" derived from the S3
 match objects. The web app SPA talks to the backend over tRPC; the desktop
 client forwards live game events to the same backend.
@@ -71,7 +71,7 @@ client forwards live game events to the same backend.
 | ------------- | -------------------------------- |
 | Runtime       | Bun                              |
 | Language      | TypeScript (strict mode)         |
-| Database      | SQLite + Prisma ORM              |
+| Database      | PostgreSQL 16 + Prisma ORM       |
 | Report Lake   | DuckDB over Parquet (ScoutQL)    |
 | Bot Framework | Discord.js                       |
 | Web API       | tRPC                             |
