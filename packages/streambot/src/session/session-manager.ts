@@ -1,4 +1,5 @@
 import { createActor } from "xstate";
+import { playerCardEnabled } from "@shepherdjerred/streambot/config/dynamic.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
@@ -354,7 +355,7 @@ export class SessionManager {
       port: this.deps.cards,
       view: () =>
         buildPlaybackView(actor.getSnapshot(), entry.userbot.getPosition()),
-      enabled: this.deps.config.playerCard.enabled,
+      enabled: playerCardEnabled(this.deps.config.playerCard.enabled),
       tickMs: this.deps.config.playerCard.tickMs,
       repostAfterMessages: this.deps.config.playerCard.repostAfterMessages,
       ...(this.fetchPoster === undefined

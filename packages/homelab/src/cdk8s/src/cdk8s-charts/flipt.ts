@@ -23,6 +23,8 @@ const CONSUMER_NAMESPACES = [
   "starlight-karma-bot-prod",
   "scout-beta",
   "scout-prod",
+  // streambot is deployed inside the `media` chart, not its own namespace.
+  "media",
 ] as const;
 
 export function createFliptChart(app: App) {
