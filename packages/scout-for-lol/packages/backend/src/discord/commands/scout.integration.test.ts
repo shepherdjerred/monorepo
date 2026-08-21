@@ -185,7 +185,10 @@ describe("/scout ask", () => {
       "https://beta.scout-for-lol.com/app/explore/",
     );
     expect(responseJson).toContain('"parse":[]');
-    expect(first.edits[0]).toHaveProperty("files");
+    expect(first.edits[0]).toHaveProperty("embeds");
+    expect(first.edits[0]).not.toHaveProperty("files");
+    expect(responseJson).toContain("Win rates");
+    expect(responseJson).toContain("Aurora");
   });
 
   test("renders a salvaged partial answer as a publishable saved result", async () => {

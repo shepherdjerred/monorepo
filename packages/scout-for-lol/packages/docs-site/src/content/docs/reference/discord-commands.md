@@ -100,12 +100,14 @@ in servers listed by the operator-managed Explore allowlist and does not work in
 direct messages.
 
 Each invocation starts a **new saved Explore conversation** owned by the Discord
-user who ran it. The answer is initially private and can include caveats and a
-generated chart. Two buttons are shown:
+user who ran it. The answer is initially private and can include caveats plus
+the last result: a Discord table, leaderboard, or KPI card for those kinds, or
+a generated chart image for everything else. Two buttons are shown:
 
 - **Open in Explore** opens the saved conversation in the stage-correct web app.
-- **Post publicly** copies the stored question, answer, caveats, and chart into
-  the channel, then changes to **Posted**.
+- **Post publicly** copies the stored question, answer, caveats, and that same
+  table, leaderboard, KPI card, or chart into the channel, then changes to
+  **Posted**.
 
 Publishing uses the frozen saved result. It does not run the model or ScoutQL
 again, does not create a public Explore share link, and does not include the raw

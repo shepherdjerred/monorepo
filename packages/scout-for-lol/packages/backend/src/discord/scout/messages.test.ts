@@ -2,10 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { ExploreMessageSchema } from "@scout-for-lol/data";
 import {
   exploreAnswerChunks,
-  exploreChartAttachment,
   publicExploreChunks,
 } from "#src/discord/scout/messages.ts";
-import { scoutTestVisualization } from "#src/discord/scout/test-fixtures.ts";
 
 const answer = ExploreMessageSchema.parse({
   id: "10000000-0000-4000-8000-000000000002",
@@ -35,16 +33,5 @@ describe("Scout Discord messages", () => {
     expect(publicChunks.join("\n")).toContain(
       "Only tracked matches are included.",
     );
-  });
-
-  test("attaches the existing static visualization renderer output", () => {
-    const chartAnswer = ExploreMessageSchema.parse({
-      ...answer,
-      visualization: scoutTestVisualization,
-    });
-
-    const attachment = exploreChartAttachment(chartAnswer);
-    expect(attachment?.name).toBe("scout-explore.png");
-    expect(attachment?.attachment).toBeInstanceOf(Buffer);
   });
 });

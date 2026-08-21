@@ -10,10 +10,10 @@ import { loadExploreTranscript } from "#src/explore/store.ts";
 import { parseScoutPublishCustomId } from "#src/discord/scout/custom-id.ts";
 import {
   exploreActionRow,
-  exploreChartAttachment,
   NO_GENERATED_MENTIONS,
   publicExploreChunks,
 } from "#src/discord/scout/messages.ts";
+import { exploreVisualizationPayload } from "#src/discord/scout/visualization.ts";
 
 export type ScoutPublishButtonInteraction = {
   customId: string;
@@ -89,7 +89,7 @@ export async function handleScoutPublishButton(
       question: question.content,
       answer,
     });
-    const chart = exploreChartAttachment(answer);
+    const visualization = exploreVisualizationPayload(answer);
     const publishedMessages: { delete: () => Promise<unknown> }[] = [];
     try {
       for (const [index, content] of chunks.entries()) {
@@ -97,7 +97,7 @@ export async function handleScoutPublishButton(
           await interaction.followUp({
             content,
             allowedMentions: NO_GENERATED_MENTIONS,
-            ...(index === 0 && chart !== null ? { files: [chart] } : {}),
+            ...(index === 0 ? visualization : {}),
           }),
         );
       }

@@ -9,6 +9,7 @@ import {
   REPORT_AI_MAX_STEPS,
   REPORT_AI_MAX_TOOL_CALLS,
   modelSupportsParameter,
+  ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
   type ReportAiEditRequest,
   type ReportAiFinalDraft,
@@ -192,13 +193,14 @@ function createReportQueryTools(params: ReportQueryAgentParams) {
             inputData.sourceCompetitionId ?? params.input.sourceCompetitionId,
         });
         const preview = reportQueryPreviewSummary(result);
+        const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
 
         await params.emit({ type: "preview", preview });
         return {
           ok: true,
-          message: `Preview returned ${preview.rows.length.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
+          message: `Preview returned ${preview.rowsReturned.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
           formattedQueryText: validation.formattedQueryText,
-          preview,
+          preview: modelPreview,
         };
       }),
   });

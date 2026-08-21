@@ -1,4 +1,5 @@
 import { Output, stepCountIs, tool, ToolLoopAgent } from "ai";
+import { z } from "zod";
 import {
   EXPLORE_MAX_HISTORY_TURNS,
   EXPLORE_MAX_OUTPUT_TOKENS,
@@ -8,6 +9,8 @@ import {
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
   modelSupportsParameter,
+  ReportAiModelPreviewSummarySchema,
+  ReportQueryTextSchema,
   type ExploreAnswer,
   type ExploreMessage,
   type ExploreStreamEvent,
@@ -30,9 +33,9 @@ import {
 } from "#src/metrics/explore.ts";
 import {
   createFormatTool,
+  createLanguageTool,
   createValidateTool,
   QueryResultToolOutputSchema,
-  ScoutQlQueryToolInputSchema,
   validateQuery,
   type ToolTracker,
 } from "#src/reports/ai/scoutql-tools.ts";
@@ -201,7 +204,7 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
   const runReportQuery = tool({
     description:
       "Run a valid ScoutQL query against all ingested match data and return the resulting rows. Every statistic you state must come from a result of this tool.",
-    inputSchema: ScoutQlQueryToolInputSchema,
+    inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
     outputSchema: QueryResultToolOutputSchema,
     execute: (inputData) =>
       track("run_report_query", async () => {
@@ -225,6 +228,7 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
           queryText: validation.formattedQueryText,
         });
         const preview = reportQueryPreviewSummary(result);
+        const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
 
@@ -236,16 +240,17 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
         return {
           ok: true,
           message:
-            preview.rows.length === 0
+            preview.rowsReturned === 0
               ? `No rows matched after scanning ${preview.rowsScanned.toString()} rows. The data does not cover this — say so rather than estimating.`
-              : `Returned ${preview.rows.length.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
+              : `Returned ${preview.rowsReturned.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
           formattedQueryText: validation.formattedQueryText,
-          preview,
+          preview: modelPreview,
         };
       }),
   });
 
   return {
+    get_report_language: createLanguageTool(track),
     validate_report_query: createValidateTool(track),
     run_report_query: runReportQuery,
     format_report_query: createFormatTool(track),
