@@ -26,7 +26,7 @@ export function devPostgresPort(): number {
     return DEFAULT_PORT;
   }
   const parsed = Number.parseInt(raw, 10);
-  if (Number.isNaN(parsed) || parsed < 1 || parsed > 65535) {
+  if (Number.isNaN(parsed) || parsed < 1 || parsed > 65_535) {
     throw new Error(`SCOUT_PG_PORT must be a port number, got: ${raw}`);
   }
   return parsed;
