@@ -21,12 +21,14 @@ import {
   generateGlitterObject,
   glitterObjectArtifactSchema,
   glitterPrompt,
+  readGlitterObjectArtifact,
   useGlitterObjectArtifact,
 } from "./glitter-context-refresh-llm.ts";
 import type { StyleRefreshCandidate } from "./glitter-context-refresh-selection.ts";
 import {
   estimateStyleGenerationCost as estimateStyleGenerationCostInternal,
   EXTRACTION_MAX_OUTPUT_TOKENS,
+  EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
   EXTRACTION_MODEL,
   MAX_EXTRACTION_REPAIR_ATTEMPTS,
   MAX_SYNTHESIS_REPAIR_ATTEMPTS,
@@ -57,8 +59,39 @@ import {
 // and truncated (finish_reason=length → unparseable).
 // 28k gives comfortable headroom over the observed ~15k usage; if a call still
 // truncates, it is retried once at the ceiling below.
+const EXTRACTION_TRUNCATION_ERROR =
+  "GPT-5.6 Luna extraction reached the completion-token limit";
 const SYNTHESIS_TRUNCATION_ERROR =
   "GPT-5.6 Sol synthesis reached the completion-token limit";
+const EMPTY_CHUNK_SUMMARY: StyleChunkSummary = {
+  observations: [],
+  representativeMessages: [],
+};
+
+type ChunkExtractionRepair = {
+  previous: StyleChunkSummary;
+  error: string;
+  rawContent: string | null;
+};
+
+function nextParseFailureRepair(
+  prior: ChunkExtractionRepair | null,
+  error: string,
+  rawContent: string | null,
+): ChunkExtractionRepair {
+  if (prior === null || prior.previous === EMPTY_CHUNK_SUMMARY) {
+    return {
+      previous: EMPTY_CHUNK_SUMMARY,
+      error,
+      rawContent,
+    };
+  }
+  return {
+    previous: prior.previous,
+    error: prior.error,
+    rawContent: null,
+  };
+}
 const DETERMINISTIC_SEED = 0;
 
 // Completions are cached before validation, so repairs use distinct seeds
@@ -114,11 +147,8 @@ async function runChunkExtraction(input: {
   artifactStore: GenerationArtifactStore;
   budget: GenerationBudget;
   attempt: number;
-  repair: {
-    previous: StyleChunkSummary;
-    error: string;
-  } | null;
-}): Promise<StyleChunkSummary> {
+  repair: ChunkExtractionRepair | null;
+}) {
   const basePrompt = chunkPrompt(input);
   const prompt =
     input.repair === null
@@ -150,6 +180,8 @@ async function runChunkExtraction(input: {
       model: EXTRACTION_MODEL,
       messages,
       maxCompletionTokens: EXTRACTION_MAX_OUTPUT_TOKENS,
+      semanticRetryMaxCompletionTokens:
+        EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
       reasoningEffort: "none",
       seed,
       responseSchema: "style-chunk-summary-v2",
@@ -161,6 +193,8 @@ async function runChunkExtraction(input: {
           model: EXTRACTION_MODEL,
           inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
           outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
+          semanticRetryOutputTokenUpperBound:
+            EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
         }),
       );
       return await generateGlitterObject({
@@ -170,13 +204,16 @@ async function runChunkExtraction(input: {
         ...messages,
         workload: callSite,
         maxOutputTokens: EXTRACTION_MAX_OUTPUT_TOKENS,
+        semanticRetryMaxOutputTokens:
+          EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
         reasoningEffort: "none",
         seed,
+        truncationError: EXTRACTION_TRUNCATION_ERROR,
         exhaustionError: `GPT-5.6 Luna did not return a parsed summary for ${input.chunk.key}`,
       });
     },
   });
-  return useGlitterObjectArtifact({
+  return readGlitterObjectArtifact({
     artifact,
     budget: input.budget,
   });
@@ -188,39 +225,42 @@ async function summarizeChunk(input: {
   artifactStore: GenerationArtifactStore;
   budget: GenerationBudget;
 }): Promise<StyleChunkSummary> {
-  // Keep every attempt's raw output: repairs are non-monotonic (a later repair
-  // can cite fewer valid IDs than an earlier one), so the fallback must consider
-  // all of them, not just the last.
   const attempts: StyleChunkSummary[] = [];
-  let lastError: Error;
-  const initial = await runChunkExtraction({
-    ...input,
-    attempt: 0,
-    repair: null,
-  });
-  attempts.push(initial);
-  try {
-    validateChunkSummary(input.chunk, initial);
-    return initial;
-  } catch (error: unknown) {
-    lastError = z.instanceof(Error).parse(error);
-  }
-  for (let attempt = 1; attempt <= MAX_EXTRACTION_REPAIR_ATTEMPTS; attempt++) {
-    const repaired = await runChunkExtraction({
+  let lastError: Error | undefined;
+  let repair: ChunkExtractionRepair | null = null;
+  for (let attempt = 0; attempt <= MAX_EXTRACTION_REPAIR_ATTEMPTS; attempt++) {
+    const extracted = await runChunkExtraction({
       ...input,
       attempt,
-      repair: {
-        previous: attempts.at(-1) ?? initial,
-        error: lastError.message,
-      },
+      repair: attempt === 0 ? null : repair,
     });
-    attempts.push(repaired);
+    if (extracted.outcome === "failure") {
+      lastError = new Error(extracted.error);
+      repair = nextParseFailureRepair(
+        repair,
+        extracted.error,
+        extracted.rawContent,
+      );
+      continue;
+    }
+    attempts.push(extracted.value);
     try {
-      validateChunkSummary(input.chunk, repaired);
-      return repaired;
+      validateChunkSummary(input.chunk, extracted.value);
+      return extracted.value;
     } catch (error: unknown) {
       lastError = z.instanceof(Error).parse(error);
+      repair = {
+        previous: extracted.value,
+        error: lastError.message,
+        rawContent: null,
+      };
     }
+  }
+  if (lastError === undefined) {
+    throw new Error(`chunk ${input.chunk.key} produced no extraction attempts`);
+  }
+  if (attempts.length === 0) {
+    throw lastError;
   }
   // The model could not produce a fully valid summary for this chunk even after
   // repairs (it deterministically cites an unverifiable in-content ID). Sanitize

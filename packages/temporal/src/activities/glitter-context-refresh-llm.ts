@@ -174,9 +174,7 @@ export async function generateGlitterObject<SCHEMA extends z.ZodType>(input: {
     }
     if (!(error instanceof StructuredOutputExhaustionError)) throw error;
     const lastAttempt = error.attempts.at(-1);
-    const exhaustedByLength = error.attempts.some(
-      (attempt) => attempt.finishReason === "length",
-    );
+    const exhaustedByLength = lastAttempt?.finishReason === "length";
     return glitterObjectArtifact<z.output<SCHEMA>>({
       model: input.model,
       parsed: undefined,
@@ -198,9 +196,17 @@ export function useGlitterObjectArtifact<Response>(input: {
   artifact: GenerationArtifactResult<GlitterObjectArtifact<Response>>;
   budget: GenerationBudget;
 }): Response {
-  input.budget.record(input.artifact);
-  if (input.artifact.response.outcome === "failure") {
-    throw new Error(input.artifact.response.error);
+  const response = readGlitterObjectArtifact(input);
+  if (response.outcome === "failure") {
+    throw new Error(response.error);
   }
-  return input.artifact.response.value;
+  return response.value;
+}
+
+export function readGlitterObjectArtifact<Response>(input: {
+  artifact: GenerationArtifactResult<GlitterObjectArtifact<Response>>;
+  budget: GenerationBudget;
+}): GlitterObjectArtifact<Response> {
+  input.budget.record(input.artifact);
+  return input.artifact.response;
 }

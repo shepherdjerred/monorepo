@@ -15,7 +15,8 @@ import {
 
 export const EXTRACTION_MODEL = "gpt-5.6-luna";
 export const SYNTHESIS_MODEL = "gpt-5.6-sol";
-export const EXTRACTION_MAX_OUTPUT_TOKENS = 2000;
+export const EXTRACTION_MAX_OUTPUT_TOKENS = 4000;
+export const EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS = 8000;
 export const SYNTHESIS_MAX_OUTPUT_TOKENS = 28_000;
 export const SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS = 40_000;
 export const MAX_EXTRACTION_REPAIR_ATTEMPTS = 2;
@@ -63,14 +64,16 @@ export function estimateStyleGenerationCost(
       model: EXTRACTION_MODEL,
       inputTokenUpperBound: initialInputTokens,
       outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
+      semanticRetryOutputTokenUpperBound:
+        EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
     });
-    // Every repair attempt also serializes the prior summary (bounded by the
-    // output cap) and the validation error back into its request, so its input
-    // is larger than the initial call's.
     const repairCall = worstCaseGenerationCostUsd({
       model: EXTRACTION_MODEL,
-      inputTokenUpperBound: initialInputTokens + EXTRACTION_MAX_OUTPUT_TOKENS,
+      inputTokenUpperBound:
+        initialInputTokens + EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
       outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
+      semanticRetryOutputTokenUpperBound:
+        EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
     });
     return total + initialCall + repairCall * MAX_EXTRACTION_REPAIR_ATTEMPTS;
   }, 0);
@@ -82,7 +85,7 @@ export function estimateStyleGenerationCost(
   });
   const synthesisInputUpperBound =
     inputTokenUpperBound(synthesisBase) +
-    chunks.length * EXTRACTION_MAX_OUTPUT_TOKENS;
+    chunks.length * EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS;
   // A truncated synthesis retries at the higher ceiling, so every semantic
   // attempt after the first is priced against that ceiling.
   const synthesisInitialCall = worstCaseGenerationCostUsd({
