@@ -161,7 +161,8 @@ export async function placeParlayBet(
   try {
     return await prismaClient.$transaction(async (tx) => {
       const now = input.now ?? new Date();
-      // FIRST write: closure check, idempotency guard, and SQLite writer lock.
+      // FIRST write: closure check, idempotency guard, and market row lock
+      // (a concurrent write re-checks the WHERE and matches 0 rows).
       const claim = await tx.bucksParlayMarket.updateMany({
         where: { id: market.id, marketState: "open", closesAt: { gt: now } },
         data: { updatedAt: now },

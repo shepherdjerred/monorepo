@@ -73,7 +73,7 @@ export async function cancelBet(
 
   return await prismaClient.$transaction(async (tx) => {
     // Claim first, exactly as `placeBet` does: this both proves the window is
-    // still open and takes the write lock for the refund below. Cancelling
+    // still open and locks the pool row for the refund below. Cancelling
     // after close would let a bettor watch the game and pull out.
     const claim = await tx.bucksMatchPool.updateMany({
       where: { id: pool.id, poolState: "open", closesAt: { gt: now } },

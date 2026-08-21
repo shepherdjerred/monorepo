@@ -141,7 +141,8 @@ export async function placeBet(
 
   // Eligibility and wallet creation sit outside the transaction on purpose: a
   // freshly seeded zero-risk wallet is harmless, and keeping the create out of
-  // the critical section keeps the write lock held for as short as possible.
+  // the critical section keeps the pool/account row locks held for as short
+  // as possible.
   const player = await findEligiblePlayer(
     { serverId: input.serverId, discordId: input.discordId },
     prismaClient,

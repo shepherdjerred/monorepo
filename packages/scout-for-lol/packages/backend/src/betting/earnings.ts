@@ -290,7 +290,7 @@ export async function awardForGuild(input: {
   );
 
   // Wallets are created outside the transaction: creating one is idempotent and
-  // a zero-risk row, and keeping it out keeps the write lock held briefly.
+  // a zero-risk row, and keeping it out keeps row locks held briefly.
   const accountIds = new Map<string, number>();
   for (const target of targets) {
     let account;
