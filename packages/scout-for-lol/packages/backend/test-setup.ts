@@ -28,15 +28,27 @@ Bun.env["REPORT_LAKE_DIR"] =
 // HOME pointed at an empty dir). There is no IMDS anywhere in this infra.
 Bun.env["AWS_EC2_METADATA_DISABLED"] = "true";
 
-// SQLite stub URL — tests that need real Prisma should mock the client.
-// Without this, modules that eagerly import `#src/database/index.ts` fail
-// with PrismaClientInitializationError before any mock can intercept them.
-// Vitest runs backend suites in forked processes; a shared stub database makes
-// each process race to enable WAL at module initialization. Give every fork a
-// private stub while integration suites continue to create their own copied
-// template databases.
+// Ensure the shared dev Postgres is up, sweep leaked test databases from
+// crashed runs, and (re)build the scout_test_template database that
+// createTestDatabase clones. Preload runs once per `bun test` process, so
+// every suite pays one fast hash check.
+import {
+  ensureTestTemplate,
+  sweepStaleTestDatabases,
+} from "./src/testing/test-template.ts";
+
+sweepStaleTestDatabases();
+await ensureTestTemplate();
+
+// Stub URL pointing at a database that deliberately does not exist on the
+// real server: tests that need real Prisma use createTestDatabase (or mock
+// the client), and any accidental use of the production singleton fails
+// loudly on first query instead of silently writing somewhere. The pg pool
+// connects lazily, so merely importing `#src/database/index.ts` stays safe.
+import { devDatabaseUrl } from "./src/testing/postgres-server.ts";
+
 Bun.env["DATABASE_URL"] =
-  `file:${tmpdir()}/scout-test-database-${process.pid.toString()}.db`;
+  Bun.env["DATABASE_URL"] ?? devDatabaseUrl("scout_test_unbound");
 
 // Deterministic HS256 signing secret for session-JWT tests (auth-web,
 // jwt). Must be >= 32 chars (jwt.ts#getKey refuses shorter) and must be
