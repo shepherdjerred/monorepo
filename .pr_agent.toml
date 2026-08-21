@@ -1,0 +1,30 @@
+# Qodo (`.pr_agent.toml`) — provider-side configuration for the required review
+# gate. Prefer settings here over comments the CI gate has to post: a comment
+# costs a round-trip, is posted under a human's token so it reads as a person
+# asking, and is only sent once the gate pod has booted.
+#
+# `handle_push_trigger` defaults to false, which is why the gate had to ask at
+# all: Qodo reviews a pull request when it is opened and never again on its own.
+# With it enabled Qodo re-reviews on every push and updates its persistent
+# review comment in place, so `requestReviewAtHead` becomes a fallback rather
+# than the normal path. See
+# https://docs.qodo.ai/code-review/persistent-review-comments
+#
+# DO NOT add the documented "lean review" display settings here without first
+# checking them against `parseQodoIssueComment`
+# (packages/code-review/src/providers/qodo.ts). That parser is deliberately
+# strict and throws on unrecognised layout: `declaredFindingCount` needs both
+# the `<h3>Code Review by Qodo</h3>` marker and the `Grey Divider` alt text, and
+# the lean recipe turns divider lines off. Disabling the persistent-comment
+# notification is worse still — "was updated up to the latest commit" IS the
+# gate's completion signal (`QODO_ACKNOWLEDGEMENT_MARKER`), so switching it off
+# makes every review gate wait out its full budget and fail.
+
+[github]
+handle_push_trigger = true
+push_commands = ["/agentic_review"]
+
+[config]
+# Bot-authored pull requests are already skipped by Qodo's own author policy;
+# this covers human-opened chores that are not worth a review round.
+ignore_pr_labels = ["chore", "skip-review"]
