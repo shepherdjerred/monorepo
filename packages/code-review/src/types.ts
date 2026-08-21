@@ -68,6 +68,31 @@ export type ReviewThread = {
    * that edit it. `null` for real review threads.
    */
   commentId: number | null;
+  /**
+   * The provider review that raised this finding: its 1-based position among
+   * that provider's reviews on the pull request, and whether that same review
+   * also carried a finding at or above the blocking severity.
+   *
+   * This is what lets a severity threshold be bound to *when a finding was
+   * raised* rather than to the current round. Binding it to the round
+   * degenerates: the gate blocks on unresolved threads, so lowering the
+   * threshold after round 1 also unblocks every round-1 finding, and any
+   * throwaway push clears the sweep.
+   *
+   * `null` means "cannot be attributed" — a finding parsed out of a provider's
+   * issue comment that never merged with an addressable thread copy. Consumers
+   * MUST treat null as blocking; reading it as advisory would let exactly the
+   * findings the parser understands least escape the gate.
+   */
+  raisedInReview: RaisedInReview | null;
+};
+
+/** Where a finding was raised, for severity policies that depend on it. */
+export type RaisedInReview = {
+  /** 1-based position of the raising review among the provider's reviews. */
+  ordinal: number;
+  /** Whether that same review also carried a blocking-severity finding. */
+  hadBlockingSeverity: boolean;
 };
 
 /** A provider-authored issue comment used as a review completion signal. */
@@ -146,12 +171,15 @@ export type SkipStrategy = {
  * How to explicitly ask a provider to (re-)review the current head, or `null`
  * when the provider reviews automatically and needs no trigger comment.
  *
- * `buildComment` receives an idempotency `marker` that the caller must include
- * verbatim in the posted comment body; a caller suppresses a duplicate request
- * for the same head by checking whether that marker already appears on the PR.
+ * Only the trigger command itself, because the rest of the comment — the
+ * visible "this is CI, not a person" line and the hidden idempotency marker —
+ * is assembled by `buildReviewRequestBody`. A provider that assembled its own
+ * body could omit the marker, and a request without one is posted again on
+ * every poll.
  */
 export type ReviewRequestStrategy = {
-  buildComment: (marker: string) => string;
+  /** The provider's trigger phrase, e.g. `"@codex review"`. */
+  command: string;
 };
 
 /** A registered code-review provider. */

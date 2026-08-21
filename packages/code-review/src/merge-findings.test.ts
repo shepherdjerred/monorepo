@@ -27,6 +27,8 @@ describe("mergeDuplicateFindings", () => {
     title: "Turn outlives session destroy",
     threadId: null,
     commentId: 5_236_306_054,
+    // The review comment records no round; only the thread copy can say.
+    raisedInReview: null,
   };
   const fromThread: ReviewThread = {
     authorLogin: "qodo-code-review",
@@ -39,6 +41,7 @@ describe("mergeDuplicateFindings", () => {
     title: "Turn outlives session destroy",
     threadId: "PRRT_kwDOHf4r4c6ZlJlJ",
     commentId: null,
+    raisedInReview: { ordinal: 2, hadBlockingSeverity: true },
   };
 
   test("counts one finding rendered on both surfaces once", () => {
@@ -195,6 +198,7 @@ describe("parseQodoFindingTitle", () => {
       priority: 1,
       threadId: null,
       commentId: null,
+      raisedInReview: null,
     };
     // The comment says "joinVoice"; the thread says "Joinvoice".
     expect(
@@ -212,6 +216,7 @@ describe("parseQodoFindingTitle", () => {
       priority: 1,
       threadId: null,
       commentId: null,
+      raisedInReview: null,
     };
     // `toolkit pr review list` prints the key and `resolve --finding <key>`
     // matches it back by equality, so a control character in the key puts the

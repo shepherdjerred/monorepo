@@ -71,6 +71,15 @@ export const ReviewSignalEventSchema = z.object({
   /** Terminal gate decision, when this event is a decision (else null). */
   decision: z.enum(["waiting", "passed", "failed"]).nullable(),
   /**
+   * How many review requests this gate run had posted for this head when the
+   * observation was made, or `null` for an observer that never asks.
+   *
+   * The retry it records is not assumed to work: ~36% of first requests drew no
+   * response within an hour, and whether a second one recovers them is only
+   * answerable by comparing outcomes across this field.
+   */
+  request_attempts: z.number().int().nonnegative().nullable(),
+  /**
    * The commit of the `code-review` source that produced these counts.
    *
    * The parser ships with the repository, so a finding count is only meaningful

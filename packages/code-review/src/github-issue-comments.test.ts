@@ -184,6 +184,7 @@ const issueCommentProvider: ReviewProvider = {
         title: null,
         threadId: null,
         commentId: null,
+        raisedInReview: null,
       },
     ],
   },

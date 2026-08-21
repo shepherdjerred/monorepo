@@ -70,13 +70,59 @@ describe("requestReviewAtHead", () => {
       "https://api.github.com/repos/o/r/issues/2095/comments",
     );
     expect(posted[0]?.body).toEqual({
-      body: `/review\n\n<!-- review-request:qodo:${HEAD} -->`,
+      body:
+        `/agentic_review\n\n<sub>Automated re-review request for ` +
+        `\`${HEAD.slice(0, 7)}\` from the CI review gate.</sub>\n` +
+        `<!-- review-request:qodo:${HEAD} -->`,
     });
+  });
+
+  test("says a request is automated so a reader knows it is not a person", async () => {
+    const posted = stubGitHub([]);
+    await requestReviewAtHead({ ...request, provider: codexProvider });
+    expect(JSON.stringify(posted[0]?.body)).toContain(
+      "Automated re-review request",
+    );
+  });
+
+  test("marks a retry as such and keeps it separately idempotent", async () => {
+    // The first attempt's marker must not suppress the second, or the retry
+    // this exists to add would never be posted.
+    const posted = stubGitHub([
+      { body: `/agentic_review\n\n${buildReviewRequestMarker("qodo", HEAD)}` },
+    ]);
+    expect(
+      await requestReviewAtHead({
+        ...request,
+        provider: qodoProvider,
+        attempt: 2,
+      }),
+    ).toBe("requested");
+    expect(JSON.stringify(posted[0]?.body)).toContain("attempt 2 of 2");
+    expect(JSON.stringify(posted[0]?.body)).toContain(
+      `<!-- review-request:qodo:${HEAD}:2 -->`,
+    );
+  });
+
+  test("does not repeat the same retry attempt", async () => {
+    const posted = stubGitHub([
+      {
+        body: `/agentic_review\n\n${buildReviewRequestMarker("qodo", HEAD, 2)}`,
+      },
+    ]);
+    expect(
+      await requestReviewAtHead({
+        ...request,
+        provider: qodoProvider,
+        attempt: 2,
+      }),
+    ).toBe("already-requested");
+    expect(posted).toHaveLength(0);
   });
 
   test("does not ask twice for the same head", async () => {
     const posted = stubGitHub([
-      { body: `/review\n\n${buildReviewRequestMarker("qodo", HEAD)}` },
+      { body: `/agentic_review\n\n${buildReviewRequestMarker("qodo", HEAD)}` },
     ]);
     expect(
       await requestReviewAtHead({ ...request, provider: qodoProvider }),
@@ -89,7 +135,9 @@ describe("requestReviewAtHead", () => {
     // request it posted for this head must suppress the gate's.
     const posted = stubGitHub([
       { body: `something else` },
-      { body: `/review\n\n${buildReviewRequestMarker("qodo", HEAD)}\n` },
+      {
+        body: `/agentic_review\n\n${buildReviewRequestMarker("qodo", HEAD)}\n`,
+      },
     ]);
     expect(
       await requestReviewAtHead({ ...request, provider: qodoProvider }),

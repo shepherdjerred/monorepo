@@ -4,6 +4,7 @@
  * feeds: this is the shape of GitHub's payload, not a decision about it.
  */
 
+import { isProviderAuthor } from "./identity.ts";
 import {
   arrayField,
   asRecord,
@@ -28,7 +29,12 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
           path
           line
           comments(first: 1) {
-            nodes { author { login } url body }
+            nodes {
+              author { login }
+              url
+              body
+              pullRequestReview { id submittedAt }
+            }
           }
         }
       }
@@ -36,12 +42,25 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
   }
 }`;
 
+/**
+ * A thread plus the review that opened it.
+ *
+ * The review is carried alongside rather than on {@link ReviewThread} because a
+ * thread's `raisedInReview` ordinal cannot be known from the thread alone — it
+ * depends on every other review on the pull request, so it is assigned by
+ * {@link attributeRaisedInReview} once all pages have been read.
+ */
+export type ParsedReviewThread = {
+  thread: ReviewThread;
+  review: { id: string; submittedAt: string | null } | null;
+};
+
 export function parseThreadPage(
   payload: unknown,
   provider: ReviewProvider,
 ): {
   headRefOid: string | null;
-  threads: ReviewThread[];
+  threads: ParsedReviewThread[];
   hasNextPage: boolean;
   endCursor: string | null;
 } {
@@ -61,7 +80,7 @@ export function parseThreadPage(
     throw new Error("GitHub GraphQL response did not include reviewThreads");
   }
 
-  const threads: ReviewThread[] = [];
+  const threads: ParsedReviewThread[] = [];
   for (const rawNode of arrayField(reviewThreads, "nodes")) {
     const node = asRecord(rawNode);
     if (node === null) continue;
@@ -72,6 +91,7 @@ export function parseThreadPage(
     let url: string | null = null;
     let priority: number | null = null;
     let title: string | null = null;
+    let review: ParsedReviewThread["review"] = null;
     if (firstComment !== null) {
       const author = recordField(firstComment, "author");
       const body = stringField(firstComment, "body");
@@ -83,18 +103,33 @@ export function parseThreadPage(
       // also have rendered into its review comment, which is what stops it
       // being counted twice.
       title = provider.parseFindingTitle?.(body) ?? null;
+      const pullRequestReview = recordField(firstComment, "pullRequestReview");
+      if (pullRequestReview !== null) {
+        const reviewId = stringField(pullRequestReview, "id");
+        if (reviewId !== null) {
+          review = {
+            id: reviewId,
+            submittedAt: stringField(pullRequestReview, "submittedAt"),
+          };
+        }
+      }
     }
     threads.push({
-      authorLogin,
-      isResolved: boolField(node, "isResolved"),
-      isOutdated: boolField(node, "isOutdated"),
-      path: stringField(node, "path"),
-      line: numberField(node, "line"),
-      url,
-      priority,
-      title,
-      threadId: stringField(node, "id"),
-      commentId: null,
+      thread: {
+        authorLogin,
+        isResolved: boolField(node, "isResolved"),
+        isOutdated: boolField(node, "isOutdated"),
+        path: stringField(node, "path"),
+        line: numberField(node, "line"),
+        url,
+        priority,
+        title,
+        threadId: stringField(node, "id"),
+        commentId: null,
+        // Assigned by attributeRaisedInReview once every page has been read.
+        raisedInReview: null,
+      },
+      review,
     });
   }
 
@@ -105,4 +140,62 @@ export function parseThreadPage(
     hasNextPage: pageInfo !== null && boolField(pageInfo, "hasNextPage"),
     endCursor: pageInfo === null ? null : stringField(pageInfo, "endCursor"),
   };
+}
+
+/**
+ * Assign each thread the review that raised it, as an ordinal plus whether that
+ * review also carried a blocking-severity finding.
+ *
+ * Only the active provider's own reviews are counted, so a human review left
+ * between two provider reviews cannot shift the ordinals and silently turn a
+ * first-review finding into a later-review one.
+ *
+ * Reviews are ordered by `submittedAt`. GitHub reports null for a review that
+ * was never submitted; those sort last and keep a stable relative order, which
+ * is the conservative choice — a finding that cannot be placed early is treated
+ * as late, and the caller's policy already fails such findings closed.
+ */
+export function attributeRaisedInReview(
+  parsed: readonly ParsedReviewThread[],
+  provider: ReviewProvider,
+  alwaysBlockingPriority: number,
+): ReviewThread[] {
+  const groups = new Map<
+    string,
+    { submittedAt: string | null; seenAt: number; threads: ReviewThread[] }
+  >();
+  for (const [index, entry] of parsed.entries()) {
+    if (entry.review === null) continue;
+    if (!isProviderAuthor(provider, entry.thread.authorLogin)) continue;
+    const existing = groups.get(entry.review.id);
+    if (existing === undefined) {
+      groups.set(entry.review.id, {
+        submittedAt: entry.review.submittedAt,
+        seenAt: index,
+        threads: [entry.thread],
+      });
+      continue;
+    }
+    existing.threads.push(entry.thread);
+  }
+
+  const ordered = [...groups.values()].sort((left, right) => {
+    if (left.submittedAt === right.submittedAt)
+      return left.seenAt - right.seenAt;
+    if (left.submittedAt === null) return 1;
+    if (right.submittedAt === null) return -1;
+    return left.submittedAt.localeCompare(right.submittedAt);
+  });
+
+  for (const [index, group] of ordered.entries()) {
+    const hadBlockingSeverity = group.threads.some(
+      (thread) =>
+        thread.priority !== null && thread.priority <= alwaysBlockingPriority,
+    );
+    for (const thread of group.threads) {
+      thread.raisedInReview = { ordinal: index + 1, hadBlockingSeverity };
+    }
+  }
+
+  return parsed.map((entry) => entry.thread);
 }

@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
+  blockingPolicyForThreshold,
   evaluateGate,
+  firstReviewFindingCount,
   isBlocking,
+  type LowSeverityPolicy,
   reviewGateSkipReasonForAuthor,
 } from "./gate.ts";
 import { codexProvider } from "./providers/codex.ts";
@@ -20,8 +23,18 @@ function thread(overrides: Partial<ReviewThread>): ReviewThread {
     title: null,
     threadId: null,
     commentId: null,
+    // Unattributed by default, which the policy treats as blocking. The
+    // attribution-sensitive cases set this explicitly.
+    raisedInReview: null,
     ...overrides,
   };
+}
+
+function policy(
+  maxBlockingPriority = 3,
+  lowSeverity: LowSeverityPolicy = "first-review-or-accompanied",
+) {
+  return blockingPolicyForThreshold(maxBlockingPriority, lowSeverity);
 }
 
 describe("reviewGateSkipReasonForAuthor", () => {
@@ -88,39 +101,149 @@ describe("reviewGateSkipReasonForAuthor", () => {
 
 describe("isBlocking", () => {
   test("blocks an unresolved, non-outdated provider thread within threshold", () => {
-    expect(isBlocking(thread({}), codexProvider, 3)).toBe(true);
+    expect(isBlocking(thread({}), codexProvider, policy())).toBe(true);
   });
   test("does not block a resolved thread", () => {
-    expect(isBlocking(thread({ isResolved: true }), codexProvider, 3)).toBe(
-      false,
-    );
+    expect(
+      isBlocking(thread({ isResolved: true }), codexProvider, policy()),
+    ).toBe(false);
   });
   test("does not block an outdated thread", () => {
-    expect(isBlocking(thread({ isOutdated: true }), codexProvider, 3)).toBe(
-      false,
-    );
+    expect(
+      isBlocking(thread({ isOutdated: true }), codexProvider, policy()),
+    ).toBe(false);
   });
   test("does not block a thread from another author", () => {
     expect(
-      isBlocking(thread({ authorLogin: "some-human" }), codexProvider, 3),
+      isBlocking(
+        thread({ authorLogin: "some-human" }),
+        codexProvider,
+        policy(),
+      ),
     ).toBe(false);
   });
   test("does not block a thread below the priority threshold", () => {
-    expect(isBlocking(thread({ priority: 3 }), codexProvider, 2)).toBe(false);
-  });
-  test("does not block a thread with no severity badge", () => {
-    expect(isBlocking(thread({ priority: null }), codexProvider, 3)).toBe(
+    expect(isBlocking(thread({ priority: 3 }), codexProvider, policy(2))).toBe(
       false,
     );
+  });
+  test("does not block a thread with no severity badge", () => {
+    expect(
+      isBlocking(thread({ priority: null }), codexProvider, policy()),
+    ).toBe(false);
   });
   test("matches the REST [bot] login form", () => {
     expect(
       isBlocking(
         thread({ authorLogin: "chatgpt-codex-connector[bot]" }),
         codexProvider,
-        3,
+        policy(),
       ),
     ).toBe(true);
+  });
+});
+
+describe("isBlocking — low-severity policy", () => {
+  const p1 = { ordinal: 1, hadBlockingSeverity: false };
+  test("an always-blocking finding blocks whenever it was raised", () => {
+    expect(
+      isBlocking(
+        thread({
+          priority: 1,
+          raisedInReview: { ordinal: 9, hadBlockingSeverity: true },
+        }),
+        codexProvider,
+        policy(),
+      ),
+    ).toBe(true);
+  });
+
+  test("a low-severity finding from the first review blocks", () => {
+    expect(
+      isBlocking(
+        thread({ priority: 2, raisedInReview: p1 }),
+        codexProvider,
+        policy(),
+      ),
+    ).toBe(true);
+  });
+
+  test("a later-review low-severity finding alone does not block", () => {
+    expect(
+      isBlocking(
+        thread({
+          priority: 2,
+          raisedInReview: { ordinal: 4, hadBlockingSeverity: false },
+        }),
+        codexProvider,
+        policy(),
+      ),
+    ).toBe(false);
+  });
+
+  test("a later-review low-severity finding blocks when its review also carried a blocking one", () => {
+    expect(
+      isBlocking(
+        thread({
+          priority: 2,
+          raisedInReview: { ordinal: 4, hadBlockingSeverity: true },
+        }),
+        codexProvider,
+        policy(),
+      ),
+    ).toBe(true);
+  });
+
+  test("an unattributable low-severity finding blocks", () => {
+    expect(
+      isBlocking(
+        thread({ priority: 2, raisedInReview: null }),
+        codexProvider,
+        policy(),
+      ),
+    ).toBe(true);
+  });
+
+  test('the "always" policy ignores attribution entirely', () => {
+    expect(
+      isBlocking(
+        thread({
+          priority: 2,
+          raisedInReview: { ordinal: 9, hadBlockingSeverity: false },
+        }),
+        codexProvider,
+        policy(3, "always"),
+      ),
+    ).toBe(true);
+  });
+
+  test("lowering the threshold to the always-blocking severity disables the low-severity rules", () => {
+    expect(
+      isBlocking(
+        thread({ priority: 2, raisedInReview: p1 }),
+        codexProvider,
+        policy(1),
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("firstReviewFindingCount", () => {
+  test("counts only the provider's first-review findings", () => {
+    const threads = [
+      thread({ raisedInReview: { ordinal: 1, hadBlockingSeverity: false } }),
+      thread({ raisedInReview: { ordinal: 1, hadBlockingSeverity: false } }),
+      thread({ raisedInReview: { ordinal: 2, hadBlockingSeverity: false } }),
+      thread({
+        authorLogin: "some-human",
+        raisedInReview: { ordinal: 1, hadBlockingSeverity: false },
+      }),
+    ];
+    expect(firstReviewFindingCount(threads, codexProvider)).toBe(2);
+  });
+
+  test("is null when nothing is attributed to a first review", () => {
+    expect(firstReviewFindingCount([thread({})], codexProvider)).toBeNull();
   });
 });
 
@@ -128,7 +251,7 @@ describe("evaluateGate", () => {
   const base = {
     head: "abc123",
     provider: codexProvider,
-    maxBlockingPriority: 3,
+    policy: policy(),
   };
 
   test("waits while reviewing", () => {
@@ -181,6 +304,70 @@ describe("evaluateGate", () => {
       threads: [thread({})],
     });
     expect(d.message).toContain("P2 src/x.ts:10");
+  });
+
+  // The degeneration the raising-review binding exists to prevent. A threshold
+  // bound to the CURRENT round would stop blocking on the first review's
+  // low-severity findings as soon as a second review existed, so pushing
+  // anything at all would clear the sweep without fixing it.
+  test("a first-review low-severity finding still blocks after later reviews arrive", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "reviewed",
+      threads: [
+        thread({
+          priority: 2,
+          title: "unfixed from the first review",
+          raisedInReview: { ordinal: 1, hadBlockingSeverity: false },
+        }),
+        thread({
+          priority: 2,
+          title: "raised later, advisory",
+          raisedInReview: { ordinal: 5, hadBlockingSeverity: false },
+        }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("1 unresolved Codex comment");
+    expect(d.message).toContain("unfixed from the first review");
+    expect(d.message).not.toContain("raised later, advisory");
+  });
+
+  test("passes once only later-review low-severity findings remain", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "reviewed",
+      threads: [
+        thread({
+          priority: 2,
+          raisedInReview: { ordinal: 5, hadBlockingSeverity: false },
+        }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+  });
+
+  test("explains why a ride-along low-severity finding is blocking", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "reviewed",
+      threads: [
+        thread({
+          priority: 1,
+          title: "the blocking one",
+          raisedInReview: { ordinal: 5, hadBlockingSeverity: true },
+        }),
+        thread({
+          priority: 2,
+          title: "rides along",
+          raisedInReview: { ordinal: 5, hadBlockingSeverity: true },
+        }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("2 unresolved Codex comment");
+    expect(d.message).toContain("rides along");
+    expect(d.message).toContain("round you are already paying for");
   });
 
   test("passes on a skip with the reason in the message", () => {

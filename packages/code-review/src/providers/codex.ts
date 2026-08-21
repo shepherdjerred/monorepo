@@ -28,9 +28,8 @@ export const codexProvider: ReviewProvider = {
   findingKey: null,
   completion: { kind: "review-at-head", cleanSignal: "thumbsup-reaction" },
   detectSkip: null,
-  // Codex re-reviews on push, but an explicit `@codex review` mention forces a
-  // fresh review of the current head (used after a bot publishes a fix).
-  requestReview: {
-    buildComment: (marker) => `@codex review\n\n${marker}`,
-  },
+  // Codex's "Automatic reviews" setting reviews a pull request when it is
+  // opened, not on every push, so a new head still has to be asked for
+  // explicitly. There is no per-push configuration to move this to.
+  requestReview: { command: "@codex review" },
 };

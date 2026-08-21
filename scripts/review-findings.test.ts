@@ -55,6 +55,7 @@ describe("describeFinding", () => {
       title: "S3 fetch lacks timeout",
       threadId: null,
       commentId: null,
+      raisedInReview: null,
     });
     expect(line).toContain("P1");
     expect(line).toContain("S3 fetch lacks timeout");
@@ -73,6 +74,7 @@ describe("describeFinding", () => {
       title: null,
       threadId: null,
       commentId: null,
+      raisedInReview: null,
     });
     expect(line).toContain("P2 src/x.ts:42");
     expect(line).not.toContain("untitled");

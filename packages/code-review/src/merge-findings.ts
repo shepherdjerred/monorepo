@@ -67,6 +67,13 @@ export function mergeDuplicateFindings(
     finding.commentId ??= thread.commentId;
     finding.line ??= thread.line;
     finding.path ??= thread.path;
+    // Only the addressable thread copy knows which review raised the finding —
+    // a provider that keeps its findings in a rewritten issue comment records
+    // no round in that comment. Inheriting it here is what lets a severity
+    // policy bound to the raising review work for such a provider at all; a
+    // finding whose thread copy never merged keeps `null` and, by the gate's
+    // rule, blocks.
+    finding.raisedInReview ??= thread.raisedInReview;
   }
   // Decided over the whole group rather than folded in copy by copy, so the
   // answer cannot depend on which surface the provider happened to list first.

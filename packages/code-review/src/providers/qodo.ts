@@ -401,6 +401,12 @@ function parseSeveritySection(
         // cleared by editing the comment it came from.
         threadId: null,
         commentId,
+        // The review comment is rewritten in place on every re-review and
+        // records no round, so this copy cannot say which review raised it.
+        // `mergeDuplicateFindings` inherits it from the addressable thread copy
+        // Qodo posts for the same finding; a finding that never merges keeps
+        // null and blocks.
+        raisedInReview: null,
       },
     });
   }
@@ -679,7 +685,10 @@ export const qodoProvider: ReviewProvider = {
     parseFindings: parseQodoIssueComment,
   },
   detectSkip: null,
-  requestReview: {
-    buildComment: (marker) => `/review\n\n${marker}`,
-  },
+  // Qodo 2.x documents `/agentic_review` as the manual trigger. The older
+  // `/review` still works, but it is no longer the documented spelling and can
+  // stop working without notice. Preferred over asking at all: enabling
+  // `handle_push_trigger` in `.pr_agent.toml`, which re-reviews on push and
+  // needs no comment — this remains the fallback for when that is not in effect.
+  requestReview: { command: "/agentic_review" },
 };

@@ -15,6 +15,7 @@
  */
 
 import {
+  blockingPolicyForThreshold,
   isBlocking,
   isProviderAuthor,
   REVIEW_SIGNAL_SCHEMA,
@@ -116,7 +117,7 @@ async function probePr(
       isProviderAuthor(provider, thread.authorLogin) && !thread.isOutdated,
   );
   const blocking = threadResult.threads.filter((thread) =>
-    isBlocking(thread, provider, 3),
+    isBlocking(thread, provider, blockingPolicyForThreshold(3)),
   );
   // Latency only when the reviewed commit IS the head (else a stale review of
   // an older commit yields a bogus/negative value).
@@ -149,6 +150,8 @@ async function probePr(
     timed_out: false,
     stale_reaction: state.staleReaction,
     decision: null,
+    // A probe reads state; it never asks for a review.
+    request_attempts: null,
     // Which parser produced these counts. A probe run from a stale checkout
     // reads the repository's stale parser and reports numbers that disagree
     // with CI for reasons that have nothing to do with the PR.

@@ -23,7 +23,10 @@ import {
   fetchLatestProviderIssueComment,
   resolveIssueCommentReview,
 } from "./github-issue-comments.ts";
+import { ALWAYS_BLOCKING_PRIORITY } from "./gate.ts";
 import {
+  attributeRaisedInReview,
+  type ParsedReviewThread,
   parseThreadPage,
   REVIEW_THREADS_QUERY,
 } from "./github-review-threads.ts";
@@ -96,7 +99,7 @@ export async function fetchReviewThreads(input: {
   issueComment?: ReviewIssueComment | null | undefined;
 }): Promise<{ threads: ReviewThread[]; headRefOid: string | null }> {
   const { owner, name } = splitRepo(input.repo);
-  const threads: ReviewThread[] = [];
+  const parsed: ParsedReviewThread[] = [];
   let headRefOid: string | null = null;
   let cursor: string | null = null;
   for (;;) {
@@ -107,10 +110,17 @@ export async function fetchReviewThreads(input: {
     );
     const page = parseThreadPage(payload, input.provider);
     if (page.headRefOid !== null) headRefOid = page.headRefOid;
-    threads.push(...page.threads);
+    parsed.push(...page.threads);
     if (!page.hasNextPage || page.endCursor === null) break;
     cursor = page.endCursor;
   }
+  // Attribution needs every page: a thread's ordinal is its review's position
+  // among all of this provider's reviews, which is not knowable page by page.
+  const threads: ReviewThread[] = attributeRaisedInReview(
+    parsed,
+    input.provider,
+    ALWAYS_BLOCKING_PRIORITY,
+  );
   const { completion } = input.provider;
   if (completion.kind === "issue-comment") {
     const comment =
