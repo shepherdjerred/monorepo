@@ -62,45 +62,131 @@ function entryMatchesToken(
  * via /-/npm/v1/tokens (paginated; some accounts have dozens of tokens) and
  * fail fast with an actionable message before bun gets a chance to wait.
  */
-async function verifyTokenBypasses2fa(token: string): Promise<void> {
+export type TokenIntrospectionFetcher = (
+  url: string,
+  init: RequestInit,
+) => Promise<Response>;
+
+export type TokenPreflightOptions = {
+  readonly fetcher?: TokenIntrospectionFetcher;
+  readonly now?: Date;
+  readonly warn?: (message: string) => void;
+};
+
+/**
+ * Warn this far ahead of expiry. npm's granular tokens cap out at 90 days, so
+ * three weeks leaves room to notice and rotate without the warning shouting
+ * for most of the token's life.
+ */
+export const EXPIRY_WARNING_DAYS = 21;
+
+/**
+ * npm reports a granular token's expiry as `expiry`. An expired token is not
+ * rejected with anything token-shaped — every authenticated call simply 401s —
+ * so the only way to avoid a surprise CI outage is to look at this field while
+ * the token still works. A token with no expiry never lapses and needs no
+ * warning.
+ */
+export function expiryWarning(
+  entry: Record<string, unknown>,
+  now: Date,
+): string | null {
+  const expiry = entry["expiry"];
+  if (typeof expiry !== "string" || expiry === "") return null;
+  const expiresAt = new Date(expiry);
+  if (Number.isNaN(expiresAt.getTime())) {
+    throw new TypeError(
+      `npm token introspection returned unparsable expiry: ${expiry}`,
+    );
+  }
+  const days = Math.floor(
+    (expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
+  );
+  if (days > EXPIRY_WARNING_DAYS) return null;
+  const when =
+    days < 0 ? `${String(-days)} day(s) AGO` : `in ${String(days)} day(s)`;
+  return (
+    `NPM_TOKEN expires ${when} (${expiry}). When it lapses, every npm call ` +
+    `401s and this publish step fails with no other symptom. Mint a ` +
+    `replacement granular token with bypass-2FA enabled and update the ` +
+    `NPM_TOKEN field of the buildkite-ci-secrets 1Password item.`
+  );
+}
+
+type TokenPage = {
+  readonly entries: readonly Record<string, unknown>[];
+  readonly next: string | null;
+};
+
+/**
+ * Read one page of /-/npm/v1/tokens. Kept separate from the search loop so
+ * each concern — HTTP failure classification, body shape, pagination — reads
+ * on its own.
+ */
+async function readTokenPage(
+  fetcher: TokenIntrospectionFetcher,
+  url: string,
+  token: string,
+  page: number,
+): Promise<TokenPage> {
+  const response = await fetcher(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  // 401 is not an introspection quirk: the registry rejects the credential
+  // itself, which for a granular token almost always means it expired.
+  if (response.status === 401) {
+    throw new Error(
+      "npm rejected NPM_TOKEN (HTTP 401). The token is expired, revoked, " +
+        "or otherwise invalid — this is a credential rotation, not a bug " +
+        "in this script. Mint a granular token with bypass-2FA enabled " +
+        "and update the NPM_TOKEN field of the buildkite-ci-secrets " +
+        "1Password item; the operator syncs it to the buildkite namespace.",
+    );
+  }
+  if (!response.ok) {
+    throw new Error(
+      `npm token introspection failed (page ${page.toString()}): ` +
+        `HTTP ${response.status.toString()} ${response.statusText}`,
+    );
+  }
+  const data = asRecord(await response.json());
+  if (data === null) {
+    throw new Error("npm token introspection returned a non-object body");
+  }
+  const objects = data["objects"];
+  const entries: Record<string, unknown>[] = [];
+  if (Array.isArray(objects)) {
+    for (const o of objects) {
+      const entry = asRecord(o);
+      if (entry !== null) entries.push(entry);
+    }
+  }
+  const urls = asRecord(data["urls"]);
+  const next = urls === null ? undefined : urls["next"];
+  if (typeof next !== "string" || next === "") {
+    return { entries, next: null };
+  }
+  return {
+    entries,
+    next: next.startsWith("http") ? next : `https://registry.npmjs.org${next}`,
+  };
+}
+
+export async function verifyTokenBypasses2fa(
+  token: string,
+  options: TokenPreflightOptions = {},
+): Promise<void> {
+  const fetcher = options.fetcher ?? fetch;
+  const now = options.now ?? new Date();
+  const warn = options.warn ?? defaultExpiryWarner;
   let url: string | null = "https://registry.npmjs.org/-/npm/v1/tokens";
   let me: Record<string, unknown> | null = null;
   let pages = 0;
   while (url !== null && me === null) {
     pages++;
-    const r = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!r.ok) {
-      throw new Error(
-        `npm token introspection failed (page ${pages.toString()}): ` +
-          `HTTP ${r.status.toString()} ${r.statusText}`,
-      );
-    }
-    const data = asRecord(await r.json());
-    if (data === null) {
-      throw new Error("npm token introspection returned a non-object body");
-    }
-    const objects = data["objects"];
-    if (Array.isArray(objects)) {
-      for (const o of objects) {
-        const entry = asRecord(o);
-        if (entry !== null && entryMatchesToken(entry, token)) {
-          me = entry;
-          break;
-        }
-      }
-    }
-    // Advance to the next page if the registry paginated the response.
-    const urls = asRecord(data["urls"]);
-    const next = urls === null ? undefined : urls["next"];
-    if (typeof next === "string" && next !== "") {
-      url = next.startsWith("http")
-        ? next
-        : `https://registry.npmjs.org${next}`;
-    } else {
-      url = null;
-    }
+    const page = await readTokenPage(fetcher, url, token, pages);
+    me = page.entries.find((entry) => entryMatchesToken(entry, token)) ?? null;
+    url = page.next;
   }
 
   if (me === null) {
@@ -125,6 +211,35 @@ async function verifyTokenBypasses2fa(token: string): Promise<void> {
   console.log(
     `OK: NPM_TOKEN bypasses 2FA (token name: ${name}, found on page ${pages.toString()})`,
   );
+  const warning = expiryWarning(me, now);
+  if (warning !== null) warn(warning);
+}
+
+/**
+ * Surface an imminent expiry where someone will actually see it. A log line in
+ * a passing step is invisible, so in CI this also raises a build annotation.
+ */
+function defaultExpiryWarner(message: string): void {
+  console.warn(`WARNING: ${message}`);
+  if (Bun.env["BUILDKITE"] !== "true") return;
+  const proc = Bun.spawnSync(
+    [
+      "buildkite-agent",
+      "annotate",
+      "--style",
+      "warning",
+      "--context",
+      "npm-token-expiry",
+    ],
+    {
+      stdin: new TextEncoder().encode(message),
+      stdout: "inherit",
+      stderr: "inherit",
+    },
+  );
+  if (proc.exitCode !== 0) {
+    throw new Error(`buildkite-agent annotate exited ${String(proc.exitCode)}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -293,4 +408,6 @@ async function main(): Promise<void> {
   console.log(`--- published ${pkgName} --tag ${tag}`);
 }
 
-await runMain(main);
+if (import.meta.main) {
+  await runMain(main);
+}
