@@ -6,13 +6,13 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createFreshRssDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss.ts";
 
-export function createFreshRssChart(app: App) {
+export async function createFreshRssChart(app: App): Promise<void> {
   const chart = new Chart(app, "freshrss", {
     namespace: "freshrss",
     disableResourceNameHashes: true,
   });
 
-  createFreshRssDeployment(chart);
+  await createFreshRssDeployment(chart);
 
   // NetworkPolicy: Allow ingress from Tailscale and Cloudflare tunnel
   new KubeNetworkPolicy(chart, "freshrss-ingress-netpol", {
@@ -21,6 +21,10 @@ export function createFreshRssChart(app: App) {
       podSelector: {},
       policyTypes: ["Ingress"],
       ingress: [
+        {
+          from: [{ podSelector: { matchLabels: { app: "freshrss-sync" } } }],
+          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
+        },
         {
           from: [
             {

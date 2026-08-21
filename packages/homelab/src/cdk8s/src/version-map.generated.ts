@@ -67,6 +67,7 @@ export const VersionMapSchema = z
     "shepherdjerred/discord-plays-pokemon": z.string(),
     "shepherdjerred/discord-plays-mario-kart": z.string(),
     "freshrss/freshrss": z.string(),
+    "oven/bun": z.string(),
     "pinchtab/pinchtab": z.string(),
     "agent-stack-k8s": z.string(),
     "ducktors/turborepo-remote-cache": z.string(),
