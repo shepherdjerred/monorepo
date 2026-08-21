@@ -102,7 +102,7 @@ describe("openBettingPoolsForPrematch", () => {
     ).toEqual(new Date("2026-08-19T00:03:30Z"));
   });
 
-  test("opens a Classic pool and stores no prediction", async () => {
+  test("does not open a League Classic pool", async () => {
     const currentGame = gameInfo();
     const opened = await openBettingPoolsForPrematch(
       {
@@ -119,20 +119,17 @@ describe("openBettingPoolsForPrematch", () => {
       db,
     );
 
-    expect(opened).toEqual(new Set([SERVER_ID]));
-    const pool = await db.bucksMatchPool.findUniqueOrThrow({
-      where: {
-        matchId_serverId: {
-          matchId: "NA1_5000000001",
-          serverId: SERVER_ID,
+    expect(opened).toEqual(new Set());
+    expect(
+      await db.bucksMatchPool.findUnique({
+        where: {
+          matchId_serverId: {
+            matchId: "NA1_5000000001",
+            serverId: SERVER_ID,
+          },
         },
-      },
-    });
-    expect(pool.queueType).toBe("classic");
-    expect(pool.predictionJson).toBeNull();
-    expect(pool.peekAvailableAt.getTime()).toBe(
-      currentGame.gameStartTime + PEEK_DELAY_MS,
-    );
+      }),
+    ).toBeNull();
   });
 
   test("does not open a Classic ARAM Mayhem pool", async () => {
@@ -157,7 +154,7 @@ describe("openBettingPoolsForPrematch", () => {
       {
         matchId: "NA1_5000000003",
         gameInfo: gameInfo(),
-        queueType: "classic",
+        queueType: "solo",
         guildIds: [SERVER_ID],
         detectedAt: new Date(),
         trackedAliasByPuuid: new Map(),

@@ -91,7 +91,11 @@ export async function retryPendingBucksEarnings(
   loadMatch: PendingEarningMatchLoader = queryMatchById,
 ): Promise<void> {
   const pending = await prismaClient.bucksMatchEarning.findMany({
-    where: { state: "pending", retryAt: { lte: new Date() } },
+    where: {
+      phase: "postmatch",
+      state: "pending",
+      retryAt: { lte: new Date() },
+    },
     orderBy: { retryAt: "asc" },
     take: 50,
     select: {

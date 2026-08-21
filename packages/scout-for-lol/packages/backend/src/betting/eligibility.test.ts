@@ -15,7 +15,7 @@ describe("isBettableQueue", () => {
   test("accepts every supported ranked queue", () => {
     expect(isBettableQueue("solo")).toBe(true);
     expect(isBettableQueue("flex")).toBe(true);
-    expect(isBettableQueue("classic")).toBe(true);
+    expect(isBettableQueue("classic")).toBe(false);
     expect(isBettableQueue("ranked 5s")).toBe(true);
     expect(isBettableQueue("clash")).toBe(true);
   });
@@ -26,8 +26,9 @@ describe("isBettableQueue", () => {
     expect(isBettableQueue("aram clash")).toBe(false);
   });
 
-  test("rejects non-ranked, Classic Mayhem, and unknown queues", () => {
+  test("rejects League Classic, Classic Mayhem, and unknown queues", () => {
     expect(isBettableQueue("aram")).toBe(false);
+    expect(isBettableQueue("classic")).toBe(false);
     expect(isBettableQueue("classic aram mayhem")).toBe(false);
     expect(isBettableQueue("arena")).toBe(false);
     expect(isBettableQueue("quickplay")).toBe(false);
@@ -72,7 +73,7 @@ describe("isBettableGame", () => {
     );
     expect(
       isBettableGame({ queueType: "classic", participants: STANDARD }),
-    ).toBe(true);
+    ).toBe(false);
     expect(isBettableGame({ queueType: "aram", participants: STANDARD })).toBe(
       false,
     );

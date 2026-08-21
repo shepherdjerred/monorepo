@@ -9,6 +9,7 @@ import {
 import {
   BucksPoolRosterSchema,
   BucksPredictionSchema,
+  DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
   type PlayerConfigEntry,
@@ -79,7 +80,12 @@ const prediction = BucksPredictionSchema.parse({
 });
 
 beforeEach(async () => {
+  await db.bucksLedgerEntry.deleteMany();
+  await db.bucksMatchEarning.deleteMany();
+  await db.bucksAccount.deleteMany();
   await db.bucksMatchPool.deleteMany();
+  await db.account.deleteMany();
+  await db.player.deleteMany();
   clearFlagOverrides("betting_enabled");
   addFlagOverride("betting_enabled", true, { server: ENABLED });
 });
@@ -93,6 +99,56 @@ afterAll(async () => {
 });
 
 describe("prepareBucksPrematch", () => {
+  test("grants one Classic participation point without opening a market", async () => {
+    const now = new Date();
+    await db.player.create({
+      data: {
+        alias: "jerred",
+        discordId: DiscordAccountIdSchema.parse("16050917270473909"),
+        serverId: ENABLED,
+        creatorDiscordId: DiscordAccountIdSchema.parse("16050917270473909"),
+        createdTime: now,
+        updatedTime: now,
+        accounts: {
+          create: {
+            alias: "jerred",
+            puuid: LeaguePuuidSchema.parse(puuidFor(0)),
+            region: "AMERICA_NORTH",
+            serverId: ENABLED,
+            creatorDiscordId: DiscordAccountIdSchema.parse("16050917270473909"),
+            createdTime: now,
+            updatedTime: now,
+          },
+        },
+      },
+    });
+
+    const input = {
+      gameInfo: gameInfo({ gameQueueConfigId: 4310 }),
+      trackedPlayers: [trackedPlayer()],
+      queueType: "classic" as const,
+      targetGuildIds: [ENABLED],
+      detectedAt: new Date(),
+      prediction,
+    };
+    const first = await prepareBucksPrematch(input, db);
+    const second = await prepareBucksPrematch(input, db);
+
+    expect(first.bettingGuildIds.size).toBe(0);
+    expect(first.rows).toEqual([]);
+    expect(first.footer).toBe("");
+    expect(second.bettingGuildIds.size).toBe(0);
+    expect(
+      await db.bucksMatchPool.count({ where: { queueType: "classic" } }),
+    ).toBe(0);
+    expect(
+      await db.bucksLedgerEntry.count({ where: { kind: "earn_game" } }),
+    ).toBe(1);
+    expect(
+      await db.bucksAccount.findFirstOrThrow({ where: { isHouse: false } }),
+    ).toMatchObject({ balance: 26 });
+  });
+
   test("does nothing for a guild that is not on the allowlist", async () => {
     const result = await prepareBucksPrematch(
       {
@@ -139,6 +195,24 @@ describe("prepareBucksPrematch", () => {
     );
     expect(aram.footer).toBe("");
     expect(partial.footer).toBe("");
+  });
+
+  test("does not grant Classic ARAM Mayhem participation", async () => {
+    const result = await prepareBucksPrematch(
+      {
+        gameInfo: gameInfo({ gameQueueConfigId: 2450 }),
+        trackedPlayers: [trackedPlayer()],
+        queueType: "classic aram mayhem",
+        targetGuildIds: [ENABLED],
+        detectedAt: new Date(),
+        prediction,
+      },
+      db,
+    );
+    expect(result.bettingGuildIds.size).toBe(0);
+    expect(result.rows).toEqual([]);
+    expect(result.footer).toBe("");
+    expect(await db.bucksLedgerEntry.count()).toBe(0);
   });
 
   test("opens a market with the frozen v2 estimate but keeps it private", async () => {

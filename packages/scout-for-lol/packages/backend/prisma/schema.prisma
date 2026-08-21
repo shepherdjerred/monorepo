@@ -1050,6 +1050,10 @@ model BucksMatchEarning {
   serverId  String
   awardedAt DateTime @default(now())
 
+  // postmatch is the normal Match-V5 award; prematch is the one-time League
+  // Classic participation grant, which has no supported post-game payload.
+  phase String @default("postmatch")
+
   // pending means wallet funding was unavailable and the match must be retried;
   // processing is held only inside the awarding transaction; complete is the
   // durable exactly-once result.
@@ -1064,5 +1068,6 @@ model BucksMatchEarning {
   entryCount Int
 
   @@id([matchId, serverId])
+  @@index([phase, state, retryAt])
   @@index([state, retryAt])
 }

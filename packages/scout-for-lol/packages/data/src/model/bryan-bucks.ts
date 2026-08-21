@@ -304,6 +304,14 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     mvp: MvpContextSchema.optional(),
   }),
   z.strictObject({
+    type: z.literal("earn_prematch"),
+    alias: z.string(),
+    puuid: LeaguePuuidSchema,
+    championId: z.number().int(),
+    teamId: RiotTeamIdSchema,
+    queueType: QueueTypeSchema,
+  }),
+  z.strictObject({
     type: z.literal("stake"),
     subjectAlias: z.string(),
     subjectPuuid: LeaguePuuidSchema,

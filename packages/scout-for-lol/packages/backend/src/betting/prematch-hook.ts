@@ -7,7 +7,8 @@ import type {
   BucksPrediction,
 } from "@scout-for-lol/data";
 import { buildBettingRows } from "#src/betting/components.ts";
-import { isBettableGame } from "#src/betting/eligibility.ts";
+import { awardClassicPrematchForGame } from "#src/betting/classic-prematch-earnings.ts";
+import { isBettableGame, isStandardLobby } from "#src/betting/eligibility.ts";
 import {
   bettingEnabledGuilds,
   openBettingPoolsForPrematch,
@@ -60,6 +61,29 @@ export async function prepareBucksPrematch(
   );
 
   const enabledGuilds = bettingEnabledGuilds(input.targetGuildIds);
+  if (
+    input.queueType === "classic" &&
+    enabledGuilds.length > 0 &&
+    isStandardLobby(input.gameInfo.participants)
+  ) {
+    await awardClassicPrematchForGame(
+      {
+        matchId,
+        gameInfo: input.gameInfo,
+        trackedAliasByPuuid,
+        serverIds: enabledGuilds,
+        detectedAt: input.detectedAt,
+      },
+      prismaClient,
+    );
+    return {
+      bettingGuildIds: new Set<DiscordGuildId>(),
+      rows: [],
+      footer: "",
+      matchId,
+    };
+  }
+
   const bettable = isBettableGame({
     queueType: input.queueType,
     participants: input.gameInfo.participants,

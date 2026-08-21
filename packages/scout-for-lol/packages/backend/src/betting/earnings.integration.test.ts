@@ -198,7 +198,7 @@ describe("awardBucksForMatch", () => {
     expect(entries.every((e) => e.matchId === MATCH_ID)).toBe(true);
   });
 
-  test("awards the normal Bucks for League Classic", async () => {
+  test("does not award League Classic from the unsupported post-match path", async () => {
     await trackPlayer({
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473910"),
@@ -208,14 +208,9 @@ describe("awardBucksForMatch", () => {
 
     const awards = await awardBucksForMatch(withQueue(4310), db);
 
-    expect(awards[0]?.reasons.toSorted()).toEqual(
-      mvpParticipant.win ? ["mvp", "played", "win"] : ["mvp", "played"],
-    );
-    expect(awards[0]?.total).toBe(mvpParticipant.win ? 3 : 2);
-    const account = await db.bucksAccount.findFirstOrThrow({
-      where: { isHouse: false },
-    });
-    expect(account.balance).toBe(SEED_GRANT + (mvpParticipant.win ? 3 : 2));
+    expect(awards).toEqual([]);
+    expect(await db.bucksAccount.count()).toBe(0);
+    expect(await db.bucksMatchEarning.count()).toBe(0);
   });
 
   test("awards two Bucks for a win that is not MVP", async () => {
