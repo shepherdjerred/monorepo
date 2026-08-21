@@ -122,7 +122,18 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
         APPLICATION_ID: EnvValue.fromValue(applicationId),
         // The bot owner may configure recaps without holding Manage Server in
         // the guild. This is an identity, not a credential.
+        //
+        // KARMA_ADMIN_USER_ID and KARMA_EMOJI are now the ENV LAYER beneath
+        // their flags: a Flipt value for `karma-admin-user-id` or `karma-emoji`
+        // outranks these, and with no flag defined they still apply. Keeping
+        // them is what makes the migration a no-op until someone creates the
+        // flag.
         KARMA_ADMIN_USER_ID: EnvValue.fromValue("160509172704739328"),
+        // Bootstrap for the flag client itself — it cannot come from a flag.
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
         DATA_DIR: EnvValue.fromValue("/data"),
         // Prisma-native database, backfilled on first boot from the legacy
         // TypeORM `glitter.sqlite`.

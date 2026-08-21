@@ -1558,6 +1558,8 @@
         "@prisma/client": "^7.9.1",
         "@prisma/client-runtime-utils": "7.9.1",
         "@sentry/bun": "^10.49.0",
+        "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
         "cron-parser": "^5.5.0",
         "discord.js": "^14.27.0",
         "dotenv": "^17.4.2",
