@@ -111,6 +111,7 @@ export const VersionMapSchema = z
     "temporalio/admin-tools": z.string(),
     "shepherdjerred/temporal-worker": z.string(),
     "shepherdjerred/trmnl-dashboard": z.string(),
+    "flipt-io/flipt": z.string(),
   })
   .catchall(z.string());
 

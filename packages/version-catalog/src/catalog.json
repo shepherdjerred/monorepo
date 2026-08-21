@@ -1346,6 +1346,23 @@
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"
       ]
+    },
+    {
+      "name": "flipt-io/flipt",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v2.11.0@sha256:d20384874048ef6ac326f4937cee64f1db175a1878a87db32916cc8db46c740e",
+      "notes": [
+        "Feature flag server. Fair Core License; the free tier covers the UI, local git storage, and evaluation.",
+        "A bump requires re-capturing packages/feature-flags/fixtures/flipt-snapshot.default.json,",
+        "because the provider fetches the internal /internal/v1/evaluation/snapshot API."
+      ]
     }
   ]
 }
