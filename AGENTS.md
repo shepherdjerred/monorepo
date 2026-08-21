@@ -368,12 +368,46 @@ and provider adapters remain from `main`; once `main` accepts Codex, the path
 is automatically unreachable. This is a one-time rollout bridge, not a
 permanent PR-self-sourced gate.
 
-Each gate asks its provider to review the head before waiting on it. Qodo
-reviews a PR once, when it is opened, and Codex needs an explicit `@codex
-review` trigger for a fresh head; polling alone can therefore burn the whole
-budget. The request is idempotent per provider and head through
-`buildReviewRequestMarker()`, shared with the PR-fleet controller so consumers
-recognise each other's request.
+**What blocks.** A finding at P1 or above always blocks. A lower-severity
+finding blocks only when it came from the PR's **first** review, or from a
+review that **also** raised a P1 — another round is already being paid for, so
+everything in it gets fixed. Anything else is advisory: still posted, no longer
+a gate. Severity is bound to the review that raised a finding
+(`ReviewThread.raisedInReview`), not to the current round; binding it to the
+round degenerates, because the gate blocks on unresolved threads and lowering
+the threshold at round 2 would also unblock every round-1 finding, letting any
+throwaway push clear the sweep. A finding that cannot be attributed to a review
+blocks. `REVIEW_MAX_BLOCKING_PRIORITY` still works, and setting it to `1`
+disables the low-severity rules entirely, so the policy can be neutralised from
+the pipeline without a revert.
+
+This is measured, not assumed. Across PRs #2259–#2308 the loop ran 260
+finding-bearing rounds over 33 PRs, and 93% of the findings raised from round 8
+onward flagged a line that did not exist at first review — the review was mostly
+reviewing its own churn. Blind grading of 76 findings put the defect-reality rate
+at ~97%, with P1 at ~50% production bugs against 0% one tier down, which is where
+the line is drawn. Re-measure with `scripts/review-analytics.ts`.
+
+**Asking for a review.** Prefer provider configuration over a comment: the
+repo-root `.pr_agent.toml` sets Qodo's `handle_push_trigger`, so Qodo re-reviews
+on push without being asked. Codex has no per-push setting — its "Automatic
+reviews" fire on PR open only — so a fresh head still needs `@codex review`.
+Each request carries a visible "automated re-review request" line plus a hidden
+marker (`buildReviewRequestMarker()`, shared with the PR-fleet controller so
+consumers recognise each other's request). An unanswered request is re-asked
+once after `REVIEW_REQUEST_RETRY_SECONDS` (default 31 min), capped at two
+attempts, with the clock read from the first request comment's own creation time
+so a retried CI job continues the schedule rather than restarting it.
+
+The gate also warns — without blocking — when a first review returns four or
+more findings: no PR measured at that level has converged within three rounds.
+
+**Do not change Qodo's display settings without checking the parser.**
+`parseQodoIssueComment` throws on unrecognised layout, and the documented "lean
+review" recipe turns off divider lines (which `declaredFindingCount` needs) and
+can turn off the persistent-comment notification, which _is_ the gate's
+completion signal. Either change fails every review gate closed. See the
+comments in `.pr_agent.toml`.
 
 Each `review-signal` event carries `parser_commit`, the commit of the parser
 that produced the counts. A finding count is only comparable against the parser
@@ -683,6 +717,28 @@ incorrect:
 Both require a reason and record it in a single audit comment on the PR, so a
 dismissal is a reviewable decision rather than an invisible edit to a bot's
 comment. Neither is automatic and neither runs in CI.
+
+### Measuring the review loop — `review-analytics`
+
+```bash
+GH_TOKEN=$(toolkit gh auth token) bun scripts/review-analytics.ts rounds --last 50
+GH_TOKEN=$(toolkit gh auth token) bun scripts/review-analytics.ts requests --last 50
+GH_TOKEN=$(toolkit gh auth token) bun scripts/review-analytics.ts blame --pr 2301
+```
+
+`rounds` prints the per-push finding sequence and severity mix, `requests`
+compares automated against hand-typed review requests and how often each drew a
+response inside an hour, and `blame` reports what share of findings flag a line
+written after the PR's first review — i.e. churn the loop caused itself. `--json`
+for machine-readable output, `--pr N,M` for specific pull requests.
+
+This is deliberately a live query rather than another archive: reviews, review
+comments and their timestamps are retained by GitHub indefinitely, so every
+figure here is reconstructible after the fact. The 6-hourly
+`review-signals-collect` archive stays as it is, but note it snapshots only the
+_current_ head and so cannot answer a per-push question. Severity is parsed with
+the checkout's own provider rules, so run it from the checkout whose numbers you
+mean to compare.
 
 ## PR Fleet Controller
 
