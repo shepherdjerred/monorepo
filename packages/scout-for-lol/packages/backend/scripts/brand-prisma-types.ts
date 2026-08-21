@@ -301,7 +301,11 @@ function transformFieldRefLines(
 
 function getModelNameForTypeAlias(typeName: string): string | null {
   const modelName = typeName.replace(
-    /UncheckedCreateWithout\w+Input|UncheckedUpdateWithout\w+Input|UncheckedCreateInput|UncheckedUpdateInput|CreateWithout\w+Input|UpdateWithout\w+Input|CreateMany\w+Input|UpdateMany\w+Input|CreateInput|UpdateInput|WhereUniqueInput|WhereInput|MinAggregateOutputType|MaxAggregateOutputType|GroupByOutputType/,
+    // Plain `CreateManyInput` must be listed: `CreateMany\w+Input` only
+    // matches the nested `CreateManyXInput` variants, so `XCreateManyInput`
+    // previously kept its full name and fell through to field-name-only
+    // branding (ReportRun.status came out as ParticipantStatus).
+    /UncheckedCreateWithout\w+Input|UncheckedUpdateWithout\w+Input|UncheckedCreateInput|UncheckedUpdateInput|CreateWithout\w+Input|UpdateWithout\w+Input|CreateMany\w+Input|UpdateMany\w+Input|CreateManyInput|CreateInput|UpdateInput|WhereUniqueInput|WhereInput|MinAggregateOutputType|MaxAggregateOutputType|GroupByOutputType/,
     "",
   );
 
