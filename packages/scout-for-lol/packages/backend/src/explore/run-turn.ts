@@ -82,6 +82,8 @@ export async function runPersistedExploreTurn(
     identity: ExploreRateLimitIdentity;
     started: StartedExploreTurn;
     history: ExploreMessage[];
+    /** The asker's servers; scopes `player('…')` alias resolution. */
+    guildIds: string[];
     abortSignal?: AbortSignal;
     abortOutcome?: () => Extract<ExploreTurnOutcome, "stopped" | "interrupted">;
     emit: (event: ExploreStreamEvent) => void | Promise<void>;
@@ -158,6 +160,7 @@ export async function runPersistedExploreTurn(
       // The last history item is the question being answered. The agent gets
       // that separately as its current turn, so replaying it duplicates it.
       history: input.history.slice(0, -1),
+      guildIds: input.guildIds,
       abortSignal: abortController.signal,
       emit: record,
     });

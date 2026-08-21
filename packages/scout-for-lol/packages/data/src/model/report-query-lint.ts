@@ -6,6 +6,7 @@ import {
   type ReportDiagnostic,
   type ReportQueryAst,
   type ReportQuerySpan,
+  type ReportWhereClause,
 } from "#src/model/report-query-spec.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
 import {
@@ -14,6 +15,11 @@ import {
   parseGroupByClauses,
 } from "#src/model/report-query-compile.ts";
 import { parseRenderClause } from "#src/model/report-query-render.ts";
+import {
+  INVALID_DURING_MESSAGE,
+  REPORT_WINDOW_REQUIRED_MESSAGE,
+  parseReportQueryWindowClause,
+} from "#src/model/report-query-window.ts";
 import { parseReportSelectItem } from "#src/model/report-query-expression.ts";
 import { tokenizeReportQuery } from "#src/model/report-query-lexer.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
@@ -51,9 +57,75 @@ export function lintReportQuery(text: string): ReportDiagnostic[] {
   diagnostics.push(...metricDiagnostics(ast));
   diagnostics.push(...orderAndLimitDiagnostics(ast));
   diagnostics.push(...whereDiagnostics(ast));
+  diagnostics.push(...playerRefDiagnostics(ast));
+  diagnostics.push(...conflictingWindowDiagnostics(ast));
   diagnostics.push(...havingDiagnostics(ast));
+  diagnostics.push(...windowDiagnostics(ast));
   diagnostics.push(...renderDiagnostics(ast));
   return diagnostics;
+}
+
+/**
+ * The time period: missing, or present but malformed.
+ *
+ * A missing period is anchored on the GROUP BY span, since that is where the
+ * clause belongs — pointing at the whole query would underline everything and
+ * say nothing about where to type.
+ */
+function windowDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
+  if (ast.during !== undefined) {
+    try {
+      parseReportQueryWindowClause(ast.during.value);
+      return [];
+    } catch (error_) {
+      return [
+        error(
+          error_ instanceof Error ? error_.message : INVALID_DURING_MESSAGE,
+          ast.during.span,
+        ),
+      ];
+    }
+  }
+  if (ast.analysis !== undefined) return [];
+  if (ast.where.some((clause) => clause.kind === "lookback")) return [];
+  if (ast.groupBy === undefined) return [];
+  return [error(REPORT_WINDOW_REQUIRED_MESSAGE, ast.groupBy.span)];
+}
+
+/**
+ * Two clauses both stating a period. The compiler refuses this, but without a
+ * diagnostic the editor stayed silent until the query was actually run.
+ */
+function conflictingWindowDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
+  const lookback = ast.where.find((clause) => clause.kind === "lookback");
+  if (ast.during === undefined) {
+    if (lookback !== undefined && ast.analysis !== undefined) {
+      return [
+        error(
+          "An ANALYZE clause already states its time period; remove the timestamp lookback predicate.",
+          lookback.span,
+        ),
+      ];
+    }
+    return [];
+  }
+  if (ast.analysis !== undefined) {
+    return [
+      error(
+        "Do not combine ANALYZE with DURING; an ANALYZE clause already states its own time period.",
+        ast.during.span,
+      ),
+    ];
+  }
+  if (lookback !== undefined) {
+    return [
+      error(
+        "State the time period once: use either DURING or a timestamp lookback predicate, not both.",
+        ast.during.span,
+      ),
+    ];
+  }
+  return [];
 }
 
 function havingDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
@@ -232,6 +304,33 @@ function safeGroupBys(value: string | undefined) {
   }
 }
 
+/** The timestamp column a lookback predicate must use for its source. */
+function lookbackFieldDiagnostics(
+  clause: Extract<ReportWhereClause, { kind: "lookback" }>,
+  ast: ReportQueryAst,
+): ReportDiagnostic[] {
+  const expected =
+    ast.source?.value === "prematch_participants"
+      ? "observed_at"
+      : "game_creation_at";
+  if (clause.field === expected) return [];
+  return [
+    error(
+      `Source "${ast.source?.value ?? "unknown"}" uses ${expected} for lookback filters.`,
+      clause.span,
+    ),
+  ];
+}
+
+/** `player('')` is the one player-reference failure decidable without the lake. */
+function playerRefDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
+  return ast.where.flatMap((clause) =>
+    clause.kind === "player_ref" && clause.name.trim().length === 0
+      ? [error("player() needs a name to look up.", clause.span)]
+      : [],
+  );
+}
+
 function whereDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   const out: ReportDiagnostic[] = [];
   for (const clause of ast.where) {
@@ -264,18 +363,7 @@ function whereDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
         break;
       }
       case "lookback": {
-        const expected =
-          ast.source?.value === "prematch_participants"
-            ? "observed_at"
-            : "game_creation_at";
-        if (clause.field !== expected) {
-          out.push(
-            error(
-              `Source "${ast.source?.value ?? "unknown"}" uses ${expected} for lookback filters.`,
-              clause.span,
-            ),
-          );
-        }
+        out.push(...lookbackFieldDiagnostics(clause, ast));
         break;
       }
       case "champion_id":
@@ -289,9 +377,13 @@ function whereDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
         break;
       }
       case "field":
+      case "player_ref":
       case "unsupported": {
-        // Generic field filters are validated during compilation; no
-        // where-clause diagnostic is emitted for them here.
+        // Generic field filters are validated during compilation. A player()
+        // name cannot be checked here at all: resolving one needs the lake and
+        // a guild-scoped permission check, and this module is pure and also
+        // runs in the browser. Its one decidable failure is handled by
+        // playerRefDiagnostics.
         break;
       }
     }

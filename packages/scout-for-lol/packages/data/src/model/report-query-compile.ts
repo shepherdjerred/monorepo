@@ -5,16 +5,15 @@ import {
   ReportHavingOperatorSchema,
   ReportOrderBySchema,
   ReportOrderDirectionSchema,
-  ReportQueryPlanSchema,
   ReportSourceSchema,
   type ReportGroupBy,
   type ReportGroupSize,
   type ReportHavingClause,
   type ReportMetric,
-  type ReportFilter,
   type ReportQueryAst,
   type ReportQueryPlan,
   type ReportSelectItem,
+  parseReportQueryPlan,
 } from "#src/model/report-query-spec.ts";
 import {
   collectExpressionMetrics,
@@ -27,6 +26,15 @@ import {
   parseReportQuery,
 } from "#src/model/report-query-parser.ts";
 import { compileReportWhere } from "#src/model/report-query-where.ts";
+import {
+  REPORT_WINDOW_REQUIRED_MESSAGE,
+  resolveReportQueryWindow,
+} from "#src/model/report-query-window.ts";
+import {
+  validateSourceFilters,
+  validateSourcePlayerRefs,
+  validateSourceWindow,
+} from "#src/model/report-query-source-validation.ts";
 import {
   parseTemporalAnalysisClause,
   resolveTemporalBucket,
@@ -134,6 +142,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
 
   const filters = compileReportWhere(ast.where, source);
   validateSourceFilters(source, filters.filters);
+  validateSourcePlayerRefs(source, filters.playerRefs ?? []);
 
   const { orderBy, orderDirection } = compileOrdering(
     ast,
@@ -155,7 +164,30 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
         : undefined
       : PositiveIntSchema.parse(ast.limit.value);
 
-  return ReportQueryPlanSchema.parse({
+  const resolvedWindow = resolveReportQueryWindow({
+    duringClause: ast.during?.value,
+    lookbackDays: filters.lookbackDays,
+    analysis,
+  });
+  // Checked before the schema parse so the actionable message wins over a Zod
+  // dump. The schema still requires the field — this is the friendly path to
+  // the same refusal, not the only one.
+  if (resolvedWindow === undefined) {
+    throw new Error(REPORT_WINDOW_REQUIRED_MESSAGE);
+  }
+  // Old rank reports stated the otherwise-ignored default as a timestamp
+  // predicate. Preserve those stored queries across rollout/rollback, but make
+  // every newly authored DURING clause honest: rank sources are current or
+  // whole-competition snapshots and only support ALL TIME.
+  const window =
+    (source === "rank_current" || source === "competition_rank") &&
+    filters.lookbackDays !== undefined &&
+    ast.during === undefined
+      ? { kind: "all_time" as const }
+      : resolvedWindow;
+  validateSourceWindow(source, window);
+
+  return parseReportQueryPlan({
     source,
     groupBy,
     groupBys,
@@ -166,7 +198,8 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     championId: filters.championId,
     minGames: filters.minGames,
     competitionId: filters.competitionId,
-    lookbackDays: filters.lookbackDays,
+    playerRefs: filters.playerRefs ?? [],
+    window,
     analysis,
     filters: filters.filters,
     orderBy,
@@ -308,9 +341,16 @@ function validateTemporalCompatibility(
   analysis: ReportQueryPlan["analysis"],
 ): void {
   if (analysis === undefined) return;
+  // ANALYZE carries its own window, so any second window is ambiguous rather
+  // than redundant — there is no rule saying which one wins.
+  if (ast.during !== undefined) {
+    throw new Error(
+      "Do not combine ANALYZE with DURING; an ANALYZE clause already states its own time period.",
+    );
+  }
   if (ast.where.some((clause) => clause.kind === "lookback")) {
     throw new Error(
-      "Do not combine ANALYZE with a legacy timestamp lookback predicate.",
+      "Do not combine ANALYZE with a timestamp lookback predicate; an ANALYZE clause already states its own time period.",
     );
   }
   if (groupBys.some((groupBy) => LEGACY_TEMPORAL_GROUPS.has(groupBy))) {
@@ -405,30 +445,6 @@ function validateSourceMetrics(
   for (const metric of metrics) {
     if (!allowed.has(metric)) {
       throw new Error(`Metric ${metric} is not available for ${source}.`);
-    }
-  }
-}
-
-function validateSourceFilters(
-  source: ReportQueryPlan["source"],
-  filters: ReportFilter[],
-): void {
-  const prematchFields = new Set([
-    "player",
-    "champion_id",
-    "queue",
-    "game_mode",
-    "game_type",
-    "map_id",
-  ]);
-  for (const filter of filters) {
-    const valid =
-      source === "rank_current" || source === "competition_rank"
-        ? false
-        : source !== "prematch_participants" ||
-          prematchFields.has(filter.field);
-    if (!valid) {
-      throw new Error(`Filter ${filter.field} is not available for ${source}.`);
     }
   }
 }

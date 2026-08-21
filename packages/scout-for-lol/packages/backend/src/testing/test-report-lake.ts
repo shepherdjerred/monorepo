@@ -31,6 +31,11 @@ import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 export type TestLakeMatchFact = {
   playerId: number;
   playerAlias: string;
+  /** Servers whose accounts dimension contains this fact; defaults to the
+   * write's primary and also-tracked servers. */
+  accountServerIds?: string[];
+  /** Account-specific alias; defaults to the owning player's Scout alias. */
+  accountAlias?: string;
   discordId?: string | null;
   matchId: string;
   puuid: string;
@@ -51,12 +56,26 @@ export type TestLakeMatchFact = {
   playerSubteamId?: number;
   championId?: number;
   championName?: string;
+  /**
+   * The Riot ID recorded on this match row.
+   *
+   * Defaults to the player alias so existing fixtures are unchanged. Set it
+   * per-match to express a rename — one PUUID under several Riot IDs — which
+   * is the shape identity resolution exists to handle and which was otherwise
+   * inexpressible here.
+   */
+  riotIdGameName?: string;
+  riotIdTagline?: string;
   gameCreationAt: Date;
 };
 
 export type TestLakePrematchFact = {
   playerId: number;
   playerAlias: string;
+  /** Servers whose accounts dimension contains this fact; defaults to the
+   * write's primary and also-tracked servers. */
+  accountServerIds?: string[];
+  accountAlias?: string;
   discordId?: string | null;
   dedupeKey: string;
   puuid: string;
@@ -91,8 +110,8 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     puuid: fact.puuid,
     participant_id: fact.playerId,
     team_id: fact.teamId ?? 100,
-    riot_id_game_name: fact.playerAlias,
-    riot_id_tagline: "NA1",
+    riot_id_game_name: fact.riotIdGameName ?? fact.playerAlias,
+    riot_id_tagline: fact.riotIdTagline ?? "NA1",
     summoner_name: fact.playerAlias,
     champion_id: fact.championId ?? 22,
     champion_name: fact.championName ?? "Ashe",
@@ -232,13 +251,13 @@ export async function writeTestLake(
   ];
   const accountServerIds = [input.serverId, ...(input.alsoTrackedBy ?? [])];
   for (const fact of allFacts) {
-    for (const serverId of accountServerIds) {
+    for (const serverId of fact.accountServerIds ?? accountServerIds) {
       const key = `${serverId}:${fact.playerId.toString()}:${fact.puuid}`;
       accountsByKey.set(key, {
         server_id: serverId,
         puuid: fact.puuid,
         account_id: fact.playerId,
-        account_alias: fact.playerAlias,
+        account_alias: fact.accountAlias ?? fact.playerAlias,
         region: "AMERICA_NORTH",
         player_id: fact.playerId,
         player_alias: fact.playerAlias,

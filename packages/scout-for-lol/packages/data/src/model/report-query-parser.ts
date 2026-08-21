@@ -13,6 +13,7 @@ import {
   Analyze,
   Comma,
   CurrentTimestamp,
+  During,
   Equals,
   From,
   GreaterEqual,
@@ -37,6 +38,10 @@ import {
   Where,
 } from "#src/model/report-query-lexer.ts";
 import {
+  matchChampionClause,
+  matchPlayerClause,
+} from "#src/model/report-query-call-forms.ts";
+import {
   firstPositive,
   indexOfGroupBy,
   indexOfType,
@@ -49,6 +54,7 @@ import {
   tokenItem,
   wholeSpan,
 } from "#src/model/report-query-parser-helpers.ts";
+import { parseReportStringLiteral } from "#src/model/report-query-string-literal.ts";
 
 const INVALID_QUERY_MESSAGE =
   "Invalid report query. Expected: SELECT <metrics> FROM <source> [WHERE queue IN (...)] GROUP BY <field> [ORDER BY <metric> DESC] [LIMIT n]";
@@ -73,6 +79,7 @@ function locateClauses(tokens: IToken[]): {
   limitIdx: number;
   renderIdx: number;
   analyzeIdx: number;
+  duringIdx: number;
 } {
   const fromIdx = indexOfType(tokens, From, 0);
   const groupIdx = indexOfGroupBy(tokens, 0);
@@ -89,6 +96,7 @@ function locateClauses(tokens: IToken[]): {
     limitIdx: afterGroup(Limit),
     renderIdx: afterGroup(Render),
     analyzeIdx: afterGroup(Analyze),
+    duringIdx: afterGroup(During),
   };
 }
 
@@ -107,6 +115,7 @@ export function parseReportQuery(text: string): ReportParseResult {
     limitIdx,
     renderIdx,
     analyzeIdx,
+    duringIdx,
   } = locateClauses(tokens);
   const structurallyValid =
     selectIdx === 0 && fromIdx !== -1 && groupIdx !== -1 && groupIdx > fromIdx;
@@ -146,18 +155,27 @@ export function parseReportQuery(text: string): ReportParseResult {
     : [];
 
   const groupByEnd = firstPositive(
-    [havingIdx, analyzeIdx, orderIdx, limitIdx, renderIdx],
+    [havingIdx, duringIdx, analyzeIdx, orderIdx, limitIdx, renderIdx],
     tokens.length,
   );
   const groupBy =
     groupIdx === -1 ? undefined : joinItem(tokens, groupIdx + 2, groupByEnd);
 
   const havingEnd = firstPositive(
-    [analyzeIdx, orderIdx, limitIdx, renderIdx],
+    [duringIdx, analyzeIdx, orderIdx, limitIdx, renderIdx],
     tokens.length,
   );
   const having =
     havingIdx === -1 ? undefined : joinItem(tokens, havingIdx + 1, havingEnd);
+
+  const duringEnd = firstPositive(
+    [analyzeIdx, orderIdx, limitIdx, renderIdx],
+    tokens.length,
+  );
+  const during =
+    duringIdx === -1
+      ? undefined
+      : parseClauseTail(text, tokens, duringIdx, duringEnd);
 
   const analysisEnd = firstPositive(
     [orderIdx, limitIdx, renderIdx],
@@ -166,7 +184,7 @@ export function parseReportQuery(text: string): ReportParseResult {
   const analysis =
     analyzeIdx === -1
       ? undefined
-      : parseAnalysisItem(text, tokens, analyzeIdx, analysisEnd);
+      : parseClauseTail(text, tokens, analyzeIdx, analysisEnd);
 
   const orderByEnd = firstPositive([limitIdx, renderIdx], tokens.length);
   const orderBy = parseOrderBy(tokens, orderIdx, orderByEnd);
@@ -179,6 +197,7 @@ export function parseReportQuery(text: string): ReportParseResult {
     where,
     groupBy,
     having,
+    during,
     analysis,
     orderBy,
     limit,
@@ -187,23 +206,31 @@ export function parseReportQuery(text: string): ReportParseResult {
   return { ast, diagnostics };
 }
 
-function parseAnalysisItem(
+/**
+ * Captures the raw text following a clause keyword, for a compiler-side regex
+ * to validate. Shared by `DURING` and `ANALYZE`, which have the same shape: a
+ * keyword, then a tail this parser deliberately does not tokenize.
+ *
+ * The span covers the keyword too, so a diagnostic about the clause underlines
+ * the whole clause rather than only its argument.
+ */
+function parseClauseTail(
   text: string,
   tokens: IToken[],
-  analyzeIdx: number,
-  analysisEnd: number,
+  keywordIdx: number,
+  clauseEnd: number,
 ): ReportQueryItem | undefined {
-  const analyzeToken = tokens[analyzeIdx];
-  const last = tokens[analysisEnd - 1];
-  if (analyzeToken === undefined || last === undefined) return undefined;
-  const clauseStart = (analyzeToken.endOffset ?? analyzeToken.startOffset) + 1;
+  const keywordToken = tokens[keywordIdx];
+  const last = tokens[clauseEnd - 1];
+  if (keywordToken === undefined || last === undefined) return undefined;
+  const clauseStart = (keywordToken.endOffset ?? keywordToken.startOffset) + 1;
   return {
     value: text
       .slice(clauseStart, tokenSpan(last).end)
       .trim()
       .replaceAll(/\s+/gu, " "),
     span: {
-      start: analyzeToken.startOffset,
+      start: keywordToken.startOffset,
       end: tokenSpan(last).end,
     },
   };
@@ -368,6 +395,10 @@ function matchComparisonClause(
   if (champion !== undefined) {
     return champion;
   }
+  const playerRef = matchPlayerClause(slice, span);
+  if (playerRef !== undefined) {
+    return playerRef;
+  }
   const lookback = matchLookbackClause(slice, span);
   if (lookback !== undefined) {
     return lookback;
@@ -424,24 +455,6 @@ function comparisonOperator(token: IToken): string | undefined {
   return undefined;
 }
 
-function matchChampionClause(
-  slice: IToken[],
-  span: ReportQuerySpan,
-): ReportWhereClause | undefined {
-  if (
-    normalize(slice[0]?.image ?? "") !== "champion_id" ||
-    slice[1]?.tokenType !== Equals ||
-    normalize(slice[2]?.image ?? "") !== "champion" ||
-    slice[3]?.tokenType !== LParen ||
-    slice[4]?.tokenType !== StringLiteral ||
-    slice[5]?.tokenType !== RParen ||
-    slice.length !== 6
-  ) {
-    return undefined;
-  }
-  return { kind: "champion", name: unquote(slice[4].image), span };
-}
-
 function matchLookbackClause(
   slice: IToken[],
   span: ReportQuerySpan,
@@ -458,17 +471,15 @@ function matchLookbackClause(
   ) {
     return undefined;
   }
-  const interval = unquote(slice[5].image).trim().toLowerCase();
+  const interval = parseReportStringLiteral(slice[5].image)
+    .trim()
+    .toLowerCase();
   const intervalMatch = /^(?<days>\d+)\s+days?$/u.exec(interval);
   const days = Number(intervalMatch?.groups?.["days"] ?? Number.NaN);
   if (!Number.isInteger(days)) {
     return undefined;
   }
   return { kind: "lookback", field, days, span };
-}
-
-function unquote(value: string): string {
-  return value.slice(1, -1);
 }
 
 function parseFilterValue(token: IToken): ReportFilterValue {

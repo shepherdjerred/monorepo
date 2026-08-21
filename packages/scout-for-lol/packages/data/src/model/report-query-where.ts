@@ -19,6 +19,8 @@ export type ReportWhereFilters = {
   minGames?: number;
   competitionId?: number;
   lookbackDays?: number;
+  /** Names from `player('…')`, still unresolved — see the plan's player_ref. */
+  playerRefs?: string[];
   filters: ReportFilter[];
 };
 
@@ -40,6 +42,18 @@ export function compileReportWhere(
       })
       .with({ kind: "champion" }, (value) => {
         filters.championId = requireReportChampion(value.name).id;
+      })
+      .with({ kind: "player_ref" }, (value) => {
+        // One row belongs to exactly one account, so `player = player('A') AND
+        // player = player('B')` can never match. Collecting both into a set
+        // would compile to `puuid IN (A, B)` — an OR, answering a question the
+        // author did not ask.
+        if (filters.playerRefs !== undefined) {
+          throw new Error(
+            "A query can name one player. `player = player('A') AND player = player('B')` matches no rows, because a row belongs to one account.",
+          );
+        }
+        filters.playerRefs = [value.name];
       })
       .with({ kind: "lookback" }, (value) => {
         const expectedField =

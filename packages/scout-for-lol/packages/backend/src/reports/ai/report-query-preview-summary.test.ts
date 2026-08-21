@@ -10,7 +10,7 @@ describe("reportQueryPreviewSummary", () => {
   test("projects result values onto the strict AI preview contract", () => {
     const result: ReportQueryResult = {
       plan: parseAndCompile(
-        "SELECT games FROM match_participants GROUP BY all LIMIT 10 RENDER table",
+        "SELECT games FROM match_participants GROUP BY all DURING LAST 30 DAYS LIMIT 10 RENDER table",
       ),
       columns: ["games"],
       rows: [
@@ -51,7 +51,7 @@ describe("reportQueryPreviewSummary", () => {
   test("keeps enough rows for frozen Discord visualizations", () => {
     const result: ReportQueryResult = {
       plan: parseAndCompile(
-        "SELECT games FROM match_participants GROUP BY champion LIMIT 25 RENDER table",
+        "SELECT games FROM match_participants GROUP BY champion DURING LAST 30 DAYS LIMIT 25 RENDER table",
       ),
       columns: ["games"],
       rows: Array.from({ length: 13 }, (_, index) => ({

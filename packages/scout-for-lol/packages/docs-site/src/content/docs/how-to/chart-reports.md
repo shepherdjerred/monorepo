@@ -36,6 +36,7 @@ options](/docs/reference/scoutql-render/).
 select games, win_rate
 from match_participants
 group by champion
+during last 30 days
 order by games desc
 limit 10
 render bar_chart with (y = games, orientation = horizontal)
@@ -59,6 +60,7 @@ select games, win_rate
 from match_participants
 where queue in (solo, flex)
 group by week
+during last 30 days
 order by week asc
 render line_chart with (y = win_rate, x_axis = "Week", smooth = true)
 ```
@@ -74,6 +76,7 @@ A heatmap needs two grouping dimensions and a value:
 select games
 from match_participants
 group by champion, team_position
+during last 30 days
 order by games desc
 render heatmap with (value = games, series = team_position)
 ```
@@ -85,6 +88,7 @@ select games, win_rate, kda
 from match_participants
 where queue in (solo)
 group by all
+during last 30 days
 render kpi_card
 ```
 

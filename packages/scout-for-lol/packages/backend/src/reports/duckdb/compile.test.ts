@@ -55,7 +55,7 @@ describe("compile", () => {
   test("match query: filters pushed into both union branches before dedupe", () => {
     const compiled = compileMatchQuery(
       input(
-        "SELECT player, games FROM match_participants WHERE queue IN ('solo') GROUP BY player",
+        "SELECT player, games FROM match_participants WHERE queue IN ('solo') GROUP BY player DURING LAST 30 DAYS",
       ),
     );
     if (compiled === undefined) {
@@ -81,7 +81,7 @@ describe("compile", () => {
     // must not rely on that: feed a hostile plan value directly.
     const hostile = "solo'); DROP TABLE reports;--";
     const base = input(
-      "SELECT player, games FROM match_participants WHERE queue IN ('solo') GROUP BY player",
+      "SELECT player, games FROM match_participants WHERE queue IN ('solo') GROUP BY player DURING LAST 30 DAYS",
     );
     const compiled = compileMatchQuery({
       ...base,
@@ -98,7 +98,7 @@ describe("compile", () => {
   test("competition scoping binds player ids as a list param", () => {
     const compiled = compileMatchQuery(
       input(
-        "SELECT player, games FROM competition_match_participants WHERE competition_id = 1 GROUP BY player",
+        "SELECT player, games FROM competition_match_participants WHERE competition_id = 1 GROUP BY player DURING LAST 30 DAYS",
         [7, 8, 9],
       ),
     );
@@ -115,7 +115,9 @@ describe("compile", () => {
 
   test("group query dedupes per subteam unit and keeps only multi-player units", () => {
     const compiled = compileGroupFactsQuery(
-      input("SELECT group, games FROM player_groups GROUP BY group(all)"),
+      input(
+        "SELECT group, games FROM player_groups GROUP BY group(all) DURING LAST 30 DAYS",
+      ),
     );
     if (compiled === undefined) {
       throw new Error("expected compiled query");
@@ -134,10 +136,14 @@ describe("compile", () => {
 
   test("legacy pair query text compiles to the same group facts query", () => {
     const legacy = compileGroupFactsQuery(
-      input("SELECT pair, games FROM player_pairs GROUP BY pair"),
+      input(
+        "SELECT pair, games FROM player_pairs GROUP BY pair DURING LAST 30 DAYS",
+      ),
     );
     const modern = compileGroupFactsQuery(
-      input("SELECT group, games FROM player_groups GROUP BY group(2)"),
+      input(
+        "SELECT group, games FROM player_groups GROUP BY group(2) DURING LAST 30 DAYS",
+      ),
     );
     expect(legacy?.aggregateSql).toBe(modern?.aggregateSql);
   });
@@ -145,7 +151,7 @@ describe("compile", () => {
   test("prematch rowsScanned asymmetry: champion filter only in the aggregate statement", () => {
     const compiled = compilePrematchQuery(
       input(
-        "SELECT player, prematches FROM prematch_participants WHERE champion_id = 22 GROUP BY player",
+        "SELECT player, prematches FROM prematch_participants WHERE champion_id = 22 GROUP BY player DURING LAST 30 DAYS",
       ),
     );
     if (compiled === undefined) {
@@ -160,7 +166,9 @@ describe("compile", () => {
 
   test("prematch GROUP BY all: no trailing empty GROUP BY clause", () => {
     const compiled = compilePrematchQuery(
-      input("SELECT prematches FROM prematch_participants GROUP BY all"),
+      input(
+        "SELECT prematches FROM prematch_participants GROUP BY all DURING LAST 30 DAYS",
+      ),
     );
     if (compiled === undefined) {
       throw new Error("expected compiled query");
@@ -171,7 +179,9 @@ describe("compile", () => {
     expect(compiled.aggregateSql).not.toContain("GROUP BY");
     expect(compiled.aggregateSql).toContain("HAVING COUNT(*) > 0");
   });
+});
 
+describe("compile temporal grouping", () => {
   test("prematch temporal grouping retains the observation timestamp", () => {
     const compiled = compilePrematchQuery(
       input(
@@ -188,7 +198,7 @@ describe("compile", () => {
   test("match rowsScanned parity: champion filter in BOTH statements", () => {
     const compiled = compileMatchQuery(
       input(
-        "SELECT player, games FROM match_participants WHERE champion_id = 22 GROUP BY player",
+        "SELECT player, games FROM match_participants WHERE champion_id = 22 GROUP BY player DURING LAST 30 DAYS",
       ),
     );
     if (compiled === undefined) {
@@ -201,7 +211,7 @@ describe("compile", () => {
   test("compiles two-dimensional temporal grouping as closed SQL", () => {
     const compiled = compileMatchQuery(
       input(
-        "SELECT games, win_rate FROM match_participants GROUP BY week, team_position ORDER BY label ASC",
+        "SELECT games, win_rate FROM match_participants GROUP BY week, team_position DURING LAST 30 DAYS ORDER BY label ASC",
       ),
     );
     if (compiled === undefined) throw new Error("expected compiled query");
@@ -212,10 +222,25 @@ describe("compile", () => {
     expect(compiled.aggregateSql).toContain("concat_ws(' • '");
   });
 
+  test("uses a DURING calendar timezone for match grouping", () => {
+    const compiled = compileMatchQuery(
+      input(
+        "SELECT games FROM match_participants GROUP BY day DURING BETWEEN '2026-01-01' AND '2026-01-02' IN TIME ZONE 'America/Los_Angeles'",
+      ),
+    );
+    if (compiled === undefined) throw new Error("expected compiled query");
+    expect(compiled.aggregateSql).toContain(
+      "timezone(?, timezone('UTC', game_creation_at))",
+    );
+    expect(paramValues(compiled.aggregateParams)).toContain(
+      "America/Los_Angeles",
+    );
+  });
+
   test("binds string, numeric, and boolean participant filters", () => {
     const compiled = compileMatchQuery(
       input(
-        "SELECT games FROM match_participants WHERE role = 'support' AND damage_to_champions >= 10000 AND win IN (true, false) GROUP BY player",
+        "SELECT games FROM match_participants WHERE role = 'support' AND damage_to_champions >= 10000 AND win IN (true, false) GROUP BY player DURING LAST 30 DAYS",
       ),
     );
     if (compiled === undefined) throw new Error("expected compiled query");
@@ -242,7 +267,9 @@ describe("compile", () => {
       competitionRankHistoryStaging: [],
     };
     const compiled = compileMatchQuery({
-      ...input("SELECT player, games FROM match_participants GROUP BY player"),
+      ...input(
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
+      ),
       files: empty,
     });
     expect(compiled).toBeUndefined();

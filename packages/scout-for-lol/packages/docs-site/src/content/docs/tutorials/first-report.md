@@ -8,7 +8,7 @@ sidebar:
 In this tutorial you will write a query in **ScoutQL** — Scout's report query
 language — preview it against your server's real match history, turn it into a
 chart, and schedule it to post itself to a channel every week. You will meet
-`SELECT`, `FROM`, `GROUP BY`, `ORDER BY`, and `RENDER`.
+`SELECT`, `FROM`, `GROUP BY`, DURING LAST 30 DAYS `ORDER BY`, and `RENDER`.
 
 You need at least one tracked player who has played recently. Reports read the
 last 30 days of match history by default, so a server that has just been set up
@@ -35,6 +35,7 @@ loads this query into the editor:
 select games, win_rate
 from match_participants
 group by player
+during last 30 days
 order by games desc
 limit 10
 render leaderboard
@@ -68,6 +69,7 @@ Replace `games, win_rate` in the `SELECT` with damage:
 select damage_to_champions
 from match_participants
 group by player
+during last 30 days
 order by damage_to_champions desc
 limit 10
 render leaderboard
@@ -86,6 +88,7 @@ Change the last line to render a bar chart, and tell it which column to plot:
 select damage_to_champions
 from match_participants
 group by player
+during last 30 days
 order by damage_to_champions desc
 limit 10
 render bar_chart with (y = damage_to_champions, orientation = horizontal)

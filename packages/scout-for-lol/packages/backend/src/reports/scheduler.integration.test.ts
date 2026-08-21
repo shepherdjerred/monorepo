@@ -28,7 +28,7 @@ const REPORT_DEFAULTS = {
   channelId: testChannelId("999003"),
   description: null,
   queryText:
-    "SELECT player, score FROM competition_rank WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND competition_id = 0 GROUP BY player ORDER BY score DESC LIMIT 10",
+    "SELECT player, score FROM competition_rank WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND competition_id = 0 GROUP BY player DURING LAST 30 DAYS ORDER BY score DESC LIMIT 10",
   isEnabled: true,
   isSystemManaged: false,
   systemSource: null,

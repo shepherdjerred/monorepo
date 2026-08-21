@@ -56,10 +56,13 @@ function resolveWindow(
   now: Date,
 ): TemporalRange {
   if (window.kind === "relative") {
-    return {
-      startDate: new Date(now.getTime() - window.days * DAY_MS),
-      endDate: now,
-    };
+    // Clamped at the epoch, as the plain DURING window is. Without the old
+    // 365-day cap a large enough day count runs past the representable Date
+    // range, and the resulting invalid date surfaces as an Intl formatting
+    // error rather than as anything an author could act on. A window reaching
+    // the epoch already covers every match.
+    const startMs = now.getTime() - window.days * DAY_MS;
+    return { startDate: new Date(Math.max(startMs, 0)), endDate: now };
   }
   return calendarRange(window.startDate, window.endDate, timezone);
 }
@@ -92,7 +95,12 @@ function resolveComparison(
   };
 }
 
-function calendarRange(
+/**
+ * A whole-day-inclusive range for two calendar dates in one timezone. Shared
+ * with the plain `DURING BETWEEN` window so both temporal paths agree on where
+ * a local day begins and ends.
+ */
+export function calendarRange(
   startDate: string,
   endDate: string,
   timezone: string,

@@ -63,6 +63,24 @@ async function requireExploreUser(user: User): Promise<DiscordAccountId> {
   return DiscordAccountIdSchema.parse(user.discordId);
 }
 
+/**
+ * The caller's id together with the servers they belong to.
+ *
+ * `assertExploreAccess` already fetches those servers to make its allowlist
+ * decision, so returning them costs nothing extra — and starting a turn needs
+ * them, because a `player('…')` alias may only resolve against servers the
+ * asker is actually in.
+ */
+async function requireExploreUserAndGuilds(
+  user: User,
+): Promise<{ userId: DiscordAccountId; guildIds: string[] }> {
+  const guildIds = await assertExploreAccess(user);
+  return {
+    userId: DiscordAccountIdSchema.parse(user.discordId),
+    guildIds,
+  };
+}
+
 const exploreProcedure = protectedProcedure;
 
 export const exploreRouter = router({
@@ -111,9 +129,9 @@ export const exploreRouter = router({
   start: webMutationProcedure
     .input(ExploreTurnRequestSchema)
     .mutation(async ({ ctx, input }) => {
-      const userId = await requireExploreUser(ctx.user);
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
       try {
-        return await exploreRunManager.start({ userId }, input);
+        return await exploreRunManager.start({ userId }, input, guildIds);
       } catch (error) {
         if (error instanceof ExploreConversationBusyError) {
           throw new TRPCError({ code: "CONFLICT", message: error.message });

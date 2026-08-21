@@ -102,6 +102,7 @@ describe("executeReportQuery", () => {
         FROM match_participants
         WHERE queue IN ('solo')
         GROUP BY player
+        DURING LAST 30 DAYS
         ORDER BY surrender_rate DESC
         LIMIT 10
       `,
@@ -161,7 +162,7 @@ describe("executeReportQuery", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT player, games, kills FROM match_participants GROUP BY player ORDER BY kills DESC LIMIT 1",
+        "SELECT player, games, kills FROM match_participants GROUP BY player DURING LAST 30 DAYS ORDER BY kills DESC LIMIT 1",
       now,
     });
 
@@ -208,7 +209,7 @@ describe("executeReportQuery", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT pair, games, wins, win_rate FROM player_pairs WHERE queue IN ('solo') GROUP BY pair ORDER BY win_rate DESC LIMIT 10",
+        "SELECT pair, games, wins, win_rate FROM player_pairs WHERE queue IN ('solo') GROUP BY pair DURING LAST 30 DAYS ORDER BY win_rate DESC LIMIT 10",
       now,
     });
 
@@ -240,7 +241,7 @@ describe("executeReportQuery", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT player, prematches FROM prematch_participants WHERE queue IN ('solo') GROUP BY player ORDER BY prematches DESC",
+        "SELECT player, prematches FROM prematch_participants WHERE queue IN ('solo') GROUP BY player DURING LAST 30 DAYS ORDER BY prematches DESC",
       now,
     });
 
@@ -498,12 +499,12 @@ describe("executeReportQuery player groups", () => {
     const legacy = await executeReportQuery({
       ...base,
       queryText:
-        "SELECT pair, games, wins, kills, win_rate FROM player_pairs GROUP BY pair",
+        "SELECT pair, games, wins, kills, win_rate FROM player_pairs GROUP BY pair DURING LAST 30 DAYS",
     });
     const modern = await executeReportQuery({
       ...base,
       queryText:
-        "SELECT group, games, wins, kills, win_rate FROM player_groups GROUP BY group(2)",
+        "SELECT group, games, wins, kills, win_rate FROM player_groups GROUP BY group(2) DURING LAST 30 DAYS",
     });
     expect(modern.rows).toEqual(legacy.rows);
     expect(modern.rows[0]?.label).toBe("First Player + Second Player");
@@ -533,7 +534,7 @@ describe("executeReportQuery player groups", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT group, games, wins FROM player_groups GROUP BY group(all) ORDER BY label ASC",
+        "SELECT group, games, wins FROM player_groups GROUP BY group(all) DURING LAST 30 DAYS ORDER BY label ASC",
       now,
     });
 
@@ -583,7 +584,7 @@ describe("executeReportQuery player groups", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT group, games, wins FROM player_groups WHERE queue IN ('arena') GROUP BY group(all) ORDER BY label ASC",
+        "SELECT group, games, wins FROM player_groups WHERE queue IN ('arena') GROUP BY group(all) DURING LAST 30 DAYS ORDER BY label ASC",
       now,
     });
 
@@ -666,7 +667,7 @@ describe("executeReportQuery competition rank reports", () => {
     const result = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
-      queryText: `SELECT player, score FROM competition_rank WHERE competition_id = ${competition.id.toString()} GROUP BY player ORDER BY score DESC`,
+      queryText: `SELECT player, score FROM competition_rank WHERE competition_id = ${competition.id.toString()} GROUP BY player DURING ALL TIME ORDER BY score DESC`,
       sourceCompetitionId: competition.id,
       now: new Date("2026-06-01T00:00:00Z"),
     });

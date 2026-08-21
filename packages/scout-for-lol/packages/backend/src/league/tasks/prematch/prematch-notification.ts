@@ -317,6 +317,9 @@ export async function sendPrematchNotification(
     gameInfo.gameMode,
     gameInfo.gameType,
   );
+  // Hoisted: this appears in five log lines, metric labels, and S3 keys, and
+  // each inline `??` counted against the function's complexity budget.
+  const queueLabel = queueType ?? "unknown";
   const predictionEligible = isBettableGame({
     queueType,
     participants: gameInfo.participants,
@@ -369,7 +372,7 @@ export async function sendPrematchNotification(
   if (deliverChannels.length === 0) {
     await predictionPromise;
     logger.info(
-      `[sendPrematchNotification] 🔕 Game ${gameId} filtered out for all channels (queue ${queueType ?? "unknown"})`,
+      `[sendPrematchNotification] 🔕 Game ${gameId} filtered out for all channels (queue ${queueLabel})`,
     );
     return new Map();
   }

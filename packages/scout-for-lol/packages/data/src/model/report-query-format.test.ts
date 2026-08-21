@@ -7,7 +7,7 @@ describe("formatReportQuery", () => {
   test("formats a valid ScoutQL query by clause", () => {
     expect(
       formatReportQuery(
-        "select games, win_rate from match_participants where queue in (solo) and games >= 5 group by player order by win_rate desc limit 10 render bar_chart with (y = win_rate)",
+        "select games, win_rate from match_participants where queue in (solo) and games >= 5 group by player during last 30 days order by win_rate desc limit 10 render bar_chart with (y = win_rate)",
       ),
     ).toBe(
       [
@@ -16,6 +16,7 @@ describe("formatReportQuery", () => {
         "WHERE queue IN (solo)",
         "  AND games >= 5",
         "GROUP BY player",
+        "DURING LAST 30 DAYS",
         "ORDER BY win_rate desc",
         "LIMIT 10",
         "RENDER bar_chart with (y = win_rate)",

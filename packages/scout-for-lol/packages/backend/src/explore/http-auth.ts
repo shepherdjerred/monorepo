@@ -19,7 +19,7 @@ import { createContext, type Context } from "#src/trpc/context.ts";
 const logger = createLogger("explore-http-auth");
 
 export type ExploreAuthResult =
-  | { ok: true; identity: ExploreRateLimitIdentity }
+  | { ok: true; identity: ExploreRateLimitIdentity; guildIds: string[] }
   | { ok: false; status: number; message: string };
 
 export async function authenticateExploreRequest(
@@ -29,12 +29,13 @@ export async function authenticateExploreRequest(
     const ctx = await createContext(request);
     const web = readWebCsrfContext(ctx);
     assertWebCsrf(web.webSession);
-    await assertExploreAccess(web.user);
+    const guildIds = await assertExploreAccess(web.user);
     return {
       ok: true,
       identity: {
         userId: DiscordAccountIdSchema.parse(web.user.discordId),
       },
+      guildIds,
     };
   } catch (error) {
     if (error instanceof TRPCError) {

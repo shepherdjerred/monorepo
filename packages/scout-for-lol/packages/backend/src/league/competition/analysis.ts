@@ -296,7 +296,11 @@ function criterionScoutQl(
 ): string {
   const present = conditions.filter((condition) => condition !== null);
   const where = present.length === 0 ? "" : ` WHERE ${present.join(" AND ")}`;
-  return `SELECT player, ${metric} FROM competition_match_participants${where} GROUP BY player ORDER BY ${metric} DESC LIMIT 100 RENDER bar_chart WITH (y = ${metric})`;
+  // DURING ALL TIME rather than a period, because the caller supplies the real
+  // range: competition queries execute with an explicit `rangeOverride`, which
+  // wins over the plan's own window. Saying "all time" states honestly that the
+  // query text has no opinion, instead of naming a period nothing honours.
+  return `SELECT player, ${metric} FROM competition_match_participants${where} GROUP BY player DURING ALL TIME ORDER BY ${metric} DESC LIMIT 100 RENDER bar_chart WITH (y = ${metric})`;
 }
 
 function competitionQueueCondition(queue: CompetitionQueueType): string | null {
@@ -314,12 +318,15 @@ function temporalPresetPlan(
   preset: CompetitionAnalysisPreset,
   analysis: TemporalAnalysisSpec,
 ): ReportQueryPlan {
+  // As in criterionScoutQl, DURING ALL TIME states that the text has no
+  // opinion about the period: the temporal analysis is attached to the plan
+  // below, and the competition range is supplied at execution.
   const query =
     preset === "games_wins"
-      ? "SELECT games, wins FROM competition_match_participants GROUP BY all RENDER line_chart WITH (y = (games, wins), trend = true, sparkline = true)"
+      ? "SELECT games, wins FROM competition_match_participants GROUP BY all DURING ALL TIME RENDER line_chart WITH (y = (games, wins), trend = true, sparkline = true)"
       : preset === "performance"
-        ? "SELECT win_rate, kda FROM competition_match_participants GROUP BY all RENDER line_chart WITH (y = (win_rate, kda), rolling = 3, trend = true, sparkline = true)"
-        : "SELECT queue, games FROM competition_match_participants GROUP BY queue RENDER area_chart WITH (y = games, stack = percent, annotations = true)";
+        ? "SELECT win_rate, kda FROM competition_match_participants GROUP BY all DURING ALL TIME RENDER line_chart WITH (y = (win_rate, kda), rolling = 3, trend = true, sparkline = true)"
+        : "SELECT queue, games FROM competition_match_participants GROUP BY queue DURING ALL TIME RENDER area_chart WITH (y = games, stack = percent, annotations = true)";
   const base = parseAndCompile(query);
   const bucket = resolveTemporalBucket(
     analysis.bucket,

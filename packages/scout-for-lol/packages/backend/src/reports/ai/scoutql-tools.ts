@@ -14,6 +14,7 @@ import {
   REPORT_RENDER_KINDS,
   REPORT_RENDER_OPTIONS,
   REPORT_SOURCES,
+  REPORT_TIME_PERIODS,
   ReportQueryTextSchema,
 } from "@scout-for-lol/data";
 
@@ -111,6 +112,14 @@ export const LanguageToolOutputSchema = z
         description: z.string(),
       }),
     ),
+    // Every query must state one of these. Listed separately from `filters`
+    // because DURING is a top-level clause, not a WHERE predicate.
+    timePeriods: z.array(
+      z.object({
+        syntax: z.string(),
+        description: z.string(),
+      }),
+    ),
     renderKinds: z.array(
       z.object({
         id: z.string(),
@@ -146,6 +155,7 @@ export function scoutQlLanguageReference(): z.infer<
     functions: REPORT_FUNCTIONS,
     groupBys: REPORT_GROUP_BYS,
     filters: REPORT_FILTERS,
+    timePeriods: REPORT_TIME_PERIODS,
     renderKinds: REPORT_RENDER_KINDS,
     renderOptions: REPORT_RENDER_OPTIONS,
     queues: reportQueueValues(),

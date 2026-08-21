@@ -48,6 +48,7 @@ Order by any metric you selected:
 select games, win_rate, kda
 from match_participants
 group by player
+during last 30 days
 order by win_rate desc
 ```
 
@@ -58,6 +59,7 @@ select per_game(vision_score) as vision_per_game, games
 from match_participants
 group by player
 having games >= 10
+during last 30 days
 order by vision_per_game desc
 ```
 

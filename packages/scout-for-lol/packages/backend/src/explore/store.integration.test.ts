@@ -59,7 +59,8 @@ afterAll(async () => {
 const ANSWER = {
   answer: "Jinx has the most games in this data.",
   title: null,
-  queryText: "SELECT champion, games FROM match_participants GROUP BY champion",
+  queryText:
+    "SELECT champion, games FROM match_participants GROUP BY champion DURING LAST 30 DAYS",
   caveats: ["Only 12 games."],
   followUps: ["How does that change by patch?"],
 };

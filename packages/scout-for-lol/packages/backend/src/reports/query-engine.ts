@@ -16,6 +16,7 @@ import {
   scoutReportQueryRunsTotal,
 } from "#src/metrics/report-query.ts";
 import { runLakeAggregation } from "#src/reports/duckdb/execute.ts";
+import { resolvePlayerRefsToPuuids } from "#src/reports/identity.ts";
 import {
   requireGuildScope,
   type LakeQueryScope,
@@ -26,6 +27,7 @@ import {
   sortedAggregates,
 } from "#src/reports/query-aggregates.ts";
 import {
+  calendarRange,
   clampTemporalRange,
   resolveTemporalRanges,
   type ResolvedTemporalRanges,
@@ -116,11 +118,39 @@ export type ExecuteReportQueryParams = {
   now?: Date;
   onPlan?: ((plan: ReportQueryPlan) => void) | undefined;
   rangeOverride?: TemporalRange;
+  /** The Discord servers a global-scope asker belongs to. Guild-scoped reports
+   * resolve aliases from their own scope, including scheduled reports. */
+  askerGuildIds?: string[] | undefined;
 };
 type ReportExecutionParams = Omit<
   ExecuteReportQueryParams,
   "queryText" | "onPlan"
 >;
+
+/**
+ * Turn any `player('…')` names on the plan into PUUIDs.
+ *
+ * Undefined when the query has no player reference, so the ordinary path pays
+ * for no lake reads. A query that does carry one and cannot be resolved throws
+ * from `resolvePlayerRefsToPuuids` rather than matching nothing.
+ */
+async function resolvePlanPlayerRefs(
+  params: Pick<ExecuteReportQueryParams, "askerGuildIds" | "scope">,
+  plan: ReportQueryPlan,
+): Promise<string[] | undefined> {
+  if (plan.playerRefs.length === 0) return undefined;
+  const guildIds =
+    params.scope.kind === "guild"
+      ? [params.scope.serverId]
+      : (params.askerGuildIds ?? []);
+  return await resolvePlayerRefsToPuuids({
+    playerRefs: plan.playerRefs,
+    guildIds,
+    // Global callers without an asker have no permission-bounded alias scope.
+    // A guild report always does: its execution scope is the boundary.
+    aliasScopeAvailable: guildIds.length > 0,
+  });
+}
 
 /**
  * Execute a ScoutQL report query.
@@ -185,9 +215,11 @@ async function runReportQueryPlan(
   }
 
   const ranges = queryRanges(plan, params.now, params.rangeOverride);
+  const playerPuuids = await resolvePlanPlayerRefs(params, plan);
   const result = await runLakeAggregation({
     plan,
     scope: params.scope,
+    playerPuuids,
     startDate: ranges.current.startDate,
     endDate: ranges.current.endDate,
   });
@@ -201,6 +233,7 @@ async function runReportQueryPlan(
   const comparison = await runLakeAggregation({
     plan,
     scope: params.scope,
+    playerPuuids,
     startDate: ranges.comparison.startDate,
     endDate: ranges.comparison.endDate,
   });
@@ -359,20 +392,32 @@ async function executeCompetitionRankReport(
   };
 }
 
-function lookbackRange(
+/**
+ * The date range a non-ANALYZE plan covers.
+ *
+ * `all_time` starts at the epoch rather than at the lake's minimum timestamp:
+ * the predicate compiles to a bound `BETWEEN` either way, no League match
+ * predates 2009, and querying the lake for its own floor would add a round trip
+ * to every all-time query to move a boundary that excludes nothing.
+ */
+function windowRange(
   plan: ReportQueryPlan,
   now: Date | undefined,
-): {
-  startDate: Date;
-  endDate: Date;
-} {
+): TemporalRange {
   const endDate = now ?? new Date();
-  return {
-    startDate: new Date(
-      endDate.getTime() - plan.lookbackDays * 24 * 60 * 60 * 1000,
-    ),
-    endDate,
-  };
+  const window = plan.window;
+  if (window.kind === "all_time") {
+    return { startDate: new Date(0), endDate };
+  }
+  if (window.kind === "relative") {
+    // Clamped at the epoch: without the cap that used to bound this, a large
+    // enough day count overflows past the Date range and every timestamp
+    // parameter downstream becomes NaN. A window that reaches the epoch
+    // already selects every row, so clamping loses nothing.
+    const startMs = endDate.getTime() - window.days * 24 * 60 * 60 * 1000;
+    return { startDate: new Date(Math.max(startMs, 0)), endDate };
+  }
+  return calendarRange(window.startDate, window.endDate, window.timezone);
 }
 
 function queryRanges(
@@ -385,7 +430,7 @@ function queryRanges(
     return { current: rangeOverride, comparison: null };
   }
   if (plan.analysis === undefined) {
-    return { current: lookbackRange(plan, now), comparison: null };
+    return { current: windowRange(plan, now), comparison: null };
   }
   return resolveTemporalRanges(plan.analysis, now);
 }
@@ -429,13 +474,30 @@ function competitionRange(
   plan: ReportQueryPlan,
   nowInput: Date | undefined,
 ): { startDate: Date; endDate: Date } {
-  const fallback = lookbackRange(plan, nowInput);
+  // Intersect the competition's own dates with the period the query asked
+  // for. Taking only the competition's bounds discarded the query's window
+  // entirely, so `DURING BETWEEN` on a competition source silently widened to
+  // the whole competition.
+  const requested = windowRange(plan, nowInput);
   const now = nowInput ?? new Date();
   const configuredEnd = competition.endDate ?? now;
-  return {
-    startDate: competition.startDate ?? fallback.startDate,
-    endDate: new Date(Math.min(configuredEnd.getTime(), now.getTime())),
-  };
+  const startDate =
+    competition.startDate === null
+      ? requested.startDate
+      : new Date(
+          Math.max(
+            competition.startDate.getTime(),
+            requested.startDate.getTime(),
+          ),
+        );
+  const endDate = new Date(
+    Math.min(
+      configuredEnd.getTime(),
+      now.getTime(),
+      requested.endDate.getTime(),
+    ),
+  );
+  return { startDate, endDate };
 }
 
 function resolveCompetitionId(

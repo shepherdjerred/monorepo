@@ -39,7 +39,7 @@ describe("compile — global scope", () => {
   test("emits no accounts join and no server_id predicate", () => {
     const compiled = compileMatchQuery(
       globalInput(
-        "SELECT player, games FROM match_participants GROUP BY player",
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
       ),
     );
     if (compiled === undefined) {
@@ -58,7 +58,7 @@ describe("compile — global scope", () => {
   test("groups players by puuid and labels them with the Riot ID", () => {
     const compiled = compileMatchQuery(
       globalInput(
-        "SELECT player, games FROM match_participants GROUP BY player",
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
       ),
     );
     if (compiled === undefined) {
@@ -79,7 +79,7 @@ describe("compile — global scope", () => {
       accountsParquet: undefined,
     };
     const queryText =
-      "SELECT player, games FROM match_participants GROUP BY player";
+      "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS";
 
     expect(
       compileMatchQuery({ ...globalInput(queryText), files: withoutAccounts }),
@@ -92,7 +92,7 @@ describe("compile — global scope", () => {
   test("prematch labels from the pre-joined riot_id column", () => {
     const compiled = compilePrematchQuery(
       globalInput(
-        "SELECT player, prematches FROM prematch_participants GROUP BY player",
+        "SELECT player, prematches FROM prematch_participants GROUP BY player DURING LAST 30 DAYS",
       ),
     );
     if (compiled === undefined) {
@@ -105,7 +105,9 @@ describe("compile — global scope", () => {
   test("refuses teammate groups rather than reporting every team as a stack", () => {
     expect(() =>
       compileGroupFactsQuery(
-        globalInput("SELECT group, games FROM player_groups GROUP BY group(2)"),
+        globalInput(
+          "SELECT group, games FROM player_groups GROUP BY group(2) DURING LAST 30 DAYS",
+        ),
       ),
     ).toThrow(/not available in global scope/);
   });
@@ -114,7 +116,7 @@ describe("compile — global scope", () => {
     expect(() =>
       compileMatchQuery({
         ...globalInput(
-          "SELECT player, games FROM match_participants GROUP BY player",
+          "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
         ),
         playerIds: [7],
       }),

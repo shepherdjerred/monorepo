@@ -59,6 +59,13 @@ type StartedTurn = {
 type ActiveRun = {
   summary: ExploreActiveRun;
   identity: ExploreRateLimitIdentity;
+  /**
+   * The asker's Discord servers, carried for the whole run so a `player('…')`
+   * alias resolves against the servers this person actually belongs to. It is
+   * authorization context, not a quota key, so it rides on the run rather than
+   * on `identity`, and not on the request, which is client-supplied.
+   */
+  guildIds: string[];
   ticket: ExploreRateLimitTicket;
   started: StartedTurn;
   history: ExploreMessage[];
@@ -130,6 +137,7 @@ export class ExploreRunManager {
   async start(
     identity: ExploreRateLimitIdentity,
     request: ExploreTurnRequest,
+    guildIds: string[],
   ): Promise<ExploreActiveRun> {
     this.#assertAcceptingRuns();
     const conversationId =
@@ -195,6 +203,7 @@ export class ExploreRunManager {
       const run: ActiveRun = {
         summary,
         identity,
+        guildIds,
         ticket,
         started,
         history: transcript.messages,
@@ -407,6 +416,7 @@ export class ExploreRunManager {
         {
           ticket: run.ticket,
           identity: run.identity,
+          guildIds: run.guildIds,
           started: run.started,
           history: run.history,
           abortSignal: run.abortController.signal,

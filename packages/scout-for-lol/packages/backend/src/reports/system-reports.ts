@@ -131,8 +131,9 @@ function competitionReportQuery(
     return [
       "SELECT player, score",
       "FROM competition_rank",
-      `WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND competition_id = ${competitionId.toString()}`,
+      `WHERE competition_id = ${competitionId.toString()}`,
       "GROUP BY player",
+      "DURING ALL TIME",
       "ORDER BY score DESC",
     ].join(" ");
   }
