@@ -1,4 +1,4 @@
-import { describe, expect, test, mock } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import {
   RawCurrentGameInfoSchema,
   LoadingScreenDataSchema,
@@ -6,15 +6,10 @@ import {
   SummonerSpellIdSchema,
   type Lane,
 } from "@scout-for-lol/data/index.ts";
-import {
-  buildLoadingScreenData,
-  fetchParticipantRanks,
-} from "#src/league/tasks/prematch/loading-screen-builder.ts";
-
 let rankFetchCount = 0;
 
 // Mock the rank fetcher to avoid real API calls in tests
-void mock.module("#src/league/model/rank.ts", () => ({
+vi.doMock("#src/league/model/rank.ts", () => ({
   getRankByPuuid: async () => {
     rankFetchCount += 1;
     return {
@@ -28,6 +23,9 @@ void mock.module("#src/league/model/rank.ts", () => ({
     };
   },
 }));
+
+const { buildLoadingScreenData, fetchParticipantRanks } =
+  await import("#src/league/tasks/prematch/loading-screen-builder.ts");
 
 const currentDir = new URL(".", import.meta.url).pathname;
 const realS3ClassicAramMayhemFixture = `${currentDir}testdata/spectator-classic-aram-mayhem-s3.json`;
@@ -418,8 +416,12 @@ describe("buildLoadingScreenData standard and custom layouts", () => {
     if (result.layout !== "standard") {
       throw new Error("Expected a normal standard loading screen");
     }
-    expect(result.participants[0]?.championName).toBe("Akali");
-    expect(result.participants[0]?.championName).not.toStartWith("Jade_");
+    const participant = result.participants[0];
+    if (participant === undefined) {
+      throw new Error("Expected a loading-screen participant");
+    }
+    expect(participant.championName).toBe("Akali");
+    expect(participant.championName.startsWith("Jade_")).toBe(false);
     expect(String(result.queueDisplayName)).toBe("Summoner's Rift");
   });
 
@@ -490,9 +492,13 @@ describe("buildLoadingScreenData for The Bandlewood", () => {
         throw new Error("Expected Classic loading screen data");
       }
       expect(parsed.participants).toHaveLength(10);
-      expect(parsed.participants[0]?.championName).toStartWith("Jade_");
+      const participant = parsed.participants[0];
+      if (participant === undefined) {
+        throw new Error("Expected a Classic loading-screen participant");
+      }
+      expect(participant.championName.startsWith("Jade_")).toBe(true);
       expect("bans" in parsed).toBe(false);
-      expect("ranks" in (parsed.participants[0] ?? {})).toBe(false);
+      expect("ranks" in participant).toBe(false);
     },
   );
 

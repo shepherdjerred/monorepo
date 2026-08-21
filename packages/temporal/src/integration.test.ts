@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { Client, Connection } from "@temporalio/client";
 import { Worker } from "@temporalio/worker";
 

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "vitest";
 import { buildBugsinkApiUrl } from "#lib/bugsink/client.ts";
 import { getIssues } from "#lib/bugsink/issues.ts";
 import { getReleases } from "#lib/bugsink/queries.ts";

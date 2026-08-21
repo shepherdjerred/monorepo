@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { scoutThemes } from "./tokens.ts";
 
 function channel(value: number): number {

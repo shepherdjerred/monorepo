@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { parseYAMLComments, cleanYAMLComment } from "./comment-parser.ts";
 
 describe("YAML Comment Parsing", () => {

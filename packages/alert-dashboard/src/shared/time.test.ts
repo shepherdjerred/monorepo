@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import {
   addDuration,

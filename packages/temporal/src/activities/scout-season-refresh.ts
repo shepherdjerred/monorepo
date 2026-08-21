@@ -335,7 +335,7 @@ async function prepareWorkdir(input: ScoutSeasonRefreshInput): Promise<{
     "1",
   ]);
   // Pre-install the scout workspace (with the llm-models producer built) so
-  // Claude's verification step (`bun test src/seasons.test.ts`) works on the
+  // Claude's verification step (`bun run test -- src/seasons.test.ts`) works on the
   // first try — otherwise Claude improvises its own installs, and a root
   // install would arm lefthook hooks in the clone.
   await installScoutWorkspace(repoDir);

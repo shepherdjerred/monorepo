@@ -6,7 +6,7 @@
  * this independent of the source objects catches accidental route ordering or
  * receiver regressions before ArgoCD applies the monitoring stack.
  */
-import { beforeAll, describe, expect, it } from "bun:test";
+import { beforeAll, describe, expect, it } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 

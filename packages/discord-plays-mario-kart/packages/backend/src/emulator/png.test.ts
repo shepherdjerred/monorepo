@@ -1,4 +1,5 @@
 import { inflateSync } from "node:zlib";
+import { describe, expect, it } from "vitest";
 import {
   encodeScreenshotPng,
   SCREENSHOT_HEIGHT,

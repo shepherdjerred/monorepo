@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test } from "vitest";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
 import {

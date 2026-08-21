@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parsePorcelainPaths } from "#shared/porcelain.ts";
 
 // NOTE: these are the pure-function cases. They are necessary but NOT

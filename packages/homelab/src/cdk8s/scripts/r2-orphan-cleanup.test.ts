@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parseR2OrphanArguments } from "./r2-orphan-cleanup.ts";
 
 describe("R2 orphan cleanup arguments", () => {

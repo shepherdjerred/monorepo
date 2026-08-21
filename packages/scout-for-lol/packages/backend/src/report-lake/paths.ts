@@ -37,7 +37,7 @@ export const COMPETITION_RANK_HISTORY_STAGING_DIR =
   "competition-rank-history-recent";
 
 export function resolveLakeDir(): string {
-  // Widened to unknown because Bun's process-wide `mock.module` leakage can
+  // Widened to unknown because the former process-wide Bun module mock could
   // hand us a PARTIAL configuration mock missing this field (see the
   // write-up in trpc/auth-web.test.ts); in real runs env-var's .default()
   // guarantees a string.

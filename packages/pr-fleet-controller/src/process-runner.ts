@@ -172,7 +172,9 @@ export async function runCommand(
       }
     }
     const [exitCode, stdoutResult, stderrResult] = await processSettlement;
-    killProcessGroup(subprocess.pid);
+    if (!commandWasTerminated(termination)) {
+      killProcessGroup(subprocess.pid);
+    }
     return {
       exitCode,
       stdout: stdoutResult.text,

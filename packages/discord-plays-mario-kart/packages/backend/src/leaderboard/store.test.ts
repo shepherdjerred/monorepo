@@ -1,7 +1,7 @@
 // In-memory libSQL exercises the real Prisma client + queries (groupBy,
 // aggregation, ordering). Requires `prisma generate` to have run (CI does this
 // before backend tests; locally run `bun run generate`).
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { tmpdir } from "node:os";
 import { PrismaClient } from "#generated/prisma/client/index.js";
 import { PrismaLibSql } from "@prisma/adapter-libsql";

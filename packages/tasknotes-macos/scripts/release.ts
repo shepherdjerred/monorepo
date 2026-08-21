@@ -17,7 +17,7 @@
 //     workspace and `scripts/check-script-coverage.ts` fails the build if its
 //     aggregate function/line coverage drops below 90%. A file whose body is
 //     `xcodebuild`, `notarytool`, `codesign` and `spctl` invocations cannot be
-//     covered by Bun tests on a Linux agent, and manufacturing coverage for it
+//     covered by TypeScript tests on a Linux agent, and manufacturing coverage for it
 //     would be ceremony rather than assurance.
 //  3. **Its inputs are here.** It reads `project.yml`'s generated `Info.plist`,
 //     the entitlements file, and the archive. Root `scripts/release.ts` already

@@ -12,7 +12,7 @@ Luckily Skill Capped provides a manifest of all their video data embeded right i
 cd packages/better-skill-capped
 bun run start       # Vite dev server (--host); /data proxies to production
 bun run build       # production build to dist/
-bun run test        # bun test
+bun run test        # bun run test
 bun run lint        # eslint .
 bun run typecheck   # tsc --noEmit
 bun run deploy      # bun ../../scripts/deploy-site.ts better-skill-capped

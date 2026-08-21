@@ -1,10 +1,22 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 
 test("passes the isolated classifier error metrics contract", async () => {
   const process = Bun.spawn(
-    ["bun", "test", "./tests/admission/classifier-error-harness.ts"],
+    [
+      "bun",
+      "--no-install",
+      "--bun",
+      "vitest",
+      "--config",
+      "../../vitest.config.ts",
+      "run",
+    ],
     {
       cwd: new URL("../../", import.meta.url).pathname,
+      env: {
+        ...Bun.env,
+        BIRMEL_VITEST_HARNESS: "tests/admission/classifier-error-harness.ts",
+      },
       stdout: "pipe",
       stderr: "pipe",
     },

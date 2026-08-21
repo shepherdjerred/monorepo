@@ -1,5 +1,5 @@
 // Ambient types for the handful of runtime APIs the fixture loader needs,
-// scoped the same way `bun-test.d.ts` scopes `bun:test`: declared locally
+// scoped like the package's Vitest test types: declared locally
 // rather than by pulling in `bun-types` / `@types/node`, so Bun's global DOM
 // types do not leak into the React Native source build (where its
 // `fetch`/`AbortSignal` overloads conflict with the RN runtime types).

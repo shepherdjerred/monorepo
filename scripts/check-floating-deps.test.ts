@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -21,8 +21,8 @@ function reason(spec: string): string {
 describe("classifySpec", () => {
   test("accepts version-anchored ranges", () => {
     for (const spec of [
-      "1.3.14",
-      "^1.3.14",
+      "1.4.0",
+      "1.4.0",
       "~1.3",
       "^1",
       ">=2.0.0 <3.0.0",

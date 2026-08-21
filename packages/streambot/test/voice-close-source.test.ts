@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createVoiceCloseTracker } from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
 
 describe("voice close source", () => {

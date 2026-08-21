@@ -2,7 +2,7 @@
  * Tests for Guild Create Event Handler
  */
 
-import { describe, it, expect, mock } from "bun:test";
+import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
 import { handleGuildCreate } from "#src/discord/events/guild-create.ts";
 import { ChannelType } from "discord.js";
@@ -11,7 +11,7 @@ import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
 
 describe("handleGuildCreate", () => {
   it("should send welcome message to system channel when available", async () => {
-    const sendMock = mock((_msg: unknown) => Promise.resolve({}));
+    const sendMock = vi.fn((_msg: unknown) => Promise.resolve({}));
 
     const guild = mockGuild({
       name: "Test Server",
@@ -20,13 +20,13 @@ describe("handleGuildCreate", () => {
       systemChannel: mockTextChannel({
         type: ChannelType.GuildText,
         name: "general",
-        permissionsFor: mock(() => ({
-          has: mock(() => true),
+        permissionsFor: vi.fn(() => ({
+          has: vi.fn(() => true),
         })),
         send: sendMock,
       }),
       channels: {
-        fetch: mock(() => Promise.resolve(new Map())),
+        fetch: vi.fn(() => Promise.resolve(new Map())),
       },
       members: {
         me: { id: testAccountId("999") },
@@ -56,13 +56,13 @@ describe("handleGuildCreate", () => {
   });
 
   it("should find first available text channel if system channel unavailable", async () => {
-    const sendMock = mock((_msg: unknown) => Promise.resolve({}));
+    const sendMock = vi.fn((_msg: unknown) => Promise.resolve({}));
 
     const mockChannel = mockTextChannel({
       type: ChannelType.GuildText,
       name: "welcome",
-      permissionsFor: mock(() => ({
-        has: mock(() => true),
+      permissionsFor: vi.fn(() => ({
+        has: vi.fn(() => true),
       })),
       send: sendMock,
     });
@@ -73,7 +73,7 @@ describe("handleGuildCreate", () => {
       memberCount: 50,
       systemChannel: null,
       channels: {
-        fetch: mock(() => {
+        fetch: vi.fn(() => {
           const channelMap = new Map();
           channelMap.set("channel1", { type: ChannelType.GuildVoice });
           channelMap.set("channel2", mockChannel);
@@ -110,14 +110,14 @@ describe("handleGuildCreate", () => {
       memberCount: 25,
       systemChannel: null,
       channels: {
-        fetch: mock(() => {
+        fetch: vi.fn(() => {
           const channelMap = new Map();
           channelMap.set(
             "channel1",
             mockTextChannel({
               type: ChannelType.GuildText,
-              permissionsFor: mock(() => ({
-                has: mock(() => false), // No permissions
+              permissionsFor: vi.fn(() => ({
+                has: vi.fn(() => false), // No permissions
               })),
             }),
           );
@@ -137,7 +137,7 @@ describe("handleGuildCreate", () => {
   });
 
   it("does nothing when the guild is unavailable (Discord outage replay)", async () => {
-    const sendMock = mock((_msg: unknown) => Promise.resolve({}));
+    const sendMock = vi.fn((_msg: unknown) => Promise.resolve({}));
 
     const guild = mockGuild({
       name: "Long-standing Server",
@@ -146,10 +146,10 @@ describe("handleGuildCreate", () => {
       systemChannel: mockTextChannel({
         type: ChannelType.GuildText,
         name: "general",
-        permissionsFor: mock(() => ({ has: mock(() => true) })),
+        permissionsFor: vi.fn(() => ({ has: vi.fn(() => true) })),
         send: sendMock,
       }),
-      channels: { fetch: mock(() => Promise.resolve(new Map())) },
+      channels: { fetch: vi.fn(() => Promise.resolve(new Map())) },
       members: { me: { id: testAccountId("999") } },
       client: { user: { id: testAccountId("999") } },
     });
@@ -161,7 +161,9 @@ describe("handleGuildCreate", () => {
   });
 
   it("should handle errors gracefully when sending message fails", async () => {
-    const sendMock = mock(() => Promise.reject(new Error("Permission denied")));
+    const sendMock = vi.fn(() =>
+      Promise.reject(new Error("Permission denied")),
+    );
 
     const guild = mockGuild({
       name: "Test Server",
@@ -170,13 +172,13 @@ describe("handleGuildCreate", () => {
       systemChannel: mockTextChannel({
         type: ChannelType.GuildText,
         name: "general",
-        permissionsFor: mock(() => ({
-          has: mock(() => true),
+        permissionsFor: vi.fn(() => ({
+          has: vi.fn(() => true),
         })),
         send: sendMock,
       }),
       channels: {
-        fetch: mock(() => Promise.resolve(new Map())),
+        fetch: vi.fn(() => Promise.resolve(new Map())),
       },
       members: {
         me: { id: testAccountId("999") },

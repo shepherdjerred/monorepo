@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   currentSeasonDateClaims,
   hasIndependentSeasonSources,
@@ -13,7 +13,7 @@ describe("hasIndependentSeasonSources", () => {
         "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
         "https://wiki.leagueoflegends.com/en-us/Season_2026",
       ]),
-    ).toBeTrue();
+    ).toBe(true);
   });
 
   it("rejects multiple URLs from only the official Riot source family", () => {
@@ -22,7 +22,7 @@ describe("hasIndependentSeasonSources", () => {
         "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
         "https://support-leagueoflegends.riotgames.com/hc/en-us/articles/season-2026",
       ]),
-    ).toBeFalse();
+    ).toBe(false);
   });
 
   it("rejects multiple URLs from only the wiki source family", () => {
@@ -31,7 +31,7 @@ describe("hasIndependentSeasonSources", () => {
         "https://wiki.leagueoflegends.com/en-us/Season_2026",
         "https://wiki.leagueoflegends.com/en-us/Patch_26.1",
       ]),
-    ).toBeFalse();
+    ).toBe(false);
   });
 
   it("does not count an unknown origin as independent corroboration", () => {
@@ -40,7 +40,7 @@ describe("hasIndependentSeasonSources", () => {
         "https://wiki.leagueoflegends.com/en-us/Season_2026",
         "https://example.com/season-2026",
       ]),
-    ).toBeFalse();
+    ).toBe(false);
   });
 });
 

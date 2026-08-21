@@ -2,11 +2,11 @@
 
 ## Testing actors
 
-Use the **Arrange–Act–Assert** pattern. This monorepo uses `bun:test` (Jest-compatible API).
+Use the **Arrange–Act–Assert** pattern. This monorepo runs Vitest through Bun.
 
 ```ts
 import { setup, createActor } from "xstate";
-import { test, expect } from "bun:test";
+import { expect, test } from "vitest";
 
 test("toggles between active and inactive", () => {
   const notified: string[] = [];
@@ -38,14 +38,14 @@ test("toggles between active and inactive", () => {
 });
 ```
 
-**Mock actions/actors with `machine.provide`** (and `mock` from `bun:test`):
+**Mock actions/actors with `machine.provide`** (and `vi.fn` from Vitest):
 
 ```ts
-import { mock, test, expect } from "bun:test";
+import { expect, test, vi } from "vitest";
 import { setup, createActor, fromPromise } from "xstate";
 
 test("mocked promise actor reaches success", async () => {
-  const fetchData = mock(() => Promise.resolve({ data: "ok" }));
+  const fetchData = vi.fn(() => Promise.resolve({ data: "ok" }));
   const machine = setup({ actors: { fetchData: fromPromise(fetchData) } }).createMachine({
     initial: "idle",
     states: {

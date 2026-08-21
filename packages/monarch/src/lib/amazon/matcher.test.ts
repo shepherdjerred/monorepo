@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { matchAmazonOrders } from "./matcher.ts";
 import type { MonarchTransaction } from "../monarch/types.ts";
 import type { AmazonOrder } from "./types.ts";

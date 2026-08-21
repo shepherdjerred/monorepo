@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { generateTypeScriptCode } from "./code-generator.ts";
 import type { TypeScriptInterface } from "./types.ts";
 

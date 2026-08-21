@@ -1,12 +1,18 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { lanePriorS3Region } from "./lane-prior-s3.ts";
 
 const ORIGINAL_AWS_REGION = Bun.env["AWS_REGION"];
 const ORIGINAL_S3_REGION = Bun.env["S3_REGION"];
 
+function setEnvironment(name: string, value: string | undefined): boolean {
+  return value === undefined
+    ? Reflect.deleteProperty(Bun.env, name)
+    : Reflect.set(Bun.env, name, value);
+}
+
 afterEach(() => {
-  Bun.env["AWS_REGION"] = ORIGINAL_AWS_REGION;
-  Bun.env["S3_REGION"] = ORIGINAL_S3_REGION;
+  setEnvironment("AWS_REGION", ORIGINAL_AWS_REGION);
+  setEnvironment("S3_REGION", ORIGINAL_S3_REGION);
 });
 
 describe("lanePriorS3Region", () => {
@@ -25,14 +31,14 @@ describe("lanePriorS3Region", () => {
   });
 
   test("falls back to S3_REGION", () => {
-    Bun.env["AWS_REGION"] = undefined;
+    setEnvironment("AWS_REGION", undefined);
     Bun.env["S3_REGION"] = "us-east-1";
 
     expect(lanePriorS3Region()).toBe("us-east-1");
   });
 
   test("trims S3_REGION before returning it", () => {
-    Bun.env["AWS_REGION"] = undefined;
+    setEnvironment("AWS_REGION", undefined);
     Bun.env["S3_REGION"] = " eu-west-1 ";
 
     expect(lanePriorS3Region()).toBe("eu-west-1");
@@ -53,8 +59,8 @@ describe("lanePriorS3Region", () => {
   });
 
   test("defaults to us-east-1", () => {
-    Bun.env["AWS_REGION"] = undefined;
-    Bun.env["S3_REGION"] = undefined;
+    setEnvironment("AWS_REGION", undefined);
+    setEnvironment("S3_REGION", undefined);
 
     expect(lanePriorS3Region()).toBe("us-east-1");
   });

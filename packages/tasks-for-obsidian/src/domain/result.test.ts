@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { OK_VOID, err, flatMap, map, mapErr, ok, unwrapOr } from "./result";
 

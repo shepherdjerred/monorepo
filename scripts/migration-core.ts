@@ -49,17 +49,19 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
         private: true,
         scripts: {
           build: "bun build src/index.ts --outdir dist",
-          test: "bun test",
+          test: "bun --no-install --bun vitest --config ../../vitest.config.ts run",
           typecheck:
             "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
           lint: "eslint .",
         },
         devDependencies: {
           "@shepherdjerred/eslint-config": "workspace:*",
-          "@types/bun": "^1.3.14",
+          "@types/bun": "1.4.0",
           "@typescript/native": "npm:typescript@7.0.2",
+          "@vitest/coverage-istanbul": "4.1.9",
           eslint: "^10.7.0",
           typescript: "^6.0.3",
+          vitest: "4.1.9",
         },
       },
       undefined,
@@ -77,7 +79,7 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
     )}\n`,
     "src/index.ts": "export {};\n",
     "src/index.test.ts":
-      'import { expect, test } from "bun:test";\n\ntest("package loads", async () => {\n  expect(await import("./index.ts")).toBeDefined();\n});\n',
+      'import { expect, test } from "vitest";\n\ntest("package loads", async () => {\n  expect(await import("./index.ts")).toBeDefined();\n});\n',
   };
 }
 
@@ -175,14 +177,29 @@ export type CoverageSummary = {
 
 export function parseCoverageSummaries(output: string): CoverageSummary[] {
   const summaries: CoverageSummary[] = [];
-  for (const line of output.split("\n")) {
-    const match =
-      /All files\s+\|\s+(\d+(?:\.\d+)?)\s+\|\s+(\d+(?:\.\d+)?)\s+\|/.exec(line);
-    if (match?.[1] !== undefined && match[2] !== undefined) {
+  let functions: number | undefined;
+  for (const line of Bun.stripANSI(output).split("\n")) {
+    const tableMatch =
+      /^\s*All files\s+\|\s*\d+(?:\.\d+)?\s*\|\s*\d+(?:\.\d+)?\s*\|\s*(\d+(?:\.\d+)?)\s*\|\s*(\d+(?:\.\d+)?)\s*\|/u.exec(
+        line,
+      );
+    if (tableMatch?.[1] !== undefined && tableMatch[2] !== undefined) {
       summaries.push({
-        functions: Number(match[1]),
-        lines: Number(match[2]),
+        functions: Number(tableMatch[1]),
+        lines: Number(tableMatch[2]),
       });
+      functions = undefined;
+      continue;
+    }
+    const functionMatch = /^Functions\s+:\s+(\d+(?:\.\d+)?)%/u.exec(line);
+    if (functionMatch?.[1] !== undefined) {
+      functions = Number(functionMatch[1]);
+      continue;
+    }
+    const lineMatch = /^Lines\s+:\s+(\d+(?:\.\d+)?)%/u.exec(line);
+    if (functions !== undefined && lineMatch?.[1] !== undefined) {
+      summaries.push({ functions, lines: Number(lineMatch[1]) });
+      functions = undefined;
     }
   }
   return summaries;

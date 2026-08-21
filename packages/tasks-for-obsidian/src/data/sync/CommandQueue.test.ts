@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test } from "vitest";
 
 import { ApiError } from "../../domain/errors";
 import { taskId } from "../../domain/types";

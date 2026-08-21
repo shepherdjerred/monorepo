@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createMemoryReader } from "#src/emulator/memory.ts";
 import type { GameSymbols } from "#src/emulator/symbols.ts";
 import { readMapObjects, readSpatialSnapshot } from "./spatial-snapshot.ts";

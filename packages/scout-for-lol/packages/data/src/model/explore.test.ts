@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { ExploreTraceEntrySchema } from "#src/model/explore.ts";
 
 describe("ExploreTraceEntrySchema", () => {

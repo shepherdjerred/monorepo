@@ -1,19 +1,27 @@
-import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type MockInstance,
+} from "vitest";
 import { log, setLogLevel } from "./logger.ts";
 
 describe("logger", () => {
-  let writeSpy: ReturnType<typeof spyOn>;
+  let writeSpy: MockInstance<typeof process.stderr.write>;
   let captured: string;
 
   beforeEach(() => {
     captured = "";
-    writeSpy = spyOn(process.stderr, "write").mockImplementation(
-      (chunk: string | Uint8Array) => {
+    writeSpy = vi
+      .spyOn(process.stderr, "write")
+      .mockImplementation((chunk: string | Uint8Array) => {
         captured +=
           typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
         return true;
-      },
-    );
+      });
     setLogLevel("info");
   });
 

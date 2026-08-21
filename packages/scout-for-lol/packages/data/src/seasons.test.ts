@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   SEASONS,
   SeasonIdSchema,
@@ -108,7 +108,7 @@ describe("seasons", () => {
   describe("getCurrentSeason", () => {
     test("should return undefined if no active season", () => {
       // This test might fail if there's actually an active season
-      // We can't easily mock Date in Bun tests, so this test is informational
+      // This time-sensitive test remains informational rather than mocking Date
       const current = getCurrentSeason();
       if (current) {
         const now = new Date();

@@ -28,7 +28,7 @@
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --outDir ./dist",
     "lint": "bunx eslint --cache .",
-    "test": "bun test",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "prepublishOnly": "bun run build",
     "test:ci": "bun ../../scripts/run-ci-test.ts",
@@ -62,6 +62,8 @@
   "devDependencies": {
     "@typescript-eslint/rule-tester": "^8.59.0",
     "@types/node": "^26.1.1",
-    "@typescript/native": "npm:typescript@7.0.2"
+    "@typescript/native": "npm:typescript@7.0.2",
+    "vitest": "4.1.9",
+    "@vitest/coverage-istanbul": "4.1.9"
   }
 }

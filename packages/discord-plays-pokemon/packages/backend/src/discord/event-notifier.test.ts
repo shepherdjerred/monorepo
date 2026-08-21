@@ -48,3 +48,4 @@ describe("eventToEmbed", () => {
     expect(embed.data.description).toContain("Treecko");
   });
 });
+import { describe, expect, test } from "vitest";

@@ -1,14 +1,14 @@
-import { describe, expect, test, beforeEach, mock } from "bun:test";
+import { describe, expect, test, beforeEach, vi } from "vitest";
 import * as RealSentry from "@sentry/bun";
 
 // Spy on Sentry.captureException so we can assert exactly when the breaker
 // reports. Spread the real module so sibling test files that rely on other
 // Sentry exports aren't broken by this process-global mock.
-const captureException = mock(
+const captureException = vi.fn(
   (_error: unknown, _options?: { tags?: Record<string, string> }): void =>
     undefined,
 );
-await mock.module("@sentry/bun", () => ({
+await vi.doMock("@sentry/bun", () => ({
   ...RealSentry,
   captureException,
 }));

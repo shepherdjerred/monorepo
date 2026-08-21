@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { shouldAcquirePrematchRanks } from "#src/league/tasks/prematch/prematch-work.ts";
 
 describe("shouldAcquirePrematchRanks", () => {

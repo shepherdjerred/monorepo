@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { ConfigSchema } from "./schema.ts";
 
 /** The smallest config that satisfies every required field. */

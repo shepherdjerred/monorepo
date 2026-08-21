@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -78,7 +78,11 @@ describe("dependency summary collection", () => {
       "owner/image",
     ]);
     expect(entries[0]?.artifactType).toBe("helm-chart");
-    expect(entries[1]?.value).toEndWith("a".repeat(64));
+    const secondEntry = entries[1];
+    if (secondEntry === undefined) {
+      throw new Error("Expected a second dependency summary entry");
+    }
+    expect(secondEntry.value.endsWith("a".repeat(64))).toBe(true);
   });
 
   it("preserves intermediate upgrades and reverts chronologically", () => {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { detectDowntime } from "#src/league/tasks/recovery/detect-downtime.ts";
 
 describe("detectDowntime", () => {

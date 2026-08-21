@@ -28,7 +28,16 @@ async function main(): Promise<void> {
       return response?.ok === true;
     });
     await run([...compose, "run", "--rm", "minio-init"]);
-    await run(["bun", "test", "test/e2e"]);
+    await run([
+      "bun",
+      "--no-install",
+      "--bun",
+      "vitest",
+      "--config",
+      "../../vitest.config.ts",
+      "run",
+      "test/e2e",
+    ]);
   } catch (error) {
     try {
       await run([...compose, "logs", "tempo"]);

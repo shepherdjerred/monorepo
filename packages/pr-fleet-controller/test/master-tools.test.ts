@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { currentCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
 import { runRecordedMasterTool } from "@shepherdjerred/pr-fleet-controller/src/master-tools.ts";
 import type { FleetTelemetry } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";

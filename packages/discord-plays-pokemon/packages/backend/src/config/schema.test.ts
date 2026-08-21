@@ -164,3 +164,4 @@ describe("ConfigSchema goal config", () => {
     expect(result.success).toBe(false);
   });
 });
+import { describe, expect, test } from "vitest";

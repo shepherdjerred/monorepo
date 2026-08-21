@@ -28,7 +28,7 @@ runtime data fetching — the site is fully static.
 
 ```bash
 bun run build    # build dist/ (requires glitter-context's dist; see below)
-bun run test     # bun test test
+bun run test     # bun run test test
 bun run deploy   # bun ../../scripts/deploy-site.ts glitter
 ```
 

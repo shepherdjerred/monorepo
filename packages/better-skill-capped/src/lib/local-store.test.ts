@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import type { StringStore } from "./safe-storage.ts";
 import { createLocalStore } from "./local-store.ts";

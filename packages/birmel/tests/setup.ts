@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, mock } from "bun:test";
+import { beforeAll, afterAll, vi } from "vitest";
 
 // Mock environment variables for testing
 beforeAll(() => {
@@ -13,7 +13,7 @@ afterAll(() => {
 });
 
 // Mock Discord.js to prevent actual API calls
-void mock.module("discord.js", () => ({
+vi.mock("discord.js", () => ({
   Client: class MockClient {
     guilds = { cache: new Map(), fetch: () => Promise.resolve({}) };
     channels = { fetch: () => Promise.resolve({}) };
@@ -111,7 +111,7 @@ void mock.module("discord.js", () => ({
 }));
 
 // Mock discord-player
-void mock.module("discord-player", () => ({
+vi.mock("discord-player", () => ({
   Player: class MockPlayer {
     extractors = {
       register: () => Promise.resolve({}),
@@ -196,7 +196,7 @@ void mock.module("discord-player", () => ({
 }));
 
 // Mock discord-player-youtubei
-void mock.module("discord-player-youtubei", () => ({
+vi.mock("discord-player-youtubei", () => ({
   YoutubeiExtractor: class MockYoutubeiExtractor {
     static identifier = "youtubei-extractor";
     context = {};

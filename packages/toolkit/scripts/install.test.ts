@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { installPaths } from "./install-core.ts";
 
 test("installation remains scoped below the supplied home directory", () => {

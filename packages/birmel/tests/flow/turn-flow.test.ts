@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -26,16 +26,28 @@ function resultFor(scenario: FlowScenario): FlowScenarioResult {
 beforeAll(async () => {
   temporaryDirectory = await mkdtemp(path.join(tmpdir(), "birmel-flow-"));
   const databasePath = path.join(temporaryDirectory, "flow.db");
-  const child = Bun.spawn(["bun", "run", "tests/flow/flow-harness.ts"], {
-    cwd: import.meta.dir.replace(/\/tests\/flow$/u, ""),
-    env: {
-      ...Bun.env,
-      DATABASE_PATH: databasePath,
-      DATABASE_URL: `file:${databasePath}`,
+  const child = Bun.spawn(
+    [
+      "bun",
+      "--no-install",
+      "--bun",
+      "vitest",
+      "--config",
+      "../../vitest.config.ts",
+      "run",
+    ],
+    {
+      cwd: import.meta.dir.replace(/\/tests\/flow$/u, ""),
+      env: {
+        ...Bun.env,
+        DATABASE_PATH: databasePath,
+        DATABASE_URL: `file:${databasePath}`,
+        BIRMEL_VITEST_HARNESS: "tests/flow/flow-harness.ts",
+      },
+      stdout: "pipe",
+      stderr: "pipe",
     },
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  );
   const [exitCode, stdout, stderr] = await Promise.all([
     child.exited,
     new Response(child.stdout).text(),

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { pruneOrphanedPlayers } from "#src/league/tasks/cleanup/prune-players.ts";
 import {

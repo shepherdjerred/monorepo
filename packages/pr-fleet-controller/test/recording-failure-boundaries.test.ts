@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { tmpdir } from "node:os";
 import { runRecordedCommand } from "@shepherdjerred/pr-fleet-controller/src/recorded-command.ts";
 import { runRecordedToolOperation } from "@shepherdjerred/pr-fleet-controller/src/recorded-tool.ts";
@@ -51,7 +51,7 @@ describe("terminal recording failure boundaries", () => {
       failure,
     );
 
-    expect(
+    await expect(
       runRecordedCommand(
         {
           executable: process.execPath,
@@ -76,7 +76,7 @@ describe("terminal recording failure boundaries", () => {
     );
     let operationRuns = 0;
 
-    expect(
+    await expect(
       runRecordedToolOperation({
         tool: "publish_fix",
         input: {},
@@ -112,7 +112,7 @@ describe("terminal recording failure boundaries", () => {
     );
     let operationRuns = 0;
 
-    expect(
+    await expect(
       runRecordedWorkerAttempt({
         attempt: 1,
         prompt: "work once",
@@ -142,7 +142,7 @@ describe("terminal recording failure boundaries", () => {
     );
     let operationRuns = 0;
 
-    expect(
+    await expect(
       runRecordedWorkerAttempt({
         attempt: 1,
         prompt: "publish once",

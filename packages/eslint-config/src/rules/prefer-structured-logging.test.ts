@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { afterAll, describe, it } from "bun:test";
+import { afterAll, describe, it } from "vitest";
 import { preferStructuredLogging } from "./prefer-structured-logging.ts";
 
 RuleTester.afterAll = afterAll;

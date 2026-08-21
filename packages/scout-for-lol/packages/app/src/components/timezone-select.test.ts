@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   labelForValue,
   zonesForQuery,
@@ -16,7 +16,7 @@ describe("zonesForQuery", () => {
       (zone) => zone.id === "America/New_York",
     );
     expect(catalogEntry?.label).toBe(SELECTED_LABEL);
-    expect(SELECTED_LABEL).toStartWith("America/New_York (GMT");
+    expect(SELECTED_LABEL.startsWith("America/New_York (GMT")).toBe(true);
   });
 
   test("returns the whole catalog when the field still holds the selection", () => {

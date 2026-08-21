@@ -260,7 +260,7 @@ groupByWeek() ---> buildWeekWindows() ---> classifyWeek() ---> ProposedChange[]
 
 ## Testing
 
-15 test files using `bun:test`. Key coverage areas:
+15 test files using Vitest. Key coverage areas:
 
 - **Matchers**: Date window/amount tolerance logic for all deep paths
 - **Parsers**: Apple EML, Conservice .NET dates, Venmo CSV
@@ -269,4 +269,4 @@ groupByWeek() ---> buildWeekWindows() ---> classifyWeek() ---> ProposedChange[]
 - **Display**: Summary statistics aggregation
 - **Logger**: Level gating and progress formatting
 
-Run with `bun test`.
+Run with `bun run test`.

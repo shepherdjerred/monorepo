@@ -13,7 +13,7 @@
   "additionalProperties": false,
   "properties": {
     "$schema": { "const": "./ci-test-manifest.schema.json" },
-    "version": { "const": 1 },
+    "version": { "const": 2 },
     "workspaces": {
       "type": "array",
       "items": {
@@ -55,29 +55,14 @@
                   "additionalProperties": false,
                   "required": ["runner"],
                   "properties": {
-                    "runner": { "const": "bun" },
-                    "name": { "type": "string", "minLength": 1 },
-                    "bunArgs": {
-                      "type": "array",
-                      "items": { "type": "string" }
-                    },
-                    "args": {
-                      "type": "array",
-                      "items": { "type": "string" }
-                    },
-                    "coverageConfig": {
-                      "type": "string",
-                      "minLength": 1
-                    }
-                  }
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": ["runner", "args"],
-                  "properties": {
                     "runner": { "const": "vitest" },
                     "name": { "type": "string", "minLength": 1 },
+                    "runtime": { "enum": ["bun", "node"] },
+                    "runtimeReason": { "type": "string", "minLength": 1 },
+                    "runtimeArgs": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
                     "args": {
                       "type": "array",
                       "items": { "type": "string" }

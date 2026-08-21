@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { SETUP_COMMANDS } from "@shepherdjerred/pr-fleet-controller/src/worker-setup-tool.ts";
 
 describe("worktree setup", () => {

@@ -51,7 +51,7 @@ bun install
 mise run build
 
 # Run tests
-bun test
+bun run test
 
 # Lint
 bun run lint
@@ -248,7 +248,7 @@ bun run test
 ```
 
 The working directory matters: many CDK8s tests read `config/homeassistant` via
-a CWD-relative path. Bare `bun test` from `packages/homelab` uses the wrong CWD
+a CWD-relative path. Bare `bun run test` from `packages/homelab` uses the wrong CWD
 and produces ~15 spurious failures, all reporting
 `ENOENT: no such file or directory, open 'config/homeassistant '` (note the trailing
 null byte) across unrelated test files — these are NOT real failures.
@@ -271,7 +271,7 @@ transient pattern (502/503/504, `ECONN*`, DNS, TLS handshake) as a loudly-logged
 **non-fatal skip**, not a build failure. Real errors (404/missing version, template or
 schema-validation errors) stay hard failures. So a red helm-render build means a genuine
 chart/values bug, not a flake; `Skipped N/M chart(s) due to transient upstream errors` is
-expected. Run locally with `HELM_RENDER_TEST=1 bun test src/argocd-helm-render.test.ts`
+expected. Run locally with `HELM_RENDER_TEST=1 bun run test src/argocd-helm-render.test.ts`
 (needs `bun run build` first for `dist/apps.k8s.yaml`).
 
 ## Git Workflow

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { trace } from "@opentelemetry/api";
 import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
 import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";

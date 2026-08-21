@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { collectBuildkiteWith } from "./homelab-audit-buildkite.ts";
 
 function build(number: number, state = "passed") {

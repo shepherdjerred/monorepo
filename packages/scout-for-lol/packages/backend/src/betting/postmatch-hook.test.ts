@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { refreshSettledPoolMessages } from "#src/betting/postmatch-hook.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 

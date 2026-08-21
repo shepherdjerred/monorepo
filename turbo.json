@@ -85,6 +85,17 @@
     "//#check-suppressions": {
       "inputs": ["scripts/**", "!scripts/node_modules/**"]
     },
+    "//#check-test-standardization": {
+      "inputs": [
+        "package.json",
+        "packages/**",
+        "scripts/**",
+        ".buildkite/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!packages/dotfiles/dot_agents/skills/**"
+      ]
+    },
     "//#check-ai-architecture": {
       "inputs": [
         "package.json",

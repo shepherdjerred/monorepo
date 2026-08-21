@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "vitest";
 import { createServer, type Server as HttpServer } from "node:http";
 import { Server as SocketIoServer } from "socket.io";
 import { io as ioClient, type Socket } from "socket.io-client";

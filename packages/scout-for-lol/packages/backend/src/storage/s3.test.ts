@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { z } from "zod";
@@ -72,7 +72,7 @@ describe("S3 Key Generation Logic for Matches", () => {
     const day = String(date.getUTCDate()).padStart(2, "0");
 
     const key = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
-    expect(key).toEndWith(".json");
+    expect(key.endsWith(".json")).toBe(true);
   });
 });
 
@@ -107,7 +107,7 @@ describe("S3 Key Generation Logic for Images", () => {
     const day = String(date.getUTCDate()).padStart(2, "0");
 
     const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
-    expect(key).toEndWith(".png");
+    expect(key.endsWith(".png")).toBe(true);
   });
 
   test("image and match keys share same game directory", () => {
@@ -122,8 +122,8 @@ describe("S3 Key Generation Logic for Images", () => {
 
     // Both should share the same game directory
     const gameDir = `games/${year.toString()}/${month}/${day}/${matchId}/`;
-    expect(matchKey).toStartWith(gameDir);
-    expect(imageKey).toStartWith(gameDir);
+    expect(matchKey.startsWith(gameDir)).toBe(true);
+    expect(imageKey.startsWith(gameDir)).toBe(true);
     expect(matchKey).not.toBe(imageKey);
   });
 });
@@ -159,7 +159,7 @@ describe("S3 Key Generation Logic for SVG Images", () => {
     const day = String(date.getUTCDate()).padStart(2, "0");
 
     const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.svg`;
-    expect(key).toEndWith(".svg");
+    expect(key.endsWith(".svg")).toBe(true);
   });
 
   test("PNG and SVG keys share game directory structure", () => {
@@ -174,8 +174,8 @@ describe("S3 Key Generation Logic for SVG Images", () => {
 
     // Both should use the same game directory path
     const gameDir = `games/${year.toString()}/${month}/${day}/${matchId}/`;
-    expect(pngKey).toStartWith(gameDir);
-    expect(svgKey).toStartWith(gameDir);
+    expect(pngKey.startsWith(gameDir)).toBe(true);
+    expect(svgKey.startsWith(gameDir)).toBe(true);
 
     // Only extension should differ
     expect(pngKey.replace(".png", ".svg")).toBe(svgKey);
@@ -289,8 +289,9 @@ describe("S3 Image Storage", () => {
     );
     expect(command.input.Metadata?.["matchId"]).toBe(matchId);
     expect(command.input.Metadata?.["queueType"]).toBe("solo");
-    expect(result).toStartWith("s3://test-bucket/");
-    expect(result).toEndWith(".png");
+    if (result === undefined) throw new Error("Expected an uploaded image URL");
+    expect(result.startsWith("s3://test-bucket/")).toBe(true);
+    expect(result.endsWith(".png")).toBe(true);
   });
 
   test("saveImageToS3 returns undefined when S3_BUCKET_NAME not configured", async () => {
@@ -408,8 +409,8 @@ describe("Edge Cases for S3 Storage", () => {
 
     // Both should use the same game directory
     const gameDir = `games/${year.toString()}/${month}/${day}/${matchId}/`;
-    expect(matchKey).toStartWith(gameDir);
-    expect(imageKey).toStartWith(gameDir);
+    expect(matchKey.startsWith(gameDir)).toBe(true);
+    expect(imageKey.startsWith(gameDir)).toBe(true);
   });
 });
 
@@ -427,7 +428,7 @@ describe("S3 URL Format", () => {
   test("s3 URL format is parseable", () => {
     const url = "s3://my-bucket/games/2025/10/16/NA1_1234567890/report.png";
 
-    expect(url).toStartWith("s3://");
+    expect(url.startsWith("s3://")).toBe(true);
     const parts = url.replace("s3://", "").split("/");
     expect(parts[0]).toBe("my-bucket");
     expect(parts.at(-1)).toBe("report.png");

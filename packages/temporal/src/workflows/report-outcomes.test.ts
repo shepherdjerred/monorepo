@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { CiIoImpactResult } from "#activities/ci-io-impact.ts";
 import type {
   DataDragonUpdateResult,

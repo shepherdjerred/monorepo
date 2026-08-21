@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { zipSync } from "fflate";
 import { importSeedArchive } from "./glitter-corpus-seed.ts";
 

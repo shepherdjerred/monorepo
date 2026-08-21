@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createStreambotDashboard } from "./streambot-dashboard.ts";
 import { createStreambotVoiceDashboard } from "./streambot-voice-dashboard.ts";
 

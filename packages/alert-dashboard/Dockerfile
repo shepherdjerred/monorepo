@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1-labs@sha256:7d49dad25a050e14338ba7028b0460243f9d911dedc160a8fe20c34738fef3af
-FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
+FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
 WORKDIR /app
 
 FROM base AS deps
@@ -30,18 +30,22 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/alert-d
 
 FROM base AS runtime
 COPY --from=prod-deps /app/ /app/
-COPY --from=build /app/packages/alert-dashboard /app/packages/alert-dashboard
+# Preserve the production install's isolated-linker symlinks. The development
+# install can use different peer-context hashes, so copying its node_modules
+# over this tree would point at packages that do not exist in prod-deps.
+COPY --from=build --exclude=node_modules /app/packages/alert-dashboard /app/packages/alert-dashboard
 # Bake Prisma's migration engines into the production dependency tree. Bun's
 # production install omits lifecycle scripts, so the CLI would otherwise
 # download engines on first use. Runtime executes as uid 1000 over root-owned
 # node_modules, which correctly prevents that startup write. Generating once as
 # root here keeps `prisma migrate deploy` read-only at runtime.
 RUN cd packages/alert-dashboard && bunx --no-install --trust prisma generate
+WORKDIR /app/packages/alert-dashboard
 ENV NODE_ENV=production HOME=/tmp
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 EXPOSE 7341
 USER 1000:1000
-CMD ["bun", "packages/alert-dashboard/src/server/index.ts"]
+CMD ["bun", "src/server/index.ts"]
 
 FROM runtime AS smoke
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts

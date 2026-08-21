@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { getStreambotRuleGroups } from "./streambot.ts";
 
 const rules = getStreambotRuleGroups().flatMap((group) => group.rules ?? []);

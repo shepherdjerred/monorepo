@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parseRecipe } from "./cook-parser.ts";
 import { renderRecipe } from "./cook-renderer.ts";
 import type { CooklangSettings } from "./settings.ts";

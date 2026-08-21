@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { dnsAuditActivities } from "./dns-audit.ts";
 
 describe("dnsAuditActivities", () => {

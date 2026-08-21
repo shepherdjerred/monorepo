@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { TurnInputSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import {
   attachSelfMemoryProvenance,

@@ -1,8 +1,15 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { filesEqual } from "./migration-core.ts";
+import { filesEqual, requireCliValue } from "./migration-core.ts";
+
+test("requires a value after a CLI flag", () => {
+  expect(requireCliValue(["--web-port", "4321"], 0, "--web-port")).toBe("4321");
+  expect(() => requireCliValue(["--web-port"], 0, "--web-port")).toThrow(
+    "--web-port requires a value",
+  );
+});
 
 test("compares generated schemas byte-for-byte", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "scout-schema-"));

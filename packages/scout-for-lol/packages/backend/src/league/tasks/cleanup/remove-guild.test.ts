@@ -1,4 +1,4 @@
-import { describe, expect, test, afterAll, beforeEach } from "bun:test";
+import { describe, expect, test, afterAll, beforeEach } from "vitest";
 import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
 import { recordPermissionError } from "#src/database/guild-permission-errors.ts";
 import {

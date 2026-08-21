@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { catalogRefreshBranch } from "#activities/llm-catalog-refresh.ts";
 
 const PROPOSAL = '{\n  "gpt-5.6-luna": { "input": 0.2 }\n}\n';

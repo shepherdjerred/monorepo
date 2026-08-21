@@ -6,7 +6,7 @@ import {
   describe,
   expect,
   test,
-} from "bun:test";
+} from "vitest";
 import { editAgentJob } from "@shepherdjerred/birmel/agent-tools/tools/automation/agent-job-actions.ts";
 import {
   resolveAmbiguousAgentJobEffect,
@@ -122,7 +122,7 @@ describe("durable AgentJob effect resolution", () => {
         jobId: "c97a9236-10e7-4dd3-859b-7894608f15dd",
         disposition: "not_applied",
       }).success,
-    ).toBeFalse();
+    ).toBe(false);
   });
 
   test("does not deliver when an isolated-agent checkpoint acquisition fails", async () => {

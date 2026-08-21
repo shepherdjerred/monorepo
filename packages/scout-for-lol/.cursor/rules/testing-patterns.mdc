@@ -11,7 +11,7 @@ Use proper imports for test utilities vs runtime code:
 
 ```typescript
 // ✅ CORRECT:
-import { describe, test, expect, beforeEach } from "bun:test";
+import { describe, test, expect, beforeEach } from "vitest";
 import { createCompetition, type CreateCompetitionInput } from "./queries.ts";
 import type { Competition } from "./types.ts";
 
@@ -102,7 +102,7 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach } from "bun:test";
+import { afterEach, beforeEach } from "vitest";
 import { PrismaClient } from "generated/prisma/client";
 
 // Create test database ONCE (outside beforeEach)
@@ -230,7 +230,7 @@ test("generates correct report", () => {
 });
 
 // Update snapshots when output intentionally changes:
-// bun test --update-snapshots
+// bun run test -- --update
 ```
 
 ## Test Organization
@@ -304,35 +304,34 @@ test("complete flow", async () => {
 ### Basic Test Commands
 
 ```bash
-# Run all tests (includes eslint-rules tests)
-bun test
-bun run test              # Root: eslint-rules + all packages
+# Run the package test suite
+bun run test
 
 # Package-specific
-cd packages/backend && bun test
-cd packages/data && bun test
+cd packages/backend && bun run test
+cd packages/data && bun run test
 
 # Specific test file
-bun test src/database/competition.test.ts
+bun run test -- src/database/competition.test.ts
 
 # Watch mode (re-run on changes)
-bun test --watch
+bun run test:watch
 
 # Coverage
-bun test --coverage
-bun test --coverage --bail  # With threshold check
+bun run test:coverage
+bun run test:coverage -- --bail=1  # With threshold check
 
 # CI mode
-bun test --bail --reporter=junit
+bun run test -- --bail=1 --reporter=junit
 
 # Fast mode (bail after 3 failures)
-bun test --bail=3
+bun run test -- --bail=3
 
 # Debug mode (randomize test order)
-bun test --randomize
+bun run test -- --sequence.shuffle
 
 # Update snapshots
-bun test --update-snapshots
+bun run test -- --update
 ```
 
 ### Test Scripts in Backend
@@ -513,14 +512,14 @@ describe("Module", () => {
 # Run tests locally (mise way)
 mise run test
 
-# Run tests with Bun directly
-bun test
+# Run tests through the package interface
+bun run test
 
 # Watch mode for development
-bun test --watch
+bun run test:watch
 
 # Specific test file
-bun test src/database/competition.integration.test.ts
+bun run test -- src/database/competition.integration.test.ts
 ```
 
 ### CI Environment Testing

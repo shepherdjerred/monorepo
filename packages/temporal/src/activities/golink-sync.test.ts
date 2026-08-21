@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "vitest";
 import { golinkSyncActivities } from "./golink-sync.ts";
 
 const originalFetch = globalThis.fetch;

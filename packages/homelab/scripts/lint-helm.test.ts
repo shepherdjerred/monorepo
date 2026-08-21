@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { chartName } from "./migration-core.ts";
 
 test("extracts a chart directory name", () => {

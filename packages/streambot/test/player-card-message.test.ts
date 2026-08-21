@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { ButtonStyle, Client } from "discord.js";
 import { PlayerCardMessenger } from "@shepherdjerred/streambot/discord/player-card-message.ts";
 import { toMessagePayload } from "@shepherdjerred/streambot/discord/player-card-message.ts";

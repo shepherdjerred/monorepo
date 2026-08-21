@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { isExpectedRouteError } from "./route-error-panel.tsx";
 import { RouteParameterError } from "#src/lib/route-params.ts";

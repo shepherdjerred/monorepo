@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { runDueReports } from "#src/reports/scheduler.ts";
 import { scoutScheduledReportLastSuccessTimestamp } from "#src/metrics/report-runs.ts";
 import {

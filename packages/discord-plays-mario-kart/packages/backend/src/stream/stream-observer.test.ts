@@ -1,4 +1,4 @@
-import { describe, expect, it, spyOn } from "bun:test";
+import { describe, expect, it, vi } from "vitest";
 import {
   commandUsesHardwareEncode,
   createStreamObserver,
@@ -199,7 +199,7 @@ describe("createStreamObserver", () => {
   });
 
   it("sets the hw-encode gauge and logs the command once", async () => {
-    const infoSpy = spyOn(logger, "info").mockImplementation(() => logger);
+    const infoSpy = vi.spyOn(logger, "info").mockImplementation(() => logger);
     try {
       const observer = createStreamObserver(newSessionStats());
       observer.onCommand?.("ffmpeg ... hwupload -c:v h264_vaapi ...");
@@ -213,7 +213,7 @@ describe("createStreamObserver", () => {
   });
 
   it("warns on sustained sub-realtime encode, rate-limited to once a minute", () => {
-    const warnSpy = spyOn(logger, "warn").mockImplementation(() => logger);
+    const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => logger);
     try {
       const clock = makeClock();
       const observer = createStreamObserver(newSessionStats(), {

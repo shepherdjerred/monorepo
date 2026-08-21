@@ -92,3 +92,4 @@ describe("createGameEventWatcher", () => {
     expect(watcher.poll().map((e) => e.kind)).toEqual(["faint"]);
   });
 });
+import { describe, expect, test } from "vitest";

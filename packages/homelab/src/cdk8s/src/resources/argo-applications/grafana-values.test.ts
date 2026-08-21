@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   BUILDKITE_IO_OBSERVABILITY_VALUES,
   BUILDKITE_KUBE_STATE_METRICS_VALUES,

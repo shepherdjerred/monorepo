@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -17,8 +17,8 @@ import { taskId, type Task } from "../src/domain/types";
  * server is rebuilt (plan P3), this suite is what keeps the legacy adapter
  * honest until the app migrates (P5).
  *
- * Runs via `bun run test:contract` (not part of the default `bun test src
- * scripts` — it needs the sibling package present and spawns a server).
+ * Runs via `bun run test:contract` (not part of the default `bun run test`
+ * script — it needs the sibling package present and spawns a server).
  */
 
 const AUTH_TOKEN = "contract-test-token";

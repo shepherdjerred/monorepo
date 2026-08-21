@@ -5,7 +5,7 @@
  * as part of the post-match flow.
  */
 
-import { describe, expect, test, beforeEach, afterEach } from "bun:test";
+import { describe, expect, test, beforeEach, afterEach } from "vitest";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { resetConfigurationForTests } from "#src/configuration.ts";
@@ -265,8 +265,10 @@ describe("Match ID Handling", () => {
     const command = call.args[0];
 
     if (command instanceof PutObjectCommand) {
-      expect(command.input.Key).toContain(matchId);
-      expect(command.input.Key).toEndWith(`${matchId}/report.png`);
+      const key = command.input.Key;
+      if (key === undefined) throw new Error("Expected an S3 object key");
+      expect(key).toContain(matchId);
+      expect(key.endsWith(`${matchId}/report.png`)).toBe(true);
     }
   });
 });
@@ -404,7 +406,8 @@ describe("ContentType and S3 Configuration", () => {
     if (command instanceof PutObjectCommand) {
       expect(command.input.Bucket).toBe("custom-scout-bucket");
     }
-    expect(result).toStartWith("s3://custom-scout-bucket/");
+    if (result === undefined) throw new Error("Expected an uploaded image URL");
+    expect(result.startsWith("s3://custom-scout-bucket/")).toBe(true);
     expect(result).toContain(matchId);
   });
 });

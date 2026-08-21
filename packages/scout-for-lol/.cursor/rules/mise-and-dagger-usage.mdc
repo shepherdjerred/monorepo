@@ -32,7 +32,7 @@ mise check
 ├── typecheck (TypeScript compilation)
 ├── lint (ESLint + 12 custom rules)
 ├── format (Prettier check)
-├── test (Bun test runner)
+├── test (Vitest on Bun)
 ├── knip (unused code detection)
 └── duplication-check (JSCPD copy-paste detection)
 ```
@@ -267,7 +267,7 @@ dagger call check      # Retry (uses cache)
 
 # Check environment
 echo $DATABASE_URL
-NODE_ENV=test bun test
+NODE_ENV=test bun run test
 ```
 
 ### Type errors in Dagger only

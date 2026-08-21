@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { GoalControlGate } from "./goal-control-gate.ts";
 
 test("GoalControlGate rejects stale goals and drains accepted controls", async () => {
@@ -6,7 +6,7 @@ test("GoalControlGate rejects stale goals and drains accepted controls", async (
   gate.open("goal-a");
   expect(gate.begin("goal-b")).toBeUndefined();
   const finish = gate.begin("goal-a");
-  expect(finish).toBeFunction();
+  expect(typeof finish).toBe("function");
   if (finish === undefined) {
     throw new Error("active goal control must be accepted");
   }
@@ -29,7 +29,7 @@ test("GoalControlGate rejects stale goals and drains accepted controls", async (
   gate.open("goal-b");
   expect(gate.begin("goal-a")).toBeUndefined();
   const finishNext = gate.begin("goal-b");
-  expect(finishNext).toBeFunction();
+  expect(typeof finishNext).toBe("function");
   finishNext?.();
   gate.close("goal-b");
 });

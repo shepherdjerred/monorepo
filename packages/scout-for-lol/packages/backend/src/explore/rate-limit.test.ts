@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test } from "vitest";
 import type { DiscordAccountId } from "@scout-for-lol/data";
 import { testAccountId } from "#src/testing/test-ids.ts";
 import {

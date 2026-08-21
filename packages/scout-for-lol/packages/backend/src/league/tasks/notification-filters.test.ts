@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, mock, test } from "bun:test";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -24,7 +24,7 @@ class MockChannelSendError extends Error {
   replyPermissionError: boolean;
 }
 
-await mock.module("#src/league/discord/channel.ts", () => ({
+await vi.doMock("#src/league/discord/channel.ts", () => ({
   ChannelSendError: MockChannelSendError,
   isReplyPermissionError: (error: MockChannelSendError) =>
     error.replyPermissionError,

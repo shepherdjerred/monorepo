@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { z } from "zod";
 import {
@@ -55,12 +55,12 @@ describe("CI reporting boundaries", () => {
   test("rejects unknown properties at every manifest object boundary", () => {
     const validManifest = {
       $schema: "./ci-test-manifest.schema.json",
-      version: 1,
+      version: 2,
       workspaces: [
         {
           package: "package",
           directory: "packages/package",
-          steps: [{ runner: "bun" }],
+          steps: [{ runner: "vitest" }],
         },
       ],
       testlessWorkspaces: [
@@ -81,24 +81,24 @@ describe("CI reporting boundaries", () => {
 
     expect(
       TestManifestSchema.safeParse({ ...validManifest, typo: true }).success,
-    ).toBeFalse();
+    ).toBe(false);
     expect(
       TestManifestSchema.safeParse({
         ...validManifest,
         workspaces: [{ ...validManifest.workspaces[0], defaultENV: {} }],
       }).success,
-    ).toBeFalse();
+    ).toBe(false);
     expect(
       TestManifestSchema.safeParse({
         ...validManifest,
         workspaces: [
           {
             ...validManifest.workspaces[0],
-            steps: [{ runner: "bun", arg: "test.ts" }],
+            steps: [{ runner: "vitest", arg: "test.ts" }],
           },
         ],
       }).success,
-    ).toBeFalse();
+    ).toBe(false);
     expect(
       TestManifestSchema.safeParse({
         ...validManifest,
@@ -106,13 +106,13 @@ describe("CI reporting boundaries", () => {
           { ...validManifest.testlessWorkspaces[0], typo: true },
         ],
       }).success,
-    ).toBeFalse();
+    ).toBe(false);
     expect(
       TestManifestSchema.safeParse({
         ...validManifest,
         separateTests: [{ ...validManifest.separateTests[0], typo: true }],
       }).success,
-    ).toBeFalse();
+    ).toBe(false);
   });
 
   test("committed manifest never runs a suite it documents as excluded", async () => {
@@ -134,7 +134,7 @@ describe("CI reporting boundaries", () => {
         );
         // A documented exclusion must reference a real suite file so it cannot
         // rot into a stale claim once the underlying test is renamed or removed.
-        expect(await Bun.file(suitePath).exists()).toBeTrue();
+        expect(await Bun.file(suitePath).exists()).toBe(true);
       }
     }
   });
@@ -142,12 +142,12 @@ describe("CI reporting boundaries", () => {
   test("rejects an excluded suite that a reporting step still runs", () => {
     const manifest = TestManifestSchema.parse({
       $schema: "./ci-test-manifest.schema.json",
-      version: 1,
+      version: 2,
       workspaces: [
         {
           package: "package",
           directory: "packages/package",
-          steps: [{ runner: "bun", args: ["src", "contract-tests"] }],
+          steps: [{ runner: "vitest", args: ["src", "contract-tests"] }],
           excludedSuites: [
             { path: "contract-tests", reason: "runs in a dedicated lane" },
           ],
@@ -258,19 +258,19 @@ describe("CI test reporting", () => {
     );
     await Bun.write(reportPath, "<testsuite/>");
     await removeExistingReport(reportPath);
-    expect(await Bun.file(reportPath).exists()).toBeFalse();
+    expect(await Bun.file(reportPath).exists()).toBe(false);
     await removeExistingReport(reportPath);
   });
 
   test("derives reported workspaces from emitted report paths", () => {
     const manifest = TestManifestSchema.parse({
       $schema: "./ci-test-manifest.schema.json",
-      version: 1,
+      version: 2,
       workspaces: [
         {
           package: "@scope/package",
           directory: "packages/package",
-          steps: [{ runner: "bun" }],
+          steps: [{ runner: "vitest" }],
         },
       ],
       testlessWorkspaces: [],
@@ -284,9 +284,9 @@ describe("CI test reporting", () => {
     });
     expect(
       reportedWorkspacesForReports(manifest, [
-        "scope__package/bun-1.xml",
+        "scope__package/vitest-1.xml",
         "site/playwright.xml",
-        "scope__package/bun-2.xml",
+        "scope__package/vitest-2.xml",
       ]),
     ).toEqual(["@scope/package", "site"]);
     expect(() =>
@@ -302,7 +302,7 @@ describe("CI test reporting", () => {
     );
     try {
       const completed = await completeJUnitReport({
-        runner: "bun",
+        runner: "vitest",
         reportPath: missingReport,
         workspace: "package",
         name: "unit",
@@ -704,6 +704,9 @@ describe("CI reporting manifest", () => {
     const homelab = manifest.workspaces.find(
       (entry) => entry.directory === "packages/homelab",
     );
+    const temporal = manifest.workspaces.find(
+      (entry) => entry.directory === "packages/temporal",
+    );
 
     expect(declaredDirectories.size).toBe(manifest.workspaces.length);
     expect(noTestDirectories.size).toBe(manifest.testlessWorkspaces.length);
@@ -721,11 +724,11 @@ describe("CI reporting manifest", () => {
         name: "typedoc",
         command: ["bun", "run", "typedoc"],
       },
-      { runner: "bun", args: ["src/"] },
+      { runner: "vitest", args: ["src/"] },
     ]);
     expect(homelab?.steps).toEqual([
       {
-        runner: "bun",
+        runner: "vitest",
         args: [
           "scripts/argocd-manifest-overrides.test.ts",
           "scripts/helm-release-core.test.ts",
@@ -736,6 +739,19 @@ describe("CI reporting manifest", () => {
         ],
       },
     ]);
+    expect(temporal?.steps.at(-1)).toEqual({
+      runner: "vitest",
+      name: "workflows",
+      runtime: "node",
+      runtimeReason:
+        "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
+      args: [
+        "src/workflows",
+        "--exclude",
+        "src/workflows/agent-task.test.ts",
+        "--no-file-parallelism",
+      ],
+    });
     // The Tauri crate (@scout-for-lol/desktop-rust) is intentionally listed in
     // testlessWorkspaces, not workspaces: its cargo tests require GTK/glib
     // system libraries in the ci-base image, which only rebuilds on main after
@@ -745,12 +761,12 @@ describe("CI reporting manifest", () => {
       manifest.workspaces.some(
         (entry) => entry.package === "@scout-for-lol/desktop-rust",
       ),
-    ).toBeFalse();
+    ).toBe(false);
     expect(
       manifest.testlessWorkspaces.some(
         (entry) => entry.package === "@scout-for-lol/desktop-rust",
       ),
-    ).toBeTrue();
+    ).toBe(true);
 
     for (const directory of workspaceDirectories) {
       const packageJsonPath = path.join(
@@ -763,7 +779,7 @@ describe("CI reporting manifest", () => {
       );
       const scripts = packageJson.scripts ?? {};
       if (typeof scripts["test"] === "string") {
-        expect(declaredDirectories.has(directory)).toBeTrue();
+        expect(declaredDirectories.has(directory)).toBe(true);
       }
       if (declaredDirectories.has(directory)) {
         const manifestEntry = manifest.workspaces.find(

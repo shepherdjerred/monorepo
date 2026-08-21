@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import path from "node:path";
 import {
   coverageArtifactFilename,
@@ -110,7 +110,7 @@ test("inventories reported C# sources without Istanbul instrumentation", () => {
   ).toEqual(["packages/tasknotes-windows/src/Native.cs"]);
   expect(
     isInstrumentableSource("packages/tasknotes-windows/src/Native.cs"),
-  ).toBeFalse();
+  ).toBe(false);
 });
 
 test("declares .NET Cobertura artifacts and arguments", () => {

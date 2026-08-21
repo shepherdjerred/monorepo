@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { InputLeaseConflictError } from "#src/emulator/emulator.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import { executeInteractiveChord } from "./message-handler.ts";

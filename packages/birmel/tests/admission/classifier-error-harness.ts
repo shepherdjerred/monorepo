@@ -1,16 +1,16 @@
-// Runs in a dedicated Bun test process because module mocks are process-global.
-import { expect, mock, test } from "bun:test";
+// Runs in a dedicated Vitest process because module mocks are process-global.
+import { expect, test, vi } from "vitest";
 
-void mock.module("@shepherdjerred/llm-runtime", () => ({
+vi.doMock("@shepherdjerred/llm-runtime", () => ({
   generateValidatedObject: () =>
     Promise.reject(new Error("structured classifier failure")),
 }));
 
-void mock.module("@shepherdjerred/birmel/agent-runtime/llm.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/agent-runtime/llm.ts", () => ({
   getLlmRuntime: () => ({}),
 }));
 
-void mock.module("@shepherdjerred/birmel/config/index.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/config/index.ts", () => ({
   getConfig: () => ({
     openRouter: {
       classifierModel: "gpt-5.6-luna",
@@ -21,7 +21,7 @@ void mock.module("@shepherdjerred/birmel/config/index.ts", () => ({
   }),
 }));
 
-void mock.module("@shepherdjerred/birmel/persona/projection.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/persona/projection.ts", () => ({
   buildConfiguredPersonaProjection: () => "persona",
 }));
 
@@ -31,7 +31,7 @@ const [{ classifyShouldRespond }, { metricsRegister }] = await Promise.all([
 ]);
 
 test("fails closed and records an admission classifier error", async () => {
-  expect(
+  await expect(
     classifyShouldRespond({
       persona: "virmel",
       transcript: "",
@@ -40,7 +40,7 @@ test("fails closed and records an admission classifier error", async () => {
       channelId: "100000000000000002",
       userId: "100000000000000003",
     }),
-  ).resolves.toBeFalse();
+  ).resolves.toBe(false);
 
   const metric = await metricsRegister
     .getSingleMetric("birmel_admission_classifier_total")
@@ -49,5 +49,5 @@ test("fails closed and records an admission classifier error", async () => {
     metric?.values.some(
       ({ labels, value }) => labels["outcome"] === "error" && value === 1,
     ),
-  ).toBeTrue();
+  ).toBe(true);
 });

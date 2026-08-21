@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import satori from "satori";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
 import {

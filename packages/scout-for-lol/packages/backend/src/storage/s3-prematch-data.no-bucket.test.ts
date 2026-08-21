@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { getMetrics } from "#src/metrics/index.ts";
 import { savePrematchDataToS3 } from "#src/storage/s3.ts";
 import { RawCurrentGameInfoSchema } from "@scout-for-lol/data";

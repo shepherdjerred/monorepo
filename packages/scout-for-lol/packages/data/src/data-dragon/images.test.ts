@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { championNameOverrides } from "./champion-name-overrides.generated.ts";
 import {
   championNameToDisplayName,
@@ -67,13 +67,13 @@ test("validates existing item image", async () => {
 
 test("returns CDN URL for champion image", () => {
   const url = getChampionImageUrl("Aatrox");
-  expect(url).toStartWith("https://ddragon.leagueoflegends.com/cdn/");
+  expect(url.startsWith("https://ddragon.leagueoflegends.com/cdn/")).toBe(true);
   expect(url).toContain("/img/champion/Aatrox.png");
 });
 
 test("returns CDN URL for item image", () => {
   const url = getItemImageUrl(1001);
-  expect(url).toStartWith("https://ddragon.leagueoflegends.com/cdn/");
+  expect(url.startsWith("https://ddragon.leagueoflegends.com/cdn/")).toBe(true);
   expect(url).toContain("/img/item/1001.png");
 });
 
@@ -183,7 +183,7 @@ describe("championNameOverrides", () => {
     }
     const [input] = firstOverride;
     const dataUri = await getChampionLoadingImageBase64(input);
-    expect(dataUri).toStartWith("data:image/jpeg;base64,");
+    expect(dataUri.startsWith("data:image/jpeg;base64,")).toBe(true);
     const payload = dataUri.split(",", 2)[1] ?? "";
     expect(payload.length).toBeGreaterThan(100);
   });

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { ME } from "#src/configuration/flags.ts";

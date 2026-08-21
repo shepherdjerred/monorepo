@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { competitionAnalysisDateInput } from "#src/lib/competition-analysis-date.ts";
 
 describe("competitionAnalysisDateInput", () => {

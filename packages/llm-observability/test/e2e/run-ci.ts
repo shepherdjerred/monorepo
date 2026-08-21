@@ -7,11 +7,23 @@ async function main(): Promise<void> {
     );
     return response?.ok === true;
   });
-  const process = Bun.spawn(["bun", "test", "test/e2e"], {
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
-  });
+  const process = Bun.spawn(
+    [
+      "bun",
+      "--no-install",
+      "--bun",
+      "vitest",
+      "--config",
+      "../../vitest.config.ts",
+      "run",
+      "test/e2e",
+    ],
+    {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+    },
+  );
   const exitCode = await process.exited;
   if (exitCode !== 0)
     throw new Error(`E2E tests exited ${exitCode.toString()}`);

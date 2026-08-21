@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
@@ -21,6 +21,13 @@ type RequestObservation = {
 };
 
 const RELEASE_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
+
+afterAll(async () => {
+  await rm(
+    path.resolve(import.meta.dir, "../../..", "homelab-release-result.json"),
+    { force: true },
+  );
+});
 
 const WorkerApplicationResource = {
   group: "argoproj.io",

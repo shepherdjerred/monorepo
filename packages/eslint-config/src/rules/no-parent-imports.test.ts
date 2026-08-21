@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { afterAll, describe, it } from "bun:test";
+import { afterAll, describe, it } from "vitest";
 import { noParentImports } from "./no-parent-imports.ts";
 
 RuleTester.afterAll = afterAll;

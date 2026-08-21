@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import {
   AUTO_SYNC_POLICY_ABSENT,
   autoSyncPolicyDivergences,

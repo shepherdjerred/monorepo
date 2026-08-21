@@ -8,7 +8,7 @@
 // specific critical inputs by string matching; this test owns the generic
 // subset property over every lane, parsed from the real YAML.
 
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   lanePaths as selectorLanePaths,
   selectorPathsForLane,

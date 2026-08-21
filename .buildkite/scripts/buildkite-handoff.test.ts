@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import {
   BUILD_METADATA_LIMIT_BYTES,
   INLINE_HANDOFF_LIMIT_BYTES,

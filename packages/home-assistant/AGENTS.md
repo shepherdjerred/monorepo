@@ -37,5 +37,5 @@ Generated output contains private entity IDs and service definitions and **must 
 bun install
 bun run typecheck
 bun run lint
-bun test
+bun run test
 ```

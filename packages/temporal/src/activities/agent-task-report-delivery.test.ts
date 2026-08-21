@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
@@ -250,7 +250,7 @@ describe("agent task report delivery delegation", () => {
   });
 
   test("rejects an unvalidated delegated result", async () => {
-    expect(
+    await expect(
       deliverAgentTaskReportWithDependencies(REPORT, {
         execute: async () => ({ messageId: "missing receipt state" }),
       }),

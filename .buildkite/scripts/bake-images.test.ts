@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import {
   annotate,
   ensureBuilder,
@@ -507,6 +507,10 @@ test("validates external JSON arrays", () => {
   expect(() =>
     parseLastPassedStepsCommit([{ commit: "current" }], ["images"]),
   ).toThrow("contain jobs");
+  expect(() => parseLastPassedStepsCommit({}, ["images"])).toThrow("array");
+  expect(() => parseLastPassedStepsCommit([{ jobs: [] }], ["images"])).toThrow(
+    "contain a commit",
+  );
 });
 
 test("fails open when image selection output is malformed", () => {
@@ -778,6 +782,37 @@ test("fingerprints rootfs and runtime OCI config without build identity", async 
   expect(() => runtimeFingerprintFromImage({})).toThrow(
     "architecture, os, and rootfs",
   );
+});
+
+test("validates optional OCI runtime metadata", () => {
+  const base = {
+    architecture: "amd64",
+    os: "linux",
+    rootfs: { type: "layers", diff_ids: ["sha256:one"] },
+    config: {},
+  };
+  expect(() => runtimeFingerprintFromImage(null)).toThrow(
+    "image metadata must be an object",
+  );
+  expect(() => runtimeFingerprintFromImage({ ...base, config: null })).toThrow(
+    "image runtime config must be an object",
+  );
+  expect(() =>
+    runtimeFingerprintFromImage({
+      ...base,
+      rootfs: { diff_ids: ["sha256:one"] },
+    }),
+  ).toThrow("image rootfs must contain a type");
+  expect(() =>
+    runtimeFingerprintFromImage({ ...base, "os.version": 1 }),
+  ).toThrow("image os.version must be a string");
+  expect(
+    runtimeFingerprintFromImage({
+      ...base,
+      "os.features": ["feature-one"],
+      config: { enabled: true, retries: 3, optional: null },
+    }),
+  ).toMatch(/^[a-f\d]{64}$/u);
 });
 
 test("requires the effective candidate OCI source label", async () => {

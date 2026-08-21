@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { addSubscriptionChannel } from "#src/lib/subscription/add-channel.ts";
 import { moveSubscription } from "#src/lib/subscription/move.ts";
 import type { DiscordChannelId, PlayerId } from "@scout-for-lol/data";

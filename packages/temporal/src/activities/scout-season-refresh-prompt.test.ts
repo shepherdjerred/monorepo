@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { buildSeasonRefreshPrompt } from "./scout-season-refresh-prompt.ts";
 
 describe("buildSeasonRefreshPrompt", () => {
@@ -49,9 +49,9 @@ describe("buildSeasonRefreshPrompt", () => {
     expect(prompt.toLowerCase()).toContain("never push");
   });
 
-  test("requires verification via bun test", () => {
+  test("requires verification through the package test interface", () => {
     const prompt = buildSeasonRefreshPrompt(baseInput);
-    expect(prompt).toContain("bun test src/seasons.test.ts");
+    expect(prompt).toContain("bun run test -- src/seasons.test.ts");
   });
 
   test("requires cross-checking at least TWO sources", () => {

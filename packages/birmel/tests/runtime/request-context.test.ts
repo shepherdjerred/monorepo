@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   runWithRequestContext,
   suppressAutomaticMemoryExtraction,
@@ -20,6 +20,6 @@ describe("request-scoped memory extraction control", () => {
       await Bun.sleep(0);
     });
 
-    expect(context.suppressAutomaticMemoryExtraction).toBeTrue();
+    expect(context.suppressAutomaticMemoryExtraction).toBe(true);
   });
 });

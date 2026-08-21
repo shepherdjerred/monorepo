@@ -7,18 +7,12 @@ import { z } from "zod";
 const StepSchema = z.discriminatedUnion("runner", [
   z
     .object({
-      runner: z.literal("bun"),
-      name: z.string().min(1).optional(),
-      bunArgs: z.array(z.string()).optional(),
-      args: z.array(z.string()).optional(),
-      coverageConfig: z.string().min(1).optional(),
-    })
-    .strict(),
-  z
-    .object({
       runner: z.literal("vitest"),
       name: z.string().min(1).optional(),
-      args: z.array(z.string()).min(1),
+      runtime: z.enum(["bun", "node"]).optional(),
+      runtimeReason: z.string().min(1).optional(),
+      runtimeArgs: z.array(z.string()).optional(),
+      args: z.array(z.string()).optional(),
     })
     .strict(),
   z
@@ -55,7 +49,7 @@ const StepSchema = z.discriminatedUnion("runner", [
 export const TestManifestSchema = z
   .object({
     $schema: z.literal("./ci-test-manifest.schema.json"),
-    version: z.literal(1),
+    version: z.literal(2),
     workspaces: z.array(
       z
         .object({
@@ -173,7 +167,6 @@ export function testStepReportName(step: TestStep, index: number): string {
 
 export function coverageArtifactFilename(step: TestStep): string | undefined {
   switch (step.runner) {
-    case "bun":
     case "vitest":
       return "lcov.info";
     case "go":
@@ -209,9 +202,8 @@ export function dotnetCoverageArguments(
 
 function stepTargetPaths(step: TestStep): readonly string[] {
   switch (step.runner) {
-    case "bun":
-      return step.args ?? [];
     case "vitest":
+      return step.args ?? [];
     case "go":
     case "cargo":
     case "dotnet":

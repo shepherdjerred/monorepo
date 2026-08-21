@@ -38,7 +38,7 @@ Payloads are assembled from five clients in `src/clients/`: `alerts`,
 ```bash
 bun run dev           # watch mode
 bun run start
-bun test
+bun run test
 bun run typecheck
 bun run lint
 bun run docker:build  # buildx image (monorepo-root context, tag trmnl-dashboard:dev)

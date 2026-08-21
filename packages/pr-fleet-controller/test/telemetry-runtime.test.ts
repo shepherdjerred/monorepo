@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "bun:test";
+import { afterEach, expect, test } from "vitest";
 import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -16,7 +16,7 @@ afterEach(async () => {
     stateDirectory = undefined;
   }
   // This suite registers process-global OpenTelemetry state. Leaving it
-  // registered leaks into every other file of `bun test src test`, where the
+  // registered leaks into every other file in the same worker, where the
   // symptom is silent: later spans route into a shut-down processor whose
   // target directory this hook just deleted.
   resetOtelGlobals();

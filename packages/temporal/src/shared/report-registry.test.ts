@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { SCHEDULES } from "#schedules/schedule-definitions.ts";
 import {
   defaultReportGraceHours,
@@ -20,7 +20,7 @@ describe("report schedule registry", () => {
     expect(new Set(registeredIds).size).toBe(registeredIds.length);
     const sourceIds = new Set(SCHEDULES.map((schedule) => schedule.id));
     for (const scheduleId of registeredIds) {
-      expect(sourceIds.has(scheduleId)).toBeTrue();
+      expect(sourceIds.has(scheduleId)).toBe(true);
     }
   });
 

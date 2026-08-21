@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { BucksPredictionFeature } from "@scout-for-lol/data";
 import { predictWin } from "#src/betting/prediction.ts";
 

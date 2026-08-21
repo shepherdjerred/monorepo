@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   formatParlayCustomId,
   isParlayCustomId,
@@ -17,7 +17,7 @@ describe("parlay custom IDs", () => {
   });
 
   test("claims malformed namespaced IDs without parsing them", () => {
-    expect(isParlayCustomId("bbp:old")).toBeTrue();
+    expect(isParlayCustomId("bbp:old")).toBe(true);
     expect(parseParlayCustomId("bbp:old")).toBeUndefined();
   });
 });

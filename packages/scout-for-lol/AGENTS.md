@@ -1148,7 +1148,7 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
 - **Integration tests** - Test package interactions
 - **Snapshot testing** - For report generation output
 - **Type testing** - Ensure type safety in complex scenarios
-- **Run tests**: `bun test` in any package or root
+- **Run tests**: `bun run test` in any package or root
 
 ### Local testing without Discord login or a real Discord backing
 

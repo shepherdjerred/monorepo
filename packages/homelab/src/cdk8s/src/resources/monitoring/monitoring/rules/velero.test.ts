@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { getVeleroRuleGroups } from "./velero.ts";
 
 describe("Velero large PVC backup policy alerts", () => {

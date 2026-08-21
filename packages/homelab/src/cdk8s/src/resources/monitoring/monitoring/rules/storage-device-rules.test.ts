@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { getNvmeRuleGroups } from "./nvme.ts";
 import { getSmartctlRuleGroups } from "./smartctl.ts";
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { bundleWorkflowCode } from "@temporalio/worker";
 
 // Smoke test: webpack-bundle the workflow entry the same way Worker.create

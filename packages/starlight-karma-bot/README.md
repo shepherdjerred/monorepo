@@ -42,7 +42,7 @@ bun run generate   # generate the Prisma client (scripts/generate-prisma.ts)
 bun run migrate    # deploy database migrations (scripts/migrate.ts)
 bun run typecheck  # generates first, then tsc
 bun run lint
-bun test
+bun run test
 bun run format     # prettier --check
 bun run prettier   # prettier --write
 ```

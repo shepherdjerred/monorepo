@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { parseAndCompile, type CompetitionId } from "@scout-for-lol/data";
 import { DEFAULT_COMPETITION_CRON } from "@scout-for-lol/data/model/competition-cron.ts";
 import { createCompetition } from "#src/database/competition/queries.ts";

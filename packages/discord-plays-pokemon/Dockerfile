@@ -78,7 +78,7 @@ RUN WASM_CC=clang WASM_LD=wasm-ld make wasm \
 # ---------------------------------------------------------------------------
 # Bun stages.
 # ---------------------------------------------------------------------------
-FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
+FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
 WORKDIR /app
 
 # ── deps: full install (dev deps) — feeds the artifact builds below ─────────
@@ -102,6 +102,7 @@ RUN bun install --frozen-lockfile --filter '@discord-plays-pokemon/*'
 FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
+  vitest.config.ts \
   packages/discord-plays-pokemon/packages/backend \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-pokemon/packages/frontend \
@@ -130,8 +131,9 @@ RUN cd packages/discord-plays-pokemon/packages/frontend && bun run build
 FROM build AS wasm-abi-test
 COPY --from=wasm-builder /src/build/wasm/pokeemerald.wasm \
   /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
-RUN bun test \
-  /app/packages/discord-plays-pokemon/packages/backend/src/emulator/emulator-symbols.integration.test.ts
+RUN cd /app/packages/discord-plays-pokemon/packages/backend && \
+  bun --no-install --bun vitest --config ../../../../vitest.config.ts run \
+  src/emulator/emulator-symbols.integration.test.ts
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 FROM base AS prod-deps

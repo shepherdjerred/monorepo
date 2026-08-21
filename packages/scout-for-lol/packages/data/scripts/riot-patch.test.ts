@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parsePatchesFromHtml, selectPatchByMinor } from "./riot-patch.ts";
 
 // Mirrors the real Riot patch-notes `__NEXT_DATA__` shape: articles carry a

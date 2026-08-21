@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
   AGENT_TASK_CLAUDE_SCHEMA_VERSION,

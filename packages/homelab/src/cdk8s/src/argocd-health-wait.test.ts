@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { Testing } from "cdk8s";
 import { z } from "zod";
 import { applicationReadiness } from "./argocd-application-readiness.ts";

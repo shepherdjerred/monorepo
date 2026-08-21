@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   exploreAllowlist,
@@ -8,7 +8,7 @@ import {
 
 /**
  * Env is mutated directly with `resetConfigurationForTests` rather than
- * `mock.module`, which leaks across sibling test files in this suite.
+ * the former Bun module mock, which leaked across sibling test files.
  */
 function withAllowlist(value: string | undefined): void {
   if (value === undefined) {

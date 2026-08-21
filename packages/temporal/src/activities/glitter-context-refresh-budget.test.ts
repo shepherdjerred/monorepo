@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { MAX_SEMANTIC_ATTEMPTS } from "@shepherdjerred/llm-runtime";
 import { ApplicationFailure } from "@temporalio/common";
 import {

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, mock, spyOn, test } from "bun:test";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   CompletedMatchSchema,
   LeaguePuuidSchema,
@@ -137,7 +137,7 @@ function buildCompletedPlayer(alias: string, puuid: typeof firstPuuid) {
 }
 
 afterEach(() => {
-  mock.restore();
+  vi.restoreAllMocks();
 });
 
 function getRequiredDecision(
@@ -146,7 +146,7 @@ function getRequiredDecision(
   firstPerformance: Performance,
   secondPerformance: Performance,
 ) {
-  spyOn(Math, "random").mockReturnValue(0);
+  vi.spyOn(Math, "random").mockReturnValue(0);
   const decision = getAiReviewDecision(
     buildCompletedMatch(firstAlias, secondAlias),
     buildRawMatch(firstPerformance, secondPerformance),
@@ -159,7 +159,7 @@ function getRequiredDecision(
 
 describe("getAiReviewDecision", () => {
   test("rejects a selected player absent from the raw match", () => {
-    spyOn(Math, "random").mockReturnValue(0);
+    vi.spyOn(Math, "random").mockReturnValue(0);
 
     expect(() =>
       getAiReviewDecision(

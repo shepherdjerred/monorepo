@@ -21,7 +21,7 @@ bun run build                              # Compile to dist/toolkit
 
 # Type checking & tests
 bun run typecheck
-bun test
+bun run test
 
 # Install globally
 bun scripts/install.ts                    # Installs to ~/.local/bin/toolkit

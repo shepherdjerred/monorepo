@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { RepositoryOpenTelemetry } from "#src/ai-sdk-telemetry.ts";
 import { exporter } from "./otel-test-provider.ts";
 

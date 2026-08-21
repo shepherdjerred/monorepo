@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { Registry } from "prom-client";
 import type { ArchiveConfig } from "@shepherdjerred/llm-observability";
 import { createBroadcastApp, type BroadcastLogger } from "#src/app.ts";

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
 import {
   buildStyleEvidenceChunks,

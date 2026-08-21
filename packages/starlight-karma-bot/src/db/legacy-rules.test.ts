@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { decideLegacyImport, parseLegacyDatetime } from "./legacy-rules.ts";
 
 describe("parseLegacyDatetime", () => {

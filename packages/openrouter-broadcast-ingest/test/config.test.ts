@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { loadBroadcastConfig } from "#src/config.ts";
 
 const completeEnv = {

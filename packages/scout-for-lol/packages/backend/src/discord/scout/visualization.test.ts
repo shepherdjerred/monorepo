@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   ExploreMessageSchema,
   ReportAiPreviewSummarySchema,
@@ -449,7 +449,7 @@ describe("Scout Discord visualization bounds", () => {
         }),
       );
       const description = embed?.data.description;
-      expect(description).toBeString();
+      expect(typeof description).toBe("string");
       expect(description?.length).toBeLessThanOrEqual(3900);
       expect(embed?.data.title?.length).toBeLessThanOrEqual(256);
       expect(embed?.data.title).not.toContain("�");

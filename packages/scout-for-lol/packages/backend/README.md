@@ -18,7 +18,7 @@ bun run dev              # Start with hot reload
 bun run start            # Start once
 bun run build            # Bundle to dist/
 
-bun run test             # bun test against a local test.db
+bun run test             # bun run test against a local test.db
 bun run typecheck        # tsc --noEmit
 bun run lint             # ESLint
 bun run format           # Prettier check

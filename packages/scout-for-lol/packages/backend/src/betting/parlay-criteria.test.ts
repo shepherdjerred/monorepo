@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema, RawMatchSchema } from "@scout-for-lol/data";
 import { z } from "zod";
 import {

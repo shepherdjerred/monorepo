@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
@@ -146,9 +146,10 @@ describe("voice corpus generation", () => {
       ).rejects.toThrow("--refresh");
       await generateVoiceCorpus({ ...options, refresh: true });
       expect(calls).toBe(2);
-      expect(
-        await Bun.file(path.join(directory, "manifest.json")).text(),
-      ).toEndWith("\n");
+      const manifest = await Bun.file(
+        path.join(directory, "manifest.json"),
+      ).text();
+      expect(manifest.endsWith("\n")).toBe(true);
     } finally {
       await rm(directory, { recursive: true });
     }
@@ -159,7 +160,7 @@ describe("committed voice corpus", () => {
   test("all 400 clips verify against their manifest checksums", async () => {
     // requireComplete (the default) enforces the canonical clip count. This is the only place
     // outside the operator acceptance run that proves the committed fixtures are intact — a
-    // corrupted clip must fail bun test, not surface mid-acceptance.
+    // corrupted clip must fail `bun run test`, not surface mid-acceptance.
     const verified = await verifyVoiceCorpus(DEFAULT_VOICE_CORPUS_DIR);
     expect(verified.clipCount).toBe(400);
   });

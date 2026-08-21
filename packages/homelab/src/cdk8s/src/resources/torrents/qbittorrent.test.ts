@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { Chart, Size, Testing } from "cdk8s";
 import { PersistentVolumeClaim } from "cdk8s-plus-31";
 import { z } from "zod";

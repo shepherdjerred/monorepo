@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 
 test("migrated entrypoints load without executing", async () => {
   const modules = await Promise.all([

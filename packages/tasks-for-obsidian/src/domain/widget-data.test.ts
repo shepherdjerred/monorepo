@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { TaskSchema } from "./schemas";
 import { deriveWidgetData, deriveWidgetDataEnvelope } from "./widget-data";

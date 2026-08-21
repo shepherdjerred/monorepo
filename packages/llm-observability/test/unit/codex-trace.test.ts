@@ -1,5 +1,5 @@
 import { trace } from "@opentelemetry/api";
-import { test, expect, beforeAll } from "bun:test";
+import { test, expect, beforeAll } from "vitest";
 import { createCodexJsonlParser, type CodexEvent } from "#src/codex-jsonl.ts";
 import { attachCodexTrace } from "#src/codex-trace.ts";
 import { exporter } from "./otel-test-provider.ts";

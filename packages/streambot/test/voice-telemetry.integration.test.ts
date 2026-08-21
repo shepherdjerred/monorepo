@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { context, metrics, propagation, trace } from "@opentelemetry/api";
 import { logs as logsApi } from "@opentelemetry/api-logs";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";

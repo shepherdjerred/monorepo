@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { App } from "cdk8s";
 import { rm } from "node:fs/promises";
 import { parseAllDocuments } from "yaml";

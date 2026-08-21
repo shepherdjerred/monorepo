@@ -1,4 +1,4 @@
-import { afterAll, expect, test } from "bun:test";
+import { afterAll, expect, test } from "vitest";
 import type { Configuration } from "./types.ts";
 import { run } from "./index.ts";
 import { tmpdir } from "node:os";

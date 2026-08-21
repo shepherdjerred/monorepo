@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { canonicalOtlpJson, OtlpJsonPayloadSchema } from "#src/otlp.ts";
 
 function span(extra: Record<string, unknown>) {

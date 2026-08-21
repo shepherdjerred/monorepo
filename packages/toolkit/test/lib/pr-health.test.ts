@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { BuildkiteBuild } from "#lib/buildkite/ci.ts";
 import type { GitHubCheck, PullRequest } from "#lib/github/types.ts";
 import { buildPrHealthReport, ciHealth } from "#commands/pr/health.ts";

@@ -11,7 +11,7 @@
  * Canaries (each maps to a real weekly failure from June/July 2026):
  *  1. scout    — the root workspace installs, the llm-models producer builds
  *                and resolves from scout's data package, and a plain
- *                `bun test` on the report package passes.
+ *                `bun run test` on the report package passes.
  *  2. snapshot — `update-data-dragon.ts --snapshots-only`, the snapshot-test
  *                step that failed in scout-data-dragon-weekly-refresh even
  *                after the (1) fix. It historically also covered a second root
@@ -163,13 +163,25 @@ async function rehearseScoutWorkspace(repoDir: string): Promise<void> {
     ],
     { cwd: `${repoDir}/${DATA_PACKAGE}` },
   );
-  console.error(`[rehearsal] scout: bun test ${REALDATA_TEST}`);
+  console.error(`[rehearsal] scout: bun run test -- ${REALDATA_TEST}`);
   // Clear ENVIRONMENT like data-dragon.ts does: scout's env-var validation
   // rejects the worker pod's ENVIRONMENT=production.
-  await runCommand(["bun", "test", REALDATA_TEST], {
-    cwd: `${repoDir}/${REPORT_PACKAGE}`,
-    env: { ENVIRONMENT: undefined },
-  });
+  await runCommand(
+    [
+      "bun",
+      "--no-install",
+      "--bun",
+      "vitest",
+      "--config",
+      "../../../../vitest.config.ts",
+      "run",
+      REALDATA_TEST,
+    ],
+    {
+      cwd: `${repoDir}/${REPORT_PACKAGE}`,
+      env: { ENVIRONMENT: undefined },
+    },
+  );
 }
 
 async function rehearseGlitterContextRefresh(repoDir: string): Promise<void> {

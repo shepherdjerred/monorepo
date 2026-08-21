@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "bun:test";
+import { describe, it, expect, beforeAll } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { parseAllDocuments } from "yaml";
@@ -23,12 +23,12 @@ import path from "node:path";
  *
  * CI-only: This test requires network access (~40s) and is skipped in
  * pre-commit hooks. Run explicitly with:
- *   bun test src/argocd-helm-render.test.ts
+ *   bun run test -- src/argocd-helm-render.test.ts
  * Or set CI=true to enable in automated pipelines.
  */
 
-// CI-only: skip in local `bun test` (runs all tests) unless explicitly enabled.
-// To run locally: HELM_RENDER_TEST=1 bun test src/argocd-helm-render.test.ts
+// CI-only: skip in local `bun run test` unless explicitly enabled.
+// To run locally: HELM_RENDER_TEST=1 bun run test -- src/argocd-helm-render.test.ts
 const shouldRun =
   Bun.env["CI"] === "true" ||
   Bun.env["BUILDKITE"] === "true" ||

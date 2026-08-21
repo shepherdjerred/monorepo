@@ -7,14 +7,7 @@
 //
 // No ROM or wasm needed; this runs in CI. The "input actually moves the game"
 // half is covered by the manual scripts/e2e-input.ts (needs a ROM).
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createServer, type Server as HttpServer } from "node:http";
 import { io as ioClient, type Socket as ClientSocket } from "socket.io-client";
 import type { Subscription } from "rxjs";

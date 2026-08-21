@@ -330,8 +330,8 @@
     "**/postcss.config.ts",
     "**/generated/**",
     "**/dist/**",
-    "archive/**",
-    "practice/**",
+    "sandbox/archive/**",
+    "sandbox/practice/**",
     "packages/discord-video-stream/**",
     "packages/resume/**",
     "packages/dotfiles/**",
@@ -342,7 +342,7 @@
     "packages/cooklang-for-obsidian/**",
     "packages/tasks-for-obsidian/**",
     "packages/bun-decompile/**",
-    "poc/**",
+    "sandbox/poc/**",
     "scripts/observability/local-stack/**"
   ],
   "ignoreDependencies": [

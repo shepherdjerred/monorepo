@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   buildMaintenanceCommand,
   cleanTurboCache,
@@ -10,8 +10,10 @@ import {
 } from "./maintenance.ts";
 import { register } from "#observability/metrics.ts";
 
-function setEnvironment(name: string, value: string | undefined): void {
-  Bun.env[name] = value;
+function setEnvironment(name: string, value: string | undefined): boolean {
+  return value === undefined
+    ? Reflect.deleteProperty(Bun.env, name)
+    : Reflect.set(Bun.env, name, value);
 }
 
 const testHooks: MaintenanceCommandHooks = {

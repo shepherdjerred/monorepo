@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { ButtonStyle } from "discord.js";
 import {
   DiscordGuildIdSchema,
@@ -44,8 +44,8 @@ function fakeInteraction(customId: string, guildId: string | null = SERVER_ID) {
     customId,
     guildId,
     user: { id: BETTOR },
-    deferReply: mock(() => Promise.resolve(undefined)),
-    editReply: mock((options: { content: string }) => {
+    deferReply: vi.fn(() => Promise.resolve(undefined)),
+    editReply: vi.fn((options: { content: string }) => {
       replies.push(options.content);
       return Promise.resolve(undefined);
     }),

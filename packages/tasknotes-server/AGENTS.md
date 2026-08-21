@@ -7,14 +7,14 @@ Hono HTTP server (Bun runtime) that reads/writes task markdown files and exposes
 This package is a member of the root Bun workspace (one root `bun.lock`,
 isolated linker) — `bun install` at the repo root covers it. `cd
 packages/tasknotes-server` before running package-scoped commands like
-`bun test` or `bunx eslint`.
+`bun run test` or `bunx eslint`.
 
 ## Quick Reference
 
 ```bash
 bun install                          # Install deps
 bun run typecheck                    # Type check
-bun test                             # Run tests
+bun run test                             # Run tests
 bunx eslint . --max-warnings=0       # Lint
 bun run build                        # Compile to binary (dist/tasknotes-server)
 bun run dev                          # Dev mode (auto-reload)

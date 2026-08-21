@@ -195,12 +195,11 @@ const commands: Record<
       "export DATABASE_URL=file:/tmp/alert-dashboard-smoke.db",
       // Kept as separate commands: `set -e` ignores a failing non-final
       // command in an AND-OR list, so chaining these with `&&` would swallow a
-      // migrate failure, leave the shell in the package directory, and surface
-      // it as a bogus "Module not found" for the server entrypoint below.
+      // migrate failure. The server deliberately stays in the package directory
+      // so Bun resolves the isolated-linker dependency tree for this workspace.
       "cd /app/packages/alert-dashboard",
       "bunx prisma migrate deploy",
-      "cd /app",
-      "bun packages/alert-dashboard/src/server/index.ts >/tmp/alert-dashboard-smoke.log 2>&1 &",
+      "bun src/server/index.ts >/tmp/alert-dashboard-smoke.log 2>&1 &",
       "pid=$!",
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
       "for _ in $(seq 1 30); do",

@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { afterAll, describe, it } from "bun:test";
+import { afterAll, describe, it } from "vitest";
 import { preferAsyncAwait } from "./prefer-async-await.ts";
 
 RuleTester.afterAll = afterAll;

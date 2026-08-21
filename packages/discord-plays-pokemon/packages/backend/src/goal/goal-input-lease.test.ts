@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import path from "node:path";
 import type { Config } from "#src/config/schema.ts";
 import { GoalManager } from "./goal-manager.ts";
@@ -123,7 +123,7 @@ describe("GoalManager input lease", () => {
 
     const started = await manager.startGoal(START_INPUT);
     expect(started.kind).toBe("started");
-    expect(tracker.held).toBeTrue();
+    expect(tracker.held).toBe(true);
     process.finish(0);
     await waitForRelease(tracker);
     expect(tracker.released).toBe(1);
@@ -165,9 +165,9 @@ describe("GoalManager input lease", () => {
       }
     })();
     await process.killRequested;
-    expect(process.killed()).toBeTrue();
-    expect(persistTracker.held).toBeTrue();
-    expect(rejected).toBeFalse();
+    expect(process.killed()).toBe(true);
+    expect(persistTracker.held).toBe(true);
+    expect(rejected).toBe(false);
     process.finish(143);
     await expect(start).rejects.toThrow();
     expect(persistTracker.released).toBe(1);
@@ -194,15 +194,15 @@ describe("GoalManager input lease", () => {
     if (firstProcess === undefined)
       throw new Error("first process not spawned");
     await firstProcess.killRequested;
-    expect(firstProcess.killed()).toBeTrue();
-    expect(tracker.held).toBeTrue();
+    expect(firstProcess.killed()).toBe(true);
+    expect(tracker.held).toBe(true);
     expect(tracker.acquired).toBe(1);
     firstProcess.finish(143);
     await replacement;
     expect(tracker.acquired).toBe(2);
     expect(tracker.released).toBe(1);
     await manager.shutdown();
-    expect(processes[1]?.killed()).toBeTrue();
+    expect(processes[1]?.killed()).toBe(true);
     expect(tracker.released).toBe(2);
   });
 
@@ -227,7 +227,7 @@ describe("GoalManager input lease", () => {
     expect(startResult.kind).toBe("started");
     await stopping;
     expect(processes).toHaveLength(1);
-    expect(processes[0]?.killed()).toBeTrue();
+    expect(processes[0]?.killed()).toBe(true);
     expect(tracker.released).toBe(1);
     expect(manager.getStatus()).toBeUndefined();
     const afterShutdown = await manager.startGoal(START_INPUT);
@@ -304,7 +304,7 @@ describe("GoalManager input lease", () => {
 
     await manager.startGoal(START_INPUT);
     await waitForRelease(tracker);
-    expect(process.killed()).toBeTrue();
+    expect(process.killed()).toBe(true);
     expect(tracker.released).toBe(1);
   });
 });

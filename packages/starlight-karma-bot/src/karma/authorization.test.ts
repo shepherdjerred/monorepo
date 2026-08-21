@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { canConfigureKarma } from "./authorization.ts";
 
 describe("canConfigureKarma", () => {

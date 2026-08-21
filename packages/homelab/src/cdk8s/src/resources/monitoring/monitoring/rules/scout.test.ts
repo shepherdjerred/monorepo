@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { getScoutRuleGroups } from "./scout.ts";
 
 describe("Scout bot-health alert rules", () => {

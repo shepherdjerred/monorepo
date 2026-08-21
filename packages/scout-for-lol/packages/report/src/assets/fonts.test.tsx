@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import satori from "satori";
 import {
   bunReportFonts,
@@ -19,15 +19,15 @@ describe("report fonts", () => {
     expect(cjkFontFileName("日本語かな")).toBe("NotoSansCJKjp-Regular.otf");
     expect(cjkFontFileName("ㄅㄆㄇ")).toBe("NotoSansCJKtc-Regular.otf");
     expect(cjkFontFileName("中文")).toBe("NotoSansCJKsc-Regular.otf");
-    expect(fontForText("body", "한국어")).toStartWith(
-      "Spiegel, Noto Sans CJK KR",
-    );
-    expect(fontForText("body", "日本語かな")).toStartWith(
-      "Spiegel, Noto Sans CJK JP",
-    );
-    expect(fontForText("body", "中文")).toStartWith(
-      "Spiegel, Noto Sans CJK SC",
-    );
+    expect(
+      fontForText("body", "한국어").startsWith("Spiegel, Noto Sans CJK KR"),
+    ).toBe(true);
+    expect(
+      fontForText("body", "日本語かな").startsWith("Spiegel, Noto Sans CJK JP"),
+    ).toBe(true);
+    expect(
+      fontForText("body", "中文").startsWith("Spiegel, Noto Sans CJK SC"),
+    ).toBe(true);
     expect(fontForText("body", "Summoner One")).toBe("Spiegel");
 
     const fonts = await bunReportFonts(containsCjkText(playerName), playerName);

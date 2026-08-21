@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { parseAgentTaskInputsFromMarkdown } from "./agent-task-markdown.ts";
 
 function block(title: string, runAt: string): string {

@@ -2,7 +2,7 @@
 // for its jitter buffer, so it is close to a floor on client-side latency for
 // an interactive stream. These tests pin the encoding and, importantly, that
 // omitting the option leaves existing consumers on the historical 100ms.
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { mergePlayStreamOptions } from "../src/media/newApi.js";
 
 describe("videoPlayoutDelayMaxMs option resolution", () => {

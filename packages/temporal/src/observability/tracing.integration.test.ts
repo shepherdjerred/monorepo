@@ -7,7 +7,7 @@
 // exporter loses its url, or if shutdown stops force-flushing — `posts` stays
 // empty and the test fails. The local stub-receiver experiment that drove the
 // original fix is exactly this assertion, codified.
-import { describe, expect, test, beforeAll, afterAll } from "bun:test";
+import { describe, expect, test, beforeAll, afterAll } from "vitest";
 import * as Sentry from "@sentry/bun";
 import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 import { initializeTracing, shutdownTracing, withSpan } from "./tracing.ts";

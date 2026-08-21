@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "bun:test";
+import { describe, it, expect, beforeAll } from "vitest";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { App } from "cdk8s";

@@ -6,7 +6,7 @@
  * values are accepted, and the volume is bounded.
  */
 
-import { describe, it, expect, beforeEach, afterAll } from "bun:test";
+import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import {
   OnboardingOutcomeSchema,
   OnboardingStepKindSchema,

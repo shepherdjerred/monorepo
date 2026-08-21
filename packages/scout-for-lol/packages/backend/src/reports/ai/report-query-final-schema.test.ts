@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { REPORT_COMMON_PRESETS } from "@scout-for-lol/data";
 import { ValidatedReportAiFinalDraftSchema } from "./report-query-final-schema.ts";
 

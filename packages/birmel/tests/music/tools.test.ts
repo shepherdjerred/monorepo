@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, mock, test } from "bun:test";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import {
   getRequestContext,
@@ -82,7 +82,7 @@ function makeQueue(input: {
 
 const channels = new Map<string, unknown>();
 
-void mock.module("@shepherdjerred/birmel/discord/client.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/discord/client.ts", () => ({
   getDiscordClient: () => ({
     user: { id: "bot-user" },
     channels: {
@@ -91,7 +91,7 @@ void mock.module("@shepherdjerred/birmel/discord/client.ts", () => ({
   }),
 }));
 
-void mock.module("@shepherdjerred/birmel/music/player.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/music/player.ts", () => ({
   getMusicPlayer: () => ({
     queues: {
       get: (guildId: string) => queues.get(guildId) ?? null,
@@ -121,7 +121,7 @@ void mock.module("@shepherdjerred/birmel/music/player.ts", () => ({
   }),
 }));
 
-void mock.module("@shepherdjerred/birmel/music/responses.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/music/responses.ts", () => ({
   sendMusicEmbed: (embed: unknown) => {
     sentEmbeds.push(embed);
     return Promise.resolve();

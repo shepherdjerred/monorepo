@@ -1,4 +1,4 @@
-import { test, expect, describe } from "bun:test";
+import { test, expect, describe } from "vitest";
 import { computeVerdict } from "#commands/deployed/deployed.ts";
 import type { ArgoStatus } from "#lib/deployed/types.ts";
 

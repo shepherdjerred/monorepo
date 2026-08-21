@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { Testing } from "cdk8s";
 import { z } from "zod";
 import { createBuildkiteApp } from "./buildkite.ts";

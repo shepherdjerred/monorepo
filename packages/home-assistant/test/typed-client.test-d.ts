@@ -4,7 +4,7 @@
  * runtime assertions — the `@ts-expect-error` comments fail the build when
  * the expected errors disappear, and valid lines must compile clean. Renamed
  * to `.test-d.ts` by convention so it's obvious it's a type-level test and
- * so bun test doesn't try to run it as a suite.
+ * so Vitest doesn't try to run it as a suite.
  */
 
 import type { HomeAssistantRestClient } from "#lib";

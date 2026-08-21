@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { ReportIdSchema } from "@scout-for-lol/data";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ReportRunHistory } from "#src/components/report-run-history.tsx";

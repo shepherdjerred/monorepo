@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parseAppleReceipt, parseAppleDate } from "./parser.ts";
 
 describe("parseAppleDate", () => {

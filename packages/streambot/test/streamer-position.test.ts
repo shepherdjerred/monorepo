@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import type {
   PlayerFactory,

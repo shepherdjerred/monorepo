@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { ThreadEvent, ThreadItem } from "@openai/codex-sdk";
 import { codexFinalizationToolViolation } from "./agent-task-sdk.ts";
 

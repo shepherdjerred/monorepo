@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { freshnessAvailability } from "#client/freshness-availability.ts";
 import { CaseSummarySchema, type CaseSummary } from "#shared/schema.ts";

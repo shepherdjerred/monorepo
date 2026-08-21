@@ -8,7 +8,7 @@
  * "You are not a member of that guild" during a plain Discord outage.
  */
 
-import { describe, it, expect, mock, afterEach } from "bun:test";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import type { User } from "#generated/prisma/client/index.js";
 import {
   DiscordUpstreamError,
@@ -44,7 +44,7 @@ function testUser(overrides: Partial<User> = {}): User {
 
 /** Swap in a fetch-shaped stub, preserving the `preconnect` member. */
 function installFetch(implementation: () => Promise<Response>): void {
-  globalThis.fetch = Object.assign(mock(implementation), {
+  globalThis.fetch = Object.assign(vi.fn(implementation), {
     preconnect: realFetch.preconnect,
   });
 }

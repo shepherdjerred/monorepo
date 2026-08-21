@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { filterNewMatches } from "#src/league/api/match-history.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 

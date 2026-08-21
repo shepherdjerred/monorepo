@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { TaskSchema } from "../../domain/schemas";
 import { taskDetailCompletionAction } from "./task-detail-completion";

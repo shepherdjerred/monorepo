@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   getChampionImage,
   getChampionLoadingImage,
@@ -17,7 +17,7 @@ describe("image-cache", () => {
   test("preload + get with normalized camelCase key (RekSai)", async () => {
     await preloadChampionImages(["RekSai"]);
     const dataUri = getChampionImage("RekSai");
-    expect(dataUri).toStartWith("data:image/png;base64,");
+    expect(dataUri.startsWith("data:image/png;base64,")).toBe(true);
     expect(dataUri.length).toBeGreaterThan(200);
   });
 
@@ -26,8 +26,12 @@ describe("image-cache", () => {
     // same cache entry whether the caller used the override input or the
     // canonical form.
     await preloadChampionImages(["Reksai"]);
-    expect(getChampionImage("Reksai")).toStartWith("data:image/png;base64,");
-    expect(getChampionImage("RekSai")).toStartWith("data:image/png;base64,");
+    expect(
+      getChampionImage("Reksai").startsWith("data:image/png;base64,"),
+    ).toBe(true);
+    expect(
+      getChampionImage("RekSai").startsWith("data:image/png;base64,"),
+    ).toBe(true);
   });
 
   test("preload + get round-trip across Riot quirk casing (FiddleSticks ↔ Fiddlesticks)", async () => {
@@ -35,34 +39,34 @@ describe("image-cache", () => {
     // Fiddlesticks. The cache must resolve both casings to the same
     // canonical entry so report rendering doesn't throw.
     await preloadChampionImages(["FiddleSticks"]);
-    expect(getChampionImage("FiddleSticks")).toStartWith(
-      "data:image/png;base64,",
-    );
-    expect(getChampionImage("Fiddlesticks")).toStartWith(
-      "data:image/png;base64,",
-    );
-    expect(getChampionImage("FIDDLESTICKS")).toStartWith(
-      "data:image/png;base64,",
-    );
+    expect(
+      getChampionImage("FiddleSticks").startsWith("data:image/png;base64,"),
+    ).toBe(true);
+    expect(
+      getChampionImage("Fiddlesticks").startsWith("data:image/png;base64,"),
+    ).toBe(true);
+    expect(
+      getChampionImage("FIDDLESTICKS").startsWith("data:image/png;base64,"),
+    ).toBe(true);
   });
 
   test("preload + get champion loading image for RekSai", async () => {
     await preloadChampionLoadingImages(["RekSai"]);
     const dataUri = getChampionLoadingImage("RekSai");
-    expect(dataUri).toStartWith("data:image/jpeg;base64,");
+    expect(dataUri.startsWith("data:image/jpeg;base64,")).toBe(true);
     expect(dataUri.length).toBeGreaterThan(200);
   });
 
   test("preload + get champion loading image for KSante", async () => {
     await preloadChampionLoadingImages(["KSante"]);
     const dataUri = getChampionLoadingImage("KSante");
-    expect(dataUri).toStartWith("data:image/jpeg;base64,");
+    expect(dataUri.startsWith("data:image/jpeg;base64,")).toBe(true);
   });
 
   test("preload + get champion loading image for JarvanIV", async () => {
     await preloadChampionLoadingImages(["JarvanIV"]);
     const dataUri = getChampionLoadingImage("JarvanIV");
-    expect(dataUri).toStartWith("data:image/jpeg;base64,");
+    expect(dataUri.startsWith("data:image/jpeg;base64,")).toBe(true);
   });
 
   test("getChampionImage throws when not pre-loaded", () => {
@@ -83,7 +87,7 @@ describe("image-cache", () => {
     // — satori crashes on empty `<img src="">` and the postmatch report
     // pipeline silently advances cursors, losing matches.
     const dataUri = getItemImage(9_999_999);
-    expect(dataUri).toStartWith("data:image/svg+xml;base64,");
+    expect(dataUri.startsWith("data:image/svg+xml;base64,")).toBe(true);
     expect(dataUri.length).toBeGreaterThan(50);
   });
 
@@ -91,7 +95,7 @@ describe("image-cache", () => {
     // Item ID 1001 (Boots) has shipped in every Data Dragon snapshot since
     // forever; if this assertion ever fails, the items.json is broken.
     const dataUri = getItemImage(1001);
-    expect(dataUri).toStartWith("data:image/png;base64,");
+    expect(dataUri.startsWith("data:image/png;base64,")).toBe(true);
   });
 
   test("setItemMissHandler fires for unknown item ids only", () => {

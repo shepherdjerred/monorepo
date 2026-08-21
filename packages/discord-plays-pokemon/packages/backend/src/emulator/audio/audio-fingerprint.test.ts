@@ -21,7 +21,7 @@
 // plain `bun run test` on a clean checkout); force-skip with
 // `SKIP_AUDIO_FINGERPRINT=1`.
 
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { Emulator } from "#src/emulator/emulator.ts";
 import type { DrainResult } from "#src/emulator/audio/m4a-driver.ts";

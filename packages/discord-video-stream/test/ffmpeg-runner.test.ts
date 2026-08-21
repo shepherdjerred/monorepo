@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { fileURLToPath } from "node:url";
 import {
   FfmpegExitError,

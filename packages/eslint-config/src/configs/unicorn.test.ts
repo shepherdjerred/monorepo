@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import unicorn from "eslint-plugin-unicorn";
 import { reviewedUnicornConfig, reviewedUnicornRuleNames } from "./unicorn.ts";
 

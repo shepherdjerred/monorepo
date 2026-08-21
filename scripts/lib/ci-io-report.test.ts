@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import {
   BuildkiteBuildSchema,
@@ -448,7 +448,7 @@ describe("validated API clients", () => {
     const parsed = await fetchBuildkiteBuild(config, 101);
     expect(parsed.number).toBe(101);
     const url = new URL(requestedUrl);
-    expect(url.pathname).toEndWith("/builds/101");
+    expect(url.pathname.endsWith("/builds/101")).toBe(true);
     expect(url.searchParams.get("include_retried_jobs")).toBe("true");
     expect(requestedInit?.signal).toBeInstanceOf(AbortSignal);
     expect(JSON.stringify(parsed)).not.toContain("secret-token");

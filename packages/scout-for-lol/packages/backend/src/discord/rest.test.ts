@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
 import { guildCommandPayload } from "#src/discord/commands/definitions.ts";

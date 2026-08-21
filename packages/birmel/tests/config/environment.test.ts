@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { loadConfigFromEnvironment } from "@shepherdjerred/birmel/config/index.ts";
 
 const VALID_ENVIRONMENT = {

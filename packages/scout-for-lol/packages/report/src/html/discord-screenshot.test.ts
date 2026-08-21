@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "vitest";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { satoriRankAssetUrl } from "@scout-for-lol/design-system/satori/assets";
@@ -31,9 +31,7 @@ afterAll(() => {
 
 function expectPng(image: Uint8Array): void {
   expect(image.length).toBeGreaterThan(1000);
-  expect(image.slice(0, PNG_SIGNATURE.length)).toEqual(
-    Uint8Array.from(PNG_SIGNATURE),
-  );
+  expect([...image.slice(0, PNG_SIGNATURE.length)]).toEqual(PNG_SIGNATURE);
 }
 
 describe("discord screenshot renderer", () => {

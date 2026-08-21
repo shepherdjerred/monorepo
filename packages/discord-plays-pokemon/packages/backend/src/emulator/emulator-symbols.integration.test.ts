@@ -242,3 +242,4 @@ describeWasm("emulator game symbols (real wasm)", () => {
     }
   }, 180_000);
 });
+import { describe, expect, test } from "vitest";

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { ReportStateV1Schema } from "./report-delivery.ts";
 import { tasknotesBaselineFromReportState } from "./tasknotes-canary.ts";
 

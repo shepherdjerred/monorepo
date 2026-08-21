@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -45,19 +45,19 @@ function fakeInteraction(
     },
     deferred: false,
     replied: false,
-    deferUpdate: mock(() => {
+    deferUpdate: vi.fn(() => {
       calls.push("deferUpdate");
       return Promise.resolve(undefined);
     }),
-    deferReply: mock(() => {
+    deferReply: vi.fn(() => {
       calls.push("deferReply");
       return Promise.resolve(undefined);
     }),
-    reply: mock(() => {
+    reply: vi.fn(() => {
       calls.push("reply");
       return Promise.resolve(undefined);
     }),
-    editReply: mock(() => {
+    editReply: vi.fn(() => {
       calls.push("editReply");
       editReplyCount += 1;
       if (editReplyCount === 1 && options.failConfirmationEdit === true) {
@@ -65,11 +65,11 @@ function fakeInteraction(
       }
       return Promise.resolve(undefined);
     }),
-    followUp: mock(() => {
+    followUp: vi.fn(() => {
       calls.push("followUp");
       return Promise.resolve({ delete: () => Promise.resolve(undefined) });
     }),
-    sendPublic: mock(() => {
+    sendPublic: vi.fn(() => {
       calls.push("sendPublic");
       return options.failPublicSend
         ? Promise.reject(new Error("missing send permission"))

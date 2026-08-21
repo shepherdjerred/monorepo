@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { zodSchemaNaming } from "./zod-schema-naming.ts";
 
 describe("zod-schema-naming", () => {

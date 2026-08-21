@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   CommandHandler,
   type CommandHandlerDeps,
@@ -72,6 +72,14 @@ type Harness = {
   announces: string[];
   debugStarts: number[];
 };
+
+function firstMessage(messages: readonly string[]): string {
+  const message = messages[0];
+  if (message === undefined) {
+    throw new Error("Expected the command handler to emit a message");
+  }
+  return message;
+}
 
 function makeHandler(over: {
   adminIds?: string[];
@@ -281,7 +289,9 @@ describe("CommandHandler routing + acks", () => {
         preResolved: RESOLVED_STUB,
       },
     ]);
-    expect(edits[0]).toStartWith("Queued: **never gonna give you up**");
+    expect(
+      firstMessage(edits).startsWith("Queued: **never gonna give you up**"),
+    ).toBe(true);
     expect(edits[0]).toContain("Tip: ");
   });
 
@@ -293,7 +303,7 @@ describe("CommandHandler routing + acks", () => {
     });
     await h.handler.run(interaction);
     expect(h.events[0]?.type).toBe("ADD_NEXT");
-    expect(edits[0]).toStartWith("Up next: **song**");
+    expect(firstMessage(edits).startsWith("Up next: **song**")).toBe(true);
     expect(edits[0]).toContain("Tip: ");
   });
 
@@ -321,7 +331,7 @@ describe("CommandHandler routing + acks", () => {
         requesterId: uid(REQUESTER),
       },
     ]);
-    expect(replies[0]).toStartWith("Queued: **Movie**");
+    expect(firstMessage(replies).startsWith("Queued: **Movie**")).toBe(true);
   });
 
   test("play surfaces a specific error for an unsupported site and queues nothing", async () => {
@@ -382,7 +392,7 @@ describe("CommandHandler routing + acks", () => {
     });
     await h.handler.run(interaction);
     expect(h.events).toHaveLength(0);
-    expect(edits[0]).toStartWith("Couldn't queue that:");
+    expect(firstMessage(edits).startsWith("Couldn't queue that:")).toBe(true);
   });
 
   test("play still shames+blocks when yt-dlp resolves to a blocked domain", async () => {
@@ -509,7 +519,9 @@ describe("CommandHandler playlist expansion", () => {
     expect(state.deferred).toBe(true);
     expect(h.events).toHaveLength(2);
     expect(h.events.every((event) => event.type === "ADD")).toBe(true);
-    expect(edits[0]).toStartWith("Queued 2 item(s) from the playlist.");
+    expect(
+      firstMessage(edits).startsWith("Queued 2 item(s) from the playlist."),
+    ).toBe(true);
     expect(edits[0]).toContain("Tip: ");
   });
 });
@@ -1059,7 +1071,11 @@ describe("CommandHandler subtitles options", () => {
     const event = h.events[0];
     if (event?.type !== "ADD") throw new Error("expected ADD");
     expect(event.source.subtitles).toEqual({ enabled: true, language: "es" });
-    expect(fake.edits[0]).toStartWith("Queued: **a song** _(subtitles: es)_");
+    expect(
+      firstMessage(fake.edits).startsWith(
+        "Queued: **a song** _(subtitles: es)_",
+      ),
+    ).toBe(true);
   });
 
   test("subtitles:off disables and is reflected in the ack", async () => {
@@ -1068,7 +1084,11 @@ describe("CommandHandler subtitles options", () => {
     const event = h.events[0];
     if (event?.type !== "ADD") throw new Error("expected ADD");
     expect(event.source.subtitles).toEqual({ enabled: false });
-    expect(fake.edits[0]).toStartWith("Queued: **a song** _(subtitles: off)_");
+    expect(
+      firstMessage(fake.edits).startsWith(
+        "Queued: **a song** _(subtitles: off)_",
+      ),
+    ).toBe(true);
   });
 
   test("playlist items inherit the subtitle preference", async () => {

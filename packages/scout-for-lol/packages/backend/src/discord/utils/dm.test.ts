@@ -1,4 +1,4 @@
-import { describe, expect, test, afterAll, beforeEach, mock } from "bun:test";
+import { describe, expect, test, afterAll, beforeEach, vi } from "vitest";
 import { DiscordAPIError } from "discord.js";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { mockClient, mockUser } from "#src/testing/discord-mocks.ts";
@@ -14,7 +14,7 @@ function clientWithSend(send: () => Promise<unknown>) {
   const user = mockUser({
     id: recipientId,
     tag: "Recipient#1234",
-    send: mock(send),
+    send: vi.fn(send),
   });
   return mockClient({
     users: {

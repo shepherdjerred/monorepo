@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { BUCKS_INT32_MAX } from "@scout-for-lol/data";
 import {
   addInt32,

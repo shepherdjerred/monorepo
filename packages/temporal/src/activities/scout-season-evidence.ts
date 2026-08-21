@@ -229,7 +229,7 @@ export async function assessSeasonEvidence(input: {
       // Failed sources stay absent so the report cannot claim clean coverage.
     }
   }
-  await runCommand(["bun", "test", "src/seasons.test.ts"], {
+  await runCommand(["bun", "run", "test", "--", "src/seasons.test.ts"], {
     cwd: `${input.repoDir}/packages/scout-for-lol/packages/data`,
   });
   const requiredDates =

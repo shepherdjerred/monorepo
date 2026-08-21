@@ -1,6 +1,6 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { fetchRawMatchPair } from "#materialization/s3-source.ts";
 

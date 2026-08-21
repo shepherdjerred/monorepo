@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parseMaxBlockingPriority } from "#commands/pr/review.ts";
 import {
   CODEX_GATE_CONTEXT,

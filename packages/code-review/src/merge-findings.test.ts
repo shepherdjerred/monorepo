@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { mergeDuplicateFindings } from "./merge-findings.ts";
 import { codexProvider } from "./providers/codex.ts";
 import {

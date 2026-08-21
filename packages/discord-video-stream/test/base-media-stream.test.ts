@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { BaseMediaStream } from "../src/media/BaseMediaStream.ts";
 import type { SendStats, StreamObserver } from "../src/media/StreamObserver.ts";
 

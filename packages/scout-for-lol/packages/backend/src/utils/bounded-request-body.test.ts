@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
 
 /**

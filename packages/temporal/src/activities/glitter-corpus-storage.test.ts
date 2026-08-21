@@ -1,5 +1,5 @@
 import { S3Client } from "@aws-sdk/client-s3";
-import { describe, expect, spyOn, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import { glitterCorpusStorageIntegrityFailuresTotal } from "#observability/metrics-glitter.ts";
 import { StoredObjectSchema } from "#shared/glitter-corpus.ts";
 import { discordRequestLeaseDelayMs } from "./glitter-corpus-rate-limit.ts";
@@ -184,7 +184,7 @@ describe("Glitter corpus required reads", () => {
       bucket: "test",
       client,
     };
-    const integrityFailure = spyOn(
+    const integrityFailure = vi.spyOn(
       glitterCorpusStorageIntegrityFailuresTotal,
       "inc",
     );

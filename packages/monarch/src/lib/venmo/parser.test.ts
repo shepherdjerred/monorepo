@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach } from "bun:test";
+import { describe, expect, test, beforeEach, afterEach } from "vitest";
 import { parseVenmoCSV } from "./parser.ts";
 import path from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";

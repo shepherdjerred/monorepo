@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ApplicationFailure } from "@temporalio/activity";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput, AgentTaskProvider } from "#shared/agent-task.ts";

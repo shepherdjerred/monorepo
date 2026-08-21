@@ -1,5 +1,5 @@
 import { generateText } from "ai";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { getPricing } from "@shepherdjerred/llm-models";
 import { Registry } from "prom-client";
 import { z } from "zod";

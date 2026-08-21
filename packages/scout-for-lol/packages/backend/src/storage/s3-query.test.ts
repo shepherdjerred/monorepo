@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { RawMatch } from "@scout-for-lol/data";
 
 // We'll need to test internal helper functions, so let's create a test version

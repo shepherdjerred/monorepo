@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import { parseVersionCatalog } from "@shepherdjerred/version-catalog";
 import { VersionMapSchema } from "./version-map.generated.ts";
@@ -41,8 +41,8 @@ describe("version catalog static validation", () => {
   it("uses valid managed metadata", () => {
     for (const entry of catalog.entries) {
       if (!entry.management.managed) continue;
-      expect(DATASOURCES.has(entry.management.datasource)).toBeTrue();
-      expect(VERSIONING.has(entry.management.versioning)).toBeTrue();
+      expect(DATASOURCES.has(entry.management.datasource)).toBe(true);
+      expect(VERSIONING.has(entry.management.versioning)).toBe(true);
       if (
         entry.management.datasource === "helm" ||
         entry.management.datasource === "docker"
@@ -61,17 +61,17 @@ describe("version catalog static validation", () => {
       ) {
         continue;
       }
-      expect(SEMVER_PATTERN.test(entry.value)).toBeTrue();
+      expect(SEMVER_PATTERN.test(entry.value)).toBe(true);
     }
   });
 
   it("uses canonical image digests", () => {
     for (const entry of catalog.entries) {
       if (entry.artifactType !== "image") continue;
-      expect(DOCKER_REF_PATTERN.test(entry.value)).toBeTrue();
+      expect(DOCKER_REF_PATTERN.test(entry.value)).toBe(true);
       const digest = entry.value.split("@sha256:")[1];
       expect(digest).toBeDefined();
-      expect(SHA256_PATTERN.test(digest ?? "")).toBeTrue();
+      expect(SHA256_PATTERN.test(digest ?? "")).toBe(true);
     }
   });
 

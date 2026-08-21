@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { AnnexBSplitter, classifyAccessUnit } from "./annex-b.ts";
 
 const AUD = 9;
