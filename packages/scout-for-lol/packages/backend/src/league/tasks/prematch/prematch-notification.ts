@@ -1,12 +1,12 @@
-import { EmbedBuilder } from "discord.js";
+import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import type {
   RawCurrentGameInfo,
   PlayerConfigEntry,
   LeaguePuuid,
   DiscordGuildId,
   QueueType,
+  BucksPrediction,
 } from "@scout-for-lol/data/index.ts";
-import type { AttachmentBuilder, MessageCreateOptions } from "discord.js";
 import {
   resolveQueueTypeFromGame,
   queueTypeToDisplayString,
@@ -19,17 +19,34 @@ import { getChampionDisplayName } from "#src/utils/champion.ts";
 import { createLogger } from "#src/logger.ts";
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/bun";
+import {
+  buildLoadingScreenData,
+  fetchParticipantRanks,
+  type ParticipantRanks,
+} from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import { recordLoadingScreenFailure } from "#src/league/tasks/prematch/loading-screen-failure.ts";
+import {
+  loadingScreenToImage,
+  loadingScreenToSvg,
+} from "@scout-for-lol/report";
+import { savePrematchImageToS3, savePrematchSvgToS3 } from "#src/storage/s3.ts";
+import {
+  prematchLoadingScreenGeneratedTotal,
+  prematchLoadingScreenDurationSeconds,
+} from "#src/metrics/index.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { recordPoolMessageRefs } from "#src/betting/pool-open.ts";
 import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
+import { capturePredictionForPrematch } from "#src/betting/prediction-capture.ts";
+import { isBettableGame } from "#src/betting/eligibility.ts";
 import { appendBucksLine } from "#src/betting/prematch-line.ts";
 import {
   prepareBucksPrematch,
   type BucksPrematchAttachment,
 } from "#src/betting/prematch-hook.ts";
 import { startParlayGeneration } from "#src/betting/parlay-generate.ts";
+import type { MessageCreateOptions } from "discord.js";
 import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
-import { renderPrematchLoadingScreen } from "#src/league/tasks/prematch/prematch-loading-screen.ts";
 
 const logger = createLogger("prematch-notification");
 
@@ -282,6 +299,7 @@ export async function sendPrematchNotification(
   trackedPlayers: PlayerConfigEntry[],
 ): Promise<Map<string, string>> {
   const gameId = gameInfo.gameId.toString();
+  const detectedAt = new Date();
   const aliases = trackedPlayers.map((p) => p.alias);
   logger.info(
     `[sendPrematchNotification] 📢 Sending notification for game ${gameId} with ${trackedPlayers.length.toString()} tracked player(s)`,
@@ -294,54 +312,172 @@ export async function sendPrematchNotification(
   const puuids: LeaguePuuid[] = trackedPlayers.map(
     (p) => p.league.leagueAccount.puuid,
   );
-  const channels = await getChannelsSubscribedToPlayers(puuids);
-
-  if (channels.length === 0) {
-    logger.info(
-      `[sendPrematchNotification] ⚠️  No channels subscribed for game ${gameId}`,
-    );
-    return new Map();
-  }
-
-  // Apply per-subscription notification filters (queue type, etc.).
   const queueType = resolveQueueTypeFromGame(
     gameInfo.gameQueueConfigId,
     gameInfo.gameMode,
     gameInfo.gameType,
   );
+  const predictionEligible = isBettableGame({
+    queueType,
+    participants: gameInfo.participants,
+  });
+
+  // Capture an eligible match before resolving delivery destinations. A
+  // subscription lookup is unrelated to the match-scoped observation and may
+  // fail independently; prediction capture must not be lost in that case.
+  let predictionPromise: Promise<BucksPrediction | undefined> =
+    Promise.resolve(undefined);
+  let ranksByPuuid: ParticipantRanks | undefined;
+  if (predictionEligible) {
+    const firstPlayer = trackedPlayers[0];
+    if (firstPlayer === undefined) {
+      throw new Error(`No tracked players provided for game ${gameId}`);
+    }
+    const region = firstPlayer.league.leagueAccount.region;
+    ranksByPuuid = await fetchParticipantRanks(gameInfo, region);
+    predictionPromise = capturePredictionForPrematch({
+      gameInfo,
+      queueType,
+      ranksByPuuid,
+      observedAt: detectedAt,
+    });
+  }
+
+  let channels: Awaited<ReturnType<typeof getChannelsSubscribedToPlayers>>;
+  try {
+    channels = await getChannelsSubscribedToPlayers(puuids);
+  } catch (error) {
+    await predictionPromise;
+    logger.error(
+      `[sendPrematchNotification] ❌ Failed to resolve channels for game ${gameId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "prematch-channel-lookup", gameId },
+    });
+    return new Map();
+  }
   const deliverChannels = channelsPassingQueueFilter(channels, queueType);
+
+  if (channels.length === 0) {
+    await predictionPromise;
+    logger.info(
+      `[sendPrematchNotification] ⚠️  No channels subscribed for game ${gameId}`,
+    );
+    return new Map();
+  }
   if (deliverChannels.length === 0) {
+    await predictionPromise;
     logger.info(
       `[sendPrematchNotification] 🔕 Game ${gameId} filtered out for all channels (queue ${queueType ?? "unknown"})`,
     );
     return new Map();
   }
 
+  const firstPlayer = trackedPlayers[0];
+  if (firstPlayer === undefined) {
+    throw new Error(`No tracked players provided for game ${gameId}`);
+  }
+  const region = firstPlayer.league.leagueAccount.region;
+  ranksByPuuid ??= await fetchParticipantRanks(gameInfo, region);
+
+  const loadingScreenStartTime = Date.now();
+  let loadingScreenData: LoadingScreenData | undefined;
+  try {
+    const trackedPuuidSet = new Set(
+      trackedPlayers.map((p) => p.league.leagueAccount.puuid),
+    );
+    loadingScreenData = await buildLoadingScreenData(
+      gameInfo,
+      trackedPuuidSet,
+      region,
+      ranksByPuuid,
+    );
+  } catch (error) {
+    recordLoadingScreenFailure({
+      error,
+      gameId,
+      gameInfo,
+      loadingScreenData,
+      queueType,
+    });
+  }
+
   const targetGuildIds: DiscordGuildId[] = uniqueBy(
     deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
     (id) => id,
   );
-
   logger.info(
     `[sendPrematchNotification] 📺 Sending to ${deliverChannels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
   );
-
   const prematchMessageContent = formatPrematchMessage(
     trackedPlayers,
     queueType,
     gameInfo.gameMode,
   );
 
-  const loadingScreen = await renderPrematchLoadingScreen({
-    gameInfo,
-    trackedPlayers,
-    queueType,
-    gameId,
-    aliases,
-  });
-  const loadingScreenAttachment = loadingScreen.attachment;
-  const loadingScreenEmbed = loadingScreen.embed;
-  const loadingScreenData = loadingScreen.data;
+  // Generate presentation assets only when at least one channel will receive
+  // them. Prediction capture is already running from the same frozen data.
+  let loadingScreenAttachment: AttachmentBuilder | undefined;
+  let loadingScreenEmbed: EmbedBuilder | undefined;
+  if (loadingScreenData !== undefined) {
+    try {
+      const [image, svg] = await Promise.all([
+        loadingScreenToImage(loadingScreenData),
+        loadingScreenToSvg(loadingScreenData),
+      ]);
+      const attachmentName = `loading-screen-${gameId}.png`;
+      loadingScreenAttachment = new AttachmentBuilder(
+        Buffer.from(image),
+      ).setName(attachmentName);
+      loadingScreenEmbed = new EmbedBuilder({
+        image: { url: `attachment://${attachmentName}` },
+      });
+
+      const duration = (Date.now() - loadingScreenStartTime) / 1000;
+      prematchLoadingScreenDurationSeconds.observe(duration);
+      prematchLoadingScreenGeneratedTotal.inc({
+        queue_type: queueType ?? "unknown",
+        status: "success",
+      });
+      logger.info(
+        `[sendPrematchNotification] 🖼️ Loading screen generated in ${duration.toFixed(1)}s for game ${gameId}`,
+      );
+
+      void (async () => {
+        try {
+          await Promise.all([
+            savePrematchImageToS3(
+              gameInfo.gameId,
+              image,
+              queueType ?? "unknown",
+              aliases,
+            ),
+            savePrematchSvgToS3(
+              gameInfo.gameId,
+              svg,
+              queueType ?? "unknown",
+              aliases,
+            ),
+          ]);
+        } catch (s3Error) {
+          logger.error(
+            `[sendPrematchNotification] Failed to save prematch assets to S3:`,
+            s3Error,
+          );
+        }
+      })();
+    } catch (error) {
+      recordLoadingScreenFailure({
+        error,
+        gameId,
+        gameInfo,
+        loadingScreenData,
+        queueType,
+      });
+    }
+  }
+  const prediction = await predictionPromise;
 
   // Bryan Bucks: open the markets and build the buttons. Entirely
   // best-effort — on any failure this yields no guilds, no rows, and the
@@ -351,8 +487,8 @@ export async function sendPrematchNotification(
     trackedPlayers,
     queueType,
     targetGuildIds,
-    loadingScreenData,
-    detectedAt: new Date(),
+    detectedAt,
+    prediction,
   });
   const prematchContentBase =
     loadingScreenAttachment !== undefined && loadingScreenEmbed !== undefined

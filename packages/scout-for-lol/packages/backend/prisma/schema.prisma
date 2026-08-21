@@ -709,6 +709,8 @@ model BucksAccount {
   // ledger-audited but excluded from user-facing balances and leaderboards.
   isHouse   Boolean  @default(false)
   balance   Int      @default(0)
+  // Per-guild 24-hour entitlement purchased through the audited ledger.
+  peekPassExpiresAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -744,7 +746,7 @@ model BucksLedgerEntry {
   // BucksLedgerKind (@scout-for-lol/data): seed | earn_* | bet_stake |
   // bet_payout | bet_*_refund | winner_fee | house_match | cancel_fee |
   // parlay_stake | parlay_reserve | parlay_payout | parlay_refund |
-  // parlay_release | legacy bet_refund/house_rake | adjustment.
+  // parlay_release | peek_pass | legacy bet_refund/house_rake | adjustment.
   // Not a Prisma enum — the SQLite provider has none. Zod-validated on write
   // and on read.
   kind String
@@ -862,6 +864,10 @@ model BucksMatchPool {
   // sweep deletes.
   detectedAt DateTime
 
+  // Frozen pregame estimate becomes privately visible two minutes after the
+  // game starts (or the reconstructed start when Riot omits it).
+  peekAvailableAt DateTime
+
   // STORED rather than computed, so changing BETTING_WINDOW_MS cannot
   // retroactively move a window a user was already shown.
   closesAt DateTime
@@ -921,6 +927,8 @@ model BucksMatchPool {
 
   @@unique([matchId, serverId])
   @@index([poolState, closesAt])
+  @@index([serverId, poolState, peekAvailableAt])
+  @@index([serverId, poolState, settledAt])
   @@index([matchId])
 }
 

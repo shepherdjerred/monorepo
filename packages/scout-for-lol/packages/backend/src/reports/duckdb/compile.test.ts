@@ -6,7 +6,10 @@ import {
   compilePrematchQuery,
   type LakeQueryInput,
 } from "#src/reports/duckdb/compile.ts";
-import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
+import {
+  buildPredictionObservationsSource,
+  type LakeFiles,
+} from "#src/reports/duckdb/lake.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   TEST_GUILD_ID,
@@ -26,6 +29,29 @@ function input(queryText: string, playerIds?: number[]): LakeQueryInput {
 }
 
 describe("compile", () => {
+  test("prediction observations prefer newer staging rows over compacted parquet", () => {
+    const source = buildPredictionObservationsSource(
+      {
+        matchesParquet: [],
+        matchesStaging: [],
+        prematchParquet: [],
+        prematchStaging: [],
+        predictionObservationsParquet: ["published.parquet"],
+        predictionObservationsStaging: ["pending.ndjson"],
+        accountsParquet: undefined,
+        competitionRankHistoryParquet: [],
+        competitionRankHistoryStaging: [],
+      },
+      { sql: "", params: [] },
+    );
+    if (source === undefined) {
+      throw new Error("expected prediction observation source");
+    }
+    expect(source.sql).toContain(
+      "PARTITION BY match_id ORDER BY observed_at DESC, src DESC",
+    );
+  });
+
   test("match query: filters pushed into both union branches before dedupe", () => {
     const compiled = compileMatchQuery(
       input(
@@ -209,6 +235,8 @@ describe("compile", () => {
       matchesStaging: [],
       prematchParquet: [],
       prematchStaging: [],
+      predictionObservationsParquet: [],
+      predictionObservationsStaging: [],
       accountsParquet: undefined,
       competitionRankHistoryParquet: [],
       competitionRankHistoryStaging: [],

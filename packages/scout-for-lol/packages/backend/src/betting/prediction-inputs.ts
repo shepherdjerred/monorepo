@@ -1,170 +1,233 @@
-import type {
-  LoadingScreenData,
-  LoadingScreenParticipant,
-  QueueType,
-  Rank,
-  Team,
-} from "@scout-for-lol/data";
-import { createLogger } from "#src/logger.ts";
-import { fetchRecentGamesForPuuids } from "#src/reports/duckdb/lake-reads.ts";
 import {
-  predictWin,
-  type PredictionForm,
-  type PredictionParticipant,
-} from "#src/betting/prediction.ts";
-import type { BucksPrediction } from "@scout-for-lol/data";
+  BucksPredictionObservationSchema,
+  LeaguePuuidSchema,
+  RiotTeamIdSchema,
+  type BucksPredictionFeature,
+  type BucksPredictionObservation,
+  type QueueType,
+  type Rank,
+  type Ranks,
+  type RawCurrentGameInfo,
+  type RawCurrentGameParticipant,
+  inferStandardLanesWithCurrentPriors,
+  parseLane,
+  rankToLeaguePoints,
+} from "@scout-for-lol/data";
+import { BLUE_TEAM_ID, RED_TEAM_ID } from "#src/betting/constants.ts";
+import { isStandardLobby } from "#src/betting/eligibility.ts";
+import type { ParticipantRanks } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import { predictWin } from "#src/betting/prediction.ts";
+import { createLogger } from "#src/logger.ts";
+import {
+  fetchPredictionHistory,
+  type LakePredictionHistoryRow,
+} from "#src/reports/duckdb/prediction-history.ts";
+import { ReportQueryTimeoutError } from "#src/reports/duckdb/instance.ts";
 
 const logger = createLogger("betting-prediction-inputs");
 
-/**
- * Assembles the inputs `predictWin` needs, at prematch time, for free.
- *
- * The cost model is the whole point of this file:
- *
- * - **Ranks are already fetched.** `buildLoadingScreenData` calls
- *   `getRankByPuuid` for all ten participants and attaches the result to each
- *   `LoadingScreenParticipant`. This function reads that structure and must
- *   NEVER re-fetch. The prematch poll runs every 30 seconds across up to 50
- *   players; ten Riot calls per game per poll would be thousands of requests a
- *   minute and would blow the rate limit immediately.
- * - **Form is one local read.** A single DuckDB query against the report lake
- *   for the tracked subject only, bounded by a short timeout, and dropped
- *   entirely on failure. The formula degrades rather than blocking the
- *   notification.
- */
-
-/** The lake read is best-effort garnish on a message that must go out on time,
- * so it gets a short leash. */
 const LAKE_TIMEOUT_MS = 1500;
-const RECENT_GAMES_LIMIT = 30;
+const HISTORY_LIMIT_PER_PLAYER = 30;
+const RECENT_FORM_LIMIT = 20;
 
-/** Which of the two ranked queues a rank should be read from. */
+export type PredictionInputDependencies = {
+  fetchHistory: typeof fetchPredictionHistory;
+};
+
+const defaultDependencies: PredictionInputDependencies = {
+  fetchHistory: fetchPredictionHistory,
+};
+
 function rankForQueue(
-  participant: LoadingScreenParticipant,
+  ranks: Ranks | undefined,
   queueType: QueueType,
 ): Rank | undefined {
   if (queueType === "solo") {
-    return participant.ranks?.solo;
+    return ranks?.solo;
   }
   if (queueType === "flex") {
-    return participant.ranks?.flex;
+    return ranks?.flex;
   }
   return undefined;
 }
 
-export function toPredictionParticipants(input: {
-  participants: readonly LoadingScreenParticipant[];
-  queueType: QueueType;
-  subjectTeam: Team;
-}): PredictionParticipant[] {
-  return input.participants.map((participant) => ({
-    rank: rankForQueue(participant, input.queueType),
-    isSubjectTeam: participant.team === input.subjectTeam,
-  }));
-}
-
-function summarize(rows: readonly { win: boolean }[]): PredictionForm {
+function summarize(rows: readonly LakePredictionHistoryRow[]): {
+  wins: number;
+  games: number;
+} {
   return {
     wins: rows.filter((row) => row.win).length,
     games: rows.length,
   };
 }
 
-/**
- * Recent overall form and form on the champion being played, from one lake
- * read.
- *
- * Returns undefined for both on any failure — a missing lake directory, a
- * DuckDB error, or the timeout. That is deliberate: the report lake is
- * disposable derived data, and a prematch notification must not wait on it or
- * fail because of it.
- */
-export async function fetchSubjectForm(input: {
-  subjectPuuid: string;
-  championName: string;
-  excludeMatchId: string;
-}): Promise<{
-  recentForm: PredictionForm | undefined;
-  championForm: PredictionForm | undefined;
-}> {
-  const empty = { recentForm: undefined, championForm: undefined };
-
+async function fetchLobbyHistory(
+  input: {
+    puuids: string[];
+    matchId: string;
+    queueType: QueueType;
+    observedAt: Date;
+  },
+  dependencies: PredictionInputDependencies,
+): Promise<LakePredictionHistoryRow[]> {
   try {
-    const rows = await Promise.race([
-      fetchRecentGamesForPuuids({
-        puuids: [input.subjectPuuid],
-        excludeMatchId: input.excludeMatchId,
-        limit: RECENT_GAMES_LIMIT,
-      }),
-      new Promise<undefined>((resolve) => {
-        setTimeout(() => {
-          resolve(undefined);
-        }, LAKE_TIMEOUT_MS);
-      }),
-    ]);
-
-    if (rows === undefined) {
-      logger.debug(
-        `⏱️ Lake form lookup timed out for ${input.excludeMatchId}; predicting without it`,
-      );
-      return empty;
-    }
-
-    return {
-      recentForm: summarize(rows),
-      // Champion form comes from the same rows rather than a second query.
-      championForm: summarize(
-        rows.filter((row) => row.champion_name === input.championName),
-      ),
-    };
+    return await dependencies.fetchHistory({
+      puuids: input.puuids,
+      excludeMatchId: input.matchId,
+      queue: input.queueType,
+      beforeMs: input.observedAt.getTime(),
+      limitPerPlayer: HISTORY_LIMIT_PER_PLAYER,
+      timeoutMs: LAKE_TIMEOUT_MS,
+    });
   } catch (error) {
-    logger.warn(
-      `⚠️ Lake form lookup failed for ${input.excludeMatchId}; predicting without it`,
-      error,
-    );
-    return empty;
+    if (error instanceof ReportQueryTimeoutError) {
+      logger.debug(
+        `⏱️ Lake history lookup timed out for ${input.matchId}; predicting from ranks only`,
+      );
+      return [];
+    }
+    throw error;
   }
 }
 
-/**
- * Build Scout's call for one tracked player in a live game.
- *
- * Returns undefined when the lobby is not a standard ranked 5v5 — the same
- * games the market refuses — so a caller never has to decide separately
- * whether a prediction is meaningful.
- */
-export async function buildPrediction(input: {
-  loadingScreenData: LoadingScreenData;
-  subject: { puuid: string; alias: string; team: Team; championName: string };
-  matchId: string;
-}): Promise<BucksPrediction | undefined> {
-  const { loadingScreenData } = input;
-  if (loadingScreenData.layout !== "standard") {
+function buildFeature(input: {
+  participant: RawCurrentGameParticipant;
+  lane: string;
+  ranks: Ranks | undefined;
+  queueType: QueueType;
+  history: readonly LakePredictionHistoryRow[];
+}): BucksPredictionFeature {
+  const rank = rankForQueue(input.ranks, input.queueType);
+  const recentRows = input.history.slice(0, RECENT_FORM_LIMIT);
+  const laneRows = input.history.filter(
+    (row) => parseLane(row.team_position) === input.lane,
+  );
+  const championRows = input.history.filter(
+    (row) => row.champion_id === input.participant.championId,
+  );
+  return {
+    puuid:
+      input.participant.puuid === null
+        ? null
+        : LeaguePuuidSchema.parse(input.participant.puuid),
+    teamId: RiotTeamIdSchema.parse(input.participant.teamId),
+    championId: input.participant.championId,
+    lane: input.lane,
+    rankLeaguePoints: rank === undefined ? null : rankToLeaguePoints(rank),
+    seasonWins: rank?.wins ?? null,
+    seasonLosses: rank?.losses ?? null,
+    recentForm: summarize(recentRows),
+    laneForm: summarize(laneRows),
+    championForm: summarize(championRows),
+  };
+}
+
+function laneInferenceKey(index: number): string {
+  return `participant:${index.toString()}`;
+}
+
+function inferLanes(
+  participants: readonly RawCurrentGameParticipant[],
+): string[] {
+  const lanesByIndex = new Map<number, string>();
+  for (const teamId of [BLUE_TEAM_ID, RED_TEAM_ID]) {
+    const team = participants
+      .map((participant, index) => ({ participant, index }))
+      .filter((entry) => entry.participant.teamId === teamId);
+    const inference = inferStandardLanesWithCurrentPriors(
+      team.map((entry) => ({
+        participantKey: laneInferenceKey(entry.index),
+        championId: entry.participant.championId,
+        spell1Id: entry.participant.spell1Id,
+        spell2Id: entry.participant.spell2Id,
+      })),
+    );
+    for (const assignment of inference.assignments) {
+      const index = Number(
+        assignment.participantKey.replace("participant:", ""),
+      );
+      lanesByIndex.set(index, assignment.lane);
+    }
+  }
+  return participants.map((_participant, index) => {
+    const lane = lanesByIndex.get(index);
+    if (lane === undefined) {
+      throw new Error(
+        `Lane inference did not produce participant at index ${index.toString()}`,
+      );
+    }
+    return lane;
+  });
+}
+
+/** Build and freeze one canonical v2 estimate for a standard lobby. */
+export async function buildPredictionObservation(
+  input: {
+    gameInfo: RawCurrentGameInfo;
+    ranksByPuuid: ParticipantRanks;
+    matchId: string;
+    platformId: string;
+    queueType: QueueType;
+    observedAt: Date;
+    gameStartAt: Date;
+  },
+  dependencies: PredictionInputDependencies = defaultDependencies,
+): Promise<BucksPredictionObservation | undefined> {
+  if (!isStandardLobby(input.gameInfo.participants)) {
     return undefined;
   }
-
-  const participants = toPredictionParticipants({
-    participants: loadingScreenData.participants,
-    queueType: loadingScreenData.queueType,
-    subjectTeam: input.subject.team,
+  const puuids = input.gameInfo.participants.flatMap((participant) =>
+    participant.puuid === null ? [] : [participant.puuid],
+  );
+  const history = await fetchLobbyHistory(
+    {
+      puuids,
+      matchId: input.matchId,
+      queueType: input.queueType,
+      observedAt: input.observedAt,
+    },
+    dependencies,
+  );
+  const historyByPuuid = new Map<string, LakePredictionHistoryRow[]>();
+  for (const row of history) {
+    historyByPuuid.set(row.puuid, [
+      ...(historyByPuuid.get(row.puuid) ?? []),
+      row,
+    ]);
+  }
+  const lanes = inferLanes(input.gameInfo.participants);
+  const features = input.gameInfo.participants.map((participant, index) => {
+    const lane = lanes[index];
+    if (lane === undefined) {
+      throw new Error(`Missing inferred lane at index ${index.toString()}`);
+    }
+    return buildFeature({
+      participant,
+      lane,
+      ranks:
+        participant.puuid === null
+          ? undefined
+          : input.ranksByPuuid.get(participant.puuid),
+      queueType: input.queueType,
+      history:
+        participant.puuid === null
+          ? []
+          : (historyByPuuid.get(participant.puuid) ?? []),
+    });
   });
-
-  const { recentForm, championForm } = await fetchSubjectForm({
-    subjectPuuid: input.subject.puuid,
-    championName: input.subject.championName,
-    excludeMatchId: input.matchId,
+  const prediction = predictWin({
+    features,
+    queueType: input.queueType,
   });
-
-  // The stored prediction records which side it was made about, so a later
-  // reader (the post-match recap, or a calibration pass) never has to guess
-  // whether "63%" meant blue or red.
-  return {
-    ...predictWin({
-      subjectAlias: input.subject.alias,
-      participants,
-      recentForm,
-      championForm,
-    }),
-    subjectTeamId: input.subject.team === "blue" ? 100 : 200,
-  };
+  return BucksPredictionObservationSchema.parse({
+    version: 1,
+    matchId: input.matchId,
+    platformId: input.platformId,
+    gameId: input.gameInfo.gameId.toString(),
+    queueType: input.queueType,
+    observedAt: input.observedAt.toISOString(),
+    gameStartAt: input.gameStartAt.toISOString(),
+    prediction,
+    features,
+  });
 }

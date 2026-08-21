@@ -36,6 +36,7 @@ const LEDGER_KIND_LABELS = {
   parlay_payout: "parlay payout",
   parlay_refund: "parlay refund",
   parlay_release: "parlay reserve release",
+  peek_pass: "24-hour peek pass",
   adjustment: "adjustment",
 } satisfies Record<BucksLedgerKind, string>;
 

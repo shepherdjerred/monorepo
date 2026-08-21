@@ -18,6 +18,9 @@ describe("/bb history labels", () => {
     expect(ledgerKindLabel(BucksLedgerKindSchema.parse("winner_fee"))).toBe(
       "winner fee",
     );
+    expect(ledgerKindLabel(BucksLedgerKindSchema.parse("peek_pass"))).toBe(
+      "24-hour peek pass",
+    );
 
     const rendered = renderBucksHistory(bucksTestDiscordId(1), {
       entries: [

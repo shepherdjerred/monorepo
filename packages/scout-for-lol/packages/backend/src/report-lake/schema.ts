@@ -167,6 +167,29 @@ export const PrematchLakeRowSchema = z.object({
 
 export type PrematchLakeRow = z.infer<typeof PrematchLakeRowSchema>;
 
+export const PredictionObservationLakeRowSchema = z.object({
+  dedupe_key: z.string(),
+  match_id: z.string(),
+  game_id: z.string(),
+  platform_id: z.string(),
+  month: z.string(),
+  observed_at: z.string(),
+  game_start_at: z.string(),
+  queue: z.string(),
+  observation_version: z.number().int().positive(),
+  prediction_version: z.number().int().positive(),
+  blue_win_probability: z.number().min(0).max(1),
+  data_quality: z.string(),
+  coverage_covered: z.number().int().nonnegative(),
+  coverage_applicable: z.number().int().positive(),
+  drivers_json: z.string(),
+  features_json: z.string(),
+});
+
+export type PredictionObservationLakeRow = z.infer<
+  typeof PredictionObservationLakeRowSchema
+>;
+
 export const AccountLakeRowSchema = z.object({
   server_id: z.string(),
   puuid: z.string(),
@@ -320,6 +343,28 @@ export const PREMATCH_LAKE_COLUMNS: Record<
   summoner_name: "VARCHAR",
   selected_skin_index: "INTEGER",
   bot: "BOOLEAN",
+};
+
+export const PREDICTION_OBSERVATION_LAKE_COLUMNS: Record<
+  keyof PredictionObservationLakeRow,
+  DuckDbColumnType
+> = {
+  dedupe_key: "VARCHAR",
+  match_id: "VARCHAR",
+  game_id: "VARCHAR",
+  platform_id: "VARCHAR",
+  month: "VARCHAR",
+  observed_at: "TIMESTAMP",
+  game_start_at: "TIMESTAMP",
+  queue: "VARCHAR",
+  observation_version: "INTEGER",
+  prediction_version: "INTEGER",
+  blue_win_probability: "DOUBLE",
+  data_quality: "VARCHAR",
+  coverage_covered: "INTEGER",
+  coverage_applicable: "INTEGER",
+  drivers_json: "VARCHAR",
+  features_json: "VARCHAR",
 };
 
 export const ACCOUNT_LAKE_COLUMNS: Record<

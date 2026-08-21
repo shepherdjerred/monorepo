@@ -122,6 +122,7 @@ beforeEach(async () => {
       matchId: MATCH_ID,
       serverId: SERVER_ID,
       detectedAt: new Date(Date.now() - 60_000),
+      peekAvailableAt: new Date(Date.now() + 60_000),
       closesAt: new Date(Date.now() + 5 * 60_000),
       queueType: "solo",
       roster: JSON.stringify({ participants: bucksTestRoster() }),

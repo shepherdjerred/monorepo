@@ -43,6 +43,18 @@ function prediction(
 }
 
 describe("predictionVerdict", () => {
+  test("scores canonical v2 Blue probability against either result", () => {
+    const v2 = BucksPredictionSchema.parse({
+      version: 2,
+      blueWinProbability: 0.72,
+      dataQuality: "high",
+      coverage: { covered: 50, applicable: 50 },
+      drivers: ["Blue rank edge"],
+    });
+    expect(predictionVerdict(v2, 100)).toBe("Scout called it.");
+    expect(predictionVerdict(v2, 200)).toBe("Scout was wrong.");
+  });
+
   test("scores a confident call that landed", () => {
     expect(predictionVerdict(prediction(0.72, 100), 100)).toBe(
       "Scout called it.",

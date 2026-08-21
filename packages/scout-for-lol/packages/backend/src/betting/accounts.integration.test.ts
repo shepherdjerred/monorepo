@@ -322,6 +322,7 @@ describe("personal positions and open markets", () => {
         matchId: "NA1_5000000100",
         serverId: SERVER_A,
         detectedAt: new Date("2030-01-01T00:00:00Z"),
+        peekAvailableAt: new Date("2030-01-01T00:02:00Z"),
         closesAt: new Date("2030-01-01T00:10:00Z"),
         roster: JSON.stringify({
           participants: bucksTestRoster().map((participant, index) =>
@@ -443,6 +444,7 @@ describe("personal positions and open markets", () => {
           matchId: `NA1_50000002${index.toString().padStart(2, "0")}`,
           serverId: SERVER_A,
           detectedAt: new Date("2030-01-01T00:00:00Z"),
+          peekAvailableAt: new Date("2030-01-01T00:02:00Z"),
           closesAt: new Date("2030-01-01T00:10:00Z"),
           roster: JSON.stringify({ participants: bucksTestRoster() }),
         },

@@ -48,9 +48,19 @@ function formatPrediction(raw: string | null): string | undefined {
     return undefined;
   }
   const parsed = BucksPredictionSchema.safeParse(JSON.parse(raw));
-  return parsed.success && shouldDisplayPrediction(parsed.data.winProbability)
-    ? parsed.data.sentence
-    : undefined;
+  if (!parsed.success) {
+    return undefined;
+  }
+  if (!("version" in parsed.data)) {
+    return shouldDisplayPrediction(parsed.data.winProbability)
+      ? parsed.data.sentence
+      : undefined;
+  }
+  if (!shouldDisplayPrediction(parsed.data.blueWinProbability)) {
+    return undefined;
+  }
+  const blue = Math.round(parsed.data.blueWinProbability * 100);
+  return `🔮 Scout's experimental estimate was Blue ${blue.toString()}% / Red ${(100 - blue).toString()}% · ${parsed.data.dataQuality} data quality.`;
 }
 
 export type SettlementDeliveryDependencies = {

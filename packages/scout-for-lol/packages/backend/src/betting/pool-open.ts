@@ -17,6 +17,8 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-pool-open");
 
+export const PEEK_DELAY_MS = 2 * 60 * 1000;
+
 /**
  * Opening a betting market when Scout notices a game.
  *
@@ -50,6 +52,27 @@ export function computeClosesAt(input: {
   );
 }
 
+/** Resolve the game's start even while Spectator reports a zero timestamp.
+ * `gameLength` is elapsed seconds and is negative during countdown. */
+export function computeGameStartAt(input: {
+  detectedAt: Date;
+  gameStartTime: number;
+  gameLength: number;
+}): Date {
+  if (input.gameStartTime > 0) {
+    return new Date(input.gameStartTime);
+  }
+  return new Date(input.detectedAt.getTime() - input.gameLength * 1000);
+}
+
+export function computePeekAvailableAt(input: {
+  detectedAt: Date;
+  gameStartTime: number;
+  gameLength: number;
+}): Date {
+  return new Date(computeGameStartAt(input).getTime() + PEEK_DELAY_MS);
+}
+
 function buildRoster(input: {
   gameInfo: RawCurrentGameInfo;
   trackedAliasByPuuid: ReadonlyMap<string, string>;
@@ -76,11 +99,10 @@ function buildRoster(input: {
 /**
  * The subset of guilds a game would open a market in.
  *
- * Exported so callers can answer "is this worth doing at all?" *before* paying
- * for anything — the prediction costs a lake read, and computing one for a
- * guild that will never see it is pure waste on a poll that runs every 30
- * seconds. `openBettingPoolsForPrematch` still applies this itself; it remains
- * the authoritative gate rather than trusting its caller to have filtered.
+ * Prediction capture is intentionally independent of this flag so every
+ * eligible detected game can contribute a match-scoped v2 observation. This
+ * helper remains the authoritative gate for the guild-scoped wallet, pool,
+ * buttons, and peek-pass surfaces.
  */
 export function bettingEnabledGuilds(
   guildIds: readonly DiscordGuildId[],
@@ -138,6 +160,11 @@ export async function openBettingPoolsForPrematch(
       detectedAt: input.detectedAt,
       gameStartTime: input.gameInfo.gameStartTime,
     });
+    const peekAvailableAt = computePeekAvailableAt({
+      detectedAt: input.detectedAt,
+      gameStartTime: input.gameInfo.gameStartTime,
+      gameLength: input.gameInfo.gameLength,
+    });
     const predictionJson =
       input.prediction === undefined
         ? null
@@ -157,6 +184,7 @@ export async function openBettingPoolsForPrematch(
           serverId,
           detectedAt: input.detectedAt,
           closesAt,
+          peekAvailableAt,
           queueType: input.queueType ?? null,
           roster: JSON.stringify(roster),
           predictionJson,

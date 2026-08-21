@@ -16,6 +16,8 @@ export const TEST_LAKE_FILES: LakeFiles = {
   matchesStaging: ["/lake/matches-recent/NA1_1.jsonl"],
   prematchParquet: ["/lake/builds/b1/prematch/month=2026-07/data_0.parquet"],
   prematchStaging: [],
+  predictionObservationsParquet: [],
+  predictionObservationsStaging: [],
   accountsParquet: "/lake/builds/b1/accounts/accounts.parquet",
   competitionRankHistoryParquet: [],
   competitionRankHistoryStaging: [],

@@ -15,13 +15,13 @@ const logger = createLogger("storage-s3-prematch");
  * Pattern: prematch/{date}/{gameId}/{assetType}.{ext}
  */
 function generatePrematchS3Key(
-  gameId: number,
+  resourceId: string,
   assetType: string,
   extension: string,
+  keyDate: Date,
 ): string {
-  const now = new Date();
-  const dateStr = format(now, "yyyy/MM/dd");
-  return `prematch/${dateStr}/${gameId.toString()}/${assetType}.${extension}`;
+  const dateStr = format(keyDate, "yyyy/MM/dd");
+  return `prematch/${dateStr}/${resourceId}/${assetType}.${extension}`;
 }
 
 type SavePrematchToS3Config = {
@@ -35,6 +35,10 @@ type SavePrematchToS3Config = {
   logMessage: string;
   errorContext: string;
   returnUrl?: boolean;
+  /** Stable source timestamp for idempotent match-keyed assets. */
+  keyDate?: Date;
+  /** Full natural identity when a numeric game ID is not globally unique. */
+  resourceId?: string;
 };
 
 /**
@@ -54,6 +58,8 @@ export async function savePrematchToS3(
     logMessage,
     errorContext,
     returnUrl,
+    keyDate,
+    resourceId,
   } = config;
   const bucket = configuration.s3BucketName;
   const gameIdStr = gameId.toString();
@@ -69,7 +75,12 @@ export async function savePrematchToS3(
 
   try {
     const client = createS3Client();
-    const key = generatePrematchS3Key(gameId, assetType, extension);
+    const key = generatePrematchS3Key(
+      resourceId ?? gameIdStr,
+      assetType,
+      extension,
+      keyDate ?? new Date(),
+    );
     const StringSchema = z.string();
     const BytesSchema = z.instanceof(Uint8Array);
 
