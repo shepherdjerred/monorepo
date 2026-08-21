@@ -101,6 +101,7 @@
     "packages/docs/wiki",
     "packages/dotfiles",
     "packages/eslint-config",
+    "packages/feature-flags",
     "packages/glitter",
     "packages/glitter-context",
     "packages/home-assistant",

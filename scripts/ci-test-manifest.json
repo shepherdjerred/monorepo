@@ -629,6 +629,11 @@
       ]
     },
     {
+      "package": "@shepherdjerred/feature-flags",
+      "directory": "packages/feature-flags",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
       "package": "@shepherdjerred/version-catalog",
       "directory": "packages/version-catalog",
       "steps": [
