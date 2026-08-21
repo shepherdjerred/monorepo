@@ -28,27 +28,29 @@ Bun.env["REPORT_LAKE_DIR"] =
 // HOME pointed at an empty dir). There is no IMDS anywhere in this infra.
 Bun.env["AWS_EC2_METADATA_DISABLED"] = "true";
 
-// Ensure the shared dev Postgres is up, sweep leaked test databases from
-// crashed runs, and (re)build the scout_test_template database that
-// createTestDatabase clones. Preload runs once per `bun test` process, so
-// every suite pays one fast hash check.
-import {
-  ensureTestTemplate,
-  sweepStaleTestDatabases,
-} from "./src/testing/test-template.ts";
-
-sweepStaleTestDatabases();
-await ensureTestTemplate();
-
 // Stub URL pointing at a database that deliberately does not exist on the
 // real server: tests that need real Prisma use createTestDatabase (or mock
 // the client), and any accidental use of the production singleton fails
 // loudly on first query instead of silently writing somewhere. The pg pool
 // connects lazily, so merely importing `#src/database/index.ts` stays safe.
-import { devDatabaseUrl } from "./src/testing/postgres-server.ts";
-
+// Inline (no harness import) so the scout-root preload below stays cheap.
 Bun.env["DATABASE_URL"] =
-  Bun.env["DATABASE_URL"] ?? devDatabaseUrl("scout_test_unbound");
+  Bun.env["DATABASE_URL"] ??
+  `postgres://scout@127.0.0.1:${Bun.env["SCOUT_PG_PORT"] ?? "5471"}/scout_test_unbound`;
+
+// Ensure the shared dev Postgres is up, sweep leaked test databases from
+// crashed runs, and (re)build the scout_test_template database that
+// createTestDatabase clones — for BACKEND test runs only. This file is also
+// preloaded by the scout package root's bunfig.toml for its script suites,
+// where importing the harness would require a running Postgres for pure
+// script tests and drag @scout-for-lol/data into their coverage denominator
+// (the package coverage gate measures every loaded file).
+if (process.cwd() === import.meta.dir) {
+  const { ensureTestTemplate, sweepStaleTestDatabases } =
+    await import("./src/testing/test-template.ts");
+  sweepStaleTestDatabases();
+  await ensureTestTemplate();
+}
 
 // Deterministic HS256 signing secret for session-JWT tests (auth-web,
 // jwt). Must be >= 32 chars (jwt.ts#getKey refuses shorter) and must be
