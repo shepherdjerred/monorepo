@@ -9,6 +9,7 @@ import { loadFeatureFlagConfiguration } from "@shepherdjerred/feature-flags/conf
 import { NoopProvider } from "@shepherdjerred/feature-flags/providers/noop.ts";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import type { FeatureFlagConfiguration } from "@shepherdjerred/feature-flags/config/schema.ts";
+import type { EvaluationEvent } from "@shepherdjerred/feature-flags/observability.ts";
 
 const CLIENT_NAME = "shepherdjerred-feature-flags";
 
@@ -53,7 +54,16 @@ export type InitFeatureFlagsOptions = {
    * consumer routes it through its own `createLogger`.
    */
   readonly onInitializationFailure?: (message: string) => void;
+  /**
+   * Called once per evaluation. Injected rather than metered here so this
+   * package needs no metrics client — see `observability.ts` for the canonical
+   * metric names, and why snapshot age rather than per-evaluation reporting is
+   * the outage signal.
+   */
+  readonly onEvaluation?: (event: EvaluationEvent) => void;
 };
+
+let evaluationObserver: ((event: EvaluationEvent) => void) | undefined;
 
 /**
  * Resolves configuration, installs a provider, and waits for it to be ready.
@@ -70,6 +80,7 @@ export async function initFeatureFlags(
     options.environment ?? Bun.env,
   );
   const provider = options.provider ?? providerFor(configuration);
+  evaluationObserver = options.onEvaluation;
   try {
     await OpenFeature.setProviderAndWait(CLIENT_NAME, provider);
   } catch (error) {
@@ -120,7 +131,13 @@ export async function isEnabled(
     options.default,
     toContext(options),
   );
-  return toResult(details);
+  const result = toResult(details);
+  evaluationObserver?.({
+    flag: key,
+    reason: result.reason,
+    errorCode: result.errorCode,
+  });
+  return result;
 }
 
 export async function stringValue(
@@ -132,7 +149,13 @@ export async function stringValue(
     options.default,
     toContext(options),
   );
-  return toResult(details);
+  const result = toResult(details);
+  evaluationObserver?.({
+    flag: key,
+    reason: result.reason,
+    errorCode: result.errorCode,
+  });
+  return result;
 }
 
 export async function numberValue(
@@ -144,7 +167,13 @@ export async function numberValue(
     options.default,
     toContext(options),
   );
-  return toResult(details);
+  const result = toResult(details);
+  evaluationObserver?.({
+    flag: key,
+    reason: result.reason,
+    errorCode: result.errorCode,
+  });
+  return result;
 }
 
 /**
@@ -152,5 +181,6 @@ export async function numberValue(
  * hangs on the open interval and pods leak a poller across shutdown.
  */
 export async function shutdownFeatureFlags(): Promise<void> {
+  evaluationObserver = undefined;
   await OpenFeature.close();
 }

@@ -62,6 +62,26 @@ same reason: a flag backend must never stop a service from booting.
 - **Object flags are unsupported** and say so with `TYPE_MISMATCH` rather than
   returning the default with a success reason.
 
+## Observability
+
+This package owns no metrics client. A Prometheus registry is per-process state,
+so a library that creates one forces its choice on every consumer. Hooks are
+injected — `onEvaluation`, `onInitializationFailure` — and each consumer wires
+its own counters through its own `createLogger`. What is shared is the
+**naming**, in `observability.ts`, so services cannot instrument the same thing
+three different ways.
+
+**`targetingKey` is never a metric label.** It is a guild or user id, so it
+would be unbounded cardinality.
+
+**Snapshot age is the outage signal, not per-evaluation reporting.** During a
+backend outage the client keeps serving its last good snapshot: evaluations
+still succeed, error rates stay flat, and nothing looks wrong. A rising
+`feature_flag_snapshot_age_seconds` is the only thing that moves. Reporting each
+evaluation instead would emit one Bugsink event per flag read and bury the
+signal. `FliptProvider.snapshotAgeSeconds()` exposes it; the homelab
+`FeatureFlagSnapshotStale` alert consumes it.
+
 ## Flipt specifics
 
 Learned by running `flipt/flipt:v2.11.0`, not from documentation:

@@ -71,6 +71,24 @@ default, which is a dead knob rather than configuration.
   SCREAMING_SNAKE env, dotted file path — with per-key overrides, because
   existing env var names are not consistent enough to derive in every case.
 
+## Observability
+
+Same rule as the flags package: no metrics client here, because this package is
+meant to stay light enough to hand to someone self-hosting a bot who has neither
+Prometheus nor OpenTelemetry. `createObservabilityHooks()` in `observability.ts`
+turns an injected recorder and log sink into `ResolverHooks`, and the metric
+names and label sets live there so every consumer agrees.
+
+**`targetingKey` is never a metric label** — unbounded cardinality.
+
+**There is no per-resolution logging.** Config reads sit on hot paths, so a line
+per read would bury the changes that actually matter. Changes and source
+failures log; resolutions only count.
+
+Change lines carry the old value, the new value, and the layer that supplied it,
+because "I set the env var and nothing happened" is the classic failure of
+layered config and provenance is what answers it.
+
 ## Where a flag does nothing
 
 Check where your read happens before adding a key:

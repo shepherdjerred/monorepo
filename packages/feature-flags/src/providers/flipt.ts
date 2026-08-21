@@ -72,6 +72,7 @@ export class FliptProvider implements Provider {
   private readonly options: FliptProviderOptions;
   private client: FliptEvaluationClient | undefined;
   private knownKeys: ReadonlySet<string> = new Set();
+  private lastKeyRefreshMs: number | undefined;
 
   constructor(options: FliptProviderOptions) {
     this.options = options;
@@ -102,6 +103,7 @@ export class FliptProvider implements Provider {
     this.client?.close();
     this.client = undefined;
     this.knownKeys = new Set();
+    this.lastKeyRefreshMs = undefined;
     return Promise.resolve();
   }
 
@@ -115,6 +117,22 @@ export class FliptProvider implements Provider {
       return;
     }
     this.knownKeys = new Set(this.client.listFlags().map((flag) => flag.key));
+    this.lastKeyRefreshMs = Date.now();
+  }
+
+  /**
+   * Seconds since the key set was last read from a snapshot, or `undefined`
+   * before the first successful initialize.
+   *
+   * This is the outage signal. During a backend outage the client keeps serving
+   * its last good snapshot, so evaluations still succeed and nothing looks
+   * wrong; a rising age is what tells an operator the values are frozen. See
+   * `observability.ts` for why this replaces per-evaluation reporting.
+   */
+  snapshotAgeSeconds(): number | undefined {
+    return this.lastKeyRefreshMs === undefined
+      ? undefined
+      : (Date.now() - this.lastKeyRefreshMs) / 1000;
   }
 
   private evaluate<T>(
