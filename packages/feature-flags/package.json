@@ -16,6 +16,7 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "dependencies": {
+    "@flipt-io/flipt-client-js": "^0.5.0",
     "@openfeature/server-sdk": "^1.23.0",
     "zod": "^4.4.3"
   },
