@@ -372,7 +372,6 @@
     "@iconify-json/mdi",
     "@iconify-json/ph",
     "@iconify-json/simple-icons",
-    "@libsql/client",
     "@opentelemetry/core",
     "@opentelemetry/sdk-node",
     "@opentelemetry/sdk-trace-base",

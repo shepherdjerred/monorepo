@@ -13,7 +13,7 @@
  * noticed stays quietly closed — acceptable for a one-shot.
  *
  * Required env:
- *   DATABASE_URL              path to the SQLite DB
+ *   DATABASE_URL              postgres:// URL of the target database
  *   DISCORD_BOT_TOKEN         standard bot token used to post notices
  *
  *   bun run scripts/backfill-overdue-season-comps.ts
@@ -22,16 +22,18 @@
 import { SEASONS } from "@scout-for-lol/data";
 import { Client, GatewayIntentBits } from "discord.js";
 import { PrismaClient } from "#generated/prisma/client/index.js";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("backfill-overdue-season-comps");
 
+const databaseUrl = Bun.env["DATABASE_URL"];
+if (databaseUrl === undefined || databaseUrl === "") {
+  throw new Error("DATABASE_URL is required (postgres:// URL)");
+}
 const prisma = new PrismaClient({
-  adapter: new PrismaLibSql({
-    url: Bun.env["DATABASE_URL"] ?? "file:./db.sqlite",
-  }),
+  adapter: new PrismaPg({ connectionString: databaseUrl }),
 });
 
 type AffectedComp = {
