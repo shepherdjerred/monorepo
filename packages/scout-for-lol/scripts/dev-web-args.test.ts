@@ -10,7 +10,7 @@ test("parses isolated ports and database URL", () => {
         "--web-port",
         "5181",
         "--database-url",
-        "file:./agent-one.db",
+        "postgres://scout@127.0.0.1:5471/agent_one",
       ],
       {},
     ),
@@ -19,7 +19,7 @@ test("parses isolated ports and database URL", () => {
     options: {
       backendPort: 3001,
       webPort: 5181,
-      databaseUrl: "file:./agent-one.db",
+      databaseUrl: "postgres://scout@127.0.0.1:5471/agent_one",
       discordGatewayEnabled: true,
       backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4321",
@@ -31,14 +31,14 @@ test("parses isolated ports and database URL", () => {
 test("derives an isolated database for a non-default backend port", () => {
   expect(
     parseDevWebArgs(["--backend-port", "3001", "--web-port", "5181"], {
-      DATABASE_URL: "file:./local-web-dev.db",
+      DATABASE_URL: "postgres://scout@127.0.0.1:5471/scout_dev_3000",
     }),
   ).toEqual({
     kind: "options",
     options: {
       backendPort: 3001,
       webPort: 5181,
-      databaseUrl: "file:./local-web-dev-3001.db",
+      databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3001",
       discordGatewayEnabled: true,
       backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4321",
@@ -47,13 +47,13 @@ test("derives an isolated database for a non-default backend port", () => {
   });
 });
 
-test("rejects shared ports and non-file databases", () => {
+test("rejects shared ports and sqlite databases", () => {
   expect(() =>
     parseDevWebArgs(["--backend-port", "3001", "--web-port", "3001"], {}),
   ).toThrow("must be different");
   expect(() =>
-    parseDevWebArgs(["--database-url", "postgres://localhost/scout"], {}),
-  ).toThrow("local file: SQLite URL");
+    parseDevWebArgs(["--database-url", "file:./local-web-dev.db"], {}),
+  ).toThrow("postgres:// URL");
 });
 
 test("supports a stable secondary copy without the BETA gateway", () => {
@@ -67,7 +67,7 @@ test("supports a stable secondary copy without the BETA gateway", () => {
     options: {
       backendPort: 3001,
       webPort: 5180,
-      databaseUrl: "file:./local-web-dev-3001.db",
+      databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3001",
       discordGatewayEnabled: false,
       backendWatchEnabled: false,
       marketingOrigin: "http://localhost:4321",
@@ -92,7 +92,7 @@ test("configures alternate surface origins for a second stack", () => {
     options: {
       backendPort: 3000,
       webPort: 5180,
-      databaseUrl: "file:./local-web-dev.db",
+      databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3000",
       discordGatewayEnabled: true,
       backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4324",
