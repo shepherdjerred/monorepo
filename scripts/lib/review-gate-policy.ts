@@ -20,23 +20,65 @@ import {
 } from "@shepherdjerred/code-review";
 
 /**
- * How long an unanswered review request waits before it is asked again.
+ * The slowest review measured completing normally (PR #2152, 1834s).
  *
- * Must exceed ordinary provider latency or the retry is noise: completed Qodo
- * reviews have been measured at 1637s and 1834s, so this sits above the second
- * of those. Tune from the `attempt` field on the `review-signal` events rather
- * than by guessing.
+ * Every timing constant here is expressed against it: a request the gate has no
+ * time left to act on is not a retry, it is a comment.
  */
-export const DEFAULT_REQUEST_RETRY_SECONDS = 31 * 60;
+export const SLOWEST_COMPLETED_REVIEW_SECONDS = 1834;
+
+/**
+ * How long a head goes unreviewed before the gate asks at all.
+ *
+ * Both providers start reviews on their own — Qodo on every push once
+ * `.pr_agent.toml` enables `handle_push_trigger`, Codex when the pull request is
+ * opened — and that work begins at push time, before this pod has booted. Asking
+ * immediately would therefore enqueue a second review of a head already being
+ * read, which is the comment churn the configuration exists to remove. The gate
+ * waits out this grace first and only asks for a head nothing appears to be
+ * working on.
+ */
+export const DEFAULT_REQUEST_GRACE_SECONDS = 10 * 60;
+
+/**
+ * How long an unanswered request waits before it is asked once more.
+ *
+ * Roughly a third of automated requests drew no response within an hour and
+ * nothing ever re-asked, which is what produced every hand-typed request in the
+ * measured sample.
+ */
+export const DEFAULT_REQUEST_RETRY_SECONDS = 15 * 60;
+
+/**
+ * The budget the request schedule needs from the gate's own deadline.
+ *
+ * Stated positively so it can be asserted rather than eyeballed: the last
+ * request the gate will make has to be posted early enough that the slowest
+ * review we have actually watched complete still fits before the deadline.
+ * Without this the retry is advertised and then reliably cut off — the exact
+ * shape of bug that a constant tuned in isolation produces.
+ */
+export function reviewRequestScheduleBounds(input: {
+  graceSeconds: number;
+  retryAfterSeconds: number;
+}): { lastRequestAtSeconds: number; minimumGateTimeoutSeconds: number } {
+  const lastRequestAtSeconds = input.graceSeconds + input.retryAfterSeconds;
+  return {
+    lastRequestAtSeconds,
+    minimumGateTimeoutSeconds:
+      lastRequestAtSeconds + SLOWEST_COMPLETED_REVIEW_SECONDS,
+  };
+}
 
 /**
  * Whether it is time to make request `attempt` for this head.
  *
- * The first attempt is made as soon as the provider is seen not to have
- * reviewed the head. A later attempt waits for the previous one to have gone
- * unanswered for `retryAfterSeconds`, measured from the previous request
- * comment's creation time — GitHub's record, not this process's memory, so a
- * restarted gate neither re-asks immediately nor forgets that it already asked.
+ * The first attempt waits for `graceSeconds` since the head was pushed, so a
+ * provider reviewing on its own is not asked to start again. A later attempt
+ * waits for the previous one to have gone unanswered for `retryAfterSeconds`,
+ * measured from the previous request comment's creation time — GitHub's record,
+ * not this process's memory, so a restarted gate neither re-asks immediately nor
+ * forgets that it already asked.
  */
 export async function shouldEscalateReviewRequest(input: {
   repo: string;
@@ -45,9 +87,23 @@ export async function shouldEscalateReviewRequest(input: {
   token: string;
   provider: ReviewProvider;
   attempt: number;
+  graceSeconds: number;
   retryAfterSeconds: number;
+  headPushedAt: string | null;
+  startedAt: number;
 }): Promise<boolean> {
-  if (input.attempt <= 1) return true;
+  if (input.attempt <= 1) {
+    // Age the head from its push time when GitHub reports one. Falling back to
+    // this process's start is deliberately conservative: it can only delay the
+    // first request, never bring it forward into the window where the provider
+    // is most likely already working.
+    const since =
+      input.headPushedAt === null
+        ? input.startedAt
+        : Date.parse(input.headPushedAt);
+    if (!Number.isFinite(since)) return true;
+    return (Date.now() - since) / 1000 >= input.graceSeconds;
+  }
   const previous = await findReviewRequest({
     ...input,
     attempt: input.attempt - 1,
@@ -119,7 +175,10 @@ export async function ensureReviewRequested(input: {
   token: string;
   provider: ReviewProvider;
   attempt: number;
+  graceSeconds: number;
   retryAfterSeconds: number;
+  headPushedAt: string | null;
+  startedAt: number;
   reviewedCommit: string | null;
 }): Promise<number> {
   if (input.attempt > MAX_REVIEW_REQUEST_ATTEMPTS) return input.attempt;

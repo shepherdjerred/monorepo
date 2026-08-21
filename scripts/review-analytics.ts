@@ -174,7 +174,16 @@ async function commandRequests(
       if (marker === null) manual += 1;
       else automated += 1;
       const askedAt = Date.parse(comment.created_at);
-      const answers = marker?.[1] === "codex" ? codexReviews : acks;
+      // Which provider was asked. A hand-typed request carries no marker, so
+      // falling back to the marker alone would score every manual `@codex
+      // review` against Qodo's acknowledgements — counting a later Qodo
+      // acknowledgement as the answer while ignoring the Codex review that did
+      // arrive. That would corrupt the conversion rate the retry policy is
+      // justified by, so the command itself decides when the marker cannot.
+      const askedProvider =
+        marker?.[1] ??
+        (comment.body.includes("@codex review") ? "codex" : "qodo");
+      const answers = askedProvider === "codex" ? codexReviews : acks;
       if (
         answers.some((at) => {
           const gap = Date.parse(at) - askedAt;

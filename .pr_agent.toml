@@ -24,7 +24,8 @@
 handle_push_trigger = true
 push_commands = ["/agentic_review"]
 
-[config]
-# Bot-authored pull requests are already skipped by Qodo's own author policy;
-# this covers human-opened chores that are not worth a review round.
-ignore_pr_labels = ["chore", "skip-review"]
+# Deliberately NO `ignore_pr_labels` / `ignore_pr_*` here. Telling Qodo to skip a
+# pull request does not tell the gate to skip it: `qodoProvider.detectSkip` is
+# null and the gate only skips bot authors, so a label Qodo honours would leave
+# the required gate waiting for a review that is never coming, until it times
+# out. Any exclusion added here needs a matching gate-visible skip policy first.

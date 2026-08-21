@@ -394,10 +394,28 @@ on push without being asked. Codex has no per-push setting — its "Automatic
 reviews" fire on PR open only — so a fresh head still needs `@codex review`.
 Each request carries a visible "automated re-review request" line plus a hidden
 marker (`buildReviewRequestMarker()`, shared with the PR-fleet controller so
-consumers recognise each other's request). An unanswered request is re-asked
-once after `REVIEW_REQUEST_RETRY_SECONDS` (default 31 min), capped at two
+consumers recognise each other's request).
+
+The gate does not ask immediately. Both providers start on their own — Qodo per
+push, Codex on open — and that begins before the gate pod boots, so an immediate
+request would enqueue a second review of a head already being read. It waits
+`REVIEW_REQUEST_GRACE_SECONDS` (default 10 min) from the head's push time, then
+re-asks once after `REVIEW_REQUEST_RETRY_SECONDS` (default 15 min), capped at two
 attempts, with the clock read from the first request comment's own creation time
 so a retried CI job continues the schedule rather than restarting it.
+
+Those two constants and the gate deadline are one budget, not three independent
+knobs: the last request has to land early enough that the slowest review we have
+watched complete (1834s) still fits before the deadline, or the retry is
+advertised and then cut off. `reviewRequestScheduleBounds()` states the relation
+and `wait-for-review.test.ts` asserts it, so raising the retry without raising
+`DEFAULT_TIMEOUT_SECONDS` (and the steps' `timeout_in_minutes` above it) fails
+the suite instead of silently disabling the retry.
+
+Do not add `ignore_pr_*` rules to `.pr_agent.toml`. Telling Qodo to skip a pull
+request does not tell the gate to skip it — `qodoProvider.detectSkip` is null
+and the gate only skips bot authors — so the required gate would wait out its
+deadline for a review that is never coming.
 
 The gate also warns — without blocking — when a first review returns four or
 more findings: no PR measured at that level has converged within three rounds.

@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import {
+  DEFAULT_REQUEST_GRACE_SECONDS,
+  DEFAULT_REQUEST_RETRY_SECONDS,
+  reviewRequestScheduleBounds,
+  SLOWEST_COMPLETED_REVIEW_SECONDS,
+} from "./lib/review-gate-policy.ts";
+import {
   DEFAULT_TIMEOUT_SECONDS,
   parseMaxBlockingPriority,
   resolveReviewGateProvider,
@@ -162,8 +168,36 @@ describe("review gate timeout budget", () => {
   test("does not regress below the slowest completed review", () => {
     // Both measured on PR #2152, on reviews that completed normally only after
     // the 1200s budget had already failed the gate.
-    const slowestCompleted = 1834;
-    expect(DEFAULT_TIMEOUT_SECONDS).toBeGreaterThan(slowestCompleted);
+    expect(DEFAULT_TIMEOUT_SECONDS).toBeGreaterThan(
+      SLOWEST_COMPLETED_REVIEW_SECONDS,
+    );
+  });
+
+  // The retry is only a retry if the gate is still alive to see its answer. A
+  // grace period and a retry interval tuned in isolation produced exactly that
+  // bug: the second request landed 31 minutes in, against a 40-minute deadline,
+  // leaving nine minutes for a review that routinely needs thirty.
+  test("leaves the slowest completed review time to finish after the last request", () => {
+    const bounds = reviewRequestScheduleBounds({
+      graceSeconds: DEFAULT_REQUEST_GRACE_SECONDS,
+      retryAfterSeconds: DEFAULT_REQUEST_RETRY_SECONDS,
+    });
+    expect(DEFAULT_TIMEOUT_SECONDS).toBeGreaterThanOrEqual(
+      bounds.minimumGateTimeoutSeconds,
+    );
+  });
+
+  test("asks for the first review only after the provider has had a head start", () => {
+    // Both providers begin on their own — Qodo per push via `.pr_agent.toml`,
+    // Codex on open — and that starts before this pod boots. Asking at once
+    // would enqueue a second review of a head already being read.
+    expect(DEFAULT_REQUEST_GRACE_SECONDS).toBeGreaterThan(0);
+    expect(
+      reviewRequestScheduleBounds({
+        graceSeconds: DEFAULT_REQUEST_GRACE_SECONDS,
+        retryAfterSeconds: DEFAULT_REQUEST_RETRY_SECONDS,
+      }).lastRequestAtSeconds,
+    ).toBe(DEFAULT_REQUEST_GRACE_SECONDS + DEFAULT_REQUEST_RETRY_SECONDS);
   });
 });
 

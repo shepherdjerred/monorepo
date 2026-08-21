@@ -32,6 +32,7 @@ import {
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import { buildSignalEvent } from "./lib/review-gate-signal.ts";
 import {
+  DEFAULT_REQUEST_GRACE_SECONDS,
   DEFAULT_REQUEST_RETRY_SECONDS,
   ensureReviewRequested,
   warnIfFirstReviewIsOversized,
@@ -59,6 +60,15 @@ const DEFAULT_REPO = "shepherdjerred/monorepo";
  * undershooting costs a false red on a healthy PR, so the asymmetry favours
  * headroom.
  *
+ * It also has to hold the request schedule. The gate waits a grace period before
+ * asking at all and may ask once more after that, so the deadline must leave the
+ * slowest review we have watched complete still able to finish after the LAST
+ * request — otherwise the retry is advertised and then cut off.
+ * `reviewRequestScheduleBounds()` states that relation and
+ * `wait-for-review.test.ts` asserts it, which is why raising the retry interval
+ * without raising this fails the suite rather than silently disabling the
+ * retry.
+ *
  * The durable fix is ordering rather than duration — not starting the gate
  * until the review exists — but that is a CI-architecture change, not a
  * constant.
@@ -70,7 +80,7 @@ const DEFAULT_REPO = "shepherdjerred/monorepo";
  * `wait-for-review.test.ts` asserts that ordering against the pipeline,
  * reading the step's own declared timeout rather than the first one it finds.
  */
-export const DEFAULT_TIMEOUT_SECONDS = 40 * 60;
+export const DEFAULT_TIMEOUT_SECONDS = 60 * 60;
 const DEFAULT_INTERVAL_SECONDS = 30;
 
 export function resolveReviewGateProvider(
@@ -238,6 +248,10 @@ async function waitForReview(): Promise<void> {
     "REVIEW_REQUEST_RETRY_SECONDS",
     DEFAULT_REQUEST_RETRY_SECONDS,
   );
+  const graceSeconds = parsePositiveIntegerEnv(
+    "REVIEW_REQUEST_GRACE_SECONDS",
+    DEFAULT_REQUEST_GRACE_SECONDS,
+  );
 
   console.log(
     `Review gate: provider=${provider.id}, repo=${repo}, pr=#${String(number)}, head=${head}, ` +
@@ -252,6 +266,7 @@ async function waitForReview(): Promise<void> {
     head,
     token,
     policy,
+    graceSeconds,
     retryAfterSeconds,
     timeoutSeconds,
     intervalSeconds,
@@ -265,6 +280,7 @@ type GateConfig = {
   head: string;
   token: string;
   policy: BlockingPolicy;
+  graceSeconds: number;
   retryAfterSeconds: number;
   timeoutSeconds: number;
   intervalSeconds: number;
@@ -324,6 +340,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     head,
     token,
     policy,
+    graceSeconds,
     retryAfterSeconds,
     timeoutSeconds,
     intervalSeconds,
@@ -439,7 +456,10 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         token,
         provider,
         attempt,
+        graceSeconds,
         retryAfterSeconds,
+        headPushedAt,
+        startedAt,
         reviewedCommit: stateResult.reviewedCommit,
       });
     } catch (error) {
