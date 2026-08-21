@@ -23,7 +23,7 @@
 ########################
 # Matches upstream Dockerfile.ubuntu's RUST_BUILDER_VERSION=slim-bookworm.
 # renovate: datasource=docker depName=rust
-FROM rust:slim-bookworm@sha256:99e09cb2284e2ddbb73a995deee3e91783fd04d177602ccf6eab326d778ee777 AS builder
+FROM rust:slim-bookworm@sha256:94e9efa4033213dbb70d4f665527e7ece3944ddb7ba1dd2e43f6fd6e2490af58 AS builder
 
 RUN apt-get update \
   && apt-get -y install --no-install-recommends git ca-certificates build-essential cmake libclang-dev \
@@ -49,7 +49,7 @@ RUN cargo build --release --locked --bin redlib \
 ########################
 # Renovate-managed Ubuntu 26.04 release base.
 # renovate: datasource=docker depName=ubuntu
-FROM ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb AS release
+FROM ubuntu:26.04@sha256:2260313b31c8c011cd2eebe728008efac1b3982be73eb71348ea2648d2c0e09b AS release
 
 # wget powers both the HEALTHCHECK below and the in-image `smoke` stage's
 # /settings probe. The minimal Ubuntu image does not ship wget, so install it

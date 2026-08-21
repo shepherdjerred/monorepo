@@ -1,0 +1,11 @@
+--- a/code/Makefile
++++ b/code/Makefile
+@@ -211,7 +211,7 @@
+ all: n64wasm.js
+ 
+ n64wasm.js: $(FILES)
+-	emcc -o $@ $(FILES) -s USE_SDL=2 -s USE_SDL_TTF=2 \
++	em++ -o $@ $(FILES) -s USE_SDL=2 -s USE_SDL_TTF=2 \
+     -s USE_ZLIB=1 \
+ 	-s USE_SDL_IMAGE=2 \
+     -lGL \

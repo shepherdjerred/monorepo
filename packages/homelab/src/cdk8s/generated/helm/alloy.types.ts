@@ -319,7 +319,7 @@ export type AlloyHelmValuesConfigReloader = {
   /**
    * Security context to apply to the Grafana configReloader container.
    *
-   * @default {}
+   * @default {...} (7 keys)
    */
   securityContext?: AlloyHelmValuesConfigReloaderSecurityContext;
 };
@@ -357,7 +357,47 @@ export type AlloyHelmValuesConfigReloaderImage = {
   pullPolicy?: string;
 };
 
-export type AlloyHelmValuesConfigReloaderSecurityContext = object;
+export type AlloyHelmValuesConfigReloaderSecurityContext = {
+  /**
+   * @default false
+   */
+  allowPrivilegeEscalation?: boolean;
+  /**
+   * @default true
+   */
+  readOnlyRootFilesystem?: boolean;
+  /**
+   * @default {"drop":["ALL"]}
+   */
+  capabilities?: AlloyHelmValuesConfigReloaderSecurityContextCapabilities;
+  /**
+   * @default true
+   */
+  runAsNonRoot?: boolean;
+  /**
+   * @default 65534
+   */
+  runAsUser?: number;
+  /**
+   * @default 65534
+   */
+  runAsGroup?: number;
+  /**
+   * @default {"type":"RuntimeDefault"}
+   */
+  seccompProfile?: AlloyHelmValuesConfigReloaderSecurityContextSeccompProfile;
+};
+
+export type AlloyHelmValuesConfigReloaderSecurityContextCapabilities = {
+  drop?: string[];
+};
+
+export type AlloyHelmValuesConfigReloaderSecurityContextSeccompProfile = {
+  /**
+   * @default "RuntimeDefault"
+   */
+  type?: string;
+};
 
 export type AlloyHelmValuesController = {
   /**
@@ -1017,6 +1057,13 @@ export type AlloyHelmParameters = {
   "configReloader.image.pullPolicy"?: string;
   "configReloader.customArgs"?: string;
   "configReloader.resources"?: string;
+  "configReloader.securityContext.allowPrivilegeEscalation"?: string;
+  "configReloader.securityContext.readOnlyRootFilesystem"?: string;
+  "configReloader.securityContext.capabilities.drop"?: string;
+  "configReloader.securityContext.runAsNonRoot"?: string;
+  "configReloader.securityContext.runAsUser"?: string;
+  "configReloader.securityContext.runAsGroup"?: string;
+  "configReloader.securityContext.seccompProfile.type"?: string;
   "controller.type"?: string;
   "controller.replicas"?: string;
   "controller.parallelRollout"?: string;

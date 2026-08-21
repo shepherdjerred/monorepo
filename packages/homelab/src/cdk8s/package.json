@@ -45,11 +45,11 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@temporalio/testing": "1.21.1",
+    "@temporalio/testing": "1.22.0",
     "@types/bun": "1.4.0",
     "@types/lodash": "^4.17.24",
     "@typescript/native": "npm:typescript@7.0.2",
-    "cdk8s-cli": "2.207.41",
+    "cdk8s-cli": "2.207.47",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "prettier": "^3.8.3",

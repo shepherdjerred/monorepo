@@ -479,7 +479,7 @@ await assertPackageTokens([
   ["scripts/package.json", ['"bunx --no-install eslint']],
   [
     "packages/release-tools/package.json",
-    ['"release-please": "17.10.4"', '"release-please": "release-please"'],
+    ['"release-please": "17.11.1"', '"release-please": "release-please"'],
   ],
 ]);
 

@@ -422,7 +422,7 @@ export type LokiHelmValuesLokiImage = {
   /**
    * Overrides the image tag whose default is the chart's appVersion
    *
-   * @default "3.6.8"
+   * @default "3.6.11"
    */
   tag?: string;
   digest?: unknown;
@@ -1158,7 +1158,7 @@ export type LokiHelmValuesEnterprise = {
   /**
    * Default version of GEL to deploy
    *
-   * @default "3.6.8"
+   * @default "3.6.11"
    */
   version?: string;
   cluster_name?: unknown;
@@ -1257,7 +1257,7 @@ export type LokiHelmValuesEnterpriseImage = {
   /**
    * Docker image tag
    *
-   * @default "3.6.8"
+   * @default "3.6.11"
    */
   tag?: string;
   digest?: unknown;
