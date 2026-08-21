@@ -178,9 +178,68 @@
     "//#markdownlint": {
       "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
     },
-    "//#prettier": {
+    "//#prettier-scout": {
       "inputs": [
+        ".prettierrc.json",
+        ".prettierignore",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "packages/scout-for-lol/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/generated/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#prettier-homelab": {
+      "inputs": [
+        ".prettierrc.json",
+        ".prettierignore",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "packages/homelab/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/generated/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#prettier-packages": {
+      "inputs": [
+        ".prettierrc.json",
+        ".prettierignore",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "packages/**",
+        "!packages/scout-for-lol/**",
+        "!packages/homelab/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/generated/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#prettier-root": {
+      "inputs": [
+        ".prettierrc.json",
+        ".prettierignore",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
         "**/*",
+        "!packages/**",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/dist/**",
@@ -275,11 +334,65 @@
         "!**/generated/**"
       ]
     },
-    "//#line-endings": {
+    "//#line-endings-scout": {
       "inputs": [
         ".gitattributes",
         "scripts/check-line-endings.ts",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "packages/scout-for-lol/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#line-endings-homelab": {
+      "inputs": [
+        ".gitattributes",
+        "scripts/check-line-endings.ts",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "packages/homelab/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#line-endings-packages": {
+      "inputs": [
+        ".gitattributes",
+        "scripts/check-line-endings.ts",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "packages/**",
+        "!packages/scout-for-lol/**",
+        "!packages/homelab/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#line-endings-root": {
+      "inputs": [
+        ".gitattributes",
+        "scripts/check-line-endings.ts",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
         "**/*",
+        "!packages/**",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/dist/**",
@@ -296,18 +409,79 @@
         "!**/node_modules/**"
       ]
     },
-    "//#large-files": {
+    "//#large-files-scout": {
       "inputs": [
         ".largeignore",
         "scripts/check-large-files.ts",
-        "packages/scout-for-lol/scripts/check-asset-sizes.ts",
-        "**/*",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "packages/scout-for-lol/**",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/dist/**",
         "!**/build/**",
         "!**/target/**",
         "!**/.venv/**"
+      ]
+    },
+    "//#large-files-homelab": {
+      "inputs": [
+        ".largeignore",
+        "scripts/check-large-files.ts",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "packages/homelab/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#large-files-packages": {
+      "inputs": [
+        ".largeignore",
+        "scripts/check-large-files.ts",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "packages/**",
+        "!packages/scout-for-lol/**",
+        "!packages/homelab/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#large-files-root": {
+      "inputs": [
+        ".largeignore",
+        "scripts/check-large-files.ts",
+        "scripts/repo-shards.ts",
+        "scripts/run-shard-check.ts",
+        "scripts/lib/run.ts",
+        "**/*",
+        "!packages/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#scout-asset-sizes": {
+      "inputs": [
+        "packages/scout-for-lol/scripts/check-asset-sizes.ts",
+        "packages/scout-for-lol/assets/**",
+        "packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-loading/**",
+        "packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-splash/**"
       ]
     },
     "//#guard:migration": {
