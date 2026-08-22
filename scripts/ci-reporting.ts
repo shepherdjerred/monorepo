@@ -292,10 +292,11 @@ export function namespaceJUnit(xml: string, workspace: string): string {
   }
   let parsed: z.infer<typeof XmlValueSchema>;
   try {
-    const validation = SyntaxValidator.validate(xml);
-    if (validation !== true) {
-      throw new Error(validation.err.msg);
-    }
+    // fast-xml-validator 1.4.1 THROWS a ValidationError on invalid XML instead
+    // of returning `{ err }` (its `validate` is now typed `=> true`). The catch
+    // below already wraps whatever it throws into the same
+    // "malformed JUnit XML" error, so there is no return value left to inspect.
+    SyntaxValidator.validate(xml);
     parsed = XmlValueSchema.parse(junitParser.parse(xml));
   } catch (error) {
     throw new Error(`${workspace} emitted malformed JUnit XML`, {

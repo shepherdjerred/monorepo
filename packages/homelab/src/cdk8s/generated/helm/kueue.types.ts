@@ -50,7 +50,7 @@ export type KueueHelmValuesControllerManager = {
 export type KueueHelmValuesControllerManagerManager = {
   priorityClassName?: unknown;
   /**
-   * @default {"repository":"registry.k8s.io/kueue/kueue","tag":"v0.18.2","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"registry.k8s.io/kueue/kueue","tag":"v0.19.0","pullPolicy":"IfNotPresent"}
    */
   image?: KueueHelmValuesControllerManagerManagerImage;
   /**
@@ -94,7 +94,7 @@ export type KueueHelmValuesControllerManagerManagerImage = {
   /**
    * ControllerManager's image tag
    *
-   * @default "v0.18.2"
+   * @default "v0.19.0"
    */
   tag?: string;
   /**
@@ -401,7 +401,7 @@ export type KueueHelmValuesKueueVizBackend = {
    */
   auth?: KueueHelmValuesKueueVizBackendAuth;
   /**
-   * @default {"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.18.2","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.19.0","pullPolicy":"IfNotPresent"}
    */
   image?: KueueHelmValuesKueueVizBackendImage;
 };
@@ -543,7 +543,7 @@ export type KueueHelmValuesKueueVizBackendImage = {
   /**
    * KueueViz dashboard backend image tag
    *
-   * @default "v0.18.2"
+   * @default "v0.19.0"
    */
   tag?: string;
   /**
@@ -576,13 +576,13 @@ export type KueueHelmValuesKueueVizFrontend = {
   /**
    * KueueViz frontend pod securityContext
    *
-   * @default {}
+   * @default {"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}}
    */
   podSecurityContext?: KueueHelmValuesKueueVizFrontendPodSecurityContext;
   /**
    * KueueViz frontend container securityContext
    *
-   * @default {}
+   * @default {"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}
    */
   containerSecurityContext?: KueueHelmValuesKueueVizFrontendContainerSecurityContext;
   env?: unknown[];
@@ -591,14 +591,52 @@ export type KueueHelmValuesKueueVizFrontend = {
    */
   ingress?: KueueHelmValuesKueueVizFrontendIngress;
   /**
-   * @default {"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.18.2","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.19.0","pullPolicy":"IfNotPresent"}
    */
   image?: KueueHelmValuesKueueVizFrontendImage;
 };
 
-export type KueueHelmValuesKueueVizFrontendPodSecurityContext = object;
+export type KueueHelmValuesKueueVizFrontendPodSecurityContext = {
+  /**
+   * @default true
+   */
+  runAsNonRoot?: boolean;
+  /**
+   * @default 1000
+   */
+  runAsUser?: number;
+  /**
+   * @default {"type":"RuntimeDefault"}
+   */
+  seccompProfile?: KueueHelmValuesKueueVizFrontendPodSecurityContextSeccompProfile;
+};
 
-export type KueueHelmValuesKueueVizFrontendContainerSecurityContext = object;
+export type KueueHelmValuesKueueVizFrontendPodSecurityContextSeccompProfile = {
+  /**
+   * @default "RuntimeDefault"
+   */
+  type?: string;
+};
+
+export type KueueHelmValuesKueueVizFrontendContainerSecurityContext = {
+  /**
+   * @default true
+   */
+  readOnlyRootFilesystem?: boolean;
+  /**
+   * @default false
+   */
+  allowPrivilegeEscalation?: boolean;
+  /**
+   * @default {"drop":["ALL"]}
+   */
+  capabilities?: KueueHelmValuesKueueVizFrontendContainerSecurityContextCapabilities;
+};
+
+export type KueueHelmValuesKueueVizFrontendContainerSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
 export type KueueHelmValuesKueueVizFrontendIngress = {
   /**
@@ -652,7 +690,7 @@ export type KueueHelmValuesKueueVizFrontendImage = {
   /**
    * KueueViz dashboard frontend image tag
    *
-   * @default "v0.18.2"
+   * @default "v0.19.0"
    */
   tag?: string;
   /**
@@ -732,6 +770,12 @@ export type KueueHelmValues = {
    */
   enableVisibilityAPF?: boolean;
   /**
+   * Enable the visibility server's auth-reader RoleBinding. It is always created in the kube-system namespace because it binds to the built-in extension-apiserver-authentication-reader Role, which only exists there. Disable when deploying under a GitOps project that cannot target kube-system, then create the RoleBinding out-of-band.
+   *
+   * @default true
+   */
+  enableVisibilityAuthReaderRoleBinding?: boolean;
+  /**
    * Enable KueueViz dashboard
    *
    * @default false
@@ -748,7 +792,7 @@ export type KueueHelmValues = {
    */
   controllerManager?: KueueHelmValuesControllerManager;
   /**
-   * @default {"controllerManagerConfigYaml":"apiVersion: config.kueue.x-k8s.io/v1beta2\nkind: Configuration\nhealth:\n  healthProbeBindAddress: :8081\nmetrics:\n  bindAddress: :8443\n# enableClusterQueueResources: true\nwebhook:\n  port: 9443\nleaderElection:\n  leaderElect: true\n  resourceName: c1f6bfd2.kueue.x-k8s.io\ncontroller:\n  groupKindConcurrency:\n    Job.batch: 5\n    Pod: 5\n    Workload.kueue.x-k8s.io: 5\n    LocalQueue.kueue.x-k8s.io: 1\n    ClusterQueue.kueue.x-k8s.io: 1\n    ResourceFlavor.kueue.x-k8s.io: 1\nclientConnection:\n  qps: 50\n  burst: 100\n#pprofBindAddress: :8083\n#waitForPodsReady:\n#  timeout: 5m\n#  recoveryTimeout: 3m\n#  blockAdmission: false\n#  requeuingStrategy:\n#    timestamp: Eviction\n#    backoffLimitCount: null # null indicates infinite requeuing\n#    backoffBaseSeconds: 60\n#    backoffMaxSeconds: 3600\n#manageJobsWithoutQueueName: true\n# See \"Opt-in Namespace Management\" for guidance on namespace management:\n# https://kueue.sigs.k8s.io/docs/tasks/manage/enforce_job_management/opt_in_namespace_management/\n#managedJobsNamespaceSelector:\n#  matchExpressions:\n#    - key: kubernetes.io/metadata.name\n#      operator: NotIn\n#      values: [ kube-system, kueue-system ]\n#internalCertManagement:\n#  enable: false\n#  webhookServiceName: \"\"\n#  webhookSecretName: \"\"\nintegrations:\n  frameworks:\n  - \"batch/job\"\n  - \"kubeflow.org/mpijob\"\n  - \"ray.io/rayjob\"\n  - \"ray.io/rayservice\"\n  - \"ray.io/raycluster\"\n  - \"jobset.x-k8s.io/jobset\"\n  - \"trainer.kubeflow.org/trainjob\"\n  - \"kubeflow.org/paddlejob\"\n  - \"kubeflow.org/pytorchjob\"\n  - \"kubeflow.org/tfjob\"\n  - \"kubeflow.org/xgboostjob\"\n  - \"kubeflow.org/jaxjob\"\n  - \"workload.codeflare.dev/appwrapper\"\n#  - \"sparkoperator.k8s.io/sparkapplication\"\n  - \"pod\"\n  - \"deployment\"\n  - \"statefulset\"\n  - \"leaderworkerset.x-k8s.io/leaderworkerset\"\n#  externalFrameworks:\n#  - \"Foo.v1.example.com\"\n#fairSharing:\n#  preemptionStrategies: [LessThanOrEqualToFinalShare, LessThanInitialShare]\n#admissionFairSharing:\n#  usageHalfLifeTime: \"168h\" # 7 days\n#  usageSamplingInterval: \"5m\"\n#  resourceWeights: # optional, defaults to 1 for all resources if not specified\n#    cpu: 0    # if you want to completely ignore cpu usage\n#    memory: 0 # ignore completely memory usage\n#    example.com/gpu: 100 # and you care only about GPUs usage\n#resources:\n#  excludeResourcePrefixes: []\n#  quotaCheckStrategy: \"BlockUndeclared\"\n# transformations:\n# - input: nvidia.com/mig-4g.5gb\n#   strategy: Replace | Retain\n#   outputs:\n#     example.com/accelerator-memory: 5Gi\n#     example.com/accelerator-gpc: 4\n#objectRetentionPolicies:\n#  workloads:\n#    afterFinished: null # null indicates infinite retention, 0s means no retention at all\n#    afterDeactivatedByKueue: null # null indicates infinite retention, 0s means no retention at all"}
+   * @default {"controllerManagerConfigYaml":"apiVersion: config.kueue.x-k8s.io/v1beta2\nkind: Configuration\nhealth:\n  healthProbeBindAddress: :8081\nmetrics:\n  bindAddress: :8443\n# enableClusterQueueResources: true\nwebhook:\n  port: 9443\nleaderElection:\n  leaderElect: true\n  resourceName: c1f6bfd2.kueue.x-k8s.io\ncontroller:\n  groupKindConcurrency:\n    Job.batch: 5\n    Pod: 5\n    Workload.kueue.x-k8s.io: 10\n    LocalQueue.kueue.x-k8s.io: 5\n    ClusterQueue.kueue.x-k8s.io: 5\n    ResourceFlavor.kueue.x-k8s.io: 1\nclientConnection:\n  qps: 300\n  burst: 500\n#pprofBindAddress: :8083\n#waitForPodsReady:\n#  timeout: 5m\n#  recoveryTimeout: 3m\n#  blockAdmission: false\n#  requeuingStrategy:\n#    timestamp: Eviction\n#    backoffLimitCount: null # null indicates infinite requeuing\n#    backoffBaseSeconds: 60\n#    backoffMaxSeconds: 3600\n#manageJobsWithoutQueueName: true\n# See \"Opt-in Namespace Management\" for guidance on namespace management:\n# https://kueue.sigs.k8s.io/docs/tasks/manage/enforce_job_management/opt_in_namespace_management/\n#managedJobsNamespaceSelector:\n#  matchExpressions:\n#    - key: kubernetes.io/metadata.name\n#      operator: NotIn\n#      values: [ kube-system, kueue-system ]\n#internalCertManagement:\n#  enable: false\n#  webhookServiceName: \"\"\n#  webhookSecretName: \"\"\nintegrations:\n  frameworks:\n  - \"batch/job\"\n  - \"kubeflow.org/mpijob\"\n  - \"ray.io/rayjob\"\n  - \"ray.io/rayservice\"\n  - \"ray.io/raycluster\"\n  - \"jobset.x-k8s.io/jobset\"\n  - \"trainer.kubeflow.org/trainjob\"\n#  - \"kubeflow.org/paddlejob\"\n#  - \"kubeflow.org/pytorchjob\"\n#  - \"kubeflow.org/tfjob\"\n#  - \"kubeflow.org/xgboostjob\"\n#  - \"kubeflow.org/jaxjob\"\n  - \"workload.codeflare.dev/appwrapper\"\n#  - \"sparkoperator.k8s.io/sparkapplication\"\n  - \"pod\"\n  - \"deployment\"\n  - \"statefulset\"\n  - \"leaderworkerset.x-k8s.io/leaderworkerset\"\n#  externalFrameworks:\n#  - \"Foo.v1.example.com\"\n#fairSharing:\n#  preemptionStrategies: [LessThanOrEqualToFinalShare, LessThanInitialShare]\n#admissionFairSharing:\n#  usageHalfLifeTime: \"168h\" # 7 days\n#  usageSamplingInterval: \"5m\"\n#  resourceWeights: # optional, defaults to 1 for all resources if not specified\n#    cpu: 0    # if you want to completely ignore cpu usage\n#    memory: 0 # ignore completely memory usage\n#    example.com/gpu: 100 # and you care only about GPUs usage\n#resources:\n#  excludeResourcePrefixes: []\n#  quotaCheckStrategy: \"BlockUndeclared\"\n# transformations:\n# - input: nvidia.com/mig-4g.5gb\n#   strategy: Replace | Retain\n#   outputs:\n#     example.com/accelerator-memory: 5Gi\n#     example.com/accelerator-gpc: 4\n#objectRetentionPolicies:\n#  workloads:\n#    afterFinished: null # null indicates infinite retention, 0s means no retention at all\n#    afterDeactivatedByKueue: null # null indicates infinite retention, 0s means no retention at all"}
    */
   managerConfig?: KueueHelmValuesManagerConfig;
   /**
@@ -764,7 +808,7 @@ export type KueueHelmValues = {
    */
   mutatingWebhook?: KueueHelmValuesMutatingWebhook;
   /**
-   * @default {"backend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[{"name":"KUEUEVIZ_ALLOWED_ORIGINS","value":"https://frontend.kueueviz.local"}],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"backend.kueueviz.local","tlsSecretName":"kueueviz-backend-tls"},"auth":{"mode":"Disabled","tokenReviewConfig":{"audiences":"","cacheTTL":"60s","negativeCacheTTL":"5s"}},"image":{"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.18.2","pullPolicy":"IfNotPresent"}},"frontend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{},"containerSecurityContext":{},"env":[],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"frontend.kueueviz.local","tlsSecretName":"kueueviz-frontend-tls"},"image":{"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.18.2","pullPolicy":"IfNotPresent"}}}
+   * @default {"backend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[{"name":"KUEUEVIZ_ALLOWED_ORIGINS","value":"https://frontend.kueueviz.local"}],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"backend.kueueviz.local","tlsSecretName":"kueueviz-backend-tls"},"auth":{"mode":"Disabled","tokenReviewConfig":{"audiences":"","cacheTTL":"60s","negativeCacheTTL":"5s"}},"image":{"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.19.0","pullPolicy":"IfNotPresent"}},"frontend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"frontend.kueueviz.local","tlsSecretName":"kueueviz-frontend-tls"},"image":{"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.19.0","pullPolicy":"IfNotPresent"}}}
    */
   kueueViz?: KueueHelmValuesKueueViz;
   /**
@@ -779,6 +823,7 @@ export type KueueHelmParameters = {
   enablePrometheus?: string;
   enableCertManager?: string;
   enableVisibilityAPF?: string;
+  enableVisibilityAuthReaderRoleBinding?: string;
   enableKueueViz?: string;
   kubernetesClusterDomain?: string;
   "controllerManager.featureGates"?: string;
@@ -854,6 +899,12 @@ export type KueueHelmParameters = {
   "kueueViz.frontend.imagePullSecrets"?: string;
   "kueueViz.frontend.priorityClassName"?: string;
   "kueueViz.frontend.resources"?: string;
+  "kueueViz.frontend.podSecurityContext.runAsNonRoot"?: string;
+  "kueueViz.frontend.podSecurityContext.runAsUser"?: string;
+  "kueueViz.frontend.podSecurityContext.seccompProfile.type"?: string;
+  "kueueViz.frontend.containerSecurityContext.readOnlyRootFilesystem"?: string;
+  "kueueViz.frontend.containerSecurityContext.allowPrivilegeEscalation"?: string;
+  "kueueViz.frontend.containerSecurityContext.capabilities.drop"?: string;
   "kueueViz.frontend.env"?: string;
   "kueueViz.frontend.ingress.enabled"?: string;
   "kueueViz.frontend.ingress.annotations.nginx.ingress.kubernetes.io/rewrite-target"?: string;

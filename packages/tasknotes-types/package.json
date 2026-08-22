@@ -12,7 +12,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
-    "@tasknotes/model": "0.2.1",
+    "@tasknotes/model": "0.2.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {

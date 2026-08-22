@@ -47,7 +47,7 @@
     "@prisma/adapter-libsql": "7.9.1",
     "@prisma/client": "^7.9.1",
     "@prisma/client-runtime-utils": "7.9.1",
-    "@sentry/bun": "10.68.0",
+    "@sentry/bun": "10.69.0",
     "@shepherdjerred/glitter-context": "workspace:*",
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",

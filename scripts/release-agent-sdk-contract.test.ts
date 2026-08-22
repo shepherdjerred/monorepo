@@ -18,7 +18,7 @@ describe("release refiner native SDK contract", () => {
       await Bun.file(`${import.meta.dir}/package.json`).json(),
     );
     expect(manifest.dependencies["@anthropic-ai/claude-agent-sdk"]).toBe(
-      "0.3.220",
+      "0.3.226",
     );
     expect(manifest.dependencies["@openai/codex-sdk"]).toBe("0.147.0");
     expect(manifest.dependencies["@openai/codex"]).toBeUndefined();

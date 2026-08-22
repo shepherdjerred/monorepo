@@ -2517,7 +2517,7 @@ export type ArgocdHelmValuesRedis = {
   /**
    * Redis image
    *
-   * @default {"repository":"ecr-public.aws.com/docker/library/redis","tag":"8.2.3-alpine","imagePullPolicy":""}
+   * @default {"repository":"ecr-public.aws.com/docker/library/redis","tag":"8.6.4-alpine","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisImage;
   /**
@@ -2774,7 +2774,7 @@ export type ArgocdHelmValuesRedisImage = {
    * Redis tag
    * Do not use 7.4.0 <= v < 8.0.0, otherwise you are no longer using an open source version of Redis
    *
-   * @default "8.2.3-alpine"
+   * @default "8.6.4-alpine"
    */
   tag?: string;
   /**

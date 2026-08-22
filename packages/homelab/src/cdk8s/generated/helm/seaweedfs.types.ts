@@ -1958,7 +1958,7 @@ export type SeaweedfsHelmValuesS3 = {
   /**
    * Service settings
    *
-   * @default {"type":"ClusterIP"}
+   * @default {"type":"ClusterIP","nodePorts":{"http":null,"https":null,"iceberg":null,"metrics":null}}
    */
   service?: SeaweedfsHelmValuesS3Service;
   /**
@@ -2141,6 +2141,19 @@ export type SeaweedfsHelmValuesS3Service = {
    * @default "ClusterIP"
    */
   type?: string;
+  /**
+   * fixed nodePorts, used only when type is NodePort or LoadBalancer
+   *
+   * @default {...} (4 keys)
+   */
+  nodePorts?: SeaweedfsHelmValuesS3ServiceNodePorts;
+};
+
+export type SeaweedfsHelmValuesS3ServiceNodePorts = {
+  http?: unknown;
+  https?: unknown;
+  iceberg?: unknown;
+  metrics?: unknown;
 };
 
 export type SeaweedfsHelmValuesS3IcebergIngress = {
@@ -2213,9 +2226,9 @@ export type SeaweedfsHelmValuesSftp = {
   loggingOverrideLevel?: unknown;
   /**
    * SSH server configuration
-   * Path to the SSH private key file for host authentication
+   * Optional path to a single SSH host key file; the server fails to start if set but missing. Host keys come from hostKeysFolder by default.
    *
-   * @default "/etc/sw/seaweedfs_sftp_ssh_private_key"
+   * @default ""
    */
   sshPrivateKey?: string;
   /**
@@ -2372,7 +2385,7 @@ export type SeaweedfsHelmValuesSftp = {
   /**
    * Service settings
    *
-   * @default {"type":"ClusterIP"}
+   * @default {"type":"ClusterIP","nodePorts":{"sftp":null,"metrics":null}}
    */
   service?: SeaweedfsHelmValuesSftpService;
 };
@@ -2465,6 +2478,17 @@ export type SeaweedfsHelmValuesSftpService = {
    * @default "ClusterIP"
    */
   type?: string;
+  /**
+   * fixed nodePorts, used only when type is NodePort or LoadBalancer
+   *
+   * @default {"sftp":null,"metrics":null}
+   */
+  nodePorts?: SeaweedfsHelmValuesSftpServiceNodePorts;
+};
+
+export type SeaweedfsHelmValuesSftpServiceNodePorts = {
+  sftp?: unknown;
+  metrics?: unknown;
 };
 
 export type SeaweedfsHelmValuesAdmin = {
@@ -2634,7 +2658,7 @@ export type SeaweedfsHelmValuesAdmin = {
    */
   ingress?: SeaweedfsHelmValuesAdminIngress;
   /**
-   * @default {"type":"ClusterIP","annotations":{}}
+   * @default {"type":"ClusterIP","annotations":{},"nodePorts":{"http":null,"grpc":null}}
    */
   service?: SeaweedfsHelmValuesAdminService;
   /**
@@ -2904,6 +2928,12 @@ export type SeaweedfsHelmValuesAdminService = {
    * @default {}
    */
   annotations?: SeaweedfsHelmValuesAdminServiceAnnotations;
+  /**
+   * fixed nodePorts, used only when type is NodePort or LoadBalancer
+   *
+   * @default {"http":null,"grpc":null}
+   */
+  nodePorts?: SeaweedfsHelmValuesAdminServiceNodePorts;
 };
 
 export type SeaweedfsHelmValuesAdminServiceAnnotations = {
@@ -2912,6 +2942,11 @@ export type SeaweedfsHelmValuesAdminServiceAnnotations = {
    * This is common for config maps, custom settings, and extensible configurations.
    */
   [key: string]: unknown;
+};
+
+export type SeaweedfsHelmValuesAdminServiceNodePorts = {
+  http?: unknown;
+  grpc?: unknown;
 };
 
 export type SeaweedfsHelmValuesAdminServiceMonitor = {
@@ -3330,7 +3365,7 @@ export type SeaweedfsHelmValuesAllInOne = {
   /**
    * Service settings
    *
-   * @default {"annotations":{},"type":"ClusterIP","internalTrafficPolicy":"Cluster"}
+   * @default {...} (4 keys)
    */
   service?: SeaweedfsHelmValuesAllInOneService;
   /**
@@ -3579,6 +3614,12 @@ export type SeaweedfsHelmValuesAllInOneService = {
    * @default "Cluster"
    */
   internalTrafficPolicy?: string;
+  /**
+   * fixed nodePorts, used only when type is NodePort or LoadBalancer
+   *
+   * @default {...} (10 keys)
+   */
+  nodePorts?: SeaweedfsHelmValuesAllInOneServiceNodePorts;
 };
 
 export type SeaweedfsHelmValuesAllInOneServiceAnnotations = {
@@ -3587,6 +3628,19 @@ export type SeaweedfsHelmValuesAllInOneServiceAnnotations = {
    * This is common for config maps, custom settings, and extensible configurations.
    */
   [key: string]: unknown;
+};
+
+export type SeaweedfsHelmValuesAllInOneServiceNodePorts = {
+  master?: unknown;
+  masterGrpc?: unknown;
+  volume?: unknown;
+  volumeGrpc?: unknown;
+  filer?: unknown;
+  filerGrpc?: unknown;
+  s3?: unknown;
+  s3Https?: unknown;
+  sftp?: unknown;
+  metrics?: unknown;
 };
 
 export type SeaweedfsHelmValuesAllInOneData = {
@@ -3904,6 +3958,118 @@ export type SeaweedfsHelmValuesPodLabels = object;
 
 export type SeaweedfsHelmValuesPodAnnotations = object;
 
+export type SeaweedfsHelmValuesNetworkPolicy = {
+  /**
+   * Opt-in. While false the chart renders no NetworkPolicy objects at all and
+   * the cluster default (usually allow-all) applies. Turn this on for a
+   * namespace with a default-deny policy, where the components otherwise
+   * cannot reach each other and the install hangs.
+   * This alone covers a default-deny that only restricts ingress. If yours has
+   * Egress in its policyTypes as well - the usual baseline - the components
+   * still cannot resolve DNS or reach each other, and you need egress.enabled
+   * below too, together with an extraEgress entry for the filer store.
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  extraIngress?: unknown[];
+  /**
+   * @default {...} (6 keys)
+   */
+  egress?: SeaweedfsHelmValuesNetworkPolicyEgress;
+  /**
+   * @default {}
+   */
+  components?: SeaweedfsHelmValuesNetworkPolicyComponents;
+};
+
+export type SeaweedfsHelmValuesNetworkPolicyEgress = {
+  /**
+   * Egress is a separate opt-in: the chart knows the addresses of its own
+   * components, but not where your filer store (MySQL, Postgres, Redis,
+   * ...), notification sink or remote tier lives. Enabling this without
+   * listing those under extraEgress will cut the filer off from its store.
+   * It cannot be on by default either. In a namespace with no default-deny,
+   * egress rules would take the components from "may reach anything" down to
+   * "may reach the peers listed here", which is the same breakage from the
+   * other direction. Required if your default-deny covers egress.
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Every component resolves its peers by DNS name, so this is required
+   * for the release to function at all.
+   * The defaults below are CoreDNS as kubeadm, kind and the managed offerings
+   * from AWS, Google and Azure install it. OpenShift runs its resolver
+   * elsewhere and needs both overridden:
+   * A node-local DNS cache is not a pod peer at all - the resolver address is
+   * a link-local IP - so name it with an ipBlock in extraEgress instead.
+   *
+   * @default true
+   */
+  allowDNS?: boolean;
+  /**
+   * @default {"matchLabels":{"kubernetes.io/metadata.name":"kube-system"}}
+   */
+  dnsNamespaceSelector?: SeaweedfsHelmValuesNetworkPolicyEgressDnsNamespaceSelector;
+  /**
+   * @default {"matchLabels":{"k8s-app":"kube-dns"}}
+   */
+  dnsPodSelector?: SeaweedfsHelmValuesNetworkPolicyEgressDnsPodSelector;
+  /**
+   * The COSI sidecar watches the COSI custom resources and the volume resize
+   * hook shells out to kubectl. Only those two get this rule - no seaweedfs
+   * component itself speaks to the Kubernetes API. The resize hook's policy,
+   * and with it this requirement, only appears on an upgrade that actually
+   * grows a volume PVC.
+   *
+   * @default {"enabled":true,"cidrs":[],"ports":[443,6443]}
+   */
+  kubeApiServer?: SeaweedfsHelmValuesNetworkPolicyEgressKubeApiServer;
+  extraEgress?: unknown[];
+};
+
+export type SeaweedfsHelmValuesNetworkPolicyEgressDnsNamespaceSelector = {
+  /**
+   * @default {"kubernetes.io/metadata.name":"kube-system"}
+   */
+  matchLabels?: SeaweedfsHelmValuesNetworkPolicyEgressDnsNamespaceSelectorMatchLabels;
+};
+
+export type SeaweedfsHelmValuesNetworkPolicyEgressDnsNamespaceSelectorMatchLabels =
+  {
+    /**
+     * @default "kube-system"
+     */
+    "kubernetes.io/metadata.name"?: string;
+  };
+
+export type SeaweedfsHelmValuesNetworkPolicyEgressDnsPodSelector = {
+  /**
+   * @default {"k8s-app":"kube-dns"}
+   */
+  matchLabels?: SeaweedfsHelmValuesNetworkPolicyEgressDnsPodSelectorMatchLabels;
+};
+
+export type SeaweedfsHelmValuesNetworkPolicyEgressDnsPodSelectorMatchLabels = {
+  /**
+   * @default "kube-dns"
+   */
+  "k8s-app"?: string;
+};
+
+export type SeaweedfsHelmValuesNetworkPolicyEgressKubeApiServer = {
+  /**
+   * @default true
+   */
+  enabled?: boolean;
+  cidrs?: unknown[];
+  ports?: number[];
+};
+
+export type SeaweedfsHelmValuesNetworkPolicyComponents = object;
+
 export type SeaweedfsHelmValues = {
   /**
    * @default {"imageRegistry":"","imagePullSecrets":"","seaweedfs":{"createClusterRole":true,"image":{"repository":"","name":"chrislusf/seaweedfs"},"imagePullPolicy":"IfNotPresent","restartPolicy":"Always","loggingLevel":1,"enableSecurity":false,"masterServer":null,"securityConfig":{"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false,"expiresAfterSeconds":{"volumeWrite":0,"volumeRead":0,"filerWrite":0,"filerRead":0}}},"serviceAccountName":"seaweedfs","serviceAccountAnnotations":{},"automountServiceAccountToken":true,"certificates":{"duration":"87600h","renewBefore":"720h","alphacrds":false},"monitoring":{"enabled":false,"gatewayHost":null,"gatewayPort":null,"additionalLabels":{}},"enableReplication":false,"replicationPlacement":"001","extraEnvironmentVars":{"WEED_CLUSTER_DEFAULT":"sw","WEED_CLUSTER_SW_MASTER":"{{ include \"seaweedfs.cluster.masterAddress\" . }}","WEED_CLUSTER_SW_FILER":"{{ include \"seaweedfs.cluster.filerAddress\" . }}"}}}
@@ -3977,6 +4143,10 @@ export type SeaweedfsHelmValues = {
    * @default {}
    */
   podAnnotations?: SeaweedfsHelmValuesPodAnnotations;
+  /**
+   * @default {...} (4 keys)
+   */
+  networkPolicy?: SeaweedfsHelmValuesNetworkPolicy;
 };
 
 export type SeaweedfsHelmParameters = {
@@ -4293,6 +4463,10 @@ export type SeaweedfsHelmParameters = {
   "s3.ingress.pathType"?: string;
   "s3.ingress.tls"?: string;
   "s3.service.type"?: string;
+  "s3.service.nodePorts.http"?: string;
+  "s3.service.nodePorts.https"?: string;
+  "s3.service.nodePorts.iceberg"?: string;
+  "s3.service.nodePorts.metrics"?: string;
   "s3.icebergIngress.enabled"?: string;
   "s3.icebergIngress.className"?: string;
   "s3.icebergIngress.host"?: string;
@@ -4347,6 +4521,8 @@ export type SeaweedfsHelmParameters = {
   "sftp.readinessProbe.failureThreshold"?: string;
   "sftp.readinessProbe.timeoutSeconds"?: string;
   "sftp.service.type"?: string;
+  "sftp.service.nodePorts.sftp"?: string;
+  "sftp.service.nodePorts.metrics"?: string;
   "admin.enabled"?: string;
   "admin.imageOverride"?: string;
   "admin.restartPolicy"?: string;
@@ -4408,6 +4584,8 @@ export type SeaweedfsHelmParameters = {
   "admin.ingress.pathType"?: string;
   "admin.ingress.tls"?: string;
   "admin.service.type"?: string;
+  "admin.service.nodePorts.http"?: string;
+  "admin.service.nodePorts.grpc"?: string;
   "worker.enabled"?: string;
   "worker.imageOverride"?: string;
   "worker.restartPolicy"?: string;
@@ -4494,6 +4672,16 @@ export type SeaweedfsHelmParameters = {
   "allInOne.sftp.existingCAKeysSecret"?: string;
   "allInOne.service.type"?: string;
   "allInOne.service.internalTrafficPolicy"?: string;
+  "allInOne.service.nodePorts.master"?: string;
+  "allInOne.service.nodePorts.masterGrpc"?: string;
+  "allInOne.service.nodePorts.volume"?: string;
+  "allInOne.service.nodePorts.volumeGrpc"?: string;
+  "allInOne.service.nodePorts.filer"?: string;
+  "allInOne.service.nodePorts.filerGrpc"?: string;
+  "allInOne.service.nodePorts.s3"?: string;
+  "allInOne.service.nodePorts.s3Https"?: string;
+  "allInOne.service.nodePorts.sftp"?: string;
+  "allInOne.service.nodePorts.metrics"?: string;
   "allInOne.data.type"?: string;
   "allInOne.data.hostPathPrefix"?: string;
   "allInOne.data.claimName"?: string;
@@ -4552,4 +4740,14 @@ export type SeaweedfsHelmParameters = {
   "certificates.ca.duration"?: string;
   "certificates.ca.renewBefore"?: string;
   "certificates.externalCertificates.enabled"?: string;
+  "networkPolicy.enabled"?: string;
+  "networkPolicy.extraIngress"?: string;
+  "networkPolicy.egress.enabled"?: string;
+  "networkPolicy.egress.allowDNS"?: string;
+  "networkPolicy.egress.dnsNamespaceSelector.matchLabels.kubernetes.io/metadata.name"?: string;
+  "networkPolicy.egress.dnsPodSelector.matchLabels.k8s-app"?: string;
+  "networkPolicy.egress.kubeApiServer.enabled"?: string;
+  "networkPolicy.egress.kubeApiServer.cidrs"?: string;
+  "networkPolicy.egress.kubeApiServer.ports"?: string;
+  "networkPolicy.egress.extraEgress"?: string;
 };

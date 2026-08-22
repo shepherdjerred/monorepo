@@ -24,7 +24,10 @@ export type KubeprometheusstackHelmValuesCrdsUpgradeJob = {
    */
   enabled?: boolean;
   /**
-   * @default false
+   * Force apply the CRDs, taking ownership from the manager that installed them (e.g. helm).
+   * Required for the job to actually upgrade CRDs whose schema/version changed.
+   *
+   * @default true
    */
   forceConflicts?: boolean;
   /**
@@ -2530,7 +2533,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.33.1"
+   * @default "v0.34.0"
    */
   tag?: string;
   /**
@@ -6457,7 +6460,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorThanosImage = {
    */
   repository?: string;
   /**
-   * @default "v0.42.2"
+   * @default "v0.42.4"
    */
   tag?: string;
   /**
@@ -8484,7 +8487,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v3.13.1-distroless"
+   * @default "v3.14.0-distroless"
    */
   tag?: string;
   /**
@@ -9389,7 +9392,7 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.42.2"
+   * @default "v0.42.4"
    */
   tag?: string;
   /**
@@ -9668,7 +9671,7 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Install Prometheus Operator CRDs
    *
-   * @default {"enabled":true,"upgradeJob":{"enabled":false,"forceConflicts":false,"image":{"busybox":{"registry":"docker.io","repository":"busybox","tag":"latest","sha":"","pullPolicy":"IfNotPresent"},"kubectl":{"registry":"registry.k8s.io","repository":"kubectl","tag":"","sha":"","pullPolicy":"IfNotPresent"}},"env":{},"resources":{},"extraVolumes":[],"extraVolumeMounts":[],"nodeSelector":{},"affinity":{},"tolerations":[],"topologySpreadConstraints":[],"labels":{},"annotations":{},"podLabels":{},"podAnnotations":{},"serviceAccount":{"create":true,"name":"","annotations":{},"labels":{},"automountServiceAccountToken":true},"automountServiceAccountToken":true,"containerSecurityContext":{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}},"podSecurityContext":{"fsGroup":65534,"runAsGroup":65534,"runAsNonRoot":true,"runAsUser":65534,"seccompProfile":{"type":"RuntimeDefault"}}}}
+   * @default {"enabled":true,"upgradeJob":{"enabled":false,"forceConflicts":true,"image":{"busybox":{"registry":"docker.io","repository":"busybox","tag":"latest","sha":"","pullPolicy":"IfNotPresent"},"kubectl":{"registry":"registry.k8s.io","repository":"kubectl","tag":"","sha":"","pullPolicy":"IfNotPresent"}},"env":{},"resources":{},"extraVolumes":[],"extraVolumeMounts":[],"nodeSelector":{},"affinity":{},"tolerations":[],"topologySpreadConstraints":[],"labels":{},"annotations":{},"podLabels":{},"podAnnotations":{},"serviceAccount":{"create":true,"name":"","annotations":{},"labels":{},"automountServiceAccountToken":true},"automountServiceAccountToken":true,"containerSecurityContext":{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}},"podSecurityContext":{"fsGroup":65534,"runAsGroup":65534,"runAsNonRoot":true,"runAsUser":65534,"seccompProfile":{"type":"RuntimeDefault"}}}}
    */
   crds?: KubeprometheusstackHelmValuesCrds;
   /**

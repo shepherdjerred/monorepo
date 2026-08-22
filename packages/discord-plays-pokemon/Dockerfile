@@ -23,7 +23,7 @@
 # uses clang wasm32-unknown-unknown + wasm-ld (LLVM, NOT emscripten): trixie's
 # clang-19 produces a Bun-loadable binary (bookworm's clang-14 does not).
 # ---------------------------------------------------------------------------
-FROM debian:trixie-slim@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd AS wasm-builder
+FROM debian:trixie-slim@sha256:3a39a0592364683e6bab97937b72cad5a8fa6dcbbee90edb3bb48c7f8e94f258 AS wasm-builder
 
 # Pinned commit of ottohg/pokeemerald-wasm. Kept in sync with the OTTOHG_SHA in
 # packages/discord-plays-pokemon/scripts/build-wasm.ts (the single source of
@@ -36,7 +36,7 @@ ENV OTTOHG_SHA=c101be5ac2ae53c5d18ee063f16eeeda751639f8
 # decomp host tools, libpng/zlib + pkg-config for gbagfx, python3 + uv for the
 # sound-data tooling.
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.0
+ARG UV_VERSION=0.12.3
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     clang lld llvm build-essential libpng-dev zlib1g-dev pkg-config \

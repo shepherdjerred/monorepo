@@ -48,7 +48,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.2.1"
+      "value": "10.3.0"
     },
     {
       "name": "cert-manager",
@@ -96,7 +96,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "87.21.0"
+      "value": "88.5.2"
     },
     {
       "name": "prometheus-adapter",
@@ -203,7 +203,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "loose"
       },
-      "value": "1.43.3.10828-00f62d37d-amd64@sha256:f6748983db1054b571b57b4a40f07f53af6c4bfb9edd1fa455f5ebb6e16449bc"
+      "value": "1.43.3.10861-07dfddaeb-amd64@sha256:dd9bcf6494a1f7e817710e75d2ff66beb68485b5ea1b63c7c712adc25983b9bb"
     },
     {
       "name": "linuxserver/tautulli",
@@ -215,7 +215,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2.17.2@sha256:ef7f4329e5029f83bc93a6fef9a06e67b97652573ce3d62402645ba0d933a0be"
+      "value": "2.17.2@sha256:91dac75429c459756e7ef81cefa26a751b314086562a641aebb2c03ddfd52d94"
     },
     {
       "name": "linuxserver/bazarr",
@@ -227,7 +227,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "1.6.0@sha256:ab401a0f361cfad328e444838b13d5b334b189d0f556fc91a3623eb581df36df"
+      "value": "1.6.0@sha256:ac284d3fda9ee7da8b15197dc51f0d7a2a1da98549bee99a3d924d3e94a5e7ed"
     },
     {
       "name": "seerr-team/seerr",
@@ -239,7 +239,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "v3.4.0@sha256:d206d9e4056bb90178297df58047791196e7721e6dc19384579b0530702fe086"
+      "value": "v3.4.1@sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1"
     },
     {
       "name": "kometateam/kometa",
@@ -251,7 +251,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v2.4.5@sha256:a376a1818196cde159b5a4d5a6ad55411415f7b5bc38d8a27e8c718bae7f0ddd"
+      "value": "v2.4.6@sha256:12753705405a647a703c7a8aec6f862de05831f296858c6791b940500d558a6f"
     },
     {
       "name": "linuxserver/prowlarr",
@@ -263,7 +263,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.5.2@sha256:2f3d31307beba3ba2dd226d191f5f5c14ee3b4d8b49277c64683f5ed97083179"
+      "value": "2.5.2@sha256:1295cff29d10b486c0d8324d1559a552140a5932bf8b3d87e398654414f63f92"
     },
     {
       "name": "qdm12/gluetun",
@@ -275,7 +275,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver-coerced"
       },
-      "value": "v3.41.1@sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab"
+      "value": "v3.41.3@sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027"
     },
     {
       "name": "linuxserver/qbittorrent",
@@ -303,7 +303,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "6.3.0@sha256:e35056574cdc695a9ee745aa1ecda9eab3842450bf4b7b8471b023790fa3861d"
+      "value": "6.3.0@sha256:a45b5ab0f850f39edb4cc9c95bbd967b52ddc3d4574a4dfb45561177db6c88f4"
     },
     {
       "name": "linuxserver/sonarr",
@@ -315,7 +315,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "4.0.19@sha256:24acea2956a0ccb11f103877d9f4f8576600fb34bff34820ed749c2256dab89f"
+      "value": "4.0.19@sha256:373159ba768e23a3a1c497d9f2b936addf8fd5b1fdce7dd6a14080ac928bfda0"
     },
     {
       "name": "timothyjmiller/cloudflare-ddns",
@@ -363,7 +363,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2026.7.4@sha256:5a531753cea96444200158fc2b0ac7ccd739291ec50414877b396de6e0bb29b3"
+      "value": "2026.8.1@sha256:6340a3de3917a9b19368e767310a96dd090f6a19aca8aeadf87fd1145cec9682"
     },
     {
       "name": "bropat/eufy-security-ws",
@@ -387,7 +387,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.22.0@sha256:f24115c115f98a1cd69fea620bf20180be17889e9ae3c58ceabf5df1bc56c2a8"
+      "value": "11.22.2@sha256:07b1a55e39f5cd309d60d5c33d93a3ff56b4bebd9ca73070ed8a03ec1e570381"
     },
     {
       "name": "koush/scrypted",
@@ -399,7 +399,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "v0.144.1-noble-full@sha256:25440767192b0d4a0709f50388d14cdf365ba6bff59d04e40a41ca2b7b9a6b70"
+      "value": "v0.144.1-noble-full@sha256:8bb29091d17b141ed6c2ae3d5cfaafbbb91420ff77e5bafd341518e205c91731"
     },
     {
       "name": "fuatakgun/eufy_security",
@@ -432,7 +432,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.10.9"
+      "value": "v1.11.1"
     },
     {
       "name": "magico13/ha-emporia-vue",
@@ -443,7 +443,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v0.12.2"
+      "value": "v0.12.3"
     },
     {
       "name": "dlarrick/hass-kumo",
@@ -510,7 +510,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.1.2@sha256:ae909bee7c41f516be03fd7de72317a44f4a043bcba76884de941b99407b6957"
+      "value": "2.1.3@sha256:9e9b931bf48a8a08bffaaa7e2fc2b7d0126b02def2bf1d3395d9b531817f9af3"
     },
     {
       "name": "dotdc/grafana-dashboards-kubernetes",
@@ -581,7 +581,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "7.1.0"
+      "value": "7.2.0"
     },
     {
       "name": "promtail",
@@ -617,7 +617,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "2.2.0"
+      "value": "2.2.1"
     },
     {
       "name": "alloy",
@@ -629,7 +629,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "1.11.0"
+      "value": "1.11.1"
     },
     {
       "name": "openebs",
@@ -805,7 +805,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "0.15.0@sha256:a4d5ac974eb093adf0211389257179f4f4ca16369f91479be67bd881c376e716"
+      "value": "0.15.1@sha256:114e5a1ba54f4c542d0c00c3a1d20e1962db2b04b1da04a465255143e1801a0b"
     },
     {
       "name": "agent-stack-k8s",
@@ -818,7 +818,7 @@
         "versioning": "semver",
         "packageName": "agent-stack-k8s"
       },
-      "value": "0.46.3@sha256:30742cb7d592ab48ac223b1e12004dc759eaf3a18f2e5f96eaf54b6123f944d4"
+      "value": "0.47.0@sha256:c1be7d5d26c87775171d696bc18ad65d1ff185c38e7efc529233061e9ef912e4"
     },
     {
       "name": "ducktors/turborepo-remote-cache",
@@ -830,7 +830,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.11.5@sha256:dfd1ce24cc4bdd59113e3ba68c881269fda5dd5929e58e2ea95010c51c09056d",
+      "value": "2.12.0@sha256:d5cd81fc2f289b6c37ad8f3361a9abab5c359577d7809981ece045cefc21756f",
       "notes": [
         "Self-hosted Turborepo remote cache backing the workspace task graph."
       ]
@@ -846,7 +846,7 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.18.2@sha256:156fbc8c6752b08cf66a2324fed33e269e0a64e54dd8d70d51118065bca651af"
+      "value": "0.19.0@sha256:2fbaa5b15b54c1149185d7f399c573838c630c10eb35b363763cbbd3327e4333"
     },
     {
       "name": "moby/buildkit",
@@ -858,7 +858,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "v0.31.2@sha256:2f5adac4ecd194d9f8c10b7b5d7bceb5186853db1b26e5abd3a657af0b7e26ec",
+      "value": "v0.32.2@sha256:28a898719c18a33f4e8000685287fa36fd0dd9560c6440227d3a732d79bb41d8",
       "notes": [
         "Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a",
         "compressed ZFS PVC, replacing the per-run throwaway builder inside dind —",
@@ -875,7 +875,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.14-alpine@sha256:26730869004e2b9c4b9ad09cab8625e81d256d1ce97e72df5520e806b1709f92"
+      "value": "3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc"
     },
     {
       "name": "bitnamilegacy/kubectl",
@@ -975,7 +975,7 @@
         "registryUrl": "https://ghcr.io/recyclarr",
         "versioning": "docker"
       },
-      "value": "8.7.0@sha256:2d6107f758d882a59fe9d646aa54fa8a5a4fb7a40995125fade575652a3f7871"
+      "value": "8.7.1@sha256:73303ba5ee647b6492fee917d3a781c6e59b6cab08f9dfce9482a950846f564f"
     },
     {
       "name": "siderolabs/talos",
@@ -998,7 +998,7 @@
         "registryUrl": "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
         "versioning": "semver"
       },
-      "value": "2.0.0"
+      "value": "2.0.1"
     },
     {
       "name": "cooperspencer/gickup",
@@ -1058,7 +1058,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "27.0.18"
+      "value": "28.0.7"
     },
     {
       "name": "seaweedfs",
@@ -1070,7 +1070,7 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.40.0"
+      "value": "4.41.0"
     },
     {
       "name": "mariadb",
@@ -1082,7 +1082,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "26.2.0"
+      "value": "27.0.6"
     },
     {
       "name": "bitnami/mariadb",
@@ -1094,7 +1094,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:991b66aa2a16e9cf518bc6c36b32d21fcad14b5f199b5a1a8bcf4637fcae03bb"
+      "value": "latest@sha256:208df1be0f8ca7e819515fa57f7438001016b042291fc2e277ae656289bf1955"
     },
     {
       "name": "bitnami/mysqld-exporter",
@@ -1106,7 +1106,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:52e63f43bc03a4e6fb173864826845c81ec5002d5a4184ed69e073417dc6470b"
+      "value": "latest@sha256:5acc987dda6b3c7cdf060fdfcad9f6139f388077b9ca2ed44ac954a1c9ab1849"
     },
     {
       "name": "postalserver/postal",
@@ -1130,7 +1130,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.8@sha256:efb4959ef2c835cd735dbc388eb9ad6aab0c78dd64febcd51bc17481111890c4"
+      "value": "11.8@sha256:24e76fcec8c003a0362d0dd53f4806e7e79458d7fdeaf47437760e19496f5a9c"
     },
     {
       "name": "boky/postfix",
@@ -1154,7 +1154,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d"
+      "value": "latest@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616"
     },
     {
       "name": "mikefarah/yq",
@@ -1207,7 +1207,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818"
+      "value": "bookworm-slim@sha256:abd67ffcfa541b485a3dff59865ab629aa048a6c613e639d36e7456b0b229241"
     },
     {
       "name": "library/nginx",
@@ -1219,7 +1219,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.29.1-alpine@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8"
+      "value": "1.31.1-alpine@sha256:8b1e78743a03dbb2c95171cc58639fef29abc8816598e27fb910ed2e621e589a"
     },
     {
       "name": "bugsink/bugsink",
@@ -1307,7 +1307,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.52.1@sha256:b839b5c798770896c78058db1647d325a19b3acef7fa1fbd9a23fabb1dd7feb2"
+      "value": "2.53.1@sha256:102edb3cc9a549c8408bb5a867be944f6bc3889479770362e4c4c2067a4b8700"
     },
     {
       "name": "temporalio/admin-tools",
