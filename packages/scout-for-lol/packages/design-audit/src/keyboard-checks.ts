@@ -62,7 +62,7 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
     skipNextTab = false;
     const focusState = await evaluateBrowser(page, () => {
       const baseSelector =
-        ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
+        ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"], [tabindex]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
       const selector =
         window.innerWidth < 800
           ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`

@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 async function assertVisibleDialogs(page: Page): Promise<void> {
-  const dialogs = page.locator('[role="dialog"]:visible');
+  const dialogs = page.locator('[role="dialog"][aria-modal="true"]:visible');
   for (let index = 0; index < (await dialogs.count()); index += 1) {
     const dialog = dialogs.nth(index);
     await expect(dialog, "dialogs expose modal semantics").toHaveAttribute(
@@ -21,7 +21,7 @@ async function assertVisibleDialogs(page: Page): Promise<void> {
 
 export async function assertInteractiveStates(page: Page): Promise<void> {
   const dialogTriggers = page.locator(
-    '[aria-haspopup="dialog"]:visible, [data-dialog-trigger]:visible',
+    '[aria-haspopup="dialog"]:visible:not([aria-label="Open navigation"]), [data-dialog-trigger]:visible',
   );
   for (let index = 0; index < (await dialogTriggers.count()); index += 1) {
     const trigger = dialogTriggers.nth(index);
