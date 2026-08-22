@@ -28,6 +28,7 @@ export default defineConfig({
     command: "bun run dev --host 127.0.0.1",
     url: "http://127.0.0.1:5190",
     reuseExistingServer: true,
+    timeout: 120_000,
   },
   use: { baseURL: "http://127.0.0.1:5190", reducedMotion: "reduce" },
   projects: [
