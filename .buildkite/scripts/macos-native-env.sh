@@ -21,9 +21,9 @@ fi
 # to this user rather than inheriting in-cluster paths or credentials. Never let
 # a PR change install a tool onto the persistent agent while preflight is
 # checking whether the operator provisioned the pinned version.
-export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$HOME/.local/share/mise/shims:$PATH"
 export MISE_AUTO_INSTALL=0
 export MISE_NOT_FOUND_AUTO_INSTALL=0
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$HOME/.local/share/mise/shims:$PATH"
 export BUN_INSTALL_CACHE_DIR="$HOME/Library/Caches/Bun/install/cache"
 export BUN_INSTALL_LOCK_MODE="local"
 unset BUN_CACHE_LOCK_FILE
