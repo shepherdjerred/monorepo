@@ -264,11 +264,11 @@ if (import.meta.main) {
     const migration = Bun.spawn(
       ["bun", "x", "--no-install", "prisma", "migrate", "deploy"],
       {
-      cwd: backendCwd,
-      env: environment,
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit",
+        cwd: backendCwd,
+        env: environment,
+        stdin: "inherit",
+        stdout: "inherit",
+        stderr: "inherit",
       },
     );
     const migrationExitCode = await migration.exited;

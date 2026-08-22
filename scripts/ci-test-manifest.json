@@ -408,7 +408,7 @@
     {
       "package": "@scout-for-lol/design-audit",
       "directory": "packages/scout-for-lol/packages/design-audit",
-      "steps": [{ "runner": "bun", "args": ["src"] }]
+      "steps": [{ "runner": "vitest", "args": ["src"] }]
     },
     {
       "package": "@scout-for-lol/evals",
