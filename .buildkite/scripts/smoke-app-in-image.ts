@@ -462,6 +462,7 @@ const commands: Record<
       ENABLE_BACKGROUND_JOBS: "false",
       REPORT_LAKE_DIR: "/tmp/report-lake",
       PORT: "18791",
+      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   "discord-plays-pokemon": {
