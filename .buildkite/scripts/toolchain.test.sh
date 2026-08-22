@@ -196,6 +196,8 @@ HOME="$TEST_ROOT/home" \
     set -euo pipefail
     source "$1"
     [[ "$BUN_INSTALL_LOCK_MODE" == "local" ]]
+    [[ "$MISE_AUTO_INSTALL" == "0" ]]
+    [[ "$MISE_NOT_FOUND_AUTO_INSTALL" == "0" ]]
     [[ "$BUN_INSTALL_CACHE_DIR" == "$HOME/Library/Caches/Bun/install/cache" ]]
     [[ -z "${BUN_CACHE_LOCK_FILE+x}" ]]
     [[ -z "${TURBO_API+x}" ]]
