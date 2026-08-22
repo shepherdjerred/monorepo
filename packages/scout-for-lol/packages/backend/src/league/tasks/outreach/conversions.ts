@@ -13,6 +13,7 @@
  */
 
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { z } from "zod";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
@@ -25,6 +26,8 @@ import { NON_CORE_MESSAGE_BUDGET } from "#src/discord/utils/message-budget.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("outreach-conversions");
+
+const PrismaKnownErrorSchema = z.object({ code: z.string() });
 
 export const ATTRIBUTION_WINDOW_DAYS = 7;
 const WINDOW_MS = ATTRIBUTION_WINDOW_DAYS * 24 * 60 * 60 * 1000;
@@ -43,14 +46,23 @@ async function persistConversion(
   installedAt: Date,
   ladderStage: number,
 ): Promise<void> {
-  await db.outreachConversion.upsert({
-    where: { serverId_installedAt: { serverId, installedAt } },
-    create: { serverId, installedAt, ladderStage },
-    // Conversion rows are immutable historical facts. The no-op update makes
-    // concurrent cleanup and nightly writers idempotent without rewriting the
-    // stage or convertedAt timestamp selected by the first writer.
-    update: {},
-  });
+  try {
+    await db.outreachConversion.upsert({
+      where: { serverId_installedAt: { serverId, installedAt } },
+      create: { serverId, installedAt, ladderStage },
+      // Conversion rows are immutable historical facts. The no-op update makes
+      // concurrent cleanup and nightly writers idempotent without rewriting the
+      // stage or convertedAt timestamp selected by the first writer.
+      update: {},
+    });
+  } catch (error) {
+    const parsed = PrismaKnownErrorSchema.safeParse(error);
+    if (!parsed.success || parsed.data.code !== "P2002") {
+      throw error;
+    }
+    // Two callers can both observe the missing row before one wins the unique
+    // key race. That loser has achieved the same idempotent outcome.
+  }
 }
 
 /**
