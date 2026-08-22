@@ -3,18 +3,25 @@
  *
  * Bucks are integer-only. Winner fees round down so every winning 1 BB match
  * remains profitable; voluntary cancellation keeps nearest-Buck rounding.
+ *
+ * `HOUSE_CUT_PERCENT` is the single representation of this number. It used to
+ * sit beside two magic-number implementations and five hand-typed "20%"
+ * strings, and they drifted: for a day the `/bb rules` embed told players the
+ * fee was 20% of *gross payout* rounded to the nearest BB while the market
+ * copy said 20% of *matched profit* rounded down — two different amounts, both
+ * live. Every fee, and every sentence describing one, now derives from here.
  */
 
 export const HOUSE_CUT_PERCENT = 20;
 
-export const HOUSE_CUT_TERMS =
-  "🎯 An outcome amount is a maximum offer; only matched BB are at risk and unmatched BB are refunded at close. The house can fill up to **5 BB per game** after human matching. 🏦 Outcome winners pay **20% of matched profit**, rounded down. Cancelling an outcome offer costs **20%**, rounded to the nearest BB; parlay cancellation is fully refunded.";
+/** Round down, so a winning 1 BB match still profits. */
+function houseCutRoundedDown(amount: number): number {
+  return Math.floor((amount * HOUSE_CUT_PERCENT) / 100);
+}
 
-export const HOUSE_CUT_PLACEMENT_NOTE =
-  "**Only matched BB are at risk; winners pay 20% of matched profit.**";
-
-function roundedHouseCut(amount: number): number {
-  return Math.floor((amount + 2) / 5);
+/** Round to the nearest Buck, which is what a voluntary cancellation uses. */
+function houseCutRoundedNearest(amount: number): number {
+  return Math.round((amount * HOUSE_CUT_PERCENT) / 100);
 }
 
 /**
@@ -28,10 +35,10 @@ export function settlementHouseCut(input: {
   if (input.isHouse) {
     return 0;
   }
-  return Math.floor(input.matchedProfit / 5);
+  return houseCutRoundedDown(input.matchedProfit);
 }
 
 /** A voluntary cancellation returns the offer less the rounded fee. */
 export function cancellationHouseCut(stake: number): number {
-  return roundedHouseCut(stake);
+  return houseCutRoundedNearest(stake);
 }

@@ -4,13 +4,12 @@ import {
   ledgerKindLabel,
   renderBucksHistory,
 } from "#src/betting/navigation.ts";
-import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
 
 describe("/bb history labels", () => {
   test("renders current and legacy house transfers readably", () => {
     expect(ledgerKindLabel(BucksLedgerKindSchema.parse("house_rake"))).toBe(
-      "legacy house cut on payout",
+      "house cut on payout",
     );
     expect(ledgerKindLabel(BucksLedgerKindSchema.parse("cancel_fee"))).toBe(
       "cancellation fee",
@@ -49,9 +48,11 @@ describe("/bb history labels", () => {
       totalPages: 1,
       snapshotId: 2,
     });
-    expect(rendered.content).toContain("legacy house cut on payout");
+    expect(rendered.content).toContain("house cut on payout");
     expect(rendered.content).toContain("cancellation fee");
-    expect(rendered.content).toContain(HOUSE_CUT_TERMS);
+    // History is an audit trail, not a place to re-explain the fee schedule.
+    expect(rendered.content).not.toContain("20%");
+    expect(rendered.content).not.toContain("legacy");
     expect(rendered.content).not.toContain("house_rake");
     expect(rendered.content).not.toContain("cancel_fee");
   });

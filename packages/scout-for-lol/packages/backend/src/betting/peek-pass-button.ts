@@ -7,12 +7,14 @@ import {
 } from "@scout-for-lol/data";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
 import { getFlag } from "#src/configuration/flags.ts";
+import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   formatPeekPassCustomId,
   parsePeekPassCustomId,
 } from "#src/betting/peek-pass-custom-id.ts";
 import {
+  PEEK_PASS_DURATION_LABEL,
   PEEK_PASS_QUOTE_TTL_MS,
   purchasePeekPass,
   quotePeekPass,
@@ -85,7 +87,7 @@ export function renderPeekPassQuote(
       );
       return {
         content:
-          `A **24-hour peek pass** costs **${result.quote.price.toString()} BB** at your current balance and weighted holding age. ` +
+          `A **${PEEK_PASS_DURATION_LABEL} peek pass** costs **${result.quote.price.toString()} BB** for you right now. ` +
           `This quote expires ${relativeTime(expiresAt)}.`,
         components: quoteButton({
           ownerId,
@@ -110,7 +112,7 @@ export async function handlePeekPassButton(
   if (interaction.guildId === null) {
     await interaction.deferReply({ ephemeral: true });
     await interaction.editReply({
-      content: "Bryan Bucks only works inside a server.",
+      content: BUCKS_GUILD_ONLY,
       components: [],
     });
     return;
@@ -128,7 +130,7 @@ export async function handlePeekPassButton(
   }
   if (!getFlag("betting_enabled", { server: currentServerId })) {
     await interaction.editReply({
-      content: "Bryan Bucks isn't enabled in this server.",
+      content: BUCKS_NOT_ENABLED,
       components: [],
     });
     return;
@@ -147,8 +149,8 @@ export async function handlePeekPassButton(
     case "purchased":
       await interaction.editReply({
         content:
-          `✅ Peek pass active. It expires ${relativeTime(result.expiresAt)}. ` +
-          `Paid **${result.price.toString()} BB**; balance **${result.balanceAfter.toString()} BB**. Use \`/bb peek\` once a game has been live for two minutes.`,
+          `✅ Peek pass active until ${relativeTime(result.expiresAt)}. ` +
+          `Paid **${result.price.toString()} BB** · balance **${result.balanceAfter.toString()} BB**. Use \`/bb peek game:<player>\`.`,
         components: [],
       });
       return;

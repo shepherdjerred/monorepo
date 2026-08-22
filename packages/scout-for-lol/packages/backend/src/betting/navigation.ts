@@ -6,8 +6,9 @@ import {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { getLedgerPage, type LedgerPage } from "#src/betting/accounts.ts";
-import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { getFlag } from "#src/configuration/flags.ts";
+import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
+import { PEEK_PASS_DURATION_LABEL } from "#src/betting/peek-pass.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
 
@@ -28,15 +29,15 @@ const LEDGER_KIND_LABELS = {
   bet_void_refund: "matched stake refunded",
   winner_fee: "winner fee",
   house_match: "house match reserved",
-  bet_refund: "legacy bet refund",
-  house_rake: "legacy house cut on payout",
+  bet_refund: "bet refunded",
+  house_rake: "house cut on payout",
   cancel_fee: "cancellation fee",
   parlay_stake: "parlay stake",
   parlay_reserve: "parlay house reserve",
   parlay_payout: "parlay payout",
   parlay_refund: "parlay refund",
   parlay_release: "parlay reserve release",
-  peek_pass: "24-hour peek pass",
+  peek_pass: `${PEEK_PASS_DURATION_LABEL} peek pass`,
   adjustment: "adjustment",
 } satisfies Record<BucksLedgerKind, string>;
 
@@ -146,7 +147,7 @@ export function renderBucksHistory(
 ): BucksButtonEditReplyOptions {
   if (page.entries.length === 0) {
     return {
-      content: `No Bryan Bucks history yet.\n\n${HOUSE_CUT_TERMS}`,
+      content: "No Bryan Bucks history yet.",
       components: [],
     };
   }
@@ -160,8 +161,6 @@ export function renderBucksHistory(
     content: [
       `**Bryan Bucks history** · Page ${(page.page + 1).toString()}/${page.totalPages.toString()}`,
       ...lines,
-      "",
-      HOUSE_CUT_TERMS,
     ].join("\n"),
     components: navigationRow(ownerId, page),
   };
@@ -188,7 +187,7 @@ export async function handleBucksNavigation(
   if (interaction.guildId === null) {
     await interaction.deferReply({ ephemeral: true });
     await interaction.editReply({
-      content: "Bryan Bucks only works inside a server.",
+      content: BUCKS_GUILD_ONLY,
       components: [],
     });
     return;
@@ -208,7 +207,7 @@ export async function handleBucksNavigation(
   if (!getFlag("betting_enabled", { server: serverId })) {
     await interaction.deferReply({ ephemeral: true });
     await interaction.editReply({
-      content: "Bryan Bucks isn't enabled in this server.",
+      content: BUCKS_NOT_ENABLED,
       components: [],
     });
     return;

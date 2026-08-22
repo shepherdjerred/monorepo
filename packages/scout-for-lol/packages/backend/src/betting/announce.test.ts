@@ -4,7 +4,10 @@ import {
   BucksPredictionSchema,
   type BucksPrediction,
 } from "@scout-for-lol/data/index.ts";
-import { sendSettlementMessage } from "#src/betting/announce.ts";
+import {
+  buildAnnouncements,
+  sendSettlementMessage,
+} from "#src/betting/announce.ts";
 import {
   buildSettlementMessage,
   formatSettlementBody,
@@ -142,6 +145,9 @@ describe("formatSettlementBody", () => {
     };
 
     const body = formatSettlementBody({
+      includeOutcome: true,
+      parlay: undefined,
+      framing: undefined,
       summary,
       earnings: [
         {
@@ -157,11 +163,11 @@ describe("formatSettlementBody", () => {
     });
 
     expect(body).toContain(
-      `• <@${WINNER_DISCORD_ID}> offered 10 BB · matched 10 BB · refunded 0 BB → gross 20 BB − 4 BB winner fee = 16 BB received (+6 BB net winnings)`,
+      `• <@${WINNER_DISCORD_ID}> Blue 10 → matched **10** · +**6 BB** (20 − 4 fee = 16 back)`,
     );
     expect(body).toContain("Matched pool **20 BB** · winner fees **4 BB**");
     expect(body).toContain(
-      `• <@${LOSER_DISCORD_ID}> offered 10 BB · matched 10 BB · refunded 0 BB → lost 10 BB`,
+      `• <@${LOSER_DISCORD_ID}> Red 10 → matched **10** · −**10 BB**`,
     );
     expect(body).toContain("🪙 **Aaron** +11 BB (played, clash bonus)");
   });
@@ -197,6 +203,9 @@ describe("formatSettlementBody", () => {
     };
 
     const body = formatSettlementBody({
+      includeOutcome: true,
+      parlay: undefined,
+      framing: undefined,
       summary,
       earnings: [],
       predictionSentence: undefined,
@@ -204,7 +213,7 @@ describe("formatSettlementBody", () => {
     });
 
     expect(body).toContain(
-      `• <@${WINNER_DISCORD_ID}> offered 14 BB · matched 10 BB · refunded 4 BB → matched stake refunded 10 BB (no winner fee)`,
+      `• <@${WINNER_DISCORD_ID}> Blue 14 → matched **10**, refunded **4** · refunded **10 BB**`,
     );
     expect(body).toContain("Matched pool **10 BB** · winner fees **0 BB**");
   });
@@ -259,6 +268,9 @@ describe("formatSettlementBody house cuts", () => {
     };
 
     const body = formatSettlementBody({
+      includeOutcome: true,
+      parlay: undefined,
+      framing: undefined,
       summary,
       earnings: [],
       predictionSentence: undefined,
@@ -267,7 +279,7 @@ describe("formatSettlementBody house cuts", () => {
 
     expect(body).toContain("Matched pool **2 BB** · winner fees **0 BB**");
     expect(body).toContain(
-      "offered 1 BB · matched 1 BB · refunded 0 BB → gross 2 BB − 0 BB winner fee = 2 BB received (+1 BB net winnings)",
+      "Blue 1 → matched **1** · +**1 BB** (2 − 0 fee = 2 back)",
     );
   });
 
@@ -319,6 +331,9 @@ describe("formatSettlementBody house cuts", () => {
     };
 
     const body = formatSettlementBody({
+      includeOutcome: true,
+      parlay: undefined,
+      framing: undefined,
       summary,
       earnings: [],
       predictionSentence: undefined,
@@ -329,7 +344,9 @@ describe("formatSettlementBody house cuts", () => {
       "🏦 Bryan Bucks house matched 25 BB on the other side.",
     );
     expect(body).not.toContain(`<@${HOUSE_ACCOUNT_DISCORD_ID}>`);
-    expect(body).toContain(`• <@${WINNER_DISCORD_ID}> offered 25 BB`);
+    expect(body).toContain(
+      `• <@${WINNER_DISCORD_ID}> Blue 25 → matched **25**`,
+    );
   });
 });
 
@@ -396,11 +413,17 @@ describe("settlement outcome message", () => {
       predictionSentence:
         "Scout gave this roster a decisive edge before the match started.",
       predictionVerdictLine: "Scout called it.",
+      includeOutcome: true,
+      parlay: undefined,
+      framing: undefined,
     } satisfies Parameters<typeof formatSettlementBody>[0];
     const body = formatSettlementBody(outcomeInput);
     const message = buildSettlementMessage(outcomeInput);
 
-    expect(body.length).toBeGreaterThan(1900);
+    // The plain-text body is now well under one Discord message: the same
+    // settlement rendered at 2,300+ characters before the copy consolidation.
+    expect(body.length).toBeGreaterThan(1000);
+    expect(body.length).toBeLessThan(1900);
     expect(message.content).toBeUndefined();
     expect(message.embeds).toHaveLength(1);
     expect(message.allowedMentions).toEqual({ parse: [] });
@@ -422,9 +445,7 @@ describe("settlement outcome message", () => {
     expect(delivered).toContain(
       "Matched pool **80 BB** · winner fees **32 BB**",
     );
-    expect(delivered).toContain(
-      "gross 10 BB − 2 BB winner fee = 8 BB received (+3 BB net winnings)",
-    );
+    expect(delivered).toContain("+**3 BB** (10 − 2 fee = 8 back)");
     expect(delivered).toContain("🪙 **Aaron** +13 BB");
     expect(delivered).toContain("…and 1 more — see `/bb history`");
   });
@@ -433,6 +454,9 @@ describe("settlement outcome message", () => {
 describe("settlement outcome bounds", () => {
   test("truncates an overlong earning alias without dropping the outcome", () => {
     const message = buildSettlementMessage({
+      includeOutcome: true,
+      parlay: undefined,
+      framing: undefined,
       summary: {
         matchId: "NA1_5000000042",
         serverId: "1337623164146155593",
@@ -464,7 +488,153 @@ describe("settlement outcome bounds", () => {
   });
 });
 
+const SERVER_ID = "1337623164146155593";
+
+function parlaySummary(serverId: string) {
+  return {
+    matchId: "NA1_1",
+    serverId,
+    yesResult: true,
+    voidReason: undefined,
+    legs: [],
+    messageRefs: [],
+    bets: [
+      {
+        discordId: bucksTestDiscordId(1),
+        side: "YES" as const,
+        stake: 5,
+        grossPayout: 10,
+        payout: 10,
+        outcome: "won" as const,
+      },
+    ],
+  };
+}
+
+describe("buildAnnouncements", () => {
+  test("attaches a parlay to the guild's own outcome announcement", () => {
+    const announcements = buildAnnouncements({
+      closures: [],
+      settlements: [
+        {
+          matchId: "NA1_1",
+          serverId: SERVER_ID,
+          winningTeamId: 100,
+          voidReason: undefined,
+          winnersPool: 5,
+          losersPool: 5,
+          houseCut: 1,
+          bets: [],
+        },
+      ],
+      parlaySettlements: [parlaySummary(SERVER_ID)],
+    });
+
+    expect(announcements).toHaveLength(1);
+    expect(announcements[0]?.includeOutcome).toBe(true);
+    expect(announcements[0]?.parlay).toBeDefined();
+  });
+
+  // Without this carrier the parlay result is lost outright:
+  // settleParlaysForMatch returns nothing for it on any later pass, and the
+  // pool it belongs to was already settled or voided by an earlier tick.
+  test("carries a parlay whose pool this pass did not settle", () => {
+    const announcements = buildAnnouncements({
+      closures: [],
+      settlements: [],
+      parlaySettlements: [parlaySummary(SERVER_ID)],
+    });
+
+    expect(announcements).toHaveLength(1);
+    expect(announcements[0]?.includeOutcome).toBe(false);
+    expect(announcements[0]?.parlay).toBeDefined();
+    expect(announcements[0]?.summary.bets).toEqual([]);
+  });
+
+  test("does not duplicate a guild that already has an announcement", () => {
+    const announcements = buildAnnouncements({
+      closures: [
+        {
+          matchId: "NA1_1",
+          serverId: SERVER_ID,
+          messageRefs: [],
+          humanMatchedPerSide: 0,
+          houseFill: 0,
+          totalMatchedPerSide: 0,
+          positions: [
+            {
+              betId: 1,
+              discordId: bucksTestDiscordId(1),
+              teamId: 100,
+              submittedStake: 9,
+              matchedStake: 0,
+              unmatchedStake: 9,
+            },
+          ],
+        },
+      ],
+      settlements: [],
+      parlaySettlements: [parlaySummary(SERVER_ID)],
+    });
+
+    expect(announcements).toHaveLength(1);
+    expect(announcements[0]?.includeOutcome).toBe(true);
+    expect(announcements[0]?.parlay).toBeDefined();
+  });
+
+  test("announces nothing when there is nothing to say", () => {
+    expect(
+      buildAnnouncements({
+        closures: [],
+        settlements: [],
+        parlaySettlements: [],
+      }),
+    ).toEqual([]);
+  });
+});
+
+async function capturedNonce(kind: "outcome" | "parlay"): Promise<unknown> {
+  const attempts: MessageCreateOptions[] = [];
+  await sendSettlementMessage(
+    {
+      message: { embeds: [{ title: "Outcome" }] },
+      matchId: "NA1_5000000042",
+      channelId: "1337623164146155594",
+      guildId: "1337623164146155593",
+      kind,
+    },
+    {
+      sendMessage: (options) => {
+        attempts.push(options);
+        return Promise.resolve(undefined);
+      },
+      sleep: () => Promise.resolve(),
+    },
+  );
+  return attempts[0]?.nonce;
+}
+
 describe("sendSettlementMessage", () => {
+  // The single highest-risk detail in merging the parlay result into this
+  // embed. Before the discriminator, a parlay-only carrier delivered on a
+  // later tick collided with the outcome embed already delivered to the same
+  // channel for the same match, and enforceNonce dropped it — silently losing
+  // a settlement that can never be re-derived.
+  test("gives outcome and parlay carriers distinct nonces", async () => {
+    const outcome = await capturedNonce("outcome");
+    const parlay = await capturedNonce("parlay");
+
+    expect(outcome).toBeDefined();
+    expect(parlay).toBeDefined();
+    expect(outcome).not.toEqual(parlay);
+  });
+
+  test("keeps a nonce stable for the same match, channel, and kind", async () => {
+    expect(await capturedNonce("parlay")).toEqual(
+      await capturedNonce("parlay"),
+    );
+  });
+
   test("retries one outcome with a stable nonce", async () => {
     const attempts: MessageCreateOptions[] = [];
     let sleeps = 0;
@@ -476,6 +646,7 @@ describe("sendSettlementMessage", () => {
         matchId: "NA1_5000000042",
         channelId: "1337623164146155594",
         guildId: "1337623164146155593",
+        kind: "outcome",
       },
       {
         sendMessage: (options) => {
@@ -512,6 +683,7 @@ describe("sendSettlementMessage", () => {
         matchId: "NA1_5000000042",
         channelId: "1337623164146155594",
         guildId: "1337623164146155593",
+        kind: "outcome",
         postmatchMessageId: "postmatch-message",
       },
       {
@@ -546,6 +718,7 @@ describe("sendSettlementMessage", () => {
         matchId: "NA1_5000000042",
         channelId: "1337623164146155594",
         guildId: "1337623164146155593",
+        kind: "outcome",
         postmatchMessageId: "postmatch-message",
       },
       {
@@ -580,6 +753,7 @@ describe("sendSettlementMessage", () => {
         matchId: "NA1_5000000042",
         channelId: "1337623164146155594",
         guildId: "1337623164146155593",
+        kind: "outcome",
         postmatchMessageId: "postmatch-message",
       },
       {

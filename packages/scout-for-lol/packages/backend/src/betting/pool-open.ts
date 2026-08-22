@@ -14,6 +14,17 @@ import { isBettableGame } from "#src/betting/eligibility.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  bettingMessageRefsRecordedTotal,
+  bettingPoolOpenFailuresTotal,
+  bettingPoolsOpenedTotal,
+} from "#src/metrics/betting.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
+
+/** Prometheus label values must be bounded; a queue with spaces is normalised. */
+function metricQueueType(queueType: string | undefined): string {
+  return (queueType ?? "unknown").replaceAll(" ", "_");
+}
 
 const logger = createLogger("betting-pool-open");
 
@@ -192,6 +203,18 @@ export async function openBettingPoolsForPrematch(
         update: {},
       });
       opened.add(serverId);
+      // Post-commit: the upsert above has already resolved.
+      bettingPoolsOpenedTotal.inc({
+        queue_type: metricQueueType(input.queueType),
+      });
+      logBucksTransition({
+        event: "bucks.pool.opened",
+        matchId: input.matchId,
+        serverId,
+        toState: "open",
+        queueType: input.queueType ?? "unknown",
+        surface: "prematch",
+      });
     }
 
     logger.info(
@@ -202,6 +225,7 @@ export async function openBettingPoolsForPrematch(
       `❌ Could not open Bryan Bucks pools for ${input.matchId}:`,
       error,
     );
+    bettingPoolOpenFailuresTotal.inc();
     Sentry.captureException(error, {
       tags: { source: "betting-pool-open", matchId: input.matchId },
     });
@@ -252,6 +276,7 @@ export async function recordPoolMessageRefs(
           prematchContentBase: input.prematchContentBase,
         },
       });
+      bettingMessageRefsRecordedTotal.inc({ status: "recorded" });
       return;
     } catch (error) {
       if (attempt < MESSAGE_REF_ATTEMPTS) {
@@ -267,6 +292,7 @@ export async function recordPoolMessageRefs(
         `❌ Could not record Bryan Bucks message refs for ${input.matchId} in guild ${input.serverId} — this pool's settlement announcement now has nowhere to go:`,
         error,
       );
+      bettingMessageRefsRecordedTotal.inc({ status: "failed" });
       Sentry.captureException(error, {
         tags: {
           source: "betting-record-message-refs",
