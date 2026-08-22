@@ -14,7 +14,7 @@
     "build": {
       "dependsOn": ["generate"]
     },
-    // test script interpolates ${DATABASE_URL:-file:./test.db} — ambient value
+    // test script interpolates the PostgreSQL test URL — ambient value
     // changes results. Everything else is pinned by the test-setup preload.
     "test": {
       "env": ["DATABASE_URL"]
