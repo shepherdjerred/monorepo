@@ -3,11 +3,16 @@ import {
   Card,
   CardContent,
 } from "@scout-for-lol/design-system/components/card";
-import {
-  discordInviteUrl,
-  DISCORD_INSTALL_REDIRECTS_BACK,
-} from "#src/lib/discord-invite.ts";
+import { trackOutboundClick } from "#src/lib/analytics.ts";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
+
+/**
+ * The install button goes through the backend route (same-tab, like the guild
+ * picker): it mints the attribution `state` token, 302s to Discord, and
+ * Discord returns the user to /app/installed, which forwards into
+ * /welcome?guild=… — resuming this wizard past the install step.
+ */
+const INSTALL_URL = "/api/discord/install?surface=onboarding_wizard";
 
 export function OnboardingInstallStep(props: {
   guildCount: number;
@@ -28,34 +33,24 @@ export function OnboardingInstallStep(props: {
         <Card>
           <CardContent className="space-y-3 p-4">
             <p className="text-sm text-scout-subtle">
-              {DISCORD_INSTALL_REDIRECTS_BACK ? (
-                <>
-                  Pick a server and approve permissions (you need{" "}
-                  <strong>Manage Server</strong>). Discord brings you right back
-                  here when you&apos;re done.
-                </>
-              ) : (
-                <>
-                  Opens Discord in a new tab. Pick a server and approve
-                  permissions (you need <strong>Manage Server</strong>). Once
-                  you&apos;ve added Scout, return to this tab and your server
-                  shows up below.
-                </>
-              )}
+              Pick a server and approve permissions (you need{" "}
+              <strong>Manage Server</strong>). Discord brings you right back
+              here when you&apos;re done.
             </p>
-            <Button
-              onClick={() => {
-                // Build the URL at click time so the `state` nonce is minted
-                // fresh (and `window`/`crypto` aren't touched on render).
-                const url = discordInviteUrl();
-                if (DISCORD_INSTALL_REDIRECTS_BACK) {
-                  globalThis.window.location.assign(url);
-                } else {
-                  globalThis.window.open(url, "_blank", "noreferrer");
-                }
-              }}
-            >
-              Add Scout to Discord
+            <Button asChild>
+              <a
+                href={INSTALL_URL}
+                onClick={(clickEvent) => {
+                  trackOutboundClick(
+                    clickEvent,
+                    "bot_install_click",
+                    INSTALL_URL,
+                    { surface: "onboarding_wizard" },
+                  );
+                }}
+              >
+                Add Scout to Discord
+              </a>
             </Button>
           </CardContent>
         </Card>

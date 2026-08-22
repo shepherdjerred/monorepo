@@ -100,7 +100,10 @@ Website measurement and Discord bot data are connected, through the same
 analytics provider. When you open a server's dashboard, we record that server's
 Discord ID alongside your website activity, which lets us connect a dashboard
 session to that server's Scout installation and to the installation events
-described above.
+described above. When you add Scout to a server through the dashboard's
+install flow, we use that same connection to record which website visit — and,
+where present, which advertising campaign — led to the installation, so we can
+measure which channels bring new servers.
 
 That connection is limited to the server ID and your dashboard activity itself.
 Website measurement does not record which Discord commands you used, your

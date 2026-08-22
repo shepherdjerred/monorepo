@@ -33,6 +33,8 @@ export type RemovalActivationState =
   | "configured"
   | "activated";
 export type TenureBucket = "<1d" | "1-6d" | "7-29d" | "30-89d" | "90d+";
+export type AttributionSurface = "guild_picker" | "onboarding_wizard";
+export type AttributionTiming = "before_gateway" | "after_gateway";
 export type DiscordCommandName =
   | "help"
   | "setup"
@@ -60,6 +62,10 @@ type ProductAnalyticsEventProperties = {
   discord_command_used: {
     command_name: DiscordCommandName;
     status: DiscordCommandStatus;
+  };
+  guild_install_attributed: {
+    attribution_surface: AttributionSurface;
+    attribution_timing: AttributionTiming;
   };
 };
 
