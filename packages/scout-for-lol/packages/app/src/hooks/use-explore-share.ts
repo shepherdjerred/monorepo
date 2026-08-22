@@ -5,6 +5,7 @@ import {
   mintedAfterPersisted,
   resolveShareToken,
 } from "#src/lib/explore-share-link.ts";
+import { track } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 /**
@@ -92,6 +93,9 @@ export function useExploreShare(params: {
       setError(null);
       try {
         const result = await shareMutation.mutateAsync({ conversationId });
+        // The event deliberately carries nothing: the share token is the
+        // credential and must never reach PostHog.
+        track("explore_shared");
         const link = `${globalThis.location.origin}/app/explore/s/${result.shareToken}`;
         // Copy before any invalidation round trip: browsers tie clipboard
         // writes to recent user activation, and awaiting refetches first is
@@ -131,6 +135,7 @@ export function useExploreShare(params: {
       setError(null);
       try {
         await revokeMutation.mutateAsync({ conversationId });
+        track("explore_share_revoked");
         setShowShareLink(false);
         setCopied(false);
         setMintedToken(null);

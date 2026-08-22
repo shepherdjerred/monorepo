@@ -362,6 +362,10 @@ model User {
   analyticsUserId     String    @unique @default(uuid())
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+  // Best-effort dashboard activity marker for DB-side MAU/WAU, written by the
+  // authenticated request context at most once per hour per user. `updatedAt`
+  // cannot answer this: it moves on token refresh, not on activity.
+  lastSeenAt          DateTime?
 
   apiTokens            ApiToken[]
   soundPacks           SoundPack[]

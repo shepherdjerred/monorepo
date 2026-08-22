@@ -1605,4 +1605,11 @@ messaging real people.
   competitions. Both Discord deletion and reconciliation use the same path.
 - Analytics is best effort. SDK and capture errors are logged and counted but
   must not fail product behavior; graceful shutdown must flush the SDK queue.
-- Slash-command analytics, Scout desktop, and Scout evals are out of scope.
+- Slash-command usage is tracked guild-scoped as `discord_command_used`
+  (`analytics/command-usage.ts`): a closed command-name union plus
+  success/error status, captured from the dispatcher's `finally` against the
+  guild's installation identity. DM invocations are deliberately not captured
+  (no installation distinct id exists) and stay visible in the
+  `discord_commands_total` Prometheus counter. Command options, user ids, and
+  channel ids remain forbidden, per the registry rule above.
+- Scout desktop and Scout evals analytics are out of scope.

@@ -1,5 +1,7 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data/index.ts";
+import { captureDiscordCommandUsed } from "#src/analytics/command-usage.ts";
+import type { DiscordCommandStatus } from "#src/analytics/product-analytics.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   discordCommandDuration,
@@ -33,6 +35,7 @@ export async function handleChatInputCommand(
   const startTime = Date.now();
   const commandName = interaction.commandName;
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
+  let commandStatus: DiscordCommandStatus = "success";
 
   logger.info(
     `📥 Command received: ${commandName} from ${interaction.user.username} (${userId}) in guild ${interaction.guildId ?? "DM"} channel ${interaction.channelId}`,
@@ -78,6 +81,7 @@ export async function handleChatInputCommand(
 
     discordCommandsTotal.inc({ command: commandName, status: "success" });
   } catch (error) {
+    commandStatus = "error";
     logger.error(`❌ Error executing /${commandName}:`, error);
     discordCommandsTotal.inc({ command: commandName, status: "error" });
 
@@ -98,5 +102,12 @@ export async function handleChatInputCommand(
       { command: commandName },
       (Date.now() - startTime) / 1000,
     );
+    // Best-effort product analytics; the helper validates its own inputs and
+    // never throws, so it cannot replace a command error raised above.
+    await captureDiscordCommandUsed({
+      guildId: interaction.guildId,
+      commandName,
+      status: commandStatus,
+    });
   }
 }

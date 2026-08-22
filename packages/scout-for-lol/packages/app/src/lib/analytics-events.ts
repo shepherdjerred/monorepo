@@ -51,6 +51,15 @@ const SCOUT_ANALYTICS_EVENTS = [
   "competition_members_added_all",
   "competition_participant_removed",
   "competition_leaderboard_refreshed",
+  // Explore
+  "explore_turn_started",
+  "explore_turn_finished",
+  "explore_shared",
+  "explore_share_revoked",
+  "explore_conversation_renamed",
+  "explore_conversation_deleted",
+  "explore_branch_selected",
+  "explore_exported",
   // Access (RBAC)
   "access_granted",
   "access_updated",
