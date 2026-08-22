@@ -7,6 +7,7 @@ const DEFAULT_WEB_PORT = 5180;
 const DEFAULT_PG_PORT = "5471";
 const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
 const BACKEND_START_TIMEOUT_MS = 300_000;
+const DEFAULT_DESIGN_AUDIT_DATABASE_NAME = "scout_design_audit";
 
 type DevWebOptions = {
   readonly backendPort: number;
@@ -42,9 +43,10 @@ function parseDatabaseUrl(value: string): string {
 function sharedServerUrl(
   backendPort: number,
   environment: Readonly<Record<string, string | undefined>>,
+  databaseName = `scout_dev_${backendPort.toString()}`,
 ): string {
   const pgPort = environment["SCOUT_PG_PORT"] ?? DEFAULT_PG_PORT;
-  return `postgres://scout@127.0.0.1:${pgPort}/scout_dev_${backendPort.toString()}`;
+  return `postgres://scout@127.0.0.1:${pgPort}/${databaseName}`;
 }
 
 /**
@@ -95,6 +97,13 @@ function defaultDatabaseUrl(
   backendPort: number,
   environment: Readonly<Record<string, string | undefined>>,
 ): string {
+  if (environment["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] === "true") {
+    return sharedServerUrl(
+      backendPort,
+      environment,
+      DEFAULT_DESIGN_AUDIT_DATABASE_NAME,
+    );
+  }
   const configured = environment["SCOUT_DEV_DATABASE_URL"];
   if (configured !== undefined) return parseDatabaseUrl(configured);
 
