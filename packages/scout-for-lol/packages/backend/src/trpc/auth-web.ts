@@ -27,6 +27,10 @@ import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import configuration from "#src/configuration.ts";
 import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
+import {
+  AttributionSurfaceSchema,
+  mintInstallAttributionToken,
+} from "#src/analytics/install-attribution.ts";
 
 const logger = createLogger("auth-web");
 const DISCORD_API_BASE = "https://discord.com/api/v10";
@@ -251,8 +255,24 @@ export async function handleDiscordInstall(
     return new Response(null, { status: 302, headers });
   }
 
+  // Which surface sent the user here (guild picker vs onboarding wizard).
+  // Unknown or absent values fall back to the picker rather than failing the
+  // install — the surface is analytics context, not authorization.
+  const url = new URL(request.url);
+  const surfaceParam = AttributionSurfaceSchema.safeParse(
+    url.searchParams.get("surface"),
+  );
+  const surface = surfaceParam.success ? surfaceParam.data : "guild_picker";
+
+  // Mint the single-use attribution token that rides Discord's `state`
+  // through the install round trip back to /app/installed.
+  const state = await mintInstallAttributionToken({
+    discordId: DiscordAccountIdSchema.parse(claims.sub),
+    surface,
+  });
+
   const headers = new Headers();
-  headers.set("Location", buildDiscordInstallUrl());
+  headers.set("Location", buildDiscordInstallUrl(state));
 
   return new Response(null, { status: 302, headers });
 }

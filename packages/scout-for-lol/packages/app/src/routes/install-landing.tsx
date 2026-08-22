@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
+import { useMutation } from "@tanstack/react-query";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -7,48 +9,82 @@ import {
   CardDescription,
   CardHeader,
 } from "@scout-for-lol/design-system/components/card";
-import { consumeInstallState } from "#src/lib/discord-invite.ts";
+import { track } from "#src/lib/analytics.ts";
+import {
+  installCompletedEventProps,
+  installContinueTarget,
+  installLandingCopy,
+  installLandingResult,
+  type InstallLandingResult,
+} from "#src/lib/install-landing-state.ts";
+import { useTRPC } from "#src/lib/trpc.ts";
 
 /**
  * Landing page Discord redirects to after the user adds the bot (the
- * registered `/app/installed` redirect URI). The wizard re-detects the new
- * guild on return, so this just confirms success and routes back into setup.
+ * registered `/app/installed` redirect URI). Discord echoes back the
+ * single-use `state` token minted by /api/discord/install plus the chosen
+ * `guild_id`; posting them to installAttribution.complete is what joins this
+ * browser session to the new `GuildInstall` (marketing → install
+ * attribution).
  *
- * We verify the `state` nonce Discord echoes back against the one we minted
- * before the install (see `discordInviteUrl`). A hand-crafted
- * `/installed?guild_id=…` link has no matching nonce, so we don't show the
- * misleading "Scout added 🎉 for <guild>" confirmation for an install the
- * user never initiated.
+ * Server-side token validation replaces the old sessionStorage nonce check: a
+ * hand-crafted `/installed?guild_id=…` link has no valid unconsumed token, so
+ * it gets the neutral "Finish setup" copy, never the install confirmation.
+ * Copy, deep link, and the analytics event all come from the pure decisions
+ * in `install-landing-state.ts` over the mutation's server-echoed response.
  */
 export function InstallLanding() {
   const [params] = useSearchParams();
-  // Single-use consume: run exactly once via the state initializer so a
-  // re-render doesn't re-read the already-cleared nonce.
-  const [stateVerified] = useState(() =>
-    consumeInstallState(params.get("state")),
+  const trpc = useTRPC();
+  const completeMutation = useMutation(
+    trpc.installAttribution.complete.mutationOptions(),
   );
-  const guildId = stateVerified ? params.get("guild_id") : null;
-  // Carry the freshly-installed guild into the wizard so "Continue setup"
-  // skips the install step and lands on step 2 (concepts).
-  const continueTo =
-    guildId === null
-      ? "/welcome"
-      : `/welcome?guild=${encodeURIComponent(guildId)}`;
+  const completeRef = useRef(completeMutation.mutateAsync);
+  completeRef.current = completeMutation.mutateAsync;
+  const [result, setResult] = useState<InstallLandingResult | null>(null);
+  // Single-use consume: the token burns on first post, so React StrictMode's
+  // double effect (or a re-render) must not fire the mutation twice.
+  const firedRef = useRef(false);
+
+  const state = params.get("state");
+  const guildIdParam = DiscordGuildIdSchema.safeParse(params.get("guild_id"));
+  const guildId = guildIdParam.success ? guildIdParam.data : undefined;
+
+  useEffect(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    if (state === null || state.length < 32) {
+      setResult({ outcome: "invalid", guildId: null });
+      return;
+    }
+    void (async () => {
+      try {
+        const response = await completeRef.current({
+          state,
+          ...(guildId === undefined ? {} : { guildId }),
+        });
+        const eventProps = installCompletedEventProps(response);
+        if (eventProps !== null) {
+          track("bot_install_completed", eventProps);
+        }
+        setResult(installLandingResult(response));
+      } catch {
+        // Attribution is best-effort; a failed post still leaves the user a
+        // way forward into setup.
+        setResult({ outcome: "invalid", guildId: null });
+      }
+    })();
+  }, [guildId, state]);
+
+  const copy = installLandingCopy(result);
+  const continueTo = installContinueTarget(result);
 
   return (
     <div className="mx-auto max-w-md space-y-4 px-4 py-12">
       <Card>
         <CardHeader>
-          <h1 className="scout-card__title">
-            {stateVerified ? "Scout added 🎉" : "Finish setup"}
-          </h1>
-          <CardDescription>
-            {stateVerified
-              ? guildId === null
-                ? "Scout was added to your server. Let's finish setting it up."
-                : "Scout is now in your server. Let's finish setting it up."
-              : "Pick up where you left off and finish setting up Scout."}
-          </CardDescription>
+          <h1 className="scout-card__title">{copy.title}</h1>
+          <CardDescription>{copy.description}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button asChild>
