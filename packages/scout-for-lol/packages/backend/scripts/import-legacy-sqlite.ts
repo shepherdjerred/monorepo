@@ -100,16 +100,16 @@ try {
       allowFreshInstall: args.allowFreshInstall,
     });
     logger.info(`Legacy import: ${summary.action}`);
-    if (summary.action === "imported") {
+    if (summary.action === "imported" || summary.action === "skipped") {
       const drift = await verifyLedgerBalances(prisma);
       for (const line of drift) {
         logger.error(`✗ ledger: ${line}`);
       }
       if (drift.length > 0) {
-        // The import committed; drift is an importer bug to investigate, and
-        // starting the app on top of it would compound the damage.
+        // The import may have committed on an earlier invocation; starting
+        // the app on top of invalid accounting state would compound the bug.
         throw new Error(
-          `Ledger drift after import (${drift.length.toString()} accounts) — refusing to start`,
+          `Ledger drift after legacy import (${drift.length.toString()} accounts) — refusing to start`,
         );
       }
     }
