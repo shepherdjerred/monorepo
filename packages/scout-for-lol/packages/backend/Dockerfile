@@ -69,6 +69,10 @@ FROM base AS runtime
 COPY --from=prod-deps /app/ /app/
 # Scoped source closure. Report Satori imports resolve through the shared
 # design-system package, which also owns the exact font and rank-crest bytes.
+# @shepherdjerred/config and @shepherdjerred/feature-flags export their
+# TypeScript source (`exports` points at `./src/index.ts`), so the workspace
+# symlink the production install creates is dangling without their sources here
+# and the backend dies at startup with `Cannot find module`.
 COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
@@ -79,6 +83,8 @@ COPY --parents \
   packages/llm-models \
   packages/llm-observability \
   packages/llm-runtime \
+  packages/config \
+  packages/feature-flags \
   ./
 # Bake the Prisma engines into the production tree. prod-deps installs
 # without lifecycle scripts, so @prisma/engines ships empty and the CLI

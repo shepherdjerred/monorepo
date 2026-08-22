@@ -184,6 +184,11 @@ assets = "/tmp"
 enabled = false
 `;
 
+// `FEATURE_FLAGS_MODE: "disabled"` appears on every app that consumes
+// @shepherdjerred/feature-flags. The variable deliberately has no default, so a
+// service that reads flags cannot boot without one; `flipt` is unreachable from
+// an image build, and this harness only proves the process starts, so it opts
+// out explicitly rather than pretending a flag backend is there.
 const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
@@ -309,6 +314,7 @@ const commands: Record<
       APPLICATION_ID: "000000000000000000",
       DATA_DIR: "/tmp/smoke-data",
       DATABASE_PATH: "/tmp/smoke-data/karma.db",
+      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   streambot: {
@@ -335,6 +341,7 @@ const commands: Record<
       USER_TOKENS: "smoke-test-dummy",
       ADMIN_IDS: "000000000000000000",
       VIDEOS_DIR: "/tmp/videos",
+      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   "scout-evals": {
@@ -460,6 +467,7 @@ const commands: Record<
       ENABLE_BACKGROUND_JOBS: "false",
       REPORT_LAKE_DIR: "/tmp/report-lake",
       PORT: "18791",
+      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   "discord-plays-pokemon": {

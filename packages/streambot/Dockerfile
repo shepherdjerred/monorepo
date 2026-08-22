@@ -153,11 +153,17 @@ COPY --from=prod-deps /app/ /app/
 
 # Scoped source closure + the built dists from the build stage. The canonical
 # evaluation corpus is intentionally excluded from production layers.
+# @shepherdjerred/config and @shepherdjerred/feature-flags export their
+# TypeScript source (`exports` points at `./src/index.ts`), so the workspace
+# symlink the production install creates is dangling without their sources here
+# and the bot dies at startup with `Cannot find module`.
 COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
   tsconfig.base.json \
   packages/streambot \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
+  packages/config \
+  packages/feature-flags \
   ./
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/discord-video-stream/dist packages/discord-video-stream/dist
