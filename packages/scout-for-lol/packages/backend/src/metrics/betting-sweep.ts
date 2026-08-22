@@ -22,7 +22,7 @@ export async function updateBettingMetrics(
   prismaClient?: ExtendedPrismaClient,
 ): Promise<void> {
   try {
-    const databaseModule = await import("../database/index.js");
+    const databaseModule = await import("#src/database/index.ts");
     const prisma = prismaClient ?? databaseModule.prisma;
 
     const [byState, oldestUnresolved, pendingStake, houseAccounts] =

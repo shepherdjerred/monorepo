@@ -457,7 +457,17 @@ export async function announceSettlements(
           summary.winningTeamId,
         ),
       });
-      const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
+      const poolRefs = BucksMessageRefsSchema.parse(
+        JSON.parse(pool.messageRefs),
+      );
+      // The parlay carries its own durable refs, derived from the pool's at
+      // publish time and normally a subset of them. Falling back to them here
+      // is what stops a parlay-only carrier being silently dropped in the case
+      // the pool's own refs are ever empty or the pool row itself cannot be
+      // resolved by the time this defensive branch is reached — today that
+      // never happens on the happy path, but the data is already on hand, so
+      // there is no reason to prefer "no destination" over it.
+      const refs = poolRefs.length > 0 ? poolRefs : (parlay?.messageRefs ?? []);
       if (refs.length === 0) {
         // No recorded message means no destination, and there is no second
         // chance: the pool has committed as settled, so a later pass returns no
