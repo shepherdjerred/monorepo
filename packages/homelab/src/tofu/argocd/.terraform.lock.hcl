@@ -5,7 +5,13 @@ provider "registry.opentofu.org/1password/onepassword" {
   version     = "3.3.1"
   constraints = "~> 3.0"
   hashes = [
+    "h1:35PCpSNLVubReT1imwfC+FpIP5gQWx+rvG4njkXkZKM=",
+    "h1:GqvBYImDNYNPMi9o3kJTSIJDeEnNO7om46RWA0wjeso=",
     "h1:Tg8bJ+ATy5pla6ZTn87lb3nIyiTJTgQHJdxOWQjFF9k=",
+    "h1:a8DHdeyXt8YaEngXGEWZC75W27OG742wtw5BmRnhrpI=",
+    "h1:bPFt8A+PWGwEj3wQ3D0GxyrTMmr1piNrwEuPJu7AZTo=",
+    "h1:nThx/0XctUKlAa6aAsSEHZvx/mD1tSxCE6pacSnotxU=",
+    "h1:syh+iS5VPBQTLszL503BOi5rLpL1wGl1IjyYqgpKYIg=",
     "zh:02d93a7f520ec69ad8944a68dcbf512e2f9920a6696628b8d05e6ad408309f35",
     "zh:0f91a902da84470af95f0da4dc21127b84e23c856a431ff9ecfe45d9c6775ef0",
     "zh:161bc55c466214a5d425ba85753d74ed5078212db965f726e6650d2e1524d633",
@@ -21,7 +27,16 @@ provider "registry.opentofu.org/argoproj-labs/argocd" {
   version     = "7.15.3"
   constraints = "~> 7.0"
   hashes = [
+    "h1:69ZiNh1EH9WJtJ3g4EK8AKPgUQKMVlgoaCzm/jmq36w=",
+    "h1:9hNkBlRb2casDG16Z91NYKOJXqk9PBWPX/TdO0uSk80=",
+    "h1:XdcPLnexS6gvioNN0K/JWDmB16oUoqcLUVWrsYslfzU=",
+    "h1:ZCIcaDzTy2WN2iaaMA9puR1khbGetdesJDYNEgshfZE=",
+    "h1:ZeLDjsFcmAraMlBYOyk38WECajt3tTNnGnaJgY4wlYg=",
     "h1:gklxppttVJ+pXqxAkUwmQFR9EreSKNBqoh7hbLbyIPI=",
+    "h1:o17G7uth3AP0WhOXqWUJdj3SDouxbJYYBZrLJ7Fpuxg=",
+    "h1:tlKTxJm7e3Z75JW2Vmyb/fmvp/ddSxtNkPdz+q5yYcw=",
+    "h1:ugsethfDCkqJz/qafebB3qFsMN3lYoektBVD30tl6mg=",
+    "h1:xyTFpdj/J91Z9Eqr7i0xZD7gRs3wBL6ZI16lscNZctE=",
     "zh:1a754d97259b9d2e9e624703eec655278bff20ca829b9d48ee9aae9591af2681",
     "zh:3728ed3654f426d745d624d6895631651ebd8e84d594fe475849f2ad02c5c027",
     "zh:4261e504831d8744de39e583a3b6931ced1ca6b67b2363448243197548cb6fd1",

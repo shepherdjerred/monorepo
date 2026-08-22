@@ -44,6 +44,17 @@ uses a local override to keep auto-sync disabled between batches; the final
 prune restores that one policy. Stage 7 is the single authoritative scoped
 health gate.
 
+The platform-account apply runs alongside the infrastructure release after
+verification. It applies the `openai`, `anthropic`, `discord`, and `openrouter`
+stacks before ArgoCD sync, so generated credentials and their 1Password
+handoffs exist before workloads consume them. The step is serialized separately
+from the other OpenTofu applies and has no automatic retry because a provider
+may return a new secret only once.
+
+If the platform-account step fails, inspect the encrypted stack state and the
+corresponding 1Password handoff before resuming. Do not blindly retry a
+partial credential create.
+
 Stage 5 renders the same exact root revision and walks its child Applications
 in numeric sync-wave order. Repository-published children take their immutable
 revision from the release inventory. External children, such as cert-manager,

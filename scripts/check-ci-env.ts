@@ -142,6 +142,34 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
       "steps that call argocd.ts for real (argocd-sync, tofu-cloudflare) " +
       "export ARGOCD_TOKEN in their command and are checked normally.",
   },
+  {
+    step: "pr-dryrun",
+    script: "scripts/release.ts",
+    names: [
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "CODEX_ACCESS_TOKEN",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+    ],
+    reason:
+      "The step runs release.ts with --dry-run, and that flag returns before " +
+      "the release script's provider and GitHub App authentication. The real " +
+      "release-please step provides and checks these names normally.",
+  },
+  {
+    step: "pr-dryrun",
+    script: "scripts/update-versions.ts",
+    names: [
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+    ],
+    reason:
+      "The step passes an empty pin-candidate set with --dry-run, so " +
+      "update-versions exits before its GitHub App authentication. The real " +
+      "version-commit-back step provides and checks these names normally.",
+  },
 ];
 
 const SnapshotItemSchema = z.object({

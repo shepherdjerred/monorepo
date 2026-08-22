@@ -1,7 +1,9 @@
 [extend]
 useDefault = true
 
-[allowlist]
+# The plural table is required: a scoped allowlist below needs `condition`, and
+# gitleaks refuses to load the deprecated singular `[allowlist]` alongside it.
+[[allowlists]]
 regexTarget = "secret"
 regexes = [
   # PostHog phc_ project tokens are public browser ingestion identifiers.
@@ -57,3 +59,13 @@ paths = [
   # parallel source scan runs. Staged source still goes through `gitleaks protect`.
   '''packages/scout-for-lol/.*/logs/''',
 ]
+
+# The Discord bot registry stores 1Password item IDs, which are non-secret
+# metadata references but read as high-entropy generic API keys. This matches
+# the field rather than the file: a `paths` entry makes gitleaks skip the file
+# before scanning it (even with `condition = "AND"`), which would let a real bot
+# token committed into the registry go undetected.
+[[allowlists]]
+description = "1Password item IDs are non-secret metadata references"
+regexTarget = "secret"
+regexes = ['''"onepassword_item": "[a-z0-9]{26}"''']

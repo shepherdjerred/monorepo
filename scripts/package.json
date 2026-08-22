@@ -34,10 +34,12 @@
     "@types/istanbul-lib-instrument": "1.7.8"
   },
   "exports": {
+    "./lib/run.ts": "./lib/run.ts",
     "./lib/commit-message.ts": {
       "types": "./types/commit-message.d.ts",
       "default": "./lib/commit-message.ts"
     },
-    "./lib/test-git.ts": "./lib/test-git.ts"
+    "./lib/test-git.ts": "./lib/test-git.ts",
+    "./lib/transient.ts": "./lib/transient.ts"
   }
 }

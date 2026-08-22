@@ -230,8 +230,6 @@ common:
                   readOnly: true
                 - name: buildkite-tofu-plugin-cache
                   mountPath: /buildkite/tofu-plugin-cache
-              envFrom:
-                - secretRef: { name: buildkite-ci-secrets }
   - retry: &retry
       automatic:
         # Transient infra failures only; logical failures (1, 3) never retry.
@@ -1111,6 +1109,8 @@ steps:
         - "scripts/lib/**"
         - "packages/homelab/src/tofu/**"
         - "packages/homelab/scripts/tofu-stack.ts"
+        - "packages/homelab/scripts/tofu-validation.ts"
+        - "packages/terraform-provider-openrouter-byok/**"
         - "packages/homelab/scripts/helm-release-core.ts"
         - "packages/homelab/scripts/helm-push.ts"
         - "packages/homelab/scripts/argocd.ts"
@@ -1156,47 +1156,32 @@ steps:
       if bun --no-install .buildkite/scripts/ci-changed.ts helm-types; then
         bun --no-install run --cwd packages/homelab/src/cdk8s generate-helm-types --check
       fi
-      # Tofu plans — the only expensive section; gated on tofu inputs. The
-      # SeaweedFS creds (tofu's S3 state backend) are confined to a subshell so
-      # they DON'T leak into the deploy-site/scout dry-run rehearsals below:
-      # with creds present, deploy-site's --dry-run runs a real
-      # `aws s3 sync --dryrun` against a dist/ that was never built (the build
-      # is stubbed in dry-run), which fails "path does not exist". These lanes
-      # used to be separate pods; merging them into one made the leak possible.
+      # Do not run live OpenTofu plans in a PR-controlled pod. The plan would
+      # require production state-backend and vendor-admin credentials, and a
+      # changed PR script could read or exfiltrate those values. Main-only
+      # admission-gated apply steps own the credentialed OpenTofu execution;
+      # verify still covers formatting and static validation for these modules.
       if bun --no-install .buildkite/scripts/ci-changed.ts tofu; then
-        (
-          export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-          export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
-          flock -x 9
-          for stack in seaweedfs tailscale buildkite arr github cloudflare; do
-            bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
-          done
-        ) 9>/buildkite/tofu-plugin-cache/.lock
+        tofu fmt -check -recursive packages/homelab/src/tofu
+        # The wrapper also supports credentialed plan/apply, so the static
+        # env-contract check requires these names. Validate uses an empty env,
+        # backend=false, and never contacts the state or cloud APIs.
+        export AWS_ACCESS_KEY_ID=ci-validation AWS_SECRET_ACCESS_KEY=ci-validation
+        for stack in seaweedfs tailscale buildkite arr github cloudflare discord openai anthropic openrouter argocd asuswrt; do
+          bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" validate
+        done
       fi
-      # Print-only rehearsals (seconds each): sites catalog, the versioned
-      # scout release path, helm chart push, and release-please.
-      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red wiki better-skill-capped glitter; do
-        bun --no-install scripts/deploy-site.ts "$$site" --dry-run
-      done
-      scout_backend=$$(bun --no-install scripts/scout-site-release.ts resolve-backend-digest)
-      bun --no-install scripts/scout-site-release.ts prepare-state \
-        --build-number "$BUILDKITE_BUILD_NUMBER" \
-        --backend-digest "$$scout_backend" \
-        --output /tmp/scout-release-state.json \
-        --dry-run
-      scout_state=$$(</tmp/scout-release-state.json)
-      bun --no-install scripts/scout-site-release.ts archive --state "$$scout_state" --dry-run
-      bun --no-install scripts/scout-site-release.ts deploy-beta --state "$$scout_state" --dry-run
-      bun --no-install scripts/scout-site-release.ts reconcile-prod --state "$$scout_state" --dry-run
-      bun --no-install scripts/scout-site-release.ts tag-release --state "$$scout_state" --dry-run
-      bun --no-install scripts/scout-site-release.ts resolve-prod-pin
+      # The remaining deploy rehearsals are credential-free. Site, release,
+      # Scout, and version-promotion commands stay in their trusted lanes;
+      # invoking them here would require importing production credentials into
+      # a PR-controlled pod.
       bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
-      apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
-      bun --no-install packages/homelab/scripts/argocd.ts release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --dry-run
       pin_candidates=$$(jq -cn --arg build "$BUILDKITE_BUILD_NUMBER" \
         '{schema:"pin-candidates/v1",buildNumber:($$build|tonumber),candidates:{}}')
       bun --no-install scripts/update-versions.ts --commit-back --candidates "$$pin_candidates" --dry-run
       bun --no-install scripts/release.ts --dry-run
+      apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
+      bun --no-install packages/homelab/scripts/argocd.ts release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --dry-run
     retry: *retry
     plugins:
       - kubernetes:
@@ -1572,6 +1557,7 @@ steps:
       fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       (
         export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -1607,6 +1593,7 @@ steps:
       fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       (
         export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -1620,11 +1607,49 @@ steps:
             labels:
               ci.sjer.red/step-key: tofu-github
 
+  - label: ":key: OpenTofu apply — platform accounts"
+    key: tofu-platform
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: [homelab-release-admission, verify]
+    concurrency: 1
+    concurrency_group: monorepo/tofu-platform
+    # Platform APIs can return a newly-created secret only once. There is no
+    # automatic retry here: inspect state and the 1Password handoff before
+    # deliberately resuming after a partial failure.
+    command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      (
+        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+        export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+        flock -x 9
+        for stack in openai anthropic discord openrouter; do
+          bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" apply
+        done
+      ) 9>/buildkite/tofu-plugin-cache/.lock
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-platform
+
   - label: ":argo: sync + wait"
     key: argocd-sync
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
-    depends_on: [homelab-release-admission, images, helm-push, tofu-apply]
+    # tofu-platform is in the chain so a deploy never lands before the platform
+    # credentials and 1Password handoffs from the same merge have been applied.
+    depends_on:
+      [homelab-release-admission, images, helm-push, tofu-apply, tofu-platform]
     concurrency: 1
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
@@ -1801,9 +1826,8 @@ steps:
         flock -x 9
         bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare apply
       ) 9>/buildkite/tofu-plugin-cache/.lock
-    # Safe to retry: tofu re-plans from state, and the scripts only exit 34
-    # (the retryable code) on classified transient failures.
-    retry: *retry
+    # No automatic retry: a token value may only be available during the
+    # original apply, so inspect state and the 1Password handoff first.
     plugins:
       - kubernetes:
           <<: *pod_tofu_kubernetes
@@ -1927,6 +1951,7 @@ steps:
       - helm-push
       - tofu-apply
       - tofu-github
+      - tofu-platform
       - argocd-sync
       - scout-beta-release
       - publish

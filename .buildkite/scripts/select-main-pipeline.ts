@@ -56,6 +56,7 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "helm-push": ["helm", "argocd", "images"],
   "tofu-apply": ["tofu"],
   "tofu-github": ["tofu"],
+  "tofu-platform": ["tofu"],
   "argocd-sync": ["helm", "argocd", "images"],
   "tofu-cloudflare": ["tofu", "argocd"],
   "scout-beta-release": ["site-scout", "images"],

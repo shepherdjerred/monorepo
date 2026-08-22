@@ -65,7 +65,10 @@ that quietly does not do what you meant. Pushing that into a type error moves th
 discovery from "weeks later" to "before merge".
 
 OpenTofu covers what is not in the cluster: ArgoCD bootstrap, Cloudflare,
-GitHub, SeaweedFS, Tailscale, and the media stack's external config.
+GitHub, SeaweedFS, Tailscale, and the media stack's external config. Separate
+platform stacks manage OpenAI, Anthropic, Discord, and OpenRouter organization
+settings and generated credentials. OnePassword is the handoff boundary for
+those credentials; application workloads never receive provider bootstrap keys.
 
 ## Delivery is GitOps, with an unusual amount of care
 
