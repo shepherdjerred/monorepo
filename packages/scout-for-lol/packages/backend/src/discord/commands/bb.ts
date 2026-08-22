@@ -24,7 +24,7 @@ import {
   outcomeLabel,
   resolveOutcomeChoice,
 } from "#src/betting/team.ts";
-import { announceParlayPlacement } from "#src/betting/parlay-announce.ts";
+import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
 import { describeParlayResult } from "#src/betting/parlay-bet-button.ts";
 import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
@@ -268,14 +268,9 @@ async function replyParlay(
   });
   await interaction.editReply({ content: describeParlayResult(result) });
   if (result.kind === "placed") {
-    await announceParlayPlacement({
+    await refreshParlayMessages({
       matchId: selection.market.matchId,
       serverId,
-      discordId,
-      side: parsedSide,
-      stake,
-      totalStake: result.totalStake,
-      grossPayout: result.grossPayout,
     });
   }
 }

@@ -1,78 +1,15 @@
 import * as Sentry from "@sentry/bun";
 import {
-  BucksMessageRefsSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  type BucksParlaySide,
 } from "@scout-for-lol/data";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-parlay-announce");
 const MAX_BET_ROWS = 15;
-
-export function formatParlayPlacementAnnouncement(input: {
-  discordId: string;
-  side: BucksParlaySide;
-  stake: number;
-  totalStake: number;
-  grossPayout: number;
-}): string {
-  return `🎲 <@${input.discordId}> staked **${input.stake.toString()} BB** on parlay **${input.side}** (position: **${input.totalStake.toString()} BB**, pays **${input.grossPayout.toString()} BB**).`;
-}
-
-export async function announceParlayPlacement(
-  input: {
-    matchId: string;
-    serverId: ReturnType<typeof DiscordGuildIdSchema.parse>;
-    discordId: string;
-    side: BucksParlaySide;
-    stake: number;
-    totalStake: number;
-    grossPayout: number;
-  },
-  prismaClient: ExtendedPrismaClient = prisma,
-): Promise<void> {
-  try {
-    const market = await prismaClient.bucksParlayMarket.findUnique({
-      where: {
-        matchId_serverId: { matchId: input.matchId, serverId: input.serverId },
-      },
-      select: { messageRefs: true },
-    });
-    if (market === null) return;
-    const content = formatParlayPlacementAnnouncement(input);
-    const refs = BucksMessageRefsSchema.parse(JSON.parse(market.messageRefs));
-    for (const ref of refs) {
-      try {
-        await send(
-          { content, allowedMentions: { users: [input.discordId] } },
-          DiscordChannelIdSchema.parse(ref.channelId),
-          input.serverId,
-        );
-      } catch (error) {
-        logger.warn(
-          `Could not announce parlay placement for ${input.matchId} in ${ref.channelId}:`,
-          error,
-        );
-      }
-    }
-  } catch (error) {
-    logger.error(
-      `Could not prepare parlay placement for ${input.matchId}:`,
-      error,
-    );
-    Sentry.captureException(error, {
-      tags: {
-        source: "betting-parlay-placement-announce",
-        matchId: input.matchId,
-      },
-    });
-  }
-}
 
 export function formatParlaySettlement(
   summary: ParlaySettlementSummary,

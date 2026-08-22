@@ -10,7 +10,7 @@ import {
   formatParlaySettlementChunks,
 } from "#src/betting/parlay-announce.ts";
 import { buildParlayButtons } from "#src/betting/parlay-components.ts";
-import { buildParlayMessage } from "#src/betting/parlay-publish.ts";
+import { buildParlayContent } from "#src/betting/parlay-line.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 
 const subjects = ParlaySubjectsSchema.parse([
@@ -73,16 +73,18 @@ function largeSettlementSummary(
 
 describe("parlay Discord experience", () => {
   test("renders a dedicated live-market follow-up and five actions", () => {
-    const content = buildParlayMessage({
+    const content = buildParlayContent({
       criteria,
       subjects,
       closesAt: new Date("2026-08-18T12:05:00.000Z"),
+      marketState: "open",
+      positions: [],
     });
     expect(content).toContain("Bryan gets at least 5 kills");
     expect(content).toContain("Their team gets first baron");
     expect(content).toContain("YES** 40% (2.50×)");
     expect(content).toContain("NO** 60% (1.67×)");
-    expect(content).toContain("Live/in-play market");
+    expect(content).toContain("live in-play market");
     expect(content).toContain("<t:1787054700:R>");
 
     const row = buildParlayButtons({ matchId: "NA1_42" }).toJSON();
@@ -121,10 +123,12 @@ describe("parlay Discord experience", () => {
         }),
       ),
     };
-    const content = buildParlayMessage({
+    const content = buildParlayContent({
       criteria: longCriteria,
       subjects: longSubjects,
       closesAt: new Date("2026-08-18T12:05:00.000Z"),
+      marketState: "open",
+      positions: [],
     });
     expect(content.length).toBeLessThanOrEqual(1900);
     expect(content).toContain("a".repeat(PARLAY_SUBJECT_ALIAS_MAX_LENGTH));

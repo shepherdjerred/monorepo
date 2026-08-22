@@ -6,7 +6,7 @@ import {
   cancelParlayBet,
   type CancelParlayBetResult,
 } from "#src/betting/parlay-cancel-bet.ts";
-import { announceParlayPlacement } from "#src/betting/parlay-announce.ts";
+import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { parseParlayCustomId } from "#src/betting/parlay-custom-id.ts";
 import {
   placeParlayBet,
@@ -92,6 +92,14 @@ export async function handleParlayBetButton(
       prismaClient,
     );
     await interaction.editReply({ content: describeParlayCancel(result) });
+    // Newly required: the market message now carries a live position digest,
+    // so a cancellation that did not refresh would leave a stale one.
+    if (result.kind === "cancelled") {
+      await refreshParlayMessages(
+        { matchId: parsed.matchId, serverId },
+        prismaClient,
+      );
+    }
     return;
   }
   const result = await placeParlayBet(
@@ -106,16 +114,8 @@ export async function handleParlayBetButton(
   );
   await interaction.editReply({ content: describeParlayResult(result) });
   if (result.kind === "placed") {
-    await announceParlayPlacement(
-      {
-        matchId: parsed.matchId,
-        serverId,
-        discordId,
-        side: parsed.side,
-        stake: parsed.amount,
-        totalStake: result.totalStake,
-        grossPayout: result.grossPayout,
-      },
+    await refreshParlayMessages(
+      { matchId: parsed.matchId, serverId },
       prismaClient,
     );
   }

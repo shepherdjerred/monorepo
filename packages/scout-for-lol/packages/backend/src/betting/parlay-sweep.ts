@@ -7,7 +7,7 @@ import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { disableParlayPreparationReferences } from "#src/betting/parlay-publish.ts";
-import { disableClosedBettingMessages } from "#src/betting/message-controls.ts";
+import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { bettingParlayVoidsTotal } from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
@@ -58,7 +58,7 @@ export async function voidStaleParlayMarkets(
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
   disablePreparationReferences: typeof disableParlayPreparationReferences = disableParlayPreparationReferences,
-  disableMarketControls: typeof disableClosedBettingMessages = disableClosedBettingMessages,
+  disableMarketControls: typeof refreshClosedParlayMessages = refreshClosedParlayMessages,
 ): Promise<number> {
   const cutoff = new Date(now.getTime() - VOID_GRACE_MS);
   const markets = await prismaClient.bucksParlayMarket.findMany({
@@ -153,14 +153,10 @@ export async function voidStaleParlayMarkets(
             market.matchId,
           );
         } else {
+          // The refresh reads its own refs, and now re-renders the message as
+          // voided rather than only stripping its buttons.
           await disableMarketControls([
-            {
-              matchId: market.matchId,
-              serverId: market.serverId,
-              messageRefs: BucksMessageRefsSchema.parse(
-                JSON.parse(market.messageRefs),
-              ).map((ref) => ({ ...ref })),
-            },
+            { matchId: market.matchId, serverId: market.serverId },
           ]);
         }
       }

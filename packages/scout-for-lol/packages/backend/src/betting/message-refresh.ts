@@ -18,6 +18,7 @@ import {
   type BucksPrematchPosition,
 } from "#src/betting/prematch-line.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
+import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { createLogger } from "#src/logger.ts";
@@ -40,10 +41,8 @@ const defaultEditMessage: BucksMessageEdit = async (input) => {
   await channel.messages.edit(input.messageId, input.options);
 };
 
-const refreshTails = new Map<string, Promise<void>>();
-
 function refreshKey(matchId: string, serverId: DiscordGuildId): string {
-  return `${serverId}:${matchId}`;
+  return `pool:${serverId}:${matchId}`;
 }
 
 async function refreshOnce(
@@ -180,10 +179,7 @@ export async function refreshBucksMessages(
   prismaClient: ExtendedPrismaClient = prisma,
   editMessage: BucksMessageEdit = defaultEditMessage,
 ): Promise<void> {
-  const key = refreshKey(input.matchId, input.serverId);
-  const prior = refreshTails.get(key) ?? Promise.resolve();
-  const current = (async () => {
-    await prior;
+  await runSerialized(refreshKey(input.matchId, input.serverId), async () => {
     try {
       await refreshOnce(
         {
@@ -207,15 +203,7 @@ export async function refreshBucksMessages(
         extra: { serverId: input.serverId },
       });
     }
-  })();
-  refreshTails.set(key, current);
-  try {
-    await current;
-  } finally {
-    if (refreshTails.get(key) === current) {
-      refreshTails.delete(key);
-    }
-  }
+  });
 }
 
 export async function refreshClosedBucksMessages(
