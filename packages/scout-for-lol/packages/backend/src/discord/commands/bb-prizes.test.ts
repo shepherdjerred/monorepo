@@ -260,8 +260,13 @@ describe("/bb command contract", () => {
     expect(rendered).toContain("live in-play market");
     // The Clash bonus is the largest single award and was documented nowhere.
     expect(rendered).toContain("Clash adds **+10 BB**");
-    // Normal 5v5 earns too; the old copy said "ranked" and was wrong.
-    expect(rendered).toContain("normal 5v5");
+    // The queue list is derived from BUCKS_EARNING_QUEUES rather than typed,
+    // and League Classic's split behaviour (played point, no market) is
+    // stated rather than left for a player to discover.
+    expect(rendered).toContain("Eligible queues:");
+    expect(rendered).toContain(
+      "League Classic pays the played point but carries no market",
+    );
     expect(rendered).not.toContain("Eligible ranked games");
     // WIN/LOSE with the documented Blue/Red fallback.
     expect(rendered).toContain("**WIN** or **LOSE**");

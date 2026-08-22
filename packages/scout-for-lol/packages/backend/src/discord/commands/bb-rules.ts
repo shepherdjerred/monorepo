@@ -1,6 +1,7 @@
 import { EmbedBuilder } from "discord.js";
 import {
   BETTING_WINDOW_MS,
+  BUCKS_EARNING_QUEUES,
   HOUSE_MATCH_LIMIT,
   PARLAY_BETTING_WINDOW_MS,
   SEED_GRANT,
@@ -60,7 +61,8 @@ export function buildBbRulesEmbed(): EmbedBuilder {
           `**+${EARNED_REWARDS.mvp.amount.toString()} BB** for MVP. ` +
           `Ranked 5s adds **+${EARNED_REWARDS["ranked 5s bonus"].amount.toString()} BB** and Clash adds ` +
           `**+${EARNED_REWARDS["clash bonus"].amount.toString()} BB**. ` +
-          "Solo/duo, flex, normal 5v5, ranked 5s, and Clash all count.",
+          `Eligible queues: ${BUCKS_EARNING_QUEUES.join(", ")}. ` +
+          "League Classic pays the played point but carries no market, because Riot exposes no post-game payload for it.",
       },
       {
         name: `Outcome bets — ${outcomeWindow} minutes`,
