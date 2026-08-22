@@ -888,6 +888,13 @@ fails fast without `OPENROUTER_API_KEY`. Discord publication persists a
 retries activation after restarts, and the market becomes bettable only after
 the guarded transition to `open`.
 
+League Classic (`queueType: "classic"`, Riot queue 4310) is not a betting or
+parlay queue because this integration has no supported post-game payload. A
+tracked, linked player in a complete Classic 5v5 receives exactly one
+`earn_game` participation point when the prematch spectator record is first
+processed. The grant is idempotent per match and guild, and Classic ARAM
+Mayhem (`"classic aram mayhem"`) receives neither the grant nor any market.
+
 **Generation is two passes, and the model never sets the price.** GPT-5.6 Sol
 first proposes 2–6 leg _shapes_ — subject, field, operator, no numbers. Only
 then does the harness know which distributions to measure, so it fetches one

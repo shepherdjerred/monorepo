@@ -27,6 +27,9 @@ export const PARLAY_INITIAL_OUTPUT_TOKENS = 4096;
 export const PARLAY_RETRY_OUTPUT_TOKENS = 6144;
 export const DEFAULT_PARLAY_AI_MODEL = "gpt-5.6-sol";
 
+/** Delay before retrying a wallet-funded earning. */
+export const PENDING_EARNING_RETRY_DELAY_MS = 5 * 60 * 1000;
+
 /**
  * How long past its close a pool may sit unsettled before it is voided and
  * every stake refunded.
@@ -90,14 +93,13 @@ export const REMAKE_MAX_DURATION_SECONDS = 300;
  * which also matches "clash" and "aram clash". That helper exists to gate AI
  * review spend; reusing it would mean a future tweak to review heuristics
  * silently moves the economy. Solo and flex are exactly the queues the MVP
- * weights are calibrated for. Classic intentionally has no prediction inputs,
- * but it still has a binary 5v5 outcome and can carry a market. Standard Clash
- * is included; ARAM Clash is not.
+ * weights are calibrated for. League Classic has no supported post-game
+ * payload, so it has a separate pre-match participation grant and cannot
+ * carry a market. Standard Clash is included; ARAM Clash is not.
  */
 export const BUCKS_EARNING_QUEUES: readonly QueueType[] = [
   "solo",
   "flex",
-  "classic",
   "ranked 5s",
   "clash",
 ];

@@ -1,5 +1,6 @@
 import type {
   LeaguePuuid,
+  MatchId,
   PlayerConfigEntry,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
@@ -13,11 +14,13 @@ import { getActiveGame } from "#src/league/api/spectator.ts";
 import {
   getActiveGames,
   upsertActiveGame,
+  deleteActiveGame,
   deleteExpiredActiveGames,
   getActiveGameCount,
   recordPrematchMessageIds,
 } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { sendPrematchNotification } from "#src/league/tasks/prematch/prematch-notification.ts";
+import { PrematchNotificationPostDeliveryError } from "#src/league/tasks/prematch/prematch-notification-errors.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
 import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
@@ -115,6 +118,27 @@ async function refetchLobbyUntilFilled(
     latest = retry.game;
   }
   return latest;
+}
+
+async function processPrematchWithRetryCleanup(input: {
+  matchId: MatchId;
+  gameInfo: RawCurrentGameInfo;
+  trackedPlayers: PlayerConfigEntry[];
+}): Promise<Map<string, string>> {
+  try {
+    await recordPrematchForReportStore({
+      gameInfo: input.gameInfo,
+      observedAt: new Date(),
+      source: "prematch_live",
+      trackedPlayerAliases: input.trackedPlayers.map((p) => p.alias),
+    });
+    return await sendPrematchNotification(input.gameInfo, input.trackedPlayers);
+  } catch (error) {
+    if (!(error instanceof PrematchNotificationPostDeliveryError)) {
+      await deleteActiveGame(MatchIdSchema.parse(input.matchId));
+    }
+    throw error;
+  }
 }
 
 function shouldSkipCheck(): boolean {
@@ -389,21 +413,14 @@ export async function checkActiveGames(
           priorGameIdByPuuid.set(p, gameInfo.gameId);
         }
 
-        // Authoritative S3 write + lake staging for this prematch observation.
-        // Runs before the notification so the raw spectator payload is durably
-        // persisted regardless of notification delivery.
-        await recordPrematchForReportStore({
+        // Persist the observation and send the notification. Failures before
+        // delivery clear the dedup row so the next poll retries; failures
+        // after delivery retain it to prevent duplicate Discord messages.
+        const prematchMessageIds = await processPrematchWithRetryCleanup({
+          matchId,
           gameInfo,
-          observedAt: new Date(),
-          source: "prematch_live",
-          trackedPlayerAliases: trackedPlayersInGame.map((p) => p.alias),
+          trackedPlayers: trackedPlayersInGame,
         });
-
-        // Send notification
-        const prematchMessageIds = await sendPrematchNotification(
-          gameInfo,
-          trackedPlayersInGame,
-        );
         await recordPrematchMessageIds(matchId, prematchMessageIds);
 
         prematchDetectionsTotal.inc({ status: "detected" });
