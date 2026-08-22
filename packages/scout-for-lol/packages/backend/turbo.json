@@ -17,10 +17,12 @@
     // test script interpolates the PostgreSQL test URL — ambient value
     // changes results. Everything else is pinned by the test-setup preload.
     "test": {
-      "env": ["DATABASE_URL"]
+      "env": ["DATABASE_URL"],
+      "passThroughEnv": ["MISE_DATA_DIR"]
     },
     "test:ci": {
-      "env": ["DATABASE_URL"]
+      "env": ["DATABASE_URL"],
+      "passThroughEnv": ["MISE_DATA_DIR"]
     },
     // Typed lint (projectService) resolves the generated Prisma client; root's
     // lint task only depends on ^build, so on a cold container lint raced
