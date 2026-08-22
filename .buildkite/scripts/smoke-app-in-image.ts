@@ -455,10 +455,12 @@ const commands: Record<
     command: [
       "set -eu",
       "cd /app/packages/scout-for-lol/packages/backend",
-      // Throwaway Postgres inside the smoke stage (apt postgresql, PATH set
-      // in the Dockerfile). Runs as uid 1000 with HOME=/tmp like the app.
-      "initdb -D /tmp/smoke-pg -U postgres --auth=trust --no-locale >/dev/null",
-      'pg_ctl -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-p 18732 -c listen_addresses=127.0.0.1" start',
+      // Throwaway Postgres inside the smoke stage (apt postgresql). Resolve
+      // the installed major version through pg_config; Debian's package
+      // version is independent of the runtime image's base distribution.
+      'postgres_bin="$(pg_config --bindir)"',
+      '"$postgres_bin/initdb" -D /tmp/smoke-pg -U postgres --auth=trust --no-locale >/dev/null',
+      '"$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-p 18732 -c listen_addresses=127.0.0.1" start',
       "set +e",
       // Mirror the full image CMD: migrate → legacy import (which must take
       // its fresh-install marker path here) → report audit → boot.

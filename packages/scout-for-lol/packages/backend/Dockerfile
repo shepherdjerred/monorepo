@@ -138,7 +138,6 @@ FROM runtime AS smoke
 # stage inherits from `runtime` and stays byte-identical.
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql postgresql-client && rm -rf /var/lib/apt/lists/*
-ENV PATH="/usr/lib/postgresql/15/bin:${PATH}"
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts

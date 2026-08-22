@@ -57,6 +57,14 @@ const SENTINEL_MODELS = new Set([
 
 const MARKER_TABLE = "_legacy_sqlite_import";
 
+function quoteIdentifier(identifier: string): string {
+  return `"${identifier.replaceAll('"', '""')}"`;
+}
+
+function quoteStringLiteral(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
+}
+
 async function ensureMarkerTable(prisma: ImportClient): Promise<void> {
   await prisma.$executeRawUnsafe(
     `CREATE TABLE IF NOT EXISTS ${MARKER_TABLE} (
@@ -140,8 +148,9 @@ function sqliteSourceDigest(sqlitePath: string): string {
       if (typeof name !== "string" || typeof sql !== "string") {
         throw new TypeError("SQLite schema row has invalid name or SQL");
       }
-      const escapedName = name.replaceAll('"', '""');
-      const rows: unknown = db.query(`SELECT * FROM "${escapedName}"`).all();
+      const rows: unknown = db
+        .query(`SELECT * FROM ${quoteIdentifier(name)}`)
+        .all();
       if (!Array.isArray(rows)) {
         throw new TypeError(`Unexpected SQLite rows for ${name}`);
       }
@@ -199,9 +208,11 @@ function topoSortByParent(rows: SqliteRow[]): SqliteRow[] {
 }
 
 function readSqliteRows(db: Database, spec: ImportModelSpec): SqliteRow[] {
-  const orderBy = spec.idColumns.map((column) => `"${column}"`).join(", ");
+  const orderBy = spec.idColumns
+    .map((column) => quoteIdentifier(column))
+    .join(", ");
   const rows: unknown = db
-    .query(`SELECT * FROM "${spec.model}" ORDER BY ${orderBy}`)
+    .query(`SELECT * FROM ${quoteIdentifier(spec.model)} ORDER BY ${orderBy}`)
     .all();
   if (!Array.isArray(rows)) {
     throw new TypeError(`${spec.model}: unexpected sqlite result shape`);
@@ -226,8 +237,8 @@ async function resetSequences(tx: ImportTx): Promise<void> {
     // Without this, the first post-cutover insert dies on a duplicate PK:
     // imported rows carry explicit ids, which never advance the sequence.
     await tx.$executeRawUnsafe(
-      `SELECT setval(pg_get_serial_sequence('"${spec.model}"', '${column}'),` +
-        ` COALESCE((SELECT MAX("${column}") FROM "${spec.model}"), 0) + 1, false)`,
+      `SELECT setval(pg_get_serial_sequence(${quoteStringLiteral(quoteIdentifier(spec.model))}, ${quoteStringLiteral(column)}),` +
+        ` COALESCE((SELECT MAX(${quoteIdentifier(column)}) FROM ${quoteIdentifier(spec.model)}), 0) + 1, false)`,
     );
   }
 }
