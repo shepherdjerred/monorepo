@@ -73,7 +73,7 @@ describe("Tracker Tracker chart", () => {
                   z
                     .object({
                       image: z.literal(
-                        "ghcr.io/jordanlambrecht/tracker-tracker:2.8.9@sha256:27b93eb839812c7ccaf03b1024f31d23b5981f8fcc13257447e2082100b7a71c",
+                        "ghcr.io/jordanlambrecht/tracker-tracker:2.10.0@sha256:f7e4b80a928714dd361f125ddd5cb5db6bb372a7a1694ca4e8ac7fe67313e824",
                       ),
                       env: z.array(z.object({ name: z.string() }).loose()),
                       readinessProbe: z
