@@ -18,7 +18,6 @@ import {
 import { prepareBucksPrematch } from "#src/betting/prematch-hook.ts";
 import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
 import { openBettingPoolsForPrematch } from "#src/betting/pool-open.ts";
-import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
@@ -229,8 +228,9 @@ describe("prepareBucksPrematch", () => {
       db,
     );
     expect(result.bettingGuildIds).toEqual(new Set([ENABLED]));
-    expect(result.footer).toContain(HOUSE_CUT_TERMS);
-    expect(result.footer).toContain("**Live offers** — No offers yet.");
+    expect(result.footer).toContain("no offers yet");
+    // The market message states numbers, never rules.
+    expect(result.footer).not.toContain("20%");
     expect(result.footer).not.toContain("58%");
     const pool = await db.bucksMatchPool.findUniqueOrThrow({
       where: {

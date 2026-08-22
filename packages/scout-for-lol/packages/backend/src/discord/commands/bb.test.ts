@@ -27,7 +27,7 @@ function fixturePuuidAt(index: number) {
 }
 
 describe("/bb bet", () => {
-  test("registers game, team, and amount as required options", () => {
+  test("registers game, outcome, and amount as required options", () => {
     const command = bbCommand.toJSON();
     const bet = command.options?.find((option) => option.name === "bet");
     if (bet === undefined || !("options" in bet)) {
@@ -38,7 +38,7 @@ describe("/bb bet", () => {
       expect.objectContaining({
         type: 1,
         name: "bet",
-        description: "Offer up to an amount; only matched Bucks are at risk",
+        description: "Bet on a tracked player's game",
       }),
     );
     expect(bet.options).toEqual([
@@ -47,11 +47,16 @@ describe("/bb bet", () => {
         description: "A tracked player in the game",
         required: true,
       }),
+      // Four static choices: slash-command choices are frozen at registration,
+      // so Blue/Red have to stay available for the rare lobby where win/lose
+      // names no single outcome.
       expect.objectContaining({
-        name: "team",
-        description: "The team to win",
+        name: "outcome",
+        description: "Win or lose for the tracked player — or pick a side",
         required: true,
         choices: [
+          { name: "Win", value: "win" },
+          { name: "Lose", value: "lose" },
           { name: "Blue", value: "blue" },
           { name: "Red", value: "red" },
         ],
@@ -78,11 +83,13 @@ describe("/bb bet", () => {
       matchId: "NA1_blue-and-red",
       subjectPuuid: fixturePuuidAt(0),
       subjectTeamId: 100,
+      mixedTeams: true,
     });
     expect(resolveOpenGameByAlias(pools, "BrYaN")).toEqual({
       matchId: "NA1_blue-and-red",
       subjectPuuid: fixturePuuidAt(5),
       subjectTeamId: 200,
+      mixedTeams: true,
     });
   });
 
@@ -142,7 +149,7 @@ describe("/bb bet", () => {
     }
   });
 
-  test("shows every open-game alias with its Blue or Red team", () => {
+  test("names sides WIN and LOSE and offers a copyable selector", () => {
     const sections = buildOpenMarketSections([
       {
         matchId: "NA1_open",
@@ -157,11 +164,26 @@ describe("/bb bet", () => {
     ]);
 
     expect(sections).toHaveLength(1);
-    expect(sections[0]).toContain(
-      "🔵 **Blue Team offers:** 6 BB across 2 offer(s) — game: `jerred`, game: `friend`",
-    );
-    expect(sections[0]).toContain(
-      "🔴 **Red Team offers:** 5 BB across 1 offer(s) — game: `bryan`",
-    );
+    // Tracked players on both teams, so this lobby keeps Blue/Red.
+    expect(sections[0]).toContain("**jerred, friend, bryan**");
+    expect(sections[0]).toContain("Blue **6 BB** (2) · Red **5 BB** (1)");
+    expect(sections[0]).toContain("`/bb bet game:jerred`");
+  });
+
+  test("names sides WIN and LOSE when only one team is tracked", () => {
+    const sections = buildOpenMarketSections([
+      {
+        matchId: "NA1_open",
+        closesAt: new Date("2030-01-01T00:10:00Z"),
+        blue: {
+          trackedPlayers: ["jerred", "friend"],
+          totalStake: 6,
+          betCount: 2,
+        },
+        red: { trackedPlayers: [], totalStake: 5, betCount: 1 },
+      },
+    ]);
+
+    expect(sections[0]).toContain("WIN **6 BB** (2) · LOSE **5 BB** (1)");
   });
 });

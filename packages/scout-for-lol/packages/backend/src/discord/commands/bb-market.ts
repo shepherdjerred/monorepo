@@ -6,7 +6,11 @@ import {
 } from "@scout-for-lol/data";
 import type { OpenMarketAggregate } from "#src/betting/open-market.ts";
 import { BLUE_TEAM_ID, RED_TEAM_ID } from "#src/betting/constants.ts";
-import { teamName } from "#src/betting/team.ts";
+import {
+  hasTrackedPlayersOnBothTeams,
+  outcomeLabel,
+  type OutcomeFraming,
+} from "#src/betting/team.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 
 type OpenBettingPool = {
@@ -18,6 +22,8 @@ export type OpenGameAnchor = {
   matchId: string;
   subjectPuuid: LeaguePuuid;
   subjectTeamId: RiotTeamId;
+  /** Tracked players on both teams, so `/bb bet outcome:win` is ambiguous. */
+  mixedTeams: boolean;
 };
 
 export function parseBettingRoster(raw: string): BucksPoolParticipant[] {
@@ -46,7 +52,8 @@ export function resolveOpenGameByAlias(
   const matches: OpenGameAnchor[] = [];
 
   for (const pool of pools) {
-    const subject = parseBettingRoster(pool.roster).find(
+    const roster = parseBettingRoster(pool.roster);
+    const subject = roster.find(
       (participant) =>
         participant.puuid !== null &&
         participant.trackedAlias?.toLowerCase() === normalizedAlias,
@@ -56,6 +63,7 @@ export function resolveOpenGameByAlias(
         matchId: pool.matchId,
         subjectPuuid: subject.puuid,
         subjectTeamId: subject.teamId,
+        mixedTeams: hasTrackedPlayersOnBothTeams(roster),
       });
     }
   }
@@ -68,24 +76,47 @@ export function resolveOpenGameByAlias(
   return matches[0];
 }
 
+/**
+ * How to name this pool's sides in `/bb open`.
+ *
+ * The aggregate already splits tracked players by team, so a mixed lobby is
+ * visible without reparsing the roster.
+ */
+function framingForAggregate(pool: OpenMarketAggregate): OutcomeFraming {
+  const blueIsTracked = pool.blue.trackedPlayers.length > 0;
+  const redIsTracked = pool.red.trackedPlayers.length > 0;
+  return {
+    anchorTeamId: blueIsTracked ? BLUE_TEAM_ID : RED_TEAM_ID,
+    mixedTeams: blueIsTracked && redIsTracked,
+  };
+}
+
 export function buildOpenMarketSections(
   pools: readonly OpenMarketAggregate[],
 ): string[] {
   return pools.map((pool) => {
     const closesAtUnix = Math.floor(pool.closesAt.getTime() / 1000);
-    const blueSelectors = formatGameSelectors(pool.blue.trackedPlayers);
-    const redSelectors = formatGameSelectors(pool.red.trackedPlayers);
-    const bluePlayers =
-      blueSelectors.length > 0
-        ? blueSelectors.join(", ")
-        : "No tracked players";
-    const redPlayers =
-      redSelectors.length > 0 ? redSelectors.join(", ") : "No tracked players";
+    const framing = framingForAggregate(pool);
+    const players = [...pool.blue.trackedPlayers, ...pool.red.trackedPlayers];
+    const title = players.length > 0 ? players.join(", ") : "Untracked lobby";
+    const sideEntries: readonly {
+      teamId: RiotTeamId;
+      side: OpenMarketAggregate["blue"];
+    }[] = [
+      { teamId: BLUE_TEAM_ID, side: pool.blue },
+      { teamId: RED_TEAM_ID, side: pool.red },
+    ];
+    const sides = sideEntries
+      .map(
+        (entry) =>
+          `${outcomeLabel(entry.teamId, framing)} **${entry.side.totalStake.toString()} BB** (${entry.side.betCount.toString()})`,
+      )
+      .join(" · ");
+    const selector =
+      players[0] === undefined ? "" : ` — \`/bb bet game:${players[0]}\``;
     return [
-      `## ${bluePlayers} vs ${redPlayers}`,
-      `Closes <t:${closesAtUnix.toString()}:R>`,
-      `🔵 **${teamName(BLUE_TEAM_ID)} offers:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} offer(s) — ${bluePlayers}`,
-      `🔴 **${teamName(RED_TEAM_ID)} offers:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} offer(s) — ${redPlayers}`,
+      `**${title}** · closes <t:${closesAtUnix.toString()}:R>`,
+      `${sides}${selector}`,
     ].join("\n");
   });
 }

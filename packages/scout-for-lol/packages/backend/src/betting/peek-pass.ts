@@ -5,9 +5,14 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 
 export const PEEK_PASS_DURATION_MS = 24 * 60 * 60 * 1000;
+
+/** "24-hour", derived — the duration used to be hand-typed on five surfaces. */
+export const PEEK_PASS_DURATION_LABEL = `${Math.floor(
+  PEEK_PASS_DURATION_MS / 3_600_000,
+).toString()}-hour`;
 export const PEEK_PASS_QUOTE_TTL_MS = 10 * 60 * 1000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const MINIMUM_PRICE = 5;
+export const MINIMUM_PRICE = 5;
 
 type LedgerLotInput = {
   id: number;

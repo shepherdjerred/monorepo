@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/bun";
 import type { MessageEditOptions } from "discord.js";
 import {
   BucksMessageRefsSchema,
+  BucksPoolRosterSchema,
   BucksPoolStateSchema,
   BucksPredictionSchema,
   DiscordChannelIdSchema,
@@ -11,10 +12,12 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import {
-  appendBucksLine,
+  withBucksDigest,
+  digestBudgetFor,
   bucksPrematchSummary,
   type BucksPrematchPosition,
 } from "#src/betting/prematch-line.ts";
+import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { createLogger } from "#src/logger.ts";
@@ -64,6 +67,8 @@ async function refreshOnce(
       prematchContentBase: true,
       poolState: true,
       predictionJson: true,
+      roster: true,
+      closesAt: true,
       bets: {
         select: {
           id: true,
@@ -123,13 +128,19 @@ async function refreshOnce(
       matchedStake: bet.matchedStake,
     };
   });
-  const content = appendBucksLine(
+  const anchor = bettingAnchor(
+    BucksPoolRosterSchema.parse(JSON.parse(pool.roster)).participants,
+  );
+  const content = withBucksDigest(
     pool.prematchContentBase,
     bucksPrematchSummary({
       prediction,
       poolState,
       positions,
       houseMatches,
+      framing: anchor === undefined ? undefined : subjectFraming(anchor),
+      closesAt: pool.closesAt,
+      maxLength: digestBudgetFor(pool.prematchContentBase),
     }),
   );
 

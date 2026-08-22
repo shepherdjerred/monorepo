@@ -3,8 +3,8 @@ import type {
   BucksPrediction,
   RiotTeamId,
 } from "@scout-for-lol/data";
-import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
-import { teamName } from "#src/betting/team.ts";
+import { BETTING_TEAM_IDS, outcomeLabel } from "#src/betting/team.ts";
+import type { OutcomeFraming } from "#src/betting/team.ts";
 
 /**
  * The Bryan Bucks lines appended to a prematch message.
@@ -12,11 +12,18 @@ import { teamName } from "#src/betting/team.ts";
  * Kept separate from the notification module so the text can be unit-tested
  * without a Discord client, and so the length rule below lives next to the
  * strings it governs.
+ *
+ * These lines state numbers, never rules. Every rule lives in `/bb rules`; a
+ * market that re-explained the fee schedule on every game was 17% of all the
+ * Bryan Bucks text a player ever saw.
  */
 
 /** Discord's hard limit on message content. */
 const MAX_CONTENT_LENGTH = 2000;
 const MAX_VISIBLE_POSITIONS = 15;
+
+/** Where the rules actually live, so no other surface has to restate them. */
+export const BUCKS_RULES_HINT = "`/bb rules`";
 
 export type BucksPrematchPosition = {
   discordId: string;
@@ -30,59 +37,6 @@ export type BucksPrematchHouseMatch = {
   teamId: RiotTeamId;
   matchedStake: number;
 };
-
-function positionLines(
-  positions: readonly BucksPrematchPosition[],
-  isOpen: boolean,
-): string[] {
-  const lines: string[] = [];
-  for (const teamId of [100, 200] satisfies readonly RiotTeamId[]) {
-    const teamPositions = positions.filter(
-      (position) => position.teamId === teamId,
-    );
-    if (teamPositions.length === 0) {
-      continue;
-    }
-    lines.push(`**${teamName(teamId)}**`);
-    for (const position of teamPositions) {
-      if (isOpen) {
-        lines.push(
-          `• <@${position.discordId}> — offered **${position.offeredStake.toString()} BB**`,
-        );
-      } else {
-        const allocation = finalAllocation(position);
-        lines.push(
-          `• <@${position.discordId}> — offered **${position.offeredStake.toString()} BB** · matched **${allocation.matchedStake.toString()} BB** · refunded **${allocation.unmatchedStake.toString()} BB**`,
-        );
-      }
-    }
-  }
-  return lines;
-}
-
-function boundedPositionDigest(input: {
-  lines: readonly string[];
-  positions: readonly BucksPrematchPosition[];
-  isOpen: boolean;
-}): string {
-  let visibleCount = Math.min(input.positions.length, MAX_VISIBLE_POSITIONS);
-  while (visibleCount >= 0) {
-    const candidateLines = [
-      ...input.lines,
-      ...positionLines(input.positions.slice(0, visibleCount), input.isOpen),
-    ];
-    const hiddenCount = input.positions.length - visibleCount;
-    if (hiddenCount > 0) {
-      candidateLines.push(`…and ${hiddenCount.toString()} more position(s).`);
-    }
-    const candidate = candidateLines.join("\n");
-    if (candidate.length <= MAX_CONTENT_LENGTH) {
-      return candidate;
-    }
-    visibleCount -= 1;
-  }
-  throw new Error("Bryan Bucks prematch footer exceeds Discord's limit");
-}
 
 function finalAllocation(position: BucksPrematchPosition): {
   matchedStake: number;
@@ -104,15 +58,118 @@ function finalAllocation(position: BucksPrematchPosition): {
 }
 
 /**
- * Build the optional betting line.
+ * While the market is open, names are grouped one line per side.
  *
- * A prediction close to even odds is deliberately omitted: the buttons are
- * useful, but a nearly arbitrary call is not useful to read.
+ * One line per bettor was the single largest contributor to the old footer's
+ * length, and the offered amount is the only number that matters before close.
  */
-export function bucksPrematchLine(_input?: {
-  prediction: BucksPrediction | undefined;
+function openPositionLines(
+  positions: readonly BucksPrematchPosition[],
+  framing: OutcomeFraming | undefined,
+): string[] {
+  const lines: string[] = [];
+  for (const teamId of BETTING_TEAM_IDS) {
+    const side = positions.filter((position) => position.teamId === teamId);
+    if (side.length === 0) {
+      continue;
+    }
+    const names = side
+      .map(
+        (position) =>
+          `<@${position.discordId}> ${position.offeredStake.toString()}`,
+      )
+      .join(" · ");
+    lines.push(`**${outcomeLabel(teamId, framing)}** ${names}`);
+  }
+  return lines;
+}
+
+/**
+ * At close the message becomes the receipt, so each bettor gets their own row
+ * with the offered/matched/refunded arithmetic preserved in full.
+ */
+function closedPositionLines(
+  positions: readonly BucksPrematchPosition[],
+  framing: OutcomeFraming | undefined,
+): string[] {
+  return positions.map((position) => {
+    const allocation = finalAllocation(position);
+    const refunded =
+      allocation.unmatchedStake > 0
+        ? `, refunded **${allocation.unmatchedStake.toString()}**`
+        : "";
+    return `• <@${position.discordId}> ${outcomeLabel(position.teamId, framing)} ${position.offeredStake.toString()} → matched **${allocation.matchedStake.toString()}**${refunded}`;
+  });
+}
+
+function positionLines(
+  positions: readonly BucksPrematchPosition[],
+  isOpen: boolean,
+  framing: OutcomeFraming | undefined,
+): string[] {
+  return isOpen
+    ? openPositionLines(positions, framing)
+    : closedPositionLines(positions, framing);
+}
+
+function boundedPositionDigest(input: {
+  lines: readonly string[];
+  positions: readonly BucksPrematchPosition[];
+  isOpen: boolean;
+  framing: OutcomeFraming | undefined;
+  maxLength: number;
 }): string {
-  return HOUSE_CUT_TERMS;
+  let visibleCount = Math.min(input.positions.length, MAX_VISIBLE_POSITIONS);
+  while (visibleCount >= 0) {
+    const candidateLines = [
+      ...input.lines,
+      ...positionLines(
+        input.positions.slice(0, visibleCount),
+        input.isOpen,
+        input.framing,
+      ),
+    ];
+    const hiddenCount = input.positions.length - visibleCount;
+    if (hiddenCount > 0) {
+      candidateLines.push(`…and ${hiddenCount.toString()} more.`);
+    }
+    const candidate = candidateLines.join("\n");
+    if (candidate.length <= input.maxLength) {
+      return candidate;
+    }
+    visibleCount -= 1;
+  }
+  throw new Error("Bryan Bucks prematch digest exceeds its length budget");
+}
+
+function totalsFor(input: {
+  positions: readonly BucksPrematchPosition[];
+  houseMatches: readonly BucksPrematchHouseMatch[];
+  teamId: RiotTeamId;
+  isOpen: boolean;
+}): number {
+  const own = input.positions
+    .filter((position) => position.teamId === input.teamId)
+    .reduce(
+      (total, position) =>
+        total +
+        (input.isOpen
+          ? position.offeredStake
+          : finalAllocation(position).matchedStake),
+      0,
+    );
+  const house = input.houseMatches
+    .filter((match) => match.teamId === input.teamId)
+    .reduce((total, match) => total + match.matchedStake, 0);
+  return own + house;
+}
+
+/** `closes <t:…:R>`, omitted when the caller has no authoritative close time. */
+function closesClause(closesAt: Date | undefined): string {
+  if (closesAt === undefined) {
+    return "";
+  }
+  return ` · closes <t:${Math.floor(closesAt.getTime() / 1000).toString()}:R>`;
 }
 
 /**
@@ -120,96 +177,110 @@ export function bucksPrematchLine(_input?: {
  *
  * Positions are already sorted by the database query that reads them. Keeping
  * that order here means repeated refreshes do not make rows jump around.
+ *
+ * `prediction` is accepted and deliberately unused: pregame estimates are never
+ * public, and keeping the parameter documents that this is a decision rather
+ * than an omission.
  */
 export function bucksPrematchSummary(input: {
   prediction: BucksPrediction | undefined;
   poolState: BucksPoolState;
   positions: readonly BucksPrematchPosition[];
-  houseMatches?: readonly BucksPrematchHouseMatch[];
+  houseMatches?: readonly BucksPrematchHouseMatch[] | undefined;
+  framing?: OutcomeFraming | undefined;
+  closesAt?: Date | undefined;
+  /** Characters available after the non-betting content. */
+  maxLength?: number | undefined;
 }): string {
-  const lines = [bucksPrematchLine({ prediction: input.prediction })];
   const houseMatches = input.houseMatches ?? [];
   const isOpen = input.poolState === "open";
+  const maxLength = input.maxLength ?? MAX_CONTENT_LENGTH;
 
   if (isOpen && houseMatches.length > 0) {
     throw new Error("An open Bryan Bucks pool cannot contain a house match");
   }
 
-  lines.push("");
   if (input.positions.length === 0) {
-    lines.push(
-      isOpen
-        ? "🎲 **Live offers** — No offers yet."
-        : "🎲 **Final matched stakes** — No active offers at close.",
-    );
-    return lines.join("\n");
+    return isOpen
+      ? `🎲 **Bets open**${closesClause(input.closesAt)} — no offers yet · ${BUCKS_RULES_HINT}`
+      : "🎲 **Bets closed** — no offers matched.";
   }
 
-  if (isOpen) {
-    const blueOffered = input.positions
-      .filter((position) => position.teamId === 100)
-      .reduce((total, position) => total + position.offeredStake, 0);
-    const redOffered = input.positions
-      .filter((position) => position.teamId === 200)
-      .reduce((total, position) => total + position.offeredStake, 0);
-    lines.push(
-      `🎲 **Live offers** — Blue **${blueOffered.toString()} BB offered** · Red **${redOffered.toString()} BB offered**`,
-    );
-  } else {
-    const matchedForTeam = (teamId: RiotTeamId): number =>
-      input.positions
-        .filter((position) => position.teamId === teamId)
-        .reduce(
-          (total, position) => total + finalAllocation(position).matchedStake,
-          0,
-        ) +
-      houseMatches
-        .filter((position) => position.teamId === teamId)
-        .reduce((total, position) => total + position.matchedStake, 0);
-    const blueMatched = matchedForTeam(100);
-    const redMatched = matchedForTeam(200);
-    lines.push(
-      `🎲 **Final matched stakes** — Blue **${blueMatched.toString()} BB** · Red **${redMatched.toString()} BB**`,
-    );
-    for (const houseMatch of houseMatches) {
-      lines.push(
-        `🏦 House matched **${houseMatch.matchedStake.toString()} BB** on **${teamName(houseMatch.teamId)}**.`,
-      );
-    }
+  const [first, second] = BETTING_TEAM_IDS;
+  if (first === undefined || second === undefined) {
+    throw new Error("Bryan Bucks has no betting sides configured");
   }
+  const totals = [first, second].map((teamId) => ({
+    teamId,
+    label: outcomeLabel(teamId, input.framing),
+    total: totalsFor({
+      positions: input.positions,
+      houseMatches,
+      teamId,
+      isOpen,
+    }),
+  }));
+  const totalsText = totals
+    .map((side) => `${side.label} **${side.total.toString()} BB**`)
+    .join(" · ");
+
+  const header = isOpen
+    ? `🎲 **Bets open**${closesClause(input.closesAt)} — ${totalsText}`
+    : `🎲 **Bets closed** — ${totalsText}${houseClause(houseMatches, input.framing)}`;
 
   return boundedPositionDigest({
-    lines,
+    lines: [header],
     positions: input.positions,
     isOpen,
+    framing: input.framing,
+    maxLength,
   });
 }
 
+/** `(house **5** on LOSE)` — the aggregate fill, without naming the account. */
+function houseClause(
+  houseMatches: readonly BucksPrematchHouseMatch[],
+  framing: OutcomeFraming | undefined,
+): string {
+  if (houseMatches.length === 0) {
+    return "";
+  }
+  const parts = houseMatches.map(
+    (match) =>
+      `house **${match.matchedStake.toString()}** on ${outcomeLabel(match.teamId, framing)}`,
+  );
+  return ` (${parts.join(", ")})`;
+}
+
+/** Characters a digest may use once the non-betting content is accounted for. */
+export function digestBudgetFor(base: string): number {
+  if (base.length === 0) {
+    return MAX_CONTENT_LENGTH;
+  }
+  return MAX_CONTENT_LENGTH - base.length - 2;
+}
+
 /**
- * Append the betting footer to a message, truncating the base if needed so an
- * open market never loses its house-cut disclosure.
+ * Join the non-betting content and the betting digest.
  *
- * The footer is internal, bounded copy. If it alone cannot fit, that is a
- * broken caller contract and must fail loudly rather than sending partial
- * terms.
+ * The digest is bounded by `digestBudgetFor` before it reaches here, so the
+ * base is never truncated. That inverts the previous contract, which sacrificed
+ * the player names to protect a house-cut disclosure that no longer exists — a
+ * digest that cannot fit is now a broken caller, not a reason to eat the report.
  */
-export function appendBucksLine(base: string, footer: string): string {
-  if (footer.length === 0) {
+export function withBucksDigest(base: string, digest: string): string {
+  if (digest.length === 0) {
     return base;
   }
   if (base.length === 0) {
-    if (footer.length > MAX_CONTENT_LENGTH) {
-      throw new Error("Bryan Bucks prematch footer exceeds Discord's limit");
+    if (digest.length > MAX_CONTENT_LENGTH) {
+      throw new Error("Bryan Bucks prematch digest exceeds Discord's limit");
     }
-    return footer;
+    return digest;
   }
-  const combined = `${base}\n\n${footer}`;
-  if (combined.length <= MAX_CONTENT_LENGTH) {
-    return combined;
+  const combined = `${base}\n\n${digest}`;
+  if (combined.length > MAX_CONTENT_LENGTH) {
+    throw new Error("Bryan Bucks prematch content exceeds Discord's limit");
   }
-  const baseLength = MAX_CONTENT_LENGTH - footer.length - 2;
-  if (baseLength < 0) {
-    throw new Error("Bryan Bucks prematch footer exceeds Discord's limit");
-  }
-  return `${base.slice(0, baseLength)}\n\n${footer}`;
+  return combined;
 }

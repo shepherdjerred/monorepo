@@ -1,49 +1,98 @@
 import { EmbedBuilder } from "discord.js";
 import {
   BETTING_WINDOW_MS,
+  HOUSE_MATCH_LIMIT,
   PARLAY_BETTING_WINDOW_MS,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
+import { EARNED_REWARDS } from "#src/betting/earnings.ts";
+import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
+import { PEEK_DELAY_MS } from "#src/betting/pool-open.ts";
+import {
+  MINIMUM_PRICE,
+  PEEK_PASS_DURATION_MS,
+} from "#src/betting/peek-pass.ts";
 
 const BUCKS_COLOR = 0x2e_cc_71;
 
+/**
+ * The single place Bryan Bucks rules are explained.
+ *
+ * No other surface states a fee, a window, a cap, or a rounding mode. Market
+ * messages and confirmations show numbers and point here. Two reasons:
+ *
+ * 1. The old house-terms blurb was 344 characters rendered on seven surfaces —
+ *    17% of every character a player ever saw — and four of those surfaces
+ *    were not a betting decision.
+ * 2. Restating a rule means maintaining it twice, and it drifted: for a day
+ *    this embed said the winner fee was 20% of *gross payout* rounded to the
+ *    nearest BB while the market copy said 20% of *matched profit* rounded
+ *    down. Two different amounts, both live.
+ *
+ * Every number below is interpolated from the constant that implements it.
+ * Do not hand-type one.
+ */
+function minutes(milliseconds: number): string {
+  return Math.floor(milliseconds / 60_000).toString();
+}
+
+function hours(milliseconds: number): string {
+  return Math.floor(milliseconds / 3_600_000).toString();
+}
+
 export function buildBbRulesEmbed(): EmbedBuilder {
+  const outcomeWindow = minutes(BETTING_WINDOW_MS);
+  const parlayWindow = minutes(PARLAY_BETTING_WINDOW_MS);
+  const cut = HOUSE_CUT_PERCENT.toString();
   return new EmbedBuilder()
     .setTitle("📜 Bryan Bucks rules")
     .setColor(BUCKS_COLOR)
     .setDescription(
-      "Bryan Bucks are friendly points for tracked League players. They have no cash value.",
+      "Bryan Bucks are friendly points for tracked League players. They are a joke — there is no cash value and nothing can actually be redeemed. `/bb prizes` is part of the joke.",
     )
     .addFields(
       {
-        name: "Eligibility & earnings",
+        name: "Getting Bucks",
         value:
-          `Your Discord account must be linked to a tracked player. A new wallet starts with **${SEED_GRANT.toString()} BB**. ` +
-          "Eligible ranked games award **+1 BB** for playing, **+1 BB** for winning, and **+1 BB** for MVP.",
+          `Link your Discord account to a tracked player. A new wallet starts with **${SEED_GRANT.toString()} BB**. ` +
+          `Every eligible game pays **+${EARNED_REWARDS.played.amount.toString()} BB** for playing, ` +
+          `**+${EARNED_REWARDS.win.amount.toString()} BB** for winning, and ` +
+          `**+${EARNED_REWARDS.mvp.amount.toString()} BB** for MVP. ` +
+          `Ranked 5s adds **+${EARNED_REWARDS["ranked 5s bonus"].amount.toString()} BB** and Clash adds ` +
+          `**+${EARNED_REWARDS["clash bonus"].amount.toString()} BB**. ` +
+          "Solo/duo, flex, normal 5v5, ranked 5s, and Clash all count.",
       },
       {
-        name: "Placing a bet",
+        name: `Outcome bets — ${outcomeWindow} minutes`,
         value:
-          `Offer any positive whole-BB amount your wallet can cover on the Blue or Red Team in a tracked player's game; that market stays open for ${Math.floor(BETTING_WINDOW_MS / 60_000).toString()} minutes. Only the final matched amount is at risk. ` +
-          `A separate YES/NO parlay may open for ${Math.floor(PARLAY_BETTING_WINDOW_MS / 60_000).toString()} minutes, with its full house liability reserved when you bet. ` +
-          "You can add to a position before its window closes. Cancelling an outcome offer costs 20% of the submitted amount, rounded to the nearest BB; cancelling a parlay returns its full stake and releases the house reserve.",
+          "Bet **WIN** or **LOSE** on the tracked player. When both teams have a tracked player, pick **Blue** or **Red** instead. " +
+          "Your amount is a maximum offer: human offers match first at even money, oversubscribed offers match proportionally, " +
+          `and the house then fills up to **${HOUSE_MATCH_LIMIT.toString()} BB** per game if its balance allows. ` +
+          "Unmatched BB are refunded at close, free. " +
+          `Winners get twice their matched stake, less **${cut}%** of matched profit, rounded down. ` +
+          `Cancelling before close costs **${cut}%** of the offer, rounded to the nearest BB.`,
       },
       {
-        name: "Outcome matching & settlement",
+        name: `Parlays — ${parlayWindow} minutes`,
         value:
-          "Human offers match first at even money. The house then fills up to 5 BB of the remaining gap for the whole game, subject to its balance. Oversubscribed offers are matched proportionally, and all unmatched BB are refunded at close. " +
-          "A winner receives twice their matched stake before a fee of 20% of matched profit, rounded down.",
+          "A separate YES/NO market on 2-6 legs about the live game. **Every leg must hit for YES.** " +
+          "Odds are fixed and quoted when you bet, and the house reserves the full payout at that price. " +
+          "It is a live in-play market published after the game starts, so early events may already be visible. " +
+          "Cancelling a parlay is free and returns the whole stake.",
+      },
+      {
+        name: "Voids",
+        value:
+          "Remakes, unsupported modes, and games that never resolve return every matched stake with no fee. " +
+          "Unmatched BB are always refunded free. Parlay voids also release the reserved house payout.",
       },
       {
         name: "Peek passes",
         value:
-          "Use `/bb pass` to buy unlimited private peeks for 24 hours. The price depends on your current balance and how long you have held it, with a 5 BB minimum. " +
-          "Use `/bb peek game:<tracked player>` after the game has been live for two minutes. Estimates are experimental, frozen before the game, and disappear when the market resolves.",
-      },
-      {
-        name: "Settlement",
-        value:
-          "Outcome BB that do not match are refunded automatically with no fee. Matched outcome stakes are returned with no fee when a game is voided, remade, unsupported, or cannot be settled. Parlay voids return the stake and release the reserved house liability.",
+          `\`/bb pass\` buys **${hours(PEEK_PASS_DURATION_MS)} hours** of private pregame estimates. ` +
+          `The price scales with your balance and how long you have held it, minimum **${MINIMUM_PRICE.toString()} BB**. ` +
+          `Then \`/bb peek game:<tracked player>\` once the game has been live for **${minutes(PEEK_DELAY_MS)} minutes**. ` +
+          "Estimates are experimental, frozen before the game, and disappear when the market resolves.",
       },
     );
 }

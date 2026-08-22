@@ -97,7 +97,7 @@ type EarnedReward = {
   amount: number;
 };
 
-const EARNED_REWARDS = {
+export const EARNED_REWARDS = {
   played: { kind: "earn_game", amount: 1 },
   "ranked 5s bonus": { kind: "earn_ranked_5s_bonus", amount: 1 },
   "clash bonus": { kind: "earn_clash_bonus", amount: 10 },
