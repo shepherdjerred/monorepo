@@ -190,6 +190,9 @@
       ],
       "project": ["src/**/*.{ts,tsx}", "*.ts", "public/**/*.js"]
     },
+    "packages/scout-for-lol/packages/design-system": {
+      "entry": ["src/testing/setup.ts"]
+    },
     "packages/scout-for-lol/packages/evals": {
       "entry": [
         "src/client/main.tsx",

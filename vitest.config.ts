@@ -23,7 +23,9 @@ const setupFiles =
             ? [path.join(workspaceRoot, "test-setup.ts")]
             : workspace === "packages/scout-for-lol/packages/design-system"
               ? [path.join(workspaceRoot, "src/testing/setup.ts")]
-              : [];
+              : workspace === "packages/scout-for-lol/packages/activity"
+                ? [path.join(workspaceRoot, "src/testing/setup.ts")]
+                : [];
 
 const coverageThresholds =
   process.env["CI_TEST_COVERAGE"] === "1"
@@ -155,7 +157,14 @@ export default {
               "config",
             ),
           }
-        : {},
+        : workspace === "packages/scout-for-lol/packages/activity"
+          ? [
+              {
+                find: /^@\//u,
+                replacement: `${path.join(workspaceRoot, "src")}${path.sep}`,
+              },
+            ]
+          : {},
   },
   plugins: [
     {
@@ -188,7 +197,8 @@ export default {
   ],
   test: {
     env: { TZ: "UTC" },
-    ...(workspace === "packages/scout-for-lol/packages/design-system"
+    ...(workspace === "packages/scout-for-lol/packages/design-system" ||
+    workspace === "packages/scout-for-lol/packages/activity"
       ? { environment: "jsdom" }
       : {}),
     pool: "forks",

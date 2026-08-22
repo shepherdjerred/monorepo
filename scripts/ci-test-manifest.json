@@ -378,15 +378,8 @@
       "directory": "packages/scout-for-lol/packages/activity",
       "steps": [
         {
-          "runner": "command",
-          "name": "bun-test",
-          "command": [
-            "bun",
-            "test",
-            "src",
-            "--preload",
-            "./src/testing/setup.ts"
-          ]
+          "runner": "vitest",
+          "args": ["src"]
         }
       ]
     },

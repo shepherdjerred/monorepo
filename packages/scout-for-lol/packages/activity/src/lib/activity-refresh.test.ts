@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { customActivityRefreshDelay } from "@/lib/activity-refresh";
 
 describe("custom Activity auth refresh scheduling", () => {
