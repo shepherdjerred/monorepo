@@ -181,6 +181,7 @@ function createUser(discordId: DiscordAccountId): User {
     discordRefreshToken: "refresh",
     tokenExpiresAt: null,
     analyticsUserId: `analytics-${discordId}`,
+    lastSeenAt: null,
     createdAt: new Date(0),
     updatedAt: new Date(0),
   };
