@@ -66,7 +66,10 @@ switch (variant) {
     variantClasses = "scout-button--outline";
     break;
   case "text":
-    variantClasses = "scout-button--link";
+    variantClasses =
+      color === "white"
+        ? "scout-button--link scout-button--on-primary"
+        : "scout-button--link";
     break;
 }
 

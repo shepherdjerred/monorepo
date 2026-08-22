@@ -123,7 +123,7 @@ export function validatePipelineResourceContracts(
 
   for (const step of ["playwright-e2e-pr", "playwright-e2e-main"]) {
     const command = containerBlock(step, stepBlocks.get(step), "container-0");
-    if (!hasTrimmedLine(command, 'requests: { cpu: "1", memory: "4Gi" }')) {
+    if (!hasTrimmedLine(command, 'requests: { cpu: "1", memory: "5Gi" }')) {
       fail(`${step} is missing audited Playwright command reservation`);
     }
   }

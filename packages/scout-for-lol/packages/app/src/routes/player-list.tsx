@@ -88,7 +88,7 @@ export function PlayerList() {
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Players</h2>
           <Collapsible>
-            <CollapsibleTrigger className="flex items-center gap-1 text-sm text-scout-subtle hover:text-scout-ink">
+            <CollapsibleTrigger className="flex min-h-6 items-center gap-1 text-sm text-scout-subtle hover:text-scout-ink">
               What are players, accounts, and subscriptions?
               <ChevronDown className="h-3 w-3" aria-hidden="true" />
             </CollapsibleTrigger>
@@ -117,6 +117,7 @@ export function PlayerList() {
           {perms.can("subscriptions", "create") && (
             <Button
               type="button"
+              aria-haspopup="dialog"
               onClick={() => {
                 setAddOpen(true);
               }}

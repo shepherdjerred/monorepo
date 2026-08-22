@@ -255,7 +255,7 @@ for (const tracker of staticTrackers) {
 const scoutBootstrapPath =
   "packages/scout-for-lol/packages/frontend/public/posthog-bootstrap.js";
 const scoutBootstrap = await Bun.file(`${root}/${scoutBootstrapPath}`).text();
-for (const requiredSetting of [
+const requiredScoutBootstrapSettings = [
   "e.__SV",
   "e._i.push",
   "autocapture: true",
@@ -266,18 +266,40 @@ for (const requiredSetting of [
   "capture_performance: { web_vitals: true, network_timing: true }",
   "respect_dnt: true",
   'person_profiles: "always"',
-  "session_recording: { maskAllInputs: true }",
-]) {
-  if (!scoutBootstrap.includes(requiredSetting)) {
-    throw new Error(
-      `${scoutBootstrapPath} must configure Scout PostHog setting ${requiredSetting}`,
-    );
+  'session_recording: { maskAllInputs: true, maskTextSelector: "*" }',
+  "mask_all_text: true",
+  "mask_all_element_attributes: true",
+] as const;
+
+function assertScoutBootstrap(path: string, source: string): void {
+  for (const requiredSetting of requiredScoutBootstrapSettings) {
+    if (!source.includes(requiredSetting)) {
+      throw new Error(
+        `${path} must configure Scout PostHog setting ${requiredSetting}`,
+      );
+    }
   }
 }
+
+assertScoutBootstrap(scoutBootstrapPath, scoutBootstrap);
+
+const scoutDocsBootstrapPath =
+  "packages/scout-for-lol/packages/docs-site/public/posthog-bootstrap.js";
+const scoutDocsBootstrap = await Bun.file(
+  `${root}/${scoutDocsBootstrapPath}`,
+).text();
+assertScoutBootstrap(scoutDocsBootstrapPath, scoutDocsBootstrap);
+
 const forbiddenScoutSetting = forbiddenSettingIn(scoutBootstrap);
 if (forbiddenScoutSetting !== undefined) {
   throw new Error(
     `${scoutBootstrapPath} must not set ${forbiddenScoutSetting}`,
+  );
+}
+const forbiddenScoutDocsSetting = forbiddenSettingIn(scoutDocsBootstrap);
+if (forbiddenScoutDocsSetting !== undefined) {
+  throw new Error(
+    `${scoutDocsBootstrapPath} must not set ${forbiddenScoutDocsSetting}`,
   );
 }
 
@@ -285,7 +307,7 @@ const scoutDocsConfigPath =
   "packages/scout-for-lol/packages/docs-site/astro.config.ts";
 const scoutDocsConfig = await Bun.file(`${root}/${scoutDocsConfigPath}`).text();
 for (const requiredSetting of [
-  'src: "/posthog-bootstrap.js"',
+  'src: "/docs/posthog-bootstrap.js"',
   '"data-posthog-project-token"',
   '"data-posthog-api-host"',
   '"data-posthog-asset-host"',

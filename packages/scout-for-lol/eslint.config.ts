@@ -199,6 +199,34 @@ const config = [
     ],
     rules: { "unicorn/prefer-add-event-listener": "off" },
   },
+  // Browser evaluation callbacks intentionally reference the page's DOM
+  // globals and cannot be moved outside page.evaluate().
+  {
+    files: [
+      "packages/design-audit/src/page-checks.ts",
+      "packages/design-audit/tests/**/*.ts",
+    ],
+    rules: {
+      "unicorn/isolated-functions": "off",
+      "unicorn/consistent-function-scoping": "off",
+    },
+  },
+  {
+    files: [
+      "packages/design-audit/src/auth.ts",
+      "packages/design-audit/src/routes.ts",
+    ],
+    rules: {
+      // Playwright loads these modules in Node, while the package's Bun
+      // scripts use Bun.env. Keep the cross-runtime environment boundary
+      // explicit rather than hiding it behind a global shim.
+      "custom-rules/prefer-bun-apis": "off",
+    },
+  },
+  {
+    files: ["packages/design-audit/src/static-token-check.ts"],
+    rules: { "no-console": "off" },
+  },
   // Astro files: enable parser + custom-rules/no-shadcn-theme-tokens (above),
   // but defer the broader recommended() rules until they can be addressed
   // separately. The existing .astro pages predate Astro linting in this repo

@@ -6,7 +6,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { consumeInstallState } from "#src/lib/discord-invite.ts";
 
@@ -40,9 +39,9 @@ export function InstallLanding() {
     <div className="mx-auto max-w-md space-y-4 px-4 py-12">
       <Card>
         <CardHeader>
-          <CardTitle>
+          <h1 className="scout-card__title">
             {stateVerified ? "Scout added 🎉" : "Finish setup"}
-          </CardTitle>
+          </h1>
           <CardDescription>
             {stateVerified
               ? guildId === null

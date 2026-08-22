@@ -269,7 +269,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
         </p>
       </div>
 
-      <div className="text-xs text-scout-warning bg-scout-warning border border-scout-warning rounded p-3">
+      <div className="text-xs text-scout-warning-ink bg-scout-warning border border-scout-warning rounded p-3">
         ⚠️ API keys are stored in browser IndexedDB.
       </div>
     </div>

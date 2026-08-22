@@ -250,6 +250,25 @@ export function devGuildOverride(input: {
   }));
 }
 
+/**
+ * Whether a guild is treated as installed for the local dev-login fixture.
+ *
+ * The real Discord client does not log in during design-audit boots, so its
+ * guild cache cannot contain the ids returned by `DEV_USER_GUILDS`. Keep this
+ * exception alongside the membership override and behind the same gates; a
+ * deployed client must continue to use its live cache as the installation
+ * signal.
+ */
+export function isDevGuildOverrideGuild(guildId: string): boolean {
+  return (
+    devGuildOverride({
+      environment: configuration.environment,
+      enableDevLogin: configuration.enableDevLogin,
+      guildIds: configuration.devUserGuilds,
+    })?.some((guild) => guild.id === guildId) ?? false
+  );
+}
+
 let loggedDevGuildOverride = false;
 
 /**

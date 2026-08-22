@@ -182,7 +182,7 @@ export function PersonalitySelector({
                         onClick={() => {
                           void onDelete(personality.id);
                         }}
-                        className="px-2 py-1 bg-scout-danger text-scout-danger text-xs rounded hover:bg-scout-danger border border-scout-danger"
+                        className="px-2 py-1 bg-scout-danger text-scout-danger-ink text-xs rounded hover:bg-scout-danger border border-scout-danger"
                         title="Delete this personality"
                       >
                         Del

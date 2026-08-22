@@ -40,10 +40,13 @@ async function acquireGenerateLock(): Promise<() => Promise<void>> {
 
 const releaseGenerateLock = await acquireGenerateLock();
 try {
-  const generate = Bun.spawn(["bunx", "--trust", "prisma", "generate"], {
-    stdout: "inherit",
-    stderr: "inherit",
-  });
+  const generate = Bun.spawn(
+    ["bun", "x", "--no-install", "--trust", "prisma", "generate"],
+    {
+      stdout: "inherit",
+      stderr: "inherit",
+    },
+  );
   const exitCode = await generate.exited;
   if (exitCode !== 0) {
     throw new Error(`prisma generate exited with code ${String(exitCode)}`);

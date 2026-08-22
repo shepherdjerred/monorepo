@@ -57,364 +57,366 @@ const initialShowcasePreview = showcasePreviews.at(0);
   description="Get notified when your friends start League of Legends matches and get beautiful post-match reports delivered right to your Discord server."
 >
   <div class="bg-scout-surface">
-    <WhatsNewBanner />
-    <Navbar activePage="home" />
-
-    <Hero
-      title="Scout for League of Legends"
-      subtitle="Get notified when your friends start League matches and receive beautiful post-match reports with detailed stats, all delivered right to your Discord server."
-      showGradient={true}
-      size="home"
-      ctaButtons={[
-        {
-          text: "Get Started",
-          href: APP_DASHBOARD_URL,
-          variant: "primary",
-          trackingEvent: GET_STARTED_CLICK_EVENT,
-          trackingLocation: "home_hero",
-        },
-        { text: "View Documentation", href: DOCS_URL, variant: "secondary" },
-      ]}
-    />
-
-    <!-- Features Section -->
-    <div id="features" class="py-24 sm:py-32">
-      <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <SectionHeader
-          badge="Everything you need"
-          title="Never miss a League match again"
-          subtitle="Scout automatically tracks your friends' League of Legends matches and provides rich notifications and detailed post-match analysis."
-        />
-        <FeatureGrid>
-          <FeatureCard
-            icon="heroicons:bell"
-            title="Match Notifications"
-            description="Get notifications when subscribed players finish a League match."
-          />
-          <FeatureCard
-            icon="heroicons:eye"
-            title="Pre-Match Alerts"
-            description="Know the moment your friends start a game. Scout detects active matches in real-time and sends a notification with champion picks and game mode."
-          />
-          <FeatureCard
-            icon="heroicons:document-text"
-            title="Detailed Post-Match Reports"
-            description="Beautiful, automatically generated post-match reports with KDA, damage, gold, items, and performance statistics. See a preview below!"
-          />
-          <FeatureCard
-            icon="heroicons:users"
-            title="Multi-Region Support"
-            description="Track players across all League of Legends regions including NA, EUW, EUNE, KR, and more."
-          />
-          <FeatureCard
-            icon="heroicons:trophy"
-            title="Competitions & Leaderboards"
-            description="Create scheduled competitions with configurable criteria, League seasons or custom dates, and automatic leaderboard posts."
-          />
-          <FeatureCard
-            icon="heroicons:chart-bar-square"
-            title="Scheduled Reports"
-            description="Turn match history into recurring Discord reports for leaderboards, surrender trends, champion stats, and pairing performance."
-          />
-          <FeatureCard
-            icon="heroicons:bolt"
-            title="Arena Mode Support"
-            description="Full support for League's Arena mode with detailed reports for 18-player 3v3 matches, augments, and placements, while legacy duo reports still render."
-          />
-        </FeatureGrid>
-      </div>
+    <div role="region" aria-label="Latest update">
+      <WhatsNewBanner />
     </div>
+    <Navbar activePage="home" />
+    <main>
+      <Hero
+        title="Scout for League of Legends"
+        subtitle="Get notified when your friends start League matches and receive beautiful post-match reports with detailed stats, all delivered right to your Discord server."
+        showGradient={true}
+        size="home"
+        ctaButtons={[
+          {
+            text: "Get Started",
+            href: APP_DASHBOARD_URL,
+            variant: "primary",
+            trackingEvent: GET_STARTED_CLICK_EVENT,
+            trackingLocation: "home_hero",
+          },
+          { text: "View Documentation", href: DOCS_URL, variant: "secondary" },
+        ]}
+      />
 
-    <!-- Match Report Preview -->
-    <div class="py-24 sm:py-32">
-      <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <SectionHeader
-          badge="Report Preview"
-          title="See what your reports look like"
-          subtitle="Every match is automatically analyzed and formatted into a beautiful, easy-to-read report that shows all the key statistics and performance data."
-        />
+      <!-- Features Section -->
+      <div id="features" class="py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+          <SectionHeader
+            badge="Everything you need"
+            title="Never miss a League match again"
+            subtitle="Scout automatically tracks your friends' League of Legends matches and provides rich notifications and detailed post-match analysis."
+          />
+          <FeatureGrid>
+            <FeatureCard
+              icon="heroicons:bell"
+              title="Match Notifications"
+              description="Get notifications when subscribed players finish a League match."
+            />
+            <FeatureCard
+              icon="heroicons:eye"
+              title="Pre-Match Alerts"
+              description="Know the moment your friends start a game. Scout detects active matches in real-time and sends a notification with champion picks and game mode."
+            />
+            <FeatureCard
+              icon="heroicons:document-text"
+              title="Detailed Post-Match Reports"
+              description="Beautiful, automatically generated post-match reports with KDA, damage, gold, items, and performance statistics. See a preview below!"
+            />
+            <FeatureCard
+              icon="heroicons:users"
+              title="Multi-Region Support"
+              description="Track players across all League of Legends regions including NA, EUW, EUNE, KR, and more."
+            />
+            <FeatureCard
+              icon="heroicons:trophy"
+              title="Competitions & Leaderboards"
+              description="Create scheduled competitions with configurable criteria, League seasons or custom dates, and automatic leaderboard posts."
+            />
+            <FeatureCard
+              icon="heroicons:chart-bar-square"
+              title="Scheduled Reports"
+              description="Turn match history into recurring Discord reports for leaderboards, surrender trends, champion stats, and pairing performance."
+            />
+            <FeatureCard
+              icon="heroicons:bolt"
+              title="Arena Mode Support"
+              description="Full support for League's Arena mode with detailed reports for 18-player 3v3 matches, augments, and placements, while legacy duo reports still render."
+            />
+          </FeatureGrid>
+        </div>
+      </div>
 
-        <div class="mx-auto mt-16 max-w-5xl">
-          <GalleryItem
-            imageSrc={matchImg}
-            imageAlt="Example League of Legends match report showing team compositions, player statistics, KDA, damage dealt, gold earned, and items"
+      <!-- Match Report Preview -->
+      <div class="py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+          <SectionHeader
+            badge="Report Preview"
+            title="See what your reports look like"
+            subtitle="Every match is automatically analyzed and formatted into a beautiful, easy-to-read report that shows all the key statistics and performance data."
           />
 
-          <div class="mx-auto mt-12 max-w-2xl lg:max-w-none">
-            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              <BenefitCard
-                title="Complete Stats"
-                description="KDA, damage, gold, CS, items, and more - everything you need to analyze the match."
-                icon="heroicons:check-circle"
-                color="green"
-              />
-              <BenefitCard
-                title="Team Overview"
-                description="Clear team compositions with champion portraits and roles for easy identification."
-                icon="heroicons:users"
-                color="blue"
-              />
-              <BenefitCard
-                title="Ranked Progress"
-                description="Track rank changes and LP gains/losses with beautiful rank emblems."
-                icon="heroicons:sparkles"
-                color="purple"
-              />
+          <div class="mx-auto mt-16 max-w-5xl">
+            <GalleryItem
+              imageSrc={matchImg}
+              imageAlt="Example League of Legends match report showing team compositions, player statistics, KDA, damage dealt, gold earned, and items"
+            />
+
+            <div class="mx-auto mt-12 max-w-2xl lg:max-w-none">
+              <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                <BenefitCard
+                  title="Complete Stats"
+                  description="KDA, damage, gold, CS, items, and more - everything you need to analyze the match."
+                  icon="heroicons:check-circle"
+                  color="green"
+                />
+                <BenefitCard
+                  title="Team Overview"
+                  description="Clear team compositions with champion portraits and roles for easy identification."
+                  icon="heroicons:users"
+                  color="blue"
+                />
+                <BenefitCard
+                  title="Ranked Progress"
+                  description="Track rank changes and LP gains/losses with beautiful rank emblems."
+                  icon="heroicons:sparkles"
+                  color="purple"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Features Gallery Section -->
-    <div class="bg-scout-surface py-24 sm:py-32">
-      <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <SectionHeader badge="Feature Showcase" title="See Scout in Action" />
+      <!-- Features Gallery Section -->
+      <div class="bg-scout-surface py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+          <SectionHeader badge="Feature Showcase" title="See Scout in Action" />
 
-        <div
-          class="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-        >
+          <div
+            class="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {
+              showcasePreviews.map((preview) => (
+                <button
+                  type="button"
+                  class="group mx-auto block w-full max-w-sm cursor-zoom-in rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus focus-visible:ring-offset-4 focus-visible:ring-offset-scout-canvas"
+                  data-scout-lightbox-trigger
+                  data-lightbox-src={preview.src}
+                  data-lightbox-alt={preview.title}
+                  aria-label={`View ${preview.title} larger`}
+                >
+                  <img
+                    src={preview.src}
+                    alt={preview.title}
+                    loading="lazy"
+                    class="h-auto w-full rounded-md transition duration-200 group-hover:opacity-90"
+                  />
+                </button>
+              ))
+            }
+          </div>
+
           {
-            showcasePreviews.map((preview) => (
-              <button
-                type="button"
-                class="group mx-auto block w-full max-w-sm cursor-zoom-in rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus focus-visible:ring-offset-4 focus-visible:ring-offset-scout-canvas"
-                data-scout-lightbox-trigger
-                data-lightbox-src={preview.src}
-                data-lightbox-alt={preview.title}
-                aria-label={`View ${preview.title} larger`}
+            showcasePreviews.length === 0 && (
+              <div class="mt-8 rounded-lg border border-scout-border bg-scout-raised px-5 py-4 text-sm text-scout-subtle ">
+                Scout showcase examples are unavailable right now.
+              </div>
+            )
+          }
+
+          {
+            initialShowcasePreview && (
+              <div
+                class="fixed inset-0 z-50 hidden items-center justify-center bg-scout-canvas/90 p-4 backdrop-blur-sm"
+                data-scout-lightbox
+                role="dialog"
+                aria-modal="true"
+                aria-label="Scout report preview"
               >
+                <button
+                  type="button"
+                  class="absolute top-4 right-4 rounded-md bg-scout-surface px-3 py-2 text-sm font-semibold text-scout-ink shadow-sm hover:bg-scout-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus"
+                  data-scout-lightbox-close
+                >
+                  Close
+                </button>
                 <img
-                  src={preview.src}
-                  alt={preview.title}
+                  alt=""
                   loading="lazy"
-                  class="h-auto w-full rounded-md transition duration-200 group-hover:opacity-90"
+                  class="max-h-[88vh] max-w-[95vw] rounded-md shadow-2xl"
+                  data-scout-lightbox-image
                 />
-              </button>
-            ))
+              </div>
+            )
           }
         </div>
-
-        {
-          showcasePreviews.length === 0 && (
-            <div class="mt-8 rounded-lg border border-scout-border bg-scout-raised px-5 py-4 text-sm text-scout-subtle ">
-              Scout showcase examples are unavailable right now.
-            </div>
-          )
-        }
-
-        {
-          initialShowcasePreview && (
-            <div
-              class="fixed inset-0 z-50 hidden items-center justify-center bg-scout-canvas/90 p-4 backdrop-blur-sm"
-              data-scout-lightbox
-              role="dialog"
-              aria-modal="true"
-              aria-label="Scout report preview"
-            >
-              <button
-                type="button"
-                class="absolute top-4 right-4 rounded-md bg-scout-surface px-3 py-2 text-sm font-semibold text-scout-ink shadow-sm hover:bg-scout-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus"
-                data-scout-lightbox-close
-              >
-                Close
-              </button>
-              <img
-                alt=""
-                loading="lazy"
-                class="max-h-[88vh] max-w-[95vw] rounded-md shadow-2xl"
-                data-scout-lightbox-image
-              />
-            </div>
-          )
-        }
       </div>
-    </div>
 
-    <script>
-      const lightbox = document.querySelector("[data-scout-lightbox]");
-      const lightboxImage = document.querySelector(
-        "[data-scout-lightbox-image]",
-      );
-      const closeButtons = document.querySelectorAll(
-        "[data-scout-lightbox-close]",
-      );
-      const triggers = document.querySelectorAll(
-        "[data-scout-lightbox-trigger]",
-      );
-      let previousFocus: HTMLElement | null = null;
-
-      const isLightboxOpen = () =>
-        lightbox instanceof HTMLElement &&
-        lightbox.classList.contains("flex") &&
-        !lightbox.classList.contains("hidden");
-
-      const closeLightbox = () => {
-        if (!(lightbox instanceof HTMLElement)) {
-          return;
-        }
-
-        lightbox.classList.add("hidden");
-        lightbox.classList.remove("flex");
-        document.documentElement.classList.remove("overflow-hidden");
-
-        if (previousFocus instanceof HTMLElement) {
-          previousFocus.focus();
-        }
-
-        previousFocus = null;
-      };
-
-      const openLightbox = (trigger: Element) => {
-        if (
-          !(trigger instanceof HTMLButtonElement) ||
-          !(lightbox instanceof HTMLElement) ||
-          !(lightboxImage instanceof HTMLImageElement)
-        ) {
-          return;
-        }
-
-        const src = trigger.dataset["lightboxSrc"];
-        const alt = trigger.dataset["lightboxAlt"];
-
-        if (!src || !alt) {
-          return;
-        }
-
-        previousFocus = trigger;
-        lightboxImage.src = src;
-        lightboxImage.alt = alt;
-        lightbox.classList.remove("hidden");
-        lightbox.classList.add("flex");
-        document.documentElement.classList.add("overflow-hidden");
-
-        const closeButton = lightbox.querySelector(
+      <script>
+        const lightbox = document.querySelector("[data-scout-lightbox]");
+        const lightboxImage = document.querySelector(
+          "[data-scout-lightbox-image]",
+        );
+        const closeButtons = document.querySelectorAll(
           "[data-scout-lightbox-close]",
         );
-        if (closeButton instanceof HTMLButtonElement) {
-          closeButton.focus();
-        }
-      };
+        const triggers = document.querySelectorAll(
+          "[data-scout-lightbox-trigger]",
+        );
+        let previousFocus: HTMLElement | null = null;
 
-      triggers.forEach((trigger) => {
-        trigger.addEventListener("click", () => {
-          openLightbox(trigger);
+        const isLightboxOpen = () =>
+          lightbox instanceof HTMLElement &&
+          lightbox.classList.contains("flex") &&
+          !lightbox.classList.contains("hidden");
+
+        const closeLightbox = () => {
+          if (!(lightbox instanceof HTMLElement)) {
+            return;
+          }
+
+          lightbox.classList.add("hidden");
+          lightbox.classList.remove("flex");
+          document.documentElement.classList.remove("overflow-hidden");
+
+          if (previousFocus instanceof HTMLElement) {
+            previousFocus.focus();
+          }
+
+          previousFocus = null;
+        };
+
+        const openLightbox = (trigger: Element) => {
+          if (
+            !(trigger instanceof HTMLButtonElement) ||
+            !(lightbox instanceof HTMLElement) ||
+            !(lightboxImage instanceof HTMLImageElement)
+          ) {
+            return;
+          }
+
+          const src = trigger.dataset["lightboxSrc"];
+          const alt = trigger.dataset["lightboxAlt"];
+
+          if (!src || !alt) {
+            return;
+          }
+
+          previousFocus = trigger;
+          lightboxImage.src = src;
+          lightboxImage.alt = alt;
+          lightbox.classList.remove("hidden");
+          lightbox.classList.add("flex");
+          document.documentElement.classList.add("overflow-hidden");
+
+          const closeButton = lightbox.querySelector(
+            "[data-scout-lightbox-close]",
+          );
+          if (closeButton instanceof HTMLButtonElement) {
+            closeButton.focus();
+          }
+        };
+
+        triggers.forEach((trigger) => {
+          trigger.addEventListener("click", () => {
+            openLightbox(trigger);
+          });
         });
-      });
 
-      closeButtons.forEach((button) => {
-        button.addEventListener("click", closeLightbox);
-      });
+        closeButtons.forEach((button) => {
+          button.addEventListener("click", closeLightbox);
+        });
 
-      lightbox?.addEventListener("click", (event) => {
-        if (event.target === lightbox) {
-          closeLightbox();
-        }
-      });
+        lightbox?.addEventListener("click", (event) => {
+          if (event.target === lightbox) {
+            closeLightbox();
+          }
+        });
 
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          closeLightbox();
-          return;
-        }
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeLightbox();
+            return;
+          }
 
-        if (event.key !== "Tab" || !isLightboxOpen()) {
-          return;
-        }
+          if (event.key !== "Tab" || !isLightboxOpen()) {
+            return;
+          }
 
-        const closeButton = lightbox?.querySelector(
-          "[data-scout-lightbox-close]",
-        );
+          const closeButton = lightbox?.querySelector(
+            "[data-scout-lightbox-close]",
+          );
 
-        if (!(closeButton instanceof HTMLButtonElement)) {
-          return;
-        }
+          if (!(closeButton instanceof HTMLButtonElement)) {
+            return;
+          }
 
-        event.preventDefault();
-        closeButton.focus();
-      });
-    </script>
+          event.preventDefault();
+          closeButton.focus();
+        });
+      </script>
 
-    <!-- How it works -->
-    <div class="bg-scout-raised py-24 sm:py-32">
-      <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <SectionHeader
-          badge="Simple setup"
-          title="Get started in minutes"
-          centered={true}
-        />
-        <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-          <dl
-            class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3"
-          >
-            <ProcessStep number={1} title="Sign in with Discord">
-              <p class="text-scout-subtle">
-                Open the dashboard and sign in with your Discord account.
-              </p>
-            </ProcessStep>
-            <ProcessStep number={2} title="Add Scout to your server">
-              <p class="text-scout-subtle">
-                One click adds the bot to your server and sends you right back
-                to the dashboard.
-              </p>
-            </ProcessStep>
-            <ProcessStep number={3} title="Pick who to track">
-              <p class="text-scout-subtle">
-                Add the friends you want to follow, choose where Scout posts,
-                and start getting alerts, reports, and leaderboards.
-              </p>
-            </ProcessStep>
-          </dl>
+      <!-- How it works -->
+      <div class="bg-scout-raised py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+          <SectionHeader
+            badge="Simple setup"
+            title="Get started in minutes"
+            centered={true}
+          />
+          <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <div
+              class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3"
+            >
+              <ProcessStep number={1} title="Sign in with Discord">
+                <p class="text-scout-subtle">
+                  Open the dashboard and sign in with your Discord account.
+                </p>
+              </ProcessStep>
+              <ProcessStep number={2} title="Add Scout to your server">
+                <p class="text-scout-subtle">
+                  One click adds the bot to your server and sends you right back
+                  to the dashboard.
+                </p>
+              </ProcessStep>
+              <ProcessStep number={3} title="Pick who to track">
+                <p class="text-scout-subtle">
+                  Add the friends you want to follow, choose where Scout posts,
+                  and start getting alerts, reports, and leaderboards.
+                </p>
+              </ProcessStep>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Dashboard showcase -->
-    <div class="py-24 sm:py-32">
-      <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <SectionHeader
-          badge="Subscriptions · Competitions · Reports"
-          title="Manage it all from one dashboard"
-          subtitle="Track the players you care about, choose where Scout posts, and run competitions and scheduled reports — all from a fast web UI."
-          centered={true}
-        />
-        <div class="mx-auto mt-16 max-w-4xl space-y-12">
-          <GalleryItem
-            imageSrc="/dashboard-add-subscription.png"
-            imageAlt="Scout dashboard 'Add subscription' dialog with channel, region, Riot ID, and alias fields"
-            caption="Add a player to track in seconds — pick a channel, paste a Riot ID, set an alias."
+      <!-- Dashboard showcase -->
+      <div class="py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+          <SectionHeader
+            badge="Subscriptions · Competitions · Reports"
+            title="Manage it all from one dashboard"
+            subtitle="Track the players you care about, choose where Scout posts, and run competitions and scheduled reports — all from a fast web UI."
+            centered={true}
           />
-          <GalleryItem
-            imageSrc="/dashboard-subscriptions.png"
-            imageAlt="Scout dashboard subscriptions table listing tracked players and their channels"
-            caption="Manage every tracked player and channel from one table."
-          />
-          <GalleryItem
-            imageSrc="/dashboard-competition.png"
-            imageAlt="Scout dashboard competition setup form with criteria, queue, and schedule"
-            caption="Spin up competitions and leaderboards with a guided form."
-          />
+          <div class="mx-auto mt-16 max-w-4xl space-y-12">
+            <GalleryItem
+              imageSrc="/dashboard-add-subscription.png"
+              imageAlt="Scout dashboard 'Add subscription' dialog with channel, region, Riot ID, and alias fields"
+              caption="Add a player to track in seconds — pick a channel, paste a Riot ID, set an alias."
+            />
+            <GalleryItem
+              imageSrc="/dashboard-subscriptions.png"
+              imageAlt="Scout dashboard subscriptions table listing tracked players and their channels"
+              caption="Manage every tracked player and channel from one table."
+            />
+            <GalleryItem
+              imageSrc="/dashboard-competition.png"
+              imageAlt="Scout dashboard competition setup form with criteria, queue, and schedule"
+              caption="Spin up competitions and leaderboards with a guided form."
+            />
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- CTA Section -->
-    <CTA
-      variant="indigo"
-      title="Ready to track your friends' League matches?"
-      description="Add Scout to your Discord server and never miss another epic play or hilarious fail from your League friends."
-      buttons={[
-        {
-          text: "Get Started",
-          href: APP_DASHBOARD_URL,
-          variant: "primary",
-          trackingEvent: GET_STARTED_CLICK_EVENT,
-          trackingLocation: "home_final_cta",
-        },
-        { text: "Read the docs", href: DOCS_URL, variant: "secondary" },
-      ]}
-    />
-
+      <!-- CTA Section -->
+      <CTA
+        variant="indigo"
+        title="Ready to track your friends' League matches?"
+        description="Add Scout to your Discord server and never miss another epic play or hilarious fail from your League friends."
+        buttons={[
+          {
+            text: "Get Started",
+            href: APP_DASHBOARD_URL,
+            variant: "primary",
+            trackingEvent: GET_STARTED_CLICK_EVENT,
+            trackingLocation: "home_final_cta",
+          },
+          { text: "Read the docs", href: DOCS_URL, variant: "secondary" },
+        ]}
+      />
+    </main>
     <Footer variant="homepage" />
   </div>
 </Layout>

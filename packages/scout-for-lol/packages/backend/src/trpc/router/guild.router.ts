@@ -28,7 +28,10 @@ import {
   resolveGuildPermissions,
 } from "#src/trpc/guild-permission.ts";
 import { client as discordClient } from "#src/discord/client.ts";
-import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import {
+  hasAdministrator,
+  isDevGuildOverrideGuild,
+} from "#src/lib/discord-rest.ts";
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -44,7 +47,9 @@ export const guildRouter = router({
   listManageable: webProcedure.query(async ({ ctx }) => {
     const userGuilds = await fetchUserGuildsForRequest(ctx.user);
     const botGuildIds = new Set(discordClient.guilds.cache.map((g) => g.id));
-    const present = userGuilds.filter((g) => botGuildIds.has(g.id));
+    const present = userGuilds.filter(
+      (g) => botGuildIds.has(g.id) || isDevGuildOverrideGuild(g.id),
+    );
 
     // One query for the user's grants across all present guilds (no N+1).
     const grantRows = await prisma.serverPermission.findMany({

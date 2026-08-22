@@ -90,10 +90,14 @@
 }
 
 .scout-button--link {
-  min-height: auto;
-  padding: 0;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.25rem;
   text-decoration: underline;
   text-underline-offset: 0.2em;
+}
+
+.scout-button--link.scout-button--on-primary {
+  color: var(--scout-color-primary-text);
 }
 
 .scout-button--small {

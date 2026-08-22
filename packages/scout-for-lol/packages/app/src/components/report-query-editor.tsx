@@ -93,6 +93,7 @@ export default function ReportQueryEditor(props: {
         onChange={handleChange}
         onMount={handleMount}
         options={{
+          ariaLabel: "ScoutQL query",
           minimap: { enabled: false },
           lineNumbers: "off",
           fontSize: 13,

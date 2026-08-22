@@ -5,6 +5,7 @@ import { requireCliValue, unresolvedSecrets } from "./migration-core.ts";
 const DEFAULT_BACKEND_PORT = 3000;
 const DEFAULT_WEB_PORT = 5180;
 const DEFAULT_DATABASE_URL = "file:./local-web-dev.db";
+const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
 
 type DevWebOptions = {
   readonly backendPort: number;
@@ -57,6 +58,9 @@ function defaultDatabaseUrl(
   backendPort: number,
   environment: Readonly<Record<string, string | undefined>>,
 ): string {
+  if (environment["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] === "true") {
+    return "file:./design-audit-local.db";
+  }
   const configured = environment["SCOUT_DEV_DATABASE_URL"];
   if (configured !== undefined) return parseDatabaseUrl(configured);
 
@@ -197,22 +201,27 @@ function origins(options: DevWebOptions): {
 
 if (import.meta.main) {
   const root = import.meta.dir.replace(/\/scripts$/, "");
+  const isDesignAuditBoot = Bun.env["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] === "true";
   const parsed = parseDevWebArgs(Bun.argv.slice(2));
   if (parsed.kind === "help") {
     printHelp();
   } else {
-    const missing = unresolvedSecrets(Bun.env);
-    if (missing.length > 0) {
-      throw new Error(
-        `${missing.join(", ")} not resolved. Run with op run --env-file=${root}/dev-web.env.tpl -- bun ${import.meta.path}`,
-      );
+    if (!isDesignAuditBoot) {
+      const missing = unresolvedSecrets(Bun.env);
+      if (missing.length > 0) {
+        throw new Error(
+          `${missing.join(", ")} not resolved. Run with op run --env-file=${root}/dev-web.env.tpl -- bun ${import.meta.path}`,
+        );
+      }
     }
     const { options } = parsed;
     const { backendOrigin, webOrigin } = origins(options);
     const backendCwd = path.join(root, "packages", "backend");
     const lakeDir = resolveBackendLakeDir(
       backendCwd,
-      Bun.env["REPORT_LAKE_DIR"],
+      isDesignAuditBoot
+        ? DEFAULT_DESIGN_AUDIT_LAKE_DIR
+        : Bun.env["REPORT_LAKE_DIR"],
     );
     console.log(await adoptSeedIfUnseeded(lakeDir));
 
@@ -225,27 +234,81 @@ if (import.meta.main) {
       SCOUT_DEV_WEB_ORIGIN: webOrigin,
       VITE_MARKETING_ORIGIN: options.marketingOrigin,
       VITE_DOCS_ORIGIN: options.docsOrigin,
-      ENABLE_BACKGROUND_JOBS: options.discordGatewayEnabled ? "true" : "false",
-      ENABLE_DISCORD_GATEWAY: options.discordGatewayEnabled ? "true" : "false",
+      ENABLE_BACKGROUND_JOBS:
+        isDesignAuditBoot || !options.discordGatewayEnabled ? "false" : "true",
+      ENABLE_DISCORD_GATEWAY:
+        isDesignAuditBoot || !options.discordGatewayEnabled ? "false" : "true",
       WEB_APP_ORIGIN: webOrigin,
       REPORT_LAKE_DIR: lakeDir,
+      ...(isDesignAuditBoot
+        ? {
+            NODE_ENV: "test",
+            JWT_SIGNING_SECRET:
+              Bun.env["JWT_SIGNING_SECRET"] ??
+              "design-audit-local-jwt-signing-secret-32-bytes",
+            DEV_USER_GUILDS:
+              Bun.env["DEV_USER_GUILDS"] ??
+              Bun.env["SCOUT_DESIGN_AUDIT_GUILD_ID"] ??
+              "1337623164146155593",
+            EXPLORE_GUILD_ALLOWLIST:
+              Bun.env["EXPLORE_GUILD_ALLOWLIST"] ??
+              Bun.env["SCOUT_DESIGN_AUDIT_GUILD_ID"] ??
+              "1337623164146155593",
+          }
+        : {}),
     };
 
     console.log(
       `Applying Prisma migrations against ${environment.DATABASE_URL}`,
     );
-    const migration = Bun.spawn(["bunx", "prisma", "migrate", "deploy"], {
+    const migration = Bun.spawn(
+      ["bun", "x", "--no-install", "prisma", "migrate", "deploy"],
+      {
       cwd: backendCwd,
       env: environment,
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
-    });
+      },
+    );
     const migrationExitCode = await migration.exited;
     if (migrationExitCode !== 0) {
       throw new Error(
         `Prisma migrations failed with exit code ${migrationExitCode.toString()}`,
       );
+    }
+    if (isDesignAuditBoot) {
+      const generate = Bun.spawn(
+        ["bun", "x", "--no-install", "prisma", "generate"],
+        {
+          cwd: backendCwd,
+          env: environment,
+          stdin: "inherit",
+          stdout: "inherit",
+          stderr: "inherit",
+        },
+      );
+      const generateExitCode = await generate.exited;
+      if (generateExitCode !== 0) {
+        throw new Error(
+          `Prisma client generation failed with exit code ${generateExitCode.toString()}`,
+        );
+      }
+    }
+    if (isDesignAuditBoot) {
+      const seed = Bun.spawn(["bun", "scripts/seed-design-audit.ts"], {
+        cwd: backendCwd,
+        env: environment,
+        stdin: "inherit",
+        stdout: "inherit",
+        stderr: "inherit",
+      });
+      const seedExitCode = await seed.exited;
+      if (seedExitCode !== 0) {
+        throw new Error(
+          `Design-audit database seeding failed with exit code ${seedExitCode.toString()}`,
+        );
+      }
     }
 
     const backendCommand = options.backendWatchEnabled
@@ -253,7 +316,10 @@ if (import.meta.main) {
       : ["bun", "src/index.ts"];
     const backend = Bun.spawn(backendCommand, {
       cwd: backendCwd,
-      env: environment,
+      env: {
+        ...environment,
+        ...(isDesignAuditBoot ? { NODE_ENV: "test" } : {}),
+      },
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",

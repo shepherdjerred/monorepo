@@ -7,6 +7,7 @@ import {
   REPORT_METRICS,
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
+import { ClipboardError } from "#src/components/clipboard-error.tsx";
 import { Input } from "@scout-for-lol/design-system/components/input";
 import {
   Select,
@@ -25,6 +26,7 @@ import {
 } from "@scout-for-lol/design-system/components/table";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
+import { copyToClipboard } from "#src/lib/clipboard.ts";
 
 // Explorer columns are raw lake column names; only some coincide with valid
 // ScoutQL identifiers (metrics / group-by dimensions / filter fields). Inserting
@@ -36,6 +38,15 @@ const SCOUTQL_INSERTABLE_IDS: ReadonlySet<string> = new Set<string>([
   ...REPORT_GROUP_BYS.map((groupBy) => groupBy.id),
   ...REPORT_FILTERS.map((filter) => filter.id),
 ]);
+
+async function copyColumnId(
+  value: string,
+  setCopyError: (value: boolean) => void,
+): Promise<void> {
+  const copied = await copyToClipboard(value);
+  setCopyError(!copied);
+  if (copied) track("data_explorer_action", { action: "copy_column_id" });
+}
 
 type ExplorerTableId = "match_participants" | "prematch_participants";
 type ExplorerOperator = "eq" | "contains" | "gte" | "lte";
@@ -57,6 +68,7 @@ export function ReportDataExplorer(props: {
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [cursor, setCursor] = useState(0);
+  const [copyError, setCopyError] = useState(false);
   const pageSize = 25;
 
   const schemaQuery = useQuery(
@@ -108,7 +120,7 @@ export function ReportDataExplorer(props: {
   );
 
   return (
-    <section className="space-y-4 border-t border-border pt-6">
+    <section className="report-data-explorer space-y-4 border-t border-border pt-6">
       <div>
         <h3 className="text-base font-semibold">Data explorer</h3>
         <p className="text-sm text-scout-subtle">
@@ -157,6 +169,7 @@ export function ReportDataExplorer(props: {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
+                        className="size-6 shrink-0"
                         checked={selectedColumns.includes(column.id)}
                         onChange={() => {
                           setSelectedColumns((current) =>
@@ -171,13 +184,11 @@ export function ReportDataExplorer(props: {
                     </label>
                     <button
                       type="button"
+                      className="size-6 shrink-0"
                       aria-label={`Copy ${column.id}`}
                       title={`Copy ${column.id}`}
                       onClick={() => {
-                        void navigator.clipboard.writeText(column.id);
-                        track("data_explorer_action", {
-                          action: "copy_column_id",
-                        });
+                        void copyColumnId(column.id, setCopyError);
                       }}
                     >
                       <Copy className="size-3" />
@@ -185,6 +196,7 @@ export function ReportDataExplorer(props: {
                     {SCOUTQL_INSERTABLE_IDS.has(column.id) && (
                       <button
                         type="button"
+                        className="size-6 shrink-0"
                         aria-label={`Insert ${column.id} into query`}
                         title={`Insert ${column.id} into query`}
                         onClick={() => {
@@ -204,6 +216,8 @@ export function ReportDataExplorer(props: {
           ))}
         </div>
       </div>
+
+      <ClipboardError visible={copyError} />
 
       <div className="space-y-2">
         {filters.map((filter) => (

@@ -13,9 +13,11 @@ any two of them would lose information the pipeline is built to preserve.
 ## The lanes are phases, not duplicated test suites
 
 - **Browser E2E** covers the shipped Playwright consumers: `sjer.red`, the docs
-  wiki, the alert dashboard, and Scout evals. The browser matrix comes from the
-  pinned `ci-playwright` image, so the lane is about published sites rather than
-  about Playwright as a tool. The lane's scope statement is asserted in
+  wiki, the alert dashboard, Scout evals, and Scout's public/docs/app design
+  audit. The browser matrix comes from the pinned `ci-playwright` image, so the
+  lane is about published sites rather than about Playwright as a tool. The
+  design audit uses a deterministic local boot and fixture; see [Run the Scout
+  design audit](/how-to/run-scout-design-audit/). The lane's scope statement is asserted in
   [`validate-pipeline-clarity.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/validate-pipeline-clarity.ts)
   against the lane defined in [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
 - **llm-observability E2E** is the dedicated tracing-stack lane. It starts Tempo

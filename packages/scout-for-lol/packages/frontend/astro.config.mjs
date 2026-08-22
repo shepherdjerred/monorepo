@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig, envField } from "astro/config";
+import { env } from "node:process";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
 import { readFileSync } from "node:fs";
@@ -35,6 +36,7 @@ const isNoindexPath = (/** @type {string} */ page) =>
 // https://astro.build/config
 export default defineConfig({
   compressHTML: true,
+  devToolbar: { enabled: env.CI !== "true" },
   site: "https://scout-for-lol.com",
   // /commands and /docs were marketing pages before the documentation site
   // existed. Keep inbound links and bookmarks working by pointing them at

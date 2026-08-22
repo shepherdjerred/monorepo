@@ -142,7 +142,7 @@ export function GuildPicker() {
           <li key={g.id}>
             <Link
               to={`/g/${g.id}`}
-              className="flex items-center gap-3 rounded-md border border-border bg-scout-surface p-3 text-scout-ink transition-colors hover:bg-scout-accent"
+              className="flex items-center gap-3 rounded-md border border-border bg-scout-surface p-3 text-scout-ink transition-colors hover:bg-scout-accent hover:text-scout-accent-ink"
             >
               {g.icon === null ? (
                 <div className="h-8 w-8 shrink-0 rounded-md bg-scout-hover" />

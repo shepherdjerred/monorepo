@@ -194,6 +194,7 @@ export function SubscriptionFilterFields(props: {
             <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-scout-subtle hover:bg-scout-accent hover:text-scout-accent-ink">
               <input
                 type="checkbox"
+                className="size-6 shrink-0"
                 checked={showUnavailable}
                 onChange={(event) => {
                   setShowUnavailable(event.target.checked);

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test:e2e": {
+      "cache": false,
+      "passThroughEnv": [
+        "CI",
+        "PLAYWRIGHT_BROWSERS_PATH",
+        "SCOUT_DESIGN_AUDIT_BASE_URL",
+        "SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS",
+        "SCOUT_DESIGN_AUDIT_APP_URL",
+        "SCOUT_DESIGN_AUDIT_PUBLIC_URL",
+        "SCOUT_DESIGN_AUDIT_DOCS_URL",
+        "SCOUT_DESIGN_AUDIT_MODE",
+        "SCOUT_DESIGN_AUDIT_DISCORD_ID",
+        "SCOUT_DESIGN_AUDIT_GUILD_ID",
+        "SCOUT_DESIGN_AUDIT_PLAYER_ALIAS",
+        "SCOUT_DESIGN_AUDIT_COMPETITION_ID",
+        "SCOUT_DESIGN_AUDIT_REPORT_ID",
+        "SCOUT_DESIGN_AUDIT_EXPLORE_CONVERSATION_ID",
+        "SCOUT_DESIGN_AUDIT_EXPLORE_SHARE_TOKEN",
+        "SCOUT_DESIGN_AUDIT_DISCORD_EMAIL",
+        "SCOUT_DESIGN_AUDIT_DISCORD_PASSWORD",
+        "SCOUT_DESIGN_AUDIT_DISCORD_TOTP"
+      ]
+    }
+  }
+}

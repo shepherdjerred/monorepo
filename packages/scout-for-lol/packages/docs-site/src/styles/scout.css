@@ -5,7 +5,7 @@
   --sl-font-system: var(--scout-font-body);
   --sl-color-accent-low: var(--scout-color-interactive-hover);
   --sl-color-accent: var(--scout-color-primary);
-  --sl-color-accent-high: var(--scout-color-primary);
+  --sl-color-accent-high: var(--scout-color-text);
   --sl-color-text-accent: var(--scout-color-primary);
   --sl-color-text-invert: var(--scout-color-primary-text);
   --sl-color-bg-accent: var(--scout-color-primary);
@@ -40,8 +40,22 @@
   max-width: none;
 }
 
+.header .scout-navbar a:not(.scout-button) {
+  color: var(--scout-color-text);
+}
+
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) {
   font-family: var(--scout-font-display);
+}
+
+.scout-docs-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.sl-markdown-content pre[data-design-audit-allow-overflow] {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .sl-link-button {
@@ -70,7 +84,7 @@
 :root:not([data-has-sidebar]) .scout-footer,
 :root[data-has-sidebar] .scout-footer {
   width: 100dvw;
-  margin-inline-start: calc(50% - 50dvw + var(--sl-content-pad-x));
+  margin-inline-start: calc(50% - 50dvw);
 }
 
 :root[data-has-sidebar] .scout-footer {

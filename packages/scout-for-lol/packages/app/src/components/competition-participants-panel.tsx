@@ -167,7 +167,9 @@ export function CompetitionParticipantsPanel(props: {
                 <TableHead>Player</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Joined</TableHead>
-                <TableHead className="w-1" />
+                <TableHead className="w-1">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

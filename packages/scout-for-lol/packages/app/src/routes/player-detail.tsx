@@ -87,6 +87,7 @@ function PlayerSummaryCards(props: {
                 type="button"
                 variant="outline"
                 size="sm"
+                aria-haspopup="dialog"
                 onClick={props.onLink}
               >
                 Link Discord
@@ -322,6 +323,7 @@ export function PlayerDetail() {
               type="button"
               variant="outline"
               size="sm"
+              aria-haspopup="dialog"
               onClick={() => {
                 setAddAccountOpen(true);
               }}

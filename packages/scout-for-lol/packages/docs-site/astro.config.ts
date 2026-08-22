@@ -29,6 +29,7 @@ export default defineConfig({
     format: "directory",
     inlineStylesheets: "never",
   },
+  devToolbar: { enabled: env.CI !== "true" },
   image: {
     layout: "constrained",
     responsiveStyles: true,
@@ -53,7 +54,7 @@ export default defineConfig({
           attrs: {
             ...posthogHeadAttrs,
             defer: true,
-            src: "/posthog-bootstrap.js",
+            src: "/docs/posthog-bootstrap.js",
           },
         },
       ],

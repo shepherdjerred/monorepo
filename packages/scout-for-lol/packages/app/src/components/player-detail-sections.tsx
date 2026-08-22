@@ -118,7 +118,11 @@ export function PlayerSubscriptionsTable(props: {
           <TableHead>Filters</TableHead>
           <TableHead>Created by</TableHead>
           <TableHead>Created</TableHead>
-          {hasActions && <TableHead className="w-1" />}
+          {hasActions && (
+            <TableHead className="w-1">
+              <span className="sr-only">Actions</span>
+            </TableHead>
+          )}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -245,7 +249,9 @@ export function PlayerAccountsTable(props: {
           <TableHead>Last match</TableHead>
           <TableHead>Last checked</TableHead>
           {(props.canEdit || props.canTransfer || props.canDelete) && (
-            <TableHead className="w-1" />
+            <TableHead className="w-1">
+              <span className="sr-only">Actions</span>
+            </TableHead>
           )}
         </TableRow>
       </TableHeader>

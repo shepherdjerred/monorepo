@@ -349,10 +349,10 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
 
   const statusClass = useMemo(() => {
     if (wasPromoted(config.rankBefore, config.rankAfter)) {
-      return "text-scout-warning bg-scout-warning";
+      return "text-scout-warning-ink bg-scout-warning";
     }
     if (wasDemoted(config.rankBefore, config.rankAfter)) {
-      return "text-scout-danger bg-scout-danger";
+      return "text-scout-danger-ink bg-scout-danger";
     }
     return "text-scout-subtle bg-scout-raised";
   }, [config.rankBefore, config.rankAfter]);
@@ -394,7 +394,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
               onClick={() => {
                 handlePresetClick("promotion");
               }}
-              colorClass="bg-scout-warning text-scout-warning"
+              colorClass="bg-scout-warning text-scout-warning-ink"
             />
             <PresetButton
               label="Demotion"
@@ -402,7 +402,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
               onClick={() => {
                 handlePresetClick("demotion");
               }}
-              colorClass="bg-scout-danger text-scout-danger"
+              colorClass="bg-scout-danger text-scout-danger-ink"
             />
             <PresetButton
               label="LP Gain"
@@ -418,7 +418,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
               onClick={() => {
                 handlePresetClick("lp-loss");
               }}
-              colorClass="bg-scout-warning text-scout-warning"
+              colorClass="bg-scout-warning text-scout-warning-ink"
             />
           </div>
         </div>

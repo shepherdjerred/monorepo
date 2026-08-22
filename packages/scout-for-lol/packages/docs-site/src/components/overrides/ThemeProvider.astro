@@ -1,1 +1,41 @@
 <script is:inline src="/assets/scout/brand/theme-bootstrap.js"></script>
+<script is:inline>
+  const focusScrollableRegions = () => {
+    document.querySelectorAll("*").forEach((element) => {
+      const style = getComputedStyle(element);
+      const overflowsHorizontally =
+        (style.overflowX === "auto" || style.overflowX === "scroll") &&
+        element.scrollWidth > element.clientWidth;
+      const overflowsVertically =
+        (style.overflowY === "auto" || style.overflowY === "scroll") &&
+        element.scrollHeight > element.clientHeight;
+      const isWideTable =
+        element.tagName === "TABLE" && window.innerWidth < 800;
+      if (
+        (overflowsHorizontally || overflowsVertically || isWideTable) &&
+        !element.hasAttribute("tabindex")
+      ) {
+        element.setAttribute("tabindex", "0");
+      }
+    });
+  };
+
+  focusScrollableRegions();
+  document.addEventListener("DOMContentLoaded", focusScrollableRegions, {
+    once: true,
+  });
+  window.addEventListener("load", focusScrollableRegions, { once: true });
+  window.setTimeout(focusScrollableRegions, 0);
+  window.setTimeout(focusScrollableRegions, 100);
+  window.setTimeout(focusScrollableRegions, 500);
+  document.addEventListener("astro:page-load", focusScrollableRegions);
+  const scrollableRegionObserver = new MutationObserver(focusScrollableRegions);
+  if (document.body !== null) {
+    scrollableRegionObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class", "style"],
+    });
+  }
+</script>

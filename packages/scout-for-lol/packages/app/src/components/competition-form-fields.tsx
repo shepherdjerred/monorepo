@@ -66,7 +66,7 @@ export function CompetitionFormFields(props: {
   return (
     <form onSubmit={props.onSubmit} className="space-y-4">
       {locked && (
-        <p className="rounded-md border border-border bg-scout-hover/40 p-3 text-sm text-scout-subtle">
+        <p className="rounded-md border border-border bg-scout-hover/40 p-3 text-sm text-scout-ink">
           This competition has started — criteria, dates, and visibility are
           locked. You can still edit the title, description, channel, and
           increase the participant cap.

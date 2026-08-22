@@ -40,6 +40,9 @@ export async function startBackendRuntime(): Promise<HttpServerRuntime> {
     },
     startHttpServer: async () => await import("#src/http-server.ts"),
     startDiscord: async () => {
+      if (Bun.env.NODE_ENV === "test") {
+        return;
+      }
       if (!configuration.enableDiscordGateway) {
         logger.warn(
           "⏭️  Discord gateway disabled for this local secondary instance",

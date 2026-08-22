@@ -208,6 +208,7 @@ function AnalysisControls(props: {
           Selected period
         </Button>
         <select
+          aria-label="Competition analysis preset"
           className="h-9 rounded-md border border-scout-border bg-scout-canvas px-2 text-sm"
           value={props.preset}
           onChange={(event) => {

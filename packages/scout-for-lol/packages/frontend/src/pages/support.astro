@@ -18,186 +18,186 @@ import Button from "../components/Button.astro";
 >
   <div class="bg-scout-surface">
     <Navbar activePage="support" />
+    <main>
+      <!-- Main Content -->
+      <div class="relative px-6 lg:px-8">
+        <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
+          <Header
+            variant="page"
+            title="Get Support"
+            subtitle="Need help with Scout? We're here to assist you."
+          />
 
-    <!-- Main Content -->
-    <div class="relative px-6 lg:px-8">
-      <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
-        <Header
-          variant="page"
-          title="Get Support"
-          subtitle="Need help with Scout? We're here to assist you."
-        />
-
-        <!-- Feature Request Callout -->
-        <div class="mb-12">
-          <InfoBox variant="success" title="Have an idea for Scout?">
-            We welcome feature requests! Share your ideas on
-            <a
-              href="https://discord.gg/qmRewyHXFE"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-scout-success hover:underline font-medium">Discord</a
-            > or open an issue on
-            <a
-              href="https://github.com/shepherdjerred/monorepo/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-scout-success hover:underline font-medium">GitHub</a
-            >.
-          </InfoBox>
-        </div>
-
-        <!-- Support Options -->
-        <div class="space-y-8">
-          <!-- Discord Support -->
-          <div
-            class="hover:shadow-lg transition-shadow bg-scout-surface border-2 border-scout-border rounded-xl p-8"
-          >
-            <div class="flex flex-row items-start mb-4">
-              <div class="shrink-0">
-                <Icon
-                  name="simple-icons:discord"
-                  class="h-12 w-12 text-scout-brand"
-                />
-              </div>
-              <h3 class="ml-6 text-2xl font-semibold text-scout-ink">
-                Join the Discord Server
-              </h3>
-            </div>
-            <div>
-              <p class="text-scout-subtle mb-4">
-                Get quick help from the community and the Scout team. Perfect
-                for:
-              </p>
-              <ul
-                class="list-disc list-inside space-y-2 text-scout-subtle mb-6"
-              >
-                <li>Quick questions and troubleshooting</li>
-                <li>Feature requests and suggestions</li>
-                <li>General discussion and tips</li>
-                <li>Support from the community</li>
-              </ul>
-              <Button
+          <!-- Feature Request Callout -->
+          <div class="mb-12">
+            <InfoBox variant="success" title="Have an idea for Scout?">
+              We welcome feature requests! Share your ideas on
+              <a
                 href="https://discord.gg/qmRewyHXFE"
-                external={true}
-                variant="primary"
-                color="indigo"
-              >
-                Join Discord Server
-                <Icon
-                  name="heroicons:arrow-top-right-on-square"
-                  class="ml-2 -mr-1 h-5 w-5"
-                />
-              </Button>
-            </div>
-          </div>
-
-          <!-- GitHub Issues -->
-          <div
-            class="hover:shadow-lg transition-shadow bg-scout-surface border-2 border-scout-border rounded-xl p-8"
-          >
-            <div class="flex flex-row items-start mb-4">
-              <div class="shrink-0">
-                <Icon
-                  name="simple-icons:github"
-                  class="h-12 w-12 text-scout-ink"
-                />
-              </div>
-              <h3 class="ml-6 text-2xl font-semibold text-scout-ink">
-                Open a GitHub Issue
-              </h3>
-            </div>
-            <div>
-              <p class="text-scout-subtle mb-4">
-                Report bugs, request features, or track existing issues. Best
-                for:
-              </p>
-              <ul
-                class="list-disc list-inside space-y-2 text-scout-subtle mb-6"
-              >
-                <li>Bug reports with detailed information</li>
-                <li>Feature requests with specific use cases</li>
-                <li>Technical discussions and documentation</li>
-                <li>Tracking issue resolution and updates</li>
-              </ul>
-              <Button
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-scout-ink hover:underline font-medium">Discord</a
+              > or open an issue on
+              <a
                 href="https://github.com/shepherdjerred/monorepo/issues"
-                external={true}
-                variant="primary"
-                color="gray"
-              >
-                Open an Issue
-                <Icon
-                  name="heroicons:arrow-top-right-on-square"
-                  class="ml-2 -mr-1 h-5 w-5"
-                />
-              </Button>
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-scout-ink hover:underline font-medium">GitHub</a
+              >.
+            </InfoBox>
+          </div>
+
+          <!-- Support Options -->
+          <div class="space-y-8">
+            <!-- Discord Support -->
+            <div
+              class="hover:shadow-lg transition-shadow bg-scout-surface border-2 border-scout-border rounded-xl p-8"
+            >
+              <div class="flex flex-row items-start mb-4">
+                <div class="shrink-0">
+                  <Icon
+                    name="simple-icons:discord"
+                    class="h-12 w-12 text-scout-brand"
+                  />
+                </div>
+                <h2 class="ml-6 text-2xl font-semibold text-scout-ink">
+                  Join the Discord Server
+                </h2>
+              </div>
+              <div>
+                <p class="text-scout-subtle mb-4">
+                  Get quick help from the community and the Scout team. Perfect
+                  for:
+                </p>
+                <ul
+                  class="list-disc list-inside space-y-2 text-scout-subtle mb-6"
+                >
+                  <li>Quick questions and troubleshooting</li>
+                  <li>Feature requests and suggestions</li>
+                  <li>General discussion and tips</li>
+                  <li>Support from the community</li>
+                </ul>
+                <Button
+                  href="https://discord.gg/qmRewyHXFE"
+                  external={true}
+                  variant="primary"
+                  color="indigo"
+                >
+                  Join Discord Server
+                  <Icon
+                    name="heroicons:arrow-top-right-on-square"
+                    class="ml-2 -mr-1 h-5 w-5"
+                  />
+                </Button>
+              </div>
+            </div>
+
+            <!-- GitHub Issues -->
+            <div
+              class="hover:shadow-lg transition-shadow bg-scout-surface border-2 border-scout-border rounded-xl p-8"
+            >
+              <div class="flex flex-row items-start mb-4">
+                <div class="shrink-0">
+                  <Icon
+                    name="simple-icons:github"
+                    class="h-12 w-12 text-scout-ink"
+                  />
+                </div>
+                <h2 class="ml-6 text-2xl font-semibold text-scout-ink">
+                  Open a GitHub Issue
+                </h2>
+              </div>
+              <div>
+                <p class="text-scout-subtle mb-4">
+                  Report bugs, request features, or track existing issues. Best
+                  for:
+                </p>
+                <ul
+                  class="list-disc list-inside space-y-2 text-scout-subtle mb-6"
+                >
+                  <li>Bug reports with detailed information</li>
+                  <li>Feature requests with specific use cases</li>
+                  <li>Technical discussions and documentation</li>
+                  <li>Tracking issue resolution and updates</li>
+                </ul>
+                <Button
+                  href="https://github.com/shepherdjerred/monorepo/issues"
+                  external={true}
+                  variant="primary"
+                  color="gray"
+                >
+                  Open an Issue
+                  <Icon
+                    name="heroicons:arrow-top-right-on-square"
+                    class="ml-2 -mr-1 h-5 w-5"
+                  />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Help Tips -->
-        <section class="mt-16">
-          <h2 class="text-2xl font-bold text-scout-ink mb-6">
-            Before Asking for Help
-          </h2>
-          <InfoBox variant="info">
-            <ul class="space-y-3 text-scout-subtle">
-              <li class="flex items-start">
-                <Icon
-                  name="heroicons:check-circle"
-                  class="h-6 w-6 text-scout-brand mr-3 shrink-0"
-                />
-                <span
-                  ><strong>Check the documentation:</strong> Visit our <a
-                    href={docsUrl}
-                    class="text-scout-brand hover:text-scout-brand underline"
-                    >documentation page</a
-                  > for comprehensive guides and command references.</span
-                >
-              </li>
-              <li class="flex items-start">
-                <Icon
-                  name="heroicons:check-circle"
-                  class="h-6 w-6 text-scout-brand mr-3 shrink-0"
-                />
-                <span
-                  ><strong>Use the /help command:</strong> Type <code
-                    class="bg-scout-raised px-2 py-1 rounded text-sm text-scout-ink"
-                    >/help</code
-                  > in Discord to see available commands and quick tips.</span
-                >
-              </li>
-              <li class="flex items-start">
-                <Icon
-                  name="heroicons:check-circle"
-                  class="h-6 w-6 text-scout-brand mr-3 shrink-0"
-                />
-                <span
-                  ><strong>Search existing issues:</strong> Your question might already
-                  be answered in <a
-                    href="https://github.com/shepherdjerred/monorepo/issues"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-scout-brand hover:text-scout-brand underline"
-                    >existing GitHub issues</a
-                  >.</span
-                >
-              </li>
-            </ul>
-          </InfoBox>
-        </section>
+          <!-- Help Tips -->
+          <section class="mt-16">
+            <h2 class="text-2xl font-bold text-scout-ink mb-6">
+              Before Asking for Help
+            </h2>
+            <InfoBox variant="info">
+              <ul class="space-y-3 text-scout-subtle">
+                <li class="flex items-start">
+                  <Icon
+                    name="heroicons:check-circle"
+                    class="h-6 w-6 text-scout-brand mr-3 shrink-0"
+                  />
+                  <span
+                    ><strong>Check the documentation:</strong> Visit our <a
+                      href={docsUrl}
+                      class="text-scout-brand hover:text-scout-brand underline"
+                      >documentation page</a
+                    > for comprehensive guides and command references.</span
+                  >
+                </li>
+                <li class="flex items-start">
+                  <Icon
+                    name="heroicons:check-circle"
+                    class="h-6 w-6 text-scout-brand mr-3 shrink-0"
+                  />
+                  <span
+                    ><strong>Use the /help command:</strong> Type <code
+                      class="bg-scout-raised px-2 py-1 rounded text-sm text-scout-ink"
+                      >/help</code
+                    > in Discord to see available commands and quick tips.</span
+                  >
+                </li>
+                <li class="flex items-start">
+                  <Icon
+                    name="heroicons:check-circle"
+                    class="h-6 w-6 text-scout-brand mr-3 shrink-0"
+                  />
+                  <span
+                    ><strong>Search existing issues:</strong> Your question might
+                    already be answered in <a
+                      href="https://github.com/shepherdjerred/monorepo/issues"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-scout-brand hover:text-scout-brand underline"
+                      >existing GitHub issues</a
+                    >.</span
+                  >
+                </li>
+              </ul>
+            </InfoBox>
+          </section>
 
-        <!-- Back to Home -->
-        <div class="mt-16 text-center">
-          <Button href="/" variant="text" class="inline-flex items-center">
-            <Icon name="heroicons:arrow-left" class="mr-2 h-5 w-5" />
-            Back to Home
-          </Button>
+          <!-- Back to Home -->
+          <div class="mt-16 text-center">
+            <Button href="/" variant="text" class="inline-flex items-center">
+              <Icon name="heroicons:arrow-left" class="mr-2 h-5 w-5" />
+              Back to Home
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
-
+    </main>
     <Footer />
   </div>
 </Layout>

@@ -36,7 +36,7 @@ export function MatchDetailsPanel({
         <div className="mb-3 p-3 rounded-lg bg-scout-danger border border-scout-danger">
           <div className="flex items-start gap-2">
             <svg
-              className="w-5 h-5 text-scout-danger shrink-0 mt-0.5"
+              className="w-5 h-5 text-scout-danger-ink shrink-0 mt-0.5"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -47,10 +47,10 @@ export function MatchDetailsPanel({
               />
             </svg>
             <div>
-              <p className="text-sm font-medium text-scout-danger">
+              <p className="text-sm font-medium text-scout-danger-ink">
                 Timeline data missing
               </p>
-              <p className="text-xs text-scout-danger">
+              <p className="text-xs text-scout-danger-ink">
                 This match cannot be used for review generation. Try selecting a
                 different match.
               </p>
@@ -96,8 +96,8 @@ export function MatchDetailsPanel({
                     <span
                       className={`text-xs px-2 py-1 rounded ${
                         player.outcome === "Victory"
-                          ? "bg-scout-success text-scout-success"
-                          : "bg-scout-danger text-scout-danger"
+                          ? "bg-scout-success text-scout-success-ink"
+                          : "bg-scout-danger text-scout-danger-ink"
                       }`}
                     >
                       {player.outcome}
@@ -166,16 +166,16 @@ export function MatchDetailsPanel({
 
               {/* Red Team */}
               <div className="bg-scout-danger rounded p-3 border border-scout-danger">
-                <div className="text-xs font-semibold text-scout-danger mb-2">
+                <div className="text-xs font-semibold text-scout-danger-ink mb-2">
                   Red Team
                 </div>
                 <div className="space-y-1.5">
                   {match.teams.red.map((champion, idx) => (
                     <div key={idx} className="text-xs">
-                      <div className="font-medium text-scout-danger">
+                      <div className="font-medium text-scout-danger-ink">
                         {champion.riotIdGameName}
                       </div>
-                      <div className="text-scout-danger">
+                      <div className="text-scout-danger-ink">
                         {championNameToDisplayName(champion.championName)}
                       </div>
                     </div>

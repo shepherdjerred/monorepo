@@ -35,29 +35,39 @@ for (const column of columns) {
   }
 }
 const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
+const tableLabel = columns.map((column) => column.header).join(", ");
+const tableLabel = columns.map((column) => column.header).join(", ");
 ---
 
-<table>
-  <thead>
-    <tr>
-      {columns.map((column) => <th>{column.header}</th>)}
-    </tr>
-  </thead>
-  <tbody>
-    {
-      rowIndexes.map((rowIndex) => (
-        <tr>
-          {columns.map((column) => (
-            <td>
-              {column.code === true ? (
-                <code>{column.values[rowIndex]}</code>
-              ) : (
-                column.values[rowIndex]
-              )}
-            </td>
-          ))}
-        </tr>
-      ))
-    }
-  </tbody>
-</table>
+<div
+  class="scout-docs-table-scroll"
+  data-design-audit-allow-overflow
+  tabindex="0"
+  role="region"
+  aria-label={`Scrollable table: ${tableLabel}`}
+>
+  <table>
+    <thead>
+      <tr>
+        {columns.map((column) => <th>{column.header}</th>)}
+      </tr>
+    </thead>
+    <tbody>
+      {
+        rowIndexes.map((rowIndex) => (
+          <tr>
+            {columns.map((column) => (
+              <td>
+                {column.code === true ? (
+                  <code>{column.values[rowIndex]}</code>
+                ) : (
+                  column.values[rowIndex]
+                )}
+              </td>
+            ))}
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>

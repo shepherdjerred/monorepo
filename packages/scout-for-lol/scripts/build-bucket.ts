@@ -88,7 +88,7 @@ for (const entrypoint of [
 }
 
 const docsHtml = await Bun.file(`${docsTarget}/index.html`).text();
-if (!docsHtml.includes('src="/posthog-bootstrap.js"')) {
+if (!docsHtml.includes('src="/docs/posthog-bootstrap.js"')) {
   throw new Error(
     `${docsTarget}/index.html does not load the shared PostHog bootstrap`,
   );

@@ -10,6 +10,7 @@
     "knip": "knip --config ../../knip.json --workspace scout-for-lol --workspace '@scout-for-lol/*' --no-config-hints",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
     "dev:web": "op run --env-file=./dev-web.env.tpl -- bun scripts/dev-web.ts",
+    "dev:design-audit": "bun scripts/dev-web.ts",
     "dev:seed": "bun scripts/dev-seed.ts",
     "dev:login": "bun scripts/dev-login.ts",
     "duplication-check": "bun run scripts/check-duplication.ts",
