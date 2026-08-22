@@ -34,9 +34,6 @@ import {
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
 } from "#src/metrics/index.ts";
-import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
-import { recordPoolMessageRefs } from "#src/betting/pool-open.ts";
-import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { capturePredictionForPrematch } from "#src/betting/prediction-capture.ts";
 import { isBettableGame, isStandardLobby } from "#src/betting/eligibility.ts";
 import { appendBucksLine } from "#src/betting/prematch-line.ts";
@@ -44,7 +41,8 @@ import {
   prepareBucksPrematch,
   type BucksPrematchAttachment,
 } from "#src/betting/prematch-hook.ts";
-import { startParlayGeneration } from "#src/betting/parlay-generate.ts";
+import { PrematchNotificationPostDeliveryError } from "#src/league/tasks/prematch/prematch-notification-errors.ts";
+import { recordPrematchOutputs } from "#src/league/tasks/prematch/prematch-output-recording.ts";
 import type { MessageCreateOptions } from "discord.js";
 import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
 
@@ -178,49 +176,6 @@ function buildPrematchPayload(input: {
     embeds: [input.fallbackEmbed()],
     components,
   };
-}
-
-/**
- * Persist the outputs that depend on successful Discord delivery, then start
- * the best-effort parlay generation after those records are durable.
- */
-async function recordPrematchOutputs(input: {
-  bucks: BucksPrematchAttachment;
-  deliveredGuildIds: Set<DiscordGuildId>;
-  gameInfo: RawCurrentGameInfo;
-  loadingScreenData: LoadingScreenData | undefined;
-  messageRefsByGuild: Map<string, { channelId: string; messageId: string }[]>;
-  prematchContentBase: string;
-  queueType: QueueType | undefined;
-  trackedPlayers: PlayerConfigEntry[];
-}): Promise<void> {
-  for (const [serverId, refs] of input.messageRefsByGuild) {
-    await recordPoolMessageRefs({
-      matchId: input.bucks.matchId,
-      serverId: DiscordGuildIdSchema.parse(serverId),
-      refs,
-      prematchContentBase: input.prematchContentBase,
-    });
-    await refreshBucksMessages({
-      matchId: input.bucks.matchId,
-      serverId: DiscordGuildIdSchema.parse(serverId),
-    });
-  }
-
-  await recordCoreOutputsDelivered(input.deliveredGuildIds, "prematch");
-
-  // The parlay is deliberately generated only after the ordinary prematch
-  // message and outcome-pool references are durable. This starts a caught
-  // background task, so the 30-second spectator polling lock is not held for
-  // the model's up-to-60-second deadline.
-  if (input.bucks.bettingGuildIds.size > 0) {
-    startParlayGeneration({
-      gameInfo: input.gameInfo,
-      trackedPlayers: input.trackedPlayers,
-      queueType: input.queueType,
-      loadingScreenData: input.loadingScreenData,
-    });
-  }
 }
 
 type PrematchDeliveryChannel = Awaited<
@@ -526,16 +481,27 @@ export async function sendPrematchNotification(
     loadingScreenEmbed,
   });
 
-  await recordPrematchOutputs({
-    bucks,
-    deliveredGuildIds: delivery.deliveredGuildIds,
-    gameInfo,
-    loadingScreenData,
-    messageRefsByGuild: delivery.messageRefsByGuild,
-    prematchContentBase,
-    queueType,
-    trackedPlayers,
-  });
+  try {
+    await recordPrematchOutputs({
+      bucks,
+      deliveredGuildIds: delivery.deliveredGuildIds,
+      gameInfo,
+      loadingScreenData,
+      messageRefsByGuild: delivery.messageRefsByGuild,
+      prematchContentBase,
+      queueType,
+      trackedPlayers,
+    });
+  } catch (error) {
+    logger.error(
+      `[sendPrematchNotification] ❌ Failed to persist outputs after Discord delivery for game ${gameId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "prematch-output-persistence", gameId },
+    });
+    throw new PrematchNotificationPostDeliveryError(error);
+  }
 
   logger.info(
     `[sendPrematchNotification] ✅ Notifications sent for game ${gameId}`,
