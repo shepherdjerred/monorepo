@@ -726,11 +726,6 @@
       "reason": "Static marketing site; no test files exist."
     },
     {
-      "package": "@shepherdjerred/release-tools",
-      "directory": "packages/release-tools",
-      "reason": "Release Please wrapper package; no test files exist."
-    },
-    {
       "package": "@shepherdjerred/resume",
       "directory": "packages/resume",
       "reason": "LaTeX build artifact; no test files exist."
