@@ -206,7 +206,6 @@
     "@react-native/metro-babel-transformer@0.86.2": "patches/@react-native%2Fmetro-babel-transformer@0.86.2.patch",
     "@astrojs/starlight@0.41.5": "patches/@astrojs%2Fstarlight@0.41.5.patch",
     "astro@7.1.5": "patches/astro@7.1.5.patch",
-    "bun-types@1.4.0": "patches/bun-types@1.4.0.patch",
     "discord-player-youtubei@2.0.0": "patches/discord-player-youtubei@2.0.0.patch",
     "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
     "markdown-it@14.1.1": "patches/markdown-it@14.1.1.patch",
@@ -214,7 +213,8 @@
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "react-native-worklets@0.11.3": "patches/react-native-worklets@0.11.3.patch",
     "twisted@1.82.0": "patches/twisted@1.82.0.patch",
-    "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch"
+    "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch",
+    "bun-types@1.3.14": "patches/bun-types@1.3.14.patch"
   },
   "packageManager": "bun@1.4.0"
 }

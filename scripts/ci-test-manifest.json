@@ -377,7 +377,7 @@
       "package": "@scout-for-lol/backend",
       "directory": "packages/scout-for-lol/packages/backend",
       "defaultEnv": {
-        "DATABASE_URL": "file:./test.db"
+        "DATABASE_URL": "postgres://scout@127.0.0.1:5471/scout_test_unbound"
       },
       "steps": [
         {

@@ -32,7 +32,7 @@ const TEMPLATE_LOCK_STALE_MS = 10 * 60 * 1000;
 const TEMPLATE_LOCK_OWNER = "owner.json";
 const TemplateLockOwnerSchema = z.object({
   pid: z.number().int(),
-  acquiredAt: z.number().finite(),
+  acquiredAt: z.number(),
 });
 let activeTemplateDatabase: string | undefined;
 

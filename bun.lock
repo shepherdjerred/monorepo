@@ -213,6 +213,7 @@
       "name": "@shepherdjerred/config",
       "version": "0.1.0",
       "dependencies": {
+        "smol-toml": "^1.8.0",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -225,7 +226,6 @@
         "@vitest/coverage-istanbul": "4.1.9",
         "eslint": "^10.7.0",
         "jiti": "^2.7.0",
-        "smol-toml": "^1.8.0",
         "typescript": "^6.0.3",
         "vitest": "4.1.9",
       },
@@ -2008,8 +2008,8 @@
     "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch",
     "twisted@1.82.0": "patches/twisted@1.82.0.patch",
     "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
-    "bun-types@1.4.0": "patches/bun-types@1.4.0.patch",
     "@astrojs/internal-helpers@0.10.2": "patches/@astrojs%2Finternal-helpers@0.10.2.patch",
+    "bun-types@1.3.14": "patches/bun-types@1.3.14.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "astro@7.1.5": "patches/astro@7.1.5.patch",
     "@kubernetes/client-node@1.4.0": "patches/@kubernetes%2Fclient-node@1.4.0.patch",
