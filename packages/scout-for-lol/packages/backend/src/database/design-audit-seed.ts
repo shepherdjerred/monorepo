@@ -67,8 +67,8 @@ export async function seedDesignAuditDatabase(
       "Design-audit fixtures require SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true",
     );
   }
-  const configuredDatabaseUrl = environment["DATABASE_URL"] ?? "";
-  if (!configuredDatabaseUrl.includes("design-audit")) {
+  const configuredDatabaseUrl = databaseUrl(environment);
+  if (new URL(configuredDatabaseUrl).pathname !== "/scout_design_audit") {
     throw new Error(
       "Design-audit fixtures require a dedicated design-audit database",
     );
