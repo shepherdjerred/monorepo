@@ -2,8 +2,23 @@ import { z } from "zod";
 
 const DigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/);
 const BuildVersionSchema = z.string().regex(/^2\.0\.0-\d+$/);
+const ScoutImageVersionSchema = z
+  .string()
+  .regex(/^2\.0\.0-\d+(?:@sha256:[a-f\d]{64})?$/);
 const ImageDigestsSchema = z.record(z.string().min(1), DigestSchema);
 const ChartRevisionsSchema = z.record(z.string().min(1), BuildVersionSchema);
+
+/**
+ * Images from this build onward use the PostgreSQL backend. Older production
+ * pins remain on SQLite until Renovate promotes one of these images.
+ */
+const SCOUT_POSTGRES_CUTOVER_BUILD = 10_659;
+
+export function scoutImageUsesPostgres(version: string): boolean {
+  const parsed = ScoutImageVersionSchema.parse(version);
+  const build = Number.parseInt(parsed.slice(6).split("@")[0] ?? "", 10);
+  return build >= SCOUT_POSTGRES_CUTOVER_BUILD;
+}
 
 function parseJson(raw: string, label: string): unknown {
   try {

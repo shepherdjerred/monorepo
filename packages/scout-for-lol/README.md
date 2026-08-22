@@ -90,7 +90,7 @@ are one-shot and each command starts a new saved conversation.
 
 - TypeScript + Bun runtime
 - Discord.js for the bot framework
-- Prisma (SQLite) for application state
+- Prisma (PostgreSQL) for application state
 - tRPC for the backend ↔ web-app API contract
 - React + Satori + resvg for report image generation
 - DuckDB for the ScoutQL report query engine

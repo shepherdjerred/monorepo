@@ -25,7 +25,7 @@ export default defineConfig({
   snapshotPathTemplate:
     "{snapshotDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}",
   webServer: {
-    command: "bun run dev --host 127.0.0.1",
+    command: "bun run dev --host 127.0.0.1 --port 5190",
     url: "http://127.0.0.1:5190",
     reuseExistingServer: true,
   },

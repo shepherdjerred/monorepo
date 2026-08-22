@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Subscription {
@@ -94,7 +94,8 @@ model SummonerIndex {
   createdTime    DateTime
   updatedTime    DateTime
 
-  // Prefix-autocomplete on gameName (SQLite LIKE 'q%', ASCII case-insensitive).
+  // Prefix-autocomplete on gameName (case-insensitive via Prisma mode:
+  // "insensitive" → ILIKE; the b-tree index serves exact-prefix scans only).
   @@index([gameName])
 }
 
@@ -747,7 +748,8 @@ model BucksLedgerEntry {
   // bet_payout | bet_*_refund | winner_fee | house_match | cancel_fee |
   // parlay_stake | parlay_reserve | parlay_payout | parlay_refund |
   // parlay_release | peek_pass | legacy bet_refund/house_rake | adjustment.
-  // Not a Prisma enum — the SQLite provider has none. Zod-validated on write
+  // Not a Prisma enum (kept a plain string through the Postgres migration).
+  // Zod-validated on write
   // and on read.
   kind String
 

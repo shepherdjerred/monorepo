@@ -39,6 +39,12 @@ if ! rg -wq 'util-linux' "$CI_IMAGE" ||
   exit 1
 fi
 
+if ! rg -wq 'libxml2' "$CI_IMAGE" ||
+  ! rg -Fq "libxml2.so.2" "$TOOLCHAIN"; then
+  echo "CI toolchain must provide libxml2 for the mise-managed PostgreSQL binaries" >&2
+  exit 1
+fi
+
 if rg -q 'apt-get|playwright install|bun x' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'Bun.file("/ms-playwright/.docker-info").json()' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'typeof info.driverVersion !== "string"' "$CI_PLAYWRIGHT_IMAGE" ||

@@ -8,7 +8,7 @@ FROM debian:bookworm-slim@sha256:abd67ffcfa541b485a3dff59865ab629aa048a6c613e639
 
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git minisign unzip xz-utils zstd python3 ripgrep rsync \
-    build-essential pkg-config libssl-dev util-linux \
+    build-essential pkg-config libssl-dev libxml2 util-linux \
     && flock --version \
     && rm -rf /var/lib/apt/lists/*
 

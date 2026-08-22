@@ -14,13 +14,15 @@
     "build": {
       "dependsOn": ["generate"]
     },
-    // test script interpolates ${DATABASE_URL:-file:./test.db} — ambient value
+    // test script interpolates the PostgreSQL test URL — ambient value
     // changes results. Everything else is pinned by the test-setup preload.
     "test": {
-      "env": ["DATABASE_URL"]
+      "env": ["DATABASE_URL"],
+      "passThroughEnv": ["MISE_DATA_DIR"]
     },
     "test:ci": {
-      "env": ["DATABASE_URL"]
+      "env": ["DATABASE_URL"],
+      "passThroughEnv": ["MISE_DATA_DIR"]
     },
     // Typed lint (projectService) resolves the generated Prisma client; root's
     // lint task only depends on ^build, so on a cold container lint raced
@@ -29,31 +31,19 @@
     "lint": {
       "dependsOn": ["^build", "generate"]
     },
-    // generate also produces the test template DB (undeclared outputs don't
-    // restore from cache). ^build is a real dependency: the template-DB seed
-    // imports @scout-for-lol/data → @shepherdjerred/llm-models, whose exports
-    // only resolve from its built dist/ (fresh checkouts fail without it).
+    // ^build is a real dependency: generate imports @scout-for-lol/data →
+    // @shepherdjerred/llm-models, whose exports only resolve from its built
+    // dist/ (fresh checkouts fail without it).
     // The birmel edge is NOT a real dependency: it serializes this prisma
     // generate against birmel's so two concurrent runs don't race Prisma's
     // shared engine/download cache (same synthetic edge the old setup.ts DAG
     // carried; observed flaky at -c 4 without it).
+    // The hash-scoped test-template database on the shared local Postgres is
+    // not a turbo output: the bun test preload rebuilds it
+    // whenever its content hash (migrations + SEASONS + harness) changes.
     "generate": {
       "dependsOn": ["^build", "@shepherdjerred/birmel#generate"],
-      "outputs": ["generated/**", "src/testing/template.db"]
-    },
-    // template.db must match migrations + seed inputs (old CI:
-    // scout-test-template-check). Seed data includes ../data/src/seasons.ts —
-    // turbo inputs can't cross packages, so the @scout-for-lol/data#typecheck
-    // edge stands in: any data-package source change re-runs this check
-    // (over-invalidation, never under-invalidation).
-    "check:test-template": {
-      "dependsOn": ["generate", "@scout-for-lol/data#typecheck"],
-      "inputs": [
-        "prisma/migrations/**",
-        "scripts/generate-test-template-db.ts",
-        "scripts/check-test-template-db.ts",
-        "src/testing/template.db"
-      ]
+      "outputs": ["generated/**"]
     }
   }
 }

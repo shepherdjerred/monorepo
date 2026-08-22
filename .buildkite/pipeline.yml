@@ -358,7 +358,7 @@ steps:
         - "packages/eslint-config/**"
     cancel_on_build_failing: true
     command: |
-      . .buildkite/scripts/toolchain.sh
+      MISE_TOOLCHAIN_SCOPE=runtime . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'
       export DATABASE_URL='file:/tmp/alert-dashboard.db'
       bun --no-install run --cwd packages/alert-dashboard generate
@@ -409,6 +409,7 @@ steps:
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
         - ".buildkite/scripts/read-buildkite-handoff.ts"
         - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/toolchain.sh"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/ci-playwright/**"
         - "bun.lock"
@@ -442,6 +443,7 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
+      MISE_TOOLCHAIN_SCOPE=postgres . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
       bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
       bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
@@ -501,6 +503,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
+      MISE_TOOLCHAIN_SCOPE=postgres . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
       bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
       bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2

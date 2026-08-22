@@ -45,7 +45,7 @@ dependency changes.
 | Runtime       | Bun                              |
 | Language      | TypeScript (strict mode)         |
 | Linting       | ESLint + Prettier                |
-| Database      | Prisma ORM                       |
+| Database      | PostgreSQL 16 + Prisma ORM       |
 | Validation    | Zod                              |
 | Task Runner   | mise                             |
 | Bot Framework | Discord.js                       |
@@ -84,8 +84,8 @@ cd packages/backend
 bun run dev              # Start with hot reload
 bun run build            # Build for production
 bun run db:generate      # Generate Prisma client
-bun run db:push          # Push schema to database
-bun run db:migrate       # Run migrations
+bun run db:push          # Push schema to the shared local dev Postgres
+bun run db:migrate       # Run migrations (prisma migrate dev) against it
 bun run db:studio        # Open Prisma Studio
 ```
 
@@ -97,9 +97,16 @@ bun run --filter='./packages/scout-for-lol' dev:web
 
 This boots the backend on `:3000` (logging in as the BETA Discord bot) and the
 Vite dev server on `:5180` (proxying `/trpc` + `/api` to the backend). It
-applies Prisma migrations against a local `local-web-dev.db` first. To run a
-second copy, use different ports and `--no-discord-gateway`; the SQLite file
-then defaults to `local-web-dev-<backend-port>.db`:
+first ensures the shared machine-wide Postgres server is running (mise-pinned
+PostgreSQL 16 binaries from the root `.mise.toml`,
+`ubi:theseus-rs/postgresql-binaries`; data dir
+`~/.local/share/scout-for-lol/postgres/16`, honours `XDG_DATA_HOME`; port
+`5471`, `SCOUT_PG_PORT` overrides — managed by
+`packages/backend/src/testing/postgres-server.ts`'s `ensureDevPostgres`), then
+applies Prisma migrations against a per-copy `scout_dev_<backend-port>`
+database on it. To run a second copy, use different ports and
+`--no-discord-gateway`; the database name follows the backend port
+(`scout_dev_3001`):
 
 ```bash
 bun run --filter='./packages/scout-for-lol' dev:web -- \
@@ -109,8 +116,9 @@ bun run --filter='./packages/scout-for-lol' dev:web -- \
   --no-backend-watch
 ```
 
-Use `--database-url file:...` for an explicit local database. Ports are strict:
-a busy port fails instead of silently changing the URL.
+Use `--database-url postgres://...` (or `SCOUT_DEV_DATABASE_URL`) for an
+explicit local database; only `postgres://`/`postgresql://` URLs are accepted.
+Ports are strict: a busy port fails instead of silently changing the URL.
 `--no-backend-watch` keeps a browser-testing backend stable while tests and
 code generation rewrite imported artifacts; restart `dev:web` deliberately
 after backend edits. Vite still hot-reloads app changes.
@@ -329,25 +337,25 @@ or beta build, links remain same-origin (`/app/` and `/docs/`) as expected.
 The shared local report lake is
 `$HOME/.local/share/scout-for-lol/dev-seed/report-lake`; set
 `REPORT_LAKE_DIR` explicitly when using it. It is derived Parquet data queried
-by DuckDB, not the SQLite application database, and compaction is an explicit
+by DuckDB, not the Postgres application database, and compaction is an explicit
 single-operator action. Multiple copies may read it concurrently.
 
-BETA application state is `/data/db.sqlite` in the
-`scout-beta-scout-backend-*` pod in namespace `scout-beta`; the lake is
-`/data/report-lake`. To copy BETA state, create a consistent temporary snapshot
-with SQLite `VACUUM INTO`, then `kubectl cp` only that snapshot to an ignored
-local path. For example:
+BETA application state is the `scout` database in the `scout-beta-postgresql`
+cluster (Zalando postgres-operator) in namespace `scout-beta`; the lake is
+`/data/report-lake` in the backend pod. To copy BETA state, run `pg_dump`
+through the postgres pod's local trust socket into an ignored local path, then
+restore into the shared local dev server. For example:
 
 ```bash
-POD="$(kubectl get pods -n scout-beta -o name | rg 'scout-beta-scout-backend-' | head -n 1)"
-LOCAL_DB="$HOME/.local/share/scout-for-lol/scout-beta.db"
-kubectl exec -n scout-beta "$POD" -- bun -e 'import { Database } from "bun:sqlite"; const db = new Database("/data/db.sqlite", { readonly: true }); db.exec(`VACUUM INTO "/tmp/scout-beta-snapshot.sqlite"`); db.close();'
-mkdir -p "$(dirname "$LOCAL_DB")"
-kubectl cp -n scout-beta "$POD:/tmp/scout-beta-snapshot.sqlite" "$LOCAL_DB"
-kubectl exec -n scout-beta "$POD" -- rm /tmp/scout-beta-snapshot.sqlite
+kubectl exec -n scout-beta scout-beta-postgresql-0 -- pg_dump -U postgres -Fc scout > "$HOME/.local/share/scout-for-lol/scout-beta.dump"
+mise exec -- createdb -h 127.0.0.1 -p 5471 -U scout scout_beta_snapshot
+mise exec -- pg_restore -h 127.0.0.1 -p 5471 -U scout -d scout_beta_snapshot --no-owner "$HOME/.local/share/scout-for-lol/scout-beta.dump"
+SCOUT_DEV_DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
+  bun run --filter='./packages/scout-for-lol' dev:web -- \
+  --backend-port 3001 --web-port 5181 --no-discord-gateway
 ```
 
-Never raw-copy a live SQLite file, copy production data, or print credentials.
+Never copy production data (snapshots are beta-only) or print credentials.
 The BETA pod uses the real BETA Discord token and one gateway connection, so the
 gateway-owner `dev:web` intentionally disconnects the deployed BETA bot until
 stopped. That disconnect is authorized and expected for local
@@ -370,22 +378,23 @@ tokens/profiles/cookies in Git.
 `bun run --filter=@scout-for-lol/evals dev`. Candidate discovery and explicit
 S3/model-backed draft materialization are documented in `packages/evals/README.md`.
 The corpus is Beta-only. `sync-beta` creates a sanitized local profile snapshot
-from Beta SQLite, and discovery/materialization use that snapshot with the
+by kubectl-execing one `psql` `json_agg` query against `scout-beta-postgresql-0`
+(database `scout`), and discovery/materialization use that snapshot with the
 `scout-beta` S3 bucket. Raw S3 match objects do not preserve Scout aliases or
 tracked membership; never infer those identities from arbitrary Riot
 participants or substitute the production bucket.
 
 The full operator workflow (flags and examples in `packages/evals/README.md`):
 
-| Command                                                                                  | Purpose                                                                                                    |
-| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `bun run --filter=@scout-for-lol/evals dev`                                              | Launch the loopback web app to rate cases and run style-batch freshness checks.                            |
-| `bun run --filter=@scout-for-lol/evals sync-beta`                                        | Snapshot a sanitized Beta profile corpus into the local SQLite snapshot used by discovery/materialization. |
-| `AWS_PROFILE=seaweedfs bun run --filter=@scout-for-lol/evals discover -- …`              | Discover candidate matches from the `scout-beta` bucket against the snapshot.                              |
-| `bun run --filter=@scout-for-lol/evals materialize -- --spec <file>`                     | Materialize a new draft — or extend an existing draft via the spec's `datasetId` — with S3/model cases.    |
-| `bun run --filter=@scout-for-lol/evals dataset:push -- --dataset <id> --server <url>`    | Push a locally-materialized draft to the hosted instance over the tailnet (additive, never overwrites).    |
-| `bun run --filter=@scout-for-lol/evals dataset:export -- --dataset <id> --output <file>` | Export a finalized dataset to a checksummed, generation-set-bound transfer file.                           |
-| `bun run --filter=@scout-for-lol/evals dataset:import -- --input <file>`                 | Import a transfer file into another eval database (rejects tampered checksums or freshness bindings).      |
+| Command                                                                                  | Purpose                                                                                                                                         |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun run --filter=@scout-for-lol/evals dev`                                              | Launch the loopback web app to rate cases and run style-batch freshness checks.                                                                 |
+| `bun run --filter=@scout-for-lol/evals sync-beta`                                        | Snapshot a sanitized Beta profile corpus (read from Beta Postgres via `psql`) into the local SQLite snapshot used by discovery/materialization. |
+| `AWS_PROFILE=seaweedfs bun run --filter=@scout-for-lol/evals discover -- …`              | Discover candidate matches from the `scout-beta` bucket against the snapshot.                                                                   |
+| `bun run --filter=@scout-for-lol/evals materialize -- --spec <file>`                     | Materialize a new draft — or extend an existing draft via the spec's `datasetId` — with S3/model cases.                                         |
+| `bun run --filter=@scout-for-lol/evals dataset:push -- --dataset <id> --server <url>`    | Push a locally-materialized draft to the hosted instance over the tailnet (additive, never overwrites).                                         |
+| `bun run --filter=@scout-for-lol/evals dataset:export -- --dataset <id> --output <file>` | Export a finalized dataset to a checksummed, generation-set-bound transfer file.                                                                |
+| `bun run --filter=@scout-for-lol/evals dataset:import -- --input <file>`                 | Import a transfer file into another eval database (rejects tampered checksums or freshness bindings).                                           |
 
 Run the deterministic browser suite with
 `bunx turbo run test:e2e --filter=@scout-for-lol/evals`. It uses a test-only
@@ -682,7 +691,7 @@ loading art, so a missing refresh fails deployment immediately.
 
 Scheduled/user-authored ScoutQL reports execute as **compiled SQL on embedded
 DuckDB** (`@duckdb/node-api`, lazy-loaded) over a local Parquet "report lake"
-(`REPORT_LAKE_DIR`, prod `/data/report-lake`) — not over SQLite fact tables.
+(`REPORT_LAKE_DIR`, prod `/data/report-lake`) — not over Postgres fact tables.
 
 ### Leaderboard mentions
 
@@ -996,10 +1005,11 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   refund. `placeBet` carries the check rather than relying on the pool
   disappearing, because a revoked guild's pools outlive the revocation.
 - **The first statement of every mutating transaction is a guarded conditional
-  write.** It validates the precondition _and_ takes the SQLite write lock in
-  one round trip. This is the whole double-spend guard and the whole
-  exactly-once story; a read-then-write would race, and
-  `SQLITE_BUSY_SNAPSHOT` is **not** retried by `busy_timeout`.
+  write.** Under PostgreSQL READ COMMITTED, a concurrent committed update
+  forces the guard's WHERE to re-evaluate against the newest row version
+  (EvalPlanQual), so the losing racer matches 0 rows; composite-PK/unique
+  creates race-fail with P2002. This is the whole double-spend guard and the
+  whole exactly-once story; a read-then-write would race.
 - **`BucksAccount.balance` is stored, and `src/betting/ledger.ts` is the only
   module allowed to move it.** This departs from the `DmAuditLog` "derive,
   never store" rule deliberately: that rule guards a counter written after a
@@ -1117,8 +1127,22 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
 
 ## Database (Prisma)
 
+- **PostgreSQL 16** - `datasource provider = "postgresql"`, connected through
+  Prisma's `@prisma/adapter-pg`. Locally, `ensureDevPostgres`
+  (`src/testing/postgres-server.ts`) runs the shared machine-wide server; in
+  beta/prod each namespace runs a Zalando postgres-operator cluster
+  (`scout-<stage>-postgresql`) and the deployment composes `DATABASE_URL` from
+  the operator secret.
 - **Schema-first approach** - Define models in `schema.prisma`
-- **Migration strategy** - Use `prisma migrate` for production, `db:push` for development
+- **Migration strategy** - Use `prisma migrate` for production, `db:push` for
+  development. The 67 SQLite-era migrations were squashed into one baseline
+  migration (`prisma/migrations/20260820000000_postgresql_baseline/`).
+- **Legacy SQLite import** - the entrypoint chain is
+  `prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/audit-report-windows.ts --database "$DATABASE_URL" --fix && bun run src/index.ts`.
+  The boot-time importer reads the legacy `/data/db.sqlite` (still on the 24Gi
+  PVC as `LEGACY_SQLITE_PATH`) exactly once, tracked by the
+  `_legacy_sqlite_import` marker table with a fail-closed decision table;
+  rollback = repin the previous image, which reads the untouched file.
 - **Type safety** - Generated client provides full type safety
 - **Connection management** - Proper connection pooling and cleanup
 - Validate database inputs with Zod schemas
@@ -1166,7 +1190,10 @@ documented under **Web UI** above — it substitutes for the Discord _membership
 lookup_ only, and never for the session, CSRF, or the allowlist itself.
 
 To exercise the web/tRPC surface offline, use one of these — both
-run fully in-process against an isolated SQLite copy of `template.db`, no OAuth,
+run fully in-process against an isolated Postgres database cloned from the
+hash-scoped template on the shared local dev server (`createdb -T`, ~100ms; the
+bun test preload rebuilds the template when the hash of migrations + SEASONS +
+harness changes — `src/testing/test-template.ts`), no OAuth,
 no Discord API:
 
 - **Domain layer (simplest)** — call the exported functions directly (e.g.
@@ -1396,9 +1423,11 @@ drift from reality. Treat this as an invariant:
   after that timestamp, there is no list of counters to remember to clear —
   which is exactly what previously left a re-installed server exhausted.
 
-Validate ladder changes with `bun run scripts/outreach-dry-run.ts` against a
-copy of production before the first real fire — the failure mode here is
-messaging real people.
+Validate ladder changes with `DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
+  bun run scripts/outreach-dry-run.ts` against a restored beta copy before the
+first real fire — the failure mode here is messaging real people. Create that
+copy with the `pg_dump`/`createdb`/`pg_restore` sequence above; never point the
+dry run at production itself.
 
 ## Server-side product analytics invariants
 

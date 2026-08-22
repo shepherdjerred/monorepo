@@ -32,6 +32,31 @@ import { resolveDiscordUsers } from "#src/lib/discord/resolve-users.ts";
 import { client as discordClient } from "#src/discord/client.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
+/**
+ * Serialize role mutations per guild. The manager-preservation invariant is
+ * a read-then-write (assertPreservesRoleManager counts other viable
+ * managers, then rows are deleted), which is write-skew under Postgres READ
+ * COMMITTED: two concurrent removals each see the other manager and both
+ * proceed, leaving zero. SQLite's single writer serialized this implicitly;
+ * here both mutating transactions take the same per-guild advisory lock as
+ * their FIRST statement. Transaction-scoped — released at commit or abort.
+ */
+async function lockGuildRoleMutations(
+  // Structural: the base and $extends-wrapped transaction clients disagree on
+  // their full types, and this helper needs exactly one capability.
+  tx: {
+    $executeRaw: (
+      query: TemplateStringsArray,
+      ...values: unknown[]
+    ) => Promise<number>;
+  },
+  guildId: string,
+): Promise<void> {
+  // $executeRaw, not $queryRaw: the adapter cannot deserialize the void
+  // column the lock function returns.
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-roles'), hashtext(${guildId}))`;
+}
+
 const GRANT_KEY = permissionKey({ resource: "roles", action: "grant" });
 const REVOKE_KEY = permissionKey({ resource: "roles", action: "revoke" });
 const DiscordApiErrorSchema = z.object({ code: z.number() });
@@ -186,6 +211,7 @@ export const rolesRouter = router({
 
       const now = new Date();
       await prisma.$transaction(async (tx) => {
+        await lockGuildRoleMutations(tx, input.guildId);
         // Read current grants inside the txn for a consistent diff.
         const currentRows = await tx.serverPermission.findMany({
           where: {
@@ -320,6 +346,7 @@ export const rolesRouter = router({
     .input(GuildInput.extend({ discordUserId: DiscordAccountIdSchema }))
     .mutation(async ({ ctx, input }) => {
       await prisma.$transaction(async (tx) => {
+        await lockGuildRoleMutations(tx, input.guildId);
         const targetManagerPermissionRows = await tx.serverPermission.findMany({
           where: {
             serverId: input.guildId,

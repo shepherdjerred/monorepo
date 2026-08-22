@@ -291,14 +291,6 @@ const commands: Record<
       // where the Prisma engines EACCES crash-loop (#1682) surfaced. Booting
       // only far enough to fail Discord auth would not touch the database at
       // all, so an image that cannot create or query its schema used to pass.
-      // Production runs FEATURE_FLAGS_MODE=flipt, which the build sandbox cannot
-      // reach, so the boot below runs `disabled` rather than racing a network
-      // timeout. Import the facade explicitly instead: its index statically
-      // pulls in FliptProvider and therefore @flipt-io/flipt-client-js, so this
-      // still proves the whole flag path survives a production-only install.
-      // (The Flipt client is feature-flags' own dependency — under the isolated
-      // linker it is deliberately NOT resolvable from this package.)
-      `bun -e 'await import("@shepherdjerred/feature-flags");'`,
       "bun scripts/migrate.ts",
       `bun -e 'import { prisma, disconnectPrisma } from "#src/db/index.ts";` +
         ` const n = await prisma.karma.count();` +
@@ -317,7 +309,6 @@ const commands: Record<
       APPLICATION_ID: "000000000000000000",
       DATA_DIR: "/tmp/smoke-data",
       DATABASE_PATH: "/tmp/smoke-data/karma.db",
-      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   streambot: {
@@ -344,7 +335,6 @@ const commands: Record<
       USER_TOKENS: "smoke-test-dummy",
       ADMIN_IDS: "000000000000000000",
       VIDEOS_DIR: "/tmp/videos",
-      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   "scout-evals": {
@@ -454,10 +444,18 @@ const commands: Record<
     command: [
       "set -eu",
       "cd /app/packages/scout-for-lol/packages/backend",
+      // Throwaway Postgres inside the smoke stage (apt postgresql, PATH set
+      // in the Dockerfile). Runs as uid 1000 with HOME=/tmp like the app.
+      "initdb -D /tmp/smoke-pg -U postgres --auth=trust --no-locale >/dev/null",
+      'pg_ctl -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-p 18732 -c listen_addresses=127.0.0.1" start',
       "set +e",
-      'output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run src/index.ts" 2>&1)"',
+      // Mirror the full image CMD: migrate → legacy import (which must take
+      // its fresh-install marker path here) → report audit → boot.
+      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts --allow-fresh-install && bun run scripts/audit-report-windows.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
+      String.raw`printf '%s\n' "$output" | grep -q "Legacy import: fresh" || { echo "importer did not take the fresh-install path"; exit 1; }`,
+      String.raw`printf '%s\n' "$output" | grep -Fq "HTTP server started" || { echo "backend did not reach HTTP startup"; exit 1; }`,
       String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
         '"',
@@ -466,8 +464,8 @@ const commands: Record<
       DISCORD_TOKEN: "smoke-test-dummy",
       APPLICATION_ID: "000000000000000000",
       RIOT_API_KEY: "smoke-test-dummy",
-      FEATURE_FLAGS_MODE: "disabled",
-      DATABASE_URL: "file:/tmp/smoke-test.db",
+      DATABASE_URL: "postgres://postgres@127.0.0.1:18732/postgres",
+      LEGACY_SQLITE_PATH: "/tmp/no-legacy-sqlite.db",
       ENABLE_BACKGROUND_JOBS: "false",
       REPORT_LAKE_DIR: "/tmp/report-lake",
       PORT: "18791",

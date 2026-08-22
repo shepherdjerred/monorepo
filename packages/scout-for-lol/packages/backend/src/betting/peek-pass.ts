@@ -220,7 +220,9 @@ export async function purchasePeekPass(
   const expiresAt = new Date(now.getTime() + PEEK_PASS_DURATION_MS);
   try {
     return await prismaClient.$transaction(async (tx) => {
-      // FIRST statement: claim an inactive pass and take SQLite's write lock.
+      // FIRST statement: claim an inactive pass and lock the account row —
+      // a concurrent claim re-evaluates against the committed claim and
+      // matches 0 rows.
       const claimed = await tx.bucksAccount.updateMany({
         where: {
           id: account.id,
