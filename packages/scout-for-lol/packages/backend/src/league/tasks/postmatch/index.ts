@@ -83,6 +83,10 @@ export async function checkPostMatch() {
         settlements: staleBucks.settlements.filter(
           (settlement) => settlement.matchId === matchId,
         ),
+        // voidStaleParlayMarkets runs after this and rewrites each voided
+        // parlay's own market message, so nothing is lost by not carrying one
+        // here — and no extra post-match message is created.
+        parlaySettlements: [],
         earnings: [],
         postmatchMessageIds,
       });

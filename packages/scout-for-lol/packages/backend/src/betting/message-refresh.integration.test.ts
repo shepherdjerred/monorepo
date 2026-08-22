@@ -362,6 +362,7 @@ describe("announceSettlements", () => {
       {
         matchId: MATCH_ID,
         closures: [],
+        parlaySettlements: [],
         settlements: [remakeSettlement()],
         earnings: [],
         postmatchMessageIds: new Map([[CHANNEL_ONE, "postmatch-one"]]),
@@ -394,6 +395,7 @@ describe("announceSettlements", () => {
       {
         matchId: MATCH_ID,
         closures: [],
+        parlaySettlements: [],
         settlements: [remakeSettlement()],
         earnings: [],
         postmatchMessageIds: new Map(),
@@ -466,6 +468,7 @@ describe("announceSettlements unmatched receipts", () => {
             ],
           },
         ],
+        parlaySettlements: [],
         settlements: [],
         earnings: [],
         postmatchMessageIds: new Map(),
@@ -482,7 +485,7 @@ describe("announceSettlements unmatched receipts", () => {
 
     expect(sends).toHaveLength(2);
     expect(JSON.stringify(sends[0])).toContain(
-      `offered 9 BB · matched 0 BB · refunded 9 BB → no stake was matched`,
+      `Blue 9 → nothing matched, refunded **9**`,
     );
   });
 
@@ -521,6 +524,7 @@ describe("announceSettlements unmatched receipts", () => {
             ],
           },
         ],
+        parlaySettlements: [],
         settlements: [],
         earnings: [],
         postmatchMessageIds: new Map(),
@@ -565,6 +569,7 @@ describe("announceSettlements unmatched receipts", () => {
       {
         matchId: MATCH_ID,
         closures: [],
+        parlaySettlements: [],
         settlements: [remakeSettlement()],
         earnings: [],
         postmatchMessageIds: new Map(),
@@ -580,7 +585,7 @@ describe("announceSettlements unmatched receipts", () => {
     );
 
     expect(JSON.stringify(sends[0])).toContain(
-      `offered 9 BB · matched 0 BB · refunded 9 BB`,
+      `Blue 9 → nothing matched, refunded **9**`,
     );
   });
 });

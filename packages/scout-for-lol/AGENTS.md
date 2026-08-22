@@ -857,7 +857,24 @@ user-facing betting surfaces should not advertise the allowlist. `/bb prizes`
 is the deliberate exception: it displays the existing 1:10 catalog and
 in-person-with-Bryan footer as joke copy only. There is no command or accounting
 path to redeem, donate, burn, or claim Bucks, and nothing transfers to real
-goods.
+goods. `/bb rules` says so explicitly, because for a while it claimed "no cash
+value" while `/bb prizes` printed CAD figures to $1,000,000 with no
+cross-reference.
+
+**`/bb rules` is the only place a rule is stated.** Every other surface shows
+numbers and points at it. Market messages, confirmations, `/bb balance`,
+`/bb open`, and `/bb history` carry no fee, window, cap, or rounding
+explanation. The one deliberate exception is the bet confirmation's "Only
+matched BB are at risk", which changes what the number above it means.
+
+Two things drove this. The old `HOUSE_CUT_TERMS` blurb was 344 characters
+rendered on seven sites — 2,408 delivered characters, 17% of every character a
+player could see, and four of those sites were not a betting decision. And
+restating a rule means maintaining it twice: on 2026-08-19 the rules embed and
+the market copy described the winner fee as two different amounts at the same
+time. So every number in `/bb rules` is interpolated from the constant that
+implements it, and `settlementHouseCut`/`cancellationHouseCut` derive from
+`HOUSE_CUT_PERCENT` rather than open-coding it. Do not hand-type one.
 
 `/bb balance`, `/bb history`, `/bb pass`, and `/bb peek` are private to the
 caller. History uses caller-bound `bbnav:` component IDs and a frozen maximum
@@ -1022,10 +1039,24 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   rolls the claim back and returns a fresh quote. Matching `peek_pass` ledger
   rows debit the buyer and credit the guild house in the same transaction.
 - **One pool per `(matchId, serverId)`; a bet stores a `predictedTeamId`.**
-  Every 5v5 outcome is one binary event, so the prematch UI offers Blue and Red
-  exactly once each rather than repeating WIN/LOSE controls for every tracked
-  player. `/bb bet` also names the team directly; its tracked-player `game`
-  option identifies the open pool and does not define the wagered outcome.
+  Every 5v5 outcome is one binary event, so the prematch UI offers exactly two
+  controls rather than repeating a pair for every tracked player. That
+  not-per-tracked-player rule is the load-bearing half and must not be undone:
+  it is why same-team teammates do not render as duplicate markets.
+- **The UI names those two controls WIN and LOSE, relative to one anchor.**
+  `bettingAnchor` picks the first tracked, non-scrubbed participant;
+  `outcomeLabel` renders relative to it. Blue/Red returns only when
+  `hasTrackedPlayersOnBothTeams` is true over the pool's frozen roster, which
+  is the one case where WIN names no single outcome. Storage is untouched:
+  `predictedTeamId` remains authoritative, `custom-id.ts` still encodes
+  `"W"`/`"L"`, and `teamIdForSubjectOutcome`/`subjectWinsForTeam` are exact
+  inverses, so the framing is lossless in both directions.
+- **`/bb bet` takes four static choices — Win, Lose, Blue, Red.**
+  Slash-command choices are frozen at registration and cannot vary per game, so
+  Blue/Red are what make a per-game distinction expressible at all. `win`/`lose`
+  on a mixed lobby resolves to `{ kind: "ambiguous" }` and is answered with an
+  explanation, never guessed. Its tracked-player `game` option identifies the
+  open pool and does not define the wagered outcome.
 - **Settlement idempotency is the `poolState` column, not a marker table.**
   Unlike `MatchAiAttempt` — marked _before_ its call because OpenAI spend cannot
   join a transaction — every side effect here is local, so the transition
@@ -1038,24 +1069,53 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   share a `try` with report generation in `processMatchAndUpdatePlayers`, and
   inside it each `messageRefs` entry is sent under its own `catch`, so one dead
   channel cannot swallow the healthy channels behind it. Post-match delivery
-  returns the exact message ID per channel. The outcome is one bounded embed
-  replying to that message; a missing report or unavailable reply falls back to
-  the same one-message outcome standalone. Stable nonces keep transient retries
-  idempotent.
+  returns the exact message ID per channel and now persists it on
+  `ActiveGame.postmatchMessageIds`, so a restart between the report and the
+  announcement no longer loses the reply target. The outcome is one bounded
+  embed replying to that message; a missing report or unavailable reply falls
+  back to the same one-message outcome standalone.
+- **The outcome and the parlay result are ONE post-match embed.** Three
+  details keep that safe, and each is a way to lose a settlement permanently:
+  - The delivery nonce is keyed on `(matchId, channelId, kind)`. Without the
+    `kind` discriminator a parlay-only carrier sent on a later tick collides
+    with the outcome embed already delivered to that channel, and
+    `enforceNonce` drops it silently.
+  - `buildAnnouncements` makes a third pass for parlays no outcome
+    announcement already covers. That is the "pool voided or settled on an
+    earlier tick" case; `settleParlaysForMatch` returns nothing for it
+    afterwards, so omitting the pass loses the result outright.
+  - `fitSections` trims in priority order — earnings, then parlay legs, then
+    parlay positions, then outcome rows — instead of throwing at Discord's
+    6000-character ceiling, which merging made reachable. The description is
+    never trimmed and an over-length description still throws.
+    The cost, stated plainly: the parlay result now shares a channel's fate with
+    the outcome, where they used to fail independently. That is the price of one
+    extra post-match message, and it beats the old chunked send that could
+    deliver chunk 1 and drop chunk 2.
 - **Successful mutations refresh the prematch message instead of posting a
   receipt.** Button and `/bb` placement or cancellation confirmations remain
-  ephemeral. After the ledger transaction commits, a per-pool queue re-reads
-  current offers and best-effort edits every stored prematch message with Blue
-  and Red totals plus each named human position. At close the same message
-  becomes the receipt: it shows every human's offered, matched, and refunded BB,
-  equal final matched totals, and any aggregate house fill without exposing the
-  synthetic house account. Cancellations disappear from the public digest while
-  remaining in the audit tables, and mention notifications are suppressed. The pool
-  records `prematchContentBase` atomically with its message refs so refreshes do
-  not require Read Message History; legacy pools without that base remain
-  settlement-safe and are not edited. Close and settlement run the same refresh
-  with controls removed. `/bb history` remains the transaction-level audit
-  trail, while public outcome copy retains the exact gross-cut-net arithmetic.
+  ephemeral. After the ledger transaction commits, a queue serialized per market
+  (`refresh-queue.ts`, keyed `pool:` or `parlay:`) re-reads current offers and
+  best-effort edits every stored message. At close the same message becomes the
+  receipt: it shows every human's offered, matched, and refunded BB, equal final
+  matched totals, and any aggregate house fill without exposing the synthetic
+  house account. Cancellations disappear from the public digest while remaining
+  in the audit tables, and mention notifications are suppressed. `/bb history`
+  remains the transaction-level audit trail, while public outcome copy retains
+  the exact gross-cut-net arithmetic.
+- **This applies to the parlay market too, and it is why there are no
+  per-placement receipts.** The parlay market message is **recomputed from its
+  stored definition** rather than snapshotted: legs, subjects, odds, and close
+  time are all persisted, so unlike the outcome message there is no out-of-band
+  content to preserve, no migration, and no legacy market that cannot be
+  refreshed. The outcome message needs `prematchContentBase` precisely because
+  its non-betting content lives nowhere in `BucksMatchPool`; legacy pools
+  without that base remain settlement-safe and are not edited.
+  A `publishing` market is never refreshed — the activation outbox owns that
+  message and a refresh would race `activatePendingParlayMarkets` — and it
+  provably holds no positions, since `placeParlayBet` and `cancelParlayBet`
+  both require `marketState: "open"`. Parlay **cancellation** must refresh as
+  well; the digest is live, so skipping it leaves a stale position on screen.
 - **Settle and award outside the Discord path.** `settleAndAwardBucks` is called
   from `processMatchAndUpdatePlayers`, after the S3 ingest gate and outside
   `if (!silent)`. `processMatch` returns early with no subscribed channel and

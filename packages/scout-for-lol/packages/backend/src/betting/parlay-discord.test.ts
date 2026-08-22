@@ -4,11 +4,7 @@ import {
   PARLAY_SUBJECT_ALIAS_MAX_LENGTH,
   ParlaySubjectsSchema,
 } from "#src/betting/parlay-criteria.ts";
-import {
-  announceParlaySettlements,
-  formatParlaySettlement,
-  formatParlaySettlementChunks,
-} from "#src/betting/parlay-announce.ts";
+import { buildSettlementMessage } from "#src/betting/outcome-message.ts";
 import { buildParlayButtons } from "#src/betting/parlay-components.ts";
 import { buildParlayContent } from "#src/betting/parlay-line.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
@@ -69,6 +65,34 @@ function largeSettlementSummary(
       outcome: "won",
     })),
   };
+}
+
+function parlayEmbed(
+  parlay: Parameters<typeof buildSettlementMessage>[0]["parlay"],
+) {
+  const message = buildSettlementMessage({
+    summary: {
+      matchId: "NA1_42",
+      serverId: "1337623164146155593",
+      winningTeamId: undefined,
+      voidReason: undefined,
+      winnersPool: 0,
+      losersPool: 0,
+      houseCut: 0,
+      bets: [],
+    },
+    includeOutcome: false,
+    parlay,
+    framing: undefined,
+    earnings: [],
+    predictionSentence: undefined,
+    predictionVerdictLine: undefined,
+  });
+  const embed = message.embeds?.[0];
+  if (embed === undefined) {
+    throw new Error("expected a settlement embed");
+  }
+  return JSON.stringify(embed);
 }
 
 describe("parlay Discord experience", () => {
@@ -146,8 +170,10 @@ describe("parlay Discord experience", () => {
     ).toThrow();
   });
 
+  // The parlay result is now a section on the settlement embed rather than its
+  // own message, so these assert the embed's parlay fields.
   test("renders leg actuals, the overall side, positions, and payouts", () => {
-    const content = formatParlaySettlement({
+    const rendered = parlayEmbed({
       matchId: "NA1_42",
       serverId: "1337623164146155593",
       yesResult: false,
@@ -178,43 +204,33 @@ describe("parlay Discord experience", () => {
         },
       ],
     });
-    expect(content).toContain("actual **4**");
-    expect(content).toContain("actual **true**");
-    expect(content).toContain("Overall result: **NO**");
-    expect(content).toContain("NO 25 BB → won, 42 BB");
+    expect(rendered).toContain("Parlay — NO (1/2 legs)");
+    expect(rendered).toContain("Bryan gets at least 5 kills — 4");
+    expect(rendered).toContain("Their team gets first baron — true");
+    expect(rendered).toContain("NO 25 → won, **42 BB**");
   });
 
-  test("chunks a large settlement without dropping legs or positions", () => {
-    const summary = largeSettlementSummary();
-    const renderedLegs = summary.legs.map((leg) => leg.rendered);
-    const chunks = formatParlaySettlementChunks(summary);
-    expect(chunks.length).toBeGreaterThan(1);
-    expect(chunks.every((chunk) => chunk.length <= 1900)).toBe(true);
-    const combined = chunks.join("\n");
-    for (const rendered of renderedLegs) {
-      expect(combined).toContain(rendered);
-    }
-    expect(combined).toContain("<@1000000000000000014>");
-  });
-
-  test("attempts later settlement chunks after one send fails", async () => {
-    const summary = largeSettlementSummary([
-      {
-        channelId: "1337623164146155593",
-        messageId: "1337623164146155594",
-      },
-    ]);
-    const chunks = formatParlaySettlementChunks(summary);
-    let attempts = 0;
-    await announceParlaySettlements([summary], {
-      sendMessage: async () => {
-        attempts += 1;
-        if (attempts === 1) {
-          throw new Error("transient Discord failure");
-        }
-      },
+  test("names a void in prose rather than leaking the enum", () => {
+    const rendered = parlayEmbed({
+      matchId: "NA1_42",
+      serverId: "1337623164146155593",
+      yesResult: undefined,
+      voidReason: "expired",
+      messageRefs: [],
+      legs: [],
+      bets: [],
     });
-    expect(chunks.length).toBeGreaterThan(1);
-    expect(attempts).toBe(chunks.length);
+    expect(rendered).toContain("Parlay — voided (the game never resolved)");
+    expect(rendered).not.toContain("expired");
+  });
+
+  // Merging the parlay into the outcome embed made Discord's 6000-character
+  // ceiling reachable. Throwing there would discard a one-shot settlement, so
+  // the sections degrade in order instead.
+  test("degrades an oversized settlement instead of throwing", () => {
+    const summary = largeSettlementSummary();
+    const rendered = parlayEmbed(summary);
+    expect(rendered.length).toBeGreaterThan(0);
+    expect(rendered).toContain("Parlay");
   });
 });

@@ -42,7 +42,6 @@ import {
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
-import { announceParlaySettlements } from "#src/betting/parlay-announce.ts";
 import { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
 import { uniqueBy } from "remeda";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
@@ -284,10 +283,10 @@ async function processMatchAndUpdatePlayers(
       matchId,
       closures: bucks.closures,
       settlements: bucks.settlements,
+      parlaySettlements: bucks.parlaySettlements,
       earnings: bucks.earnings,
       postmatchMessageIds,
     });
-    await announceParlaySettlements(bucks.parlaySettlements);
   }
 
   // Mark as processed

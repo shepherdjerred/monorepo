@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/bun";
 import type { MessageCreateOptions } from "discord.js";
 import {
   BucksMessageRefsSchema,
+  BucksPoolRosterSchema,
   BucksPredictionSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -15,6 +16,8 @@ import {
   buildSettlementMessage,
   predictionVerdict,
 } from "#src/betting/outcome-message.ts";
+import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/sweep.ts";
 import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
@@ -117,8 +120,20 @@ const defaultSettlementDeliveryDependencies: SettlementDeliveryDependencies = {
   },
 };
 
-function settlementNonce(matchId: string, channelId: DiscordChannelId): string {
-  const deliveryKey = `${matchId}:${channelId}`;
+/**
+ * Idempotency key for one settlement delivery.
+ *
+ * `kind` is load-bearing since the parlay result merged into this embed: a
+ * parlay-only carrier delivered on a later tick would otherwise collide with
+ * the outcome embed already delivered to the same channel for the same match,
+ * and `enforceNonce` would silently drop a one-shot parlay settlement.
+ */
+function settlementNonce(
+  matchId: string,
+  channelId: DiscordChannelId,
+  kind: "outcome" | "parlay",
+): string {
+  const deliveryKey = `${matchId}:${channelId}:${kind}`;
   return `bbs:${Bun.hash(deliveryKey).toString(36)}`;
 }
 
@@ -167,6 +182,7 @@ export async function sendSettlementMessage(
     matchId: string;
     channelId: string;
     guildId: string;
+    kind: "outcome" | "parlay";
     postmatchMessageId?: string;
   },
   dependencies: SettlementDeliveryDependencies = defaultSettlementDeliveryDependencies,
@@ -176,7 +192,7 @@ export async function sendSettlementMessage(
   const options: MessageCreateOptions = {
     ...input.message,
     // Stable nonces make a transient retry idempotent at Discord.
-    nonce: settlementNonce(input.matchId, channelId),
+    nonce: settlementNonce(input.matchId, channelId, input.kind),
     enforceNonce: true,
     // A fifteen-person settlement must not ping fifteen people.
     allowedMentions: { parse: [] },
@@ -219,6 +235,122 @@ export async function sendSettlementMessage(
   }
 }
 
+type Announcement = {
+  summary: SettlementSummary;
+  /** False when the embed exists only to carry a parlay result. */
+  includeOutcome: boolean;
+  parlay: ParlaySettlementSummary | undefined;
+};
+
+/** A settled-but-empty pool, used as the carrier for closures and parlays. */
+function zeroSummary(matchId: string, serverId: string): SettlementSummary {
+  return {
+    matchId,
+    serverId,
+    winningTeamId: undefined,
+    voidReason: undefined,
+    winnersPool: 0,
+    losersPool: 0,
+    houseCut: 0,
+    bets: [],
+  };
+}
+
+/**
+ * A settled pool with no recorded message has no destination and no second
+ * chance: it has committed as settled, so a later pass returns no summary. A
+ * pool that owed nobody anything is not worth reporting.
+ *
+ * Deliberately not redirected elsewhere — the pool's own message is where its
+ * bettors are watching, and substituting a guess would post a guild's payouts
+ * somewhere nobody opted into.
+ */
+function reportUndeliverableSettlement(input: {
+  summary: SettlementSummary;
+  parlay: ParlaySettlementSummary | undefined;
+  unmatchedCount: number;
+  earnings: readonly EarnedAward[];
+}): void {
+  const owedSomeone =
+    input.summary.bets.some((bet) => !bet.isHouse) ||
+    input.unmatchedCount > 0 ||
+    (input.parlay?.bets.length ?? 0) > 0 ||
+    input.earnings.some((award) => award.serverId === input.summary.serverId);
+  if (!owedSomeone) {
+    return;
+  }
+  logger.error(
+    `❌ Settled Bryan Bucks pool ${input.summary.matchId} in guild ${input.summary.serverId} has no recorded message — the settlement was paid but cannot be announced`,
+  );
+  Sentry.captureMessage("Bryan Bucks settlement had nowhere to announce", {
+    level: "error",
+    tags: { source: "betting-announce", matchId: input.summary.matchId },
+    extra: { serverId: input.summary.serverId },
+  });
+}
+
+/**
+ * Decide which guilds get a settlement embed, and what each one carries.
+ *
+ * Three passes: pools this call settled, closures whose offers were all
+ * unmatched, and parlays not already covered by either. That third pass is
+ * what keeps a parlay deliverable when its pool voided or settled on an
+ * earlier tick — `settleParlaysForMatch` returns nothing for it afterwards, so
+ * omitting it loses the result outright.
+ */
+export function buildAnnouncements(input: {
+  closures: readonly ClosedPool[];
+  settlements: readonly SettlementSummary[];
+  parlaySettlements: readonly ParlaySettlementSummary[];
+}): Announcement[] {
+  const settlementServerIds = new Set(
+    input.settlements.map((summary) => summary.serverId),
+  );
+  const announcements: Announcement[] = input.settlements.map((summary) => ({
+    summary,
+    includeOutcome: true,
+    parlay: undefined,
+  }));
+  for (const closure of input.closures) {
+    if (closure.positions.length === 0) {
+      continue;
+    }
+    const alreadySettled = settlementServerIds.has(closure.serverId);
+    const hasMatchedStake = closure.positions.some(
+      (position) => position.matchedStake !== 0,
+    );
+    if (!alreadySettled && !hasMatchedStake) {
+      announcements.push({
+        summary: zeroSummary(closure.matchId, closure.serverId),
+        includeOutcome: true,
+        parlay: undefined,
+      });
+    }
+  }
+  for (const parlay of input.parlaySettlements) {
+    const covered = announcements.some(
+      (announcement) =>
+        announcement.summary.matchId === parlay.matchId &&
+        announcement.summary.serverId === parlay.serverId,
+    );
+    if (!covered) {
+      announcements.push({
+        summary: zeroSummary(parlay.matchId, parlay.serverId),
+        includeOutcome: false,
+        parlay: undefined,
+      });
+    }
+  }
+  for (const announcement of announcements) {
+    announcement.parlay = input.parlaySettlements.find(
+      (parlay) =>
+        parlay.matchId === announcement.summary.matchId &&
+        parlay.serverId === announcement.summary.serverId,
+    );
+  }
+  return announcements;
+}
+
 /**
  * Post one settlement message per guild that this pass actually settled.
  *
@@ -230,42 +362,19 @@ export async function announceSettlements(
     matchId: string;
     closures: readonly ClosedPool[];
     settlements: readonly SettlementSummary[];
+    parlaySettlements: readonly ParlaySettlementSummary[];
     earnings: readonly EarnedAward[];
     postmatchMessageIds: ReadonlyMap<string, string>;
   },
   prismaClient: ExtendedPrismaClient = prisma,
   deliveryDependencies: SettlementDeliveryDependencies = defaultSettlementDeliveryDependencies,
 ): Promise<void> {
-  const settlementServerIds = new Set(
-    input.settlements.map((summary) => summary.serverId),
-  );
-  const announcements = [...input.settlements];
-  for (const closure of input.closures) {
-    if (settlementServerIds.has(closure.serverId)) {
-      continue;
-    }
-    if (
-      closure.positions.length === 0 ||
-      closure.positions.some((position) => position.matchedStake !== 0)
-    ) {
-      continue;
-    }
-    announcements.push({
-      matchId: closure.matchId,
-      serverId: closure.serverId,
-      winningTeamId: undefined,
-      voidReason: undefined,
-      winnersPool: 0,
-      losersPool: 0,
-      houseCut: 0,
-      bets: [],
-    });
-  }
+  const announcements = buildAnnouncements(input);
   if (announcements.length === 0) {
     return;
   }
 
-  for (const summary of announcements) {
+  for (const { summary, includeOutcome, parlay } of announcements) {
     try {
       const pool = await prismaClient.bucksMatchPool.findUnique({
         where: {
@@ -277,6 +386,7 @@ export async function announceSettlements(
         select: {
           messageRefs: true,
           predictionJson: true,
+          roster: true,
           bets: {
             where: {
               betOutcome: "refunded",
@@ -301,9 +411,11 @@ export async function announceSettlements(
         continue;
       }
       const settledBetIds = new Set(summary.bets.map((bet) => bet.betId));
-      const unmatchedPositions = pool.bets
-        .filter((bet) => !settledBetIds.has(bet.id))
-        .map((bet) => storedUnmatchedPosition(bet));
+      const unmatchedPositions = includeOutcome
+        ? pool.bets
+            .filter((bet) => !settledBetIds.has(bet.id))
+            .map((bet) => storedUnmatchedPosition(bet))
+        : [];
 
       const predictionSentence = formatPrediction(pool.predictionJson);
       const prediction =
@@ -312,8 +424,14 @@ export async function announceSettlements(
           : BucksPredictionSchema.safeParse(JSON.parse(pool.predictionJson))
               .data;
 
+      const anchor = bettingAnchor(
+        BucksPoolRosterSchema.parse(JSON.parse(pool.roster)).participants,
+      );
       const message = buildSettlementMessage({
         summary,
+        includeOutcome,
+        parlay,
+        framing: anchor === undefined ? undefined : subjectFraming(anchor),
         earnings: input.earnings,
         unmatchedPositions,
         predictionSentence,
@@ -336,23 +454,12 @@ export async function announceSettlements(
         // message is where its bettors are watching, and substituting a guess
         // would post a guild's payouts somewhere nobody opted into. A pool that
         // owed nobody anything is not worth reporting.
-        const owedSomeone =
-          summary.bets.some((bet) => !bet.isHouse) ||
-          unmatchedPositions.length > 0 ||
-          input.earnings.some((award) => award.serverId === summary.serverId);
-        if (owedSomeone) {
-          logger.error(
-            `❌ Settled Bryan Bucks pool ${summary.matchId} in guild ${summary.serverId} has no recorded message — the settlement was paid but cannot be announced`,
-          );
-          Sentry.captureMessage(
-            "Bryan Bucks settlement had nowhere to announce",
-            {
-              level: "error",
-              tags: { source: "betting-announce", matchId: summary.matchId },
-              extra: { serverId: summary.serverId },
-            },
-          );
-        }
+        reportUndeliverableSettlement({
+          summary,
+          parlay,
+          unmatchedCount: unmatchedPositions.length,
+          earnings: input.earnings,
+        });
         continue;
       }
       for (const ref of refs) {
@@ -370,6 +477,7 @@ export async function announceSettlements(
               matchId: summary.matchId,
               channelId: ref.channelId,
               guildId: summary.serverId,
+              kind: includeOutcome ? "outcome" : "parlay",
               ...(postmatchMessageId === undefined
                 ? {}
                 : { postmatchMessageId }),
