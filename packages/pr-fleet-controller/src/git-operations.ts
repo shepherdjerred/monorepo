@@ -1,7 +1,10 @@
 import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import type { ReviewProvider } from "@shepherdjerred/code-review";
-import { buildReviewRequestMarker } from "@shepherdjerred/code-review/request-review";
+import {
+  buildReviewRequestBody,
+  buildReviewRequestMarker,
+} from "@shepherdjerred/code-review/request-review";
 import { z } from "zod";
 import { validateCommitMessage } from "@shepherdjerred/root-scripts/lib/commit-message.ts";
 import { isTelemetryCaptureError } from "./controller-telemetry.ts";
@@ -447,7 +450,12 @@ export class GitOperations {
         "--repo",
         this.#repo,
         "--body",
-        strategy.buildComment(marker),
+        buildReviewRequestBody({
+          command: strategy.command,
+          head: headSha,
+          attempt: 1,
+          marker,
+        }),
       ],
       undefined,
       { signal },

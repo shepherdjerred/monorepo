@@ -2,6 +2,7 @@ import { Context } from "@temporalio/activity";
 import { Octokit } from "octokit";
 import * as Sentry from "@sentry/bun";
 import {
+  blockingPolicyForThreshold,
   isBlocking,
   isProviderAuthor,
   REVIEW_SIGNAL_SCHEMA,
@@ -175,7 +176,11 @@ async function buildSignalEvent(input: {
       isProviderAuthor(provider, thread.authorLogin) && !thread.isOutdated,
   );
   const blocking = threadResult.threads.filter((thread) =>
-    isBlocking(thread, provider, MAX_BLOCKING_PRIORITY),
+    isBlocking(
+      thread,
+      provider,
+      blockingPolicyForThreshold(MAX_BLOCKING_PRIORITY),
+    ),
   );
 
   // Latency only when the reviewed commit IS the head (else a stale review of
@@ -209,6 +214,8 @@ async function buildSignalEvent(input: {
     timed_out: false,
     stale_reaction: state.staleReaction,
     decision: null,
+    // The collector observes; it never asks for a review.
+    request_attempts: null,
     parser_commit: null,
   };
 }

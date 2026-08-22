@@ -13,6 +13,7 @@ const thread: ReviewThread = {
   title: null,
   threadId: null,
   commentId: null,
+  raisedInReview: null,
 };
 
 describe("assertGraphQlOk", () => {

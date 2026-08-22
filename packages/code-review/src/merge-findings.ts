@@ -81,6 +81,26 @@ export function mergeDuplicateFindings(
     finding.isResolved = (current.length === 0 ? copies : current).some(
       (copy) => copy.isResolved,
     );
+    // Preserve the earliest review that raised this finding. Qodo's persistent
+    // comment and addressable thread can both be present, and a later review
+    // leaves the old thread outdated beside the new one. Selecting only the
+    // current copy would let an unresolved first-review finding become
+    // advisory merely because the provider repeated it after a push.
+    const attributionCopies = copies
+      .filter((copy) => copy.raisedInReview !== null)
+      .sort((left, right) => {
+        const leftReview = left.raisedInReview;
+        const rightReview = right.raisedInReview;
+        if (leftReview === null || rightReview === null) return 0;
+        if (leftReview.ordinal !== rightReview.ordinal) {
+          return leftReview.ordinal - rightReview.ordinal;
+        }
+        return (
+          Number(rightReview.hadBlockingSeverity) -
+          Number(leftReview.hadBlockingSeverity)
+        );
+      });
+    finding.raisedInReview = attributionCopies[0]?.raisedInReview ?? null;
   }
   return merged;
 }

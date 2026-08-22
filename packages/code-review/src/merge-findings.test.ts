@@ -27,6 +27,8 @@ describe("mergeDuplicateFindings", () => {
     title: "Turn outlives session destroy",
     threadId: null,
     commentId: 5_236_306_054,
+    // The review comment records no round; only the thread copy can say.
+    raisedInReview: null,
   };
   const fromThread: ReviewThread = {
     authorLogin: "qodo-code-review",
@@ -39,6 +41,7 @@ describe("mergeDuplicateFindings", () => {
     title: "Turn outlives session destroy",
     threadId: "PRRT_kwDOHf4r4c6ZlJlJ",
     commentId: null,
+    raisedInReview: { ordinal: 2, hadBlockingSeverity: true },
   };
 
   test("counts one finding rendered on both surfaces once", () => {
@@ -91,6 +94,30 @@ describe("mergeDuplicateFindings", () => {
       expect(merged).toHaveLength(1);
       expect(merged[0]?.isResolved).toBe(false);
       expect(merged[0]?.isOutdated).toBe(false);
+    }
+  });
+
+  test("preserves first-review provenance, regardless of copy order", () => {
+    const oldCopy = {
+      ...fromThread,
+      threadId: "old-thread",
+      isOutdated: true,
+      raisedInReview: { ordinal: 1, hadBlockingSeverity: true },
+    };
+    const currentCopy = {
+      ...fromThread,
+      threadId: "current-thread",
+      raisedInReview: { ordinal: 2, hadBlockingSeverity: false },
+    };
+    for (const order of [
+      [oldCopy, currentCopy],
+      [currentCopy, oldCopy],
+    ]) {
+      const [merged] = mergeDuplicateFindings(order, qodoProvider);
+      expect(merged?.raisedInReview).toEqual({
+        ordinal: 1,
+        hadBlockingSeverity: true,
+      });
     }
   });
 
@@ -195,6 +222,7 @@ describe("parseQodoFindingTitle", () => {
       priority: 1,
       threadId: null,
       commentId: null,
+      raisedInReview: null,
     };
     // The comment says "joinVoice"; the thread says "Joinvoice".
     expect(
@@ -212,6 +240,7 @@ describe("parseQodoFindingTitle", () => {
       priority: 1,
       threadId: null,
       commentId: null,
+      raisedInReview: null,
     };
     // `toolkit pr review list` prints the key and `resolve --finding <key>`
     // matches it back by equality, so a control character in the key puts the

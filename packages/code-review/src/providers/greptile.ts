@@ -17,6 +17,7 @@ import type { ReviewProvider } from "../types.ts";
 export const greptileProvider: ReviewProvider = {
   id: "greptile",
   displayName: "Greptile",
+  startsReviewOnPush: true,
   botAuthoredPullRequestPolicy: "review",
   authorLogins: ["greptile-apps"],
   parseSeverity: parseGreptileSeverity,
