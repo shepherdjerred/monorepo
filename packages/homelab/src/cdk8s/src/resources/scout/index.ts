@@ -27,6 +27,7 @@ import {
   zfsVolumeSelinuxLevels,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/analytics.ts";
+import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 export function createScoutDeployment(chart: Chart, stage: Stage) {
   const analytics = scoutAnalyticsConfiguration(stage);
@@ -52,7 +53,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   });
   const {
     path,
-    image,
+    imageVersion,
     applicationId,
     s3BucketName,
     selinuxLevel,
@@ -61,7 +62,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   } = match(stage)
     .with("beta", () => {
       return {
-        image: `ghcr.io/shepherdjerred/scout-for-lol:${versions["shepherdjerred/scout-for-lol/beta"]}`,
+        imageVersion: versions["shepherdjerred/scout-for-lol/beta"],
         path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/rtu44pohnp5ixdp2njuv5f6t2e",
         applicationId: "1311755320745394317",
         s3BucketName: "scout-beta",
@@ -72,7 +73,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     })
     .with("prod", () => {
       return {
-        image: `ghcr.io/shepherdjerred/scout-for-lol:${versions["shepherdjerred/scout-for-lol/prod"]}`,
+        imageVersion: versions["shepherdjerred/scout-for-lol/prod"],
         path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/pacrc4wfbtct4y3qazkvazop5a",
         applicationId: "1182800769188110366",
         s3BucketName: "scout-prod",
@@ -99,26 +100,25 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     "scout-pg-secret-ref",
     `scout.scout-${stage}-postgresql.credentials.postgresql.acid.zalan.do`,
   );
-  const dbEnv: Record<string, EnvValue> =
-    stage === "beta"
-      ? {
-          DB_USER: EnvValue.fromSecretValue({
-            secret: pgSecretRef,
-            key: "username",
-          }),
-          DB_PASSWORD: EnvValue.fromSecretValue({
-            secret: pgSecretRef,
-            key: "password",
-          }),
-          DATABASE_URL: EnvValue.fromValue(
-            `postgresql://$(DB_USER):$(DB_PASSWORD)@scout-${stage}-postgresql.scout-${stage}.svc.cluster.local:5432/scout`,
-          ),
-        }
-      : {
-          // Production remains on the previous SQLite image until its
-          // promoted PostgreSQL-compatible image is pinned after beta soak.
-          DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
-        };
+  const dbEnv: Record<string, EnvValue> = scoutImageUsesPostgres(imageVersion)
+    ? {
+        DB_USER: EnvValue.fromSecretValue({
+          secret: pgSecretRef,
+          key: "username",
+        }),
+        DB_PASSWORD: EnvValue.fromSecretValue({
+          secret: pgSecretRef,
+          key: "password",
+        }),
+        DATABASE_URL: EnvValue.fromValue(
+          `postgresql://$(DB_USER):$(DB_PASSWORD)@scout-${stage}-postgresql.scout-${stage}.svc.cluster.local:5432/scout`,
+        ),
+      }
+    : {
+        // Older production pins remain on SQLite until a PostgreSQL-
+        // compatible image is promoted after the beta soak.
+        DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
+      };
 
   const localPathVolume = new ZfsNvmeVolume(chart, "scout-storage-claim", {
     // 24Gi: sized when the SQLite match DB lived here and filled the original
@@ -257,7 +257,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
 
   deployment.addContainer(
     withCommonProps({
-      image: image,
+      image: `ghcr.io/shepherdjerred/scout-for-lol:${imageVersion}`,
       ports: [
         {
           name: "port-3000",
