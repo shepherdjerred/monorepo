@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   ACCOUNT_LAKE_COLUMNS,
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,

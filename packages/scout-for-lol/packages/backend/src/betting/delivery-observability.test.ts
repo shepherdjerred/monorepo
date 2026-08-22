@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   observeBucksDelivery,
   recordBucksDeliverySkip,
@@ -136,10 +136,10 @@ describe("betting metric naming", () => {
       expect(metric.name).toMatch(/^betting_[a-z0-9_]+$/u);
       const type = String(metric.type);
       if (type === "counter") {
-        expect(metric.name).toEndWith("_total");
+        expect(metric.name.endsWith("_total")).toBe(true);
       }
       if (type === "histogram") {
-        expect(metric.name).toEndWith("_seconds");
+        expect(metric.name.endsWith("_seconds")).toBe(true);
       }
     }
   });
