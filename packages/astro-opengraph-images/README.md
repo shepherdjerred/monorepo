@@ -215,9 +215,9 @@ If you're using this project, [open a PR](https://github.com/shepherdjerred/mono
 
 ## Filtering Pages
 
-By default, this integration generates an Open Graph image for every page in your build output. Pass an optional `filter` callback to skip pages — for example, the 404 page, utility routes, or sections where images don't apply.
+By default, this integration generates an Open Graph image for every page in your build output. Pass an optional `pathFilter` callback to skip pages before their output files are read — for example, the 404 page, utility routes, or sections where images don't apply.
 
-The callback receives the same `RenderFunctionInput` as your renderer (pathname, parsed DOM, Open Graph metadata). Return `true` to render the image, `false` to skip it. The callback may be synchronous or return a `Promise<boolean>`.
+The `pathFilter` callback receives the page pathname. Return `true` to continue processing the page and `false` to skip it. The callback may be synchronous or return a `Promise<boolean>`.
 
 ```diff
  import opengraphImages, { presets } from "astro-opengraph-images";
@@ -228,7 +228,7 @@ The callback receives the same `RenderFunctionInput` as your renderer (pathname,
        options: { fonts: [/* ... */] },
        render: presets.blackAndWhite,
 +      // Only generate images for blog posts
-+      filter: ({ pathname }) => pathname.startsWith("/blog/"),
++      pathFilter: ({ pathname }) => pathname.startsWith("/blog/"),
      }),
    ],
  });
@@ -237,16 +237,16 @@ The callback receives the same `RenderFunctionInput` as your renderer (pathname,
 More examples:
 
 ```typescript
-// Exclude utility pages
-filter: ({ pathname }) => !["/404/", "/"].includes(pathname);
+// Exclude utility pages before their HTML is read
+pathFilter: ({ pathname }) => !["/404/", "/"].includes(pathname);
 
-// Filter on DOM content or async data
+// Filter on DOM content after Open Graph metadata has been extracted
 filter: async ({ document, pathname }) =>
   document.querySelector('meta[property="og:image"]') !== null &&
   pathname.startsWith("/blog/");
 ```
 
-When `verbose: true` is set on `options`, skipped pages are logged.
+Use `pathFilter` when excluded pages may not have the required Open Graph metadata. The metadata-aware `filter` runs after extraction, so pages reaching it must still have the required tags. When `verbose: true` is set on `options`, skipped pages are logged.
 
 ## Custom Renderers
 

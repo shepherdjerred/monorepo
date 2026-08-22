@@ -5,6 +5,7 @@ export type IntegrationInput = {
   options: PartialIntegrationOptions;
   render: RenderFunction;
   filter?: FilterFunction;
+  pathFilter?: PathFilterFunction;
 };
 
 /** When applied to PartialIntegrationOptions this type equals IntegrationOptions */
@@ -35,6 +36,9 @@ export type IntegrationOptions = PartialIntegrationOptions &
 export type Page = {
   pathname: string;
 };
+
+/** A function that filters pages before their output files are read */
+export type PathFilterFunction = (input: Page) => Promise<boolean> | boolean;
 
 /** The input Astro passes to the build done hook */
 export type AstroBuildDoneHookInput = Parameters<

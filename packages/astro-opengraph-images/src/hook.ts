@@ -5,6 +5,7 @@ import type {
   FilterFunction,
   IntegrationOptions,
   Page,
+  PathFilterFunction,
   RenderFunction,
 } from "./types.ts";
 import * as fs from "node:fs/promises";
@@ -22,14 +23,16 @@ export async function buildDoneHook({
   dir,
   render,
   filter,
+  pathFilter,
 }: AstroBuildDoneHookInput & {
   options: IntegrationOptions;
   render: RenderFunction;
   filter: FilterFunction | undefined;
+  pathFilter: PathFilterFunction | undefined;
 }) {
   logger.info("Generating Open Graph images");
   const promises = pages.map((page) =>
-    handlePage({ page, options, render, dir, logger, filter }),
+    handlePage({ page, options, render, dir, logger, filter, pathFilter }),
   );
   await Promise.all(promises);
 }
@@ -41,6 +44,7 @@ type HandlePageInput = {
   dir: URL;
   logger: AstroIntegrationLogger;
   filter: FilterFunction | undefined;
+  pathFilter: PathFilterFunction | undefined;
 };
 
 async function handlePage({
@@ -50,7 +54,19 @@ async function handlePage({
   dir,
   logger,
   filter,
+  pathFilter,
 }: HandlePageInput) {
+  if (pathFilter) {
+    const shouldRender = await pathFilter(page);
+
+    if (!shouldRender) {
+      if (options.verbose) {
+        logger.info(`Skipping page ${page.pathname}.`);
+      }
+      return;
+    }
+  }
+
   // gets the absolute path to the HTML file. E.g. /home/user/project/dist/blog/index.html
   // fileURLToPath() converts the URL to a file path. Without it, the path would start with a leading slash on Windows
   // systems, resulting in an invalid path.
