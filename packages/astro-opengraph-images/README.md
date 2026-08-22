@@ -1,8 +1,8 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.rawgit.com/shepherdjerred/astro-opengraph-images/main/assets/logo-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://cdn.rawgit.com/shepherdjerred/astro-opengraph-images/main/assets/logo-light.png">
-    <img alt="project logo" src="https://cdn.rawgit.com/shepherdjerred/astro-opengraph-images/main/assets/logo-light.png" height=75>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/astro-opengraph-images/assets/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/astro-opengraph-images/assets/logo-light.png">
+    <img alt="project logo" src="https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/astro-opengraph-images/assets/logo-light.png" height=75>
   </picture>
 
 [![astro-opengraph-images](https://img.shields.io/npm/v/astro-opengraph-images.svg)](https://www.npmjs.com/package/astro-opengraph-images)

@@ -22,10 +22,31 @@
 
 import { requireEnv, run } from "./lib/run.ts";
 import { setupGitAuth } from "./lib/github-auth.ts";
+import {
+  classifyAllPackageReleases,
+  type PackageReleaseDecision,
+} from "./lib/npm-release-eligibility.ts";
 import { runReleaseRefiner } from "./lib/release-refiner.ts";
 import { runMain } from "./lib/transient.ts";
+import { runReleasePlease } from "@shepherdjerred/release-tools/runner";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
+
+function printReleaseDecisions(
+  decisions: readonly PackageReleaseDecision[],
+): void {
+  for (const decision of decisions) {
+    const state = decision.eligible ? "eligible" : "excluded";
+    const reason =
+      decision.reasons.length === 0
+        ? "no consumer-facing changes"
+        : decision.reasons.join("; ");
+    console.log(
+      `--- npm release policy: ${decision.packageName} ${state} ` +
+        `(since ${decision.latestTag}; ${reason})`,
+    );
+  }
+}
 
 /** Repo root = one level up from scripts/. */
 function repoRoot(): string {
@@ -57,6 +78,12 @@ async function main(): Promise<void> {
   }
 
   const root = repoRoot();
+  const releaseDecisions = await classifyAllPackageReleases(root);
+  printReleaseDecisions(releaseDecisions);
+  const excludedPaths = releaseDecisions
+    .filter((decision) => !decision.eligible)
+    .map((decision) => decision.packagePath);
+
   // Validate both providers before release-please mutates the release PR.
   // Codex is an intentional quota fallback, not an optional best-effort path.
   const claudeToken = requireEnv("CLAUDE_CODE_OAUTH_TOKEN");
@@ -71,26 +98,13 @@ async function main(): Promise<void> {
   const env = auth.env;
 
   try {
-    // release-please takes the token via --token; it does not need git askpass.
-    const releasePlease = (subcommand: string) =>
-      run(
-        [
-          "bun",
-          "--no-install",
-          "run",
-          "--cwd",
-          "packages/release-tools",
-          "release-please",
-          "--",
-          subcommand,
-          `--token=${auth.token}`,
-          `--repo-url=${MONOREPO_REPO}`,
-          "--target-branch=main",
-        ],
-        { cwd: root, env },
-      );
-
-    await releasePlease("release-pr");
+    await runReleasePlease({
+      phase: "release-pr",
+      token: auth.token,
+      repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
+      targetBranch: "main",
+      excludedPaths,
+    });
 
     // Refine the just-generated CHANGELOGs. The prompt is the source of truth
     // for the agent's behavior; it exits 0 with a status envelope when there
@@ -115,7 +129,13 @@ async function main(): Promise<void> {
     });
     console.log(`--- CHANGELOG refinement complete (provider=${provider})`);
 
-    await releasePlease("github-release");
+    await runReleasePlease({
+      phase: "github-release",
+      token: auth.token,
+      repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
+      targetBranch: "main",
+      excludedPaths,
+    });
     console.log("--- release-please complete");
   } finally {
     await auth.cleanup();

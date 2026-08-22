@@ -92,7 +92,14 @@ git diff --stat <last-tag>..origin/main -- <package-path>
 
 Read every non-trivial file change. Walk through the commits with `git log --oneline <last-tag>..origin/main -- <package-path>` to attribute changes accurately.
 
-### 5. Library-consumer filter — DROP these from the CHANGELOG
+### 5. Library-consumer filter — match the release eligibility preflight
+
+The release lane has already classified each package's diff. That classification
+is authoritative for whether a package is released. Your job is only to explain
+the eligible package's consumer-facing changes clearly; never reintroduce a
+filtered internal change because it appears in the raw Release Please notes.
+
+### 5a. DROP these from the CHANGELOG
 
 These ship as monorepo-internal churn or never reach the npm tarball at all:
 
@@ -111,7 +118,14 @@ These ship as monorepo-internal churn or never reach the npm tarball at all:
 - Runtime-dep changes in `dependencies` or `peerDependencies` (verify version diff via `git diff -- package.json`)
 - Source/behavior changes under `src/` (verify with `git diff -- src/`)
 - README content that ships in the npm tarball (`README.md`)
-- `package.json` metadata that ships: `repository`, `bugs`, `homepage`, `version`, `main`, `exports`, `files`, `type`
+- `package.json` metadata that ships: `repository`, `bugs`, `homepage`, `main`, `exports`, `files`, `type`
+
+The preflight also treats `optionalDependencies`, `peerDependenciesMeta`,
+`bin`, `types`, `engines`, `os`, `cpu`, `publishConfig`, and `license` as
+consumer-visible metadata. It ignores changes limited to `version`,
+`devDependencies`, `scripts`, or `overrides`. Any non-test source change is
+release-eligible even when it looks mechanical; do not make semantic guesses
+about whether it deserves a version.
 
 ### 6. Rewrite each new CHANGELOG section
 
