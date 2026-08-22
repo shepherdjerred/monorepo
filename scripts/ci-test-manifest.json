@@ -634,6 +634,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/config",
+      "directory": "packages/config",
+      "steps": [{ "runner": "vitest" }]
+    },
+    {
+      "package": "@shepherdjerred/feature-flags",
+      "directory": "packages/feature-flags",
+      "steps": [{ "runner": "vitest" }]
+    },
+    {
       "package": "@shepherdjerred/version-catalog",
       "directory": "packages/version-catalog",
       "steps": [

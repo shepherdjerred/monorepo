@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { SubtitlePref } from "@shepherdjerred/streambot/sources/source.ts";
 import { parseJson } from "@shepherdjerred/streambot/util/errors.ts";
+import { subtitlesEnabled } from "@shepherdjerred/streambot/config/dynamic.ts";
 
 /**
  * Pure subtitle helpers: name parsing, cross-source ranking, codec classification, and yt-dlp arg
@@ -299,7 +300,10 @@ export function effectiveSubtitleConfig(
   pref: SubtitlePref | undefined,
   config: Config,
 ): EffectiveSubtitleConfig {
-  const enabled = pref?.enabled ?? config.subtitles.enabled;
+  // Per-request preference still wins; the dynamic layer only replaces the
+  // global default, and falls back to the passed config until startup
+  // initializes it.
+  const enabled = pref?.enabled ?? subtitlesEnabled(config.subtitles.enabled);
   if (pref?.language !== undefined && pref.language.length > 0) {
     const { language, modifier } = parseLangPref(pref.language);
     return { enabled, languages: [language], pinnedModifier: modifier };
