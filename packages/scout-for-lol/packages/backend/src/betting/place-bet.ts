@@ -48,6 +48,8 @@ export type PlaceBetResult =
       totalStake: number;
       balanceAfter: number;
       side: RiotTeamId;
+      /** True when this call added to an already-open position. */
+      wasTopUp: boolean;
     }
   | { kind: "window_closed" }
   | { kind: "no_pool" }
@@ -116,7 +118,7 @@ export async function placeBet(
   if (result.kind === "placed") {
     bettingStakeBucksTotal.inc({ movement: "placed" }, input.stake);
     logBucksTransition({
-      event: "bucks.bet.placed",
+      event: result.wasTopUp ? "bucks.bet.topped_up" : "bucks.bet.placed",
       matchId: input.matchId,
       serverId: input.serverId,
       actorDiscordId: input.discordId,
@@ -309,6 +311,7 @@ async function placeBetInner(
         totalStake: bet.stake,
         balanceAfter,
         side: predictedTeamId,
+        wasTopUp: existing !== null,
       };
     });
   } catch (error) {

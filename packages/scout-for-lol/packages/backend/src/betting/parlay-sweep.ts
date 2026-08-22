@@ -11,6 +11,7 @@ import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { bettingParlayVoidsTotal } from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-parlay-sweep");
 
@@ -36,6 +37,14 @@ export async function closeExpiredParlayWindows(
         data: { marketState: "closed" },
       });
       if (claim.count !== 1) continue;
+      logBucksTransition({
+        event: "bucks.parlay.closed",
+        matchId: market.matchId,
+        serverId: market.serverId,
+        fromState: "open",
+        toState: "closed",
+        surface: "sweep",
+      });
       closed.push({
         matchId: market.matchId,
         serverId: market.serverId,
@@ -90,7 +99,7 @@ export async function voidStaleParlayMarkets(
             settledAt,
           },
         });
-        if (claim.count !== 1) return false;
+        if (claim.count !== 1) return;
         const bets = await tx.bucksParlayBet.findMany({
           where: { marketId: market.id, betOutcome: "pending" },
           select: {
@@ -142,11 +151,34 @@ export async function voidStaleParlayMarkets(
             context: { ...context, credited: bet.houseReserve },
           });
         }
-        return true;
+        return { bets };
       });
-      if (voided) {
+      if (voided !== undefined) {
         count += 1;
         bettingParlayVoidsTotal.inc({ reason: "expired" });
+        logBucksTransition({
+          event: "bucks.parlay.voided",
+          matchId: market.matchId,
+          serverId: market.serverId,
+          fromState: market.marketState,
+          toState: "voided",
+          reason: "expired",
+          surface: "sweep",
+        });
+        for (const bet of voided.bets) {
+          logBucksTransition({
+            event: "bucks.parlay_bet.settled",
+            matchId: market.matchId,
+            serverId: market.serverId,
+            betId: bet.id,
+            bucksAccountId: bet.bucksAccountId,
+            side: BucksParlaySideSchema.parse(bet.side),
+            stake: bet.stake,
+            payout: bet.stake,
+            reason: "voided",
+            surface: "sweep",
+          });
+        }
         if (market.marketState === "publishing") {
           await disablePreparationReferences(
             BucksMessageRefsSchema.parse(JSON.parse(market.messageRefs)),

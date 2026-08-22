@@ -265,6 +265,7 @@ async function replyParlay(
     discordId,
     side: parsedSide,
     stake,
+    surface: "command",
   });
   await interaction.editReply({ content: describeParlayResult(result) });
   if (result.kind === "placed") {

@@ -11,6 +11,8 @@ import {
 import { PARLAY_BETTING_WINDOW_MS } from "#src/betting/constants.ts";
 import { buildParlayButtons } from "#src/betting/parlay-components.ts";
 import { buildParlayContent } from "#src/betting/parlay-line.ts";
+import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { send } from "#src/league/discord/channel.ts";
@@ -25,10 +27,14 @@ async function disablePreparationMessages(
 ): Promise<void> {
   const disabled = await Promise.allSettled(
     messages.map((message) =>
-      message.edit({
-        content: "🎲 This Bryan Bucks parlay could not be opened.",
-        components: [],
-      }),
+      observeBucksDelivery(
+        { surface: "parlay_preparation", operation: "edit", matchId },
+        () =>
+          message.edit({
+            content: "🎲 This Bryan Bucks parlay could not be opened.",
+            components: [],
+          }),
+      ),
     ),
   );
   for (const result of disabled) {
@@ -46,16 +52,26 @@ export async function disableParlayPreparationReferences(
   matchId: string,
 ): Promise<void> {
   const disabled = await Promise.allSettled(
-    refs.map(async (ref) => {
-      const channel = await client.channels.fetch(
-        DiscordChannelIdSchema.parse(ref.channelId),
-      );
-      if (channel?.isTextBased() !== true) return;
-      await channel.messages.edit(ref.messageId, {
-        content: "🎲 This Bryan Bucks parlay could not be opened.",
-        components: [],
-      });
-    }),
+    refs.map((ref) =>
+      observeBucksDelivery(
+        {
+          surface: "parlay_preparation",
+          operation: "edit",
+          matchId,
+          channelId: ref.channelId,
+        },
+        async () => {
+          const channel = await client.channels.fetch(
+            DiscordChannelIdSchema.parse(ref.channelId),
+          );
+          if (channel?.isTextBased() !== true) return;
+          await channel.messages.edit(ref.messageId, {
+            content: "🎲 This Bryan Bucks parlay could not be opened.",
+            components: [],
+          });
+        },
+      ),
+    ),
   );
   for (const result of disabled) {
     if (result.status === "rejected") {
@@ -73,14 +89,28 @@ async function activateMessageReference(input: {
   content: string;
 }): Promise<{ channelId: string; messageId: string } | undefined> {
   try {
-    const channel = await client.channels.fetch(
-      DiscordChannelIdSchema.parse(input.ref.channelId),
+    await observeBucksDelivery(
+      {
+        surface: "parlay_market",
+        operation: "edit",
+        matchId: input.matchId,
+        channelId: input.ref.channelId,
+      },
+      async () => {
+        const channel = await client.channels.fetch(
+          DiscordChannelIdSchema.parse(input.ref.channelId),
+        );
+        if (channel?.isTextBased() !== true) {
+          throw new Error(
+            `Bryan Bucks parlay activation channel ${input.ref.channelId} is unavailable or not text based`,
+          );
+        }
+        await channel.messages.edit(input.ref.messageId, {
+          content: input.content,
+          components: [buildParlayButtons({ matchId: input.matchId })],
+        });
+      },
     );
-    if (channel?.isTextBased() !== true) return;
-    await channel.messages.edit(input.ref.messageId, {
-      content: input.content,
-      components: [buildParlayButtons({ matchId: input.matchId })],
-    });
     return { ...input.ref };
   } catch (error) {
     logger.warn(
@@ -239,6 +269,16 @@ export async function activatePendingParlayMarkets(
           });
         }
       }
+      if (claim.count === 1) {
+        logBucksTransition({
+          event: "bucks.parlay.opened",
+          matchId: market.matchId,
+          serverId: market.serverId,
+          fromState: "publishing",
+          toState: "open",
+          surface: "prematch",
+        });
+      }
       activated += claim.count;
     } catch (error) {
       logger.error(
@@ -300,12 +340,22 @@ export async function publishParlayDefinition(
       for (const outcomeRef of outcomeRefs) {
         signal?.throwIfAborted();
         try {
-          const sent = await send(
+          const sent = await observeBucksDelivery(
             {
-              content: "🎲 Preparing the Bryan Bucks parlay…",
+              surface: "parlay_preparation",
+              operation: "send",
+              matchId: definition.matchId,
+              serverId: pool.serverId,
+              channelId: outcomeRef.channelId,
             },
-            DiscordChannelIdSchema.parse(outcomeRef.channelId),
-            DiscordGuildIdSchema.parse(pool.serverId),
+            () =>
+              send(
+                {
+                  content: "🎲 Preparing the Bryan Bucks parlay…",
+                },
+                DiscordChannelIdSchema.parse(outcomeRef.channelId),
+                DiscordGuildIdSchema.parse(pool.serverId),
+              ),
           );
           sentMessages.push(sent);
           messages.push(sent);
@@ -369,6 +419,13 @@ export async function publishParlayDefinition(
       }
       for (const message of market.messages) durableMessages.add(message);
       persisted += 1;
+      logBucksTransition({
+        event: "bucks.parlay.published",
+        matchId: market.matchId,
+        serverId: market.serverId,
+        toState: "publishing",
+        surface: "prematch",
+      });
     }
     if (persisted === 0) return 0;
     // Buttons appear only after every market is durable. A process exit before
