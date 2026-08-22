@@ -47,6 +47,8 @@ export type FlagSourceOptions = {
   readonly attributes?: Readonly<Record<string, string | number | boolean>>;
 };
 
+const FATAL_SOURCE_ERROR_NAME = "ConfigSourceFatalError";
+
 function valueOrAbsent<T>(
   result: FlagResult<T>,
   flag: string,
@@ -55,9 +57,11 @@ function valueOrAbsent<T>(
     return undefined;
   }
   if (result.errorCode !== undefined) {
-    throw new Error(
+    const error = new Error(
       `flag "${flag}" evaluation failed with ${result.errorCode}`,
     );
+    error.name = FATAL_SOURCE_ERROR_NAME;
+    throw error;
   }
   return { value: result.value };
 }

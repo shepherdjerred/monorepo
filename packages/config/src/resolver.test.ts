@@ -204,6 +204,30 @@ describe("absence vs. answer", () => {
     expect(errors).toEqual(["knob/flag: backend exploded"]);
   });
 
+  test("a fatal source error stops resolution", async () => {
+    const fatal = new Error("flag evaluation is invalid");
+    fatal.name = "ConfigSourceFatalError";
+    const resolver = defineConfig({
+      definition: {
+        knob: {
+          schema: z.string(),
+          sources: ["flag", "env", "default"],
+          default: "from-default",
+        },
+      } as const,
+      sources: {
+        flag: {
+          name: "flag",
+          get: () => Promise.reject(fatal),
+        },
+        env: mapSource("env", { knob: "from-env" }),
+      },
+    });
+    await expect(resolver.get("knob")).rejects.toThrow(
+      "flag evaluation is invalid",
+    );
+  });
+
   test("a present-but-invalid value throws instead of falling through", async () => {
     // A source with an opinion it cannot express is a configuration bug.
     // Deferring to a lower layer would mask it.
@@ -404,5 +428,19 @@ describe("startup dump", () => {
     const dump = formatConfigDump(await resolver.describe());
     expect(dump).not.toContain("super-secret-value");
     expect(dump).toContain("<redacted sha256:");
+  });
+
+  test("fails when describe resolves an invalid value", async () => {
+    const resolver = defineConfig({
+      definition: {
+        port: {
+          schema: z.coerce.number().int().positive(),
+          sources: ["env", "default"],
+          default: 8080,
+        },
+      } as const,
+      sources: { env: createEnvSource({ PORT: "not-a-number" }) },
+    });
+    await expect(resolver.describe()).rejects.toThrow(/Invalid input/);
   });
 });
