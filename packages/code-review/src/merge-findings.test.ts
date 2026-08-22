@@ -97,6 +97,30 @@ describe("mergeDuplicateFindings", () => {
     }
   });
 
+  test("attributes a duplicate to the current review, regardless of order", () => {
+    const oldCopy = {
+      ...fromThread,
+      threadId: "old-thread",
+      isOutdated: true,
+      raisedInReview: { ordinal: 1, hadBlockingSeverity: true },
+    };
+    const currentCopy = {
+      ...fromThread,
+      threadId: "current-thread",
+      raisedInReview: { ordinal: 2, hadBlockingSeverity: false },
+    };
+    for (const order of [
+      [oldCopy, currentCopy],
+      [currentCopy, oldCopy],
+    ]) {
+      const [merged] = mergeDuplicateFindings(order, qodoProvider);
+      expect(merged?.raisedInReview).toEqual({
+        ordinal: 2,
+        hadBlockingSeverity: false,
+      });
+    }
+  });
+
   test("reports an all-outdated finding's resolution from its outdated copies", () => {
     const merged = mergeDuplicateFindings(
       [

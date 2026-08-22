@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   DEFAULT_REQUEST_GRACE_SECONDS,
   DEFAULT_REQUEST_RETRY_SECONDS,
+  requestGraceSecondsForProvider,
   reviewRequestScheduleBounds,
   SLOWEST_COMPLETED_REVIEW_SECONDS,
 } from "./lib/review-gate-policy.ts";
@@ -10,6 +11,7 @@ import {
   parseMaxBlockingPriority,
   resolveReviewGateProvider,
 } from "./wait-for-review.ts";
+import { codexProvider, qodoProvider } from "@shepherdjerred/code-review";
 
 describe("resolveReviewGateProvider", () => {
   test("defaults direct invocations to Qodo", () => {
@@ -187,11 +189,22 @@ describe("review gate timeout budget", () => {
     );
   });
 
-  test("asks for the first review only after the provider has had a head start", () => {
-    // Both providers begin on their own — Qodo per push via `.pr_agent.toml`,
-    // Codex on open — and that starts before this pod boots. Asking at once
-    // would enqueue a second review of a head already being read.
+  test("applies the first-review grace only to push-triggered providers", () => {
+    // Qodo starts on every push via `.pr_agent.toml`; Codex only starts when the
+    // pull request opens, so a new head needs an immediate explicit request.
     expect(DEFAULT_REQUEST_GRACE_SECONDS).toBeGreaterThan(0);
+    expect(
+      requestGraceSecondsForProvider(
+        qodoProvider,
+        DEFAULT_REQUEST_GRACE_SECONDS,
+      ),
+    ).toBe(DEFAULT_REQUEST_GRACE_SECONDS);
+    expect(
+      requestGraceSecondsForProvider(
+        codexProvider,
+        DEFAULT_REQUEST_GRACE_SECONDS,
+      ),
+    ).toBe(0);
     expect(
       reviewRequestScheduleBounds({
         graceSeconds: DEFAULT_REQUEST_GRACE_SECONDS,

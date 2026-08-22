@@ -188,6 +188,8 @@ export type ReviewProvider = {
   id: string;
   /** Human-facing name for gate messages, e.g. `"Greptile"`, `"Codex"`. */
   displayName: string;
+  /** Whether the provider starts a review automatically when a head is pushed. */
+  startsReviewOnPush: boolean;
   /**
    * Whether bot-authored pull requests need this provider's normal review.
    * `skip` is an explicit provider capability for reviewers that cannot emit

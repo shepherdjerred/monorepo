@@ -396,13 +396,14 @@ Each request carries a visible "automated re-review request" line plus a hidden
 marker (`buildReviewRequestMarker()`, shared with the PR-fleet controller so
 consumers recognise each other's request).
 
-The gate does not ask immediately. Both providers start on their own — Qodo per
-push, Codex on open — and that begins before the gate pod boots, so an immediate
-request would enqueue a second review of a head already being read. It waits
-`REVIEW_REQUEST_GRACE_SECONDS` (default 10 min) from the head's push time, then
-re-asks once after `REVIEW_REQUEST_RETRY_SECONDS` (default 15 min), capped at two
-attempts, with the clock read from the first request comment's own creation time
-so a retried CI job continues the schedule rather than restarting it.
+The gate applies `REVIEW_REQUEST_GRACE_SECONDS` (default 10 min) from the head's
+push time only to providers that start reviews on push. That keeps Qodo's
+push-triggered review from receiving a duplicate request while it is already
+working. Codex has no per-push setting, so a fresh head gets an immediate
+explicit request. Either provider is re-asked once after
+`REVIEW_REQUEST_RETRY_SECONDS` (default 15 min), capped at two attempts, with
+the clock read from the first request comment's own creation time so a retried
+CI job continues the schedule rather than restarting it.
 
 Those two constants and the gate deadline are one budget, not three independent
 knobs: the last request has to land early enough that the slowest review we have

@@ -35,6 +35,7 @@ import {
   DEFAULT_REQUEST_GRACE_SECONDS,
   DEFAULT_REQUEST_RETRY_SECONDS,
   ensureReviewRequested,
+  requestGraceSecondsForProvider,
   warnIfFirstReviewIsOversized,
 } from "./lib/review-gate-policy.ts";
 import {
@@ -248,9 +249,13 @@ async function waitForReview(): Promise<void> {
     "REVIEW_REQUEST_RETRY_SECONDS",
     DEFAULT_REQUEST_RETRY_SECONDS,
   );
-  const graceSeconds = parsePositiveIntegerEnv(
+  const configuredGraceSeconds = parsePositiveIntegerEnv(
     "REVIEW_REQUEST_GRACE_SECONDS",
     DEFAULT_REQUEST_GRACE_SECONDS,
+  );
+  const graceSeconds = requestGraceSecondsForProvider(
+    provider,
+    configuredGraceSeconds,
   );
 
   console.log(

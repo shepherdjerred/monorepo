@@ -164,6 +164,7 @@ describe("reviewCommentBoundToHead", () => {
 const issueCommentProvider: ReviewProvider = {
   id: "issue-comment-fixture",
   displayName: "Issue comment fixture",
+  startsReviewOnPush: false,
   botAuthoredPullRequestPolicy: "review",
   authorLogins: ["review-bot"],
   parseSeverity: () => null,

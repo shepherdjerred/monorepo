@@ -670,6 +670,7 @@ function parseQodoSeverity(body: string | null): number | null {
 export const qodoProvider: ReviewProvider = {
   id: "qodo",
   displayName: "Qodo",
+  startsReviewOnPush: true,
   // Qodo skips bot-authored PRs by default (`ignore_bot_pr = true`). Keep the
   // gate's bot behavior explicit until Qodo is configured otherwise.
   botAuthoredPullRequestPolicy: "skip",

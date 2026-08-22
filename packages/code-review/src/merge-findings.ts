@@ -67,13 +67,6 @@ export function mergeDuplicateFindings(
     finding.commentId ??= thread.commentId;
     finding.line ??= thread.line;
     finding.path ??= thread.path;
-    // Only the addressable thread copy knows which review raised the finding —
-    // a provider that keeps its findings in a rewritten issue comment records
-    // no round in that comment. Inheriting it here is what lets a severity
-    // policy bound to the raising review work for such a provider at all; a
-    // finding whose thread copy never merged keeps `null` and, by the gate's
-    // rule, blocks.
-    finding.raisedInReview ??= thread.raisedInReview;
   }
   // Decided over the whole group rather than folded in copy by copy, so the
   // answer cannot depend on which surface the provider happened to list first.
@@ -88,6 +81,26 @@ export function mergeDuplicateFindings(
     finding.isResolved = (current.length === 0 ? copies : current).some(
       (copy) => copy.isResolved,
     );
+    // Only the current copies may determine which review raised the finding.
+    // Qodo's persistent comment and addressable thread can both be present,
+    // and a later review leaves the old thread outdated beside the new one.
+    // Prefer the newest attributed current review; ties are conservative and
+    // deterministic because all copies from one review carry the same value.
+    const attributionCopies = (current.length === 0 ? copies : current)
+      .filter((copy) => copy.raisedInReview !== null)
+      .sort((left, right) => {
+        const leftReview = left.raisedInReview;
+        const rightReview = right.raisedInReview;
+        if (leftReview === null || rightReview === null) return 0;
+        if (leftReview.ordinal !== rightReview.ordinal) {
+          return rightReview.ordinal - leftReview.ordinal;
+        }
+        return (
+          Number(rightReview.hadBlockingSeverity) -
+          Number(leftReview.hadBlockingSeverity)
+        );
+      });
+    finding.raisedInReview = attributionCopies[0]?.raisedInReview ?? null;
   }
   return merged;
 }

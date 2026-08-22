@@ -30,15 +30,21 @@ export const SLOWEST_COMPLETED_REVIEW_SECONDS = 1834;
 /**
  * How long a head goes unreviewed before the gate asks at all.
  *
- * Both providers start reviews on their own — Qodo on every push once
- * `.pr_agent.toml` enables `handle_push_trigger`, Codex when the pull request is
- * opened — and that work begins at push time, before this pod has booted. Asking
- * immediately would therefore enqueue a second review of a head already being
- * read, which is the comment churn the configuration exists to remove. The gate
- * waits out this grace first and only asks for a head nothing appears to be
- * working on.
+ * Providers that start reviews on push get a head start before the gate asks.
+ * That work begins before this pod has booted, so asking immediately would
+ * enqueue a second review of a head already being read. Providers without a
+ * push trigger, such as Codex, get no grace: a fresh head needs an explicit
+ * request as soon as the gate observes that it is unreviewed.
  */
 export const DEFAULT_REQUEST_GRACE_SECONDS = 10 * 60;
+
+/** Apply the grace only to providers that can actually review a pushed head. */
+export function requestGraceSecondsForProvider(
+  provider: ReviewProvider,
+  configuredGraceSeconds: number,
+): number {
+  return provider.startsReviewOnPush ? configuredGraceSeconds : 0;
+}
 
 /**
  * How long an unanswered request waits before it is asked once more.

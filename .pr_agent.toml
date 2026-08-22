@@ -20,7 +20,7 @@
 # gate's completion signal (`QODO_ACKNOWLEDGEMENT_MARKER`), so switching it off
 # makes every review gate wait out its full budget and fail.
 
-[github]
+[github_app]
 handle_push_trigger = true
 push_commands = ["/agentic_review"]
 
