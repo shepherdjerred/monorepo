@@ -309,6 +309,7 @@ const commands: Record<
       APPLICATION_ID: "000000000000000000",
       DATA_DIR: "/tmp/smoke-data",
       DATABASE_PATH: "/tmp/smoke-data/karma.db",
+      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   streambot: {
@@ -335,6 +336,7 @@ const commands: Record<
       USER_TOKENS: "smoke-test-dummy",
       ADMIN_IDS: "000000000000000000",
       VIDEOS_DIR: "/tmp/videos",
+      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   "scout-evals": {
