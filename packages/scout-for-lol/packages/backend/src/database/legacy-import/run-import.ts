@@ -57,12 +57,34 @@ const SENTINEL_MODELS = new Set([
 
 const MARKER_TABLE = "_legacy_sqlite_import";
 
+// The currently promoted SQLite image predates the parlay migration. These
+// tables did not exist in that source schema, so an absent table is an empty
+// historical model; every other missing table remains a hard compatibility
+// error.
+const LEGACY_OPTIONAL_TABLES = new Set([
+  "BucksParlayDefinition",
+  "BucksParlayMarket",
+  "BucksParlayBet",
+]);
+
 function quoteIdentifier(identifier: string): string {
   return `"${identifier.replaceAll('"', '""')}"`;
 }
 
 function quoteStringLiteral(value: string): string {
   return `'${value.replaceAll("'", "''")}'`;
+}
+
+function sqliteTableExists(db: Database, model: string): boolean {
+  const rows: unknown = db
+    .query(
+      "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1",
+    )
+    .all(model);
+  if (!Array.isArray(rows)) {
+    throw new TypeError("Unexpected SQLite table-existence result shape");
+  }
+  return rows.length > 0;
 }
 
 async function ensureMarkerTable(prisma: ImportClient): Promise<void> {
@@ -208,6 +230,14 @@ function topoSortByParent(rows: SqliteRow[]): SqliteRow[] {
 }
 
 function readSqliteRows(db: Database, spec: ImportModelSpec): SqliteRow[] {
+  if (!sqliteTableExists(db, spec.model)) {
+    if (LEGACY_OPTIONAL_TABLES.has(spec.model)) {
+      return [];
+    }
+    throw new Error(
+      `Legacy SQLite source is missing required table ${quoteIdentifier(spec.model)}`,
+    );
+  }
   const orderBy = spec.idColumns
     .map((column) => quoteIdentifier(column))
     .join(", ");

@@ -31,10 +31,16 @@ const OWNER = DiscordAccountIdSchema.parse("222333444555666777");
 const PUUID = "p".repeat(78);
 const NOW = 1_755_600_000_000; // epoch ms, as the legacy adapter stored dates
 
-function buildLegacySqlite(path: string): void {
+function buildLegacySqlite(
+  path: string,
+  omittedTables: ReadonlySet<string> = new Set(),
+): void {
   const db = new Database(path);
   try {
     for (const [table, columns] of Object.entries(LEGACY_TABLE_COLUMNS)) {
+      if (omittedTables.has(table)) {
+        continue;
+      }
       const cols = columns.map((column) => `"${column}"`).join(", ");
       db.run(`CREATE TABLE "${table}" (${cols})`);
     }
@@ -181,9 +187,13 @@ function buildLegacySqlite(path: string): void {
 const fixtureDir = `${tmpdir()}/legacy-import-fixture-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 Bun.spawnSync(["mkdir", "-p", fixtureDir]);
 const fixturePath = `${fixtureDir}/legacy.sqlite`;
+const oldSchemaDbUrl = createTestDatabase("legacy-import-old-schema").dbUrl;
+const oldSchemaPrisma = bareClient(oldSchemaDbUrl);
+const oldSchemaFixturePath = `${fixtureDir}/legacy-old-schema.sqlite`;
 
 afterAll(async () => {
   await prisma.$disconnect();
+  await oldSchemaPrisma.$disconnect();
 });
 
 describe("legacy sqlite import", () => {
@@ -240,6 +250,30 @@ describe("legacy sqlite import", () => {
       },
     });
     expect(created.id).toBe(PlayerIdSchema.parse(4));
+  });
+
+  test("imports the promoted SQLite schema without later parlay tables", async () => {
+    buildLegacySqlite(
+      oldSchemaFixturePath,
+      new Set(["BucksParlayDefinition", "BucksParlayMarket", "BucksParlayBet"]),
+    );
+    await oldSchemaPrisma.season.deleteMany();
+
+    const summary = await runImport({
+      prisma: oldSchemaPrisma,
+      sqlitePath: oldSchemaFixturePath,
+    });
+
+    expect(summary.action).toBe("imported");
+    expect(summary.rowCounts["BucksParlayDefinition"]).toBe(0);
+    expect(summary.rowCounts["BucksParlayMarket"]).toBe(0);
+    expect(summary.rowCounts["BucksParlayBet"]).toBe(0);
+    expect(
+      await verifyImport({
+        prisma: oldSchemaPrisma,
+        sqlitePath: oldSchemaFixturePath,
+      }),
+    ).toEqual([]);
   });
 
   test("refuses to trust a marker after the sqlite source changes", async () => {
