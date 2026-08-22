@@ -6,6 +6,36 @@ description: Some of the things I've worked on over the years
 
 This page documents some of the things I've worked on over the years.
 
+<nav aria-label="Project sections">
+  <a href="#featured">Featured</a>
+  <span aria-hidden="true"> · </span>
+  <a href="#all">All</a>
+</nav>
+
+## Featured
+
+### [Astro Open Graph Images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images)
+
+An Astro integration for generating customizable Open Graph images for static pages and content collections.
+
+### [Scout for LoL](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
+
+A Discord bot and dashboard that tracks League of Legends matches, sends game notifications, and produces detailed post-match reports, competitions, and leaderboards.
+
+### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring)
+
+A small TypeScript library that fetches, sanitizes, caches, and truncates updates from RSS and Atom feeds.
+
+### [Cooklang](https://github.com/shepherdjerred/cooklang-for-obsidian)
+
+An Obsidian plugin that renders Cooklang recipes with rich previews, ingredients, directions, timers, nutrition, and metadata.
+
+### [Better Skill Capped](https://github.com/shepherdjerred/monorepo/tree/main/packages/better-skill-capped)
+
+A better interface for Skill Capped.
+
+## All
+
 ## Timeless
 
 ### [sjer.red](https://github.com/shepherdjerred/monorepo)
