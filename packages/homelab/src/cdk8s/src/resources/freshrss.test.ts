@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
 import { createFreshRssChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/freshrss.ts";
@@ -104,12 +104,12 @@ describe("FreshRSS chart", () => {
         }),
       })
       .parse(findManifest(manifests, "Deployment", "freshrss"));
-    expect(item.spec.itemPath).toEndWith("/items/freshrss-sync");
+    expect(item.spec.itemPath).toMatch(/\/items\/freshrss-sync$/u);
     expect(
       deployment.spec.template.spec.initContainers?.some(
         (container) => container.name === "configure-api",
       ) ?? false,
-    ).toBeFalse();
+    ).toBe(false);
     expect(
       JSON.stringify(deployment.spec.template.spec.containers[0]?.volumeMounts),
     ).toContain("config.custom.php");

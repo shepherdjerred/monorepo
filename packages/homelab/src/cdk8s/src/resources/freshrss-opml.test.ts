@@ -1,10 +1,13 @@
-import { describe, expect, test } from "bun:test";
-import feedsOpml from "@shepherdjerred/homelab/cdk8s/helm/freshrss/feeds.opml" with { type: "text" };
+import { describe, expect, test } from "vitest";
 import {
   buildManagedFreshRssOpml,
   FRESHRSS_PRERELEASE_FILTER,
   parseFreshRssOpml,
 } from "./freshrss-opml.ts";
+
+const feedsOpml = await Bun.file(
+  new URL("../../helm/freshrss/feeds.opml", import.meta.url),
+).text();
 
 describe("FreshRSS OPML", () => {
   test("extracts exactly 40 managed feeds and preserves prerelease filters", () => {

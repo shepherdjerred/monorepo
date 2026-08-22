@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   type DesiredFeed,
   type DesiredManifest,
@@ -242,7 +242,7 @@ describe("FreshRSS reconciler", () => {
     expect(api.subscriptions).toContainEqual(outside);
     expect(
       api.subscriptions.some((subscription) => subscription.id === "feed/91"),
-    ).toBeFalse();
+    ).toBe(false);
   });
 
   test("refuses to unsubscribe a stale feed shared with an unmanaged category", async () => {
