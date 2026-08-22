@@ -128,9 +128,17 @@ async function refreshOnce(
         : BucksParlayVoidReasonSchema.parse(market.voidReason),
   });
 
-  const components = input.removeComponents
-    ? []
-    : [buildParlayButtons({ matchId: input.matchId })];
+  // A caller decides `removeComponents` from why *it* is refreshing, not from
+  // the market's current state — a placement-triggered refresh always asks
+  // for buttons. But refreshes for one match/guild are only serialized
+  // against each other, not ordered against the sweep that closes the
+  // market, so a placement refresh queued behind a close refresh must still
+  // defer to the state this call just loaded, or it re-renders clickable
+  // buttons on an already-closed market.
+  const components =
+    marketState !== "open" || input.removeComponents
+      ? []
+      : [buildParlayButtons({ matchId: input.matchId })];
 
   for (const ref of refs) {
     try {

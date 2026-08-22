@@ -9,7 +9,11 @@ import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { disableParlayPreparationReferences } from "#src/betting/parlay-publish.ts";
 import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { bettingParlayVoidsTotal } from "#src/metrics/betting-parlay.ts";
+import {
+  bettingParlayBetSettlementsTotal,
+  bettingParlayMarketsClosedTotal,
+  bettingParlayVoidsTotal,
+} from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
@@ -37,6 +41,7 @@ export async function closeExpiredParlayWindows(
         data: { marketState: "closed" },
       });
       if (claim.count !== 1) continue;
+      bettingParlayMarketsClosedTotal.inc();
       logBucksTransition({
         event: "bucks.parlay.closed",
         matchId: market.matchId,
@@ -166,6 +171,7 @@ export async function voidStaleParlayMarkets(
           surface: "sweep",
         });
         for (const bet of voided.bets) {
+          bettingParlayBetSettlementsTotal.inc({ result: "voided" });
           logBucksTransition({
             event: "bucks.parlay_bet.settled",
             matchId: market.matchId,

@@ -22,7 +22,11 @@ import {
 } from "#src/betting/parlay-evaluator.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
-import { bettingParlayVoidsTotal } from "#src/metrics/betting-parlay.ts";
+import {
+  bettingParlayBetSettlementsTotal,
+  bettingParlayMarketSettlementsTotal,
+  bettingParlayVoidsTotal,
+} from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-parlay-settle");
@@ -438,6 +442,9 @@ export async function settleParlaysForMatch(
       );
       if (summary !== undefined) {
         summaries.push(summary);
+        bettingParlayMarketSettlementsTotal.inc({
+          result: summary.voidReason === undefined ? "settled" : "voided",
+        });
         logBucksTransition({
           event:
             summary.voidReason === undefined
@@ -453,6 +460,7 @@ export async function settleParlaysForMatch(
           surface: "postmatch",
         });
         for (const bet of summary.bets) {
+          bettingParlayBetSettlementsTotal.inc({ result: bet.outcome });
           logBucksTransition({
             event: "bucks.parlay_bet.settled",
             matchId: summary.matchId,

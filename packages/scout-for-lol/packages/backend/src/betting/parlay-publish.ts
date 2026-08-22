@@ -17,6 +17,10 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  bettingParlayMarketsOpenedTotal,
+  bettingParlayMarketsPublishedTotal,
+} from "#src/metrics/betting-parlay.ts";
 
 const logger = createLogger("betting-parlay-publish");
 type PreparationMessage = Awaited<ReturnType<typeof send>>;
@@ -64,7 +68,11 @@ export async function disableParlayPreparationReferences(
           const channel = await client.channels.fetch(
             DiscordChannelIdSchema.parse(ref.channelId),
           );
-          if (channel?.isTextBased() !== true) return;
+          if (channel?.isTextBased() !== true) {
+            throw new Error(
+              `Bryan Bucks parlay preparation channel ${ref.channelId} is unavailable or not text based`,
+            );
+          }
           await channel.messages.edit(ref.messageId, {
             content: "🎲 This Bryan Bucks parlay could not be opened.",
             components: [],
@@ -270,6 +278,7 @@ export async function activatePendingParlayMarkets(
         }
       }
       if (claim.count === 1) {
+        bettingParlayMarketsOpenedTotal.inc();
         logBucksTransition({
           event: "bucks.parlay.opened",
           matchId: market.matchId,
@@ -419,6 +428,7 @@ export async function publishParlayDefinition(
       }
       for (const message of market.messages) durableMessages.add(message);
       persisted += 1;
+      bettingParlayMarketsPublishedTotal.inc();
       logBucksTransition({
         event: "bucks.parlay.published",
         matchId: market.matchId,

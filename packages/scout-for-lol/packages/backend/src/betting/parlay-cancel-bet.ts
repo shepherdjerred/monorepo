@@ -7,6 +7,7 @@ import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { bettingParlayBetCancellationsTotal } from "#src/metrics/betting-parlay.ts";
 
 export type CancelParlayBetResult =
   | { kind: "cancelled"; refunded: number; balanceAfter: number }
@@ -31,6 +32,10 @@ export async function cancelParlayBet(
   now: Date = new Date(),
 ): Promise<CancelParlayBetResult> {
   const result = await cancelParlayBetInner(input, prismaClient, now);
+  bettingParlayBetCancellationsTotal.inc({
+    surface: "button",
+    result: result.kind,
+  });
   if (result.kind === "cancelled") {
     logBucksTransition({
       event: "bucks.parlay_bet.cancelled",

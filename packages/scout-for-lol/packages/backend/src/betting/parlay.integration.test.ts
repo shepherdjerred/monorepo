@@ -897,6 +897,30 @@ describe("Bryan Bucks parlay message refresh", () => {
     expect(edits.every((edit) => edit.removedComponents)).toBe(true);
   });
 
+  // Refreshes for one match/guild are only serialized against each other,
+  // never ordered against the sweep that closes the market. A
+  // placement-triggered refresh always asks for buttons (no
+  // `removeComponents`), so if it runs after a close-triggered refresh has
+  // already marked the market closed, it must still strip controls based on
+  // the market state this call just loaded — not reintroduce clickable
+  // buttons on a closed market.
+  test("strips controls on a closed market even when the caller did not ask", async () => {
+    await marketWithMessages();
+    await db.bucksParlayMarket.updateMany({
+      where: { matchId: MATCH_ID, serverId: SERVER_ID },
+      data: { marketState: "closed" },
+    });
+
+    const edits: RecordedEdit[] = [];
+    await refreshParlayMessages(
+      { matchId: MATCH_ID, serverId: SERVER_ID },
+      db,
+      recordingEditor(edits),
+    );
+
+    expect(edits.every((edit) => edit.removedComponents)).toBe(true);
+  });
+
   // The activation outbox owns a publishing message; refreshing it would race
   // `activatePendingParlayMarkets` for the same edit.
   test("never touches a market that is still publishing", async () => {

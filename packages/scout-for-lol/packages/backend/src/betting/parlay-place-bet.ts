@@ -23,6 +23,7 @@ import { addInt32, quoteParlayPosition } from "#src/betting/parlay-odds.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   bettingOversizedStakeRejectedTotal,
+  bettingParlayBetPlacementsTotal,
   bettingParlayHouseBalance,
   bettingParlayHouseUnavailableTotal,
 } from "#src/metrics/betting-parlay.ts";
@@ -108,6 +109,8 @@ export async function placeParlayBet(
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<PlaceParlayBetResult> {
   const result = await placeParlayBetInner(input, prismaClient);
+  const surface = input.surface ?? "button";
+  bettingParlayBetPlacementsTotal.inc({ surface, result: result.kind });
   if (result.kind === "placed") {
     // The parlay lifecycle has no separate "topped up" event — a top-up still
     // reprices the whole position, so it is recorded as the same placement
