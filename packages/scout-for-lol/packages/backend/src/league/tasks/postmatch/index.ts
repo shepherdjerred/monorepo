@@ -4,6 +4,8 @@ import { announceSettlements } from "#src/betting/announce.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
 import { voidStaleBettingPools } from "#src/betting/void-stale.ts";
 import { voidStaleParlayMarkets } from "#src/betting/parlay-sweep.ts";
+import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
+import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("tasks-postmatch");
@@ -66,6 +68,13 @@ export async function checkPostMatch() {
       ...staleBucks.settlements,
     ]);
     for (const matchId of staleMatchIds) {
+      // Usually empty: the ActiveGame TTL is 3h and VOID_GRACE_MS is 6h, so the
+      // row is normally gone by the time a pool is voided. When it survives,
+      // the void notice replies to the report instead of floating free.
+      const parsedMatchId = MatchIdSchema.safeParse(matchId);
+      const postmatchMessageIds = parsedMatchId.success
+        ? await getPostmatchMessageIdsForMatchIdOrEmpty(parsedMatchId.data)
+        : new Map<string, string>();
       await announceSettlements({
         matchId,
         closures: staleBucks.closures.filter(
@@ -75,7 +84,7 @@ export async function checkPostMatch() {
           (settlement) => settlement.matchId === matchId,
         ),
         earnings: [],
-        postmatchMessageIds: new Map(),
+        postmatchMessageIds,
       });
     }
     await voidStaleParlayMarkets();

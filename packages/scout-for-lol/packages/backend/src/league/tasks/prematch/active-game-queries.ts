@@ -12,13 +12,14 @@ const logger = createLogger("prematch-active-game-queries");
 const ACTIVE_GAME_TTL_MS = 3 * 60 * 60 * 1000;
 
 const TrackedPuuidsSchema = z.array(z.string());
-const PrematchMessageIdsSchema = z.record(z.string(), z.string());
+/** Discord channel ID -> message ID, for both prematch and postmatch refs. */
+const MessageIdsByChannelSchema = z.record(z.string(), z.string());
 
-function parsePrematchMessageIds(raw: string | null): Record<string, string> {
+function parseMessageIdsByChannel(raw: string | null): Record<string, string> {
   if (raw === null) {
     return {};
   }
-  return PrematchMessageIdsSchema.parse(JSON.parse(raw));
+  return MessageIdsByChannelSchema.parse(JSON.parse(raw));
 }
 
 export type ActiveGameRecord = {
@@ -45,7 +46,7 @@ export async function getActiveGames(
           ? null
           : MatchIdSchema.parse(row.prematchMatchId),
       trackedPuuids: TrackedPuuidsSchema.parse(JSON.parse(row.trackedPuuids)),
-      prematchMessageIds: parsePrematchMessageIds(row.prematchMessageIds),
+      prematchMessageIds: parseMessageIdsByChannel(row.prematchMessageIds),
       detectedAt: row.detectedAt,
       expiresAt: row.expiresAt,
     }));
@@ -172,7 +173,7 @@ export async function getPrematchMessageIds(
   if (row === null) {
     return new Map();
   }
-  const parsed = parsePrematchMessageIds(row.prematchMessageIds);
+  const parsed = parseMessageIdsByChannel(row.prematchMessageIds);
   return new Map(Object.entries(parsed));
 }
 
@@ -202,7 +203,7 @@ export async function getPrematchMessageIdsForMatchId(
     return new Map();
   }
   return new Map(
-    Object.entries(parsePrematchMessageIds(row.prematchMessageIds)),
+    Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)),
   );
 }
 
@@ -232,7 +233,87 @@ export async function getPrematchMessageIdsForMatchIdOrEmpty(
     return new Map();
   }
   return new Map(
-    Object.entries(parsePrematchMessageIds(row.prematchMessageIds)),
+    Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)),
+  );
+}
+
+/**
+ * Persist the Discord message IDs produced by the postmatch report.
+ *
+ * Deliberately best-effort, unlike `recordPrematchMessageIds`, which throws.
+ * This runs *after* the report has already been delivered, so a failed
+ * metadata write must not turn a successful delivery into an exception on the
+ * polling path. The only consequence of losing it is that a settlement
+ * announced by a later process replies to nothing, which
+ * `sendSettlementMessage` already handles by sending standalone.
+ *
+ * Uses `updateMany` rather than `update` so a row already reaped by the TTL
+ * sweep is a no-op instead of a `P2025`.
+ */
+export async function recordPostmatchMessageIds(
+  matchId: MatchId,
+  messageIds: ReadonlyMap<string, string>,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  if (messageIds.size === 0) {
+    return;
+  }
+  const serialized = Object.fromEntries(messageIds.entries());
+  try {
+    await prismaClient.activeGame.updateMany({
+      where: { prematchMatchId: matchId },
+      data: { postmatchMessageIds: JSON.stringify(serialized) },
+    });
+  } catch (error) {
+    logger.warn(
+      `⚠️ Could not record postmatch message IDs for ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "postmatch-record-message-ids", matchId },
+    });
+  }
+}
+
+/**
+ * Retrieve the postmatch report's reply references, keyed by channel ID.
+ *
+ * Mirrors `getPrematchMessageIdsForMatchIdOrEmpty`: a lookup failure returns an
+ * empty map rather than propagating, because the settlement announcement must
+ * still be delivered standalone.
+ */
+export async function getPostmatchMessageIdsForMatchIdOrEmpty(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Map<string, string>> {
+  const suffix = matchId.split("_").at(-1);
+  if (suffix === undefined || !/^\d+$/.test(suffix)) {
+    return new Map();
+  }
+  let row: {
+    postmatchMessageIds: string | null;
+    prematchMatchId: string | null;
+  } | null;
+  try {
+    row = await prismaClient.activeGame.findUnique({
+      where: { prematchMatchId: matchId },
+      select: { postmatchMessageIds: true, prematchMatchId: true },
+    });
+  } catch (error) {
+    logger.warn(
+      `⚠️ Could not retrieve postmatch reply references for ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "postmatch-postmatch-reply-lookup", matchId },
+    });
+    return new Map();
+  }
+  if (row?.prematchMatchId !== matchId) {
+    return new Map();
+  }
+  return new Map(
+    Object.entries(parseMessageIdsByChannel(row.postmatchMessageIds)),
   );
 }
 
