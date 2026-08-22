@@ -5,6 +5,7 @@ import {
   requestGraceSecondsForProvider,
   reviewRequestScheduleBounds,
   SLOWEST_COMPLETED_REVIEW_SECONDS,
+  validateReviewRequestSchedule,
 } from "./lib/review-gate-policy.ts";
 import {
   DEFAULT_TIMEOUT_SECONDS,
@@ -211,6 +212,24 @@ describe("review gate timeout budget", () => {
         retryAfterSeconds: DEFAULT_REQUEST_RETRY_SECONDS,
       }).lastRequestAtSeconds,
     ).toBe(DEFAULT_REQUEST_GRACE_SECONDS + DEFAULT_REQUEST_RETRY_SECONDS);
+  });
+
+  test("rejects timing overrides that cut off the retry budget", () => {
+    expect(() =>
+      validateReviewRequestSchedule({
+        graceSeconds: 600,
+        retryAfterSeconds: 3000,
+        timeoutSeconds: 3600,
+      }),
+    ).toThrow("requires at least 5434s");
+    expect(() =>
+      validateReviewRequestSchedule({
+        graceSeconds: 0,
+        retryAfterSeconds: DEFAULT_REQUEST_RETRY_SECONDS,
+        timeoutSeconds:
+          DEFAULT_REQUEST_RETRY_SECONDS + SLOWEST_COMPLETED_REVIEW_SECONDS,
+      }),
+    ).not.toThrow();
   });
 });
 

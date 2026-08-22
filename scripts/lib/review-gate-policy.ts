@@ -76,6 +76,22 @@ export function reviewRequestScheduleBounds(input: {
   };
 }
 
+/** Reject timing overrides that leave the advertised retry no time to finish. */
+export function validateReviewRequestSchedule(input: {
+  graceSeconds: number;
+  retryAfterSeconds: number;
+  timeoutSeconds: number;
+}): void {
+  const bounds = reviewRequestScheduleBounds(input);
+  if (input.timeoutSeconds < bounds.minimumGateTimeoutSeconds) {
+    throw new Error(
+      `Review request timing requires at least ${String(bounds.minimumGateTimeoutSeconds)}s ` +
+        `of gate timeout, but REVIEW_WAIT_TIMEOUT_SECONDS is ${String(input.timeoutSeconds)}s ` +
+        `(grace=${String(input.graceSeconds)}s, retry=${String(input.retryAfterSeconds)}s).`,
+    );
+  }
+}
+
 /**
  * Whether it is time to make request `attempt` for this head.
  *

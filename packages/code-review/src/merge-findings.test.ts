@@ -97,7 +97,7 @@ describe("mergeDuplicateFindings", () => {
     }
   });
 
-  test("attributes a duplicate to the current review, regardless of order", () => {
+  test("preserves first-review provenance, regardless of copy order", () => {
     const oldCopy = {
       ...fromThread,
       threadId: "old-thread",
@@ -115,8 +115,8 @@ describe("mergeDuplicateFindings", () => {
     ]) {
       const [merged] = mergeDuplicateFindings(order, qodoProvider);
       expect(merged?.raisedInReview).toEqual({
-        ordinal: 2,
-        hadBlockingSeverity: false,
+        ordinal: 1,
+        hadBlockingSeverity: true,
       });
     }
   });

@@ -36,6 +36,7 @@ import {
   DEFAULT_REQUEST_RETRY_SECONDS,
   ensureReviewRequested,
   requestGraceSecondsForProvider,
+  validateReviewRequestSchedule,
   warnIfFirstReviewIsOversized,
 } from "./lib/review-gate-policy.ts";
 import {
@@ -257,6 +258,11 @@ async function waitForReview(): Promise<void> {
     provider,
     configuredGraceSeconds,
   );
+  validateReviewRequestSchedule({
+    graceSeconds,
+    retryAfterSeconds,
+    timeoutSeconds,
+  });
 
   console.log(
     `Review gate: provider=${provider.id}, repo=${repo}, pr=#${String(number)}, head=${head}, ` +

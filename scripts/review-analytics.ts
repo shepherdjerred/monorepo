@@ -37,6 +37,16 @@ import {
 } from "./lib/review-analytics-github.ts";
 import type { z } from "zod";
 
+type ReviewAnswer = { head: string | null; at: string };
+
+const QODO_ACKNOWLEDGEMENT = "was updated up to the latest commit";
+
+function acknowledgedHead(body: string): string | null {
+  const markerAt = body.indexOf(QODO_ACKNOWLEDGEMENT);
+  if (markerAt === -1) return null;
+  return /\b([0-9a-f]{40})\b/iu.exec(body.slice(markerAt))?.[1] ?? null;
+}
+
 /** Distinct reviewed heads in chronological order, with per-provider counts. */
 function headsOf(pr: PrRounds) {
   const byHead = new Map<
@@ -151,14 +161,15 @@ async function commandRequests(
       token,
     );
     const comments = raw.map((item) => IssueCommentSchema.parse(item));
-    const acks = comments
-      .filter((comment) =>
-        comment.body.includes("was updated up to the latest commit"),
-      )
-      .map((comment) => comment.created_at);
-    const codexReviews = pr.rounds
+    const acks: ReviewAnswer[] = comments
+      .filter((comment) => comment.body.includes(QODO_ACKNOWLEDGEMENT))
+      .map((comment) => ({
+        head: acknowledgedHead(comment.body),
+        at: comment.created_at,
+      }));
+    const codexReviews: ReviewAnswer[] = pr.rounds
       .filter((round) => round.provider === "codex")
-      .map((round) => round.at);
+      .map((round) => ({ head: round.head, at: round.at }));
 
     let automated = 0;
     let manual = 0;
@@ -184,10 +195,15 @@ async function commandRequests(
         marker?.[1] ??
         (comment.body.includes("@codex review") ? "codex" : "qodo");
       const answers = askedProvider === "codex" ? codexReviews : acks;
+      const requestedHead = marker?.[2] ?? null;
       if (
-        answers.some((at) => {
-          const gap = Date.parse(at) - askedAt;
-          return gap > 0 && gap < 60 * 60 * 1000;
+        answers.some((answer) => {
+          const gap = Date.parse(answer.at) - askedAt;
+          return (
+            (requestedHead === null || answer.head === requestedHead) &&
+            gap > 0 &&
+            gap < 60 * 60 * 1000
+          );
         })
       ) {
         converted += 1;
