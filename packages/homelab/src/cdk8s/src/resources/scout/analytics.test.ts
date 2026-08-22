@@ -60,6 +60,13 @@ describe("Scout PostHog deployment configuration", () => {
       expect(env.get("POSTHOG_API_HOST")).toBe(registry.apiHost);
       expect(env.get("POSTHOG_SITE_KEY")).toBe(site?.key);
       expect(env.get("POSTHOG_SITE_HOSTNAME")).toBe(site?.hostname);
+      if (stage === "beta") {
+        expect(env.get("DATABASE_URL")).toBe(
+          "postgresql://$(DB_USER):$(DB_PASSWORD)@scout-beta-postgresql.scout-beta.svc.cluster.local:5432/scout",
+        );
+      } else {
+        expect(env.get("DATABASE_URL")).toBe("file:/data/db.sqlite");
+      }
     },
   );
 });

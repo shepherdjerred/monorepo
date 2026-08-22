@@ -99,16 +99,26 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     "scout-pg-secret-ref",
     `scout.scout-${stage}-postgresql.credentials.postgresql.acid.zalan.do`,
   );
-  const dbEnv = {
-    DB_USER: EnvValue.fromSecretValue({ secret: pgSecretRef, key: "username" }),
-    DB_PASSWORD: EnvValue.fromSecretValue({
-      secret: pgSecretRef,
-      key: "password",
-    }),
-    DATABASE_URL: EnvValue.fromValue(
-      `postgresql://$(DB_USER):$(DB_PASSWORD)@scout-${stage}-postgresql.scout-${stage}.svc.cluster.local:5432/scout`,
-    ),
-  };
+  const dbEnv: Record<string, EnvValue> =
+    stage === "beta"
+      ? {
+          DB_USER: EnvValue.fromSecretValue({
+            secret: pgSecretRef,
+            key: "username",
+          }),
+          DB_PASSWORD: EnvValue.fromSecretValue({
+            secret: pgSecretRef,
+            key: "password",
+          }),
+          DATABASE_URL: EnvValue.fromValue(
+            `postgresql://$(DB_USER):$(DB_PASSWORD)@scout-${stage}-postgresql.scout-${stage}.svc.cluster.local:5432/scout`,
+          ),
+        }
+      : {
+          // Production remains on the previous SQLite image until its
+          // promoted PostgreSQL-compatible image is pinned after beta soak.
+          DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
+        };
 
   const localPathVolume = new ZfsNvmeVolume(chart, "scout-storage-claim", {
     // 24Gi: sized when the SQLite match DB lived here and filled the original
