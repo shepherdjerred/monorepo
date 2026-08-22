@@ -69,6 +69,9 @@ FROM base AS runtime
 COPY --from=prod-deps /app/ /app/
 # Scoped source closure. Report Satori imports resolve through the shared
 # design-system package, which also owns the exact font and rank-crest bytes.
+# `@shepherdjerred/config` and `@shepherdjerred/feature-flags` are source-only
+# (no build step, exports resolve straight to `src/*`), so their source must
+# be physically present here too, not just linked from node_modules.
 COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
@@ -81,6 +84,8 @@ COPY --parents \
   packages/llm-models \
   packages/llm-observability \
   packages/llm-runtime \
+  packages/config \
+  packages/feature-flags \
   ./
 # Bake the Prisma engines into the production tree. prod-deps installs
 # without lifecycle scripts, so @prisma/engines ships empty and the CLI
