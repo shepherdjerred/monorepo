@@ -38,6 +38,9 @@
   --scout-font-body:
     Spiegel, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC,
     Noto Sans CJK SC, sans-serif;
+  --scout-font-mono:
+    Berkeley Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
   --scout-radius-small: 0.25rem;
   --scout-radius-medium: 0.5rem;
   --scout-radius-large: 0.75rem;
@@ -86,6 +89,9 @@
   --scout-font-body:
     Spiegel, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC,
     Noto Sans CJK SC, sans-serif;
+  --scout-font-mono:
+    Berkeley Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
   --scout-radius-small: 0.25rem;
   --scout-radius-medium: 0.5rem;
   --scout-radius-large: 0.75rem;
@@ -134,6 +140,9 @@
   --scout-font-body:
     Gill Sans, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC,
     Noto Sans CJK SC, sans-serif;
+  --scout-font-mono:
+    Berkeley Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
   --scout-radius-small: 0rem;
   --scout-radius-medium: 0.125rem;
   --scout-radius-large: 0.25rem;
@@ -182,6 +191,9 @@
   --scout-font-body:
     Gill Sans, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC,
     Noto Sans CJK SC, sans-serif;
+  --scout-font-mono:
+    Berkeley Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
   --scout-radius-small: 0rem;
   --scout-radius-medium: 0.125rem;
   --scout-radius-large: 0.25rem;

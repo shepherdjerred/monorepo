@@ -108,10 +108,11 @@
         "typography": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["display", "body"],
+          "required": ["display", "body", "mono"],
           "properties": {
             "display": { "type": "string", "minLength": 1 },
-            "body": { "type": "string", "minLength": 1 }
+            "body": { "type": "string", "minLength": 1 },
+            "mono": { "type": "string", "minLength": 1 }
           }
         },
         "shape": {

@@ -25,6 +25,7 @@
   --color-scout-overlay: var(--scout-color-overlay);
   --font-sans: var(--scout-font-body);
   --font-display: var(--scout-font-display);
+  --font-mono: var(--scout-font-mono);
   --radius-sm: var(--scout-radius-small);
   --radius-md: var(--scout-radius-medium);
   --radius-lg: var(--scout-radius-large);
