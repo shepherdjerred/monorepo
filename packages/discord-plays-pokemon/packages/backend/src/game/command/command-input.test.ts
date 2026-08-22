@@ -65,3 +65,4 @@ describe("commandInput", () => {
     });
   });
 });
+import { describe, expect, test } from "vitest";

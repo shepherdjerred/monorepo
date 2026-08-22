@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { z } from "zod";
 import {
   REQUIRED_EMSCRIPTEN_FS_FUNCTIONS,

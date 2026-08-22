@@ -9,7 +9,7 @@
  * Only Discord is stubbed (via the offline harness); everything else is real.
  */
 
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,

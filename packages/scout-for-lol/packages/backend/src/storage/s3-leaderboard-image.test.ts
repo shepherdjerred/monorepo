@@ -3,7 +3,7 @@
  * Environment setup (S3_BUCKET_NAME) is handled by test-setup.ts.
  */
 
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   GetObjectCommand,
   PutObjectCommand,

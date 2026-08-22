@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
@@ -416,8 +416,8 @@ describe("explore raw tool payload inspection", () => {
     expect(partialOutputStreamCompleted).toBe(true);
   });
 
-  test("a stream error chunk throws rather than ending the turn quietly", () => {
-    expect(
+  test("a stream error chunk throws rather than ending the turn quietly", async () => {
+    await expect(
       emitExploreStreamChunk(
         { type: "error", error: new Error("upstream exploded") },
         () => {

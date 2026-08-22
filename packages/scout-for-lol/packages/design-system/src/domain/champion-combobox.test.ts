@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { syncedChampionQuery } from "./champion-combobox.tsx";
 
 const aatrox = { key: "Aatrox", id: 266, name: "Aatrox" };

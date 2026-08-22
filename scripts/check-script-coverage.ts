@@ -43,7 +43,7 @@ async function checkPackage(packageDirectory: string): Promise<void> {
   }
   const summaries = parseCoverageSummaries(`${stdout}\n${stderr}`);
   if (summaries.length === 0) {
-    throw new Error(`${packageDirectory} emitted no Bun coverage summary`);
+    throw new Error(`${packageDirectory} emitted no Vitest coverage summary`);
   }
   for (const summary of summaries) {
     if (

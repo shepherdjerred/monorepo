@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { SingleFlight } from "./single-flight.ts";
 
 describe("SingleFlight", () => {

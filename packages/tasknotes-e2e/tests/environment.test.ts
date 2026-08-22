@@ -1,6 +1,6 @@
 import { access, rm } from "node:fs/promises";
 import path from "node:path";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import {
   ScenarioEnvironment,

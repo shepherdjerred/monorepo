@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { BucksLedgerKindSchema } from "@scout-for-lol/data/index.ts";
 import {
   ledgerKindLabel,

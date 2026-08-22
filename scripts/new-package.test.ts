@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -31,7 +31,7 @@ describe("new-package", () => {
       '"@typescript/native": "npm:typescript@7.0.2"',
     );
     expect(files["eslint.config.ts"]).toContain("recommended");
-    expect(files["src/index.test.ts"]).toContain("bun:test");
+    expect(files["src/index.test.ts"]).toContain('from "vitest"');
   });
 
   test("creates package and nested source directories", async () => {

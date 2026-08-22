@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { PassThrough } from "node:stream";
 import { createActor, waitFor } from "xstate";
 import { createDesiredStreamMachine } from "@shepherdjerred/discord-stream-lifecycle";

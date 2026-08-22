@@ -35,7 +35,7 @@ bun run scripts/snapshot-1password-vault.ts   # refresh snapshot after vault cha
 
 ```bash
 bun run build       # synthesize manifests into dist/
-bun test            # full suite (plus test:gpu-resources)
+bun run test            # full suite (plus test:gpu-resources)
 bun run diff        # build + helm-render diff against the cluster
 bun run render      # build + render only
 bun run up          # build + apply via helm-render (operator escape hatch)

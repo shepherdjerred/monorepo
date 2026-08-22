@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 
 test("E2E entrypoints load without starting containers", async () => {
   const modules = await Promise.all([

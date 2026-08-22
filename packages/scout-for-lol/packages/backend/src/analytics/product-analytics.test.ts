@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import {
   createProductAnalytics,
   type ProductAnalyticsTransport,
@@ -12,8 +12,8 @@ const analyticsConfiguration = {
 };
 
 function createTransportFixture() {
-  const capture = mock<ProductAnalyticsTransport["capture"]>(() => null);
-  const shutdown = mock<ProductAnalyticsTransport["shutdown"]>(() =>
+  const capture = vi.fn<ProductAnalyticsTransport["capture"]>(() => null);
+  const shutdown = vi.fn<ProductAnalyticsTransport["shutdown"]>(() =>
     Promise.resolve(),
   );
   return { capture, shutdown };
@@ -103,10 +103,10 @@ describe("Scout product analytics adapter", () => {
   });
 
   test("keeps synchronous capture and shutdown failures non-fatal", async () => {
-    const capture = mock<ProductAnalyticsTransport["capture"]>(() => {
+    const capture = vi.fn<ProductAnalyticsTransport["capture"]>(() => {
       throw new Error("capture failed");
     });
-    const shutdown = mock<ProductAnalyticsTransport["shutdown"]>(() =>
+    const shutdown = vi.fn<ProductAnalyticsTransport["shutdown"]>(() =>
       Promise.reject(new Error("shutdown failed")),
     );
     const analytics = createProductAnalytics({

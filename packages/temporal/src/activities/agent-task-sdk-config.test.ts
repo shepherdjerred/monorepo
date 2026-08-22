@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,

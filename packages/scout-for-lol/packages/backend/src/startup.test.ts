@@ -1,10 +1,10 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import { runBackendStartup } from "./startup.ts";
 
 describe("backend startup", () => {
   test("validates champion assets before serving", async () => {
     const calls: string[] = [];
-    const shutdownHttpServer = mock(() => Promise.resolve());
+    const shutdownHttpServer = vi.fn(() => Promise.resolve());
 
     const runtime = await runBackendStartup({
       validateChampionAssets: async () => {
@@ -52,10 +52,10 @@ describe("backend startup", () => {
 
   test("propagates asset-validation failure before health or Discord start", async () => {
     const assetFailure = new Error("champion asset missing");
-    const startHttpServer = mock(async () => ({
+    const startHttpServer = vi.fn(async () => ({
       shutdownHttpServer: () => Promise.resolve(),
     }));
-    const startDiscord = mock(() => Promise.resolve());
+    const startDiscord = vi.fn(() => Promise.resolve());
 
     await expect(
       runBackendStartup({

@@ -13,7 +13,7 @@
  * feature-disabled message.
  */
 
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,

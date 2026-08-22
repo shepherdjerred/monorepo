@@ -1,12 +1,5 @@
 import type { PrismaClient } from "#generated/prisma/client/index.js";
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  test,
-} from "bun:test";
+import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
 import type { MemoryCandidate } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import {
   applyMemoryCandidates,
@@ -397,10 +390,10 @@ describe("claim precedence and temporal conflicts", () => {
       query: "favorite drink",
     });
     expect(retrieved.claims).toHaveLength(2);
-    expect(retrieved.claims.every((entry) => entry.uncertain)).toBeTrue();
+    expect(retrieved.claims.every((entry) => entry.uncertain)).toBe(true);
     expect(
       retrieved.claims.every((entry) => entry.conflictingClaimIds.length === 1),
-    ).toBeTrue();
+    ).toBe(true);
   });
 
   test("keeps equal-priority contradictions from one source unresolved", async () => {
@@ -777,7 +770,7 @@ describe("mandatory and similarity retrieval", () => {
     });
 
     expect(retrieved.claims).toHaveLength(2);
-    expect(retrieved.claims.every((entry) => entry.mandatory)).toBeTrue();
+    expect(retrieved.claims.every((entry) => entry.mandatory)).toBe(true);
     expect(
       retrieved.claims.map((entry) => entry.claim.predicate).sort(),
     ).toEqual(["preference", "rule"]);

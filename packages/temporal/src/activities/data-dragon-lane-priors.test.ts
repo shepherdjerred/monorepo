@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   LANE_PRIOR_ARTIFACT_PATH,
   LANE_PRIOR_EVAL_REPORT_PATH,

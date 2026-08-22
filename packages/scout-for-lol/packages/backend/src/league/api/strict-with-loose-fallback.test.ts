@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { parseWithUnknownKeyFallback } from "#src/league/api/strict-with-loose-fallback.ts";
 

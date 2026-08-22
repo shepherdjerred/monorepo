@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   decodeEngineMapTile,
   decodeEngineObservation,
@@ -374,12 +374,12 @@ describe("decodeEngineObservation battle decisions", () => {
     const battle = decodeEngineObservation(bytes).battle;
 
     expect(decodeEngineObservation(bytes).world).toBeNull();
-    expect(decodeEngineObservation(bytes).readiness.inputReady).toBeTrue();
+    expect(decodeEngineObservation(bytes).readiness.inputReady).toBe(true);
     expect(battle?.menu).toBe("move");
     expect(battle?.inputBattler).toBe(0);
     expect(battle?.moveCursor).toBe(3);
     expect(battle?.targetBattler).toBe(1);
-    expect(battle?.switchAllowed).toBeTrue();
+    expect(battle?.switchAllowed).toBe(true);
     expect(battle?.moves).toEqual([
       {
         slot: 1,
@@ -488,7 +488,7 @@ describe("decodeEngineObservation battle decisions", () => {
       view.setUint8(9, 0);
       view.setUint8(28, 1);
       view.setUint8(30, menu);
-      expect(decodeEngineObservation(bytes).readiness.inputReady).toBeFalse();
+      expect(decodeEngineObservation(bytes).readiness.inputReady).toBe(false);
       expect(decodeEngineObservation(bytes).world).toBeNull();
     }
   });

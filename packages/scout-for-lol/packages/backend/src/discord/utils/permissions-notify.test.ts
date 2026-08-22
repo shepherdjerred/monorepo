@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { notifyServerOwnerAboutPermissionError } from "#src/discord/utils/permissions.ts";
 import { mockClient } from "#src/testing/discord-mocks.ts";
 import {

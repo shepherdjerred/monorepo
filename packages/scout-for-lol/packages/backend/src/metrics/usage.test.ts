@@ -1,4 +1,4 @@
-import { describe, expect, test, afterAll, beforeEach } from "bun:test";
+import { describe, expect, test, afterAll, beforeEach } from "vitest";
 import { updateUsageMetrics } from "#src/metrics/usage.ts";
 import {
   guildSendBlockedTotal,

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { analyzeApplySafety } from "./argocd-apply-safety.ts";
 import { withIgnoredDifferencesApplied } from "./argocd-ignored-differences.ts";
 

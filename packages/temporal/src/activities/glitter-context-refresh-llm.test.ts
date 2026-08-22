@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { GenerationBudget } from "./glitter-context-refresh-budget.ts";
 import {
   readGlitterObjectArtifact,

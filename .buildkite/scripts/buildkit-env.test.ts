@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { registryLoginCommand } from "./build-ci-image-core.ts";
 
 test("does not log in without a token", () => {

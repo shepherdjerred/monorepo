@@ -1,4 +1,4 @@
-import { expect } from "bun:test";
+import { expect } from "vitest";
 
 import { AlertmanagerSnapshotAlertSchema } from "#shared/schema";
 import { InstantTextSchema } from "#shared/time";

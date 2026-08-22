@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { health } from "#lib/pinchtab-cli/client.ts";
 import { screenshotCommand } from "#commands/screenshot/screenshot.ts";
 

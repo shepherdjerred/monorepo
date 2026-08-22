@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { afterAll, describe, it } from "bun:test";
+import { afterAll, describe, it } from "vitest";
 import { requireContainerResources } from "./require-container-resources.ts";
 
 RuleTester.afterAll = afterAll;

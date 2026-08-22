@@ -1,5 +1,5 @@
 import type { ReviewThread } from "@shepherdjerred/code-review";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { assertGraphQlOk, fallbackKey } from "#lib/review/findings.ts";
 
 const thread: ReviewThread = {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { bucksTestRoster } from "#src/testing/bucks-fixtures.ts";
 import {
   buildOpenMarketSections,

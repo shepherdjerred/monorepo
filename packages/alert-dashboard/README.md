@@ -55,8 +55,8 @@ process in production (`bun run start`).
 | `bun run build`              | Prisma generate + Vite production build                             |
 | `bun run generate`           | Generate the Prisma client                                          |
 | `bun run typecheck`          | TypeScript (native `tsc`) after codegen                             |
-| `bun run test`               | Unit tests (`bun test src`)                                         |
-| `bun run test:sqlite`        | SQLite integration test (`integration/sqlite.integration.ts`)       |
+| `bun run test`               | Unit tests (`bun run test src`)                                     |
+| `bun run test:sqlite`        | SQLite integration test (`integration/sqlite.integration.test.ts`)  |
 | `bun run test:e2e`           | Playwright end-to-end tests (`e2e/`, `playwright.config.ts`)        |
 | `bun run lint`               | ESLint plus the architecture check                                  |
 | `bun run check:architecture` | dependency-cruiser layering rules (`scripts/check-architecture.ts`) |

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import {
   HaApiError,
@@ -303,7 +303,7 @@ describe("HomeAssistantRestClient service-response mode", () => {
   });
 
   it("notifies handler registered with mock", async () => {
-    const handler = mock(() => Response.json([]));
+    const handler = vi.fn(() => Response.json([]));
     const { fn, calls } = makeFetch(() => handler());
     globalThis.fetch = fn;
 

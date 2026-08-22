@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 
 import { ChangeBus } from "#server/change-bus";
 import { Metrics } from "#server/metrics";

@@ -1,6 +1,6 @@
-// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildLoadingScreenData with real spectator payload transforms ranked flex payload into valid LoadingScreenData 1`] = `
+exports[`buildLoadingScreenData with real spectator payload > transforms ranked flex payload into valid LoadingScreenData 1`] = `
 {
   "bans": [
     {

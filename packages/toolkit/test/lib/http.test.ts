@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { createHttpClient } from "#lib/http.ts";
 

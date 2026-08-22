@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { assign, createActor, fromPromise, setup, waitFor } from "xstate";
 import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
 import type { TransitionLogSink } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
@@ -124,7 +124,7 @@ describe("createTransitionLogInspector", () => {
     expect(finish).toBeDefined();
     expect(finish?.from).toBe("active");
     // The child's completion is the machine's transition reason.
-    expect(String(finish?.event)).toStartWith("xstate.done.actor");
+    expect(String(finish?.event).startsWith("xstate.done.actor")).toBe(true);
   });
 
   test("suppresses no-op self-transitions (PING keeps state active -> no line)", async () => {

@@ -1,9 +1,9 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import { PlayerConfigEntrySchema } from "@scout-for-lol/data/index.ts";
 
-const byPUUID = mock<() => Promise<{ response: unknown }>>();
+const byPUUID = vi.fn<() => Promise<{ response: unknown }>>();
 
-void mock.module("#src/league/api/api.ts", () => ({
+vi.doMock("#src/league/api/api.ts", () => ({
   api: {
     League: {
       byPUUID,

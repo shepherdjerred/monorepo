@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 
 /**
@@ -17,8 +17,8 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
  * jwtSigningSecret, discordClientSecret}` lazily at call time. The real
  * configuration module reads these from the environment behind memoized
  * getters, so we set the env and force a re-read rather than swapping in a
- * process-wide `mock.module` stub (which used to leak into and break sibling
- * S3 test files, since Bun's `mock.module` is retroactive and never restored).
+ * process-wide Bun module stub (which used to leak into and break sibling
+ * S3 test files, since that mock was retroactive and never restored).
  *
  * `webAppOrigin` already defaults to this origin, `applicationId` is supplied
  * by the test preload, and `JWT_SIGNING_SECRET` is set by test-setup.ts — we

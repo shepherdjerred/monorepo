@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { afterAll, describe, it } from "bun:test";
+import { afterAll, describe, it } from "vitest";
 import { preferZodValidation } from "./prefer-zod-validation.ts";
 
 RuleTester.afterAll = afterAll;

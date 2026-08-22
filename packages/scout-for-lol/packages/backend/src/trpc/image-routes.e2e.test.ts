@@ -11,7 +11,7 @@
  * is 403 — the two are unambiguous.
  */
 
-import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -26,11 +26,11 @@ import * as reportRunModule from "#src/storage/s3-report-run.ts";
 // before importing the route so it binds to the stubs.
 const trpc = await createOfflineTrpcHarness("image-routes-e2e");
 
-void mock.module("#src/storage/s3-leaderboard-image.ts", () => ({
+vi.doMock("#src/storage/s3-leaderboard-image.ts", () => ({
   ...leaderboardImageModule,
   loadLeaderboardImage: () => Promise.resolve(null),
 }));
-void mock.module("#src/storage/s3-report-run.ts", () => ({
+vi.doMock("#src/storage/s3-report-run.ts", () => ({
   ...reportRunModule,
   loadReportRunImage: () => Promise.resolve(null),
 }));

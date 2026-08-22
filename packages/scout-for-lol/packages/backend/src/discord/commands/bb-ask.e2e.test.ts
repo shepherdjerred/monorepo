@@ -4,9 +4,9 @@ import {
   beforeAll,
   describe,
   expect,
-  mock,
   test,
-} from "bun:test";
+  vi,
+} from "vitest";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
@@ -305,18 +305,18 @@ function fakeAskCommand() {
     },
     replied: false,
     deferred: false,
-    reply: mock((payload) => Promise.resolve(payload)),
-    deferReply: mock((payload) => {
+    reply: vi.fn((payload) => Promise.resolve(payload)),
+    deferReply: vi.fn((payload) => {
       calls.push("deferReply");
       deferReplies.push(payload);
       return Promise.resolve(payload);
     }),
-    editReply: mock((payload) => {
+    editReply: vi.fn((payload) => {
       calls.push("editReply");
       serializedEdits.push(JSON.stringify(payload));
       return Promise.resolve(payload);
     }),
-    followUp: mock((payload) => Promise.resolve(payload)),
+    followUp: vi.fn((payload) => Promise.resolve(payload)),
   };
   return { interaction, calls, deferReplies, serializedEdits };
 }
@@ -340,21 +340,21 @@ function fakePublishInteraction(
     },
     deferred: false,
     replied: false,
-    deferUpdate: mock(() => {
+    deferUpdate: vi.fn(() => {
       calls.push("deferUpdate");
       return Promise.resolve(undefined);
     }),
-    deferReply: mock(() => Promise.resolve(undefined)),
-    reply: mock((payload) => Promise.resolve(payload)),
-    editReply: mock((payload) => {
+    deferReply: vi.fn(() => Promise.resolve(undefined)),
+    reply: vi.fn((payload) => Promise.resolve(payload)),
+    editReply: vi.fn((payload) => {
       calls.push("editReply");
       edits.push(payload);
       return Promise.resolve(payload);
     }),
-    followUp: mock(() =>
+    followUp: vi.fn(() =>
       Promise.resolve({ delete: () => Promise.resolve(undefined) }),
     ),
-    sendPublic: mock((message) => {
+    sendPublic: vi.fn((message) => {
       calls.push("sendPublic");
       publicMessages.push(message);
       return Promise.resolve(message);

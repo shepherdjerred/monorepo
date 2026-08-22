@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import type { ChatInputCommandInteraction } from "discord.js";
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
 import { executeHelp } from "#src/discord/commands/help.ts";
@@ -17,7 +17,7 @@ afterEach(() => {
 
 describe("/help", () => {
   test("presents the retained commands and web-only management areas", async () => {
-    const replyMock = mock(
+    const replyMock = vi.fn(
       (payload: Parameters<ChatInputCommandInteraction["reply"]>[0]) =>
         Promise.resolve(payload),
     );
@@ -38,7 +38,7 @@ describe("/help", () => {
   test("includes Scout Explore only inside an allowlisted guild", async () => {
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "100000000000000001";
     resetConfigurationForTests();
-    const replyMock = mock(
+    const replyMock = vi.fn(
       (payload: Parameters<ChatInputCommandInteraction["reply"]>[0]) =>
         Promise.resolve(payload),
     );

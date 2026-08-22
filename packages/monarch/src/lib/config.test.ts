@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {

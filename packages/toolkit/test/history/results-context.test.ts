@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   dialogueFirstExcerpt,
   messageMatchesQuery,
@@ -471,7 +471,7 @@ describe("query-aware bounded history context", () => {
       ],
       "Bryan Bucks",
     );
-    expect(excerpt).toStartWith("Dialogue explains");
+    expect(excerpt.startsWith("Dialogue explains")).toBe(true);
     expect(
       dialogueFirstExcerpt(
         [message("user", `prefix ${"detail ".repeat(100)}Bryan Bucks result`)],

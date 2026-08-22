@@ -44,7 +44,7 @@ first. Run them per-package:
 ```bash
 cd packages/discord-stream-lifecycle
 bun run build       # tsc -p tsconfig.build.json → dist/
-bun run test        # build + bun test test/
+bun run test        # build + bun run test test/
 bun run typecheck   # build + tsc --noEmit
 bun run lint        # build + eslint
 ```

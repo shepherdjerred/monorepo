@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { RawMatchSchema } from "#src/league/raw-match.schema.ts";
 import { buildLanePriorArtifact } from "#src/lane-priors/build.ts";
 import { evaluateLanePriors } from "#src/lane-priors/eval.ts";

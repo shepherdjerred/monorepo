@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "build": "bun run scripts/build.ts",
-    "test": "bun test test",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
     "deploy": "bun ../../scripts/deploy-site.ts glitter",
     "test:ci": "bun ../../scripts/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "@shepherdjerred/glitter-context": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "4.1.9",
+    "@vitest/coverage-istanbul": "4.1.9"
   }
 }

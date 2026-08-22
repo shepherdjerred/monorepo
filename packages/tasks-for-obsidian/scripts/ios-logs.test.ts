@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { outputPath } from "./ios-scripts-core.ts";
 
 test("defaults to the established device log", () => {

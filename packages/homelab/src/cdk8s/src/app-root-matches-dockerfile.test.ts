@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { APP_ROOT as POKEMON_APP_ROOT } from "./resources/pokemon.ts";
 import { APP_ROOT as MARIO_KART_APP_ROOT } from "./resources/mario-kart.ts";
 

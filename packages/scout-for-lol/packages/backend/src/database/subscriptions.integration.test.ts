@@ -5,7 +5,7 @@ import {
   beforeEach,
   afterEach,
   describe,
-} from "bun:test";
+} from "vitest";
 import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
 import {
   setSubscriptionFilters,

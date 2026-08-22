@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import type { ChatInputCommandInteraction } from "discord.js";
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
 import {
@@ -9,7 +9,7 @@ import {
 } from "#src/discord/commands/onboarding.ts";
 
 function interaction() {
-  const replyMock = mock(
+  const replyMock = vi.fn(
     (payload: Parameters<ChatInputCommandInteraction["reply"]>[0]) =>
       Promise.resolve(payload),
   );

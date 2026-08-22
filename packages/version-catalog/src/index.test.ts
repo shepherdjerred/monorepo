@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import rawCatalog from "./catalog.json" with { type: "json" };
 import catalogSchema from "./schema.json" with { type: "json" };
@@ -15,7 +15,7 @@ describe("version catalog", () => {
       strict: true,
       validateFormats: false,
     }).compile(catalogSchema);
-    expect(validate(rawCatalog)).toBeTrue();
+    expect(validate(rawCatalog)).toBe(true);
     expect(validate.errors).toBeNull();
   });
 
@@ -30,7 +30,7 @@ describe("version catalog", () => {
     const catalog = parseVersionCatalog(rawCatalog);
     const serialized = serializeVersionCatalog(catalog);
     expect(parseVersionCatalogText(serialized)).toEqual(catalog);
-    expect(serialized.endsWith("\n")).toBeTrue();
+    expect(serialized.endsWith("\n")).toBe(true);
   });
 
   test("rejects duplicate names", () => {

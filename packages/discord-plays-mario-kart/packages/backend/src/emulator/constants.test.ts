@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { EMPTY_BUTTONS } from "@discord-plays-mario-kart/common";
 import { BUTTON_ORDER, CONTROL_CHARS } from "./constants.ts";
 

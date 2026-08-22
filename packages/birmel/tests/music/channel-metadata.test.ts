@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { getChannelMetadata } from "@shepherdjerred/birmel/music/channel-metadata.ts";
 
 describe("getChannelMetadata", () => {

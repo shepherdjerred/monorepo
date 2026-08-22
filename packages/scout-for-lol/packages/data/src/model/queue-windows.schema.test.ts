@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import queueWindowsJson from "#src/model/queue-windows.json" with { type: "json" };
 import {
   QueueWindowsArraySchema,

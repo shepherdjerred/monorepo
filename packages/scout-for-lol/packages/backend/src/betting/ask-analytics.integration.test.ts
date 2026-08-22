@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { DiscordGuildIdSchema, type DiscordGuildId } from "@scout-for-lol/data";
 import {
   BUCKS_ASK_DATASET_LIMITS,

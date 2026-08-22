@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from "bun:test";
+import { describe, expect, it, vi } from "vitest";
 import type { Client } from "@temporalio/client";
 import { buildAgentTaskApiApp } from "./agent-task-api.ts";
 import type {
@@ -20,7 +20,7 @@ const START_RESULT: AgentTaskStartResult = {
 
 /** A `start` mock that resolves to the canonical workflow start result. */
 function makeStartMock() {
-  return mock(
+  return vi.fn(
     async (
       _client: Client,
       _input: AgentTaskInput,

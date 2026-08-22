@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { DRIVER_FEED_KEYFRAME_FLAG } from "@discord-plays-mario-kart/common";
 import { decideDriverFeedDecode, retainDriverFeedEntryPoint } from "./video.ts";
 

@@ -7,7 +7,7 @@
  * single chokepoint, so no caller can bypass it.
  */
 
-import { describe, it, expect, mock, beforeEach, afterAll } from "bun:test";
+import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import { DiscordAPIError, type Client } from "discord.js";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { mockClient } from "#src/testing/discord-mocks.ts";
@@ -24,14 +24,14 @@ type SendMock = ReturnType<typeof makeSendMock>;
 
 /** A DM send spy whose first argument is the message body. */
 function makeSendMock() {
-  return mock((_body: unknown) => Promise.resolve({}));
+  return vi.fn((_body: unknown) => Promise.resolve({}));
 }
 
 /** A Discord client whose DMs always succeed. */
 function clientThatSends(send: SendMock) {
   return mockClient({
     users: {
-      fetch: mock(() => Promise.resolve({ tag: "tester#0001", send })),
+      fetch: vi.fn(() => Promise.resolve({ tag: "tester#0001", send })),
     },
   });
 }
@@ -40,10 +40,10 @@ function clientThatSends(send: SendMock) {
 function clientThatCannotDm() {
   return mockClient({
     users: {
-      fetch: mock(() =>
+      fetch: vi.fn(() =>
         Promise.resolve({
           tag: "tester#0001",
-          send: mock(() =>
+          send: vi.fn(() =>
             Promise.reject(
               new DiscordAPIError(
                 { code: 50_007, message: "Cannot send messages to this user" },

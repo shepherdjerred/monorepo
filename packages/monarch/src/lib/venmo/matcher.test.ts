@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { matchVenmoTransactions } from "./matcher.ts";
 import type { MonarchTransaction } from "../monarch/types.ts";
 import type { VenmoTransaction } from "./types.ts";

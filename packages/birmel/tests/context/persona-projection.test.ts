@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { getStyleCard } from "@shepherdjerred/glitter-context";
 import { CONTEXT_BUDGETS } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import {

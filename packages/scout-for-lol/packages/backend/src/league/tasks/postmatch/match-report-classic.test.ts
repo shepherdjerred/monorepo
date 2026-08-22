@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import {
   type ClassicMatch,
   type Player,
@@ -198,8 +198,12 @@ describe("buildClassicMatch", () => {
         mapName === "Classic Rift" ? "classic" : "classic aram mayhem",
       );
       expect(result.mapName).toBe(mapName);
-      expect(result.teams.blue[0]?.championName).toStartWith("Jade_");
-      expect(result.teams.blue[0]?.spells).toEqual([74, 714]);
+      const blueParticipant = result.teams.blue[0];
+      if (blueParticipant === undefined) {
+        throw new Error("Expected a blue-side participant");
+      }
+      expect(blueParticipant.championName.startsWith("Jade_")).toBe(true);
+      expect(blueParticipant.spells).toEqual([74, 714]);
     },
   );
 
@@ -476,19 +480,19 @@ describe("generateMatchReport Classic routing", () => {
         },
       },
     });
-    const processClassicMatchSpy = mock(async () => ({
+    const processClassicMatchSpy = vi.fn(async () => ({
       content: "Classic dependency route",
     }));
-    const getPlayerSpy = mock(async () => {
+    const getPlayerSpy = vi.fn(async () => {
       throw new Error("Classic must not fetch ranked player data");
     });
-    const fetchTimelineSpy = mock(async () => {
+    const fetchTimelineSpy = vi.fn(async () => {
       throw new Error("Classic must not fetch timeline data");
     });
-    const processArenaSpy = mock(async () => {
+    const processArenaSpy = vi.fn(async () => {
       throw new Error("Classic must not enter arena processing");
     });
-    const processStandardSpy = mock(async () => {
+    const processStandardSpy = vi.fn(async () => {
       throw new Error(
         "Classic must not enter rank-history or AI standard processing",
       );

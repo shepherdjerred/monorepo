@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "vitest";
 import { type PostalConfig, sendPostalEmail } from "./postal.ts";
 
 const ORIGINAL_FETCH = globalThis.fetch;

@@ -49,7 +49,7 @@ Releases are published to the separate plugin repository
 cd packages/cooklang-for-obsidian
 bun run dev              # esbuild watch build
 bun run build            # production build (main.js)
-bun run test             # bun test
+bun run test             # bun run test
 bun run lint             # eslint src
 bun run typecheck        # tsc --noEmit
 bun run publish:plugin   # scripts/publish.ts — build, release to the plugin repo, version-bump PR

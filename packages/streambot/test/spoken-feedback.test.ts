@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { loadSpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
 

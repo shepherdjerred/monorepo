@@ -121,7 +121,7 @@ const decision = evaluateGate({
 ## Development
 
 ```bash
-bun run test        # bun test
+bun run test        # bun run test
 bun run typecheck
 bun run lint
 ```

@@ -7,7 +7,7 @@
 // loses its OTLPLogExporter, if shutdown stops force-flushing logs, or if
 // the OTel logs API stops auto-attaching span context — `logPosts` stays
 // empty or the body doesn't contain a traceId, and the test fails.
-import { describe, expect, test, beforeAll, afterAll } from "bun:test";
+import { describe, expect, test, beforeAll, afterAll } from "vitest";
 import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 import { initializeTracing, shutdownTracing, withSpan } from "./tracing.ts";
 import { log } from "./log.ts";

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   REPORT_DEFAULT_MAX_ROWS,
   REPORT_ACTIVE_LIMIT_PER_OWNER_PER_SERVER,

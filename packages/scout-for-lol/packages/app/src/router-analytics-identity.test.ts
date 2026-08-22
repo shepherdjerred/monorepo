@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { isValidElement } from "react";
 import type { RouteObject } from "react-router";
 import { routes } from "#src/router.tsx";

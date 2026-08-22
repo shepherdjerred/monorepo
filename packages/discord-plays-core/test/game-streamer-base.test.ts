@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { PassThrough } from "node:stream";
 import { Client } from "discord.js-selfbot-v13";
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types";

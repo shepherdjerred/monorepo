@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { buildDevLoginUrl, parseDevLoginArgs } from "./dev-login.ts";
 
 test("parses the selected user and local return path", () => {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { buildAnalysisPrompt, parsePatchAnalysis } from "./patch-analysis.ts";
 import type { RiotPatch } from "./riot-patch.ts";
 

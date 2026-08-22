@@ -7,7 +7,7 @@
  * Environment setup is handled automatically by test-setup.ts (preloaded via bunfig.toml)
  */
 
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { z } from "zod";
@@ -349,7 +349,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
     const command = getValidatedCommand(0);
 
-    expect(command.input.Key).toEndWith(".png");
+    expect(command.input.Key.endsWith(".png")).toBe(true);
   });
 
   test("returns s3:// URL format", async () => {
@@ -363,9 +363,10 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
     const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
-    expect(result).toStartWith("s3://test-bucket/");
+    if (result === undefined) throw new Error("Expected an uploaded image URL");
+    expect(result.startsWith("s3://test-bucket/")).toBe(true);
     expect(result).toContain("games/");
-    expect(result).toEndWith(".png");
+    expect(result.endsWith(".png")).toBe(true);
   });
 });
 

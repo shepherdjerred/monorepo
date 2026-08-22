@@ -351,7 +351,7 @@ error: 'prisma-client-disconnect' - Prisma client must be disconnected after tes
 ### ✅ Correct Pattern
 
 ```typescript
-import { afterEach } from "bun:test";
+import { afterEach } from "vitest";
 import { PrismaClient } from "generated/prisma/client";
 
 const prisma = new PrismaClient();
@@ -395,7 +395,7 @@ afterEach(() => {
 
 ```typescript
 // ❌ BEFORE
-import { beforeEach } from "bun:test";
+import { beforeEach } from "vitest";
 import { PrismaClient } from "generated/prisma/client";
 
 const prisma = new PrismaClient();
@@ -406,7 +406,7 @@ beforeEach(async () => {
 });
 
 // ✅ AFTER
-import { beforeEach, afterEach } from "bun:test";
+import { beforeEach, afterEach } from "vitest";
 import { PrismaClient } from "generated/prisma/client";
 
 const prisma = new PrismaClient();

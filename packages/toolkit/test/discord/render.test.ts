@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { IpcMessage } from "#lib/discord/ipc.ts";
 import {
   renderMessages,

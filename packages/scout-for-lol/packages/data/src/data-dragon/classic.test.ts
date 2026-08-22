@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   CLASSIC_CHAMPION_COUNT,
   CLASSIC_SUMMONER_SPELL_COUNT,

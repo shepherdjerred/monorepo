@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { createHandler } from "../app.ts";
 import type { AppConfig } from "../config.ts";
 import type { HomePayload, HomelabPayload } from "../types.ts";

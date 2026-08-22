@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   ALLOWED_KARMA_AMOUNTS,
   formatLeaderboardLine,
@@ -112,7 +112,7 @@ describe("parseKarmaAmount", () => {
     [null, "null"],
     [undefined, "undefined"],
     [Number.NaN, "NaN"],
-  ])("rejects %p (%s)", (value) => {
+  ])("rejects %p (%s)", (value, _description) => {
     expect(() => parseKarmaAmount(value)).toThrow(InvalidKarmaAmountError);
   });
 });

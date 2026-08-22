@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   ParlayConditionSchema,
   PARLAY_SUBJECT_ALIAS_MAX_LENGTH,

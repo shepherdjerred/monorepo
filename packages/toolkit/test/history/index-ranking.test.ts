@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -396,7 +396,7 @@ describe("history index rebuilds", () => {
     `);
     old.close();
 
-    expect(HistoryIndex.open(paths)).rejects.toThrow();
+    await expect(HistoryIndex.open(paths)).rejects.toThrow();
 
     const preserved = new Database(paths.indexDb, { readonly: true });
     expect(preserved.query("SELECT body FROM documents").get()).toEqual({

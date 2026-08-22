@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import type { ErrorEvent, EventHint } from "@sentry/bun";
 import { z } from "zod";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";

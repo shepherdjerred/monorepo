@@ -1745,10 +1745,9 @@ async function updateSnapshots(): Promise<void> {
         : testPath;
 
       console.log(`  Updating: ${testFile}`);
-      const result =
-        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`
-          .quiet()
-          .nothrow();
+      const result = await $`cd ${cwd} && bun run test -- ${testFile} --update`
+        .quiet()
+        .nothrow();
       assertSnapshotUpdateSucceeded(
         testFile,
         result.exitCode,

@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import type { Client } from "@temporalio/client";
 import { WorkflowIdConflictPolicy } from "@temporalio/client";
 import { buildSleepWebhookApp } from "./sleep-webhook.ts";
@@ -22,7 +22,7 @@ function fakeClient(
 }
 
 function makeStartMock() {
-  return mock((_workflowType: string, _options: StartOptions) =>
+  return vi.fn((_workflowType: string, _options: StartOptions) =>
     Promise.resolve(),
   );
 }
@@ -171,7 +171,7 @@ describe("sleep webhook", () => {
   });
 
   test("returns 500 when Temporal cannot start the workflow", async () => {
-    const start = mock(async () => {
+    const start = vi.fn(async () => {
       throw new Error("Temporal unavailable");
     });
     const app = buildSleepWebhookApp(TOKEN, fakeClient(start));

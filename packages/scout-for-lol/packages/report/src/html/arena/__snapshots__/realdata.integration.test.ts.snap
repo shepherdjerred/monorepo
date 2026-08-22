@@ -1,4 +1,4 @@
-// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`arena real data renders image for 1.json 1`] = `"145dc90c49e909acee32a65b546f57da4ed14c87fa3cbb91285b679556c993e7"`;
 

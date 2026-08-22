@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { redactAgentTaskPayloadStrings } from "./agent-task-result.ts";
 
 describe("agent task result redaction", () => {

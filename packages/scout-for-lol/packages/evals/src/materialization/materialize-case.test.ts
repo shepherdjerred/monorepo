@@ -1,5 +1,5 @@
 import type { PipelineTraces, StageTrace } from "@scout-for-lol/data";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import {
   buildMaterializedGeneration,

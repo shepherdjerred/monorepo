@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { Registry } from "prom-client";
 import { commonLlmMetrics } from "#src/metrics.ts";
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./worker-options.ts";
 
 describe("Temporal worker options", () => {

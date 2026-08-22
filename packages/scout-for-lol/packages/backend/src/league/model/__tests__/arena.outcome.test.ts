@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import type { RawParticipant } from "@scout-for-lol/data";
 import { getArenaPlacement } from "#src/league/model/match.ts";
 import { makeTestParticipant } from "#src/testing/riot-mocks.ts";

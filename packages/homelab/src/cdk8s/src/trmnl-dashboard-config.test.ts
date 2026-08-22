@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { App } from "cdk8s";
 import { setupCharts } from "./setup-charts.ts";
 

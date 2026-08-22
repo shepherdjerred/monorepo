@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { MAX_LIST_ITEMS, buildListEmbed } from "#src/discord/commands/list.ts";
 import type { SubscriptionListItem } from "#src/lib/subscription/types.ts";
 

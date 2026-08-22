@@ -1,4 +1,4 @@
-import { describe, expect, spyOn, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import { z } from "zod/v4";
 import { DiscordRestClient } from "./glitter-corpus-discord-client.ts";
 import {
@@ -174,9 +174,9 @@ describe("Glitter Discord request release", () => {
       },
       { preconnect: globalThis.fetch.preconnect },
     );
-    const fetchSpy = spyOn(globalThis, "fetch").mockImplementation(
-      fetchImplementation,
-    );
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(fetchImplementation);
     try {
       const { hooks } = clientHooks(recorded.coordinator);
       const client = new DiscordRestClient("token", hooks);
@@ -208,9 +208,9 @@ describe("Glitter Discord request release", () => {
       },
       { preconnect: globalThis.fetch.preconnect },
     );
-    const fetchSpy = spyOn(globalThis, "fetch").mockImplementation(
-      fetchImplementation,
-    );
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(fetchImplementation);
     try {
       const { hooks, waits } = clientHooks(recorded.coordinator);
       const client = new DiscordRestClient("token", hooks);

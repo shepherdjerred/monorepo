@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { blitBgra } from "./blit.ts";
 import type { FrameView, Label } from "./blit.ts";
 

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data/index.ts";
 import {
   aggregateQueueActivity,

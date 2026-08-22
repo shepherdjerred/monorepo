@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { getTemporalRuleGroups } from "./temporal.ts";
 
 function findFailureRule(alertName: string): string {

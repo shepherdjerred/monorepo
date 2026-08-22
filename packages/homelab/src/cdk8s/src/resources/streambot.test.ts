@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "bun:test";
+import { beforeAll, describe, expect, it } from "vitest";
 import { App } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
@@ -114,23 +114,29 @@ const STREAMBOT_STATE = "/state";
 
 describe("streambot deployment (media namespace)", () => {
   let deployment: z.infer<typeof DeploymentSchema>;
-  let container: z.infer<typeof ContainerSchema> | undefined;
+  let container: z.infer<typeof ContainerSchema>;
 
   beforeAll(async () => {
     deployment = await getStreambotDeployment();
-    container = deployment.spec.template.spec.containers[0];
+    const firstContainer = deployment.spec.template.spec.containers[0];
+    if (firstContainer === undefined) {
+      throw new Error("Expected the Streambot deployment to have a container");
+    }
+    container = firstContainer;
   });
 
   it("uses the first-party ghcr image", () => {
-    expect(container?.image).toStartWith("ghcr.io/shepherdjerred/streambot:");
+    const image = container.image;
+    if (image === undefined) throw new Error("Expected a Streambot image");
+    expect(image.startsWith("ghcr.io/shepherdjerred/streambot:")).toBe(true);
     // Voice ships enabled; the env flag is the single GitOps rollback knob.
-    expect(container?.env).toContainEqual(
+    expect(container.env).toContainEqual(
       expect.objectContaining({
         name: "VOICE_ASSISTANT_ENABLED",
         value: "true",
       }),
     );
-    expect(container?.env).not.toContainEqual(
+    expect(container.env).not.toContainEqual(
       expect.objectContaining({ name: "VOICE_MODEL" }),
     );
     // The dedicated streambot-openai item syncs to a secret; the key must arrive via
@@ -142,14 +148,14 @@ describe("streambot deployment (media namespace)", () => {
       }),
     });
     const openAiKey = EnvFromSecretSchema.parse(
-      (container?.env ?? []).find((entry) => entry.name === "OPENAI_API_KEY"),
+      (container.env ?? []).find((entry) => entry.name === "OPENAI_API_KEY"),
     );
     expect(openAiKey.valueFrom.secretKeyRef.key).toBe("OPENAI_API_KEY");
   });
 
   it("exports voice telemetry and private captures to in-cluster backends", () => {
     const env = new Map(
-      (container?.env ?? []).map((variable) => [variable.name, variable]),
+      (container.env ?? []).map((variable) => [variable.name, variable]),
     );
     expect(env.get("TELEMETRY_ENABLED")?.value).toBe("true");
     expect(env.get("TELEMETRY_SERVICE_NAME")?.value).toBe("streambot");
@@ -190,11 +196,11 @@ describe("streambot deployment (media namespace)", () => {
   });
 
   it("runs as the non-root user", () => {
-    expect(container?.securityContext?.runAsUser).toBe(1000);
+    expect(container.securityContext?.runAsUser).toBe(1000);
   });
 
   it("mounts the movies and tv libraries read-only", () => {
-    const mounts = container?.volumeMounts ?? [];
+    const mounts = container.volumeMounts ?? [];
     const movies = mounts.find((mount) => mount.mountPath === STREAMBOT_MOVIES);
     const tv = mounts.find((mount) => mount.mountPath === STREAMBOT_TV);
     expect(movies?.readOnly).toBe(true);
@@ -202,14 +208,14 @@ describe("streambot deployment (media namespace)", () => {
   });
 
   it("does not carry the legacy writable yt-dlp scripts mount", () => {
-    const mounts = container?.volumeMounts ?? [];
+    const mounts = container.volumeMounts ?? [];
     expect(
       mounts.some((mount) => mount.mountPath === LEGACY_SCRIPTS_PATH),
     ).toBe(false);
   });
 
   it("mounts the resume-state volume writable at /state", () => {
-    const mounts = container?.volumeMounts ?? [];
+    const mounts = container.volumeMounts ?? [];
     const state = mounts.find((mount) => mount.mountPath === STREAMBOT_STATE);
     expect(state).toBeDefined();
     // Must be writable (default / not readOnly) so the bot can persist resume state.
@@ -217,7 +223,7 @@ describe("streambot deployment (media namespace)", () => {
   });
 
   it("sets STATE_DIR to the persistent /state mount", () => {
-    const stateDir = (container?.env ?? []).find(
+    const stateDir = (container.env ?? []).find(
       (variable) => variable.name === "STATE_DIR",
     );
     expect(stateDir?.value).toBe(STREAMBOT_STATE);
@@ -233,7 +239,7 @@ describe("streambot deployment (media namespace)", () => {
         }),
       }),
     });
-    const tmdb = (container?.env ?? []).find(
+    const tmdb = (container.env ?? []).find(
       (variable) => variable.name === "TMDB_API_KEY",
     );
     const parsed = EnvFromSecretSchema.parse(tmdb);

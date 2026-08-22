@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { deriveTaskPresentation } from "./task-presentation";
 import type { TaskDateRelation } from "./task-presentation";

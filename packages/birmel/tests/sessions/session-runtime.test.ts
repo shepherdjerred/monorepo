@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 
 const {
   appendSessionEvent,
@@ -125,32 +125,32 @@ describe("thread-bound sessions", () => {
       threadId: session.threadId,
     };
 
-    expect(await isSessionActiveForThread(exactSession)).toBeTrue();
+    expect(await isSessionActiveForThread(exactSession)).toBe(true);
     expect(
       await isSessionActiveForThread({
         ...exactSession,
         sessionId: "different-session",
       }),
-    ).toBeFalse();
+    ).toBe(false);
     expect(
       await isSessionActiveForThread({
         ...exactSession,
         guildId: "different-guild",
       }),
-    ).toBeFalse();
+    ).toBe(false);
     expect(
       await isSessionActiveForThread({
         ...exactSession,
         threadId: "different-thread",
       }),
-    ).toBeFalse();
+    ).toBe(false);
 
     await updateSessionStatus({
       sessionId: session.id,
       guildId: session.guildId,
       status: "archived",
     });
-    expect(await isSessionActiveForThread(exactSession)).toBeFalse();
+    expect(await isSessionActiveForThread(exactSession)).toBe(false);
 
     await updateSessionStatus({
       sessionId: session.id,
@@ -162,7 +162,7 @@ describe("thread-bound sessions", () => {
       guildId: session.guildId,
       status: "cancelled",
     });
-    expect(await isSessionActiveForThread(exactSession)).toBeFalse();
+    expect(await isSessionActiveForThread(exactSession)).toBe(false);
   });
 
   test("archive, cancel, and resume change active thread routing state", async () => {
@@ -174,7 +174,7 @@ describe("thread-bound sessions", () => {
         guildId: session.guildId,
         status: "archived",
       }),
-    ).toBeTrue();
+    ).toBe(true);
     expect(await getActiveSessionForThread(session.threadId)).toBeNull();
 
     expect(
@@ -183,7 +183,7 @@ describe("thread-bound sessions", () => {
         guildId: session.guildId,
         status: "active",
       }),
-    ).toBeTrue();
+    ).toBe(true);
     expect(await getActiveSessionForThread(session.threadId)).toMatchObject({
       status: "active",
       archivedAt: null,
@@ -196,7 +196,7 @@ describe("thread-bound sessions", () => {
         guildId: session.guildId,
         status: "cancelled",
       }),
-    ).toBeTrue();
+    ).toBe(true);
     expect(await getActiveSessionForThread(session.threadId)).toBeNull();
 
     expect(
@@ -205,7 +205,7 @@ describe("thread-bound sessions", () => {
         guildId: session.guildId,
         status: "active",
       }),
-    ).toBeTrue();
+    ).toBe(true);
     expect(await getActiveSessionForThread(session.threadId)).toMatchObject({
       status: "active",
       archivedAt: null,
@@ -281,7 +281,7 @@ describe("session event log", () => {
       "assistant",
       "tool",
     ]);
-    expect(SessionEventRoleSchema.safeParse("reasoning").success).toBeFalse();
+    expect(SessionEventRoleSchema.safeParse("reasoning").success).toBe(false);
   });
 
   test("resumes context from the versioned summary and only later events", async () => {
@@ -328,7 +328,7 @@ describe("session summarization", () => {
       },
     );
 
-    expect(summarized).toBeTrue();
+    expect(summarized).toBe(true);
     expect(calls).toEqual([
       {
         previousSummary: null,
@@ -372,7 +372,7 @@ describe("session summarization", () => {
       return "Unexpected summary";
     });
 
-    expect(summarized).toBeFalse();
+    expect(summarized).toBe(false);
     expect(calls).toBe(0);
     expect(
       await prisma.agentSession.findUniqueOrThrow({
@@ -433,7 +433,7 @@ describe("session summarization", () => {
       },
     );
 
-    expect(summarized).toBeTrue();
+    expect(summarized).toBe(true);
     expect(inputCharacters).toBeLessThanOrEqual(
       MAX_SESSION_SUMMARIZATION_INPUT_CHARACTERS,
     );
@@ -460,7 +460,7 @@ describe("session summarization batching and concurrency", () => {
         );
         return "Bounded batch summary";
       }),
-    ).toBeTrue();
+    ).toBe(true);
 
     expect(observedSequences).toHaveLength(
       MAX_SESSION_SUMMARIZATION_EVENTS_PER_PASS,
@@ -505,9 +505,9 @@ describe("session summarization batching and concurrency", () => {
         session.id,
         async () => "Newer fast summary",
       ),
-    ).toBeTrue();
+    ).toBe(true);
     releaseSlow?.();
-    expect(await slow).toBeFalse();
+    expect(await slow).toBe(false);
 
     expect(
       await prisma.agentSession.findUniqueOrThrow({
@@ -560,7 +560,7 @@ describe("session tool contract", () => {
           action,
           guildId: "guild-session-test",
         }).success,
-      ).toBeTrue();
+      ).toBe(true);
     }
 
     for (const action of ["follow-up", "steer", "spawn", "set-options"]) {
@@ -569,7 +569,7 @@ describe("session tool contract", () => {
           action,
           guildId: "guild-session-test",
         }).success,
-      ).toBeFalse();
+      ).toBe(false);
     }
   });
 });

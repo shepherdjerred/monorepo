@@ -176,9 +176,9 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
 - `src/voice/` — local sherpa models, speaker-locking audio lifecycle, bounded Realtime tools, and
   per-session assistant ownership.
 - `src/util/` — structured logger, errors.
-- `test/` — `bun:test`; the machine is the most heavily tested surface.
+- `test/` — Vitest; the machine is the most heavily tested surface.
 - `integration/` — real-ffmpeg integration tests (`bun run test:integration`); need real
-  ffmpeg/ffprobe (e.g. inside the streambot image), never part of the plain `bun test`. They
+  ffmpeg/ffprobe (e.g. inside the streambot image), never part of the plain `bun run test`. They
   are not wired into a turbo task, so `bun run verify` and CI don't run them — run them
   manually against real ffmpeg when touching the ffmpeg pipeline.
 

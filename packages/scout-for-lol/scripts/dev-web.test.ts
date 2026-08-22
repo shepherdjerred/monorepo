@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { unresolvedSecrets } from "./migration-core.ts";
 
 test("reports missing and unresolved 1Password values", () => {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { MemoryCandidateSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { buildGroundedCommitment } from "@shepherdjerred/birmel/memory/commitments.ts";
 import { buildMemoryClaimFamilyKey } from "@shepherdjerred/birmel/memory/identity.ts";

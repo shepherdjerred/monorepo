@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { computeElapsed } from "@shepherdjerred/streambot/streamer/elapsed.ts";
 
 describe("computeElapsed", () => {

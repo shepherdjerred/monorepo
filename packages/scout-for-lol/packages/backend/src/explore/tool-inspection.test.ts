@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { ReportAiModelPreviewSummarySchema } from "@scout-for-lol/data";
 import { inspectExploreToolResult } from "#src/explore/tool-inspection.ts";
 

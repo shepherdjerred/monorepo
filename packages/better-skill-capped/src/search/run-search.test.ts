@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, test } from "vitest";
 import { buildChampionAliases, normalizeName } from "./normalize.ts";
 import { contentToSearchDocs } from "./search-doc.ts";
 import { createSearchIndex, type SearchIndex } from "./index-builder.ts";

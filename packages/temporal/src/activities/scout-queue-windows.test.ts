@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { nextWarningState } from "./scout-queue-windows.ts";
 
 const FINGERPRINT = "a".repeat(64);

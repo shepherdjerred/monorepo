@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { AloneInVoiceWatcher } from "@shepherdjerred/discord-stream-lifecycle/session/auto-leave";
 
 function makeSession(guildId: string, voiceChannelId: string) {

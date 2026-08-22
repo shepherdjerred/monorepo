@@ -92,7 +92,9 @@ export function createAlertDashboardDeployment(chart: Chart) {
       name: "alert-dashboard",
       image: IMAGE,
       command: ["/bin/sh", "-c"],
-      args: ["exec bun packages/alert-dashboard/src/server/index.ts"],
+      args: [
+        "cd /app/packages/alert-dashboard && exec bun src/server/index.ts",
+      ],
       ports: [{ name: "http", number: 7341 }],
       resources: {
         cpu: { request: Cpu.millis(50), limit: Cpu.millis(500) },

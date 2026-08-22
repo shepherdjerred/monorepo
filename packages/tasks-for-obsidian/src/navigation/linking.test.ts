@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { getStateFromPath } from "@react-navigation/core";
 
 import { linking } from "./linking";

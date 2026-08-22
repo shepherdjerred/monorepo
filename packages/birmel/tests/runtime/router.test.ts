@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { routeTurn } from "@shepherdjerred/birmel/agent-runtime/router.ts";
 import type { SpecialistId } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";

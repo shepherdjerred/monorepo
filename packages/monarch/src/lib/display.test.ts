@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { displaySummary } from "./display.ts";
 import type { EnrichmentStats } from "./enrichment/pipeline.ts";
 

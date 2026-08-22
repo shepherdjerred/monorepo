@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import type {
   DiscordAccountId,
   LeaguePuuid,
@@ -20,21 +20,19 @@ import {
 const { prisma } = createTestDatabase("account-admin-mutations");
 const puuidsByRiotName = new Map<string, LeaguePuuid>();
 
-void mock.module("#src/database/index.ts", () => ({ prisma }));
-void mock.module("#src/trpc/guild-guard.ts", () => ({
+vi.doMock("#src/database/index.ts", () => ({ prisma }));
+vi.doMock("#src/trpc/guild-guard.ts", () => ({
   assertGuildAdmin: () => Promise.resolve(),
-  // Must mirror the module's full export surface. bun's `mock.module` is
-  // process-global, so any router linked after this file runs would otherwise
-  // fail to resolve this static import ("Export named 'assertChannelInGuild'
-  // not found in module guild-guard.ts"), depending on test-file order.
+  // Mirror the module's full export surface because routers linked by the
+  // module under test resolve both static exports.
   assertChannelInGuild: () => {
     /* no-op: real bot-cache membership check is out of scope offline */
   },
 }));
-void mock.module("#src/league/api/backfill-match-history.ts", () => ({
+vi.doMock("#src/league/api/backfill-match-history.ts", () => ({
   backfillLastMatchTime: () => Promise.resolve(),
 }));
-void mock.module("#src/lib/riot/resolve-puuid.ts", () => ({
+vi.doMock("#src/lib/riot/resolve-puuid.ts", () => ({
   resolvePuuidFromRiotId: (riotId: RiotId, _region: Region) =>
     Promise.resolve({
       success: true,

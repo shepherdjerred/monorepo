@@ -9,10 +9,10 @@
  * left to neutralize are the guild guard (real Discord call) and the global
  * Prisma singleton (bound to `DATABASE_URL` at import). This harness does both:
  *
- *   - `mock.module("#src/trpc/guild-guard.ts", …)` → `assertGuildAdmin` /
+ *   - `vi.doMock("#src/trpc/guild-guard.ts", …)` → `assertGuildAdmin` /
  *     `assertChannelInGuild` become no-ops (offline can't verify real Discord
  *     membership; that check is out of scope for these tests).
- *   - `mock.module("#src/database/index.ts", …)` → the router's `prisma` points
+ *   - `vi.doMock("#src/database/index.ts", …)` → the router's `prisma` points
  *     at an isolated, migrated test DB (a copy of `template.db`). The real
  *     module is spread so its other exports stay intact for the rest of the
  *     router graph.
@@ -34,7 +34,7 @@
  * ```
  */
 
-import { mock } from "bun:test";
+import { vi } from "vitest";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import type { User } from "#generated/prisma/client/index.js";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
@@ -156,13 +156,13 @@ export async function createOfflineTrpcHarness(
       ? new Set()
       : new Set(state.membership.map((m) => m.guildId));
 
-  void mock.module("#src/trpc/guild-guard.ts", () => ({
+  vi.doMock("#src/trpc/guild-guard.ts", () => ({
     assertGuildAdmin: () => Promise.resolve(),
     assertChannelInGuild: () => {
       /* no-op: real bot-cache membership check is out of scope offline */
     },
   }));
-  void mock.module("#src/database/index.ts", () => ({
+  vi.doMock("#src/database/index.ts", () => ({
     ...databaseModule,
     prisma,
   }));
@@ -170,15 +170,15 @@ export async function createOfflineTrpcHarness(
   // the bot's guild cache. Stub those two seams so the REAL
   // resolveGuildPermissions runs against seeded ServerPermission rows.
   //
-  // Stub the request-layer seam, NOT `#src/lib/discord-rest.ts`: `mock.module`
+  // Stub the request-layer seam, NOT `#src/lib/discord-rest.ts`: `vi.doMock`
   // is process-global in Bun, so mocking the lower module would also replace
   // `fetchUserGuilds` for its own unit tests (`src/lib/discord-rest.test.ts`)
-  // whenever they run in the same `bun test` process.
-  void mock.module("#src/trpc/discord-upstream.ts", () => ({
+  // whenever they run in the same test worker.
+  vi.doMock("#src/trpc/discord-upstream.ts", () => ({
     ...discordUpstreamModule,
     fetchUserGuildsForRequest: () => Promise.resolve(toPartialGuilds()),
   }));
-  void mock.module("#src/discord/client.ts", () => ({
+  vi.doMock("#src/discord/client.ts", () => ({
     client: {
       guilds: {
         cache: {

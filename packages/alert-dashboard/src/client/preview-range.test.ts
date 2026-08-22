@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 
 import { occurrencePreviewRange } from "./preview-range.ts";
 import { InstantTextSchema } from "#shared/time";

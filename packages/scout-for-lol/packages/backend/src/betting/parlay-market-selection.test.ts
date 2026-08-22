@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { selectParlayMarketForAlias } from "#src/betting/parlay-market-selection.ts";
 
 function market(matchId: string, aliases: readonly string[]) {

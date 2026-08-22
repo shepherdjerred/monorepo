@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
 import { createCloudflareTunnelBinding } from "./cloudflare-tunnel.ts";

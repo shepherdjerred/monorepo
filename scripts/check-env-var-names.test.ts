@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { findEnvironmentVariableViolations } from "./environment-variable-rules.ts";
 import {
@@ -117,9 +117,21 @@ test("environment-variable checks scope local work to relevant changed files", (
   );
 });
 
-test("parses Bun coverage summaries for the strict gate", () => {
+test("parses Vitest coverage summaries for the strict gate", () => {
   expect(
-    parseCoverageSummaries("All files |  95.50 |  91.25 |\nnot a coverage row"),
+    parseCoverageSummaries(
+      "Functions    : 95.50% ( 191/200 )\nLines        : 91.25% ( 365/400 )\nnot a coverage summary",
+    ),
   ).toEqual([{ functions: 95.5, lines: 91.25 }]);
+  expect(
+    parseCoverageSummaries(
+      "All files          |   92.89 |    89.02 |   98.41 |   94.51 |",
+    ),
+  ).toEqual([{ functions: 98.41, lines: 94.51 }]);
+  expect(
+    parseCoverageSummaries(
+      "\u{1B}[32;1mFunctions    : 100% ( 1/1 )\u{1B}[0m\n\u{1B}[32;1mLines        : 100% ( 1/1 )\u{1B}[0m",
+    ),
+  ).toEqual([{ functions: 100, lines: 100 }]);
   expect(parseCoverageSummaries("no summary")).toEqual([]);
 });

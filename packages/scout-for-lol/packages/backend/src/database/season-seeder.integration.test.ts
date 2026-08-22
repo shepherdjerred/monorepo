@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { SEASONS } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { seedSeasons } from "#src/database/season-seeder.ts";

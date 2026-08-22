@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { isProviderAuthor } from "../identity.ts";
 import type { ReviewThread } from "../types.ts";
 import {

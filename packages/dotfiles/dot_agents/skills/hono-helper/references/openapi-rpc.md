@@ -51,7 +51,7 @@ const user = await client.users[":id"].$get({
 ### Using app.request()
 
 ```typescript
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "vitest";
 import app from "./app";
 
 describe("API", () => {

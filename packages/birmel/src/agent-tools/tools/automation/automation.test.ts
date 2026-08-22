@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, test } from "vitest";
 import { rm } from "node:fs/promises";
 import { z } from "zod";
 import { runWithRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";

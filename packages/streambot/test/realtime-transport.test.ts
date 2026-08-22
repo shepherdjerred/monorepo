@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import {
   PlaybackCommandService,
@@ -605,14 +605,13 @@ describe("custom Realtime transport failure boundaries", () => {
     const listener = context.voiceListener();
     if (listener === null) throw new Error("Voice listener was not installed");
     emitMarkerTurn(listener);
-    await Bun.sleep(60);
+    await expect.poll(() => announcements.length).toBe(1);
     expect(announcements).toHaveLength(1);
     expect(announcements[0]).toContain("Playback is still healthy");
     expect(context.events).toHaveLength(0);
     emitMarkerTurn(listener);
-    await Bun.sleep(60);
+    await expect.poll(() => transports[1]?.closeCount).toBe(1);
     expect(transportIndex).toBe(2);
-    expect(transports[1]?.closeCount).toBe(1);
     expect(context.events).toHaveLength(0);
     assistant.close();
   });
@@ -701,8 +700,7 @@ describe("VoiceAssistantSession feedback and isolation", () => {
     expect(transportConstructions).toBe(0);
 
     emitMarkerTurn(listener);
-    await Bun.sleep(60);
-    expect(transportConstructions).toBe(1);
+    await expect.poll(() => transportConstructions).toBe(1);
     assistant.close();
   });
 
@@ -733,9 +731,8 @@ describe("VoiceAssistantSession feedback and isolation", () => {
     listener({ userId: String(USER), ssrc: 1, opus: new Uint8Array([4]) });
     listener({ userId: String(USER), ssrc: 1, opus: new Uint8Array([4]) });
     listener({ userId: String(USER), ssrc: 1, opus: new Uint8Array([4]) });
-    await Bun.sleep(60);
-    expect(transportConstructions).toBe(1);
-    expect(transport.closeCount).toBe(1);
+    await expect.poll(() => transportConstructions).toBe(1);
+    await expect.poll(() => transport.closeCount).toBe(1);
     assistant.close();
   });
 });

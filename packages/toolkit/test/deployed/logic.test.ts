@@ -1,4 +1,4 @@
-import { test, expect, describe } from "bun:test";
+import { test, expect, describe } from "vitest";
 import { isBumpSubject } from "#lib/deployed/git.ts";
 import { podsForVersionKey } from "#lib/deployed/kubectl.ts";
 import type { RunningPod } from "#lib/deployed/types.ts";

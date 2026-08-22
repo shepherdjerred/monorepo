@@ -1,5 +1,5 @@
-// Runs in a dedicated Bun test process because module mocks are process-global.
-import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
+// Runs in a dedicated Vitest process because module mocks are process-global.
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { Client } from "discord.js";
 import type { TurnInput } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import type { MessageContext } from "@shepherdjerred/birmel/discord/events/message-create.ts";
@@ -30,29 +30,25 @@ const previousTrustedUserIds = Bun.env["TRUSTED_USER_IDS"];
 Bun.env["TRUSTED_USER_IDS"] = JSON.stringify(trustedUserIds);
 resetConfig();
 
-void mock.module(
-  "@shepherdjerred/birmel/database/repositories/activity.ts",
-  () => ({ recordMessageActivity: () => null }),
-);
+vi.doMock("@shepherdjerred/birmel/database/repositories/activity.ts", () => ({
+  recordMessageActivity: () => null,
+}));
 
-void mock.module(
+vi.doMock(
   "@shepherdjerred/birmel/database/repositories/guild-owner.ts",
   () => ({
     getOrCreateGuildOwner: () => Promise.resolve({ currentOwner: "jerred" }),
   }),
 );
 
-void mock.module(
-  "@shepherdjerred/birmel/discord/engagement-tracker.ts",
-  () => ({
-    isRecentlyEngaged: () => recentlyEngaged,
-    markEngaged() {
-      recentlyEngaged = true;
-    },
-  }),
-);
+vi.doMock("@shepherdjerred/birmel/discord/engagement-tracker.ts", () => ({
+  isRecentlyEngaged: () => recentlyEngaged,
+  markEngaged() {
+    recentlyEngaged = true;
+  },
+}));
 
-void mock.module(
+vi.doMock(
   "@shepherdjerred/birmel/discord/should-respond-classifier.ts",
   () => ({
     classifyShouldRespond: () => {
@@ -62,19 +58,16 @@ void mock.module(
   }),
 );
 
-void mock.module(
-  "@shepherdjerred/birmel/discord/utils/channel-history.ts",
-  () => ({
-    getRecentChannelMessages: () => Promise.resolve([]),
-    formatTranscript: () => "",
-  }),
-);
+vi.doMock("@shepherdjerred/birmel/discord/utils/channel-history.ts", () => ({
+  getRecentChannelMessages: () => Promise.resolve([]),
+  formatTranscript: () => "",
+}));
 
-void mock.module("@shepherdjerred/birmel/persona/guild-persona.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/persona/guild-persona.ts", () => ({
   getGuildPersona: () => Promise.resolve("virmel"),
 }));
 
-void mock.module("@shepherdjerred/birmel/memory/aliases.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/memory/aliases.ts", () => ({
   listActivePersonaAliases: async ({ guildId }: { guildId: string }) => {
     aliasLookupCalls += 1;
     if (aliasLookupCalls === 1 && aliasLookupGate !== null) {
@@ -84,7 +77,7 @@ void mock.module("@shepherdjerred/birmel/memory/aliases.ts", () => ({
   },
 }));
 
-void mock.module("@shepherdjerred/birmel/sessions/service.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/sessions/service.ts", () => ({
   getActiveSessionForThread: () =>
     Promise.resolve(activeSessionId == null ? null : { id: activeSessionId }),
 }));

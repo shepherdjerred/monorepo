@@ -1,4 +1,4 @@
-import { describe, expect, test, mock, beforeEach } from "bun:test";
+import { describe, expect, test, beforeEach, vi } from "vitest";
 import type {
   PlayerConfigEntry,
   RawCurrentGameInfo,
@@ -96,17 +96,17 @@ const reportStoreCalls: { gameId: number }[] = [];
 // isolation we need.
 //
 // Sibling files in this directory (e.g. prematch-notification.integration.test.ts)
-// also call `mock.module("#src/database/index.ts", ...)`. Bun mocks are
+// also call `vi.doMock("#src/database/index.ts", ...)`. Bun mocks are
 // process-global, so we have to provide every database export any sibling
 // test file mocks — otherwise sibling tests that ran first leave a partial
 // mock in place that hides exports our SUT needs.
-await mock.module("#src/database/index.ts", () => ({
+await vi.doMock("#src/database/index.ts", () => ({
   prisma: {},
   getAccountsWithState: () => Promise.resolve(mockAccounts),
   getChannelsSubscribedToPlayers: () => Promise.resolve([]),
 }));
 
-await mock.module("#src/league/tasks/prematch/active-game-queries.ts", () => ({
+await vi.doMock("#src/league/tasks/prematch/active-game-queries.ts", () => ({
   getActiveGames: () => Promise.resolve(mockActiveGames),
   upsertActiveGame: (
     _matchId: string,
@@ -122,7 +122,7 @@ await mock.module("#src/league/tasks/prematch/active-game-queries.ts", () => ({
   recordPrematchMessageIds: () => Promise.resolve(),
 }));
 
-await mock.module("#src/league/api/spectator.ts", () => ({
+await vi.doMock("#src/league/api/spectator.ts", () => ({
   getActiveGame: (puuid: LeaguePuuid) => {
     const response = mockSpectatorResponses.get(puuid);
     if (response === undefined) {
@@ -132,28 +132,25 @@ await mock.module("#src/league/api/spectator.ts", () => ({
   },
 }));
 
-await mock.module(
-  "#src/league/tasks/prematch/prematch-notification.ts",
-  () => ({
-    sendPrematchNotification: (
-      gameInfo: RawCurrentGameInfo,
-      trackedPlayers: PlayerConfigEntry[],
-    ) => {
-      notificationCalls.push({ gameId: gameInfo.gameId, trackedPlayers });
-      return Promise.resolve(new Map<string, string>());
-    },
-  }),
-);
+await vi.doMock("#src/league/tasks/prematch/prematch-notification.ts", () => ({
+  sendPrematchNotification: (
+    gameInfo: RawCurrentGameInfo,
+    trackedPlayers: PlayerConfigEntry[],
+  ) => {
+    notificationCalls.push({ gameId: gameInfo.gameId, trackedPlayers });
+    return Promise.resolve(new Map<string, string>());
+  },
+}));
 
 // `active-game-detection.ts` imports getActiveServerIds, which pulls in the
 // Discord client singleton (and its whole command tree). Mock it so the client
 // module is never loaded under the partial database mock above. The return value
 // is irrelevant here since getAccountsWithState is mocked to ignore its filter.
-await mock.module("#src/discord/utils/guild-membership.ts", () => ({
+await vi.doMock("#src/discord/utils/guild-membership.ts", () => ({
   getActiveServerIds: () => new Set<string>(),
 }));
 
-await mock.module("#src/report-store/live-ingest.ts", () => ({
+await vi.doMock("#src/report-store/live-ingest.ts", () => ({
   recordPrematchForReportStore: ({
     gameInfo,
   }: {

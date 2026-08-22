@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { getLlmRuleGroups } from "./llm.ts";
 
 test("keeps LLM recording and Broadcast alert coverage together", () => {

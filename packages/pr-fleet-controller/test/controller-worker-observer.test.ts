@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { startWorkerObservation } from "@shepherdjerred/pr-fleet-controller/src/controller-worker-observer.ts";
 import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
 

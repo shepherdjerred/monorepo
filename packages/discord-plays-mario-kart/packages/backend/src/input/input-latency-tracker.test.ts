@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { InputLatencyTracker } from "./input-latency-tracker.ts";
 
 // Deterministic clock the tests advance by hand.

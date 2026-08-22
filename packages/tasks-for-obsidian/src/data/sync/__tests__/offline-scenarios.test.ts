@@ -1,4 +1,4 @@
-import { describe, test } from "bun:test";
+import { describe, test } from "vitest";
 
 import { groupByDescribe, scenariosFrom } from "./fixtures/load";
 import { runScenario } from "./fixtures/runner";

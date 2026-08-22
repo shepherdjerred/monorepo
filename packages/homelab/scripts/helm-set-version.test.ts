@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { setChartVersion } from "./migration-core.ts";
 
 test("updates chart and application versions", () => {

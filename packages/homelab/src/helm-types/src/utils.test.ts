@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { sanitizePropertyName } from "./utils.ts";
 import { convertToTypeScriptInterface } from "./type-converter.ts";
 

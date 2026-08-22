@@ -1,11 +1,4 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { AlertmanagerSnapshotAlertSchema } from "#shared/schema";
 import { epochNanosecondsToInstantText, InstantTextSchema } from "#shared/time";
@@ -220,7 +213,9 @@ describe("SQLite alert ledger", () => {
     expect(alerts.items[0]?.lifecycleState).toBe("resolved");
     expect(alerts.items[0]?.resolutionSource).toBe("webhook");
   });
+});
 
+describe("SQLite snapshot reconciliation", () => {
   it("serializes a firing webhook with an older snapshot absence pass", async () => {
     const fingerprint = "fingerprint-overlapping-absence";
     const alert = AlertmanagerSnapshotAlertSchema.parse({
@@ -372,7 +367,9 @@ describe("SQLite alert ledger", () => {
     expect(authoritative.lifecycleState).toBe("resolved");
     expect(authoritative.resolutionSource).toBe("webhook");
   });
+});
 
+describe("SQLite queries and outbox", () => {
   it("supports lifecycle pagination, indexed label queries, outbox transitions, and raw retention", async () => {
     await repository.ingestWebhook(
       input(webhook("fingerprint-a", "firing"), "2026-08-08T18:00:01Z"),

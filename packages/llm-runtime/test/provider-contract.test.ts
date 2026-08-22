@@ -1,5 +1,5 @@
 import { embed, generateImage, generateText, streamText, tool } from "ai";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
 

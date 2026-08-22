@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { test, expect } from "vitest";
 import { loadingScreenToSvg } from "#src/html/loading-screen/index.tsx";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
 import { svgToPng } from "#src/html/index.tsx";

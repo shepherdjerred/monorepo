@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { Encoders } from "../src/media/encoders/index.ts";
 import { buildVaapiVideoGraph } from "../src/media/videoGraph.ts";
 

@@ -6,7 +6,7 @@
  * fixed, finite set — no matter what an internet-facing scanner sends.
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import {
   classifyRoute,
   statusClass,

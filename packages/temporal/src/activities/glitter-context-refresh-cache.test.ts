@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod/v4";
 import { ApplicationFailure } from "@temporalio/common";
 import {

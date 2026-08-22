@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { type Rank } from "@scout-for-lol/data";
 import { createCompetition } from "#src/database/competition/queries.ts";
 import {

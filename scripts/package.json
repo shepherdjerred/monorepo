@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "lint": "bunx --no-install eslint --cache . && bun lint-buildkite.ts",
-    "test": "bun test . ../.buildkite/scripts && bash ../.buildkite/scripts/upload-pipeline.test.sh && bash ../.buildkite/scripts/toolchain.test.sh",
-    "test:coverage": "bun test --coverage-reporter=text --coverage-reporter=lcov --coverage-dir=coverage --config bunfig.coverage.toml --coverage generate-anki.test.ts check-env-var-names.test.ts check-merge-conflicts.test.ts compliance-check.test.ts new-package.test.ts prettier-staged.test.ts pyright-check.test.ts shellcheck.test.ts lib/json.test.ts lib/run.test.ts lib/transient.test.ts ../.buildkite/scripts/annotate-build-summary.test.ts ../.buildkite/scripts/bake-images.test.ts ../.buildkite/scripts/bake-retry.test.ts ../.buildkite/scripts/build-ci-image.test.ts ../.buildkite/scripts/buildkit-env.test.ts ../.buildkite/scripts/buildkite-handoff.test.ts ../.buildkite/scripts/ci-changed.test.ts ../.buildkite/scripts/prepare-ci-changed-base.test.ts ../.buildkite/scripts/select-main-pipeline.test.ts ../.buildkite/scripts/update-ci-image-pin.test.ts",
+    "test": "bun --no-install --bun vitest --config ../vitest.config.ts run . ../.buildkite/scripts && bash ../.buildkite/scripts/upload-pipeline.test.sh && bash ../.buildkite/scripts/toolchain.test.sh",
+    "test:coverage": "bun --no-install --bun vitest --config ../vitest.config.ts run --coverage.reporter=text --coverage.reporter=lcovonly --coverage.reportsDirectory=coverage --coverage generate-anki.test.ts check-env-var-names.test.ts check-merge-conflicts.test.ts compliance-check.test.ts new-package.test.ts prettier-staged.test.ts pyright-check.test.ts shellcheck.test.ts lib/json.test.ts lib/run.test.ts lib/transient.test.ts ../.buildkite/scripts/annotate-build-summary.test.ts ../.buildkite/scripts/bake-images.test.ts ../.buildkite/scripts/bake-retry.test.ts ../.buildkite/scripts/build-ci-image.test.ts ../.buildkite/scripts/buildkit-env.test.ts ../.buildkite/scripts/buildkite-handoff.test.ts ../.buildkite/scripts/ci-changed.test.ts ../.buildkite/scripts/prepare-ci-changed-base.test.ts ../.buildkite/scripts/select-main-pipeline.test.ts ../.buildkite/scripts/update-ci-image-pin.test.ts --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.statements=90",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test:ci": "bun run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun run-ci-test.ts"
@@ -25,13 +25,15 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@types/bun": "^1.3.12",
+    "@types/bun": "1.4.0",
     "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "ts-morph": "^28.0.0",
     "typescript": "^6.0.3",
-    "@types/istanbul-lib-instrument": "1.7.8"
+    "@types/istanbul-lib-instrument": "1.7.8",
+    "vitest": "4.1.9",
+    "@vitest/coverage-istanbul": "4.1.9"
   },
   "exports": {
     "./lib/commit-message.ts": {

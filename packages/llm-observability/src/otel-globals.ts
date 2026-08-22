@@ -6,10 +6,9 @@ import { logs as logsAPI } from "@opentelemetry/api-logs";
  *
  * Each `setGlobalXProvider` is one-shot per process: while a provider is still
  * registered, a later registration silently returns false and the caller keeps
- * a provider nothing routes through. `bun test` runs every file in one
- * process, so a suite that registers globals and does not unregister them
- * leaves the next file emitting into its shut-down providers — spans and logs
- * vanish, no error is raised, and which file wins depends on file order.
+ * a provider nothing routes through. A test that registers globals and does
+ * not unregister them leaves the next test in that file emitting into its
+ * shut-down providers — spans and logs vanish without raising an error.
  *
  * `disable()` both disables and unregisters, so the API falls back to its noop
  * implementation. Prefer this over disabling a manager instance directly: an

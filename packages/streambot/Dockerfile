@@ -15,7 +15,7 @@
 # stack — no compilers. Dev dependencies and the rest of the monorepo source
 # never reach the final image, and the source layer only invalidates when a
 # closure package changes — not on every repo commit.
-FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
+FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
 WORKDIR /app
 
 # ── base-build: runtime libs + build toolchain for native postinstalls ──────
@@ -187,7 +187,11 @@ RUN VOICE_ASSISTANT_ENABLED=true \
 
 FROM runtime AS smoke
 # The general app smoke harness ships in CI context only and never reaches the
-# pushed image. Depend on voice-smoke so explicit smoke builds prove both.
+# pushed image. Restore the full development dependency tree only in this stage
+# because the integration smoke now runs Vitest, while the runtime image stays
+# production-only. Depend on voice-smoke so explicit smoke builds prove both.
+COPY --from=deps /app/ /app/
+COPY vitest.config.ts /app/vitest.config.ts
 COPY --from=voice-smoke /tmp/voice-model-smoke-passed /tmp/voice-model-smoke-passed
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
 ARG SMOKE_TARGET=streambot

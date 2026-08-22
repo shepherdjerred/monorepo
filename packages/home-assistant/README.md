@@ -41,7 +41,7 @@ The output contains instance-specific entity IDs and service definitions — git
 ```bash
 bun run typecheck
 bun run lint
-bun test
+bun run test
 ```
 
 See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.

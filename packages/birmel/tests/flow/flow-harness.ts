@@ -1,4 +1,4 @@
-import { mock } from "bun:test";
+import { test, vi } from "vitest";
 import { z } from "zod";
 import type { PrismaClient } from "#generated/prisma/client/index.js";
 import {
@@ -105,7 +105,7 @@ const fakeSpan = {
   },
 };
 
-void mock.module("@shepherdjerred/birmel/context/turn-context.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/context/turn-context.ts", () => ({
   buildContextForTurn: async (rawOptions: unknown) => {
     const options = ContextOptionsSchema.parse(rawOptions);
     state.contextCalls += 1;
@@ -123,7 +123,7 @@ void mock.module("@shepherdjerred/birmel/context/turn-context.ts", () => ({
   },
 }));
 
-void mock.module("@shepherdjerred/birmel/agent-runtime/router.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/agent-runtime/router.ts", () => ({
   routeTurn: (rawOptions: unknown) => {
     RouteOptionsSchema.parse(rawOptions);
     state.routerCalls += 1;
@@ -151,7 +151,7 @@ void mock.module("@shepherdjerred/birmel/agent-runtime/router.ts", () => ({
   },
 }));
 
-void mock.module("@shepherdjerred/birmel/agent-runtime/runtime.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/agent-runtime/runtime.ts", () => ({
   executeRoutedTurn: (rawOptions: unknown) => {
     const options = RuntimeOptionsSchema.parse(rawOptions);
     if (options.route.route === "direct") {
@@ -209,47 +209,40 @@ void mock.module("@shepherdjerred/birmel/agent-runtime/runtime.ts", () => ({
   },
 }));
 
-void mock.module(
-  "@shepherdjerred/birmel/agent-runtime/memory-extraction.ts",
-  () => ({
-    extractAndApplyTurnMemory: () => {
-      state.memoryExtractionCalls += 1;
-      if (state.scenario === "memory-extraction-failure") {
-        return Promise.reject(new Error("MEMORY_EXTRACTION_SECRET_EXCEPTION"));
-      }
-      return Promise.resolve();
-    },
-  }),
-);
+vi.doMock("@shepherdjerred/birmel/agent-runtime/memory-extraction.ts", () => ({
+  extractAndApplyTurnMemory: () => {
+    state.memoryExtractionCalls += 1;
+    if (state.scenario === "memory-extraction-failure") {
+      return Promise.reject(new Error("MEMORY_EXTRACTION_SECRET_EXCEPTION"));
+    }
+    return Promise.resolve();
+  },
+}));
 
-void mock.module("@shepherdjerred/birmel/persona/guild-persona.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/persona/guild-persona.ts", () => ({
   getGuildPersona: () => Promise.resolve("Compact elected persona"),
 }));
 
-void mock.module(
-  "@shepherdjerred/birmel/discord/utils/channel-history.ts",
-  () => ({
-    getConversationTranscriptResult: () =>
-      Promise.resolve({
-        messages: [],
-        fetchFailed: false,
-      }),
-  }),
-);
+vi.doMock("@shepherdjerred/birmel/discord/utils/channel-history.ts", () => ({
+  getConversationTranscriptResult: () =>
+    Promise.resolve({
+      messages: [],
+      fetchFailed: false,
+    }),
+}));
 
-void mock.module(
-  "@shepherdjerred/birmel/discord/engagement-tracker.ts",
-  () => ({ markEngaged: () => null }),
-);
+vi.doMock("@shepherdjerred/birmel/discord/engagement-tracker.ts", () => ({
+  markEngaged: () => null,
+}));
 
-void mock.module("@shepherdjerred/birmel/config/index.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/config/index.ts", () => ({
   getConfig: () => ({
     responder: { transcriptWindowMs: 3_600_000, transcriptMaxMessages: 50 },
     persona: { enabled: true },
   }),
 }));
 
-void mock.module("@shepherdjerred/birmel/sessions/service.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/sessions/service.ts", () => ({
   appendSessionEvent: (rawOptions: unknown) => {
     const options = SessionEventOptionsSchema.parse(rawOptions);
     state.sessionEventCalls += 1;
@@ -280,17 +273,17 @@ void mock.module("@shepherdjerred/birmel/sessions/service.ts", () => ({
   },
 }));
 
-void mock.module("@shepherdjerred/birmel/sessions/summarization.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/sessions/summarization.ts", () => ({
   summarizeSessionIfNeeded: () => Promise.resolve(),
 }));
 
-void mock.module("@shepherdjerred/birmel/observability/sentry.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/observability/sentry.ts", () => ({
   captureException: () => null,
   clearSentryContext: () => null,
   setSentryContext: () => null,
 }));
 
-void mock.module("@shepherdjerred/birmel/observability/tracing.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/observability/tracing.ts", () => ({
   withSpan: async (
     _name: string,
     _attributes: Readonly<Record<string, unknown>>,
@@ -298,7 +291,7 @@ void mock.module("@shepherdjerred/birmel/observability/tracing.ts", () => ({
   ) => await operation(fakeSpan),
 }));
 
-void mock.module("@shepherdjerred/birmel/utils/logger.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/utils/logger.ts", () => ({
   logger: {
     info: (..._values: unknown[]) => null,
     error: (..._values: unknown[]) => null,
@@ -463,10 +456,10 @@ async function main(): Promise<void> {
     }
     await completeAgentRun(options);
   };
-  void mock.module(
-    "@shepherdjerred/birmel/agent-runtime/agent-runs.ts",
-    () => ({ ...agentRuns, completeAgentRun: completeAgentRunWithFailure }),
-  );
+  vi.doMock("@shepherdjerred/birmel/agent-runtime/agent-runs.ts", () => ({
+    ...agentRuns,
+    completeAgentRun: completeAgentRunWithFailure,
+  }));
   const [{ handleMessage }, { prisma, disconnectPrisma }] = await Promise.all([
     import("@shepherdjerred/birmel/agent-runtime/message-handler.ts"),
     import("@shepherdjerred/birmel/database/index.ts"),
@@ -490,11 +483,6 @@ async function main(): Promise<void> {
     await disconnectPrisma();
   }
 }
-try {
+test("runs every flow scenario", async () => {
   await main();
-} catch (error) {
-  const message =
-    error instanceof Error ? (error.stack ?? error.message) : String(error);
-  process.stderr.write(`${message}\n`);
-  process.exitCode = 1;
-}
+});

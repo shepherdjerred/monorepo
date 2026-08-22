@@ -7,7 +7,7 @@
  * `OK`, and failures are counted with their TRPCError code.
  */
 
-import { describe, it, expect, afterAll } from "bun:test";
+import { describe, it, expect, afterAll } from "vitest";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 
 const trpc = await createOfflineTrpcHarness("trpc-metrics-test");

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { Glob } from "bun";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -21,7 +21,7 @@ const HELM_DIR = path.join(import.meta.dir, "../helm");
 const DIST_DIR = path.join(import.meta.dir, "../dist");
 
 // Every test below spawns a `helm template` subprocess. PR #1249 raised the
-// "render all charts" test's timeout to 60s after the default 5s bun test
+// "render all charts" test's timeout to 60s after the default test timeout
 // timeout kept tipping over under concurrent CI load on torvalds
 // (single-node) — see the "Helm Escaping - helm template (dist/)" describe
 // below. Build 5765 (2026-07-19) hit the identical flake in one of the E2E

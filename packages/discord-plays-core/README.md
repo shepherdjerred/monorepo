@@ -42,7 +42,7 @@ metrics, and socket handlers stay in the games.
 Run from `packages/discord-plays-core`:
 
 ```bash
-bun run test         # bun test test/
+bun run test         # bun run test test/
 bun run typecheck    # tsc --noEmit
 bun run lint         # eslint
 ```

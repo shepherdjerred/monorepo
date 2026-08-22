@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { collectErrorMessages } from "#shared/error-cause.ts";
 import {
   branchName,

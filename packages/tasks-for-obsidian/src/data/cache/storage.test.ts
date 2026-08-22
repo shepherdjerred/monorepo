@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { makeTask } from "../sync/__tests__/harness";
 import { parseTaskCache } from "./storage";

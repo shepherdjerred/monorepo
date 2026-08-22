@@ -1,4 +1,4 @@
-import { expect } from "bun:test";
+import { expect } from "vitest";
 
 import { isTempId } from "../../commands";
 import { runActions } from "./actions";

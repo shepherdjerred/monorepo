@@ -1,4 +1,4 @@
-import { describe, expect, spyOn, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 
 import {
   importDatasetExportFile,
@@ -279,7 +279,7 @@ describe("dataset export snapshot", () => {
       ).artifact;
       const originalQuery = readerDatabase.query.bind(readerDatabase);
       let didWrite = false;
-      spyOn(readerDatabase, "query").mockImplementation((sql) => {
+      vi.spyOn(readerDatabase, "query").mockImplementation((sql) => {
         if (!didWrite && sql.includes("FROM freshness_ratings")) {
           didWrite = true;
           writer.recordGeneration({

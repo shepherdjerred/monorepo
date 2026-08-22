@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parseAndCompile } from "@scout-for-lol/data";
 import type { ReportResultRow } from "#src/reports/query-engine.ts";
 import { attachTemporalComparison } from "#src/reports/temporal-comparison.ts";

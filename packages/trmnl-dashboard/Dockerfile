@@ -8,7 +8,7 @@
 # closure and never runs `bun install`. Dev dependencies and the rest of the
 # monorepo source never reach the final image, and the source layer only
 # invalidates when a closure package changes — not on every repo commit.
-FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
+FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
 WORKDIR /app
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────

@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 
 test("Buildkite migration entrypoints load without running", async () => {
   await Promise.all([

@@ -4,7 +4,7 @@
  * These tests verify SVG storage functionality using in-memory mocking.
  */
 
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { z } from "zod";
@@ -251,7 +251,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
 
     const command = getValidatedCommand(0);
 
-    expect(command.input.Key).toEndWith(".svg");
+    expect(command.input.Key.endsWith(".svg")).toBe(true);
   });
 
   test("returns s3:// URL format", async () => {
@@ -265,9 +265,10 @@ describe("saveSvgToS3 - S3 Key Format", () => {
 
     const result = await saveSvgToS3(matchId, svgContent, queueType, []);
 
-    expect(result).toStartWith("s3://test-bucket/");
+    if (result === undefined) throw new Error("Expected an uploaded SVG URL");
+    expect(result.startsWith("s3://test-bucket/")).toBe(true);
     expect(result).toContain("games/");
-    expect(result).toEndWith(".svg");
+    expect(result.endsWith(".svg")).toBe(true);
   });
 });
 

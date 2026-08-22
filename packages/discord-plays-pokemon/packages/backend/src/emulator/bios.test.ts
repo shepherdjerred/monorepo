@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createBios } from "./bios.ts";
 
 // Hand-encode a minimal wasm module whose only content is `env.<name>`

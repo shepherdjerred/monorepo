@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, test } from "bun:test";
+import { afterAll, beforeAll, expect, test } from "vitest";
 import { context, trace } from "@opentelemetry/api";
 import { z } from "zod";
 import {

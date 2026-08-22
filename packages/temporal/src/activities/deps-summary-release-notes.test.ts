@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import type { DependencyChange } from "./deps-summary.ts";
 import { ociManifestAttempt } from "./deps-summary-oci.ts";
 
@@ -77,11 +77,17 @@ describe("dependency OCI release-note metadata", () => {
       url: "https://github.com/owner/image",
     });
     expect(result.note?.notes).toContain("substantive");
-    expect(requested[0]).toStartWith(
-      "https://registry-1.docker.io/v2/owner/image/manifests/2.0.0",
-    );
+    const manifestRequest = requested[0];
+    if (manifestRequest === undefined) {
+      throw new Error("Expected an OCI manifest request");
+    }
+    expect(
+      manifestRequest.startsWith(
+        "https://registry-1.docker.io/v2/owner/image/manifests/2.0.0",
+      ),
+    ).toBe(true);
     expect(
       requested.some((url) => url.startsWith("https://auth.docker.io/token")),
-    ).toBeTrue();
+    ).toBe(true);
   });
 });

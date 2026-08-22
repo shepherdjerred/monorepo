@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 
 import { createOpenRouterClient } from "#materialization/openrouter-client.ts";

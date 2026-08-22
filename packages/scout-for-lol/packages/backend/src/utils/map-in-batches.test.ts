@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { mapInBatches } from "#src/utils/map-in-batches.ts";
 
 describe("mapInBatches", () => {

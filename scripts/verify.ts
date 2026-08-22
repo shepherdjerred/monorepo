@@ -10,6 +10,7 @@ const turboTasks = [
   "check-patched-deps",
   "check-ci-env",
   "check-script-migrations",
+  "check-test-standardization",
   "script-coverage",
   "markdownlint",
   "prettier",

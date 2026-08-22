@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { getZfsMaintenanceRuleGroups } from "./zfs-maintenance.ts";
 
 describe("ZfsScrubOverdue", () => {

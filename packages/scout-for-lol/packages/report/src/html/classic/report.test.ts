@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import satori, { type Font } from "satori";
 import type { ClassicMatch } from "@scout-for-lol/data";
 import { satoriFontUrl } from "@scout-for-lol/design-system/satori/assets";

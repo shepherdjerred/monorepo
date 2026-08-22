@@ -1,5 +1,5 @@
 import { Glob } from "bun";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   getHomeAssistantRuleGroups,
   TEMPORAL_AUTOMATION_ENTITY_IDS,

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test } from "vitest";
 import { getOpenRouterProviderOptions } from "@shepherdjerred/birmel/agent-runtime/provider-options.ts";
 import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 

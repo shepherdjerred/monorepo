@@ -126,7 +126,7 @@ export function getRegisteredPublicProbes(): PublicProbeDescriptor[] {
  * independent full-app synth starts clean — necessary because this module's
  * state is process-global: the test suite's ~28 files each construct their
  * own `App` and call `setupCharts()` (or an individual chart-creation
- * function) within the same bun:test process, so without a reset here,
+ * function) within the same test worker, so without a reset here,
  * registrations from one test's synth would leak into the next and
  * `createServiceProbesChart` would try to create duplicate-named Probe
  * constructs for a service registered by more than one prior test run.

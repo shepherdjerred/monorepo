@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { test, expect } from "vitest";
 import { buildArchiveKey, type ArchiveConfig } from "#src/archive-uploader.ts";
 
 const config: ArchiveConfig = {

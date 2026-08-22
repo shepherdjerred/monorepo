@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { drainRing } from "./audio-ring.ts";
 
 const RING = 8; // ring capacity in int16 samples

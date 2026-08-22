@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import SYSTEM_PROMPT from "#src/review/prompts/system/2-review-text.txt";
 import USER_PROMPT from "#src/review/prompts/user/2-review-text.txt";

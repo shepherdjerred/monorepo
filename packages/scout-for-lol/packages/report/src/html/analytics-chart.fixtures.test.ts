@@ -1,4 +1,4 @@
-import { afterAll, expect, test } from "bun:test";
+import { afterAll, expect, test } from "vitest";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import {

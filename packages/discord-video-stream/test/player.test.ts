@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createSeekablePlayer } from "../src/media/player.ts";
 
 // This file is run by bun but is intentionally outside the package's tsconfig `include`, so the

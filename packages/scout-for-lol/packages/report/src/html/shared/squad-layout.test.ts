@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { splitSquad } from "#src/html/shared/squad-layout.ts";
 
 describe("splitSquad", () => {

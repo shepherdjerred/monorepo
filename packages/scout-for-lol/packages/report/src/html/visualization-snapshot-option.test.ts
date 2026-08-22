@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { VisualizationSnapshotSchema } from "@scout-for-lol/data";
 import { calendarTooltipText } from "#src/html/visualization-calendar-tooltip.ts";
 import {

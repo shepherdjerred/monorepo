@@ -322,7 +322,7 @@ fromPromise(({ input, signal }: { input: { id: string }; signal: AbortSignal }) 
 
 ### 3. Repo conventions
 
-- **Bun only** — `bun add xstate`, never npm/yarn/pnpm. Test with `bun:test`.
+- **Bun only** — `bun add xstate`, never npm/yarn/pnpm. Run Vitest through Bun.
 - **No `as` casts** anywhere except `as const` / `as unknown` — use `assertEvent`, guards, and the
   holder-variable pattern instead of casting.
 - Keep examples `strict`-clean; the base ESLint config applies `strictTypeChecked`.

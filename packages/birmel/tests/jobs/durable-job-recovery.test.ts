@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import {
   findExpiredAgentJobLeases,
@@ -50,7 +50,7 @@ async function recoverOnlyExpiredLease(): Promise<void> {
   if (lease === undefined) {
     throw new Error("Expected one expired AgentJob lease");
   }
-  expect(await recoverExpiredAgentJobLease(lease, recoveredAt)).toBeTrue();
+  expect(await recoverExpiredAgentJobLease(lease, recoveredAt)).toBe(true);
 }
 
 afterEach(async () => {
@@ -72,7 +72,7 @@ describe("durable AgentJob effect recovery", () => {
       expectedRunStatus: "success",
       expectedLastStatus: "success",
     },
-  ])(
+  ] as const)(
     "recovers $checkpointStatus without making the effect replay-eligible",
     async (expected) => {
       const { job, run } = await seedExpiredCheckpoint({
@@ -104,7 +104,7 @@ describe("durable AgentJob effect recovery", () => {
       expectedRunStatus: "success",
       expectedLastStatus: "cancelled_after_effect",
     },
-  ])(
+  ] as const)(
     "recovers cancelled $checkpointStatus without making it replay-eligible",
     async (expected) => {
       const { job, run } = await seedExpiredCheckpoint({

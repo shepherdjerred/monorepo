@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { loadConserviceFromPdfs } from "./parser.ts";

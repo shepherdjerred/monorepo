@@ -6,7 +6,7 @@ import {
   describe,
   expect,
   test,
-} from "bun:test";
+} from "vitest";
 import { z } from "zod";
 import { manageJobTool } from "@shepherdjerred/birmel/agent-tools/tools/automation/agent-jobs.ts";
 import { createAgentJob } from "@shepherdjerred/birmel/agent-tools/tools/automation/agent-job-actions.ts";
@@ -279,7 +279,7 @@ describe("durable AgentJob creation limits", () => {
         scheduleKind: "every",
         scheduleValue: "1 hour",
       });
-      expect(recurringJobId).toBeString();
+      expect(typeof recurringJobId).toBe("string");
       const oneShotJobId = await createDueJob({
         payload: { kind: "message", message: "candidate" },
       });

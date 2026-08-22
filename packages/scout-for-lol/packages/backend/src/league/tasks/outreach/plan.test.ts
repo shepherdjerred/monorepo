@@ -6,7 +6,7 @@
  * corresponds to a behaviour that was wrong in the version this replaces.
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { planOutreach } from "#src/league/tasks/outreach/index.ts";
 
 const INSTALLED = new Date("2026-01-01T00:00:00.000Z");

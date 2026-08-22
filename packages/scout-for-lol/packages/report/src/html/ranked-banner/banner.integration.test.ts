@@ -1,4 +1,4 @@
-import { test, expect, setDefaultTimeout } from "bun:test";
+import { test, expect, vi } from "vitest";
 import { matchToSvg, svgToPng } from "#src/html/index.tsx";
 import { rankedFixture } from "#src/html/shared/test-fixtures.ts";
 
@@ -7,7 +7,7 @@ import { rankedFixture } from "#src/html/shared/test-fixtures.ts";
 // render succeeds, it just needs more than 5s when caches are cold. Without
 // this, a timed-out test also drifts Bun's snapshot counter, comparing each
 // render against the next test's committed hash.
-setDefaultTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000 });
 
 function hashSvg(svg: string): string {
   const hasher = new Bun.CryptoHasher("sha256");

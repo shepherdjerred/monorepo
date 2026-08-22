@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   createSnapshot,
   getSnapshot,
@@ -183,7 +183,7 @@ describe("createSnapshot - START snapshot", () => {
     const { competitionId } = await createTestCompetition(criteria);
     const nonExistentPlayerId = 99_999;
 
-    expect(
+    await expect(
       createSnapshot(prisma, {
         competitionId: CompetitionIdSchema.parse(competitionId),
         playerId: PlayerIdSchema.parse(nonExistentPlayerId),
@@ -214,7 +214,7 @@ describe("createSnapshot - START snapshot", () => {
       },
     });
 
-    expect(
+    await expect(
       createSnapshot(prisma, {
         competitionId: CompetitionIdSchema.parse(competitionId),
         playerId: PlayerIdSchema.parse(player.id),

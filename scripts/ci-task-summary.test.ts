@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   buildCiTaskReport,
   renderCiTaskReport,
@@ -66,8 +66,13 @@ describe("CI task summary", () => {
     expect(report.run.passed).toBe(1);
     expect(report.run.cached).toBe(1);
     expect(report.run.failed).toBe(1);
-    expect(report.tasks[0]?.jobUrl).toEndWith("#job-id");
-    expect(report.tasks[0]?.durationSeconds).toBe(2);
+    const firstTask = report.tasks[0];
+    if (firstTask === undefined) throw new Error("Expected one report task");
+    if (firstTask.jobUrl === undefined) {
+      throw new Error("Expected the report task to have a Buildkite job URL");
+    }
+    expect(firstTask.jobUrl.endsWith("#job-id")).toBe(true);
+    expect(firstTask.durationSeconds).toBe(2);
     expect(report.links.artifacts).toBe(
       "https://buildkite.com/sjerred/monorepo/builds/1#artifacts",
     );

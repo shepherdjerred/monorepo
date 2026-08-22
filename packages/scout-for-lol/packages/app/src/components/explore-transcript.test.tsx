@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ExploreMessageSchema, type ExploreMessage } from "@scout-for-lol/data";
 import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";

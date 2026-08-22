@@ -7,7 +7,7 @@
  * Environment setup is handled automatically by test-setup.ts (preloaded via bunfig.toml)
  */
 
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   GetObjectCommand,
   ListObjectsV2Command,

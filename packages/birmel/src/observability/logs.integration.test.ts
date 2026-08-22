@@ -18,7 +18,7 @@ Bun.env["SENTRY_DSN"] = "https://public@127.0.0.1:1/0";
 Bun.env["SENTRY_ENVIRONMENT"] = "development";
 Bun.env["SENTRY_TRACES_SAMPLE_RATE"] = "0";
 
-import { describe, expect, test, beforeAll, afterAll } from "bun:test";
+import { describe, expect, test, beforeAll, afterAll } from "vitest";
 import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { initializeObservability, shutdownObservability } from "./index.ts";

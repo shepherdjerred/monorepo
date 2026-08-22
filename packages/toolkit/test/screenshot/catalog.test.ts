@@ -1,4 +1,4 @@
-import { test, expect, describe } from "bun:test";
+import { test, expect, describe } from "vitest";
 import { PACKAGES, resolvePackage } from "#lib/screenshot/catalog.ts";
 import { repoRoot } from "#lib/deployed/git.ts";
 

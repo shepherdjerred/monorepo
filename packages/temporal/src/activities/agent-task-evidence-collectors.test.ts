@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { AgentTaskInputV2Schema } from "#shared/agent-task.ts";
 import {
   collectDeclaredAgentTaskEvidence,

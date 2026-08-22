@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { App, Chart } from "cdk8s";
 import { z } from "zod";
 import { createStashChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/stash.ts";
