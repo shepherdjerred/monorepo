@@ -31,7 +31,7 @@
     "evaluate-lane-priors": "bun run scripts/evaluate-lane-priors.ts",
     "evaluate-predictions": "bun run scripts/evaluate-predictions.ts",
     "update-queue-windows": "bun run scripts/update-queue-windows.ts",
-    "db:generate": "bunx --trust prisma generate && bun run brand-types && bunx prettier --write generated/",
+    "db:generate": "bun x --trust prisma generate && bun run brand-types && bun x prettier --write generated/",
     "brand-types": "bun run scripts/brand-prisma-types.ts",
     "db:push": "bun x prisma db push",
     "db:migrate": "bun x prisma migrate dev",

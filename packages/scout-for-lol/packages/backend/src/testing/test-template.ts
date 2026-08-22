@@ -148,7 +148,7 @@ async function rebuildTemplate(
   psqlMaintenance(`CREATE DATABASE ${databaseName}`);
 
   const templateUrl = devDatabaseUrl(databaseName);
-  const deploy = Bun.spawnSync(["bunx", "prisma", "migrate", "deploy"], {
+  const deploy = Bun.spawnSync(["bun", "x", "prisma", "migrate", "deploy"], {
     cwd: BACKEND_ROOT,
     env: { ...Bun.env, DATABASE_URL: templateUrl },
     stdout: "pipe",

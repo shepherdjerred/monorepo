@@ -6,7 +6,7 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("migrate");
 
 // Run prisma migrate deploy using Bun
-const proc = spawn(["bunx", "prisma", "migrate", "deploy"], {
+const proc = spawn(["bun", "x", "prisma", "migrate", "deploy"], {
   stdout: "inherit",
   stderr: "inherit",
 });

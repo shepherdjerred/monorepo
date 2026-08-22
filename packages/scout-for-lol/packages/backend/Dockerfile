@@ -47,7 +47,7 @@ RUN cd packages/llm-models && bun run build
 # be produced in-image). Engines download at build time — that's expected.
 # Only `prisma generate` here — the package's full `generate` script also runs
 # brand-types + prettier + a test-template DB build, which are dev/test-only.
-RUN cd packages/scout-for-lol/packages/backend && bunx --trust prisma generate
+RUN cd packages/scout-for-lol/packages/backend && bun x --trust prisma generate
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 FROM base AS prod-deps
@@ -93,7 +93,7 @@ COPY --parents \
 # Running generate here (as root, schema present from the source COPY above)
 # fetches them at build time; uid 1000 then only reads them at runtime.
 # Mirrors the discord-plays-mario-kart runtime fix (2.0.0-6322 crash-loop).
-RUN cd packages/scout-for-lol/packages/backend && bunx --trust prisma generate
+RUN cd packages/scout-for-lol/packages/backend && bun x --trust prisma generate
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
@@ -127,8 +127,8 @@ WORKDIR /app/packages/scout-for-lol/packages/backend
 # fail-closed — see src/database/legacy-import/run-import.ts); the
 # parser-aware report audit runs after it because the Report rows it fixes
 # arrive with the import. `prisma` is a runtime dependency of the backend,
-# so `bunx` resolves it from the installed tree without a network fetch.
-CMD ["/bin/sh", "-c", "bunx prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/audit-report-windows.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
+# so `bun x` resolves it from the installed tree without a network fetch.
+CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/audit-report-windows.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
 
 FROM runtime AS smoke
 # The smoke boots the backend against a throwaway local Postgres (the app no
