@@ -7,10 +7,80 @@ import {
   assertInstallFreeEntrypointsHaveNoBareImports,
   assertPackageTokens,
   assertUnfilteredInstallBelongsToVerify,
+  collectStepBlocks,
   FORBIDDEN_DOCKER_IN_DOCKER_PATTERNS,
   completePodReservation,
   type PodReservation,
 } from "./validate-pipeline-lib.ts";
+
+const nativeStepConfig = {
+  sharedPodAnchors: [],
+  checkoutContainerAlias: "- *checkout_container",
+  pathGatedPrKeys: new Set<string>(),
+  nativeStepKeys: new Set(["quotabar-macos-pr"]),
+  globalIfChanged: [],
+};
+
+const validNativeStep = `  - label: native
+    key: quotabar-macos-pr
+    timeout_in_minutes: 45
+    if: build.pull_request.id != null
+    depends_on: verify
+    concurrency: 1
+    concurrency_group: monorepo/macos-native
+    command: run-native
+    agents:
+      queue: macos
+`;
+
+function validateNativeStep(source: string): void {
+  collectStepBlocks(source.split("\n"), nativeStepConfig);
+}
+
+describe("native Buildkite execution surface", () => {
+  test("accepts a hard serialized macOS step", () => {
+    expect(() => validateNativeStep(validNativeStep)).not.toThrow();
+  });
+
+  test.each([
+    ["missing queue", "      queue: macos\n", ""],
+    ["wrong queue", "queue: macos", "queue: default"],
+  ])("rejects %s", (_name, target, replacement) => {
+    expect(() =>
+      validateNativeStep(validNativeStep.replace(target, replacement)),
+    ).toThrow("must target queue macos");
+  });
+
+  test("rejects Kubernetes plugins", () => {
+    const source = validNativeStep.replace(
+      "    agents:",
+      "    plugins:\n      - kubernetes: {}\n    agents:",
+    );
+    expect(() => validateNativeStep(source)).toThrow(
+      "must be a hard step without plugins",
+    );
+  });
+
+  test("rejects soft-fail configuration", () => {
+    const source = validNativeStep.replace(
+      "    command:",
+      "    soft_fail: true\n    command:",
+    );
+    expect(() => validateNativeStep(source)).toThrow(
+      "must be a hard step without plugins",
+    );
+  });
+
+  test("rejects missing global serialization", () => {
+    const source = validNativeStep.replace(
+      "    concurrency: 1\n    concurrency_group: monorepo/macos-native\n",
+      "",
+    );
+    expect(() => validateNativeStep(source)).toThrow(
+      "must serialize in monorepo/macos-native",
+    );
+  });
+});
 
 function hasForbiddenDockerInDockerPath(source: string): boolean {
   return FORBIDDEN_DOCKER_IN_DOCKER_PATTERNS.some((pattern) =>

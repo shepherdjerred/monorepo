@@ -15,6 +15,27 @@ test("all expected deployment lanes are modeled", () => {
   );
 });
 
+test("native lanes separate product changes and share infrastructure changes", () => {
+  const quotaPaths = selectorPathsForLane("quotabar-macos");
+  const taskNotesPaths = selectorPathsForLane("tasknotes-native");
+  expect(quotaPaths).toContain("packages/macos-ai-subscription-tracker");
+  expect(quotaPaths).not.toContain("packages/tasknotes-macos");
+  expect(taskNotesPaths).toContain("packages/tasknotes-macos");
+  expect(taskNotesPaths).not.toContain(
+    "packages/macos-ai-subscription-tracker",
+  );
+  for (const sharedPath of [
+    ".buildkite/pipeline.yml",
+    ".buildkite/scripts/macos-native-preflight.ts",
+    ".mise.toml",
+    ".xcode-version",
+    "packages/homelab/mac-ci",
+  ]) {
+    expect(quotaPaths).toContain(sharedPath);
+    expect(taskNotesPaths).toContain(sharedPath);
+  }
+});
+
 test("forces every runtime-selected fixed-corpus lane", () => {
   const environment = {
     CI_IO_FIXED_CORPUS: "true",

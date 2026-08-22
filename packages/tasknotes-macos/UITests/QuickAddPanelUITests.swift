@@ -177,18 +177,20 @@ final class QuickAddPanelUITests: XCTestCase {
         // accuses a feature that has been verified by hand to work. Naming the
         // real cause, and the remedy, is the difference between a five-minute
         // fix and the afternoon this cost.
-        try XCTSkipUnless(
-            AXIsProcessTrusted(),
-            """
-            The test runner does not hold Accessibility trust, so synthetic key \
-            events are discarded and no global hotkey can be exercised. Approve \
-            TaskNotesUITests-Runner in System Settings ▸ Privacy & Security ▸ \
-            Accessibility. This is a one-time grant *provided* the runner is \
-            built with a stable signature — see AGENTS.md › Running the \
-            end-to-end tests; an ad-hoc runner is re-hashed on every build and \
-            the grant will not survive.
-            """
-        )
+        guard AXIsProcessTrusted() else {
+            XCTFail(
+                """
+                The test runner does not hold Accessibility trust, so synthetic key \
+                events are discarded and no global hotkey can be exercised. Approve \
+                TaskNotesUITests-Runner in System Settings ▸ Privacy & Security ▸ \
+                Accessibility. This is a one-time grant *provided* the runner is \
+                built with a stable signature — see AGENTS.md › Running the \
+                end-to-end tests; an ad-hoc runner is re-hashed on every build and \
+                the grant will not survive.
+                """
+            )
+            throw AccessibilityTrustError.missing
+        }
         let source = try XCTUnwrap(
             CGEventSource(stateID: .hidSystemState),
             "could not create a HID event source"
@@ -216,6 +218,10 @@ final class QuickAddPanelUITests: XCTestCase {
         )
         up.flags = flags
         up.post(tap: .cghidEventTap)
+    }
+
+    private enum AccessibilityTrustError: Error {
+        case missing
     }
 
     /// Poll until the frontmost application matches, or give up.

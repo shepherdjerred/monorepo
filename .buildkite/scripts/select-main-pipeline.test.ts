@@ -175,6 +175,30 @@ test("keeps browser, resume, and Docker E2E lanes independently selectable", () 
   expect(selected.has("docker-e2e-main")).toBe(true);
 });
 
+test("keeps QuotaBar and TaskNotes native lanes independently selectable", () => {
+  const quotaOnly = selectedKeys(
+    steps,
+    new Map([
+      ["quotabar-macos", true],
+      ["tasknotes-native", false],
+    ]),
+  );
+  expect(quotaOnly.has("quotabar-macos-main")).toBe(true);
+  expect(quotaOnly.has("tasknotes-native-main")).toBe(false);
+  expect(quotaOnly.has("verify")).toBe(true);
+
+  const taskNotesOnly = selectedKeys(
+    steps,
+    new Map([
+      ["quotabar-macos", false],
+      ["tasknotes-native", true],
+    ]),
+  );
+  expect(taskNotesOnly.has("quotabar-macos-main")).toBe(false);
+  expect(taskNotesOnly.has("tasknotes-native-main")).toBe(true);
+  expect(taskNotesOnly.has("verify")).toBe(true);
+});
+
 test("keeps infrastructure and publish lanes in the main graph", () => {
   const laneDecisions = new Map([
     ["tofu", true],
