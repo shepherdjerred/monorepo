@@ -5,7 +5,10 @@
 
 [tools]
 # renovate: datasource=github-releases depName=oven-sh/bun
-bun = "1.3.14"
+bun = "1.4.0"
+# Temporal's real workflow-worker tests need Node runtime primitives that Bun
+# 1.4 does not implement. Keep the sole exception on the current LTS line.
+node = "24.19.0"
 rust = "1.97.1"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk
 dotnet = "10.0.302"

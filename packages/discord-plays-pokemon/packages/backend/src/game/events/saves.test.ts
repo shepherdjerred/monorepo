@@ -175,3 +175,4 @@ describe("readGameSnapshot over real Emerald saves", () => {
     expect(ownedCount(snap)).toBe(11);
   });
 });
+import { describe, expect, test } from "vitest";

@@ -65,7 +65,7 @@ const repoRoot = `${scriptDir}/..`;
 const absolutePackageDir = `${repoRoot}/${packageDir}`;
 
 // Run the tests
-const testResult = Bun.spawnSync(["bun", "test", ...testFiles], {
+const testResult = Bun.spawnSync(["bun", "run", "test", "--", ...testFiles], {
   cwd: absolutePackageDir,
   stdout: "inherit",
   stderr: "inherit",

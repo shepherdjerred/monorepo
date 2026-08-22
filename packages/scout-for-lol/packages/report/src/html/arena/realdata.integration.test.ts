@@ -1,4 +1,4 @@
-import { test, expect, setDefaultTimeout } from "bun:test";
+import { test, expect, vi } from "vitest";
 import { arenaMatchToSvg } from "#src/html/arena/index.tsx";
 import { ArenaMatchSchema } from "@scout-for-lol/data";
 import { svgToPng } from "#src/html/index.tsx";
@@ -7,7 +7,7 @@ import { svgToPng } from "#src/html/index.tsx";
 // fetches + decodes champion assets on first run. On a cold Dagger CI engine
 // it can exceed Bun's 5s default per-test timeout, so give it headroom — the
 // render succeeds, it just needs more than 5s when caches are cold.
-setDefaultTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000 });
 
 function hashSvg(svg: string): string {
   const hasher = new Bun.CryptoHasher("sha256");

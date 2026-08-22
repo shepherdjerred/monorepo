@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import playerCss from "asciinema-player/dist/bundle/asciinema-player.css" with { type: "text" };
 import { renderCastPlayerHtml } from "#lib/s3/cast-player.ts";
 

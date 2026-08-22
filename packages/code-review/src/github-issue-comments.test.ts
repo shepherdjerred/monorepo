@@ -1,4 +1,4 @@
-import { describe, expect, spyOn, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import {
   fetchLatestProviderIssueComment,
   resolveIssueCommentReview,
@@ -164,6 +164,7 @@ describe("reviewCommentBoundToHead", () => {
 const issueCommentProvider: ReviewProvider = {
   id: "issue-comment-fixture",
   displayName: "Issue comment fixture",
+  startsReviewOnPush: false,
   botAuthoredPullRequestPolicy: "review",
   authorLogins: ["review-bot"],
   parseSeverity: () => null,
@@ -184,6 +185,7 @@ const issueCommentProvider: ReviewProvider = {
         title: null,
         threadId: null,
         commentId: null,
+        raisedInReview: null,
       },
     ],
   },
@@ -214,9 +216,9 @@ test("records the acknowledgement time as issue-comment completion", async () =>
       ]),
     { preconnect: globalThis.fetch.preconnect },
   );
-  const fetchSpy = spyOn(globalThis, "fetch").mockImplementation(
-    fetchImplementation,
-  );
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(fetchImplementation);
   try {
     await expect(
       resolveIssueCommentReview({
@@ -261,9 +263,9 @@ test("ignores the in-progress placeholder that supersedes the rendered review", 
       ]),
     { preconnect: globalThis.fetch.preconnect },
   );
-  const fetchSpy = spyOn(globalThis, "fetch").mockImplementation(
-    fetchImplementation,
-  );
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(fetchImplementation);
   try {
     const comment = await fetchLatestProviderIssueComment({
       repo: "o/r",
@@ -308,9 +310,9 @@ test("re-reads the review comment once an acknowledgement names the head", async
     },
     { preconnect: globalThis.fetch.preconnect },
   );
-  const fetchSpy = spyOn(globalThis, "fetch").mockImplementation(
-    fetchImplementation,
-  );
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(fetchImplementation);
   try {
     const result = await resolveIssueCommentReview({
       provider: issueCommentProvider,

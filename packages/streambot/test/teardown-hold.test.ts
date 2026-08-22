@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
 
 async function track(

@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { waitForTempo } from "./run-core.ts";
 
 test("stops checking once Tempo is ready", async () => {
@@ -11,7 +11,7 @@ test("stops checking once Tempo is ready", async () => {
 });
 
 test("fails after the configured attempts", async () => {
-  expect(waitForTempo(async () => false, 1, 0)).rejects.toThrow(
+  await expect(waitForTempo(async () => false, 1, 0)).rejects.toThrow(
     "Tempo did not become ready",
   );
 });

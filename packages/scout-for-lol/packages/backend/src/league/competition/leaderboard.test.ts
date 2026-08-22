@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { PlayerIdSchema, type PlayerId, type Rank } from "@scout-for-lol/data";
 import type { LeaderboardEntry } from "#src/league/competition/processors/types.ts";

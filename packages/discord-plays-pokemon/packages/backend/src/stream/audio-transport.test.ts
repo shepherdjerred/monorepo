@@ -14,11 +14,11 @@
 //
 // Mirrors the structure of `discord-plays-mario-kart`'s `scripts/e2e-audio.ts`
 // synthetic mode, adapted to Pokemon's Float32 / 13379 Hz format. Run
-// automatically in `bun test`; needs `ffmpeg` + `ffprobe` on PATH (the harness
+// automatically in `bun run test`; needs `ffmpeg` + `ffprobe` on PATH (the harness
 // already requires them, so this is no new dep). Skip with
 // `SKIP_AUDIO_STREAM_INTEGRATION=1` if those tools aren't available.
 
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { spawnSync } from "node:child_process";
 import { once } from "node:events";
 import { PassThrough, type Writable } from "node:stream";

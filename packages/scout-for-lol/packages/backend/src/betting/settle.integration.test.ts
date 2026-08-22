@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   BUCKS_INT32_MAX,
   BucksLedgerContextSchema,

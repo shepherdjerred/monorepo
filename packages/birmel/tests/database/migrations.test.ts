@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { Database } from "bun:sqlite";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -632,7 +632,7 @@ describe("Birmel database migrations", () => {
       try {
         productionDatabase.run(BASELINE_SQL);
         const fingerprint = readDatabaseFingerprint(productionDatabase);
-        expect(fingerprint.hasMigrationTable).toBeFalse();
+        expect(fingerprint.hasMigrationTable).toBe(false);
         expect(() => verifyBaselineFingerprint(fingerprint)).not.toThrow();
         seedProductionShapedRows(productionDatabase);
       } finally {
@@ -667,7 +667,7 @@ describe("Birmel database migrations", () => {
         seedProductionShapedRows(productionDatabase);
 
         const fingerprint = readDatabaseFingerprint(productionDatabase);
-        expect(fingerprint.hasMigrationTable).toBeTrue();
+        expect(fingerprint.hasMigrationTable).toBe(true);
         expect(() => verifyBaselineFingerprint(fingerprint)).not.toThrow();
         expect(readAppliedMigrations(productionDatabase)).toEqual(
           LEGACY_BASELINE_MIGRATIONS.map(

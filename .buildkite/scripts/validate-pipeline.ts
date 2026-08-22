@@ -468,10 +468,13 @@ await assertPackageTokens([
       "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     ],
   ],
-  ["packages/sjer.red/package.json", ['"bun x --no-install playwright test']],
+  [
+    "packages/sjer.red/package.json",
+    ['"bun --no-install --bun playwright test'],
+  ],
   [
     "packages/scout-for-lol/packages/evals/package.json",
-    ['"bun x --no-install playwright test'],
+    ['"bun --no-install --bun playwright test'],
   ],
   ["scripts/package.json", ['"bunx --no-install eslint']],
   [

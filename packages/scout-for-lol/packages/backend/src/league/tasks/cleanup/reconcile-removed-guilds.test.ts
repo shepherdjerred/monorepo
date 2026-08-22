@@ -1,4 +1,4 @@
-import { describe, expect, test, afterAll, beforeEach } from "bun:test";
+import { describe, expect, test, afterAll, beforeEach } from "vitest";
 import { DiscordAPIError } from "discord.js";
 import { reconcileRemovedGuilds } from "#src/league/tasks/cleanup/reconcile-removed-guilds.ts";
 import { mockClient, mockGuild } from "#src/testing/discord-mocks.ts";

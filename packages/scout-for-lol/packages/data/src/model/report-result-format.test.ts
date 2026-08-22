@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parseAndCompile } from "#src/model/report-query-compile.ts";
 import {
   formatReportDisplayValue,

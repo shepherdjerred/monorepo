@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { bunClassicFonts } from "@scout-for-lol/design-system/satori/classic-fonts";
 import { classicTypography } from "@scout-for-lol/design-system/satori/classic-style";
 import {
@@ -50,7 +50,7 @@ describe("Classic report renders with committed fonts", () => {
     const repeat = await classicMatchToSvg(match);
 
     expect(svg).toBe(repeat);
-    expect(svg).toStartWith("<svg ");
+    expect(svg.startsWith("<svg ")).toBe(true);
     expect(svg).toContain('width="1920" height="1200"');
   });
 
@@ -80,9 +80,9 @@ describe("Classic report renders with committed fonts", () => {
       loadingScreenToSvg(loadingScreen),
       classicMatchToSvg(match),
     ]);
-    expect(loadingSvg).toStartWith("<svg ");
+    expect(loadingSvg.startsWith("<svg ")).toBe(true);
     expect(loadingSvg).toContain('width="1920" height="1280"');
-    expect(matchSvg).toStartWith("<svg ");
+    expect(matchSvg.startsWith("<svg ")).toBe(true);
     expect(matchSvg).toContain('width="1920" height="1200"');
 
     const [loadingPng, matchPng] = await Promise.all([
@@ -111,7 +111,7 @@ describe("Classic report renders with committed fonts", () => {
 
   test("classic loading screen renders at the approved dimensions", async () => {
     const svg = await loadingScreenToSvg(classicLoadingScreenFixture());
-    expect(svg).toStartWith("<svg ");
+    expect(svg.startsWith("<svg ")).toBe(true);
     expect(svg).toContain('width="1920" height="1280"');
   });
 
@@ -130,7 +130,7 @@ describe("Classic report renders with committed fonts", () => {
     const repeat = await classicMatchToSvg(match);
 
     expect(svg).toBe(repeat);
-    expect(svg).toStartWith("<svg ");
+    expect(svg.startsWith("<svg ")).toBe(true);
     // The scoreboard height scales with the number of rendered rows, so a
     // partial roster is intentionally shorter than the full 5v5 report; only
     // the fixed report width is asserted here.
@@ -144,7 +144,7 @@ describe("Classic report renders with committed fonts", () => {
     const partial = classicLoadingScreenFixture(3, 2);
     const svg = await loadingScreenToSvg(partial);
 
-    expect(svg).toStartWith("<svg ");
+    expect(svg.startsWith("<svg ")).toBe(true);
     expect(svg).toContain('width="1920" height="1280"');
 
     const png = await loadingScreenToImage(partial);

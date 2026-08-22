@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { CompetitionIdSchema } from "@scout-for-lol/data";
 import { loadHistoricalLeaderboardSnapshots } from "#src/storage/s3-leaderboard.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { appGlobalPath } from "./root-layout.tsx";
 
 describe("RootLayout global navigation path", () => {

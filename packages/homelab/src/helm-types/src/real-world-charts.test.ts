@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parseYAMLComments } from "./yaml-comments.ts";
 
 describe("Real-World Helm Charts - PostgreSQL (Bitnami)", () => {

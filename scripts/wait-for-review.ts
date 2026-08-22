@@ -17,23 +17,28 @@
  */
 
 import {
+  type BlockingPolicy,
+  blockingPolicyForThreshold,
   evaluateGate,
   formatSignalEvent,
-  isBlocking,
-  isProviderAuthor,
-  REVIEW_SIGNAL_SCHEMA,
   resolveProvider,
   reviewGateSkipReasonForAuthor,
   resolveRequiredReviewProvider,
-  tallyFindings,
   type GateDecision,
   type PullRequestAuthor,
   type ReviewProvider,
-  type ReviewSignalEvent,
   type ReviewThread,
 } from "@shepherdjerred/code-review";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
-import { requestReviewAtHead } from "@shepherdjerred/code-review/request-review";
+import { buildSignalEvent } from "./lib/review-gate-signal.ts";
+import {
+  DEFAULT_REQUEST_GRACE_SECONDS,
+  DEFAULT_REQUEST_RETRY_SECONDS,
+  ensureReviewRequested,
+  requestGraceSecondsForProvider,
+  validateReviewRequestSchedule,
+  warnIfFirstReviewIsOversized,
+} from "./lib/review-gate-policy.ts";
 import {
   fetchPullRequestAuthor,
   fetchReviewThreads,
@@ -57,6 +62,15 @@ const DEFAULT_REPO = "shepherdjerred/monorepo";
  * undershooting costs a false red on a healthy PR, so the asymmetry favours
  * headroom.
  *
+ * It also has to hold the request schedule. The gate waits a grace period before
+ * asking at all and may ask once more after that, so the deadline must leave the
+ * slowest review we have watched complete still able to finish after the LAST
+ * request — otherwise the retry is advertised and then cut off.
+ * `reviewRequestScheduleBounds()` states that relation and
+ * `wait-for-review.test.ts` asserts it, which is why raising the retry interval
+ * without raising this fails the suite rather than silently disabling the
+ * retry.
+ *
  * The durable fix is ordering rather than duration — not starting the gate
  * until the review exists — but that is a CI-architecture change, not a
  * constant.
@@ -68,7 +82,7 @@ const DEFAULT_REPO = "shepherdjerred/monorepo";
  * `wait-for-review.test.ts` asserts that ordering against the pipeline,
  * reading the step's own declared timeout rather than the first one it finds.
  */
-export const DEFAULT_TIMEOUT_SECONDS = 40 * 60;
+export const DEFAULT_TIMEOUT_SECONDS = 60 * 60;
 const DEFAULT_INTERVAL_SECONDS = 30;
 
 export function resolveReviewGateProvider(
@@ -133,17 +147,6 @@ function repoFromEnvironment(): string {
   return DEFAULT_REPO;
 }
 
-function latencySeconds(
-  reviewedAt: string | null,
-  headPushedAt: string | null,
-): number | null {
-  if (reviewedAt === null || headPushedAt === null) return null;
-  const reviewed = Date.parse(reviewedAt);
-  const pushed = Date.parse(headPushedAt);
-  if (!Number.isFinite(reviewed) || !Number.isFinite(pushed)) return null;
-  return Math.round((reviewed - pushed) / 1000);
-}
-
 /**
  * Recognized transport-level failure signatures (no HTTP status): the socket
  * dropped, DNS/connection failed, or the request timed out. Covers both
@@ -205,71 +208,6 @@ function isRetryablePollError(error: Error): boolean {
   return TRANSPORT_FAILURE_RE.test(message);
 }
 
-function buildSignalEvent(input: {
-  provider: ReviewProvider;
-  pr: number;
-  head: string;
-  headPushedAt: string | null;
-  state: ReviewStateResult;
-  threads: readonly ReviewThread[];
-  maxBlockingPriority: number;
-  gateWaitSeconds: number;
-  timedOut: boolean;
-  decision: GateDecision | null;
-}): ReviewSignalEvent {
-  const providerThreads = input.threads.filter(
-    (thread) =>
-      isProviderAuthor(input.provider, thread.authorLogin) &&
-      !thread.isOutdated,
-  );
-  const blocking = input.threads.filter((thread) =>
-    isBlocking(thread, input.provider, input.maxBlockingPriority),
-  );
-  const reviewState =
-    input.state.completionSignal === "thumbsup-reaction"
-      ? "reviewed-clean-reaction"
-      : input.state.state;
-  return {
-    schema: REVIEW_SIGNAL_SCHEMA,
-    ts: new Date().toISOString(),
-    provider: input.provider.id,
-    pr: input.pr,
-    head_sha: input.head,
-    head_pushed_at: input.headPushedAt,
-    review_state: reviewState,
-    completion_signal: input.state.completionSignal,
-    reviewed_at_head: input.state.reviewedCommit === input.head,
-    // Latency is only meaningful when the reviewed commit IS the head; a stale
-    // review of an older commit must not produce a (possibly negative) latency.
-    latency_s:
-      input.state.reviewedCommit === input.head
-        ? latencySeconds(input.state.reviewedAt, input.headPushedAt)
-        : null,
-    findings: tallyFindings(providerThreads.map((thread) => thread.priority)),
-    blocking_count: blocking.length,
-    unresolved_count: providerThreads.filter((thread) => !thread.isResolved)
-      .length,
-    gate_wait_s: input.gateWaitSeconds,
-    timed_out: input.timedOut,
-    stale_reaction: input.state.staleReaction,
-    decision: input.decision === null ? null : input.decision.state,
-    parser_commit: parserCommit(),
-  };
-}
-
-/**
- * The commit of the `code-review` source that produced this observation.
- *
- * `review-gate.sh` runs the gate from a worktree of `main` and passes the
- * commit it checked out. Recording it makes the log say which parser produced
- * a count — the one thing that would have made an inflated `blocking_count`
- * obvious at a glance rather than after a long hunt.
- */
-function parserCommit(): string | null {
-  const commit = Bun.env["REVIEW_GATE_PARSER_COMMIT"];
-  return commit === undefined || commit.trim() === "" ? null : commit.trim();
-}
-
 async function waitForReview(): Promise<void> {
   const pullRequest = Bun.env["BUILDKITE_PULL_REQUEST"];
   if (
@@ -299,7 +237,7 @@ async function waitForReview(): Promise<void> {
   const head = commit.trim();
   const repo = repoFromEnvironment();
   const provider = resolveReviewGateProvider(Bun.env["REVIEW_PROVIDER"]);
-  const maxBlockingPriority = parseMaxBlockingPriority();
+  const policy = blockingPolicyForThreshold(parseMaxBlockingPriority());
   const timeoutSeconds = parsePositiveIntegerEnv(
     "REVIEW_WAIT_TIMEOUT_SECONDS",
     DEFAULT_TIMEOUT_SECONDS,
@@ -308,10 +246,28 @@ async function waitForReview(): Promise<void> {
     "REVIEW_WAIT_INTERVAL_SECONDS",
     DEFAULT_INTERVAL_SECONDS,
   );
+  const retryAfterSeconds = parsePositiveIntegerEnv(
+    "REVIEW_REQUEST_RETRY_SECONDS",
+    DEFAULT_REQUEST_RETRY_SECONDS,
+  );
+  const configuredGraceSeconds = parsePositiveIntegerEnv(
+    "REVIEW_REQUEST_GRACE_SECONDS",
+    DEFAULT_REQUEST_GRACE_SECONDS,
+  );
+  const graceSeconds = requestGraceSecondsForProvider(
+    provider,
+    configuredGraceSeconds,
+  );
+  validateReviewRequestSchedule({
+    graceSeconds,
+    retryAfterSeconds,
+    timeoutSeconds,
+  });
 
   console.log(
     `Review gate: provider=${provider.id}, repo=${repo}, pr=#${String(number)}, head=${head}, ` +
-      `timeout=${String(timeoutSeconds)}s, blockingPriority<=P${String(maxBlockingPriority)}.`,
+      `timeout=${String(timeoutSeconds)}s, blockingPriority<=P${String(policy.maxBlockingPriority)}, ` +
+      `lowSeverity=${policy.lowSeverity}.`,
   );
 
   await pollReviewGate({
@@ -320,7 +276,9 @@ async function waitForReview(): Promise<void> {
     number,
     head,
     token,
-    maxBlockingPriority,
+    policy,
+    graceSeconds,
+    retryAfterSeconds,
     timeoutSeconds,
     intervalSeconds,
   });
@@ -332,7 +290,9 @@ type GateConfig = {
   number: number;
   head: string;
   token: string;
-  maxBlockingPriority: number;
+  policy: BlockingPolicy;
+  graceSeconds: number;
+  retryAfterSeconds: number;
   timeoutSeconds: number;
   intervalSeconds: number;
 };
@@ -346,6 +306,7 @@ function emitSignal(input: {
   startedAt: number;
   timedOut: boolean;
   decision: GateDecision | null;
+  requestAttempts: number;
 }): void {
   const { config } = input;
   console.log(
@@ -357,10 +318,11 @@ function emitSignal(input: {
         headPushedAt: input.headPushedAt,
         state: input.state,
         threads: input.threads,
-        maxBlockingPriority: config.maxBlockingPriority,
+        policy: config.policy,
         gateWaitSeconds: Math.round((Date.now() - input.startedAt) / 1000),
         timedOut: input.timedOut,
         decision: input.decision,
+        requestAttempts: input.requestAttempts,
       }),
     ),
   );
@@ -388,7 +350,9 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     number,
     head,
     token,
-    maxBlockingPriority,
+    policy,
+    graceSeconds,
+    retryAfterSeconds,
     timeoutSeconds,
     intervalSeconds,
   } = config;
@@ -396,6 +360,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
   const startedAt = Date.now();
   const deadline = startedAt + timeoutSeconds * 1000;
   let warnedMismatch = false;
+  let warnedOversizedFirstReview = false;
   // The head push time is REQUIRED for the clean-review 👍 binding (not
   // telemetry-only), so it is fetched INSIDE the retry loop and CACHED only once
   // a real timestamp resolves. A null result is deliberately NOT cached: the
@@ -411,7 +376,10 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
   // Whether this run has already asked the provider to review the head. The
   // marker check makes a duplicate request impossible anyway; this avoids
   // paying for a comment scan on every poll.
-  let requested = false;
+  // The next request attempt to make for this head, 1-based. Incremented only
+  // once an attempt has actually been posted, so a poll that decides it is too
+  // early to escalate re-decides on the next one.
+  let attempt = 1;
 
   while (Date.now() <= deadline) {
     let stateResult: ReviewStateResult;
@@ -489,37 +457,22 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
       });
 
       // Ask for the review this loop is waiting on, once we have seen that the
-      // provider has not already reviewed this head. Keep this write inside the
-      // same retry boundary as the reads above: a transient failure while
-      // checking or posting the request must not fail the gate immediately.
-      //
-      // Qodo reviews a PR once, when it is opened, and never again on its own.
-      // Polling alone therefore waits out the entire budget on every push after
-      // the first and then fails a PR whose diff is fine. The request is asked
-      // for after the first observation rather than before it, so a head the
-      // provider has already reviewed is never asked again; the marker makes a
-      // repeat impossible even so.
-      if (!requested && stateResult.reviewedCommit !== head) {
-        const outcome = await requestReviewAtHead({
-          repo,
-          number,
-          head,
-          token,
-          provider,
-        });
-        requested = true;
-        console.log(
-          JSON.stringify({
-            level: "info",
-            msg: `review-request-${outcome}`,
-            component: "review-gate",
-            provider: provider.id,
-            repo,
-            pr: number,
-            head_sha: head,
-          }),
-        );
-      }
+      // provider has not already reviewed this head. Kept inside the same retry
+      // boundary as the reads above: a transient failure while checking or
+      // posting the request must not fail the gate immediately.
+      attempt = await ensureReviewRequested({
+        repo,
+        number,
+        head,
+        token,
+        provider,
+        attempt,
+        graceSeconds,
+        retryAfterSeconds,
+        headPushedAt,
+        startedAt,
+        reviewedCommit: stateResult.reviewedCommit,
+      });
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       if (!isRetryablePollError(err)) throw err;
@@ -550,9 +503,17 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
       provider,
       reviewState: stateResult.state,
       threads: threadResult.threads,
-      maxBlockingPriority,
+      policy,
       skipReason: stateResult.skipReason,
     });
+
+    if (!warnedOversizedFirstReview) {
+      warnedOversizedFirstReview = warnIfFirstReviewIsOversized({
+        provider,
+        number,
+        threads: threadResult.threads,
+      });
+    }
 
     emitSignal({
       config,
@@ -562,6 +523,8 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
       startedAt,
       timedOut: false,
       decision,
+      // Attempts already made, not the next one queued up.
+      requestAttempts: attempt - 1,
     });
 
     if (decision.state === "passed") {
@@ -588,6 +551,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     startedAt,
     timedOut: true,
     decision: null,
+    requestAttempts: attempt - 1,
   });
 
   if (lastPollError !== null) {

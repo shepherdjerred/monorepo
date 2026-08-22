@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { outcomeIcon, summaryLanes, summarySteps } from "./migration-core.ts";
 
 test("summary has unique step and lane keys", () => {

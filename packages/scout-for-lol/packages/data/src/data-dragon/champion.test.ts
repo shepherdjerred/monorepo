@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { championNameOverrides } from "./champion-name-overrides.generated.ts";
 import { getChampionInfo } from "./champion.ts";
 

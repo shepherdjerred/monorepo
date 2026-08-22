@@ -64,7 +64,7 @@ export function buildSeasonRefreshPrompt(
     "     touch or reword any existing changelog entry.",
     "6. Verify your edit by running:",
     `      cd ${input.workdir}/packages/scout-for-lol/packages/data`,
-    "      bun test src/seasons.test.ts",
+    "      bun run test -- src/seasons.test.ts",
     "   If tests fail, fix them. Do NOT skip tests, do NOT weaken assertions.",
     "7. Before the sentinel, include a SOURCES section containing the exact",
     "   two or more independent URLs that support the conclusion, even when",

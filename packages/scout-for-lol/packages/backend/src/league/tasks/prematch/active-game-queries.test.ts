@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, mock } from "bun:test";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 
 type ActiveGameUpdateArgs = {
@@ -17,13 +17,13 @@ let lastUpdate: ActiveGameUpdateArgs | undefined;
 
 const fakePrisma = {
   activeGame: {
-    update: mock(async (args: ActiveGameUpdateArgs) => {
+    update: vi.fn(async (args: ActiveGameUpdateArgs) => {
       lastUpdate = args;
       storedPrematchMessageIds = args.data.prematchMessageIds;
       storedPrematchMatchId = args.data.prematchMatchId;
       return {};
     }),
-    findUnique: mock(async (_args: ActiveGameFindUniqueArgs) => {
+    findUnique: vi.fn(async (_args: ActiveGameFindUniqueArgs) => {
       if (storedPrematchMessageIds === null) {
         return null;
       }
@@ -35,7 +35,7 @@ const fakePrisma = {
   },
 };
 
-await mock.module("#src/database/index.ts", () => ({
+await vi.doMock("#src/database/index.ts", () => ({
   prisma: fakePrisma,
   getAccountsWithState: () => Promise.resolve([]),
   getChannelsSubscribedToPlayers: () => Promise.resolve([]),

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   renderReportHtml,
   renderReportText,
@@ -184,7 +184,9 @@ describe("ReportEnvelopeV1", () => {
     const text = renderReportText(report);
     expect(html).toContain("No &lt;unsafe&gt; changes");
     expect(html).not.toContain("<unsafe>");
-    expect(text).toStartWith("[OK] Dependency summary\nNo <unsafe> changes");
+    expect(
+      text.startsWith("[OK] Dependency summary\nNo <unsafe> changes"),
+    ).toBe(true);
     expect(text).toContain("[passed] Catalog diff");
     expect(text).toContain("[evidence: git-diff]");
   });

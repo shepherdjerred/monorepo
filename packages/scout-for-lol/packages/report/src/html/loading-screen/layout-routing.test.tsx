@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { Children, isValidElement, type ReactNode } from "react";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
 import { LoadingScreen } from "#src/html/loading-screen/loading-screen.tsx";

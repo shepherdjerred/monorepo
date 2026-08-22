@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import type { AppError } from "../../../domain/errors";
 import {
@@ -86,7 +86,7 @@ describe("committed JSON Schema", () => {
     }
     const committed: unknown = JSON.parse(readFileSync(SCHEMA_PATH, "utf8"));
     withContext(
-      "packages/tasknotes-fixtures/schema/scenario.schema.json is stale; regenerate with UPDATE_FIXTURE_SCHEMA=1 bun test src/data/sync/__tests__/fixtures.test.ts",
+      "packages/tasknotes-fixtures/schema/scenario.schema.json is stale; regenerate with UPDATE_FIXTURE_SCHEMA=1 bun run test -- src/data/sync/__tests__/fixtures.test.ts",
       () => {
         expect<unknown>(committed).toEqual(generated);
       },

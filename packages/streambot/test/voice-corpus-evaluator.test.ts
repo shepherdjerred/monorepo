@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { DiscordOpusEncoder } from "@shepherdjerred/discord-video-stream";
 import { evaluateDiscordOpusPackets } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";

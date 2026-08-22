@@ -35,7 +35,7 @@ Run from `packages/birmel`:
 bun run dev          # build glitter context, generate Prisma, apply migrations, watch-run src/index.ts
 bun run start        # production startup path (scripts/start.ts): migrate deploy, then run the bot
 bun run build        # bundle src/index.ts to dist/
-bun run test         # generate Prisma against .env.test, then bun test
+bun run test         # generate Prisma against .env.test, then bun run test
 bun run typecheck    # tsc --noEmit (generates Prisma first)
 bun run lint         # eslint (generates Prisma first)
 bun run smoke        # image smoke test (scripts/smoke.ts)

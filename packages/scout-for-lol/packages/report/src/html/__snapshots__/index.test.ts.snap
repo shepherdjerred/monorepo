@@ -1,25 +1,25 @@
-// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
-
-exports[`sanity check 1`] = `"1a76a71246c084eb4f8c089604024dfff7e52aeb3a031518814baf07822b8232"`;
-
-exports[`no items test 1`] = `"cf164f15bb2b578e2b417cefaad7e73f3d46d39ceb7d37bab753c129c99f54d4"`;
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`all fields zeroed out test 1`] = `"4bbd5d84c34f602fbc7b98fc447c8163ae3075264e598657fee6493245921cf3"`;
 
-exports[`no rank test 1`] = `"a8013709fbd8e19cc4b41f0d089190e08d20a34e52c7c2974c15dff347cc3b91"`;
-
-exports[`large values test 1`] = `"ce6bdd84d0f8cb389e3225c5504465b152116b7b81830a9a5f57e3bc4c593aa9"`;
-
-exports[`victory test 1`] = `"20f13ed20cc9fa13a5f799b2e17ff810d3f77fcbc112f2d99c6c306046ecf88a"`;
-
-exports[`surrender test 1`] = `"38358db98bfa90841548e9e0e7ef3de02287f466ce4fe53ff436343277b5ce3a"`;
-
-exports[`no rank before match test 1`] = `"e2eca4ef2359613888cd77c39fb3c01994982d2edf6d37cbb62f60e53327dd20"`;
-
-exports[`multiple highlighted players test 1`] = `"e8ee61010bfec7d144680aa794917e3665e36b2a8e9ae1696805a1308f1cb4af"`;
+exports[`aram clash game test 1`] = `"fc204b9bafc5f2453165d350744c2312a0ab80fe9d5ca97df84e4cdad98e55ad"`;
 
 exports[`clash game test 1`] = `"bd8eca5a67d1239208a6e05e9cd66fc2b35c5c0d5e9f9329ad124e5ed2f89fe1"`;
 
-exports[`aram clash game test 1`] = `"fc204b9bafc5f2453165d350744c2312a0ab80fe9d5ca97df84e4cdad98e55ad"`;
+exports[`large values test 1`] = `"ce6bdd84d0f8cb389e3225c5504465b152116b7b81830a9a5f57e3bc4c593aa9"`;
+
+exports[`multiple highlighted players test 1`] = `"e8ee61010bfec7d144680aa794917e3665e36b2a8e9ae1696805a1308f1cb4af"`;
 
 exports[`multiple players with promotion and demotion test 1`] = `"8e37cd3f798ea0747d0ae04ad29928ebb445dfada5fd01f673aa4ad58d8f5a42"`;
+
+exports[`no items test 1`] = `"cf164f15bb2b578e2b417cefaad7e73f3d46d39ceb7d37bab753c129c99f54d4"`;
+
+exports[`no rank before match test 1`] = `"e2eca4ef2359613888cd77c39fb3c01994982d2edf6d37cbb62f60e53327dd20"`;
+
+exports[`no rank test 1`] = `"a8013709fbd8e19cc4b41f0d089190e08d20a34e52c7c2974c15dff347cc3b91"`;
+
+exports[`sanity check 1`] = `"1a76a71246c084eb4f8c089604024dfff7e52aeb3a031518814baf07822b8232"`;
+
+exports[`surrender test 1`] = `"38358db98bfa90841548e9e0e7ef3de02287f466ce4fe53ff436343277b5ce3a"`;
+
+exports[`victory test 1`] = `"20f13ed20cc9fa13a5f799b2e17ff810d3f77fcbc112f2d99c6c306046ecf88a"`;

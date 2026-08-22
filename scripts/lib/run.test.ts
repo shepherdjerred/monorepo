@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 
 import { optionalEnv, requireEnv, run, runAllowExit, tmpBase } from "./run.ts";
 import { isTransientError } from "./transient.ts";
@@ -22,7 +22,7 @@ describe("run stderr capture", () => {
   const originalWrite = process.stderr.write.bind(process.stderr);
   afterEach(() => {
     process.stderr.write = originalWrite;
-    Bun.env[testEnvironmentName] = undefined;
+    Reflect.deleteProperty(Bun.env, testEnvironmentName);
   });
 
   test("runAllowExit returns a stderr tail and never throws on non-zero exit", async () => {
@@ -145,7 +145,7 @@ describe("run stderr capture", () => {
 });
 
 test("requires and optionally reads environment variables", () => {
-  Bun.env[testEnvironmentName] = undefined;
+  Reflect.deleteProperty(Bun.env, testEnvironmentName);
   expect(() => requireEnv(testEnvironmentName)).toThrow(
     `Missing required environment variable ${testEnvironmentName}`,
   );
@@ -156,7 +156,7 @@ test("requires and optionally reads environment variables", () => {
   expect(optionalEnv(testEnvironmentName)).toBe("value");
   Bun.env[testEnvironmentName] = "";
   expect(optionalEnv(testEnvironmentName)).toBeNull();
-  Bun.env[testEnvironmentName] = undefined;
+  Reflect.deleteProperty(Bun.env, testEnvironmentName);
 });
 
 test("returns the temporary base without a trailing slash", () => {

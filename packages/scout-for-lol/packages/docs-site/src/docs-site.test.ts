@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { REPORT_METRICS } from "@scout-for-lol/data/model/report-query-metrics.ts";
 import {
@@ -9,7 +9,7 @@ import { ALL_PERMISSIONS } from "@scout-for-lol/data/model/permissions/catalog.t
 
 /**
  * These assertions run against the built site (`bun run build` precedes
- * `bun test`), because the things worth protecting here only exist after a
+ * `bun run test`), because the things worth protecting here only exist after a
  * build: the resolved link graph, the `base` prefix applied to sidebar links,
  * and the reference tables rendered from `@scout-for-lol/data`.
  */

@@ -95,7 +95,7 @@ function seasonChecks(
       required: true,
       status: result.validationPassed ? "passed" : "failed",
       summary: result.validationPassed
-        ? "bun test src/seasons.test.ts passed"
+        ? "bun run test -- src/seasons.test.ts passed"
         : "Season tests did not pass",
       evidenceReceiptIds: ["season-tests"],
     },
@@ -150,7 +150,7 @@ function seasonEvidence(
       observedAt,
       status: result.validationPassed ? "success" : "failure",
       command:
-        "cd packages/scout-for-lol/packages/data && bun test src/seasons.test.ts",
+        "cd packages/scout-for-lol/packages/data && bun run test -- src/seasons.test.ts",
       excerpt: result.validationPassed ? "passed" : "failed",
     },
   ];

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import type { MaterializedCase } from "#materialization/materialize-case.ts";
 import { persistMaterializedDataset } from "#materialization/persist-dataset.ts";

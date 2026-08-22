@@ -1,5 +1,5 @@
 import { trace } from "@opentelemetry/api";
-import { test, expect } from "bun:test";
+import { test, expect } from "vitest";
 import { traceClaudeAgent } from "#src/claude-agent-wrapper.ts";
 import { exporter } from "./otel-test-provider.ts";
 import { Registry } from "prom-client";

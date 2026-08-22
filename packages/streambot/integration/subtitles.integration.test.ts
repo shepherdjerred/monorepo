@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -17,7 +17,7 @@ import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 /**
  * Real-ffmpeg integration tests. These run ONLY via `bun run test:integration` — run it where
  * ffmpeg/ffprobe + libass + zimg + fonts are available (e.g. inside the streambot image; the Dagger
- * CI target that used to run them was removed 2026-07). They are NOT part of the plain `bun test`
+ * CI target that used to run them was removed 2026-07). They are NOT part of the plain `bun run test`
  * (scoped to `test/`). They hard-fail (never skip) if a binary is missing.
  */
 

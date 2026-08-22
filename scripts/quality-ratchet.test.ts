@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { QUALITY_RATCHET_EXCLUDED_DIRECTORIES } from "./quality-ratchet.ts";
 
 describe("quality ratchet search scope", () => {

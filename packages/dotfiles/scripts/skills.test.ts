@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 

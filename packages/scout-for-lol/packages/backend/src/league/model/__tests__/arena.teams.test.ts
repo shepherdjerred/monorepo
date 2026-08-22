@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import type { RawParticipant } from "@scout-for-lol/data";
 import {
   groupArenaTeams,

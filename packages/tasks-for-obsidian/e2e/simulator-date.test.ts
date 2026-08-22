@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { captureFlowToday, parseSimulatorToday } from "./simulator-date";
 
 const readToday = (): string => "2026-08-08\n";

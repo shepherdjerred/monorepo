@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { matchRoutes } from "react-router";
 import { routes } from "#src/router.tsx";
 import { trpcOptions } from "#src/lib/trpc-options.ts";

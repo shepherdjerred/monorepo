@@ -1,6 +1,6 @@
 {
   "$schema": "./ci-test-manifest.schema.json",
-  "version": 1,
+  "version": 2,
   "workspaces": [
     {
       "package": "@shepherdjerred/alert-dashboard",
@@ -11,18 +11,31 @@
           "name": "generate",
           "command": ["bun", "run", "generate"]
         },
-        { "runner": "bun", "args": ["src"] }
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
       ]
     },
     {
       "package": "astro-opengraph-images",
       "directory": "packages/astro-opengraph-images",
-      "steps": [{ "runner": "vitest", "name": "vitest", "args": ["src"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "name": "vitest",
+          "args": ["src"]
+        }
+      ]
     },
     {
       "package": "better-skill-capped",
       "directory": "packages/better-skill-capped",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/birmel",
@@ -34,43 +47,63 @@
           "command": ["bun", "--env-file=.env.test", "run", "generate"]
         },
         {
-          "runner": "bun",
-          "bunArgs": ["--env-file=.env.test"],
-          "coverageConfig": "bunfig.reporting.toml"
+          "runner": "vitest",
+          "runtimeArgs": ["--env-file=.env.test"]
         }
       ]
     },
     {
       "package": "@shepherdjerred/code-review",
       "directory": "packages/code-review",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/pr-fleet-controller",
       "directory": "packages/pr-fleet-controller",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/pr-fleet-web",
       "directory": "packages/pr-fleet-controller/packages/web",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "cooklang-for-obsidian",
       "directory": "packages/cooklang-for-obsidian",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/discord-plays-core",
       "directory": "packages/discord-plays-core",
-      "steps": [{ "runner": "bun", "args": ["test/"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test/"]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/discord-plays-mario-kart-scripts",
       "directory": "packages/discord-plays-mario-kart",
       "steps": [
         {
-          "runner": "bun",
+          "runner": "vitest",
           "args": [
             "scripts/build-wasm.test.ts",
             "scripts/vendor-n64wasm.test.ts",
@@ -82,22 +115,39 @@
     {
       "package": "@discord-plays-mario-kart/backend",
       "directory": "packages/discord-plays-mario-kart/packages/backend",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@discord-plays-mario-kart/frontend",
       "directory": "packages/discord-plays-mario-kart/packages/frontend",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/discord-plays-pokemon-scripts",
       "directory": "packages/discord-plays-pokemon",
-      "steps": [{ "runner": "bun", "args": ["scripts"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["scripts"]
+        }
+      ]
     },
     {
       "package": "@discord-plays-pokemon/backend",
       "directory": "packages/discord-plays-pokemon/packages/backend",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/discord-stream-lifecycle",
@@ -108,33 +158,59 @@
           "name": "build",
           "command": ["bun", "run", "build"]
         },
-        { "runner": "bun", "args": ["test/"] }
+        {
+          "runner": "vitest",
+          "args": ["test/"]
+        }
       ]
     },
     {
       "package": "@shepherdjerred/discord-video-stream",
       "directory": "packages/discord-video-stream",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/docs-wiki",
       "directory": "packages/docs/wiki",
-      "steps": [{ "runner": "bun", "args": ["src"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/dotfiles-scripts",
       "directory": "packages/dotfiles",
-      "steps": [{ "runner": "bun", "args": ["scripts"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["scripts"]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/eslint-config",
       "directory": "packages/eslint-config",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "glitter",
       "directory": "packages/glitter",
-      "steps": [{ "runner": "bun", "args": ["test"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/glitter-context",
@@ -145,7 +221,10 @@
           "name": "generate",
           "command": ["bun", "run", "scripts/generate.ts"]
         },
-        { "runner": "bun", "args": ["test"] },
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        },
         {
           "runner": "command",
           "name": "python-validation",
@@ -156,19 +235,27 @@
     {
       "package": "@shepherdjerred/home-assistant",
       "directory": "packages/home-assistant",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/leetcode",
       "directory": "packages/leetcode",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "homelab",
       "directory": "packages/homelab",
       "steps": [
         {
-          "runner": "bun",
+          "runner": "vitest",
           "args": [
             "scripts/argocd-manifest-overrides.test.ts",
             "scripts/helm-release-core.test.ts",
@@ -184,7 +271,9 @@
       "package": "@homelab/cdk8s",
       "directory": "packages/homelab/src/cdk8s",
       "steps": [
-        { "runner": "bun" },
+        {
+          "runner": "vitest"
+        },
         {
           "runner": "command",
           "name": "gpu-resources",
@@ -195,24 +284,38 @@
     {
       "package": "@shepherdjerred/helm-types",
       "directory": "packages/homelab/src/helm-types",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/llm-models",
       "directory": "packages/llm-models",
-      "steps": [{ "runner": "bun", "args": ["test"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/llm-runtime",
       "directory": "packages/llm-runtime",
-      "steps": [{ "runner": "bun", "args": ["test"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/llm-observability",
       "directory": "packages/llm-observability",
       "steps": [
         {
-          "runner": "bun",
+          "runner": "vitest",
           "args": [
             "test/unit",
             "test/e2e/run.test.ts",
@@ -230,20 +333,28 @@
     {
       "package": "@shepherdjerred/openrouter-broadcast-ingest",
       "directory": "packages/openrouter-broadcast-ingest",
-      "steps": [{ "runner": "bun", "args": ["test"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/monarch",
       "directory": "packages/monarch",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "scout-for-lol",
       "directory": "packages/scout-for-lol",
       "steps": [
         {
-          "runner": "bun",
-          "coverageConfig": "bunfig.reporting.toml",
+          "runner": "vitest",
           "args": [
             "scripts/create-minimal-png.test.ts",
             "scripts/dev-web.test.ts",
@@ -256,39 +367,62 @@
     {
       "package": "@scout-for-lol/app",
       "directory": "packages/scout-for-lol/packages/app",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@scout-for-lol/backend",
       "directory": "packages/scout-for-lol/packages/backend",
-      "defaultEnv": { "DATABASE_URL": "file:./test.db" },
+      "defaultEnv": {
+        "DATABASE_URL": "file:./test.db"
+      },
       "steps": [
         {
-          "runner": "bun",
-          "coverageConfig": "bunfig.reporting.toml",
-          "args": ["--timeout", "20000"]
+          "runner": "vitest",
+          "args": ["--testTimeout", "20000"]
         }
       ]
     },
     {
       "package": "@scout-for-lol/data",
       "directory": "packages/scout-for-lol/packages/data",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@scout-for-lol/design-system",
       "directory": "packages/scout-for-lol/packages/design-system",
-      "steps": [{ "runner": "bun", "args": ["src"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
     },
     {
       "package": "@scout-for-lol/evals",
       "directory": "packages/scout-for-lol/packages/evals",
-      "steps": [{ "runner": "bun", "args": ["src"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
     },
     {
       "package": "@scout-for-lol/frontend",
       "directory": "packages/scout-for-lol/packages/frontend",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@scout-for-lol/docs-site",
@@ -299,33 +433,59 @@
           "name": "build",
           "command": ["bun", "run", "build"]
         },
-        { "runner": "bun", "args": ["src"] }
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
       ]
     },
     {
       "package": "@scout-for-lol/report",
       "directory": "packages/scout-for-lol/packages/report",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "starlight-karma-bot",
       "directory": "packages/starlight-karma-bot",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/streambot",
       "directory": "packages/streambot",
-      "steps": [{ "runner": "bun", "args": ["test/"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test/"]
+        }
+      ]
     },
     {
       "package": "tasknotes-core",
       "directory": "packages/tasknotes-core",
-      "steps": [{ "runner": "cargo", "args": ["--workspace"] }]
+      "steps": [
+        {
+          "runner": "cargo",
+          "args": ["--workspace"]
+        }
+      ]
     },
     {
       "package": "@tasknotes/e2e",
       "directory": "packages/tasknotes-e2e",
-      "steps": [{ "runner": "bun", "args": ["tests"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["tests"]
+        }
+      ]
     },
     {
       "package": "tasknotes-windows",
@@ -366,19 +526,27 @@
     {
       "package": "tasknotes-server",
       "directory": "packages/tasknotes-server",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "tasknotes-types",
       "directory": "packages/tasknotes-types",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "tasks-for-obsidian",
       "directory": "packages/tasks-for-obsidian",
       "steps": [
         {
-          "runner": "bun",
+          "runner": "vitest",
           "args": ["src", "scripts", "e2e/simulator-date.test.ts"]
         }
       ],
@@ -399,15 +567,27 @@
           "command": ["bun", "run", "scripts/ensure-ha-schema.ts"]
         },
         {
-          "runner": "bun",
+          "runner": "vitest",
           "args": [
             "src/activities",
             "src/event-bridge",
             "src/observability",
             "src/schedules",
             "src/shared",
+            "src/lib",
+            "src/workflows/agent-task.test.ts"
+          ]
+        },
+        {
+          "runner": "vitest",
+          "name": "workflows",
+          "runtime": "node",
+          "runtimeReason": "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
+          "args": [
             "src/workflows",
-            "src/lib"
+            "--exclude",
+            "src/workflows/agent-task.test.ts",
+            "--no-file-parallelism"
           ]
         }
       ]
@@ -415,14 +595,19 @@
     {
       "package": "@shepherdjerred/terraform-provider-asuswrt",
       "directory": "packages/terraform-provider-asuswrt",
-      "steps": [{ "runner": "go", "args": ["./..."] }]
+      "steps": [
+        {
+          "runner": "go",
+          "args": ["./..."]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/toolkit",
       "directory": "packages/toolkit",
       "steps": [
         {
-          "runner": "bun",
+          "runner": "vitest",
           "args": [
             "test/lib",
             "test/bugsink",
@@ -437,12 +622,20 @@
     {
       "package": "@shepherdjerred/trmnl-dashboard",
       "directory": "packages/trmnl-dashboard",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/version-catalog",
       "directory": "packages/version-catalog",
-      "steps": [{ "runner": "bun" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "webring",
@@ -453,7 +646,10 @@
           "name": "typedoc",
           "command": ["bun", "run", "typedoc"]
         },
-        { "runner": "bun", "args": ["src/"] }
+        {
+          "runner": "vitest",
+          "args": ["src/"]
+        }
       ]
     },
     {
@@ -461,7 +657,10 @@
       "directory": "scripts",
       "coverageSourceDirectories": ["scripts", ".buildkite/scripts"],
       "steps": [
-        { "runner": "bun", "args": [".", "../.buildkite/scripts"] },
+        {
+          "runner": "vitest",
+          "args": [".", "../.buildkite/scripts"]
+        },
         {
           "runner": "command",
           "name": "upload-pipeline-shell",

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { AssistantAudioOutput } from "@shepherdjerred/streambot/streamer/assistant-audio-output.ts";
 
 describe("AssistantAudioOutput", () => {

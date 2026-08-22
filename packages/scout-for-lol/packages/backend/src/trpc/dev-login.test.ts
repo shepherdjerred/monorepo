@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "vitest";
 import configuration, {
   resetConfigurationForTests,
 } from "#src/configuration.ts";
@@ -9,7 +9,7 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
  * `#src/database/index.ts`, `jwt.ts`) all read env vars at import/call
  * time behind memoized getters — same reasoning as auth-web.test.ts: set
  * env, force a re-read, then dynamically import, rather than a process-wide
- * `mock.module` (which leaks across sibling test files).
+ * the former Bun module mock (which leaked across sibling test files).
  */
 const TEST_APP_ORIGIN = "https://scout-for-lol.com";
 Bun.env["WEB_APP_ORIGIN"] = TEST_APP_ORIGIN;

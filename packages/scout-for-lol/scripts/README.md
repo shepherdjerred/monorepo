@@ -21,7 +21,7 @@ detail below; the rest of the directory is indexed here.
 | `run-relevant-tests.ts`   | Finds and runs the affected tests (see below)                                                   |
 | `update-lint-cache.ts`    | Regenerates `.knip-cache.json` and `.jscpd-cache.json`                                          |
 
-`*.test.ts` files are the tests for these scripts (`bun test ./scripts` from
+`*.test.ts` files are the tests for these scripts (`bun run test ./scripts` from
 the Scout package root).
 
 ## Selective Test Running

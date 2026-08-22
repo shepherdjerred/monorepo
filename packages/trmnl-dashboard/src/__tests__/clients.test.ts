@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "vitest";
 import { BugsinkClient } from "../clients/bugsink.ts";
 import { HomeStatusClient } from "../clients/home-assistant.ts";
 import { AlertsClient } from "../clients/alerts.ts";

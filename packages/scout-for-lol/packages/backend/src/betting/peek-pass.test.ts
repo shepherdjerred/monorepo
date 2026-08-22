@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { calculatePeekPassPrice } from "#src/betting/peek-pass.ts";
 
 const NOW = new Date("2026-08-19T00:00:00Z");

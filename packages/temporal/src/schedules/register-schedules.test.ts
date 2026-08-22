@@ -1,4 +1,4 @@
-import { describe, test, expect, it } from "bun:test";
+import { describe, test, expect, it } from "vitest";
 import type { Duration } from "@temporalio/common";
 import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";

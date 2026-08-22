@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import type { AppConfig } from "../config.ts";
 import { collectHomePayload } from "../collectors/home.ts";
 import {

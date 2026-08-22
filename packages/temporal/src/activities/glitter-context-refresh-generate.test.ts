@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import {
   PersonSchema,
   StyleCardSchema,
@@ -320,7 +320,7 @@ let recordedSynthesisTokenLimits: {
 }[] = [];
 let lastGenerationBudget: GenerationBudget | undefined;
 
-await mock.module("./glitter-context-refresh-llm.ts", () => ({
+await vi.doMock("./glitter-context-refresh-llm.ts", () => ({
   ...glitterLlm,
   generateGlitterObject: (input: {
     workload: string;

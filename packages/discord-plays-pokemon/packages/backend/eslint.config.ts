@@ -60,7 +60,7 @@ const config = [
         "src/stream/orchestrator-machine.test.ts",
         "src/stream/audio-transport.test.ts",
       ],
-      // Test files are excluded from tsconfig (bun test globals aren't visible
+      // Test files are excluded from tsconfig (test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
       maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 60,
     },

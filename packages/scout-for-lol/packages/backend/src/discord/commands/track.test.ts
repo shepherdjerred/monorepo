@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import type { ChatInputCommandInteraction } from "discord.js";
 import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
 import {
@@ -10,15 +10,15 @@ type TrackInteraction = Parameters<typeof executeTrack>[0];
 
 describe("/track", () => {
   test("rejects direct messages and invalid command input", async () => {
-    const replyMock = mock(
+    const replyMock = vi.fn(
       (payload: Parameters<ChatInputCommandInteraction["reply"]>[0]) =>
         Promise.resolve(payload),
     );
-    const deferReplyMock = mock(
+    const deferReplyMock = vi.fn(
       (options: Parameters<ChatInputCommandInteraction["deferReply"]>[0]) =>
         Promise.resolve(options),
     );
-    const editReplyMock = mock(
+    const editReplyMock = vi.fn(
       (options: Parameters<ChatInputCommandInteraction["editReply"]>[0]) =>
         Promise.resolve(options),
     );

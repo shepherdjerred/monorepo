@@ -23,7 +23,7 @@ copy instead of hoisting them); they resolve via `paths` in each backend's
 `tsconfig.json`, which map `@shepherdjerred/discord-stream-lifecycle{,/*}` and
 `@shepherdjerred/discord-video-stream{,/*}` to the sibling source dirs. Bun
 honors tsconfig `paths` at runtime, and tsc/eslint honor them at check time
-(verified in oven/bun:1.3.14). The mapped source dirs need their own
+(verified in oven/bun:1.4.0). The mapped source dirs need their own
 `node_modules` for their runtime deps/peers — locally, `bun install` in each
 mapped source dir (they're `file:` producers; see the root AGENTS.md
 "Development Setup"); image builds run the same per-dep install as a step in each

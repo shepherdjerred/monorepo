@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { minimalPng, scoutIconDirectory } from "./migration-core.ts";
 
 test("emits a PNG signature", () => {

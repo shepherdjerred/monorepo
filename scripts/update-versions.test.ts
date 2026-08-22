@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -226,7 +226,7 @@ describe("version catalog integrity", () => {
     expect(management).toBeGreaterThan(entryStart);
     expect(value).toBeGreaterThan(management);
     validateStateAgainstVersions(state, parseVersionCatalogSource(rewritten));
-    expect(serializePinCandidatesState(state)).toEndWith("\n");
+    expect(serializePinCandidatesState(state).endsWith("\n")).toBe(true);
   });
 
   test("fails closed when state and versions drift", () => {

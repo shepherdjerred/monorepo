@@ -19,3 +19,4 @@ describe("commandToButtonMask", () => {
     expect(commandToButtonMask("r")).toBe(BUTTON.right);
   });
 });
+import { describe, expect, test } from "vitest";

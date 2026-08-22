@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   MIN_DRIFT_LOOKBACK_DAYS,
   proposeQueueWindowEdits,

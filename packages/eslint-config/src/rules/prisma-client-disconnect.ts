@@ -43,15 +43,15 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
     }[] = [];
     let hasAfterAllWithDisconnect = false;
     let lastLifecycleHook: TSESTree.Node | undefined;
-    let bunTestImport: TSESTree.ImportDeclaration | undefined;
+    let vitestImport: TSESTree.ImportDeclaration | undefined;
     let hasAfterAllImport = false;
 
     return {
-      // Track imports from "bun:test" and check if afterAll is imported
-      "ImportDeclaration[source.value='bun:test']"(
+      // Track Vitest imports and check if afterAll is imported.
+      "ImportDeclaration[source.value='vitest']"(
         node: TSESTree.ImportDeclaration,
       ) {
-        bunTestImport = node;
+        vitestImport = node;
         // Check if afterAll is already imported
         hasAfterAllImport = node.specifiers.some(
           (spec) =>
@@ -138,21 +138,18 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
                       const fixes: ReturnType<typeof fixer.replaceText>[] = [];
 
                       // Add afterAll to imports if missing
-                      if (!hasAfterAllImport && bunTestImport !== undefined) {
-                        // Find the closing brace of the import specifiers
-                        const importText = sourceCode.getText(bunTestImport);
-                        // Use more specific regex without overlapping quantifiers
-                        const importRegex = /^import\s*\{([^}]+)\}\s*from/;
-                        const importMatch = importRegex.exec(importText);
+                      if (!hasAfterAllImport && vitestImport !== undefined) {
+                        const importText = sourceCode.getText(vitestImport);
+                        const openBrace = importText.indexOf("{");
+                        const closeBrace = importText.indexOf("}", openBrace);
 
-                        if (importMatch !== null) {
-                          // Add afterAll to the import list
-                          const newImportText = importText.replace(
-                            /^(import\s*\{)([^}]+)(\}\s*from)/,
-                            "$1afterAll, $2$3",
-                          );
+                        if (openBrace !== -1 && closeBrace > openBrace) {
+                          const existingImports = importText
+                            .slice(openBrace + 1, closeBrace)
+                            .trim();
+                          const newImportText = `${importText.slice(0, openBrace + 1)} afterAll, ${existingImports} ${importText.slice(closeBrace)}`;
                           fixes.push(
-                            fixer.replaceText(bunTestImport, newImportText),
+                            fixer.replaceText(vitestImport, newImportText),
                           );
                         }
                       }

@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from "bun:test";
+import { describe, expect, it, vi } from "vitest";
 import {
   ScheduleNotFoundError,
   WorkflowExecutionAlreadyStartedError,
@@ -35,17 +35,19 @@ function fakeClient(
 ): Client {
   const client = Object.create(null);
   client.workflow = {
-    start: mock(async (workflowType: string, opts: Record<string, unknown>) => {
-      captured.startType = workflowType;
-      captured.startOpts = opts;
-      if (behavior.startError !== undefined) {
-        throw behavior.startError;
-      }
-      return {
-        workflowId: opts["workflowId"],
-        firstExecutionRunId: "run-1",
-      };
-    }),
+    start: vi.fn(
+      async (workflowType: string, opts: Record<string, unknown>) => {
+        captured.startType = workflowType;
+        captured.startOpts = opts;
+        if (behavior.startError !== undefined) {
+          throw behavior.startError;
+        }
+        return {
+          workflowId: opts["workflowId"],
+          firstExecutionRunId: "run-1",
+        };
+      },
+    ),
     getHandle: () => ({
       describe: async () => ({ runId: behavior.existingRunId ?? "run-1" }),
     }),
@@ -57,7 +59,7 @@ function fakeClient(
         throw new ScheduleNotFoundError("not found", "sched-id");
       },
     }),
-    create: mock(async (opts: Record<string, unknown>) => {
+    create: vi.fn(async (opts: Record<string, unknown>) => {
       captured.createOpts = opts;
       return { scheduleId: "sched-id" };
     }),

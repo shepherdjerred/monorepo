@@ -1,8 +1,8 @@
-import { expect, setDefaultTimeout, test } from "bun:test";
+import { expect, test, vi } from "vitest";
 import { matchToSvg, svgToPng } from "#src/html/index.tsx";
 import { rankedFixture } from "#src/html/shared/test-fixtures.ts";
 
-setDefaultTimeout(120_000);
+vi.setConfig({ testTimeout: 120_000 });
 
 test("ranked report renders CJK player names in SVG and PNG", async () => {
   const match = rankedFixture({

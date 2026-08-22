@@ -1,4 +1,4 @@
-// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Snapshot Tests should generate consistent output for basic types with comments 1`] = `
 "// Generated TypeScript types for basic Helm chart

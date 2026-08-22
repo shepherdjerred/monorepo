@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createAiProviderDashboard } from "./ai-provider-dashboard.ts";
 import { createBuildkiteDashboard } from "./buildkite-dashboard.ts";
 import { createBuildkitdDashboard } from "./buildkitd-dashboard.ts";

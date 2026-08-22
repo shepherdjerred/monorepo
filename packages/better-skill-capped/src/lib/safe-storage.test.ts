@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { StringStore } from "./safe-storage.ts";
 import { createSafeStorage } from "./safe-storage.ts";
 

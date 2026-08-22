@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, spyOn, test } from "bun:test";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   logs as logsAPI,
   type Logger as OtelLogger,
@@ -42,7 +42,7 @@ describe("logger OTLP emission", () => {
       },
     };
 
-    const warnSpy = spyOn(console, "warn").mockImplementation(() => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
       // silence the structured warn lines this test deliberately produces
     });
 
@@ -79,7 +79,7 @@ describe("logger OTLP emission", () => {
       },
     };
 
-    const warnSpy = spyOn(console, "warn").mockImplementation(() => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
       // silence structured warn output
     });
 

@@ -49,7 +49,7 @@ async function getInstance(): Promise<DuckDBInstance> {
   instancePromise ??= (async () => {
     const duckdb = await loadDuckDB();
     // Widened to unknown to survive partial test mocks of the configuration
-    // module (process-wide mock.module leakage — see trpc/auth-web.test.ts);
+    // module (a former process-wide Bun mock leaked here; see auth-web.test.ts);
     // real runs always have the env-var defaults.
     const configuredThreads: unknown = configuration.reportDuckDbThreads;
     const configuredMemory: unknown = configuration.reportDuckDbMemoryLimit;
@@ -83,24 +83,28 @@ export async function withDuckDBConnection<T>(
   const instance = await getInstance();
   const connection = await instance.connect();
 
-  let timedOut = false;
+  const timeoutState = { timedOut: false };
+  const hasTimedOut = () => timeoutState.timedOut;
   const timer = setTimeout(() => {
-    timedOut = true;
+    timeoutState.timedOut = true;
     connection.interrupt();
   }, timeoutMs);
 
   if (timeoutMs <= 0) {
-    timedOut = true;
+    timeoutState.timedOut = true;
     connection.interrupt();
   }
 
   const session: DuckDBSession = {
     run: async (sql, params) => {
+      if (hasTimedOut()) {
+        throw new ReportQueryTimeoutError(timeoutMs);
+      }
       try {
         const reader = await connection.runAndReadAll(sql, params);
         return reader.getRowObjects();
       } catch (error) {
-        if (timedOut) {
+        if (hasTimedOut()) {
           throw new ReportQueryTimeoutError(timeoutMs);
         }
         throw error;

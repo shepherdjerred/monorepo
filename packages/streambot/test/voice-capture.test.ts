@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 import { VoiceSessionTelemetry } from "@shepherdjerred/streambot/observability/voice-session.ts";
@@ -274,8 +274,8 @@ describe("voice capture manager", () => {
     if (audio === undefined || manifestObject === undefined) {
       throw new Error("Expected capture audio and manifest");
     }
-    expect(audio.key).toEndWith("/speaker.wav");
-    expect(manifestObject.key).toEndWith("/manifest.json");
+    expect(audio.key.endsWith("/speaker.wav")).toBe(true);
+    expect(manifestObject.key.endsWith("/manifest.json")).toBe(true);
     const parsed = VoiceCaptureManifestSchema.parse(
       JSON.parse(new TextDecoder().decode(manifestObject.body)),
     );

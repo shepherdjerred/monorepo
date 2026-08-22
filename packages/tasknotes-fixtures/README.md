@@ -88,7 +88,7 @@ truth is the Zod schema at
 
 ```bash
 cd packages/tasks-for-obsidian
-UPDATE_FIXTURE_SCHEMA=1 bun test src/data/sync/__tests__/fixtures.test.ts
+UPDATE_FIXTURE_SCHEMA=1 bun run test src/data/sync/__tests__/fixtures.test.ts
 ```
 
 ## Deliberate coverage gaps

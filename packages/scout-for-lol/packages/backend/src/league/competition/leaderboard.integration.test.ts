@@ -1,4 +1,4 @@
-import { describe, expect, test, afterAll, beforeEach } from "bun:test";
+import { describe, expect, test, afterAll, beforeEach } from "vitest";
 import { z } from "zod";
 import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
 import { createCompetition } from "#src/database/competition/queries.ts";
@@ -146,7 +146,7 @@ describe("calculateLeaderboard integration tests", () => {
     };
 
     // Should throw error for DRAFT competition
-    expect(calculateLeaderboard(prisma, competition)).rejects.toThrow(
+    await expect(calculateLeaderboard(prisma, competition)).rejects.toThrow(
       "Cannot calculate leaderboard for DRAFT",
     );
   });

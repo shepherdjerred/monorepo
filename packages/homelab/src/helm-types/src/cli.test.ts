@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { parse as yamlParse } from "yaml";
 import { toPascalCase } from "./cli.ts";
 import { HelmValueSchema, RecordSchema } from "./schemas.ts";

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   DRIVER_FEED_HEADER_BYTES,
   DRIVER_FEED_KEYFRAME_FLAG,

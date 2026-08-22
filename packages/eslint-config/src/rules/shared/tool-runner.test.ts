@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { resolve } from "node:path";
 import { parseKnipOutput } from "./tool-runner.ts";
 

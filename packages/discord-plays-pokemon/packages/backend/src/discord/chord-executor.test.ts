@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import path from "node:path";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import { effectiveChordDelay, execute } from "./chord-executor.ts";

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { GoalActivityLog } from "./goal-activity.ts";
 
 function call(path: string, at: number, status = 200) {

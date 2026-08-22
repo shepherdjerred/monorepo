@@ -2,6 +2,18 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
+    // The workflow-worker suite resolves the mise-pinned Node executable.
+    // Turbo's strict env mode otherwise drops the CI image's /opt/mise store
+    // location and makes an installed Node version appear to be missing.
+    "test": {
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "test:ci": {
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "test:report": {
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
     // Rehearse the scheduled PR-creating workflows' environment prep against a
     // copy of the repo tree (old CI: temporal-schedule-rehearsal). Drives the
     // SAME bot-clone.ts helpers the weekly activities run, so a break surfaces

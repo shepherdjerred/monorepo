@@ -1,9 +1,18 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
+import {
+  DEFAULT_REQUEST_GRACE_SECONDS,
+  DEFAULT_REQUEST_RETRY_SECONDS,
+  requestGraceSecondsForProvider,
+  reviewRequestScheduleBounds,
+  SLOWEST_COMPLETED_REVIEW_SECONDS,
+  validateReviewRequestSchedule,
+} from "./lib/review-gate-policy.ts";
 import {
   DEFAULT_TIMEOUT_SECONDS,
   parseMaxBlockingPriority,
   resolveReviewGateProvider,
 } from "./wait-for-review.ts";
+import { codexProvider, qodoProvider } from "@shepherdjerred/code-review";
 
 describe("resolveReviewGateProvider", () => {
   test("defaults direct invocations to Qodo", () => {
@@ -162,8 +171,65 @@ describe("review gate timeout budget", () => {
   test("does not regress below the slowest completed review", () => {
     // Both measured on PR #2152, on reviews that completed normally only after
     // the 1200s budget had already failed the gate.
-    const slowestCompleted = 1834;
-    expect(DEFAULT_TIMEOUT_SECONDS).toBeGreaterThan(slowestCompleted);
+    expect(DEFAULT_TIMEOUT_SECONDS).toBeGreaterThan(
+      SLOWEST_COMPLETED_REVIEW_SECONDS,
+    );
+  });
+
+  // The retry is only a retry if the gate is still alive to see its answer. A
+  // grace period and a retry interval tuned in isolation produced exactly that
+  // bug: the second request landed 31 minutes in, against a 40-minute deadline,
+  // leaving nine minutes for a review that routinely needs thirty.
+  test("leaves the slowest completed review time to finish after the last request", () => {
+    const bounds = reviewRequestScheduleBounds({
+      graceSeconds: DEFAULT_REQUEST_GRACE_SECONDS,
+      retryAfterSeconds: DEFAULT_REQUEST_RETRY_SECONDS,
+    });
+    expect(DEFAULT_TIMEOUT_SECONDS).toBeGreaterThanOrEqual(
+      bounds.minimumGateTimeoutSeconds,
+    );
+  });
+
+  test("applies the first-review grace only to push-triggered providers", () => {
+    // Qodo starts on every push via `.pr_agent.toml`; Codex only starts when the
+    // pull request opens, so a new head needs an immediate explicit request.
+    expect(DEFAULT_REQUEST_GRACE_SECONDS).toBeGreaterThan(0);
+    expect(
+      requestGraceSecondsForProvider(
+        qodoProvider,
+        DEFAULT_REQUEST_GRACE_SECONDS,
+      ),
+    ).toBe(DEFAULT_REQUEST_GRACE_SECONDS);
+    expect(
+      requestGraceSecondsForProvider(
+        codexProvider,
+        DEFAULT_REQUEST_GRACE_SECONDS,
+      ),
+    ).toBe(0);
+    expect(
+      reviewRequestScheduleBounds({
+        graceSeconds: DEFAULT_REQUEST_GRACE_SECONDS,
+        retryAfterSeconds: DEFAULT_REQUEST_RETRY_SECONDS,
+      }).lastRequestAtSeconds,
+    ).toBe(DEFAULT_REQUEST_GRACE_SECONDS + DEFAULT_REQUEST_RETRY_SECONDS);
+  });
+
+  test("rejects timing overrides that cut off the retry budget", () => {
+    expect(() =>
+      validateReviewRequestSchedule({
+        graceSeconds: 600,
+        retryAfterSeconds: 3000,
+        timeoutSeconds: 3600,
+      }),
+    ).toThrow("requires at least 5434s");
+    expect(() =>
+      validateReviewRequestSchedule({
+        graceSeconds: 0,
+        retryAfterSeconds: DEFAULT_REQUEST_RETRY_SECONDS,
+        timeoutSeconds:
+          DEFAULT_REQUEST_RETRY_SECONDS + SLOWEST_COMPLETED_REVIEW_SECONDS,
+      }),
+    ).not.toThrow();
   });
 });
 

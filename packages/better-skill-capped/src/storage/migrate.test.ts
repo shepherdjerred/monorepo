@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { StringStore } from "#src/lib/safe-storage";
 import { migrateStorage } from "./migrate.ts";
 import { parseStoredBookmarks, parseStoredWatchStatuses } from "./schemas.ts";

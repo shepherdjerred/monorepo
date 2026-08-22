@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -6,6 +6,8 @@ import { Testing } from "cdk8s";
 import { stringify } from "yaml";
 import { z } from "zod";
 import { ARGO_APPLICATION_HEALTH_LUA, createArgoCdApp } from "./argocd.ts";
+
+vi.setConfig({ testTimeout: 15_000 });
 
 const ApplicationSchema = z
   .object({

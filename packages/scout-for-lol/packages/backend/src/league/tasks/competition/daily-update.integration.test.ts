@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test, mock } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   createCompetition,
   type CreateCompetitionInput,
@@ -47,7 +47,7 @@ class ChannelSendError extends Error {
 }
 
 // Mock the channel send function
-void mock.module("../../discord/channel.js", () => ({
+vi.doMock("../../discord/channel.js", () => ({
   send: (message: string | Record<string, unknown>, channelId: string) => {
     sentMessages.push({ channelId, content: message });
     return Promise.resolve({ id: "mock-message-id" });
@@ -56,7 +56,7 @@ void mock.module("../../discord/channel.js", () => ({
 }));
 
 // Mock the S3 query module to avoid AWS configuration issues in tests
-void mock.module("../../../storage/s3-query.js", () => ({
+vi.doMock("../../../storage/s3-query.js", () => ({
   queryMatchesByDateRange: async () => {
     // Return empty array - tests are focused on posting logic, not match data
     return [];
@@ -64,7 +64,7 @@ void mock.module("../../../storage/s3-query.js", () => ({
 }));
 
 // Mock the S3 leaderboard save function to avoid AWS configuration issues in tests
-void mock.module("../../../storage/s3-leaderboard.js", () => ({
+vi.doMock("../../../storage/s3-leaderboard.js", () => ({
   loadHistoricalLeaderboardSnapshots: async () => [],
   saveCachedLeaderboard: async () => {
     // No-op - tests are focused on posting logic, not S3 caching
@@ -76,7 +76,7 @@ void mock.module("../../../storage/s3-leaderboard.js", () => ({
 const { prisma: testPrisma } = createTestDatabase("daily-update-test");
 
 // Mock the prisma instance used by daily-update
-void mock.module("../../../database/index.js", () => ({
+vi.doMock("../../../database/index.js", () => ({
   prisma: testPrisma,
 }));
 

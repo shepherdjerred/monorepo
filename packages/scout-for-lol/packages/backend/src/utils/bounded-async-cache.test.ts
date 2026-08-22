@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createBoundedAsyncCache } from "#src/utils/bounded-async-cache.ts";
 
 describe("createBoundedAsyncCache", () => {

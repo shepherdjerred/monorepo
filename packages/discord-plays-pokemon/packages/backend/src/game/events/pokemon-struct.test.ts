@@ -182,3 +182,4 @@ describe("parsePartyMon", () => {
 
 // Export the encoder so other tests (snapshot) can build party data.
 export { buildMon };
+import { describe, expect, test } from "vitest";

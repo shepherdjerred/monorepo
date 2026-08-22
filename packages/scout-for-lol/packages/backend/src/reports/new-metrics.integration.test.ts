@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";

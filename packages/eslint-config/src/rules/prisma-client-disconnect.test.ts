@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { afterAll, describe, it } from "bun:test";
+import { afterAll, describe, it } from "vitest";
 import { prismaClientDisconnect } from "./prisma-client-disconnect.ts";
 
 RuleTester.afterAll = afterAll;
@@ -18,7 +18,7 @@ ruleTester.run("prisma-client-disconnect", prismaClientDisconnect, {
   valid: [
     {
       code: `
-        import { afterAll } from "bun:test";
+        import { afterAll } from "vitest";
         const prisma = new PrismaClient();
         afterAll(async () => {
           await prisma.$disconnect();
@@ -34,7 +34,7 @@ ruleTester.run("prisma-client-disconnect", prismaClientDisconnect, {
     },
     {
       code: `
-        import { test } from "bun:test";
+        import { test } from "vitest";
         test("something", () => {});
       `,
       filename: "/test/integration.integration.test.ts",
@@ -43,12 +43,12 @@ ruleTester.run("prisma-client-disconnect", prismaClientDisconnect, {
   invalid: [
     {
       code: `
-        import { test } from "bun:test";
+        import { test } from "vitest";
         const prisma = new PrismaClient();
         test("something", () => {});
       `,
       output: `
-        import {afterAll,  test } from "bun:test";
+        import { afterAll, test } from "vitest";
         const prisma = new PrismaClient();
 afterAll(async () => {
   await prisma.$disconnect();
@@ -61,12 +61,12 @@ afterAll(async () => {
     },
     {
       code: `
-        import { test } from "bun:test";
+        import { test } from "vitest";
         const prisma1 = new PrismaClient();
         const prisma2 = new PrismaClient();
       `,
       output: `
-        import {afterAll,  test } from "bun:test";
+        import { afterAll, test } from "vitest";
         const prisma1 = new PrismaClient();
 afterAll(async () => {
   await prisma1.$disconnect();

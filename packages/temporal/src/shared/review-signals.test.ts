@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   emptyFindingCounts,
   REVIEW_SIGNAL_SCHEMA,
@@ -28,6 +28,7 @@ function makeEvent(
     timed_out: false,
     stale_reaction: false,
     decision: null,
+    request_attempts: null,
     parser_commit: null,
     ...overrides,
   };

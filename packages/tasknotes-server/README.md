@@ -25,7 +25,7 @@ One surface, envelope responses (`{ success, data, error? }`):
 bun run dev           # Dev mode with reload
 bun run start         # Run directly
 bun run build         # Compile to a single binary (dist/tasknotes-server)
-bun test              # Tests
+bun run test              # Tests
 bun run typecheck     # tsc --noEmit
 bun run lint          # ESLint (zero warnings)
 bun run docker:build  # Build the Docker image (pushed to GHCR by CI)

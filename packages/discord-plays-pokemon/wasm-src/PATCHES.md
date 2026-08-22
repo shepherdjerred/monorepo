@@ -91,6 +91,6 @@ Dockerfile copy). To do it by hand:
    regenerating the committed species/map data tables from the new pin —
    commit those alongside the pin bump.
 3. Run the verification tests (or let the image build / Renovate PR run them):
-   `cd packages/backend && bun test src/emulator/emulator-symbols.integration.test.ts src/emulator/audio/audio-fingerprint.test.ts`.
+   `cd packages/backend && bun run test src/emulator/emulator-symbols.integration.test.ts src/emulator/audio/audio-fingerprint.test.ts`.
 4. If the audio intentionally changed, regenerate the baseline with
    `bun run scripts/audio-e2e.ts --update-baseline` and commit the WAV.

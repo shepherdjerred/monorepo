@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { createEvalStore } from "#server/store.ts";
 import { appRouter } from "#server/trpc.ts";

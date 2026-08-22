@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   ciImagePromotionFiles,
   classifyCiImageRuntimePromotion,
@@ -276,7 +276,7 @@ describe("CI image runtime promotion", () => {
 describe("Playwright candidate promotion", () => {
   const futureVersion = "1.63.0";
   const futureDockerfile = [
-    "FROM oven/bun:1.3.14@sha256:" + "a".repeat(64) + " AS bun",
+    "FROM oven/bun:1.4.0@sha256:" + "a".repeat(64) + " AS bun",
     "",
     "# renovate: datasource=docker depName=mcr.microsoft.com/playwright",
     `FROM mcr.microsoft.com/playwright:v${futureVersion}-noble@sha256:${"b".repeat(64)}`,

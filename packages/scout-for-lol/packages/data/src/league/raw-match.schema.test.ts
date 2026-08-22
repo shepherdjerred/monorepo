@@ -5,7 +5,7 @@
  * Test data files contain real match data from the Riot Games API.
  */
 
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { RawMatchSchema, type RawMatch } from "#src/league/raw-match.schema.ts";
 
 // Use Bun's path joining to find test data files relative to this test file
@@ -47,7 +47,7 @@ describe("RawMatch Schema Validation", () => {
         // Verify basic structure
         expect(result.data.metadata).toBeDefined();
         expect(result.data.info).toBeDefined();
-        expect(result.data.info.participants).toBeArray();
+        expect(Array.isArray(result.data.info.participants)).toBe(true);
         expect(result.data.info.participants.length).toBeGreaterThan(0);
 
         // Verify first participant has challenges
@@ -69,8 +69,8 @@ describe("RawMatch Schema Validation", () => {
       expect(firstParticipant.bountyLevel).toBeUndefined(); // Missing in real API
 
       // Fields that ARE present in real API
-      expect(firstParticipant.assists).toBeNumber();
-      expect(firstParticipant.basicPings).toBeNumber();
+      expect(typeof firstParticipant.assists).toBe("number");
+      expect(typeof firstParticipant.basicPings).toBe("number");
       expect(firstParticipant.challenges).toBeDefined();
     }
 
@@ -92,9 +92,9 @@ describe("RawMatch Schema Validation", () => {
     }
 
     // Fields that ARE present in real API
-    expect(challenges.abilityUses).toBeNumber();
-    expect(challenges.goldPerMinute).toBeNumber();
-    expect(challenges.kda).toBeNumber();
+    expect(typeof challenges.abilityUses).toBe("number");
+    expect(typeof challenges.goldPerMinute).toBe("number");
+    expect(typeof challenges.kda).toBe("number");
 
     // Fields that are MISSING in real API Arena matches (should be optional)
     // These fields are not consistently present across all participants:

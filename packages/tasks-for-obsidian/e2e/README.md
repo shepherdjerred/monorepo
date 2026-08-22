@@ -86,7 +86,7 @@ completed-task recovery.
 - Seed fixtures use fixed dates: "Water plants" is intentionally overdue so it
   always appears on the Today tab; "Seeded open task" is due in the future so
   it lives on the Inbox tab.
-- The device-backed flows in this directory are excluded from `bun test` and
+- The device-backed flows in this directory are excluded from `bun run test` and
   from the app's `tsc` project; the deterministic
   `e2e/simulator-date.test.ts` helper test is included in `bun run test`.
   E2E files are linted via ESLint's `allowDefaultProject`.

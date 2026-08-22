@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   createCompetition,
   type CreateCompetitionInput,
@@ -33,7 +33,7 @@ class ChannelSendError extends Error {
   }
 }
 
-void mock.module("../../discord/channel.js", () => ({
+vi.doMock("../../discord/channel.js", () => ({
   send: (message: string, channelId: string) => {
     if (sendShouldFail) {
       return Promise.reject(new Error("temporary discord failure"));

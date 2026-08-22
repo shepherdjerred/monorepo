@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   BUCKS_RECONCILIATION_CRON,
   BUCKS_RECONCILIATION_TRANSACTION_TIMEOUT_MS,

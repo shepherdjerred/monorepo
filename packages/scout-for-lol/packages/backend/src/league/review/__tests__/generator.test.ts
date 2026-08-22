@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, mock, test } from "bun:test";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   MatchIdSchema,
   RawMatchSchema,
@@ -22,16 +22,16 @@ let textClient: TextGenerationClient | undefined;
 let imageClient: unknown;
 const capturedExceptionInputs: unknown[] = [];
 const savedPipelineArtifacts: string[] = [];
-const captureException = mock((error: unknown) => {
+const captureException = vi.fn((error: unknown) => {
   capturedExceptionInputs.push(error);
 });
 
-void mock.module("../ai-clients.ts", () => ({
+vi.doMock("../ai-clients.ts", () => ({
   getTextGenerationClient: () => textClient,
   getImageGenerationClient: () => imageClient,
 }));
 
-void mock.module("#src/storage/pipeline-s3.ts", () => ({
+vi.doMock("#src/storage/pipeline-s3.ts", () => ({
   savePipelineTracesToS3: async () => {
     savedPipelineArtifacts.push("traces");
   },
@@ -40,13 +40,13 @@ void mock.module("#src/storage/pipeline-s3.ts", () => ({
   },
 }));
 
-void mock.module("@sentry/bun", () => ({
+vi.doMock("@sentry/bun", () => ({
   captureException,
 }));
 
 // Player history is DB-backed and fail-fast in production; this unit test isn't
 // about the DB, so stub it to an empty (no-history) result.
-void mock.module("../player-history.ts", () => ({
+vi.doMock("../player-history.ts", () => ({
   buildPlayerHistoryContext: async () => ({ text: "", poolChampions: [] }),
 }));
 

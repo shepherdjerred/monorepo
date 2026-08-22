@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { AgentExecutionResult } from "@shepherdjerred/birmel/agent-runtime/specialists.ts";
 import {
   executeIsolatedAgentJob,
@@ -160,7 +160,7 @@ describe("isolated scheduled agent", () => {
 
     await executeIsolatedAgentJob("finish this later", execution, dependencies);
 
-    expect(observedContext.startsWith(`${summary}\n\n`)).toBeTrue();
+    expect(observedContext.startsWith(`${summary}\n\n`)).toBe(true);
     expect(observedContext).toContain("2 assistant:");
     expect(observedContext).not.toContain("1 user:");
     expect(observedContext.length).toBeLessThanOrEqual(20_000);

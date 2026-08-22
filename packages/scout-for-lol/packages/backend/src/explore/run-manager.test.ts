@@ -5,7 +5,7 @@ import {
   describe,
   expect,
   test,
-} from "bun:test";
+} from "vitest";
 import {
   DiscordAccountIdSchema,
   EXPLORE_ANSWER_MAX_LENGTH,
@@ -235,7 +235,7 @@ describe("ExploreRunManager", () => {
     const second = await startNew(manager, "Question B");
 
     expect(manager.list(owner)).toHaveLength(2);
-    expect(
+    await expect(
       manager.start(
         { userId: owner },
         {
@@ -550,7 +550,7 @@ describe("ExploreRunManager lifecycle", () => {
 
     await manager.shutdown();
 
-    expect(startNew(manager, "Too late")).rejects.toBeInstanceOf(
+    await expect(startNew(manager, "Too late")).rejects.toBeInstanceOf(
       ExploreRunUnavailableError,
     );
     expect(manager.list(owner)).toEqual([]);

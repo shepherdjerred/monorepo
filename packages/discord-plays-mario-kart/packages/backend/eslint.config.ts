@@ -4,7 +4,7 @@ const config = [
     tsconfigRootDir: import.meta.dirname,
     // New leaderboard/overlay tests are part of the tsconfig project (typed by
     // projectService directly). The pre-existing tests stay excluded from the
-    // tsconfig (some use bun:test globals without importing, or hit prom-client
+    // tsconfig (some historically used test globals without importing, or hit prom-client
     // typing quirks) and are linted via the default project — kept at the
     // 8-file cap.
     projectService: {

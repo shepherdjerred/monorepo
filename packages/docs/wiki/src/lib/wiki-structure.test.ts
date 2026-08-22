@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import nodePath from "node:path";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 const DOCS_ROOT = new URL("../content/docs/", import.meta.url).pathname;
 

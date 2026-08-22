@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { replaceGrafanaVariables } from "./grafana-variable-substitution.ts";
 
 describe("Grafana query-audit variable substitution", () => {

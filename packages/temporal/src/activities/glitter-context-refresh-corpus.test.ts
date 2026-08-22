@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { sha256 } from "#shared/glitter-corpus-projection.ts";
 import {
   loadVerifiedGlitterCorpusWithReader,

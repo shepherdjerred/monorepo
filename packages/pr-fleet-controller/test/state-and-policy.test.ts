@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
 import { busyStackIds } from "@shepherdjerred/pr-fleet-controller/src/controller-dispatch.ts";
 import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { z } from "zod";
 // Types from @scout-for-lol/data are used by TypeScript for type checking
 import { participantToArenaChampion } from "#src/league/model/champion.ts";

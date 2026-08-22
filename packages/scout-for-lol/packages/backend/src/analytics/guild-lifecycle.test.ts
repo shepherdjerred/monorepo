@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   testGuildId,
   testAccountId,
@@ -21,8 +21,8 @@ const { prisma } = createTestDatabase("guild-lifecycle-analytics-test");
 const SERVER_ID = testGuildId("780");
 
 function createAnalyticsFixture() {
-  const capture = mock<ProductAnalytics["capture"]>(() => null);
-  const shutdown = mock<ProductAnalytics["shutdown"]>(() => Promise.resolve());
+  const capture = vi.fn<ProductAnalytics["capture"]>(() => null);
+  const shutdown = vi.fn<ProductAnalytics["shutdown"]>(() => Promise.resolve());
   return { analytics: { capture, shutdown }, capture, shutdown };
 }
 
@@ -380,10 +380,10 @@ describe("guild removal", () => {
 
   test("stamps removedAt even when the best-effort classification fails", async () => {
     await seedInstall();
-    const capture = mock<ProductAnalytics["capture"]>(() => {
+    const capture = vi.fn<ProductAnalytics["capture"]>(() => {
       throw new Error("capture boom");
     });
-    const shutdown = mock<ProductAnalytics["shutdown"]>(() =>
+    const shutdown = vi.fn<ProductAnalytics["shutdown"]>(() =>
       Promise.resolve(),
     );
     const removedAt = new Date("2026-08-10T00:00:00Z");

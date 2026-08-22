@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { createTempoForwarder } from "#src/forwarder.ts";
 
 const ERROR_BODY_LIMIT = 2000;

@@ -1,4 +1,4 @@
-import { describe, expect, setDefaultTimeout, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import { Database } from "bun:sqlite";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -17,7 +17,7 @@ const BASELINE_SQL = await Bun.file(BASELINE_MIGRATION_URL).text();
 const RUNTIME_SQL = await Bun.file(RUNTIME_MIGRATION_URL).text();
 const RECOVERY_REASON =
   "Legacy execution was interrupted with an unknown effect outcome";
-setDefaultTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000 });
 
 type CountRow = { count: number };
 type MigratedJobRow = {

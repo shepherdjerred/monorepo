@@ -8,7 +8,7 @@
  * is meant to work with no session at all.
  */
 
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,

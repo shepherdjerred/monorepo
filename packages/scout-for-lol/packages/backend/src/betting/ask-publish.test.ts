@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import type { APIEmbed } from "discord.js";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
 import { formatBucksAskPublishCustomId } from "#src/betting/ask-custom-id.ts";
@@ -196,28 +196,28 @@ function fakeInteraction(
       author: { id: options.authorId ?? BOT_ID },
       embeds: [{ toJSON: () => EMBED }],
     },
-    deferUpdate: mock(() => {
+    deferUpdate: vi.fn(() => {
       calls.push("deferUpdate");
       return Promise.resolve(undefined);
     }),
-    reply: mock((reply) => {
+    reply: vi.fn((reply) => {
       calls.push("reply");
       replies.push(reply);
       return Promise.resolve(undefined);
     }),
-    editReply: mock(async (edit) => {
+    editReply: vi.fn(async (edit) => {
       calls.push("editReply");
       edits.push(edit);
       return options.editReply === undefined
         ? await Promise.resolve(undefined)
         : await options.editReply(edit);
     }),
-    followUp: mock((reply) => {
+    followUp: vi.fn((reply) => {
       calls.push("followUp");
       replies.push(reply);
       return Promise.resolve(undefined);
     }),
-    sendPublic: mock(async (message) => {
+    sendPublic: vi.fn(async (message) => {
       calls.push("sendPublic");
       const result =
         sendPublic === undefined

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { isProviderAuthor } from "../identity.ts";
 import type { ReviewThread } from "../types.ts";
 import {
@@ -45,9 +45,7 @@ describe("qodoProvider", () => {
       inProgress: { marker: "<h3>New Review Started</h3>" },
       parseFindings: parseQodoIssueComment,
     });
-    expect(qodoProvider.requestReview?.buildComment("marker")).toBe(
-      "/review\n\nmarker",
-    );
+    expect(qodoProvider.requestReview?.command).toBe("/agentic_review");
   });
 
   test("recognizes every Qodo app login without admitting look-alikes", () => {
@@ -82,6 +80,7 @@ describe("qodoProvider", () => {
         priority: 1,
         threadId: null,
         commentId: 1,
+        raisedInReview: null,
       },
       {
         authorLogin: "qodo-code-review",
@@ -94,6 +93,7 @@ describe("qodoProvider", () => {
         priority: 2,
         threadId: null,
         commentId: 1,
+        raisedInReview: null,
       },
       {
         authorLogin: "qodo-code-review",
@@ -106,6 +106,7 @@ describe("qodoProvider", () => {
         priority: 2,
         threadId: null,
         commentId: 1,
+        raisedInReview: null,
       },
     ]);
   });
@@ -480,6 +481,7 @@ describe("qodo re-review copies", () => {
         priority: 1,
         threadId: null,
         commentId: 1,
+        raisedInReview: null,
       },
       {
         authorLogin: "qodo-code-review",
@@ -492,6 +494,7 @@ describe("qodo re-review copies", () => {
         priority: 1,
         threadId: null,
         commentId: 1,
+        raisedInReview: null,
       },
     ]);
   });
@@ -576,6 +579,7 @@ Older unresolved wording retained for review history.
         priority: 2,
         threadId: null,
         commentId: 1,
+        raisedInReview: null,
       },
     ]);
   });

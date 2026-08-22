@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { ControllerTelemetry } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
 import { settleWorkerFailure } from "@shepherdjerred/pr-fleet-controller/src/controller-worker-settlement.ts";
 import { WorktreeHeadChangedError } from "@shepherdjerred/pr-fleet-controller/src/inherited-wip.ts";

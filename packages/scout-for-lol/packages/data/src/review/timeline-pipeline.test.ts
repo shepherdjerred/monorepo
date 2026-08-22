@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 
 import { RawMatchSchema, type RawMatch } from "#src/league/raw-match.schema.ts";
 import {
@@ -107,7 +107,7 @@ describe("runTimelineSummaryWithChunks", () => {
     const { client, calls, getMaxConcurrentRequests } =
       buildConcurrencyCheckingClient();
     const reportedStages: PipelineStageName[] = [];
-    const reportProgress = mock((stage: PipelineStageName) => {
+    const reportProgress = vi.fn((stage: PipelineStageName) => {
       reportedStages.push(stage);
     });
 

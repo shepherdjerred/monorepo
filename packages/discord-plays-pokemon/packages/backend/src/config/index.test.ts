@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { getConfig } from "./index.ts";
 
 describe("config", () => {

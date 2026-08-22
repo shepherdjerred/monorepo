@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
 

@@ -1,4 +1,4 @@
-import { test, expect, afterEach } from "bun:test";
+import { test, expect, afterEach } from "vitest";
 import { z } from "zod";
 import { redactSecrets, redactText } from "#src/redact.ts";
 

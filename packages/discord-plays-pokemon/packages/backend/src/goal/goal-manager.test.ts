@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import path from "node:path";
 import type { Config } from "#src/config/schema.ts";
 import { DISCORD_MESSAGE_LIMIT } from "./discord-message.ts";

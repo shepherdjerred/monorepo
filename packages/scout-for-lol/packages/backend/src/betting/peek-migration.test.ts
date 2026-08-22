@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { Database } from "bun:sqlite";
 import { z } from "zod";
 

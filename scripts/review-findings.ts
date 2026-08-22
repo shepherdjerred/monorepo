@@ -22,6 +22,7 @@
  *     --thread PRRT_kwDO… --reason "fixed in e4ec2f6db"
  */
 import {
+  blockingPolicyForThreshold,
   isBlocking,
   markQodoFindingResolved,
   resolveProvider,
@@ -218,7 +219,11 @@ async function listCommand(
 ): Promise<void> {
   const { head, threads } = await loadThreads(repo, prNumber, token, provider);
   const blocking = threads.filter((thread) =>
-    isBlocking(thread, provider, MAX_BLOCKING_PRIORITY),
+    isBlocking(
+      thread,
+      provider,
+      blockingPolicyForThreshold(MAX_BLOCKING_PRIORITY),
+    ),
   );
   console.log(
     `${provider.displayName} on ${repo}#${String(prNumber)} @ ${head.slice(0, 9)}`,

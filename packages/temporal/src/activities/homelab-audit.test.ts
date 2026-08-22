@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "vitest";
 import { classifyHomelabAuditPreflight } from "./homelab-audit-preflight.ts";
 import { homelabAuditActivities } from "./homelab-audit.ts";
 

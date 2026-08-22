@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import type {
   SpecialistId,
@@ -16,7 +16,7 @@ const defaultResult = {
   toolEvents: [],
 };
 
-void mock.module("@shepherdjerred/birmel/agent-runtime/specialists.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/agent-runtime/specialists.ts", () => ({
   executeDirect: async () => defaultResult,
   executeSpecialist: async () => defaultResult,
   executeIsolatedAutomationAgent: async () => defaultResult,

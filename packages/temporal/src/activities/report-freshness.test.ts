@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { reportFreshnessState } from "#observability/metrics-report.ts";
 import {
   evaluateFreshness,

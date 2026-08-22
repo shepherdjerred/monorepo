@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { groupByMonth, matchBiltTransactions } from "./matcher.ts";
 import type { ConserviceCharge, ConserviceMonthSummary } from "./types.ts";
 import type { MonarchTransaction } from "../monarch/types.ts";

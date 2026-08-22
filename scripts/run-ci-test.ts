@@ -14,7 +14,6 @@ import {
 
 const repositoryRoot = path.resolve(import.meta.dir, "..");
 const coverageEnabled = Bun.env["CI_TEST_COVERAGE"] === "1";
-const bunLcovReporter = "--coverage-reporter=lcov";
 if (process.argv.slice(2).length > 0) {
   throw new Error(`Unknown arguments: ${process.argv.slice(2).join(", ")}`);
 }
@@ -47,6 +46,34 @@ await Bun.$`mkdir -p ${outputDirectory}`;
 const environment = { ...Bun.env };
 applyDefaultEnvironment(environment, workspace.defaultEnv ?? {});
 let cachedDotnetExecutable: string | undefined;
+let cachedNodeExecutable: string | undefined;
+
+async function pinnedNodeExecutable(): Promise<string> {
+  if (cachedNodeExecutable !== undefined) {
+    return cachedNodeExecutable;
+  }
+  const result = Bun.spawnSync(["mise", "where", "node"], {
+    cwd: repositoryRoot,
+    stdout: "pipe",
+    stderr: "inherit",
+  });
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `mise where node exited with status ${String(result.exitCode)}; run mise install.`,
+    );
+  }
+  const nodeRoot = new TextDecoder().decode(result.stdout).trim();
+  const executable = path.join(
+    nodeRoot,
+    "bin",
+    process.platform === "win32" ? "node.exe" : "node",
+  );
+  if (!(await Bun.file(executable).exists())) {
+    throw new Error(`mise resolved a Node installation without ${executable}.`);
+  }
+  cachedNodeExecutable = executable;
+  return executable;
+}
 
 async function pinnedDotnetExecutable(): Promise<string> {
   if (cachedDotnetExecutable !== undefined) {
@@ -101,7 +128,7 @@ function vitestCoverageArguments(rawCoverageDirectory: string): string[] {
     ? [
         "--coverage",
         "--coverage.provider=istanbul",
-        "--coverage.reporter=lcov",
+        "--coverage.reporter=lcovonly",
         `--coverage.reportsDirectory=${rawCoverageDirectory}`,
       ]
     : [];
@@ -113,38 +140,36 @@ async function commandForStep(
   rawCoverageDirectory: string,
 ): Promise<string[]> {
   switch (step.runner) {
-    case "bun":
-      return [
-        "bun",
-        ...(step.bunArgs ?? []),
-        "test",
-        ...(coverageEnabled && step.coverageConfig !== undefined
-          ? [`--config=${step.coverageConfig}`]
-          : []),
-        "--reporter=junit",
-        `--reporter-outfile=${reportPath}`,
-        ...(coverageEnabled
-          ? [
-              "--coverage",
-              bunLcovReporter,
-              `--coverage-dir=${rawCoverageDirectory}`,
-            ]
-          : []),
-        ...(step.args ?? []),
-      ];
     case "vitest":
-      return [
-        "bun",
-        "x",
-        "--no-install",
-        "vitest",
-        "run",
-        ...step.args,
-        "--reporter=default",
-        "--reporter=junit",
-        `--outputFile=${reportPath}`,
-        ...vitestCoverageArguments(rawCoverageDirectory),
-      ];
+      return step.runtime === "node"
+        ? [
+            await pinnedNodeExecutable(),
+            ...(step.runtimeArgs ?? []),
+            path.join(process.cwd(), "node_modules", "vitest", "vitest.mjs"),
+            "--config",
+            path.join(repositoryRoot, "vitest.config.ts"),
+            "run",
+            ...(step.args ?? []),
+            "--reporter=default",
+            "--reporter=junit",
+            `--outputFile=${reportPath}`,
+            ...vitestCoverageArguments(rawCoverageDirectory),
+          ]
+        : [
+            "bun",
+            ...(step.runtimeArgs ?? []),
+            "--no-install",
+            "--bun",
+            "vitest",
+            "--config",
+            path.join(repositoryRoot, "vitest.config.ts"),
+            "run",
+            ...(step.args ?? []),
+            "--reporter=default",
+            "--reporter=junit",
+            `--outputFile=${reportPath}`,
+            ...vitestCoverageArguments(rawCoverageDirectory),
+          ];
     case "go":
       return [
         "go",
@@ -196,12 +221,6 @@ function expectedCoveragePath(
     : path.join(rawCoverageDirectory, artifactFilename);
 }
 
-function fallbackBunCoveragePath(step: TestStep): string | undefined {
-  return coverageEnabled && step.runner === "bun"
-    ? path.join(process.cwd(), "coverage", "lcov.info")
-    : undefined;
-}
-
 for (const [index, step] of workspace.steps.entries()) {
   const name = testStepReportName(step, index);
   const reportPath = path.resolve(outputDirectory, `${name}.xml`);
@@ -212,13 +231,6 @@ for (const [index, step] of workspace.steps.entries()) {
     expectedCoveragePath(step, rawCoverageDirectory) !== undefined
   ) {
     await Bun.$`mkdir -p ${rawCoverageDirectory}`;
-  }
-  const fallbackCoveragePath = fallbackBunCoveragePath(step);
-  if (
-    fallbackCoveragePath !== undefined &&
-    (await Bun.file(fallbackCoveragePath).exists())
-  ) {
-    await Bun.file(fallbackCoveragePath).delete();
   }
   const startedAt = performance.now();
   const command = await commandForStep(step, reportPath, rawCoverageDirectory);
@@ -302,15 +314,6 @@ for (const [index, step] of workspace.steps.entries()) {
   }
 
   const coveragePath = expectedCoveragePath(step, rawCoverageDirectory);
-  if (
-    coveragePath !== undefined &&
-    fallbackCoveragePath !== undefined &&
-    !(await Bun.file(coveragePath).exists()) &&
-    (await Bun.file(fallbackCoveragePath).exists())
-  ) {
-    await Bun.write(coveragePath, Bun.file(fallbackCoveragePath));
-  }
-
   if (exitCode !== 0) {
     if (reportingError !== undefined) {
       console.error(

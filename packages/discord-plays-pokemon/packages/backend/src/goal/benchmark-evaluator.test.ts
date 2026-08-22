@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import type { ParsedPartyMon } from "#src/game/events/pokemon-struct.ts";
 import { BenchmarkWorkerResultSchema } from "./benchmark-harness.ts";

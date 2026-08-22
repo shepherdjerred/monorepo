@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { shouldAnnounceBucks } from "#src/league/tasks/postmatch/match-history-polling.ts";
 
 describe("shouldAnnounceBucks", () => {

@@ -1,5 +1,5 @@
 import { summoner } from "@scout-for-lol/data/data-dragon/summoner.ts";
-import { test, expect } from "bun:test";
+import { test, expect } from "vitest";
 
 test("should be able to get champion data", () => {
   expect(summoner).toMatchSnapshot();

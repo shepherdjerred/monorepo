@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { PassThrough } from "node:stream";
 import { waitForCalibrationVideoDrain } from "./e2e-stream-latency.ts";
 

@@ -64,17 +64,20 @@
     "check-patched-deps": "bun scripts/check-patched-deps.ts",
     "check-ci-env": "bun scripts/check-ci-env.ts",
     "check-script-migrations": "bun scripts/check-script-migrations.ts",
+    "check-test-standardization": "bun scripts/check-test-standardization.ts",
     "script-coverage": "bun scripts/check-script-coverage.ts"
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.0",
+    "@vitest/coverage-istanbul": "4.1.9",
     "jscpd": "5.0.14",
     "knip": "6.29.0",
     "lefthook": "^2.1.10",
     "markdownlint-cli2": "^0.23.0",
     "prettier": "^3.8.3",
     "prettier-plugin-astro": "^0.14.1",
-    "turbo": "2.10.7"
+    "turbo": "2.10.7",
+    "vitest": "4.1.9"
   },
   "workspaces": [
     "packages/alert-dashboard",
@@ -200,7 +203,7 @@
     "@react-native/metro-babel-transformer@0.86.2": "patches/@react-native%2Fmetro-babel-transformer@0.86.2.patch",
     "@astrojs/starlight@0.41.5": "patches/@astrojs%2Fstarlight@0.41.5.patch",
     "astro@7.1.5": "patches/astro@7.1.5.patch",
-    "bun-types@1.3.14": "patches/bun-types@1.3.14.patch",
+    "bun-types@1.4.0": "patches/bun-types@1.4.0.patch",
     "discord-player-youtubei@2.0.0": "patches/discord-player-youtubei@2.0.0.patch",
     "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
     "markdown-it@14.1.1": "patches/markdown-it@14.1.1.patch",
@@ -210,5 +213,5 @@
     "twisted@1.82.0": "patches/twisted@1.82.0.patch",
     "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch"
   },
-  "packageManager": "bun@1.3.14"
+  "packageManager": "bun@1.4.0"
 }

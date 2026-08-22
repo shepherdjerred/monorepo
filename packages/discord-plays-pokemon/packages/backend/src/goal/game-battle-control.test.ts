@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import { GameBattleControl } from "./game-battle-control.ts";
 import { requireBattleItemSelection } from "./game-battle-control-rules.ts";

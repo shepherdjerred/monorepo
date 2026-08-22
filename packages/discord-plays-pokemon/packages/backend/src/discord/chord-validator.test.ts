@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { isValid, type ChordLimits } from "./chord-validator.ts";
 import { parseChord } from "#src/game/command/chord.ts";
 

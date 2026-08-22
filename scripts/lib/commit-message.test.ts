@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { validateCommitMessage } from "./commit-message.ts";
 
 const repositoryRoot = new URL("../..", import.meta.url).pathname;

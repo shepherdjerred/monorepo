@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { ExploreMessageSchema, type ExploreMessage } from "@scout-for-lol/data";
 import {
   applyStreamEvent,

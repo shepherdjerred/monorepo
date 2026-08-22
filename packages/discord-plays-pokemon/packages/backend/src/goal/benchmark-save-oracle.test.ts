@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { decodePersistedCatchState } from "./benchmark-save-oracle.ts";
 
 const SAVE_SLOT_BYTES = 0xe0_00;

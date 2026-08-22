@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { ApiError } from "../../../domain/errors";
 import { FakeServer, makeClock, makeHarness, makeTask } from "./harness";

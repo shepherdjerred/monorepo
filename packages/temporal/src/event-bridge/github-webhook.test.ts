@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from "bun:test";
+import { describe, expect, it, vi } from "vitest";
 import { sign } from "@octokit/webhooks-methods";
 import { buildWebhookApp } from "./github-webhook.ts";
 import type { CancelBuildkiteBuildsInput } from "#shared/schemas.ts";
@@ -79,7 +79,7 @@ async function postWebhook(
 
 describe("buildWebhookApp signature verification", () => {
   it("returns 401 when X-Hub-Signature-256 is missing", async () => {
-    const startPr = mock(noopConflictPr);
+    const startPr = vi.fn(noopConflictPr);
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
     const res = await postWebhook(app, makeBaseEvent(), { sign: false });
     expect(res.status).toBe(401);
@@ -87,7 +87,7 @@ describe("buildWebhookApp signature verification", () => {
   });
 
   it("returns 401 when the signature is wrong", async () => {
-    const startPr = mock(noopConflictPr);
+    const startPr = vi.fn(noopConflictPr);
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
     const res = await postWebhook(app, makeBaseEvent(), {
       signature: "sha256=deadbeef",
@@ -120,7 +120,7 @@ function makePushEvent(
 describe("buildWebhookApp push to main", () => {
   it("starts the conflict-check workflow for a push to refs/heads/main", async () => {
     const calls: ConflictMainCall[] = [];
-    const startMain = mock(async (args: ConflictMainArgs) => {
+    const startMain = vi.fn(async (args: ConflictMainArgs) => {
       calls.push([args]);
     });
     const app = buildWebhookApp(SECRET, {
@@ -140,7 +140,7 @@ describe("buildWebhookApp push to main", () => {
   });
 
   it("ignores pushes to refs that are not main", async () => {
-    const startMain = mock(noopConflictMain);
+    const startMain = vi.fn(noopConflictMain);
     const app = buildWebhookApp(SECRET, {
       startConflictCheckMain: startMain,
     });
@@ -155,7 +155,7 @@ describe("buildWebhookApp push to main", () => {
   });
 
   it("returns 401 when a push has a bad signature", async () => {
-    const startMain = mock(noopConflictMain);
+    const startMain = vi.fn(noopConflictMain);
     const app = buildWebhookApp(SECRET, {
       startConflictCheckMain: startMain,
     });
@@ -168,7 +168,7 @@ describe("buildWebhookApp push to main", () => {
   });
 
   it("returns 500 when the conflict-check start function throws", async () => {
-    const startMain = mock((_args: ConflictMainArgs): Promise<void> => {
+    const startMain = vi.fn((_args: ConflictMainArgs): Promise<void> => {
       throw new Error("Temporal unavailable");
     });
     const app = buildWebhookApp(SECRET, {
@@ -182,7 +182,7 @@ describe("buildWebhookApp push to main", () => {
 describe("buildWebhookApp per-PR conflict check", () => {
   it("starts the per-PR conflict check on opened", async () => {
     const calls: ConflictPrCall[] = [];
-    const startPr = mock(async (args: ConflictPrArgs) => {
+    const startPr = vi.fn(async (args: ConflictPrArgs) => {
       calls.push([args]);
     });
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
@@ -199,7 +199,7 @@ describe("buildWebhookApp per-PR conflict check", () => {
   });
 
   it("starts the per-PR conflict check on synchronize", async () => {
-    const startPr = mock(noopConflictPr);
+    const startPr = vi.fn(noopConflictPr);
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
     const res = await postWebhook(
       app,
@@ -210,7 +210,7 @@ describe("buildWebhookApp per-PR conflict check", () => {
   });
 
   it("starts the per-PR conflict check on edited (covers base-ref changes)", async () => {
-    const startPr = mock(noopConflictPr);
+    const startPr = vi.fn(noopConflictPr);
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
     const res = await postWebhook(app, makeBaseEvent({ action: "edited" }));
     expect(res.status).toBe(200);
@@ -219,7 +219,7 @@ describe("buildWebhookApp per-PR conflict check", () => {
 
   it("starts the per-PR conflict check even for draft PRs", async () => {
     // Drafts can still conflict with main — paint the status regardless.
-    const startPr = mock(noopConflictPr);
+    const startPr = vi.fn(noopConflictPr);
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
     const res = await postWebhook(
       app,
@@ -230,7 +230,7 @@ describe("buildWebhookApp per-PR conflict check", () => {
   });
 
   it("starts the per-PR conflict check even for bot-authored PRs (Renovate etc.)", async () => {
-    const startPr = mock(noopConflictPr);
+    const startPr = vi.fn(noopConflictPr);
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
     const res = await postWebhook(
       app,
@@ -245,7 +245,7 @@ describe("buildWebhookApp per-PR conflict check", () => {
   });
 
   it("does NOT start the per-PR conflict check for closed PRs", async () => {
-    const startPr = mock(noopConflictPr);
+    const startPr = vi.fn(noopConflictPr);
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
     const res = await postWebhook(
       app,
@@ -256,7 +256,7 @@ describe("buildWebhookApp per-PR conflict check", () => {
   });
 
   it("does NOT fail the webhook delivery when conflict-check start throws", async () => {
-    const startPr = mock((_args: ConflictPrArgs): Promise<void> => {
+    const startPr = vi.fn((_args: ConflictPrArgs): Promise<void> => {
       throw new Error("Temporal unavailable");
     });
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
@@ -270,7 +270,7 @@ describe("buildWebhookApp per-PR conflict check", () => {
 describe("buildWebhookApp PR closed", () => {
   it("starts the cancel workflow when a merged PR is closed", async () => {
     const cancelCalls: CancelCall[] = [];
-    const cancel = mock(async (input: CancelBuildkiteBuildsInput) => {
+    const cancel = vi.fn(async (input: CancelBuildkiteBuildsInput) => {
       cancelCalls.push([input]);
     });
     const app = buildWebhookApp(SECRET, { startCancel: cancel });
@@ -296,7 +296,7 @@ describe("buildWebhookApp PR closed", () => {
 
   it("starts the cancel workflow when a PR is closed without merging", async () => {
     const cancelCalls: CancelCall[] = [];
-    const cancel = mock(async (input: CancelBuildkiteBuildsInput) => {
+    const cancel = vi.fn(async (input: CancelBuildkiteBuildsInput) => {
       cancelCalls.push([input]);
     });
     const app = buildWebhookApp(SECRET, { startCancel: cancel });
@@ -310,7 +310,7 @@ describe("buildWebhookApp PR closed", () => {
   });
 
   it("cancels builds even for bot-authored closed PRs", async () => {
-    const cancel = mock(noopCancel);
+    const cancel = vi.fn(noopCancel);
     const app = buildWebhookApp(SECRET, { startCancel: cancel });
     const res = await postWebhook(
       app,
@@ -326,7 +326,7 @@ describe("buildWebhookApp PR closed", () => {
   });
 
   it("does not start the cancel workflow for opened PRs", async () => {
-    const cancel = mock(noopCancel);
+    const cancel = vi.fn(noopCancel);
     const app = buildWebhookApp(SECRET, { startCancel: cancel });
     const res = await postWebhook(app, makeBaseEvent({ action: "opened" }));
     expect(res.status).toBe(200);
@@ -334,9 +334,11 @@ describe("buildWebhookApp PR closed", () => {
   });
 
   it("returns 500 when the cancel start function throws", async () => {
-    const cancel = mock((_input: CancelBuildkiteBuildsInput): Promise<void> => {
-      throw new Error("Temporal unavailable");
-    });
+    const cancel = vi.fn(
+      (_input: CancelBuildkiteBuildsInput): Promise<void> => {
+        throw new Error("Temporal unavailable");
+      },
+    );
     const app = buildWebhookApp(SECRET, { startCancel: cancel });
     const res = await postWebhook(
       app,

@@ -12,11 +12,11 @@
   },
   "scripts": {
     "verify:classic-visuals": "bun run scripts/verify-classic-visuals.ts",
-    "verify:visual-contract": "bun test && bun run verify:classic-visuals && bun run scripts/verify-visual-contract.ts",
-    "update:visual-contract": "bun test && bun run verify:classic-visuals && SCOUT_ALLOW_REPORT_BASELINE_UPDATE=1 bun run scripts/verify-visual-contract.ts --write",
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage",
+    "verify:visual-contract": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run && bun run verify:classic-visuals && bun run scripts/verify-visual-contract.ts",
+    "update:visual-contract": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run && bun run verify:classic-visuals && SCOUT_ALLOW_REPORT_BASELINE_UPDATE=1 bun run scripts/verify-visual-contract.ts --write",
+    "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
+    "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
+    "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:ci": "bun ../../../../scripts/run-ci-test.ts",
     "lint": "bunx eslint src",
     "format": "bunx prettier --check src",
@@ -40,10 +40,12 @@
   "devDependencies": {
     "@types/chroma-js": "^3.1.2",
     "@types/react": "^19.2.17",
-    "bun-types": "1.3.14",
+    "bun-types": "1.4.0",
     "eslint": "^10.3.0",
     "typescript": "^6.0.3",
-    "@typescript/native": "npm:typescript@7.0.2"
+    "@typescript/native": "npm:typescript@7.0.2",
+    "vitest": "4.1.9",
+    "@vitest/coverage-istanbul": "4.1.9"
   },
   "description": "Generate report images for League of Legends",
   "keywords": [

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   buildSoftwareVideoGraph,
   buildVaapiVideoGraph,
@@ -249,7 +249,7 @@ describe("buildVaapiVideoGraph", () => {
     if (graph.kind !== "filterComplex") {
       throw new Error("expected a filterComplex graph");
     }
-    expect(graph.graph[1]).toStartWith("color=c=black@0:s=1280x720,format=bgra");
+    expect((graph.graph[1]).startsWith("color=c=black@0:s=1280x720,format=bgra")).toBe(true);
   });
 
   test("escapes subtitle paths for graph context (quote, comma, brackets)", () => {

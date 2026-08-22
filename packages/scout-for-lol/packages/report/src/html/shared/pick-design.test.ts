@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { test, expect } from "vitest";
 import { rankedFixture } from "#src/html/shared/test-fixtures.ts";
 import { pickRankedDesign } from "#src/html/shared/pick-design.ts";
 

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   classifyPlayError,
   isHttpUrl,
@@ -80,14 +80,14 @@ describe("classifyPlayError", () => {
       classifyPlayError(
         new Error("yt-dlp exited with code 1: No videos found"),
         "url",
-      ),
-    ).toStartWith("Couldn't queue that:");
+      ).startsWith("Couldn't queue that:"),
+    ).toBe(true);
   });
 
   test("falls back to a trimmed generic message for anything else", () => {
     const longMessage = `yt-dlp exited with code 1: ${"x".repeat(500)}`;
     const message = classifyPlayError(new Error(longMessage), "url");
-    expect(message).toStartWith("Couldn't queue that:");
+    expect(message.startsWith("Couldn't queue that:")).toBe(true);
     expect(message.length).toBeLessThan(longMessage.length);
   });
 });

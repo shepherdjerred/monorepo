@@ -1,4 +1,4 @@
-import { test, expect, describe } from "bun:test";
+import { test, expect, describe } from "vitest";
 import { SERVICES, resolveServiceSelector } from "#lib/deployed/catalog.ts";
 import { showVersionsAt } from "#lib/deployed/git.ts";
 import { parseVersionsFile } from "#lib/deployed/versions-file.ts";

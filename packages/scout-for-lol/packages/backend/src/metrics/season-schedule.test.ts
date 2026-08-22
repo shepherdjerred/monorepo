@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { getAllSeasons } from "@scout-for-lol/data";
 import { scoutSeasonScheduleEndTimestampSeconds } from "#src/metrics/season-schedule.ts";
 

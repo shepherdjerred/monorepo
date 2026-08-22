@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { turboCacheCleanActivityOptions } from "./maintenance.ts";
 
 describe("Turbo cache cleanup activity options", () => {
@@ -6,7 +6,7 @@ describe("Turbo cache cleanup activity options", () => {
     expect(turboCacheCleanActivityOptions.startToCloseTimeout).toBe(
       "5 minutes",
     );
-    expect("heartbeatTimeout" in turboCacheCleanActivityOptions).toBeFalse();
+    expect("heartbeatTimeout" in turboCacheCleanActivityOptions).toBe(false);
     expect(turboCacheCleanActivityOptions.retry.maximumAttempts).toBe(3);
   });
 });

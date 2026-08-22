@@ -7,7 +7,7 @@
  * removal we actually observed (`removedAt`) makes it a genuine re-install.
  */
 
-import { describe, it, expect, mock, beforeEach, afterAll } from "bun:test";
+import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import { ChannelType } from "discord.js";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { mockGuild, mockTextChannel } from "#src/testing/discord-mocks.ts";
@@ -17,7 +17,7 @@ import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 const { prisma } = createTestDatabase("guild-create-install-test");
 
 const databaseModule = await import("#src/database/index.ts");
-void mock.module("#src/database/index.ts", () => ({
+vi.doMock("#src/database/index.ts", () => ({
   ...databaseModule,
   prisma,
 }));
@@ -26,8 +26,8 @@ void mock.module("#src/database/index.ts", () => ({
 // touching the real product analytics singleton (network/PostHog init).
 const guildLifecycleModule = await import("#src/analytics/guild-lifecycle.ts");
 const captureGuildInstalled =
-  mock<typeof guildLifecycleModule.captureGuildInstalled>();
-void mock.module("#src/analytics/guild-lifecycle.ts", () => ({
+  vi.fn<typeof guildLifecycleModule.captureGuildInstalled>();
+vi.doMock("#src/analytics/guild-lifecycle.ts", () => ({
   ...guildLifecycleModule,
   captureGuildInstalled,
 }));
@@ -46,10 +46,10 @@ function guildFixture(): ReturnType<typeof mockGuild> {
     systemChannel: mockTextChannel({
       type: ChannelType.GuildText,
       name: "general",
-      permissionsFor: mock(() => ({ has: mock(() => true) })),
-      send: mock(() => Promise.resolve({})),
+      permissionsFor: vi.fn(() => ({ has: vi.fn(() => true) })),
+      send: vi.fn(() => Promise.resolve({})),
     }),
-    channels: { fetch: mock(() => Promise.resolve(new Map())) },
+    channels: { fetch: vi.fn(() => Promise.resolve(new Map())) },
     members: { me: { id: testAccountId("999") } },
     client: { user: { id: testAccountId("999") } },
   });

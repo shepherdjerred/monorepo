@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { randomTip, TIPS } from "@shepherdjerred/streambot/discord/tips.ts";
 
 describe("tips", () => {

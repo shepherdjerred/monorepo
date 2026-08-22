@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from "bun:test";
+import { afterAll, describe, expect, it } from "vitest";
 
 import { GrafanaPreviewClient } from "#infrastructure/grafana-preview-client";
 import { AlertDetailSchema, PreviewInputSchema } from "#shared/schema";
@@ -94,7 +94,7 @@ describe("Grafana preview boundary", () => {
       from: "2026-08-07T18:00:00Z",
       to: "2026-08-08T19:00:01Z",
     });
-    expect(client().previews(tooLong, alert)).rejects.toThrow(
+    await expect(client().previews(tooLong, alert)).rejects.toThrow(
       "Preview range exceeds 24 hours",
     );
 

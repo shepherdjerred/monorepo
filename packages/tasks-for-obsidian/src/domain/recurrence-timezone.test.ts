@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { isCompletedOn, nextOccurrenceAfter, occursOn } from "./recurrence";
 import type { Task } from "./types";

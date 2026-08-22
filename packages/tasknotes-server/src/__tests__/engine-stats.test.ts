@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { resolveModelConfig } from "tasknotes-types/v2";
 import type { TaskInfo } from "tasknotes-types/v2";
 

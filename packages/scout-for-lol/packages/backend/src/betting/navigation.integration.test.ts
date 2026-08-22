@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   formatBucksNavigationId,
@@ -35,15 +35,15 @@ function fakeNavigation(customId: string, userId = OWNER_ID) {
     customId,
     guildId: SERVER_ID,
     user: { id: userId },
-    deferReply: mock(() => {
+    deferReply: vi.fn(() => {
       calls.push("deferReply");
       return Promise.resolve(undefined);
     }),
-    deferUpdate: mock(() => {
+    deferUpdate: vi.fn(() => {
       calls.push("deferUpdate");
       return Promise.resolve(undefined);
     }),
-    editReply: mock((options: BucksButtonEditReplyOptions) => {
+    editReply: vi.fn((options: BucksButtonEditReplyOptions) => {
       calls.push("editReply");
       replies.push(options);
       return Promise.resolve(undefined);

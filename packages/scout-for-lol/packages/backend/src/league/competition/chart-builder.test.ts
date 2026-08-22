@@ -1,8 +1,8 @@
-import { describe, expect, test, mock } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 
 // The real configuration module reads `S3_BUCKET_NAME` (set by test-setup.ts)
 // lazily from the environment, so there is no need to stub it here — doing so
-// via a process-wide `mock.module` used to leak into unrelated S3 test files.
+// because the former process-wide Bun module mock leaked into unrelated files.
 
 const {
   CachedLeaderboardSchema,
@@ -26,7 +26,7 @@ const s3Mock: { loaded: CachedLeaderboard[] } = { loaded: [] };
 // module so unrelated tests in the same process keep all the s3-leaderboard
 // exports intact.
 const realS3Leaderboard = await import("#src/storage/s3-leaderboard.ts");
-void mock.module("#src/storage/s3-leaderboard.ts", () => ({
+vi.doMock("#src/storage/s3-leaderboard.ts", () => ({
   ...realS3Leaderboard,
   loadHistoricalLeaderboardSnapshots: () => Promise.resolve(s3Mock.loaded),
   saveCachedLeaderboard: () => Promise.resolve(),
@@ -35,12 +35,10 @@ void mock.module("#src/storage/s3-leaderboard.ts", () => ({
 
 const reportRenderCalls: { svg: number; image: number } = { svg: 0, image: 0 };
 
-// Spread the real module so other tests (which run in the same `bun test`
-// process) keep all the report exports — bun's mock.module is process-wide
-// and retroactive, so a narrow stub here would break any later test that
-// imports svgToPng / matchToImage / etc.
+// Spread the real module so this test retains exports used by the module graph
+// beyond the two render functions it replaces.
 const realReport = await import("@scout-for-lol/report");
-void mock.module("@scout-for-lol/report", () => ({
+vi.doMock("@scout-for-lol/report", () => ({
   ...realReport,
   competitionChartToSvg: () => {
     reportRenderCalls.svg += 1;

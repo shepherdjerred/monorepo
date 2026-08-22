@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import type { Task } from "../../domain/types";
 import { contextName, projectName, tagName, taskId } from "../../domain/types";

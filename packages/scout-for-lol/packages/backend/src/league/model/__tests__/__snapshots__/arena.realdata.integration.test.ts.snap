@@ -1,6 +1,6 @@
-// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each provided real match JSON 1`] = `
+exports[`toArenaMatch with real arena JSON > produces valid ArenaMatch for each provided real match JSON 1`] = `
 {
   "durationInSeconds": 1303,
   "players": [
@@ -5625,7 +5625,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
 }
 `;
 
-exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each provided real match JSON 2`] = `
+exports[`toArenaMatch with real arena JSON > produces valid ArenaMatch for each provided real match JSON 2`] = `
 {
   "durationInSeconds": 1354,
   "players": [

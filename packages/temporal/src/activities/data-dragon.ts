@@ -349,14 +349,14 @@ export const dataDragonActivities = {
 
       // Installs the root workspace once without hooks, then builds the shared
       // producers Scout imports. Without the llm-models build, the updater's
-      // snapshot-refresh `bun test` dies with `Cannot find module
+      // snapshot-refresh `bun run test` dies with `Cannot find module
       // '@shepherdjerred/llm-models'`.
       await installScoutWorkspace(repoDir);
       await runCommand(
         ["bun", "run", "update-data-dragon", input.latestVersion],
         {
           cwd: `${repoDir}/${DATA_PACKAGE_ROOT}`,
-          // The updater's snapshot-regeneration step runs `bun test`, which
+          // The updater's snapshot-regeneration step runs `bun run test`, which
           // loads scout's `configuration.ts` whose `env-var` validator only
           // accepts ENVIRONMENT ∈ {dev, beta, prod}. The Temporal worker pod
           // runs with ENVIRONMENT=production and the subprocess inherits it,

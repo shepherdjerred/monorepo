@@ -23,8 +23,14 @@ import {
   fetchLatestProviderIssueComment,
   resolveIssueCommentReview,
 } from "./github-issue-comments.ts";
+import { ALWAYS_BLOCKING_PRIORITY } from "./gate.ts";
 import {
+  attributeRaisedInReview,
+  type ParsedReviewThread,
   parseThreadPage,
+  parseReviewPage,
+  type ProviderReview,
+  REVIEW_REVIEWS_QUERY,
   REVIEW_THREADS_QUERY,
 } from "./github-review-threads.ts";
 import { isProviderAuthor } from "./identity.ts";
@@ -96,7 +102,8 @@ export async function fetchReviewThreads(input: {
   issueComment?: ReviewIssueComment | null | undefined;
 }): Promise<{ threads: ReviewThread[]; headRefOid: string | null }> {
   const { owner, name } = splitRepo(input.repo);
-  const threads: ReviewThread[] = [];
+  const parsed: ParsedReviewThread[] = [];
+  const providerReviews: ProviderReview[] = [];
   let headRefOid: string | null = null;
   let cursor: string | null = null;
   for (;;) {
@@ -107,10 +114,31 @@ export async function fetchReviewThreads(input: {
     );
     const page = parseThreadPage(payload, input.provider);
     if (page.headRefOid !== null) headRefOid = page.headRefOid;
-    threads.push(...page.threads);
+    parsed.push(...page.threads);
     if (!page.hasNextPage || page.endCursor === null) break;
     cursor = page.endCursor;
   }
+  let reviewCursor: string | null = null;
+  for (;;) {
+    const payload = await graphqlRequest(
+      REVIEW_REVIEWS_QUERY,
+      { owner, name, number: input.number, cursor: reviewCursor },
+      input.token,
+    );
+    const page = parseReviewPage(payload);
+    providerReviews.push(...page.reviews);
+    if (!page.hasNextPage || page.endCursor === null) break;
+    reviewCursor = page.endCursor;
+  }
+  // Attribution needs every page: a thread's ordinal is its review's position
+  // among all of this provider's reviews, including clean reviews that opened
+  // no thread and therefore do not appear in `parsed`.
+  const threads: ReviewThread[] = attributeRaisedInReview(
+    parsed,
+    input.provider,
+    ALWAYS_BLOCKING_PRIORITY,
+    providerReviews,
+  );
   const { completion } = input.provider;
   if (completion.kind === "issue-comment") {
     const comment =

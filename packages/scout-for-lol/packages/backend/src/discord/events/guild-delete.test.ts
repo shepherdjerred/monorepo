@@ -7,7 +7,7 @@
  * so a later `guildCreate` can be recognised as a genuine re-install.
  */
 
-import { describe, it, expect, mock, beforeEach, afterAll } from "bun:test";
+import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { mockGuild } from "#src/testing/discord-mocks.ts";
 import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
@@ -15,13 +15,13 @@ import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
 const { prisma } = createTestDatabase("guild-delete-test");
 
 const databaseModule = await import("#src/database/index.ts");
-void mock.module("#src/database/index.ts", () => ({
+vi.doMock("#src/database/index.ts", () => ({
   ...databaseModule,
   prisma,
 }));
 
-const sendDMMock = mock(() => Promise.resolve("sent"));
-void mock.module("#src/discord/utils/dm.ts", () => ({
+const sendDMMock = vi.fn(() => Promise.resolve("sent"));
+vi.doMock("#src/discord/utils/dm.ts", () => ({
   sendDM: sendDMMock,
 }));
 

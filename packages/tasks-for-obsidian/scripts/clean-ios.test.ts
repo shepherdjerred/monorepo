@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -18,6 +18,10 @@ test("a missing DerivedData directory has nothing to clean", async () => {
   } finally {
     await rm(home, { force: true, recursive: true });
   }
+});
+
+test("filesystem errors other than a missing directory propagate", async () => {
+  await expect(derivedDataTargets("\0invalid-home")).rejects.toThrow();
 });
 
 test("only this application's DerivedData directories are selected", async () => {

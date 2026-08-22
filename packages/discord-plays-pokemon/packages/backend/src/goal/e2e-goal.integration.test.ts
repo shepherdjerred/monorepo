@@ -9,11 +9,11 @@
 // documented in the plan's acceptance section as a manual pre-merge gate.
 //
 // Run as a test:
-//     bun test src/goal/e2e-goal.integration.test.ts
+//     bun run test -- src/goal/e2e-goal.integration.test.ts
 // Or via the script alias from the package root:
 //     bun run e2e:goal
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   BasicTracerProvider,
   InMemorySpanExporter,

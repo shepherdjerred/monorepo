@@ -6,7 +6,7 @@
  * they never retry or re-authenticate — which is the confusion this replaces.
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { TRPCError } from "@trpc/server";
 import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import { toTrpcError } from "#src/trpc/discord-upstream.ts";

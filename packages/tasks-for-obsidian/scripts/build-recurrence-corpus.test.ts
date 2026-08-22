@@ -7,7 +7,7 @@
  * a lie. Regenerating here and comparing byte-for-byte makes a dependency bump
  * that alters ANY expansion fail loudly.
  */
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 

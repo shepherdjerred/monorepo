@@ -163,7 +163,7 @@ async function validateRefreshClone(repoDir: string): Promise<void> {
     },
   );
   await runCommand(["bun", "run", "typecheck"], { cwd: packageDir });
-  await runCommand(["bun", "test"], { cwd: packageDir });
+  await runCommand(["bun", "run", "test"], { cwd: packageDir });
   await runCommand(["bun", "run", "lint"], { cwd: packageDir });
   await runCommand(["bun", "run", "build"], { cwd: packageDir });
 }

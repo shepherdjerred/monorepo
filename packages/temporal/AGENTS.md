@@ -4,7 +4,17 @@ Temporal workflow worker for the monorepo. Consolidates ad-hoc scheduling (K8s C
 
 ## Runtime
 
-Runs under **Bun**. The Temporal TypeScript SDK supports Bun for workers, workflows, activities, and client.
+Production runs under **Bun**.
+
+Unit and activity tests run with Vitest hosted by Bun through `bun run test:bun`.
+The Temporal SDK's real workflow-worker tests are the sole repository exception:
+`bun run test:workflows` hosts Vitest on Node because the SDK worker depends on
+authentic Node `worker_threads`, VM, promise hooks, and native worker support.
+Keep this exception restricted to `src/workflows`, and do not expand it to
+ordinary Temporal tests. The workflow phase keeps Vitest isolation but runs
+files sequentially: each file owns a native time-skipping server and authentic
+Node worker threads, and concurrent environments exhaust the bounded CI agent.
+`bun run test` runs both phases through the stable package interface.
 
 Production uses the same Bun image in four Kubernetes Deployments selected by
 `TEMPORAL_WORKER_ROLE`: `core` owns the `default` queue plus schedules and
@@ -113,11 +123,11 @@ stays at 0 and is indistinguishable from a clean "no orphans" result.
 bun run start        # Start worker (connects to Temporal server)
 bun run typecheck    # Type check (runs ensure-ha-schema first)
 bun run lint         # ESLint
-bun test             # Run tests (incl. workflow-bundle smoke test)
+bun run test             # Run tests (incl. workflow-bundle smoke test)
 bun run generate     # Regenerate src/generated/ha-schema.ts from live HA (needs HA_URL + HA_TOKEN)
 ```
 
-The `bun test` run includes a workflow-bundle smoke test (`src/workflows/bundle.test.ts`) that runs the same webpack pass `Worker.create()` performs at startup. If you import an activity helper into a workflow file and this test starts failing, move the helper to `src/shared/` (a pure module with no Sentry/observability imports).
+The `bun run test` run includes a workflow-bundle smoke test (`src/workflows/bundle.test.ts`) that runs the same webpack pass `Worker.create()` performs at startup. If you import an activity helper into a workflow file and this test starts failing, move the helper to `src/shared/` (a pure module with no Sentry/observability imports).
 
 ## LLM observability
 
@@ -152,7 +162,7 @@ That file is **gitignored** (`packages/temporal/.gitignore`). It is produced by 
 Two committed artifacts make this work without always needing HA credentials:
 
 - `src/generated/ha-schema.stub.ts` — a permissive `DefaultHaSchema` fallback. No sensitive content.
-- `scripts/ensure-ha-schema.ts` — pre-script that copies the stub into `ha-schema.ts` when the generated file is missing. Invoked automatically by `bun run typecheck`, `bun test`, and `bun run build`.
+- `scripts/ensure-ha-schema.ts` — pre-script that copies the stub into `ha-schema.ts` when the generated file is missing. Invoked automatically by `bun run typecheck`, `bun run test`, and `bun run build`.
 
 Workflow:
 

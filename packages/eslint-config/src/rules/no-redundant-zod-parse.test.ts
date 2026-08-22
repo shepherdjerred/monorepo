@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { noRedundantZodParse } from "./no-redundant-zod-parse.ts";
 
 describe("no-redundant-zod-parse", () => {

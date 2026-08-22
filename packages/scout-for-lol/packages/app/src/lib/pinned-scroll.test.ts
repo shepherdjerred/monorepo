@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   isScrolledToBottom,
   PINNED_BOTTOM_SLACK_PX,
