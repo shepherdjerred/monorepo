@@ -177,7 +177,10 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       matchId: toStr(row, "matchId"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
       awardedAt: toDate(row, "awardedAt"),
-      phase: toStr(row, "phase"),
+      // This column was added after the currently promoted SQLite image. The
+      // old schema's rows are all post-match earnings; keep that meaning when
+      // importing them rather than requiring the source file to be mutated.
+      phase: row["phase"] === undefined ? "postmatch" : toStr(row, "phase"),
       state: toStr(row, "state"),
       targetSnapshotJson: toStr(row, "targetSnapshotJson"),
       retryAt: toDate(row, "retryAt"),

@@ -88,22 +88,34 @@ function asPostgresOwner(cmd: string[]): string[] {
     throw new Error("Postgres command cannot be empty");
   }
   const su = Bun.which("su");
-  const miseDataDir = Bun.env["MISE_DATA_DIR"];
-  if (su === null || miseDataDir === undefined || miseDataDir === "") {
-    throw new Error("Root-hosted Postgres tests require MISE_DATA_DIR and su");
+  if (su === null) {
+    throw new Error("Root-hosted Postgres tests require su");
   }
-  const matches = [
-    ...new Bun.Glob(`${POSTGRES_INSTALL_DIR}/*/bin/${executable}`).scanSync({
-      cwd: `${miseDataDir}/installs`,
-      onlyFiles: true,
-    }),
-  ];
-  if (matches.length !== 1) {
+  const miseDataDir = Bun.env["MISE_DATA_DIR"];
+  let resolvedExecutable: string | null = null;
+  if (miseDataDir !== undefined && miseDataDir !== "") {
+    const matches = [
+      ...new Bun.Glob(`${POSTGRES_INSTALL_DIR}/*/bin/${executable}`).scanSync({
+        cwd: `${miseDataDir}/installs`,
+        onlyFiles: true,
+      }),
+    ];
+    if (matches.length > 1) {
+      throw new Error(
+        `Expected at most one installed Postgres ${executable}, found ${matches.length.toString()}`,
+      );
+    }
+    const match = matches[0];
+    if (match !== undefined) {
+      resolvedExecutable = `${miseDataDir}/installs/${match}`;
+    }
+  }
+  resolvedExecutable ??= Bun.which(executable);
+  if (resolvedExecutable === null) {
     throw new Error(
-      `Expected exactly one installed Postgres ${executable}, found ${matches.length.toString()}`,
+      `Root-hosted Postgres tests require ${executable} on PATH or in MISE_DATA_DIR`,
     );
   }
-  const resolvedExecutable = `${miseDataDir}/installs/${matches.join("")}`;
   return [
     su,
     "-s",

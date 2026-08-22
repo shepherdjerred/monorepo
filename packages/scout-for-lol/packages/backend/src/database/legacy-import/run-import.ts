@@ -90,10 +90,70 @@ async function getImportMarker(
     : { source: marker.source, sourceDigest: marker.source_digest };
 }
 
+function sqliteDigestValue(value: unknown): unknown {
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  if (value instanceof Uint8Array) {
+    return [...value];
+  }
+  return value;
+}
+
+function sqliteDigestRow(row: unknown): string {
+  if (row === null || typeof row !== "object" || Array.isArray(row)) {
+    throw new Error("Unexpected SQLite snapshot row shape");
+  }
+  return JSON.stringify(
+    Object.entries(row)
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(([key, value]) => [key, sqliteDigestValue(value)]),
+  );
+}
+
 async function sqliteSourceDigest(sqlitePath: string): Promise<string> {
+  // Read through SQLite instead of hashing only db.sqlite. SQLite exposes
+  // committed WAL pages through this connection, so the digest represents the
+  // state the importer will actually read after an unclean rollback shutdown.
+  const db = new Database(sqlitePath, { readonly: true, safeIntegers: true });
   const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(await Bun.file(sqlitePath).arrayBuffer());
-  return hasher.digest("hex");
+  try {
+    const schemaRows: unknown = db
+      .query(
+        "SELECT name, sql FROM sqlite_master WHERE type = 'table' ORDER BY name",
+      )
+      .all();
+    if (!Array.isArray(schemaRows)) {
+      throw new Error("Unexpected SQLite schema result shape");
+    }
+    for (const schemaRow of schemaRows) {
+      if (
+        schemaRow === null ||
+        typeof schemaRow !== "object" ||
+        Array.isArray(schemaRow)
+      ) {
+        throw new Error("Unexpected SQLite schema row shape");
+      }
+      const entries = Object.entries(schemaRow);
+      const name = entries.find(([key]) => key === "name")?.[1];
+      const sql = entries.find(([key]) => key === "sql")?.[1];
+      if (typeof name !== "string" || typeof sql !== "string") {
+        throw new Error("SQLite schema row has invalid name or SQL");
+      }
+      const escapedName = name.replaceAll('"', '""');
+      const rows: unknown = db.query(`SELECT * FROM "${escapedName}"`).all();
+      if (!Array.isArray(rows)) {
+        throw new Error(`Unexpected SQLite rows for ${name}`);
+      }
+      hasher.update(`${name}\u0000${sql}\u0000`);
+      for (const row of rows.map(sqliteDigestRow).sort()) {
+        hasher.update(`${row}\u0000`);
+      }
+    }
+    return hasher.digest("hex");
+  } finally {
+    db.close();
+  }
 }
 
 async function postgresHasData(prisma: ImportClient): Promise<boolean> {
