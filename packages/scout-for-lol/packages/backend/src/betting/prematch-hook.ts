@@ -60,10 +60,8 @@ export async function prepareBucksPrematch(
     ]),
   );
 
-  const enabledGuilds = bettingEnabledGuilds(input.targetGuildIds);
   if (
     input.queueType === "classic" &&
-    enabledGuilds.length > 0 &&
     isStandardLobby(input.gameInfo.participants)
   ) {
     await awardClassicPrematchForGame(
@@ -71,7 +69,6 @@ export async function prepareBucksPrematch(
         matchId,
         gameInfo: input.gameInfo,
         trackedAliasByPuuid,
-        serverIds: enabledGuilds,
         detectedAt: input.detectedAt,
       },
       prismaClient,
@@ -83,6 +80,8 @@ export async function prepareBucksPrematch(
       matchId,
     };
   }
+
+  const enabledGuilds = bettingEnabledGuilds(input.targetGuildIds);
 
   const bettable = isBettableGame({
     queueType: input.queueType,

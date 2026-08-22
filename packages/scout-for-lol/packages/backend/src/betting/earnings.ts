@@ -9,7 +9,10 @@ import {
   type RawMatch,
   type RawParticipant,
 } from "@scout-for-lol/data";
-import { BUCKS_EARNING_QUEUES } from "#src/betting/constants.ts";
+import {
+  BUCKS_EARNING_QUEUES,
+  PENDING_EARNING_RETRY_DELAY_MS,
+} from "#src/betting/constants.ts";
 import { computeMvp } from "#src/betting/mvp.ts";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import {
@@ -101,8 +104,6 @@ const EARNED_REWARDS = {
   win: { kind: "earn_win", amount: 1 },
   mvp: { kind: "earn_mvp", amount: 1 },
 } satisfies Record<EarnedAwardReason, EarnedReward>;
-
-export const PENDING_EARNING_RETRY_DELAY_MS = 5 * 60 * 1000;
 
 export type EarnedAward = {
   serverId: string;

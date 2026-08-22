@@ -4,7 +4,6 @@ import {
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
   RiotTeamIdSchema,
-  type DiscordGuildId,
   type RawCurrentGameInfo,
   type RawCurrentGameParticipant,
 } from "@scout-for-lol/data";
@@ -13,8 +12,10 @@ import {
   HouseInsufficientError,
 } from "#src/betting/accounts.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
+import { PENDING_EARNING_RETRY_DELAY_MS } from "#src/betting/constants.ts";
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { getFlag } from "#src/configuration/flags.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
 import { z } from "zod";
@@ -26,7 +27,10 @@ type ClassicPrematchEarnTarget = {
   serverId: string;
   discordId: string;
   alias: string;
-  participant: RawCurrentGameParticipant;
+  participant: Pick<
+    RawCurrentGameParticipant,
+    "puuid" | "championId" | "teamId"
+  >;
 };
 
 const ClassicPrematchTargetSnapshotSchema = z.array(
@@ -34,6 +38,8 @@ const ClassicPrematchTargetSnapshotSchema = z.array(
     discordId: z.string(),
     alias: z.string(),
     puuid: z.string(),
+    championId: z.number().int(),
+    teamId: z.number().int(),
   }),
 );
 
@@ -45,6 +51,8 @@ function classicPrematchTargetSnapshotJson(
       discordId: target.discordId,
       alias: target.alias,
       puuid: target.participant.puuid,
+      championId: target.participant.championId,
+      teamId: target.participant.teamId,
     })),
   );
 }
@@ -52,11 +60,10 @@ function classicPrematchTargetSnapshotJson(
 async function findClassicPrematchEarnTargets(input: {
   gameInfo: RawCurrentGameInfo;
   trackedAliasByPuuid: ReadonlyMap<string, string>;
-  serverIds: readonly DiscordGuildId[];
   prismaClient: ExtendedPrismaClient;
 }): Promise<ClassicPrematchEarnTarget[]> {
   const puuids = [...input.trackedAliasByPuuid.keys()];
-  if (puuids.length === 0 || input.serverIds.length === 0) {
+  if (puuids.length === 0) {
     return [];
   }
 
@@ -73,7 +80,7 @@ async function findClassicPrematchEarnTargets(input: {
     const player = account.player;
     if (
       player.discordId === null ||
-      !input.serverIds.includes(player.serverId)
+      !getFlag("betting_enabled", { server: player.serverId })
     ) {
       continue;
     }
@@ -97,7 +104,6 @@ async function findClassicPrematchEarnTargets(input: {
 }
 
 function classicPrematchTargetsFromSnapshot(
-  participants: readonly RawCurrentGameParticipant[],
   serverId: string,
   serialized: string,
 ): ClassicPrematchEarnTarget[] {
@@ -105,24 +111,15 @@ function classicPrematchTargetsFromSnapshot(
     JSON.parse(serialized),
   );
   return snapshots.map((snapshot) => {
-    const participant = participants.find(
-      (candidate) => candidate.puuid === snapshot.puuid,
-    );
-    if (participant === undefined) {
-      throw new Error(
-        `Prematch Bryan Bucks target ${snapshot.puuid} is absent from the active game`,
-      );
-    }
-    if (participant.puuid === null) {
-      throw new Error(
-        `Prematch Bryan Bucks target ${snapshot.puuid} is absent from the active game`,
-      );
-    }
     return {
       serverId,
       discordId: snapshot.discordId,
       alias: snapshot.alias,
-      participant,
+      participant: {
+        puuid: snapshot.puuid,
+        championId: snapshot.championId,
+        teamId: snapshot.teamId,
+      },
     };
   });
 }
@@ -138,7 +135,6 @@ export async function awardClassicPrematchForGame(
     matchId: string;
     gameInfo: RawCurrentGameInfo;
     trackedAliasByPuuid: ReadonlyMap<string, string>;
-    serverIds: readonly DiscordGuildId[];
     detectedAt: Date;
   },
   prismaClient: ExtendedPrismaClient = prisma,
@@ -162,7 +158,6 @@ async function awardClassicPrematchForGameUnsafe(
     matchId: string;
     gameInfo: RawCurrentGameInfo;
     trackedAliasByPuuid: ReadonlyMap<string, string>;
-    serverIds: readonly DiscordGuildId[];
     detectedAt: Date;
   },
   prismaClient: ExtendedPrismaClient,
@@ -170,7 +165,6 @@ async function awardClassicPrematchForGameUnsafe(
   const targets = await findClassicPrematchEarnTargets({
     gameInfo: input.gameInfo,
     trackedAliasByPuuid: input.trackedAliasByPuuid,
-    serverIds: input.serverIds,
     prismaClient,
   });
   const byGuild = new Map<string, ClassicPrematchEarnTarget[]>();
@@ -194,7 +188,6 @@ async function awardClassicPrematchForGameUnsafe(
             : input.detectedAt.getTime(),
         ),
         targets: guildTargets,
-        participants: input.gameInfo.participants,
       })),
     );
   }
@@ -206,8 +199,7 @@ async function awardClassicPrematchForGuild(input: {
   matchId: string;
   serverId: string;
   matchCreatedAt: Date;
-  targets: readonly ClassicPrematchEarnTarget[];
-  participants: readonly RawCurrentGameParticipant[];
+  targets?: readonly ClassicPrematchEarnTarget[];
 }): Promise<EarnedAward[]> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
   let marker = await input.prismaClient.bucksMatchEarning.findUnique({
@@ -225,6 +217,11 @@ async function awardClassicPrematchForGuild(input: {
     return [];
   }
   if (marker === null) {
+    if (input.targets === undefined) {
+      throw new Error(
+        `Pending Classic prematch marker ${input.matchId} in ${serverId} has no target snapshot`,
+      );
+    }
     try {
       marker = await input.prismaClient.bucksMatchEarning.create({
         data: {
@@ -261,7 +258,6 @@ async function awardClassicPrematchForGuild(input: {
   }
 
   const targets = classicPrematchTargetsFromSnapshot(
-    input.participants,
     serverId,
     marker.targetSnapshotJson,
   );
@@ -346,4 +342,62 @@ async function awardClassicPrematchForGuild(input: {
     });
     return awards;
   });
+}
+
+/**
+ * Retry Classic participation markers after a guild house has been funded.
+ * The marker contains the complete prematch participant snapshot, so this
+ * recovery does not depend on a post-game Match-V5 payload.
+ */
+export async function retryPendingClassicPrematchEarnings(
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  const pending = await prismaClient.bucksMatchEarning.findMany({
+    where: {
+      phase: "prematch",
+      state: "pending",
+      retryAt: { lte: new Date() },
+    },
+    orderBy: { retryAt: "asc" },
+    take: 50,
+    select: {
+      matchId: true,
+      serverId: true,
+      matchCreatedAt: true,
+    },
+  });
+
+  for (const marker of pending) {
+    try {
+      await awardClassicPrematchForGuild({
+        prismaClient,
+        matchId: marker.matchId,
+        serverId: marker.serverId,
+        matchCreatedAt: marker.matchCreatedAt,
+      });
+    } catch (error) {
+      logger.error(
+        `❌ Could not retry Classic prematch ${marker.matchId} in ${marker.serverId}:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: {
+          source: "betting-earnings-prematch-retry",
+          matchId: marker.matchId,
+          serverId: marker.serverId,
+        },
+      });
+      await prismaClient.bucksMatchEarning.updateMany({
+        where: {
+          matchId: marker.matchId,
+          serverId: DiscordGuildIdSchema.parse(marker.serverId),
+          phase: "prematch",
+          state: "pending",
+        },
+        data: {
+          retryAt: new Date(Date.now() + PENDING_EARNING_RETRY_DELAY_MS),
+        },
+      });
+    }
+  }
 }

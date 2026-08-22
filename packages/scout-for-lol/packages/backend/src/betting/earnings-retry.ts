@@ -6,12 +6,12 @@ import {
   type RawMatch,
 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { BUCKS_EARNING_QUEUES } from "#src/betting/constants.ts";
 import {
-  awardForGuild,
+  BUCKS_EARNING_QUEUES,
   PENDING_EARNING_RETRY_DELAY_MS,
-  type EarnTarget,
-} from "#src/betting/earnings.ts";
+} from "#src/betting/constants.ts";
+import { retryPendingClassicPrematchEarnings } from "#src/betting/classic-prematch-earnings.ts";
+import { awardForGuild, type EarnTarget } from "#src/betting/earnings.ts";
 import { computeMvp } from "#src/betting/mvp.ts";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -187,4 +187,6 @@ export async function retryPendingBucksEarnings(
       }
     }
   }
+
+  await retryPendingClassicPrematchEarnings(prismaClient);
 }

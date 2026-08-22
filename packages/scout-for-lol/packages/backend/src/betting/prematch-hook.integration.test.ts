@@ -16,6 +16,7 @@ import {
   type RawCurrentGameInfo,
 } from "@scout-for-lol/data";
 import { prepareBucksPrematch } from "#src/betting/prematch-hook.ts";
+import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
 import { openBettingPoolsForPrematch } from "#src/betting/pool-open.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import {
@@ -127,7 +128,7 @@ describe("prepareBucksPrematch", () => {
       gameInfo: gameInfo({ gameQueueConfigId: 4310 }),
       trackedPlayers: [trackedPlayer()],
       queueType: "classic" as const,
-      targetGuildIds: [ENABLED],
+      targetGuildIds: [],
       detectedAt: new Date(),
       prediction,
     };
@@ -269,4 +270,92 @@ describe("prepareBucksPrematch", () => {
       ).toHaveLength(10);
     });
   }
+});
+
+describe("Classic prematch recovery", () => {
+  test("retries a pending Classic point after the house is funded", async () => {
+    const now = new Date();
+    const discordId = DiscordAccountIdSchema.parse("16050917270473910");
+    await db.player.create({
+      data: {
+        alias: "jerred",
+        discordId,
+        serverId: ENABLED,
+        creatorDiscordId: discordId,
+        createdTime: now,
+        updatedTime: now,
+        accounts: {
+          create: {
+            alias: "jerred",
+            puuid: LeaguePuuidSchema.parse(puuidFor(0)),
+            region: "AMERICA_NORTH",
+            serverId: ENABLED,
+            creatorDiscordId: discordId,
+            createdTime: now,
+            updatedTime: now,
+          },
+        },
+      },
+    });
+
+    const game = gameInfo({ gameId: 5_000_000_002, gameQueueConfigId: 4310 });
+    const house = await db.bucksAccount.create({
+      data: {
+        serverId: ENABLED,
+        discordId: DiscordAccountIdSchema.parse("10000000000000000"),
+        balance: 0,
+        isHouse: true,
+      },
+    });
+    await prepareBucksPrematch(
+      {
+        gameInfo: game,
+        trackedPlayers: [trackedPlayer()],
+        queueType: "classic",
+        targetGuildIds: [],
+        detectedAt: now,
+        prediction,
+      },
+      db,
+    );
+    expect(
+      await db.bucksMatchEarning.findUniqueOrThrow({
+        where: {
+          matchId_serverId: {
+            matchId: "NA1_5000000002",
+            serverId: ENABLED,
+          },
+        },
+      }),
+    ).toMatchObject({ phase: "prematch", state: "pending" });
+
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: 10_000 },
+    });
+    await db.bucksMatchEarning.update({
+      where: {
+        matchId_serverId: {
+          matchId: "NA1_5000000002",
+          serverId: ENABLED,
+        },
+      },
+      data: { retryAt: new Date(0) },
+    });
+    await retryPendingBucksEarnings(db);
+
+    expect(
+      await db.bucksLedgerEntry.count({ where: { kind: "earn_game" } }),
+    ).toBe(1);
+    expect(
+      await db.bucksMatchEarning.findUniqueOrThrow({
+        where: {
+          matchId_serverId: {
+            matchId: "NA1_5000000002",
+            serverId: ENABLED,
+          },
+        },
+      }),
+    ).toMatchObject({ phase: "prematch", state: "complete", entryCount: 1 });
+  });
 });

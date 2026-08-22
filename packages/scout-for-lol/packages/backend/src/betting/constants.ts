@@ -27,6 +27,9 @@ export const PARLAY_INITIAL_OUTPUT_TOKENS = 4096;
 export const PARLAY_RETRY_OUTPUT_TOKENS = 6144;
 export const DEFAULT_PARLAY_AI_MODEL = "gpt-5.6-sol";
 
+/** Delay before retrying a wallet-funded earning. */
+export const PENDING_EARNING_RETRY_DELAY_MS = 5 * 60 * 1000;
+
 /**
  * How long past its close a pool may sit unsettled before it is voided and
  * every stake refunded.
