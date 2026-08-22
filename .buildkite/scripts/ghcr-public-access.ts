@@ -95,9 +95,14 @@ async function consumeManifest(response: Response): Promise<void> {
  * message has to carry the manual step rather than pretend CI can repair it.
  */
 function remediation(name: string): string {
-  return requiresPublicGhcrVisibility(name)
-    ? ` ${name} is declared public in IMAGE_TARGET_REGISTRY: open https://github.com/users/shepherdjerred/packages/container/${encodeURIComponent(name)}/settings and set "Change visibility" to Public (one time, per package).`
-    : "";
+  // Every probed name is a first-party package under ghcr.io/shepherdjerred —
+  // the infra bake targets (caddy-s3proxy, obsidian-headless, redlib) as much
+  // as the IMAGE_TARGET_REGISTRY applications — so the one-time manual flip
+  // applies to all of them; only the framing differs.
+  const declaration = requiresPublicGhcrVisibility(name)
+    ? `${name} is declared public in IMAGE_TARGET_REGISTRY`
+    : `${name} is a first-party infra image pushed under ghcr.io/shepherdjerred`;
+  return ` ${declaration}: open https://github.com/users/shepherdjerred/packages/container/${encodeURIComponent(name)}/settings and set "Change visibility" to Public (one time, per package).`;
 }
 
 export async function ensureAnonymousGhcrPull(

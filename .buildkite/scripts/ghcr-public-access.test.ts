@@ -45,7 +45,10 @@ test("names the one-time manual fix for a declared-public target", async () => {
   );
 });
 
-test("omits the first-party remediation for images the repo only mirrors", async () => {
+// Infra bake targets live outside IMAGE_TARGET_REGISTRY but are still pushed
+// under ghcr.io/shepherdjerred, so a private one needs the same one-time flip
+// — this used to produce no hint at all.
+test("names the one-time manual fix for a first-party infra image", async () => {
   const failure: unknown = await ensureAnonymousGhcrPull("redlib", digest, {
     ...noWait,
     fetcher: anonymousTokenDenied,
@@ -54,6 +57,10 @@ test("omits the first-party remediation for images the repo only mirrors", async
   const message = failure instanceof Error ? failure.message : "";
   expect(message).toContain("is not anonymously pullable");
   expect(message).not.toContain("IMAGE_TARGET_REGISTRY");
+  expect(message).toContain("first-party infra image");
+  expect(message).toContain(
+    "https://github.com/users/shepherdjerred/packages/container/redlib/settings",
+  );
 });
 
 test("retries a transient manifest 404 before giving up", async () => {

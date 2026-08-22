@@ -106,6 +106,14 @@ export function createTurboCacheDeployment(chart: Chart) {
         STORAGE_PROVIDER: EnvValue.fromValue("local"),
         STORAGE_PATH: EnvValue.fromValue("/cache"),
         STORAGE_PATH_USE_TMP_FOLDER: EnvValue.fromValue("false"),
+        // The upstream default is 100 MiB (104857600), which the Scout
+        // frontend and design-system build artifacts exceed — every verify
+        // run logged `413 Payload Too Large` for exactly those two uploads,
+        // so they re-ran from scratch on every machine forever. 256 MiB
+        // clears them with headroom; the memory limit below funds it, since
+        // the server buffers each upload fully in memory
+        // (`parseAs: 'buffer'` in its octet-stream content-type parser).
+        BODY_LIMIT: EnvValue.fromValue(String(256 * 1024 * 1024)),
         TURBO_TOKEN: EnvValue.fromSecretValue({
           secret: secretRef,
           key: "TURBO_TOKEN",
@@ -121,8 +129,11 @@ export function createTurboCacheDeployment(chart: Chart) {
           limit: Cpu.millis(500),
         },
         memory: {
-          request: Size.mebibytes(256),
-          limit: Size.mebibytes(512),
+          // Uploads are buffered whole (see BODY_LIMIT above) and verify runs
+          // its task graph at --concurrency=4, so two ~150-250 MiB artifact
+          // uploads can be in flight at once on top of the Node baseline.
+          request: Size.mebibytes(512),
+          limit: Size.mebibytes(1536),
         },
       },
       volumeMounts: [

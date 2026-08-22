@@ -113,7 +113,8 @@ pre-commit:
             run: bun install --frozen-lockfile --dry-run
 
           # Formatting is intentionally staged-file-only locally. CI runs the
-          # full `//#prettier` task over the repository.
+          # sharded `//#prettier-*` tasks over the whole repository
+          # (scripts/repo-shards.ts).
           - name: prettier
             glob: "**/*.{ts,tsx,js,jsx,json,jsonc,yaml,yml,md,css,astro,html,graphql}"
             exclude:
