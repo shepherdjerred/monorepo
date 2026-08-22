@@ -1,22 +1,28 @@
 {
-  "generatedAt": "2026-05-16T20:06:49.960Z",
+  "generatedAt": "2026-08-22T13:11:56.872Z",
   "source": {
     "startDate": "2026-05-14",
     "endDate": "2026-05-16",
-    "queueIds": [400, 420, 440, 480, 490],
+    "queueIds": [
+      400,
+      420,
+      440,
+      480,
+      490
+    ],
     "sampleSize": 100,
     "seed": "scout-lane-priors-patch-cadence-v1"
   },
   "threshold": 0.95,
   "matchCount": 100,
   "participantCount": 1000,
-  "correctParticipantCount": 979,
-  "participantAccuracy": 0.979,
+  "correctParticipantCount": 983,
+  "participantAccuracy": 0.983,
   "perLaneAccuracy": {
     "top": {
-      "correct": 193,
+      "correct": 194,
       "total": 200,
-      "accuracy": 0.965
+      "accuracy": 0.97
     },
     "jungle": {
       "correct": 200,
@@ -24,9 +30,9 @@
       "accuracy": 1
     },
     "middle": {
-      "correct": 192,
+      "correct": 194,
       "total": 200,
-      "accuracy": 0.96
+      "accuracy": 0.97
     },
     "adc": {
       "correct": 197,
@@ -34,26 +40,26 @@
       "accuracy": 0.985
     },
     "support": {
-      "correct": 197,
+      "correct": 198,
       "total": 200,
-      "accuracy": 0.985
+      "accuracy": 0.99
     }
   },
   "perQueueAccuracy": {
     "400": {
-      "correct": 48,
-      "total": 50,
-      "accuracy": 0.96
+      "correct": 40,
+      "total": 40,
+      "accuracy": 1
     },
     "420": {
-      "correct": 788,
-      "total": 800,
-      "accuracy": 0.985
+      "correct": 820,
+      "total": 830,
+      "accuracy": 0.9879518072289156
     },
     "440": {
-      "correct": 136,
-      "total": 140,
-      "accuracy": 0.9714285714285714
+      "correct": 116,
+      "total": 120,
+      "accuracy": 0.9666666666666667
     },
     "480": {
       "correct": 7,
@@ -63,9 +69,9 @@
   },
   "confusionMatrix": {
     "top": {
-      "top": 193,
+      "top": 194,
       "jungle": 0,
-      "middle": 5,
+      "middle": 4,
       "adc": 1,
       "support": 1
     },
@@ -77,11 +83,11 @@
       "support": 0
     },
     "middle": {
-      "top": 5,
+      "top": 4,
       "jungle": 0,
-      "middle": 192,
+      "middle": 194,
       "adc": 1,
-      "support": 2
+      "support": 1
     },
     "adc": {
       "top": 2,
@@ -93,9 +99,9 @@
     "support": {
       "top": 0,
       "jungle": 0,
-      "middle": 2,
+      "middle": 1,
       "adc": 1,
-      "support": 197
+      "support": 198
     }
   },
   "worstExamples": [
@@ -268,46 +274,6 @@
       "spell2Id": 14,
       "actualLane": "support",
       "guessedLane": "adc"
-    },
-    {
-      "matchId": "EUW1_7855628129",
-      "queueId": 420,
-      "participantKey": "EUW1_7855628129:1",
-      "championId": 84,
-      "spell1Id": 14,
-      "spell2Id": 4,
-      "actualLane": "top",
-      "guessedLane": "middle"
-    },
-    {
-      "matchId": "EUW1_7855628129",
-      "queueId": 420,
-      "participantKey": "EUW1_7855628129:3",
-      "championId": 10,
-      "spell1Id": 12,
-      "spell2Id": 4,
-      "actualLane": "middle",
-      "guessedLane": "top"
-    },
-    {
-      "matchId": "LA1_1718401965",
-      "queueId": 400,
-      "participantKey": "LA1_1718401965:3",
-      "championId": 35,
-      "spell1Id": 4,
-      "spell2Id": 14,
-      "actualLane": "middle",
-      "guessedLane": "support"
-    },
-    {
-      "matchId": "LA1_1718401965",
-      "queueId": 400,
-      "participantKey": "LA1_1718401965:5",
-      "championId": 800,
-      "spell1Id": 4,
-      "spell2Id": 14,
-      "actualLane": "support",
-      "guessedLane": "middle"
     }
   ]
 }
