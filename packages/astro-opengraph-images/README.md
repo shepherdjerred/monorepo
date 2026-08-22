@@ -241,12 +241,11 @@ More examples:
 pathFilter: ({ pathname }) => !["/404/", "/"].includes(pathname);
 
 // Filter on DOM content after Open Graph metadata has been extracted
-filter: async ({ document, pathname }) =>
-  document.querySelector('meta[property="og:image"]') !== null &&
-  pathname.startsWith("/blog/");
+filter: async ({ document, type }) =>
+  type === "article" && document.querySelector("article") !== null;
 ```
 
-Use `pathFilter` when excluded pages may not have the required Open Graph metadata. The metadata-aware `filter` runs after extraction, so pages reaching it must still have the required tags. When `verbose: true` is set on `options`, skipped pages are logged.
+Use `pathFilter` when excluded pages may not have the required Open Graph metadata. The metadata-aware `filter` runs only after the output HTML is read, parsed, and strictly extracted, so it is never called for a page missing any of these required tags: `og:title`, `og:url`, `og:type`, or `og:image`. A missing required tag fails the build before `filter` can return `false`. When `verbose: true` is set on `options`, skipped pages are logged.
 
 ## Custom Renderers
 
