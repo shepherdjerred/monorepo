@@ -1,15 +1,11 @@
 import { createReadStream } from "node:fs";
 import { cp, mkdir, stat, writeFile } from "node:fs/promises";
 import { extname, isAbsolute, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
 import { gameAssetManifest } from "@scout-for-lol/data/browser-assets";
 import type { Connect, Plugin } from "vite";
 import { SCOUT_THEME_BOOTSTRAP_SCRIPT } from "#src/runtime/bootstrap.ts";
 
-const packageRoot = resolve(
-  fileURLToPath(new URL(".", import.meta.url)),
-  "../..",
-);
+const packageRoot = resolve(import.meta.dirname, "../..");
 const dataAssetsRoot = resolve(packageRoot, "../data/src/data-dragon/assets");
 const ownedAssetsRoot = resolve(packageRoot, "assets");
 

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createKeyedSerialExecutor } from "#src/customs/keyed-serial.ts";
 
 describe("keyed serial executor", () => {

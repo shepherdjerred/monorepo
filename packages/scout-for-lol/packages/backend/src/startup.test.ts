@@ -47,6 +47,9 @@ describe("backend startup", () => {
       startDiscord: async () => {
         calls.push("discord");
       },
+      startCustomsDiscord: async () => {
+        calls.push("customs-discord");
+      },
     });
 
     expect(calls).toEqual([
@@ -54,6 +57,7 @@ describe("backend startup", () => {
       "report-lake",
       "http-server",
       "discord",
+      "customs-discord",
     ]);
     await runtime.shutdownHttpServer();
   });

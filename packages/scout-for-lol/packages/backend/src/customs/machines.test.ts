@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { transitionCustomGame } from "#src/customs/game-machine.ts";
 import { transitionCustomNight } from "#src/customs/night-machine.ts";
 

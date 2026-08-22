@@ -21,7 +21,9 @@ const setupFiles =
           ? [path.join(workspaceRoot, "packages/backend/test-setup.ts")]
           : workspace === "packages/scout-for-lol/packages/backend"
             ? [path.join(workspaceRoot, "test-setup.ts")]
-            : [];
+            : workspace === "packages/scout-for-lol/packages/design-system"
+              ? [path.join(workspaceRoot, "src/testing/setup.ts")]
+              : [];
 
 const coverageThresholds =
   process.env["CI_TEST_COVERAGE"] === "1"
@@ -186,6 +188,9 @@ export default {
   ],
   test: {
     env: { TZ: "UTC" },
+    ...(workspace === "packages/scout-for-lol/packages/design-system"
+      ? { environment: "jsdom" }
+      : {}),
     pool: "forks",
     exclude: [
       ...defaultTestExclude,

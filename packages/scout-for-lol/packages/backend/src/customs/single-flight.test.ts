@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createSingleFlightRunner } from "#src/customs/single-flight.ts";
 
 describe("customs reconciler single-flight runner", () => {
