@@ -16,7 +16,7 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("postgres-server");
 
 const DEFAULT_PORT = 5471;
-const POSTGRES_MISE_TOOL = "ubi:theseus-rs/postgresql-binaries";
+const POSTGRES_INSTALL_DIR = "ubi-theseus-rs-postgresql-binaries";
 /** initdb/start window guard only; normal operation takes no lock. */
 const LOCK_STALE_MS = 120_000;
 const START_WAIT_MS = 120_000;
@@ -87,19 +87,23 @@ function asPostgresOwner(cmd: string[]): string[] {
   if (executable === undefined) {
     throw new Error("Postgres command cannot be empty");
   }
-  const resolvedShim = Bun.which(executable);
-  const mise = Bun.which("mise");
   const su = Bun.which("su");
-  if (resolvedShim === null || mise === null || su === null) {
+  const miseDataDir = Bun.env["MISE_DATA_DIR"];
+  if (su === null || miseDataDir === undefined || miseDataDir === "") {
+    throw new Error("Root-hosted Postgres tests require MISE_DATA_DIR and su");
+  }
+  const matches = [
+    ...new Bun.Glob(`${POSTGRES_INSTALL_DIR}/*/bin/${executable}`).scanSync({
+      cwd: `${miseDataDir}/installs`,
+      onlyFiles: true,
+    }),
+  ];
+  if (matches.length !== 1) {
     throw new Error(
-      "Root-hosted Postgres tests require mise, the Postgres binary, and su",
+      `Expected exactly one installed Postgres ${executable}, found ${matches.length.toString()}`,
     );
   }
-  const lookup = run([mise, "which", executable, "--tool", POSTGRES_MISE_TOOL]);
-  const resolvedExecutable = lookup.stdout.trim();
-  if (resolvedExecutable === "" || lookup.exitCode !== 0) {
-    throw new Error(`mise could not resolve ${executable}: ${lookup.stderr}`);
-  }
+  const resolvedExecutable = `${miseDataDir}/installs/${matches.join("")}`;
   return [
     su,
     "-s",
