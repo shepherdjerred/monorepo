@@ -4,7 +4,8 @@
  * Runs from the container entrypoint after `prisma migrate deploy`, before
  * the app starts. Fail-closed decision table:
  *
- *   marker present                  → skip (idempotent restart)
+ *   marker present, source unchanged → skip (idempotent restart)
+ *   marker present, source changed   → hard error (rollback/recovery required)
  *   no marker, Postgres has data    → hard error (ambiguous state; the
  *                                     previous image is still deployable)
  *   no marker, no data, sqlite file → import everything in one transaction
@@ -63,16 +64,36 @@ async function ensureMarkerTable(prisma: ImportClient): Promise<void> {
        imported_at timestamptz NOT NULL DEFAULT now(),
        source text NOT NULL,
        source_size_bytes bigint,
+       source_digest text,
        row_counts jsonb NOT NULL
      )`,
   );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE ${MARKER_TABLE} ADD COLUMN IF NOT EXISTS source_digest text`,
+  );
 }
 
-async function markerPresent(prisma: ImportClient): Promise<boolean> {
-  const rows = await prisma.$queryRawUnsafe<{ source: string }[]>(
-    `SELECT source FROM ${MARKER_TABLE} WHERE id = 1`,
-  );
-  return rows.length > 0;
+type ImportMarker = {
+  source: string;
+  sourceDigest: string | null;
+};
+
+async function getImportMarker(
+  prisma: ImportClient,
+): Promise<ImportMarker | null> {
+  const rows = await prisma.$queryRawUnsafe<
+    { source: string; source_digest: string | null }[]
+  >(`SELECT source, source_digest FROM ${MARKER_TABLE} WHERE id = 1`);
+  const marker = rows[0];
+  return marker === undefined
+    ? null
+    : { source: marker.source, sourceDigest: marker.source_digest };
+}
+
+async function sqliteSourceDigest(sqlitePath: string): Promise<string> {
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(await Bun.file(sqlitePath).arrayBuffer());
+  return hasher.digest("hex");
 }
 
 async function postgresHasData(prisma: ImportClient): Promise<boolean> {
@@ -167,8 +188,39 @@ export async function runImport(
 ): Promise<ImportSummary> {
   const { prisma, sqlitePath, allowFreshInstall = false } = options;
   await ensureMarkerTable(prisma);
+  const sqliteFile = Bun.file(sqlitePath);
+  const sourceDigest =
+    sqliteFile.size === 0 ? null : await sqliteSourceDigest(sqlitePath);
 
-  if (await markerPresent(prisma)) {
+  const marker = await getImportMarker(prisma);
+  if (marker !== null) {
+    if (marker.source === "none") {
+      if (sourceDigest !== null) {
+        throw new Error(
+          "Legacy import marker records a fresh install but a sqlite source now exists; " +
+            "refusing to skip the source. Resolve the deployment state by hand.",
+        );
+      }
+    } else {
+      if (marker.sourceDigest === null) {
+        throw new Error(
+          "Legacy import marker has no source digest; refusing to trust it. " +
+            "Resolve the deployment state by hand.",
+        );
+      }
+      if (sourceDigest === null) {
+        throw new Error(
+          "Legacy import marker expects a sqlite source, but the source is missing or empty; " +
+            "refusing to skip the import.",
+        );
+      }
+      if (marker.sourceDigest !== sourceDigest) {
+        throw new Error(
+          "Legacy sqlite source changed after import; refusing to skip the marker. " +
+            "Rollback/recovery requires a coordinated reimport.",
+        );
+      }
+    }
     logger.info("Legacy import marker present — skipping");
     return { action: "skipped", rowCounts: {} };
   }
@@ -181,7 +233,6 @@ export async function runImport(
     );
   }
 
-  const sqliteFile = Bun.file(sqlitePath);
   if (sqliteFile.size === 0) {
     if (!allowFreshInstall) {
       throw new Error(
@@ -232,10 +283,11 @@ export async function runImport(
         }
         await resetSequences(tx);
         await tx.$executeRawUnsafe(
-          `INSERT INTO ${MARKER_TABLE} (id, source, source_size_bytes, row_counts)
-           VALUES (1, $1, $2, $3::jsonb)`,
+          `INSERT INTO ${MARKER_TABLE} (id, source, source_size_bytes, source_digest, row_counts)
+           VALUES (1, $1, $2, $3, $4::jsonb)`,
           sqlitePath,
           sqliteFile.size,
+          sourceDigest,
           JSON.stringify(rowCounts),
         );
       },

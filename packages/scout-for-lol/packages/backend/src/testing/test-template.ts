@@ -14,6 +14,7 @@
  */
 import { SEASONS } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
+import { z } from "zod";
 import {
   devDatabaseUrl,
   devPostgresDataRoot,
@@ -29,6 +30,10 @@ const TEMPLATE_SCHEMA_VERSION = "1";
 const SWEEP_MAX_AGE_MS = 30 * 60 * 1000;
 const TEMPLATE_LOCK_STALE_MS = 10 * 60 * 1000;
 const TEMPLATE_LOCK_OWNER = "owner.json";
+const TemplateLockOwnerSchema = z.object({
+  pid: z.number().int(),
+  acquiredAt: z.number().finite(),
+});
 let activeTemplateDatabase: string | undefined;
 
 const BACKEND_ROOT = `${import.meta.dir}/../..`;
@@ -110,20 +115,8 @@ async function lockIsStale(lockDir: string): Promise<boolean> {
     return Date.now() - Bun.file(lockDir).lastModified > TEMPLATE_LOCK_STALE_MS;
   }
   try {
-    const owner: unknown = JSON.parse(await ownerFile.text());
-    if (owner === null || typeof owner !== "object") {
-      return Date.now() - ownerFile.lastModified > TEMPLATE_LOCK_STALE_MS;
-    }
-    const acquiredAt = Reflect.get(owner, "acquiredAt");
-    const pid = Reflect.get(owner, "pid");
-    if (
-      typeof acquiredAt !== "number" ||
-      typeof pid !== "number" ||
-      !Number.isFinite(acquiredAt) ||
-      !Number.isInteger(pid)
-    ) {
-      return Date.now() - ownerFile.lastModified > TEMPLATE_LOCK_STALE_MS;
-    }
+    const parsed: unknown = JSON.parse(await ownerFile.text());
+    const { acquiredAt, pid } = TemplateLockOwnerSchema.parse(parsed);
     if (Date.now() - acquiredAt <= TEMPLATE_LOCK_STALE_MS) {
       return false;
     }

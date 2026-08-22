@@ -644,6 +644,7 @@ CREATE TABLE "BucksMatchEarning" (
     "matchId" TEXT NOT NULL,
     "serverId" TEXT NOT NULL,
     "awardedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "phase" TEXT NOT NULL DEFAULT 'postmatch',
     "state" TEXT NOT NULL DEFAULT 'complete',
     "targetSnapshotJson" TEXT NOT NULL DEFAULT '[]',
     "retryAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -895,6 +896,9 @@ CREATE UNIQUE INDEX "BucksParlayBet_marketId_bucksAccountId_key" ON "BucksParlay
 
 -- CreateIndex
 CREATE INDEX "BucksMatchEarning_state_retryAt_idx" ON "BucksMatchEarning"("state", "retryAt");
+
+-- CreateIndex
+CREATE INDEX "BucksMatchEarning_phase_state_retryAt_idx" ON "BucksMatchEarning"("phase", "state", "retryAt");
 
 -- AddForeignKey
 ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Player"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
