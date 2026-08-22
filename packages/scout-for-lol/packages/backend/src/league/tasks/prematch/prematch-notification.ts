@@ -49,6 +49,11 @@ import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
 const logger = createLogger("prematch-notification");
 
 const PREMATCH_EMBED_COLOR = 0x00_bc_d4; // Teal - distinct from post-match
+type PrematchMessageRef = {
+  channelId: string;
+  messageId: string;
+  prematchContentBase: string;
+};
 
 /**
  * Format a natural language list: "A", "A and B", "A, B, and C"
@@ -194,14 +199,11 @@ async function deliverPrematchMessages(input: {
 }): Promise<{
   sentMessageIds: Map<string, string>;
   deliveredGuildIds: Set<DiscordGuildId>;
-  messageRefsByGuild: Map<string, { channelId: string; messageId: string }[]>;
+  messageRefsByGuild: Map<string, PrematchMessageRef[]>;
 }> {
   const sentMessageIds = new Map<string, string>();
   const deliveredGuildIds = new Set<DiscordGuildId>();
-  const messageRefsByGuild = new Map<
-    string,
-    { channelId: string; messageId: string }[]
-  >();
+  const messageRefsByGuild = new Map<string, PrematchMessageRef[]>();
 
   for (const { channel, serverId } of input.channels) {
     try {
@@ -222,7 +224,14 @@ async function deliverPrematchMessages(input: {
       if (betsOpen) {
         messageRefsByGuild.set(guildId, [
           ...(messageRefsByGuild.get(guildId) ?? []),
-          { channelId: channel, messageId: sentMessage.id },
+          {
+            channelId: channel,
+            messageId: sentMessage.id,
+            prematchContentBase:
+              input.loadingScreenAttachment && input.loadingScreenEmbed
+                ? input.prematchMessageContent
+                : "",
+          },
         ]);
       }
     } catch (error) {
@@ -465,11 +474,6 @@ export async function sendPrematchNotification(
       detectedAt,
       prediction,
     }));
-  const prematchContentBase =
-    loadingScreenAttachment !== undefined && loadingScreenEmbed !== undefined
-      ? prematchMessageContent
-      : "";
-
   const delivery = await deliverPrematchMessages({
     channels: deliverChannels,
     gameInfo,
@@ -488,7 +492,6 @@ export async function sendPrematchNotification(
       gameInfo,
       loadingScreenData,
       messageRefsByGuild: delivery.messageRefsByGuild,
-      prematchContentBase,
       queueType,
       trackedPlayers,
     });

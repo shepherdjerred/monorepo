@@ -17,17 +17,20 @@ export async function recordPrematchOutputs(input: {
   deliveredGuildIds: Set<DiscordGuildId>;
   gameInfo: RawCurrentGameInfo;
   loadingScreenData: LoadingScreenData | undefined;
-  messageRefsByGuild: Map<string, { channelId: string; messageId: string }[]>;
-  prematchContentBase: string;
+  messageRefsByGuild: Map<
+    string,
+    { channelId: string; messageId: string; prematchContentBase: string }[]
+  >;
   queueType: QueueType | undefined;
   trackedPlayers: PlayerConfigEntry[];
 }): Promise<void> {
   for (const [serverId, refs] of input.messageRefsByGuild) {
+    const prematchContentBase = refs[0]?.prematchContentBase ?? "";
     await recordPoolMessageRefs({
       matchId: input.bucks.matchId,
       serverId: DiscordGuildIdSchema.parse(serverId),
-      refs,
-      prematchContentBase: input.prematchContentBase,
+      refs: refs.map(({ channelId, messageId }) => ({ channelId, messageId })),
+      prematchContentBase,
     });
     await refreshBucksMessages({
       matchId: input.bucks.matchId,
