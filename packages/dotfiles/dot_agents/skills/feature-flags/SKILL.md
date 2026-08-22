@@ -33,9 +33,14 @@ ramp, then remove the flag. That is the default path, not an exception.
 ## Adding a config key
 
 ```ts
+const booleanFromText = z.preprocess(
+  (value) => value === "true" ? true : value === "false" ? false : value,
+  z.boolean(),
+);
+
 const DEFINITION = {
   myFeatureEnabled: {
-    schema: z.coerce.boolean(),   // env/file values arrive as STRINGS
+    schema: booleanFromText, // env/file values arrive as STRINGS
     sources: ["flag", "env", "default"],
     default: false,               // MUST be current production behavior
   },

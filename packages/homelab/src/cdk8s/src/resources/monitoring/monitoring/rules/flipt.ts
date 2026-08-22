@@ -45,7 +45,7 @@ export function getFliptRuleGroups(): PrometheusRuleSpecGroups[] {
               "A provider failed to initialize, so every flag in that pod reports PROVIDER_NOT_READY and resolves to its call-site default until the pod restarts. There is no retry in v1.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(feature_flag_errors_total{operation="initialize"}[15m]) > 0',
+            'feature_flag_errors_total{operation="initialize"} > 0',
           ),
           for: "5m",
           labels: { severity: "warning" },

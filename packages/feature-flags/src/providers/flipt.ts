@@ -201,13 +201,13 @@ export class FliptProvider implements Provider {
       };
     }
 
+    // Reconcile with the current snapshot before the membership decision. This
+    // handles both flags created and flags removed since initialization; the
+    // engine throws for a removed key, which must not become a fatal config
+    // error when the correct result is absence.
+    this.refreshKnownKeys();
     if (!this.knownKeys.has(flagKey)) {
-      // The snapshot may have advanced since the last refresh. Re-read once
-      // before declaring the key absent so a newly created flag is picked up.
-      this.refreshKnownKeys();
-      if (!this.knownKeys.has(flagKey)) {
-        return absent(flagKey, defaultValue);
-      }
+      return absent(flagKey, defaultValue);
     }
 
     try {
