@@ -33,6 +33,10 @@ expose_postgres_tools() {
     # Root-hosted tests run the Postgres server as nobody. Runtime mise
     # installs inherit root's umask, so expose only the public shims and the
     # pinned Postgres installation to that test user.
+    chmod a+rX "${MISE_DATA_DIR}" "${MISE_DATA_DIR}/shims"
+    if [ -d "${MISE_DATA_DIR}/installs" ]; then
+      chmod a+rX "${MISE_DATA_DIR}/installs"
+    fi
     chmod -R a+rX "${MISE_DATA_DIR}/shims"
     if [ -d "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries" ]; then
       chmod -R a+rX "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries"
