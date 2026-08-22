@@ -27,6 +27,8 @@ const logger = createLogger("test-template");
 /** Bump to force a rebuild when refresh logic changes shape. */
 const TEMPLATE_SCHEMA_VERSION = "1";
 const SWEEP_MAX_AGE_MS = 30 * 60 * 1000;
+const TEMPLATE_LOCK_STALE_MS = 10 * 60 * 1000;
+const TEMPLATE_LOCK_OWNER = "owner.json";
 let activeTemplateDatabase: string | undefined;
 
 const BACKEND_ROOT = `${import.meta.dir}/../..`;
@@ -91,8 +93,50 @@ function currentTemplateHash(databaseName: string): string | undefined {
   }
 }
 
-function acquireTemplateLock(lockDir: string): boolean {
-  return Bun.spawnSync(["mkdir", lockDir]).exitCode === 0;
+async function acquireTemplateLock(lockDir: string): Promise<boolean> {
+  if (Bun.spawnSync(["mkdir", lockDir]).exitCode !== 0) {
+    return false;
+  }
+  await Bun.write(
+    `${lockDir}/${TEMPLATE_LOCK_OWNER}`,
+    JSON.stringify({ pid: process.pid, acquiredAt: Date.now() }),
+  );
+  return true;
+}
+
+async function lockIsStale(lockDir: string): Promise<boolean> {
+  const ownerFile = Bun.file(`${lockDir}/${TEMPLATE_LOCK_OWNER}`);
+  if (!(await ownerFile.exists())) {
+    return Date.now() - Bun.file(lockDir).lastModified > TEMPLATE_LOCK_STALE_MS;
+  }
+  try {
+    const owner: unknown = JSON.parse(await ownerFile.text());
+    if (owner === null || typeof owner !== "object") {
+      return Date.now() - ownerFile.lastModified > TEMPLATE_LOCK_STALE_MS;
+    }
+    const acquiredAt = Reflect.get(owner, "acquiredAt");
+    const pid = Reflect.get(owner, "pid");
+    if (
+      typeof acquiredAt !== "number" ||
+      typeof pid !== "number" ||
+      !Number.isFinite(acquiredAt) ||
+      !Number.isInteger(pid)
+    ) {
+      return Date.now() - ownerFile.lastModified > TEMPLATE_LOCK_STALE_MS;
+    }
+    if (Date.now() - acquiredAt <= TEMPLATE_LOCK_STALE_MS) {
+      return false;
+    }
+    return Bun.spawnSync(["kill", "-0", pid.toString()]).exitCode !== 0;
+  } catch {
+    return Date.now() - ownerFile.lastModified > TEMPLATE_LOCK_STALE_MS;
+  }
+}
+
+async function reclaimStaleTemplateLock(lockDir: string): Promise<void> {
+  if (await lockIsStale(lockDir)) {
+    Bun.spawnSync(["rm", "-rf", lockDir]);
+  }
 }
 
 async function rebuildTemplate(
@@ -168,7 +212,8 @@ export async function ensureTestTemplate(): Promise<void> {
   const lockDir = `${devPostgresDataRoot()}/.template.lock`;
   const deadline = Date.now() + 180_000;
   for (;;) {
-    if (acquireTemplateLock(lockDir)) {
+    await reclaimStaleTemplateLock(lockDir);
+    if (await acquireTemplateLock(lockDir)) {
       break;
     }
     // Another suite is refreshing; wait for it and re-check.
