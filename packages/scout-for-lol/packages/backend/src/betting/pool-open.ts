@@ -11,6 +11,7 @@ import {
 } from "@scout-for-lol/data";
 import { BETTING_WINDOW_MS } from "#src/betting/constants.ts";
 import { isBettableGame } from "#src/betting/eligibility.ts";
+import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -182,28 +183,39 @@ export async function openBettingPoolsForPrematch(
         : JSON.stringify(BucksPredictionSchema.parse(input.prediction));
 
     for (const serverId of enabledGuilds) {
-      // Upsert rather than create: the prematch poll can re-detect the same
-      // game before the notification lands. The update branch deliberately
-      // leaves closesAt and poolState alone, so a re-detection can neither
-      // extend a live window nor reopen a settled pool.
-      await prismaClient.bucksMatchPool.upsert({
-        where: {
-          matchId_serverId: { matchId: input.matchId, serverId },
-        },
-        create: {
-          matchId: input.matchId,
-          serverId,
-          detectedAt: input.detectedAt,
-          closesAt,
-          peekAvailableAt,
-          queueType: input.queueType ?? null,
-          roster: JSON.stringify(roster),
-          predictionJson,
-        },
-        update: {},
-      });
+      // Create rather than upsert: the prematch poll can re-detect the same
+      // game before the notification lands, and a re-detection must neither
+      // extend a live window nor reopen a settled pool. `upsert`'s update
+      // branch already did nothing for that case, so a plain `create` with
+      // its unique-constraint violation caught is behaviourally identical —
+      // and, unlike upsert, unambiguous about whether a pool was actually
+      // opened. The metric and transition log must only fire on that create
+      // branch, or a re-detection reads as repeated opens.
+      let created = true;
+      try {
+        await prismaClient.bucksMatchPool.create({
+          data: {
+            matchId: input.matchId,
+            serverId,
+            detectedAt: input.detectedAt,
+            closesAt,
+            peekAvailableAt,
+            queueType: input.queueType ?? null,
+            roster: JSON.stringify(roster),
+            predictionJson,
+          },
+        });
+      } catch (error) {
+        if (!isUniqueConstraintError(error)) {
+          throw error;
+        }
+        created = false;
+      }
       opened.add(serverId);
-      // Post-commit: the upsert above has already resolved.
+      if (!created) {
+        continue;
+      }
+      // Post-commit: the create above has already resolved.
       bettingPoolsOpenedTotal.inc({
         queue_type: metricQueueType(input.queueType),
       });

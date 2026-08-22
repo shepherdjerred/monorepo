@@ -109,6 +109,7 @@ export async function handleParlayBetButton(
       discordId,
       side: parsed.side,
       stake: parsed.amount,
+      surface: "button",
     },
     prismaClient,
   );

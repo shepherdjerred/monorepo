@@ -27,6 +27,7 @@ import {
   bettingParlayHouseUnavailableTotal,
 } from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-parlay-place-bet");
 
@@ -37,6 +38,8 @@ export type PlaceParlayBetResult =
       totalStake: number;
       grossPayout: number;
       balanceAfter: number;
+      /** True when this call added to an already-open position. */
+      wasTopUp: boolean;
     }
   | { kind: "window_closed" }
   | { kind: "no_market" }
@@ -84,7 +87,48 @@ async function isOpponentPinger(
   return accounts.some((account) => opponentPuuids.has(account.puuid));
 }
 
+/**
+ * Place or top up a parlay bet, counting and logging the result.
+ *
+ * Post-commit, same as the outcome market's `placeBet`: `placeParlayBetInner`
+ * returns only after its transaction resolves, so the count and transition
+ * log cannot survive a rollback.
+ */
 export async function placeParlayBet(
+  input: {
+    matchId: string;
+    serverId: DiscordGuildId;
+    discordId: DiscordAccountId;
+    side: BucksParlaySide;
+    stake: number;
+    now?: Date;
+    /** Which surface asked, so the two cannot drift apart unnoticed. */
+    surface?: "button" | "command";
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<PlaceParlayBetResult> {
+  const result = await placeParlayBetInner(input, prismaClient);
+  if (result.kind === "placed") {
+    // The parlay lifecycle has no separate "topped up" event — a top-up still
+    // reprices the whole position, so it is recorded as the same placement
+    // with the fact noted in `reason`.
+    logBucksTransition({
+      event: "bucks.parlay_bet.placed",
+      matchId: input.matchId,
+      serverId: input.serverId,
+      actorDiscordId: input.discordId,
+      side: result.side,
+      stake: input.stake,
+      grossPayout: result.grossPayout,
+      balanceAfter: result.balanceAfter,
+      reason: result.wasTopUp ? "top_up" : "new",
+      surface: input.surface ?? "button",
+    });
+  }
+  return result;
+}
+
+async function placeParlayBetInner(
   input: {
     matchId: string;
     serverId: DiscordGuildId;
@@ -278,6 +322,7 @@ export async function placeParlayBet(
         totalStake,
         grossPayout: quote.grossPayout,
         balanceAfter,
+        wasTopUp: existing !== null,
       };
     });
   } catch (error) {

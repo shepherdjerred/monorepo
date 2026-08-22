@@ -5,6 +5,7 @@ import {
 } from "@scout-for-lol/data";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 
 export type CancelParlayBetResult =
@@ -14,7 +15,37 @@ export type CancelParlayBetResult =
   | { kind: "window_closed" }
   | { kind: "already_resolved"; marketState: "settled" | "voided" };
 
+/**
+ * Cancel a parlay bet, logging the result post-commit.
+ *
+ * `cancelParlayBetInner` returns only after its transaction resolves, so the
+ * transition log cannot survive a rollback.
+ */
 export async function cancelParlayBet(
+  input: {
+    matchId: string;
+    serverId: DiscordGuildId;
+    discordId: DiscordAccountId;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+  now: Date = new Date(),
+): Promise<CancelParlayBetResult> {
+  const result = await cancelParlayBetInner(input, prismaClient, now);
+  if (result.kind === "cancelled") {
+    logBucksTransition({
+      event: "bucks.parlay_bet.cancelled",
+      matchId: input.matchId,
+      serverId: input.serverId,
+      actorDiscordId: input.discordId,
+      payout: result.refunded,
+      balanceAfter: result.balanceAfter,
+      surface: "button",
+    });
+  }
+  return result;
+}
+
+async function cancelParlayBetInner(
   input: {
     matchId: string;
     serverId: DiscordGuildId;

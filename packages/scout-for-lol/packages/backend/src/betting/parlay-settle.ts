@@ -10,6 +10,7 @@ import {
   type RawMatch,
 } from "@scout-for-lol/data";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 import {
   applyBucksDelta,
   refundableBucksHeldForAccounts,
@@ -437,6 +438,34 @@ export async function settleParlaysForMatch(
       );
       if (summary !== undefined) {
         summaries.push(summary);
+        logBucksTransition({
+          event:
+            summary.voidReason === undefined
+              ? "bucks.parlay.settled"
+              : "bucks.parlay.voided",
+          matchId: summary.matchId,
+          serverId: summary.serverId,
+          fromState: "closed",
+          toState: summary.voidReason === undefined ? "settled" : "voided",
+          ...(summary.voidReason === undefined
+            ? {}
+            : { reason: summary.voidReason }),
+          surface: "postmatch",
+        });
+        for (const bet of summary.bets) {
+          logBucksTransition({
+            event: "bucks.parlay_bet.settled",
+            matchId: summary.matchId,
+            serverId: summary.serverId,
+            actorDiscordId: bet.discordId,
+            side: bet.side,
+            stake: bet.stake,
+            grossPayout: bet.grossPayout,
+            payout: bet.payout,
+            reason: bet.outcome,
+            surface: "postmatch",
+          });
+        }
         if (summary.voidReason !== undefined) {
           bettingParlayVoidsTotal.inc({ reason: summary.voidReason });
         }
