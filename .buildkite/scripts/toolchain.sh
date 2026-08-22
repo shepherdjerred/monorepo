@@ -22,6 +22,12 @@ if [ -n "${GH_TOKEN:-}" ]; then
 fi
 mise trust .mise.toml
 case "${MISE_TOOLCHAIN_SCOPE:-full}" in
+  runtime)
+    # SQLite-only lanes need Bun but must not resolve unrelated tools such as
+    # the PostgreSQL binaries, which can exhaust the shared GitHub API quota.
+    mise install --yes bun
+    mise reshim
+    ;;
   postgres)
     # The Playwright image intentionally carries only browsers and Bun. The
     # design-audit lane needs the same pinned Postgres binaries as backend
