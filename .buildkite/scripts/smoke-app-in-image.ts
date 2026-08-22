@@ -460,7 +460,7 @@ const commands: Record<
       // version is independent of the runtime image's base distribution.
       'postgres_bin="$(pg_config --bindir)"',
       '"$postgres_bin/initdb" -D /tmp/smoke-pg -U postgres --auth=trust --no-locale >/dev/null',
-      '"$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-p 18732 -c listen_addresses=127.0.0.1" start',
+      'if ! "$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-p 18732 -c listen_addresses=127.0.0.1 -c unix_socket_directories=/tmp" start; then cat /tmp/smoke-pg.log; exit 1; fi',
       "set +e",
       // Mirror the full image CMD: migrate → legacy import (which must take
       // its fresh-install marker path here) → report audit → boot.
