@@ -131,7 +131,7 @@ export function createResolver<D extends Record<string, ConfigKeyDefinition>>(
     overrides: EvaluationOverrides | undefined,
   ): string {
     return resolved.targeted
-      ? `${resolved.names.key}\u0000${overrides?.targetingKey ?? ""}`
+      ? `${resolved.names.key}\u{0}${overrides?.targetingKey ?? ""}`
       : resolved.names.key;
   }
 
