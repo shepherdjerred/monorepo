@@ -20,12 +20,12 @@
     "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
-    "smol-toml": "^1.8.0",
     "typescript": "^6.0.3",
     "vitest": "4.1.9",
     "@vitest/coverage-istanbul": "4.1.9"
   },
   "dependencies": {
+    "smol-toml": "^1.8.0",
     "zod": "^4.4.3"
   },
   "exports": {
