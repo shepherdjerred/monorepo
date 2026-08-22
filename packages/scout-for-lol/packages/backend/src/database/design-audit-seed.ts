@@ -54,12 +54,12 @@ export async function seedDesignAuditDatabase(
   backendCwd: string,
   environment: Readonly<Record<string, string | undefined>>,
 ): Promise<void> {
-  if (Bun.env["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] !== "true") {
+  if (environment["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] !== "true") {
     throw new Error(
       "Design-audit fixtures require SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true",
     );
   }
-  const configuredDatabaseUrl = Bun.env["DATABASE_URL"] ?? "";
+  const configuredDatabaseUrl = environment["DATABASE_URL"] ?? "";
   if (!configuredDatabaseUrl.includes("design-audit")) {
     throw new Error(
       "Design-audit fixtures require a dedicated design-audit database",
@@ -91,10 +91,10 @@ export async function seedDesignAuditDatabase(
     ),
   );
   const exploreConversationId =
-    Bun.env["SCOUT_DESIGN_AUDIT_EXPLORE_CONVERSATION_ID"] ??
+    environment["SCOUT_DESIGN_AUDIT_EXPLORE_CONVERSATION_ID"] ??
     DESIGN_AUDIT_EXPLORE_CONVERSATION_ID;
   const exploreShareToken =
-    Bun.env["SCOUT_DESIGN_AUDIT_EXPLORE_SHARE_TOKEN"] ??
+    environment["SCOUT_DESIGN_AUDIT_EXPLORE_SHARE_TOKEN"] ??
     DESIGN_AUDIT_EXPLORE_SHARE_TOKEN;
   const now = new Date("2026-01-01T00:00:00.000Z");
   const prisma = new PrismaClient({
