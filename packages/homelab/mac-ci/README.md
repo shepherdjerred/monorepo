@@ -46,8 +46,24 @@ select neither lane.
 
 ### 1. Bootstrap packages and the agent
 
-From a clean checkout on the Mac, fetch the existing Buildkite cluster agent
-token without persisting it and run:
+From a clean checkout on the Mac, run the host provisioner:
+
+```bash
+./packages/homelab/mac-ci/provision-host.sh
+```
+
+It reads the existing Buildkite agent token from 1Password without persisting
+it, runs the package and agent bootstrap, installs/selects the pinned Xcode,
+and validates the native prerequisites. Apple ID, administrator, FileVault,
+signing, and Accessibility prompts remain interactive. To rerun only the
+Xcode and validation phase after the package bootstrap has completed:
+
+```bash
+./packages/homelab/mac-ci/provision-host.sh --skip-bootstrap
+```
+
+The lower-level bootstrap can still be run directly when an explicit token
+reference or environment is required:
 
 ```bash
 BUILDKITE_AGENT_TOKEN="$(op read 'op://<vault>/Buildkite Agent Token/<field>')" \
