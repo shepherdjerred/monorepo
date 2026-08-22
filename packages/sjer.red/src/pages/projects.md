@@ -34,7 +34,7 @@ An Obsidian plugin that renders Cooklang recipes with rich previews, ingredients
 
 A better interface for Skill Capped.
 
-## All
+<span id="all"></span>
 
 ## Timeless
 
