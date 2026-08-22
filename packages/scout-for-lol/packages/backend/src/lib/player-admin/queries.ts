@@ -188,7 +188,7 @@ export async function listPlayers(
     where: {
       serverId: input.guildId,
       ...(input.query !== undefined && input.query.length > 0
-        ? { alias: { contains: input.query } }
+        ? { alias: { contains: input.query, mode: "insensitive" } }
         : {}),
     },
     include: {

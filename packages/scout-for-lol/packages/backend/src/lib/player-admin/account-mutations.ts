@@ -39,6 +39,21 @@ export type RiotAccountInputData = z.infer<typeof RiotAccountInput>;
 export type TransferAccountInputData = z.infer<typeof TransferAccountInput>;
 export type UpdateAccountInputData = z.infer<typeof UpdateAccountInput>;
 
+async function lockPlayerAccountMutations(
+  tx: {
+    $executeRaw: (
+      query: TemplateStringsArray,
+      ...values: unknown[]
+    ) => Promise<number>;
+  },
+  playerId: number,
+): Promise<void> {
+  // The last-account invariant is a read-then-write check. Serialize every
+  // mutation for the source player before counting accounts so PostgreSQL's
+  // READ COMMITTED transactions cannot both observe the same count.
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-player-accounts'), ${playerId})`;
+}
+
 async function resolvePuuidOrThrow(
   input: RiotAccountInputData,
 ): Promise<LeaguePuuid> {
@@ -141,6 +156,7 @@ export async function deleteAccount(ctx: WebCtx, input: RiotAccountInputData) {
     });
     if (account === null) throw notFound("Account was not found");
 
+    await lockPlayerAccountMutations(tx, account.player.id);
     const sourceAccountCount = await tx.account.count({
       where: { playerId: account.player.id },
     });
@@ -192,6 +208,7 @@ export async function transferAccount(
     });
     if (account === null) throw notFound("Account was not found");
 
+    await lockPlayerAccountMutations(tx, account.player.id);
     const targetPlayer = await tx.player.findUnique({
       where: {
         serverId_alias: {
