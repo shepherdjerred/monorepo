@@ -254,7 +254,7 @@ describe("FreshRSS reconciler", () => {
     };
     const api = new MockFreshRssApi([shared]);
 
-    expect(reconcile(api)).rejects.toThrow(
+    await expect(reconcile(api)).rejects.toThrow(
       "also belong to unmanaged categories",
     );
     expect(api.subscriptions).toEqual([shared]);
@@ -273,34 +273,36 @@ describe("FreshRSS reconciler", () => {
     const api = new MockFreshRssApi([]);
     api.authenticationStatus = 403;
 
-    expect(reconcile(api)).rejects.toThrow("authentication failed: HTTP 403");
+    await expect(reconcile(api)).rejects.toThrow(
+      "authentication failed: HTTP 403",
+    );
   });
 
   test("fails on malformed API responses", async () => {
     const api = new MockFreshRssApi([]);
     api.malformedList = true;
 
-    expect(reconcile(api)).rejects.toThrow("subscriptions array");
+    await expect(reconcile(api)).rejects.toThrow("subscriptions array");
   });
 
   test("fails when subscription edits are rejected", async () => {
     const api = new MockFreshRssApi([]);
     api.editStatus = 400;
 
-    expect(reconcile(api)).rejects.toThrow("subscription/edit");
+    await expect(reconcile(api)).rejects.toThrow("subscription/edit");
   });
 
   test("fails unless release filters converge exactly", async () => {
     const api = new MockFreshRssApi([]);
     api.convergeFilters = false;
 
-    expect(reconcile(api)).rejects.toThrow("filters did not converge");
+    await expect(reconcile(api)).rejects.toThrow("filters did not converge");
   });
 
   test("rejects a runtime category that differs from the manifest", async () => {
     const api = new MockFreshRssApi([]);
 
-    expect(
+    await expect(
       reconcileFreshRss({
         apiUrl: "http://freshrss-service/api/greader.php",
         user: "sjerred",
