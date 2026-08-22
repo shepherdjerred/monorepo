@@ -53,11 +53,16 @@ FROM base AS runtime
 # so copying the whole install root between same-rooted stages is safe. Kept
 # BEFORE the source COPY so a source edit doesn't re-push this layer.
 COPY --from=prod-deps /app/ /app/
-# Scoped source closure (no runtime workspace deps); root tsconfig kept for
-# uniformity with the other app images.
+# Scoped source closure — starlight-karma-bot's own source plus the two
+# source-only internal packages (`@shepherdjerred/config`,
+# `@shepherdjerred/feature-flags`) it imports at runtime; neither has a build
+# step, so their `src/` must be physically present, not just linked from
+# node_modules. Root tsconfig kept for uniformity with the other app images.
 COPY --parents \
   tsconfig.base.json \
   packages/starlight-karma-bot \
+  packages/config \
+  packages/feature-flags \
   ./
 # Bake Prisma's engines into the production dependency tree. Bun's production
 # install omits lifecycle scripts, so the CLI would otherwise download engines

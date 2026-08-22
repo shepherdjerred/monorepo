@@ -8,7 +8,7 @@ import {
   settleParlaysForMatch,
   type ParlaySettlementSummary,
 } from "#src/betting/parlay-settle.ts";
-import { disableClosedBettingMessages } from "#src/betting/message-controls.ts";
+import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
 import {
   closeBettingWindowsForMatch,
@@ -20,7 +20,7 @@ export async function refreshSettledPoolMessages(
   straightPools: readonly { matchId: string; serverId: string }[],
   parlaySettlements: readonly ParlaySettlementSummary[],
   refreshStraightPools: typeof refreshClosedBucksMessages = refreshClosedBucksMessages,
-  disableParlayPools: typeof disableClosedBettingMessages = disableClosedBettingMessages,
+  disableParlayPools: typeof refreshClosedParlayMessages = refreshClosedParlayMessages,
 ): Promise<void> {
   const uniqueStraightPools = new Map<
     string,

@@ -3,15 +3,24 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type BucksPoolParticipant,
-  type RiotTeamId,
 } from "@scout-for-lol/data";
 import type { InteractionEditReplyOptions } from "discord.js";
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
-import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { placeBet, type PlaceBetResult } from "#src/betting/place-bet.ts";
 import { cancelBet, type CancelBetResult } from "#src/betting/cancel-bet.ts";
 import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
-import { teamIdForSubjectOutcome, teamName } from "#src/betting/team.ts";
+import { outcomeLabel, teamIdForSubjectOutcome } from "#src/betting/team.ts";
+import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
+import {
+  BUCKS_GUILD_ONLY,
+  BUCKS_HOUSE_CANNOT_FUND,
+  BUCKS_INVALID_STAKE,
+  BUCKS_NOT_ELIGIBLE,
+  BUCKS_NOT_ENABLED,
+  BUCKS_NO_OUTCOME_MARKET,
+  BUCKS_STORAGE_LIMIT,
+  bucksInsufficient,
+} from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -50,32 +59,36 @@ const defaultDependencies: BetButtonDependencies = {
  * user input at a system boundary, so none of them are errors. */
 export function describeResult(
   result: PlaceBetResult,
-  selectedTeamId: RiotTeamId,
+  sideLabel: string,
 ): string {
   switch (result.kind) {
     case "placed": {
-      return `✅ Offer placed: **${teamName(selectedTeamId)} wins** for up to **${result.totalStake.toString()} BB**. The final matched amount will be announced at close. Available balance: **${result.balanceAfter.toString()} BB**. ${HOUSE_CUT_TERMS}`;
+      // "Only matched BB are at risk" is the one rule that survives on a
+      // confirmation: without it the number above reads as a guaranteed loss
+      // amount, which is not what was submitted. Everything else is in
+      // `/bb rules`.
+      return `✅ **${sideLabel}** — offered up to **${result.totalStake.toString()} BB** · balance **${result.balanceAfter.toString()} BB**. Only matched BB are at risk; the rest is refunded at close.`;
     }
     case "window_closed":
       return "⏰ Betting has closed for this game.";
     case "no_pool":
-      return "🚫 There's no Bryan Bucks market for this game.";
+      return BUCKS_NO_OUTCOME_MARKET;
     case "feature_disabled":
-      return "🚫 Bryan Bucks is no longer enabled in this server.";
+      return BUCKS_NOT_ENABLED;
     case "not_eligible":
-      return "🔒 Only tracked players can bet. Ask an admin to link your Discord account to a player in the dashboard.";
+      return BUCKS_NOT_ELIGIBLE;
     case "unknown_subject":
       return `🤔 That player isn't in this game. Try: ${result.validAliases.join(", ")}.`;
     case "invalid_stake":
-      return "💱 Offers must be a positive whole number of BB.";
+      return BUCKS_INVALID_STAKE;
     case "storage_limit":
-      return "💱 That position is too large for the current Bryan Bucks storage format.";
+      return BUCKS_STORAGE_LIMIT;
     case "insufficient":
-      return `💸 You have **${result.balance.toString()} BB** but need **${result.needed.toString()} BB**.`;
+      return bucksInsufficient(result.balance, result.needed);
     case "house_insufficient":
-      return "🏦 The Bryan Bucks house cannot fund a new wallet right now. No Bucks moved.";
+      return BUCKS_HOUSE_CANNOT_FUND;
     case "side_conflict":
-      return "↔️ You already backed the other side of this game. Cancel your bet first.";
+      return "↔️ You already backed the other side. Cancel that bet first.";
   }
 }
 
@@ -85,17 +98,17 @@ export function describeResult(
 export function describeCancel(result: CancelBetResult): string {
   switch (result.kind) {
     case "cancelled":
-      return `↩️ Offer cancelled: offered **${result.stake.toString()} BB** − **${result.houseCut.toString()} BB cancellation fee** = **${result.refunded.toString()} BB returned**; balance **${result.balanceAfter.toString()} BB**.`;
+      return `↩️ Cancelled: **${result.stake.toString()} BB** − **${result.houseCut.toString()} BB** fee = **${result.refunded.toString()} BB** back · balance **${result.balanceAfter.toString()} BB**.`;
     case "window_closed":
-      return "⏰ Betting has closed for this game. Your offer can no longer be cancelled; check the close announcement for your final matched amount and any unmatched refund.";
+      return "⏰ Betting is closed — your bet is locked in. Final amounts are on the game message.";
     case "already_resolved":
       return result.poolState === "settled"
-        ? "✅ This game has already settled, so there's nothing left to cancel — check your balance for the payout."
-        : "🚫 This game's market was voided, so matched BB were refunded and unmatched BB were already returned.";
+        ? "✅ Already settled — check `/bb balance`."
+        : "🚫 Voided — everything was refunded.";
     case "no_bet":
       return "🤷 You don't have a bet to cancel on this game.";
     case "no_pool":
-      return "🚫 There's no Bryan Bucks market for this game.";
+      return BUCKS_NO_OUTCOME_MARKET;
   }
 }
 
@@ -129,7 +142,7 @@ export async function handleBetButton(
   if (interaction.guildId === null) {
     await interaction.deferReply({ ephemeral: true });
     await interaction.editReply({
-      content: "🏠 Bryan Bucks only works inside a server.",
+      content: BUCKS_GUILD_ONLY,
     });
     return;
   }
@@ -145,7 +158,7 @@ export async function handleBetButton(
   });
   if (pool === null) {
     await interaction.editReply({
-      content: "🚫 There's no Bryan Bucks market for this game.",
+      content: BUCKS_NO_OUTCOME_MARKET,
     });
     return;
   }
@@ -178,6 +191,11 @@ export async function handleBetButton(
 
   const betOnWin = parsed.side === "W";
   const selectedTeamId = teamIdForSubjectOutcome(subject.teamId, betOnWin);
+  const anchor = bettingAnchor(roster);
+  const sideLabel = outcomeLabel(
+    selectedTeamId,
+    anchor === undefined ? undefined : subjectFraming(anchor),
+  );
   const result = await placeBet(
     {
       matchId: parsed.matchId,
@@ -186,12 +204,13 @@ export async function handleBetButton(
       subjectPuuid: subject.puuid,
       subjectWins: betOnWin,
       stake: parsed.amount,
+      surface: "button",
     },
     prismaClient,
   );
 
   await interaction.editReply({
-    content: describeResult(result, selectedTeamId),
+    content: describeResult(result, sideLabel),
   });
 
   if (result.kind === "placed") {

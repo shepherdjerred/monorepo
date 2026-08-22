@@ -7,10 +7,15 @@ import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { disableParlayPreparationReferences } from "#src/betting/parlay-publish.ts";
-import { disableClosedBettingMessages } from "#src/betting/message-controls.ts";
+import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { bettingParlayVoidsTotal } from "#src/metrics/betting-parlay.ts";
+import {
+  bettingParlayBetSettlementsTotal,
+  bettingParlayMarketsClosedTotal,
+  bettingParlayVoidsTotal,
+} from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-parlay-sweep");
 
@@ -36,6 +41,15 @@ export async function closeExpiredParlayWindows(
         data: { marketState: "closed" },
       });
       if (claim.count !== 1) continue;
+      bettingParlayMarketsClosedTotal.inc();
+      logBucksTransition({
+        event: "bucks.parlay.closed",
+        matchId: market.matchId,
+        serverId: market.serverId,
+        fromState: "open",
+        toState: "closed",
+        surface: "sweep",
+      });
       closed.push({
         matchId: market.matchId,
         serverId: market.serverId,
@@ -58,7 +72,7 @@ export async function voidStaleParlayMarkets(
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
   disablePreparationReferences: typeof disableParlayPreparationReferences = disableParlayPreparationReferences,
-  disableMarketControls: typeof disableClosedBettingMessages = disableClosedBettingMessages,
+  disableMarketControls: typeof refreshClosedParlayMessages = refreshClosedParlayMessages,
 ): Promise<number> {
   const cutoff = new Date(now.getTime() - VOID_GRACE_MS);
   const markets = await prismaClient.bucksParlayMarket.findMany({
@@ -90,7 +104,7 @@ export async function voidStaleParlayMarkets(
             settledAt,
           },
         });
-        if (claim.count !== 1) return false;
+        if (claim.count !== 1) return;
         const bets = await tx.bucksParlayBet.findMany({
           where: { marketId: market.id, betOutcome: "pending" },
           select: {
@@ -142,25 +156,45 @@ export async function voidStaleParlayMarkets(
             context: { ...context, credited: bet.houseReserve },
           });
         }
-        return true;
+        return { bets };
       });
-      if (voided) {
+      if (voided !== undefined) {
         count += 1;
         bettingParlayVoidsTotal.inc({ reason: "expired" });
+        logBucksTransition({
+          event: "bucks.parlay.voided",
+          matchId: market.matchId,
+          serverId: market.serverId,
+          fromState: market.marketState,
+          toState: "voided",
+          reason: "expired",
+          surface: "sweep",
+        });
+        for (const bet of voided.bets) {
+          bettingParlayBetSettlementsTotal.inc({ result: "voided" });
+          logBucksTransition({
+            event: "bucks.parlay_bet.settled",
+            matchId: market.matchId,
+            serverId: market.serverId,
+            betId: bet.id,
+            bucksAccountId: bet.bucksAccountId,
+            side: BucksParlaySideSchema.parse(bet.side),
+            stake: bet.stake,
+            payout: bet.stake,
+            reason: "voided",
+            surface: "sweep",
+          });
+        }
         if (market.marketState === "publishing") {
           await disablePreparationReferences(
             BucksMessageRefsSchema.parse(JSON.parse(market.messageRefs)),
             market.matchId,
           );
         } else {
+          // The refresh reads its own refs, and now re-renders the message as
+          // voided rather than only stripping its buttons.
           await disableMarketControls([
-            {
-              matchId: market.matchId,
-              serverId: market.serverId,
-              messageRefs: BucksMessageRefsSchema.parse(
-                JSON.parse(market.messageRefs),
-              ).map((ref) => ({ ...ref })),
-            },
+            { matchId: market.matchId, serverId: market.serverId },
           ]);
         }
       }

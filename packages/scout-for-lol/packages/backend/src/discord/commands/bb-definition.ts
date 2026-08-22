@@ -40,7 +40,7 @@ export const bbCommand = addBbPeekSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName("bet")
-        .setDescription("Offer up to an amount; only matched Bucks are at risk")
+        .setDescription("Bet on a tracked player's game")
         .addStringOption((option) =>
           option
             .setName("game")
@@ -49,10 +49,18 @@ export const bbCommand = addBbPeekSubcommands(
         )
         .addStringOption((option) =>
           option
-            .setName("team")
-            .setDescription("The team to win")
+            .setName("outcome")
+            // Four static choices, because slash-command choices are frozen at
+            // registration and cannot vary per game. Blue/Red resolve without
+            // knowing the game, which is what covers the rare lobby with
+            // tracked players on both teams.
+            .setDescription(
+              "Win or lose for the tracked player — or pick a side",
+            )
             .setRequired(true)
             .addChoices(
+              { name: "Win", value: "win" },
+              { name: "Lose", value: "lose" },
               { name: "Blue", value: "blue" },
               { name: "Red", value: "red" },
             ),

@@ -265,6 +265,12 @@ async function buildSite(
       flavor === "prod"
         ? "https://scout-for-lol.com"
         : "https://beta.scout-for-lol.com",
+    // Beta-only documentation is excluded from the collection at build time,
+    // so the pages are physically absent from the prod artifact rather than
+    // redirected. Both flavors are built here from one source tree and hashed
+    // separately, and `assertScoutArchiveBytes` verifies each digest, so a
+    // beta-only page cannot leak into prod by accident.
+    PUBLIC_SCOUT_SITE_FLAVOR: flavor,
   };
   if (flavor === "prod") {
     env["PUBLIC_PINTEREST_TAG_ID"] = requireEnv("PUBLIC_PINTEREST_TAG_ID");

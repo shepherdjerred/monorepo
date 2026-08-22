@@ -30,6 +30,56 @@ export const bettingParlayVoidsTotal = new Counter({
   registers: [registry],
 });
 
+/* -------------------------------------------------- market lifecycle -- */
+
+export const bettingParlayMarketsPublishedTotal = new Counter({
+  name: "betting_parlay_markets_published_total",
+  help: "Bryan Bucks parlay markets persisted behind a preparation message.",
+  registers: [registry],
+});
+
+export const bettingParlayMarketsOpenedTotal = new Counter({
+  name: "betting_parlay_markets_opened_total",
+  help: "Bryan Bucks parlay markets activated from publishing to open.",
+  registers: [registry],
+});
+
+export const bettingParlayMarketsClosedTotal = new Counter({
+  name: "betting_parlay_markets_closed_total",
+  help: "Bryan Bucks parlay markets closed at their betting window.",
+  registers: [registry],
+});
+
+export const bettingParlayMarketSettlementsTotal = new Counter({
+  name: "betting_parlay_market_settlements_total",
+  help: "Bryan Bucks parlay markets reaching a terminal state.",
+  labelNames: ["result"] as const,
+  registers: [registry],
+});
+
+/* ------------------------------------------------------------ bets ---- */
+
+export const bettingParlayBetPlacementsTotal = new Counter({
+  name: "betting_parlay_bet_placements_total",
+  help: "Bryan Bucks parlay bet placements by surface and result.",
+  labelNames: ["surface", "result"] as const,
+  registers: [registry],
+});
+
+export const bettingParlayBetCancellationsTotal = new Counter({
+  name: "betting_parlay_bet_cancellations_total",
+  help: "Bryan Bucks parlay bet cancellations by surface and result.",
+  labelNames: ["surface", "result"] as const,
+  registers: [registry],
+});
+
+export const bettingParlayBetSettlementsTotal = new Counter({
+  name: "betting_parlay_bet_settlements_total",
+  help: "Bryan Bucks parlay bets reaching a terminal outcome.",
+  labelNames: ["result"] as const,
+  registers: [registry],
+});
+
 export const bettingParlayHouseUnavailableTotal = new Counter({
   name: "betting_parlay_house_unavailable_total",
   help: "Parlay placements rejected because the house could not reserve liability.",

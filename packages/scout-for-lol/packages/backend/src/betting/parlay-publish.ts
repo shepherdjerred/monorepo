@@ -7,16 +7,20 @@ import {
 import {
   GeneratedParlaySchema,
   ParlaySubjectsSchema,
-  renderParlay,
 } from "#src/betting/parlay-criteria.ts";
 import { PARLAY_BETTING_WINDOW_MS } from "#src/betting/constants.ts";
 import { buildParlayButtons } from "#src/betting/parlay-components.ts";
-import { formatDecimalOdds } from "#src/betting/parlay-odds.ts";
+import { buildParlayContent } from "#src/betting/parlay-line.ts";
+import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
-import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  bettingParlayMarketsOpenedTotal,
+  bettingParlayMarketsPublishedTotal,
+} from "#src/metrics/betting-parlay.ts";
 
 const logger = createLogger("betting-parlay-publish");
 type PreparationMessage = Awaited<ReturnType<typeof send>>;
@@ -27,10 +31,14 @@ async function disablePreparationMessages(
 ): Promise<void> {
   const disabled = await Promise.allSettled(
     messages.map((message) =>
-      message.edit({
-        content: "🎲 This Bryan Bucks parlay could not be opened.",
-        components: [],
-      }),
+      observeBucksDelivery(
+        { surface: "parlay_preparation", operation: "edit", matchId },
+        () =>
+          message.edit({
+            content: "🎲 This Bryan Bucks parlay could not be opened.",
+            components: [],
+          }),
+      ),
     ),
   );
   for (const result of disabled) {
@@ -48,16 +56,30 @@ export async function disableParlayPreparationReferences(
   matchId: string,
 ): Promise<void> {
   const disabled = await Promise.allSettled(
-    refs.map(async (ref) => {
-      const channel = await client.channels.fetch(
-        DiscordChannelIdSchema.parse(ref.channelId),
-      );
-      if (channel?.isTextBased() !== true) return;
-      await channel.messages.edit(ref.messageId, {
-        content: "🎲 This Bryan Bucks parlay could not be opened.",
-        components: [],
-      });
-    }),
+    refs.map((ref) =>
+      observeBucksDelivery(
+        {
+          surface: "parlay_preparation",
+          operation: "edit",
+          matchId,
+          channelId: ref.channelId,
+        },
+        async () => {
+          const channel = await client.channels.fetch(
+            DiscordChannelIdSchema.parse(ref.channelId),
+          );
+          if (channel?.isTextBased() !== true) {
+            throw new Error(
+              `Bryan Bucks parlay preparation channel ${ref.channelId} is unavailable or not text based`,
+            );
+          }
+          await channel.messages.edit(ref.messageId, {
+            content: "🎲 This Bryan Bucks parlay could not be opened.",
+            components: [],
+          });
+        },
+      ),
+    ),
   );
   for (const result of disabled) {
     if (result.status === "rejected") {
@@ -69,55 +91,34 @@ export async function disableParlayPreparationReferences(
   }
 }
 
-function probabilityPercent(bps: number): string {
-  return `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 2)}%`;
-}
-
-export function buildParlayMessage(input: {
-  criteria: ReturnType<typeof GeneratedParlaySchema.parse>;
-  subjects: ReturnType<typeof ParlaySubjectsSchema.parse>;
-  closesAt: Date;
-}): string {
-  const yes = input.criteria.yesProbabilityBps;
-  const no = 10_000 - yes;
-  const closeUnix = Math.floor(input.closesAt.getTime() / 1000);
-  const legs = renderParlay(input.criteria, input.subjects).map(
-    (leg, index) => `${(index + 1).toString()}. ${leg}`,
-  );
-  const content = [
-    "🎲 **Bryan Bucks Parlay** — every leg must hit for YES",
-    ...legs,
-    "",
-    `**YES** ${probabilityPercent(yes)} (${formatDecimalOdds(yes)}×) · **NO** ${probabilityPercent(no)} (${formatDecimalOdds(no)}×)`,
-    `Closes <t:${closeUnix.toString()}:R> · Live/in-play market: early game events may already be visible.`,
-  ].join("\n");
-  const chunks = splitMessageIntoChunks(content);
-  if (chunks.length !== 1) {
-    throw new Error(
-      "Bryan Bucks parlay publication exceeds Discord's message limit.",
-    );
-  }
-  const message = chunks[0];
-  if (message === undefined) {
-    throw new Error("Bryan Bucks parlay publication rendered no content.");
-  }
-  return message;
-}
-
 async function activateMessageReference(input: {
   ref: { channelId: string; messageId: string };
   matchId: string;
   content: string;
 }): Promise<{ channelId: string; messageId: string } | undefined> {
   try {
-    const channel = await client.channels.fetch(
-      DiscordChannelIdSchema.parse(input.ref.channelId),
+    await observeBucksDelivery(
+      {
+        surface: "parlay_market",
+        operation: "edit",
+        matchId: input.matchId,
+        channelId: input.ref.channelId,
+      },
+      async () => {
+        const channel = await client.channels.fetch(
+          DiscordChannelIdSchema.parse(input.ref.channelId),
+        );
+        if (channel?.isTextBased() !== true) {
+          throw new Error(
+            `Bryan Bucks parlay activation channel ${input.ref.channelId} is unavailable or not text based`,
+          );
+        }
+        await channel.messages.edit(input.ref.messageId, {
+          content: input.content,
+          components: [buildParlayButtons({ matchId: input.matchId })],
+        });
+      },
     );
-    if (channel?.isTextBased() !== true) return;
-    await channel.messages.edit(input.ref.messageId, {
-      content: input.content,
-      components: [buildParlayButtons({ matchId: input.matchId })],
-    });
     return { ...input.ref };
   } catch (error) {
     logger.warn(
@@ -211,7 +212,13 @@ export async function activatePendingParlayMarkets(
       const closesAt = new Date(
         publishedAt.getTime() + PARLAY_BETTING_WINDOW_MS,
       );
-      const content = buildParlayMessage({ criteria, subjects, closesAt });
+      const content = buildParlayContent({
+        criteria,
+        subjects,
+        closesAt,
+        marketState: "open",
+        positions: [],
+      });
       const activationResults = await Promise.all(
         refs.map((ref) =>
           activateReference({
@@ -244,10 +251,12 @@ export async function activatePendingParlayMarkets(
           select: { marketState: true, closesAt: true },
         });
         if (current?.marketState === "open") {
-          const authoritativeContent = buildParlayMessage({
+          const authoritativeContent = buildParlayContent({
             criteria,
             subjects,
             closesAt: current.closesAt,
+            marketState: "open",
+            positions: [],
           });
           await Promise.all(
             refs.map((ref) =>
@@ -267,6 +276,17 @@ export async function activatePendingParlayMarkets(
             disableReferences,
           });
         }
+      }
+      if (claim.count === 1) {
+        bettingParlayMarketsOpenedTotal.inc();
+        logBucksTransition({
+          event: "bucks.parlay.opened",
+          matchId: market.matchId,
+          serverId: market.serverId,
+          fromState: "publishing",
+          toState: "open",
+          surface: "prematch",
+        });
       }
       activated += claim.count;
     } catch (error) {
@@ -329,12 +349,22 @@ export async function publishParlayDefinition(
       for (const outcomeRef of outcomeRefs) {
         signal?.throwIfAborted();
         try {
-          const sent = await send(
+          const sent = await observeBucksDelivery(
             {
-              content: "🎲 Preparing the Bryan Bucks parlay…",
+              surface: "parlay_preparation",
+              operation: "send",
+              matchId: definition.matchId,
+              serverId: pool.serverId,
+              channelId: outcomeRef.channelId,
             },
-            DiscordChannelIdSchema.parse(outcomeRef.channelId),
-            DiscordGuildIdSchema.parse(pool.serverId),
+            () =>
+              send(
+                {
+                  content: "🎲 Preparing the Bryan Bucks parlay…",
+                },
+                DiscordChannelIdSchema.parse(outcomeRef.channelId),
+                DiscordGuildIdSchema.parse(pool.serverId),
+              ),
           );
           sentMessages.push(sent);
           messages.push(sent);
@@ -398,6 +428,14 @@ export async function publishParlayDefinition(
       }
       for (const message of market.messages) durableMessages.add(message);
       persisted += 1;
+      bettingParlayMarketsPublishedTotal.inc();
+      logBucksTransition({
+        event: "bucks.parlay.published",
+        matchId: market.matchId,
+        serverId: market.serverId,
+        toState: "publishing",
+        surface: "prematch",
+      });
     }
     if (persisted === 0) return 0;
     // Buttons appear only after every market is durable. A process exit before

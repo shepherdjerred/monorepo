@@ -13,6 +13,8 @@ import {
   RawMatchSchema,
 } from "@scout-for-lol/data";
 import { cancelParlayBet } from "#src/betting/parlay-cancel-bet.ts";
+import type { BucksMessageEdit } from "#src/betting/message-refresh.ts";
+import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
 import {
   applyBucksDelta,
   BucksStorageOverflowError,
@@ -785,5 +787,169 @@ describe("Bryan Bucks parlay publication lifecycle", () => {
     expect(await db.bucksMatchPool.findFirstOrThrow()).toMatchObject({
       poolState: "open",
     });
+  });
+});
+
+async function marketWithMessages(): Promise<void> {
+  const market = await makeMarket();
+  await db.bucksParlayMarket.update({
+    where: { id: market.id },
+    data: {
+      messageRefs: JSON.stringify([
+        { channelId: "1337623164146155594", messageId: "parlay-one" },
+        { channelId: "1337623164146155595", messageId: "parlay-two" },
+      ]),
+    },
+  });
+}
+
+describe("Bryan Bucks parlay message refresh", () => {
+  type RecordedEdit = {
+    messageId: string;
+    content: string;
+    removedComponents: boolean;
+  };
+
+  function recordingEditor(edits: RecordedEdit[]): BucksMessageEdit {
+    return (input) => {
+      if (typeof input.options.content !== "string") {
+        throw new TypeError("expected refreshed parlay content");
+      }
+      edits.push({
+        messageId: input.messageId,
+        content: input.options.content,
+        removedComponents:
+          Array.isArray(input.options.components) &&
+          input.options.components.length === 0,
+      });
+      return Promise.resolve();
+    };
+  }
+
+  // The file-level beforeEach already clears state and seeds the tracked
+  // player; clearing again here would delete that linkage.
+
+  // The whole point of the refresh: a placement mutates the market message
+  // instead of posting a public receipt, which was ~1.8 extra messages a game.
+  test("edits every market message with the live position digest", async () => {
+    await marketWithMessages();
+    await db.bucksAccount.create({
+      data: { serverId: SERVER_ID, discordId: BETTOR, balance: 50 },
+    });
+    expect(await place("YES", 5)).toMatchObject({ kind: "placed" });
+    expect(await db.bucksParlayBet.count()).toBe(1);
+
+    const edits: RecordedEdit[] = [];
+    await refreshParlayMessages(
+      { matchId: MATCH_ID, serverId: SERVER_ID },
+      db,
+      recordingEditor(edits),
+    );
+
+    expect(edits.map((edit) => edit.messageId)).toEqual([
+      "parlay-one",
+      "parlay-two",
+    ]);
+    expect(edits[0]?.content).toContain(`**YES** <@${BETTOR}> 5`);
+    expect(edits[0]?.content).toContain("every leg must hit for YES");
+    expect(edits[0]?.content).toContain("live in-play market");
+    expect(edits.every((edit) => !edit.removedComponents)).toBe(true);
+  });
+
+  test("drops a cancelled position from the digest", async () => {
+    await marketWithMessages();
+    await db.bucksAccount.create({
+      data: { serverId: SERVER_ID, discordId: BETTOR, balance: 50 },
+    });
+    await place("YES", 5);
+    await cancelParlayBet(
+      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      db,
+    );
+
+    const edits: RecordedEdit[] = [];
+    await refreshParlayMessages(
+      { matchId: MATCH_ID, serverId: SERVER_ID },
+      db,
+      recordingEditor(edits),
+    );
+
+    expect(edits[0]?.content).not.toContain(`<@${BETTOR}>`);
+  });
+
+  test("renders a voided market and strips its controls", async () => {
+    await marketWithMessages();
+    await db.bucksParlayMarket.updateMany({
+      where: { matchId: MATCH_ID, serverId: SERVER_ID },
+      data: { marketState: "voided", voidReason: "expired" },
+    });
+
+    const edits: RecordedEdit[] = [];
+    await refreshParlayMessages(
+      { matchId: MATCH_ID, serverId: SERVER_ID, removeComponents: true },
+      db,
+      recordingEditor(edits),
+    );
+
+    expect(edits[0]?.content).toContain("Voided (the game never resolved)");
+    // The raw enum must never reach a player.
+    expect(edits[0]?.content).not.toContain("expired");
+    expect(edits.every((edit) => edit.removedComponents)).toBe(true);
+  });
+
+  // Refreshes for one match/guild are only serialized against each other,
+  // never ordered against the sweep that closes the market. A
+  // placement-triggered refresh always asks for buttons (no
+  // `removeComponents`), so if it runs after a close-triggered refresh has
+  // already marked the market closed, it must still strip controls based on
+  // the market state this call just loaded — not reintroduce clickable
+  // buttons on a closed market.
+  test("strips controls on a closed market even when the caller did not ask", async () => {
+    await marketWithMessages();
+    await db.bucksParlayMarket.updateMany({
+      where: { matchId: MATCH_ID, serverId: SERVER_ID },
+      data: { marketState: "closed" },
+    });
+
+    const edits: RecordedEdit[] = [];
+    await refreshParlayMessages(
+      { matchId: MATCH_ID, serverId: SERVER_ID },
+      db,
+      recordingEditor(edits),
+    );
+
+    expect(edits.every((edit) => edit.removedComponents)).toBe(true);
+  });
+
+  // The activation outbox owns a publishing message; refreshing it would race
+  // `activatePendingParlayMarkets` for the same edit.
+  test("never touches a market that is still publishing", async () => {
+    await marketWithMessages();
+    await db.bucksParlayMarket.updateMany({
+      where: { matchId: MATCH_ID, serverId: SERVER_ID },
+      data: { marketState: "publishing" },
+    });
+
+    const edits: RecordedEdit[] = [];
+    await refreshParlayMessages(
+      { matchId: MATCH_ID, serverId: SERVER_ID },
+      db,
+      recordingEditor(edits),
+    );
+
+    expect(edits).toEqual([]);
+  });
+
+  test("is a no-op for a market with no delivered messages", async () => {
+    await makeMarket();
+
+    const edits: RecordedEdit[] = [];
+    await refreshParlayMessages(
+      { matchId: MATCH_ID, serverId: SERVER_ID },
+      db,
+      recordingEditor(edits),
+    );
+
+    expect(edits).toEqual([]);
   });
 });

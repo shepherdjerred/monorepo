@@ -116,6 +116,21 @@ afterAll(async () => {
 });
 
 describe("placeBet — accepting a position", () => {
+  test("marks a top-up as a top-up, not a fresh placement", async () => {
+    const first = await bet({ stake: 5 });
+    if (first.kind !== "placed") {
+      throw new Error(`expected the first bet to be placed, got ${first.kind}`);
+    }
+    expect(first.wasTopUp).toBe(false);
+
+    const second = await bet({ stake: 3 });
+    if (second.kind !== "placed") {
+      throw new Error(`expected the top-up to be placed, got ${second.kind}`);
+    }
+    expect(second.wasTopUp).toBe(true);
+    expect(second.totalStake).toBe(8);
+  });
+
   test("debits the stake, records one ledger row, and seeds the wallet", async () => {
     const result = await bet({ stake: 5 });
 

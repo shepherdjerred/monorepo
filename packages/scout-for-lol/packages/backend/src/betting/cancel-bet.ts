@@ -12,6 +12,12 @@ import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { findBucksAccountId } from "#src/betting/accounts.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  bettingBetCancellationsTotal,
+  bettingSettlementConservationFailuresTotal,
+  bettingStakeBucksTotal,
+} from "#src/metrics/betting.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-cancel-bet");
 
@@ -46,6 +52,43 @@ export type CancelBetResult =
  * offer without severing any ledger links.
  */
 export async function cancelBet(
+  input: {
+    matchId: string;
+    serverId: DiscordGuildId;
+    discordId: DiscordAccountId;
+    surface?: "button" | "command";
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+  now: Date = new Date(),
+): Promise<CancelBetResult> {
+  const result = await cancelBetInner(input, prismaClient, now);
+  const surface = input.surface ?? "button";
+  bettingBetCancellationsTotal.inc({ surface, result: result.kind });
+  if (result.kind === "cancelled") {
+    bettingStakeBucksTotal.inc(
+      { movement: "refunded_cancel" },
+      result.refunded,
+    );
+    bettingStakeBucksTotal.inc(
+      { movement: "house_cut_cancellation" },
+      result.houseCut,
+    );
+    logBucksTransition({
+      event: "bucks.bet.cancelled",
+      matchId: input.matchId,
+      serverId: input.serverId,
+      actorDiscordId: input.discordId,
+      stake: result.stake,
+      houseCut: result.houseCut,
+      payout: result.refunded,
+      balanceAfter: result.balanceAfter,
+      surface,
+    });
+  }
+  return result;
+}
+
+async function cancelBetInner(
   input: {
     matchId: string;
     serverId: DiscordGuildId;
@@ -152,6 +195,7 @@ export async function cancelBet(
     const houseCut = cancellationHouseCut(bet.stake);
     const refunded = bet.stake - houseCut;
     if (refunded + houseCut !== bet.stake) {
+      bettingSettlementConservationFailuresTotal.inc({ stage: "cancellation" });
       throw new Error(
         `Cancellation for ${input.matchId} did not conserve Bucks: offer ${bet.stake.toString()}, refund ${refunded.toString()}, cancellation fee ${houseCut.toString()}`,
       );
