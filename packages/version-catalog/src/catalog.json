@@ -784,6 +784,18 @@
       "value": "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d"
     },
     {
+      "name": "oven/bun",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "1.3.14-slim@sha256:d56a2534ffd262e92c12fd3249d3924d296d97086da773f821d7d0477435ea04"
+    },
+    {
       "name": "pinchtab/pinchtab",
       "category": "upstream",
       "artifactType": "image",

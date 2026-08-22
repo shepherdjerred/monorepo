@@ -160,10 +160,11 @@ prerequisites applied and child auto-sync suspended.
 
 ## Code Review Rules
 
-These rules steer automated PR code review. Qodo and Codex are the
-repository-required CI providers; Buildkite runs both provider gates, while
-consumers that decide against the gate — PR fleet — default to Qodo so their
-findings cannot disagree with the check they are reproducing.
+These rules steer automated PR code review. Codex is the repository-required CI
+provider for now; Buildkite runs its gate. Qodo remains an optional registered
+provider for manual or future use. Consumers that decide against the gate — PR
+fleet — use the required Codex provider so their findings cannot disagree with
+the check they are reproducing.
 `resolveProvider()` keeps a separate neutral default for callers that are not
 reproducing a gate decision.
 The gate implementation remains provider-neutral — see
@@ -352,7 +353,7 @@ Treat this as a production-mutating build, not a read-only benchmark.
 
 ### The review gate
 
-The `review-gate` and `codex-review-gate` steps run
+The `codex-review-gate` step runs
 `.buildkite/scripts/review-gate.sh`, which checks out `main` into a worktree and
 runs the provider-selected gate from there. Each gate reads only GitHub state
 and never the PR's diff, so running it from the PR's own copy bought nothing and
@@ -717,9 +718,9 @@ GH_TOKEN=$(toolkit gh auth token) bun scripts/review-findings.ts list <pr>
 toolkit pr review harvest <pr>
 ```
 
-The first command lists Qodo findings with title, severity and location. The
-harvest command independently evaluates both providers' Buildkite status and
-review state, so a stale Codex job is not hidden by a healthy Qodo gate. Run
+The first command lists Codex findings with title, severity and location. The
+harvest command evaluates the required Codex Buildkite status and review state.
+Run
 these **before** pushing a fix: a fix pushed without resolving its thread only
 surfaces at the end of a ~7-minute gate cycle.
 

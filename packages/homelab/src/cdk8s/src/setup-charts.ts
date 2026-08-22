@@ -66,7 +66,7 @@ export async function setupCharts(app: App): Promise<void> {
   createPostalChart(app);
   createSyncthingChart(app);
   createGolinkChart(app);
-  createFreshRssChart(app);
+  await createFreshRssChart(app);
   createPinchtabChart(app);
   createPokemonChart(app);
   createMarioKartChart(app);

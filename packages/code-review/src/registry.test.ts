@@ -22,9 +22,9 @@ describe("resolveProvider", () => {
     expect(resolveProvider("  QODO ").id).toBe("qodo");
   });
 
-  test("keeps the required CI provider separate from the neutral default", () => {
-    expect(REQUIRED_REVIEW_PROVIDER_ID).toBe("qodo");
-    expect(resolveRequiredReviewProvider().id).toBe("qodo");
+  test("uses Codex as the required CI provider", () => {
+    expect(REQUIRED_REVIEW_PROVIDER_ID).toBe("codex");
+    expect(resolveRequiredReviewProvider().id).toBe("codex");
     expect(resolveProvider().id).toBe("codex");
   });
 

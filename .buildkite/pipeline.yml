@@ -1022,30 +1022,13 @@ steps:
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
 
-  # Blocking required gates: Qodo and Codex must each finish reviewing the
-  # exact PR head, and every unresolved finding from either provider at the
-  # configured severity must be addressed. Each provider runs independently so
-  # its completion signal and findings are evaluated with its own adapter.
+  # The blocking required gate is Codex: it must finish reviewing the exact PR
+  # head, and every unresolved finding at the configured severity must be
+  # addressed. Qodo remains available as an optional provider for manual
+  # investigation, but is not part of the PR status until re-enabled here.
   # This budget stays above wait-for-review.ts's own deadline plus its install,
   # so the script always reports which provider and head it gave up on rather
   # than Buildkite killing the pod first.
-  - label: ":robot_face: Qodo review gate (required)"
-    key: review-gate
-    timeout_in_minutes: 90
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    env:
-      REVIEW_PROVIDER: qodo
-    command: |
-      . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/review-gate.sh
-    retry: *retry
-    plugins:
-      - kubernetes:
-          <<: *pod_light_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: review-gate
-
   - label: ":robot_face: Codex review gate (required)"
     key: codex-review-gate
     timeout_in_minutes: 90

@@ -15,23 +15,26 @@ import {
 import { codexProvider, qodoProvider } from "@shepherdjerred/code-review";
 
 describe("resolveReviewGateProvider", () => {
-  test("defaults direct invocations to Qodo", () => {
-    expect(resolveReviewGateProvider(undefined).id).toBe("qodo");
-    expect(resolveReviewGateProvider("").id).toBe("qodo");
-    expect(resolveReviewGateProvider("  QODO ").id).toBe("qodo");
+  test("defaults direct invocations to Codex", () => {
+    expect(resolveReviewGateProvider(undefined).id).toBe("codex");
+    expect(resolveReviewGateProvider("").id).toBe("codex");
+    expect(resolveReviewGateProvider("  CODEX ").id).toBe("codex");
   });
 
-  test("accepts both required CI providers", () => {
+  test("accepts the required CI provider", () => {
     expect(resolveReviewGateProvider("codex").id).toBe("codex");
     expect(resolveReviewGateProvider("  CODEX ").id).toBe("codex");
   });
 
-  test("rejects registered non-CI providers and unknown providers", () => {
+  test("rejects optional and unknown providers at the CI boundary", () => {
+    expect(() => resolveReviewGateProvider("qodo")).toThrow(
+      "CI review gate requires Codex",
+    );
     expect(() => resolveReviewGateProvider("greptile")).toThrow(
-      "CI review gate requires Qodo or Codex",
+      "CI review gate requires Codex",
     );
     expect(() => resolveReviewGateProvider("unknown")).toThrow(
-      "CI review gate requires Qodo or Codex",
+      "CI review gate requires Codex",
     );
   });
 });
@@ -132,7 +135,7 @@ describe("review gate timeout budget", () => {
     const pipeline = await Bun.file(
       `${import.meta.dir}/../.buildkite/pipeline.yml`,
     ).text();
-    for (const stepKey of ["review-gate", "codex-review-gate"]) {
+    for (const stepKey of ["codex-review-gate"]) {
       expect(
         reviewGateStepTimeoutSeconds(pipeline, stepKey),
       ).toBeGreaterThanOrEqual(
@@ -239,12 +242,11 @@ describe("review gate timeout budget", () => {
 // blocking findings against current main and 3 against its own 22-commit-stale
 // parser, and no change to that PR could have cleared it.
 describe("review gate source", () => {
-  test("both provider gates use the main-sourced wrapper", async () => {
+  test("the required Codex gate uses the main-sourced wrapper", async () => {
     const pipeline = await Bun.file(
       `${import.meta.dir}/../.buildkite/pipeline.yml`,
     ).text();
     for (const [stepKey, provider] of [
-      ["review-gate", "qodo"],
       ["codex-review-gate", "codex"],
     ] as const) {
       const command = reviewGateStepCommand(pipeline, stepKey);
@@ -260,11 +262,11 @@ describe("review gate source", () => {
     }
   });
 
-  test("both required gates remain independently retryable", async () => {
+  test("the required gate remains retryable", async () => {
     const pipeline = await Bun.file(
       `${import.meta.dir}/../.buildkite/pipeline.yml`,
     ).text();
-    for (const stepKey of ["review-gate", "codex-review-gate"]) {
+    for (const stepKey of ["codex-review-gate"]) {
       expect(reviewGateStepBlockText(pipeline, stepKey)).not.toContain(
         "cancel_on_build_failing",
       );
