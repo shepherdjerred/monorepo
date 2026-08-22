@@ -177,6 +177,7 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       matchId: toStr(row, "matchId"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
       awardedAt: toDate(row, "awardedAt"),
+      phase: toStr(row, "phase"),
       state: toStr(row, "state"),
       targetSnapshotJson: toStr(row, "targetSnapshotJson"),
       retryAt: toDate(row, "retryAt"),

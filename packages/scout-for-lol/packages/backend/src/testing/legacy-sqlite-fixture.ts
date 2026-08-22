@@ -459,6 +459,7 @@ export const LEGACY_TABLE_COLUMNS: Record<string, string[]> = {
     "matchId",
     "serverId",
     "awardedAt",
+    "phase",
     "state",
     "targetSnapshotJson",
     "retryAt",
