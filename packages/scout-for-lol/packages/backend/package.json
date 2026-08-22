@@ -32,7 +32,7 @@
     "evaluate-predictions": "bun run scripts/evaluate-predictions.ts",
     "customs:anonymize": "bun run scripts/anonymize-customs-participant.ts",
     "update-queue-windows": "bun run scripts/update-queue-windows.ts",
-    "db:generate": "bun x --trust prisma generate && bun run brand-types && bun x prettier --write generated/ && bun run generate:test-template",
+    "db:generate": "bun x --no-install --trust prisma generate && bun run brand-types && bun x --no-install prettier --write generated/ && bun run generate:test-template",
     "generate:test-template": "RUST_LOG=info bun run scripts/generate-test-template-db.ts",
     "check:test-template": "bun run scripts/check-test-template-db.ts",
     "brand-types": "bun run scripts/brand-prisma-types.ts",
