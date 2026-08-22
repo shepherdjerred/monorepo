@@ -237,13 +237,16 @@ if (import.meta.main) {
     console.log(
       `Applying Prisma migrations against ${environment.DATABASE_URL}`,
     );
-    const migration = Bun.spawn(["bunx", "prisma", "migrate", "deploy"], {
+    const migration = Bun.spawn(
+      ["bun", "x", "--no-install", "prisma", "migrate", "deploy"],
+      {
       cwd: backendCwd,
       env: environment,
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
-    });
+      },
+    );
     const migrationExitCode = await migration.exited;
     if (migrationExitCode !== 0) {
       throw new Error(
