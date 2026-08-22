@@ -358,7 +358,7 @@ steps:
         - "packages/eslint-config/**"
     cancel_on_build_failing: true
     command: |
-      . .buildkite/scripts/toolchain.sh
+      MISE_TOOLCHAIN_SCOPE=runtime . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'
       export DATABASE_URL='file:/tmp/alert-dashboard.db'
       bun --no-install run --cwd packages/alert-dashboard generate
