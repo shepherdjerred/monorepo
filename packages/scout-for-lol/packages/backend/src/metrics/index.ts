@@ -2,6 +2,7 @@ import { Counter, Gauge, Histogram } from "prom-client";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
+import { updateBettingMetrics } from "#src/metrics/betting-sweep.ts";
 import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 import "#src/metrics/season-schedule.ts";
 import "#src/metrics/product-analytics.ts";
@@ -756,5 +757,6 @@ export async function getMetrics(): Promise<string> {
   updateUptimeMetric();
   await updateUsageMetrics();
   await updateLimitMetrics();
+  await updateBettingMetrics();
   return await registry.metrics();
 }

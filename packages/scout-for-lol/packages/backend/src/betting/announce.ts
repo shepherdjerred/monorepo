@@ -17,6 +17,8 @@ import {
   predictionVerdict,
 } from "#src/betting/outcome-message.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
+import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { bettingSettlementUndeliverableTotal } from "#src/metrics/betting.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/sweep.ts";
@@ -151,10 +153,21 @@ async function sendSettlementWithRetries(
     attempt++
   ) {
     try {
-      await dependencies.sendMessage(
-        input.options,
-        input.channelId,
-        input.guildId,
+      // Wrapped per attempt, so a retried delivery shows its failures rather
+      // than only its eventual success.
+      await observeBucksDelivery(
+        {
+          surface: "settlement",
+          operation: "send",
+          channelId: input.channelId,
+          serverId: input.guildId,
+        },
+        () =>
+          dependencies.sendMessage(
+            input.options,
+            input.channelId,
+            input.guildId,
+          ),
       );
       return;
     } catch (error) {
@@ -276,6 +289,9 @@ function reportUndeliverableSettlement(input: {
     input.unmatchedCount > 0 ||
     (input.parlay?.bets.length ?? 0) > 0 ||
     input.earnings.some((award) => award.serverId === input.summary.serverId);
+  bettingSettlementUndeliverableTotal.inc({
+    reason: owedSomeone ? "no_refs_owed" : "no_refs_unowed",
+  });
   if (!owedSomeone) {
     return;
   }
@@ -408,6 +424,7 @@ export async function announceSettlements(
         },
       });
       if (pool === null) {
+        bettingSettlementUndeliverableTotal.inc({ reason: "pool_missing" });
         continue;
       }
       const settledBetIds = new Set(summary.bets.map((bet) => bet.betId));

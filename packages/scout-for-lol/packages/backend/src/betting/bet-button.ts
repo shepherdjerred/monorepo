@@ -204,6 +204,7 @@ export async function handleBetButton(
       subjectPuuid: subject.puuid,
       subjectWins: betOnWin,
       stake: parsed.amount,
+      surface: "button",
     },
     prismaClient,
   );

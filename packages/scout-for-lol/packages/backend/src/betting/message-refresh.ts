@@ -19,6 +19,10 @@ import {
 } from "#src/betting/prematch-line.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
+import {
+  observeBucksDelivery,
+  recordBucksDeliverySkip,
+} from "#src/betting/delivery-observability.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { createLogger } from "#src/logger.ts";
@@ -85,14 +89,38 @@ async function refreshOnce(
     },
   });
   if (pool === null) {
+    recordBucksDeliverySkip({
+      surface: "prematch",
+      operation: "edit",
+      reason: "skipped_no_pool",
+      matchId: input.matchId,
+      serverId: input.serverId,
+    });
     return;
   }
   if (pool.prematchContentBase === null) {
+    // Expected forever for pools created before this column existed.
+    recordBucksDeliverySkip({
+      surface: "prematch",
+      operation: "edit",
+      reason: "skipped_no_base",
+      matchId: input.matchId,
+      serverId: input.serverId,
+    });
     return;
   }
 
   const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
   if (refs.length === 0) {
+    // Follows a failed recordPoolMessageRefs, and is the leading indicator of
+    // "settlement had nowhere to announce".
+    recordBucksDeliverySkip({
+      surface: "prematch",
+      operation: "edit",
+      reason: "skipped_no_refs",
+      matchId: input.matchId,
+      serverId: input.serverId,
+    });
     return;
   }
   const prediction =
@@ -145,15 +173,25 @@ async function refreshOnce(
 
   for (const ref of refs) {
     try {
-      await editMessage({
-        channelId: DiscordChannelIdSchema.parse(ref.channelId),
-        messageId: ref.messageId,
-        options: {
-          content,
-          allowedMentions: { parse: [] },
-          ...(input.removeComponents ? { components: [] } : {}),
+      await observeBucksDelivery(
+        {
+          surface: "prematch",
+          operation: "edit",
+          matchId: input.matchId,
+          serverId: input.serverId,
+          channelId: ref.channelId,
         },
-      });
+        () =>
+          editMessage({
+            channelId: DiscordChannelIdSchema.parse(ref.channelId),
+            messageId: ref.messageId,
+            options: {
+              content,
+              allowedMentions: { parse: [] },
+              ...(input.removeComponents ? { components: [] } : {}),
+            },
+          }),
+      );
     } catch (error) {
       logger.warn(
         `⚠️ Could not refresh Bryan Bucks message ${ref.messageId} for ${input.matchId}:`,

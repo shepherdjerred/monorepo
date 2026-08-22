@@ -17,6 +17,7 @@ import {
   bucksTestPuuid,
   bucksTestRoster,
 } from "#src/testing/bucks-fixtures.ts";
+import { registry } from "#src/metrics/registry.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
 const { prisma: db } = createTestDatabase("bucks-message-refresh");
@@ -587,5 +588,35 @@ describe("announceSettlements unmatched receipts", () => {
     expect(JSON.stringify(sends[0])).toContain(
       `Blue 9 → nothing matched, refunded **9**`,
     );
+  });
+});
+
+describe("refreshBucksMessages observability", () => {
+  // These three paths returned silently before, which is exactly what made
+  // "why didn't the message update?" unanswerable.
+  test("counts each silent refresh skip instead of returning quietly", async () => {
+    const found = registry.getSingleMetric("betting_message_operations_total");
+    if (found === undefined) {
+      throw new Error("betting_message_operations_total is not registered");
+    }
+    const metric = found;
+    async function skipCount(reason: string): Promise<number> {
+      const collected = await metric.get();
+      return (
+        collected.values.find(
+          (value) =>
+            value.labels["surface"] === "prematch" &&
+            value.labels["result"] === reason,
+        )?.value ?? 0
+      );
+    }
+
+    const before = await skipCount("skipped_no_pool");
+    await refreshBucksMessages(
+      { matchId: "NA1_does-not-exist", serverId: SERVER_ID },
+      db,
+      recordingEditor([]),
+    );
+    expect(await skipCount("skipped_no_pool")).toBe(before + 1);
   });
 });

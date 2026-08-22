@@ -1169,11 +1169,37 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   out with a silent `deferUpdate()` and counted as `bb/malformed`, never as
   `bb/success`.
 - **Pregame estimates are never public.** Prematch messages contain only market
-  controls and house terms. A pass holder sees the estimate ephemerally after
-  the two-minute delay. Settlement may reveal it after the result, except that
+  controls. A pass holder sees the estimate ephemerally after the two-minute
+  delay. Settlement may reveal it after the result, except that
   calls displaying as 45–55% remain suppressed. `predictionVerdict` also
   returns nothing for those near-even rows because scoring them would claim a
   direction the stored estimate did not take.
+- **Every state transition is counted and logged, post-commit only.**
+  `src/metrics/betting.ts` holds the counters and gauges;
+  `src/betting/transition-log.ts` holds `logBucksTransition`. Both fire
+  **after** the owning `$transaction` resolves — `settleOnePool`,
+  `matchPoolAtClose`, `cancelBet`, `placeBet`, and `purchasePeekPass` all
+  return from inside their transaction, so their observations live at the
+  call site or in a thin wrapper. A metric emitted inside a transaction that
+  then rolls back is a lie that survives forever. `logBucksTransition` never
+  throws; observability must not fail a money movement.
+  Metric labels are closed unions and carry **no IDs** — Bryan Bucks runs in
+  one guild, so a `server_id` label costs a dimension and says nothing.
+- **Retention: logs are 90 days, counters are not history.** Promtail ships
+  stdout to Loki with a 90-day retention, and Prometheus counters reset on
+  restart. The permanent record is SQLite — `BucksLedgerEntry` plus the pool
+  and bet timestamp columns (`createdAt`, `matchedAt`, `settledAt`,
+  `cancelledAt`, `matchingJson`). Do not treat logs or counters as the audit
+  trail.
+- **All Bucks sends and edits go through `observeBucksDelivery`**, which
+  classifies the failure, counts it, and **rethrows unchanged** — every caller
+  owns its own catch, and `announce.ts`'s per-channel isolation depends on
+  seeing the error. The three refresh paths that used to return silently
+  (`pool === null`, `prematchContentBase === null`, `refs.length === 0`) now
+  call `recordBucksDeliverySkip`. They are not equally alarming:
+  `skipped_no_base` is expected forever for pre-column pools and must never be
+  alerted on, while `skipped_no_refs` is the leading indicator of "settlement
+  had nowhere to announce".
 
 ## Database (Prisma)
 

@@ -3,6 +3,8 @@ import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
+import { bettingPeekPassesTotal } from "#src/metrics/betting.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 export const PEEK_PASS_DURATION_MS = 24 * 60 * 60 * 1000;
 
@@ -185,6 +187,32 @@ export type PurchasePeekPassResult =
   | { kind: "quote_changed"; quote: PeekPassPrice; quotedAt: Date };
 
 export async function purchasePeekPass(
+  input: {
+    serverId: DiscordGuildId;
+    discordId: DiscordAccountId;
+    quotedPrice: number;
+    quotedAt: Date;
+    now?: Date;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<PurchasePeekPassResult> {
+  const result = await purchasePeekPassInner(input, prismaClient);
+  // Post-commit; the inner call has already resolved its transaction.
+  bettingPeekPassesTotal.inc({ result: result.kind });
+  if (result.kind === "purchased") {
+    logBucksTransition({
+      event: "bucks.peek_pass.purchased",
+      serverId: input.serverId,
+      actorDiscordId: input.discordId,
+      payout: result.price,
+      balanceAfter: result.balanceAfter,
+      surface: "button",
+    });
+  }
+  return result;
+}
+
+async function purchasePeekPassInner(
   input: {
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;

@@ -320,6 +320,7 @@ async function replyBet(
       subjectPuuid: game.subjectPuuid,
       subjectWins,
       stake,
+      surface: "command",
     });
     await interaction.editReply({
       content: describeResult(result, outcomeLabel(selectedTeamId, framing)),

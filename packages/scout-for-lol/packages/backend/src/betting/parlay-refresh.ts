@@ -19,6 +19,10 @@ import {
 } from "#src/betting/parlay-line.ts";
 import { buildParlayButtons } from "#src/betting/parlay-components.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
+import {
+  observeBucksDelivery,
+  recordBucksDeliverySkip,
+} from "#src/betting/delivery-observability.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { createLogger } from "#src/logger.ts";
@@ -70,6 +74,13 @@ async function refreshOnce(
     },
   });
   if (market === null) {
+    recordBucksDeliverySkip({
+      surface: "parlay_market",
+      operation: "edit",
+      reason: "skipped_no_pool",
+      matchId: input.matchId,
+      serverId: input.serverId,
+    });
     return;
   }
 
@@ -84,6 +95,13 @@ async function refreshOnce(
 
   const refs = BucksMessageRefsSchema.parse(JSON.parse(market.messageRefs));
   if (refs.length === 0) {
+    recordBucksDeliverySkip({
+      surface: "parlay_market",
+      operation: "edit",
+      reason: "skipped_no_refs",
+      matchId: input.matchId,
+      serverId: input.serverId,
+    });
     return;
   }
 
@@ -116,15 +134,25 @@ async function refreshOnce(
 
   for (const ref of refs) {
     try {
-      await editMessage({
-        channelId: DiscordChannelIdSchema.parse(ref.channelId),
-        messageId: ref.messageId,
-        options: {
-          content,
-          allowedMentions: { parse: [] },
-          components,
+      await observeBucksDelivery(
+        {
+          surface: "parlay_market",
+          operation: "edit",
+          matchId: input.matchId,
+          serverId: input.serverId,
+          channelId: ref.channelId,
         },
-      });
+        () =>
+          editMessage({
+            channelId: DiscordChannelIdSchema.parse(ref.channelId),
+            messageId: ref.messageId,
+            options: {
+              content,
+              allowedMentions: { parse: [] },
+              components,
+            },
+          }),
+      );
     } catch (error) {
       logger.warn(
         `⚠️ Could not refresh Bryan Bucks parlay message ${ref.messageId} for ${input.matchId}:`,
