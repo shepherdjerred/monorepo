@@ -176,6 +176,13 @@ SCOUT_DEV_DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
   --backend-port 3001 --web-port 5181 --no-discord-gateway
 ```
 
+Use the same restored `scout_beta_snapshot` for the outreach pre-send review:
+
+```bash
+DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
+  bun run --cwd packages/scout-for-lol/packages/backend scripts/outreach-dry-run.ts
+```
+
 Never copy production data — snapshots are beta-only. Do not expose the
 database or credentials in logs. The exact database name and local destination
 must be explicit in every command; never use a broad recursive copy.

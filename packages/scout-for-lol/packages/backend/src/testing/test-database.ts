@@ -5,7 +5,7 @@ import {
   devDatabaseUrl,
   devPostgresPort,
 } from "#src/testing/postgres-server.ts";
-import { TEST_TEMPLATE_DB } from "#src/testing/test-template.ts";
+import { getTestTemplateDatabase } from "#src/testing/test-template.ts";
 
 function extendClient(client: PrismaClient): ExtendedPrismaClient {
   return client.$extends({
@@ -33,7 +33,7 @@ function testDatabaseName(testName: string): string {
  * Creates an isolated test database and returns an ExtendedPrismaClient
  * configured to use it.
  *
- * Clones the pre-built `scout_test_template` database on the shared local
+ * Clones the pre-built hash-scoped test template database on the shared local
  * Postgres server (`createdb -T` is a server-side file copy, ~50–150ms —
  * the Postgres equivalent of the old copy-a-SQLite-file strategy). The
  * template is ensured/refreshed by the bun test preload (test-setup.ts).
@@ -49,6 +49,7 @@ export function createTestDatabase(testName: string): {
   dbUrl: string;
 } {
   const dbName = testDatabaseName(testName);
+  const templateDatabase = getTestTemplateDatabase();
   const port = devPostgresPort();
   const result = Bun.spawnSync(
     [
@@ -60,14 +61,14 @@ export function createTestDatabase(testName: string): {
       "-U",
       "scout",
       "-T",
-      TEST_TEMPLATE_DB,
+      templateDatabase,
       dbName,
     ],
     { stdout: "pipe", stderr: "pipe" },
   );
   if (result.exitCode !== 0) {
     throw new Error(
-      `createdb -T ${TEST_TEMPLATE_DB} ${dbName} failed: ${result.stderr.toString()}\n` +
+      `createdb -T ${templateDatabase} ${dbName} failed: ${result.stderr.toString()}\n` +
         `Run \`bun test\` from packages/backend once to build the template, ` +
         `and \`mise install\` at the repo root if Postgres binaries are missing.`,
     );

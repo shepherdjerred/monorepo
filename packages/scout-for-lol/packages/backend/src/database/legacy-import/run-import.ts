@@ -8,8 +8,8 @@
  *   no marker, Postgres has data    → hard error (ambiguous state; the
  *                                     previous image is still deployable)
  *   no marker, no data, sqlite file → import everything in one transaction
- *   no marker, no data, no sqlite   → record source "none" and continue
- *                                     (fresh installs, local dev, smoke)
+ *   no marker, no data, no sqlite   → hard error unless the caller explicitly
+ *                                     allows a fresh install
  *
  * The marker table lives outside the Prisma schema (migrate deploy does not
  * drift-check), and the marker row is the LAST statement inside the import
@@ -159,12 +159,13 @@ export type ImportSummary = {
 export type ImportOptions = {
   prisma: ImportClient;
   sqlitePath: string;
+  allowFreshInstall?: boolean;
 };
 
 export async function runImport(
   options: ImportOptions,
 ): Promise<ImportSummary> {
-  const { prisma, sqlitePath } = options;
+  const { prisma, sqlitePath, allowFreshInstall = false } = options;
   await ensureMarkerTable(prisma);
 
   if (await markerPresent(prisma)) {
@@ -182,6 +183,12 @@ export async function runImport(
 
   const sqliteFile = Bun.file(sqlitePath);
   if (sqliteFile.size === 0) {
+    if (!allowFreshInstall) {
+      throw new Error(
+        `Legacy sqlite source ${sqlitePath} is missing or empty; refusing to record a fresh install. ` +
+          "Pass --allow-fresh-install only for an explicitly empty deployment.",
+      );
+    }
     logger.info(`No legacy sqlite at ${sqlitePath} — recording fresh install`);
     await prisma.$executeRawUnsafe(
       `INSERT INTO ${MARKER_TABLE} (id, source, source_size_bytes, row_counts)

@@ -277,9 +277,16 @@ describe("legacy sqlite import", () => {
   test("records a fresh-install marker when no sqlite exists", async () => {
     const fresh = bareClient(createTestDatabase("legacy-import-fresh").dbUrl);
     try {
+      await expect(
+        runImport({
+          prisma: fresh,
+          sqlitePath: `${fixtureDir}/does-not-exist.sqlite`,
+        }),
+      ).rejects.toThrow(/explicitly empty deployment/);
       const summary = await runImport({
         prisma: fresh,
         sqlitePath: `${fixtureDir}/does-not-exist.sqlite`,
+        allowFreshInstall: true,
       });
       expect(summary.action).toBe("fresh");
       const rerun = await runImport({

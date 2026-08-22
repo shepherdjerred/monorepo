@@ -452,10 +452,11 @@ const commands: Record<
       "set +e",
       // Mirror the full image CMD: migrate → legacy import (which must take
       // its fresh-install marker path here) → report audit → boot.
-      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/audit-report-windows.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
+      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts --allow-fresh-install && bun run scripts/audit-report-windows.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
       String.raw`printf '%s\n' "$output" | grep -q "Legacy import: fresh" || { echo "importer did not take the fresh-install path"; exit 1; }`,
+      String.raw`printf '%s\n' "$output" | grep -Fq "HTTP server started" || { echo "backend did not reach HTTP startup"; exit 1; }`,
       String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
         '"',
