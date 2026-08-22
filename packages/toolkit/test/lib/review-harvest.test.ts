@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import { parseMaxBlockingPriority } from "#commands/pr/review.ts";
 import {
   CODEX_GATE_CONTEXT,
-  GATE_CONTEXT,
   harvestVerdict,
   jobIdFromTargetUrl,
   nextPageUrl,
@@ -16,15 +15,11 @@ const failed: GateStatus = {
   targetUrl: `https://buildkite.com/sjerred/monorepo/builds/9633#${JOB}`,
 };
 
-test("declares independent Qodo and Codex gate contexts", () => {
-  expect(GATE_CONTEXT).toBe(
-    "buildkite/monorepo/pr/robot-face-qodo-review-gate-required",
-  );
+test("declares the required Codex gate context", () => {
   expect(CODEX_GATE_CONTEXT).toBe(
     "buildkite/monorepo/pr/robot-face-codex-review-gate-required",
   );
   expect(REQUIRED_REVIEW_GATES).toEqual([
-    { providerId: "qodo", context: GATE_CONTEXT },
     { providerId: "codex", context: CODEX_GATE_CONTEXT },
   ]);
 });

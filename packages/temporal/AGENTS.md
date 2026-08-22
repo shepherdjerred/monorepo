@@ -537,18 +537,17 @@ This is not theoretical: the Data Dragon lane-prior step passed `--output packag
 
 ## Review threads (CI gate)
 
-The Buildkite pipeline has **blocking** Codex and Qodo review gates on PR builds
-(`scripts/wait-for-review.ts`, `.buildkite/pipeline.yml`, step keys
-`review-gate` and `codex-review-gate`): every non-outdated finding from either
-provider that still applies to the latest revision must be resolved before the
-aggregate `buildkite/monorepo/pr` required status can go green. The gate
-implementation remains provider-neutral, and all provider-specific knowledge
-lives in `@shepherdjerred/code-review`; each Buildkite step selects exactly one
-provider with `REVIEW_PROVIDER=qodo` or `REVIEW_PROVIDER=codex`, and any other
-value fails loudly. The durable signal collector remains provider-neutral and
-records the selected provider on each signal. These CI gates are wholly
-separate from the GitHub webhook server (`## GitHub webhook` below), which
-handles only the merge-conflict check and PR-closed build cancellation.
+The Buildkite pipeline has one **blocking** Codex review gate on PR builds
+(`scripts/wait-for-review.ts`, `.buildkite/pipeline.yml`, step key
+`codex-review-gate`): every non-outdated Codex finding that still applies to the
+latest revision must be resolved before the aggregate
+`buildkite/monorepo/pr` required status can go green. The gate implementation
+remains provider-neutral, and Qodo remains registered for optional/manual use;
+it is not a required Buildkite gate for now. The durable signal collector
+remains provider-neutral and records the selected provider on each signal.
+These CI gates are wholly separate from the GitHub webhook server
+(`## GitHub webhook` below), which handles only the merge-conflict check and
+PR-closed build cancellation.
 
 - **Gate on review threads, not the provider's own status.** A thread blocks iff authored by the active provider (`isProviderAuthor`, which strips the REST `[bot]` suffix so GraphQL `greptile-apps` / `chatgpt-codex-connector` and their `[bot]` REST forms compare equal) AND `!isResolved` AND `!isOutdated` AND its severity is at/above the threshold. Providers auto-resolve/outdate their own threads as referenced lines change.
 - **Completion detection is provider-specific** (`CompletionStrategy` in the package). Qodo uses `issue-comment`: it keeps every finding in one persistent issue comment and posts a **separate acknowledgement** naming the commit it just read (`… was updated up to the latest commit <sha>`). That acknowledgement is the completion signal, not the review comment: Qodo relinks the review comment's findings to a new head within seconds of a push, long before re-reading the code, so the body alone proves nothing. While a re-review runs it replaces the rendered review with a `New Review Started` placeholder, which carries the review heading but no findings and is deliberately ignored. Codex uses `review-at-head`: its latest PR review must have `commit_id === head`, and a clean review is represented by the provider's 👍 reaction (`thumbsup-reaction`). For context, Greptile posts a check-run per reviewed commit (`.greptile/config.json` `statusCheck:true`), useful only as a "reviewed this head?" marker since it goes green with comments unresolved (verified on PR #1026).

@@ -3,8 +3,8 @@
  * finished reviewing the PR head commit AND every provider review comment that
  * still applies to the latest revision has been resolved.
  *
- * The gate logic is provider-neutral, but the required CI boundary runs once
- * for Qodo and once for Codex. All provider-specific knowledge — how completion is detected, how
+ * The gate logic is provider-neutral, but the required CI boundary currently
+ * runs for Codex. All provider-specific knowledge — how completion is detected, how
  * severity badges are parsed, and how a deliberate skip is signalled — lives
  * in `@shepherdjerred/code-review`. This script only drives the poll loop and
  * emits structured `review-signal` observability events.
@@ -75,7 +75,7 @@ const DEFAULT_REPO = "shepherdjerred/monorepo";
  * until the review exists — but that is a CI-architecture change, not a
  * constant.
  *
- * The `review-gate` step allows longer still — by a margin sized for its
+ * The `codex-review-gate` step allows longer still — by a margin sized for its
  * unbounded `toolchain.sh` and install preamble, not a token few minutes — so
  * this deadline is always the binding one and the timeout message names the
  * provider and head commit instead of Buildkite killing the pod anonymously.
@@ -89,14 +89,14 @@ export function resolveReviewGateProvider(
   configuredProvider: string | undefined,
 ): ReviewProvider {
   const normalized = configuredProvider?.trim().toLowerCase();
-  const ciProviders = new Set(["qodo", "codex"]);
+  const ciProviders = new Set(["codex"]);
   if (
     normalized !== undefined &&
     normalized !== "" &&
     !ciProviders.has(normalized)
   ) {
     throw new Error(
-      `CI review gate requires Qodo or Codex; REVIEW_PROVIDER was ${String(configuredProvider)}.`,
+      `CI review gate requires Codex; REVIEW_PROVIDER was ${String(configuredProvider)}.`,
     );
   }
   if (normalized === undefined || normalized === "") {

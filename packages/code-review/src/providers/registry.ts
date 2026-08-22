@@ -16,11 +16,11 @@ export const ProviderIdSchema = z.enum(["codex", "greptile", "qodo"]);
 export type ProviderId = z.infer<typeof ProviderIdSchema>;
 
 /** The hosted provider whose findings are required by the repository CI gate. */
-export const REQUIRED_REVIEW_PROVIDER_ID: ProviderId = "qodo";
+export const REQUIRED_REVIEW_PROVIDER_ID: ProviderId = "codex";
 
 /**
- * The shared default for provider-neutral consumers such as PR fleet. CI pins
- * its required Qodo provider explicitly at the wait-for-review boundary.
+ * The shared default for provider-neutral consumers such as PR fleet. Qodo
+ * remains registered for optional/manual review, but is not a required CI gate.
  */
 export const DEFAULT_PROVIDER_ID: ProviderId = "codex";
 

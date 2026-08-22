@@ -47,7 +47,6 @@ export function validatePipelineClarity(
     ],
     ["docker-e2e-pr", "llm-observability E2E — Tempo + MinIO"],
     ["docker-e2e-main", "llm-observability E2E — Tempo + MinIO"],
-    ["review-gate", "Qodo review gate (required)"],
     ["codex-review-gate", "Codex review gate (required)"],
   ] satisfies readonly (readonly [string, string])[]) {
     requireIncludes(

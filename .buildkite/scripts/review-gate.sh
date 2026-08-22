@@ -65,7 +65,8 @@ cd "$GATE_DIR"
   --filter '@shepherdjerred/root-scripts' --production
 
 WAIT_SCRIPT="$GATE_DIR/scripts/wait-for-review.ts"
-if [[ "${REVIEW_PROVIDER:-qodo}" == "codex" ]] && \
+if [[ "${REVIEW_PROVIDER:-codex}" == "codex" ]] && \
+  ! grep -Fq 'ciProviders = new Set(["codex"])' "$WAIT_SCRIPT" && \
   ! grep -Fq 'ciProviders = new Set(["qodo", "codex"])' "$WAIT_SCRIPT"; then
   BOOTSTRAP_PATCH="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/.buildkite/scripts/review-gate-codex-bootstrap.patch"
   if [[ ! -f "$BOOTSTRAP_PATCH" ]] || \

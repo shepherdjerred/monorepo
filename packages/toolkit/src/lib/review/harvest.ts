@@ -12,14 +12,11 @@ import { z } from "zod";
 
 const GITHUB_API = "https://api.github.com";
 
-export const GATE_CONTEXT =
-  "buildkite/monorepo/pr/robot-face-qodo-review-gate-required";
 export const CODEX_GATE_CONTEXT =
   "buildkite/monorepo/pr/robot-face-codex-review-gate-required";
 
-/** The independent provider gates that must be harvested for a PR. */
+/** The provider gate that must be harvested for a PR. */
 export const REQUIRED_REVIEW_GATES = [
-  { providerId: "qodo", context: GATE_CONTEXT },
   { providerId: "codex", context: CODEX_GATE_CONTEXT },
 ] as const;
 
@@ -85,7 +82,7 @@ export async function gateStatusFor(input: {
   token: string;
   context?: string;
 }): Promise<GateStatus | null> {
-  const context = input.context ?? GATE_CONTEXT;
+  const context = input.context ?? CODEX_GATE_CONTEXT;
   let url: string | null =
     `${GITHUB_API}/repos/${input.repo}/commits/${input.ref}/status?per_page=100`;
   while (url !== null) {
