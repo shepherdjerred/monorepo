@@ -41,6 +41,7 @@ import { useExploreRunMarkers } from "#src/hooks/use-explore-run-markers.ts";
 import { useMarkerDiscovery } from "#src/hooks/use-explore-marker-discovery.ts";
 import { useExploreStartMutation } from "#src/hooks/use-explore-start-mutation.ts";
 import { useExploreRunObserver } from "#src/hooks/use-explore-run-observer.ts";
+import { track } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import {
   ExploreRunsContext,
@@ -147,6 +148,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     ): Promise<void> => {
       if (finishingRef.current.has(summary.runId)) return;
       finishingRef.current.add(summary.runId);
+      track("explore_turn_finished", { outcome });
       let transcript: ExploreTranscript | undefined;
       try {
         transcript = await refreshConversation(summary.conversationId);
