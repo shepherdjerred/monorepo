@@ -312,11 +312,14 @@ const commands: Record<
     },
   },
   streambot: {
+    // The real-ffmpeg integration suite is NOT run here. This harness also runs
+    // against the pushed digest, which carries no development dependencies and
+    // therefore no Vitest; the suite runs in the streambot Dockerfile's `smoke`
+    // stage, which restores the development tree over the same runtime rootfs.
     command: [
       "set -eu",
       "mkdir -p /tmp/videos",
       "cd /app/packages/streambot",
-      "bun run test:integration",
       "ffmpeg -version >/dev/null",
       "/usr/local/bin/yt-dlp --version >/dev/null",
       "set +e",
