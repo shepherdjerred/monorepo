@@ -38,6 +38,9 @@ export function devDatabaseUrl(dbName: string): string {
 
 /** Version-suffixed so a future major bump gets a fresh initdb. */
 export function devPostgresDataRoot(): string {
+  if (runsAsRoot()) {
+    return "/tmp/scout-for-lol/postgres/16";
+  }
   const xdg = Bun.env["XDG_DATA_HOME"];
   const home = Bun.env["HOME"];
   if (
