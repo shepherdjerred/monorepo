@@ -153,11 +153,16 @@ COPY --from=prod-deps /app/ /app/
 
 # Scoped source closure + the built dists from the build stage. The canonical
 # evaluation corpus is intentionally excluded from production layers.
+# config/feature-flags export straight from `src/*.ts` and the isolated linker
+# installs them as symlinks into these directories, so their source has to be
+# present or the bot dies at boot with "Cannot find module".
 COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
   tsconfig.base.json \
   packages/streambot \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
+  packages/config \
+  packages/feature-flags \
   ./
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/discord-video-stream/dist packages/discord-video-stream/dist
