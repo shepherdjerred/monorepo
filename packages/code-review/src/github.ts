@@ -130,6 +130,21 @@ export async function fetchReviewThreads(input: {
     if (!page.hasNextPage || page.endCursor === null) break;
     reviewCursor = page.endCursor;
   }
+  if (input.provider.completion.kind === "review-at-head") {
+    const reactions = await fetchProviderThumbsUps({
+      repo: input.repo,
+      number: input.number,
+      token: input.token,
+      provider: input.provider,
+    });
+    for (const [index, reaction] of reactions.entries()) {
+      providerReviews.push({
+        id: `reaction-${String(index)}`,
+        submittedAt: reaction.createdAt,
+        authorLogin: reaction.authorLogin,
+      });
+    }
+  }
   // Attribution needs every page: a thread's ordinal is its review's position
   // among all of this provider's reviews, including clean reviews that opened
   // no thread and therefore do not appear in `parsed`.
@@ -339,10 +354,33 @@ export async function fetchProviderThumbsUp(input: {
   token: string;
   provider: ReviewProvider;
 }): Promise<{ createdAt: string | null } | null> {
-  let url: string | null =
-    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/reactions?per_page=100`;
+  const reactions = await fetchProviderThumbsUps(input);
   let latest: { createdAt: string | null } | null = null;
   let latestScore = Number.NEGATIVE_INFINITY;
+  for (const reaction of reactions) {
+    const score = Date.parse(reaction.createdAt ?? "");
+    const normalized = Number.isFinite(score)
+      ? score
+      : Number.NEGATIVE_INFINITY;
+    if (latest === null || normalized >= latestScore) {
+      latest = { createdAt: reaction.createdAt };
+      latestScore = normalized;
+    }
+  }
+  return latest;
+}
+
+/** Every provider +1 reaction, including clean Codex reviews with no review object. */
+export async function fetchProviderThumbsUps(input: {
+  repo: string;
+  number: number;
+  token: string;
+  provider: ReviewProvider;
+}): Promise<{ createdAt: string | null; authorLogin: string | null }[]> {
+  let url: string | null =
+    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/reactions?per_page=100`;
+  const matches: { createdAt: string | null; authorLogin: string | null }[] =
+    [];
   while (url !== null) {
     const { payload, linkNext } = await getJsonWithLink(url, input.token);
     const reactions = Array.isArray(payload) ? payload : [];
@@ -354,18 +392,11 @@ export async function fetchProviderThumbsUp(input: {
       const login = user === null ? null : stringField(user, "login");
       if (!isProviderAuthor(input.provider, login)) continue;
       const createdAt = stringField(item, "created_at");
-      const score = Date.parse(createdAt ?? "");
-      const normalized = Number.isFinite(score)
-        ? score
-        : Number.NEGATIVE_INFINITY;
-      if (latest === null || normalized >= latestScore) {
-        latest = { createdAt };
-        latestScore = normalized;
-      }
+      matches.push({ createdAt, authorLogin: login });
     }
     url = linkNext;
   }
-  return latest;
+  return matches;
 }
 
 // ---------------------------------------------------------------------------

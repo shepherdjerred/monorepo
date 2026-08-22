@@ -131,6 +131,12 @@ export const IssueCommentSchema = z.object({
   user: z.object({ login: z.string() }).nullable(),
 });
 
+export const IssueReactionSchema = z.object({
+  content: z.string(),
+  created_at: z.string(),
+  user: z.object({ login: z.string() }).nullable(),
+});
+
 /** The two providers the required gate runs; Greptile is dormant. */
 const CI_PROVIDERS: readonly (readonly [ProviderId, ReviewProvider])[] = [
   ["qodo", PROVIDERS.qodo],

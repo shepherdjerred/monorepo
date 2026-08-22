@@ -29,6 +29,7 @@ import {
   fetchPrRounds,
   graphql,
   IssueCommentSchema,
+  IssueReactionSchema,
   ghAll,
   listPrs,
   requireToken,
@@ -37,7 +38,11 @@ import {
 } from "./lib/review-analytics-github.ts";
 import type { z } from "zod";
 
-type ReviewAnswer = { head: string | null; at: string };
+type ReviewAnswer = {
+  head: string | null;
+  at: string;
+  kind: "review" | "reaction";
+};
 
 const QODO_ACKNOWLEDGEMENT = "was updated up to the latest commit";
 
@@ -155,55 +160,90 @@ async function commandRequests(
   }[] = [];
 
   for (const pr of prs) {
-    if (pr.rounds.length === 0) continue;
     const raw = await ghAll(
       `/repos/${repo}/issues/${String(pr.number)}/comments?per_page=100`,
       token,
     );
+    const rawReactions = await ghAll(
+      `/repos/${repo}/issues/${String(pr.number)}/reactions?per_page=100`,
+      token,
+    );
     const comments = raw.map((item) => IssueCommentSchema.parse(item));
+    const reactions = rawReactions.map((item) =>
+      IssueReactionSchema.parse(item),
+    );
     const acks: ReviewAnswer[] = comments
       .filter((comment) => comment.body.includes(QODO_ACKNOWLEDGEMENT))
       .map((comment) => ({
         head: acknowledgedHead(comment.body),
         at: comment.created_at,
+        kind: "review",
       }));
     const codexReviews: ReviewAnswer[] = pr.rounds
       .filter((round) => round.provider === "codex")
-      .map((round) => ({ head: round.head, at: round.at }));
+      .map((round) => ({ head: round.head, at: round.at, kind: "review" }));
+    const codexReactions: ReviewAnswer[] = reactions
+      .filter(
+        (reaction) =>
+          reaction.content === "+1" &&
+          reaction.user !== null &&
+          reaction.user.login.replace(/\[bot\]$/u, "").toLowerCase() ===
+            "chatgpt-codex-connector",
+      )
+      .map((reaction) => ({
+        head: null,
+        at: reaction.created_at,
+        kind: "reaction",
+      }));
+
+    const requests = comments.flatMap((comment) => {
+      const isRequest =
+        /^\s*\/(?:agentic_)?review\b/mu.test(comment.body) ||
+        comment.body.includes("@codex review");
+      if (!isRequest) return [];
+      const marker = /<!-- review-request:([a-z]+):([0-9a-f]{40})/u.exec(
+        comment.body,
+      );
+      return [
+        {
+          askedAt: Date.parse(comment.created_at),
+          askedProvider:
+            marker?.[1] ??
+            (comment.body.includes("@codex review") ? "codex" : "qodo"),
+          requestedHead: marker?.[2] ?? null,
+          automated: marker !== null,
+        },
+      ];
+    });
 
     let automated = 0;
     let manual = 0;
     let converted = 0;
-    for (const comment of comments) {
-      const isRequest =
-        /^\s*\/(?:agentic_)?review\b/mu.test(comment.body) ||
-        comment.body.includes("@codex review");
-      if (!isRequest) continue;
-      const marker = /<!-- review-request:([a-z]+):([0-9a-f]{40})/u.exec(
-        comment.body,
-      );
-      if (marker === null) manual += 1;
-      else automated += 1;
-      const askedAt = Date.parse(comment.created_at);
-      // Which provider was asked. A hand-typed request carries no marker, so
-      // falling back to the marker alone would score every manual `@codex
-      // review` against Qodo's acknowledgements — counting a later Qodo
-      // acknowledgement as the answer while ignoring the Codex review that did
-      // arrive. That would corrupt the conversion rate the retry policy is
-      // justified by, so the command itself decides when the marker cannot.
-      const askedProvider =
-        marker?.[1] ??
-        (comment.body.includes("@codex review") ? "codex" : "qodo");
-      const answers = askedProvider === "codex" ? codexReviews : acks;
-      const requestedHead = marker?.[2] ?? null;
+    for (const request of requests) {
+      if (request.automated) automated += 1;
+      else manual += 1;
+      const answers =
+        request.askedProvider === "codex"
+          ? [...codexReviews, ...codexReactions]
+          : acks;
       if (
         answers.some((answer) => {
-          const gap = Date.parse(answer.at) - askedAt;
-          return (
-            (requestedHead === null || answer.head === requestedHead) &&
-            gap > 0 &&
-            gap < 60 * 60 * 1000
-          );
+          const gap = Date.parse(answer.at) - request.askedAt;
+          const headMatches =
+            request.requestedHead === null ||
+            answer.head === request.requestedHead ||
+            (answer.kind === "reaction" &&
+              request.askedProvider === "codex" &&
+              // GitHub's reaction has no commit SHA. It answers an automated
+              // request only when no later Codex request was posted before the
+              // reaction; otherwise the reaction belongs to that later head.
+              !requests.some(
+                (later) =>
+                  later.askedProvider === request.askedProvider &&
+                  later.askedAt > request.askedAt &&
+                  later.askedAt < Date.parse(answer.at),
+              ));
+          return headMatches && gap > 0 && gap < 60 * 60 * 1000;
         })
       ) {
         converted += 1;
