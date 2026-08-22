@@ -162,6 +162,17 @@ function buildLegacySqlite(path: string): void {
       context: "{}",
       createdAt: NOW,
     });
+    insert("BucksMatchEarning", {
+      matchId: "NA1_earning_1",
+      serverId: GUILD,
+      awardedAt: NOW,
+      phase: "prematch",
+      state: "pending",
+      targetSnapshotJson: "[]",
+      retryAt: NOW + 60_000,
+      matchCreatedAt: NOW,
+      entryCount: 1,
+    });
   } finally {
     db.close();
   }
@@ -186,6 +197,7 @@ describe("legacy sqlite import", () => {
     expect(summary.action).toBe("imported");
     expect(summary.rowCounts["Player"]).toBe(2);
     expect(summary.rowCounts["BucksLedgerEntry"]).toBe(2);
+    expect(summary.rowCounts["BucksMatchEarning"]).toBe(1);
 
     // Converted storage formats round-trip.
     const account = await prisma.account.findUniqueOrThrow({
@@ -201,6 +213,13 @@ describe("legacy sqlite import", () => {
       where: { id: 2 },
     });
     expect(game.gameId).toBe(8_555_444_333_222_111n);
+    await expect(
+      prisma.bucksMatchEarning.findUniqueOrThrow({
+        where: {
+          matchId_serverId: { matchId: "NA1_earning_1", serverId: GUILD },
+        },
+      }),
+    ).resolves.toMatchObject({ phase: "prematch", state: "pending" });
 
     // Idempotency: the marker short-circuits a restart.
     const rerun = await runImport({ prisma, sqlitePath: fixturePath });
