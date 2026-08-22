@@ -16,6 +16,7 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("postgres-server");
 
 const DEFAULT_PORT = 5471;
+const POSTGRES_MISE_TOOL = "ubi:theseus-rs/postgresql-binaries";
 /** initdb/start window guard only; normal operation takes no lock. */
 const LOCK_STALE_MS = 120_000;
 const START_WAIT_MS = 120_000;
@@ -94,9 +95,9 @@ function asPostgresOwner(cmd: string[]): string[] {
       "Root-hosted Postgres tests require mise, the Postgres binary, and su",
     );
   }
-  const lookup = run([mise, "which", executable]);
+  const lookup = run([mise, "which", executable, "--tool", POSTGRES_MISE_TOOL]);
   const resolvedExecutable = lookup.stdout.trim();
-  if (lookup.exitCode !== 0 || resolvedExecutable === "") {
+  if (resolvedExecutable === "" || lookup.exitCode !== 0) {
     throw new Error(`mise could not resolve ${executable}: ${lookup.stderr}`);
   }
   return [
