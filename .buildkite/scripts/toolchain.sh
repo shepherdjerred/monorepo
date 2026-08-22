@@ -12,7 +12,13 @@ set -eu
 case "${BASH_VERSION:-}" in "") ;; *) set -o pipefail ;; esac
 
 command -v mise >/dev/null || curl -fsSL https://mise.run | sh
-export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/mise/shims:$PATH"
+if [ "$(id -u)" -eq 0 ]; then
+  # Root-hosted tests drop Postgres server processes to nobody. Keep the
+  # mise shims and installed binaries outside /root so that user can execute
+  # them.
+  export MISE_DATA_DIR=/opt/mise
+fi
+export PATH="/opt/mise/shims:$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 # mise resolves tool versions via api.github.com; unauthenticated calls share
 # the cluster egress IP's 60/hr limit, which CI exhausts immediately. mise
 # reads the token from GITHUB_TOKEN (its contract — exempted in
