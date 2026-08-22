@@ -2,10 +2,15 @@
   "name": "@shepherdjerred/release-tools",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "release-please": "release-please"
+    "release-please": "release-please",
+    "test": "bun test"
   },
   "dependencies": {
     "release-please": "17.11.1"
+  },
+  "exports": {
+    "./runner": "./runner.ts"
   }
 }
