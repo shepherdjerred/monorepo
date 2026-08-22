@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "vitest";
 import { Database } from "bun:sqlite";
 import { tmpdir } from "node:os";
 import { PrismaClient } from "#generated/prisma/client/index.js";
