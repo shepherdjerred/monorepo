@@ -27,6 +27,19 @@ if [ -n "${GH_TOKEN:-}" ]; then
   export GITHUB_TOKEN="$GH_TOKEN"
 fi
 mise trust .mise.toml
+
+expose_postgres_tools() {
+  if [ "$(id -u)" -eq 0 ] && [ -d "${MISE_DATA_DIR:-}/shims" ]; then
+    # Root-hosted tests run the Postgres server as nobody. Runtime mise
+    # installs inherit root's umask, so expose only the public shims and the
+    # pinned Postgres installation to that test user.
+    chmod -R a+rX "${MISE_DATA_DIR}/shims"
+    if [ -d "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries" ]; then
+      chmod -R a+rX "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries"
+    fi
+  fi
+}
+
 case "${MISE_TOOLCHAIN_SCOPE:-full}" in
   runtime)
     # SQLite-only lanes need Bun but must not resolve unrelated tools such as
@@ -41,9 +54,11 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     # tools that cannot build in that image).
     mise install --yes 'ubi:theseus-rs/postgresql-binaries'
     mise reshim
+    expose_postgres_tools
     ;;
   full)
     mise install --yes
+    expose_postgres_tools
     # Runtime installs can add a tool without creating its executable shim on a
     # stale ci-base image. Rebuild shims so commands such as gh are reachable
     # through the PATH exported above (release build 6529).
