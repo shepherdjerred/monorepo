@@ -242,6 +242,23 @@ describe("legacy sqlite import", () => {
     expect(created.id).toBe(PlayerIdSchema.parse(4));
   });
 
+  test("refuses to trust a marker after the sqlite source changes", async () => {
+    const changedFixturePath = `${fixtureDir}/legacy-changed.sqlite`;
+    await Bun.write(
+      changedFixturePath,
+      await Bun.file(fixturePath).arrayBuffer(),
+    );
+    const changed = new Database(changedFixturePath);
+    changed.run('UPDATE "Player" SET "alias" = ? WHERE "id" = 1', [
+      "changed-after-import",
+    ]);
+    changed.close();
+
+    await expect(
+      runImport({ prisma, sqlitePath: changedFixturePath }),
+    ).rejects.toThrow("source changed after import");
+  });
+
   test("verify detects tampered content and ledger drift", async () => {
     // The previous test added a player, so Player reports a count mismatch;
     // Subscription (count-stable) exercises the content-digest path.
@@ -308,9 +325,12 @@ describe("legacy sqlite import", () => {
         allowFreshInstall: true,
       });
       expect(summary.action).toBe("fresh");
+      await expect(
+        runImport({ prisma: fresh, sqlitePath: fixturePath }),
+      ).rejects.toThrow("fresh install but a sqlite source now exists");
       const rerun = await runImport({
         prisma: fresh,
-        sqlitePath: fixturePath,
+        sqlitePath: `${fixtureDir}/does-not-exist.sqlite`,
       });
       expect(rerun.action).toBe("skipped");
     } finally {
