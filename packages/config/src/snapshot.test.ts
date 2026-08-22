@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { defineConfig } from "@shepherdjerred/config/index.ts";
 import { createConfigSnapshot } from "@shepherdjerred/config/snapshot.ts";

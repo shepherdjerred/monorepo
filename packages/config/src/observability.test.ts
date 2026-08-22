@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { defineConfig } from "@shepherdjerred/config/index.ts";
 import { createEnvSource } from "@shepherdjerred/config/sources/env.ts";

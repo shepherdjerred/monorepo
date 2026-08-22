@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { ErrorCode } from "@openfeature/server-sdk";
 import snapshot from "@shepherdjerred/feature-flags/providers/fixtures/flipt-snapshot.default.json" with { type: "json" };
 import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";

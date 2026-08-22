@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "vitest";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import {
   initializeDynamicConfig,
