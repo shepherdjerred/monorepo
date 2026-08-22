@@ -111,7 +111,7 @@ function sqliteDigestRow(row: unknown): string {
   );
 }
 
-async function sqliteSourceDigest(sqlitePath: string): Promise<string> {
+function sqliteSourceDigest(sqlitePath: string): string {
   // Read through SQLite instead of hashing only db.sqlite. SQLite exposes
   // committed WAL pages through this connection, so the digest represents the
   // state the importer will actually read after an unclean rollback shutdown.
@@ -124,7 +124,7 @@ async function sqliteSourceDigest(sqlitePath: string): Promise<string> {
       )
       .all();
     if (!Array.isArray(schemaRows)) {
-      throw new Error("Unexpected SQLite schema result shape");
+      throw new TypeError("Unexpected SQLite schema result shape");
     }
     for (const schemaRow of schemaRows) {
       if (
@@ -132,22 +132,22 @@ async function sqliteSourceDigest(sqlitePath: string): Promise<string> {
         typeof schemaRow !== "object" ||
         Array.isArray(schemaRow)
       ) {
-        throw new Error("Unexpected SQLite schema row shape");
+        throw new TypeError("Unexpected SQLite schema row shape");
       }
       const entries = Object.entries(schemaRow);
-      const name = entries.find(([key]) => key === "name")?.[1];
-      const sql = entries.find(([key]) => key === "sql")?.[1];
+      const name: unknown = entries.find(([key]) => key === "name")?.[1];
+      const sql: unknown = entries.find(([key]) => key === "sql")?.[1];
       if (typeof name !== "string" || typeof sql !== "string") {
-        throw new Error("SQLite schema row has invalid name or SQL");
+        throw new TypeError("SQLite schema row has invalid name or SQL");
       }
       const escapedName = name.replaceAll('"', '""');
       const rows: unknown = db.query(`SELECT * FROM "${escapedName}"`).all();
       if (!Array.isArray(rows)) {
-        throw new Error(`Unexpected SQLite rows for ${name}`);
+        throw new TypeError(`Unexpected SQLite rows for ${name}`);
       }
-      hasher.update(`${name}\u0000${sql}\u0000`);
-      for (const row of rows.map(sqliteDigestRow).sort()) {
-        hasher.update(`${row}\u0000`);
+      hasher.update(`${name}\u{0}${sql}\u{0}`);
+      for (const row of rows.map((value) => sqliteDigestRow(value)).sort()) {
+        hasher.update(`${row}\u{0}`);
       }
     }
     return hasher.digest("hex");
@@ -250,7 +250,7 @@ export async function runImport(
   await ensureMarkerTable(prisma);
   const sqliteFile = Bun.file(sqlitePath);
   const sourceDigest =
-    sqliteFile.size === 0 ? null : await sqliteSourceDigest(sqlitePath);
+    sqliteFile.size === 0 ? null : sqliteSourceDigest(sqlitePath);
 
   const marker = await getImportMarker(prisma);
   if (marker !== null) {
