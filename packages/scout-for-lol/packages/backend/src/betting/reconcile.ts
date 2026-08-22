@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/bun";
+import { Prisma } from "#generated/prisma/client/index.js";
 import { auditBucksMatchedPools } from "#src/betting/reconcile-pools.ts";
 import { auditBucksPositions } from "#src/betting/reconcile-positions.ts";
 import {
@@ -139,7 +140,8 @@ export async function reconcileBucksBalances(
   try {
     const audit = await prismaClient.$transaction(
       async (tx) => {
-        // Every invariant is derived from one SQLite read snapshot. Without the
+        // Every invariant is derived from one PostgreSQL repeatable-read
+        // snapshot. Without the
         // shared transaction, a valid placement or settlement could commit
         // between related-table queries and create a false discrepancy alert.
         const findings = new BucksAuditCollector();
@@ -148,7 +150,10 @@ export async function reconcileBucksBalances(
         await auditBucksMatchedPools(tx, findings);
         return { findings, accountCount };
       },
-      { timeout: BUCKS_RECONCILIATION_TRANSACTION_TIMEOUT_MS },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+        timeout: BUCKS_RECONCILIATION_TRANSACTION_TIMEOUT_MS,
+      },
     );
     reportAuditResult(audit.findings, audit.accountCount);
     return [...audit.findings.retained];

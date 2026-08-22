@@ -1,5 +1,5 @@
 /**
- * Lifecycle of the `scout_test_template` database.
+ * Lifecycle of the hash-scoped test template database.
  *
  * createTestDatabase clones it with `createdb -T`, which is the Postgres
  * replacement for the old copy-a-SQLite-file strategy. The template is
@@ -8,8 +8,9 @@
  * longer matches the hash recorded inside the template itself.
  *
  * Runs from the bun test preload; guarded by a cross-process lock in the
- * shared data root so parallel suites (and parallel checkouts sharing the
- * machine-wide server) refresh exactly once.
+ * shared data root so parallel suites refresh exactly once. The database name
+ * includes the content hash so parallel checkouts never rebuild one another's
+ * template while sharing the machine-wide server.
  */
 import { SEASONS } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
@@ -23,10 +24,10 @@ import {
 
 const logger = createLogger("test-template");
 
-export const TEST_TEMPLATE_DB = "scout_test_template";
 /** Bump to force a rebuild when refresh logic changes shape. */
 const TEMPLATE_SCHEMA_VERSION = "1";
 const SWEEP_MAX_AGE_MS = 30 * 60 * 1000;
+let activeTemplateDatabase: string | undefined;
 
 const BACKEND_ROOT = `${import.meta.dir}/../..`;
 const MIGRATIONS_DIR = `${BACKEND_ROOT}/prisma/migrations`;
@@ -47,7 +48,20 @@ async function computeTemplateHash(): Promise<string> {
   return hasher.digest("hex");
 }
 
-function currentTemplateHash(): string | undefined {
+function templateDatabaseName(hash: string): string {
+  return `scout_template_${hash.slice(0, 48)}`;
+}
+
+export function getTestTemplateDatabase(): string {
+  if (activeTemplateDatabase === undefined) {
+    throw new Error(
+      "Test template has not been initialized; run the backend test preload first",
+    );
+  }
+  return activeTemplateDatabase;
+}
+
+function currentTemplateHash(databaseName: string): string | undefined {
   try {
     const port = devPostgresPort();
     const result = Bun.spawnSync(
@@ -60,7 +74,7 @@ function currentTemplateHash(): string | undefined {
         "-U",
         "scout",
         "-d",
-        TEST_TEMPLATE_DB,
+        databaseName,
         "-At",
         "-c",
         "SELECT hash FROM _template_meta LIMIT 1",
@@ -81,12 +95,15 @@ function acquireTemplateLock(lockDir: string): boolean {
   return Bun.spawnSync(["mkdir", lockDir]).exitCode === 0;
 }
 
-async function rebuildTemplate(hash: string): Promise<void> {
-  logger.info(`Rebuilding ${TEST_TEMPLATE_DB} (hash ${hash.slice(0, 12)}…)`);
-  psqlMaintenance(`DROP DATABASE IF EXISTS ${TEST_TEMPLATE_DB} WITH (FORCE)`);
-  psqlMaintenance(`CREATE DATABASE ${TEST_TEMPLATE_DB}`);
+async function rebuildTemplate(
+  databaseName: string,
+  hash: string,
+): Promise<void> {
+  logger.info(`Rebuilding ${databaseName} (hash ${hash.slice(0, 12)}…)`);
+  psqlMaintenance(`DROP DATABASE IF EXISTS ${databaseName} WITH (FORCE)`);
+  psqlMaintenance(`CREATE DATABASE ${databaseName}`);
 
-  const templateUrl = devDatabaseUrl(TEST_TEMPLATE_DB);
+  const templateUrl = devDatabaseUrl(databaseName);
   const deploy = Bun.spawnSync(["bunx", "prisma", "migrate", "deploy"], {
     cwd: BACKEND_ROOT,
     env: { ...Bun.env, DATABASE_URL: templateUrl },
@@ -95,7 +112,7 @@ async function rebuildTemplate(hash: string): Promise<void> {
   });
   if (deploy.exitCode !== 0) {
     throw new Error(
-      `prisma migrate deploy against ${TEST_TEMPLATE_DB} failed: ${deploy.stderr.toString()}${deploy.stdout.toString()}`,
+      `prisma migrate deploy against ${databaseName} failed: ${deploy.stderr.toString()}${deploy.stdout.toString()}`,
     );
   }
 
@@ -136,12 +153,15 @@ async function rebuildTemplate(hash: string): Promise<void> {
 }
 
 /**
- * Ensure the template database exists and matches the current schema/seed.
+ * Ensure the hash-scoped template database exists and matches the current
+ * schema/seed.
  */
 export async function ensureTestTemplate(): Promise<void> {
   ensureDevPostgres();
   const wanted = await computeTemplateHash();
-  if (currentTemplateHash() === wanted) {
+  const databaseName = templateDatabaseName(wanted);
+  activeTemplateDatabase = databaseName;
+  if (currentTemplateHash(databaseName) === wanted) {
     return;
   }
 
@@ -152,7 +172,7 @@ export async function ensureTestTemplate(): Promise<void> {
       break;
     }
     // Another suite is refreshing; wait for it and re-check.
-    if (currentTemplateHash() === wanted) {
+    if (currentTemplateHash(databaseName) === wanted) {
       return;
     }
     if (Date.now() > deadline) {
@@ -161,10 +181,10 @@ export async function ensureTestTemplate(): Promise<void> {
     Bun.sleepSync(250);
   }
   try {
-    if (currentTemplateHash() === wanted) {
+    if (currentTemplateHash(databaseName) === wanted) {
       return;
     }
-    await rebuildTemplate(wanted);
+    await rebuildTemplate(databaseName, wanted);
   } finally {
     Bun.spawnSync(["rm", "-rf", lockDir]);
   }
@@ -178,7 +198,7 @@ export async function ensureTestTemplate(): Promise<void> {
 export function sweepStaleTestDatabases(): void {
   ensureDevPostgres();
   const rows = psqlMaintenance(
-    `SELECT datname FROM pg_database WHERE datname LIKE 'scout_test_%' AND datname <> '${TEST_TEMPLATE_DB}'`,
+    "SELECT datname FROM pg_database WHERE datname LIKE 'scout_test_%'",
   );
   if (rows === "") {
     return;

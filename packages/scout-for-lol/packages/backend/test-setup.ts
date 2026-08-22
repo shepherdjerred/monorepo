@@ -39,7 +39,7 @@ Bun.env["DATABASE_URL"] =
   `postgres://scout@127.0.0.1:${Bun.env["SCOUT_PG_PORT"] ?? "5471"}/scout_test_unbound`;
 
 // Ensure the shared dev Postgres is up, sweep leaked test databases from
-// crashed runs, and (re)build the scout_test_template database that
+// crashed runs, and (re)build the hash-scoped test template database that
 // createTestDatabase clones — for BACKEND test runs only. This file is also
 // preloaded by the scout package root's bunfig.toml for its script suites,
 // where importing the harness would require a running Postgres for pure

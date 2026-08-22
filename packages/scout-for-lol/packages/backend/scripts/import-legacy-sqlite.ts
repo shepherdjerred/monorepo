@@ -4,7 +4,9 @@
  * once. Runs between `prisma migrate deploy` and the app in the container
  * CMD; also the rehearsal/verification CLI.
  *
- *   bun run scripts/import-legacy-sqlite.ts                     # entrypoint mode
+ *   bun run scripts/import-legacy-sqlite.ts                     # cutover mode
+ *   bun run scripts/import-legacy-sqlite.ts --allow-fresh-install
+ *                                                               # explicit empty install
  *   bun run scripts/import-legacy-sqlite.ts --source <path>    # explicit snapshot
  *   bun run scripts/import-legacy-sqlite.ts --source <path> --verify-only
  *
@@ -30,6 +32,7 @@ const ArgsSchema = z
   .object({
     source: z.string().min(1),
     verifyOnly: z.boolean().default(false),
+    allowFreshInstall: z.boolean().default(false),
   })
   .strict();
 
@@ -48,8 +51,12 @@ function parseArgs(argv: string[]): z.infer<typeof ArgsSchema> {
       raw["verifyOnly"] = true;
       continue;
     }
+    if (arg === "--allow-fresh-install") {
+      raw["allowFreshInstall"] = true;
+      continue;
+    }
     throw new Error(
-      `Unknown argument ${arg ?? ""}. Expected [--source <path>] [--verify-only].`,
+      `Unknown argument ${arg ?? ""}. Expected [--source <path>] [--verify-only] [--allow-fresh-install].`,
     );
   }
   return ArgsSchema.parse(raw);
@@ -87,7 +94,11 @@ try {
       "Verification clean: counts, content digests, and ledger match",
     );
   } else {
-    const summary = await runImport({ prisma, sqlitePath: args.source });
+    const summary = await runImport({
+      prisma,
+      sqlitePath: args.source,
+      allowFreshInstall: args.allowFreshInstall,
+    });
     logger.info(`Legacy import: ${summary.action}`);
     if (summary.action === "imported") {
       const drift = await verifyLedgerBalances(prisma);

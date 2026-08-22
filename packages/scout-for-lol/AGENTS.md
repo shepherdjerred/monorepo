@@ -1191,9 +1191,9 @@ lookup_ only, and never for the session, CSRF, or the allowlist itself.
 
 To exercise the web/tRPC surface offline, use one of these — both
 run fully in-process against an isolated Postgres database cloned from the
-`scout_test_template` template on the shared local dev server (`createdb -T`,
-~100ms; the bun test preload rebuilds the template when the hash of migrations +
-SEASONS + harness changes — `src/testing/test-template.ts`), no OAuth,
+hash-scoped template on the shared local dev server (`createdb -T`, ~100ms; the
+bun test preload rebuilds the template when the hash of migrations + SEASONS +
+harness changes — `src/testing/test-template.ts`), no OAuth,
 no Discord API:
 
 - **Domain layer (simplest)** — call the exported functions directly (e.g.
@@ -1423,9 +1423,11 @@ drift from reality. Treat this as an invariant:
   after that timestamp, there is no list of counters to remember to clear —
   which is exactly what previously left a re-installed server exhausted.
 
-Validate ladder changes with `bun run scripts/outreach-dry-run.ts` against a
-copy of production before the first real fire — the failure mode here is
-messaging real people.
+Validate ladder changes with `DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
+  bun run scripts/outreach-dry-run.ts` against a restored beta copy before the
+first real fire — the failure mode here is messaging real people. Create that
+copy with the `pg_dump`/`createdb`/`pg_restore` sequence above; never point the
+dry run at production itself.
 
 ## Server-side product analytics invariants
 

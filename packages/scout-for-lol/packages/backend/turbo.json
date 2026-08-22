@@ -36,8 +36,8 @@
     // generate against birmel's so two concurrent runs don't race Prisma's
     // shared engine/download cache (same synthetic edge the old setup.ts DAG
     // carried; observed flaky at -c 4 without it).
-    // The test-template database (scout_test_template on the shared local
-    // Postgres) is not a turbo output: the bun test preload rebuilds it
+    // The hash-scoped test-template database on the shared local Postgres is
+    // not a turbo output: the bun test preload rebuilds it
     // whenever its content hash (migrations + SEASONS + harness) changes.
     "generate": {
       "dependsOn": ["^build", "@shepherdjerred/birmel#generate"],

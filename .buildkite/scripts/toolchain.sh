@@ -37,6 +37,9 @@ ln -sf "$GH_EXECUTABLE" /usr/local/bin/gh
 if ! command -v rsync >/dev/null; then
   apt-get update -qq && apt-get install -y -qq --no-install-recommends rsync
 fi
+if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
+  apt-get update -qq && apt-get install -y -qq --no-install-recommends libxml2
+fi
 if ! command -v swiftlint >/dev/null; then
   # Official linux artifact; same recipe as .buildkite/ci-image/Dockerfile
   # (which bakes it in) — keep the two in sync.
