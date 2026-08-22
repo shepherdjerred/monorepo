@@ -66,6 +66,46 @@ function run(cmd: string[], env?: Record<string, string>): RunResult {
   };
 }
 
+function shellQuote(value: string): string {
+  const escapedValue = value.replaceAll("'", String.raw`'\''`);
+  return `'${escapedValue}'`;
+}
+
+function runsAsRoot(): boolean {
+  return process.getuid?.() === 0;
+}
+
+function asPostgresOwner(cmd: string[]): string[] {
+  if (!runsAsRoot()) {
+    return cmd;
+  }
+  const executable = cmd[0];
+  if (executable === undefined) {
+    throw new Error("Postgres command cannot be empty");
+  }
+  const resolvedExecutable = Bun.which(executable);
+  const su = Bun.which("su");
+  if (resolvedExecutable === null || su === null) {
+    throw new Error(
+      "Root-hosted Postgres tests require both the Postgres binary and su",
+    );
+  }
+  return [
+    su,
+    "-s",
+    "/bin/sh",
+    "nobody",
+    "-c",
+    [resolvedExecutable, ...cmd.slice(1)]
+      .map((value) => shellQuote(value))
+      .join(" "),
+  ];
+}
+
+function runAsPostgresOwner(cmd: string[]): RunResult {
+  return run(asPostgresOwner(cmd));
+}
+
 function binariesHint(toolError: string): Error {
   return new Error(
     `${toolError}\nPostgres binaries not found or not working — run \`mise install\` at the repo root ` +
@@ -180,11 +220,20 @@ export function ensureDevPostgres(): { port: number; superUrl: string } {
       return { port, superUrl };
     }
 
+    if (runsAsRoot()) {
+      const ownership = run(["chown", "-R", "nobody", dataRoot]);
+      if (ownership.exitCode !== 0) {
+        throw binariesHint(
+          `chown failed for the Postgres data root: ${ownership.stderr}`,
+        );
+      }
+    }
+
     // Bun.file(...).size is 0 for a missing file; PG_VERSION is never empty.
     if (Bun.file(`${dataDir}/PG_VERSION`).size === 0) {
       logger.info(`Initializing dev Postgres data dir at ${dataDir}`);
       // C locale: byte-order collation, identical between laptop and CI.
-      const init = run([
+      const init = runAsPostgresOwner([
         "initdb",
         "-D",
         dataDir,
@@ -202,7 +251,7 @@ export function ensureDevPostgres(): { port: number; superUrl: string } {
     logger.info(`Starting dev Postgres on 127.0.0.1:${port.toString()}`);
     // Trust auth is loopback-only; durability flags are deliberate — this
     // server only ever holds throwaway dev/test data.
-    const start = run([
+    const start = runAsPostgresOwner([
       "pg_ctl",
       "-D",
       dataDir,
