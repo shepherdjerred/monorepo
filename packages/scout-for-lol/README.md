@@ -155,13 +155,14 @@ Discord or Tournament setup cannot accept a game night:
 The stage-specific Scout 1Password items are the source for these values.
 Kubernetes projection remains deliberately unwired until an operator provisions
 the complete beta or production field set; the deployment must then add all
-references as required secrets in one change, never optional references. Real
-site builds fail when the stage-specific Activity client ID is missing; only
-explicit dry runs use the disabled sentinel.
-Buildkite reads `SCOUT_CUSTOMS_BETA_DISCORD_CLIENT_ID` and
-`SCOUT_CUSTOMS_PROD_DISCORD_CLIENT_ID` from its 1Password-backed environment and
-bakes the public application id into each lockstep Activity artifact. The fixed
-Activity origins are `customs-beta.scout-for-lol.com` and
+references as required secrets in one change, never optional references. Only
+explicit dry runs use the disabled sentinel for the Activity client id.
+The public Activity application ids are tracked in the release helper: beta is
+`1311755320745394317` and production is `1182800769188110366`. An explicit
+`SCOUT_CUSTOMS_BETA_DISCORD_CLIENT_ID` or
+`SCOUT_CUSTOMS_PROD_DISCORD_CLIENT_ID` environment value may override the
+corresponding id for a controlled release rehearsal. Dry runs use the disabled
+sentinel. The fixed Activity origins are `customs-beta.scout-for-lol.com` and
 `customs.scout-for-lol.com`.
 
 Participant privacy requests use the operator-only, dry-run-first command:

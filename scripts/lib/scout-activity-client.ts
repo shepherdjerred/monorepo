@@ -2,6 +2,11 @@ import { optionalEnv } from "./run.ts";
 
 export const DISABLED_ACTIVITY_CLIENT_ID = "000000000000000000";
 
+const ACTIVITY_CLIENT_IDS = {
+  beta: "1311755320745394317",
+  prod: "1182800769188110366",
+} as const;
+
 export function activityClientId(
   flavor: "prod" | "beta",
   dryRun: boolean,
@@ -10,5 +15,5 @@ export function activityClientId(
   const value = optionalEnv(variable);
   if (value !== null) return value;
   if (dryRun) return DISABLED_ACTIVITY_CLIENT_ID;
-  throw new Error(`${variable} is required for a real ${flavor} site build`);
+  return ACTIVITY_CLIENT_IDS[flavor];
 }
