@@ -139,18 +139,7 @@ export async function awardClassicPrematchForGame(
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<EarnedAward[]> {
-  try {
-    return await awardClassicPrematchForGameUnsafe(input, prismaClient);
-  } catch (error) {
-    logger.error(
-      `❌ Could not award Bryan Bucks for Classic prematch ${input.matchId}:`,
-      error,
-    );
-    Sentry.captureException(error, {
-      tags: { source: "betting-earnings-prematch", matchId: input.matchId },
-    });
-    return [];
-  }
+  return await awardClassicPrematchForGameUnsafe(input, prismaClient);
 }
 
 async function awardClassicPrematchForGameUnsafe(

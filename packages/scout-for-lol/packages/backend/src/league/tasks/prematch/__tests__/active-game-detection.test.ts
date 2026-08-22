@@ -116,6 +116,7 @@ await mock.module("#src/league/tasks/prematch/active-game-queries.ts", () => ({
     upsertCalls.push({ gameId, puuids });
     return Promise.resolve();
   },
+  deleteActiveGame: () => Promise.resolve(),
   deleteExpiredActiveGames: () => Promise.resolve(0),
   getActiveGameCount: () => Promise.resolve(mockActiveGames.length),
   recordPrematchMessageIds: () => Promise.resolve(),

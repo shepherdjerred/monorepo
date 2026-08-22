@@ -1,5 +1,6 @@
 import type {
   LeaguePuuid,
+  MatchId,
   PlayerConfigEntry,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
@@ -13,6 +14,7 @@ import { getActiveGame } from "#src/league/api/spectator.ts";
 import {
   getActiveGames,
   upsertActiveGame,
+  deleteActiveGame,
   deleteExpiredActiveGames,
   getActiveGameCount,
   recordPrematchMessageIds,
@@ -115,6 +117,19 @@ async function refetchLobbyUntilFilled(
     latest = retry.game;
   }
   return latest;
+}
+
+async function sendPrematchNotificationWithRetryCleanup(input: {
+  matchId: MatchId;
+  gameInfo: RawCurrentGameInfo;
+  trackedPlayers: PlayerConfigEntry[];
+}): Promise<Map<string, string>> {
+  try {
+    return await sendPrematchNotification(input.gameInfo, input.trackedPlayers);
+  } catch (error) {
+    await deleteActiveGame(MatchIdSchema.parse(input.matchId));
+    throw error;
+  }
 }
 
 function shouldSkipCheck(): boolean {
@@ -400,10 +415,12 @@ export async function checkActiveGames(
         });
 
         // Send notification
-        const prematchMessageIds = await sendPrematchNotification(
-          gameInfo,
-          trackedPlayersInGame,
-        );
+        const prematchMessageIds =
+          await sendPrematchNotificationWithRetryCleanup({
+            matchId,
+            gameInfo,
+            trackedPlayers: trackedPlayersInGame,
+          });
         await recordPrematchMessageIds(matchId, prematchMessageIds);
 
         prematchDetectionsTotal.inc({ status: "detected" });

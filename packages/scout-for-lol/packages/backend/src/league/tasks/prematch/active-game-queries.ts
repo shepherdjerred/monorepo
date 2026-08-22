@@ -108,6 +108,20 @@ export async function upsertActiveGame(
 }
 
 /**
+ * Remove a just-detected game when prematch processing fails before its
+ * notification is durable. The next polling cycle must be allowed to retry
+ * the spectator payload and any Classic participation award.
+ */
+export async function deleteActiveGame(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await prismaClient.activeGame.deleteMany({
+    where: { prematchMatchId: matchId },
+  });
+}
+
+/**
  * Persist the Discord message IDs produced by the prematch notification.
  * Message IDs are stored per channel because one game can be delivered to
  * several subscribed channels, and the postmatch report must reply in each
