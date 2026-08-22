@@ -21,34 +21,50 @@ if [ -n "${GH_TOKEN:-}" ]; then
   export GITHUB_TOKEN="$GH_TOKEN"
 fi
 mise trust .mise.toml
-mise install --yes
-# Runtime installs can add a tool without creating its executable shim on a
-# stale ci-base image. Rebuild shims so commands such as gh are reachable
-# through the PATH exported above (release build 6529).
-mise reshim
-# Codex executes tool calls through a login shell, whose /etc/profile can
-# replace PATH and hide mise shims (release build 6549). Expose the real
-# mise-managed binary on the login shell's stable system path.
-GH_EXECUTABLE=$(mise which gh)
-ln -sf "$GH_EXECUTABLE" /usr/local/bin/gh
+case "${MISE_TOOLCHAIN_SCOPE:-full}" in
+  postgres)
+    # The Playwright image intentionally carries only browsers and Bun. The
+    # design-audit lane needs the same pinned Postgres binaries as backend
+    # tests, but not the complete CI toolchain (which includes Rust/Cargo
+    # tools that cannot build in that image).
+    mise install --yes 'ubi:theseus-rs/postgresql-binaries'
+    mise reshim
+    ;;
+  full)
+    mise install --yes
+    # Runtime installs can add a tool without creating its executable shim on a
+    # stale ci-base image. Rebuild shims so commands such as gh are reachable
+    # through the PATH exported above (release build 6529).
+    mise reshim
+    # Codex executes tool calls through a login shell, whose /etc/profile can
+    # replace PATH and hide mise shims (release build 6549). Expose the real
+    # mise-managed binary on the login shell's stable system path.
+    GH_EXECUTABLE=$(mise which gh)
+    ln -sf "$GH_EXECUTABLE" /usr/local/bin/gh
 
-# System tools the tasks shell out to that mise doesn't manage. Baked into
-# the fresh ci-base; bootstrapped here on a stale image.
-if ! command -v rsync >/dev/null; then
-  apt-get update -qq && apt-get install -y -qq --no-install-recommends rsync
-fi
-if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
-  apt-get update -qq && apt-get install -y -qq --no-install-recommends libxml2
-fi
-if ! command -v swiftlint >/dev/null; then
-  # Official linux artifact; same recipe as .buildkite/ci-image/Dockerfile
-  # (which bakes it in) — keep the two in sync.
-  # renovate: datasource=github-releases depName=realm/SwiftLint
-  SWIFTLINT_VERSION="0.61.0"
-  curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/swiftlint_linux_amd64.zip" -o /tmp/swiftlint.zip
-  unzip -q -o /tmp/swiftlint.zip -d /usr/local/swiftlint
-  # The dynamic binary needs Swift runtime libs the zip doesn't carry
-  # (exec fails as 127); the -static build is self-contained.
-  ln -sf /usr/local/swiftlint/swiftlint-static /usr/local/bin/swiftlint
-  rm /tmp/swiftlint.zip
-fi
+    # System tools the tasks shell out to that mise doesn't manage. Baked into
+    # the fresh ci-base; bootstrapped here on a stale image.
+    if ! command -v rsync >/dev/null; then
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends rsync
+    fi
+    if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends libxml2
+    fi
+    if ! command -v swiftlint >/dev/null; then
+      # Official linux artifact; same recipe as .buildkite/ci-image/Dockerfile
+      # (which bakes it in) — keep the two in sync.
+      # renovate: datasource=github-releases depName=realm/SwiftLint
+      SWIFTLINT_VERSION="0.61.0"
+      curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/swiftlint_linux_amd64.zip" -o /tmp/swiftlint.zip
+      unzip -q -o /tmp/swiftlint.zip -d /usr/local/swiftlint
+      # The dynamic binary needs Swift runtime libs the zip doesn't carry
+      # (exec fails as 127); the -static build is self-contained.
+      ln -sf /usr/local/swiftlint/swiftlint-static /usr/local/bin/swiftlint
+      rm /tmp/swiftlint.zip
+    fi
+    ;;
+  *)
+    echo "Unknown MISE_TOOLCHAIN_SCOPE: ${MISE_TOOLCHAIN_SCOPE}" >&2
+    false
+    ;;
+esac
