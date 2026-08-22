@@ -32,6 +32,11 @@ export type SourceResult = {
   readonly value: unknown;
 };
 
+/** Per-read context supplied to targeted sources such as feature flags. */
+export type ConfigEvaluationContext = {
+  readonly targetingKey?: string;
+};
+
 export type ConfigSource = {
   readonly name: ConfigSourceName;
   /**
@@ -41,7 +46,10 @@ export type ConfigSource = {
    * source that failed is not a source that has no opinion, and conflating them
    * hands control to a lower layer on what is really a fault.
    */
-  get: (key: ConfigKeyNames) => Promise<SourceResult | undefined>;
+  get: (
+    key: ConfigKeyNames,
+    context?: ConfigEvaluationContext,
+  ) => Promise<SourceResult | undefined>;
 };
 
 /**

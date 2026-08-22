@@ -20,6 +20,10 @@ export type FliptProviderOptions = {
   readonly pollIntervalSeconds: number;
   /** Injected by tests to drive the real WASM engine without a network. */
   readonly fetcher?: FliptFetcher;
+  /** Called when a refresh cannot obtain a successful snapshot. */
+  readonly onRefreshFailure?: () => void;
+  /** Receives the current successful-snapshot age for the process registry. */
+  readonly onSnapshotAge?: (seconds: number) => void;
 };
 
 function absent<T>(flagKey: string, defaultValue: T): ResolutionDetails<T> {
@@ -72,20 +76,35 @@ export class FliptProvider implements Provider {
   private readonly options: FliptProviderOptions;
   private client: FliptEvaluationClient | undefined;
   private knownKeys: ReadonlySet<string> = new Set();
-  private lastKeyRefreshMs: number | undefined;
+  private lastSuccessfulRefreshMs: number | undefined;
+  private snapshotAgeTimer: ReturnType<typeof setInterval> | undefined;
 
   constructor(options: FliptProviderOptions) {
     this.options = options;
   }
 
   async initialize(): Promise<void> {
-    const fetcher =
+    const sourceFetcher =
       this.options.fetcher ??
       createFliptFetcher({
         url: this.options.url,
         namespace: this.options.namespace,
         environment: this.options.environment,
       });
+    const fetcher: FliptFetcher = async (fetchOptions) => {
+      try {
+        const response = await sourceFetcher(fetchOptions);
+        if (response.ok || response.status === 304) {
+          this.lastSuccessfulRefreshMs = Date.now();
+        } else {
+          this.options.onRefreshFailure?.();
+        }
+        return response;
+      } catch (error) {
+        this.options.onRefreshFailure?.();
+        throw error;
+      }
+    };
 
     this.client = await createFliptEvaluationClient({
       url: this.options.url,
@@ -95,6 +114,18 @@ export class FliptProvider implements Provider {
       fetcher,
     });
     this.refreshKnownKeys();
+    this.updateSnapshotAge();
+    if (this.options.onSnapshotAge !== undefined) {
+      this.snapshotAgeTimer = setInterval(
+        () => {
+          this.updateSnapshotAge();
+        },
+        Math.min(
+          60 * 1000,
+          Math.max(1 * 1000, this.options.pollIntervalSeconds * 1000),
+        ),
+      );
+    }
   }
 
   onClose(): Promise<void> {
@@ -103,7 +134,11 @@ export class FliptProvider implements Provider {
     this.client?.close();
     this.client = undefined;
     this.knownKeys = new Set();
-    this.lastKeyRefreshMs = undefined;
+    this.lastSuccessfulRefreshMs = undefined;
+    if (this.snapshotAgeTimer !== undefined) {
+      clearInterval(this.snapshotAgeTimer);
+      this.snapshotAgeTimer = undefined;
+    }
     return Promise.resolve();
   }
 
@@ -117,11 +152,17 @@ export class FliptProvider implements Provider {
       return;
     }
     this.knownKeys = new Set(this.client.listFlags().map((flag) => flag.key));
-    this.lastKeyRefreshMs = Date.now();
+  }
+
+  private updateSnapshotAge(): void {
+    const age = this.snapshotAgeSeconds();
+    if (age !== undefined) {
+      this.options.onSnapshotAge?.(age);
+    }
   }
 
   /**
-   * Seconds since the key set was last read from a snapshot, or `undefined`
+   * Seconds since the snapshot was last fetched successfully, or `undefined`
    * before the first successful initialize.
    *
    * This is the outage signal. During a backend outage the client keeps serving
@@ -130,9 +171,9 @@ export class FliptProvider implements Provider {
    * `observability.ts` for why this replaces per-evaluation reporting.
    */
   snapshotAgeSeconds(): number | undefined {
-    return this.lastKeyRefreshMs === undefined
+    return this.lastSuccessfulRefreshMs === undefined
       ? undefined
-      : (Date.now() - this.lastKeyRefreshMs) / 1000;
+      : (Date.now() - this.lastSuccessfulRefreshMs) / 1000;
   }
 
   private evaluate<T>(

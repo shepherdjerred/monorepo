@@ -125,17 +125,4 @@ describe("initialization", () => {
       initFeatureFlags({ environment: DISABLED, provider: failing }),
     ).resolves.toBeUndefined();
   });
-
-  test("flipt mode without an explicit provider fails loudly", async () => {
-    // Configuration error, not availability: the caller asked for Flipt and did
-    // not supply the provider that can talk to it.
-    await expect(
-      initFeatureFlags({
-        environment: {
-          FEATURE_FLAGS_MODE: "flipt",
-          FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
-        },
-      }),
-    ).rejects.toThrow(/requires a provider/);
-  });
 });

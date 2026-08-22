@@ -3,7 +3,10 @@ import {
   numberValue,
   stringValue,
 } from "@shepherdjerred/feature-flags/index.ts";
-import { isAbsent } from "@shepherdjerred/feature-flags/flag-result.ts";
+import {
+  isAbsent,
+  type FlagResult,
+} from "@shepherdjerred/feature-flags/flag-result.ts";
 
 /**
  * Structural mirror of `@shepherdjerred/config`'s source contract.
@@ -22,7 +25,10 @@ export type FlagSourceResult = { readonly value: unknown };
 
 export type FlagConfigSource = {
   readonly name: "flag";
-  get: (names: FlagSourceKeyNames) => Promise<FlagSourceResult | undefined>;
+  get: (
+    names: FlagSourceKeyNames,
+    context?: { readonly targetingKey?: string },
+  ) => Promise<FlagSourceResult | undefined>;
 };
 
 export type FlagSourceOptions = {
@@ -41,6 +47,21 @@ export type FlagSourceOptions = {
   readonly attributes?: Readonly<Record<string, string | number | boolean>>;
 };
 
+function valueOrAbsent<T>(
+  result: FlagResult<T>,
+  flag: string,
+): FlagSourceResult | undefined {
+  if (isAbsent(result)) {
+    return undefined;
+  }
+  if (result.errorCode !== undefined) {
+    throw new Error(
+      `flag "${flag}" evaluation failed with ${result.errorCode}`,
+    );
+  }
+  return { value: result.value };
+}
+
 /**
  * Adapts the flag client into a config layer.
  *
@@ -57,6 +78,7 @@ export function createFlagConfigSource(
     name: "flag",
     get: async (
       names: FlagSourceKeyNames,
+      context?: { readonly targetingKey?: string },
     ): Promise<FlagSourceResult | undefined> => {
       const kind = options.kinds[names.key];
       if (kind === undefined) {
@@ -64,7 +86,7 @@ export function createFlagConfigSource(
       }
 
       const evaluation = {
-        targetingKey: options.targetingKey,
+        targetingKey: context?.targetingKey ?? options.targetingKey,
         ...(options.attributes === undefined
           ? {}
           : { attributes: options.attributes }),
@@ -76,21 +98,21 @@ export function createFlagConfigSource(
             default: false,
             ...evaluation,
           });
-          return isAbsent(result) ? undefined : { value: result.value };
+          return valueOrAbsent(result, names.flag);
         }
         case "string": {
           const result = await stringValue(names.flag, {
             default: "",
             ...evaluation,
           });
-          return isAbsent(result) ? undefined : { value: result.value };
+          return valueOrAbsent(result, names.flag);
         }
         case "number": {
           const result = await numberValue(names.flag, {
             default: 0,
             ...evaluation,
           });
-          return isAbsent(result) ? undefined : { value: result.value };
+          return valueOrAbsent(result, names.flag);
         }
       }
     },

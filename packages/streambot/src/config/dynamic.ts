@@ -39,17 +39,29 @@ import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-sou
  * fall back to the passed-in `Config` value until startup initializes the
  * snapshot — so this is a no-op until a flag exists.
  */
+const DynamicBooleanSchema = z.preprocess(
+  (value) =>
+    typeof value === "string"
+      ? value.toLowerCase() === "true"
+        ? true
+        : value.toLowerCase() === "false"
+          ? false
+          : value
+      : value,
+  z.boolean(),
+);
+
 const DEFINITION = {
   playerCardEnabled: {
-    schema: z.coerce.boolean(),
+    schema: DynamicBooleanSchema,
     sources: ["flag", "env", "default"],
     default: true,
     names: { env: "PLAYER_CARD_ENABLED" },
   },
   subtitlesEnabled: {
-    schema: z.coerce.boolean(),
+    schema: DynamicBooleanSchema,
     sources: ["flag", "env", "default"],
-    default: false,
+    default: true,
     names: { env: "SUBTITLES_ENABLED" },
   },
 } as const;
@@ -88,6 +100,7 @@ let snapshot: Snapshot | undefined;
 export type InitializeDynamicConfigOptions = {
   readonly environment?: InitFeatureFlagsOptions["environment"];
   readonly provider?: InitFeatureFlagsOptions["provider"];
+  readonly metrics?: InitFeatureFlagsOptions["metrics"];
   readonly seed: { playerCardEnabled: boolean; subtitlesEnabled: boolean };
   readonly log?: (message: string) => void;
   /** Tests pass false to avoid an interval. */
@@ -109,6 +122,7 @@ export async function initializeDynamicConfig(
       ? {}
       : { environment: options.environment }),
     ...(options.provider === undefined ? {} : { provider: options.provider }),
+    ...(options.metrics === undefined ? {} : { metrics: options.metrics }),
     onInitializationFailure: log,
   });
   snapshot = buildSnapshot(options.environment ?? Bun.env, options.seed, log);

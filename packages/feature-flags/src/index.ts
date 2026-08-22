@@ -8,8 +8,12 @@ import {
 import { loadFeatureFlagConfiguration } from "@shepherdjerred/feature-flags/config/load.ts";
 import { NoopProvider } from "@shepherdjerred/feature-flags/providers/noop.ts";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
+import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
 import type { FeatureFlagConfiguration } from "@shepherdjerred/feature-flags/config/schema.ts";
-import type { EvaluationEvent } from "@shepherdjerred/feature-flags/observability.ts";
+import type {
+  EvaluationEvent,
+  FlagMetricsRecorder,
+} from "@shepherdjerred/feature-flags/observability.ts";
 
 const CLIENT_NAME = "shepherdjerred-feature-flags";
 
@@ -28,23 +32,29 @@ const CLIENT_NAME = "shepherdjerred-feature-flags";
  * degraded dependency into an outage of its own.
  */
 
-function providerFor(configuration: FeatureFlagConfiguration): Provider {
+function providerFor(
+  configuration: FeatureFlagConfiguration,
+  metrics: FlagMetricsRecorder | undefined,
+): Provider {
   switch (configuration.mode) {
     case "disabled":
       return new NoopProvider();
     case "static":
       return new StaticProvider(configuration.overrides);
     case "flipt":
-      // The Flipt provider is a separate module so this package stays usable —
-      // and testable — without pulling in the WASM engine.
-      throw new Error(
-        'FEATURE_FLAGS_MODE=flipt requires a provider to be supplied explicitly: initFeatureFlags({ provider: createFliptProvider(config) }). Import it from "@shepherdjerred/feature-flags/providers/flipt.ts".',
-      );
+      return new FliptProvider({
+        url: configuration.url,
+        namespace: configuration.namespace,
+        environment: configuration.environment,
+        pollIntervalSeconds: configuration.pollIntervalSeconds,
+        onRefreshFailure: () => metrics?.countError("refresh"),
+        onSnapshotAge: (seconds) => metrics?.observeSnapshotAge(seconds),
+      });
   }
 }
 
 export type InitFeatureFlagsOptions = {
-  /** Overrides the mode-derived provider. Required for `flipt`. */
+  /** Overrides the mode-derived provider. Useful for tests. */
   readonly provider?: Provider;
   /** Defaults to `Bun.env`. */
   readonly environment?: Readonly<Record<string, string | undefined>>;
@@ -61,9 +71,12 @@ export type InitFeatureFlagsOptions = {
    * the outage signal.
    */
   readonly onEvaluation?: (event: EvaluationEvent) => void;
+  /** Optional process-owned Prometheus hooks for the provider lifecycle. */
+  readonly metrics?: FlagMetricsRecorder;
 };
 
 let evaluationObserver: ((event: EvaluationEvent) => void) | undefined;
+let metricsRecorder: FlagMetricsRecorder | undefined;
 
 /**
  * Resolves configuration, installs a provider, and waits for it to be ready.
@@ -79,8 +92,10 @@ export async function initFeatureFlags(
   const configuration = loadFeatureFlagConfiguration(
     options.environment ?? Bun.env,
   );
-  const provider = options.provider ?? providerFor(configuration);
+  const provider =
+    options.provider ?? providerFor(configuration, options.metrics);
   evaluationObserver = options.onEvaluation;
+  metricsRecorder = options.metrics;
   try {
     await OpenFeature.setProviderAndWait(CLIENT_NAME, provider);
   } catch (error) {
@@ -90,6 +105,19 @@ export async function initFeatureFlags(
     options.onInitializationFailure?.(
       `provider "${provider.metadata.name}" failed to initialize; every flag reports PROVIDER_NOT_READY until this pod restarts: ${message}`,
     );
+    options.metrics?.countError("initialize");
+  }
+}
+
+function recordEvaluation(event: EvaluationEvent): void {
+  evaluationObserver?.(event);
+  metricsRecorder?.countEvaluation(event);
+  if (
+    event.errorCode !== undefined &&
+    event.errorCode !== "FLAG_NOT_FOUND" &&
+    event.errorCode !== "PROVIDER_NOT_READY"
+  ) {
+    metricsRecorder?.countError("evaluate");
   }
 }
 
@@ -132,7 +160,7 @@ export async function isEnabled(
     toContext(options),
   );
   const result = toResult(details);
-  evaluationObserver?.({
+  recordEvaluation({
     flag: key,
     reason: result.reason,
     errorCode: result.errorCode,
@@ -150,7 +178,7 @@ export async function stringValue(
     toContext(options),
   );
   const result = toResult(details);
-  evaluationObserver?.({
+  recordEvaluation({
     flag: key,
     reason: result.reason,
     errorCode: result.errorCode,
@@ -168,7 +196,7 @@ export async function numberValue(
     toContext(options),
   );
   const result = toResult(details);
-  evaluationObserver?.({
+  recordEvaluation({
     flag: key,
     reason: result.reason,
     errorCode: result.errorCode,
@@ -182,5 +210,6 @@ export async function numberValue(
  */
 export async function shutdownFeatureFlags(): Promise<void> {
   evaluationObserver = undefined;
+  metricsRecorder = undefined;
   await OpenFeature.close();
 }

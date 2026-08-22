@@ -9,6 +9,7 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import type { ConfigSource } from "@shepherdjerred/config/source.ts";
+import { featureFlagMetrics } from "#src/metrics.ts";
 
 /**
  * Dynamic configuration — the values an operator can change without a deploy.
@@ -90,6 +91,7 @@ export async function initializeConfig(
       ? {}
       : { environment: options.environment }),
     ...(options.provider === undefined ? {} : { provider: options.provider }),
+    metrics: featureFlagMetrics,
     onInitializationFailure: (message) => {
       console.warn(`[Config] ${message}`);
     },

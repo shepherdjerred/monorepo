@@ -10,6 +10,7 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { createLogger } from "#src/logger.ts";
+import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
 
 const logger = createLogger("config-dynamic");
 
@@ -125,6 +126,7 @@ let snapshot: Snapshot | undefined;
 export type InitializeDynamicConfigOptions = {
   readonly environment?: InitFeatureFlagsOptions["environment"];
   readonly provider?: InitFeatureFlagsOptions["provider"];
+  readonly metrics?: InitFeatureFlagsOptions["metrics"];
   readonly seed: {
     exploreGuildAllowlist: string[];
     llmHourlyTokenBudget: number;
@@ -148,6 +150,7 @@ export async function initializeDynamicConfig(
       ? {}
       : { environment: options.environment }),
     ...(options.provider === undefined ? {} : { provider: options.provider }),
+    metrics: options.metrics ?? featureFlagMetrics,
     onInitializationFailure: (message) => {
       logger.warn(message);
     },

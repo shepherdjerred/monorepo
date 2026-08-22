@@ -79,4 +79,16 @@ describe("flag config source", () => {
       source.get({ key: "threshold", flag: "threshold" }),
     ).resolves.toEqual({ value: 0.33 });
   });
+
+  test("a non-absence evaluation error is surfaced", async () => {
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({ "feature-on": "not-a-boolean" }),
+    });
+    const source = createFlagConfigSource({
+      targetingKey: "service",
+      kinds: { featureOn: "boolean" },
+    });
+    await expect(source.get(NAMES)).rejects.toThrow(/TYPE_MISMATCH/);
+  });
 });

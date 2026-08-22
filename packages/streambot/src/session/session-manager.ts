@@ -95,8 +95,6 @@ export type SessionManagerDeps = {
   readonly voiceCaptureManager?: VoiceCaptureManager;
 };
 
-// Re-exported for existing consumers (command-bot) — the canonical home is session-types.ts.
-
 /**
  * Owns one playback session per `(guild, voice channel)`. A play command acquires a member-userbot
  * from the pool, spins up an isolated XState actor bound to that userbot's streamer, and tears it
@@ -344,8 +342,7 @@ export class SessionManager {
     const reporter = new StatusReporter((message) =>
       this.deps.announce(params.statusChannelId, message),
     );
-    // Built before the session record so its `view()` can close over the actor and userbot directly
-    // (the same projection `handleFor` exposes) without a mutable back-reference.
+    // Build before the session record so `view()` can close over actor and userbot directly.
     const card = new PlayerCardManager({
       owner: {
         guildId: params.guildId,
@@ -395,8 +392,7 @@ export class SessionManager {
       }),
     };
     session.voiceAssistant = createSessionVoiceAssistant(this.deps, session);
-    // Trigger 1: the fork's voice ws `close` event (fires even when the main gateway never
-    // reports the streamer leaving — the silent-to-EOF case).
+    // Trigger 1: the fork's voice ws `close` event, including silent-to-EOF cases.
     entry.userbot.setVoiceCloseListener(() => {
       this.beginVoiceRecovery(session);
     });

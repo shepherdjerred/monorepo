@@ -91,6 +91,33 @@ describe("precedence", () => {
 });
 
 describe("absence vs. answer", () => {
+  test("forwards targeting context to each source read", async () => {
+    const targetingKeys: (string | undefined)[] = [];
+    const source: ConfigSource = {
+      name: "flag",
+      get: (_names, context) => {
+        targetingKeys.push(context?.targetingKey);
+        return Promise.resolve({ value: "guild-value" });
+      },
+    };
+    const resolver = defineConfig({
+      definition: {
+        value: {
+          schema: z.string(),
+          sources: ["flag", "default"],
+          default: "default-value",
+          targeted: true,
+        },
+      } as const,
+      sources: { flag: source },
+    });
+
+    await expect(
+      resolver.value("value", { targetingKey: "guild-123" }),
+    ).resolves.toBe("guild-value");
+    expect(targetingKeys).toEqual(["guild-123"]);
+  });
+
   test("a flag resolving FALSE stops the waterfall", async () => {
     // The correctness property this package exists for. If `false` fell
     // through, the env var below would silently re-enable exactly what an
