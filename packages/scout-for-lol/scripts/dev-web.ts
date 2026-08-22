@@ -243,6 +243,13 @@ if (import.meta.main) {
       ...(isDesignAuditBoot
         ? {
             NODE_ENV: "test",
+            // Flipt is unreachable from a local/CI design-audit boot, and
+            // loadFeatureFlagConfiguration refuses to default this on
+            // purpose (see @shepherdjerred/feature-flags). Without it the
+            // backend throws during startup, every design-audit route loads
+            // against a dead API, and any backend-dependent UI renders its
+            // error/fallback state instead of the real page.
+            FEATURE_FLAGS_MODE: Bun.env["FEATURE_FLAGS_MODE"] ?? "disabled",
             JWT_SIGNING_SECRET:
               Bun.env["JWT_SIGNING_SECRET"] ??
               "design-audit-local-jwt-signing-secret-32-bytes",
