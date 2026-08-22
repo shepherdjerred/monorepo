@@ -12,7 +12,7 @@
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun --external=ffmpeg-static --external '@duckdb/*'",
-    "test": "DATABASE_URL=${DATABASE_URL:-file:./test.db} bun --no-install --bun vitest --config ../../../../vitest.config.ts run --testTimeout 20000",
+    "test": "DATABASE_URL=${DATABASE_URL:-postgres://scout@127.0.0.1:${SCOUT_PG_PORT:-5471}/scout_test_unbound} bun --no-install --bun vitest --config ../../../../vitest.config.ts run --testTimeout 20000",
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:coverage:threshold": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage --bail=1",
