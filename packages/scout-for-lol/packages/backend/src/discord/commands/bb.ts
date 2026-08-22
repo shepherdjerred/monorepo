@@ -11,16 +11,20 @@ import {
 import { placeBet } from "#src/betting/place-bet.ts";
 import { describeResult } from "#src/betting/bet-button.ts";
 import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
-import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
+import {
+  BUCKS_GUILD_ONLY,
+  BUCKS_NOT_ENABLED,
+  withRulesHint,
+} from "#src/betting/copy.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
 import { getOpenMarketAggregates } from "#src/betting/open-market.ts";
 import {
-  BucksTeamChoiceSchema,
+  BucksOutcomeChoiceSchema,
   subjectWinsForTeam,
-  teamIdForChoice,
-  teamName,
+  outcomeLabel,
+  resolveOutcomeChoice,
 } from "#src/betting/team.ts";
-import { announceParlayPlacement } from "#src/betting/parlay-announce.ts";
+import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
 import { describeParlayResult } from "#src/betting/parlay-bet-button.ts";
 import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
@@ -96,7 +100,7 @@ export function buildPersonalBucksEmbed(
         position.matchedStake === null
           ? `offered up to ${position.offeredStake.toString()} BB · match pending`
           : `matched ${position.matchedStake.toString()} BB · refunded ${(position.unmatchedStake ?? 0).toString()} BB`;
-      return `• **${teamName(position.teamId)}** — game: \`${position.gameAlias}\` · ${amount} · ${timing}`;
+      return `• **${position.gameAlias} ${position.sideLabel}** — ${amount} · ${timing}`;
     }
     return `• **${position.subjectAlias} ${position.side}** — ${position.stake.toString()} BB · ${timing}`;
   });
@@ -139,13 +143,14 @@ async function replyBalance(
   const view = await getPersonalBucksView({ serverId, discordId });
   if (view === undefined) {
     await interaction.editReply({
-      content: `You don't have a Bryan Bucks wallet yet — place your first bet on a live game and you'll be given a starting balance.\n\n${HOUSE_CUT_TERMS}`,
+      content: withRulesHint(
+        "No wallet yet — bet on a live game and you'll get a starting balance.",
+      ),
     });
     return;
   }
 
   await interaction.editReply({
-    content: HOUSE_CUT_TERMS,
     embeds: [buildPersonalBucksEmbed(view)],
   });
 }
@@ -198,7 +203,7 @@ async function replyOpen(
 
   if (pools.length === 0 && parlays.length === 0) {
     await interaction.editReply({
-      content: `No games are open for betting right now.\n\n${HOUSE_CUT_TERMS}`,
+      content: "Nothing open right now.",
     });
     return;
   }
@@ -210,16 +215,12 @@ async function replyOpen(
     ).map((subject) => subject.alias);
     const closesAtUnix = Math.floor(parlay.closesAt.getTime() / 1000);
     sections.push(
-      [
-        `## Parlay · ${aliases.join(", ")}`,
-        `Match: \`${parlay.matchId}\``,
-        `Closes <t:${closesAtUnix.toString()}:R>`,
-      ].join("\n"),
+      `**Parlay · ${aliases.join(", ")}** · closes <t:${closesAtUnix.toString()}:R> — \`/bb parlay player:${aliases[0] ?? ""}\``,
     );
   }
   await editReplyInChunks(
     interaction,
-    splitMessageIntoChunks(`${sections.join("\n\n")}\n\n${HOUSE_CUT_TERMS}`),
+    splitMessageIntoChunks(sections.join("\n\n")),
   );
 }
 
@@ -267,14 +268,9 @@ async function replyParlay(
   });
   await interaction.editReply({ content: describeParlayResult(result) });
   if (result.kind === "placed") {
-    await announceParlayPlacement({
+    await refreshParlayMessages({
       matchId: selection.market.matchId,
       serverId,
-      discordId,
-      side: parsedSide,
-      stake,
-      totalStake: result.totalStake,
-      grossPayout: result.grossPayout,
     });
   }
 }
@@ -285,8 +281,8 @@ async function replyBet(
   discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
 ): Promise<void> {
   const requestedAlias = interaction.options.getString("game", true);
-  const selectedTeamId = teamIdForChoice(
-    BucksTeamChoiceSchema.parse(interaction.options.getString("team", true)),
+  const choice = BucksOutcomeChoiceSchema.parse(
+    interaction.options.getString("outcome", true),
   );
   const stake = interaction.options.getInteger("amount", true);
 
@@ -300,6 +296,22 @@ async function replyBet(
 
   const game = resolveOpenGameByAlias(pools, requestedAlias);
   if (game !== undefined) {
+    const framing = {
+      anchorTeamId: game.subjectTeamId,
+      mixedTeams: game.mixedTeams,
+    };
+    const resolved = resolveOutcomeChoice(choice, framing);
+    if (resolved.kind === "ambiguous") {
+      // Slash-command choices are frozen at registration, so the rare lobby
+      // with tracked players on both teams has to be handled here rather than
+      // by varying the option list per game.
+      await interaction.editReply({
+        content:
+          "Both teams have a tracked player in this game, so `win` and `lose` are ambiguous — pick `Blue` or `Red`.",
+      });
+      return;
+    }
+    const selectedTeamId = resolved.teamId;
     const subjectWins = subjectWinsForTeam(game.subjectTeamId, selectedTeamId);
     const result = await placeBet({
       matchId: game.matchId,
@@ -308,9 +320,10 @@ async function replyBet(
       subjectPuuid: game.subjectPuuid,
       subjectWins,
       stake,
+      surface: "command",
     });
     await interaction.editReply({
-      content: describeResult(result, selectedTeamId),
+      content: describeResult(result, outcomeLabel(selectedTeamId, framing)),
     });
     if (result.kind === "placed") {
       await refreshBucksMessages({ matchId: game.matchId, serverId });
@@ -324,7 +337,7 @@ async function replyBet(
 
   if (available.length === 0) {
     await interaction.editReply({
-      content: "No games are open for betting right now.",
+      content: "Nothing open right now.",
     });
     return;
   }
@@ -344,7 +357,7 @@ export async function executeBb(
   try {
     if (interaction.guildId === null) {
       await interaction.reply({
-        content: "Bryan Bucks only works inside a server.",
+        content: BUCKS_GUILD_ONLY,
         ephemeral: true,
       });
       return;
@@ -355,7 +368,7 @@ export async function executeBb(
       // Reachable only if the flag was turned off after registration, since
       // the command is not registered anywhere the flag is off.
       await interaction.reply({
-        content: "Bryan Bucks isn't enabled in this server.",
+        content: BUCKS_NOT_ENABLED,
         ephemeral: true,
       });
       return;

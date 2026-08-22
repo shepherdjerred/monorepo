@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/bun";
 import type { MessageEditOptions } from "discord.js";
 import {
   BucksMessageRefsSchema,
+  BucksPoolRosterSchema,
   BucksPoolStateSchema,
   BucksPredictionSchema,
   DiscordChannelIdSchema,
@@ -11,10 +12,17 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import {
-  appendBucksLine,
+  withBucksDigest,
+  digestBudgetFor,
   bucksPrematchSummary,
   type BucksPrematchPosition,
 } from "#src/betting/prematch-line.ts";
+import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
+import { runSerialized } from "#src/betting/refresh-queue.ts";
+import {
+  observeBucksDelivery,
+  recordBucksDeliverySkip,
+} from "#src/betting/delivery-observability.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { createLogger } from "#src/logger.ts";
@@ -37,10 +45,8 @@ const defaultEditMessage: BucksMessageEdit = async (input) => {
   await channel.messages.edit(input.messageId, input.options);
 };
 
-const refreshTails = new Map<string, Promise<void>>();
-
 function refreshKey(matchId: string, serverId: DiscordGuildId): string {
-  return `${serverId}:${matchId}`;
+  return `pool:${serverId}:${matchId}`;
 }
 
 async function refreshOnce(
@@ -64,6 +70,8 @@ async function refreshOnce(
       prematchContentBase: true,
       poolState: true,
       predictionJson: true,
+      roster: true,
+      closesAt: true,
       bets: {
         select: {
           id: true,
@@ -81,14 +89,38 @@ async function refreshOnce(
     },
   });
   if (pool === null) {
+    recordBucksDeliverySkip({
+      surface: "prematch",
+      operation: "edit",
+      reason: "skipped_no_pool",
+      matchId: input.matchId,
+      serverId: input.serverId,
+    });
     return;
   }
   if (pool.prematchContentBase === null) {
+    // Expected forever for pools created before this column existed.
+    recordBucksDeliverySkip({
+      surface: "prematch",
+      operation: "edit",
+      reason: "skipped_no_base",
+      matchId: input.matchId,
+      serverId: input.serverId,
+    });
     return;
   }
 
   const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
   if (refs.length === 0) {
+    // Follows a failed recordPoolMessageRefs, and is the leading indicator of
+    // "settlement had nowhere to announce".
+    recordBucksDeliverySkip({
+      surface: "prematch",
+      operation: "edit",
+      reason: "skipped_no_refs",
+      matchId: input.matchId,
+      serverId: input.serverId,
+    });
     return;
   }
   const prediction =
@@ -123,27 +155,43 @@ async function refreshOnce(
       matchedStake: bet.matchedStake,
     };
   });
-  const content = appendBucksLine(
+  const anchor = bettingAnchor(
+    BucksPoolRosterSchema.parse(JSON.parse(pool.roster)).participants,
+  );
+  const content = withBucksDigest(
     pool.prematchContentBase,
     bucksPrematchSummary({
       prediction,
       poolState,
       positions,
       houseMatches,
+      framing: anchor === undefined ? undefined : subjectFraming(anchor),
+      closesAt: pool.closesAt,
+      maxLength: digestBudgetFor(pool.prematchContentBase),
     }),
   );
 
   for (const ref of refs) {
     try {
-      await editMessage({
-        channelId: DiscordChannelIdSchema.parse(ref.channelId),
-        messageId: ref.messageId,
-        options: {
-          content,
-          allowedMentions: { parse: [] },
-          ...(input.removeComponents ? { components: [] } : {}),
+      await observeBucksDelivery(
+        {
+          surface: "prematch",
+          operation: "edit",
+          matchId: input.matchId,
+          serverId: input.serverId,
+          channelId: ref.channelId,
         },
-      });
+        () =>
+          editMessage({
+            channelId: DiscordChannelIdSchema.parse(ref.channelId),
+            messageId: ref.messageId,
+            options: {
+              content,
+              allowedMentions: { parse: [] },
+              ...(input.removeComponents ? { components: [] } : {}),
+            },
+          }),
+      );
     } catch (error) {
       logger.warn(
         `⚠️ Could not refresh Bryan Bucks message ${ref.messageId} for ${input.matchId}:`,
@@ -169,10 +217,7 @@ export async function refreshBucksMessages(
   prismaClient: ExtendedPrismaClient = prisma,
   editMessage: BucksMessageEdit = defaultEditMessage,
 ): Promise<void> {
-  const key = refreshKey(input.matchId, input.serverId);
-  const prior = refreshTails.get(key) ?? Promise.resolve();
-  const current = (async () => {
-    await prior;
+  await runSerialized(refreshKey(input.matchId, input.serverId), async () => {
     try {
       await refreshOnce(
         {
@@ -196,15 +241,7 @@ export async function refreshBucksMessages(
         extra: { serverId: input.serverId },
       });
     }
-  })();
-  refreshTails.set(key, current);
-  try {
-    await current;
-  } finally {
-    if (refreshTails.get(key) === current) {
-      refreshTails.delete(key);
-    }
-  }
+  });
 }
 
 export async function refreshClosedBucksMessages(

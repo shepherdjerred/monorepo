@@ -442,6 +442,7 @@ export function lakeSchemaFingerprint(): string {
   const tables: Record<string, Record<string, DuckDbColumnType>> = {
     matches: MATCH_LAKE_COLUMNS,
     prematch: PREMATCH_LAKE_COLUMNS,
+    prediction_observations: PREDICTION_OBSERVATION_LAKE_COLUMNS,
     accounts: ACCOUNT_LAKE_COLUMNS,
     competition_rank_history: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   };

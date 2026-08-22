@@ -10,8 +10,10 @@ import { BLUE_TEAM_ID, BUTTON_STAKES } from "#src/betting/constants.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import {
   BETTING_TEAM_IDS,
-  shortTeamName,
+  hasTrackedPlayersOnBothTeams,
+  outcomeLabel,
   subjectWinsForTeam,
+  type OutcomeFraming,
 } from "#src/betting/team.ts";
 
 /**
@@ -27,7 +29,14 @@ export type BettableSubject = {
   index: number;
   /** Used only to translate a direct team choice into the v1 WIN/LOSE ID. */
   teamId: RiotTeamId;
+  /** Tracked players on both teams, so this game's copy stays Blue/Red. */
+  mixedTeams: boolean;
 };
+
+/** How this game's two outcomes should be named. */
+export function subjectFraming(subject: BettableSubject): OutcomeFraming {
+  return { anchorTeamId: subject.teamId, mixedTeams: subject.mixedTeams };
+}
 
 /**
  * The first tracked player in roster order, used as this game's button anchor.
@@ -39,13 +48,28 @@ export type BettableSubject = {
 export function bettingAnchor(
   roster: readonly BucksPoolParticipant[],
 ): BettableSubject | undefined {
+  const mixedTeams = hasTrackedPlayersOnBothTeams(roster);
   for (const [index, participant] of roster.entries()) {
     if (participant.trackedAlias === undefined || participant.puuid === null) {
       continue;
     }
-    return { index, teamId: participant.teamId };
+    return { index, teamId: participant.teamId, mixedTeams };
   }
   return undefined;
+}
+
+/**
+ * Green for the tracked player winning, red for losing; the mixed lobby keeps
+ * the literal Blue/Red colours because neither side is "ours".
+ */
+function buttonStyleFor(
+  teamId: RiotTeamId,
+  anchor: BettableSubject,
+): ButtonStyle.Primary | ButtonStyle.Success | ButtonStyle.Danger {
+  if (anchor.mixedTeams) {
+    return teamId === BLUE_TEAM_ID ? ButtonStyle.Primary : ButtonStyle.Danger;
+  }
+  return teamId === anchor.teamId ? ButtonStyle.Success : ButtonStyle.Danger;
 }
 
 function buildRow(input: {
@@ -69,10 +93,10 @@ function buildRow(input: {
               amount: stake,
             }),
           )
-          .setLabel(`${shortTeamName(teamId)} · ${stake.toString()} BB`)
-          .setStyle(
-            teamId === BLUE_TEAM_ID ? ButtonStyle.Primary : ButtonStyle.Danger,
+          .setLabel(
+            `${outcomeLabel(teamId, subjectFraming(input.anchor))} · ${stake.toString()} BB`,
           )
+          .setStyle(buttonStyleFor(teamId, input.anchor))
           .setDisabled(input.disabled),
       );
     }

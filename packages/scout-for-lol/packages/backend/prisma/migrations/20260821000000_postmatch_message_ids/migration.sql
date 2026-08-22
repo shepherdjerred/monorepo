@@ -1,0 +1,13 @@
+-- Persist the postmatch report's Discord message IDs alongside the prematch
+-- ones already stored on ActiveGame.
+--
+-- The Bryan Bucks settlement embed replies to the postmatch report. Those
+-- report IDs previously lived only in an in-memory Map for the duration of a
+-- single poll, so a restart between delivering the report and announcing the
+-- settlement lost the reply target for good: the settlement summary is
+-- one-shot, and a later pass returns nothing for an already-settled pool.
+--
+-- Nullable with no backfill. Rows written before this migration simply have no
+-- reply target, which is exactly the behaviour they already had, and
+-- sendSettlementMessage already falls back to a standalone message.
+ALTER TABLE "ActiveGame" ADD COLUMN "postmatchMessageIds" TEXT;

@@ -11,6 +11,11 @@ import {
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  bettingReconciliationFindings,
+  bettingReconciliationLastRunTimestampSeconds,
+  bettingReconciliationRunsTotal,
+} from "#src/metrics/betting.ts";
 
 const logger = createLogger("betting-reconcile");
 
@@ -106,12 +111,21 @@ function reportAuditResult(
   findings: BucksAuditCollector,
   accountCount: number,
 ): void {
+  // Reset per run: a gauge answers "is the ledger drifting right now"
+  // directly, where a nightly counter's increase() alert would be noisy.
+  bettingReconciliationFindings.reset();
+  bettingReconciliationLastRunTimestampSeconds.set(Date.now() / 1000);
+  for (const kind of findings.findingKinds) {
+    bettingReconciliationFindings.set({ kind }, 1);
+  }
   if (findings.totalCount === 0) {
+    bettingReconciliationRunsTotal.inc({ status: "clean" });
     logger.info(
       `✅ Reconciled ${accountCount.toString()} Bryan Bucks account(s) with no findings`,
     );
     return;
   }
+  bettingReconciliationRunsTotal.inc({ status: "findings" });
   logger.error(
     `🚨 Bryan Bucks reconciliation found ${findings.totalCount.toString()} accounting issue(s)`,
   );

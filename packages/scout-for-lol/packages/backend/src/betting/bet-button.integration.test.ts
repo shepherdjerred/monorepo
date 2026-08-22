@@ -136,26 +136,30 @@ afterAll(async () => {
 });
 
 describe("handleBetButton", () => {
+  // The shared test roster tracks players on BOTH teams, so it is the mixed
+  // lobby and keeps the literal Blue/Red framing.
   test.each([
-    ["Blue · 1 BB", 100, 1, "Blue Team"],
-    ["Blue · 5 BB", 100, 5, "Blue Team"],
-    ["Red · 1 BB", 200, 1, "Red Team"],
-    ["Red · 5 BB", 200, 5, "Red Team"],
+    ["Blue · 1 BB", 100, 1, "Blue"],
+    ["Blue · 5 BB", 100, 5, "Blue"],
+    ["Red · 1 BB", 200, 1, "Red"],
+    ["Red · 5 BB", 200, 5, "Red"],
   ])(
     "%s places a direct team bet",
-    async (label, expectedTeamId, expectedStake, expectedTeamName) => {
+    async (label, expectedTeamId, expectedStake, expectedSideLabel) => {
       const customId = buttonIdForLabel(bucksTestRoster(), label);
       const { interaction, replies } = fakeInteraction(customId);
       await handleBetButton(interaction, db);
 
-      expect(replies[0]).toContain("Offer placed");
-      expect(replies[0]).toContain(expectedTeamName);
-      expect(replies[0]).not.toContain("jerred WINS");
-      expect(replies[0]).toContain("for up to");
-      expect(replies[0]).toContain("only matched BB are at risk");
-      expect(replies[0]).toContain("5 BB per game");
-      expect(replies[0]).toContain("20% of matched profit**, rounded down");
-      expect(replies[0]).toContain("parlay cancellation is fully refunded");
+      expect(replies[0]).toContain(`**${expectedSideLabel}**`);
+      expect(replies[0]).toContain("offered up to");
+      // The one rule that survives on a confirmation, because without it the
+      // number reads as a guaranteed loss rather than a maximum offer.
+      expect(replies[0]).toContain("Only matched BB are at risk");
+      // Everything else belongs in /bb rules and must not be restated here.
+      expect(replies[0]).not.toContain("20%");
+      expect(replies[0]).not.toContain("5 BB per game");
+      expect(replies[0]).not.toContain("rounded down");
+      expect(replies[0]).not.toContain("parlay cancellation");
       expect(await db.bucksBet.count()).toBe(1);
       const bet = await db.bucksBet.findFirstOrThrow();
       expect(bet.predictedTeamId).toBe(expectedTeamId);
@@ -168,12 +172,17 @@ describe("handleBetButton", () => {
     },
   );
 
+  // The BUTTONS here are built from a roster where only the Red-side player is
+  // tracked, so they reframe to WIN/LOSE — WIN means team 200. The reply label
+  // comes from the pool's own frozen roster, which is the shared mixed one, so
+  // it still reads Blue/Red. In production both are the same roster; what this
+  // pins is that the anchor translation stores the right team either way.
   test.each([
-    ["Blue · 1 BB", 100, "Blue Team"],
-    ["Red · 1 BB", 200, "Red Team"],
+    ["WIN · 1 BB", 200, "Red"],
+    ["LOSE · 1 BB", 100, "Blue"],
   ])(
     "%s persists the selected team through a Red-side anchor",
-    async (label, expectedTeamId, expectedTeamName) => {
+    async (label, expectedTeamId, expectedSideLabel) => {
       const redAnchorRoster = bucksTestRoster().map((participant, index) => ({
         ...participant,
         trackedAlias: index === 5 ? "bryan" : undefined,
@@ -183,7 +192,7 @@ describe("handleBetButton", () => {
       const { interaction, replies } = fakeInteraction(customId);
       await handleBetButton(interaction, db);
 
-      expect(replies[0]).toContain(expectedTeamName);
+      expect(replies[0]).toContain(`**${expectedSideLabel}**`);
       const bet = await db.bucksBet.findFirstOrThrow();
       expect(bet.predictedTeamId).toBe(expectedTeamId);
     },
@@ -203,10 +212,8 @@ describe("handleBetButton", () => {
     const refreshes: { matchId: string; serverId: string }[] = [];
     await handleBetButton(interaction, db, recordingRefreshes(refreshes));
 
-    expect(replies[0]).toContain("Offer cancelled");
-    expect(replies[0]).toContain(
-      "offered **5 BB** − **1 BB cancellation fee** = **4 BB returned**",
-    );
+    expect(replies[0]).toContain("Cancelled");
+    expect(replies[0]).toContain("**5 BB** − **1 BB** fee = **4 BB** back");
     expect(await db.bucksBet.count()).toBe(1);
     expect(await db.bucksOpenPosition.count()).toBe(0);
     expect(await db.bucksBet.findFirstOrThrow()).toEqual(
@@ -268,7 +275,7 @@ describe("handleBetButton", () => {
       return f;
     })();
 
-    expect(replies[0]).toContain("Offer placed");
+    expect(replies[0]).toContain("offered up to");
     expect(await db.bucksBet.count()).toBe(2);
     const bet = await db.bucksBet.findFirstOrThrow({
       where: { betOutcome: "pending" },
@@ -294,8 +301,8 @@ describe("handleBetButton", () => {
 
     // "You don't have a bet" would be a lie to someone whose stake is sitting
     // in the pool, and would read as if it had never been recorded.
-    expect(replies[0]).toContain("Betting has closed");
-    expect(replies[0]).toContain("check the close announcement");
+    expect(replies[0]).toContain("Betting is closed");
+    expect(replies[0]).toContain("your bet is locked in");
     expect(replies[0]).not.toContain("were returned");
     expect(replies[0]).not.toContain("don't have a bet");
 
