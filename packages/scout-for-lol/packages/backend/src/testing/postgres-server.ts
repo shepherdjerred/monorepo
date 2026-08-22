@@ -86,12 +86,18 @@ function asPostgresOwner(cmd: string[]): string[] {
   if (executable === undefined) {
     throw new Error("Postgres command cannot be empty");
   }
-  const resolvedExecutable = Bun.which(executable);
+  const resolvedShim = Bun.which(executable);
+  const mise = Bun.which("mise");
   const su = Bun.which("su");
-  if (resolvedExecutable === null || su === null) {
+  if (resolvedShim === null || mise === null || su === null) {
     throw new Error(
-      "Root-hosted Postgres tests require both the Postgres binary and su",
+      "Root-hosted Postgres tests require mise, the Postgres binary, and su",
     );
+  }
+  const lookup = run([mise, "which", executable]);
+  const resolvedExecutable = lookup.stdout.trim();
+  if (lookup.exitCode !== 0 || resolvedExecutable === "") {
+    throw new Error(`mise could not resolve ${executable}: ${lookup.stderr}`);
   }
   return [
     su,
