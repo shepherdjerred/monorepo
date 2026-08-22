@@ -957,7 +957,7 @@
         "datasource": "custom.papermc",
         "versioning": "semver-coerced"
       },
-      "value": "26.1.2",
+      "value": "26.2",
       "notes": [
         "The papermc datasource lists both 2-part families (e.g. \"26.2\") and 3-part",
         "builds (e.g. \"26.1.2\"); strict semver drops the 2-part ones, so it never",
