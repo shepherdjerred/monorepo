@@ -38,7 +38,7 @@ import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { recordPoolMessageRefs } from "#src/betting/pool-open.ts";
 import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { capturePredictionForPrematch } from "#src/betting/prediction-capture.ts";
-import { isBettableGame } from "#src/betting/eligibility.ts";
+import { isBettableGame, isStandardLobby } from "#src/betting/eligibility.ts";
 import { appendBucksLine } from "#src/betting/prematch-line.ts";
 import {
   prepareBucksPrematch,
@@ -325,6 +325,21 @@ export async function sendPrematchNotification(
     participants: gameInfo.participants,
   });
 
+  // Classic participation is a wallet operation, not a delivery operation.
+  // Run it before subscription lookup so muted, filtered, or missing channels
+  // cannot suppress the one supported Classic reward.
+  let preparedBucks: BucksPrematchAttachment | undefined;
+  if (queueType === "classic" && isStandardLobby(gameInfo.participants)) {
+    preparedBucks = await prepareBucksPrematch({
+      gameInfo,
+      trackedPlayers,
+      queueType,
+      targetGuildIds: [],
+      detectedAt,
+      prediction: undefined,
+    });
+  }
+
   // Capture an eligible match before resolving delivery destinations. A
   // subscription lookup is unrelated to the match-scoped observation and may
   // fail independently; prediction capture must not be lost in that case.
@@ -485,14 +500,16 @@ export async function sendPrematchNotification(
   // Bryan Bucks: open the markets and build the buttons. Entirely
   // best-effort — on any failure this yields no guilds, no rows, and the
   // notification below is exactly what it was before the feature existed.
-  const bucks = await prepareBucksPrematch({
-    gameInfo,
-    trackedPlayers,
-    queueType,
-    targetGuildIds,
-    detectedAt,
-    prediction,
-  });
+  const bucks =
+    preparedBucks ??
+    (await prepareBucksPrematch({
+      gameInfo,
+      trackedPlayers,
+      queueType,
+      targetGuildIds,
+      detectedAt,
+      prediction,
+    }));
   const prematchContentBase =
     loadingScreenAttachment !== undefined && loadingScreenEmbed !== undefined
       ? prematchMessageContent

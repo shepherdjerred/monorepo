@@ -277,6 +277,17 @@ async function awardClassicPrematchForGuild(input: {
         logger.warn(
           `🏦 Skipping ${input.matchId} Classic participation for ${serverId}: the house cannot fund a welcome grant`,
         );
+        await input.prismaClient.bucksMatchEarning.updateMany({
+          where: {
+            matchId: input.matchId,
+            serverId,
+            phase: "prematch",
+            state: "pending",
+          },
+          data: {
+            retryAt: new Date(Date.now() + PENDING_EARNING_RETRY_DELAY_MS),
+          },
+        });
         return [];
       }
       throw error;
