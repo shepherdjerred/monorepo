@@ -26,6 +26,7 @@ export function PlayerHeaderActions(props: {
           type="button"
           variant="outline"
           size="sm"
+          aria-haspopup="dialog"
           onClick={props.onRename}
         >
           Rename
@@ -36,6 +37,7 @@ export function PlayerHeaderActions(props: {
           type="button"
           variant="outline"
           size="sm"
+          aria-haspopup="dialog"
           onClick={props.onMerge}
         >
           Merge

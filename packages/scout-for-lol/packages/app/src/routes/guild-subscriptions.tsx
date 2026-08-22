@@ -195,6 +195,7 @@ export function GuildSubscriptions() {
               type="button"
               size="sm"
               variant="outline"
+              aria-haspopup="dialog"
               onClick={() => {
                 setFilterAction({ kind: "bulk" });
               }}
@@ -206,6 +207,7 @@ export function GuildSubscriptions() {
             <Button
               type="button"
               size="sm"
+              aria-haspopup="dialog"
               onClick={() => {
                 setAddOpen(true);
               }}
@@ -301,6 +303,7 @@ export function GuildSubscriptions() {
                             type="button"
                             variant="ghost"
                             size="sm"
+                            aria-haspopup="dialog"
                             onClick={() => {
                               setFilterAction({
                                 kind: "edit",

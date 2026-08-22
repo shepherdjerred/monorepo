@@ -15,6 +15,28 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
     focusable.first(),
     "pages must finish rendering before focus is audited",
   ).toBeVisible();
+  const focusBaselines = await evaluateBrowser(page, () => {
+    const baseSelector =
+      ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"], [tabindex]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
+    const selector =
+      window.innerWidth < 800
+        ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`
+        : baseSelector;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
+    return [...document.querySelectorAll<HTMLElement>(selector)]
+      .filter((element) => element.checkVisibility())
+      .map((element) => {
+        const style = getComputedStyle(element);
+        return {
+          outlineColor: style.outlineColor,
+          outlineOffset: style.outlineOffset,
+          outlineStyle: style.outlineStyle,
+          outlineWidth: style.outlineWidth,
+          boxShadow: style.boxShadow,
+        };
+      });
+  });
   const count = await evaluateBrowser(page, () => {
     const baseSelector =
       ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"], [tabindex]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
@@ -66,18 +88,31 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
         expectedIndex,
         isMonaco: element.closest(".monaco-editor") !== null,
         description: `${element.tagName.toLowerCase()}#${element.id}.${element.className}`,
-        hasIndicator:
-          (style.outlineStyle !== "none" &&
-            Number.parseFloat(style.outlineWidth) > 0) ||
-          style.boxShadow !== "none" ||
-          element.matches('input[type="date"]'),
+        focusStyle: {
+          outlineColor: style.outlineColor,
+          outlineOffset: style.outlineOffset,
+          outlineStyle: style.outlineStyle,
+          outlineWidth: style.outlineWidth,
+          boxShadow: style.boxShadow,
+        },
       };
     });
     if (focusState.kind === "skip") continue;
     if (focusState.expectedIndex >= checks) continue;
     if (visited.has(focusState.expectedIndex)) continue;
+    const baseline = focusBaselines[focusState.expectedIndex];
+    const hasIndicator =
+      baseline !== undefined &&
+      ((focusState.focusStyle.outlineStyle !== "none" &&
+        Number.parseFloat(focusState.focusStyle.outlineWidth) > 0 &&
+        (focusState.focusStyle.outlineColor !== baseline.outlineColor ||
+          focusState.focusStyle.outlineOffset !== baseline.outlineOffset ||
+          focusState.focusStyle.outlineStyle !== baseline.outlineStyle ||
+          focusState.focusStyle.outlineWidth !== baseline.outlineWidth)) ||
+        (focusState.focusStyle.boxShadow !== "none" &&
+          focusState.focusStyle.boxShadow !== baseline.boxShadow));
     expect(
-      focusState.hasIndicator,
+      hasIndicator,
       `focus stop ${String(visited.size + 1)} (${focusState.description}) must have a visible outline or focus ring`,
     ).toBe(true);
     visited.add(focusState.expectedIndex);

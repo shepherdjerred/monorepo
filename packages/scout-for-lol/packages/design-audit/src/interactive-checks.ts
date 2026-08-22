@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-export async function assertInteractiveStates(page: Page): Promise<void> {
+async function assertVisibleDialogs(page: Page): Promise<void> {
   const dialogs = page.locator('[role="dialog"]:visible');
   for (let index = 0; index < (await dialogs.count()); index += 1) {
     const dialog = dialogs.nth(index);
@@ -17,6 +17,26 @@ export async function assertInteractiveStates(page: Page): Promise<void> {
       "dialogs expose a keyboard-accessible close control",
     ).toBeGreaterThan(0);
   }
+}
+
+export async function assertInteractiveStates(page: Page): Promise<void> {
+  const dialogTriggers = page.locator(
+    '[aria-haspopup="dialog"]:visible, [data-dialog-trigger]:visible',
+  );
+  for (let index = 0; index < (await dialogTriggers.count()); index += 1) {
+    const trigger = dialogTriggers.nth(index);
+    await trigger.scrollIntoViewIfNeeded();
+    await trigger.click({ force: true });
+    await expect(
+      page.locator('[role="dialog"]:visible'),
+      "dialog triggers open a visible dialog",
+    ).not.toHaveCount(0);
+    await assertVisibleDialogs(page);
+    await page.keyboard.press("Escape");
+    await expect(page.locator('[role="dialog"]:visible')).toHaveCount(0);
+  }
+
+  await assertVisibleDialogs(page);
 
   const tabLists = page.locator('[role="tablist"]:visible');
   for (let index = 0; index < (await tabLists.count()); index += 1) {

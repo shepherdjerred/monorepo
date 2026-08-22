@@ -117,6 +117,7 @@ export function PlayerList() {
           {perms.can("subscriptions", "create") && (
             <Button
               type="button"
+              aria-haspopup="dialog"
               onClick={() => {
                 setAddOpen(true);
               }}
