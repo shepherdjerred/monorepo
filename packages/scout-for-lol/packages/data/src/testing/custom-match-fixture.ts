@@ -83,3 +83,52 @@ export function toCustomLobby(
     },
   });
 }
+
+/**
+ * Deletes fields from a parsed match by dotted path, producing the payloads a
+ * custom game may actually send. `info.participants[].x` removes `x` from every
+ * participant.
+ *
+ * Deliberately returns `RawMatch` without re-parsing: the whole point is to
+ * produce a value the schema accepts but `missingExpectedMatchFields` rejects,
+ * which is only possible because those fields are optional.
+ */
+const PARTICIPANT_PREFIX = "info.participants[].";
+
+function participantField(path: string): string | undefined {
+  return path.startsWith(PARTICIPANT_PREFIX)
+    ? path.slice(PARTICIPANT_PREFIX.length)
+    : undefined;
+}
+
+export function omitFields(match: RawMatch, paths: string[]): RawMatch {
+  const infoWithout = paths
+    .filter((path) => participantField(path) === undefined)
+    .reduce<Record<string, unknown>>(
+      (info, path) => {
+        const { [path.replace("info.", "")]: _removed, ...rest } = info;
+        return rest;
+      },
+
+      { ...match.info },
+    );
+
+  const participantFields = paths
+    .map((path) => participantField(path))
+    .filter((field) => field !== undefined);
+
+  const participants = match.info.participants.map((participant) =>
+    participantFields.reduce<Record<string, unknown>>(
+      (current, field) => {
+        const { [field]: _removed, ...rest } = current;
+        return rest;
+      },
+      { ...participant },
+    ),
+  );
+
+  return RawMatchSchema.parse({
+    ...match,
+    info: { ...infoWithout, participants },
+  });
+}
