@@ -1,7 +1,6 @@
-import type { ZodError } from "zod";
-import { type ZodType } from "zod";
+import { z, type ZodError, type ZodType } from "zod";
 import * as Sentry from "@sentry/bun";
-import type { MatchId } from "@scout-for-lol/data/index.ts";
+import type { MatchId } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import {
   riotApiErrorsTotal,
@@ -63,6 +62,15 @@ type CallResult<T> =
   | { kind: "http-error"; status: number; error: unknown }
   | { kind: "transport-error"; error: unknown };
 
+const ResponseWrapperSchema = z.object({
+  response: z.unknown(),
+});
+
+function extractPayload(raw: unknown): unknown {
+  const wrapped = ResponseWrapperSchema.safeParse(raw);
+  return wrapped.success ? wrapped.data.response : raw;
+}
+
 function formatContext(context: Record<string, string | number>): string {
   const entries = Object.entries(context);
   if (entries.length === 0) return "";
@@ -86,7 +94,7 @@ function contextAsTags(
  */
 async function runRiotCall<T>(
   config: CallRiotConfig<T>,
-  fn: () => Promise<{ response: unknown }>,
+  fn: () => Promise<unknown>,
 ): Promise<CallResult<T>> {
   const {
     source,
@@ -105,9 +113,9 @@ async function runRiotCall<T>(
     level: "info",
   });
 
-  let response: { response: unknown };
+  let rawResult: unknown;
   try {
-    response = await withTimeout(fn());
+    rawResult = await withTimeout(fn());
   } catch (error) {
     const isTimeout =
       error instanceof Error && error.message.includes("timed out");
@@ -151,7 +159,9 @@ async function runRiotCall<T>(
   riotApiRequestsTotal.inc({ source, status: "success" });
   updateRiotApiHealth(true);
 
-  const parsed = parseWithUnknownKeyFallback(schema, response.response);
+  const payload = extractPayload(rawResult);
+
+  const parsed = parseWithUnknownKeyFallback(schema, payload);
   if (!parsed.ok) {
     logger.error(
       `[${source}] ❌ Validation failed${contextSuffix}:`,
@@ -162,7 +172,7 @@ async function runRiotCall<T>(
       await saveFailedPayloadToS3({
         matchId: onValidationFailure.id,
         assetType: onValidationFailure.assetType,
-        rawPayload: response.response,
+        rawPayload: payload,
         validationError: parsed.error,
       });
     }
@@ -187,7 +197,7 @@ async function runRiotCall<T>(
  */
 export async function callRiotOrUndefined<T>(
   config: CallRiotConfig<T>,
-  fn: () => Promise<{ response: unknown }>,
+  fn: () => Promise<unknown>,
 ): Promise<T | undefined> {
   const result = await runRiotCall(config, fn);
   return result.kind === "success" ? result.data : undefined;
@@ -196,11 +206,11 @@ export async function callRiotOrUndefined<T>(
 /**
  * Returns `T` on success; throws on any failure (after full plumbing
  * runs). Validation failures throw the `ZodError`; HTTP/transport
- * failures throw the underlying error from twisted.
+ * failures throw the underlying error.
  */
 export async function callRiotOrThrow<T>(
   config: CallRiotConfig<T>,
-  fn: () => Promise<{ response: unknown }>,
+  fn: () => Promise<unknown>,
 ): Promise<T> {
   const result = await runRiotCall(config, fn);
   switch (result.kind) {

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import type { ErrorEvent, EventHint } from "@sentry/bun";
 import { z } from "zod";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
+import { RiotHttpError } from "#src/league/api/client/errors.ts";
 
 function makeHint(originalException: unknown): EventHint {
   return { originalException };
@@ -270,6 +271,56 @@ describe("filterScoutSentryEvent — passthrough", () => {
 
   test("keeps events with no original exception", () => {
     const result = filterScoutSentryEvent(baseEvent, {});
+    expect(result).toEqual(baseEvent);
+  });
+});
+
+describe("filterScoutSentryEvent — RiotHttpError", () => {
+  test("drops RiotHttpError 502 when not sampled", () => {
+    const error = new RiotHttpError({
+      status: 502,
+      statusText: "Bad Gateway",
+      body: null,
+      url: "https://na1.api.riotgames.com/test",
+      headers: new Headers(),
+    });
+    const result = filterScoutSentryEvent(
+      baseEvent,
+      makeHint(error),
+      alwaysDrop,
+    );
+    expect(result).toBeNull();
+  });
+
+  test("keeps RiotHttpError 502 when sampled", () => {
+    const error = new RiotHttpError({
+      status: 502,
+      statusText: "Bad Gateway",
+      body: null,
+      url: "https://na1.api.riotgames.com/test",
+      headers: new Headers(),
+    });
+    const result = filterScoutSentryEvent(
+      baseEvent,
+      makeHint(error),
+      alwaysSample,
+    );
+    expect(result).toEqual(baseEvent);
+  });
+
+  test("keeps RiotHttpError 429 (actionable rate limit)", () => {
+    const error = new RiotHttpError({
+      status: 429,
+      statusText: "Rate Limit",
+      body: null,
+      url: "https://na1.api.riotgames.com/test",
+      headers: new Headers(),
+    });
+    const result = filterScoutSentryEvent(
+      baseEvent,
+      makeHint(error),
+      alwaysDrop,
+    );
     expect(result).toEqual(baseEvent);
   });
 });

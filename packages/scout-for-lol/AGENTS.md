@@ -10,7 +10,7 @@ Monorepo using **Bun workspaces**:
 
 ```text
 packages/
-├── backend/   # Discord bot backend service (Discord.js, Prisma, twisted)
+├── backend/   # Discord bot backend service (Discord.js, Prisma, native Riot client)
 ├── data/      # Shared data models, schemas, and utilities
 ├── design-system/ # Shared themes, components, browser assets, and Satori foundations
 ├── report/    # Report generation components (React + satori)
@@ -528,7 +528,6 @@ Enforced by ESLint:
 | `env-var`         | Type-safe environment configuration     |
 | `date-fns`        | Date operations                         |
 | `zod`             | Runtime validation and schemas          |
-| `twisted`         | Riot Games API client                   |
 | `satori`          | JSX to SVG rendering                    |
 | `@resvg/resvg-js` | SVG to PNG conversion                   |
 | `tslog`           | Structured logging (backend)            |
@@ -604,7 +603,7 @@ try {
 
 ## League of Legends API Integration
 
-- Use the `twisted` library for Riot API calls
+- Use the native `RiotClient` in `#src/league/api/client/riot-client.ts` for Riot API calls
 - Implement proper rate limiting and retry logic
 - Cache API responses appropriately
 - Handle API errors and rate limits gracefully
@@ -635,7 +634,7 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 
 - Clearly distinguishes between unvalidated external data (`Raw*`) and validated internal types
 - Enforced by ESLint rule `custom-rules/no-dto-naming`
-- Never import DTO types directly from `twisted` - use `@scout-for-lol/data` schemas instead
+- Never import DTO types from external libraries - use `@scout-for-lol/data` schemas instead
 
 ---
 

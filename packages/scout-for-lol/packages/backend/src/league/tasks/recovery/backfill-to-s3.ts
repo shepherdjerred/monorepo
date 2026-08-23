@@ -1,11 +1,13 @@
-import { api } from "#src/league/api/api.ts";
-import { Constants } from "twisted";
-const { regionToRegionGroup } = Constants;
-import { mapRegionToEnum } from "#src/league/model/region.ts";
+import { riotClient } from "#src/league/api/api.ts";
 import { getAccountsWithState } from "#src/database/index.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
-import type { MatchId, Region } from "@scout-for-lol/data/index.ts";
+import {
+  MatchIdSchema,
+  LeaguePuuidSchema,
+  platformToRegionalRoute,
+  type MatchId,
+  type Region,
+} from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import {
   backfillMatchesTotal,
@@ -42,8 +44,8 @@ export async function fetchMatchIdsForTimeRange(
   startTimeEpochSeconds: number,
   endTimeEpochSeconds: number,
 ): Promise<MatchId[]> {
-  const regionEnum = mapRegionToEnum(region);
-  const regionGroup = regionToRegionGroup(regionEnum);
+  const regionalRoute = platformToRegionalRoute(region);
+  const parsedPuuid = LeaguePuuidSchema.parse(puuid);
   const allMatchIds: MatchId[] = [];
   let offset = 0;
   let hasMore = true;
@@ -57,7 +59,7 @@ export async function fetchMatchIdsForTimeRange(
         context: { puuid, region, offset },
       },
       () =>
-        api.MatchV5.list(puuid, regionGroup, {
+        riotClient.match.list(parsedPuuid, regionalRoute, {
           startTime: startTimeEpochSeconds,
           endTime: endTimeEpochSeconds,
           count: MAX_MATCHES_PER_REQUEST,

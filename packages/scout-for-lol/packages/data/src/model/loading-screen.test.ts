@@ -5,8 +5,6 @@ import {
   LoadingScreenParticipantSchema,
   LoadingScreenBanSchema,
   LoadingScreenLayoutSchema,
-  SummonerSpellIdSchema,
-  RuneIdSchema,
   LoadingScreenChampionIdSchema,
   GameIdSchema,
   QueueDisplayNameSchema,
@@ -14,6 +12,7 @@ import {
   loadingScreenLayoutForQueueType,
   type LoadingScreenLayout,
 } from "#src/model/loading-screen.ts";
+import { SummonerSpellIdSchema, RuneIdSchema } from "#src/model/identifiers.ts";
 import type { QueueType } from "#src/model/state.ts";
 import { LeaguePuuidSchema } from "#src/model/league-account.ts";
 import { ArenaTeamIdSchema } from "#src/model/arena/arena.ts";

@@ -23,7 +23,7 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "#src/storage/s3-client.ts";
-import { LolApi, Constants } from "twisted";
+import { riotClient } from "#src/league/api/api.ts";
 import configuration from "#src/configuration.ts";
 import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
 import { createLogger } from "#src/logger.ts";
@@ -33,9 +33,6 @@ import {
   generateDatePrefixes,
   type MatchType,
 } from "#src/league/review/test-reviews-utils.ts";
-
-// Initialize Riot API client for timeline fetching
-const api = new LolApi({ key: configuration.riotApiToken });
 
 const logger = createLogger("review-test-reviews");
 
@@ -200,11 +197,8 @@ async function fetchTimelineFromRiotApi(
 ): Promise<RawTimeline | undefined> {
   try {
     logger.info(`📊 Fetching timeline from Riot API for ${matchId}`);
-    const response = await api.MatchV5.timeline(
-      matchId,
-      Constants.RegionGroups.AMERICAS,
-    );
-    const validated = RawTimelineSchema.parse(response.response);
+    const rawTimeline = await riotClient.match.timeline(matchId, "AMERICAS");
+    const validated = RawTimelineSchema.parse(rawTimeline);
     logger.info(
       `✅ Timeline fetched with ${validated.info.frames.length.toString()} frames`,
     );

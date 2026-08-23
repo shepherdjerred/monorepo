@@ -11,12 +11,14 @@
  * the background and served from cache. All refreshes are fail-soft.
  */
 
-import { type Region, RegionSchema } from "@scout-for-lol/data";
+import {
+  type Region,
+  RegionSchema,
+  LeaguePuuidSchema,
+  platformToAccountRegionalRoute,
+} from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { riotApi } from "#src/league/api/api.ts";
-import { mapRegionToEnum } from "#src/league/model/region.ts";
-import { Constants } from "twisted";
-const { regionToRegionGroupForAccountAPI } = Constants;
+import { riotClient } from "#src/league/api/api.ts";
 import { withTimeout } from "#src/utils/timeout.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -48,15 +50,14 @@ export async function getRiotIdByPuuid(
   region: Region,
 ): Promise<RiotIdParts | null> {
   try {
-    const regionGroup = regionToRegionGroupForAccountAPI(
-      mapRegionToEnum(region),
-    );
+    const regionalRoute = platformToAccountRegionalRoute(region);
+    const parsedPuuid = LeaguePuuidSchema.parse(puuid);
     const account = await withTimeout(
-      riotApi.Account.getByPUUID(puuid, regionGroup),
+      riotClient.account.getByPuuid(parsedPuuid, regionalRoute),
     );
     return {
-      gameName: account.response.gameName,
-      tagLine: account.response.tagLine,
+      gameName: account.gameName,
+      tagLine: account.tagLine,
     };
   } catch (error) {
     logger.warn("Failed to resolve Riot ID by PUUID", { puuid, region, error });

@@ -2,7 +2,7 @@ import { filter, first, map, pipe } from "remeda";
 import { match } from "ts-pattern";
 import type { RawParticipant } from "#src/league/raw-participant.schema.ts";
 import type { Champion, Rune } from "#src/model/champion.ts";
-import { normalizeChampionName } from "#src/data-dragon/images.ts";
+import { normalizeChampionName } from "#src/model/champion-registry.ts";
 import { getRuneInfo } from "#src/data-dragon/runes.ts";
 import { parseLane } from "#src/model/lane.ts";
 

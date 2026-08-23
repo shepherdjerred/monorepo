@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
-  ChampionIdSchema,
   CompetitionIdSchema,
   parseCompetition,
 } from "#src/model/competition.ts";
+import { ChampionIdSchema } from "#src/model/identifiers.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,

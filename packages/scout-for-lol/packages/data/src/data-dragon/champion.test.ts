@@ -1,5 +1,4 @@
 import { describe, test, expect } from "vitest";
-import { championNameOverrides } from "./champion-name-overrides.generated.ts";
 import { getChampionInfo } from "./champion.ts";
 
 describe("getChampionInfo", () => {
@@ -10,12 +9,10 @@ describe("getChampionInfo", () => {
     expect(info?.passive.name.length).toBeGreaterThan(0);
   });
 
-  // Auto-generated override inputs — each must resolve via the normalization
-  // layer to a real on-disk champion data file.
-  test.each(Object.entries(championNameOverrides))(
-    "loads abilities for override input %s (resolves to %s)",
-    async (input) => {
-      const info = await getChampionInfo(input);
+  test.each(["Aatrox", "LeeSin", "MonkeyKing", "Renata", "Velkoz"])(
+    "loads abilities for champion %s",
+    async (championName) => {
+      const info = await getChampionInfo(championName);
       expect(info).toBeDefined();
       expect(info?.spells).toHaveLength(4);
     },

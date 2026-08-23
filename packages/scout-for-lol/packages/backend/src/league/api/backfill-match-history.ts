@@ -1,11 +1,10 @@
-import { api } from "#src/league/api/api.ts";
-import { Constants } from "twisted";
-const { regionToRegionGroup } = Constants;
-import { mapRegionToEnum } from "#src/league/model/region.ts";
-import type {
-  PlayerConfigEntry,
-  LeaguePuuid,
-} from "@scout-for-lol/data/index.ts";
+import { riotClient } from "#src/league/api/api.ts";
+import {
+  type PlayerConfigEntry,
+  type LeaguePuuid,
+  platformToRegionalRoute,
+} from "@scout-for-lol/data";
+import { z } from "zod";
 import { updateLastMatchTime } from "#src/database/index.ts";
 import { getRecentMatchIds } from "#src/league/api/match-history.ts";
 import { createLogger } from "#src/logger.ts";
@@ -60,12 +59,17 @@ export async function backfillLastMatchTime(
     );
 
     // Fetch match details to get game creation time
-    const region = mapRegionToEnum(playerRegion);
-    const regionGroup = regionToRegionGroup(region);
-    const response = await withTimeout(
-      api.MatchV5.get(mostRecentMatchId, regionGroup),
+    const regionalRoute = platformToRegionalRoute(playerRegion);
+    const rawMatch = await withTimeout(
+      riotClient.match.get(mostRecentMatchId, regionalRoute),
     );
-    const matchData = response.response;
+    const matchData = z
+      .object({
+        info: z.object({
+          gameCreation: z.number(),
+        }),
+      })
+      .parse(rawMatch);
     const gameCreationTime = new Date(matchData.info.gameCreation);
 
     logger.info(

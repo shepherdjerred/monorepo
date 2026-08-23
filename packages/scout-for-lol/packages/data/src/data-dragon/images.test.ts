@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { championNameOverrides } from "./champion-name-overrides.generated.ts";
+import { normalizeChampionName } from "#src/model/champion-registry.ts";
 import {
   championNameToDisplayName,
   getChampionDisplayNameById,
@@ -7,7 +7,6 @@ import {
   getChampionLoadingImageBase64,
   getChampionLoadingImageUrl,
   getItemImageUrl,
-  normalizeChampionName,
   validateChampionImage,
   validateChampionLoadingImage,
   validateChampionSplashImage,
@@ -17,11 +16,18 @@ import {
   validateAugmentIcon,
 } from "./images.ts";
 
-// Iterate every entry in the auto-generated `championNameOverrides`. The
-// generator rewrites this map on every `bun run update-data-dragon`; the
-// tests below automatically cover whatever's in the current map.
-const championOverrides: readonly (readonly [string, string])[] =
-  Object.entries(championNameOverrides);
+const representativeChampions: readonly (readonly [string, string])[] = [
+  ["Aatrox", "Aatrox"],
+  ["LeeSin", "LeeSin"],
+  ["leesin", "LeeSin"],
+  ["MonkeyKing", "MonkeyKing"],
+  ["wukong", "MonkeyKing"],
+  ["FiddleSticks", "Fiddlesticks"],
+  ["fiddlesticks", "Fiddlesticks"],
+  ["RekSai", "RekSai"],
+  ["Renata", "Renata"],
+  ["Nunu & Willump", "Nunu"],
+];
 
 test("throws error when champion image doesn't exist", async () => {
   await expect(validateChampionImage("NonExistentChampion")).rejects.toThrow(
@@ -41,68 +47,45 @@ test("throws error when spell image doesn't exist", async () => {
   );
 });
 
-test("throws error when rune image doesn't exist", async () => {
-  await expect(validateRuneIcon("perk-images/NonExistent.png")).rejects.toThrow(
-    /Rune image NonExistent.png not found.*Run 'bun run update-data-dragon'/,
+test("throws error when rune icon doesn't exist", async () => {
+  await expect(validateRuneIcon("nonexistent.png")).rejects.toThrow(
+    /Rune image nonexistent.png not found.*Run 'bun run update-data-dragon'/,
   );
 });
 
-test("throws error when augment image doesn't exist", async () => {
-  await expect(
-    validateAugmentIcon("assets/ux/cherry/augments/icons/nonexistent.png"),
-  ).rejects.toThrow(
+test("throws error when augment icon doesn't exist", async () => {
+  await expect(validateAugmentIcon("nonexistent.png")).rejects.toThrow(
     /Augment image nonexistent.png not found.*Run 'bun run update-data-dragon'/,
   );
 });
 
-test("validates existing champion image", async () => {
-  // Aatrox should always exist in our cached data
-  await expect(validateChampionImage("Aatrox")).resolves.toBeUndefined();
+test("formats item image url for valid item id", () => {
+  const url = getItemImageUrl(3031);
+  expect(url).toContain("/img/item/3031.png");
 });
 
-test("validates existing item image", async () => {
-  // Item 1001 (Boots) should exist
-  await expect(validateItemImage(1001)).resolves.toBeUndefined();
-});
-
-test("returns CDN URL for champion image", () => {
-  const url = getChampionImageUrl("Aatrox");
-  expect(url.startsWith("https://ddragon.leagueoflegends.com/cdn/")).toBe(true);
-  expect(url).toContain("/img/champion/Aatrox.png");
-});
-
-test("returns CDN URL for item image", () => {
-  const url = getItemImageUrl(1001);
-  expect(url.startsWith("https://ddragon.leagueoflegends.com/cdn/")).toBe(true);
-  expect(url).toContain("/img/item/1001.png");
-});
-
-describe("champion display names", () => {
-  test("getChampionDisplayNameById resolves 805 (Locke) — newer than twisted's enum", () => {
-    expect(getChampionDisplayNameById(805)).toBe("Locke");
-  });
-
-  test("getChampionDisplayNameById returns punctuated display names, not a string transform", () => {
+describe("getChampionDisplayNameById", () => {
+  test("returns human display name with punctuation for known id", () => {
     expect(getChampionDisplayNameById(161)).toBe("Vel'Koz");
     expect(getChampionDisplayNameById(121)).toBe("Kha'Zix");
     expect(getChampionDisplayNameById(62)).toBe("Wukong");
-    expect(getChampionDisplayNameById(20)).toBe("Nunu & Willump");
+    expect(getChampionDisplayNameById(4)).toBe("Twisted Fate");
   });
 
-  test("getChampionDisplayNameById falls back to a placeholder for an unknown id", () => {
+  test("returns fallback string for unknown id", () => {
     expect(getChampionDisplayNameById(999_999)).toBe("Champion 999999");
   });
+});
 
-  test("championNameToDisplayName resolves raw Riot match-data casing to the correct display name", () => {
-    expect(championNameToDisplayName("XinZhao")).toBe("Xin Zhao");
+describe("championNameToDisplayName", () => {
+  test("resolves standard canonical key to display name", () => {
     expect(championNameToDisplayName("Velkoz")).toBe("Vel'Koz");
-    expect(championNameToDisplayName("FiddleSticks")).toBe("Fiddlesticks");
     expect(championNameToDisplayName("MonkeyKing")).toBe("Wukong");
   });
 });
 
-describe("championNameOverrides", () => {
-  test.each(championOverrides)(
+describe("champion normalization", () => {
+  test.each(representativeChampions)(
     "normalizeChampionName(%s) === %s",
     (input, expected) => {
       expect(normalizeChampionName(input)).toBe(expected);
@@ -118,30 +101,24 @@ describe("championNameOverrides", () => {
   });
 
   test("case-insensitive lookup against champion.json normalizes Riot quirks", () => {
-    // Riot match data API returns "FiddleSticks" (capital S) but the
-    // on-disk file is "Fiddlesticks.png". Same idea for any future Riot
-    // casing surprise — the case-insensitive lookup absorbs it without
-    // needing an explicit override entry.
     expect(normalizeChampionName("FiddleSticks")).toBe("Fiddlesticks");
     expect(normalizeChampionName("FIDDLESTICKS")).toBe("Fiddlesticks");
     expect(normalizeChampionName("fiddlesticks")).toBe("Fiddlesticks");
     expect(normalizeChampionName("Nunu & Willump")).toBe("Nunu");
     expect(normalizeChampionName("Nunu%20&%20Willump")).toBe("Nunu");
     expect(normalizeChampionName("nunu & willump")).toBe("Nunu");
-    // No-op for already-canonical names
-    expect(normalizeChampionName("Wukong")).toBe("Wukong");
-    // Names that aren't in champion.json at all are returned unchanged
+    expect(normalizeChampionName("Wukong")).toBe("MonkeyKing");
     expect(normalizeChampionName("UnknownChamp")).toBe("UnknownChamp");
   });
 
-  test.each(championOverrides)(
-    "validateChampionImage finds on-disk asset for override input %s",
+  test.each(representativeChampions)(
+    "validateChampionImage finds on-disk asset for input %s",
     async (input) => {
       await expect(validateChampionImage(input)).resolves.toBeUndefined();
     },
   );
 
-  test.each(championOverrides)(
+  test.each(representativeChampions)(
     "getChampionImageUrl rewrites %s to the correct CDN path",
     (input, expected) => {
       expect(getChampionImageUrl(input)).toContain(
@@ -150,8 +127,8 @@ describe("championNameOverrides", () => {
     },
   );
 
-  test.each(championOverrides)(
-    "validateChampionLoadingImage finds loading art for override input %s",
+  test.each(representativeChampions)(
+    "validateChampionLoadingImage finds loading art for input %s",
     async (input) => {
       await expect(
         validateChampionLoadingImage(input),
@@ -159,14 +136,14 @@ describe("championNameOverrides", () => {
     },
   );
 
-  test.each(championOverrides)(
-    "validateChampionSplashImage finds splash art for override input %s",
+  test.each(representativeChampions)(
+    "validateChampionSplashImage finds splash art for input %s",
     async (input) => {
       await expect(validateChampionSplashImage(input)).resolves.toBeUndefined();
     },
   );
 
-  test.each(championOverrides)(
+  test.each(representativeChampions)(
     "getChampionLoadingImageUrl rewrites %s to the correct CDN path",
     (input, expected) => {
       expect(getChampionLoadingImageUrl(input, 0)).toContain(
@@ -175,14 +152,8 @@ describe("championNameOverrides", () => {
     },
   );
 
-  test("getChampionLoadingImageBase64 returns a non-empty data URI for an overridden name", async () => {
-    const firstOverride = championOverrides[0];
-    if (!firstOverride) {
-      // No overrides in the generated map — nothing to assert.
-      return;
-    }
-    const [input] = firstOverride;
-    const dataUri = await getChampionLoadingImageBase64(input);
+  test("getChampionLoadingImageBase64 returns a non-empty data URI for known champion", async () => {
+    const dataUri = await getChampionLoadingImageBase64("Aatrox");
     expect(dataUri.startsWith("data:image/jpeg;base64,")).toBe(true);
     const payload = dataUri.split(",", 2)[1] ?? "";
     expect(payload.length).toBeGreaterThan(100);

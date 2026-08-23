@@ -468,16 +468,10 @@ describe("patch attribution", () => {
     ).toEqual(["birmel"]);
   });
 
-  test("a patch resolved through several scout packages selects only scout images", async () => {
-    // twisted@1.82.0 is the live resolution across scout's closure (backend,
-    // data), so its patch attributes to exactly the images whose closures
-    // resolve it: the backend and the evals app (via @scout-for-lol/data).
-    // (Stale patches — keys no closure resolves — can no longer exist:
-    // scripts/check-patched-deps.ts fails verify on them.)
-    expect(await select(["patches/twisted@1.82.0.patch"])).toEqual([
-      "scout-evals",
-      "scout-for-lol",
-    ]);
+  test("a patch resolved through several packages selects only those images", async () => {
+    expect(
+      await select(["patches/@openrouter%2Fai-sdk-provider@3.0.0.patch"]),
+    ).toEqual(["birmel", "scout-evals", "scout-for-lol", "temporal-worker"]);
   });
 
   test("a patch for a dep outside every image closure selects nothing", async () => {

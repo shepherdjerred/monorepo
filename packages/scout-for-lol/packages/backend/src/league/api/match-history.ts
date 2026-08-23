@@ -1,9 +1,10 @@
-import { api } from "#src/league/api/api.ts";
-import { Constants } from "twisted";
-const { regionToRegionGroup } = Constants;
-import { mapRegionToEnum } from "#src/league/model/region.ts";
-import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { riotClient } from "#src/league/api/api.ts";
+import {
+  type PlayerConfigEntry,
+  type MatchId,
+  MatchIdSchema,
+  platformToRegionalRoute,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
@@ -26,8 +27,7 @@ export async function getRecentMatchIds(
     `📜 Fetching recent match IDs for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`,
   );
 
-  const region = mapRegionToEnum(playerRegion);
-  const regionGroup = regionToRegionGroup(region);
+  const regionalRoute = platformToRegionalRoute(playerRegion);
 
   return callRiotOrUndefined(
     {
@@ -36,7 +36,7 @@ export async function getRecentMatchIds(
       context: { playerAlias, region: playerRegion },
       sentry: true,
     },
-    () => api.MatchV5.list(playerPuuid, regionGroup, { count }),
+    () => riotClient.match.list(playerPuuid, regionalRoute, { count }),
   );
 }
 

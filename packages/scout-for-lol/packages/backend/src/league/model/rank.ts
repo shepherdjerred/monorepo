@@ -1,18 +1,17 @@
-import type {
-  Ranks,
-  PlayerConfigEntry,
-  Rank,
-  RawSummonerLeague,
-  Region,
-} from "@scout-for-lol/data";
 import {
+  type Ranks,
+  type PlayerConfigEntry,
+  type Rank,
+  type RawSummonerLeague,
+  type Region,
   parseDivision,
   TierSchema,
   RawSummonerLeagueSchema,
+  LeaguePuuidSchema,
+  regionToPlatformRoute,
 } from "@scout-for-lol/data";
-import { api } from "#src/league/api/api.ts";
+import { riotClient } from "#src/league/api/api.ts";
 import { filter, first, pipe } from "remeda";
-import { mapRegionToEnum } from "#src/league/model/region.ts";
 import { z } from "zod";
 import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
 
@@ -63,6 +62,8 @@ export async function getRankByPuuid(
   puuid: string,
   region: Region,
 ): Promise<Ranks | undefined> {
+  const platform = regionToPlatformRoute(region);
+  const parsedPuuid = LeaguePuuidSchema.parse(puuid);
   const entries = await callRiotOrUndefined(
     {
       source: "rank-by-puuid",
@@ -70,7 +71,7 @@ export async function getRankByPuuid(
       schemaLabel: "summoner-league",
       context: { puuid, region },
     },
-    () => api.League.byPUUID(puuid, mapRegionToEnum(region)),
+    () => riotClient.league.byPuuid(parsedPuuid, platform),
   );
   if (entries === undefined) return undefined;
   return {
@@ -80,6 +81,7 @@ export async function getRankByPuuid(
 }
 
 export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
+  const platform = regionToPlatformRoute(player.league.leagueAccount.region);
   const entries = await callRiotOrUndefined(
     {
       source: "rank",
@@ -91,10 +93,7 @@ export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
       },
     },
     () =>
-      api.League.byPUUID(
-        player.league.leagueAccount.puuid,
-        mapRegionToEnum(player.league.leagueAccount.region),
-      ),
+      riotClient.league.byPuuid(player.league.leagueAccount.puuid, platform),
   );
   if (entries === undefined) {
     return {

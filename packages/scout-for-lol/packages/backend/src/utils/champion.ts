@@ -1,172 +1,59 @@
-import { Constants } from "twisted";
-const { Champions, getChampionName } = Constants;
 import {
-  getChampionDisplayNameById,
-  getChampionKeyById,
-  normalizeChampionName,
+  getChampionDisplayName as getChampionDisplayNameFromRegistry,
+  getChampionIdByName,
+  resolveChampionKey as resolveChampionKeyFromRegistry,
+  searchChampions as searchChampionsFromRegistry,
+  getAllChampions as getAllChampionsFromRegistry,
+  type ChampionId,
 } from "@scout-for-lol/data";
-import { z } from "zod";
 
 /**
- * Champion ID to name mapping (provided by twisted package)
- * Example: { 1: "ANNIE", 2: "OLAF", ... }
- */
-const CHAMPION_ID_TO_NAME: Record<number, string> = Champions;
-
-/**
- * Champion name to ID mapping (reverse of Champions)
- * Built once on module load for efficient lookups
- * Normalized to lowercase for case-insensitive matching
- */
-const CHAMPION_NAME_TO_ID: Record<string, number> = Object.entries(
-  CHAMPION_ID_TO_NAME,
-).reduce<Record<string, number>>((acc, [id, name]) => {
-  // Champions object has both id->name and name->id mappings
-  // Filter to only string values to avoid duplicates and type errors
-  const nameValidation = z.string().safeParse(name);
-  if (nameValidation.success) {
-    const normalizedName = nameValidation.data.toLowerCase();
-    acc[normalizedName] = Number.parseInt(id, 10);
-  }
-  return acc;
-}, {});
-
-/**
- * Get champion ID from champion name
- * Case-insensitive matching
+ * Get champion ID from champion name (case-insensitive, handles aliases and spaces/underscores).
  *
- * @param name Champion name (e.g., "yasuo", "Yasuo", "YASUO")
+ * @param name Champion name (e.g., "yasuo", "Yasuo", "YASUO", "Twisted Fate", "twisted_fate")
  * @returns Champion ID or undefined if not found
- *
- * @example
- * getChampionId("yasuo") // 157
- * getChampionId("TWISTED_FATE") // 4
  */
-export function getChampionId(name: string): number | undefined {
-  const normalized = name.toLowerCase().replaceAll(/['\s-]/g, "_");
-  return CHAMPION_NAME_TO_ID[normalized];
+export function getChampionId(name: string): ChampionId | undefined {
+  return getChampionIdByName(name);
 }
 
 /**
  * Get the human display name for a champion by id, e.g. "Twisted Fate",
- * "Vel'Koz", "Wukong". Delegates to the `champion.json`-backed lookup table
- * in `@scout-for-lol/data`, which (unlike twisted's hardcoded champion enum)
- * is always current and returns Riot's actual punctuated name rather than a
- * string transform of it.
+ * "Vel'Koz", "Wukong", "Locke".
  *
  * @param championId Champion ID
- *
- * @example
- * getChampionDisplayName(4) // "Twisted Fate"
- * getChampionDisplayName(805) // "Locke"
  */
 export function getChampionDisplayName(championId: number): string {
-  return getChampionDisplayNameById(championId);
+  return getChampionDisplayNameFromRegistry(championId);
 }
 
 /**
- * Search for champions by name prefix
- * Returns array of {name, id} sorted by relevance
- * Used for autocomplete in Discord commands
+ * Search for champions by name prefix or substring.
+ * Returns array of {name, id} sorted by relevance (used for autocomplete in Discord commands).
  *
  * @param query Search query (partial champion name)
  * @param limit Maximum number of results (default: 25, Discord limit)
- * @returns Array of matching champions with display names and IDs
- *
- * @example
- * searchChampions("yas") // [{name: "Yasuo", id: 157}]
- * searchChampions("twisted") // [{name: "Twisted Fate", id: 4}]
  */
 export function searchChampions(
   query: string,
   limit = 25,
 ): { name: string; id: number }[] {
-  const normalizedQuery = query.toLowerCase().replaceAll(/['\s-]/g, "_");
-
-  // Get all champions
-  const allChampions = Object.entries(CHAMPION_NAME_TO_ID)
-    .filter(([name]) => name !== "empty_champion") // Skip empty champion slot
-    .map(([name, id]) => ({
-      name: getChampionDisplayName(id),
-      id,
-      searchName: name,
-    }));
-
-  // Filter by query
-  const matches = allChampions.filter((champion) => {
-    return (
-      champion.searchName.includes(normalizedQuery) ||
-      champion.name.toLowerCase().includes(query.toLowerCase())
-    );
-  });
-
-  // Sort by relevance: exact matches first, then starts-with, then contains
-  const sortedMatches = matches.toSorted((a, b) => {
-    const aExact = a.searchName === normalizedQuery ? 1 : 0;
-    const bExact = b.searchName === normalizedQuery ? 1 : 0;
-    if (aExact !== bExact) {
-      return bExact - aExact;
-    }
-
-    const aStarts = a.searchName.startsWith(normalizedQuery) ? 1 : 0;
-    const bStarts = b.searchName.startsWith(normalizedQuery) ? 1 : 0;
-    if (aStarts !== bStarts) {
-      return bStarts - aStarts;
-    }
-
-    // Alphabetical as tie-breaker
-    return a.name.localeCompare(b.name);
-  });
-
-  return sortedMatches.slice(0, limit);
+  return searchChampionsFromRegistry(query, limit);
 }
 
 /**
- * Get all champions as an array
- * @returns Array of all champions with their IDs and display names
+ * Get all champions as an array sorted alphabetically by display name.
  */
 export function getAllChampions(): { name: string; id: number }[] {
-  return Object.entries(CHAMPION_NAME_TO_ID)
-    .filter(([name]) => name !== "empty_champion")
-    .map(([, id]) => ({
-      name: getChampionDisplayName(id),
-      id,
-    }))
-    .toSorted((a, b) => a.name.localeCompare(b.name));
+  return getAllChampionsFromRegistry().map((c) => ({
+    name: c.name,
+    id: c.id,
+  }));
 }
 
 /**
- * Resolve a Riot champion ID to the Data Dragon champion key.
- * The key is used for file paths like "LeeSin_0.jpg" for loading screen art.
- *
- * @param championId Champion ID (e.g., 64)
- * @returns Data Dragon key (e.g., "LeeSin")
- *
- * @example
- * resolveChampionKey(1) // "Annie"
- * resolveChampionKey(64) // "LeeSin"
+ * Resolve a Riot champion ID to the Data Dragon champion key (e.g. 64 -> "LeeSin", 888 -> "Renata").
  */
 export function resolveChampionKey(championId: number): string {
-  try {
-    const rawName = getChampionName(championId);
-    if (!rawName || rawName === "") {
-      // twisted's hardcoded champion enum lags Data Dragon (e.g. it had no
-      // entry for 805/Locke). Fall back to the bundled champion.json id→key
-      // map before giving up on a `Champion<id>` placeholder.
-      return (
-        getChampionKeyById(championId) ?? `Champion${championId.toString()}`
-      );
-    }
-
-    // twisted returns SCREAMING_SNAKE_CASE like "LEE_SIN"
-    // Convert to PascalCase for Data Dragon key format
-    const parts = rawName.split("_");
-    const pascalCase = parts
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-      .join("");
-
-    return normalizeChampionName(pascalCase);
-  } catch {
-    return getChampionKeyById(championId) ?? `Champion${championId.toString()}`;
-  }
+  return resolveChampionKeyFromRegistry(championId);
 }

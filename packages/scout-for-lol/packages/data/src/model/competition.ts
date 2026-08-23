@@ -8,6 +8,7 @@ import type {
 import { RankSchema } from "#src/model/rank.ts";
 import type { SeasonId } from "#src/seasons.ts";
 import { ReportScheduleTimezoneSchema } from "#src/model/competition-cron.ts";
+import { ChampionIdSchema } from "#src/model/identifiers.ts";
 
 /**
  * Competition database row shape — mirrors backend/prisma/schema.prisma.
@@ -189,9 +190,6 @@ export const MostWinsPlayerCriteriaSchema = z.object({
 export type MostWinsPlayerCriteria = z.infer<
   typeof MostWinsPlayerCriteriaSchema
 >;
-
-export const ChampionIdSchema = z.number().int().positive().brand("ChampionId");
-export type ChampionId = z.infer<typeof ChampionIdSchema>;
 
 /**
  * Criteria: Most wins with a specific champion

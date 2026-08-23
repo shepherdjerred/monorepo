@@ -120,6 +120,7 @@ export * from "./league/raw-challenges.schema.ts";
 export * from "./league/raw-timeline.schema.ts";
 export * from "./league/raw-summoner-league.schema.ts";
 export * from "./league/raw-current-game-info.schema.ts";
+export * from "./league/raw-account.schema.ts";
 export * from "./lane-priors/schema.ts";
 export * from "./lane-priors/inference.ts";
 export * from "./lane-priors/current.ts";
@@ -186,7 +187,6 @@ export {
   validateLaneIcon,
   validateChampionLoadingImage,
   validateChampionSplashImage,
-  normalizeChampionName,
   getChampionKeyById,
   championNameToDisplayName,
   getChampionDisplayNameById,

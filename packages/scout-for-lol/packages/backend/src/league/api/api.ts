@@ -1,16 +1,8 @@
-import { LolApi, RiotApi } from "twisted";
 import configuration from "#src/configuration.ts";
+import { RiotClient } from "./client/riot-client.ts";
 
-export const api = new LolApi({
-  key: configuration.riotApiToken,
-  rateLimitRetry: true,
-  rateLimitRetryAttempts: 3,
+export const riotClient = new RiotClient({
+  apiKey: configuration.riotApiToken,
   concurrency: 5,
-});
-
-export const riotApi = new RiotApi({
-  key: configuration.riotApiToken,
-  rateLimitRetry: true,
-  rateLimitRetryAttempts: 3,
-  concurrency: 5,
+  maxRetries: 3,
 });

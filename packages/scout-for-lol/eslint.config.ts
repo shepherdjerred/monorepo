@@ -80,12 +80,17 @@ const config = [
               message:
                 "Use Bun.pathToFileURL or import from 'node:path' if needed.",
             },
+            {
+              name: "twisted",
+              message:
+                "twisted has been removed. Use RiotClient from #src/league/api/client/riot-client.ts or schemas from @scout-for-lol/data.",
+            },
           ],
           patterns: [
             {
-              group: ["twisted/dist/models-dto*"],
+              group: ["twisted*"],
               message:
-                "Do not import DTO types from twisted. Use Raw* Zod schemas from @scout-for-lol/data instead (e.g., RawMatch, RawSummonerLeague).",
+                "twisted has been removed. Use RiotClient from #src/league/api/client/riot-client.ts or schemas from @scout-for-lol/data.",
             },
           ],
         },

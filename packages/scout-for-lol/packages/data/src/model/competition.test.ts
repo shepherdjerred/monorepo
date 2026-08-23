@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import {
-  ChampionIdSchema,
   type CompetitionCriteria,
   CompetitionCriteriaSchema,
   CompetitionIdSchema,
@@ -25,6 +24,7 @@ import {
   participantStatusToString,
   visibilityToString,
 } from "#src/model/competition.ts";
+import { ChampionIdSchema } from "#src/model/identifiers.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,

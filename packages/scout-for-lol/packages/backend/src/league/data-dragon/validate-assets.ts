@@ -10,30 +10,24 @@ import { getAllChampions, resolveChampionKey } from "#src/utils/champion.ts";
 
 const logger = createLogger("validate-assets");
 
-// Crashes the pod at startup if any Data Dragon champion asset is missing.
-// Two parallel passes:
-//   1. Iterate every champion Twisted knows and resolve via
-//      `resolveChampionKey` — catches stale `championNameOverrides`
-//      generated map drift.
-//   2. Iterate every key in the bundled `champion.json` directly — catches
-//      Riot match-data casing quirks (e.g. `participant.championName`
-//      returning `"FiddleSticks"`) that the Twisted-driven pass can't
-//      observe because Twisted produces canonical PascalCase output.
-// Every check runs the actual on-disk lookup that production code uses,
-// so any name-resolution divergence between callers is caught at deploy
-// time rather than at notification time.
+/**
+ * Crashes the pod at startup if any Data Dragon champion asset is missing.
+ * Two parallel passes:
+ *   1. Iterate every champion in the registry and resolve via `resolveChampionKey`.
+ *   2. Iterate every key in the bundled `champion.json` directly.
+ */
 export async function validateChampionAssets(): Promise<void> {
   validateClassicChampionCatalog();
-  const twistedChampions = getAllChampions();
+  const registryChampions = getAllChampions();
   const dataDragonChampions = await getChampionList();
-  const totalChecks = twistedChampions.length + dataDragonChampions.length;
+  const totalChecks = registryChampions.length + dataDragonChampions.length;
   logger.info(
-    `🖼️  Validating Data Dragon assets for ${String(totalChecks)} champion entries (${String(twistedChampions.length)} via Twisted, ${String(dataDragonChampions.length)} via champion.json)`,
+    `🖼️  Validating Data Dragon assets for ${String(totalChecks)} champion entries (${String(registryChampions.length)} via registry, ${String(dataDragonChampions.length)} via champion.json)`,
   );
 
   const failures: Error[] = [];
 
-  for (const { id } of twistedChampions) {
+  for (const { id } of registryChampions) {
     const key = resolveChampionKey(id);
 
     try {
