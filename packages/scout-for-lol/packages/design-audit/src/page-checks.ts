@@ -6,7 +6,6 @@ export function evaluateBrowser<T>(page: Page, callback: () => T): Promise<T> {
 
 export async function waitForStablePage(page: Page): Promise<void> {
   await page.waitForLoadState("load");
-  await page.waitForTimeout(250);
   await expect(
     page.locator("a, button, h1, h2").first(),
     "page must render visible content",
@@ -46,6 +45,8 @@ export async function waitForStablePage(page: Page): Promise<void> {
         }
       }),
     );
+    // Let hydration and decoded-image layout commit without a fixed delay.
+    await new Promise<number>(requestAnimationFrame);
   });
   const brokenImages = await page
     .locator("img")
@@ -297,7 +298,8 @@ export async function preparePageForScreenshot(page: Page): Promise<void> {
   if (viewport !== null) {
     await page.mouse.move(viewport.width - 1, viewport.height - 1);
   }
-  await page.waitForTimeout(50);
+  // Scroll and pointer state settle on the next rendered frame.
+  await page.evaluate(() => new Promise<number>(requestAnimationFrame));
 }
 
 export async function assertRenderedContrast(page: Page): Promise<void> {

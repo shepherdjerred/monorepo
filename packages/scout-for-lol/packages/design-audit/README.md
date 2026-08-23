@@ -51,9 +51,10 @@ omitted.
 `SCOUT_DESIGN_AUDIT_MODE=nightly` selects the scheduled validation boundary but
 does not expand the browser matrix. When local servers are enabled, as they are
 in CI, nightly runs the 616 cases exactly once across 16 sequential shards so
-each Playwright process stays inside the 12 GiB pod limit. It uses the same
-deterministic fixture and needs no external origins or Discord credentials. An
-explicitly external or Beta audit must
+each Playwright process stays inside the 16 GiB pod limit and the complete run
+fits the cluster's 30-minute pod-readiness budget. It uses the same deterministic
+fixture and needs no external origins or Discord credentials. An explicitly
+external or Beta audit must
 provide either one base URL or all three surface URLs, plus dedicated read-only
 Discord credentials. Visual snapshots are updated only
 through an explicit local Playwright update command after review; CI never
