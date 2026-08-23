@@ -291,6 +291,14 @@ const commands: Record<
       // where the Prisma engines EACCES crash-loop (#1682) surfaced. Booting
       // only far enough to fail Discord auth would not touch the database at
       // all, so an image that cannot create or query its schema used to pass.
+      // Production runs FEATURE_FLAGS_MODE=flipt, which the build sandbox cannot
+      // reach, so the boot below runs `disabled` rather than racing a network
+      // timeout. Import the facade explicitly instead: its index statically
+      // pulls in FliptProvider and therefore @flipt-io/flipt-client-js, so this
+      // still proves the whole flag path survives a production-only install.
+      // (The Flipt client is feature-flags' own dependency — under the isolated
+      // linker it is deliberately NOT resolvable from this package.)
+      `bun -e 'await import("@shepherdjerred/feature-flags");'`,
       "bun scripts/migrate.ts",
       `bun -e 'import { prisma, disconnectPrisma } from "#src/db/index.ts";` +
         ` const n = await prisma.karma.count();` +
@@ -309,14 +317,18 @@ const commands: Record<
       APPLICATION_ID: "000000000000000000",
       DATA_DIR: "/tmp/smoke-data",
       DATABASE_PATH: "/tmp/smoke-data/karma.db",
+      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   streambot: {
+    // The real-ffmpeg integration suite is NOT run here. This harness also runs
+    // against the pushed digest, which carries no development dependencies and
+    // therefore no Vitest; the suite runs in the streambot Dockerfile's `smoke`
+    // stage, which restores the development tree over the same runtime rootfs.
     command: [
       "set -eu",
       "mkdir -p /tmp/videos",
       "cd /app/packages/streambot",
-      "bun run test:integration",
       "ffmpeg -version >/dev/null",
       "/usr/local/bin/yt-dlp --version >/dev/null",
       "set +e",
@@ -332,6 +344,7 @@ const commands: Record<
       USER_TOKENS: "smoke-test-dummy",
       ADMIN_IDS: "000000000000000000",
       VIDEOS_DIR: "/tmp/videos",
+      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   "scout-evals": {
@@ -453,6 +466,7 @@ const commands: Record<
       DISCORD_TOKEN: "smoke-test-dummy",
       APPLICATION_ID: "000000000000000000",
       RIOT_API_KEY: "smoke-test-dummy",
+      FEATURE_FLAGS_MODE: "disabled",
       DATABASE_URL: "file:/tmp/smoke-test.db",
       ENABLE_BACKGROUND_JOBS: "false",
       REPORT_LAKE_DIR: "/tmp/report-lake",

@@ -408,7 +408,7 @@
     {
       "package": "@scout-for-lol/design-audit",
       "directory": "packages/scout-for-lol/packages/design-audit",
-      "steps": [{ "runner": "bun", "args": ["src"] }]
+      "steps": [{ "runner": "vitest", "args": ["src"] }]
     },
     {
       "package": "@scout-for-lol/evals",
@@ -632,6 +632,16 @@
           "runner": "vitest"
         }
       ]
+    },
+    {
+      "package": "@shepherdjerred/config",
+      "directory": "packages/config",
+      "steps": [{ "runner": "vitest" }]
+    },
+    {
+      "package": "@shepherdjerred/feature-flags",
+      "directory": "packages/feature-flags",
+      "steps": [{ "runner": "vitest" }]
     },
     {
       "package": "@shepherdjerred/version-catalog",

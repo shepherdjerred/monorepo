@@ -9,7 +9,7 @@ import {
   userMention,
 } from "discord.js";
 import { prisma } from "#src/db/index.ts";
-import configuration from "#src/configuration.ts";
+import { karmaAdminUserId } from "#src/config.ts";
 import { canConfigureKarma } from "#src/karma/authorization.ts";
 import { karmaAmountFor, KARMA_GIVE_AMOUNT } from "#src/karma/scoring.ts";
 import { handleKarmaLeaderboard } from "#src/karma/leaderboard.ts";
@@ -340,7 +340,7 @@ async function handleKarmaConfig(interaction: ChatInputCommandInteraction) {
   if (
     !canConfigureKarma({
       userId: interaction.user.id,
-      adminUserId: configuration.karmaAdminUserId,
+      adminUserId: await karmaAdminUserId(interaction.guildId),
       hasManageGuild,
     })
   ) {

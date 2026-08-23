@@ -4,6 +4,11 @@ import {
   scoutOpenaiTokensUsedTotal,
 } from "#src/metrics/index.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  isDynamicConfigReady,
+  llmDailyTokenBudget,
+  llmHourlyTokenBudget,
+} from "#src/config/dynamic.ts";
 
 const logger = createLogger("llm-budget");
 
@@ -34,7 +39,8 @@ export class LlmBudgetExceeded extends Error {
 type Window = {
   readonly window: BudgetWindow;
   readonly durationMs: number;
-  readonly budget: number;
+  /** Re-read before each check; see `refreshBudgets`. */
+  budget: number;
   startedAt: number;
   tokensUsed: number;
 };
@@ -58,6 +64,24 @@ const daily: Window = {
   tokensUsed: 0,
 };
 
+/**
+ * Pulls the current ceilings before each check.
+ *
+ * Capturing them once at module load made these boot-wired: raising or lowering
+ * a spend ceiling mid-incident required a redeploy. Reading is synchronous by
+ * necessity — this runs on the generation path — which is why the dynamic layer
+ * is a seeded snapshot rather than the async resolver. Before startup
+ * initializes it the env-derived values still apply, so behavior is unchanged
+ * until a flag exists.
+ */
+function refreshBudgets(): void {
+  if (!isDynamicConfigReady()) {
+    return;
+  }
+  hourly.budget = llmHourlyTokenBudget();
+  daily.budget = llmDailyTokenBudget();
+}
+
 function rollIfElapsed(w: Window): void {
   const now = Date.now();
   if (now - w.startedAt >= w.durationMs) {
@@ -71,6 +95,7 @@ function rollIfElapsed(w: Window): void {
  * daily budget. Call before every model generation.
  */
 export function assertWithinBudget(): void {
+  refreshBudgets();
   rollIfElapsed(hourly);
   rollIfElapsed(daily);
 

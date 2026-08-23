@@ -36,13 +36,11 @@ for (const column of columns) {
 }
 const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
 const tableLabel = columns.map((column) => column.header).join(", ");
-const tableLabel = columns.map((column) => column.header).join(", ");
 ---
 
 <div
   class="scout-docs-table-scroll"
   data-design-audit-allow-overflow
-  tabindex="0"
   role="region"
   aria-label={`Scrollable table: ${tableLabel}`}
 >
