@@ -101,7 +101,7 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "OpenRouterBroadcastTargetDown",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'absent(up{namespace="openrouter-broadcast-ingest",service="openrouter-broadcast-ingest-service"}) or max(up{namespace="openrouter-broadcast-ingest",service="openrouter-broadcast-ingest-service"}) == 0',
+            'absent(up{namespace="openrouter-broadcast-ingest",service="openrouter-broadca-openrouter-broadcast-ingest-service"}) or max(up{namespace="openrouter-broadcast-ingest",service="openrouter-broadca-openrouter-broadcast-ingest-service"}) == 0',
           ),
           for: "5m",
           labels: { severity: "critical", category: "llm" },

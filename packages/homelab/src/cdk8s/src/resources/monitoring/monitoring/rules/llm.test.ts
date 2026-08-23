@@ -14,6 +14,17 @@ test("keeps LLM recording and Broadcast alert coverage together", () => {
   expect(serialized).toContain("OpenRouterBroadcastTargetDown");
 
   const rules = groups.flatMap(({ rules: groupRules }) => groupRules);
+
+  const targetDown = rules.find(
+    (rule) => rule?.alert === "OpenRouterBroadcastTargetDown",
+  );
+  expect(targetDown?.expr?.value).toContain(
+    'service="openrouter-broadca-openrouter-broadcast-ingest-service"',
+  );
+  expect(targetDown?.expr?.value).not.toContain(
+    'service="openrouter-broadcast-ingest-service"',
+  );
+
   for (const alertName of [
     "BirmelAdmissionClassifierErrors",
     "BirmelMemoryExtractionErrors",
