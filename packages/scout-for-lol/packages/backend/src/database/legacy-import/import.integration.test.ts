@@ -31,6 +31,57 @@ const OWNER = DiscordAccountIdSchema.parse("222333444555666777");
 const PUUID = "p".repeat(78);
 const NOW = 1_755_600_000_000; // epoch ms, as the legacy adapter stored dates
 
+const TOURNAMENT_TABLE_COLUMNS: Record<string, string[]> = {
+  TournamentRegistration: [
+    "id",
+    "apiMode",
+    "tournamentRegion",
+    "providerId",
+    "tournamentId",
+    "callbackUrl",
+    "name",
+    "createdAt",
+  ],
+  TournamentLobby: [
+    "id",
+    "code",
+    "apiMode",
+    "providerId",
+    "tournamentId",
+    "region",
+    "platformId",
+    "serverId",
+    "channelId",
+    "creatorDiscordId",
+    "bluePuuids",
+    "redPuuids",
+    "blueAliases",
+    "redAliases",
+    "teamSize",
+    "pickType",
+    "mapType",
+    "spectatorType",
+    "lobbyName",
+    "password",
+    "state",
+    "processedEventCount",
+    "lastEventTimestamp",
+    "prematchMessageIds",
+    "joinedPuuids",
+    "gameId",
+    "matchId",
+    "lastPolledAt",
+    "createdAt",
+    "expiresAt",
+    "updatedAt",
+  ],
+};
+
+const TEST_TABLE_COLUMNS = {
+  ...LEGACY_TABLE_COLUMNS,
+  ...TOURNAMENT_TABLE_COLUMNS,
+};
+
 function sqliteValues(
   row: Record<string, unknown>,
   keys: readonly string[],
@@ -103,6 +154,54 @@ function insertPostCutoverRows(
   }
 }
 
+function insertTournamentRows(
+  insert: (table: string, row: Record<string, unknown>) => void,
+): void {
+  insert("TournamentRegistration", {
+    id: 1,
+    apiMode: "stub",
+    tournamentRegion: "AMERICA_NORTH",
+    providerId: 101,
+    tournamentId: 202,
+    callbackUrl: "https://example.test/tournament/callback",
+    name: "legacy tournament",
+    createdAt: NOW,
+  });
+  insert("TournamentLobby", {
+    id: 1,
+    code: "NA1-legacy-code",
+    apiMode: "stub",
+    providerId: 101,
+    tournamentId: 202,
+    region: "AMERICA_NORTH",
+    platformId: "NA1",
+    serverId: GUILD,
+    channelId: "333444555666777888",
+    creatorDiscordId: OWNER,
+    bluePuuids: `["${PUUID}"]`,
+    redPuuids: "[]",
+    blueAliases: '["alpha"]',
+    redAliases: "[]",
+    teamSize: 1,
+    pickType: "BLIND_PICK",
+    mapType: "SUMMONERS_RIFT",
+    spectatorType: "NONE",
+    lobbyName: "legacy lobby",
+    password: null,
+    state: "created",
+    processedEventCount: 0,
+    lastEventTimestamp: null,
+    prematchMessageIds: null,
+    joinedPuuids: "[]",
+    gameId: null,
+    matchId: null,
+    lastPolledAt: null,
+    createdAt: NOW,
+    expiresAt: NOW + 7_200_000,
+    updatedAt: NOW,
+  });
+}
+
 function buildLegacySqlite(
   path: string,
   omittedTables: ReadonlySet<string> = new Set(),
@@ -111,7 +210,7 @@ function buildLegacySqlite(
   const db = new Database(path);
   try {
     const tableColumns = new Map<string, ReadonlySet<string>>();
-    for (const [table, columns] of Object.entries(LEGACY_TABLE_COLUMNS)) {
+    for (const [table, columns] of Object.entries(TEST_TABLE_COLUMNS)) {
       if (omittedTables.has(table)) {
         continue;
       }
@@ -182,6 +281,7 @@ function buildLegacySqlite(
       updatedTime: NOW,
     });
     insertPostCutoverRows(tableColumns, insert);
+    insertTournamentRows(insert);
     insert("Season", {
       id: "2026-split-2",
       displayName: "2026 Split 2",
@@ -318,6 +418,8 @@ describe("legacy sqlite import", () => {
     expect(summary.rowCounts["BucksLedgerEntry"]).toBe(2);
     expect(summary.rowCounts["BucksMatchEarning"]).toBe(1);
     expect(summary.rowCounts["InstallAttributionToken"]).toBe(1);
+    expect(summary.rowCounts["TournamentRegistration"]).toBe(1);
+    expect(summary.rowCounts["TournamentLobby"]).toBe(1);
 
     await expect(
       prisma.user.findUniqueOrThrow({ where: { discordId: OWNER } }),
@@ -334,6 +436,21 @@ describe("legacy sqlite import", () => {
       token: "install-token-1",
       guildId: GUILD,
       consumedAt: null,
+    });
+    await expect(
+      prisma.tournamentRegistration.findUniqueOrThrow({ where: { id: 1 } }),
+    ).resolves.toMatchObject({
+      providerId: 101,
+      tournamentId: 202,
+      tournamentRegion: "AMERICA_NORTH",
+    });
+    await expect(
+      prisma.tournamentLobby.findUniqueOrThrow({ where: { id: 1 } }),
+    ).resolves.toMatchObject({
+      code: "NA1-legacy-code",
+      region: "AMERICA_NORTH",
+      gameId: null,
+      expiresAt: new Date(NOW + 7_200_000),
     });
 
     // Converted storage formats round-trip.
