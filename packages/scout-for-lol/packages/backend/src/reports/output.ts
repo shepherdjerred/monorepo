@@ -54,7 +54,9 @@ type ChartRender = Extract<
       | "RADAR_CHART"
       | "KPI_CARD"
       | "BUMP_CHART"
-      | "CALENDAR_HEATMAP";
+      | "CALENDAR_HEATMAP"
+      | "HISTOGRAM"
+      | "BOX_PLOT";
   }
 >;
 

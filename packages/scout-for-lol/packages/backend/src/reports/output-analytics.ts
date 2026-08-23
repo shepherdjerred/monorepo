@@ -31,7 +31,9 @@ type ChartRender = Extract<
       | "RADAR_CHART"
       | "KPI_CARD"
       | "BUMP_CHART"
-      | "CALENDAR_HEATMAP";
+      | "CALENDAR_HEATMAP"
+      | "HISTOGRAM"
+      | "BOX_PLOT";
   }
 >;
 
@@ -77,6 +79,12 @@ export function renderLegacyAnalyticsImage(input: {
     .with("KPI_CARD", () => renderKpiAnalytics(context))
     .with("BUMP_CHART", () => renderBumpAnalytics(context))
     .with("CALENDAR_HEATMAP", () => renderCalendarHeatmapAnalytics(context))
+    .with("HISTOGRAM", "BOX_PLOT", (kind): Buffer => {
+      // These kinds render exclusively from the visualization snapshot
+      // (renderSnapshotOutput); a query that produced neither a snapshot nor
+      // an earlier error reaching this legacy path is a bug, not a fallback.
+      throw new Error(`RENDER ${kind} requires a visualization snapshot.`);
+    })
     .exhaustive();
 }
 
