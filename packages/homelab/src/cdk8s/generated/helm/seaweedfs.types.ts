@@ -16,7 +16,7 @@ export type SeaweedfsHelmValuesGlobal = {
    * All app-specific global values are namespaced under global.seaweedfs
    * to avoid polluting the shared global namespace when used as a subchart.
    *
-   * @default {...} (16 keys)
+   * @default {...} (17 keys)
    */
   seaweedfs?: SeaweedfsHelmValuesGlobalSeaweedfs;
 };
@@ -30,6 +30,15 @@ export type SeaweedfsHelmValuesGlobalSeaweedfs = {
    * @default {"repository":"","name":"chrislusf/seaweedfs"}
    */
   image?: SeaweedfsHelmValuesGlobalSeaweedfsImage;
+  /**
+   * Enterprise license file, held in a Secret in the release namespace and
+   * mounted read-only on the components that run a master. A renewed Secret
+   * reaches the running master without a restart. SEAWEED_LICENSE is reserved
+   * while this is set: an extraEnvironmentVars entry of that name is dropped.
+   *
+   * @default {"existingSecret":"","secretKey":"seaweed-license.json","mountPath":"/etc/seaweedfs/license"}
+   */
+  license?: SeaweedfsHelmValuesGlobalSeaweedfsLicense;
   /**
    * @default "IfNotPresent"
    */
@@ -104,9 +113,26 @@ export type SeaweedfsHelmValuesGlobalSeaweedfsImage = {
    */
   repository?: string;
   /**
+   * chrislusf/seaweedfs-enterprise for the enterprise edition
+   *
    * @default "chrislusf/seaweedfs"
    */
   name?: string;
+};
+
+export type SeaweedfsHelmValuesGlobalSeaweedfsLicense = {
+  /**
+   * @default ""
+   */
+  existingSecret?: string;
+  /**
+   * @default "seaweed-license.json"
+   */
+  secretKey?: string;
+  /**
+   * @default "/etc/seaweedfs/license"
+   */
+  mountPath?: string;
 };
 
 export type SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfig = {
@@ -328,7 +354,7 @@ export type SeaweedfsHelmValuesMaster = {
   /**
    * You can also use emptyDir storage:
    *
-   * @default {"type":"hostPath","storageClass":"","hostPathPrefix":"/ssd"}
+   * @default {...} (4 keys)
    */
   data?: SeaweedfsHelmValuesMasterData;
   /**
@@ -432,6 +458,13 @@ export type SeaweedfsHelmValuesMaster = {
    */
   priorityClassName?: string;
   /**
+   * used to specify a custom scheduler for master pods
+   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/
+   *
+   * @default ""
+   */
+  schedulerName?: string;
+  /**
    * used to assign a service account.
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
    *
@@ -490,6 +523,10 @@ export type SeaweedfsHelmValuesMasterData = {
    * @default "hostPath"
    */
   type?: string;
+  /**
+   * @default "1Gi"
+   */
+  size?: string;
   /**
    * @default ""
    */
@@ -884,6 +921,13 @@ export type SeaweedfsHelmValuesVolume = {
    * @default ""
    */
   priorityClassName?: string;
+  /**
+   * used to specify a custom scheduler for volume pods
+   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/
+   *
+   * @default ""
+   */
+  schedulerName?: string;
   /**
    * used to assign a service account.
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
@@ -1354,6 +1398,13 @@ export type SeaweedfsHelmValuesFiler = {
    */
   priorityClassName?: string;
   /**
+   * used to specify a custom scheduler for filer pods
+   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/
+   *
+   * @default ""
+   */
+  schedulerName?: string;
+  /**
    * used to assign a service account.
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
    *
@@ -1591,6 +1642,8 @@ export type SeaweedfsHelmValuesFilerIngressesGrpcAnnotations = {
 
 export type SeaweedfsHelmValuesFilerExtraEnvironmentVars = {
   /**
+   * the WEED_MYSQL_* keys and the db credential secret only render while this is "true"
+   *
    * @default "false"
    */
   WEED_MYSQL_ENABLED?: boolean;
@@ -1900,6 +1953,13 @@ export type SeaweedfsHelmValuesS3 = {
    * @default ""
    */
   priorityClassName?: string;
+  /**
+   * used to assign a custom scheduler to server pods
+   * ref: https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/
+   *
+   * @default ""
+   */
+  schedulerName?: string;
   /**
    * used to assign a service account.
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
@@ -2352,6 +2412,10 @@ export type SeaweedfsHelmValuesSftp = {
   /**
    * @default ""
    */
+  schedulerName?: string;
+  /**
+   * @default ""
+   */
   serviceAccountName?: string;
   /**
    * @default {}
@@ -2621,6 +2685,10 @@ export type SeaweedfsHelmValuesAdmin = {
    * @default ""
    */
   priorityClassName?: string;
+  /**
+   * @default ""
+   */
+  schedulerName?: string;
   /**
    * @default ""
    */
@@ -3090,6 +3158,10 @@ export type SeaweedfsHelmValuesWorker = {
   /**
    * @default ""
    */
+  schedulerName?: string;
+  /**
+   * @default ""
+   */
   serviceAccountName?: string;
   /**
    * @default {}
@@ -3490,6 +3562,13 @@ export type SeaweedfsHelmValuesAllInOne = {
    */
   priorityClassName?: string;
   /**
+   * Used to assign a custom scheduler to pods
+   * ref: https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/
+   *
+   * @default ""
+   */
+  schedulerName?: string;
+  /**
    * Used to assign a service account.
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
    *
@@ -3849,6 +3928,13 @@ export type SeaweedfsHelmValuesCosi = {
    */
   containerSecurityContext?: SeaweedfsHelmValuesCosiContainerSecurityContext;
   /**
+   * used to assign a custom scheduler to cosi pods
+   * ref: https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/
+   *
+   * @default ""
+   */
+  schedulerName?: string;
+  /**
    * @default ""
    */
   extraVolumes?: string;
@@ -4072,7 +4158,7 @@ export type SeaweedfsHelmValuesNetworkPolicyComponents = object;
 
 export type SeaweedfsHelmValues = {
   /**
-   * @default {"imageRegistry":"","imagePullSecrets":"","seaweedfs":{"createClusterRole":true,"image":{"repository":"","name":"chrislusf/seaweedfs"},"imagePullPolicy":"IfNotPresent","restartPolicy":"Always","loggingLevel":1,"enableSecurity":false,"masterServer":null,"securityConfig":{"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false,"expiresAfterSeconds":{"volumeWrite":0,"volumeRead":0,"filerWrite":0,"filerRead":0}}},"serviceAccountName":"seaweedfs","serviceAccountAnnotations":{},"automountServiceAccountToken":true,"certificates":{"duration":"87600h","renewBefore":"720h","alphacrds":false},"monitoring":{"enabled":false,"gatewayHost":null,"gatewayPort":null,"additionalLabels":{}},"enableReplication":false,"replicationPlacement":"001","extraEnvironmentVars":{"WEED_CLUSTER_DEFAULT":"sw","WEED_CLUSTER_SW_MASTER":"{{ include \"seaweedfs.cluster.masterAddress\" . }}","WEED_CLUSTER_SW_FILER":"{{ include \"seaweedfs.cluster.filerAddress\" . }}"}}}
+   * @default {"imageRegistry":"","imagePullSecrets":"","seaweedfs":{"createClusterRole":true,"image":{"repository":"","name":"chrislusf/seaweedfs"},"license":{"existingSecret":"","secretKey":"seaweed-license.json","mountPath":"/etc/seaweedfs/license"},"imagePullPolicy":"IfNotPresent","restartPolicy":"Always","loggingLevel":1,"enableSecurity":false,"masterServer":null,"securityConfig":{"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false,"expiresAfterSeconds":{"volumeWrite":0,"volumeRead":0,"filerWrite":0,"filerRead":0}}},"serviceAccountName":"seaweedfs","serviceAccountAnnotations":{},"automountServiceAccountToken":true,"certificates":{"duration":"87600h","renewBefore":"720h","alphacrds":false},"monitoring":{"enabled":false,"gatewayHost":null,"gatewayPort":null,"additionalLabels":{}},"enableReplication":false,"replicationPlacement":"001","extraEnvironmentVars":{"WEED_CLUSTER_DEFAULT":"sw","WEED_CLUSTER_SW_MASTER":"{{ include \"seaweedfs.cluster.masterAddress\" . }}","WEED_CLUSTER_SW_FILER":"{{ include \"seaweedfs.cluster.filerAddress\" . }}"}}}
    */
   global?: SeaweedfsHelmValuesGlobal;
   /**
@@ -4080,11 +4166,11 @@ export type SeaweedfsHelmValues = {
    */
   image?: SeaweedfsHelmValuesImage;
   /**
-   * @default {...} (47 keys)
+   * @default {...} (48 keys)
    */
   master?: SeaweedfsHelmValuesMaster;
   /**
-   * @default {...} (49 keys)
+   * @default {...} (50 keys)
    */
   volume?: SeaweedfsHelmValuesVolume;
   /**
@@ -4094,29 +4180,29 @@ export type SeaweedfsHelmValues = {
    */
   volumes?: SeaweedfsHelmValuesVolumes;
   /**
-   * @default {...} (51 keys)
+   * @default {...} (52 keys)
    */
   filer?: SeaweedfsHelmValuesFiler;
   /**
-   * @default {...} (38 keys)
+   * @default {...} (39 keys)
    */
   s3?: SeaweedfsHelmValuesS3;
   /**
-   * @default {...} (43 keys)
+   * @default {...} (44 keys)
    */
   sftp?: SeaweedfsHelmValuesSftp;
   /**
-   * @default {...} (38 keys)
+   * @default {...} (39 keys)
    */
   admin?: SeaweedfsHelmValuesAdmin;
   /**
-   * @default {...} (35 keys)
+   * @default {...} (36 keys)
    */
   worker?: SeaweedfsHelmValuesWorker;
   /**
    * All-in-one deployment configuration
    *
-   * @default {...} (38 keys)
+   * @default {...} (39 keys)
    */
   allInOne?: SeaweedfsHelmValuesAllInOne;
   /**
@@ -4124,7 +4210,7 @@ export type SeaweedfsHelmValues = {
    * Requires COSI CRDs and controller to be installed in the cluster
    * For more information, visit: https://container-object-storage-interface.github.io/docs/deployment-guide
    *
-   * @default {...} (15 keys)
+   * @default {...} (16 keys)
    */
   cosi?: SeaweedfsHelmValuesCosi;
   /**
@@ -4155,6 +4241,9 @@ export type SeaweedfsHelmParameters = {
   "global.seaweedfs.createClusterRole"?: string;
   "global.seaweedfs.image.repository"?: string;
   "global.seaweedfs.image.name"?: string;
+  "global.seaweedfs.license.existingSecret"?: string;
+  "global.seaweedfs.license.secretKey"?: string;
+  "global.seaweedfs.license.mountPath"?: string;
   "global.seaweedfs.imagePullPolicy"?: string;
   "global.seaweedfs.restartPolicy"?: string;
   "global.seaweedfs.loggingLevel"?: string;
@@ -4208,6 +4297,7 @@ export type SeaweedfsHelmParameters = {
   "master.extraArgs"?: string;
   "master.config"?: string;
   "master.data.type"?: string;
+  "master.data.size"?: string;
   "master.data.storageClass"?: string;
   "master.data.hostPathPrefix"?: string;
   "master.logs.type"?: string;
@@ -4226,6 +4316,7 @@ export type SeaweedfsHelmParameters = {
   "master.tolerations"?: string;
   "master.nodeSelector"?: string;
   "master.priorityClassName"?: string;
+  "master.schedulerName"?: string;
   "master.serviceAccountName"?: string;
   "master.ingress.enabled"?: string;
   "master.ingress.className"?: string;
@@ -4293,6 +4384,7 @@ export type SeaweedfsHelmParameters = {
   "volume.tolerations"?: string;
   "volume.nodeSelector"?: string;
   "volume.priorityClassName"?: string;
+  "volume.schedulerName"?: string;
   "volume.serviceAccountName"?: string;
   "volume.extraEnvironmentVars"?: string;
   "volume.livenessProbe.enabled"?: string;
@@ -4362,6 +4454,7 @@ export type SeaweedfsHelmParameters = {
   "filer.tolerations"?: string;
   "filer.nodeSelector"?: string;
   "filer.priorityClassName"?: string;
+  "filer.schedulerName"?: string;
   "filer.serviceAccountName"?: string;
   "filer.ingresses.http.enabled"?: string;
   "filer.ingresses.http.className"?: string;
@@ -4432,6 +4525,7 @@ export type SeaweedfsHelmParameters = {
   "s3.tolerations"?: string;
   "s3.nodeSelector"?: string;
   "s3.priorityClassName"?: string;
+  "s3.schedulerName"?: string;
   "s3.serviceAccountName"?: string;
   "s3.logs.type"?: string;
   "s3.logs.size"?: string;
@@ -4505,6 +4599,7 @@ export type SeaweedfsHelmParameters = {
   "sftp.tolerations"?: string;
   "sftp.nodeSelector"?: string;
   "sftp.priorityClassName"?: string;
+  "sftp.schedulerName"?: string;
   "sftp.serviceAccountName"?: string;
   "sftp.logs.type"?: string;
   "sftp.logs.hostPathPrefix"?: string;
@@ -4560,6 +4655,7 @@ export type SeaweedfsHelmParameters = {
   "admin.tolerations"?: string;
   "admin.nodeSelector"?: string;
   "admin.priorityClassName"?: string;
+  "admin.schedulerName"?: string;
   "admin.serviceAccountName"?: string;
   "admin.livenessProbe.enabled"?: string;
   "admin.livenessProbe.httpGet.path"?: string;
@@ -4615,6 +4711,7 @@ export type SeaweedfsHelmParameters = {
   "worker.tolerations"?: string;
   "worker.nodeSelector"?: string;
   "worker.priorityClassName"?: string;
+  "worker.schedulerName"?: string;
   "worker.serviceAccountName"?: string;
   "worker.livenessProbe.enabled"?: string;
   "worker.livenessProbe.httpGet.path"?: string;
@@ -4715,6 +4812,7 @@ export type SeaweedfsHelmParameters = {
   "allInOne.tolerations"?: string;
   "allInOne.nodeSelector"?: string;
   "allInOne.priorityClassName"?: string;
+  "allInOne.schedulerName"?: string;
   "allInOne.serviceAccountName"?: string;
   "allInOne.resources"?: string;
   "cosi.enabled"?: string;
@@ -4727,6 +4825,7 @@ export type SeaweedfsHelmParameters = {
   "cosi.sidecar.resources"?: string;
   "cosi.enableAuth"?: string;
   "cosi.existingConfigSecret"?: string;
+  "cosi.schedulerName"?: string;
   "cosi.extraVolumes"?: string;
   "cosi.extraVolumeMounts"?: string;
   "cosi.resources"?: string;

@@ -90,6 +90,14 @@ test("extracts every managed structured version-catalog field", async () => {
       packageName: "flipt/flipt",
     }),
   );
+  expect(actual).toContainEqual(
+    expect.objectContaining({
+      depName: "library/nginx",
+      datasource: "docker",
+      versioning: "docker",
+      currentValue: "1.31.2-alpine",
+    }),
+  );
 });
 
 test("excludes all sandbox dependency files", async () => {
@@ -176,6 +184,46 @@ test("groups Talos, Kubernetes, and installer updates into one PR", async () => 
       "kubernetes/kubernetes",
     ],
     minimumReleaseAge: "0 days",
+  });
+});
+
+test("keeps direct TypeScript on 6 without constraining the native alias", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) =>
+      candidate.description ===
+      "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
+  );
+
+  expect(rule).toEqual({
+    description:
+      "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
+    matchManagers: ["npm"],
+    matchDepNames: ["typescript"],
+    allowedVersions: "<7",
+  });
+  expect(rule?.matchDepNames).not.toContain("@typescript/native");
+});
+
+test("keeps the custom Corretto manager authoritative for mise Java", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) =>
+      candidate.description ===
+      "Keep the custom Corretto regex manager authoritative; disable only the native mise java dependency so Renovate cannot replace Corretto with another JDK distribution.",
+  );
+
+  expect(rule).toEqual({
+    description:
+      "Keep the custom Corretto regex manager authoritative; disable only the native mise java dependency so Renovate cannot replace Corretto with another JDK distribution.",
+    matchManagers: ["mise"],
+    matchDepNames: ["java"],
+    matchFileNames: [".mise.toml"],
+    enabled: false,
   });
 });
 

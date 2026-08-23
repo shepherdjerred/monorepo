@@ -16,7 +16,7 @@ export async function checkPythonTypes(): Promise<void> {
     "--python",
     ".venv/bin/python",
   ]);
-  await run(["uvx", `pyright@${PYRIGHT_VERSION}`]);
+  await run(["bunx", "--bun", `pyright@${PYRIGHT_VERSION}`]);
 }
 
 if (import.meta.main) {
