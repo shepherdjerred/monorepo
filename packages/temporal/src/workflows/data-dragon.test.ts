@@ -7,7 +7,6 @@ import type {
   DataDragonUpdateResult,
   DataDragonVersionState,
 } from "#activities/data-dragon.ts";
-import type { LanePriorUpdateConfig } from "#activities/data-dragon-lane-priors.ts";
 import { runScoutDataDragonWeeklyRefresh } from "./index.ts";
 
 const TASK_QUEUE = "scout-data-dragon-test";
@@ -16,18 +15,6 @@ const VERSION_STATE: DataDragonVersionState = {
   currentVersion: "16.15.0",
   latestVersion: "16.15.1",
   updateRequired: true,
-};
-
-const LANE_PRIORS: LanePriorUpdateConfig = {
-  bucket: "scout-lane-priors",
-  queueIds: [420],
-  trainingStartDate: "2026-01-01",
-  trainingEndDate: "2026-02-01",
-  holdoutStartDate: "2026-02-02",
-  holdoutEndDate: "2026-02-09",
-  holdoutSampleSize: 100,
-  holdoutSeed: "seed",
-  threshold: 0.5,
 };
 
 type RecordFailureInput = DataDragonVersionState & {
@@ -75,7 +62,7 @@ async function runWithFailingUpdate(updateError: Error): Promise<{
   try {
     await worker.runUntil(
       testEnvironment.client.workflow.execute(runScoutDataDragonWeeklyRefresh, {
-        args: [{ lanePriors: LANE_PRIORS }],
+        args: [],
         taskQueue: TASK_QUEUE,
         workflowId: `scout-data-dragon-failure-${crypto.randomUUID()}`,
       }),
@@ -149,7 +136,7 @@ describe("runScoutDataDragonWeeklyRefresh terminal-failure recording", () => {
         testEnvironment.client.workflow.execute(
           runScoutDataDragonWeeklyRefresh,
           {
-            args: [{ lanePriors: LANE_PRIORS }],
+            args: [],
             taskQueue: TASK_QUEUE,
             workflowId: `scout-data-dragon-delivery-${crypto.randomUUID()}`,
           },

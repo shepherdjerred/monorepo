@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { createDataDragonPr } from "./data-dragon-pr.ts";
+import {
+  createDataDragonPr,
+  getPrRevisionState,
+  isPrBasedOnCurrentMain,
+} from "./data-dragon-pr.ts";
 
 const ARGS = {
   repoSlug: "shepherdjerred/monorepo",
@@ -69,5 +73,66 @@ describe("createDataDragonPr", () => {
         findOnHead: async () => new Map<string, string>().get(ARGS.branch),
       }),
     ).rejects.toBe(failure);
+  });
+});
+
+describe("isPrBasedOnCurrentMain", () => {
+  test("detects a current base", async () => {
+    const result = await isPrBasedOnCurrentMain({
+      repoSlug: ARGS.repoSlug,
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/9",
+      token: ARGS.token,
+      run: async (command) =>
+        command[1] === "pr"
+          ? JSON.stringify({
+              baseRefOid: "abc",
+              headRefOid: "def",
+              headRefName: ARGS.branch,
+            })
+          : JSON.stringify({ object: { sha: "abc" } }),
+    });
+
+    expect(result).toBe(true);
+  });
+
+  test("detects a stale base", async () => {
+    const result = await isPrBasedOnCurrentMain({
+      repoSlug: ARGS.repoSlug,
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/9",
+      token: ARGS.token,
+      run: async (command) =>
+        command[1] === "pr"
+          ? JSON.stringify({
+              baseRefOid: "old",
+              headRefOid: "def",
+              headRefName: ARGS.branch,
+            })
+          : JSON.stringify({ object: { sha: "new" } }),
+    });
+
+    expect(result).toBe(false);
+  });
+
+  test("returns both PR revisions and the current main revision", async () => {
+    const result = await getPrRevisionState({
+      repoSlug: ARGS.repoSlug,
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/9",
+      token: ARGS.token,
+      run: async (command) =>
+        command[1] === "pr"
+          ? JSON.stringify({
+              baseRefOid: "base",
+              headRefOid: "head",
+              headRefName: ARGS.branch,
+            })
+          : JSON.stringify({ object: { sha: "main" } }),
+    });
+
+    expect(result).toEqual({
+      baseRefOid: "base",
+      headRefOid: "head",
+      headRefName: ARGS.branch,
+      mainRefOid: "main",
+    });
   });
 });

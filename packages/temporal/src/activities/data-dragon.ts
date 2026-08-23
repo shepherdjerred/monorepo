@@ -11,22 +11,18 @@ import {
   type GitStatusEntry,
 } from "./data-dragon-diff.ts";
 import {
-  LanePriorUpdateConfigSchema,
-  lanePriorPrBodyLines,
-  revertGeneratedAtOnlyLanePriorChanges,
-  updateLanePriors,
-  type LanePriorUpdateConfig,
-} from "./data-dragon-lane-priors.ts";
-import {
   botCloneCacheDir,
   disarmGitHooks,
   installScoutWorkspace,
 } from "./bot-clone.ts";
+import { runScoutGeneratedPreflight } from "./scout-generated-preflight.ts";
 import { recordAutoMergeFailure, recordRun } from "./data-dragon-metrics.ts";
 import {
   createDataDragonPr,
-  findOpenDataDragonPrUrl,
+  ensureGeneratedPrAutoMerge,
+  getOpenDataDragonPrState,
 } from "./data-dragon-pr.ts";
+import { assertRemoteBranchIsOurs } from "./scout-season-refresh-git.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
@@ -52,14 +48,6 @@ const VersionsResponse = z.array(z.string().min(1)).min(1);
 
 export type DataDragonUpdateMode = "version-check" | "weekly-refresh";
 
-export const DataDragonWorkflowInputSchema = z.strictObject({
-  lanePriors: LanePriorUpdateConfigSchema,
-});
-
-export type DataDragonWorkflowInput = z.infer<
-  typeof DataDragonWorkflowInputSchema
->;
-
 export type DataDragonVersionState = {
   currentVersion: string;
   latestVersion: string;
@@ -68,7 +56,6 @@ export type DataDragonVersionState = {
 
 export type DataDragonUpdateInput = DataDragonVersionState & {
   mode: DataDragonUpdateMode;
-  lanePriors: LanePriorUpdateConfig;
 };
 
 export type DataDragonUpdateResult = DataDragonUpdateInput & {
@@ -146,41 +133,6 @@ async function changedFiles(repoDir: string): Promise<GitStatusEntry[]> {
     );
   }
   return changes;
-}
-
-/**
- * Enables auto-merge on an already-open Data Dragon PR, idempotently. Shared by
- * the create path and the dedup/retry path: `gh pr merge --auto` is safe to
- * re-issue on a PR that already has auto-merge enabled, so a retry whose prior
- * attempt died between `gh pr create` and `gh pr merge --auto` can finish the
- * setup here instead of leaving the PR stuck. On failure it records the
- * dedicated auto-merge-failure signal (so `ScoutDataDragonAutoMergeFailed`
- * fires) and logs, but does NOT throw — a PR exists either way, and the failure
- * is surfaced through its own alert rather than by failing the run. `--repo`
- * plus the full PR URL resolves the PR via the API, so the working directory
- * is irrelevant (the dedup path has no clone) — hence the fixed `/tmp` cwd.
- */
-async function ensurePrAutoMerge(
-  prUrl: string,
-  githubToken: string,
-  mode: DataDragonUpdateMode,
-  logContext: Record<string, unknown>,
-): Promise<boolean> {
-  try {
-    await runCommand(
-      ["gh", "pr", "merge", "--repo", REPO_SLUG, "--auto", "--merge", prUrl],
-      { cwd: "/tmp", env: { GH_TOKEN: githubToken }, redactOutput: true },
-    );
-    return true;
-  } catch (error: unknown) {
-    recordAutoMergeFailure(mode);
-    jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
-      ...logContext,
-      prUrl,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return false;
-  }
 }
 
 export type DataDragonActivities = typeof dataDragonActivities;
@@ -284,26 +236,35 @@ export const dataDragonActivities = {
       // open PR, and skips instead of opening a duplicate under a fresh
       // UUID-suffixed branch. It also short-circuits a prior scheduled run's
       // still-open PR, and does so before the expensive clone/install/refresh.
-      const existingPrUrl = await findOpenDataDragonPrUrl(
-        REPO_SLUG,
-        input.latestVersion,
-        githubToken,
-      );
-      if (existingPrUrl !== undefined) {
+      const { prUrl: existingPrUrl, state: existingPrState } =
+        await getOpenDataDragonPrState({
+          repoSlug: REPO_SLUG,
+          latestVersion: input.latestVersion,
+          token: githubToken,
+        });
+      const existingPrNeedsRefresh =
+        existingPrState !== undefined &&
+        existingPrState.baseRefOid !== existingPrState.mainRefOid;
+      if (existingPrUrl !== undefined && !existingPrNeedsRefresh) {
         // The prior attempt may have died between `gh pr create` and `gh pr
         // merge --auto`, leaving this PR open with auto-merge never enabled.
         // Finish the setup idempotently so the retry doesn't leave the PR
         // stuck (and so an auto-merge failure surfaces via its own alert)
         // before treating the dedup skip as complete.
-        const autoMergeConfigured = await ensurePrAutoMerge(
-          existingPrUrl,
-          githubToken,
-          input.mode,
-          {
-            ...input,
-            reason: "pr-already-open",
+        const autoMergeConfigured = await ensureGeneratedPrAutoMerge({
+          repoSlug: REPO_SLUG,
+          prUrl: existingPrUrl,
+          token: githubToken,
+          onFailure: (error: unknown) => {
+            recordAutoMergeFailure(input.mode);
+            jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
+              ...input,
+              prUrl: existingPrUrl,
+              reason: "pr-already-open",
+              error: error instanceof Error ? error.message : String(error),
+            });
           },
-        );
+        });
         const durationSeconds = (Date.now() - start) / 1000;
         recordRun({
           mode: input.mode,
@@ -329,6 +290,16 @@ export const dataDragonActivities = {
           autoMergeConfigured,
         };
       }
+      if (existingPrNeedsRefresh) {
+        jsonLog(
+          "warning",
+          "Refreshing stale Data Dragon PR from current main",
+          {
+            ...input,
+            prUrl: existingPrUrl,
+          },
+        );
+      }
 
       jsonLog("info", "Starting Data Dragon update", input);
       await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
@@ -346,6 +317,20 @@ export const dataDragonActivities = {
         "--depth",
         "1",
       ]);
+
+      const branch =
+        existingPrState?.headRefName ?? branchName(input.latestVersion);
+      if (existingPrNeedsRefresh) {
+        await runCommand(
+          [
+            "git",
+            "fetch",
+            "origin",
+            `refs/heads/${branch}:refs/remotes/origin/${branch}`,
+          ],
+          { cwd: repoDir, env: gitEnv, redactOutput: true },
+        );
+      }
 
       // Installs the root workspace once without hooks, then builds the shared
       // producers Scout imports. Without the llm-models build, the updater's
@@ -374,17 +359,7 @@ export const dataDragonActivities = {
           },
         },
       );
-      await updateLanePriors({
-        repoDir,
-        rawConfig: input.lanePriors,
-        runCommand,
-      });
-      const reverted = await revertGeneratedAtOnlyLanePriorChanges(repoDir);
-      if (reverted.length > 0) {
-        jsonLog("info", "Reverted lane-prior timestamp churn", { reverted });
-      }
-
-      const changes = await changedFiles(repoDir);
+      let changes = await changedFiles(repoDir);
       const files = changes.map((change) => change.path);
       const durationSeconds = (Date.now() - start) / 1000;
 
@@ -448,7 +423,14 @@ export const dataDragonActivities = {
         nonSuppressibleExamples: nonSuppressibleChanges.slice(0, 20),
       });
 
-      const branch = branchName(input.latestVersion);
+      await runScoutGeneratedPreflight({
+        repoDir,
+        changedFiles: files,
+        runCommand,
+      });
+      changes = await changedFiles(repoDir);
+      const formattedFiles = changes.map((change) => change.path);
+
       const title = dataDragonPrTitle(input.latestVersion);
       const body = [
         "Automated Scout Data Dragon refresh from Temporal.",
@@ -456,9 +438,7 @@ export const dataDragonActivities = {
         `Current version: ${input.currentVersion}`,
         `Latest version: ${input.latestVersion}`,
         `Mode: ${input.mode}`,
-        `Changed files: ${String(files.length)}`,
-        "",
-        ...lanePriorPrBodyLines(input.lanePriors),
+        `Changed files: ${String(formattedFiles.length)}`,
       ].join("\n");
 
       await runCommand(["git", "config", "user.email", "ci@sjer.red"], {
@@ -476,6 +456,9 @@ export const dataDragonActivities = {
       // activity stays safe if one is ever added.
       await disarmGitHooks(repoDir);
       await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
+      if (existingPrNeedsRefresh) {
+        await assertRemoteBranchIsOurs({ repoDir, branch });
+      }
       const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
         cwd: repoDir,
       });
@@ -501,15 +484,20 @@ export const dataDragonActivities = {
         version: input.latestVersion,
         token: githubToken,
       });
-      const autoMergeConfigured = await ensurePrAutoMerge(
+      const autoMergeConfigured = await ensureGeneratedPrAutoMerge({
+        repoSlug: REPO_SLUG,
         prUrl,
-        githubToken,
-        input.mode,
-        {
-          ...input,
-          branch,
+        token: githubToken,
+        onFailure: (error: unknown) => {
+          recordAutoMergeFailure(input.mode);
+          jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
+            ...input,
+            branch,
+            prUrl,
+            error: error instanceof Error ? error.message : String(error),
+          });
         },
-      );
+      });
 
       recordRun({
         mode: input.mode,
@@ -517,7 +505,7 @@ export const dataDragonActivities = {
         reason: recovered ? "pr-already-open" : "pr-created",
         currentVersion: input.currentVersion,
         latestVersion: input.latestVersion,
-        changedFiles: files.length,
+        changedFiles: formattedFiles.length,
         durationSeconds,
         prCreated: !recovered,
       });
@@ -531,14 +519,14 @@ export const dataDragonActivities = {
           branch,
           prUrl,
           commitHash,
-          changedFiles: files.length,
+          changedFiles: formattedFiles.length,
           durationSeconds,
         },
       );
 
       return {
         ...input,
-        changedFiles: files,
+        changedFiles: formattedFiles,
         branchName: branch,
         commitHash,
         prUrl,

@@ -79,13 +79,13 @@ auto-pauses or auto-unpauses anything. This is intentional — pause is the one 
 everything else about a schedule lives in source. Don't add a declarative `enabled` flag, it
 would fight the UI.
 
-| To stop…             | Pause schedule id(s)                                                                                                                                               |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                                                                                     |
-| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                                                                                           |
-| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                                                                               |
-| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                                                                                          |
-| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-season-refresh-weekly`, `scout-showcase-refresh-weekly`, `scout-queue-windows-daily` |
+| To stop…             | Pause schedule id(s)                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                                                                                                                         |
+| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                                                                                                                               |
+| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                                                                                                                   |
+| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                                                                                                                              |
+| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-lane-priors-weekly-refresh`, `scout-season-refresh-weekly`, `scout-showcase-refresh-weekly`, `scout-queue-windows-daily` |
 
 ### Catchup window (missed-run replay after a SERVER outage)
 
@@ -484,7 +484,8 @@ the branch it was given, so a branch built from a per-attempt value (a fresh
 `crypto.randomUUID()`, a timestamp) silently defeats that reuse: any failure
 after the PR is created retries the activity under a new branch and opens a
 second PR. Derive it from the content (`data-dragon.ts` uses the Data Dragon
-version; `llm-catalog-refresh.ts` hashes the proposed `catalog.json`) or from
+version; `lane-prior-refresh.ts` hashes the normalized lane-prior artifacts;
+`llm-catalog-refresh.ts` hashes the proposed `catalog.json`) or from
 the workflow's own args (`scout-season-refresh.ts`) — never from a value
 generated inside the attempt. Scratch `/tmp` directories are the opposite: keep
 those per-attempt so a retry cannot trip over a previous attempt's half-cleaned
@@ -503,6 +504,13 @@ edit straight through. Do not swap this for a tree comparison (a branch derived
 from workflow args legitimately changes content every run) or a commit count
 against main (`scout-season-refresh` clones `--depth 1`, so that history is
 absent).
+
+Data Dragon proposals are refreshed when their base is stale. The updater
+regenerates from current `main`, but it first verifies the existing branch's
+tip is still authored and committed by the bot. Human or amended commits are
+never force-pushed over; those proposals require manual attention. Lane-prior
+proposals use content-hash branches, so a changed result gets a new proposal
+instead of replacing an operator's open review.
 
 **Retry-stable is not sufficient — the key must also be stable across scheduled
 runs.** The workflow run id survives retries but changes weekly, so while a

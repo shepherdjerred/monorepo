@@ -43,6 +43,22 @@ export function lanePriorEvalReportPath(repoDir: string): string {
   return `${repoDir}/${LANE_PRIOR_EVAL_REPORT_PATH}`;
 }
 
+export async function lanePriorContentHash(repoDir: string): Promise<string> {
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(await Bun.file(lanePriorArtifactPath(repoDir)).text());
+  hasher.update("\0");
+  hasher.update(await Bun.file(lanePriorEvalReportPath(repoDir)).text());
+  return hasher.digest("hex").slice(0, 12);
+}
+
+export function lanePriorBranchName(contentHash: string): string {
+  return `chore/scout-lane-priors-${contentHash}`;
+}
+
+export function lanePriorPrTitle(): string {
+  return "chore: refresh Scout lane priors";
+}
+
 const DateOnlySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export const LanePriorUpdateConfigSchema = z.strictObject({

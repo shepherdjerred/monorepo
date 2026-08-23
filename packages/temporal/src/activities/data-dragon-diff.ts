@@ -1,8 +1,4 @@
 import type { DataDragonUpdateInput } from "./data-dragon.ts";
-import {
-  LANE_PRIOR_ARTIFACT_PATH,
-  LANE_PRIOR_EVAL_REPORT_PATH,
-} from "./data-dragon-lane-priors.ts";
 
 const SCOUT_ROOT = "packages/scout-for-lol";
 const DATA_PACKAGE_ROOT = `${SCOUT_ROOT}/packages/data`;
@@ -35,8 +31,6 @@ export const DATA_DRAGON_GENERATED_PATHS = [
   // This covers future report designs without permitting source edits.
   REPORT_HTML_ROOT,
   CHANGELOG_PATH,
-  LANE_PRIOR_ARTIFACT_PATH,
-  LANE_PRIOR_EVAL_REPORT_PATH,
 ];
 
 export type GitChangeKind =
@@ -148,9 +142,7 @@ function isAllowedDataDragonGeneratedPath(path: string): boolean {
     isWithinDirectory(path, BACKEND_SNAPSHOT_ROOT) ||
     isWithinDirectory(path, REPORT_DATA_DRAGON_SNAPSHOT_ROOT) ||
     isReportHtmlSnapshotPath(path) ||
-    path === CHANGELOG_PATH ||
-    path === LANE_PRIOR_ARTIFACT_PATH ||
-    path === LANE_PRIOR_EVAL_REPORT_PATH
+    path === CHANGELOG_PATH
   );
 }
 

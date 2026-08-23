@@ -2,7 +2,6 @@ import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   DataDragonActivities,
   DataDragonVersionState,
-  DataDragonWorkflowInput,
   DataDragonUpdateMode,
   DataDragonUpdateResult,
 } from "#activities/data-dragon.ts";
@@ -305,7 +304,6 @@ function failureReport(
 
 export async function runScoutDataDragonUpdate(
   mode: DataDragonUpdateMode,
-  input: DataDragonWorkflowInput,
 ): Promise<DataDragonUpdateResult | undefined> {
   const startedAt = new Date().toISOString();
   let state: DataDragonVersionState | undefined;
@@ -328,7 +326,6 @@ export async function runScoutDataDragonUpdate(
       result = await updateDataDragon({
         ...state,
         mode,
-        lanePriors: input.lanePriors,
       });
       report = dataDragonReport(startedAt, mode, state, result);
     }

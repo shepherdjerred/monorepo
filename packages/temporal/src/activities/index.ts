@@ -10,6 +10,7 @@ import { agentTaskActivities } from "./agent-task.ts";
 import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon.ts";
+import { lanePriorActivities } from "./lane-prior-refresh.ts";
 import { scoutSeasonRefreshActivities } from "./scout-season-refresh.ts";
 import { veleroOrphanAuditActivities } from "./velero-orphan-audit.ts";
 import { outcomeActivities } from "./outcome.ts";
@@ -46,6 +47,7 @@ export const activities = {
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
   ...dataDragonActivities,
+  ...lanePriorActivities,
   ...scoutSeasonRefreshActivities,
   ...veleroOrphanAuditActivities,
   ...outcomeActivities,
