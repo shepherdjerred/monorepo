@@ -160,6 +160,12 @@ write boundary, and dated deep references.
 - **Never export `TEMPORAL_ADDRESS` globally.** `packages/temporal/scripts/*.ts`
   read it and fall back to localhost, so a global export silently retargets every
   "local" script at production. Use `temporal --profile homelab` instead.
+- **Use `toolkit` for observability queries.** Prefer `toolkit prom query`
+  for PromQL and the corresponding `toolkit grafana`, `toolkit loki`, or
+  `toolkit tempo` passthroughs for those services. This preserves the
+  configured datasource, authentication, and agent-friendly output. Use raw
+  HTTP only when troubleshooting the toolkit/transport itself or when no
+  toolkit command exists.
 - **`gcx` owns `~/.config/gcx/config.yaml`.** Chezmoi deliberately does not manage
   it: gcx migrates any inline token into the macOS Keychain and rewrites the file
   on first use. `run_onchange_after_configure-gcx.sh.tmpl` provisions the context
