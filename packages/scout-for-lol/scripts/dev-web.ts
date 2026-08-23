@@ -6,6 +6,7 @@ const DEFAULT_BACKEND_PORT = 3000;
 const DEFAULT_WEB_PORT = 5180;
 const DEFAULT_DATABASE_URL = "file:./local-web-dev.db";
 const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
+const BACKEND_START_TIMEOUT_MS = 300_000;
 
 type DevWebOptions = {
   readonly backendPort: number;
@@ -199,6 +200,35 @@ function origins(options: DevWebOptions): {
   };
 }
 
+async function waitForBackend(
+  backendOrigin: string,
+  backend: Bun.Subprocess,
+): Promise<void> {
+  const startedAt = Date.now();
+  let lastFailure: unknown;
+  while (Date.now() - startedAt < BACKEND_START_TIMEOUT_MS) {
+    if (backend.exitCode !== null) {
+      throw new Error(
+        `Scout backend exited with code ${backend.exitCode.toString()} before becoming ready`,
+      );
+    }
+    try {
+      const response = await fetch(`${backendOrigin}/api/version`);
+      if (response.ok) return;
+      lastFailure = new Error(
+        `Scout backend readiness returned HTTP ${response.status.toString()}`,
+      );
+    } catch (error) {
+      lastFailure = error;
+    }
+    await Bun.sleep(250);
+  }
+  throw new Error(
+    `Scout backend did not become ready within ${BACKEND_START_TIMEOUT_MS.toString()}ms`,
+    { cause: lastFailure },
+  );
+}
+
 if (import.meta.main) {
   const root = import.meta.dir.replace(/\/scripts$/, "");
   const isDesignAuditBoot = Bun.env["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] === "true";
@@ -325,9 +355,10 @@ if (import.meta.main) {
       }
     }
 
-    const backendCommand = options.backendWatchEnabled
-      ? ["bun", "--watch", "src/index.ts"]
-      : ["bun", "src/index.ts"];
+    const backendCommand =
+      !isDesignAuditBoot && options.backendWatchEnabled
+        ? ["bun", "--watch", "src/index.ts"]
+        : ["bun", "src/index.ts"];
     const backend = Bun.spawn(backendCommand, {
       cwd: backendCwd,
       env: {
@@ -338,6 +369,19 @@ if (import.meta.main) {
       stdout: "inherit",
       stderr: "inherit",
     });
+    // Playwright probes the SPA through Vite's backend proxy. Starting Vite
+    // before the backend is ready can leave that first proxy request hanging
+    // for the entire webServer timeout. The audit checkout is immutable, so it
+    // also has no reason to pay for a backend file watcher.
+    if (isDesignAuditBoot) {
+      try {
+        await waitForBackend(backendOrigin, backend);
+      } catch (error) {
+        backend.kill();
+        await backend.exited;
+        throw error;
+      }
+    }
     const app = Bun.spawn(
       [
         "bun",
@@ -349,6 +393,12 @@ if (import.meta.main) {
         "--port",
         options.webPort.toString(),
         "--strictPort",
+        // Playwright restarts this server between sequential audit shards.
+        // A Vite optimizer process killed with the preceding shard can leave
+        // the shared dependency cache waiting indefinitely before the next
+        // server binds. Re-optimizing made the same live CI checkout ready in
+        // under a second and keeps this lifecycle repair audit-only.
+        ...(isDesignAuditBoot ? ["--force"] : []),
       ],
       {
         cwd: path.join(root, "packages", "app"),

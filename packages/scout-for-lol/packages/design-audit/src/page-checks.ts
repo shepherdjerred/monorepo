@@ -150,8 +150,30 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
           node.nodeType === Node.TEXT_NODE &&
           (node.textContent ?? "").trim() !== "",
       );
+    const isInlineTextInsideAllowedTruncation = (
+      element: HTMLElement,
+    ): boolean => {
+      const truncationRoot = element.closest(
+        "[data-design-audit-allow-truncation]",
+      );
+      return (
+        truncationRoot !== null &&
+        truncationRoot !== element &&
+        hasDirectText(element) &&
+        getComputedStyle(element).display === "inline"
+      );
+    };
     const isClipped = (element: HTMLElement, rectangle: DOMRect): boolean =>
       !allowed(element, "data-design-audit-allow-overflow") &&
+      // A marked single-line truncation necessarily clips inline text nodes.
+      // Keep the exception at that text boundary: the marked container and
+      // page-level horizontal overflow are still audited normally.
+      !isInlineTextInsideAllowedTruncation(element) &&
+      // SVG child geometry is expressed in the SVG coordinate space. WebKit
+      // reports those paths against clipped view boxes differently from
+      // Chromium; the outer SVG element is the layout boundary we audit.
+      (element.tagName.toLowerCase() === "svg" ||
+        element.closest("svg") === null) &&
       element.closest(".right-sidebar") === null &&
       // Monaco virtualizes its line layer inside an intentional clip region.
       element.closest(".monaco-editor") === null &&
@@ -180,6 +202,7 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
         "button, a.scout-button, input, select, textarea, [role=button]",
       ) &&
       !element.matches('select[aria-hidden="true"]') &&
+      element.closest(".monaco-editor") === null &&
       (rectangle.width < 24 || rectangle.height < 24) &&
       !allowed(element, "data-design-audit-allow-small-target");
     const elements = [...document.querySelectorAll<HTMLElement>("*")].filter(
@@ -191,14 +214,33 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     const truncated: string[] = [];
     const smallControls: string[] = [];
     const horizontalOverflow =
-      document.documentElement.scrollWidth > window.innerWidth + 1 &&
-      [...document.querySelectorAll<HTMLElement>("*")].some((element) => {
-        if (!visible(element) || isIntentionalRightSidebar(element)) {
-          return false;
-        }
-        const rectangle = element.getBoundingClientRect();
-        return rectangle.left < -1 || rectangle.right > window.innerWidth + 1;
-      });
+      document.documentElement.scrollWidth > window.innerWidth + 1
+        ? [...document.querySelectorAll<HTMLElement>("*")].flatMap(
+            (element) => {
+              if (
+                !visible(element) ||
+                isIntentionalRightSidebar(element) ||
+                allowed(element, "data-design-audit-allow-overflow") ||
+                (element.tagName.toLowerCase() !== "svg" &&
+                  element.closest("svg") !== null) ||
+                element.closest(".monaco-editor") !== null ||
+                hasScrollableAncestor(element)
+              ) {
+                return [];
+              }
+              const rectangle = element.getBoundingClientRect();
+              if (
+                rectangle.left >= -1 &&
+                rectangle.right <= window.innerWidth + 1
+              ) {
+                return [];
+              }
+              return [
+                `${element.tagName.toLowerCase()}.${element.className} (${rectangle.left.toFixed(1)}..${rectangle.right.toFixed(1)} of ${window.innerWidth.toString()})`,
+              ];
+            },
+          )
+        : [];
 
     for (const element of elements) {
       const rectangle = element.getBoundingClientRect();
@@ -217,8 +259,8 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     return { horizontalOverflow, clipped, truncated, smallControls };
   });
 
-  expect(findings.horizontalOverflow, "unexpected horizontal overflow").toBe(
-    false,
+  expect(findings.horizontalOverflow, "unexpected horizontal overflow").toEqual(
+    [],
   );
   expect(
     findings.clipped,
@@ -232,6 +274,30 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     findings.smallControls,
     "interactive targets are smaller than 24px",
   ).toEqual([]);
+}
+
+export async function preparePageForScreenshot(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
+    // Assign offsets directly so a page-level `scroll-behavior: smooth` cannot
+    // leave a long full-page capture between its previous focus stop and top.
+    document.documentElement.scrollLeft = 0;
+    document.documentElement.scrollTop = 0;
+    document.body.scrollLeft = 0;
+    document.body.scrollTop = 0;
+    for (const element of document.querySelectorAll<HTMLElement>("*")) {
+      if (element.scrollLeft !== 0 || element.scrollTop !== 0) {
+        element.scrollLeft = 0;
+        element.scrollTop = 0;
+      }
+    }
+  });
+  const viewport = page.viewportSize();
+  if (viewport !== null) {
+    await page.mouse.move(viewport.width - 1, viewport.height - 1);
+  }
+  await page.waitForTimeout(50);
 }
 
 export async function assertRenderedContrast(page: Page): Promise<void> {

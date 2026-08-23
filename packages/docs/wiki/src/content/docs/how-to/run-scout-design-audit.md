@@ -1,6 +1,6 @@
 ---
 title: Run the Scout design audit
-description: Run the deterministic Scout browser audit locally, in the pull-request lane, or across the nightly browser matrix.
+description: Run the deterministic Scout browser audit locally or reproduce its scheduled Buildkite check.
 sidebar:
   order: 14
 ---
@@ -11,36 +11,29 @@ fixture; CI uses the same boot path for repeatable browser checks.
 The complete flag, port, and path reference is in [Scout design-audit
 reference](/reference/scout-design-audit/).
 
-## 1. Run the pull-request audit
+## 1. Run the complete local audit
 
-From the repository root, run the Chromium audit used by pull-request CI:
-
-```bash
-ASTRO_DEV_BACKGROUND=false CI=true TZ=UTC \
-SCOUT_DESIGN_AUDIT_MODE=pr \
-SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true \
-bun --no-install run --cwd packages/scout-for-lol/packages/design-audit test:e2e
-```
-
-The pull-request mode checks the public site, docs site, and app across the
-committed viewport set. The Buildkite command is defined in
-[`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
-
-## 2. Run the nightly browser matrix
-
-Use nightly mode when you need Firefox and WebKit coverage in addition to
-Chromium:
+From the repository root, run the same 616-case matrix as the scheduled check:
 
 ```bash
-ASTRO_DEV_BACKGROUND=false CI=true TZ=UTC \
+ASTRO_DEV_BACKGROUND=0 CI=true TZ=UTC \
 SCOUT_DESIGN_AUDIT_MODE=nightly \
 SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true \
 bun --no-install run --cwd packages/scout-for-lol/packages/design-audit test:e2e
 ```
 
-Main CI guards this wider matrix to the default branch. Both modes select local
-servers when `SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true`; external audit URLs
-are only needed when that flag is omitted.
+The exact route, theme, viewport, and browser counts are in the
+[design-audit reference](/reference/scout-design-audit/).
+
+## 2. Reproduce the scheduled Buildkite boundary
+
+The `monorepo-test-reporting` pipeline runs the audit daily at 03:00 PT. Its
+`scout-design-audit` step uses the pinned Playwright image and remains a soft
+failure while main establishes a stable passing history. The command is defined
+in [`reporting-pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/reporting-pipeline.yml).
+
+Set `SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true` to use the deterministic local
+fixture. External audit URLs are only needed when that flag is omitted.
 
 ## 3. Know what local boot does
 
@@ -61,8 +54,8 @@ Snapshots are captured in UTC so local timezone differences do not change the
 goldens. After an intentional visual change, update only the required project:
 
 ```bash
-ASTRO_DEV_BACKGROUND=false CI=true TZ=UTC \
-SCOUT_DESIGN_AUDIT_MODE=pr \
+ASTRO_DEV_BACKGROUND=0 CI=true TZ=UTC \
+SCOUT_DESIGN_AUDIT_MODE=nightly \
 SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true \
 bun --no-install run --cwd packages/scout-for-lol/packages/design-audit \
   test:e2e -- --project=chromium-mobile --update-snapshots
@@ -76,11 +69,11 @@ use `--update-snapshots`.
 Use Playwright's project and grep filters to reproduce one route or viewport:
 
 ```bash
-ASTRO_DEV_BACKGROUND=false CI=true TZ=UTC \
-SCOUT_DESIGN_AUDIT_MODE=pr \
+ASTRO_DEV_BACKGROUND=0 CI=true TZ=UTC \
+SCOUT_DESIGN_AUDIT_MODE=nightly \
 SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true \
 bun --no-install run --cwd packages/scout-for-lol/packages/design-audit \
-  test:e2e -- --project=chromium-mobile --grep 'app/report-new.*modern-dark' \
+  test:e2e -- --project=chromium-mobile --grep 'app/report-new.*classic-light' \
   --workers=1
 ```
 
