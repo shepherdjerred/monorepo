@@ -102,23 +102,34 @@ export default defineConfig({
   ...(startLocalServers
     ? {
         webServer: [
+          // Playwright defaults to 60s. All three of these boot inside the
+          // browser-E2E pod alongside sjer.red and design-system at
+          // --concurrency=2, where a starved server needs well past a minute.
+          // 120s matches sjer.red, alert-dashboard, and evals.
           {
             command: "bun --no-install run dev -- --host 127.0.0.1 --port 4321",
             cwd: "../../../../packages/scout-for-lol/packages/frontend",
             url: "http://127.0.0.1:4321/",
             reuseExistingServer: env["CI"] !== "true",
+            timeout: 120_000,
           },
           {
             command: "bun --no-install run dev -- --host 127.0.0.1 --port 4322",
             cwd: "../../../../packages/scout-for-lol/packages/docs-site",
             url: "http://127.0.0.1:4322/docs/",
             reuseExistingServer: env["CI"] !== "true",
+            timeout: 120_000,
           },
           {
             command: devDesignAuditCommand,
             cwd: "../../../../packages/scout-for-lol",
             url: "http://localhost:5180/app/login",
             reuseExistingServer: env["CI"] !== "true",
+            // This one gets more than the other two on purpose: before it
+            // listens it runs `prisma migrate deploy`, `prisma generate`, and
+            // the design-audit seed (scripts/dev-web.ts), then starts the
+            // backend. That is minutes of real work, not just a dev server.
+            timeout: 300_000,
           },
         ],
       }

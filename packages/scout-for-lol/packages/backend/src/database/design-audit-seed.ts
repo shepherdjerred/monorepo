@@ -38,8 +38,11 @@ function requiredPositiveInteger(
   return parsed;
 }
 
-function databaseUrl(backendCwd: string): string {
-  const configured = Bun.env["DATABASE_URL"] ?? "file:./db.sqlite";
+function databaseUrl(
+  backendCwd: string,
+  environment: Readonly<Record<string, string | undefined>>,
+): string {
+  const configured = environment["DATABASE_URL"] ?? "file:./db.sqlite";
   if (!configured.startsWith("file:") || configured.startsWith("file:/")) {
     return configured;
   }
@@ -49,6 +52,7 @@ function databaseUrl(backendCwd: string): string {
 /** Seed only the read models exercised by the local design-audit routes. */
 export async function seedDesignAuditDatabase(
   backendCwd: string,
+  environment: Readonly<Record<string, string | undefined>>,
 ): Promise<void> {
   if (environment["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] !== "true") {
     throw new Error(
@@ -62,27 +66,27 @@ export async function seedDesignAuditDatabase(
     );
   }
   const guildId = DiscordGuildIdSchema.parse(
-    Bun.env["SCOUT_DESIGN_AUDIT_GUILD_ID"] ?? DEFAULT_GUILD_ID,
+    environment["SCOUT_DESIGN_AUDIT_GUILD_ID"] ?? DEFAULT_GUILD_ID,
   );
   const discordId = DiscordAccountIdSchema.parse(
-    Bun.env["SCOUT_DESIGN_AUDIT_DISCORD_ID"] ?? DEFAULT_DISCORD_ID,
+    environment["SCOUT_DESIGN_AUDIT_DISCORD_ID"] ?? DEFAULT_DISCORD_ID,
   );
   const channelId = DiscordChannelIdSchema.parse("1337623164146155594");
   const puuid = LeaguePuuidSchema.parse("d".repeat(78));
   const region = RegionSchema.parse("AMERICA_NORTH");
   const playerAlias =
-    Bun.env["SCOUT_DESIGN_AUDIT_PLAYER_ALIAS"] ?? DEFAULT_PLAYER_ALIAS;
+    environment["SCOUT_DESIGN_AUDIT_PLAYER_ALIAS"] ?? DEFAULT_PLAYER_ALIAS;
   const competitionId = CompetitionIdSchema.parse(
     requiredPositiveInteger(
       "SCOUT_DESIGN_AUDIT_COMPETITION_ID",
-      Bun.env["SCOUT_DESIGN_AUDIT_COMPETITION_ID"],
+      environment["SCOUT_DESIGN_AUDIT_COMPETITION_ID"],
       DEFAULT_COMPETITION_ID,
     ),
   );
   const reportId = ReportIdSchema.parse(
     requiredPositiveInteger(
       "SCOUT_DESIGN_AUDIT_REPORT_ID",
-      Bun.env["SCOUT_DESIGN_AUDIT_REPORT_ID"],
+      environment["SCOUT_DESIGN_AUDIT_REPORT_ID"],
       DEFAULT_REPORT_ID,
     ),
   );
@@ -95,7 +99,7 @@ export async function seedDesignAuditDatabase(
   const now = new Date("2026-01-01T00:00:00.000Z");
   const prisma = new PrismaClient({
     adapter: new PrismaLibSql(
-      { url: databaseUrl(backendCwd) },
+      { url: databaseUrl(backendCwd, environment) },
       { timestampFormat: "unixepoch-ms" },
     ),
   });

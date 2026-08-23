@@ -11,6 +11,15 @@ console.warn("=".repeat(50));
 // migrations, so this only does work when the entrypoint is run directly.
 initObservability();
 
+// Before anything reads a dynamic value. A flag backend that is unreachable is
+// not fatal — every key falls through to env and its default, which are current
+// production behavior — so this never blocks startup.
+const { initializeConfig, describeDynamicConfig } = await import("./config.ts");
+await initializeConfig();
+
+const { formatConfigDump } = await import("@shepherdjerred/config");
+console.warn(formatConfigDump(await describeDynamicConfig()));
+
 // Dynamic imports, deliberately: static `import` declarations are hoisted and
 // would evaluate these modules BEFORE `Sentry.init` above ever ran, so any
 // startup failure went unreported.
