@@ -609,7 +609,7 @@
       "name": "@shepherdjerred/discord-video-stream",
       "version": "6.0.0-fork.0",
       "dependencies": {
-        "@lng2004/node-datachannel": "0.32.3-20260815.5",
+        "@lng2004/node-datachannel": "0.32.3-20260815.3",
         "@snazzah/davey": "^0.1.8",
         "debug-level": "^4.1.1",
         "node-av": "^6.1.1",
@@ -2006,11 +2006,11 @@
     "@lng2004/node-datachannel",
   ],
   "patchedDependencies": {
-    "@lng2004/node-datachannel@0.32.3-20260815.5": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
     "discord-player-youtubei@2.0.0": "patches/discord-player-youtubei@2.0.0.patch",
     "@astrojs/starlight@0.41.7": "patches/@astrojs%2Fstarlight@0.41.7.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "react-native-worklets@0.11.4": "patches/react-native-worklets@0.11.4.patch",
+    "@lng2004/node-datachannel@0.32.3-20260815.3": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.3.patch",
     "@react-native/metro-babel-transformer@0.86.2": "patches/@react-native%2Fmetro-babel-transformer@0.86.2.patch",
     "markdown-it@14.3.0": "patches/markdown-it@14.3.0.patch",
     "@astrojs/internal-helpers@0.10.4": "patches/@astrojs%2Finternal-helpers@0.10.4.patch",
@@ -2953,7 +2953,7 @@
 
     "@libsql/win32-x64-msvc": ["@libsql/win32-x64-msvc@0.5.29", "", { "os": "win32", "cpu": "x64" }, "sha512-4/0CvEdhi6+KjMxMaVbFM2n2Z44escBRoEYpR+gZg64DdetzGnYm8mcNLcoySaDJZNaBd6wz5DNdgRmcI4hXcg=="],
 
-    "@lng2004/node-datachannel": ["@lng2004/node-datachannel@0.32.3-20260815.5", "", { "dependencies": { "pkg-prebuilds": "^1.0.0" } }, "sha512-DXyied24LJGvEEvgMirehGOmFmFzmsNLy0PT6OyEy+ulte7AUJB+tOvKtkUWiHz0fS4cVUEaA52DRnrsOVjcyg=="],
+    "@lng2004/node-datachannel": ["@lng2004/node-datachannel@0.32.3-20260815.3", "", { "dependencies": { "pkg-prebuilds": "^1.0.0" } }, "sha512-ntMzeA0SPVXgHozw8uZFKZKyQkZJWwy9Oykh8TyjD1PaWEHGYe01zbfCj7C7t07/zpcz0SyG6WZ1BkroSdsDQg=="],
 
     "@marijn/find-cluster-break": ["@marijn/find-cluster-break@1.0.4", "", {}, "sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ=="],
 
