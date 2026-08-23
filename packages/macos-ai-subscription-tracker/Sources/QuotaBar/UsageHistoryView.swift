@@ -41,6 +41,7 @@ struct UsageHistoryView: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .onAppear { selectDefaultWindowIfNeeded() }
     .onChange(of: samples) { _, _ in selectDefaultWindowIfNeeded() }
+    .onChange(of: visibleProviderIDs) { _, _ in selectDefaultWindowIfNeeded() }
   }
 
   private var windows: [HistoryWindow] {
@@ -59,7 +60,9 @@ struct UsageHistoryView: View {
     guard let selectedWindowKey else { return [] }
     let cutoff = date.addingTimeInterval(-range.duration)
     return samples.filter { sample in
-      sample.windowIDWithProvider == selectedWindowKey && sample.recordedAt >= cutoff
+      visibleProviderIDs.contains(sample.provider)
+        && sample.windowIDWithProvider == selectedWindowKey
+        && sample.recordedAt >= cutoff
     }
     .sorted { $0.recordedAt < $1.recordedAt }
   }

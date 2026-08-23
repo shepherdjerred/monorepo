@@ -55,6 +55,30 @@ final class UsageHistoryTests: XCTestCase {
     )
   }
 
+  func testTodayUsageIncludesConsumptionAfterAReportedReset() throws {
+    let calendar = utcCalendar()
+    let current = date("2026-08-09T12:00:00Z")
+    let oldReset = date("2026-08-09T06:00:00Z")
+    let newReset = date("2026-08-16T08:00:00Z")
+    let samples = [
+      try makeSample(usedPercent: 10, resetAt: oldReset, at: "2026-08-09T00:10:00Z"),
+      try makeSample(usedPercent: 15, resetAt: oldReset, at: "2026-08-09T04:00:00Z"),
+      try makeSample(usedPercent: 2, resetAt: newReset, at: "2026-08-09T08:00:00Z"),
+      try makeSample(usedPercent: 8, resetAt: newReset, at: "2026-08-09T11:00:00Z"),
+    ]
+
+    XCTAssertEqual(
+      UsageHistory.todayUsedPercent(
+        provider: .codex,
+        windowID: "weekly",
+        samples: samples,
+        at: current,
+        calendar: calendar
+      ),
+      13
+    )
+  }
+
   func testTodayUsageRequiresTwoSameDaySamplesAndKeepsWindowsSeparate() throws {
     let calendar = utcCalendar()
     let current = date("2026-08-09T12:00:00Z")
@@ -92,14 +116,18 @@ final class UsageHistoryTests: XCTestCase {
     XCTAssertTrue(modelWeekly.isWeekly)
   }
 
-  private func makeSample(usedPercent: Double, at timestamp: String) throws -> UsageHistorySample {
+  private func makeSample(
+    usedPercent: Double,
+    resetAt: Date? = nil,
+    at timestamp: String
+  ) throws -> UsageHistorySample {
     try UsageHistorySample(
       provider: .codex,
       windowID: "weekly",
       label: "Weekly",
       kind: .weekly,
       usedPercent: usedPercent,
-      resetAt: nil,
+      resetAt: resetAt,
       recordedAt: date(timestamp)
     )
   }

@@ -142,7 +142,11 @@ public enum UsageHistory {
       .sorted { $0.recordedAt < $1.recordedAt }
     guard today.count >= 2 else { return nil }
     return zip(today, today.dropFirst()).reduce(0) { total, pair in
-      total + max(0, pair.1.usedPercent - pair.0.usedPercent)
+      let earlier = pair.0
+      let later = pair.1
+      let increase = later.usedPercent - earlier.usedPercent
+      if increase >= 0 { return total + increase }
+      return earlier.resetAt == later.resetAt ? total : total + later.usedPercent
     }
   }
 }
