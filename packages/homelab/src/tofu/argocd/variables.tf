@@ -3,13 +3,6 @@ variable "argocd_admin_password" {
   type        = string
   sensitive   = true
 }
-
-variable "cloudflare_account_id" {
-  description = "Cloudflare account ID (passed to every stack, unused by ArgoCD resources)"
-  type        = string
-  sensitive   = true
-}
-
 variable "op_connect_url" {
   description = "1Password Connect server URL"
   type        = string

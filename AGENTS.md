@@ -786,7 +786,8 @@ Local and CI verification deliberately have different scopes:
    repo policy in `.hadolint.yaml`, and unpinned apt installs are acknowledged
    per-site with `# hadolint ignore=DL3008`, so a new one fails the gate),
    Knip, Gitleaks, ruff/pyright,
-   Helm/Talos/1Password, and
+   Helm/Talos/1Password, tflint (every `src/tofu` stack, bundled terraform
+   ruleset, offline — `lint:tofu` in packages/homelab), and
    the remaining repository gates. The excluded site packages run in their
    dedicated Buildkite lanes, so the overall pipeline remains the
    full-repository backstop. **Exception:** `packages/macos-ai-subscription-tracker`

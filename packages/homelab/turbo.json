@@ -17,6 +17,10 @@
         "!src/cdk8s/node_modules/**",
         "!src/cdk8s/dist/**"
       ]
+    },
+    // tflint (bundled terraform ruleset, offline) over every src/tofu stack.
+    "lint:tofu": {
+      "inputs": ["src/tofu/**", "scripts/lint-tofu.ts"]
     }
   }
 }
