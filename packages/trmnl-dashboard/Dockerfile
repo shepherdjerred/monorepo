@@ -53,9 +53,10 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
 EXPOSE 3000
 
 # Ran as UID 1000 in the old recipe — the base image's non-root `bun` user is
-# UID 1000. The COPY'd node_modules tree is root-owned but read-only at
-# runtime; nothing writes into it.
-USER bun
+# UID 1000, addressed numerically so the runtime and Kubernetes runAsNonRoot
+# admission resolve it without a passwd lookup. The COPY'd node_modules tree is
+# root-owned but read-only at runtime; nothing writes into it.
+USER 1000:1000
 
 # Run from the package dir so Bun resolves this package's tsconfig / imports map.
 WORKDIR /app/packages/trmnl-dashboard

@@ -63,9 +63,18 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/birmel'
 # ── runtime: CLIs + COPY-only app layers — no install, no build tooling ─────
 FROM base AS runtime
 
+# Fail-fast shell for every RUN in this stage: the gh install pipes curl into
+# tar, and a failed download must fail the build rather than be masked.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # --- gh CLI (editor sub-agent) ---
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
     apt-get install -y -qq --no-install-recommends ca-certificates curl git; \
@@ -77,6 +86,11 @@ RUN set -e; \
       | tar xz -C /usr/local/bin --strip-components=2 "gh_${GH_CLI_VERSION}_linux_${gharch}/bin/gh"; \
     rm -rf /var/lib/apt/lists/*
 # --- Music runtime: Node + Python for youtube-dl-exec / yt-dlp ---
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
     apt-get install -y -qq --no-install-recommends nodejs python3; \

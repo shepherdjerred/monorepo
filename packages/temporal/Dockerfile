@@ -91,6 +91,11 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/tempora
 # ── runtime: operator CLIs + COPY-only app layers ───────────────────────────
 FROM base AS runtime
 
+# Fail-fast shell for every RUN in this stage: the CLI installs pipe curl into
+# tar and cat into sha256sum, and a failed producer must fail the build rather
+# than be masked by the consumer.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Pinned operator CLI versions.
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
@@ -124,6 +129,11 @@ ARG KOMETA_VERSION=2.4.5
 ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
 
 # --- Base system deps: ca-certificates, curl, git, and the pod-local agent firewall ---
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
     apt-get install -y -qq --no-install-recommends ca-certificates curl git iptables util-linux; \
@@ -280,6 +290,11 @@ RUN set -e; \
     gcx --version
 
 # --- Python + pip (required by the uv install below) ---
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
     apt-get install -y -qq --no-install-recommends python3 python3-pip python3-venv; \
@@ -367,13 +382,14 @@ COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/scout-for-lol/packages/data/dist packages/scout-for-lol/packages/data/dist
 COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
-RUN toolkit --version
 
-# The worker imports `#generated/ha-schema.ts` (type-only, but keep the file
-# present so any runtime `import` resolves). ensure-ha-schema copies the
-# committed stub into place if a generated schema isn't present. Idempotent,
-# dependency-free — runs here because it writes into the source tree.
-RUN bun packages/temporal/scripts/ensure-ha-schema.ts
+# Verify the copied toolkit binary boots, then ensure the HA schema: the worker
+# imports `#generated/ha-schema.ts` (type-only, but keep the file present so
+# any runtime `import` resolves). ensure-ha-schema copies the committed stub
+# into place if a generated schema isn't present. Idempotent, dependency-free —
+# runs here because it writes into the source tree.
+RUN toolkit --version \
+    && bun packages/temporal/scripts/ensure-ha-schema.ts
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

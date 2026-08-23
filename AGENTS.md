@@ -782,7 +782,11 @@ Local and CI verification deliberately have different scopes:
    staged-diff automation rules. It does not run the root Turbo graph.
 3. Buildkite runs the exhaustive root `bun run verify` graph for every PR and
    for `main`: build, typecheck, test, lint, suppressions, markdownlint,
-   Prettier, shellcheck, Knip, Gitleaks, ruff/pyright, Helm/Talos/1Password, and
+   Prettier, shellcheck, hadolint (all tracked Dockerfiles outside `sandbox/`;
+   repo policy in `.hadolint.yaml`, and unpinned apt installs are acknowledged
+   per-site with `# hadolint ignore=DL3008`, so a new one fails the gate),
+   Knip, Gitleaks, ruff/pyright,
+   Helm/Talos/1Password, and
    the remaining repository gates. The excluded site packages run in their
    dedicated Buildkite lanes, so the overall pipeline remains the
    full-repository backstop. **Exception:** `packages/macos-ai-subscription-tracker`

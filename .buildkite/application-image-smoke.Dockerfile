@@ -22,6 +22,11 @@ COPY --chown=1000:1000 \
 # smoke starts an ephemeral database to exercise the deployed migration path,
 # so install that harness-only dependency before switching to the deployment
 # uid.
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN case "${SMOKE_TARGET}" in \
       scout-for-lol) \
         apt-get update \

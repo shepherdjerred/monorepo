@@ -1,0 +1,10 @@
+# Repo-wide hadolint policy (scripts/hadolint.ts passes this explicitly).
+# Only rules that genuinely should not apply anywhere in this repository are
+# ignored here; everything else is fixed at the site that raised it.
+ignored:
+  # DL3003 (use WORKDIR instead of `cd`): this is a Bun-workspace monorepo, so
+  # image builds routinely run one command inside a workspace package
+  # (`RUN cd packages/x && bun run build`). The `cd` is scoped to that single
+  # RUN; a WORKDIR would leak directory state into every later instruction and
+  # need an explicit reset, which is strictly more error-prone.
+  - DL3003

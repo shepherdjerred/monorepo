@@ -6,6 +6,15 @@
 
 FROM debian:bookworm-slim@sha256:abd67ffcfa541b485a3dff59865ab629aa048a6c613e639d36e7456b0b229241 AS base
 
+# Fail-fast shell for every RUN: a failing producer in a pipeline (curl | sh,
+# printf | sha256sum) must fail the build, not be masked by the consumer.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git minisign unzip xz-utils zstd python3 ripgrep rsync \
     build-essential pkg-config libssl-dev libxml2 util-linux \

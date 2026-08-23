@@ -12,6 +12,11 @@
 # renovate: datasource=docker depName=node
 FROM node:24-slim@sha256:3638d9a6fe4030bd716be989438248074489337ba3275657f93595428be4fc03 AS runtime
 
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 build-essential \
   && rm -rf /var/lib/apt/lists/*

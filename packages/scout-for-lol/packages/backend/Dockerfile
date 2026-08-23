@@ -146,7 +146,14 @@ FROM runtime AS smoke
 # baseline migration is plain DDL, and PG16 parity is covered by the test
 # suite and beta. Installed in the smoke stage ONLY — the pushed `image`
 # stage inherits from `runtime` and stays byte-identical.
-USER root
+# Numeric uid (DL3066) — root here is the smoke stage only; the stage drops
+# back to the deploy uid below.
+USER 0
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql postgresql-client && rm -rf /var/lib/apt/lists/*
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).

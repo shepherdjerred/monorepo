@@ -37,6 +37,11 @@ ENV OTTOHG_SHA=c101be5ac2ae53c5d18ee063f16eeeda751639f8
 # sound-data tooling.
 # renovate: datasource=pypi depName=uv
 ARG UV_VERSION=0.12.5
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     clang lld llvm build-essential libpng-dev zlib1g-dev pkg-config \
@@ -156,6 +161,11 @@ FROM base AS runtime
 # - Intel VAAPI stack (libva + iHD driver): h264_vaapi hardware encoding on an
 #   Intel iGPU. iHD lives in Debian non-free (enabled below) and is amd64-only;
 #   software libx264 is the fallback when the device/driver is absent.
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN set -e; \
   if [ -f /etc/apt/sources.list.d/debian.sources ]; then sed -i "s/^Components: main.*/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources; fi; \
   apt-get update \

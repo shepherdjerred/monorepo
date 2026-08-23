@@ -25,6 +25,11 @@
 # renovate: datasource=docker depName=rust
 FROM rust:slim-bookworm@sha256:94e9efa4033213dbb70d4f665527e7ece3944ddb7ba1dd2e43f6fd6e2490af58 AS builder
 
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN apt-get update \
   && apt-get -y install --no-install-recommends git ca-certificates build-essential cmake libclang-dev \
   && rm -rf /var/lib/apt/lists/*
@@ -55,6 +60,11 @@ FROM ubuntu:26.04@sha256:2260313b31c8c011cd2eebe728008efac1b3982be73eb71348ea264
 # /settings probe. The minimal Ubuntu image does not ship wget, so install it
 # (upstream's Dockerfile.ubuntu relies on the base having a probe tool; the base
 # image does not). Without this the smoke solve fails with `wget: not found`.
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN apt-get update \
   && apt-get -y install --no-install-recommends wget \
   && rm -rf /var/lib/apt/lists/*
@@ -62,18 +72,26 @@ RUN apt-get update \
 # Import redlib binary from builder.
 COPY --from=builder /redlib/target/release/redlib /usr/local/bin/redlib
 
-# Non-root user for running redlib (mirrors upstream).
-RUN useradd \
+# Non-root user for running redlib (mirrors upstream). The uid/gid are pinned
+# so the USER instruction below can be numeric — a numeric USER is resolvable
+# by the container runtime and by Kubernetes runAsNonRoot admission without a
+# passwd lookup. 1001 because Ubuntu's base image already owns 1000 (`ubuntu`).
+RUN groupadd --gid 1001 redlib \
+  && useradd \
+  --uid 1001 \
+  --gid 1001 \
   --no-create-home \
   --password "!" \
   --comment "user for running redlib" \
   redlib
-USER redlib
+USER 1001:1001
 
 EXPOSE 8080
 
 # Healthcheck every minute to confirm redlib is functional (mirrors upstream).
-HEALTHCHECK --interval=1m --timeout=3s CMD wget --spider -q http://localhost:8080/settings || exit 1
+# Exec form (DL3025) with an explicit shell: the `|| exit 1` normalizes wget's
+# 1–8 exit codes to 1, since HEALTHCHECK reserves codes other than 0/1.
+HEALTHCHECK --interval=1m --timeout=3s CMD ["/bin/sh", "-c", "wget --spider -q http://localhost:8080/settings || exit 1"]
 
 LABEL org.opencontainers.image.source="https://github.com/redlib-org/redlib"
 LABEL org.opencontainers.image.revision.redlib="a4d36e954cf1bd64f209cd8868c5a29edc81b374"
@@ -81,8 +99,12 @@ LABEL org.opencontainers.image.revision.redlib="a4d36e954cf1bd64f209cd8868c5a29e
 CMD ["redlib"]
 
 FROM release AS smoke
+# DL3001 flags `kill` as a non-container command, but this smoke stage manages
+# its own backgrounded redlib process, which is exactly what kill is for here.
+# hadolint ignore=DL3001
 RUN redlib >/tmp/redlib-smoke.log 2>&1 & \
   pid=$!; \
+  cleanup_status=0; \
   trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT; \
   for _ in $(seq 1 30); do \
     if wget --spider -q http://127.0.0.1:8080/settings; then exit 0; fi; \

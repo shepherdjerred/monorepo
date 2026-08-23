@@ -27,6 +27,9 @@ COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 FROM runtime AS smoke
+# Alpine base: busybox ash supports pipefail, so a failing `caddy list-modules`
+# fails the smoke check instead of being masked by grep.
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 RUN caddy version && caddy list-modules | grep -F "http.handlers.s3proxy"
 RUN --mount=type=secret,id=caddyfile \
   caddy adapt --config /run/secrets/caddyfile --adapter caddyfile >/dev/null

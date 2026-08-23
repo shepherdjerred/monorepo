@@ -35,6 +35,7 @@
     "prettier-root": "bun scripts/run-shard-check.ts prettier root",
     "prettier:fix": "prettier --write .",
     "shellcheck": "bun scripts/shellcheck.ts",
+    "hadolint": "bun scripts/hadolint.ts",
     "gitleaks": "gitleaks detect --source . --no-git --redact --no-banner",
     "jscpd": "bun scripts/jscpd-check.ts",
     "quality-ratchet": "bun scripts/quality-ratchet.ts",

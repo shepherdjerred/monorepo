@@ -24,6 +24,11 @@ WORKDIR /app
 # Mirrors the old single-stage apt layer exactly (ffmpeg + VAAPI + compilers)
 # so the node-datachannel / node-av native builds see the same environment.
 FROM base AS base-build
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN set -e; \
     if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
       sed -i 's/^Components: main.*/Components: main contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources; \
@@ -87,6 +92,9 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/streamb
 # Models are fetched only while building the immutable image. Runtime startup
 # validates these files and never reaches the network for local activation.
 FROM base-build AS voice-models
+# Fail-fast shell: the checksum verification pipes echo into sha256sum, and a
+# failed producer must fail the build rather than be masked by the consumer.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG SHERPA_KWS_ARCHIVE_SHA256=f170013b4716e41b62b9bfd809687c207cef798ef9bc6534d524e17af9b6561a
 ARG SILERO_VAD_SHA256=9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6
 RUN set -e; \
@@ -114,6 +122,11 @@ COPY --from=voice-models /opt/streambot/voice/ /
 
 # ── runtime: ffmpeg/VAAPI stack + COPY-only app layers — no compilers ───────
 FROM base AS runtime
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN set -e; \
     if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
       sed -i 's/^Components: main.*/Components: main contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources; \
