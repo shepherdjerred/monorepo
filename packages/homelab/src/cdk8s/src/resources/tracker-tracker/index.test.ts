@@ -49,6 +49,7 @@ describe("Tracker Tracker chart", () => {
         "Namespace/tracker-tracker",
         "postgresql/tracker-tracker-postgresql",
         "OnePasswordItem/tracker-tracker-tracker-tracker-secrets",
+        "ConfigMap/tracker-tracker-drizzle-config",
         "PersistentVolumeClaim/tracker-tracker-data-pvc",
         "Deployment/tracker-tracker",
         "Service/tracker-tracker-tracker-tracker-service",
@@ -84,7 +85,7 @@ describe("Tracker Tracker chart", () => {
                         })
                         .loose(),
                       volumeMounts: z.array(
-                        z.object({ mountPath: z.literal("/data") }).loose(),
+                        z.object({ mountPath: z.string() }).loose(),
                       ),
                     })
                     .loose(),
@@ -118,7 +119,6 @@ describe("Tracker Tracker chart", () => {
     );
     expect([...envNames].some((name) => name.includes("QBIT"))).toBe(false);
     expect([...envNames].some((name) => name.includes("TRACKER"))).toBe(false);
-
     const database = z
       .object({
         spec: z
@@ -232,5 +232,57 @@ describe("Tracker Tracker chart", () => {
       );
     expect(networkPolicy.spec.ingress).toHaveLength(1);
     expect(networkPolicy.spec.egress).toHaveLength(4);
+  });
+});
+
+describe("Tracker Tracker schema sync", () => {
+  it("mounts a Drizzle config that excludes PostgreSQL extension objects", () => {
+    const manifests = synthesize();
+    const deployment = z
+      .object({
+        spec: z
+          .object({
+            template: z
+              .object({
+                spec: z
+                  .object({
+                    containers: z.array(
+                      z
+                        .object({
+                          volumeMounts: z
+                            .array(z.object({ mountPath: z.string() }).loose())
+                            .length(2),
+                        })
+                        .loose(),
+                    ),
+                  })
+                  .loose(),
+              })
+              .loose(),
+          })
+          .loose(),
+      })
+      .parse(findManifest(manifests, "Deployment", "tracker-tracker"));
+    expect(
+      new Set(
+        deployment.spec.template.spec.containers[0]?.volumeMounts.map(
+          ({ mountPath }) => mountPath,
+        ),
+      ),
+    ).toEqual(new Set(["/data", "/schema-sync/drizzle.config.ts"]));
+
+    const drizzleConfig = z
+      .object({
+        data: z.object({ "drizzle.config.ts": z.string() }),
+      })
+      .parse(
+        findManifest(manifests, "ConfigMap", "tracker-tracker-drizzle-config"),
+      );
+    expect(drizzleConfig.data["drizzle.config.ts"]).toContain(
+      'tablesFilter: [\n    "app_settings",',
+    );
+    expect(drizzleConfig.data["drizzle.config.ts"]).toContain(
+      '"tracker_outages",\n  ],',
+    );
   });
 });

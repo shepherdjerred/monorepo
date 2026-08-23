@@ -1,6 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
+  ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
@@ -27,6 +28,55 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 const PORT = 3000;
 const POSTGRES_SECRET_NAME =
   "trackertracker.tracker-tracker-postgresql.credentials.postgresql.acid.zalan.do";
+
+const DRIZZLE_CONFIG = `import { defineConfig } from "drizzle-kit";
+
+function buildConnectionString(): string {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  const password = process.env.POSTGRES_PASSWORD;
+  if (!password) {
+    throw new Error("Set either DATABASE_URL or POSTGRES_PASSWORD");
+  }
+  const user = process.env.POSTGRES_USER ?? "postgres";
+  const host = process.env.POSTGRES_HOST ?? "localhost";
+  const port = process.env.POSTGRES_PORT ?? "5432";
+  const name = process.env.POSTGRES_DB ?? "tracker_tracker";
+  return \`postgresql://\${user}:\${encodeURIComponent(password)}@\${host}:\${port}/\${name}\`;
+}
+
+export default defineConfig({
+  dialect: "postgresql",
+  schema: "./src/lib/db/schema.ts",
+  out: "./drizzle",
+  // PostgreSQL's pg_stat_statements extension creates public views that the
+  // default schema diff tries to drop. Manage only Tracker Tracker tables so
+  // startup schema sync can add application columns without touching them.
+  tablesFilter: [
+    "app_settings",
+    "trackers",
+    "tracker_snapshots",
+    "tracker_roles",
+    "download_clients",
+    "client_uptime_buckets",
+    "tag_groups",
+    "tag_group_members",
+    "client_snapshots",
+    "backup_history",
+    "dismissed_alerts",
+    "notification_targets",
+    "notification_delivery_state",
+    "tracker_daily_checkpoints",
+    "torrent_daily_checkpoints",
+    "db_size_history",
+    "app_liveness",
+    "app_coverage_gaps",
+    "tracker_outages",
+  ],
+  dbCredentials: {
+    url: buildConnectionString(),
+  },
+});
+`;
 
 function createDnsEgress() {
   return {
@@ -62,6 +112,15 @@ export function createTrackerTrackerDeployment(chart: Chart) {
   const dataVolume = new ZfsNvmeVolume(chart, "tracker-tracker-data-pvc", {
     storage: Size.gibibytes(8),
   });
+  const drizzleConfig = new ConfigMap(chart, "tracker-tracker-drizzle-config", {
+    metadata: { name: "tracker-tracker-drizzle-config" },
+    data: { "drizzle.config.ts": DRIZZLE_CONFIG },
+  });
+  const drizzleConfigVolume = Volume.fromConfigMap(
+    chart,
+    "tracker-tracker-drizzle-config-volume",
+    drizzleConfig,
+  );
 
   const deployment = new Deployment(chart, "tracker-tracker", {
     replicas: 1,
@@ -133,6 +192,12 @@ export function createTrackerTrackerDeployment(chart: Chart) {
         LOG_LEVEL: EnvValue.fromValue("info"),
       },
       volumeMounts: [
+        {
+          path: "/schema-sync/drizzle.config.ts",
+          subPath: "drizzle.config.ts",
+          volume: drizzleConfigVolume,
+          readOnly: true,
+        },
         {
           path: "/data",
           volume: Volume.fromPersistentVolumeClaim(
