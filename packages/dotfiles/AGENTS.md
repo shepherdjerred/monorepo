@@ -9,7 +9,7 @@ Before doing ANY work, scan the available skills list for relevant skills and LO
 - **Leverage plugins** - Check available plugins before implementing something from scratch
 - **Web access — lightpanda, PinchTab, Docling, or similar** - For plain page/docs fetches, use [Lightpanda](https://github.com/lightpanda-io/browser): `lightpanda fetch --dump markdown --strip-mode full --log-level fatal <url>` (see the `lightpanda-browser` skill). For sites that block Lightpanda or need interaction (clicking, form filling, screenshots), use [PinchTab](https://github.com/pinchtab/pinchtab) — load the `pinchtab-helper` skill first. For document extraction (PDF/DOCX/etc.), use [Docling](https://github.com/docling-project/docling) per the PDF Extraction section below. Other similar tools are fine when they fit better.
 - **Look deeper** - If CI is failing, a build tool is erroring, or infrastructure has issues, don't just report the surface error. Load the relevant skill and investigate the root cause. The user wants solutions, not descriptions of problems.
-- **Branch & PR management → load the branching skill first.** Before creating branches, opening/updating/stacking/moving PRs, restacking, or syncing a branch with main, load the repo's branching skill first. In `shepherdjerred/monorepo` that is `git-spice-helper` — every PR is a git-spice stack. Do not run `git branch` / `git checkout -b` / `git rebase`, `gh pr create`, or `git-spice`/`gs` for feature work before loading it.
+- **Branch & PR management → load the branching skill first.** Before creating branches, opening/updating/stacking/moving PRs, restacking, or syncing a branch with main, load the repo's branching skill first. In `shepherdjerred/monorepo` that is `git-spice-helper`. **Proactively split all work into shallow, clean Git Spice stacks** (e.g., types/contracts in PR 1, backend logic in PR 2, UI in PR 3; or refactors first, then features). Do not run `git branch`, `git checkout`, `git rebase`, `gh pr create`, or bare `gs` for feature work before loading the skill.
 
 Examples of what NOT to do:
 
@@ -39,11 +39,30 @@ When asked to get CI passing, fix a build, fix lints, or complete any task with 
 - Use them only as needed for the requested operation; never repeat secret values in responses, logs, durable files, memory, commits, or generated artifacts.
 - Recommend rotation when a credential was posted publicly or shared broadly, persisted outside the intended private transcript, or shows signs of misuse. Do not reflexively demand rotation solely because the user pasted it into a private chat.
 
-## Pull Requests — Show Visual Changes
+## Pull Requests — Mandatory Visual Proof & Demos
 
-- When a change has a visible result — UI, web pages, components, charts, generated/OG images, CLI or TUI output, dashboards, rendered docs — **include screenshots (before/after where it applies) in the PR description or a PR comment.** A reviewer should be able to see the visual impact without checking out the branch.
-- Attach the actual rendered output (run the app, render the image, screenshot the terminal), not a description of it. When a change affects multiple states or scenarios, attach one screenshot per scenario.
-- Non-visual changes (pure logic, infra config, types, refactors) do not need screenshots.
+Reviewers should never have to pull a branch and run it locally to see what a change looks like or how it behaves. **Every PR where a visual demonstration aids review MUST include rich visual evidence directly in the PR description or a PR comment.**
+
+- **Documentation & Wiki (`packages/docs/wiki/`)**: Run the local preview (`bun run dev`) or build and capture a screenshot of rendered pages (e.g., via PinchTab, browser automation, or browser DevTools) showing the article layout, callouts, tables, and images in context.
+- **Web Apps & UI Features (`sjer.red`, `scout-for-lol`, `stocks-sjer-red`, `trmnl-dashboard`, `resume`, `tasks-for-obsidian`)**: Provide an end-to-end interactive demo — capture screenshots of key states, responsive views, before/after comparisons, animated GIFs, or screen recordings demonstrating the complete user journey.
+- **Bots & Messaging (`birmel`, `discord-plays-pokemon`, `starlight-karma-bot`)**: Spin up the bot / test fixture, render the actual message embed or interactive component in Discord (via browser automation or Discord client), and capture real rendered output showing layout, colors, fields, and action buttons.
+- **CLI, TUI & Developer Tools (`toolkit`, `monarch`, shell utilities, dotfiles)**: Record terminal sessions using [asciinema](https://asciinema.org) (`asciinema rec demo.cast`), generate animated SVG/GIF recordings, or capture formatted ANSI terminal output showing the tool in action.
+- **Generated Graphics, Fonts & OpenGraph (`astro-opengraph-images`, `fonts`, email templates)**: Render the image, OG card, font sample, or PDF directly and attach the generated asset.
+- **Multi-State Coverage**: When a feature introduces multiple UI or workflow states (e.g., empty state, loading state, error dialog, success confirmation, dark and light themes), capture and attach visual proof for each scenario.
+- **Non-visual changes**: Pure backend logic, type-only changes, or internal refactors with zero user-observable visual output do not need media, but should still document verification commands.
+
+## Git-Spice PR Stacking — Split PRs Proactively
+
+In `shepherdjerred/monorepo`, feature work is managed with [git-spice](https://abhinav.github.io/git-spice/) (`toolkit git-spice`). **Agents must proactively decompose complex or multi-concern changes into shallow, clean stacked PRs** rather than opening a single monolithic PR:
+
+- **Layered Architecture**: Split by architectural boundary (e.g., Schema / Zod types / API contracts in branch 1 → backend service / business logic in branch 2 → frontend UI components / views in branch 3).
+- **Refactor + Feature**: Isolate prerequisite cleanups, mechanical migrations, or dependency adjustments into a foundation PR before stacking the new feature logic on top.
+- **Infra/Config + Consumer**: Land infrastructure definitions (cdk8s, Tofu, Helm, feature flags) in a base PR before stacking application consumers that depend on them.
+- **Documentation & Tests**: Stack significant wiki articles, runbooks, or extensive integration test harnesses alongside or immediately on top of feature code.
+- **Stacking Constraints**:
+  - Keep stacks shallow (typically ≤ 4–5 branches).
+  - Every PR in the stack must be independently landable and pass CI (`buildkite/monorepo/pr`). Feature-flag incomplete features if needed.
+  - Every PR must have its own Conventional Commit title, clear `Why`/`What`/`Verification` narrative, and corresponding visual demo where applicable.
 
 ## Engineering Principles
 
@@ -52,6 +71,7 @@ These apply to all work — code, infrastructure, configuration, CI pipelines, s
 - **Fail fast** — Surface errors immediately. Never swallow exceptions, ignore error return values, or silently fall back. If something is wrong, crash or throw at the point of failure. This applies equally to shell scripts, CI pipelines, Kubernetes manifests, and application code.
 - **Never use type assertions** — No `as` casts (except `as const` and `as unknown` which the ESLint rule allows). Use runtime validation (Zod `.parse()`, `Array.isArray()`, `typeof`) or proper type narrowing instead. More broadly: never lie to a type system or validation layer — if the types don't fit, fix the data or the design, not the types.
 - **Strong, static typing** — Leverage type systems fully. No `any`, no implicit `any`, no loose types. Precise function signatures, return types, and data structures. This extends beyond TypeScript: use strict schemas for config (Zod, JSON Schema, Helm values types), typed IaC (cdk8s, CDKTF over raw YAML), and validated inputs at every system boundary.
+- **Temporal for all scheduled and recurring workloads** — Author all recurring jobs, maintenance tasks, data syncs, and scheduled batch operations as Temporal Workflows and declarative Schedules in `packages/temporal` (`src/schedules/schedule-definitions.ts`). Never introduce Kubernetes `CronJob`s (`batch/v1 CronJob` / CDK8s `KubeCronJob`), host crontabs, or ad-hoc in-process timers.
 - **Quality is paramount** — Never take shortcuts. No TODO hacks, no "good enough for now" workarounds, no skipped edge cases. Write correct, complete solutions the first time — whether that's code, a Helm chart, a CI pipeline, or a database migration.
 - **Take the time you need** — Use as many tokens and tool calls as necessary to complete a task properly. Never rush or cut corners to save tokens. Investigate thoroughly, verify end-to-end, and get it right.
 

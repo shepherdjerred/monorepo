@@ -86,6 +86,10 @@ bun run prettier
 
 ## Conventions
 
+### Scheduled jobs belong in Temporal, not Kubernetes CronJobs
+
+Do NOT author Kubernetes `CronJob` (`batch/v1 CronJob` / CDK8s `KubeCronJob`) resources or host crontabs. All recurring operations, data syncs, backups, and maintenance workflows belong in `packages/temporal` as Temporal Workflows and declarative Schedules in `src/schedules/schedule-definitions.ts`.
+
 ### Prefer Bun APIs over Node.js
 
 ```typescript

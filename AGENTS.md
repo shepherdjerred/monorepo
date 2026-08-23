@@ -72,6 +72,7 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 - **Verify link liveness** — Every URL you write or rewrite (code, docs, READMEs, package metadata) must be liveness-checked (`curl -sI -o /dev/null -w '%{http_code}' <url>` → 200) before committing. Batch-verify mass rewrites; fall back to a known-good form or drop the link rather than ship a 404.
 - **Update docs with code** — When adding a CLI command or feature, update CLAUDE.md and the relevant skills in the same phase, not a later "polish" pass, so the integration points are usable as soon as the feature works. When a change alters a meaningful architecture boundary, operator workflow, or system rationale, also update the nearest human page under `packages/docs/wiki/src/content/docs/`.
 - **Shared data is language-neutral** — Cross-package shared data (catalogs, config) belongs in a language-neutral source of truth (JSON + JSON Schema), validated per-language (Zod in TS, Pydantic in Python). The repo has Bun and Python consumers; don't ship a TS-only module. If TS needs it browser- and node-safe, ship a built package with inlined JSON + `.d.ts`, not a `node:fs` read or a source-only JSON import.
+- **Temporal for all scheduled and recurring workloads** — Author all recurring jobs, maintenance tasks, data syncs, and scheduled batch operations as Temporal Workflows and declarative Schedules in `packages/temporal` (`src/schedules/schedule-definitions.ts`). Never introduce Kubernetes `CronJob`s (`batch/v1 CronJob` / CDK8s `KubeCronJob`), host crontabs, or ad-hoc in-process timers.
 
 ### Local 1Password and Cloudflare credential probes
 
@@ -203,14 +204,27 @@ branch diff:
 - A PR body is synthesized from the complete `base...branch` diff and contains
   `Why`, `What`, and `Verification`. Add rollout notes or follow-up boundaries
   when they affect reviewer acceptance.
+- Proactively decompose complex or multi-concern work into shallow, clean stacked
+  PRs with `git-spice` (`toolkit git-spice`) rather than opening a single
+  monolithic PR (e.g. types/schemas → backend logic → UI presentation; or
+  prerequisite refactors before new capabilities).
 - Use `git-spice --fill` only as an optional draft or diagnostic. Inspect the
   full branch diff and submit reviewed metadata explicitly with
   `git-spice branch submit --title ... --body ...`.
 - After review changes, keep the PR narrative stable and use
   `git-spice ... submit --update-only`; do not regenerate it blindly from
   follow-up commits.
-- For user-visible changes, attach the required screenshot, GIF, video, or
-  other lightest artifact that proves the behavior.
+- **Mandatory Visual Proof & Demos**: Reviewers should never have to pull a branch
+  and run it locally to see what a change looks like or how it behaves. For any
+  change where a visual or interactive demonstration aids review, attach direct
+  visual evidence (screenshots, videos, screencasts, asciinema terminal
+  recordings, or browser-rendered previews) to the PR description or a PR comment:
+  - _Documentation & Wiki (`packages/docs/wiki/`)_: Run local dev server (`bun run dev`) / build and capture rendered page screenshots (via PinchTab / browser tools) showing formatting, callouts, and layout.
+  - _Web Apps & UI Features (`sjer.red`, `scout-for-lol`, `stocks-sjer-red`, `trmnl-dashboard`, `resume`, `tasks-for-obsidian`)_: Provide an end-to-end interactive demo, animated GIF, or video demonstrating user flows and state transitions across dark/light and responsive views.
+  - _Bots & Messaging (`birmel`, `discord-plays-pokemon`, `starlight-karma-bot`)_: Spin up the fixture and capture the real rendered message embed / component in Discord.
+  - _CLI & TUI Tools (`toolkit`, `monarch`, shell utilities, dotfiles)_: Record terminal sessions with `asciinema` (`asciinema rec demo.cast`) or capture formatted ANSI output.
+  - _Generated Graphics & Assets (`astro-opengraph-images`, `fonts`, email templates)_: Render and attach the generated image/PDF asset directly.
+  - _Non-visual changes_ (pure logic, internal refactors, types) do not require media, but must state exact verification commands.
 
 ## Documentation Discipline
 
