@@ -703,7 +703,9 @@ produce mentions, even when their labels match a player alias.
   entry (packages/data) + `METRIC_DISPLAY` (backend output.ts) + an aggregate
   column in `metrics-sql.ts`/`row-schema.ts`/`execute.ts` + `METRIC_VALUES`
   derivation. No Prisma migration, no backfill — the nightly rebuild picks up
-  new lake columns from `report-lake/schema.ts`/`flatten.ts`.
+  new lake columns from the shared schemas in
+  `packages/data/src/model/lake-columns.ts` plus backend
+  `report-lake/flatten.ts`.
 - Ingest staging: `store.ts` appends flattened rows to
   `<lake>/matches-recent/` so games are queryable seconds after ingest.
 

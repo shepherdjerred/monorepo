@@ -5,8 +5,8 @@ import {
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   PREDICTION_OBSERVATION_LAKE_COLUMNS,
-  duckDbColumnsSpec,
-} from "#src/report-lake/schema.ts";
+} from "@scout-for-lol/data";
+import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
 import { listStagingFiles } from "#src/report-lake/staging.ts";
 
 /**

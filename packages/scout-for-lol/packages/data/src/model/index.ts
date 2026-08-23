@@ -3,6 +3,7 @@ export * from "./champion.ts";
 export * from "./competition.ts";
 export * from "./discord.ts";
 export * from "./division.ts";
+export * from "./lake-columns.ts";
 export * from "./lane.ts";
 export * from "./league-account.ts";
 export * from "./league-points.ts";

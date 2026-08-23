@@ -6,7 +6,7 @@ import {
   type ParticipantNumericField,
   type TeamObjective,
 } from "#src/betting/parlay-catalog.ts";
-import type { MatchLakeRow } from "#src/report-lake/schema.ts";
+import type { MatchLakeRow } from "@scout-for-lol/data";
 
 /**
  * Which parlay catalog fields can be priced against recorded history.

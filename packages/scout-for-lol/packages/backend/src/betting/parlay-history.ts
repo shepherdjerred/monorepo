@@ -12,7 +12,7 @@ import {
   PARLAY_HISTORY_COLUMNS,
 } from "#src/betting/parlay-stat-fields.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import type { MatchLakeRow } from "#src/report-lake/schema.ts";
+import type { MatchLakeRow } from "@scout-for-lol/data";
 import {
   withDuckDBConnection,
   type DuckDBSession,

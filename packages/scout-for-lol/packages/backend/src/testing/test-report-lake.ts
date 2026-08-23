@@ -1,12 +1,15 @@
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import type { MatchLakeRow, PrematchLakeRow } from "#src/report-lake/schema.ts";
 import {
   ACCOUNT_LAKE_COLUMNS,
+  type AccountLakeRow,
+  type MatchLakeRow,
+  type PrematchLakeRow,
+} from "@scout-for-lol/data";
+import {
   duckDbColumnsSpec,
   lakeMonth,
   lakeTimestamp,
-  type AccountLakeRow,
 } from "#src/report-lake/schema.ts";
 import {
   buildDirPath,

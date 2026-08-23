@@ -12,7 +12,7 @@ import {
 import type { ModelParlayProposal } from "#src/betting/parlay-model-schema.ts";
 import type { ParlaySubject } from "#src/betting/parlay-criteria.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import type { MatchLakeRow } from "#src/report-lake/schema.ts";
+import type { MatchLakeRow } from "@scout-for-lol/data";
 import {
   withDuckDBConnection,
   type DuckDBSession,

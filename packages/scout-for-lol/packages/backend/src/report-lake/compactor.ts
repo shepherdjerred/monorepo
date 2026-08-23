@@ -40,6 +40,8 @@ import {
   PrematchLakeRowSchema,
   PREDICTION_OBSERVATION_LAKE_COLUMNS,
   PredictionObservationLakeRowSchema,
+} from "@scout-for-lol/data";
+import {
   duckDbColumnsSpec,
   lakeSchemaFingerprint,
 } from "#src/report-lake/schema.ts";
