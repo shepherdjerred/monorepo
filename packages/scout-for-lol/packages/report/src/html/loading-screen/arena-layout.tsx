@@ -36,6 +36,7 @@ export function ArenaLayout({ data }: { data: ArenaLoadingScreenData }) {
               participant={participant}
               teamSide="neutral"
               variant={cardVariant}
+              queueType={data.queueType}
             />
           ))}
         </div>

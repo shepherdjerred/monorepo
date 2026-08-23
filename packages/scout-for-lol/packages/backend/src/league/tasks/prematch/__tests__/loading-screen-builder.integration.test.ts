@@ -700,4 +700,39 @@ describe("buildLoadingScreenData with Arena spectator payloads", () => {
       ),
     ).toBe(true);
   });
+
+  test("assigns hidden rank status to privacy-scrubbed participants with null puuid", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      participants: baseGameInfo.participants.map((p, index) =>
+        index === 0 ? { ...p, puuid: null, riotId: "Aatrox" } : p,
+      ),
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.layout).toBe("standard");
+    if (parsed.layout === "standard") {
+      const scrubbedParticipant = parsed.participants.find(
+        (p) => p.puuid === null,
+      );
+      expect(scrubbedParticipant).toBeDefined();
+      expect(scrubbedParticipant?.ranks).toEqual({
+        solo: undefined,
+        flex: undefined,
+        soloStatus: "hidden",
+        flexStatus: "hidden",
+        hidden: true,
+      });
+    }
+  });
 });

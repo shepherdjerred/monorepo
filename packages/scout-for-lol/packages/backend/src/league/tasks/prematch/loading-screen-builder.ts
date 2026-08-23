@@ -29,11 +29,10 @@ import {
   resolveClassicChampionKey,
   getClassicChampionId,
   getClassicSpellId,
-  getModernChampionIdForClassic,
-  getModernSpellIdForClassic,
   loadingScreenLayoutForQueueType,
   isClassicAssetMode,
 } from "@scout-for-lol/data/index.ts";
+
 import {
   getChampionDisplayName,
   resolveChampionKey,
@@ -48,19 +47,13 @@ const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
 const RANKED_5S_QUEUE_ID = 710;
 
-export class RecoverableLoadingScreenDataError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "RecoverableLoadingScreenDataError";
-  }
-}
-
-export class UnsupportedLoadingScreenQueueError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "UnsupportedLoadingScreenQueueError";
-  }
-}
+import {
+  RecoverableLoadingScreenDataError,
+  UnsupportedLoadingScreenQueueError,
+  buildIncompleteLobbyMessage,
+  buildLopsidedTeamMessage,
+} from "./loading-screen-errors.ts";
+import { orderClassicParticipants } from "./loading-screen-classic.ts";
 
 type BuildParticipantContext = {
   trackedPuuids: ReadonlySet<string>;
@@ -90,9 +83,7 @@ export async function fetchParticipantRanks(
         return;
       }
       const ranks = await getRankByPuuid(participant.puuid, region);
-      return ranks === undefined
-        ? undefined
-        : { puuid: participant.puuid, ranks };
+      return { puuid: participant.puuid, ranks };
     }),
   );
   const ranksByPuuid = new Map<string, Ranks>();
@@ -225,50 +216,13 @@ function buildStandardParticipant(
   };
 }
 
-function gameInfoContextSuffix(gameInfo: RawCurrentGameInfo): string {
-  return (
-    `gameId=${gameInfo.gameId.toString()}, ` +
-    `queueConfigId=${gameInfo.gameQueueConfigId.toString()}, ` +
-    `mapId=${gameInfo.mapId.toString()}, ` +
-    `gameMode=${gameInfo.gameMode}, ` +
-    `gameType=${gameInfo.gameType}, ` +
-    `gameLength=${gameInfo.gameLength.toString()}`
-  );
-}
-
-function buildIncompleteLobbyMessage(
-  participants: readonly RankedBuiltParticipant[],
-  gameInfo: RawCurrentGameInfo,
-): string {
-  const presentPuuids = gameInfo.participants
-    .map((p) => p.puuid ?? "scrubbed")
-    .join(",");
-  return (
-    `Standard loading screen requires exactly 10 participants; ` +
-    `received ${participants.length.toString()} ` +
-    `(${gameInfoContextSuffix(gameInfo)}, participants=[${presentPuuids}])`
-  );
-}
-
-function buildLopsidedTeamMessage(
-  team: string,
-  received: number,
-  gameInfo: RawCurrentGameInfo,
-): string {
-  return (
-    `Standard loading screen requires exactly 5 ${team} participants; ` +
-    `received ${received.toString()} ` +
-    `(${gameInfoContextSuffix(gameInfo)})`
-  );
-}
-
 function inferStandardParticipants(
   participants: readonly RankedBuiltParticipant[],
   gameInfo: RawCurrentGameInfo,
 ): StandardLoadingScreenParticipant[] {
   if (participants.length !== 10) {
     throw new RecoverableLoadingScreenDataError(
-      buildIncompleteLobbyMessage(participants, gameInfo),
+      buildIncompleteLobbyMessage(participants.length, gameInfo),
     );
   }
 
@@ -321,67 +275,9 @@ function inferStandardParticipants(
   return inferred;
 }
 
-const CLASSIC_LANE_ORDER = [
-  "top",
-  "jungle",
-  "middle",
-  "adc",
-  "support",
-] as const;
-
-function orderFullClassicTeam(
-  participants: ClassicLoadingScreenParticipant[],
-): ClassicLoadingScreenParticipant[] {
-  const inference = inferStandardLanesWithCurrentPriors(
-    participants.map((participant, index) => ({
-      participantKey: laneInferenceKey(index),
-      championId: LoadingScreenChampionIdSchema.parse(
-        getModernChampionIdForClassic(participant.championId),
-      ),
-      spell1Id: SummonerSpellIdSchema.parse(
-        getModernSpellIdForClassic(participant.spell1Id) ??
-          participant.spell1Id,
-      ),
-      spell2Id: SummonerSpellIdSchema.parse(
-        getModernSpellIdForClassic(participant.spell2Id) ??
-          participant.spell2Id,
-      ),
-    })),
-  );
-  const laneByIndex = new Map(
-    inference.assignments.map((assignment) => [
-      Number(assignment.participantKey.replace("participant:", "")),
-      assignment.lane,
-    ]),
-  );
-  return participants
-    .map((participant, index) => ({
-      participant,
-      lane: laneByIndex.get(index),
-    }))
-    .toSorted(
-      (left, right) =>
-        CLASSIC_LANE_ORDER.indexOf(left.lane ?? "support") -
-        CLASSIC_LANE_ORDER.indexOf(right.lane ?? "support"),
-    )
-    .map((entry) => entry.participant);
-}
-
-function orderClassicParticipants(
-  participants: ClassicLoadingScreenParticipant[],
-): ClassicLoadingScreenParticipant[] {
-  const blue = participants.filter(
-    (participant) => participant.team === "blue",
-  );
-  const red = participants.filter((participant) => participant.team === "red");
-  if (blue.length !== 5 || red.length !== 5) {
-    return participants;
-  }
-  return [...orderFullClassicTeam(blue), ...orderFullClassicTeam(red)];
-}
-
 /**
  * Resolve banned champions to loading screen ban objects.
+
  */
 function buildBans(gameInfo: RawCurrentGameInfo): LoadingScreenBan[] {
   const bans: LoadingScreenBan[] = [];
@@ -506,11 +402,23 @@ export async function buildLoadingScreenData(
   // Combine base participants with the shared rank snapshot.
   const rankedParticipants: RankedBuiltParticipant[] = baseParticipants.map(
     (base) => {
-      const ranks =
-        base.puuid === null ? undefined : ranksByPuuid.get(base.puuid);
+      if (base.puuid === null) {
+        return {
+          ...base,
+          ranks: {
+            solo: undefined,
+            flex: undefined,
+            soloStatus: "hidden",
+            flexStatus: "hidden",
+            hidden: true,
+          },
+        };
+      }
+      const ranks = ranksByPuuid.get(base.puuid);
       return ranks === undefined ? base : { ...base, ranks };
     },
   );
+
   const participants: LoadingScreenParticipant[] =
     layout === "standard"
       ? inferStandardParticipants(rankedParticipants, gameInfo)
