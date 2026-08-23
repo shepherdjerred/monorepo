@@ -177,6 +177,15 @@
       "schedule": ["at any time"]
     },
     {
+      "description": "Bundle Talos, Kubernetes, and the node installer because they are validated and rolled out together",
+      "groupName": "Talos and Kubernetes",
+      "matchPackageNames": [
+        "siderolabs/talos",
+        "ghcr.io/siderolabs/installer",
+        "kubernetes/kubernetes"
+      ]
+    },
+    {
       "description": "Talos factory images are not digest-compatible with the base ghcr.io/siderolabs/installer image digest.",
       "matchPackageNames": ["ghcr.io/siderolabs/installer"],
       "pinDigests": false

@@ -755,6 +755,16 @@ export interface ApplicationSpecSource {
   readonly repoUrl: string;
 
   /**
+   * TagPrefix filters git tags to only those with this prefix before evaluating targetRevision as a semver constraint.
+   * The prefix is stripped from tag names before comparison and re-added to the resolved version.
+   * For example, with tagPrefix "component-b/" and targetRevision "1.0.*", tags like "component-b/1.0.0" and
+   * "component-b/1.0.1" are candidates, and the constraint resolves to "component-b/1.0.1".
+   *
+   * @schema ApplicationSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * TargetRevision defines the revision of the source to sync the application to.
    * In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD.
    * In case of Helm, this is a semver tag for the Chart's version.
@@ -784,6 +794,7 @@ export function toJson_ApplicationSpecSource(
     plugin: toJson_ApplicationSpecSourcePlugin(obj.plugin),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -916,6 +927,16 @@ export interface ApplicationSpecSources {
   readonly repoUrl: string;
 
   /**
+   * TagPrefix filters git tags to only those with this prefix before evaluating targetRevision as a semver constraint.
+   * The prefix is stripped from tag names before comparison and re-added to the resolved version.
+   * For example, with tagPrefix "component-b/" and targetRevision "1.0.*", tags like "component-b/1.0.0" and
+   * "component-b/1.0.1" are candidates, and the constraint resolves to "component-b/1.0.1".
+   *
+   * @schema ApplicationSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * TargetRevision defines the revision of the source to sync the application to.
    * In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD.
    * In case of Helm, this is a semver tag for the Chart's version.
@@ -945,6 +966,7 @@ export function toJson_ApplicationSpecSources(
     plugin: toJson_ApplicationSpecSourcesPlugin(obj.plugin),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -1190,6 +1212,16 @@ export interface ApplicationOperationSyncSource {
   readonly repoUrl: string;
 
   /**
+   * TagPrefix filters git tags to only those with this prefix before evaluating targetRevision as a semver constraint.
+   * The prefix is stripped from tag names before comparison and re-added to the resolved version.
+   * For example, with tagPrefix "component-b/" and targetRevision "1.0.*", tags like "component-b/1.0.0" and
+   * "component-b/1.0.1" are candidates, and the constraint resolves to "component-b/1.0.1".
+   *
+   * @schema ApplicationOperationSyncSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * TargetRevision defines the revision of the source to sync the application to.
    * In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD.
    * In case of Helm, this is a semver tag for the Chart's version.
@@ -1219,6 +1251,7 @@ export function toJson_ApplicationOperationSyncSource(
     plugin: toJson_ApplicationOperationSyncSourcePlugin(obj.plugin),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -1299,6 +1332,16 @@ export interface ApplicationOperationSyncSources {
   readonly repoUrl: string;
 
   /**
+   * TagPrefix filters git tags to only those with this prefix before evaluating targetRevision as a semver constraint.
+   * The prefix is stripped from tag names before comparison and re-added to the resolved version.
+   * For example, with tagPrefix "component-b/" and targetRevision "1.0.*", tags like "component-b/1.0.0" and
+   * "component-b/1.0.1" are candidates, and the constraint resolves to "component-b/1.0.1".
+   *
+   * @schema ApplicationOperationSyncSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * TargetRevision defines the revision of the source to sync the application to.
    * In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD.
    * In case of Helm, this is a semver tag for the Chart's version.
@@ -1328,6 +1371,7 @@ export function toJson_ApplicationOperationSyncSources(
     plugin: toJson_ApplicationOperationSyncSourcesPlugin(obj.plugin),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -1970,6 +2014,14 @@ export interface ApplicationSpecSourceHydratorSyncSource {
   readonly path: string;
 
   /**
+   * RepoURL is the URL to the git repository that contains the hydrated manifests. If not set, defaults to
+   * the DrySource.RepoURL.
+   *
+   * @schema ApplicationSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * TargetBranch is the branch from which hydrated manifests will be synced.
    * If HydrateTo is not set, this is also the branch to which hydrated manifests are committed.
    *
@@ -1990,6 +2042,7 @@ export function toJson_ApplicationSpecSourceHydratorSyncSource(
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -9572,6 +9625,11 @@ export interface ApplicationSetSpecGeneratorsScmProviderGitea {
   readonly api: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsScmProviderGitea#excludeArchivedRepos
+   */
+  readonly excludeArchivedRepos?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderGitea#insecure
    */
   readonly insecure?: boolean;
@@ -9600,6 +9658,7 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderGitea(
   const result = {
     allBranches: obj.allBranches,
     api: obj.api,
+    excludeArchivedRepos: obj.excludeArchivedRepos,
     insecure: obj.insecure,
     owner: obj.owner,
     tokenRef: toJson_ApplicationSetSpecGeneratorsScmProviderGiteaTokenRef(
@@ -9634,6 +9693,11 @@ export interface ApplicationSetSpecGeneratorsScmProviderGithub {
   readonly appSecretName?: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsScmProviderGithub#excludeArchivedRepos
+   */
+  readonly excludeArchivedRepos?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderGithub#organization
    */
   readonly organization: string;
@@ -9658,6 +9722,7 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderGithub(
     allBranches: obj.allBranches,
     api: obj.api,
     appSecretName: obj.appSecretName,
+    excludeArchivedRepos: obj.excludeArchivedRepos,
     organization: obj.organization,
     tokenRef: toJson_ApplicationSetSpecGeneratorsScmProviderGithubTokenRef(
       obj.tokenRef,
@@ -9694,6 +9759,11 @@ export interface ApplicationSetSpecGeneratorsScmProviderGitlab {
    * @schema ApplicationSetSpecGeneratorsScmProviderGitlab#group
    */
   readonly group: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsScmProviderGitlab#includeArchivedRepos
+   */
+  readonly includeArchivedRepos?: boolean;
 
   /**
    * @schema ApplicationSetSpecGeneratorsScmProviderGitlab#includeSharedProjects
@@ -9736,6 +9806,7 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderGitlab(
     api: obj.api,
     caRef: toJson_ApplicationSetSpecGeneratorsScmProviderGitlabCaRef(obj.caRef),
     group: obj.group,
+    includeArchivedRepos: obj.includeArchivedRepos,
     includeSharedProjects: obj.includeSharedProjects,
     includeSubgroups: obj.includeSubgroups,
     insecure: obj.insecure,
@@ -10070,6 +10141,11 @@ export interface ApplicationSetSpecTemplateSpecSource {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -10099,6 +10175,7 @@ export function toJson_ApplicationSetSpecTemplateSpecSource(
     plugin: toJson_ApplicationSetSpecTemplateSpecSourcePlugin(obj.plugin),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -10208,6 +10285,11 @@ export interface ApplicationSetSpecTemplateSpecSources {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -10237,6 +10319,7 @@ export function toJson_ApplicationSetSpecTemplateSpecSources(
     plugin: toJson_ApplicationSetSpecTemplateSpecSourcesPlugin(obj.plugin),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -14416,6 +14499,11 @@ export interface ApplicationSetSpecTemplateSpecSourceHydratorSyncSource {
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -14433,6 +14521,7 @@ export function toJson_ApplicationSetSpecTemplateSpecSourceHydratorSyncSource(
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -15157,6 +15246,11 @@ export interface ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpec
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -15195,6 +15289,7 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -15309,6 +15404,11 @@ export interface ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpec
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -15347,6 +15447,7 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -15616,6 +15717,11 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSource {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -15651,6 +15757,7 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSource(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -15765,6 +15872,11 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSources {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -15801,6 +15913,7 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSources(
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -16066,6 +16179,11 @@ export interface ApplicationSetSpecGeneratorsGitTemplateSpecSource {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -16101,6 +16219,7 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSource(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -16213,6 +16332,11 @@ export interface ApplicationSetSpecGeneratorsGitTemplateSpecSources {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -16248,6 +16372,7 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSources(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -16514,6 +16639,11 @@ export interface ApplicationSetSpecGeneratorsListTemplateSpecSource {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsListTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsListTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -16549,6 +16679,7 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSource(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -16661,6 +16792,11 @@ export interface ApplicationSetSpecGeneratorsListTemplateSpecSources {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsListTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsListTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -16696,6 +16832,7 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSources(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -18035,6 +18172,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitea {
   readonly api: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitea#excludeArchivedRepos
+   */
+  readonly excludeArchivedRepos?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitea#insecure
    */
   readonly insecure?: boolean;
@@ -18063,6 +18205,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGi
   const result = {
     allBranches: obj.allBranches,
     api: obj.api,
+    excludeArchivedRepos: obj.excludeArchivedRepos,
     insecure: obj.insecure,
     owner: obj.owner,
     tokenRef:
@@ -18098,6 +18241,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGithub {
   readonly appSecretName?: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGithub#excludeArchivedRepos
+   */
+  readonly excludeArchivedRepos?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGithub#organization
    */
   readonly organization: string;
@@ -18124,6 +18272,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGi
     allBranches: obj.allBranches,
     api: obj.api,
     appSecretName: obj.appSecretName,
+    excludeArchivedRepos: obj.excludeArchivedRepos,
     organization: obj.organization,
     tokenRef:
       toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGithubTokenRef(
@@ -18161,6 +18310,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitlab {
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitlab#group
    */
   readonly group: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitlab#includeArchivedRepos
+   */
+  readonly includeArchivedRepos?: boolean;
 
   /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitlab#includeSharedProjects
@@ -18208,6 +18362,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGi
         obj.caRef,
       ),
     group: obj.group,
+    includeArchivedRepos: obj.includeArchivedRepos,
     includeSharedProjects: obj.includeSharedProjects,
     includeSubgroups: obj.includeSubgroups,
     insecure: obj.insecure,
@@ -18513,6 +18668,11 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSource {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -18548,6 +18708,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSource(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -18660,6 +18821,11 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSources {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -18695,6 +18861,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSources(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -20030,6 +20197,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGitea {
   readonly api: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGitea#excludeArchivedRepos
+   */
+  readonly excludeArchivedRepos?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGitea#insecure
    */
   readonly insecure?: boolean;
@@ -20058,6 +20230,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGit
   const result = {
     allBranches: obj.allBranches,
     api: obj.api,
+    excludeArchivedRepos: obj.excludeArchivedRepos,
     insecure: obj.insecure,
     owner: obj.owner,
     tokenRef:
@@ -20093,6 +20266,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGithub {
   readonly appSecretName?: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGithub#excludeArchivedRepos
+   */
+  readonly excludeArchivedRepos?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGithub#organization
    */
   readonly organization: string;
@@ -20117,6 +20295,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGit
     allBranches: obj.allBranches,
     api: obj.api,
     appSecretName: obj.appSecretName,
+    excludeArchivedRepos: obj.excludeArchivedRepos,
     organization: obj.organization,
     tokenRef:
       toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGithubTokenRef(
@@ -20154,6 +20333,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGitlab {
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGitlab#group
    */
   readonly group: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGitlab#includeArchivedRepos
+   */
+  readonly includeArchivedRepos?: boolean;
 
   /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGitlab#includeSharedProjects
@@ -20199,6 +20383,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderGit
         obj.caRef,
       ),
     group: obj.group,
+    includeArchivedRepos: obj.includeArchivedRepos,
     includeSharedProjects: obj.includeSharedProjects,
     includeSubgroups: obj.includeSubgroups,
     insecure: obj.insecure,
@@ -20504,6 +20689,11 @@ export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSource {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -20539,6 +20729,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSource(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -20651,6 +20842,11 @@ export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSources {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -20686,6 +20882,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSources(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -20952,6 +21149,11 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSource {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -20987,6 +21189,7 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSource(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -21099,6 +21302,11 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSources {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -21134,6 +21342,7 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSources(
     ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -21558,6 +21767,11 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -21594,6 +21808,7 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -21708,6 +21923,11 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSources {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -21744,6 +21964,7 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -22093,6 +22314,11 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -22129,6 +22355,7 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -22243,6 +22470,11 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSources {
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -22279,6 +22511,7 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -23909,6 +24142,11 @@ export interface ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpec
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -23928,6 +24166,7 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -24979,6 +25218,11 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydratorS
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -24998,6 +25242,7 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHyd
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -26041,6 +26286,11 @@ export interface ApplicationSetSpecGeneratorsGitTemplateSpecSourceHydratorSyncSo
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -26060,6 +26310,7 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSourceHydrator
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -27095,6 +27346,11 @@ export interface ApplicationSetSpecGeneratorsListTemplateSpecSourceHydratorSyncS
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -27114,6 +27370,7 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSourceHydrato
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -30235,6 +30492,11 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceHydratorSyn
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -30254,6 +30516,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceHydra
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -33375,6 +33638,11 @@ export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydratorSync
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -33394,6 +33662,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydrat
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -34437,6 +34706,11 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourceHydratorSyn
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -34456,6 +34730,7 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourceHydra
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -35507,6 +35782,11 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHydrat
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -35526,6 +35806,7 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -36583,6 +36864,11 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHydrat
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -36602,6 +36888,7 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -42408,6 +42695,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionReso
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -42446,6 +42738,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -42560,6 +42853,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionReso
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -42598,6 +42896,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -42871,6 +43170,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpe
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -42909,6 +43213,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -43023,6 +43328,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpe
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -43061,6 +43371,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -43334,6 +43645,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSour
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -43372,6 +43688,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -43486,6 +43803,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSour
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -43524,6 +43846,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -43797,6 +44120,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSou
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -43835,6 +44163,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -43949,6 +44278,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSou
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -43987,6 +44321,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -44260,6 +44595,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecS
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -44298,6 +44638,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -44412,6 +44753,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecS
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -44450,6 +44796,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -44879,6 +45226,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplate
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -44917,6 +45269,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -45031,6 +45384,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplate
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -45069,6 +45427,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -45420,6 +45779,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplate
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -45458,6 +45822,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -45572,6 +45937,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplate
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -45610,6 +45980,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -46979,6 +47350,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResou
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -47017,6 +47393,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -47131,6 +47508,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResou
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -47169,6 +47551,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -47442,6 +47825,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpec
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -47480,6 +47868,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -47594,6 +47983,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpec
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -47632,6 +48026,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -47905,6 +48300,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourc
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -47943,6 +48343,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -48057,6 +48458,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourc
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -48095,6 +48501,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -48368,6 +48775,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSour
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -48406,6 +48818,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -48520,6 +48933,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSour
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -48558,6 +48976,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -48831,6 +49250,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSo
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -48869,6 +49293,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -48983,6 +49408,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSo
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -49021,6 +49451,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -49450,6 +49881,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateS
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -49488,6 +49924,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -49602,6 +50039,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateS
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -49640,6 +50082,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -49991,6 +50434,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateS
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSource#targetRevision
    */
   readonly targetRevision?: string;
@@ -50029,6 +50477,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -50143,6 +50592,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateS
   readonly repoUrl: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSources#targetRevision
    */
   readonly targetRevision?: string;
@@ -50181,6 +50635,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
       ),
     ref: obj.ref,
     repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
     targetRevision: obj.targetRevision,
   };
   // filter undefined values
@@ -58091,6 +58546,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionReso
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -58110,6 +58570,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -59167,6 +59628,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpe
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -59186,6 +59652,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -60243,6 +60710,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSour
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -60262,6 +60734,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -61319,6 +61792,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSou
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -61338,6 +61816,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -62395,6 +62874,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecS
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -62414,6 +62898,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -63471,6 +63956,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplate
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -63490,6 +63980,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -64547,6 +65038,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplate
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -64566,6 +65062,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -66315,6 +66812,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResou
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -66334,6 +66836,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -67391,6 +67894,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpec
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -67410,6 +67918,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -68467,6 +68976,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourc
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -68486,6 +69000,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -69543,6 +70058,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSour
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -69562,6 +70082,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -70619,6 +71140,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSo
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -70638,6 +71164,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -71695,6 +72222,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateS
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -71714,6 +72246,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -72771,6 +73304,11 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateS
   readonly path: string;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceHydratorSyncSource#targetBranch
    */
   readonly targetBranch: string;
@@ -72790,6 +73328,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
   }
   const result = {
     path: obj.path,
+    repoURL: obj.repoUrl,
     targetBranch: obj.targetBranch,
   };
   // filter undefined values
@@ -105461,9 +106000,19 @@ export interface AppProjectSpec {
   /**
    * SignatureKeys contains a list of PGP key IDs that commits in Git must be signed with in order to be allowed for sync
    *
+   * Deprecated: Use SourceIntegrity instead. SignatureKeys will be removed with the next major version.
+   *
    * @schema AppProjectSpec#signatureKeys
    */
   readonly signatureKeys?: AppProjectSpecSignatureKeys[];
+
+  /**
+   * SourceIntegrity represents a constraint on manifest sources integrity to be met before they can be used.
+   * Do not access directly, use EffectiveSourceIntegrity() for correct backwards compatibility handling.
+   *
+   * @schema AppProjectSpec#sourceIntegrity
+   */
+  readonly sourceIntegrity?: AppProjectSpecSourceIntegrity;
 
   /**
    * SourceNamespaces defines the namespaces application resources are allowed to be created in
@@ -105525,6 +106074,7 @@ export function toJson_AppProjectSpec(
     signatureKeys: obj.signatureKeys?.map((y) =>
       toJson_AppProjectSpecSignatureKeys(y),
     ),
+    sourceIntegrity: toJson_AppProjectSpecSourceIntegrity(obj.sourceIntegrity),
     sourceNamespaces: obj.sourceNamespaces?.map((y) => y),
     sourceRepos: obj.sourceRepos?.map((y) => y),
     syncWindows: obj.syncWindows?.map((y) =>
@@ -105935,6 +106485,8 @@ export function toJson_AppProjectSpecRoles(
 /**
  * SignatureKey is the specification of a key required to verify commit signatures with
  *
+ * Deprecated: Use SourceIntegrity instead. SignatureKeys will be removed with the next major version.
+ *
  * @schema AppProjectSpecSignatureKeys
  */
 export interface AppProjectSpecSignatureKeys {
@@ -105958,6 +106510,42 @@ export function toJson_AppProjectSpecSignatureKeys(
   }
   const result = {
     keyID: obj.keyId,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * SourceIntegrity represents a constraint on manifest sources integrity to be met before they can be used.
+ * Do not access directly, use EffectiveSourceIntegrity() for correct backwards compatibility handling.
+ *
+ * @schema AppProjectSpecSourceIntegrity
+ */
+export interface AppProjectSpecSourceIntegrity {
+  /**
+   * Git - policies for git source verification
+   *
+   * @schema AppProjectSpecSourceIntegrity#git
+   */
+  readonly git: AppProjectSpecSourceIntegrityGit;
+}
+
+/**
+ * Converts an object of type 'AppProjectSpecSourceIntegrity' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_AppProjectSpecSourceIntegrity(
+  obj: AppProjectSpecSourceIntegrity | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    git: toJson_AppProjectSpecSourceIntegrityGit(obj.git),
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -106037,6 +106625,15 @@ export interface AppProjectSpecSyncWindows {
   readonly schedule?: string;
 
   /**
+   * SyncOverrun allows ongoing syncs to continue in two scenarios:
+   * For deny windows: allows syncs that started before the deny window became active to continue running
+   * For allow windows: allows syncs that started during the allow window to continue after the window ends
+   *
+   * @schema AppProjectSpecSyncWindows#syncOverrun
+   */
+  readonly syncOverrun?: boolean;
+
+  /**
    * TimeZone of the sync that will be applied to the schedule
    *
    * @schema AppProjectSpecSyncWindows#timeZone
@@ -106064,6 +106661,7 @@ export function toJson_AppProjectSpecSyncWindows(
     manualSync: obj.manualSync,
     namespaces: obj.namespaces?.map((y) => y),
     schedule: obj.schedule,
+    syncOverrun: obj.syncOverrun,
     timeZone: obj.timeZone,
   };
   // filter undefined values
@@ -106155,6 +106753,158 @@ export function toJson_AppProjectSpecRolesJwtTokens(
     exp: obj.exp,
     iat: obj.iat,
     id: obj.id,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Git - policies for git source verification
+ *
+ * @schema AppProjectSpecSourceIntegrityGit
+ */
+export interface AppProjectSpecSourceIntegrityGit {
+  /**
+   * @schema AppProjectSpecSourceIntegrityGit#policies
+   */
+  readonly policies: AppProjectSpecSourceIntegrityGitPolicies[];
+}
+
+/**
+ * Converts an object of type 'AppProjectSpecSourceIntegrityGit' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_AppProjectSpecSourceIntegrityGit(
+  obj: AppProjectSpecSourceIntegrityGit | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    policies: obj.policies?.map((y) =>
+      toJson_AppProjectSpecSourceIntegrityGitPolicies(y),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema AppProjectSpecSourceIntegrityGitPolicies
+ */
+export interface AppProjectSpecSourceIntegrityGitPolicies {
+  /**
+   * Verify GPG commit/tag signatures
+   *
+   * @schema AppProjectSpecSourceIntegrityGitPolicies#gpg
+   */
+  readonly gpg: AppProjectSpecSourceIntegrityGitPoliciesGpg;
+
+  /**
+   * List of repository criteria restricting repositories the policy will apply to
+   *
+   * @schema AppProjectSpecSourceIntegrityGitPolicies#repos
+   */
+  readonly repos: AppProjectSpecSourceIntegrityGitPoliciesRepos[];
+}
+
+/**
+ * Converts an object of type 'AppProjectSpecSourceIntegrityGitPolicies' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_AppProjectSpecSourceIntegrityGitPolicies(
+  obj: AppProjectSpecSourceIntegrityGitPolicies | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    gpg: toJson_AppProjectSpecSourceIntegrityGitPoliciesGpg(obj.gpg),
+    repos: obj.repos?.map((y) =>
+      toJson_AppProjectSpecSourceIntegrityGitPoliciesRepos(y),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Verify GPG commit/tag signatures
+ *
+ * @schema AppProjectSpecSourceIntegrityGitPoliciesGpg
+ */
+export interface AppProjectSpecSourceIntegrityGitPoliciesGpg {
+  /**
+   * List of key IDs to trust. The keys need to be in the repository server keyring.
+   *
+   * @schema AppProjectSpecSourceIntegrityGitPoliciesGpg#keys
+   */
+  readonly keys: string[];
+
+  /**
+   * @schema AppProjectSpecSourceIntegrityGitPoliciesGpg#mode
+   */
+  readonly mode: string;
+}
+
+/**
+ * Converts an object of type 'AppProjectSpecSourceIntegrityGitPoliciesGpg' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_AppProjectSpecSourceIntegrityGitPoliciesGpg(
+  obj: AppProjectSpecSourceIntegrityGitPoliciesGpg | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    keys: obj.keys?.map((y) => y),
+    mode: obj.mode,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema AppProjectSpecSourceIntegrityGitPoliciesRepos
+ */
+export interface AppProjectSpecSourceIntegrityGitPoliciesRepos {
+  /**
+   * URL specifier, glob.
+   *
+   * @schema AppProjectSpecSourceIntegrityGitPoliciesRepos#url
+   */
+  readonly url: string;
+}
+
+/**
+ * Converts an object of type 'AppProjectSpecSourceIntegrityGitPoliciesRepos' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_AppProjectSpecSourceIntegrityGitPoliciesRepos(
+  obj: AppProjectSpecSourceIntegrityGitPoliciesRepos | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    url: obj.url,
   };
   // filter undefined values
   return Object.entries(result).reduce(
