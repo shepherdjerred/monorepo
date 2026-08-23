@@ -7,7 +7,7 @@ import { riotClient } from "#src/league/api/api.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
 import { withTimeout } from "#src/utils/timeout.ts";
-import { extractHttpStatus } from "#src/league/api/upstream-errors.ts";
+import { extractHttpStatus } from "#src/league/api/client/errors.ts";
 import { recordRiotResolution } from "#src/lib/riot/summoner-index.ts";
 
 const logger = createLogger("resolve-puuid");

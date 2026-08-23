@@ -604,7 +604,7 @@ try {
 ## League of Legends API Integration
 
 - Use the native `RiotClient` in `#src/league/api/client/riot-client.ts` for Riot API calls
-- Implement proper rate limiting and retry logic
+- Keep 429 handling process-wide: establish the shared `Retry-After` cooldown before releasing a request slot
 - Cache API responses appropriately
 - Handle API errors and rate limits gracefully
 

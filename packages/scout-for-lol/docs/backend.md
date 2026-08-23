@@ -167,22 +167,22 @@ flowchart TD
 ```mermaid
 flowchart LR
     CONFIG["RIOT_API_KEY"]
-    CONFIG --> LOL_API["LolApi Client"]
-    CONFIG --> RIOT_API["RiotApi Client"]
+    CONFIG --> CLIENT["Native RiotClient"]
 
-    LOL_API --> MATCH["MatchV5"]
-    LOL_API --> SUMMONER["SummonerV4"]
-    LOL_API --> RANKED["RankedV4"]
-    RIOT_API --> ACCOUNT["AccountV1"]
+    CLIENT --> MATCH["Match V5"]
+    CLIENT --> SPECTATOR["Spectator V5"]
+    CLIENT --> RANKED["League V4"]
+    CLIENT --> ACCOUNT["Account V1"]
 ```
 
 ### Rate Limiting
 
-The `twisted` library handles rate limiting automatically:
+The process-wide `RiotClient` owns concurrency and retry behavior:
 
 - **Retry attempts**: 3
-- **Concurrency**: 1 (sequential requests)
-- **Backoff**: Built-in exponential backoff
+- **Concurrency**: 5 in-flight requests
+- **429 handling**: A shared `Retry-After` cooldown blocks every future request
+- **503 handling**: Per-request exponential backoff
 
 ### Data Validation
 
@@ -287,14 +287,14 @@ The backend exposes two HTTP endpoints:
 
 ### Strategy by Error Type
 
-| Error              | Handling                               |
-| ------------------ | -------------------------------------- |
-| API 404            | Retry later (match still processing)   |
-| API 429            | Automatic backoff via twisted          |
-| Validation failure | Log to Sentry, skip processing         |
-| AI failure         | Continue without AI features           |
-| S3 failure         | Log and continue to Discord            |
-| Discord failure    | Log to Sentry, track permission errors |
+| Error              | Handling                                |
+| ------------------ | --------------------------------------- |
+| API 404            | Retry later (match still processing)    |
+| API 429            | Shared `Retry-After` cooldown and retry |
+| Validation failure | Log to Sentry, skip processing          |
+| AI failure         | Continue without AI features            |
+| S3 failure         | Log and continue to Discord             |
+| Discord failure    | Log to Sentry, track permission errors  |
 
 ### Permission Error Tracking
 

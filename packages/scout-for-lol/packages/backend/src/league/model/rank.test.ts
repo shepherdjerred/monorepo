@@ -1,12 +1,12 @@
 import { describe, expect, test, vi } from "vitest";
 import { PlayerConfigEntrySchema } from "@scout-for-lol/data/index.ts";
 
-const byPUUID = vi.fn<() => Promise<{ response: unknown }>>();
+const byPuuid = vi.fn<() => Promise<unknown>>();
 
 vi.doMock("#src/league/api/api.ts", () => ({
-  api: {
-    League: {
-      byPUUID,
+  riotClient: {
+    league: {
+      byPuuid,
     },
   },
 }));
@@ -15,7 +15,7 @@ const { getRanks } = await import("./rank.ts");
 
 describe("getRanks", () => {
   test("returns empty ranks when the Riot rank lookup fails", async () => {
-    byPUUID.mockRejectedValueOnce(
+    byPuuid.mockRejectedValueOnce(
       new Error("API request timed out after 30000ms"),
     );
 
@@ -31,6 +31,7 @@ describe("getRanks", () => {
 
     const ranks = await getRanks(player);
 
+    expect(byPuuid).toHaveBeenCalledOnce();
     expect(ranks).toEqual({
       solo: undefined,
       flex: undefined,

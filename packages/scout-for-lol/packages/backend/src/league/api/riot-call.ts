@@ -1,4 +1,4 @@
-import { z, type ZodError, type ZodType } from "zod";
+import type { ZodError, ZodType } from "zod";
 import * as Sentry from "@sentry/bun";
 import type { MatchId } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
@@ -14,7 +14,7 @@ import { parseWithUnknownKeyFallback } from "#src/league/api/strict-with-loose-f
 import {
   extractHttpStatus,
   isExpectedUpstreamError,
-} from "#src/league/api/upstream-errors.ts";
+} from "#src/league/api/client/errors.ts";
 
 const logger = createLogger("riot-call");
 
@@ -37,7 +37,7 @@ export type CallRiotConfig<T> = {
   /**
    * Optional override for the `riotApiUnknownKeysTotal{schema=...}` label.
    * Defaults to `source`. Override to keep historical label values
-   * (e.g. `"match"` instead of `"match-data"`) stable across the wrapper
+   * (e.g. `"match"` instead of `"match-data"`) stable across the client
    * migration.
    */
   schemaLabel?: string;
@@ -49,7 +49,7 @@ export type CallRiotConfig<T> = {
   onValidationFailure?: ValidationFailureSaveToS3;
   /**
    * Capture non-404 / non-upstream HTTP errors to Sentry.
-   * 404 and upstream errors (502/503/504) are never captured —
+   * 404 and reviewed upstream errors are never captured —
    * they're expected operational signals, not bugs to investigate.
    */
   sentry?: boolean;
@@ -61,15 +61,6 @@ type CallResult<T> =
   | { kind: "http-404"; error: unknown }
   | { kind: "http-error"; status: number; error: unknown }
   | { kind: "transport-error"; error: unknown };
-
-const ResponseWrapperSchema = z.object({
-  response: z.unknown(),
-});
-
-function extractPayload(raw: unknown): unknown {
-  const wrapped = ResponseWrapperSchema.safeParse(raw);
-  return wrapped.success ? wrapped.data.response : raw;
-}
 
 function formatContext(context: Record<string, string | number>): string {
   const entries = Object.entries(context);
@@ -113,9 +104,9 @@ async function runRiotCall<T>(
     level: "info",
   });
 
-  let rawResult: unknown;
+  let payload: unknown;
   try {
-    rawResult = await withTimeout(fn());
+    payload = await withTimeout(fn());
   } catch (error) {
     const isTimeout =
       error instanceof Error && error.message.includes("timed out");
@@ -158,8 +149,6 @@ async function runRiotCall<T>(
 
   riotApiRequestsTotal.inc({ source, status: "success" });
   updateRiotApiHealth(true);
-
-  const payload = extractPayload(rawResult);
 
   const parsed = parseWithUnknownKeyFallback(schema, payload);
   if (!parsed.ok) {

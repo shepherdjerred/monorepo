@@ -612,7 +612,7 @@ Data Dragon can be inaccurate (especially champion spell data). Use Community Dr
 
 ## Riot API Client Usage
 
-This repository uses a native type-safe `RiotClient` in `#src/league/api/client/riot-client.ts` with built-in concurrency limiting and automatic 429/503 retry.
+This repository uses a native type-safe `RiotClient` in `#src/league/api/client/riot-client.ts`. It combines concurrency limiting, a client-wide `Retry-After` cooldown for 429 responses, and per-request 503 retry.
 
 ### Basic Setup
 

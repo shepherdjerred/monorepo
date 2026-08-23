@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * Raw Challenges - Contains detailed match statistics and challenges from Riot API
- * Most fields are required. Some fields are optional based on the twisted library types.
+ * Most fields are required. Fields omitted by some Riot responses are optional.
  */
 export const RawChallengesSchema = z
   .object({

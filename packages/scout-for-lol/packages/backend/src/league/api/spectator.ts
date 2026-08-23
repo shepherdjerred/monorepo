@@ -16,7 +16,7 @@ import { withTimeout } from "#src/utils/timeout.ts";
 import {
   extractHttpStatus,
   isExpectedUpstreamError,
-} from "#src/league/api/upstream-errors.ts";
+} from "#src/league/api/client/errors.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("spectator-api");
@@ -29,7 +29,7 @@ const logger = createLogger("spectator-api");
 export type SpectatorResult = {
   /** Active game data, or undefined if the player is not in a game / API errored */
   game: RawCurrentGameInfo | undefined;
-  /** True when the API returned an expected upstream error (502/503/504) */
+  /** True when the API returned an expected Riot or edge upstream error */
   upstreamError: boolean;
 };
 

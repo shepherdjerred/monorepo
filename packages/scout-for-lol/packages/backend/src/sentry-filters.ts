@@ -1,16 +1,9 @@
 import type { ErrorEvent, EventHint } from "@sentry/bun";
 import { ZodError } from "zod";
-import { isExpectedUpstreamError } from "#src/league/api/upstream-errors.ts";
-import { RiotHttpError } from "#src/league/api/client/errors.ts";
-
-/**
- * Error class names for transient Riot upstream conditions.
- */
-const RIOT_ERROR_NAMES = new Set([
-  "RiotHttpError",
-  "GenericError",
-  "RiotUnavailable",
-]);
+import {
+  isExpectedUpstreamError,
+  RiotHttpError,
+} from "#src/league/api/client/errors.ts";
 
 /**
  * Sample rate for Riot API upstream 5xx events. We don't drop all of them
@@ -50,20 +43,9 @@ const RIOT_ID_FORMAT_MESSAGE =
   "Riot ID must be in the format <game_name>#<tag_line>";
 
 function isRiotUpstreamError(value: unknown): boolean {
-  if (!(value instanceof Error)) {
-    return false;
-  }
-  if (value instanceof RiotHttpError) {
-    return isExpectedUpstreamError(value.status);
-  }
-  if (
-    RIOT_ERROR_NAMES.has(value.name) &&
-    "status" in value &&
-    typeof value.status === "number"
-  ) {
-    return isExpectedUpstreamError(value.status);
-  }
-  return false;
+  return (
+    value instanceof RiotHttpError && isExpectedUpstreamError(value.status)
+  );
 }
 
 /**
@@ -72,8 +54,8 @@ function isRiotUpstreamError(value: unknown): boolean {
  *
  * Behavior:
  * - Riot API upstream HTTP errors with status 502, 503, 504, 520, 522, 524 →
- *   **sampled** at the rate from `getRiot5xxSampleRate()`. Only matches Riot
- *   API error classes (`RiotHttpError`, legacy `GenericError`, `RiotUnavailable`).
+ *   **sampled** at the rate from `getRiot5xxSampleRate()`. Only matches the
+ *   native client's `RiotHttpError`, so other upstream APIs remain visible.
  * - boundary `ZodError`s on user-supplied Riot IDs from Discord slash
  *   commands → **dropped entirely**.
  */

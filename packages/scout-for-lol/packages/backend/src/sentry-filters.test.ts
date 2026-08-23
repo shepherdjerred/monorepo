@@ -13,17 +13,14 @@ const baseEvent: ErrorEvent = {
   event_id: "test",
 };
 
-/**
- * Build a fake twisted error with the given runtime `name` and `status`.
- * Twisted's real classes set `name` on the prototype; we replicate that
- * shape rather than importing twisted directly so the test is decoupled
- * from the upstream dep version.
- */
-function makeTwistedError(name: string, status: number | string): Error {
-  const error = new Error("twisted-shaped error");
-  Object.defineProperty(error, "name", { value: name });
-  Object.defineProperty(error, "status", { value: status });
-  return error;
+function makeRiotError(status: number): RiotHttpError {
+  return new RiotHttpError({
+    status,
+    statusText: "Riot upstream error",
+    body: null,
+    url: "https://na1.api.riotgames.com/test",
+    headers: new Headers(),
+  });
 }
 
 /**
@@ -36,63 +33,36 @@ const alwaysDrop = (): number => 0.999999;
 /** Random function that always returns 0 (below any sample rate > 0). */
 const alwaysSample = (): number => 0;
 
-describe("filterScoutSentryEvent — twisted upstream sampling (above sample threshold)", () => {
-  test("drops twisted GenericError 502 when not sampled", () => {
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(makeTwistedError("GenericError", 502)),
-      alwaysDrop,
-    );
-    expect(result).toBeNull();
+describe("filterScoutSentryEvent — Riot upstream sampling", () => {
+  test("drops reviewed Riot upstream failures when not sampled", () => {
+    for (const status of [502, 503, 504, 520, 522, 524]) {
+      const result = filterScoutSentryEvent(
+        baseEvent,
+        makeHint(makeRiotError(status)),
+        alwaysDrop,
+      );
+      expect(result).toBeNull();
+    }
   });
 
-  test("drops twisted GenericError 504 when not sampled", () => {
+  test("keeps a Riot upstream failure when sampled", () => {
     const result = filterScoutSentryEvent(
       baseEvent,
-      makeHint(makeTwistedError("GenericError", 504)),
-      alwaysDrop,
-    );
-    expect(result).toBeNull();
-  });
-
-  test("drops twisted RiotUnavailable 503 when not sampled", () => {
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(makeTwistedError("RiotUnavailable", 503)),
-      alwaysDrop,
-    );
-    expect(result).toBeNull();
-  });
-});
-
-describe("filterScoutSentryEvent — twisted upstream sampling (below sample threshold)", () => {
-  test("keeps twisted GenericError 502 when sampled", () => {
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(makeTwistedError("GenericError", 502)),
-      alwaysSample,
-    );
-    expect(result).toEqual(baseEvent);
-  });
-
-  test("keeps twisted RiotUnavailable 503 when sampled", () => {
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(makeTwistedError("RiotUnavailable", 503)),
+      makeHint(makeRiotError(502)),
       alwaysSample,
     );
     expect(result).toEqual(baseEvent);
   });
 });
 
-describe("filterScoutSentryEvent — twisted upstream sample-rate distribution", () => {
+describe("filterScoutSentryEvent — Riot upstream sample-rate distribution", () => {
   test("at default 1% rate, ~1 in 100 events are kept (10k iterations)", () => {
     let kept = 0;
     const iterations = 10_000;
     for (let i = 0; i < iterations; i++) {
       const result = filterScoutSentryEvent(
         baseEvent,
-        makeHint(makeTwistedError("GenericError", 502)),
+        makeHint(makeRiotError(502)),
       );
       if (result !== null) {
         kept++;
@@ -105,7 +75,7 @@ describe("filterScoutSentryEvent — twisted upstream sample-rate distribution",
   });
 });
 
-describe("filterScoutSentryEvent — twisted upstream sample-rate env override", () => {
+describe("filterScoutSentryEvent — Riot upstream sample-rate env override", () => {
   let originalRate: string | undefined;
 
   beforeEach(() => {
@@ -119,21 +89,21 @@ describe("filterScoutSentryEvent — twisted upstream sample-rate env override",
     }
   });
 
-  test("env=0 drops every twisted upstream event regardless of random()", () => {
+  test("env=0 drops every Riot upstream event regardless of random()", () => {
     Bun.env["SCOUT_RIOT_5XX_SAMPLE_RATE"] = "0";
     const result = filterScoutSentryEvent(
       baseEvent,
-      makeHint(makeTwistedError("GenericError", 502)),
+      makeHint(makeRiotError(502)),
       alwaysSample,
     );
     expect(result).toBeNull();
   });
 
-  test("env=1 keeps every twisted upstream event regardless of random()", () => {
+  test("env=1 keeps every Riot upstream event regardless of random()", () => {
     Bun.env["SCOUT_RIOT_5XX_SAMPLE_RATE"] = "1";
     const result = filterScoutSentryEvent(
       baseEvent,
-      makeHint(makeTwistedError("GenericError", 502)),
+      makeHint(makeRiotError(502)),
       alwaysDrop,
     );
     expect(result).toEqual(baseEvent);
@@ -144,7 +114,7 @@ describe("filterScoutSentryEvent — twisted upstream sample-rate env override",
     // alwaysDrop returns 1 which is >= 0.01, so the event drops at default rate.
     const result = filterScoutSentryEvent(
       baseEvent,
-      makeHint(makeTwistedError("GenericError", 502)),
+      makeHint(makeRiotError(502)),
       alwaysDrop,
     );
     expect(result).toBeNull();
@@ -154,7 +124,7 @@ describe("filterScoutSentryEvent — twisted upstream sample-rate env override",
     Bun.env["SCOUT_RIOT_5XX_SAMPLE_RATE"] = "1.5";
     const result = filterScoutSentryEvent(
       baseEvent,
-      makeHint(makeTwistedError("GenericError", 502)),
+      makeHint(makeRiotError(502)),
       alwaysDrop,
     );
     expect(result).toBeNull();
@@ -162,60 +132,31 @@ describe("filterScoutSentryEvent — twisted upstream sample-rate env override",
 });
 
 describe("filterScoutSentryEvent — keeps non-noise events regardless of sampling", () => {
-  test("keeps twisted GenericError with status 429 (rate limit, actionable)", () => {
+  test("keeps actionable or unexpected Riot statuses", () => {
+    for (const status of [404, 429, 500]) {
+      const result = filterScoutSentryEvent(
+        baseEvent,
+        makeHint(makeRiotError(status)),
+        alwaysDrop,
+      );
+      expect(result).toEqual(baseEvent);
+    }
+  });
+
+  test("keeps a similarly named third-party error with status 502", () => {
+    const thirdPartyError = new Error("Third-party API 502");
+    Object.defineProperty(thirdPartyError, "name", { value: "GenericError" });
+    Object.defineProperty(thirdPartyError, "status", { value: 502 });
+
     const result = filterScoutSentryEvent(
       baseEvent,
-      makeHint(makeTwistedError("GenericError", 429)),
+      makeHint(thirdPartyError),
       alwaysDrop,
     );
     expect(result).toEqual(baseEvent);
   });
 
-  test("keeps twisted GenericError with status 404", () => {
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(makeTwistedError("GenericError", 404)),
-      alwaysDrop,
-    );
-    expect(result).toEqual(baseEvent);
-  });
-
-  test("keeps twisted GenericError with status 500 (real Riot bug)", () => {
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(makeTwistedError("GenericError", 500)),
-      alwaysDrop,
-    );
-    expect(result).toEqual(baseEvent);
-  });
-
-  test("keeps twisted GenericError with non-numeric status (defensive)", () => {
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(makeTwistedError("GenericError", "502")),
-      alwaysDrop,
-    );
-    expect(result).toEqual(baseEvent);
-  });
-
-  test("keeps NON-twisted error with status 502 (e.g. Discord, Bugsink, OpenAI)", () => {
-    // Critical regression guard: only twisted's own error classes are subject
-    // to sampling. A 502 from any other source still pages.
-    const discordishError = new Error("Discord API 502");
-    Object.defineProperty(discordishError, "name", {
-      value: "DiscordAPIError",
-    });
-    Object.defineProperty(discordishError, "status", { value: 502 });
-
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(discordishError),
-      alwaysDrop,
-    );
-    expect(result).toEqual(baseEvent);
-  });
-
-  test("keeps plain object with status 502 (not an Error instance)", () => {
+  test("keeps a plain status-bearing object", () => {
     const result = filterScoutSentryEvent(
       baseEvent,
       makeHint({ name: "GenericError", status: 502 }),
@@ -271,56 +212,6 @@ describe("filterScoutSentryEvent — passthrough", () => {
 
   test("keeps events with no original exception", () => {
     const result = filterScoutSentryEvent(baseEvent, {});
-    expect(result).toEqual(baseEvent);
-  });
-});
-
-describe("filterScoutSentryEvent — RiotHttpError", () => {
-  test("drops RiotHttpError 502 when not sampled", () => {
-    const error = new RiotHttpError({
-      status: 502,
-      statusText: "Bad Gateway",
-      body: null,
-      url: "https://na1.api.riotgames.com/test",
-      headers: new Headers(),
-    });
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(error),
-      alwaysDrop,
-    );
-    expect(result).toBeNull();
-  });
-
-  test("keeps RiotHttpError 502 when sampled", () => {
-    const error = new RiotHttpError({
-      status: 502,
-      statusText: "Bad Gateway",
-      body: null,
-      url: "https://na1.api.riotgames.com/test",
-      headers: new Headers(),
-    });
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(error),
-      alwaysSample,
-    );
-    expect(result).toEqual(baseEvent);
-  });
-
-  test("keeps RiotHttpError 429 (actionable rate limit)", () => {
-    const error = new RiotHttpError({
-      status: 429,
-      statusText: "Rate Limit",
-      body: null,
-      url: "https://na1.api.riotgames.com/test",
-      headers: new Headers(),
-    });
-    const result = filterScoutSentryEvent(
-      baseEvent,
-      makeHint(error),
-      alwaysDrop,
-    );
     expect(result).toEqual(baseEvent);
   });
 });

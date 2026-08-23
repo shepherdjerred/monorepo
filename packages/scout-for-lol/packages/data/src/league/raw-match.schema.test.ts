@@ -62,7 +62,7 @@ describe("RawMatch Schema Validation", () => {
   test("schema matches real API data structure", async () => {
     const matchData = await loadFirstTestMatch();
 
-    // Fields that are MISSING in real API but REQUIRED in twisted types
+    // Fields that are absent from this real Riot API response
     const firstParticipant = matchData.info.participants[0];
     if (firstParticipant) {
       expect(firstParticipant.baitPings).toBeUndefined(); // Missing in real API

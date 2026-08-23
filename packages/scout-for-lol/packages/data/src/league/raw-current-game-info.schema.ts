@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Zod schema for Spectator V5 API responses from the twisted library
+ * Zod schema for Riot Spectator V5 API responses
  * Based on Riot Games Spectator V5 API
  *
  * This schema validates the structure of active game data received from the Spectator API.
