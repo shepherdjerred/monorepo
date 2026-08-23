@@ -4,17 +4,46 @@ import {
   type TableHTMLAttributes,
   type TdHTMLAttributes,
   type ThHTMLAttributes,
+  useEffect,
+  useRef,
 } from "react";
 import { cn } from "#src/lib/cn.ts";
 
 export const Table = forwardRef<
   HTMLTableElement,
   TableHTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="scout-table-wrap">
-    <table ref={ref} className={cn("scout-table", className)} {...props} />
-  </div>
-));
+>(({ className, ...props }, ref) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (wrapper === null) return;
+    const updateAccessibility = (): void => {
+      const scrollable =
+        wrapper.scrollWidth > wrapper.clientWidth + 1 ||
+        wrapper.scrollHeight > wrapper.clientHeight + 1;
+      if (scrollable) {
+        wrapper.tabIndex = 0;
+      } else {
+        wrapper.removeAttribute("tabindex");
+      }
+    };
+    const observer = new ResizeObserver(updateAccessibility);
+    observer.observe(wrapper);
+    const table = wrapper.querySelector("table");
+    if (table !== null) observer.observe(table);
+    updateAccessibility();
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <div ref={wrapperRef} className="scout-table-wrap">
+      <table ref={ref} className={cn("scout-table", className)} {...props} />
+    </div>
+  );
+});
 Table.displayName = "Table";
 export const TableHeader = forwardRef<
   HTMLTableSectionElement,

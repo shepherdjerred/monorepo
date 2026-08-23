@@ -41,6 +41,16 @@
   max-width: none;
 }
 
+@media (max-width: 49.999rem) {
+  :root[data-has-sidebar] .header .scout-container {
+    /* Starlight fixes its docs-menu button over the global header. Reserve
+       that button's slot so Scout's own mobile navigation remains reachable. */
+    padding-inline-end: calc(
+      var(--sl-nav-pad-x) + var(--sl-nav-gap) + var(--sl-menu-button-size)
+    );
+  }
+}
+
 .header .scout-navbar a:not(.scout-button) {
   color: var(--scout-color-text);
 }

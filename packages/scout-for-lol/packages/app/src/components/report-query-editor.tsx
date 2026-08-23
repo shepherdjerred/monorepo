@@ -82,7 +82,8 @@ export default function ReportQueryEditor(props: {
   return (
     <div
       ref={containerRef}
-      className="min-w-0 overflow-hidden rounded-md border border-border"
+      data-focus-ring-container
+      className="min-w-0 overflow-hidden rounded-md border border-border focus-within:outline-3 focus-within:outline-scout-focus focus-within:outline-offset-2"
     >
       <Editor
         width="100%"

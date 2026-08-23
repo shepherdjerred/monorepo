@@ -19,12 +19,13 @@ export function parseColor(
   const hex = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(normalized);
   const digits = hex?.[1];
   if (digits === undefined) return null;
-  return [
-    Number.parseInt(digits.slice(0, 2), 16),
-    Number.parseInt(digits.slice(2, 4), 16),
-    Number.parseInt(digits.slice(4, 6), 16),
-    hex?.[2] === undefined ? 1 : Number.parseInt(hex[2], 16) / 255,
-  ];
+  const red = Number.parseInt(digits.slice(0, 2), 16);
+  const green = Number.parseInt(digits.slice(2, 4), 16);
+  const blue = Number.parseInt(digits.slice(4, 6), 16);
+  const alphaDigits = hex?.[2];
+  const alpha =
+    alphaDigits === undefined ? 1 : Number.parseInt(alphaDigits, 16) / 255;
+  return [red, green, blue, alpha];
 }
 
 function luminanceChannel(value: number): number {
