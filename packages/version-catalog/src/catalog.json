@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10860@sha256:c79be8f789dc48b8add32d5c633be88a881899cef91beb8efd450fba483474ff",
+      "value": "2.0.0-10918@sha256:b0eeee1526088a3307e5869a8fe16255685b136b2f2a4083a583c0f024041911",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
