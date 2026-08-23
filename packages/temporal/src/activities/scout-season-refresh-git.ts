@@ -117,7 +117,7 @@ export function classifyRedactedCommandFailure(
   ) {
     return "network";
   }
-  if (/stale info|non-fast-forward|failed to push some refs/i.test(output)) {
+  if (/stale info|non-fast-forward/i.test(output)) {
     return "remote-lease-rejected";
   }
   return "unknown";

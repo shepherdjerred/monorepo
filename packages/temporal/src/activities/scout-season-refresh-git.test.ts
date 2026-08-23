@@ -272,6 +272,12 @@ describe("shared proposal PR reconciliation", () => {
       "unknown",
     );
     expect(
+      classifyRedactedCommandFailure(
+        "branch-push",
+        "failed to push some refs (repository rule violation)",
+      ),
+    ).toBe("unknown");
+    expect(
       classifyRedactedCommandFailure("pr-create", "Authentication failed"),
     ).toBe("redacted");
   });

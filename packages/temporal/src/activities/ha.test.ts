@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
+import { HaApiError } from "@shepherdjerred/home-assistant";
 import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
   HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
@@ -126,6 +127,40 @@ describe("haActivities", () => {
       expect(failure.message).toBe(
         "Home Assistant media_player.join is unavailable (500)",
       );
+    } finally {
+      globalThis.fetch = originalFetch;
+      if (originalUrl === undefined) {
+        delete Bun.env["HA_URL"];
+      } else {
+        Bun.env["HA_URL"] = originalUrl;
+      }
+      if (originalToken === undefined) {
+        delete Bun.env["HA_TOKEN"];
+      } else {
+        Bun.env["HA_TOKEN"] = originalToken;
+      }
+    }
+  });
+
+  it("keeps generic media-player API failures terminal", async () => {
+    const originalUrl = Bun.env["HA_URL"];
+    const originalToken = Bun.env["HA_TOKEN"];
+    const originalFetch = globalThis.fetch;
+    Bun.env["HA_URL"] = "http://localhost:8123";
+    Bun.env["HA_TOKEN"] = "test-token";
+    globalThis.fetch = Object.assign(
+      (): Promise<Response> =>
+        Promise.resolve(new Response("Internal Server Error", { status: 500 })),
+      { preconnect: originalFetch.preconnect.bind(originalFetch) },
+    );
+
+    try {
+      await expect(
+        haActivities.callOptionalMediaPlayerService("join", {
+          entity_id: "media_player.bedroom",
+          group_members: ["media_player.master_bathroom"],
+        }),
+      ).rejects.toBeInstanceOf(HaApiError);
     } finally {
       globalThis.fetch = originalFetch;
       if (originalUrl === undefined) {

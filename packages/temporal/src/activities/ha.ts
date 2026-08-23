@@ -32,6 +32,17 @@ function getClient(): HomeAssistantRestClient {
   return cachedClient;
 }
 
+function isOptionalMediaPlayerUnavailable(error: HaApiError): boolean {
+  if (error.status !== 404 && error.status < 500) {
+    return false;
+  }
+  const text = `${error.message}\n${error.body}`;
+  return (
+    /media_player\.\w+|sonos|speaker|entity(?:\s+id)?/i.test(text) &&
+    /unavailable|not found|does not exist|offline/i.test(text)
+  );
+}
+
 export type HaActivities = typeof haActivities;
 
 export const haActivities = {
@@ -83,7 +94,7 @@ export const haActivities = {
       // then expose it as a stable type for the workflow to handle.
       if (
         error instanceof HaApiError &&
-        (error.status === 404 || error.status >= 500)
+        isOptionalMediaPlayerUnavailable(error)
       ) {
         throw ApplicationFailure.retryable(
           `Home Assistant media_player.${service} is unavailable (${String(error.status)})`,
