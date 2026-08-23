@@ -158,6 +158,26 @@ test("drives Playwright upgrades from the official image source only", async () 
   );
 });
 
+test("groups Talos, Kubernetes, and installer updates into one PR", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) => candidate.groupName === "Talos and Kubernetes",
+  );
+
+  expect(rule).toEqual({
+    description:
+      "Bundle Talos, Kubernetes, and the node installer because they are validated and rolled out together",
+    groupName: "Talos and Kubernetes",
+    matchPackageNames: [
+      "siderolabs/talos",
+      "ghcr.io/siderolabs/installer",
+      "kubernetes/kubernetes",
+    ],
+  });
+});
+
 test("ignores only the bogus qBittorrent v20 release while retaining semantic tags", async () => {
   const config = RenovateConfigSchema.parse(
     await Bun.file(`${root}/renovate.json`).json(),

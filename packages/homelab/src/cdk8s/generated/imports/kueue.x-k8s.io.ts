@@ -5367,6 +5367,8 @@ export function toJson_MultiKueueConfigV1Beta2Props(
 export interface MultiKueueConfigV1Beta2Spec {
   /**
    * clusters is a list of MultiKueueClusters names where the workloads from the ClusterQueue should be distributed.
+   * The order of the list is significant: the Incremental dispatcher nominates clusters
+   * following this order, so the most preferred clusters should be listed first.
    *
    * @schema MultiKueueConfigV1Beta2Spec#clusters
    */
@@ -7339,7 +7341,7 @@ export interface WorkloadSpec {
   /**
    * podSets is a list of sets of homogeneous pods, each described by a Pod spec
    * and a count.
-   * There must be at least one element and at most 10.
+   * There must be at least one element and at most 18.
    * podSets cannot be changed.
    *
    * @schema WorkloadSpec#podSets
@@ -29679,7 +29681,7 @@ export interface WorkloadV1Beta2Spec {
   /**
    * podSets is a list of sets of homogeneous pods, each described by a Pod spec
    * and a count.
-   * There must be at least one element and at most 10.
+   * There must be at least one element and at most 18.
    * podSets cannot be changed.
    *
    * @schema WorkloadV1Beta2Spec#podSets
