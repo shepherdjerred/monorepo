@@ -12,8 +12,10 @@ import { handleGuildDelete } from "#src/discord/events/guild-delete.ts";
 import { voiceManager } from "#src/voice/index.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
+import { addDynamicConfigRefreshListener } from "#src/config/dynamic.ts";
 
 const logger = createLogger("discord-client");
+let removeDynamicConfigRefreshListener: (() => void) | undefined;
 
 logger.info("🔌 Initializing Discord client");
 
@@ -86,6 +88,14 @@ client.on("ready", (readyClient) => {
 
   handleInteractions(readyClient);
   logger.info("⚡ Discord command handler initialized");
+
+  removeDynamicConfigRefreshListener ??= addDynamicConfigRefreshListener(
+    async () => {
+      const { reconcileGuildScopedCommands } =
+        await import("#src/discord/rest.ts");
+      await reconcileGuildScopedCommands(client.guilds.cache.keys());
+    },
+  );
 
   void registerConnectedGuildCommands(readyClient.guilds.cache.keys());
 });

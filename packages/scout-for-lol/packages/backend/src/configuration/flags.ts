@@ -19,6 +19,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { isEnabled } from "@shepherdjerred/feature-flags";
+import { isAbsent } from "@shepherdjerred/feature-flags/flag-result.ts";
 
 // ============================================================================
 // Attribute Types
@@ -357,6 +358,11 @@ export async function isPolicyEnabled(
     targetingKey,
     attributes: context,
   });
+  if (result.errorCode !== undefined && !isAbsent(result)) {
+    throw new Error(
+      `Feature flag "${name}" evaluation failed with ${result.errorCode}`,
+    );
+  }
   return result.value;
 }
 

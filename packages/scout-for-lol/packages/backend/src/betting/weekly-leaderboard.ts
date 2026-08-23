@@ -1,6 +1,5 @@
 import type { MessageCreateOptions } from "discord.js";
 import {
-  DiscordGuildIdSchema,
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -8,7 +7,7 @@ import {
   getFullLeaderboard,
   type FullLeaderboardRow,
 } from "#src/betting/accounts.ts";
-import { bettingEnabledGuilds } from "#src/betting/pool-open.ts";
+import { isPolicyEnabled, MY_SERVER } from "#src/configuration/flags.ts";
 import { client } from "#src/discord/client.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
@@ -85,11 +84,9 @@ export type WeeklyBucksLeaderboardDependencies = {
 
 const defaultDependencies: WeeklyBucksLeaderboardDependencies = {
   enabledGuilds: async () =>
-    await bettingEnabledGuilds(
-      [...client.guilds.cache.keys()].map((id) =>
-        DiscordGuildIdSchema.parse(id),
-      ),
-    ),
+    (await isPolicyEnabled("betting_enabled", { server: MY_SERVER }))
+      ? [MY_SERVER]
+      : [],
   hasGuild: (serverId) => client.guilds.cache.has(serverId),
   loadRows: async (serverId) => await getFullLeaderboard({ serverId }),
   sendMessage: async (options, channelId, serverId) =>

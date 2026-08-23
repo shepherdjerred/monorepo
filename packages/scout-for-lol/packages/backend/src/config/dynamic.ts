@@ -158,6 +158,31 @@ function buildSnapshot(
 }
 
 let snapshot: Snapshot | undefined;
+let pollTimer: ReturnType<typeof setInterval> | undefined;
+const refreshListeners = new Set<() => Promise<void>>();
+
+export function addDynamicConfigRefreshListener(
+  listener: () => Promise<void>,
+): () => void {
+  refreshListeners.add(listener);
+  return () => {
+    refreshListeners.delete(listener);
+  };
+}
+
+async function notifyRefreshListeners(): Promise<void> {
+  for (const listener of refreshListeners) {
+    await listener();
+  }
+}
+
+async function refreshDynamicConfigAndNotify(): Promise<void> {
+  try {
+    await refreshDynamicConfig();
+  } catch (error: unknown) {
+    logger.error("dynamic config refresh listener failed", { error });
+  }
+}
 
 export type InitializeDynamicConfigOptions = {
   readonly environment?: InitFeatureFlagsOptions["environment"];
@@ -198,7 +223,10 @@ export async function initializeDynamicConfig(
   snapshot = buildSnapshot(options.environment ?? Bun.env, options.seed, true);
   await snapshot.refresh();
   if (options.startPolling !== false) {
-    snapshot.start(REFRESH_INTERVAL_MS);
+    pollTimer ??= setInterval(() => {
+      void refreshDynamicConfigAndNotify();
+    }, REFRESH_INTERVAL_MS);
+    pollTimer.unref();
   }
 }
 
@@ -250,8 +278,20 @@ export function bucksAskModel(): string {
   return snapshot?.get("bucksAskModel") ?? configuration.bucksAskModel;
 }
 
+export async function refreshDynamicConfig(): Promise<void> {
+  if (snapshot === undefined) {
+    return;
+  }
+  await snapshot.refresh();
+  await notifyRefreshListeners();
+}
+
 export async function shutdownDynamicConfig(): Promise<void> {
-  snapshot?.stop();
+  if (pollTimer !== undefined) {
+    clearInterval(pollTimer);
+    pollTimer = undefined;
+  }
+  refreshListeners.clear();
   snapshot = undefined;
   await shutdownFeatureFlags();
 }
