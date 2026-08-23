@@ -56,8 +56,8 @@ export async function handleCreateWebhook(
 ): Promise<WebhookResult> {
   if (
     channelId == null ||
-    channelId.length === 0 ||
     name == null ||
+    channelId.length === 0 ||
     name.length === 0
   ) {
     return {
@@ -158,8 +158,8 @@ export async function handleExecuteWebhook(
     options;
   if (
     webhookId == null ||
-    webhookId.length === 0 ||
     webhookToken == null ||
+    webhookId.length === 0 ||
     webhookToken.length === 0
   ) {
     return {

@@ -63,14 +63,14 @@
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.0",
     "@types/react": "19.2.18",
-    "@typescript-eslint/utils": "^8.65.0",
+    "@typescript-eslint/utils": "^8.67.0",
     "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "typescript-eslint": "^8.67.0",
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   },
   "engines": {
     "node": ">=20.19.4"

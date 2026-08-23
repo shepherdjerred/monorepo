@@ -55,6 +55,12 @@ export type TailscaleoperatorHelmValuesOperatorConfig = {
     limits?: Record<string, string | number>;
   };
   /**
+   * Specifies annotations for deployment
+   *
+   * @default {}
+   */
+  annotations?: TailscaleoperatorHelmValuesOperatorConfigAnnotations;
+  /**
    * @default {}
    */
   podAnnotations?: TailscaleoperatorHelmValuesOperatorConfigPodAnnotations;
@@ -111,6 +117,14 @@ export type TailscaleoperatorHelmValuesOperatorConfigImage = {
    * @default "Always"
    */
   pullPolicy?: string;
+};
+
+export type TailscaleoperatorHelmValuesOperatorConfigAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type TailscaleoperatorHelmValuesOperatorConfigPodAnnotations = object;
@@ -253,7 +267,7 @@ export type TailscaleoperatorHelmValues = {
   /**
    * In the case that you already have a tailscale ingressclass in your cluster (or vcluster), you can disable the creation here
    *
-   * @default {...} (15 keys)
+   * @default {...} (16 keys)
    */
   operatorConfig?: TailscaleoperatorHelmValuesOperatorConfig;
   /**

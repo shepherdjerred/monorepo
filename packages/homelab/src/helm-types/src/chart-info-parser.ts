@@ -16,10 +16,10 @@ export async function parseChartInfoFromVersions(
 
     // Look for renovate comments that indicate Helm charts
     if (
-      nextLine === "" ||
       line == null ||
-      !line.includes("renovate: datasource=helm") ||
-      nextLine == null
+      nextLine == null ||
+      nextLine === "" ||
+      !line.includes("renovate: datasource=helm")
     ) {
       continue;
     }

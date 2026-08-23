@@ -141,8 +141,8 @@ export async function handleAddRole(
 ): Promise<MemberResult> {
   if (
     memberId == null ||
-    memberId.length === 0 ||
     roleId == null ||
+    memberId.length === 0 ||
     roleId.length === 0
   ) {
     return {
@@ -177,8 +177,8 @@ export async function handleRemoveRole(
 ): Promise<MemberResult> {
   if (
     memberId == null ||
-    memberId.length === 0 ||
     roleId == null ||
+    memberId.length === 0 ||
     roleId.length === 0
   ) {
     return {

@@ -184,7 +184,7 @@ test("ignores only the bogus qBittorrent v20 release while retaining semantic ta
     description:
       "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are old Ubuntu-based image tags, not qBittorrent app versions",
     matchPackageNames: ["linuxserver/qbittorrent"],
-    allowedVersions: "/^[0-9]+\\.[0-9]+\\.[0-9]+$/",
+    allowedVersions: String.raw`/^[0-9]+\.[0-9]+\.[0-9]+$/`,
   });
 });
 
@@ -289,7 +289,7 @@ test("extracts identical Emscripten tag and digest pins from both sources", asyn
     "packages/discord-plays-mario-kart/Dockerfile",
   ]);
   expect(pins).toEqual([
-    "6.0.6@sha256:be96eff5810e42c632f3f8b795388a6b596e4fb21ec28b9e1fb1bc49bb3b1eef",
-    "6.0.6@sha256:be96eff5810e42c632f3f8b795388a6b596e4fb21ec28b9e1fb1bc49bb3b1eef",
+    "6.0.8@sha256:f174124ff798a3ead1abef247d9a849c270b642d552fea500a42565ff210f765",
+    "6.0.8@sha256:f174124ff798a3ead1abef247d9a849c270b642d552fea500a42565ff210f765",
   ]);
 });

@@ -1,5 +1,5 @@
 // renovate: datasource=npm depName=pyright
-export const PYRIGHT_VERSION = "1.1.411";
+export const PYRIGHT_VERSION = "1.1.413";
 
 export function deckCommand(deck: string): string[] {
   return [

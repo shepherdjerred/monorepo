@@ -84,7 +84,7 @@ let package = Package(
         // a keystroke the app did not receive is a `CGEventTap`, which needs
         // Accessibility. A task app that demands "control your computer" on
         // first launch to give you a text field is not shipping.
-        .package(url: "https://github.com/sindresorhus/KeyboardShortcuts.git", from: "1.10.0"),
+        .package(url: "https://github.com/sindresorhus/KeyboardShortcuts.git", from: "3.0.0"),
     ],
     targets: [
         // ── Generated code is exempt; authored code is maximal. ────────────

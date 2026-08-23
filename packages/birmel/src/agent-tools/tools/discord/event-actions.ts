@@ -60,8 +60,8 @@ export async function handleCreateEvent(
   } = options;
   if (
     name == null ||
-    name.length === 0 ||
     scheduledStartTime == null ||
+    name.length === 0 ||
     scheduledStartTime.length === 0
   ) {
     return {

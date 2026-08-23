@@ -98,10 +98,10 @@ export async function handleSearch(
     const [, matchUrl, matchTitle, snippetHtml] = match;
     if (
       matchUrl != null &&
-      matchUrl.length > 0 &&
       matchTitle != null &&
-      matchTitle.length > 0 &&
       snippetHtml != null &&
+      matchUrl.length > 0 &&
+      matchTitle.length > 0 &&
       snippetHtml.length > 0
     ) {
       results.push({

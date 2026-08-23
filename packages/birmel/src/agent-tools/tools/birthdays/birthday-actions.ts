@@ -63,10 +63,10 @@ export async function handleSetBirthday(
   const { guildId, userId, birthMonth, birthDay, birthYear, timezone } =
     options;
   if (
-    userId == null ||
-    userId.length === 0 ||
     birthMonth == null ||
-    birthDay == null
+    birthDay == null ||
+    userId == null ||
+    userId.length === 0
   ) {
     return {
       success: false,

@@ -53,7 +53,7 @@ export function extractText(
   depth = 0,
   maxCharacters = Number.POSITIVE_INFINITY,
 ): string {
-  if (depth > 12 || value == null || maxCharacters <= 0) {
+  if (value == null || depth > 12 || maxCharacters <= 0) {
     return "";
   }
   if (typeof value === "string") {

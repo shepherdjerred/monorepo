@@ -19,7 +19,7 @@
   "dependencies": {
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/llm-models": "workspace:*",
-    "ai": "7.0.59",
+    "ai": "7.0.77",
     "pdfjs-dist": "^6.2.108",
     "playwright": "1.62.1",
     "zod": "^4.4.3"
@@ -31,8 +31,8 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0"

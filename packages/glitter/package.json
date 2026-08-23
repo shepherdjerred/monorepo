@@ -14,7 +14,7 @@
     "@shepherdjerred/glitter-context": "workspace:*"
   },
   "devDependencies": {
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   }
 }

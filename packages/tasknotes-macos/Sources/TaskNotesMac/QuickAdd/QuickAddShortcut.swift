@@ -46,14 +46,16 @@ internal import KeyboardShortcuts
 /// relaunch.
 ///
 /// _Phase 9c originally seeded this by hand behind a `UserDefaults` flag,
-/// because the argument label below is spelled `default:` and this package's
+/// because the argument label below was spelled `default:` and this package's
 /// `banned_switch_default` rule matched it. That was a rule defect — the regex
 /// could not tell a `switch` case from an argument label — and the rule now
 /// discriminates on SourceKit's syntax kind instead, so the library's own
-/// mechanism is usable and the hand-rolled flag is gone._
+/// mechanism is usable and the hand-rolled flag is gone. KeyboardShortcuts v3
+/// renamed that label to `initial:` without changing the persisted-binding
+/// behavior._
 extension KeyboardShortcuts.Name {
     static let quickAdd = Self(
         "quickAdd",
-        default: .init(.space, modifiers: [.control, .option, .command])
+        initial: .init(.space, modifiers: [.control, .option, .command])
     )
 }

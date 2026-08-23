@@ -48,7 +48,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.3.0"
+      "value": "10.4.0"
     },
     {
       "name": "cert-manager",
@@ -96,7 +96,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "88.5.2"
+      "value": "88.5.3"
     },
     {
       "name": "prometheus-adapter",
@@ -120,7 +120,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "11.16.0"
+      "value": "11.17.2"
     },
     {
       "name": "tailscale-operator",
@@ -132,7 +132,7 @@
         "registryUrl": "https://pkgs.tailscale.com/helmcharts",
         "versioning": "semver"
       },
-      "value": "1.98.9"
+      "value": "1.102.3"
     },
     {
       "name": "adyanth/cloudflare-operator",
@@ -185,7 +185,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2026.7.2-java25@sha256:6ec1110e4d9236d00ae9436a3e4a5929583e5b19cc94b756a7c603f7cf647a77",
+      "value": "2026.8.1-java25@sha256:1bfb278ea9ee9a319ff2b6ebf6e996e7217fbcd825a925f6382d05bd348c046b",
       "notes": [
         "java25 variant: Paper 26.2 (pinned below) requires Java 25+; the java21",
         "image crashes every server at startup (\"Minecraft 26.1 and newer requires",
@@ -203,7 +203,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "loose"
       },
-      "value": "1.43.3.10861-07dfddaeb-amd64@sha256:dd9bcf6494a1f7e817710e75d2ff66beb68485b5ea1b63c7c712adc25983b9bb"
+      "value": "1.43.3.10896-cb3ebc72d-amd64@sha256:c708587e4874617961a1bc24db9cffa2413653ff422f1b05dfec013339e6824d"
     },
     {
       "name": "linuxserver/tautulli",
@@ -251,7 +251,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v2.4.6@sha256:12753705405a647a703c7a8aec6f862de05831f296858c6791b940500d558a6f"
+      "value": "v2.4.8@sha256:c58f6d4af511613f218b6dafbfc84078af4e5a6089790c1fdba58fd7c5dad70a"
     },
     {
       "name": "linuxserver/prowlarr",
@@ -315,7 +315,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "4.0.19@sha256:373159ba768e23a3a1c497d9f2b936addf8fd5b1fdce7dd6a14080ac928bfda0"
+      "value": "4.0.19@sha256:c19aa4ecdf03d73e1d5c901da33744cb7eb4d921f89bafed1ca264601d7fa224"
     },
     {
       "name": "timothyjmiller/cloudflare-ddns",
@@ -339,7 +339,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2026.7.3@sha256:e39ee8da81ad5e05d77f38d2f51c60ca51bf2a8450ac3abab50c17fdb91d91bf"
+      "value": "2026.8.2@sha256:0aa26e284f05e6c77ae375b8c9c11d9eb6a448fb7bcd8d40f31cb6176189eb38"
     },
     {
       "name": "tailscale/golink",
@@ -363,7 +363,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2026.8.1@sha256:6340a3de3917a9b19368e767310a96dd090f6a19aca8aeadf87fd1145cec9682"
+      "value": "2026.8.3@sha256:14931c6b13756317849f46da1d01b45937a1150db66c081cfe529d48215943fe"
     },
     {
       "name": "bropat/eufy-security-ws",
@@ -387,7 +387,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.22.2@sha256:07b1a55e39f5cd309d60d5c33d93a3ff56b4bebd9ca73070ed8a03ec1e570381"
+      "value": "11.22.3@sha256:14d018bb689eecce4029229764d2191d9b8d8f211106fcabaef421e7b0f8cf9c"
     },
     {
       "name": "koush/scrypted",
@@ -432,7 +432,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.11.1"
+      "value": "v1.11.7"
     },
     {
       "name": "magico13/ha-emporia-vue",
@@ -581,7 +581,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "7.2.0"
+      "value": "7.3.0"
     },
     {
       "name": "promtail",
@@ -793,7 +793,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.3.14-slim@sha256:d56a2534ffd262e92c12fd3249d3924d296d97086da773f821d7d0477435ea04"
+      "value": "1.4.0-slim@sha256:e0ee68d16ccb9927bf02aa7dd8fd4bf3369ee6d46da04faa72b05ce8bfd135f6"
     },
     {
       "name": "pinchtab/pinchtab",
@@ -818,7 +818,7 @@
         "versioning": "semver",
         "packageName": "agent-stack-k8s"
       },
-      "value": "0.47.0@sha256:c1be7d5d26c87775171d696bc18ad65d1ff185c38e7efc529233061e9ef912e4"
+      "value": "0.48.0@sha256:cf79363dc08db9b0d2e849a484a25e95a4c63765779fd9ecbe38be927545d417"
     },
     {
       "name": "ducktors/turborepo-remote-cache",
@@ -846,7 +846,7 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.19.0@sha256:2fbaa5b15b54c1149185d7f399c573838c630c10eb35b363763cbbd3327e4333"
+      "value": "0.19.2@sha256:ab436c33ef6c6b9b9e95b633e618bca0e0e436d6581d3b27bd12fc8a8026ab34"
     },
     {
       "name": "moby/buildkit",
@@ -1058,7 +1058,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.0.7"
+      "value": "28.0.10"
     },
     {
       "name": "seaweedfs",
@@ -1094,7 +1094,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:208df1be0f8ca7e819515fa57f7438001016b042291fc2e277ae656289bf1955"
+      "value": "latest@sha256:d8ad094dc757d2270a880f3a3aff73ef5998a64538f3c05ff93edaf5056b7852"
     },
     {
       "name": "bitnami/mysqld-exporter",
@@ -1106,7 +1106,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:5acc987dda6b3c7cdf060fdfcad9f6139f388077b9ca2ed44ac954a1c9ab1849"
+      "value": "latest@sha256:e40cf454094ad1d6bd6a625ad1614ea317a26e5fb7f77d1b8fa122ad89f70292"
     },
     {
       "name": "postalserver/postal",
@@ -1166,7 +1166,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:11a1f0b604b13dbbdc662260d8db6f644b22d8553122a25c1b5b2e8713ca6977",
+      "value": "latest@sha256:cfc4eee658595834ef304eadb0c3ea721f3b7cb6404ad8b7cb909cc5b5145b23",
       "notes": [
         "Alpine-based image bundling yq + busybox coreutils (sh/find/cmp/diff/cp);",
         "used by the Minecraft config-drift init container for semantic YAML/JSON",
@@ -1219,7 +1219,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.31.1-alpine@sha256:8b1e78743a03dbb2c95171cc58639fef29abc8816598e27fb910ed2e621e589a"
+      "value": "1.31.2-alpine@sha256:54f2a904c251d5a34adf545a72d32515a15e08418dae0266e23be2e18c66fefa"
     },
     {
       "name": "bugsink/bugsink",
@@ -1307,7 +1307,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.53.1@sha256:102edb3cc9a549c8408bb5a867be944f6bc3889479770362e4c4c2067a4b8700"
+      "value": "2.53.3@sha256:eef301146e60fad34b47adaecfae4149016e34b2d44ba94fca5fd8e5441f182a"
     },
     {
       "name": "temporalio/admin-tools",

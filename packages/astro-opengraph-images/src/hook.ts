@@ -1,5 +1,3 @@
-import { Resvg } from "@resvg/resvg-js";
-import satori from "satori";
 import type {
   AstroBuildDoneHookInput,
   FilterFunction,
@@ -97,6 +95,10 @@ async function handlePage({
 
   // render the image using Satori and Resvg
   const reactNode = await render(renderInput);
+  const [{ Resvg }, { default: satori }] = await Promise.all([
+    import("@resvg/resvg-js"),
+    import("satori"),
+  ]);
   const svg = await satori(reactNode, options);
   const resvg = new Resvg(svg, {
     font: {

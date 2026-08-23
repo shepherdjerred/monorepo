@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:7d49dad25a050e14338ba7028b0460243f9d911dedc160a8fe20c34738fef3af
+# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
 # Headless Discord Plays Mario Kart. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
 # `bun run docker:build` in packages/discord-plays-mario-kart/packages/backend
@@ -24,7 +24,7 @@
 # time. No binaries are committed — the build is reproducible from source.
 # Pinned Emscripten 6 toolchain for the legacy SDL2/GLES2 core.
 # ---------------------------------------------------------------------------
-FROM emscripten/emsdk:6.0.6@sha256:be96eff5810e42c632f3f8b795388a6b596e4fb21ec28b9e1fb1bc49bb3b1eef AS wasm-builder
+FROM emscripten/emsdk:6.0.8@sha256:f174124ff798a3ead1abef247d9a849c270b642d552fea500a42565ff210f765 AS wasm-builder
 
 WORKDIR /src
 # Copy only the vendored wasm source tree (patches + the pristine `code/` tree).

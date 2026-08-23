@@ -31,8 +31,7 @@ type MessageResult = {
 };
 
 type ChannelOpResult<T> =
-  | { ok: true; value: T }
-  | { ok: false; message: string };
+  { ok: true; value: T } | { ok: false; message: string };
 
 async function withSendableChannel<T>(
   client: Client,
@@ -61,8 +60,8 @@ export async function handleSend(
 ): Promise<MessageResult> {
   if (
     channelId == null ||
-    channelId.length === 0 ||
     content == null ||
+    channelId.length === 0 ||
     content.length === 0
   ) {
     return {
@@ -158,8 +157,8 @@ export async function handleSendDm(
 ): Promise<MessageResult> {
   if (
     userId == null ||
-    userId.length === 0 ||
     content == null ||
+    userId.length === 0 ||
     content.length === 0
   ) {
     return {
@@ -195,10 +194,10 @@ export async function handleEdit(
   const { client, channelId, messageId, content, signal } = options;
   if (
     channelId == null ||
-    channelId.length === 0 ||
     messageId == null ||
-    messageId.length === 0 ||
     content == null ||
+    channelId.length === 0 ||
+    messageId.length === 0 ||
     content.length === 0
   ) {
     return {
@@ -232,8 +231,8 @@ export async function handleDelete(
 ): Promise<MessageResult> {
   if (
     channelId == null ||
-    channelId.length === 0 ||
     messageId == null ||
+    channelId.length === 0 ||
     messageId.length === 0
   ) {
     return {
@@ -320,8 +319,8 @@ export async function handlePinUnpin(
   const action = pin ? "pin" : "unpin";
   if (
     channelId == null ||
-    channelId.length === 0 ||
     messageId == null ||
+    channelId.length === 0 ||
     messageId.length === 0
   ) {
     return {
@@ -361,10 +360,10 @@ export async function handleAddReaction(
   const { client, channelId, messageId, emoji, signal } = options;
   if (
     channelId == null ||
-    channelId.length === 0 ||
     messageId == null ||
-    messageId.length === 0 ||
     emoji == null ||
+    channelId.length === 0 ||
+    messageId.length === 0 ||
     emoji.length === 0
   ) {
     return {
@@ -405,10 +404,10 @@ export async function handleRemoveReaction(
   const { client, channelId, messageId, emoji, userId, signal } = options;
   if (
     channelId == null ||
-    channelId.length === 0 ||
     messageId == null ||
-    messageId.length === 0 ||
     emoji == null ||
+    channelId.length === 0 ||
+    messageId.length === 0 ||
     emoji.length === 0
   ) {
     return {

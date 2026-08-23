@@ -85,10 +85,10 @@ export async function handleCreate(
 ): Promise<ChannelResult> {
   const { client, guildId, name, type, parentId, topic } = options;
   if (
+    name == null ||
     !type ||
     guildId == null ||
     guildId.length === 0 ||
-    name == null ||
     name.length === 0
   ) {
     return {
@@ -236,8 +236,8 @@ export async function handleSetPermissions(
   const { client, channelId, targetId, allow, deny } = options;
   if (
     channelId == null ||
-    channelId.length === 0 ||
     targetId == null ||
+    channelId.length === 0 ||
     targetId.length === 0
   ) {
     return {

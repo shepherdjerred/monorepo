@@ -111,6 +111,38 @@ describe("collectErrors against the real repo", () => {
     }
   });
 
+  test("accepts an unpatched release that already contains the upstream fix", async () => {
+    const dir = `${tmpdir()}/check-patched-deps-fixed-${String(process.pid)}`;
+    const manifest = {
+      patchedDependencies: {
+        "demo@1.0.0": "patches/demo@1.0.0.patch",
+      },
+    };
+    const lock = `{
+  "packages": {
+    "demo": ["demo@1.0.0", "", {}, "sha512-a"],
+    "other/demo": ["demo@2.0.0", "", {}, "sha512-b"],
+  },
+}`;
+    await Bun.write(`${dir}/package.json`, JSON.stringify(manifest));
+    await Bun.write(`${dir}/bun.lock`, lock);
+    await Bun.write(
+      `${dir}/patches/demo@1.0.0.patch`,
+      "--- a/index.js\n+++ b/index.js\n@@ -1 +1 @@\n-brokenImport\n+fixedImport\n",
+    );
+    await Bun.write(
+      `${dir}/node_modules/.bun/demo@2.0.0/node_modules/demo/index.js`,
+      "fixedImport\n",
+    );
+    await Bun.write(`${dir}/packages/.keep`, "");
+
+    try {
+      expect(await collectErrors(dir)).toEqual([]);
+    } finally {
+      await Bun.$`rm -rf ${dir}`.quiet();
+    }
+  });
+
   test("the live repo passes", async () => {
     expect(await collectErrors(REPO_ROOT)).toEqual([]);
   });

@@ -693,7 +693,7 @@ steps:
             <<: *pod_buildkit_pod_spec
             initContainers:
               - name: tempo
-                image: "grafana/tempo:2.10.6@sha256:6ea351a2186822a044d5e326ed4c7a43d019378e4c033c271b89584216db03e7"
+                image: "grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
                 restartPolicy: Always
                 args: ["-config.file=/etc/tempo/tempo.yaml"]
                 volumeMounts:
@@ -751,7 +751,7 @@ steps:
             <<: *pod_buildkit_pod_spec
             initContainers:
               - name: tempo
-                image: "grafana/tempo:2.10.6@sha256:6ea351a2186822a044d5e326ed4c7a43d019378e4c033c271b89584216db03e7"
+                image: "grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
                 restartPolicy: Always
                 args: ["-config.file=/etc/tempo/tempo.yaml"]
                 volumeMounts:

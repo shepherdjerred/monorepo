@@ -910,7 +910,7 @@ export type ArgocdHelmValuesController = {
    * Application controller Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   vpa?: ArgocdHelmValuesControllerVpa;
   /**
@@ -1154,6 +1154,7 @@ export type ArgocdHelmValuesControllerVpa = {
    * @default {}
    */
   containerPolicy?: ArgocdHelmValuesControllerVpaContainerPolicy;
+  recommenders?: unknown[];
 };
 
 export type ArgocdHelmValuesControllerVpaLabels = {
@@ -1669,7 +1670,7 @@ export type ArgocdHelmValuesDex = {
    * Dex Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   vpa?: ArgocdHelmValuesDexVpa;
   /**
@@ -2062,6 +2063,7 @@ export type ArgocdHelmValuesDexVpa = {
    * @default {}
    */
   containerPolicy?: ArgocdHelmValuesDexVpaContainerPolicy;
+  recommenders?: unknown[];
 };
 
 export type ArgocdHelmValuesDexVpaLabels = {
@@ -2511,7 +2513,7 @@ export type ArgocdHelmValuesRedis = {
    * Redis Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   vpa?: ArgocdHelmValuesRedisVpa;
   /**
@@ -2743,6 +2745,7 @@ export type ArgocdHelmValuesRedisVpa = {
    * @default {}
    */
   containerPolicy?: ArgocdHelmValuesRedisVpaContainerPolicy;
+  recommenders?: unknown[];
 };
 
 export type ArgocdHelmValuesRedisVpaLabels = {
@@ -2796,7 +2799,7 @@ export type ArgocdHelmValuesRedisExporter = {
   /**
    * Prometheus redis-exporter image
    *
-   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.88.0","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.89.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisExporterImage;
   /**
@@ -2835,7 +2838,7 @@ export type ArgocdHelmValuesRedisExporterImage = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.88.0"
+   * @default "v1.89.0"
    */
   tag?: string;
   /**
@@ -3879,7 +3882,7 @@ export type ArgocdHelmValuesServer = {
    * Argo CD server Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   vpa?: ArgocdHelmValuesServerVpa;
   /**
@@ -4043,7 +4046,7 @@ export type ArgocdHelmValuesServer = {
   /**
    * Server service configuration
    *
-   * @default {...} (16 keys)
+   * @default {...} (20 keys)
    */
   service?: ArgocdHelmValuesServerService;
   /**
@@ -4244,6 +4247,7 @@ export type ArgocdHelmValuesServerVpa = {
    * @default {}
    */
   containerPolicy?: ArgocdHelmValuesServerVpaContainerPolicy;
+  recommenders?: unknown[];
 };
 
 export type ArgocdHelmValuesServerVpaLabels = {
@@ -4771,9 +4775,8 @@ export type ArgocdHelmValuesServerService = {
    * @default 30080
    */
   nodePortHttp?: number;
+  nodePortHttp2?: unknown;
   /**
-   * Server service https port for NodePort service type (only if `server.service.type` is set to "NodePort")
-   *
    * @default 30443
    */
   nodePortHttps?: number;
@@ -4783,9 +4786,8 @@ export type ArgocdHelmValuesServerService = {
    * @default 80
    */
   servicePortHttp?: number;
+  servicePortHttp2?: unknown;
   /**
-   * Server service https port
-   *
    * @default 443
    */
   servicePortHttps?: number;
@@ -4796,11 +4798,25 @@ export type ArgocdHelmValuesServerService = {
    */
   servicePortHttpName?: string;
   /**
+   * Server service http2 port name, can be used to route traffic via istio
+   *
+   * @default "http2"
+   */
+  servicePortHttp2Name?: string;
+  /**
    * Server service https port name, can be used to route traffic via istio
    *
    * @default "https"
    */
   servicePortHttpsName?: string;
+  /**
+   * Server service http2 port appProtocol, e.g. `kubernetes.io/h2c`. Implementations that select the
+   * protocol from the port name instead do not need it
+   * Ref: https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
+   *
+   * @default ""
+   */
+  servicePortHttp2AppProtocol?: string;
   /**
    * Server service https port appProtocol
    * Ref: https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
@@ -5671,7 +5687,7 @@ export type ArgocdHelmValuesRepoServer = {
    * Repo server Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   vpa?: ArgocdHelmValuesRepoServerVpa;
   /**
@@ -5993,6 +6009,7 @@ export type ArgocdHelmValuesRepoServerVpa = {
    * @default {}
    */
   containerPolicy?: ArgocdHelmValuesRepoServerVpaContainerPolicy;
+  recommenders?: unknown[];
 };
 
 export type ArgocdHelmValuesRepoServerVpaLabels = {
@@ -6615,7 +6632,7 @@ export type ArgocdHelmValuesApplicationSet = {
    * ApplicationSet controller Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   vpa?: ArgocdHelmValuesApplicationSetVpa;
   /**
@@ -6881,6 +6898,7 @@ export type ArgocdHelmValuesApplicationSetVpa = {
    * @default {}
    */
   containerPolicy?: ArgocdHelmValuesApplicationSetVpaContainerPolicy;
+  recommenders?: unknown[];
 };
 
 export type ArgocdHelmValuesApplicationSetVpaLabels = {
@@ -7771,7 +7789,7 @@ export type ArgocdHelmValuesNotifications = {
    * Notifications controller Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   vpa?: ArgocdHelmValuesNotificationsVpa;
   /**
@@ -8039,6 +8057,7 @@ export type ArgocdHelmValuesNotificationsVpa = {
    * @default {}
    */
   containerPolicy?: ArgocdHelmValuesNotificationsVpaContainerPolicy;
+  recommenders?: unknown[];
 };
 
 export type ArgocdHelmValuesNotificationsVpaLabels = {
@@ -8690,7 +8709,7 @@ export type ArgocdHelmValuesCommitServer = {
    * Commit server Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   vpa?: ArgocdHelmValuesCommitServerVpa;
 };
@@ -9079,6 +9098,7 @@ export type ArgocdHelmValuesCommitServerVpa = {
    * @default {}
    */
   containerPolicy?: ArgocdHelmValuesCommitServerVpaContainerPolicy;
+  recommenders?: unknown[];
 };
 
 export type ArgocdHelmValuesCommitServerVpaLabels = {
@@ -9330,6 +9350,7 @@ export type ArgocdHelmParameters = {
   "controller.pdb.maxUnavailable"?: string;
   "controller.vpa.enabled"?: string;
   "controller.vpa.updateMode"?: string;
+  "controller.vpa.recommenders"?: string;
   "controller.image.repository"?: string;
   "controller.image.tag"?: string;
   "controller.image.imagePullPolicy"?: string;
@@ -9414,6 +9435,7 @@ export type ArgocdHelmParameters = {
   "dex.pdb.maxUnavailable"?: string;
   "dex.vpa.enabled"?: string;
   "dex.vpa.updateMode"?: string;
+  "dex.vpa.recommenders"?: string;
   "dex.image.repository"?: string;
   "dex.image.tag"?: string;
   "dex.image.imagePullPolicy"?: string;
@@ -9495,6 +9517,7 @@ export type ArgocdHelmParameters = {
   "redis.pdb.maxUnavailable"?: string;
   "redis.vpa.enabled"?: string;
   "redis.vpa.updateMode"?: string;
+  "redis.vpa.recommenders"?: string;
   "redis.image.repository"?: string;
   "redis.image.tag"?: string;
   "redis.image.imagePullPolicy"?: string;
@@ -9642,6 +9665,7 @@ export type ArgocdHelmParameters = {
   "server.pdb.maxUnavailable"?: string;
   "server.vpa.enabled"?: string;
   "server.vpa.updateMode"?: string;
+  "server.vpa.recommenders"?: string;
   "server.image.repository"?: string;
   "server.image.tag"?: string;
   "server.image.imagePullPolicy"?: string;
@@ -9721,11 +9745,15 @@ export type ArgocdHelmParameters = {
   "server.certificateSecret.crt"?: string;
   "server.service.type"?: string;
   "server.service.nodePortHttp"?: string;
+  "server.service.nodePortHttp2"?: string;
   "server.service.nodePortHttps"?: string;
   "server.service.servicePortHttp"?: string;
+  "server.service.servicePortHttp2"?: string;
   "server.service.servicePortHttps"?: string;
   "server.service.servicePortHttpName"?: string;
+  "server.service.servicePortHttp2Name"?: string;
   "server.service.servicePortHttpsName"?: string;
+  "server.service.servicePortHttp2AppProtocol"?: string;
   "server.service.servicePortHttpsAppProtocol"?: string;
   "server.service.loadBalancerClass"?: string;
   "server.service.loadBalancerIP"?: string;
@@ -9817,6 +9845,7 @@ export type ArgocdHelmParameters = {
   "repoServer.pdb.maxUnavailable"?: string;
   "repoServer.vpa.enabled"?: string;
   "repoServer.vpa.updateMode"?: string;
+  "repoServer.vpa.recommenders"?: string;
   "repoServer.image.repository"?: string;
   "repoServer.image.tag"?: string;
   "repoServer.image.imagePullPolicy"?: string;
@@ -9905,6 +9934,7 @@ export type ArgocdHelmParameters = {
   "applicationSet.pdb.maxUnavailable"?: string;
   "applicationSet.vpa.enabled"?: string;
   "applicationSet.vpa.updateMode"?: string;
+  "applicationSet.vpa.recommenders"?: string;
   "applicationSet.image.repository"?: string;
   "applicationSet.image.tag"?: string;
   "applicationSet.image.imagePullPolicy"?: string;
@@ -10019,6 +10049,7 @@ export type ArgocdHelmParameters = {
   "notifications.pdb.maxUnavailable"?: string;
   "notifications.vpa.enabled"?: string;
   "notifications.vpa.updateMode"?: string;
+  "notifications.vpa.recommenders"?: string;
   "notifications.image.repository"?: string;
   "notifications.image.tag"?: string;
   "notifications.image.imagePullPolicy"?: string;
@@ -10139,4 +10170,5 @@ export type ArgocdHelmParameters = {
   "commitServer.networkPolicy.create"?: string;
   "commitServer.vpa.enabled"?: string;
   "commitServer.vpa.updateMode"?: string;
+  "commitServer.vpa.recommenders"?: string;
 };

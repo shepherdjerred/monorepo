@@ -11,7 +11,7 @@
  * bump loudly fail until the patch is regenerated for the new version or
  * deliberately deleted.
  */
-import { readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 /**
@@ -127,14 +127,79 @@ async function keyErrors(
   return errors;
 }
 
-// Unpatched resolutions: bun patches only exactly-keyed versions, so any
-// resolved version of a patched package that no key covers ships unpatched
-// to its consumers. Keys may legitimately cover SEVERAL versions of one
-// package — coverage is judged against all of them, not key-by-key.
-function coverageErrors(
+// A patch targets a concrete upstream defect, not a package name forever. A
+// newer major may already contain its fix, as markdown-it 15 does for the
+// linkify-it 6 ESM API. Require a patch for every resolved version that still
+// contains a removed hunk line; fail closed when the installed source cannot
+// be inspected. This keeps the coverage guard while avoiding a no-op patch
+// that would conceal an already-integrated upstream fix.
+function removedPatchLines(patch: string): string[] {
+  return patch
+    .split("\n")
+    .filter((line) => line.startsWith("-") && !line.startsWith("---"))
+    .map((line) => line.slice(1))
+    .filter((line) => line.length > 0);
+}
+
+async function packageFiles(
+  root: string,
+  name: string,
+  version: string,
+): Promise<string[] | undefined> {
+  const escapedName = name.replace("/", "+");
+  let cacheEntries: string[];
+  try {
+    cacheEntries = await readdir(`${root}/node_modules/.bun`);
+  } catch {
+    return undefined;
+  }
+  const prefix = `${escapedName}@${version}`;
+  const cacheEntry = cacheEntries.find((entry) => entry.startsWith(prefix));
+  if (cacheEntry === undefined) return undefined;
+
+  const files: string[] = [];
+  async function visit(directory: string): Promise<void> {
+    const entries = await readdir(directory, { withFileTypes: true });
+    for (const entry of entries) {
+      const child = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        await visit(child);
+      } else if (entry.isFile()) {
+        files.push(child);
+      }
+    }
+  }
+
+  try {
+    await visit(`${root}/node_modules/.bun/${cacheEntry}/node_modules/${name}`);
+  } catch {
+    return undefined;
+  }
+  return files;
+}
+
+async function needsPatch(
+  root: string,
+  name: string,
+  version: string,
+  removedLines: string[],
+): Promise<boolean> {
+  const files = await packageFiles(root, name, version);
+  if (files === undefined) return true;
+  for (const file of files) {
+    const source = await readFile(file, "utf8");
+    if (removedLines.some((line) => source.includes(line))) return true;
+  }
+  return false;
+}
+
+// Bun patches only exactly-keyed versions. Coverage is judged against every
+// resolved version that still contains the patched upstream defect.
+async function coverageErrors(
+  root: string,
   patched: Record<string, string>,
   resolved: Map<string, Set<string>>,
-): string[] {
+): Promise<string[]> {
   const patchedVersionsByName = new Map<string, Set<string>>();
   for (const key of Object.keys(patched)) {
     const { name, version } = splitKey(key);
@@ -144,9 +209,28 @@ function coverageErrors(
   }
   const errors: string[] = [];
   for (const [name, patchedVersions] of patchedVersionsByName) {
-    const uncovered = [...(resolved.get(name) ?? new Set<string>())]
-      .filter((v) => !patchedVersions.has(v))
-      .sort();
+    const patchPaths = Object.entries(patched)
+      .filter(([key]) => splitKey(key).name === name)
+      .map(([, patchPath]) => patchPath);
+    const removedLineGroups = await Promise.all(
+      patchPaths.map(async (patchPath) => {
+        const patchFile = Bun.file(`${root}/${patchPath}`);
+        if (!(await patchFile.exists())) return [];
+        return removedPatchLines(await patchFile.text());
+      }),
+    );
+    const removedLines = removedLineGroups.flat();
+    const uncovered: string[] = [];
+    for (const version of resolved.get(name) ?? new Set<string>()) {
+      if (
+        !patchedVersions.has(version) &&
+        (removedLines.length === 0 ||
+          (await needsPatch(root, name, version, removedLines)))
+      ) {
+        uncovered.push(version);
+      }
+    }
+    uncovered.sort();
     if (uncovered.length > 0) {
       errors.push(
         `"${name}" also resolves at unpatched version(s) ${uncovered.join(", ")} — ` +
@@ -167,9 +251,11 @@ async function rootOrphanErrors(
   try {
     files = await readdir(`${root}/patches`);
   } catch (error) {
-    if (
-      !(error instanceof Error && "code" in error && error.code === "ENOENT")
-    ) {
+    if (!(
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "ENOENT"
+    )) {
       throw error;
     }
   }
@@ -257,7 +343,7 @@ export async function collectErrors(root: string): Promise<string[]> {
   );
   return [
     ...(await keyErrors(root, patched, resolved)),
-    ...coverageErrors(patched, resolved),
+    ...(await coverageErrors(root, patched, resolved)),
     ...(await rootOrphanErrors(root, new Set(Object.values(patched)))),
     ...(await packageLocalOrphanErrors(root)),
   ];

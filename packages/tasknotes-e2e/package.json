@@ -25,7 +25,7 @@
     "tasknotes-server": "workspace:*",
     "typescript": "^6.0.3",
     "zod": "^4.4.3",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   }
 }

@@ -21,7 +21,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
-    "@sentry/bun": "^10.49.0",
+    "@sentry/bun": "^10.70.0",
     "@shepherdjerred/home-assistant": "workspace:*",
     "zod": "^4.4.3"
   },
@@ -32,7 +32,7 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   }
 }

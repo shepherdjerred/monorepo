@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1001.0",
-    "@openai/agents": "0.14.3",
+    "@openai/agents": "0.17.0",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.221.0",
     "@opentelemetry/core": "^2.7.0",
@@ -47,7 +47,7 @@
     "@opentelemetry/sdk-node": "^0.221.0",
     "@opentelemetry/sdk-trace-base": "^2.7.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
-    "@sentry/bun": "^10.49.0",
+    "@sentry/bun": "^10.70.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/discord-stream-lifecycle": "workspace:*",
     "@shepherdjerred/discord-video-stream": "workspace:*",
@@ -64,13 +64,13 @@
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.0",
-    "@typescript-eslint/utils": "^8.65.0",
+    "@typescript-eslint/utils": "^8.67.0",
     "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
-    "openai": "7.0.0",
+    "openai": "7.5.0",
     "typescript": "^6.0.3",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   }
 }

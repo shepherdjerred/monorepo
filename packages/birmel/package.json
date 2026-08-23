@@ -33,7 +33,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.3.220",
+    "@anthropic-ai/claude-agent-sdk": "^0.3.241",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.221.0",
     "@opentelemetry/core": "^2.7.1",
@@ -47,14 +47,14 @@
     "@prisma/adapter-libsql": "7.9.1",
     "@prisma/client": "^7.9.1",
     "@prisma/client-runtime-utils": "7.9.1",
-    "@sentry/bun": "10.69.0",
+    "@sentry/bun": "10.70.0",
     "@shepherdjerred/glitter-context": "workspace:*",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@snazzah/davey": "^0.1.11",
-    "ai": "^7.0.58",
+    "ai": "^7.0.77",
     "chrono-node": "^2.9.1",
     "cron-parser": "^5.5.0",
     "discord-player": "7.2.0",
@@ -67,18 +67,18 @@
     "prom-client": "^15.1.3",
     "prisma": "7.9.1",
     "youtube-dl-exec": "^3.1.6",
-    "youtubei.js": "^17.0.1",
+    "youtubei.js": "^18.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.0",
-    "@typescript-eslint/utils": "^8.65.0",
+    "@typescript-eslint/utils": "^8.67.0",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   }
 }

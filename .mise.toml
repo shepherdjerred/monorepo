@@ -9,7 +9,7 @@ bun = "1.4.0"
 # Temporal's real workflow-worker tests need Node runtime primitives that Bun
 # 1.4 does not implement. Keep the sole exception on the current LTS line.
 node = "24.19.0"
-rust = "1.97.1"
+rust = "1.98.0"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk
 dotnet = "10.0.302"
 # C# is a third-party UniFFI binding. Keep the generator outside Cargo.toml:
@@ -21,7 +21,7 @@ dotnet = "10.0.302"
 # renovate: datasource=crate depName=cargo-mutants
 "cargo:cargo-mutants" = "27.1.0"
 # renovate: datasource=crate depName=cargo-llvm-cov
-"cargo:cargo-llvm-cov" = "0.8.7"
+"cargo:cargo-llvm-cov" = "0.9.0"
 # tasknotes-core's `deny` script (supply-chain + license + build-script bans).
 # No mise registry entry exists, so this names the backend explicitly; `github:`
 # fetches the release binary and verifies its artifact attestation and SLSA
@@ -29,12 +29,12 @@ dotnet = "10.0.302"
 # renovate: datasource=github-releases depName=EmbarkStudios/cargo-deny
 "github:EmbarkStudios/cargo-deny" = "0.20.2"
 # renovate: datasource=github-releases depName=corretto/corretto-25 versioning=loose
-java = "corretto-25.0.4.7.1"
+java = "corretto-25.0.4.8.1"
 # Repo-wide checks + git hooks (verify/pre-commit call these directly)
 gitleaks = "8"
 shellcheck = "0.11"
 # Native-family shims
-go = "1.26.5"
+go = "1.27.0"
 golangci-lint = "2"
 # Release automation (cooklang publish, release commit-backs) shells out to gh
 gh = "2"
@@ -46,6 +46,6 @@ jq = "1"
 yq = "4"
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
 helm = "4"
-opentofu = "1.12.5"
+opentofu = "1.12.6"
 argocd = "3"
 awscli = "2"
