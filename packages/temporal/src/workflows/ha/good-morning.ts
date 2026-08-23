@@ -31,6 +31,7 @@ const BEDROOM_MEDIA = "media_player.bedroom" as const;
 // get-up degrades to Bedroom-only playback when that happens.
 const MASTER_BATHROOM_MEDIA = "media_player.master_bathroom" as const;
 const EXTRA_MEDIA_PLAYERS = [MASTER_BATHROOM_MEDIA] as const;
+const OPTIONAL_MEDIA_PLAYER_PATCH = "good-morning-optional-media-player-v1";
 const BEDROOM_DIMMED = "scene.bedroom_dimmed" as const;
 const BEDROOM_BRIGHT = "scene.bedroom_bright" as const;
 const MASTER_BATHROOM_HEAT = "climate.master_bathroom" as const;
@@ -348,6 +349,34 @@ export async function goodMorningGetUp(): Promise<void> {
     entity_id: BEDROOM_BRIGHT,
     transition: 60,
   });
+
+  if (!patched(OPTIONAL_MEDIA_PLAYER_PATCH)) {
+    for (const player of EXTRA_MEDIA_PLAYERS) {
+      await callServiceUnchecked("media_player", "volume_set", {
+        entity_id: player,
+        volume_level: 0,
+      });
+    }
+
+    await callServiceUnchecked("media_player", "join", {
+      entity_id: BEDROOM_MEDIA,
+      group_members: EXTRA_MEDIA_PLAYERS,
+    });
+
+    const allPlayers = [BEDROOM_MEDIA, ...EXTRA_MEDIA_PLAYERS] as const;
+    for (let step = 0; step < 2; step += 1) {
+      for (const player of allPlayers) {
+        await callServiceUnchecked("media_player", "volume_up", {
+          entity_id: player,
+        });
+      }
+      if (step < 1) {
+        await sleep("5 seconds");
+      }
+    }
+    await setOutcome("executed", "getup-routine-complete");
+    return;
+  }
 
   let mediaDegraded = false;
   const availableExtraPlayers: string[] = [];
