@@ -2,6 +2,7 @@ import configuration from "#src/configuration.ts";
 import { z } from "zod";
 import { prisma } from "#src/db/index.ts";
 import { REQUIRED_MIGRATIONS } from "#src/db/migrate.ts";
+import { registry } from "#src/metrics.ts";
 import client from "#src/discord/client.ts";
 import {
   gatewayDownForMs,
@@ -78,6 +79,13 @@ Bun.serve({
     if (url.pathname === "/ready") {
       const result = await readiness();
       return Response.json(result, { status: result.ready ? 200 : 503 });
+    }
+
+    if (url.pathname === "/metrics") {
+      return new Response(await registry.metrics(), {
+        status: 200,
+        headers: { "content-type": registry.contentType },
+      });
     }
 
     return new Response("Not Found", { status: 404 });

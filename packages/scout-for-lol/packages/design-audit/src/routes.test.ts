@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { themes, viewports } from "./constants.ts";
 import { appRoutes, auditRoutes } from "./routes.ts";
 

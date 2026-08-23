@@ -16,6 +16,21 @@
       "dependsOn": ["generate", "^build"],
       "outputs": ["dist/**"]
     },
+    /**
+     * `lint` runs `astro sync`, which starts a vite server and optimizes deps
+     * into this package's `node_modules/.vite/deps`. `build` (astro build)
+     * optimizes into the same directory, and vite installs the result with an
+     * atomic rename. The root `lint` task depends only on `^build`/`generate`,
+     * so turbo was free to run both here at once and the losing rename failed
+     * with `ENOTEMPTY: ... deps_temp_* -> deps` (build 10781, and the same
+     * failure on #2251's build 10671). Ordering after `build` serialises the
+     * two vite runs; the build is required by `test`/`test:ci` anyway, so this
+     * costs no extra work. Same remedy as the root task's `generate`
+     * dependency, added for the identical race in build 5789.
+     */
+    "lint": {
+      "dependsOn": ["build", "^build", "generate"]
+    },
     "test": {
       "dependsOn": ["build", "^build", "generate"]
     },

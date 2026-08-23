@@ -137,6 +137,11 @@ export function createStreambotDeployment(
         // Peer userbot Discord user IDs (Pokébot + Glitter Kart) so the alone-channel
         // detector excludes them from the "real viewers" count and leaves once the
         // last human exits. Sourced from the canonical map in resources/userbot-ids.ts.
+        // Bootstrap for the flag client — cannot come from a flag.
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
         PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("streambot")),
         // Enables movie/TV poster art on the now-playing embed for local files. Sourced from the
         // dedicated streambot-tmdb item. Required — the item must carry TMDB_API_KEY or the pod

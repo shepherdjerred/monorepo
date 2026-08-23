@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { contrastRatio, parseColor } from "./contrast.ts";
 
 describe("contrast helpers", () => {

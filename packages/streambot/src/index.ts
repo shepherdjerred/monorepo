@@ -29,6 +29,11 @@ import {
   shutdownTelemetry,
 } from "@shepherdjerred/streambot/observability/tracing.ts";
 import { VoiceCaptureManager } from "@shepherdjerred/streambot/voice/capture-manager.ts";
+import {
+  initializeDynamicConfig,
+  shutdownDynamicConfig,
+} from "@shepherdjerred/streambot/config/dynamic.ts";
+import { featureFlagMetrics } from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
@@ -36,6 +41,16 @@ async function main(): Promise<void> {
   // Initialize before anything else so early failures are captured.
   initializeSentry();
   const config = loadConfig();
+  await initializeDynamicConfig({
+    seed: {
+      playerCardEnabled: config.playerCard.enabled,
+      subtitlesEnabled: config.subtitles.enabled,
+    },
+    log: (message) => {
+      logger.warn(message);
+    },
+    metrics: featureFlagMetrics,
+  });
   // Manual voice spans and correlated logs must be active before model initialization emits its
   // first diagnostics. The OpenAI SDK's own tracing remains explicitly disabled per turn.
   initializeTelemetry(config.observability);
@@ -144,6 +159,7 @@ async function main(): Promise<void> {
     await pool.destroy();
     await voiceModels?.close();
     await voiceCaptureManager.shutdown();
+    await shutdownDynamicConfig();
     await shutdownTelemetry();
     await stopMetricsServer();
     process.exit(0);

@@ -418,5 +418,11 @@
     "name": "turbo-cache-liskov",
     "backup": "disabled",
     "reason": "Rebuildable Turbo cache"
+  },
+  {
+    "namespace": "flipt",
+    "name": "flipt-data",
+    "backup": "enabled",
+    "reason": "Flipt git-backed flag state — the only durable copy of every flag definition"
   }
 ]
