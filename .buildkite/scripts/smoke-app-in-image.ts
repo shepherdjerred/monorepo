@@ -356,6 +356,7 @@ const commands: Record<
       FEATURE_FLAGS_MODE: "disabled",
       DATABASE_URL: "postgres://postgres@127.0.0.1:18732/postgres",
       LEGACY_SQLITE_PATH: "/tmp/no-legacy-sqlite.db",
+      ENABLE_DISCORD_GATEWAY: "false",
       ENABLE_BACKGROUND_JOBS: "false",
       REPORT_LAKE_DIR: "/tmp/report-lake",
       PORT: "18791",
