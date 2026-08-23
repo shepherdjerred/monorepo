@@ -257,6 +257,12 @@
       "matchDatasources": ["terraform-provider"],
       "matchPackageNames": ["hashicorp/aws"],
       "skipArtifactsUpdate": true
+    },
+    {
+      "description": "The repository-owned AsusWRT provider is built and installed from packages/terraform-provider-asuswrt; it is intentionally not published to a provider registry.",
+      "matchDatasources": ["terraform-provider"],
+      "matchPackageNames": ["shepherdjerred/asuswrt"],
+      "enabled": false
     }
   ],
   "minimumReleaseAge": "30 days",
