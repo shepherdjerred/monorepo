@@ -174,7 +174,7 @@
     "brace-expansion": "5.0.9",
     "ip-address": "10.5.0",
     "js-cookie": "3.0.8",
-    "nanoid": "6.0.0",
+    "nanoid": "6.0.1",
     "pdfjs-dist": "6.2.108",
     "postcss": "8.5.26",
     "protobufjs": "^7.5.7",
