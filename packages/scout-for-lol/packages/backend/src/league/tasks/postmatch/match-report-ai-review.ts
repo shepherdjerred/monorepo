@@ -36,6 +36,25 @@ export function isRankedQueue(queueType: QueueType | undefined): boolean {
 }
 
 /**
+ * Queues worth spending a model call on.
+ *
+ * A 5v5 custom counts, because a custom that reaches the post-match pipeline
+ * at all is necessarily a tournament-code game — plain customs are absent from
+ * Match-V5 — so reaching this gate is itself the proof that Scout minted it. No
+ * separate anti-farming check is needed here, unlike Bryan Bucks, because the
+ * only thing at stake is our own spend.
+ *
+ * Kept separate from `isRankedQueue` on purpose. A function of that name also
+ * exists in the report package, where it routes the ranked banner/square
+ * designs — and those render rank badges and LP deltas, which a custom has
+ * none of. Widening "ranked" in either place to mean "serious" would quietly
+ * change the other.
+ */
+export function isAiReviewableQueue(queueType: QueueType | undefined): boolean {
+  return isRankedQueue(queueType) || queueType === "custom";
+}
+
+/**
  * Check if AI reviews are enabled for any of the target guilds
  */
 async function isAiReviewEnabledForAnyGuild(
@@ -89,7 +108,7 @@ export function getAiReviewDecision(
     selectedPlayer.playerConfig.alias.toLowerCase() === "jerred";
   const shouldGenerateReview =
     jerredOverride ||
-    (isRankedQueue(completedMatch.queueType) &&
+    (isAiReviewableQueue(completedMatch.queueType) &&
       exceptionalResult.isExceptional);
 
   return {
@@ -128,11 +147,11 @@ export async function generateAiReviewIfEnabled(
 
   // Only generate reviews for ranked games where the selected player had an
   // exceptional performance, or for the selected Jerred override.
-  const isRanked = isRankedQueue(completedMatch.queueType);
+  const reviewable = isAiReviewableQueue(completedMatch.queueType);
   if (!decision.shouldGenerateReview) {
-    const reason = isRanked
+    const reason = reviewable
       ? "not an exceptional game"
-      : `not a ranked queue (queueType: ${completedMatch.queueType ?? "unknown"})`;
+      : `not a reviewable queue (queueType: ${completedMatch.queueType ?? "unknown"})`;
     logger.info(`[generateMatchReport] Skipping AI review - ${reason}`);
     return { text: undefined, image: undefined };
   }

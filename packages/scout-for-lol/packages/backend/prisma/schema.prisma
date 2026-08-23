@@ -1111,3 +1111,120 @@ model BucksMatchEarning {
   @@index([phase, state, retryAt])
   @@index([state, retryAt])
 }
+
+// =============================================================================
+// Tournament-code custom lobbies
+//
+// Riot removed custom games from the public API for privacy reasons, so
+// Spectator sees them only unreliably and Match-V5 does not carry them at all.
+// The one sanctioned exception is the Tournament API: a game created from a
+// tournament code IS recorded in Match-V5, with `info.tournamentCode`
+// populated. These two tables are what let Scout mint such a lobby and follow
+// it to its report.
+//
+// Deliberately provider-agnostic: only Int/String/BigInt/DateTime/Boolean, no
+// Prisma enum (SQLite has none) and no @db.* native types. Enum-shaped columns
+// are TEXT validated by Zod on read and write, matching how `AuditLog.action`
+// and `DmAuditLog.kind` already work. That keeps the migration portable across
+// the pending Postgres cutover.
+// =============================================================================
+
+/// A registered tournament provider and tournament.
+///
+/// Both are long-lived registrations produced by an API call, not per-game
+/// state and not a credential — so they live here rather than in 1Password or
+/// an env var. Created by scripts/register-tournament-provider.ts; call sites
+/// read the row and fail loudly naming that script when it is absent, rather
+/// than lazily creating one (which would race two concurrent /lobby create
+/// calls into two providers and silently mint a new one on a fresh volume).
+///
+/// Keyed by (apiMode, region) because stub and live IDs are different
+/// namespaces: a code minted under the stub is meaningless under the live API.
+model TournamentRegistration {
+  id               Int      @id @default(autoincrement())
+  apiMode          String // TournamentApiMode: "stub" | "live"
+  /// Riot tournament region code, e.g. "NA". Deliberately NOT named `region`:
+  /// that field name is branded as Scout's own Region enum, and these are a
+  /// different naming scheme entirely.
+  tournamentRegion String
+  providerId       Int
+  tournamentId     Int
+  callbackUrl      String
+  name             String
+  createdAt        DateTime @default(now())
+
+  @@unique([apiMode, tournamentRegion])
+}
+
+/// One Scout-created custom lobby, from minted code to delivered report.
+///
+/// Not folded into ActiveGame: that row is keyed by prematchMatchId, which does
+/// not exist until a game starts, and it is hard-deleted every 30 seconds once
+/// past its 3-hour TTL. A lobby exists before any game, may never produce one,
+/// and has to survive for /lobby status and for audit.
+///
+/// The link to ActiveGame is by value — TournamentLobby.matchId equals
+/// ActiveGame.prematchMatchId — so the post-match reply path needs no change.
+model TournamentLobby {
+  id           Int    @id @default(autoincrement())
+  /// The Riot tournament code. This is the join credential, so it is never
+  /// posted to a public channel.
+  code         String @unique
+  apiMode      String // TournamentApiMode
+  providerId   Int
+  tournamentId Int
+  /// Scout Region enum value, e.g. "AMERICA_NORTH".
+  region       String
+  /// Platform id, e.g. "NA1". games/by-code answers with a bare numeric gameId
+  /// and Match-V5 wants {PLATFORM}_{gameId}; this is the missing half.
+  platformId   String
+
+  serverId         String
+  channelId        String
+  creatorDiscordId String
+
+  /// JSON string arrays. Teams come from the /lobby create arguments because
+  /// lobby events carry a PUUID per join and never a side, and spectator is
+  /// unreliable for customs — so this is the only pregame source of the split.
+  bluePuuids    String
+  redPuuids     String
+  blueAliases   String
+  redAliases    String
+  teamSize      Int
+  pickType      String // TournamentPickType
+  mapType       String // TournamentMapType
+  spectatorType String // TournamentSpectatorType
+  lobbyName     String?
+  password      String?
+
+  /// TournamentLobbyState. Advances monotonically; see lifecycle.ts.
+  state String
+
+  /// Observability only. Correctness must NOT depend on these: lobby-events
+  /// replays its whole list every call, multiple events can share a
+  /// millisecond, and `timestamp` is a string. The monotonic state recompute
+  /// is what makes a replay idempotent.
+  processedEventCount Int     @default(0)
+  lastEventTimestamp  String?
+
+  /// JSON object: Discord channel ID -> prematch message ID. Copied onto the
+  /// ActiveGame row once the match ID is known, so the post-match report
+  /// replies to the right message.
+  prematchMessageIds String?
+
+  /// JSON string array of PUUIDs seen in a PlayerJoinedGameEvent.
+  joinedPuuids String @default("[]")
+
+  gameId  BigInt?
+  /// Platform-qualified Riot match ID; joins to ActiveGame.prematchMatchId.
+  matchId String?
+
+  lastPolledAt DateTime?
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+  updatedAt    DateTime  @updatedAt
+
+  @@index([state, expiresAt])
+  @@index([serverId, state])
+  @@index([matchId])
+}

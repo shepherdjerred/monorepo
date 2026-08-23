@@ -31,13 +31,19 @@ const missingAccessPut: DiscordCommandPut = () =>
   Promise.reject(Object.assign(new Error("Missing access"), { code: 50_001 }));
 
 describe("Discord command reconciliation", () => {
-  test("merges /bb and /scout into one guild replacement payload", async () => {
+  test("merges every enabled guild-scoped group into one replacement payload", async () => {
+    // A guild PUT replaces that guild's whole command list for the app, so the
+    // groups have to be merged before sending or the last one would win.
     const guildId = bettingGuild();
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = guildId;
     resetConfigurationForTests();
 
     const payload = await guildCommandPayload(guildId);
-    expect(payload.map((command) => command.name)).toEqual(["bb", "scout"]);
+    expect(payload.map((command) => command.name)).toEqual([
+      "bb",
+      "scout",
+      "lobby",
+    ]);
   });
 
   test("sends empty payloads to clear stale guild commands", async () => {

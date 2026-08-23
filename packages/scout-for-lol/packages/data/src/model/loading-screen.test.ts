@@ -318,6 +318,75 @@ describe("LoadingScreenDataSchema", () => {
     ).toThrow();
   });
 
+  test("accepts a laneless sub-five custom lobby", () => {
+    // Riot reports an empty teamPosition for a side that is not a full five,
+    // so there is no lane to infer and none is asserted.
+    const result = LoadingScreenDataSchema.parse({
+      ...validData,
+      queueType: "custom",
+      queueDisplayName: makeQueueDisplayName("custom"),
+      isRanked: false,
+      participants: [
+        makeNonStandardParticipant(makePuuid("01"), "blue"),
+        makeNonStandardParticipant(makePuuid("02"), "blue"),
+        makeNonStandardParticipant(makePuuid("03"), "blue"),
+        makeNonStandardParticipant(makePuuid("06"), "red"),
+        makeNonStandardParticipant(makePuuid("07"), "red"),
+        makeNonStandardParticipant(makePuuid("08"), "red"),
+      ],
+    });
+    expect(result.participants).toHaveLength(6);
+  });
+
+  test("accepts an uneven custom lobby", () => {
+    // A 3v2 is a real outcome: someone dodged or never connected.
+    const result = LoadingScreenDataSchema.parse({
+      ...validData,
+      queueType: "custom",
+      queueDisplayName: makeQueueDisplayName("custom"),
+      isRanked: false,
+      participants: [
+        makeNonStandardParticipant(makePuuid("01"), "blue"),
+        makeNonStandardParticipant(makePuuid("02"), "blue"),
+        makeNonStandardParticipant(makePuuid("03"), "blue"),
+        makeNonStandardParticipant(makePuuid("06"), "red"),
+        makeNonStandardParticipant(makePuuid("07"), "red"),
+      ],
+    });
+    expect(result.participants).toHaveLength(5);
+  });
+
+  test("rejects a side with nobody on it", () => {
+    // The bare 2..10 length bound would happily accept a 4v0.
+    expect(() =>
+      LoadingScreenDataSchema.parse({
+        ...validData,
+        queueType: "custom",
+        queueDisplayName: makeQueueDisplayName("custom"),
+        isRanked: false,
+        participants: [
+          makeNonStandardParticipant(makePuuid("01"), "blue"),
+          makeNonStandardParticipant(makePuuid("02"), "blue"),
+          makeNonStandardParticipant(makePuuid("03"), "blue"),
+          makeNonStandardParticipant(makePuuid("04"), "blue"),
+        ],
+      }),
+    ).toThrow();
+  });
+
+  test("still rejects a full five that lost one lane", () => {
+    // Making lane optional must not let a real 5v5 render laneless.
+    const [first, ...rest] = validData.participants;
+    if (first === undefined) throw new Error("no participants in fixture");
+    const { lane: _lane, ...withoutLane } = first;
+    expect(() =>
+      LoadingScreenDataSchema.parse({
+        ...validData,
+        participants: [withoutLane, ...rest],
+      }),
+    ).toThrow();
+  });
+
   test("accepts ARAM game with no bans", () => {
     const aramData = {
       ...validData,

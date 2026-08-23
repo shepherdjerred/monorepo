@@ -113,6 +113,7 @@ export type {
 } from "./review/prompt-variables.ts";
 
 export * from "./league/raw-match.schema.ts";
+export * from "./league/raw-tournament.schema.ts";
 export * from "./league/raw-participant.schema.ts";
 export * from "./league/raw-team.schema.ts";
 export * from "./league/raw-perks.schema.ts";

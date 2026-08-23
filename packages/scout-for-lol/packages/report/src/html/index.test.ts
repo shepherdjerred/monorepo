@@ -3,7 +3,11 @@ import {
   DiscordAccountIdSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
-import { matchToSvg, svgToPng } from "#src/html/index.tsx";
+import {
+  matchToSvg,
+  standardReportHeight,
+  svgToPng,
+} from "#src/html/index.tsx";
 import { expect, test, vi } from "vitest";
 
 // Each case performs a full Satori + resvg render. Whole-repo verification
@@ -859,3 +863,74 @@ test("multiple players with promotion and demotion test", async () => {
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
+
+// Custom-lobby sizes. A tournament code carries a teamSize of 1-5, so the
+// legacy report has to size its canvas to the roster it actually holds.
+//
+// These render into artifacts/custom/ rather than __snapshots__/ on purpose:
+// __snapshots__ is a visual-contract output root, and adding entries there
+// would require regenerating manifest.json. The SVG hash below is the real
+// regression pin, and unlike the manifest it runs in CI.
+const CUSTOM_LOBBY_SIZES = [
+  { blue: 1, red: 1, expectedHeight: 1372 },
+  { blue: 3, red: 2, expectedHeight: 2170 },
+  { blue: 3, red: 3, expectedHeight: 2436 },
+  { blue: 4, red: 4, expectedHeight: 2968 },
+] as const;
+
+function customLobby(blue: number, red: number): CompletedMatch {
+  const match = getMatch();
+  const [subject] = match.players;
+  if (subject === undefined) throw new Error("fixture has no players");
+  // A custom game has no rank, no LP delta and no ranked record. Dropping them
+  // here keeps the fixture faithful — and keeps the rendered artifact honest,
+  // since that is what a reviewer looks at.
+  const {
+    rankBeforeMatch: _before,
+    rankAfterMatch: _after,
+    wins: _wins,
+    losses: _losses,
+    ...unranked
+  } = subject;
+
+  return {
+    ...match,
+    queueType: "custom",
+    // Only the first player is highlighted, and it is blue[0], so truncating
+    // from the end keeps the report's subject intact.
+    players: [unranked],
+    teams: {
+      blue: match.teams.blue.slice(0, blue),
+      red: match.teams.red.slice(0, red),
+    },
+  };
+}
+
+test("a full 5v5 keeps the exact 3500px canvas", () => {
+  // The byte-identity guard for every committed baseline: deriving the height
+  // from the roster must reproduce the old constant at ten players. If the
+  // report's row spacing ever changes, this fails rather than silently
+  // rewriting 24 artifacts.
+  expect(standardReportHeight(getMatch())).toBe(3500);
+});
+
+for (const { blue, red, expectedHeight } of CUSTOM_LOBBY_SIZES) {
+  const label = `${blue.toString()}v${red.toString()}`;
+
+  test(`custom ${label} renders on a ${expectedHeight.toString()}px canvas`, async () => {
+    const match = customLobby(blue, red);
+    expect(standardReportHeight(match)).toBe(expectedHeight);
+
+    const svg = await matchToSvg(match);
+    const png = await svgToPng(svg);
+    await Bun.write(
+      new URL(
+        `../../artifacts/custom/match_custom_${label}.png`,
+        import.meta.url,
+      ),
+      png,
+    );
+
+    expect(hashSvg(svg)).toMatchSnapshot();
+  }, 30_000);
+}

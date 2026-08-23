@@ -48,7 +48,9 @@ export async function saveMatchToS3(
       participantCount: match.info.participants.length.toString(),
       gameDuration: match.info.gameDuration.toString(),
       gameVersion: match.info.gameVersion,
-      result: match.info.endOfGameResult,
+      // S3 object metadata values must be strings. Riot omits this for custom
+      // games, and "unknown" is the honest label for a field never sent.
+      result: match.info.endOfGameResult ?? "unknown",
       map: match.info.mapId.toString(),
       dataVersion: match.metadata.dataVersion,
       gameType: match.info.gameType,

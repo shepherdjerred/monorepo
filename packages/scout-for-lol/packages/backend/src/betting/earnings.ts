@@ -9,6 +9,8 @@ import {
   type RawMatch,
   type RawParticipant,
 } from "@scout-for-lol/data";
+import { isStandardLobby } from "#src/betting/eligibility.ts";
+import { isScoutTournamentLobby } from "#src/league/tournament/scout-lobby-lookup.ts";
 import {
   BUCKS_EARNING_QUEUES,
   PENDING_EARNING_RETRY_DELAY_MS,
@@ -175,7 +177,17 @@ export async function awardBucksForMatch(
 
   try {
     const queueType = queueTypeOf(matchData);
-    if (queueType === undefined || !BUCKS_EARNING_QUEUES.includes(queueType)) {
+    // A Scout-minted 5v5 custom earns like a ranked game. "custom" is
+    // deliberately NOT in BUCKS_EARNING_QUEUES: an arbitrary custom is
+    // trivially farmable, and this gate is what makes the code we issued the
+    // thing that qualifies rather than the queue id.
+    const earnableQueue =
+      queueType !== undefined &&
+      (BUCKS_EARNING_QUEUES.includes(queueType) ||
+        (queueType === "custom" &&
+          isStandardLobby(matchData.info.participants) &&
+          (await isScoutTournamentLobby(matchData, prismaClient))));
+    if (!earnableQueue) {
       return awards;
     }
     // A remake is not a game anyone played, so nothing is earned from it.

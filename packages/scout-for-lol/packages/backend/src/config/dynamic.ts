@@ -12,6 +12,10 @@ import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-sou
 import { createLogger } from "#src/logger.ts";
 import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
 import configuration from "#src/configuration.ts";
+import {
+  TournamentApiModeSchema,
+  type TournamentApiMode,
+} from "#src/league/api/tournament/mode.ts";
 
 const logger = createLogger("config-dynamic");
 
@@ -99,7 +103,58 @@ const DEFINITION = {
     default: "gpt-5.6-luna",
     names: { flag: "scout-bucks-ask-model", env: "BB_ASK_MODEL" },
   },
+  /**
+   * Which tournament API the tournament client talks to.
+   *
+   * Not bootstrap — nothing needs it to construct the flag client — so it is
+   * flag-capable and can be flipped the hour the Riot key gains tournament
+   * access, with no deploy.
+   *
+   * Defaults to "stub" because that is the safe state: stub codes cannot
+   * create a real game, so a misconfigured deploy fails visibly at lobby
+   * creation rather than minting live codes nobody expected.
+   *
+   * Caveat worth knowing: Scout's flag targetingKey is the constant
+   * "scout-backend", so flipping this in Flipt moves beta and prod together.
+   * That is inert while no prod guild has tournament lobbies enabled, and
+   * stops being inert the moment one does.
+   */
+  tournamentApiMode: {
+    schema: TournamentApiModeSchema,
+    sources: ["flag", "env", "default"],
+    default: "stub",
+    names: { flag: "scout-tournament-api-mode", env: "TOURNAMENT_API_MODE" },
+  },
+  /**
+   * How many lobbies one guild may have open at once. Bounds the poll budget:
+   * each open lobby costs one lobby-events call per 20-second tick.
+   */
+  tournamentMaxOpenLobbies: {
+    schema: z.coerce.number().int().positive(),
+    sources: ["flag", "env", "default"],
+    default: 10,
+    names: {
+      flag: "scout-tournament-max-open-lobbies",
+      env: "TOURNAMENT_MAX_OPEN_LOBBIES",
+    },
+  },
 } as const;
+
+/**
+ * The values the snapshot starts from, so a read before the first refresh is
+ * byte-identical to the env-derived behaviour that preceded it.
+ */
+export type DynamicConfigSeed = {
+  exploreGuildAllowlist: string[];
+  llmHourlyTokenBudget: number;
+  llmDailyTokenBudget: number;
+  reportAiModel?: string;
+  bettingParlayAiModel?: string;
+  exploreModel?: string;
+  bucksAskModel?: string;
+  tournamentApiMode?: TournamentApiMode;
+  tournamentMaxOpenLobbies?: number;
+};
 
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -107,15 +162,7 @@ type Snapshot = ReturnType<typeof buildSnapshot>;
 
 function buildSnapshot(
   environment: Readonly<Record<string, string | undefined>>,
-  seed: {
-    exploreGuildAllowlist: string[];
-    llmHourlyTokenBudget: number;
-    llmDailyTokenBudget: number;
-    reportAiModel?: string;
-    bettingParlayAiModel?: string;
-    exploreModel?: string;
-    bucksAskModel?: string;
-  },
+  seed: DynamicConfigSeed,
   flagSourceEnabled: boolean,
 ) {
   const resolver = defineConfig({
@@ -133,6 +180,8 @@ function buildSnapshot(
                 bettingParlayAiModel: "string",
                 exploreModel: "string",
                 bucksAskModel: "string",
+                tournamentApiMode: "string",
+                tournamentMaxOpenLobbies: "number",
               },
             }),
           }
@@ -188,15 +237,7 @@ export type InitializeDynamicConfigOptions = {
   readonly environment?: InitFeatureFlagsOptions["environment"];
   readonly provider?: InitFeatureFlagsOptions["provider"];
   readonly metrics?: InitFeatureFlagsOptions["metrics"];
-  readonly seed: {
-    exploreGuildAllowlist: string[];
-    llmHourlyTokenBudget: number;
-    llmDailyTokenBudget: number;
-    reportAiModel?: string;
-    bettingParlayAiModel?: string;
-    exploreModel?: string;
-    bucksAskModel?: string;
-  };
+  readonly seed: DynamicConfigSeed;
   /** Tests pass false to avoid an interval. */
   readonly startPolling?: boolean;
 };
@@ -284,6 +325,17 @@ export async function refreshDynamicConfig(): Promise<void> {
   }
   await snapshot.refresh();
   await notifyRefreshListeners();
+}
+
+export function tournamentApiMode(): TournamentApiMode {
+  return snapshot?.get("tournamentApiMode") ?? configuration.tournamentApiMode;
+}
+
+export function tournamentMaxOpenLobbies(): number {
+  return (
+    snapshot?.get("tournamentMaxOpenLobbies") ??
+    configuration.tournamentMaxOpenLobbies
+  );
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {

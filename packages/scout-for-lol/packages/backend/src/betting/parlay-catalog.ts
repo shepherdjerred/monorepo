@@ -293,10 +293,16 @@ export function participantNumericValue(
   return participant[field];
 }
 
+/**
+ * `undefined` when the payload does not carry the field at all — Riot omits
+ * `eligibleForProgression` for a custom game. Settling that as `false` would
+ * resolve real stakes against a fact nobody observed, so the evaluator voids
+ * instead, exactly as it already does for an unobservable numeric field.
+ */
 export function participantBooleanValue(
   participant: RawParticipant,
   field: ParticipantBooleanField,
-): boolean {
+): boolean | undefined {
   return participant[field];
 }
 

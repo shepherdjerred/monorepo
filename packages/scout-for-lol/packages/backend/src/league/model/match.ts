@@ -46,7 +46,6 @@ export function toMatch(
     { before: Rank | undefined; after: Rank | undefined }
   >,
 ): CompletedMatch | undefined {
-  const teams = getTeams(rawMatch.info.participants, participantToChampion);
   const queueType = resolveQueueTypeFromGame(
     rawMatch.info.queueId,
     rawMatch.info.gameMode,
@@ -56,6 +55,9 @@ export function toMatch(
   if (queueType === "arena") {
     throw new Error("arena matches are not supported");
   }
+  // After the arena guard: `getTeams` groups by teamId 100/200, which an Arena
+  // payload (8 subteams) does not use.
+  const teams = getTeams(rawMatch.info.participants, participantToChampion);
   if (
     isClassicQueueType(queueType) &&
     isClassicAssetMode(rawMatch.info.queueId, rawMatch.info.gameMode)
