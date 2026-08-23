@@ -24,6 +24,7 @@ import { requireEnv, run } from "./lib/run.ts";
 import { setupGitAuth } from "./lib/github-auth.ts";
 import {
   classifyAllPackageReleases,
+  NPM_PACKAGE_POLICIES,
   type PackageReleaseDecision,
 } from "./lib/npm-release-eligibility.ts";
 import { runReleaseRefiner } from "./lib/release-refiner.ts";
@@ -53,6 +54,19 @@ function repoRoot(): string {
   return new URL("..", import.meta.url).pathname;
 }
 
+async function fetchNpmPackageTags(
+  root: string,
+  env: Record<string, string>,
+): Promise<void> {
+  for (const policy of NPM_PACKAGE_POLICIES) {
+    const tagRef = `refs/tags/${policy.tagPrefix}*`;
+    await run(["git", "fetch", "--no-tags", "origin", `${tagRef}:${tagRef}`], {
+      cwd: root,
+      env,
+    });
+  }
+}
+
 function usage(): never {
   console.error("Usage: bun scripts/release.ts [--dry-run]");
   process.exit(1);
@@ -78,26 +92,30 @@ async function main(): Promise<void> {
   }
 
   const root = repoRoot();
-  const releaseDecisions = await classifyAllPackageReleases(root);
-  printReleaseDecisions(releaseDecisions);
-  const excludedPaths = releaseDecisions
-    .filter((decision) => !decision.eligible)
-    .map((decision) => decision.packagePath);
-
-  // Validate both providers before release-please mutates the release PR.
-  // Codex is an intentional quota fallback, not an optional best-effort path.
-  const claudeToken = requireEnv("CLAUDE_CODE_OAUTH_TOKEN");
-  const codexAccessToken = requireEnv("CODEX_ACCESS_TOKEN");
-  // Codex runs tool calls through a login shell. Verify that exact boundary,
-  // not only this process's mise-aware PATH, before release-please mutates a PR.
-  await run(["/bin/bash", "-lc", "gh --version"], {
-    cwd: root,
-    capture: true,
-  });
   const auth = await setupGitAuth(root);
   const env = auth.env;
 
   try {
+    // The canonical Buildkite checkout intentionally uses --no-tags. Fetch the
+    // authoritative package tags before the fail-closed eligibility preflight.
+    await fetchNpmPackageTags(root, env);
+    const releaseDecisions = await classifyAllPackageReleases(root);
+    printReleaseDecisions(releaseDecisions);
+    const excludedPaths = releaseDecisions
+      .filter((decision) => !decision.eligible)
+      .map((decision) => decision.packagePath);
+
+    // Validate both providers before release-please mutates the release PR.
+    // Codex is an intentional quota fallback, not an optional best-effort path.
+    const claudeToken = requireEnv("CLAUDE_CODE_OAUTH_TOKEN");
+    const codexAccessToken = requireEnv("CODEX_ACCESS_TOKEN");
+    // Codex runs tool calls through a login shell. Verify that exact boundary,
+    // not only this process's mise-aware PATH, before release-please mutates a PR.
+    await run(["/bin/bash", "-lc", "gh --version"], {
+      cwd: root,
+      capture: true,
+    });
+
     await runReleasePlease({
       phase: "release-pr",
       token: auth.token,

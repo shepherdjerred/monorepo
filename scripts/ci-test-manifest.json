@@ -687,6 +687,15 @@
           "command": ["bash", "../.buildkite/scripts/toolchain.test.sh"]
         }
       ]
+    },
+    {
+      "package": "@shepherdjerred/release-tools",
+      "directory": "packages/release-tools",
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     }
   ],
   "testlessWorkspaces": [

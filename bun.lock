@@ -1071,6 +1071,10 @@
       "dependencies": {
         "release-please": "17.11.1",
       },
+      "devDependencies": {
+        "@vitest/coverage-istanbul": "4.1.9",
+        "vitest": "4.1.9",
+      },
     },
     "packages/resume": {
       "name": "@shepherdjerred/resume",
@@ -2013,7 +2017,6 @@
     "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch",
     "twisted@1.82.0": "patches/twisted@1.82.0.patch",
     "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
-    "bun-types@1.4.0": "patches/bun-types@1.4.0.patch",
     "@astrojs/internal-helpers@0.10.2": "patches/@astrojs%2Finternal-helpers@0.10.2.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "astro@7.1.5": "patches/astro@7.1.5.patch",

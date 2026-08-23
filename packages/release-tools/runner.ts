@@ -53,6 +53,8 @@ export function applyExcludedPathsToConfig(
         `Release policy tried to exclude unconfigured package path ${path}`,
       );
     }
+    // release-please's CommitExclude treats a path as a directory prefix, so
+    // this excludes every changed file below the component path.
     config.excludePaths = [...new Set([...(config.excludePaths ?? []), path])];
   }
 }
