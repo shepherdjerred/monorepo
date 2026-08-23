@@ -295,41 +295,41 @@ function makeParticipant(
   };
 }
 
-describe("LoadingScreenDataSchema", () => {
-  const validData = {
-    gameId: GameIdSchema.parse(12_345),
-    queueType: "solo",
-    queueDisplayName: makeQueueDisplayName("solo"),
-    isRanked: true,
-    layout: "standard",
-    mapName: "Summoner's Rift",
-    participants: [
-      makeParticipant(makePuuid("01"), "blue", "top"),
-      makeParticipant(makePuuid("02"), "blue", "jungle"),
-      makeParticipant(makePuuid("03"), "blue", "middle"),
-      makeParticipant(makePuuid("04"), "blue", "adc"),
-      makeParticipant(makePuuid("05"), "blue", "support"),
-      makeParticipant(makePuuid("06"), "red", "top"),
-      makeParticipant(makePuuid("07"), "red", "jungle"),
-      makeParticipant(makePuuid("08"), "red", "middle"),
-      makeParticipant(makePuuid("09"), "red", "adc"),
-      makeParticipant(makePuuid("10"), "red", "support"),
-    ],
-    bans: [
-      {
-        championId: LoadingScreenChampionIdSchema.parse(1),
-        championName: "Annie",
-        team: "blue",
-      },
-      {
-        championId: LoadingScreenChampionIdSchema.parse(2),
-        championName: "Olaf",
-        team: "red",
-      },
-    ],
-    gameStartTime: Date.now(),
-  };
+const validData = {
+  gameId: GameIdSchema.parse(12_345),
+  queueType: "solo",
+  queueDisplayName: makeQueueDisplayName("solo"),
+  isRanked: true,
+  layout: "standard",
+  mapName: "Summoner's Rift",
+  participants: [
+    makeParticipant(makePuuid("01"), "blue", "top"),
+    makeParticipant(makePuuid("02"), "blue", "jungle"),
+    makeParticipant(makePuuid("03"), "blue", "middle"),
+    makeParticipant(makePuuid("04"), "blue", "adc"),
+    makeParticipant(makePuuid("05"), "blue", "support"),
+    makeParticipant(makePuuid("06"), "red", "top"),
+    makeParticipant(makePuuid("07"), "red", "jungle"),
+    makeParticipant(makePuuid("08"), "red", "middle"),
+    makeParticipant(makePuuid("09"), "red", "adc"),
+    makeParticipant(makePuuid("10"), "red", "support"),
+  ],
+  bans: [
+    {
+      championId: LoadingScreenChampionIdSchema.parse(1),
+      championName: "Annie",
+      team: "blue",
+    },
+    {
+      championId: LoadingScreenChampionIdSchema.parse(2),
+      championName: "Olaf",
+      team: "red",
+    },
+  ],
+  gameStartTime: Date.now(),
+};
 
+describe("LoadingScreenDataSchema", () => {
   test("accepts valid standard game data", () => {
     const result = LoadingScreenDataSchema.parse(validData);
     expect(Number(result.gameId)).toBe(12_345);
