@@ -7,7 +7,6 @@ import { chartName, setChartVersion } from "./migration-core.ts";
 if (import.meta.main) {
   const root = import.meta.dir.replace(/\/scripts$/, "");
   const cdk8s = `${root}/src/cdk8s`;
-  await $`bunx turbo run build --filter=@homelab/cdk8s`.cwd(root);
   for (const chartPath of new Bun.Glob("*/Chart.yaml").scanSync({
     cwd: `${cdk8s}/helm`,
     absolute: true,

@@ -687,6 +687,15 @@
           "command": ["bash", "../.buildkite/scripts/toolchain.test.sh"]
         }
       ]
+    },
+    {
+      "package": "@shepherdjerred/release-tools",
+      "directory": "packages/release-tools",
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     }
   ],
   "testlessWorkspaces": [
@@ -724,11 +733,6 @@
       "package": "@shepherdjerred/cooklang-rich-preview",
       "directory": "packages/cooklang-rich-preview",
       "reason": "Static marketing site; no test files exist."
-    },
-    {
-      "package": "@shepherdjerred/release-tools",
-      "directory": "packages/release-tools",
-      "reason": "Release Please wrapper package; no test files exist."
     },
     {
       "package": "@shepherdjerred/resume",

@@ -12,6 +12,7 @@
     { "type": "test", "section": "Tests", "hidden": true },
     { "type": "build", "section": "Build", "hidden": true },
     { "type": "ci", "section": "CI", "hidden": true },
+    { "type": "deps", "section": "Dependencies", "hidden": true },
     { "type": "style", "section": "Style", "hidden": true }
   ],
   "packages": {

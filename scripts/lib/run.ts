@@ -24,6 +24,8 @@ export type RunOptions = {
    * never appear in CI logs.
    */
   secret?: boolean;
+  /** When false (with capture), keep ordinary machine-readable output quiet. */
+  echoCapturedStdout?: boolean;
 };
 
 export type RunResult = {
@@ -104,7 +106,7 @@ export async function runAllowExit(
   const stdout = capture ? await new Response(proc.stdout).text() : "";
   const exitCode = await proc.exited;
   const stderr = await stderrTail;
-  if (capture && opts.secret !== true) {
+  if (capture && opts.secret !== true && opts.echoCapturedStdout !== false) {
     // Echo captured stdout so the operator still sees it in the terminal.
     // Suppressed when `secret` is set — used for secret-bearing output that
     // must never reach the log.

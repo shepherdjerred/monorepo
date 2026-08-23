@@ -2,10 +2,21 @@
   "name": "@shepherdjerred/release-tools",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "release-please": "release-please"
+    "release-please": "release-please",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "release-please": "17.11.1"
+  },
+  "exports": {
+    "./runner": "./runner.ts"
+  },
+  "devDependencies": {
+    "@vitest/coverage-istanbul": "4.1.9",
+    "vitest": "4.1.9"
   }
 }

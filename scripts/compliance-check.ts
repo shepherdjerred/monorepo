@@ -362,7 +362,6 @@ packages/scout-for-lol:typecheck
 packages/home-assistant:build
 packages/sjer.red:test
 packages/release-tools:build
-packages/release-tools:test
 packages/release-tools:lint
 packages/release-tools:typecheck
 packages/temporal:build
