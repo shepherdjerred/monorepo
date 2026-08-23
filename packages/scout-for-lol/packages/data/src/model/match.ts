@@ -110,6 +110,14 @@ export function getLaneOpponent(
   player: Champion,
   opponents: Champion[],
 ): Champion | undefined {
+  // A laneless player has no lane opponent. Without this guard, a lobby where
+  // every `teamPosition` is "" (which is what Riot sends for sub-5 sides in a
+  // custom) matches `undefined === undefined` against every enemy and returns
+  // an arbitrary one. That answer then reaches the AI review prompt, which
+  // states it as fact.
+  if (player.lane === undefined) {
+    return undefined;
+  }
   return pipe(
     opponents,
     filter((opponent) => opponent.lane === player.lane),

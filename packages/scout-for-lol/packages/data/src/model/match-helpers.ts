@@ -5,6 +5,7 @@ import type { Champion, Rune } from "#src/model/champion.ts";
 import { normalizeChampionName } from "#src/model/champion-registry.ts";
 import { getRuneInfo } from "#src/data-dragon/runes.ts";
 import { parseLane } from "#src/model/lane.ts";
+import { type Team, parseTeam } from "#src/model/team.ts";
 
 /**
  * Finds a participant in a match by their PUUID
@@ -111,14 +112,30 @@ export function participantToChampion(participant: RawParticipant): Champion {
 }
 
 /**
- * Splits participants into blue and red teams
+ * Splits participants into blue and red teams by `teamId`.
+ *
+ * Deliberately not `slice(0, 5)` / `slice(5, 10)`: that only holds for a full
+ * 5v5 emitted blue-then-red, so a tournament-code custom of any other size split
+ * into nonsense teams. Grouping also removes the dependency on Riot's ordering,
+ * which was never a documented guarantee.
+ *
+ * A participant whose `teamId` is neither 100 nor 200 is dropped. That is not a
+ * silent fallback — `RosterSchema` requires at least one champion per side, so a
+ * payload we cannot classify fails loudly at `CompletedMatchSchema.parse`
+ * instead of producing a half-empty report.
  */
-export function getTeams(
+export function getTeams<T>(
   participants: RawParticipant[],
-  championConverter: (p: RawParticipant) => Champion,
+  championConverter: (p: RawParticipant) => T,
 ) {
+  const forTeam = (team: Team) =>
+    pipe(
+      participants,
+      filter((participant) => parseTeam(participant.teamId) === team),
+      map(championConverter),
+    );
   return {
-    blue: pipe(participants.slice(0, 5), map(championConverter)),
-    red: pipe(participants.slice(5, 10), map(championConverter)),
+    blue: forTeam("blue"),
+    red: forTeam("red"),
   };
 }
