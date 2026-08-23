@@ -125,6 +125,13 @@ export async function callServiceUnchecked(
   return activities.callService(domain, service, data);
 }
 
+export async function callOptionalMediaPlayerService(
+  service: string,
+  data: Record<string, unknown>,
+): Promise<void> {
+  return activities.callOptionalMediaPlayerService(service, data);
+}
+
 export async function callServiceForCleanup<
   D extends Domain<HaSchema>,
   V extends Service<HaSchema, D>,

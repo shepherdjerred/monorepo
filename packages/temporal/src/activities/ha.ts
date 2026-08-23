@@ -1,10 +1,14 @@
 import { ApplicationFailure } from "@temporalio/common";
 import {
+  HaApiError,
   HaNotFoundError,
   HomeAssistantRestClient,
   type EntityState,
 } from "@shepherdjerred/home-assistant";
-import { HA_ENTITY_NOT_FOUND_ERROR_TYPE } from "#shared/ha-errors.ts";
+import {
+  HA_ENTITY_NOT_FOUND_ERROR_TYPE,
+  HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+} from "#shared/ha-errors.ts";
 
 // Activity signatures stay monomorphic (Temporal's proxyActivities rejects
 // generic methods), so the runtime client is the loose default. Compile-time
@@ -63,6 +67,31 @@ export const haActivities = {
   ): Promise<void> {
     await getClient().callService(domain, service, data);
     console.warn(`Called HA service: ${domain}.${service}`);
+  },
+
+  async callOptionalMediaPlayerService(
+    service: string,
+    data: Record<string, unknown>,
+  ): Promise<void> {
+    try {
+      await getClient().callService("media_player", service, data);
+      console.warn(`Called HA service: media_player.${service}`);
+    } catch (error: unknown) {
+      // A missing media entity or a Sonos integration/device failure is a
+      // known degraded condition for optional speakers. Keep the failure
+      // retryable so transient HA reloads get the normal activity retry budget,
+      // then expose it as a stable type for the workflow to handle.
+      if (
+        error instanceof HaApiError &&
+        (error.status === 404 || error.status >= 500)
+      ) {
+        throw ApplicationFailure.retryable(
+          `Home Assistant media_player.${service} is unavailable (${String(error.status)})`,
+          HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+        );
+      }
+      throw error;
+    }
   },
 
   async sendNotification(title: string, message: string): Promise<void> {

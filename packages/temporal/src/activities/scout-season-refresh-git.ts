@@ -52,10 +52,17 @@ export async function runCommand(
   ]);
 
   if (exitCode !== 0) {
+    const rawOutput = `${stdout}\n${stderr}`.trim();
     const output =
       options.redactOutput === true
-        ? "<redacted>"
-        : `${stdout}\n${stderr}`.trim();
+        ? (() => {
+            const category = classifyRedactedCommandFailure(
+              options.operation,
+              rawOutput,
+            );
+            return category === "redacted" ? "<redacted>" : category;
+          })()
+        : rawOutput;
     throw new Error(
       `Command failed (${options.redactOutput === true ? options.operation : (command[0] ?? "?")}): exit ${String(exitCode)} ${output}`,
     );
@@ -64,6 +71,57 @@ export async function runCommand(
 }
 
 export type GitCommandRunner = typeof runCommand;
+
+export type RedactedCommandFailureCategory =
+  | "authentication-or-authorization"
+  | "network"
+  | "protected-branch-policy"
+  | "remote-lease-rejected"
+  | "repository-not-found"
+  | "unknown";
+
+/**
+ * Preserve the useful class of a redacted GitHub push failure without
+ * returning remote output, which can contain credentials or repository data.
+ * The categories deliberately describe only signals Git emits consistently;
+ * ambiguous output remains `unknown` instead of being guessed.
+ */
+export function classifyRedactedCommandFailure(
+  operation: string,
+  output: string,
+): RedactedCommandFailureCategory | "redacted" {
+  if (operation !== "branch-push") {
+    return "redacted";
+  }
+  if (
+    /authentication failed|could not read username|permission denied|\b403\b|access denied/i.test(
+      output,
+    )
+  ) {
+    return "authentication-or-authorization";
+  }
+  if (
+    /gh006|protected branch|hook declined|required status checks|branch policy/i.test(
+      output,
+    )
+  ) {
+    return "protected-branch-policy";
+  }
+  if (/repository not found|does not exist/i.test(output)) {
+    return "repository-not-found";
+  }
+  if (
+    /could not resolve host|connection timed out|network is unreachable|connection reset|connection refused|temporary failure in name resolution/i.test(
+      output,
+    )
+  ) {
+    return "network";
+  }
+  if (/stale info|non-fast-forward|failed to push some refs/i.test(output)) {
+    return "remote-lease-rejected";
+  }
+  return "unknown";
+}
 
 export async function writeGitAskpass(tempDir: string): Promise<string> {
   const path = `${tempDir}/git-askpass.sh`;

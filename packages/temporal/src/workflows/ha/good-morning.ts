@@ -8,6 +8,7 @@ import {
 import { z } from "zod";
 import {
   anyoneHome,
+  callOptionalMediaPlayerService,
   callServiceUnchecked,
   getEntityState,
   sendNotification,
@@ -15,7 +16,10 @@ import {
   volumeUpBy,
 } from "./util.ts";
 import type { WeatherActivities } from "#activities/weather.ts";
-import { HA_ENTITY_NOT_FOUND_ERROR_TYPE } from "#shared/ha-errors.ts";
+import {
+  HA_ENTITY_NOT_FOUND_ERROR_TYPE,
+  HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+} from "#shared/ha-errors.ts";
 
 const weatherActivities = proxyActivities<WeatherActivities>({
   startToCloseTimeout: "30 seconds",
@@ -23,9 +27,8 @@ const weatherActivities = proxyActivities<WeatherActivities>({
 });
 
 const BEDROOM_MEDIA = "media_player.bedroom" as const;
-// NOTE: this entity_id flips from media_player.main_bathroom when the HA
-// registry cleanup renames the Sonos (2026-07 "great refresh"); between this
-// deploy and that rename the get-up join step no-ops on a missing entity.
+// This optional player may be missing or unavailable while HA/Sonos reloads;
+// get-up degrades to Bedroom-only playback when that happens.
 const MASTER_BATHROOM_MEDIA = "media_player.master_bathroom" as const;
 const EXTRA_MEDIA_PLAYERS = [MASTER_BATHROOM_MEDIA] as const;
 const BEDROOM_DIMMED = "scene.bedroom_dimmed" as const;
@@ -109,12 +112,38 @@ function parseHomeZoneCoordinates(
   return result.data;
 }
 
+function isApplicationFailureOfType(error: unknown, type: string): boolean {
+  if (!(error instanceof ActivityFailure)) {
+    return false;
+  }
+  const cause = error.cause;
+  return cause instanceof ApplicationFailure && cause.type === type;
+}
+
 function isMissingEntityFailure(error: unknown): boolean {
-  return (
-    error instanceof ActivityFailure &&
-    error.cause instanceof ApplicationFailure &&
-    error.cause.type === HA_ENTITY_NOT_FOUND_ERROR_TYPE
-  );
+  return isApplicationFailureOfType(error, HA_ENTITY_NOT_FOUND_ERROR_TYPE);
+}
+
+function isOptionalMediaPlayerFailure(error: unknown): boolean {
+  return isApplicationFailureOfType(error, HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE);
+}
+
+async function tryOptionalMediaPlayerService(
+  service: string,
+  data: Record<string, unknown>,
+): Promise<boolean> {
+  try {
+    await callOptionalMediaPlayerService(service, data);
+    return true;
+  } catch (error: unknown) {
+    if (!isOptionalMediaPlayerFailure(error)) {
+      throw error;
+    }
+    console.warn(
+      `good_morning_get_up: optional media_player.${service} unavailable; continuing without that speaker`,
+    );
+    return false;
+  }
 }
 
 // A total Mysa setup failure removes the entity outright instead of leaving it
@@ -320,28 +349,57 @@ export async function goodMorningGetUp(): Promise<void> {
     transition: 60,
   });
 
+  let mediaDegraded = false;
+  const availableExtraPlayers: string[] = [];
   for (const player of EXTRA_MEDIA_PLAYERS) {
-    await callServiceUnchecked("media_player", "volume_set", {
+    const available = await tryOptionalMediaPlayerService("volume_set", {
       entity_id: player,
       volume_level: 0,
     });
+    if (available) {
+      availableExtraPlayers.push(player);
+    } else {
+      mediaDegraded = true;
+    }
   }
 
-  await callServiceUnchecked("media_player", "join", {
-    entity_id: BEDROOM_MEDIA,
-    group_members: EXTRA_MEDIA_PLAYERS,
-  });
+  let joinedExtraPlayers: string[] = [];
+  if (availableExtraPlayers.length > 0) {
+    const joined = await tryOptionalMediaPlayerService("join", {
+      entity_id: BEDROOM_MEDIA,
+      group_members: availableExtraPlayers,
+    });
+    if (joined) {
+      joinedExtraPlayers = availableExtraPlayers;
+    } else {
+      mediaDegraded = true;
+    }
+  }
 
-  const allPlayers = [BEDROOM_MEDIA, ...EXTRA_MEDIA_PLAYERS] as const;
+  const allPlayers = [BEDROOM_MEDIA, ...joinedExtraPlayers];
   for (let step = 0; step < 2; step += 1) {
     for (const player of allPlayers) {
-      await callServiceUnchecked("media_player", "volume_up", {
-        entity_id: player,
-      });
+      if (player === BEDROOM_MEDIA) {
+        await callServiceUnchecked("media_player", "volume_up", {
+          entity_id: player,
+        });
+      } else {
+        const available = await tryOptionalMediaPlayerService("volume_up", {
+          entity_id: player,
+        });
+        if (!available) {
+          mediaDegraded = true;
+        }
+      }
     }
     if (step < 1) {
       await sleep("5 seconds");
     }
   }
-  await setOutcome("executed", "getup-routine-complete");
+  await setOutcome(
+    "executed",
+    mediaDegraded
+      ? "getup-routine-complete-optional-media-degraded"
+      : "getup-routine-complete",
+  );
 }
