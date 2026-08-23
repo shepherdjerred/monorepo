@@ -175,6 +175,7 @@ test("groups Talos, Kubernetes, and installer updates into one PR", async () => 
       "ghcr.io/siderolabs/installer",
       "kubernetes/kubernetes",
     ],
+    minimumReleaseAge: "0 days",
   });
 });
 

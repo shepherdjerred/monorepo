@@ -183,7 +183,8 @@
         "siderolabs/talos",
         "ghcr.io/siderolabs/installer",
         "kubernetes/kubernetes"
-      ]
+      ],
+      "minimumReleaseAge": "0 days"
     },
     {
       "description": "Talos factory images are not digest-compatible with the base ghcr.io/siderolabs/installer image digest.",
