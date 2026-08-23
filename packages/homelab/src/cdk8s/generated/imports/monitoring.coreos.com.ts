@@ -27716,6 +27716,15 @@ export interface AlertmanagerConfigSpecReceiversSlackConfigs {
   readonly titleLink?: string;
 
   /**
+   * updateMessage enables updating existing Slack messages instead of creating new ones
+   * when alert state changes. Please note that Webhook URLs do not support updates.
+   * It requires Alertmanager >= v0.32.0.
+   *
+   * @schema AlertmanagerConfigSpecReceiversSlackConfigs#updateMessage
+   */
+  readonly updateMessage?: boolean;
+
+  /**
    * username defines the slack bot user name.
    *
    * @schema AlertmanagerConfigSpecReceiversSlackConfigs#username
@@ -27765,6 +27774,7 @@ export function toJson_AlertmanagerConfigSpecReceiversSlackConfigs(
     timeout: obj.timeout,
     title: obj.title,
     titleLink: obj.titleLink,
+    updateMessage: obj.updateMessage,
     username: obj.username,
   };
   // filter undefined values
@@ -27859,6 +27869,17 @@ export interface AlertmanagerConfigSpecReceiversSnsConfigs {
    * @schema AlertmanagerConfigSpecReceiversSnsConfigs#topicARN
    */
   readonly topicArn?: string;
+
+  /**
+   * useAWSHTTPClient forces the AWS SDK's BuildableClient instead of
+   * alertmanager's tracing-wrapped HTTP client. Auto-enabled when AWS_CA_BUNDLE
+   * is set; set explicitly when configuring ca_bundle via shared AWS config.
+   *
+   * It requires Alertmanager >= 0.33.0.
+   *
+   * @schema AlertmanagerConfigSpecReceiversSnsConfigs#useAWSHTTPClient
+   */
+  readonly useAwshttpClient?: boolean;
 }
 
 /**
@@ -27890,6 +27911,7 @@ export function toJson_AlertmanagerConfigSpecReceiversSnsConfigs(
     subject: obj.subject,
     targetARN: obj.targetArn,
     topicARN: obj.topicArn,
+    useAWSHTTPClient: obj.useAwshttpClient,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -66264,8 +66286,15 @@ export interface PrometheusSpec {
 
   /**
    * disableCompaction when true, the Prometheus compaction is disabled.
-   * When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
-   * disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
+   *
+   * When `spec.thanos.objectStorageConfig` or `spec.thanos.objectStorageConfigFile` are defined, the operator's
+   * default handling depends on the Prometheus and Thanos sidecar versions:
+   * - With Prometheus < v3.9.0 or a Thanos sidecar < v0.41.0, block compaction is disabled to avoid race
+   * conditions during block uploads (as the Thanos documentation recommends).
+   * - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.41.0, local compaction is kept enabled and coordinated
+   * with the sidecar through the shipper meta file (`--storage.tsdb.delay-compact-file.path`), so blocks are only
+   * compacted after they have been uploaded.
+   * Setting this field to true always disables local compaction regardless of the versions.
    *
    * @schema PrometheusSpec#disableCompaction
    */
@@ -67330,6 +67359,8 @@ export interface PrometheusSpec {
    * You can also disable sharding on a specific target by setting the
    * `__tmp_disable_sharding` label with relabeling configuration. When
    * the label value isn't empty, all Prometheus shards will scrape the target.
+   *
+   * Default: 1
    *
    * @schema PrometheusSpec#shards
    */
@@ -72186,6 +72217,18 @@ export function toJson_PrometheusSpecTracingConfig(
  */
 export interface PrometheusSpecTsdb {
   /**
+   * chunkEncoding configures per-chunk-type encoding overrides.
+   *
+   * It requires Prometheus >= v3.13.0.
+   *
+   * Notice: Setting "Xor" is incompatible with --enable-feature=st-storage
+   * (XOR chunks do not store start timestamps).
+   *
+   * @schema PrometheusSpecTsdb#chunkEncoding
+   */
+  readonly chunkEncoding?: PrometheusSpecTsdbChunkEncoding;
+
+  /**
    * outOfOrderTimeWindow defines how old an out-of-order/out-of-bounds sample can be with
    * respect to the TSDB max time.
    *
@@ -72232,6 +72275,7 @@ export function toJson_PrometheusSpecTsdb(
     return undefined;
   }
   const result = {
+    chunkEncoding: toJson_PrometheusSpecTsdbChunkEncoding(obj.chunkEncoding),
     outOfOrderTimeWindow: obj.outOfOrderTimeWindow,
     staleSeriesCompactionThreshold: obj.staleSeriesCompactionThreshold?.value,
   };
@@ -76864,6 +76908,8 @@ export interface PrometheusSpecRemoteWriteMetadataConfig {
   /**
    * send defines whether metric metadata is sent to the remote storage or not.
    *
+   * The setting is ignored when Remote Write message's version 2.0 is used.
+   *
    * @schema PrometheusSpecRemoteWriteMetadataConfig#send
    */
   readonly send?: boolean;
@@ -79779,6 +79825,54 @@ export function toJson_PrometheusSpecTracingConfigTlsConfig(
     maxVersion: obj.maxVersion,
     minVersion: obj.minVersion,
     serverName: obj.serverName,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * chunkEncoding configures per-chunk-type encoding overrides.
+ *
+ * It requires Prometheus >= v3.13.0.
+ *
+ * Notice: Setting "Xor" is incompatible with --enable-feature=st-storage
+ * (XOR chunks do not store start timestamps).
+ *
+ * @schema PrometheusSpecTsdbChunkEncoding
+ */
+export interface PrometheusSpecTsdbChunkEncoding {
+  /**
+   * floats selects the encoding used for float chunks.
+   * Valid values are "Xor" and "Xor2".
+   *
+   * Notice:
+   * * Setting "Xor" is incompatible with --enable-feature=st-storage
+   * (XOR chunks do not store start timestamps).
+   * * Setting "Xor2" automatically adds the `xor2-encoding` feature flag.
+   *
+   * It requires Prometheus >= v3.13.0.
+   *
+   * @schema PrometheusSpecTsdbChunkEncoding#floats
+   */
+  readonly floats?: PrometheusSpecTsdbChunkEncodingFloats;
+}
+
+/**
+ * Converts an object of type 'PrometheusSpecTsdbChunkEncoding' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PrometheusSpecTsdbChunkEncoding(
+  obj: PrometheusSpecTsdbChunkEncoding | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    floats: obj.floats,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -89111,6 +89205,26 @@ export enum PrometheusSpecTracingConfigTlsConfigMinVersion {
   TLS12 = "TLS12",
   /** TLS13 */
   TLS13 = "TLS13",
+}
+
+/**
+ * floats selects the encoding used for float chunks.
+ * Valid values are "Xor" and "Xor2".
+ *
+ * Notice:
+ * * Setting "Xor" is incompatible with --enable-feature=st-storage
+ * (XOR chunks do not store start timestamps).
+ * * Setting "Xor2" automatically adds the `xor2-encoding` feature flag.
+ *
+ * It requires Prometheus >= v3.13.0.
+ *
+ * @schema PrometheusSpecTsdbChunkEncodingFloats
+ */
+export enum PrometheusSpecTsdbChunkEncodingFloats {
+  /** Xor */
+  XOR = "Xor",
+  /** Xor2 */
+  XOR2 = "Xor2",
 }
 
 /**
@@ -101091,6 +101205,8 @@ export interface PrometheusAgentSpec {
    * `__tmp_disable_sharding` label with relabeling configuration. When
    * the label value isn't empty, all Prometheus shards will scrape the target.
    *
+   * Default: 1
+   *
    * @schema PrometheusAgentSpec#shards
    */
   readonly shards?: number;
@@ -104904,6 +105020,18 @@ export function toJson_PrometheusAgentSpecTracingConfig(
  */
 export interface PrometheusAgentSpecTsdb {
   /**
+   * chunkEncoding configures per-chunk-type encoding overrides.
+   *
+   * It requires Prometheus >= v3.13.0.
+   *
+   * Notice: Setting "Xor" is incompatible with --enable-feature=st-storage
+   * (XOR chunks do not store start timestamps).
+   *
+   * @schema PrometheusAgentSpecTsdb#chunkEncoding
+   */
+  readonly chunkEncoding?: PrometheusAgentSpecTsdbChunkEncoding;
+
+  /**
    * outOfOrderTimeWindow defines how old an out-of-order/out-of-bounds sample can be with
    * respect to the TSDB max time.
    *
@@ -104950,6 +105078,9 @@ export function toJson_PrometheusAgentSpecTsdb(
     return undefined;
   }
   const result = {
+    chunkEncoding: toJson_PrometheusAgentSpecTsdbChunkEncoding(
+      obj.chunkEncoding,
+    ),
     outOfOrderTimeWindow: obj.outOfOrderTimeWindow,
     staleSeriesCompactionThreshold: obj.staleSeriesCompactionThreshold?.value,
   };
@@ -108953,6 +109084,8 @@ export interface PrometheusAgentSpecRemoteWriteMetadataConfig {
   /**
    * send defines whether metric metadata is sent to the remote storage or not.
    *
+   * The setting is ignored when Remote Write message's version 2.0 is used.
+   *
    * @schema PrometheusAgentSpecRemoteWriteMetadataConfig#send
    */
   readonly send?: boolean;
@@ -111130,6 +111263,54 @@ export function toJson_PrometheusAgentSpecTracingConfigTlsConfig(
     maxVersion: obj.maxVersion,
     minVersion: obj.minVersion,
     serverName: obj.serverName,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * chunkEncoding configures per-chunk-type encoding overrides.
+ *
+ * It requires Prometheus >= v3.13.0.
+ *
+ * Notice: Setting "Xor" is incompatible with --enable-feature=st-storage
+ * (XOR chunks do not store start timestamps).
+ *
+ * @schema PrometheusAgentSpecTsdbChunkEncoding
+ */
+export interface PrometheusAgentSpecTsdbChunkEncoding {
+  /**
+   * floats selects the encoding used for float chunks.
+   * Valid values are "Xor" and "Xor2".
+   *
+   * Notice:
+   * * Setting "Xor" is incompatible with --enable-feature=st-storage
+   * (XOR chunks do not store start timestamps).
+   * * Setting "Xor2" automatically adds the `xor2-encoding` feature flag.
+   *
+   * It requires Prometheus >= v3.13.0.
+   *
+   * @schema PrometheusAgentSpecTsdbChunkEncoding#floats
+   */
+  readonly floats?: PrometheusAgentSpecTsdbChunkEncodingFloats;
+}
+
+/**
+ * Converts an object of type 'PrometheusAgentSpecTsdbChunkEncoding' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PrometheusAgentSpecTsdbChunkEncoding(
+  obj: PrometheusAgentSpecTsdbChunkEncoding | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    floats: obj.floats,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -119043,6 +119224,26 @@ export enum PrometheusAgentSpecTracingConfigTlsConfigMinVersion {
   TLS12 = "TLS12",
   /** TLS13 */
   TLS13 = "TLS13",
+}
+
+/**
+ * floats selects the encoding used for float chunks.
+ * Valid values are "Xor" and "Xor2".
+ *
+ * Notice:
+ * * Setting "Xor" is incompatible with --enable-feature=st-storage
+ * (XOR chunks do not store start timestamps).
+ * * Setting "Xor2" automatically adds the `xor2-encoding` feature flag.
+ *
+ * It requires Prometheus >= v3.13.0.
+ *
+ * @schema PrometheusAgentSpecTsdbChunkEncodingFloats
+ */
+export enum PrometheusAgentSpecTsdbChunkEncodingFloats {
+  /** Xor */
+  XOR = "Xor",
+  /** Xor2 */
+  XOR2 = "Xor2",
 }
 
 /**
@@ -173603,6 +173804,8 @@ export interface ThanosRulerSpecRemoteWriteMetadataConfig {
 
   /**
    * send defines whether metric metadata is sent to the remote storage or not.
+   *
+   * The setting is ignored when Remote Write message's version 2.0 is used.
    *
    * @schema ThanosRulerSpecRemoteWriteMetadataConfig#send
    */
