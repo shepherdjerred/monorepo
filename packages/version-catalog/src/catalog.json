@@ -15,18 +15,6 @@
       "value": "v0.31.1@sha256:df744af5a0c976e2ec671052ecc1f8a9aa757fa12b8f9930b59910b7295f0da6"
     },
     {
-      "name": "jordanlambrecht/tracker-tracker",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://ghcr.io",
-        "versioning": "semver"
-      },
-      "value": "2.10.0@sha256:f7e4b80a928714dd361f125ddd5cb5db6bb372a7a1694ca4e8ac7fe67313e824"
-    },
-    {
       "name": "connect",
       "category": "upstream",
       "artifactType": "helm-chart",

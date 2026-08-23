@@ -91,7 +91,6 @@ export default defineConfig({
     "/homelab/releases": "/explanation/homelab/release-safety/",
     "/homelab/scout-evals-tailnet-boundary":
       "/explanation/homelab/scout-evals-trust-boundary/",
-    "/homelab/tracker-tracker": "/explanation/homelab/tracker-tracker/",
     "/how-this-wiki-works": "/explanation/how-this-wiki-works/",
     "/pr-fleet-controller": "/explanation/pr-fleet-authority-boundary/",
     "/scout-analysis": "/explanation/scout-temporal-analysis/",
