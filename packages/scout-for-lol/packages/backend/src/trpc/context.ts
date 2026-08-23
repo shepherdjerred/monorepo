@@ -85,8 +85,8 @@ function extractBearerToken(authHeader: string | null): string | null {
 /**
  * `User.lastSeenAt` is a DB-side activity marker (MAU/WAU without PostHog).
  * One write per user per hour bounds the write amplification of running on
- * every authenticated request; the row just read tells us whether the hour
- * has passed, so the throttle costs no extra query.
+ * every authenticated request. The update repeats the hour predicate in the
+ * database so concurrent requests cannot all pass a stale in-memory check.
  */
 const LAST_SEEN_WRITE_INTERVAL_MS = 60 * 60 * 1000;
 
@@ -102,8 +102,18 @@ export async function recordUserSeen(
     return;
   }
   try {
-    await db.user.update({
-      where: { discordId: user.discordId },
+    await db.user.updateMany({
+      where: {
+        discordId: user.discordId,
+        OR: [
+          { lastSeenAt: null },
+          {
+            lastSeenAt: {
+              lte: new Date(now.getTime() - LAST_SEEN_WRITE_INTERVAL_MS),
+            },
+          },
+        ],
+      },
       data: { lastSeenAt: now },
     });
   } catch (error) {

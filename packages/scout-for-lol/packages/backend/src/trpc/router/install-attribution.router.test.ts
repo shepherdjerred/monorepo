@@ -40,6 +40,7 @@ async function mintFor(discordId: string) {
 
 beforeEach(async () => {
   resetInstallAttributionRateLimitForTests();
+  trpc.setMembership([{ guildId: SERVER_ID, asAdmin: true }]);
   await trpc.prisma.installAttributionToken.deleteMany();
   await trpc.prisma.guildInstall.deleteMany();
 });
@@ -77,6 +78,23 @@ describe("installAttribution.complete", () => {
       .installAttribution.complete({ state: token, guildId: SERVER_ID });
 
     expect(result).toEqual({ outcome: "invalid" });
+  });
+
+  test("returns invalid when the session cannot administer the guild", async () => {
+    trpc.setMembership([]);
+    await seedInstall();
+    const token = await mintFor("761");
+
+    const result = await trpc
+      .authedCaller(ACTOR)
+      .installAttribution.complete({ state: token, guildId: SERVER_ID });
+
+    expect(result).toEqual({ outcome: "invalid" });
+    const tokenRow =
+      await trpc.prisma.installAttributionToken.findUniqueOrThrow({
+        where: { token },
+      });
+    expect(tokenRow.consumedAt).toBeNull();
   });
 
   test("rejects anonymous callers", async () => {

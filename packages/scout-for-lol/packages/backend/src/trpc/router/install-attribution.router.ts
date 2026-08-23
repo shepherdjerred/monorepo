@@ -19,6 +19,8 @@ import {
 } from "@scout-for-lol/data";
 import { router, webMutationProcedure } from "#src/trpc/trpc.ts";
 import type { Context } from "#src/trpc/context.ts";
+import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import {
   completeInstallAttribution,
   type CompleteInstallAttributionResult,
@@ -76,6 +78,18 @@ export const installAttributionRouter = router({
       async ({ ctx, input }): Promise<CompleteInstallAttributionResult> => {
         if (!withinRateLimit(callerKeyFor(ctx))) {
           return { outcome: "invalid" };
+        }
+        if (input.guildId !== undefined) {
+          const guilds = await fetchUserGuildsForRequest(ctx.user);
+          const guild = guilds.find(
+            (candidate) => candidate.id === input.guildId,
+          );
+          if (
+            guild === undefined ||
+            (!guild.owner && !hasAdministrator(guild.permissions))
+          ) {
+            return { outcome: "invalid" };
+          }
         }
         // The session's discordId is a verified JWT `sub`; a malformed value
         // means a broken session, and attribution degrades rather than throws.

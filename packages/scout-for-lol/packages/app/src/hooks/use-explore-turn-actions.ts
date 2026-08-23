@@ -36,9 +36,6 @@ export function useExploreTurnActions(params: {
   const ask = useCallback(
     (text: string) => {
       setRestoredDraft(null);
-      track("explore_turn_started", {
-        kind: conversationId === null ? "new" : "follow_up",
-      });
       const submittedLocationKey = locationKeyRef.current;
       void (async () => {
         const started = await runs.startTurn({
@@ -50,18 +47,23 @@ export function useExploreTurnActions(params: {
         });
         if (started === null) {
           setRestoredDraft(text);
-        } else if (
-          shouldOpenStartedExploreConversation({
-            submittedConversationId: conversationId,
-            submittedLocationKey,
-            currentLocationKey: locationKeyRef.current,
-          })
-        ) {
-          // Replace, not push: the transient blank `/explore` should not be a
-          // Back stop in the middle of a conversation.
-          void navigate(`/explore/${started.conversationId}`, {
-            replace: true,
+        } else {
+          track("explore_turn_started", {
+            kind: conversationId === null ? "new" : "follow_up",
           });
+          if (
+            shouldOpenStartedExploreConversation({
+              submittedConversationId: conversationId,
+              submittedLocationKey,
+              currentLocationKey: locationKeyRef.current,
+            })
+          ) {
+            // Replace, not push: the transient blank `/explore` should not be
+            // a Back stop in the middle of a conversation.
+            void navigate(`/explore/${started.conversationId}`, {
+              replace: true,
+            });
+          }
         }
       })();
     },
@@ -80,17 +82,19 @@ export function useExploreTurnActions(params: {
       // Editing forks the question: a sibling under the same parent, or a
       // new root when the edited question *is* the root — the fork a parent
       // id cannot name, which is why `attach` exists.
-      track("explore_turn_started", { kind: "edit" });
-      void runs.startTurn({
-        conversationId,
-        question: edited,
-        attach:
-          message.parentId === null
-            ? { kind: "root" }
-            : { kind: "message", messageId: message.parentId },
-        displayQuestion: edited,
-        leafIdAtStart: messages.at(-1)?.id ?? null,
-      });
+      void (async () => {
+        const started = await runs.startTurn({
+          conversationId,
+          question: edited,
+          attach:
+            message.parentId === null
+              ? { kind: "root" }
+              : { kind: "message", messageId: message.parentId },
+          displayQuestion: edited,
+          leafIdAtStart: messages.at(-1)?.id ?? null,
+        });
+        if (started !== null) track("explore_turn_started", { kind: "edit" });
+      })();
     },
     [conversationId, messages, runs],
   );
@@ -101,14 +105,19 @@ export function useExploreTurnActions(params: {
       if (message.parentId === null) {
         return;
       }
-      track("explore_turn_started", { kind: "regenerate" });
-      void runs.startTurn({
-        conversationId,
-        question: null,
-        attach: { kind: "message", messageId: message.parentId },
-        displayQuestion: null,
-        leafIdAtStart: messages.at(-1)?.id ?? null,
-      });
+      const parentId = message.parentId;
+      void (async () => {
+        const started = await runs.startTurn({
+          conversationId,
+          question: null,
+          attach: { kind: "message", messageId: parentId },
+          displayQuestion: null,
+          leafIdAtStart: messages.at(-1)?.id ?? null,
+        });
+        if (started !== null) {
+          track("explore_turn_started", { kind: "regenerate" });
+        }
+      })();
     },
     [conversationId, messages, runs],
   );
@@ -118,14 +127,16 @@ export function useExploreTurnActions(params: {
   // that is the whole reason it is stranded.
   const handleRetry = useCallback(
     (question: ExploreMessage) => {
-      track("explore_turn_started", { kind: "retry" });
-      void runs.startTurn({
-        conversationId,
-        question: null,
-        attach: { kind: "message", messageId: question.id },
-        displayQuestion: null,
-        leafIdAtStart: messages.at(-1)?.id ?? null,
-      });
+      void (async () => {
+        const started = await runs.startTurn({
+          conversationId,
+          question: null,
+          attach: { kind: "message", messageId: question.id },
+          displayQuestion: null,
+          leafIdAtStart: messages.at(-1)?.id ?? null,
+        });
+        if (started !== null) track("explore_turn_started", { kind: "retry" });
+      })();
     },
     [conversationId, messages, runs],
   );
