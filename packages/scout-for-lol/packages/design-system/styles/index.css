@@ -33,6 +33,15 @@ h6 {
   font-family: var(--scout-font-display);
 }
 
+code,
+pre,
+kbd,
+samp,
+.mono,
+[data-mono] {
+  font-family: var(--scout-font-mono);
+}
+
 :focus-visible {
   outline: 3px solid var(--scout-color-focus);
   outline-offset: 2px;

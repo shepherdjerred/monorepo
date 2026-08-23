@@ -2,6 +2,9 @@
 @import "@scout-for-lol/design-system/styles.css";
 
 @theme inline {
+  --font-mono: var(--scout-font-mono);
+  --font-sans: var(--scout-font-body);
+  --font-display: var(--scout-font-display);
   --color-scout-canvas: var(--scout-color-canvas);
   --color-scout-surface: var(--scout-color-surface);
   --color-scout-raised: var(--scout-color-surface-raised);

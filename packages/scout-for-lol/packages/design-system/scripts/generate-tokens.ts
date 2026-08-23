@@ -41,7 +41,11 @@ const ColorsSchema = z.object({
 });
 const ThemeSchema = z.object({
   colors: ColorsSchema,
-  typography: z.object({ display: z.string().min(1), body: z.string().min(1) }),
+  typography: z.object({
+    display: z.string().min(1),
+    body: z.string().min(1),
+    mono: z.string().min(1),
+  }),
   shape: z.object({
     radiusSmall: z.string(),
     radiusMedium: z.string(),
@@ -100,6 +104,7 @@ function cssForTheme(name: keyof typeof parsed.themes): string {
     ),
     `  --scout-font-display: ${theme.typography.display};`,
     `  --scout-font-body: ${theme.typography.body};`,
+    `  --scout-font-mono: ${theme.typography.mono};`,
     ...Object.entries(theme.shape).map(
       ([key, value]) => `  --scout-${kebab(key)}: ${value};`,
     ),

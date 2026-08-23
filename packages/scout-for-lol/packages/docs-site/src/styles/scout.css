@@ -3,6 +3,7 @@
 :root {
   --sl-font: var(--scout-font-body);
   --sl-font-system: var(--scout-font-body);
+  --sl-font-mono: var(--scout-font-mono);
   --sl-color-accent-low: var(--scout-color-interactive-hover);
   --sl-color-accent: var(--scout-color-primary);
   --sl-color-accent-high: var(--scout-color-text);

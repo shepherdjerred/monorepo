@@ -24,6 +24,17 @@ export default {
           accent: "#c89b3c",
         },
       },
+      fontFamily: {
+        mono: [
+          '"Berkeley Mono"',
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Monaco",
+          "Consolas",
+          "monospace",
+        ],
+      },
       animation: {
         "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "spin-slow": "spin 2s linear infinite",

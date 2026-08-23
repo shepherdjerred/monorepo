@@ -38,6 +38,7 @@ export const scoutThemes = {
       display:
         "Beaufort for LoL, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, serif",
       body: "Spiegel, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, sans-serif",
+      mono: "Berkeley Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     },
     shape: {
       radiusSmall: "0.25rem",
@@ -90,6 +91,7 @@ export const scoutThemes = {
       display:
         "Beaufort for LoL, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, serif",
       body: "Spiegel, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, sans-serif",
+      mono: "Berkeley Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     },
     shape: {
       radiusSmall: "0.25rem",
@@ -142,6 +144,7 @@ export const scoutThemes = {
       display:
         "QTFrizQuad, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, serif",
       body: "Gill Sans, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, sans-serif",
+      mono: "Berkeley Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     },
     shape: {
       radiusSmall: "0rem",
@@ -194,6 +197,7 @@ export const scoutThemes = {
       display:
         "QTFrizQuad, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, serif",
       body: "Gill Sans, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, sans-serif",
+      mono: "Berkeley Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     },
     shape: {
       radiusSmall: "0rem",

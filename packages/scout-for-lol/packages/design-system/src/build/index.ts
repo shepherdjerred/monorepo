@@ -21,6 +21,8 @@ function mimeType(path: string): string {
   if (extension === ".js") return "text/javascript; charset=utf-8";
   if (extension === ".ttf") return "font/ttf";
   if (extension === ".otf") return "font/otf";
+  if (extension === ".woff2") return "font/woff2";
+  if (extension === ".woff") return "font/woff";
   return "application/octet-stream";
 }
 
