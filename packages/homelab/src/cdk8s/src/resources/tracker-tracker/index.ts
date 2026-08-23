@@ -49,29 +49,11 @@ export default defineConfig({
   schema: "./src/lib/db/schema.ts",
   out: "./drizzle",
   // PostgreSQL's pg_stat_statements extension creates public views that the
-  // default schema diff tries to drop. Manage only Tracker Tracker tables so
-  // startup schema sync can add application columns without touching them.
-  tablesFilter: [
-    "app_settings",
-    "trackers",
-    "tracker_snapshots",
-    "tracker_roles",
-    "download_clients",
-    "client_uptime_buckets",
-    "tag_groups",
-    "tag_group_members",
-    "client_snapshots",
-    "backup_history",
-    "dismissed_alerts",
-    "notification_targets",
-    "notification_delivery_state",
-    "tracker_daily_checkpoints",
-    "torrent_daily_checkpoints",
-    "db_size_history",
-    "app_liveness",
-    "app_coverage_gaps",
-    "tracker_outages",
-  ],
+  // default schema diff tries to drop. Manage the public application schema,
+  // but leave objects owned by that extension alone.
+  tablesFilter: ["*"],
+  schemaFilter: ["public"],
+  extensionsFilters: ["pg_stat_statements"],
   dbCredentials: {
     url: buildConnectionString(),
   },
