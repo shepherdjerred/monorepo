@@ -180,6 +180,7 @@
     "protobufjs": "^7.5.7",
     "sanitize-html": "^2.17.4",
     "shell-quote": "1.10.0",
+    "satteri": "0.10.5",
     "sherpa-onnx-darwin-arm64": "1.13.1",
     "sherpa-onnx-darwin-x64": "1.13.1",
     "sherpa-onnx-linux-arm64": "1.13.1",
@@ -201,7 +202,6 @@
     "unrs-resolver"
   ],
   "patchedDependencies": {
-    "@astrojs/internal-helpers@0.10.2": "patches/@astrojs%2Finternal-helpers@0.10.2.patch",
     "@react-native/metro-babel-transformer@0.86.2": "patches/@react-native%2Fmetro-babel-transformer@0.86.2.patch",
     "@astrojs/starlight@0.41.7": "patches/@astrojs%2Fstarlight@0.41.7.patch",
     "@astrojs/internal-helpers@0.10.4": "patches/@astrojs%2Finternal-helpers@0.10.4.patch",

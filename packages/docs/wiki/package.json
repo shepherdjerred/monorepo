@@ -18,13 +18,13 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
-    "@astrojs/markdown-satteri": "0.3.5",
+    "@astrojs/markdown-satteri": "0.3.7",
     "@astrojs/sitemap": "^3.7.3",
     "@astrojs/starlight": "^0.41.5",
     "astro": "^7.1.5",
     "astro-mermaid": "^2.1.0",
     "mermaid": "^11.16.0",
-    "satteri": "0.9.5",
+    "satteri": "0.10.5",
     "sharp": "^0.35.0"
   },
   "devDependencies": {
