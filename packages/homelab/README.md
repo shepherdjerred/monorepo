@@ -216,7 +216,7 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash
-VERSION=v1.13.8
+VERSION=v1.13.9
 # Upgrade the CI worker first. The short MagicDNS name is a direct worker
 # endpoint; a worker cannot proxy its own Talos request. Use the Torvalds
 # Tailscale FQDN for all control-plane operations.
@@ -237,16 +237,37 @@ talosctl --nodes torvalds.tailnet-1a49.ts.net version
 ### Upgrade Kubernetes
 
 ```bash
-VERSION=1.36.3
+VERSION=1.36.4
 
 # `upgrade-k8s` discovers liskov by raw Tailscale IP, which does not match
 # its hostname-only Talos API certificate. Upgrade control-plane components,
-# kube-proxy, and bootstrap manifests first, without kubelet updates.
+# kube-proxy, and bootstrap manifests first, without kubelet updates. Preload
+# the images explicitly because automatic pre-pull must remain disabled.
+for COMPONENT in kube-apiserver kube-controller-manager kube-scheduler kube-proxy; do
+  talosctl --namespace inmem --nodes torvalds.tailnet-1a49.ts.net image pull \
+    registry.k8s.io/$COMPONENT:v$VERSION
+  talosctl --nodes torvalds.tailnet-1a49.ts.net image pull \
+    registry.k8s.io/$COMPONENT:v$VERSION
+done
+talosctl --endpoints liskov --nodes liskov image pull \
+  registry.k8s.io/kube-proxy:v$VERSION
+
+# Select the Kubernetes endpoint explicitly. The machine configuration also
+# advertises the LAN endpoint, which is not routable from a tailnet-only client.
 talosctl --endpoints torvalds.tailnet-1a49.ts.net \
   --nodes torvalds.tailnet-1a49.ts.net \
-  upgrade-k8s --to $VERSION --pre-pull-images=false --upgrade-kubelet=false
+  upgrade-k8s --endpoint https://torvalds.tailnet-1a49.ts.net:6443 \
+  --to $VERSION --pre-pull-images=false --upgrade-kubelet=false
+
+# If a static-pod step remains on a config-version mismatch after 60 seconds,
+# leave upgrade-k8s running and reconcile the rendered pods from another shell.
+# talosctl --nodes torvalds.tailnet-1a49.ts.net service kubelet restart
 
 # Then update each kubelet through its hostname-authenticated Talos API.
+talosctl --namespace system --endpoints liskov --nodes liskov image pull \
+  ghcr.io/siderolabs/kubelet:v$VERSION
+talosctl --namespace system --nodes torvalds.tailnet-1a49.ts.net image pull \
+  ghcr.io/siderolabs/kubelet:v$VERSION
 talosctl --endpoints liskov --nodes liskov patch machineconfig --mode no-reboot \
   --patch $'machine:\n  kubelet:\n    image: ghcr.io/siderolabs/kubelet:v'"$VERSION"
 talosctl --nodes torvalds.tailnet-1a49.ts.net patch machineconfig --mode no-reboot \
