@@ -11,6 +11,7 @@ export type ReleasePleaseRunnerOptions = {
   readonly token: string;
   readonly repoUrl: string;
   readonly targetBranch: string;
+  readonly targetBranchSha: string;
   readonly excludedPaths: readonly string[];
 };
 
@@ -22,6 +23,10 @@ export type ReleasePleaseRunnerResult = {
 type ReleaseConfig = {
   excludePaths?: string[];
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 function repositoryParts(repoUrl: string): {
   readonly owner: string;
@@ -69,6 +74,37 @@ function applyExcludedPaths(
   applyExcludedPathsToConfig(manifest.repositoryConfig, excludedPaths);
 }
 
+async function branchSha(
+  repository: { readonly owner: string; readonly repo: string },
+  token: string,
+  branch: string,
+): Promise<string> {
+  const response = await fetch(
+    `https://api.github.com/repos/${repository.owner}/${repository.repo}/git/ref/heads/${encodeURIComponent(branch)}`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Could not resolve ${branch} on GitHub (${String(response.status)} ${response.statusText})`,
+    );
+  }
+  const payload: unknown = await response.json();
+  if (!isRecord(payload)) {
+    throw new Error(`GitHub returned an invalid ref response for ${branch}`);
+  }
+  const object = payload["object"];
+  if (!isRecord(object) || typeof object["sha"] !== "string") {
+    throw new Error(`GitHub returned no commit SHA for ${branch}`);
+  }
+  return object["sha"];
+}
+
 export function validateReleaseCandidatePaths(
   candidatePaths: readonly string[],
   excludedPaths: readonly string[],
@@ -92,12 +128,34 @@ async function createManifest(
     token: options.token,
     defaultBranch: options.targetBranch,
   });
+  const beforeManifestSha = await branchSha(
+    repository,
+    options.token,
+    options.targetBranch,
+  );
+  if (beforeManifestSha !== options.targetBranchSha) {
+    throw new Error(
+      `Release target ${options.targetBranch} moved from ${options.targetBranchSha} ` +
+        `to ${beforeManifestSha} before release-please loaded its manifest; retry the release lane`,
+    );
+  }
   const manifest = await Manifest.fromManifest(
     github,
     options.targetBranch,
     "release-please-config.json",
     ".release-please-manifest.json",
   );
+  const afterManifestSha = await branchSha(
+    repository,
+    options.token,
+    options.targetBranch,
+  );
+  if (afterManifestSha !== beforeManifestSha) {
+    throw new Error(
+      `Release target ${options.targetBranch} moved while release-please loaded its manifest ` +
+        `(${beforeManifestSha} -> ${afterManifestSha}); retry the release lane`,
+    );
+  }
   applyExcludedPaths(manifest, options.excludedPaths);
   return manifest;
 }

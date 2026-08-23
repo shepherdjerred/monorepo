@@ -25,6 +25,7 @@ import { setupGitAuth } from "./lib/github-auth.ts";
 import {
   classifyAllPackageReleases,
   fetchNpmPackageTags,
+  fetchReleaseTarget,
   type PackageReleaseDecision,
 } from "./lib/npm-release-eligibility.ts";
 import { runReleaseRefiner } from "./lib/release-refiner.ts";
@@ -86,7 +87,11 @@ async function main(): Promise<void> {
     // The canonical Buildkite checkout intentionally uses --no-tags. Fetch the
     // authoritative package tags before the fail-closed eligibility preflight.
     await fetchNpmPackageTags(root, env);
-    const releaseDecisions = await classifyAllPackageReleases(root);
+    const targetBranchSha = await fetchReleaseTarget(root, env);
+    const releaseDecisions = await classifyAllPackageReleases(
+      root,
+      "refs/remotes/origin/main",
+    );
     printReleaseDecisions(releaseDecisions);
     const excludedPaths = releaseDecisions
       .filter((decision) => !decision.eligible)
@@ -108,6 +113,7 @@ async function main(): Promise<void> {
       token: auth.token,
       repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
       targetBranch: "main",
+      targetBranchSha,
       excludedPaths,
     });
 
@@ -139,6 +145,7 @@ async function main(): Promise<void> {
       token: auth.token,
       repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
       targetBranch: "main",
+      targetBranchSha,
       excludedPaths,
     });
     console.log("--- release-please complete");

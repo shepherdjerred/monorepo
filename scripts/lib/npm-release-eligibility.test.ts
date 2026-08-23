@@ -57,6 +57,28 @@ describe("package JSON consumer changes", () => {
     ).toBe(true);
   });
 
+  test("ignores JSON object key reordering", () => {
+    expect(
+      packageJsonHasConsumerChange(
+        JSON.stringify({
+          dependencies: { zod: "^4.0.0", hono: "^4.0.0" },
+          exports: {
+            ".": "./dist/index.js",
+            "./package.json": "./package.json",
+          },
+        }),
+        JSON.stringify({
+          exports: {
+            "./package.json": "./package.json",
+            ".": "./dist/index.js",
+          },
+          dependencies: { hono: "^4.0.0", zod: "^4.0.0" },
+        }),
+        "package.json",
+      ),
+    ).toBe(false);
+  });
+
   test("fails closed on malformed package metadata", () => {
     expect(() =>
       packageJsonHasConsumerChange("not-json", "{}", "package.json"),

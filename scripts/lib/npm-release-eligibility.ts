@@ -109,8 +109,30 @@ function parsePackageJson(contents: string, source: string): JsonObject {
   return JsonObjectSchema.parse(parsed);
 }
 
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function jsonValuesEqual(left: unknown, right: unknown): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+  if (Object.is(left, right)) return true;
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return (
+      left.length === right.length &&
+      left.every((value, index) => jsonValuesEqual(value, right[index]))
+    );
+  }
+  if (isJsonObject(left) && isJsonObject(right)) {
+    const leftKeys = Object.keys(left);
+    const rightKeys = Object.keys(right);
+    return (
+      leftKeys.length === rightKeys.length &&
+      leftKeys.every(
+        (key) =>
+          Object.hasOwn(right, key) && jsonValuesEqual(left[key], right[key]),
+      )
+    );
+  }
+  return false;
 }
 
 export function packageJsonHasConsumerChange(
@@ -231,6 +253,49 @@ export async function fetchNpmPackageTags(
   }
 }
 
+export async function fetchReleaseTarget(
+  root: string,
+  env: Record<string, string> = {},
+  branch = "main",
+): Promise<string> {
+  const remoteRef = `refs/heads/${branch}`;
+  const remote = await run(["git", "ls-remote", "origin", remoteRef], {
+    cwd: root,
+    env,
+    capture: true,
+    echoCapturedStdout: false,
+  });
+  const remoteSha = remote.stdout
+    .split("\n")
+    .map((line) => line.trim().split(/\s+/)[0])
+    .find((value) => value !== undefined && /^[0-9a-f]{40}$/.test(value));
+  if (remoteSha === undefined) {
+    throw new Error(`Could not resolve origin/${branch} for release preflight`);
+  }
+
+  const localRef = `refs/remotes/origin/${branch}`;
+  await run(
+    ["git", "fetch", "--no-tags", "origin", `${remoteRef}:${localRef}`],
+    {
+      cwd: root,
+      env,
+    },
+  );
+  const local = await run(["git", "rev-parse", localRef], {
+    cwd: root,
+    capture: true,
+    echoCapturedStdout: false,
+  });
+  const localSha = local.stdout.trim();
+  if (localSha !== remoteSha) {
+    throw new Error(
+      `origin/${branch} moved while release preflight fetched it ` +
+        `(${remoteSha} -> ${localSha}); retry the release lane`,
+    );
+  }
+  return remoteSha;
+}
+
 async function latestTag(
   root: string,
   policy: NpmPackagePolicy,
@@ -323,8 +388,16 @@ export async function classifyPackageReleaseRange(
 
 export async function classifyAllPackageReleases(
   root: string,
+  headRef = "HEAD",
 ): Promise<readonly PackageReleaseDecision[]> {
   return Promise.all(
-    NPM_PACKAGE_POLICIES.map((policy) => classifyPackageRelease(root, policy)),
+    NPM_PACKAGE_POLICIES.map(async (policy) =>
+      classifyPackageReleaseFromTag(
+        root,
+        policy,
+        await latestTag(root, policy),
+        headRef,
+      ),
+    ),
   );
 }
