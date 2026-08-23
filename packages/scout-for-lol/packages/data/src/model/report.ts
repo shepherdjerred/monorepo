@@ -52,6 +52,25 @@ export const ReportOutputFormatSchema = z.enum([
   "KPI_CARD",
   "BUMP_CHART",
   "CALENDAR_HEATMAP",
+  "HISTOGRAM",
+  "BOX_PLOT",
+]);
+
+/**
+ * How an output column formats for display. Inferred from the output's
+ * expression shape at ScoutQL compile (`AVG(win::INT)` → percent, duration
+ * columns → duration, counts → count) and overridable per output via
+ * `RENDER … WITH (format = (<output> = <kind>, …))`.
+ */
+export type ReportDisplayKind = z.infer<typeof ReportDisplayKindSchema>;
+export const ReportDisplayKindSchema = z.enum([
+  "count",
+  "decimal",
+  "percent",
+  "duration",
+  "ratio",
+  "text",
+  "timestamp",
 ]);
 
 /**
@@ -137,6 +156,13 @@ export const ReportChartOptionsSchema = z
     trend: z.boolean().optional(),
     annotations: z.boolean().optional(),
     sparkline: z.boolean().optional(),
+    // Period-over-period comparison: run the same query over the preceding
+    // equal-length window and overlay/delta it. Requires a DATE_TRUNC (or
+    // patch) grouping plus a recognized structural time window — validated at
+    // ScoutQL compile, not here. v2 supports previous_period only.
+    compare: z.literal("previous_period").optional(),
+    // Per-output display-kind overrides: `format = (win_rate = percent)`.
+    format: z.record(z.string().min(1), ReportDisplayKindSchema).optional(),
   })
   .strict()
   .superRefine((options, ctx) => {
@@ -236,6 +262,21 @@ export const ReportRenderSpecSchema = z.discriminatedUnion("kind", [
   }),
   z.object({
     kind: z.literal("CALENDAR_HEATMAP"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  // Distribution over a numeric bucket grouping (`GROUP BY FLOOR(x/w)*w`):
+  // x defaults to the bucket grouping, y to the count output.
+  z.object({
+    kind: z.literal("HISTOGRAM"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  // Five-number summary per group. The author SELECTs the five aggregates
+  // explicitly and names them in order: `y = (min, q1, median, q3, max)` —
+  // consistent with the explicit-SQL ethos; arity is validated at compile.
+  z.object({
+    kind: z.literal("BOX_PLOT"),
     encoding: ReportRenderChannelSchema.default({}),
     options: ReportChartOptionsSchema.default({}),
   }),
