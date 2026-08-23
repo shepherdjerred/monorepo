@@ -1,5 +1,6 @@
 import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
 import { checkPreMatch } from "#src/league/tasks/prematch/index.ts";
+import { checkTournamentLobbies } from "#src/league/tournament/poller.ts";
 import { runLifecycleCheck } from "#src/league/tasks/competition/lifecycle.ts";
 import { runPlayerPruning } from "#src/league/tasks/cleanup/prune-players.ts";
 import { reconcileRemovedGuilds } from "#src/league/tasks/cleanup/reconcile-removed-guilds.ts";
@@ -42,6 +43,22 @@ export async function startCronJobs() {
     logMessage: "🔍 Running pre-match active game check",
     timezone: "America/Los_Angeles",
     runOnInit: true,
+  });
+
+  // Tournament lobbies get their own tick rather than riding checkPreMatch,
+  // which already carries six tasks under one lock — a seventh would couple a
+  // tournament-API outage to the betting sweeps. 20 seconds guarantees at least
+  // two polls inside a ~40-second blind-pick champ select, and lands between the
+  // 30s prematch tick and the 60s postmatch tick, which is what wins the
+  // match-linkage race.
+  logger.info("📅 Setting up tournament lobby check (every 20 seconds)");
+  createCronJob({
+    schedule: "*/20 * * * * *",
+    jobName: "tournament_lobby_check",
+    task: checkTournamentLobbies,
+    logMessage: "🏟️ Polling tournament lobby events",
+    timezone: "UTC",
+    runOnInit: false,
   });
 
   // Full wallet disclosure happens only on this fixed weekly cadence; there is
