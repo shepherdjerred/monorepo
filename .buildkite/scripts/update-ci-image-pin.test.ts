@@ -352,6 +352,13 @@ describe("Playwright candidate promotion", () => {
       "packages/birmel/package.json",
       "packages/monarch/package.json",
       "packages/sjer.red/package.json",
+      // These three pin @playwright/test exactly but were missing from
+      // PLAYWRIGHT_PACKAGE_TARGETS, so the v1.62.0 -> v1.62.1 promotion left
+      // them behind and design-audit ended up resolving two incompatible
+      // playwright-core copies. Promotion must move every exact pin together.
+      "packages/scout-for-lol/packages/design-audit/package.json",
+      "packages/scout-for-lol/packages/design-system/package.json",
+      "packages/alert-dashboard/package.json",
       "bun.lock",
     ]);
     expect(ciImagePromotionFiles("ci-base")).toEqual([
