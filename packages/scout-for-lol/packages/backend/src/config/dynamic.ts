@@ -140,23 +140,29 @@ const DEFINITION = {
   },
 } as const;
 
+/**
+ * The values the snapshot starts from, so a read before the first refresh is
+ * byte-identical to the env-derived behaviour that preceded it.
+ */
+export type DynamicConfigSeed = {
+  exploreGuildAllowlist: string[];
+  llmHourlyTokenBudget: number;
+  llmDailyTokenBudget: number;
+  reportAiModel?: string;
+  bettingParlayAiModel?: string;
+  exploreModel?: string;
+  bucksAskModel?: string;
+  tournamentApiMode?: TournamentApiMode;
+  tournamentMaxOpenLobbies?: number;
+};
+
 const REFRESH_INTERVAL_MS = 60_000;
 
 type Snapshot = ReturnType<typeof buildSnapshot>;
 
 function buildSnapshot(
   environment: Readonly<Record<string, string | undefined>>,
-  seed: {
-    exploreGuildAllowlist: string[];
-    llmHourlyTokenBudget: number;
-    llmDailyTokenBudget: number;
-    reportAiModel?: string;
-    bettingParlayAiModel?: string;
-    exploreModel?: string;
-    bucksAskModel?: string;
-    tournamentApiMode?: TournamentApiMode;
-    tournamentMaxOpenLobbies?: number;
-  },
+  seed: DynamicConfigSeed,
   flagSourceEnabled: boolean,
 ) {
   const resolver = defineConfig({
@@ -231,17 +237,7 @@ export type InitializeDynamicConfigOptions = {
   readonly environment?: InitFeatureFlagsOptions["environment"];
   readonly provider?: InitFeatureFlagsOptions["provider"];
   readonly metrics?: InitFeatureFlagsOptions["metrics"];
-  readonly seed: {
-    exploreGuildAllowlist: string[];
-    llmHourlyTokenBudget: number;
-    llmDailyTokenBudget: number;
-    reportAiModel?: string;
-    bettingParlayAiModel?: string;
-    exploreModel?: string;
-    bucksAskModel?: string;
-    tournamentApiMode?: TournamentApiMode;
-    tournamentMaxOpenLobbies?: number;
-  };
+  readonly seed: DynamicConfigSeed;
   /** Tests pass false to avoid an interval. */
   readonly startPolling?: boolean;
 };
@@ -332,11 +328,14 @@ export async function refreshDynamicConfig(): Promise<void> {
 }
 
 export function tournamentApiMode(): TournamentApiMode {
-  return getSnapshot().get("tournamentApiMode");
+  return snapshot?.get("tournamentApiMode") ?? configuration.tournamentApiMode;
 }
 
 export function tournamentMaxOpenLobbies(): number {
-  return getSnapshot().get("tournamentMaxOpenLobbies");
+  return (
+    snapshot?.get("tournamentMaxOpenLobbies") ??
+    configuration.tournamentMaxOpenLobbies
+  );
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {

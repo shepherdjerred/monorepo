@@ -6,16 +6,15 @@ exports[`aram clash game test 1`] = `"d0eda1a32329b21bc542ca1ff89edde24016510d34
 
 exports[`clash game test 1`] = `"da973db7a0fbf259072a1fa73e1da3641316a4aa3e3bbd6c4b49f3dde756af4a"`;
 
+exports[`custom 1v1 renders on a 1372px canvas 1`] = `"80956f0e2ae38f19be2779a1ee74c4215abf8f6ef4eaad5c6b17fcd44b80f744"`;
+
+exports[`custom 3v2 renders on a 2170px canvas 1`] = `"884309c5874300726fa7bd9ee125dd61af6bf7ebc62563909ca1403a1420895c"`;
+
+exports[`custom 3v3 renders on a 2436px canvas 1`] = `"ead2a74500162e9a6e4599edc8ada5c7c115ee88d9b82436cb7f1481302ea678"`;
+
+exports[`custom 4v4 renders on a 2968px canvas 1`] = `"458dcc871804fc46574ea1b12d6d303d1e7161308c19807098a4868f2fededfc"`;
+
 exports[`large values test 1`] = `"8a1e013c49bf552197f501a20aa2eb2756d12cc0a5d8b032c481cb740f6d5282"`;
-exports[`custom 1v1 renders on a 1372px canvas 1`] = `"dc6b9bcebfa224dbe6108da84fef387745db6b423282dc964d1ecafeb1e17181"`;
-
-exports[`custom 3v2 renders on a 2170px canvas 1`] = `"13dd098c178c159d8f10ae570e111485120e1b7d46796a604391e22e4d0e8988"`;
-
-exports[`custom 3v3 renders on a 2436px canvas 1`] = `"50015280946835fd4dd4dbbfc535c00cf0822713209fc67c9f701a95e7bfe827"`;
-
-exports[`custom 4v4 renders on a 2968px canvas 1`] = `"ff82b03b97af44059b1f01db18d31c9e4bc21170afa498793d47946742667e79"`;
-
-exports[`large values test 1`] = `"ce6bdd84d0f8cb389e3225c5504465b152116b7b81830a9a5f57e3bc4c593aa9"`;
 
 exports[`multiple highlighted players test 1`] = `"b122f4a21b5c1e829e06a177c8272317578a44823bec218bde9ec897e6a91b19"`;
 

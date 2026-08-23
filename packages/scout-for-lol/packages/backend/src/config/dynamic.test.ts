@@ -130,7 +130,7 @@ describe("tournament api mode", () => {
       environment: { ...DISABLED, TOURNAMENT_API_MODE: "stub" },
       seed: SEED,
       startPolling: false,
-      provider: new StaticProvider({ "tournament-api-mode": "live" }),
+      provider: new StaticProvider({ "scout-tournament-api-mode": "live" }),
     });
     expect(tournamentApiMode()).toBe("live");
   });

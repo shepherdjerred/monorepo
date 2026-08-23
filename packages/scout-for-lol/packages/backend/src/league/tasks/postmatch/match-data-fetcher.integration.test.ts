@@ -20,12 +20,12 @@ const savedPayloads: { matchId: string; issueCount: number }[] = [];
 let matchResponse: unknown;
 
 vi.doMock("#src/league/api/api.ts", () => ({
-  api: {
-    MatchV5: {
-      get: () => Promise.resolve({ response: matchResponse }),
+  riotClient: {
+    match: {
+      get: () => Promise.resolve(matchResponse),
+      timeline: () => Promise.resolve(undefined),
     },
   },
-  riotApi: {},
 }));
 
 vi.doMock("#src/storage/s3-helpers.ts", async (importOriginal) => ({

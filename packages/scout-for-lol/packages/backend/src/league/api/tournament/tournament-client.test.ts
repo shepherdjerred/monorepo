@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
-import { extractHttpStatus } from "#src/league/api/upstream-errors.ts";
-import { TournamentHttpError } from "#src/league/api/tournament/http.ts";
+import { extractHttpStatus } from "#src/league/api/client/errors.ts";
+import { RiotHttpError } from "#src/league/api/client/errors.ts";
 import {
   supportsGamesByCode,
   tournamentBasePath,
@@ -12,22 +12,30 @@ import {
 } from "#src/league/api/tournament/regions.ts";
 import { RawLobbyEventListSchema } from "@scout-for-lol/data/index.ts";
 
-describe("TournamentHttpError", () => {
-  test("is readable by extractHttpStatus without changing that helper", () => {
-    // This is the whole reason the hand-rolled client can reuse riot-call.ts:
-    // the wrapper reads `{ status }` off whatever the call threw, and twisted's
-    // errors happen to carry it. Matching that shape buys metrics, health,
-    // Sentry policy, and the expected-outage list for free.
-    const error = new TournamentHttpError(429, "rate limited", 12);
+function riotError(status: number, statusText: string): RiotHttpError {
+  return new RiotHttpError({
+    status,
+    statusText,
+    body: undefined,
+    url: "https://americas.api.riotgames.com/lol/tournament/v5/codes",
+    headers: new Headers(),
+  });
+}
 
-    expect(extractHttpStatus(error)).toBe(429);
-    expect(error.retryAfterSeconds).toBe(12);
+describe("tournament errors", () => {
+  test("are RiotHttpError, so the shared upstream policy applies", () => {
+    // extractHttpStatus is `instanceof RiotHttpError` on purpose, so that
+    // similarly-shaped errors from Discord and elsewhere do not inherit Riot's
+    // upstream-outage policy. Throwing any other type from the tournament shim
+    // would silently opt every tournament call out of the 404 handling, the
+    // expected-outage list, and the Sentry rules in riot-call.ts.
+    expect(extractHttpStatus(riotError(429, "Too Many Requests"))).toBe(429);
   });
 
-  test("carries the response body so a failed lobby creation can explain itself", () => {
-    const error = new TournamentHttpError(403, "forbidden", undefined);
+  test("carry the status so a failed lobby creation can explain itself", () => {
+    const error = riotError(403, "Forbidden");
     expect(error.message).toContain("403");
-    expect(error.message).toContain("forbidden");
+    expect(error.message).toContain("Forbidden");
   });
 });
 
@@ -63,11 +71,11 @@ describe("region mapping", () => {
 });
 
 function respond(value: unknown) {
-  return () => Promise.resolve({ response: value });
+  return () => Promise.resolve(value);
 }
 
 function rejectWith(error: unknown) {
-  return async (): Promise<{ response: unknown }> => {
+  return async (): Promise<unknown> => {
     throw error;
   };
 }
@@ -150,7 +158,7 @@ describe("lobby-event parsing through the shared wrapper", () => {
         schema: RawLobbyEventListSchema,
         context: {},
       },
-      rejectWith(new TournamentHttpError(404, "not found", undefined)),
+      rejectWith(riotError(404, "Not Found")),
     );
     expect(result).toBeUndefined();
   });
@@ -162,7 +170,7 @@ describe("lobby-event parsing through the shared wrapper", () => {
         schema: RawLobbyEventListSchema,
         context: {},
       },
-      rejectWith(new TournamentHttpError(503, "unavailable", undefined)),
+      rejectWith(riotError(503, "Service Unavailable")),
     );
     expect(result).toBeUndefined();
   });

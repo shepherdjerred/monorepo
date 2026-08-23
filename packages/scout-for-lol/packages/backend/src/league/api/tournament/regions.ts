@@ -1,6 +1,9 @@
 import { match } from "ts-pattern";
-import type { Region, TournamentRegion } from "@scout-for-lol/data/index.ts";
-import { mapRegionToEnum } from "#src/league/model/region.ts";
+import {
+  regionToPlatformRoute,
+  type Region,
+  type TournamentRegion,
+} from "@scout-for-lol/data";
 
 /**
  * Scout's `Region` to the tournament API's own region code.
@@ -38,5 +41,5 @@ export function toTournamentRegion(region: Region): TournamentRegion {
  * `{PLATFORM}_{gameId}`, so this supplies the missing half.
  */
 export function toPlatformId(region: Region): string {
-  return mapRegionToEnum(region).toUpperCase();
+  return regionToPlatformRoute(region);
 }
