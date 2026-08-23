@@ -10,10 +10,49 @@
  */
 
 import { Counter, Gauge, Histogram } from "prom-client";
+import {
+  FEATURE_FLAG_METRICS,
+  type FlagMetricsRecorder,
+} from "@shepherdjerred/feature-flags/observability.ts";
 import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("metrics");
+
+export const featureFlagEvaluationsTotal = new Counter({
+  name: FEATURE_FLAG_METRICS.evaluations,
+  help: "Feature flag evaluations by flag and resolution reason",
+  labelNames: ["flag", "reason"] as const,
+  registers: [register],
+});
+
+export const featureFlagErrorsTotal = new Counter({
+  name: FEATURE_FLAG_METRICS.errors,
+  help: "Feature flag provider errors by operation",
+  labelNames: ["operation"] as const,
+  registers: [register],
+});
+
+export const featureFlagSnapshotAgeSeconds = new Gauge({
+  name: FEATURE_FLAG_METRICS.snapshotAge,
+  help: "Seconds since the feature flag snapshot refreshed successfully",
+  registers: [register],
+});
+
+export const featureFlagMetrics: FlagMetricsRecorder = {
+  countEvaluation: (event) => {
+    featureFlagEvaluationsTotal.inc({
+      flag: event.flag,
+      reason: event.reason,
+    });
+  },
+  countError: (operation) => {
+    featureFlagErrorsTotal.inc({ operation });
+  },
+  observeSnapshotAge: (seconds) => {
+    featureFlagSnapshotAgeSeconds.set(seconds);
+  },
+};
 
 // --- ffmpeg transcode realtime health --------------------------------------
 

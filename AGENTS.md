@@ -295,6 +295,31 @@ Read `posthog-helper` for the complete workflow. Source-side analytics checks
 and a successful capture response do not prove that PostHog stored an event;
 use the live API/Live Events for runtime acceptance.
 
+### Configuration and feature flags
+
+**For any app we wrote or control, environment variables are for credentials and
+bootstrap. Everything else is a feature flag.** New features ship behind a flag
+defaulted off, enabled in beta, ramped, then the flag is removed.
+
+`@shepherdjerred/config` resolves `flag → env → file → default` behind one
+Zod-typed call site and returns the value _and the layer that produced it_.
+`@shepherdjerred/feature-flags` is the OpenFeature client for the self-hosted
+Flipt instance. Load the `feature-flags` skill before adding a config value,
+adding an env var, gating a feature, or planning a rollout.
+
+Two things to know before touching either:
+
+- **Resolution falls through on absence, never on a resolved value.** A flag that
+  answers `false` stops the waterfall; if it fell through, an env var still set
+  to `true` would silently re-enable what an operator just disabled.
+- **Flipt has no authentication.** Reachability is the authorization model, so
+  the NetworkPolicy consumer list in `cdk8s-charts/flipt.ts` is the access
+  control, and capability grants (birmel's `TRUSTED_USER_IDS`, streambot's
+  `VOICE_CAPTURE_ENABLED`) deliberately stay in Git.
+
+See `packages/config/AGENTS.md`, `packages/feature-flags/AGENTS.md`, and the
+wiki's `explanation/homelab/configuration.md`.
+
 ### General repository commands
 
 ```bash

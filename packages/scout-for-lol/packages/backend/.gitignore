@@ -26,6 +26,9 @@ node_modules/
 # Anchored to the package root — src/report-lake/ is source code!
 /report-lake/
 
+# Disposable fixture lake written by scripts/seed-design-audit.ts.
+/.design-audit-report-lake/
+
 # Logs
 *.log
 npm-debug.log*

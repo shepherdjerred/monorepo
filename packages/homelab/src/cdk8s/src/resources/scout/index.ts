@@ -151,6 +151,11 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       key: "SENTRY_DSN",
     }),
     ENVIRONMENT: EnvValue.fromValue(stage),
+    // Bootstrap for the flag client — these cannot come from a flag.
+    FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+    FLIPT_URL: EnvValue.fromValue(
+      "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+    ),
     POSTHOG_PROJECT_TOKEN: EnvValue.fromValue(analytics.projectToken),
     POSTHOG_API_HOST: EnvValue.fromValue(analytics.apiHost),
     POSTHOG_SITE_KEY: EnvValue.fromValue(analytics.siteKey),

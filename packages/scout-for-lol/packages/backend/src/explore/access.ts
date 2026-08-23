@@ -1,6 +1,10 @@
 import { TRPCError } from "@trpc/server";
 import type { User } from "#generated/prisma/client/index.js";
 import configuration from "#src/configuration.ts";
+import {
+  exploreGuildAllowlist,
+  isDynamicConfigReady,
+} from "#src/config/dynamic.ts";
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 
 /**
@@ -17,7 +21,16 @@ import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
  */
 
 export function exploreAllowlist(): string[] {
-  return configuration.exploreGuildAllowlist
+  // Reads the dynamic snapshot once startup has initialized it, and the
+  // env-derived configuration before that. Both produce the same value until
+  // someone creates the `explore-guild-allowlist` flag, so this is a no-op
+  // migration; the fallback exists because this function is called from guild
+  // command registration, where an empty array would UNREGISTER `/scout`
+  // rather than merely disable it.
+  const source = isDynamicConfigReady()
+    ? exploreGuildAllowlist()
+    : configuration.exploreGuildAllowlist;
+  return source
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
 }

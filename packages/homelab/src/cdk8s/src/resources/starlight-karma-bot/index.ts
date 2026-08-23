@@ -4,6 +4,7 @@ import {
   EnvValue,
   Probe,
   Secret,
+  Service,
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
@@ -14,6 +15,7 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 
 export type Stage = "prod" | "beta";
 
@@ -122,7 +124,18 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
         APPLICATION_ID: EnvValue.fromValue(applicationId),
         // The bot owner may configure recaps without holding Manage Server in
         // the guild. This is an identity, not a credential.
+        //
+        // KARMA_ADMIN_USER_ID and KARMA_EMOJI are now the ENV LAYER beneath
+        // their flags: a Flipt value for `karma-admin-user-id` or `karma-emoji`
+        // outranks these, and with no flag defined they still apply. Keeping
+        // them is what makes the migration a no-op until someone creates the
+        // flag.
         KARMA_ADMIN_USER_ID: EnvValue.fromValue("160509172704739328"),
+        // Bootstrap for the flag client itself — it cannot come from a flag.
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
         DATA_DIR: EnvValue.fromValue("/data"),
         // Prisma-native database, backfilled on first boot from the legacy
         // TypeORM `glitter.sqlite`.
@@ -145,4 +158,17 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
       },
     }),
   );
+
+  new Service(chart, "starlight-karma-bot-metrics-service", {
+    selector: deployment,
+    metadata: {
+      name: "starlight-karma-bot-metrics",
+      labels: { app: "starlight-karma-bot-metrics" },
+    },
+    ports: [{ name: "metrics", port: 8000, targetPort: 8000 }],
+  });
+  createServiceMonitor(chart, {
+    name: "starlight-karma-bot-metrics",
+    matchLabels: { app: "starlight-karma-bot-metrics" },
+  });
 }

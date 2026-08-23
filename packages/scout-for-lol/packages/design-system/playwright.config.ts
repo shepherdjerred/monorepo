@@ -28,6 +28,11 @@ export default defineConfig({
     command: "bun run dev --host 127.0.0.1",
     url: "http://127.0.0.1:5190",
     reuseExistingServer: true,
+    // Playwright defaults to 60s. This vite server shares the browser-E2E pod
+    // with sjer.red's 110-screenshot run at --concurrency=2 and timed out at
+    // exactly 60s on build 10779 without emitting an error. 120s matches
+    // sjer.red, alert-dashboard, and evals.
+    timeout: 120_000,
   },
   use: { baseURL: "http://127.0.0.1:5190", reducedMotion: "reduce" },
   projects: [
