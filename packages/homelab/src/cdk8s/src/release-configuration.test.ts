@@ -59,6 +59,6 @@ test("releaseChartRevisions validates exact build revisions", () => {
 
 test("keeps the promoted SQLite pin below the Postgres cutover", () => {
   expect(scoutImageUsesPostgres("2.0.0-9495")).toBe(false);
-  expect(scoutImageUsesPostgres("2.0.0-10760")).toBe(false);
-  expect(scoutImageUsesPostgres("2.0.0-10761")).toBe(true);
+  expect(scoutImageUsesPostgres("2.0.0-10860")).toBe(false);
+  expect(scoutImageUsesPostgres("2.0.0-10861")).toBe(true);
 });

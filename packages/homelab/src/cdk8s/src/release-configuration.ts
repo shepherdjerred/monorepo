@@ -12,10 +12,10 @@ const ChartRevisionsSchema = z.record(z.string().min(1), BuildVersionSchema);
  * Images from this build onward use the PostgreSQL backend. Older production
  * pins remain on SQLite until Renovate promotes one of these images.
  */
-// 10760 is the latest catalogued beta image and is still SQLite-backed. The
+// 10860 is the latest catalogued beta image and is still SQLite-backed. The
 // next minted Scout release is the first one this migration can classify as
 // PostgreSQL-backed; never classify an existing SQLite tag by its age alone.
-const SCOUT_POSTGRES_CUTOVER_BUILD = 10_761;
+const SCOUT_POSTGRES_CUTOVER_BUILD = 10_861;
 
 export function scoutImageUsesPostgres(version: string): boolean {
   const parsed = ScoutImageVersionSchema.parse(version);
