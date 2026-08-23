@@ -40,7 +40,7 @@ const config = [
     },
   },
   {
-    ignores: ["generated/"],
+    ignores: ["dist/", "generated/"],
   },
 ];
 export default config;
