@@ -281,7 +281,12 @@ function buildLegacySqlite(
       updatedTime: NOW,
     });
     insertPostCutoverRows(tableColumns, insert);
-    insertTournamentRows(insert);
+    if (
+      tableColumns.has("TournamentRegistration") &&
+      tableColumns.has("TournamentLobby")
+    ) {
+      insertTournamentRows(insert);
+    }
     insert("Season", {
       id: "2026-split-2",
       displayName: "2026 Split 2",
@@ -542,6 +547,8 @@ describe("legacy sqlite import", () => {
         "BucksParlayDefinition",
         "BucksParlayMarket",
         "BucksParlayBet",
+        "TournamentRegistration",
+        "TournamentLobby",
       ]),
       omittedColumns,
     );
@@ -557,6 +564,8 @@ describe("legacy sqlite import", () => {
     expect(summary.rowCounts["BucksParlayDefinition"]).toBe(0);
     expect(summary.rowCounts["BucksParlayMarket"]).toBe(0);
     expect(summary.rowCounts["BucksParlayBet"]).toBe(0);
+    expect(summary.rowCounts["TournamentRegistration"]).toBe(0);
+    expect(summary.rowCounts["TournamentLobby"]).toBe(0);
     await expect(
       oldSchemaPrisma.bucksOpenPosition.findUniqueOrThrow({
         where: {

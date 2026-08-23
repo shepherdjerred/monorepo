@@ -68,6 +68,11 @@ const LEGACY_OPTIONAL_TABLES = new Set([
   "BucksParlayDefinition",
   "BucksParlayMarket",
   "BucksParlayBet",
+  // The promoted SQLite image predates the tournament-lobby migration. Newer
+  // snapshots carry these tables and import them; older snapshots treat them
+  // as empty so the cutover can still complete.
+  "TournamentRegistration",
+  "TournamentLobby",
 ]);
 
 function quoteIdentifier(identifier: string): string {
