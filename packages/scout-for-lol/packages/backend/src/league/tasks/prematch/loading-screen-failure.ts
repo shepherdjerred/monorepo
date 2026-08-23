@@ -4,8 +4,10 @@ import type {
   QueueType,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data";
-import { UnsupportedLoadingScreenQueueError } from "#src/league/tasks/prematch/loading-screen-builder.ts";
-import { RecoverableLoadingScreenDataError } from "#src/league/tasks/prematch/loading-screen-errors.ts";
+import {
+  RecoverableLoadingScreenDataError,
+  UnsupportedLoadingScreenQueueError,
+} from "#src/league/tasks/prematch/loading-screen-errors.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   classicAssetResolutionFailuresTotal,

@@ -1,13 +1,6 @@
 import type { RawCurrentGameInfo } from "@scout-for-lol/data/index.ts";
 
-/**
- * A loading-screen payload that is incomplete rather than wrong.
- *
- * The prematch poller treats this as "try again next tick" instead of an
- * error worth reporting: Riot surfaces a game during its pre-game countdown,
- * before every player has loaded in, so a partial roster is an expected
- * intermediate state rather than a bug.
- */
+/** An incomplete loading-screen payload that the poller should retry. */
 export class RecoverableLoadingScreenDataError extends Error {
   constructor(message: string) {
     super(message);
@@ -15,7 +8,14 @@ export class RecoverableLoadingScreenDataError extends Error {
   }
 }
 
-function gameInfoContextSuffix(gameInfo: RawCurrentGameInfo): string {
+export class UnsupportedLoadingScreenQueueError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnsupportedLoadingScreenQueueError";
+  }
+}
+
+export function gameInfoContextSuffix(gameInfo: RawCurrentGameInfo): string {
   return (
     `gameId=${gameInfo.gameId.toString()}, ` +
     `queueConfigId=${gameInfo.gameQueueConfigId.toString()}, ` +
@@ -27,7 +27,7 @@ function gameInfoContextSuffix(gameInfo: RawCurrentGameInfo): string {
 }
 
 export function buildIncompleteLobbyMessage(
-  participants: readonly unknown[],
+  participantCount: number,
   gameInfo: RawCurrentGameInfo,
 ): string {
   const presentPuuids = gameInfo.participants
@@ -35,7 +35,7 @@ export function buildIncompleteLobbyMessage(
     .join(",");
   return (
     `Standard loading screen requires exactly 10 participants; ` +
-    `received ${participants.length.toString()} ` +
+    `received ${participantCount.toString()} ` +
     `(${gameInfoContextSuffix(gameInfo)}, participants=[${presentPuuids}])`
   );
 }

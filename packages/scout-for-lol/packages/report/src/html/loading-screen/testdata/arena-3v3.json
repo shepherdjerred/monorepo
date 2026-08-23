@@ -19,7 +19,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": true,
-      "championId": 266
+      "championId": 266,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v302xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -34,7 +38,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 103
+      "championId": 103,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v303xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -49,7 +57,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 84
+      "championId": 84,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v304xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -64,7 +76,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 1
+      "championId": 1,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v305xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -79,7 +95,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 22
+      "championId": 22,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v306xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -94,7 +114,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 201
+      "championId": 201,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v307xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -109,7 +133,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 51
+      "championId": 51,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v308xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -124,7 +152,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 122
+      "championId": 122,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v309xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -139,7 +171,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 245
+      "championId": 245,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v310xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -154,7 +190,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 81
+      "championId": 81,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v311xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -169,7 +209,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 86
+      "championId": 86,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v312xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -184,7 +228,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 222
+      "championId": 222,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v313xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -199,7 +247,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 145
+      "championId": 145,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v314xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -214,7 +266,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 89
+      "championId": 89,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v315xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -229,7 +285,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 99
+      "championId": 99,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v316xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -244,7 +304,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 25
+      "championId": 25,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v317xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -259,7 +323,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 17
+      "championId": 17,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "arena3v318xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -274,7 +342,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "championId": 157
+      "championId": 157,
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     }
   ],
   "bans": [],

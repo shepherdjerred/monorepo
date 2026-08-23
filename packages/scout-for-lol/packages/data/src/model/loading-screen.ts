@@ -99,6 +99,41 @@ export const QueueDisplayNameSchema = z
   .min(1)
   .brand<"QueueDisplayName">();
 
+export const LoadingScreenRankStateSchema = z.discriminatedUnion("status", [
+  z.strictObject({ status: z.literal("hidden") }),
+  z.strictObject({ status: z.literal("error") }),
+  z.strictObject({
+    status: z.literal("available"),
+    ranks: RanksSchema,
+  }),
+]);
+export type LoadingScreenRankState = z.infer<
+  typeof LoadingScreenRankStateSchema
+>;
+
+function validateRankVisibility(
+  participant: {
+    puuid: string | null;
+    rankState: LoadingScreenRankState;
+  },
+  context: z.RefinementCtx,
+): void {
+  if (participant.puuid === null && participant.rankState.status !== "hidden") {
+    context.addIssue({
+      code: "custom",
+      message: "Participants without a PUUID must have hidden rank state",
+      path: ["rankState"],
+    });
+  }
+  if (participant.puuid !== null && participant.rankState.status === "hidden") {
+    context.addIssue({
+      code: "custom",
+      message: "Identifiable participants cannot have hidden rank state",
+      path: ["rankState"],
+    });
+  }
+}
+
 export const BaseLoadingScreenParticipantSchema = z.strictObject({
   /** Riot PUUID — null for participants we cannot identify (rare, e.g., bots) */
   puuid: LeaguePuuidSchema.nullable(),
@@ -120,8 +155,8 @@ export const BaseLoadingScreenParticipantSchema = z.strictObject({
   keystoneRuneId: RuneIdSchema.optional(),
   /** Secondary rune tree ID */
   secondaryTreeId: RuneIdSchema.optional(),
-  /** Ranks (solo + flex, fetched via LeagueV4) */
-  ranks: RanksSchema.optional(),
+  /** League-V4 lookup state for loading-screen presentation. */
+  rankState: LoadingScreenRankStateSchema,
   /** Whether this player is tracked by the bot */
   isTrackedPlayer: z.boolean(),
 });
@@ -139,7 +174,7 @@ export const StandardLoadingScreenParticipantSchema =
      * A full 5v5 still always carries one — see `inferStandardParticipants`.
      */
     lane: LaneSchema.optional(),
-  });
+  }).superRefine(validateRankVisibility);
 
 export type StandardLoadingScreenParticipant = z.infer<
   typeof StandardLoadingScreenParticipantSchema
@@ -149,7 +184,7 @@ export const NonStandardLoadingScreenParticipantSchema =
   BaseLoadingScreenParticipantSchema.extend({
     /** Team assignment for ARAM or Arena */
     team: LoadingScreenTeamSchema,
-  });
+  }).superRefine(validateRankVisibility);
 
 export type NonStandardLoadingScreenParticipant = z.infer<
   typeof NonStandardLoadingScreenParticipantSchema

@@ -1,4 +1,8 @@
-import type { LoadingScreenParticipant } from "@scout-for-lol/data";
+import type {
+  LoadingScreenParticipant,
+  QueueType,
+  Rank,
+} from "@scout-for-lol/data";
 import {
   getRuneInfo,
   getRuneTreeInfo,
@@ -55,6 +59,52 @@ const PLAYER_CARD_SIZING: Record<PlayerCardVariant, PlayerCardSizing> = {
 
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function formatRankText(rank: Rank | undefined): string | undefined {
+  if (rank === undefined) {
+    return undefined;
+  }
+  if (
+    rank.tier === "master" ||
+    rank.tier === "grandmaster" ||
+    rank.tier === "challenger"
+  ) {
+    return capitalize(rank.tier);
+  }
+  return `${capitalize(rank.tier)} ${divisionToString(rank.division)}`;
+}
+
+export function resolveParticipantRankDisplay(
+  participant: LoadingScreenParticipant,
+  queueType?: QueueType,
+): { text: string; color: string } {
+  if (participant.rankState.status === "hidden") {
+    return { text: "Hidden", color: palette.grey[1] };
+  }
+  if (participant.rankState.status === "error") {
+    return { text: "Error", color: palette.teams.red };
+  }
+
+  const ranks = participant.rankState.ranks;
+  if (queueType === "solo" || queueType === "flex") {
+    const rank = queueType === "solo" ? ranks.solo : ranks.flex;
+    return {
+      text: formatRankText(rank) ?? "Unranked",
+      color: rank === undefined ? palette.grey[1] : palette.gold[3],
+    };
+  }
+
+  const soloRank = formatRankText(ranks.solo);
+  if (soloRank !== undefined) {
+    return { text: soloRank, color: palette.gold[3] };
+  }
+  const flexRank = formatRankText(ranks.flex);
+  if (flexRank !== undefined) {
+    return { text: `Flex ${flexRank}`, color: palette.gold[3] };
+  }
+
+  return { text: "Unranked", color: palette.grey[1] };
 }
 
 function resolveSpellImage(spellId: number): string | undefined {
@@ -167,10 +217,12 @@ export function PlayerCard({
   participant,
   teamSide,
   variant = "standard",
+  queueType,
 }: {
   participant: LoadingScreenParticipant;
   teamSide: "blue" | "red" | "neutral";
-  variant?: PlayerCardVariant;
+  variant?: PlayerCardVariant | undefined;
+  queueType?: QueueType | undefined;
 }) {
   const sizing = PLAYER_CARD_SIZING[variant];
   const splashArt = getChampionLoadingImage(participant.championName);
@@ -185,11 +237,7 @@ export function PlayerCard({
 
   const borderWidth = participant.isTrackedPlayer ? "3px" : "2px";
 
-  const rank = participant.ranks?.solo ?? participant.ranks?.flex;
-  const rankText =
-    rank === undefined
-      ? "Unranked"
-      : `${capitalize(rank.tier)} ${divisionToString(rank.division)}`;
+  const rankDisplay = resolveParticipantRankDisplay(participant, queueType);
 
   return (
     <div
@@ -314,13 +362,13 @@ export function PlayerCard({
                 fontSize: `${sizing.rankFontSize.toString()}px`,
                 fontFamily: font.body,
                 fontWeight: 700,
-                color: palette.gold[3],
+                color: rankDisplay.color,
                 textShadow: "0 1px 2px rgba(0,0,0,0.9)",
                 textTransform: "uppercase",
                 letterSpacing: "1px",
               }}
             >
-              {rankText}
+              {rankDisplay.text}
             </span>
           </div>
 

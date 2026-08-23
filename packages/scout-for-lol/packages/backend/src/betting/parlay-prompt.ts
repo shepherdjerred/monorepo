@@ -66,8 +66,11 @@ function currentRank(
   >["participants"][number],
   queue: QueueType,
 ): string {
-  const rank =
-    queue === "solo" ? participant.ranks?.solo : participant.ranks?.flex;
+  const ranks =
+    participant.rankState.status === "available"
+      ? participant.rankState.ranks
+      : undefined;
+  const rank = queue === "solo" ? ranks?.solo : ranks?.flex;
   return rank === undefined ? "unranked or unavailable" : rankToString(rank);
 }
 

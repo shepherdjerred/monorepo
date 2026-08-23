@@ -10,7 +10,6 @@ import type {
   LoadingScreenLayout,
   LoadingScreenTeam,
   Region,
-  Ranks,
   StandardLoadingScreenParticipant,
 } from "@scout-for-lol/data/index.ts";
 import {
@@ -30,23 +29,27 @@ import {
   resolveClassicChampionKey,
   getClassicChampionId,
   getClassicSpellId,
-  getModernChampionIdForClassic,
-  getModernSpellIdForClassic,
   loadingScreenLayoutForQueueType,
   isClassicAssetMode,
 } from "@scout-for-lol/data/index.ts";
+
 import {
   getChampionDisplayName,
   resolveChampionKey,
 } from "#src/utils/champion.ts";
-import { getRankByPuuid } from "#src/league/model/rank.ts";
 import {
-  RecoverableLoadingScreenDataError,
-  buildIncompleteLobbyMessage,
-  buildLopsidedTeamMessage,
-} from "#src/league/tasks/prematch/loading-screen-errors.ts";
+  getRankByPuuid,
+  type RankLookupResult,
+} from "#src/league/model/rank.ts";
 import { createLogger } from "#src/logger.ts";
 import { classicAssetResolutionFailuresTotal } from "#src/metrics/index.ts";
+import {
+  RecoverableLoadingScreenDataError,
+  UnsupportedLoadingScreenQueueError,
+  buildIncompleteLobbyMessage,
+  buildLopsidedTeamMessage,
+} from "./loading-screen-errors.ts";
+import { orderClassicParticipants } from "./loading-screen-classic.ts";
 
 const logger = createLogger("prematch-loading-screen-builder");
 
@@ -54,21 +57,17 @@ const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
 const RANKED_5S_QUEUE_ID = 710;
 
-export class UnsupportedLoadingScreenQueueError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "UnsupportedLoadingScreenQueueError";
-  }
-}
-
 type BuildParticipantContext = {
   trackedPuuids: ReadonlySet<string>;
   layout: LoadingScreenLayout;
 };
 
-type BaseBuiltParticipant = Omit<NonStandardLoadingScreenParticipant, "ranks">;
-type RankedBuiltParticipant = BaseBuiltParticipant & { ranks?: Ranks };
-export type ParticipantRanks = ReadonlyMap<string, Ranks>;
+type BaseBuiltParticipant = Omit<
+  NonStandardLoadingScreenParticipant,
+  "rankState"
+>;
+type RankedBuiltParticipant = NonStandardLoadingScreenParticipant;
+export type ParticipantRanks = ReadonlyMap<string, RankLookupResult>;
 
 /** Fetch the lobby rank snapshot once so prediction and presentation share it. */
 export async function fetchParticipantRanks(
@@ -83,21 +82,32 @@ export async function fetchParticipantRanks(
   logger.info(
     `Fetching ranks for ${gameInfo.participants.length.toString()} participants`,
   );
-  const results = await Promise.allSettled(
-    gameInfo.participants.map(async (participant) => {
-      if (participant.puuid === null) {
-        return;
-      }
-      const ranks = await getRankByPuuid(participant.puuid, region);
-      return ranks === undefined
-        ? undefined
-        : { puuid: participant.puuid, ranks };
-    }),
+  const lookups = gameInfo.participants.flatMap((participant) =>
+    participant.puuid === null
+      ? []
+      : [
+          {
+            puuid: participant.puuid,
+            request: getRankByPuuid(participant.puuid, region),
+          },
+        ],
   );
-  const ranksByPuuid = new Map<string, Ranks>();
-  for (const result of results) {
-    if (result.status === "fulfilled" && result.value !== undefined) {
-      ranksByPuuid.set(result.value.puuid, result.value.ranks);
+  const results = await Promise.allSettled(
+    lookups.map((lookup) => lookup.request),
+  );
+  const ranksByPuuid = new Map<string, RankLookupResult>();
+  for (const [index, lookup] of lookups.entries()) {
+    const result = results[index];
+    if (result === undefined) {
+      throw new Error(`Missing settled rank result for ${lookup.puuid}`);
+    }
+    if (result.status === "fulfilled") {
+      ranksByPuuid.set(lookup.puuid, result.value);
+    } else {
+      logger.error("Participant rank lookup rejected", result.reason, {
+        puuid: lookup.puuid,
+      });
+      ranksByPuuid.set(lookup.puuid, { status: "error" });
     }
   }
   return ranksByPuuid;
@@ -236,7 +246,7 @@ function inferStandardParticipants(
 
   if (!isCustomLobby && participants.length !== 10) {
     throw new RecoverableLoadingScreenDataError(
-      buildIncompleteLobbyMessage(participants, gameInfo),
+      buildIncompleteLobbyMessage(participants.length, gameInfo),
     );
   }
 
@@ -305,67 +315,9 @@ function inferStandardParticipants(
   return inferred;
 }
 
-const CLASSIC_LANE_ORDER = [
-  "top",
-  "jungle",
-  "middle",
-  "adc",
-  "support",
-] as const;
-
-function orderFullClassicTeam(
-  participants: ClassicLoadingScreenParticipant[],
-): ClassicLoadingScreenParticipant[] {
-  const inference = inferStandardLanesWithCurrentPriors(
-    participants.map((participant, index) => ({
-      participantKey: laneInferenceKey(index),
-      championId: LoadingScreenChampionIdSchema.parse(
-        getModernChampionIdForClassic(participant.championId),
-      ),
-      spell1Id: SummonerSpellIdSchema.parse(
-        getModernSpellIdForClassic(participant.spell1Id) ??
-          participant.spell1Id,
-      ),
-      spell2Id: SummonerSpellIdSchema.parse(
-        getModernSpellIdForClassic(participant.spell2Id) ??
-          participant.spell2Id,
-      ),
-    })),
-  );
-  const laneByIndex = new Map(
-    inference.assignments.map((assignment) => [
-      Number(assignment.participantKey.replace("participant:", "")),
-      assignment.lane,
-    ]),
-  );
-  return participants
-    .map((participant, index) => ({
-      participant,
-      lane: laneByIndex.get(index),
-    }))
-    .toSorted(
-      (left, right) =>
-        CLASSIC_LANE_ORDER.indexOf(left.lane ?? "support") -
-        CLASSIC_LANE_ORDER.indexOf(right.lane ?? "support"),
-    )
-    .map((entry) => entry.participant);
-}
-
-function orderClassicParticipants(
-  participants: ClassicLoadingScreenParticipant[],
-): ClassicLoadingScreenParticipant[] {
-  const blue = participants.filter(
-    (participant) => participant.team === "blue",
-  );
-  const red = participants.filter((participant) => participant.team === "red");
-  if (blue.length !== 5 || red.length !== 5) {
-    return participants;
-  }
-  return [...orderFullClassicTeam(blue), ...orderFullClassicTeam(red)];
-}
-
 /**
  * Resolve banned champions to loading screen ban objects.
+
  */
 function buildBans(gameInfo: RawCurrentGameInfo): LoadingScreenBan[] {
   const bans: LoadingScreenBan[] = [];
@@ -476,7 +428,7 @@ export async function buildLoadingScreenData(
     });
   }
 
-  // Build base participant data (without ranks)
+  // Build base participant data (without rank lookup state)
   const baseParticipants = gameInfo.participants.map((p) =>
     buildParticipant(p, {
       trackedPuuids,
@@ -490,11 +442,20 @@ export async function buildLoadingScreenData(
   // Combine base participants with the shared rank snapshot.
   const rankedParticipants: RankedBuiltParticipant[] = baseParticipants.map(
     (base) => {
-      const ranks =
-        base.puuid === null ? undefined : ranksByPuuid.get(base.puuid);
-      return ranks === undefined ? base : { ...base, ranks };
+      if (base.puuid === null) {
+        return {
+          ...base,
+          rankState: { status: "hidden" },
+        };
+      }
+      const rankState = ranksByPuuid.get(base.puuid);
+      if (rankState === undefined) {
+        throw new Error(`Missing rank lookup result for ${base.puuid}`);
+      }
+      return { ...base, rankState };
     },
   );
+
   const participants: LoadingScreenParticipant[] =
     layout === "standard"
       ? inferStandardParticipants(rankedParticipants, gameInfo, queueType)

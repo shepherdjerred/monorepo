@@ -1,6 +1,7 @@
 import {
   LANE_ORDER,
   type AramLoadingScreenData,
+  type QueueType,
   type StandardLoadingScreenData,
 } from "@scout-for-lol/data";
 import { palette } from "@scout-for-lol/design-system/satori/colors";
@@ -11,12 +12,14 @@ function TeamRow({
   participants,
   teamSide,
   label,
+  queueType,
 }: {
   participants:
     | StandardLoadingScreenData["participants"]
     | AramLoadingScreenData["participants"];
   teamSide: "blue" | "red";
   label: string;
+  queueType?: QueueType;
 }) {
   const teamColor =
     teamSide === "blue" ? palette.teams.blue : palette.teams.red;
@@ -48,6 +51,7 @@ function TeamRow({
             key={participant.puuid ?? participant.summonerName}
             participant={participant}
             teamSide={teamSide}
+            queueType={queueType}
           />
         ))}
       </div>
@@ -97,7 +101,12 @@ export function StandardLayout({
         width: "100%",
       }}
     >
-      <TeamRow participants={blueTeam} teamSide="blue" label="Blue Team" />
+      <TeamRow
+        participants={blueTeam}
+        teamSide="blue"
+        label="Blue Team"
+        queueType={data.queueType}
+      />
 
       {/* VS divider */}
       <span
@@ -112,7 +121,12 @@ export function StandardLayout({
         VS
       </span>
 
-      <TeamRow participants={redTeam} teamSide="red" label="Red Team" />
+      <TeamRow
+        participants={redTeam}
+        teamSide="red"
+        label="Red Team"
+        queueType={data.queueType}
+      />
     </div>
   );
 }

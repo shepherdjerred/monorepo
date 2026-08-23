@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+import { RawSummonerLeagueListSchema } from "@scout-for-lol/data";
 import { parseWithUnknownKeyFallback } from "#src/league/api/strict-with-loose-fallback.ts";
 
 const InnerSchema = z
@@ -121,5 +122,55 @@ describe("parseWithUnknownKeyFallback", () => {
     const result = parseWithUnknownKeyFallback(OuterSchema, payload);
     expect(result.ok).toBe(true);
     expect(JSON.stringify(payload)).toBe(beforeJson);
+  });
+
+  test("audits additive League-V4 fields without losing valid ranks", () => {
+    const result = parseWithUnknownKeyFallback(RawSummonerLeagueListSchema, [
+      {
+        queueType: "RANKED_SOLO_5x5",
+        tier: "GOLD",
+        rank: "II",
+        newRiotField: true,
+      },
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("unreachable");
+    expect(result.unknownKeyPaths).toEqual(["[0].newRiotField"]);
+    expect(result.data[0]?.queueType).toBe("RANKED_SOLO_5x5");
+  });
+
+  test("audits additive fields nested inside relevant League-V4 entries", () => {
+    const result = parseWithUnknownKeyFallback(RawSummonerLeagueListSchema, [
+      {
+        queueType: "RANKED_SOLO_5x5",
+        tier: "GOLD",
+        rank: "II",
+        miniSeries: {
+          target: 3,
+          wins: 1,
+          losses: 0,
+          progress: "WNN",
+          newSeriesField: true,
+        },
+      },
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("unreachable");
+    expect(result.unknownKeyPaths).toEqual(["[0].miniSeries.newSeriesField"]);
+  });
+
+  test("still rejects malformed relevant League-V4 entries with additive fields", () => {
+    const result = parseWithUnknownKeyFallback(RawSummonerLeagueListSchema, [
+      {
+        queueType: "RANKED_FLEX_SR",
+        tier: "FUTURE_TIER",
+        rank: "I",
+        newRiotField: true,
+      },
+    ]);
+
+    expect(result.ok).toBe(false);
   });
 });

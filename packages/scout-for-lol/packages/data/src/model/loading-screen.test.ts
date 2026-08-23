@@ -111,20 +111,40 @@ describe("LoadingScreenParticipantSchema", () => {
     team: "blue",
     spell1Id: SummonerSpellIdSchema.parse(4),
     spell2Id: SummonerSpellIdSchema.parse(14),
+    rankState: { status: "available", ranks: {} },
     isTrackedPlayer: false,
   };
 
-  test("accepts valid participant without optional fields", () => {
+  test("accepts valid participant without optional rune fields", () => {
     const result = LoadingScreenParticipantSchema.parse(validParticipant);
     expect(result.keystoneRuneId).toBeUndefined();
     expect(result.secondaryTreeId).toBeUndefined();
-    expect(result.ranks).toBeUndefined();
+    expect(result.rankState).toEqual({ status: "available", ranks: {} });
   });
 
-  test("accepts participant with null puuid", () => {
-    const withNullPuuid = { ...validParticipant, puuid: null };
+  test("accepts hidden participant with null puuid", () => {
+    const withNullPuuid = {
+      ...validParticipant,
+      puuid: null,
+      rankState: { status: "hidden" },
+    };
     const result = LoadingScreenParticipantSchema.parse(withNullPuuid);
     expect(result.puuid).toBeNull();
+  });
+
+  test("rejects rank visibility states that disagree with PUUID availability", () => {
+    expect(() =>
+      LoadingScreenParticipantSchema.parse({
+        ...validParticipant,
+        puuid: null,
+      }),
+    ).toThrow("must have hidden rank state");
+    expect(() =>
+      LoadingScreenParticipantSchema.parse({
+        ...validParticipant,
+        rankState: { status: "hidden" },
+      }),
+    ).toThrow("cannot have hidden rank state");
   });
 
   // Callers must pass the normalized Data Dragon key (`RekSai`, `KSante`,
@@ -142,33 +162,39 @@ describe("LoadingScreenParticipantSchema", () => {
     },
   );
 
-  test("accepts participant with runes and ranks", () => {
+  test("accepts participant with runes and available ranks", () => {
     const withOptionals = {
       ...validParticipant,
       keystoneRuneId: RuneIdSchema.parse(8005),
       secondaryTreeId: RuneIdSchema.parse(8200),
-      ranks: {
-        solo: {
-          tier: "gold",
-          division: 2,
-          lp: 45,
-          wins: 100,
-          losses: 90,
-        },
-        flex: {
-          tier: "silver",
-          division: 1,
-          lp: 75,
-          wins: 50,
-          losses: 40,
+      rankState: {
+        status: "available",
+        ranks: {
+          solo: {
+            tier: "gold",
+            division: 2,
+            lp: 45,
+            wins: 100,
+            losses: 90,
+          },
+          flex: {
+            tier: "silver",
+            division: 1,
+            lp: 75,
+            wins: 50,
+            losses: 40,
+          },
         },
       },
       isTrackedPlayer: true,
     };
     const result = LoadingScreenParticipantSchema.parse(withOptionals);
     expect(Number(result.keystoneRuneId)).toBe(8005);
-    expect(result.ranks?.solo?.tier).toBe("gold");
-    expect(result.ranks?.flex?.tier).toBe("silver");
+    expect(result.rankState.status).toBe("available");
+    if (result.rankState.status === "available") {
+      expect(result.rankState.ranks.solo?.tier).toBe("gold");
+      expect(result.rankState.ranks.flex?.tier).toBe("silver");
+    }
     expect(result.isTrackedPlayer).toBe(true);
   });
 
@@ -245,8 +271,17 @@ function makeNonStandardParticipant(puuid: string, team: "blue" | "red") {
     team,
     spell1Id: SummonerSpellIdSchema.parse(4),
     spell2Id: SummonerSpellIdSchema.parse(14),
+    rankState: { status: "available", ranks: {} },
     isTrackedPlayer: false,
   };
+}
+
+function makeClassicParticipant(puuid: string, team: "blue" | "red") {
+  const { rankState: _rankState, ...participant } = makeNonStandardParticipant(
+    puuid,
+    team,
+  );
+  return participant;
 }
 
 function makeParticipant(
@@ -260,41 +295,41 @@ function makeParticipant(
   };
 }
 
-describe("LoadingScreenDataSchema", () => {
-  const validData = {
-    gameId: GameIdSchema.parse(12_345),
-    queueType: "solo",
-    queueDisplayName: makeQueueDisplayName("solo"),
-    isRanked: true,
-    layout: "standard",
-    mapName: "Summoner's Rift",
-    participants: [
-      makeParticipant(makePuuid("01"), "blue", "top"),
-      makeParticipant(makePuuid("02"), "blue", "jungle"),
-      makeParticipant(makePuuid("03"), "blue", "middle"),
-      makeParticipant(makePuuid("04"), "blue", "adc"),
-      makeParticipant(makePuuid("05"), "blue", "support"),
-      makeParticipant(makePuuid("06"), "red", "top"),
-      makeParticipant(makePuuid("07"), "red", "jungle"),
-      makeParticipant(makePuuid("08"), "red", "middle"),
-      makeParticipant(makePuuid("09"), "red", "adc"),
-      makeParticipant(makePuuid("10"), "red", "support"),
-    ],
-    bans: [
-      {
-        championId: LoadingScreenChampionIdSchema.parse(1),
-        championName: "Annie",
-        team: "blue",
-      },
-      {
-        championId: LoadingScreenChampionIdSchema.parse(2),
-        championName: "Olaf",
-        team: "red",
-      },
-    ],
-    gameStartTime: Date.now(),
-  };
+const validData = {
+  gameId: GameIdSchema.parse(12_345),
+  queueType: "solo",
+  queueDisplayName: makeQueueDisplayName("solo"),
+  isRanked: true,
+  layout: "standard",
+  mapName: "Summoner's Rift",
+  participants: [
+    makeParticipant(makePuuid("01"), "blue", "top"),
+    makeParticipant(makePuuid("02"), "blue", "jungle"),
+    makeParticipant(makePuuid("03"), "blue", "middle"),
+    makeParticipant(makePuuid("04"), "blue", "adc"),
+    makeParticipant(makePuuid("05"), "blue", "support"),
+    makeParticipant(makePuuid("06"), "red", "top"),
+    makeParticipant(makePuuid("07"), "red", "jungle"),
+    makeParticipant(makePuuid("08"), "red", "middle"),
+    makeParticipant(makePuuid("09"), "red", "adc"),
+    makeParticipant(makePuuid("10"), "red", "support"),
+  ],
+  bans: [
+    {
+      championId: LoadingScreenChampionIdSchema.parse(1),
+      championName: "Annie",
+      team: "blue",
+    },
+    {
+      championId: LoadingScreenChampionIdSchema.parse(2),
+      championName: "Olaf",
+      team: "red",
+    },
+  ],
+  gameStartTime: Date.now(),
+};
 
+describe("LoadingScreenDataSchema", () => {
   test("accepts valid standard game data", () => {
     const result = LoadingScreenDataSchema.parse(validData);
     expect(Number(result.gameId)).toBe(12_345);
@@ -433,6 +468,7 @@ describe("LoadingScreenDataSchema", () => {
           },
           spell1Id: SummonerSpellIdSchema.parse(4),
           spell2Id: SummonerSpellIdSchema.parse(14),
+          rankState: { status: "available", ranks: {} },
           isTrackedPlayer: false,
         }),
       );
@@ -485,16 +521,10 @@ describe("ClassicLoadingScreenDataSchema", () => {
   ])("accepts Classic %iv%i teams", (blueCount, redCount) => {
     const participants = [
       ...Array.from({ length: blueCount }, (_, index) =>
-        makeNonStandardParticipant(
-          makePuuid(`c-blue-${index.toString()}`),
-          "blue",
-        ),
+        makeClassicParticipant(makePuuid(`c-blue-${index.toString()}`), "blue"),
       ),
       ...Array.from({ length: redCount }, (_, index) =>
-        makeNonStandardParticipant(
-          makePuuid(`c-red-${index.toString()}`),
-          "red",
-        ),
+        makeClassicParticipant(makePuuid(`c-red-${index.toString()}`), "red"),
       ),
     ];
     const result = ClassicLoadingScreenDataSchema.parse({
@@ -517,16 +547,10 @@ describe("ClassicLoadingScreenDataSchema", () => {
   ])("rejects Classic %iv%i teams", (blueCount, redCount) => {
     const participants = [
       ...Array.from({ length: blueCount }, (_, index) =>
-        makeNonStandardParticipant(
-          makePuuid(`x-blue-${index.toString()}`),
-          "blue",
-        ),
+        makeClassicParticipant(makePuuid(`x-blue-${index.toString()}`), "blue"),
       ),
       ...Array.from({ length: redCount }, (_, index) =>
-        makeNonStandardParticipant(
-          makePuuid(`x-red-${index.toString()}`),
-          "red",
-        ),
+        makeClassicParticipant(makePuuid(`x-red-${index.toString()}`), "red"),
       ),
     ];
     expect(() =>
