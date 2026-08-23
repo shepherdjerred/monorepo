@@ -83,7 +83,11 @@ describe("Scout PostHog deployment configuration", () => {
       false,
     ],
     [
-      "2.0.0-10761@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      "2.0.0-10860@sha256:c79be8f789dc48b8add32d5c633be88a881899cef91beb8efd450fba483474ff",
+      false,
+    ],
+    [
+      "2.0.0-10861@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
       true,
     ],
   ])("classifies the Scout database contract for %s", (version, expected) => {
