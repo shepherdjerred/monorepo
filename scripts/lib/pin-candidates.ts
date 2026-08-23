@@ -218,7 +218,7 @@ export async function rewriteVersionCatalogSource(
                     ...(entry.notes ?? []).filter(
                       (note) => note !== SCOUT_POSTGRES_IMAGE_NOTE,
                     ),
-                    SCOUT_POSTGRES_IMAGE_NOTE,
+                    `${SCOUT_POSTGRES_IMAGE_NOTE} ${pin.digest}`,
                   ],
                 }
               : {}),

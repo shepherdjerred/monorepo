@@ -239,11 +239,13 @@ describe("version catalog integrity", () => {
         {
           name: "shepherdjerred/scout-for-lol/beta",
           value: `old@${A}`,
+          notes: [`database contract: postgresql ${A}`],
         },
       ]),
       state,
     );
-    expect(rewritten).toContain('"database contract: postgresql"');
+    expect(rewritten).toContain(`"database contract: postgresql ${B}"`);
+    expect(rewritten).toContain(`"database contract: postgresql ${A}"`);
   });
 
   test("fails closed when state and versions drift", () => {

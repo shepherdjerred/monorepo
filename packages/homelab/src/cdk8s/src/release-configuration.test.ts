@@ -106,7 +106,9 @@ test("preserves Scout PostgreSQL provenance from the catalog", () => {
           category: "internal-image",
           artifactType: "image",
           management: { managed: false },
-          notes: ["database contract: postgresql"],
+          notes: [
+            "database contract: postgresql sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+          ],
         },
       ],
     }),

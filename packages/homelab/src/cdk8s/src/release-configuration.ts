@@ -12,7 +12,6 @@ const ScoutImageVersionSchema = z
 const ImageDigestsSchema = z.record(z.string().min(1), DigestSchema);
 const ChartRevisionsSchema = z.record(z.string().min(1), BuildVersionSchema);
 const ScoutImageDigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/);
-const SCOUT_BETA_IMAGE_KEY = "shepherdjerred/scout-for-lol/beta";
 
 /**
  * A version is PostgreSQL-backed only when its immutable digest is present in
@@ -33,19 +32,26 @@ export function catalogScoutPostgresImageDigests(
 ): ReadonlySet<string> {
   const digests = new Set<string>();
   for (const entry of catalog.entries) {
-    if (
-      entry.name !== SCOUT_BETA_IMAGE_KEY ||
-      !entry.notes?.includes(SCOUT_POSTGRES_IMAGE_NOTE)
-    ) {
+    if (!entry.name.startsWith("shepherdjerred/scout-for-lol/")) {
       continue;
     }
-    const digest = entry.value.split("@")[1];
-    if (digest === undefined) {
-      throw new Error(
-        `${SCOUT_BETA_IMAGE_KEY} has a PostgreSQL contract but no digest`,
-      );
+    for (const note of entry.notes ?? []) {
+      if (note === SCOUT_POSTGRES_IMAGE_NOTE) {
+        const digest = entry.value.split("@")[1];
+        if (digest === undefined) {
+          throw new Error(
+            `${entry.name} has a PostgreSQL contract but no digest`,
+          );
+        }
+        digests.add(ScoutImageDigestSchema.parse(digest));
+        continue;
+      }
+      const prefix = `${SCOUT_POSTGRES_IMAGE_NOTE} `;
+      if (!note.startsWith(prefix)) {
+        continue;
+      }
+      digests.add(ScoutImageDigestSchema.parse(note.slice(prefix.length)));
     }
-    digests.add(ScoutImageDigestSchema.parse(digest));
   }
   return digests;
 }
