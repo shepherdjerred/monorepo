@@ -52,6 +52,57 @@ function sqliteValues(
     });
 }
 
+function insertPostCutoverRows(
+  tableColumns: ReadonlyMap<string, ReadonlySet<string>>,
+  insert: (table: string, row: Record<string, unknown>) => void,
+): void {
+  insert("User", {
+    discordId: OWNER,
+    discordUsername: "alpha",
+    discordAvatar: null,
+    discordAccessToken: null,
+    discordRefreshToken: null,
+    tokenExpiresAt: null,
+    analyticsUserId: "analytics-user-1",
+    createdAt: NOW,
+    updatedAt: NOW,
+    lastSeenAt: NOW + 1000,
+  });
+  insert("GuildInstall", {
+    id: 1,
+    serverId: GUILD,
+    serverName: "Alpha guild",
+    ownerDiscordId: OWNER,
+    addedByDiscordId: OWNER,
+    memberCount: 10,
+    installedAt: NOW,
+    analyticsInstallationId: "analytics-install-1",
+    analyticsLifecycleTracked: 1,
+    firstSubscriptionAt: null,
+    firstCoreOutputAt: null,
+    outreach3dSentAt: null,
+    outreach14dSentAt: null,
+    outreach30dSentAt: null,
+    emailNudgeSentAt: null,
+    removedAt: null,
+    attributedAt: NOW + 2000,
+    attributionSurface: "landing",
+  });
+  if (tableColumns.has("InstallAttributionToken")) {
+    insert("InstallAttributionToken", {
+      id: 1,
+      token: "install-token-1",
+      discordId: OWNER,
+      surface: "landing",
+      createdAt: NOW,
+      expiresAt: NOW + 86_400_000,
+      consumedAt: null,
+      guildId: GUILD,
+      reconciledAt: null,
+    });
+  }
+}
+
 function buildLegacySqlite(
   path: string,
   omittedTables: ReadonlySet<string> = new Set(),
@@ -130,51 +181,7 @@ function buildLegacySqlite(
       createdTime: NOW,
       updatedTime: NOW,
     });
-    insert("User", {
-      discordId: OWNER,
-      discordUsername: "alpha",
-      discordAvatar: null,
-      discordAccessToken: null,
-      discordRefreshToken: null,
-      tokenExpiresAt: null,
-      analyticsUserId: "analytics-user-1",
-      createdAt: NOW,
-      updatedAt: NOW,
-      lastSeenAt: NOW + 1_000,
-    });
-    insert("GuildInstall", {
-      id: 1,
-      serverId: GUILD,
-      serverName: "Alpha guild",
-      ownerDiscordId: OWNER,
-      addedByDiscordId: OWNER,
-      memberCount: 10,
-      installedAt: NOW,
-      analyticsInstallationId: "analytics-install-1",
-      analyticsLifecycleTracked: 1,
-      firstSubscriptionAt: null,
-      firstCoreOutputAt: null,
-      outreach3dSentAt: null,
-      outreach14dSentAt: null,
-      outreach30dSentAt: null,
-      emailNudgeSentAt: null,
-      removedAt: null,
-      attributedAt: NOW + 2_000,
-      attributionSurface: "landing",
-    });
-    if (tableColumns.has("InstallAttributionToken")) {
-      insert("InstallAttributionToken", {
-        id: 1,
-        token: "install-token-1",
-        discordId: OWNER,
-        surface: "landing",
-        createdAt: NOW,
-        expiresAt: NOW + 86_400_000,
-        consumedAt: null,
-        guildId: GUILD,
-        reconciledAt: null,
-      });
-    }
+    insertPostCutoverRows(tableColumns, insert);
     insert("Season", {
       id: "2026-split-2",
       displayName: "2026 Split 2",
@@ -314,11 +321,11 @@ describe("legacy sqlite import", () => {
 
     await expect(
       prisma.user.findUniqueOrThrow({ where: { discordId: OWNER } }),
-    ).resolves.toMatchObject({ lastSeenAt: new Date(NOW + 1_000) });
+    ).resolves.toMatchObject({ lastSeenAt: new Date(NOW + 1000) });
     await expect(
       prisma.guildInstall.findUniqueOrThrow({ where: { id: 1 } }),
     ).resolves.toMatchObject({
-      attributedAt: new Date(NOW + 2_000),
+      attributedAt: new Date(NOW + 2000),
       attributionSurface: "landing",
     });
     await expect(
