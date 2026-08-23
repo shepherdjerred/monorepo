@@ -1,4 +1,5 @@
 import { ApplicationFailure } from "@temporalio/common";
+import { z } from "zod";
 import {
   HaApiError,
   HaNotFoundError,
@@ -15,6 +16,7 @@ import {
 // type safety lives in src/workflows/ha/util.ts, which wraps each activity
 // with schema-parameterized signatures that forward through as strings.
 let cachedClient: HomeAssistantRestClient | undefined;
+const MediaPlayerEntityId = z.string().startsWith("media_player.");
 
 function getClient(): HomeAssistantRestClient {
   if (cachedClient !== undefined) {
@@ -32,14 +34,35 @@ function getClient(): HomeAssistantRestClient {
   return cachedClient;
 }
 
-function isOptionalMediaPlayerUnavailable(error: HaApiError): boolean {
+function optionalMediaPlayerEntityIds(data: Record<string, unknown>): string[] {
+  const groupMembers = data["group_members"];
+  if (Array.isArray(groupMembers)) {
+    return groupMembers.flatMap((value) => {
+      const result = MediaPlayerEntityId.safeParse(value);
+      return result.success ? [result.data] : [];
+    });
+  }
+
+  const entityId = data["entity_id"];
+  const result = MediaPlayerEntityId.safeParse(entityId);
+  if (result.success) {
+    return [result.data];
+  }
+  return [];
+}
+
+function isOptionalMediaPlayerUnavailable(
+  error: HaApiError,
+  data: Record<string, unknown>,
+): boolean {
   if (error.status !== 404 && error.status < 500) {
     return false;
   }
   const text = `${error.message}\n${error.body}`;
   return (
-    /media_player\.\w+|sonos|speaker|entity(?:\s+id)?/i.test(text) &&
-    /unavailable|not found|does not exist|offline/i.test(text)
+    optionalMediaPlayerEntityIds(data).some((entityId) =>
+      text.toLowerCase().includes(entityId.toLowerCase()),
+    ) && /unavailable|not found|does not exist|offline/i.test(text)
   );
 }
 
@@ -94,7 +117,7 @@ export const haActivities = {
       // then expose it as a stable type for the workflow to handle.
       if (
         error instanceof HaApiError &&
-        isOptionalMediaPlayerUnavailable(error)
+        isOptionalMediaPlayerUnavailable(error, data)
       ) {
         throw ApplicationFailure.retryable(
           `Home Assistant media_player.${service} is unavailable (${String(error.status)})`,

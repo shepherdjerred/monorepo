@@ -105,7 +105,12 @@ describe("haActivities", () => {
     Bun.env["HA_TOKEN"] = "test-token";
     globalThis.fetch = Object.assign(
       (): Promise<Response> =>
-        Promise.resolve(new Response("Sonos unavailable.", { status: 500 })),
+        Promise.resolve(
+          new Response(
+            "Sonos entity media_player.master_bathroom unavailable.",
+            { status: 500 },
+          ),
+        ),
       { preconnect: originalFetch.preconnect.bind(originalFetch) },
     );
 
@@ -127,6 +132,40 @@ describe("haActivities", () => {
       expect(failure.message).toBe(
         "Home Assistant media_player.join is unavailable (500)",
       );
+    } finally {
+      globalThis.fetch = originalFetch;
+      if (originalUrl === undefined) {
+        delete Bun.env["HA_URL"];
+      } else {
+        Bun.env["HA_URL"] = originalUrl;
+      }
+      if (originalToken === undefined) {
+        delete Bun.env["HA_TOKEN"];
+      } else {
+        Bun.env["HA_TOKEN"] = originalToken;
+      }
+    }
+  });
+
+  it("keeps generic missing-entity media-player failures terminal", async () => {
+    const originalUrl = Bun.env["HA_URL"];
+    const originalToken = Bun.env["HA_TOKEN"];
+    const originalFetch = globalThis.fetch;
+    Bun.env["HA_URL"] = "http://localhost:8123";
+    Bun.env["HA_TOKEN"] = "test-token";
+    globalThis.fetch = Object.assign(
+      (): Promise<Response> =>
+        Promise.resolve(new Response("Entity not found.", { status: 404 })),
+      { preconnect: originalFetch.preconnect.bind(originalFetch) },
+    );
+
+    try {
+      await expect(
+        haActivities.callOptionalMediaPlayerService("join", {
+          entity_id: "media_player.bedroom",
+          group_members: ["media_player.master_bathroom"],
+        }),
+      ).rejects.toBeInstanceOf(HaApiError);
     } finally {
       globalThis.fetch = originalFetch;
       if (originalUrl === undefined) {
