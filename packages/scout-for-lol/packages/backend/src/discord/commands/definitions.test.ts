@@ -43,6 +43,9 @@ describe("registered Discord commands", () => {
 
     expect(guildScopedNames).toContain("bb");
     expect(guildScopedNames).toContain("scout");
+    // /lobby is flag-gated to one guild, so it must stay out of the global
+    // picker for the same reason /bb does.
+    expect(guildScopedNames).toContain("lobby");
     for (const name of guildScopedNames) {
       expect(globalNames).not.toContain(name);
     }

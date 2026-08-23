@@ -48,10 +48,14 @@ function metricValue(
 }
 
 function playerLabel(participant: RawParticipant): string {
+  // championName is the last resort rather than a placeholder string: every
+  // participant has one, and it still identifies the row to a reader. Riot may
+  // send none of the three name fields for a custom game.
   return (
     participant.riotIdGameName ??
     participant.riotIdName ??
-    participant.summonerName
+    participant.summonerName ??
+    participant.championName
   );
 }
 

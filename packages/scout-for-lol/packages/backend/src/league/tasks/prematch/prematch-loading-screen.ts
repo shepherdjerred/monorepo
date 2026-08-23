@@ -11,7 +11,6 @@ import {
   UnsupportedLoadingScreenQueueError,
 } from "#src/league/tasks/prematch/loading-screen-errors.ts";
 import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
-
 import {
   loadingScreenToImage,
   loadingScreenToSvg,

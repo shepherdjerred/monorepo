@@ -142,7 +142,8 @@ export type FlagName =
   | "ai_reports_unlimited"
   | "ai_reviews_enabled"
   | "betting_enabled"
-  | "debug";
+  | "debug"
+  | "tournament_lobbies_enabled";
 
 /** Flipt is authoritative when available. The registry remains a fail-closed
  * compatibility seed and test fixture for provider-unavailable evaluations. */
@@ -164,6 +165,20 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   ai_reports_unlimited: {
     default: false,
     overrides: [{ value: true, attributes: { user: ME } }],
+  },
+  /**
+   * Tournament-code custom lobbies (`/lobby`).
+   *
+   * Beta-only in practice for the same reason betting is: the override is for
+   * one guild, and that guild runs the beta bot. There is deliberately no
+   * environment check — one override should be the whole answer to "is it on
+   * here?". Flipt cannot do this job: Scout's targetingKey is the constant
+   * "scout-backend", so a Flipt flag cannot answer differently for beta and
+   * prod.
+   */
+  tournament_lobbies_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
   ai_reviews_enabled: {
     default: false,

@@ -1,5 +1,6 @@
-import type { RawCurrentGameInfo } from "@scout-for-lol/data";
+import type { RawCurrentGameInfo } from "@scout-for-lol/data/index.ts";
 
+/** An incomplete loading-screen payload that the poller should retry. */
 export class RecoverableLoadingScreenDataError extends Error {
   constructor(message: string) {
     super(message);

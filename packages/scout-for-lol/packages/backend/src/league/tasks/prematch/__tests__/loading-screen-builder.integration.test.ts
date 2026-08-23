@@ -111,10 +111,16 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     expect(blueTeam).toHaveLength(5);
     expect(redTeam).toHaveLength(5);
     const expectedLanes: Lane[] = ["adc", "jungle", "middle", "support", "top"];
-    expect(blueTeam.map((p) => p.lane).toSorted()).toEqual(
+    // `lane` is optional on the participant so a sub-five custom side can omit
+    // it; "MISSING" makes an absent lane fail this assertion loudly rather than
+    // comparing as undefined. A full five must always carry all five lanes.
+    const laneOf = (participant: {
+      lane?: Lane | undefined;
+    }): Lane | "MISSING" => participant.lane ?? "MISSING";
+    expect(blueTeam.map((p) => laneOf(p)).toSorted()).toEqual(
       expectedLanes.toSorted(),
     );
-    expect(redTeam.map((p) => p.lane).toSorted()).toEqual(
+    expect(redTeam.map((p) => laneOf(p)).toSorted()).toEqual(
       expectedLanes.toSorted(),
     );
 
@@ -445,6 +451,51 @@ describe("buildLoadingScreenData standard and custom layouts", () => {
     const parsed = LoadingScreenDataSchema.parse(result);
     expect(parsed.queueType).toBe("custom");
     expect(parsed.layout).toBe("standard");
+  });
+
+  test("partial custom lobbies keep explicit rank states without invented lanes", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+    const participants = [
+      ...baseGameInfo.participants
+        .filter((participant) => participant.teamId === 100)
+        .slice(0, 3),
+      ...baseGameInfo.participants
+        .filter((participant) => participant.teamId === 200)
+        .slice(0, 3),
+    ];
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 3100,
+      gameMode: "CLASSIC",
+      bannedChampions: [],
+      participants,
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    expect(result.layout).toBe("standard");
+    if (result.layout !== "standard") {
+      throw new Error("Expected standard loading screen data");
+    }
+    expect(result.participants).toHaveLength(6);
+    expect(
+      result.participants.every(
+        (participant) => participant.lane === undefined,
+      ),
+    ).toBe(true);
+    expect(
+      result.participants.every((participant) =>
+        participant.puuid === null
+          ? participant.rankState.status === "hidden"
+          : participant.rankState.status === "available",
+      ),
+    ).toBe(true);
   });
 
   test("normal CLASSIC queues keep normal champion assets", async () => {

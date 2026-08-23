@@ -724,6 +724,20 @@ export const riotApiUnknownKeysTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * Expected-but-absent match fields on a payload that declared itself a custom
+ * game. Those fields are optional on the schema so tournament-code lobbies
+ * parse at all; this counts how often that tolerance is actually exercised, per
+ * field. A matchmade payload missing the same field is a hard validation
+ * failure instead and lands on riotApiErrorsTotal{http_status="validation"}.
+ */
+export const riotCustomMatchMissingFieldsTotal = new Counter({
+  name: "scout_riot_custom_match_missing_fields_total",
+  help: "Expected match fields absent from a custom-game payload, by field",
+  labelNames: ["field"] as const,
+  registers: [registry],
+});
+
 // Track application start time for uptime calculation
 const applicationStartTime = Date.now();
 

@@ -8,7 +8,6 @@ import {
   RecoverableLoadingScreenDataError,
   UnsupportedLoadingScreenQueueError,
 } from "#src/league/tasks/prematch/loading-screen-errors.ts";
-
 import { createLogger } from "#src/logger.ts";
 import {
   classicAssetResolutionFailuresTotal,

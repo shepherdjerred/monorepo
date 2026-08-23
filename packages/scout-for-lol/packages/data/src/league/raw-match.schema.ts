@@ -29,7 +29,7 @@ export const RawMetadataSchema = z
  */
 export const RawInfoSchema = z
   .object({
-    endOfGameResult: z.string(),
+    endOfGameResult: z.string().optional(),
     gameCreation: z.number(),
     gameDuration: z.number(),
     gameEndTimestamp: z.number(),
@@ -45,7 +45,7 @@ export const RawInfoSchema = z
     platformId: z.string(),
     queueId: z.number(),
     teams: z.array(RawTeamSchema),
-    tournamentCode: z.string(),
+    tournamentCode: z.string().optional(),
   })
   .strict();
 
@@ -62,3 +62,50 @@ export const RawMatchSchema = z
   .strict();
 
 export type RawMatch = z.infer<typeof RawMatchSchema>;
+
+/**
+ * Fields Riot populates for a matchmade game but may omit for a custom one.
+ *
+ * They are `.optional()` on the schemas above so a tournament-code custom
+ * parses at all. That relaxation must not reach matchmade games: a missing
+ * `endOfGameResult` on a ranked match is a real problem and has to stay loud.
+ * So the strictness moves here, applied by the caller against the payload's own
+ * `gameType` rather than baked into the schema — see `missingExpectedMatchFields`.
+ *
+ * This is deliberately NOT a `superRefine` on `RawInfoSchema`. That schema is
+ * parsed through `parseWithUnknownKeyFallback`, which recovers only when EVERY
+ * issue is `unrecognized_keys`; mixing a refinement issue into it would make the
+ * next additive Riot field fail the whole post-match pipeline closed.
+ */
+const EXPECTED_MATCH_FIELDS = ["endOfGameResult", "tournamentCode"] as const;
+
+const EXPECTED_PARTICIPANT_FIELDS = [
+  "eligibleForProgression",
+  "missions",
+  "summonerId",
+  "summonerName",
+] as const;
+
+export function isCustomMatchPayload(match: RawMatch): boolean {
+  return match.info.gameType.toUpperCase().startsWith("CUSTOM");
+}
+
+/**
+ * Dotted paths of the expected-but-absent fields, empty when the payload is
+ * complete. Pure; the caller decides whether absence is tolerable.
+ */
+export function missingExpectedMatchFields(match: RawMatch): string[] {
+  const missing = EXPECTED_MATCH_FIELDS.filter(
+    (field) => match.info[field] === undefined,
+  ).map((field) => `info.${field}`);
+
+  // Reported once per field rather than once per participant: ten identical
+  // paths would bury the signal in both the log line and the S3 metadata.
+  const missingOnAnyParticipant = EXPECTED_PARTICIPANT_FIELDS.filter((field) =>
+    match.info.participants.some(
+      (participant) => participant[field] === undefined,
+    ),
+  ).map((field) => `info.participants[].${field}`);
+
+  return [...missing, ...missingOnAnyParticipant];
+}
