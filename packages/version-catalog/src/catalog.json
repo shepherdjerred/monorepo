@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10784@sha256:fbfc8bebd7caf1a7d399cb9d9f3e341a69aeb32b91adcac0f5dcf5c305757d92",
+      "value": "2.0.0-10815@sha256:e79628382ac4c689eea0d5aaf274509994d38c0f0c36d031969871059843025a",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -705,7 +705,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10797@sha256:cb9128f89991e68f98bcf3aab22acf95649af0c2cd3879b075bc6dd3545cdb30",
+      "value": "2.0.0-10815@sha256:132f5f2e40da864ae1903ad9f243058b522c58b0f1ae8969487d3dc3a6c8bdef",
       "notes": ["not managed by renovate"]
     },
     {
@@ -715,7 +715,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10760@sha256:659f955ef4aebd9f7d293eff0dd518e52fbd683d4ce565ab96165be87550b7cc",
+      "value": "2.0.0-10815@sha256:634dd2d5f209bb92fa13586931f9937f07f14e79f81308a656a2e5290b122f7c",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -742,7 +742,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10760@sha256:be002715ef1589ea69ff538aa95b3f094ea8e1571c63a1b7044a809c6702d106",
+      "value": "2.0.0-10815@sha256:6677f992e87ada0a22cd2d9938ca2e1c03b2ce01baefedeaa510bdcec6ec8e57",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful scout-evals image push."
