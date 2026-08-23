@@ -23,7 +23,6 @@ import {
   ciNodeTaintedNode,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
-import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -133,7 +132,7 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
     "buildkite-ci-secrets",
   );
   const deployment = new Deployment(chart, WORKER_NAME, {
-    replicas: MAINTENANCE_IMAGE_READY ? 1 : 0,
+    replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     automountServiceAccountToken: false,
     metadata: {

@@ -72,7 +72,6 @@ const WORKLOAD_KINDS = new Set([
   "StatefulSet",
   "DaemonSet",
   "Job",
-  "CronJob",
 ]);
 
 type FoundContainer = {

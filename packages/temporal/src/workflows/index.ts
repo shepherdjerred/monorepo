@@ -102,6 +102,7 @@ import {
   runTrivyDbRefreshWorkflow as runTrivyDbRefreshWorkflowImplementation,
   runTurboCacheCleanWorkflow as runTurboCacheCleanWorkflowImplementation,
 } from "./maintenance.ts";
+import { runFreshRssSyncWorkflow as _runFreshRssSyncWorkflow } from "./freshrss.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -125,6 +126,10 @@ export async function runTrivyDbRefreshWorkflow(): Promise<void> {
 
 export async function runTurboCacheCleanWorkflow(): Promise<void> {
   return runTurboCacheCleanWorkflowImplementation();
+}
+
+export async function runFreshRssSyncWorkflow(): Promise<void> {
+  return _runFreshRssSyncWorkflow();
 }
 
 export async function generateDependencySummary(daysBack = 7): Promise<void> {

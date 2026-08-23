@@ -21,8 +21,7 @@ export function ciImageDefinition(name: string): CiImageDefinition {
         name,
         repository: "ghcr.io/shepherdjerred/ci-base",
         dockerfile: ".buildkite/ci-image/Dockerfile",
-        digestFile:
-          "packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST",
+        digestFile: ".buildkite/ci-image/DIGEST",
         stateFile: ".buildkite/ci-image/STATE.json",
         branch: "chore/ci-base-pin-pending",
         sourceFiles: [".buildkite/ci-image/Dockerfile", ".mise.toml"],

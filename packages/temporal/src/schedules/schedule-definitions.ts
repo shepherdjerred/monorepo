@@ -82,6 +82,17 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Fetch Better Skill Capped manifest from Firestore and upload to S3 (daily at 05:00 PT)",
   },
   {
+    id: "freshrss-sync-hourly",
+    workflowType: "runFreshRssSyncWorkflow",
+    args: [],
+    cronExpression: "7 * * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: CATCHUP_TIGHT,
+    workflowExecutionTimeout: "6 minutes",
+    memo: "Hourly FreshRSS Repo Stack reconciliation before feed refresh",
+  },
+  {
     id: "buildkite-bun-cache-gc",
     workflowType: "runBunCacheGcWorkflow",
     args: [],

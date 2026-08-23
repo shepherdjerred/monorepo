@@ -419,4 +419,35 @@ export function createTemporalChart(app: App) {
       ],
     },
   });
+
+  // FreshRSS Repo Stack reconciliation is limited to the core worker. Keep
+  // it separate from the shared worker policy because the agent and Glitter
+  // workers intentionally reuse the temporal-worker app label.
+  new KubeNetworkPolicy(chart, "temporal-worker-freshrss-netpol", {
+    metadata: { name: "temporal-worker-freshrss-netpol" },
+    spec: {
+      podSelector: {
+        matchLabels: {
+          app: "temporal-worker",
+          component: "core-worker",
+        },
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "freshrss",
+                },
+              },
+              podSelector: { matchLabels: { app: "freshrss" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
 }

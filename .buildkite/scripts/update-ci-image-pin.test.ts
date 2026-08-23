@@ -362,7 +362,7 @@ describe("Playwright candidate promotion", () => {
       "bun.lock",
     ]);
     expect(ciImagePromotionFiles("ci-base")).toEqual([
-      "packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST",
+      ".buildkite/ci-image/DIGEST",
       ".buildkite/ci-image/STATE.json",
     ]);
   });

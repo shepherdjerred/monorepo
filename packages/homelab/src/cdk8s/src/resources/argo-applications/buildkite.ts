@@ -18,12 +18,9 @@ import {
 import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/buildkite.ts";
 import {
   BUN_CACHE_MOUNT_PATH,
-  createLegacyBuildkiteBunCacheJob,
   createBuildkiteBunCache,
 } from "./buildkite-bun-cache.ts";
-import { createLegacyBuildkiteMaintenanceJobs } from "./buildkite-legacy-maintenance.ts";
 import { createBuildkiteMaintenanceWorker } from "./buildkite-maintenance-worker.ts";
-import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 
 function createBuildkiteNamespace(chart: Chart): void {
   new Namespace(chart, "buildkite-namespace", {
@@ -59,10 +56,6 @@ sleep 20
 export function createBuildkiteApp(chart: Chart) {
   createBuildkiteNamespace(chart);
   createBuildkiteBunCache(chart);
-  if (!MAINTENANCE_IMAGE_READY) {
-    createLegacyBuildkiteBunCacheJob(chart);
-    createLegacyBuildkiteMaintenanceJobs(chart);
-  }
   createBuildkiteMaintenanceWorker(chart);
 
   new OnePasswordItem(chart, "buildkite-agent-token", {
