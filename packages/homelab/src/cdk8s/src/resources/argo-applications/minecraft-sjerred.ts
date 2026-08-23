@@ -106,11 +106,11 @@ export function createMinecraftSjerredApp(chart: Chart) {
         "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.23/bluemap-5.23-paper.jar",
         "https://cdn.modrinth.com/data/fALzjamp/versions/MdY6JATr/Chunky-Bukkit-1.5.3.jar",
         // EssentialsX - core commands and teleportation
-        "https://cdn.modrinth.com/data/hXiIvTyT/versions/SKQwLLoQ/EssentialsX-2.21.0.jar",
-        "https://cdn.modrinth.com/data/sYpvDxGJ/versions/mUsbLYCO/EssentialsXSpawn-2.21.0.jar",
+        "https://cdn.modrinth.com/data/hXiIvTyT/versions/nY6VN1XH/EssentialsX-2.22.0.jar",
+        "https://cdn.modrinth.com/data/sYpvDxGJ/versions/lc5JHiNJ/EssentialsXSpawn-2.22.0.jar",
         // Core plugins (all servers)
         "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
-        "https://cdn.modrinth.com/data/Lu3KuzdV/versions/HD2IvrxS/CoreProtect-CE-23.1.jar",
+        "https://cdn.modrinth.com/data/Lu3KuzdV/versions/Kma0kBsY/CoreProtect-CE-24.0.jar",
         "https://cdn.modrinth.com/data/Kt3eUOUy/versions/hvoPVYQT/Sleeper-1.10.8.jar",
         // Harder mobs - scale health/damage based on distance from spawn
         "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/dSBu3PRW/LevelledMobs-4.5.3.2%20b159.jar",

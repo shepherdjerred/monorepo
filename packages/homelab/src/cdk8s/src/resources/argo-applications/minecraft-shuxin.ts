@@ -109,8 +109,8 @@ export function createMinecraftShuxinApp(chart: Chart) {
         "https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar",
         "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.23/bluemap-5.23-paper.jar",
         "https://cdn.modrinth.com/data/fALzjamp/versions/MdY6JATr/Chunky-Bukkit-1.5.3.jar",
-        "https://github.com/EssentialsX/Essentials/releases/download/2.21.2/EssentialsX-2.21.2.jar",
-        "https://github.com/EssentialsX/Essentials/releases/download/2.21.2/EssentialsXSpawn-2.21.2.jar",
+        "https://cdn.modrinth.com/data/hXiIvTyT/versions/nY6VN1XH/EssentialsX-2.22.0.jar",
+        "https://cdn.modrinth.com/data/sYpvDxGJ/versions/lc5JHiNJ/EssentialsXSpawn-2.22.0.jar",
         "https://cdn.modrinth.com/data/lKEzGugV/versions/pIvQcXW8/PlaceholderAPI-2.12.3.jar",
         // GeyserMC - allows Bedrock Edition (Switch, mobile, etc.) to connect
         "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot",
@@ -134,14 +134,14 @@ export function createMinecraftShuxinApp(chart: Chart) {
         "https://popicraft.net/jenkins/job/mcMMO/lastSuccessfulBuild/artifact/target/mcMMO.jar",
         // Core plugins (all servers)
         "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
-        "https://cdn.modrinth.com/data/Lu3KuzdV/versions/HD2IvrxS/CoreProtect-CE-23.1.jar",
+        "https://cdn.modrinth.com/data/Lu3KuzdV/versions/Kma0kBsY/CoreProtect-CE-24.0.jar",
         "https://cdn.modrinth.com/data/Kt3eUOUy/versions/hvoPVYQT/Sleeper-1.10.8.jar",
         // Easier mobs - challenge-bronze preset reduces mob health/damage
         "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/dSBu3PRW/LevelledMobs-4.5.3.2%20b159.jar",
         // Death chests - items saved at death location instead of scattering
         "https://cdn.modrinth.com/data/vCFaodCy/versions/JpbCUK5u/GravesX-2026.4.9.1.jar",
         // GriefPrevention - prevents creeper block damage, crop trampling, and provides claims system
-        "https://cdn.modrinth.com/data/O4o4mKaq/versions/4RqY8Kfl/GriefPrevention.jar",
+        "https://cdn.modrinth.com/data/O4o4mKaq/versions/dGfCZHqk/GriefPrevention.jar",
         // WanderingTrades - custom trades for Wandering Traders
         "https://cdn.modrinth.com/data/ZfddU72x/versions/hFXagHpi/WanderingTrades-1.9.5.jar",
       ],
