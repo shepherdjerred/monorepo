@@ -2,24 +2,24 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/alert-dashboard": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:ccde35f1f2f3b235b481521fe614fe0b4eb03ca54fdcfb5777a3ca88586c98ad",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:e0704e988e3bc34832254431a3a42e6156b4c89146289787d8211f0e74ebf6e3"
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:bf3ed99e9f75815b9c444e92c046fec1c49d1a239e798d180c22aef36619452d",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:6c25be266aa6505baeab173cc4d53b2326c60d506d922e3f994b691c29286be2"
     },
     "shepherdjerred/discord-plays-mario-kart": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:028b61982c38b1ad8a7e52c14cf749460dd17b38519d725ebfcefa721f393950",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:a5089e01e91d1f4934c9fdfb32fc96e403fe80c89d842daa865e9ea8cb12472e"
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:34643dda89cba0fda4731e260f8fdebb6ea9e2019c91928cf4e66df768b1366c",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:faede5a6fc1f0c48f8ab78f4355517dccedca3c69b85e29ca47a56007588ea8f"
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-10760",
@@ -27,9 +27,9 @@
       "buildNumber": 10760
     },
     "shepherdjerred/openrouter-broadcast-ingest": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:1a1a05bb748f5be06dee2052cbf2e4aad5a560c29eb3dde930348423417c8c86",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:4ca7323c43c6103faee7da041197138079e9d634bd5ce1534e41bdad50e83169"
     },
     "shepherdjerred/redlib": {
       "version": "2.0.0-10760",
@@ -37,39 +37,39 @@
       "buildNumber": 10760
     },
     "shepherdjerred/scout-evals": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:3598adaf1be4a045997c66d9d58d549ce2d0d5b9c4d9b5c13d4d0f8af08af574",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:459362d71799eedaf38445210443807cd931268bed07a11e4887123d00d18c7d"
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 10928,
-      "version": "2.0.0-10928",
-      "digest": "sha256:cb059b17d4d3b38bcdaf611a648e9fe5a20bd4d84f23b313121eb12fa56febe7"
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:b8db5f106169f7bd1355cc19ad19ed1090933769e61222b7a7eebc1ae663f78f"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:caaf812759bdad931ce1cd749e0e231397b246f1bfb4fbfc59ed08fd1138a05e",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:62b5ad4e6d65a60487d5146aac06671fd3cb277e1db24d1ceda31f0ad407bb21"
     },
     "shepherdjerred/streambot": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:084502c9419ec1e2e2bb73d9b4a41495a19ce4b045a0768ec4fea7920dd5ae2a",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:a6d46aec99dc6571edf91d92eab2de2e3449d544851b6a15d7b2ae02b91840ce"
     },
     "shepherdjerred/tasknotes-server": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:85f1524c802f3e5e008b551e8e0f37cb6bf49ea9fbf59e9bb19a1f16bd53eac9",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:de0569d6d212b9ba2783d1f912f81a50fc284b90e5df3f8998063c1abff5429e"
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 10928,
-      "version": "2.0.0-10928",
-      "digest": "sha256:5e8cd91d653ebbffce376892759bba44c3fb9c97806cc614cd97174846c3f4a3"
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:8e00d7d533b9f3bad17fd8b9736a2d63f12cdea524fe79215268140f5404549d"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "version": "2.0.0-10860",
-      "digest": "sha256:0523a9bc1106c30c3430605ced751f644c4609a272cd81cd565810292a927272",
-      "buildNumber": 10860
+      "buildNumber": 10941,
+      "version": "2.0.0-10941",
+      "digest": "sha256:c5fe3750c08738b7acbad3e4a8225cd7fc637051e4bd1b4d09a5224624f26bba"
     }
   }
 }
