@@ -8,7 +8,16 @@ const BOT_INSTALL_PERMISSIONS = (
   (1n << 15n)
 ).toString();
 
-export function buildDiscordInstallUrl(): string {
+/**
+ * `state` is the single-use install-attribution token minted by
+ * handleDiscordInstall; Discord echoes it back to /app/installed alongside
+ * `guild_id`, which is what joins a web session to the resulting
+ * `GuildInstall` row (see analytics/install-attribution.ts). The `/invite`
+ * slash command has no web session to attribute, so it omits it — those
+ * installs are the measurable `guild_installed − guild_install_attributed`
+ * residue.
+ */
+export function buildDiscordInstallUrl(state?: string): string {
   const origin = (
     configuration.webAppOrigin ?? "https://scout-for-lol.com"
   ).replace(/\/$/u, "");
@@ -18,5 +27,8 @@ export function buildDiscordInstallUrl(): string {
     permissions: BOT_INSTALL_PERMISSIONS,
     redirect_uri: `${origin}/app/installed`,
   });
+  if (state !== undefined) {
+    params.set("state", state);
+  }
   return `https://discord.com/api/oauth2/authorize?${params.toString()}`;
 }

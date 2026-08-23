@@ -16,6 +16,7 @@ import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { randomUUID } from "node:crypto";
 import { captureGuildInstalled } from "#src/analytics/guild-lifecycle.ts";
+import { reconcilePendingInstallAttribution } from "#src/analytics/install-attribution.ts";
 
 const logger = createLogger("guild-create");
 
@@ -170,6 +171,9 @@ async function saveGuildInstall(
         },
       });
       captureGuildInstalled(install, "first", guild.memberCount);
+      // Complete a web-flow attribution whose browser beat the gateway.
+      // Best-effort by contract: the reconciler never throws.
+      await reconcilePendingInstallAttribution(serverId);
       logger.info(
         `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: false`,
       );
@@ -203,6 +207,10 @@ async function saveGuildInstall(
         outreach14dSentAt: null,
         outreach30dSentAt: null,
         removedAt: null,
+        // A rotated identity starts unattributed; only a fresh web-flow
+        // token may attribute the new installation.
+        attributedAt: null,
+        attributionSurface: null,
       },
     });
 
@@ -212,6 +220,7 @@ async function saveGuildInstall(
         "reinstall",
         guild.memberCount,
       );
+      await reconcilePendingInstallAttribution(serverId);
       logger.info(
         `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: true`,
       );

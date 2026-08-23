@@ -549,7 +549,34 @@ model GuildInstall {
   // existence alone cannot tell the two apart.
   removedAt DateTime?
 
+  // Web-flow install attribution for THIS installation (cleared with the
+  // identity rotation on reinstall). Stamped by whichever of the
+  // /app/installed mutation or the guildCreate reconciler runs second — see
+  // analytics/install-attribution.ts.
+  attributedAt       DateTime?
+  attributionSurface String?
+
   @@index([installedAt])
+}
+
+/// A single-use, server-minted token that rides Discord's OAuth `state`
+/// parameter through the bot-install round trip. Minted by
+/// /api/discord/install, echoed by Discord to /app/installed, and consumed by
+/// the installAttribution.complete mutation. A consumed-but-unreconciled row
+/// is also the pending-attribution store for the browser-beats-gateway race.
+model InstallAttributionToken {
+  id           Int       @id @default(autoincrement())
+  token        String    @unique
+  discordId    String
+  surface      String
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  guildId      String?
+  reconciledAt DateTime?
+
+  @@index([guildId, reconciledAt])
+  @@index([expiresAt])
 }
 
 /// Free-text feedback submitted from the web dashboard.
