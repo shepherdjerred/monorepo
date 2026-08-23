@@ -279,13 +279,10 @@ describe("Tracker Tracker schema sync", () => {
         findManifest(manifests, "ConfigMap", "tracker-tracker-drizzle-config"),
       );
     expect(drizzleConfig.data["drizzle.config.ts"]).toContain(
-      'tablesFilter: ["*"],',
+      'tablesFilter: ["*", "!pg_stat_statements*", "!pg_stat_kcache*"],',
     );
     expect(drizzleConfig.data["drizzle.config.ts"]).toContain(
       'schemaFilter: ["public"],',
-    );
-    expect(drizzleConfig.data["drizzle.config.ts"]).toContain(
-      'extensionsFilters: ["pg_stat_statements"],',
     );
   });
 });

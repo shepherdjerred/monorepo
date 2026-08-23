@@ -48,12 +48,11 @@ export default defineConfig({
   dialect: "postgresql",
   schema: "./src/lib/db/schema.ts",
   out: "./drizzle",
-  // PostgreSQL's pg_stat_statements extension creates public views that the
-  // default schema diff tries to drop. Manage the public application schema,
-  // but leave objects owned by that extension alone.
-  tablesFilter: ["*"],
+  // PostgreSQL monitoring extensions create public views that the default
+  // schema diff tries to drop. Manage the public application schema, but leave
+  // those extension-owned relations alone.
+  tablesFilter: ["*", "!pg_stat_statements*", "!pg_stat_kcache*"],
   schemaFilter: ["public"],
-  extensionsFilters: ["pg_stat_statements"],
   dbCredentials: {
     url: buildConnectionString(),
   },
