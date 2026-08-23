@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.18.0...astro-opengraph-images-v1.19.0) (2026-08-23)
+
+
+### Features
+
+* **astro-opengraph-images:** add early path filtering ([#2331](https://github.com/shepherdjerred/monorepo/issues/2331)) ([63bbab7](https://github.com/shepherdjerred/monorepo/commit/63bbab7ed1deb40db3628b63a314dc82af524a5e))
+
 ## [1.18.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.4...astro-opengraph-images-v1.18.0) (2026-08-03)
 
 
