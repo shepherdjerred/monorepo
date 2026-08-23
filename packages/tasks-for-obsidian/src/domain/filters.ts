@@ -7,12 +7,7 @@ import type { Priority } from "./priority";
 import { comparePriority } from "./priority";
 
 export type SortField =
-  | "scheduled"
-  | "dueDate"
-  | "priority"
-  | "title"
-  | "created"
-  | "completed";
+  "scheduled" | "dueDate" | "priority" | "title" | "created" | "completed";
 export type SortDirection = "asc" | "desc";
 
 export type SortConfig = {

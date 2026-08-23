@@ -12,10 +12,7 @@ export const SESSION_QUERY_OPTIONS = {
 };
 
 export type SessionGuardState =
-  | "loading"
-  | "authenticated"
-  | "anonymous"
-  | "unavailable";
+  "loading" | "authenticated" | "anonymous" | "unavailable";
 
 /**
  * Classify a session query without turning transport errors into sign-outs.

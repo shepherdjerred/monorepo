@@ -49,8 +49,7 @@ type TaskRowProps = {
   /** One list-wide clock keeps every row's relative date in agreement. */
   referenceDate: Date;
   dateContext?:
-    | { readonly kind: TaskDateKind; readonly date: string }
-    | undefined;
+    { readonly kind: TaskDateKind; readonly date: string } | undefined;
   /** Explicit recurring instance represented by this agenda row. */
   completionDate?: string | undefined;
 };

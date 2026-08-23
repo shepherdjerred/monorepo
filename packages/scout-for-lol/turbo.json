@@ -1,0 +1,15 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // The Scout script suite imports backend audit tests, which load the
+    // generated Prisma client. Make that cross-package prerequisite explicit
+    // so fresh CI workers cannot start the aggregate suite before codegen.
+    "test": {
+      "dependsOn": ["@scout-for-lol/backend#generate"]
+    },
+    "test:ci": {
+      "dependsOn": ["@scout-for-lol/backend#generate"]
+    }
+  }
+}

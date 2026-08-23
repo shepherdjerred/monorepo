@@ -88,16 +88,14 @@ export function visualizationSnapshotToOption(
       }),
     ),
     ...evidenceOverlaySeries(snapshot, categories),
-    ...snapshot.trends.map(
-      (trend): echarts.SeriesOption => ({
-        name: `${trend.seriesId} trend (slope ${trend.slope.toFixed(3)}, R² ${trend.rSquared.toFixed(2)})`,
-        type: "line",
-        data: alignedTrendValues(snapshot, trend, categories),
-        symbol: "none",
-        lineStyle: { type: "dashed", width: 2, opacity: 0.8 },
-        tooltip: { show: false },
-      }),
-    ),
+    ...snapshot.trends.map((trend): echarts.SeriesOption => ({
+      name: `${trend.seriesId} trend (slope ${trend.slope.toFixed(3)}, R² ${trend.rSquared.toFixed(2)})`,
+      type: "line",
+      data: alignedTrendValues(snapshot, trend, categories),
+      symbol: "none",
+      lineStyle: { type: "dashed", width: 2, opacity: 0.8 },
+      tooltip: { show: false },
+    })),
   ];
   return {
     ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
@@ -189,38 +187,34 @@ function evidenceOverlaySeries(
   const comparison =
     snapshot.temporal?.comparison === undefined
       ? []
-      : snapshot.series.map(
-          (item): echarts.SeriesOption => ({
-            name: `${item.label} baseline`,
-            type: "line",
-            data: categories.map(
-              (category) =>
-                item.points.find((point) => point.label === category)
-                  ?.comparisonValue ?? null,
-            ),
-            symbol: "none",
-            lineStyle: { type: "dotted", width: 2, opacity: 0.65 },
-          }),
-        );
+      : snapshot.series.map((item): echarts.SeriesOption => ({
+          name: `${item.label} baseline`,
+          type: "line",
+          data: categories.map(
+            (category) =>
+              item.points.find((point) => point.label === category)
+                ?.comparisonValue ?? null,
+          ),
+          symbol: "none",
+          lineStyle: { type: "dotted", width: 2, opacity: 0.65 },
+        }));
   return [
     ...comparison,
     ...snapshot.series.flatMap((item) =>
       item.points.some((point) => point.evidence.confidenceInterval !== null)
-        ? (["lower", "upper"] as const).map(
-            (bound): echarts.SeriesOption => ({
-              name: `${item.label} 95% CI ${bound}`,
-              type: "line",
-              data: categories.map((category) => {
-                const interval = item.points.find(
-                  (point) => point.label === category,
-                )?.evidence.confidenceInterval;
-                return interval?.[bound] ?? null;
-              }),
-              symbol: "none",
-              lineStyle: { type: "dashed", width: 1, opacity: 0.35 },
-              tooltip: { show: false },
+        ? (["lower", "upper"] as const).map((bound): echarts.SeriesOption => ({
+            name: `${item.label} 95% CI ${bound}`,
+            type: "line",
+            data: categories.map((category) => {
+              const interval = item.points.find(
+                (point) => point.label === category,
+              )?.evidence.confidenceInterval;
+              return interval?.[bound] ?? null;
             }),
-          )
+            symbol: "none",
+            lineStyle: { type: "dashed", width: 1, opacity: 0.35 },
+            tooltip: { show: false },
+          }))
         : [],
     ),
   ];

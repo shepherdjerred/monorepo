@@ -20,10 +20,7 @@ export type ScoutThemePreferenceV1 = z.infer<
   typeof ScoutThemePreferenceV1Schema
 >;
 export type ScoutResolvedTheme =
-  | "classic-light"
-  | "classic-dark"
-  | "modern-light"
-  | "modern-dark";
+  "classic-light" | "classic-dark" | "modern-light" | "modern-dark";
 
 export const DEFAULT_SCOUT_THEME_PREFERENCE: ScoutThemePreferenceV1 = {
   version: 1,

@@ -146,18 +146,16 @@ export function readDatabaseFingerprint(
 ): DatabaseFingerprint {
   const tables = SchemaNameRowsSchema.parse(
     database
-      .query<
-        { name: string },
-        []
-      >("SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+      .query<{ name: string }, []>(
+        "SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+      )
       .all(),
   ).map((row) => row.name);
   const indexes = SchemaNameRowsSchema.parse(
     database
-      .query<
-        { name: string },
-        []
-      >("SELECT name FROM sqlite_schema WHERE type = 'index' AND sql IS NOT NULL ORDER BY name")
+      .query<{ name: string }, []>(
+        "SELECT name FROM sqlite_schema WHERE type = 'index' AND sql IS NOT NULL ORDER BY name",
+      )
       .all(),
   ).map((row) => row.name);
   return {

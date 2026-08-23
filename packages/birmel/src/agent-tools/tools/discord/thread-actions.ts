@@ -49,10 +49,10 @@ export async function handleCreateFromMessage(
   const { client, channelId, messageId, name, autoArchiveDuration } = options;
   if (
     channelId == null ||
-    channelId.length === 0 ||
     messageId == null ||
-    messageId.length === 0 ||
     name == null ||
+    channelId.length === 0 ||
+    messageId.length === 0 ||
     name.length === 0
   ) {
     return {
@@ -103,8 +103,8 @@ export async function handleCreateStandalone(
   } = options;
   if (
     channelId == null ||
-    channelId.length === 0 ||
     name == null ||
+    channelId.length === 0 ||
     name.length === 0
   ) {
     return {
@@ -228,8 +228,8 @@ export async function handleAddMember(
 ): Promise<ThreadResult> {
   if (
     threadId == null ||
-    threadId.length === 0 ||
     userId == null ||
+    threadId.length === 0 ||
     userId.length === 0
   ) {
     return {

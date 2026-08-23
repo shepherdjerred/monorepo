@@ -22,8 +22,7 @@ import type { DiscordGuildId } from "@scout-for-lol/data";
  * whole lake by accident. Global has to be asked for.
  */
 export type LakeQueryScope =
-  | { kind: "guild"; serverId: DiscordGuildId }
-  | { kind: "global" };
+  { kind: "guild"; serverId: DiscordGuildId } | { kind: "global" };
 
 export function guildScope(serverId: DiscordGuildId): LakeQueryScope {
   return { kind: "guild", serverId };

@@ -24,7 +24,7 @@
     "date-fns": "^4.1.0",
     "fuse.js": "^7.1.0",
     "lucide-react": "^1.14.0",
-    "ai": "^7.0.58",
+    "ai": "^7.0.77",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "tailwind-merge": "^3.4.0",
@@ -56,8 +56,8 @@
     "eslint": "^10.3.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   },
   "description": "Web frontend for Scout for League of Legends",
   "keywords": [

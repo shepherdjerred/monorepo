@@ -86,32 +86,23 @@ export function onboardingReducer(
         state.step === "concepts" ? state.conceptsBack : BACK[state.step];
       return prev === null ? state : { ...state, step: prev };
     })
-    .with(
-      { type: "goto" },
-      (e): OnboardingState => ({
-        ...state,
-        step: e.step,
-      }),
-    )
-    .with(
-      { type: "select-guild" },
-      (e): OnboardingState => ({
-        ...state,
-        step: "concepts",
-        selectedGuildId: e.guildId,
-        // Remember where we picked the guild so `back` from concepts returns
-        // there: `pick-guild` (multi-guild) or `install` (single-guild).
-        conceptsBack: state.step === "pick-guild" ? "pick-guild" : "install",
-      }),
-    )
-    .with(
-      { type: "choose" },
-      (e): OnboardingState => ({
-        ...state,
-        step: e.extra === "report" ? "build-report" : "build-competition",
-        selectedExampleId: e.exampleId,
-      }),
-    )
+    .with({ type: "goto" }, (e): OnboardingState => ({
+      ...state,
+      step: e.step,
+    }))
+    .with({ type: "select-guild" }, (e): OnboardingState => ({
+      ...state,
+      step: "concepts",
+      selectedGuildId: e.guildId,
+      // Remember where we picked the guild so `back` from concepts returns
+      // there: `pick-guild` (multi-guild) or `install` (single-guild).
+      conceptsBack: state.step === "pick-guild" ? "pick-guild" : "install",
+    }))
+    .with({ type: "choose" }, (e): OnboardingState => ({
+      ...state,
+      step: e.extra === "report" ? "build-report" : "build-competition",
+      selectedExampleId: e.exampleId,
+    }))
     .exhaustive();
 }
 

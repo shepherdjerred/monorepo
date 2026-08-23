@@ -252,8 +252,8 @@ export async function handleGetCandidateStats(
 ): Promise<ElectionResult> {
   if (
     guildId == null ||
-    guildId.length === 0 ||
     candidateName == null ||
+    guildId.length === 0 ||
     candidateName.length === 0
   ) {
     return {

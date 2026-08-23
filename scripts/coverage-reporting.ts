@@ -6,10 +6,7 @@ export type CoverageMetric = {
 };
 
 export type CoverageMetricName =
-  | "lines"
-  | "statements"
-  | "functions"
-  | "branches";
+  "lines" | "statements" | "functions" | "branches";
 
 export type CoverageMetrics = {
   lines?: CoverageMetric;

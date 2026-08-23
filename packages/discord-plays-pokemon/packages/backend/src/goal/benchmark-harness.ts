@@ -183,10 +183,7 @@ export function deserializeSnapshot(
 }
 
 export type BenchmarkRunOutcome =
-  | "success"
-  | "game-failure"
-  | "invalid-provider"
-  | "harness-error";
+  "success" | "game-failure" | "invalid-provider" | "harness-error";
 
 export type BenchmarkRunSummaryEntry = {
   run: number;

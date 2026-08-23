@@ -93,11 +93,7 @@ async function findEarnTargets(
 }
 
 export type EarnedAwardReason =
-  | "played"
-  | "ranked 5s bonus"
-  | "clash bonus"
-  | "win"
-  | "mvp";
+  "played" | "ranked 5s bonus" | "clash bonus" | "win" | "mvp";
 
 type EarnedReward = {
   kind: BucksLedgerKind;

@@ -10,13 +10,6 @@ distributor:
           endpoint: "0.0.0.0:4318"
         grpc:
           endpoint: "0.0.0.0:4317"
-ingester:
-  max_block_duration: 5m
-  complete_block_timeout: 10s
-  trace_idle_period: 1s
-compactor:
-  compaction:
-    block_retention: 1h
 storage:
   trace:
     backend: local

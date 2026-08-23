@@ -31,7 +31,7 @@
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",
-    "ai": "7.0.59",
+    "ai": "7.0.77",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -44,7 +44,7 @@
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   }
 }

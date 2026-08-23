@@ -30,10 +30,7 @@ export type WorkflowFailureDetail = {
   message: string;
   stack: string | undefined;
   timeoutClassification?:
-    | "workflow-task"
-    | "activity"
-    | "execution"
-    | "unknown";
+    "workflow-task" | "activity" | "execution" | "unknown";
   timeoutDispatchState?: "pre-dispatch" | "post-dispatch";
   workerTaskQueueUnavailable?: boolean;
   workerTaskQueueUnavailableReason?: WorkerTaskQueueUnavailableReason;

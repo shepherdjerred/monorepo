@@ -206,7 +206,7 @@ asserts all of them, because an image cannot.
   wraps `RegisterEventHotKey`, which needs **no** permission; a `CGEventTap`
   would need Accessibility and is not an option for a text field.
 - The initial binding is `⌃⌥⌘Space`, supplied through the library's own
-  `KeyboardShortcuts.Name(_:default:)`, so clearing it in Settings sticks.
+  `KeyboardShortcuts.Name(_:initial:)`, so clearing it in Settings sticks.
   ⚠️ It was `⇧⌘Space` first, on the reasoning that the combination was free. It
   is not — 1Password binds it and macOS 26 added a Siri handler — so the panel
   never opened for anyone. No combination is safe by analysis; the recorder in

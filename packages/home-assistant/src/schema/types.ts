@@ -10,12 +10,7 @@
  */
 
 export type HaFieldType =
-  | "number"
-  | "string"
-  | "boolean"
-  | "entity"
-  | "object"
-  | "unknown";
+  "number" | "string" | "boolean" | "entity" | "object" | "unknown";
 
 export type HaServiceFieldMeta = {
   readonly type: HaFieldType;
@@ -106,9 +101,8 @@ type FieldType<
       ? boolean
       : F["type"] extends "entity"
         ? F["domain"] extends string
-          ?
-              | EntityIdByDomain<S, F["domain"]>
-              | readonly EntityIdByDomain<S, F["domain"]>[]
+          ? | EntityIdByDomain<S, F["domain"]>
+            | readonly EntityIdByDomain<S, F["domain"]>[]
           : EntityId<S> | readonly EntityId<S>[]
         : F["type"] extends "object"
           ? Record<string, unknown>

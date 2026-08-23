@@ -98,7 +98,7 @@ async function handleTimeout(
   durationMinutes: number | undefined,
   reason: string | undefined,
 ): Promise<ModerationResult> {
-  if (memberId == null || memberId.length === 0 || durationMinutes == null) {
+  if (memberId == null || durationMinutes == null || memberId.length === 0) {
     return {
       success: false,
       message: "memberId and durationMinutes are required for timeout",

@@ -128,7 +128,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
           queryKey: trpc.explore.activeRuns.queryKey(),
         }),
       ]);
-      return await queryClient.fetchQuery({
+      return await queryClient.query({
         ...trpc.explore.get.queryOptions({ conversationId }),
         staleTime: 0,
       });

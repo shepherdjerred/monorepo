@@ -392,11 +392,10 @@ export function planCharts(
   const leafChanged = entries.some(
     (entry) => entry.name !== "apps" && entry.action === "publish",
   );
-  const coordinated = entries.map(
-    (entry): ChartPlanEntry =>
-      leafChanged && entry.name === "apps"
-        ? { ...entry, action: "publish" }
-        : entry,
+  const coordinated = entries.map((entry): ChartPlanEntry =>
+    leafChanged && entry.name === "apps"
+      ? { ...entry, action: "publish" }
+      : entry,
   );
   const selected = coordinated.filter((entry) => entry.action === "publish");
   const skipped = coordinated.filter((entry) => entry.action === "skip");

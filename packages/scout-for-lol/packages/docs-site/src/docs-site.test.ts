@@ -29,12 +29,10 @@ if (htmlRelativePaths.length === 0) {
 
 const htmlByPath = new Map<string, string>(
   await Promise.all(
-    htmlRelativePaths.map(
-      async (rel): Promise<[string, string]> => [
-        rel,
-        await Bun.file(path.join(DIST, rel)).text(),
-      ],
-    ),
+    htmlRelativePaths.map(async (rel): Promise<[string, string]> => [
+      rel,
+      await Bun.file(path.join(DIST, rel)).text(),
+    ]),
   ),
 );
 

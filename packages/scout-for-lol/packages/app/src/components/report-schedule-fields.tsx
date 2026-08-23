@@ -147,8 +147,7 @@ export function ReportScheduleFields(props: {
 }
 
 type SchedulePreview =
-  | { ok: true; dates: Date[] }
-  | { ok: false; message: string };
+  { ok: true; dates: Date[] } | { ok: false; message: string };
 
 function schedulePreview(cron: string, timezone: string): SchedulePreview {
   const cronResult = CompetitionCronSchema.safeParse(cron);

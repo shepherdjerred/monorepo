@@ -49,9 +49,7 @@ export type BucksMessageOperation = "send" | "edit";
  * leading indicator of "settlement had nowhere to announce".
  */
 export type BucksMessageSkipReason =
-  | "skipped_no_pool"
-  | "skipped_no_base"
-  | "skipped_no_refs";
+  "skipped_no_pool" | "skipped_no_base" | "skipped_no_refs";
 
 function classify(
   error: unknown,

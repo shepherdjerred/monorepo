@@ -88,8 +88,7 @@ function addDaysUtc(dateString: string, delta: number): string {
 }
 
 type PatchNotes =
-  | { titles: { title: string; url: string }[] }
-  | { error: string };
+  { titles: { title: string; url: string }[] } | { error: string };
 
 async function fetchPatchNotes(): Promise<PatchNotes> {
   try {

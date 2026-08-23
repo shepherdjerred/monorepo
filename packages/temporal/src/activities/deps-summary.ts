@@ -70,11 +70,7 @@ const CheckpointSchema = z.object({
 });
 
 export type DependencyChangeKind =
-  | "upstream-upgrade"
-  | "internal-promotion"
-  | "addition"
-  | "removal"
-  | "revert";
+  "upstream-upgrade" | "internal-promotion" | "addition" | "removal" | "revert";
 
 export type DependencyChange = {
   name: string;
@@ -91,8 +87,7 @@ export type DependencyChange = {
   commitSha: string;
   commitSubject: string;
   releaseNotesOverride:
-    | { url?: string | undefined; summary: string }
-    | undefined;
+    { url?: string | undefined; summary: string } | undefined;
 };
 
 export type DependencyCollectionResult = {

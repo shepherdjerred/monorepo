@@ -6,8 +6,7 @@ import type { FleetTelemetry } from "./ports.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 
 export type WorkerAttemptOutcome<T> =
-  | { status: "completed"; result: T }
-  | { status: "failed"; error: Error };
+  { status: "completed"; result: T } | { status: "failed"; error: Error };
 
 export async function runRecordedWorkerAttempt<T>(options: {
   attempt: number;

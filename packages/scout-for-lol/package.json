@@ -38,15 +38,15 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-regexp": "^3.1.0",
-    "eslint-plugin-unicorn": "^72.0.0",
+    "eslint-plugin-unicorn": "^73.0.0",
     "jiti": "^2.7.0",
-    "jscpd": "^5.0.14",
-    "knip": "^6.29.0",
-    "prettier": "3.8.3",
+    "jscpd": "^5.0.16",
+    "knip": "^6.32.2",
+    "prettier": "3.9.6",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "typescript-eslint": "^8.67.0",
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   },
   "dependencies": {
     "@scout-for-lol/design-system": "workspace:*",

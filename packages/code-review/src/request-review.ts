@@ -91,9 +91,7 @@ export function buildReviewRequestBody(input: {
  * attempted.
  */
 export type ReviewRequestOutcome =
-  | "requested"
-  | "already-requested"
-  | "unsupported";
+  "requested" | "already-requested" | "unsupported";
 
 type RequestInput = {
   repo: string;

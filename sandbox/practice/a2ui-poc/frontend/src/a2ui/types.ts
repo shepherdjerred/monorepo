@@ -162,11 +162,7 @@ export interface CheckBoxComponent {
 }
 
 export type TextFieldType =
-  | "shortText"
-  | "longText"
-  | "number"
-  | "date"
-  | "obscured";
+  "shortText" | "longText" | "number" | "date" | "obscured";
 
 export interface TextFieldComponent {
   TextField: {
@@ -278,10 +274,7 @@ export interface DeleteSurface {
 }
 
 export type A2UIMessage =
-  | SurfaceUpdate
-  | DataModelUpdate
-  | BeginRendering
-  | DeleteSurface;
+  SurfaceUpdate | DataModelUpdate | BeginRendering | DeleteSurface;
 
 export interface UserAction {
   name: string;

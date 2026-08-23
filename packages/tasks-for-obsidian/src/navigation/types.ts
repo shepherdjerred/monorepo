@@ -27,7 +27,6 @@ export type MainTabParamList = {
   Inbox: { selectionMode?: boolean } | undefined;
   Today: { selectionMode?: boolean } | undefined;
   Upcoming:
-    | { selectedDay?: string | null; selectionMode?: boolean }
-    | undefined;
+    { selectedDay?: string | null; selectionMode?: boolean } | undefined;
   Browse: undefined;
 };

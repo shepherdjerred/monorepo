@@ -31,8 +31,7 @@ const log = logger.child("subtitle-menu");
  * `MessageComponentInteraction` base type the card router passes through.
  */
 export type SubtitleMenuInteraction =
-  | ChatInputCommandInteraction
-  | MessageComponentInteraction;
+  ChatInputCommandInteraction | MessageComponentInteraction;
 
 // How long the user has to pick before the menu is abandoned.
 const MENU_TIMEOUT_MS = 2 * 60 * 1000;

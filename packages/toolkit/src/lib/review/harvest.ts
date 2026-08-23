@@ -110,8 +110,7 @@ export async function gateStatusFor(input: {
 }
 
 export type HarvestVerdict =
-  | { retryable: true; jobId: string }
-  | { retryable: false; reason: string };
+  { retryable: true; jobId: string } | { retryable: false; reason: string };
 
 /**
  * Whether a failed gate is stale rather than correct.

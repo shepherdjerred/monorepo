@@ -6,11 +6,7 @@ import type { SearchIndex } from "./index-builder.ts";
 import type { SearchDoc } from "./search-doc.ts";
 
 export type SortOption =
-  | "relevance"
-  | "newest"
-  | "oldest"
-  | "shortest"
-  | "longest";
+  "relevance" | "newest" | "oldest" | "shortest" | "longest";
 
 export type SearchRunParams = {
   q: string;

@@ -1,10 +1,7 @@
 import { z } from "zod/v4";
 
 export type WorkflowTimeoutClassification =
-  | "workflow-task"
-  | "activity"
-  | "execution"
-  | "unknown";
+  "workflow-task" | "activity" | "execution" | "unknown";
 
 export type WorkflowTimeoutHistoryClassification = {
   classification: WorkflowTimeoutClassification;

@@ -86,9 +86,11 @@ export async function listPersistedStateFiles(
   } catch (error) {
     // A missing dir is the normal "nothing persisted yet" case. Anything else (permissions, I/O) is
     // logged — resume stays best-effort (we return []), but the failure isn't silently swallowed.
-    if (
-      !(error instanceof Error && "code" in error && error.code === "ENOENT")
-    ) {
+    if (!(
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "ENOENT"
+    )) {
       log.warn("could not list resume-state dir; skipping resume", {
         dir,
         error: getErrorMessage(error),

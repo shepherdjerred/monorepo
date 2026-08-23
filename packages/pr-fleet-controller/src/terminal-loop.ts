@@ -2,8 +2,7 @@ import { combineFailures } from "./cli-failures.ts";
 
 export type TerminalLineResult = "continue" | "stop";
 export type TerminalOutcome =
-  | { status: "completed" }
-  | { status: "failed"; error: unknown };
+  { status: "completed" } | { status: "failed"; error: unknown };
 
 export function createSharedShutdown<Result>(
   shutdown: () => Promise<Result>,

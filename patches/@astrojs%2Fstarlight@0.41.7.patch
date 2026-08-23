@@ -1,0 +1,62 @@
+diff --git a/integrations/satteri.ts b/integrations/satteri.ts
+index d93c5f17f1de34c9984bf7a3ab672d6a7a593c84..9a65f76a948a176a654579dd78c2a0c2d4662923 100644
+--- a/integrations/satteri.ts
++++ b/integrations/satteri.ts
+@@ -6,9 +6,7 @@ import { directiveToMarkdown } from 'mdast-util-directive';
+ import { toMarkdown } from 'mdast-util-to-markdown';
+ import type {
+ 	HastPluginDefinition,
+-	HastPluginInput,
+ 	HastVisitorContext,
+-	MdastPluginInput,
+ 	MdastPluginDefinition,
+ } from 'satteri';
+ import { headingLinkIconChildren } from './markdown-icon';
+@@ -20,8 +18,8 @@ import {
+ } from './markdown-processor';
+ 
+ export function starlightSatteriPlugins(options: MarkdownProcessorPluginOptions): {
+-	mdastPlugins: MdastPluginInput[];
+-	hastPlugins: HastPluginInput[];
++	mdastPlugins: MdastPluginDefinition[];
++	hastPlugins: HastPluginDefinition[];
+ } {
+ 	const allowedPaths = getMarkdownProcessorPaths(options);
+ 	return {
+diff --git a/package.json b/package.json
+index cc6c48f1690747c06dcf35848fba0e5fe99bd585..c1ffbd7e06bca9cfbc7fcfe1e9b8e1d82c12bb70 100644
+--- a/package.json
++++ b/package.json
+@@ -84,7 +84,7 @@
+     "rehype": "^13.0.2",
+     "rehype-format": "^5.0.1",
+     "remark-directive": "^4.0.0",
+-    "satteri": "^0.9.1",
++    "satteri": "^0.10.3",
+     "ultrahtml": "^1.6.0",
+     "unified": "^11.0.5",
+     "unist-util-visit": "^5.1.0",
+diff --git a/schemas/head.ts b/schemas/head.ts
+index 0ecb634f932ae40e38e0a912cffbcaa7f2337ae9..f84c5b92faccf67736448165ac90dd91d36c3f6a 100644
+--- a/schemas/head.ts
++++ b/schemas/head.ts
+@@ -1,5 +1,5 @@
+ import { z } from 'astro/zod';
+-import yaml from 'js-yaml';
++import * as yaml from 'js-yaml';
+ 
+ export const HeadConfigSchema = ({
+ 	source,
+diff --git a/utils/translations-fs.ts b/utils/translations-fs.ts
+index 6838f6ac79cb78d72ca05567f9f89d05a8ef1a9d..bf934792b6ec5d9cf812ae922695d39661339225 100644
+--- a/utils/translations-fs.ts
++++ b/utils/translations-fs.ts
+@@ -1,7 +1,7 @@
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+-import yaml from 'js-yaml';
++import * as yaml from 'js-yaml';
+ import type { i18nSchemaOutput } from '../schemas/i18n';
+ import { createTranslationSystem } from './createTranslationSystem';
+ import type { StarlightConfig } from './user-config';

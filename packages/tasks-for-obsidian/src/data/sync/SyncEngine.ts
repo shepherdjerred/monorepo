@@ -65,11 +65,7 @@ export type CommandClient = {
 };
 
 export type SyncState =
-  | "idle"
-  | "syncing"
-  | "backoff"
-  | "auth_error"
-  | "unconfigured";
+  "idle" | "syncing" | "backoff" | "auth_error" | "unconfigured";
 
 export type SyncStatus = {
   readonly state: SyncState;

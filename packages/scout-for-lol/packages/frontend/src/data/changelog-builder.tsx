@@ -12,14 +12,7 @@ export type ChangelogEntry = {
 };
 
 export type ColorScheme =
-  | "yellow"
-  | "indigo"
-  | "blue"
-  | "purple"
-  | "green"
-  | "red"
-  | "pink"
-  | "teal";
+  "yellow" | "indigo" | "blue" | "purple" | "green" | "red" | "pink" | "teal";
 
 /** Public alias for the changelog section color palette. */
 export type ChangelogColor = ColorScheme;

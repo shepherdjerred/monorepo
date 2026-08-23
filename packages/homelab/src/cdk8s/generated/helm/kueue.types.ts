@@ -14,6 +14,27 @@ export type KueueHelmValuesCertManagerIssuerRef = object;
 export type KueueHelmValuesControllerManager = {
   featureGates?: unknown[];
   /**
+   * ControllerManager Deployment's update strategy. When hostNetwork is enabled the
+   * manager's ports bind to the node, so the default RollingUpdate surge cannot schedule
+   * a second pod onto an already-occupied node; set maxSurge: 0 to roll in place.
+   *
+   * @default {}
+   */
+  strategy?: KueueHelmValuesControllerManagerStrategy;
+  /**
+   * Run the ControllerManager pod on the host network. Needed where the API server
+   * reaches the webhook/visibility endpoints via node IPs rather than pod IPs.
+   *
+   * @default false
+   */
+  hostNetwork?: boolean;
+  /**
+   * ControllerManager pod's dnsPolicy. Set to ClusterFirstWithHostNet when hostNetwork is enabled.
+   *
+   * @default ""
+   */
+  dnsPolicy?: string;
+  /**
    * @default {...} (7 keys)
    */
   manager?: KueueHelmValuesControllerManagerManager;
@@ -47,10 +68,12 @@ export type KueueHelmValuesControllerManager = {
   podDisruptionBudget?: KueueHelmValuesControllerManagerPodDisruptionBudget;
 };
 
+export type KueueHelmValuesControllerManagerStrategy = object;
+
 export type KueueHelmValuesControllerManagerManager = {
   priorityClassName?: unknown;
   /**
-   * @default {"repository":"registry.k8s.io/kueue/kueue","tag":"v0.19.0","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"registry.k8s.io/kueue/kueue","tag":"v0.19.2","pullPolicy":"IfNotPresent"}
    */
   image?: KueueHelmValuesControllerManagerManagerImage;
   /**
@@ -94,7 +117,7 @@ export type KueueHelmValuesControllerManagerManagerImage = {
   /**
    * ControllerManager's image tag
    *
-   * @default "v0.19.0"
+   * @default "v0.19.2"
    */
   tag?: string;
   /**
@@ -393,7 +416,7 @@ export type KueueHelmValuesKueueVizBackend = {
   containerSecurityContext?: KueueHelmValuesKueueVizBackendContainerSecurityContext;
   env?: KueueHelmValuesKueueVizBackendEnvElement[];
   /**
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   ingress?: KueueHelmValuesKueueVizBackendIngress;
   /**
@@ -401,7 +424,7 @@ export type KueueHelmValuesKueueVizBackend = {
    */
   auth?: KueueHelmValuesKueueVizBackendAuth;
   /**
-   * @default {"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.19.0","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.19.2","pullPolicy":"IfNotPresent"}
    */
   image?: KueueHelmValuesKueueVizBackendImage;
 };
@@ -473,6 +496,7 @@ export type KueueHelmValuesKueueVizBackendIngress = {
    * @default "backend.kueueviz.local"
    */
   host?: string;
+  tlsEnabled?: unknown;
   /**
    * KueueViz dashboard backend ingress tls secret name
    *
@@ -543,7 +567,7 @@ export type KueueHelmValuesKueueVizBackendImage = {
   /**
    * KueueViz dashboard backend image tag
    *
-   * @default "v0.19.0"
+   * @default "v0.19.2"
    */
   tag?: string;
   /**
@@ -587,11 +611,11 @@ export type KueueHelmValuesKueueVizFrontend = {
   containerSecurityContext?: KueueHelmValuesKueueVizFrontendContainerSecurityContext;
   env?: unknown[];
   /**
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   ingress?: KueueHelmValuesKueueVizFrontendIngress;
   /**
-   * @default {"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.19.0","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.19.2","pullPolicy":"IfNotPresent"}
    */
   image?: KueueHelmValuesKueueVizFrontendImage;
 };
@@ -656,6 +680,7 @@ export type KueueHelmValuesKueueVizFrontendIngress = {
    * @default "frontend.kueueviz.local"
    */
   host?: string;
+  tlsEnabled?: unknown;
   /**
    * KueueViz dashboard frontend ingress tls secret name
    *
@@ -690,7 +715,7 @@ export type KueueHelmValuesKueueVizFrontendImage = {
   /**
    * KueueViz dashboard frontend image tag
    *
-   * @default "v0.19.0"
+   * @default "v0.19.2"
    */
   tag?: string;
   /**
@@ -770,6 +795,12 @@ export type KueueHelmValues = {
    */
   enableVisibilityAPF?: boolean;
   /**
+   * Enable MutatingAdmissionPolicy for clearing nominatedClusterNames on admission or eviction (requires K8s 1.36+)
+   *
+   * @default false
+   */
+  enableMutatingAdmissionPolicy?: boolean;
+  /**
    * Enable the visibility server's auth-reader RoleBinding. It is always created in the kube-system namespace because it binds to the built-in extension-apiserver-authentication-reader Role, which only exists there. Disable when deploying under a GitOps project that cannot target kube-system, then create the RoleBinding out-of-band.
    *
    * @default true
@@ -788,11 +819,11 @@ export type KueueHelmValues = {
    */
   kubernetesClusterDomain?: string;
   /**
-   * @default {...} (10 keys)
+   * @default {...} (13 keys)
    */
   controllerManager?: KueueHelmValuesControllerManager;
   /**
-   * @default {"controllerManagerConfigYaml":"apiVersion: config.kueue.x-k8s.io/v1beta2\nkind: Configuration\nhealth:\n  healthProbeBindAddress: :8081\nmetrics:\n  bindAddress: :8443\n# enableClusterQueueResources: true\nwebhook:\n  port: 9443\nleaderElection:\n  leaderElect: true\n  resourceName: c1f6bfd2.kueue.x-k8s.io\ncontroller:\n  groupKindConcurrency:\n    Job.batch: 5\n    Pod: 5\n    Workload.kueue.x-k8s.io: 10\n    LocalQueue.kueue.x-k8s.io: 5\n    ClusterQueue.kueue.x-k8s.io: 5\n    ResourceFlavor.kueue.x-k8s.io: 1\nclientConnection:\n  qps: 300\n  burst: 500\n#pprofBindAddress: :8083\n#waitForPodsReady:\n#  timeout: 5m\n#  recoveryTimeout: 3m\n#  blockAdmission: false\n#  requeuingStrategy:\n#    timestamp: Eviction\n#    backoffLimitCount: null # null indicates infinite requeuing\n#    backoffBaseSeconds: 60\n#    backoffMaxSeconds: 3600\n#manageJobsWithoutQueueName: true\n# See \"Opt-in Namespace Management\" for guidance on namespace management:\n# https://kueue.sigs.k8s.io/docs/tasks/manage/enforce_job_management/opt_in_namespace_management/\n#managedJobsNamespaceSelector:\n#  matchExpressions:\n#    - key: kubernetes.io/metadata.name\n#      operator: NotIn\n#      values: [ kube-system, kueue-system ]\n#internalCertManagement:\n#  enable: false\n#  webhookServiceName: \"\"\n#  webhookSecretName: \"\"\nintegrations:\n  frameworks:\n  - \"batch/job\"\n  - \"kubeflow.org/mpijob\"\n  - \"ray.io/rayjob\"\n  - \"ray.io/rayservice\"\n  - \"ray.io/raycluster\"\n  - \"jobset.x-k8s.io/jobset\"\n  - \"trainer.kubeflow.org/trainjob\"\n#  - \"kubeflow.org/paddlejob\"\n#  - \"kubeflow.org/pytorchjob\"\n#  - \"kubeflow.org/tfjob\"\n#  - \"kubeflow.org/xgboostjob\"\n#  - \"kubeflow.org/jaxjob\"\n  - \"workload.codeflare.dev/appwrapper\"\n#  - \"sparkoperator.k8s.io/sparkapplication\"\n  - \"pod\"\n  - \"deployment\"\n  - \"statefulset\"\n  - \"leaderworkerset.x-k8s.io/leaderworkerset\"\n#  externalFrameworks:\n#  - \"Foo.v1.example.com\"\n#fairSharing:\n#  preemptionStrategies: [LessThanOrEqualToFinalShare, LessThanInitialShare]\n#admissionFairSharing:\n#  usageHalfLifeTime: \"168h\" # 7 days\n#  usageSamplingInterval: \"5m\"\n#  resourceWeights: # optional, defaults to 1 for all resources if not specified\n#    cpu: 0    # if you want to completely ignore cpu usage\n#    memory: 0 # ignore completely memory usage\n#    example.com/gpu: 100 # and you care only about GPUs usage\n#resources:\n#  excludeResourcePrefixes: []\n#  quotaCheckStrategy: \"BlockUndeclared\"\n# transformations:\n# - input: nvidia.com/mig-4g.5gb\n#   strategy: Replace | Retain\n#   outputs:\n#     example.com/accelerator-memory: 5Gi\n#     example.com/accelerator-gpc: 4\n#objectRetentionPolicies:\n#  workloads:\n#    afterFinished: null # null indicates infinite retention, 0s means no retention at all\n#    afterDeactivatedByKueue: null # null indicates infinite retention, 0s means no retention at all"}
+   * @default {"controllerManagerConfigYaml":"apiVersion: config.kueue.x-k8s.io/v1beta2\nkind: Configuration\nhealth:\n  healthProbeBindAddress: :8081\nmetrics:\n  bindAddress: :8443\n# enableClusterQueueResources: true\nwebhook:\n  port: 9443\nleaderElection:\n  leaderElect: true\n  resourceName: c1f6bfd2.kueue.x-k8s.io\ncontroller:\n  groupKindConcurrency:\n    Job.batch: 5\n    Pod: 5\n    Workload.kueue.x-k8s.io: 10\n    LocalQueue.kueue.x-k8s.io: 5\n    ClusterQueue.kueue.x-k8s.io: 5\n    ResourceFlavor.kueue.x-k8s.io: 1\nclientConnection:\n  qps: 300\n  burst: 500\n#pprofBindAddress: :8083\n#waitForPodsReady:\n#  timeout: 5m\n#  recoveryTimeout: 3m\n#  blockAdmission: false\n#  requeuingStrategy:\n#    timestamp: Eviction\n#    backoffLimitCount: null # null indicates infinite requeuing\n#    backoffBaseSeconds: 60\n#    backoffMaxSeconds: 3600\n#manageJobsWithoutQueueName: true\n# See \"Opt-in Namespace Management\" for guidance on namespace management:\n# https://kueue.sigs.k8s.io/docs/tasks/manage/enforce_job_management/opt_in_namespace_management/\n#managedJobsNamespaceSelector:\n#  matchExpressions:\n#    - key: kubernetes.io/metadata.name\n#      operator: NotIn\n#      values: [ kube-system, kueue-system ]\n#internalCertManagement:\n#  enable: false\n#  webhookServiceName: \"\"\n#  webhookSecretName: \"\"\nintegrations:\n  frameworks:\n  - \"batch/job\"\n  - \"kubeflow.org/mpijob\"\n  - \"ray.io/rayjob\"\n  - \"ray.io/rayservice\"\n  - \"ray.io/raycluster\"\n  - \"jobset.x-k8s.io/jobset\"\n#  - \"kubeflow.org/paddlejob\"\n#  - \"kubeflow.org/pytorchjob\"\n#  - \"kubeflow.org/tfjob\"\n#  - \"kubeflow.org/xgboostjob\"\n#  - \"kubeflow.org/jaxjob\"\n  - \"workload.codeflare.dev/appwrapper\"\n  - \"trainer.kubeflow.org/trainjob\"\n#  - \"sparkoperator.k8s.io/sparkapplication\"\n  - \"pod\"\n  - \"deployment\"\n  - \"statefulset\"\n  - \"leaderworkerset.x-k8s.io/leaderworkerset\"\n#  externalFrameworks:\n#  - \"Foo.v1.example.com\"\n#fairSharing:\n#  preemptionStrategies: [LessThanOrEqualToFinalShare, LessThanInitialShare]\n#admissionFairSharing:\n#  usageHalfLifeTime: \"168h\" # 7 days\n#  usageSamplingInterval: \"5m\"\n#  resourceWeights: # optional, defaults to 1 for all resources if not specified\n#    cpu: 0    # if you want to completely ignore cpu usage\n#    memory: 0 # ignore completely memory usage\n#    example.com/gpu: 100 # and you care only about GPUs usage\n#resources:\n#  excludeResourcePrefixes: []\n#  quotaCheckStrategy: \"BlockUndeclared\"\n# transformations:\n# - input: nvidia.com/mig-4g.5gb\n#   strategy: Replace | Retain\n#   outputs:\n#     example.com/accelerator-memory: 5Gi\n#     example.com/accelerator-gpc: 4\n#objectRetentionPolicies:\n#  workloads:\n#    afterFinished: null # null indicates infinite retention, 0s means no retention at all\n#    afterDeactivatedByKueue: null # null indicates infinite retention, 0s means no retention at all"}
    */
   managerConfig?: KueueHelmValuesManagerConfig;
   /**
@@ -808,7 +839,7 @@ export type KueueHelmValues = {
    */
   mutatingWebhook?: KueueHelmValuesMutatingWebhook;
   /**
-   * @default {"backend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[{"name":"KUEUEVIZ_ALLOWED_ORIGINS","value":"https://frontend.kueueviz.local"}],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"backend.kueueviz.local","tlsSecretName":"kueueviz-backend-tls"},"auth":{"mode":"Disabled","tokenReviewConfig":{"audiences":"","cacheTTL":"60s","negativeCacheTTL":"5s"}},"image":{"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.19.0","pullPolicy":"IfNotPresent"}},"frontend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"frontend.kueueviz.local","tlsSecretName":"kueueviz-frontend-tls"},"image":{"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.19.0","pullPolicy":"IfNotPresent"}}}
+   * @default {"backend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[{"name":"KUEUEVIZ_ALLOWED_ORIGINS","value":"https://frontend.kueueviz.local"}],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"backend.kueueviz.local","tlsEnabled":null,"tlsSecretName":"kueueviz-backend-tls"},"auth":{"mode":"Disabled","tokenReviewConfig":{"audiences":"","cacheTTL":"60s","negativeCacheTTL":"5s"}},"image":{"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.19.2","pullPolicy":"IfNotPresent"}},"frontend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"frontend.kueueviz.local","tlsEnabled":null,"tlsSecretName":"kueueviz-frontend-tls"},"image":{"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.19.2","pullPolicy":"IfNotPresent"}}}
    */
   kueueViz?: KueueHelmValuesKueueViz;
   /**
@@ -823,10 +854,13 @@ export type KueueHelmParameters = {
   enablePrometheus?: string;
   enableCertManager?: string;
   enableVisibilityAPF?: string;
+  enableMutatingAdmissionPolicy?: string;
   enableVisibilityAuthReaderRoleBinding?: string;
   enableKueueViz?: string;
   kubernetesClusterDomain?: string;
   "controllerManager.featureGates"?: string;
+  "controllerManager.hostNetwork"?: string;
+  "controllerManager.dnsPolicy"?: string;
   "controllerManager.manager.priorityClassName"?: string;
   "controllerManager.manager.image.repository"?: string;
   "controllerManager.manager.image.tag"?: string;
@@ -886,6 +920,7 @@ export type KueueHelmParameters = {
   "kueueViz.backend.ingress.annotations.nginx.ingress.kubernetes.io/ssl-redirect"?: string;
   "kueueViz.backend.ingress.ingressClassName"?: string;
   "kueueViz.backend.ingress.host"?: string;
+  "kueueViz.backend.ingress.tlsEnabled"?: string;
   "kueueViz.backend.ingress.tlsSecretName"?: string;
   "kueueViz.backend.auth.mode"?: string;
   "kueueViz.backend.auth.tokenReviewConfig.audiences"?: string;
@@ -911,6 +946,7 @@ export type KueueHelmParameters = {
   "kueueViz.frontend.ingress.annotations.nginx.ingress.kubernetes.io/ssl-redirect"?: string;
   "kueueViz.frontend.ingress.ingressClassName"?: string;
   "kueueViz.frontend.ingress.host"?: string;
+  "kueueViz.frontend.ingress.tlsEnabled"?: string;
   "kueueViz.frontend.ingress.tlsSecretName"?: string;
   "kueueViz.frontend.image.repository"?: string;
   "kueueViz.frontend.image.tag"?: string;

@@ -166,26 +166,22 @@ const baseCjkFontsByLocale = {
  */
 export const bunBeaufortFonts: () => Promise<Font[]> = () =>
   Promise.all(
-    baseBeaufortFonts.map(
-      async (baseFont): Promise<Font> => ({
-        ...baseFont,
-        data: await Bun.file(
-          new URL(baseFont.src, import.meta.url),
-        ).arrayBuffer(),
-      }),
-    ),
+    baseBeaufortFonts.map(async (baseFont): Promise<Font> => ({
+      ...baseFont,
+      data: await Bun.file(
+        new URL(baseFont.src, import.meta.url),
+      ).arrayBuffer(),
+    })),
   );
 
 export const bunSpiegelFonts: () => Promise<Font[]> = () =>
   Promise.all(
-    baseSpiegelFonts.map(
-      async (baseFont): Promise<Font> => ({
-        ...baseFont,
-        data: await Bun.file(
-          new URL(baseFont.src, import.meta.url),
-        ).arrayBuffer(),
-      }),
-    ),
+    baseSpiegelFonts.map(async (baseFont): Promise<Font> => ({
+      ...baseFont,
+      data: await Bun.file(
+        new URL(baseFont.src, import.meta.url),
+      ).arrayBuffer(),
+    })),
   );
 
 const cjkFontLocales = ["jp", "kr", "sc", "tc"] as const;
@@ -265,14 +261,12 @@ export function cjkFontFileName(value: unknown): string {
 export const bunCjkFonts = (_value: unknown = ""): Promise<Font[]> => {
   cjkFontsPromise ??= Promise.all(
     cjkFontLocales.flatMap((locale) =>
-      baseCjkFontsByLocale[locale].map(
-        async (baseFont): Promise<Font> => ({
-          ...baseFont,
-          data: await Bun.file(
-            new URL(baseFont.src, import.meta.url),
-          ).arrayBuffer(),
-        }),
-      ),
+      baseCjkFontsByLocale[locale].map(async (baseFont): Promise<Font> => ({
+        ...baseFont,
+        data: await Bun.file(
+          new URL(baseFont.src, import.meta.url),
+        ).arrayBuffer(),
+      })),
     ),
   );
   return cjkFontsPromise;

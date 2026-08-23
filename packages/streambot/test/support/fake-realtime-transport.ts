@@ -1,4 +1,4 @@
-import { RuntimeEventEmitter, Usage } from "@openai/agents";
+import { Usage } from "@openai/agents";
 import type {
   RealtimeClientMessage,
   RealtimeItem,
@@ -31,10 +31,13 @@ export type FakeRealtimeToolCall = {
   readonly arguments: string;
 };
 
-export class FakeRealtimeTransport
-  extends RuntimeEventEmitter<RealtimeTransportEventTypes>
-  implements RealtimeTransportLayer
-{
+type RealtimeEventListeners = {
+  [K in keyof RealtimeTransportEventTypes]?: Set<
+    (...args: RealtimeTransportEventTypes[K]) => void
+  >;
+};
+
+export class FakeRealtimeTransport implements RealtimeTransportLayer {
   status: "connected" | "disconnected" | "connecting" | "disconnecting" =
     "disconnected";
   readonly muted = false;
@@ -45,6 +48,7 @@ export class FakeRealtimeTransport
   connectOptions: RealtimeTransportLayerConnectOptions | null = null;
   closeCount = 0;
   private outputCount = 0;
+  private readonly listeners: RealtimeEventListeners = {};
 
   constructor(
     private readonly calls: readonly FakeRealtimeToolCall[],
@@ -57,8 +61,48 @@ export class FakeRealtimeTransport
       | "disconnect"
       | "timeout" = "success",
     private readonly inputTranscript: string | null = "Hey Streambot test",
-  ) {
-    super();
+  ) {}
+
+  on<K extends keyof RealtimeTransportEventTypes>(
+    type: K,
+    listener: (...args: RealtimeTransportEventTypes[K]) => void,
+  ): this {
+    const listeners = this.listeners[type];
+    if (listeners) {
+      listeners.add(listener);
+      return this;
+    }
+    this.listeners[type] = new Set([listener]);
+    return this;
+  }
+
+  off<K extends keyof RealtimeTransportEventTypes>(
+    type: K,
+    listener: (...args: RealtimeTransportEventTypes[K]) => void,
+  ): this {
+    this.listeners[type]?.delete(listener);
+    return this;
+  }
+
+  once<K extends keyof RealtimeTransportEventTypes>(
+    type: K,
+    listener: (...args: RealtimeTransportEventTypes[K]) => void,
+  ): this {
+    const onceListener = (...args: RealtimeTransportEventTypes[K]): void => {
+      this.off(type, onceListener);
+      listener(...args);
+    };
+    return this.on(type, onceListener);
+  }
+
+  emit<K extends keyof RealtimeTransportEventTypes>(
+    type: K,
+    ...args: RealtimeTransportEventTypes[K]
+  ): boolean {
+    const listeners = this.listeners[type];
+    if (!listeners || listeners.size === 0) return false;
+    for (const listener of listeners) listener(...args);
+    return true;
   }
 
   async connect(options: RealtimeTransportLayerConnectOptions): Promise<void> {

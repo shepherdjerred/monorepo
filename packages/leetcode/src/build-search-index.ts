@@ -22,10 +22,9 @@ async function main() {
 
   const sourceDb = new Database(SQLITE_PATH, { readonly: true });
   const problems = sourceDb
-    .query<
-      ProblemRow,
-      []
-    >("SELECT slug, title, difficulty, content_html FROM problems ORDER BY id")
+    .query<ProblemRow, []>(
+      "SELECT slug, title, difficulty, content_html FROM problems ORDER BY id",
+    )
     .all();
   console.log(`[${timestamp()}] Found ${String(problems.length)} problems`);
 

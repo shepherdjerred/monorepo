@@ -32,7 +32,7 @@
     "echarts": "^6.0.0",
     "react": "19.2.8",
     "remeda": "^2.21.2",
-    "satori": "^0.29.0",
+    "satori": "^0.33.0",
     "ts-pattern": "^5.7.0",
     "yoga-wasm-web": "^0.3.3",
     "zod": "^4.4.3"
@@ -44,8 +44,8 @@
     "eslint": "^10.3.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.9",
-    "@vitest/coverage-istanbul": "4.1.9"
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
   },
   "description": "Generate report images for League of Legends",
   "keywords": [

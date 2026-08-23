@@ -186,7 +186,7 @@ describe("FreshRSS chart", () => {
       throw new Error("Missing FreshRSS sync container");
 
     expect(container.image).toMatch(
-      /^docker\.io\/oven\/bun:1\.3\.14-slim@sha256:[a-f0-9]{64}$/,
+      /^docker\.io\/oven\/bun:1\.4\.0-slim@sha256:[a-f0-9]{64}$/,
     );
     expect(container.resources).toEqual({
       limits: { cpu: "250m", memory: "128Mi" },

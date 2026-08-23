@@ -178,8 +178,7 @@ export async function handleReportAiRoute(
 }
 
 type ParsedRequestBody =
-  | { ok: true; input: ReportAiEditRequest }
-  | { ok: false; message: string };
+  { ok: true; input: ReportAiEditRequest } | { ok: false; message: string };
 
 function parseRequestBody(bodyText: string): ParsedRequestBody {
   try {

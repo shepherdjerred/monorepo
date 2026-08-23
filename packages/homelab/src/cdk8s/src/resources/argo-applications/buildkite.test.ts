@@ -79,6 +79,17 @@ const BunCacheGcConfigMapSchema = z
   })
   .loose();
 
+const TempoConfigMapSchema = z
+  .object({
+    kind: z.literal("ConfigMap"),
+    metadata: z.object({
+      name: z.literal("llm-observability-e2e-tempo"),
+      namespace: z.literal("buildkite"),
+    }),
+    data: z.object({ "tempo.yaml": z.string() }),
+  })
+  .loose();
+
 function synthBuildkiteResources() {
   const chart = Testing.chart();
   createBuildkiteApp(chart);
@@ -92,6 +103,9 @@ function synthBuildkiteResources() {
   const bunCacheGcConfigMap = resources.find(
     (manifest) => BunCacheGcConfigMapSchema.safeParse(manifest).success,
   );
+  const tempoConfigMap = resources.find(
+    (manifest) => TempoConfigMapSchema.safeParse(manifest).success,
+  );
   const persistentVolumeClaims = resources.flatMap((manifest) => {
     const result = PersistentVolumeClaimSchema.safeParse(manifest);
     return result.success ? [result.data] : [];
@@ -100,6 +114,7 @@ function synthBuildkiteResources() {
     application: ApplicationSchema.parse(application),
     hooks: HooksConfigMapSchema.parse(hooks),
     bunCacheGcConfigMap: BunCacheGcConfigMapSchema.parse(bunCacheGcConfigMap),
+    tempoConfigMap: TempoConfigMapSchema.parse(tempoConfigMap),
     persistentVolumeClaims,
     resources,
   };
@@ -186,6 +201,15 @@ function maintenanceDeployment(resources: readonly unknown[]) {
     })
     .parse(deployment);
 }
+
+it("uses the Tempo 3 configuration schema for the E2E sidecar", () => {
+  const { tempoConfigMap } = synthBuildkiteResources();
+  const tempoConfig = tempoConfigMap.data["tempo.yaml"];
+
+  expect(tempoConfig).toContain("distributor:");
+  expect(tempoConfig).toContain("storage:");
+  expect(tempoConfig).not.toMatch(/^(?:ingester|compactor):/mu);
+});
 
 describe("Buildkite application", () => {
   it("raises the controller concurrency cap to 24", () => {

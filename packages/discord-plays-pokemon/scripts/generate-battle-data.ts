@@ -11,12 +11,7 @@ type Catalog = {
 };
 
 export type ItemBattleUse =
-  | "unavailable"
-  | "direct"
-  | "escape"
-  | "party"
-  | "move"
-  | "poke-ball";
+  "unavailable" | "direct" | "escape" | "party" | "move" | "poke-ball";
 
 type RenderCatalogOptions = {
   sourceRef: string;

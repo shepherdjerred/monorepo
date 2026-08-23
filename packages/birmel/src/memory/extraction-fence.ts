@@ -64,7 +64,7 @@ export async function isMemoryCandidateFenced(options: {
   reactivateForgotten: boolean;
 }): Promise<boolean> {
   const sourceOrder = options.envelope.provenance?.sourceOrder;
-  if (options.reactivateForgotten || sourceOrder == null) {
+  if (sourceOrder == null || options.reactivateForgotten) {
     return false;
   }
   const erasedSource = await options.transaction.memorySourceFence.findFirst({

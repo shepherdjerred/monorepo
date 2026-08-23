@@ -128,6 +128,28 @@ export function validatePipelineResourceContracts(
     }
   }
 
+  // The Buildkite ConfigMap is reconciled only after a dependency PR merges.
+  // Tempo 3 rejects the old `ingester` and `compactor` keys, so each E2E pod
+  // must render the backward-compatible live source into an emptyDir before
+  // starting its Tempo sidecar. Without this, a Tempo upgrade can never pass
+  // the PR build that is meant to approve the ConfigMap migration.
+  for (const step of ["docker-e2e-pr", "docker-e2e-main"]) {
+    const block = stepBlocks.get(step);
+    for (const required of [
+      "name: render-tempo-config",
+      "mikefarah/yq:latest@sha256:cfc4eee658595834ef304eadb0c3ea721f3b7cb6404ad8b7cb909cc5b5145b23",
+      "yq eval 'del(.ingester, .compactor)'",
+      "name: llm-observability-e2e-tempo-source",
+      "name: llm-observability-e2e-tempo-rendered",
+    ]) {
+      requireIncludes(
+        block,
+        required,
+        `${step} is missing the Tempo 3 ConfigMap migration bridge ${required}`,
+      );
+    }
+  }
+
   for (const step of ["trivy", "semgrep"]) {
     const command = containerBlock(step, stepBlocks.get(step), "container-0");
     if (

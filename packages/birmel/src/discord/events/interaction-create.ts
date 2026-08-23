@@ -80,8 +80,8 @@ async function handleEditorButton(
 
   if (
     action == null ||
-    action.length === 0 ||
     sessionId == null ||
+    action.length === 0 ||
     sessionId.length === 0
   ) {
     await interaction.reply({

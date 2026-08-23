@@ -1,7 +1,7 @@
 name: llm-obs-e2e
 services:
   tempo:
-    image: grafana/tempo:3.0.2@sha256:cda87c212d8c584dc0b89e337e7ed648a5100feb657e5d528480ee4fa03dbbe3
+    image: grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5
     command: ["-config.file=/etc/tempo.yaml"]
     # `configs` ships the file CONTENT through the compose API instead of a
     # host bind mount — required in CI, where the docker daemon is a dind
@@ -65,13 +65,6 @@ configs:
                 endpoint: "0.0.0.0:4318"
               grpc:
                 endpoint: "0.0.0.0:4317"
-      ingester:
-        max_block_duration: 5m
-        complete_block_timeout: 10s
-        trace_idle_period: 1s
-      compactor:
-        compaction:
-          block_retention: 1h
       storage:
         trace:
           backend: local

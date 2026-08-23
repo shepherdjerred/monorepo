@@ -1,16 +1,11 @@
 diff --git a/dist/frontmatter.js b/dist/frontmatter.js
-index b3d20dd..7e09f00 100644
+index d2e0fe9ba..3f1762957 100644
 --- a/dist/frontmatter.js
 +++ b/dist/frontmatter.js
-@@ -1,4 +1,4 @@
--import yaml from "js-yaml";
-+import * as yaml from "js-yaml";
- import * as toml from "smol-toml";
- function isFrontmatterValid(frontmatter) {
-   try {
-@@ -22,7 +22,7 @@ function parseFrontmatter(code, options) {
-     return { frontmatter: {}, rawFrontmatter: "", content: code };
-   }
+@@ -21,8 +21,8 @@ function parseFrontmatter(code, options) {
+   if (rawFrontmatter == null) {
+    return { frontmatter: {}, rawFrontmatter: "", content: code };
+  }
    const [delims, parser] = getFrontmatterParser(code);
 -  const parsed = parser(rawFrontmatter);
 +  const parsed = rawFrontmatter.trim() === "" ? void 0 : parser(rawFrontmatter);

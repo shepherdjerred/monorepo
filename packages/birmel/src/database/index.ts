@@ -29,9 +29,9 @@ function setGlobalPrisma(client: PrismaClient): void {
 const databasePath = Bun.env["DATABASE_PATH"];
 let databaseUrl = Bun.env["DATABASE_URL"];
 if (
-  (databaseUrl == null || databaseUrl.length === 0) &&
   databasePath != null &&
-  databasePath.length > 0
+  databasePath.length > 0 &&
+  (databaseUrl == null || databaseUrl.length === 0)
 ) {
   databaseUrl = databasePath.startsWith("file:")
     ? databasePath

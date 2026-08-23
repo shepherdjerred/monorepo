@@ -7,12 +7,7 @@
  */
 
 export type Priority =
-  | "highest"
-  | "high"
-  | "medium"
-  | "normal"
-  | "low"
-  | "none";
+  "highest" | "high" | "medium" | "normal" | "low" | "none";
 
 /** Output of `parseTaskInput` (src/nlp/parser.ts). */
 export type NlpParseResult = {

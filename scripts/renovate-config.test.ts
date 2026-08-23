@@ -18,7 +18,9 @@ const RenovateConfigSchema = z.object({
       matchFileNames: z.array(z.string()).optional(),
       matchDepNames: z.array(z.string()).optional(),
       matchManagers: z.array(z.string()).optional(),
+      matchNewValue: z.string().optional(),
       matchPackageNames: z.array(z.string()).optional(),
+      allowedVersions: z.string().optional(),
       groupName: z.string().optional(),
       enabled: z.boolean().optional(),
       minimumReleaseAge: z.string().nullable().optional(),
@@ -156,6 +158,36 @@ test("drives Playwright upgrades from the official image source only", async () 
   );
 });
 
+test("ignores only the bogus qBittorrent v20 release while retaining semantic tags", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const exactIgnore = config.packageRules.find(
+    (candidate) =>
+      candidate.description ===
+      "Ignore bogus LinuxServer qBittorrent v20 tag; it is not an app release",
+  );
+  const semanticOnly = config.packageRules.find(
+    (candidate) =>
+      candidate.description ===
+      "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are old Ubuntu-based image tags, not qBittorrent app versions",
+  );
+
+  expect(exactIgnore).toEqual({
+    description:
+      "Ignore bogus LinuxServer qBittorrent v20 tag; it is not an app release",
+    matchPackageNames: ["linuxserver/qbittorrent"],
+    matchNewValue: "/^v?20$/",
+    enabled: false,
+  });
+  expect(semanticOnly).toEqual({
+    description:
+      "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are old Ubuntu-based image tags, not qBittorrent app versions",
+    matchPackageNames: ["linuxserver/qbittorrent"],
+    allowedVersions: String.raw`/^[0-9]+\.[0-9]+\.[0-9]+$/`,
+  });
+});
+
 test("updates application Dockerfile tool pins without hardcoded test fixtures", async () => {
   const config = RenovateConfigSchema.parse(
     await Bun.file(`${root}/renovate.json`).json(),
@@ -257,7 +289,7 @@ test("extracts identical Emscripten tag and digest pins from both sources", asyn
     "packages/discord-plays-mario-kart/Dockerfile",
   ]);
   expect(pins).toEqual([
-    "6.0.6@sha256:be96eff5810e42c632f3f8b795388a6b596e4fb21ec28b9e1fb1bc49bb3b1eef",
-    "6.0.6@sha256:be96eff5810e42c632f3f8b795388a6b596e4fb21ec28b9e1fb1bc49bb3b1eef",
+    "6.0.8@sha256:f174124ff798a3ead1abef247d9a849c270b642d552fea500a42565ff210f765",
+    "6.0.8@sha256:f174124ff798a3ead1abef247d9a849c270b642d552fea500a42565ff210f765",
   ]);
 });

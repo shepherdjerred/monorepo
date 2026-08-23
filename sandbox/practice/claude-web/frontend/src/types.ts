@@ -79,7 +79,4 @@ export interface PongMessage {
 }
 
 export type ServerMessage =
-  | AssistantMessage
-  | ResultMessage
-  | ErrorMessage
-  | PongMessage;
+  AssistantMessage | ResultMessage | ErrorMessage | PongMessage;

@@ -28,8 +28,7 @@ import {
 export type WaitCondition = "ready" | "stable" | "phase-change";
 
 export type BattleTargetSelection =
-  | Readonly<{ battler: number }>
-  | Readonly<{ partySlot: number }>;
+  Readonly<{ battler: number }> | Readonly<{ partySlot: number }>;
 
 export type GameControlPort = {
   observe: () => GameObservationV2;

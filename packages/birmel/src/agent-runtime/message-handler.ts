@@ -41,9 +41,7 @@ const PLACEHOLDER = "…";
 const MAX_DISCORD_RESPONSE_CHARACTERS = 2000;
 
 type PostDeliveryOperation =
-  | "agent-run.complete"
-  | "session.events"
-  | "turn.post-delivery";
+  "agent-run.complete" | "session.events" | "turn.post-delivery";
 
 function incidentId(): string {
   return `B3-${crypto.randomUUID().slice(0, 8)}`;
@@ -232,7 +230,7 @@ async function processAdmittedTurn(
     });
     await recordAgentRunContext({ runId, persona, context: bundle });
     const personaSource = bundle.sources.find(({ kind }) => kind === "persona");
-    if (getConfig().persona.enabled && personaSource == null) {
+    if (personaSource == null && getConfig().persona.enabled) {
       throw new Error(
         "Context bundle is missing its compact persona projection",
       );

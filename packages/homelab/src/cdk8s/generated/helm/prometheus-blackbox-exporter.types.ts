@@ -425,6 +425,14 @@ export type PrometheusblackboxexporterHelmValuesPodLabels = {
 
 export type PrometheusblackboxexporterHelmValuesServiceMonitor = {
   /**
+   * ServiceMonitor CRD API version
+   *
+   * @default "monitoring.coreos.com/v1"
+   */
+  apiVersion?: string;
+  /**
+   * If true, a ServiceMonitor CRD is created for a prometheus operator
+   * https://github.com/coreos/prometheus-operator for blackbox-exporter itself
    * Port can be defined by assigning a value for the port key below
    * If true, a ServiceMonitor CRD is created for a prometheus operator
    * https://github.com/coreos/prometheus-operator for each target
@@ -830,7 +838,7 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderImage = {
    */
   repository?: string;
   /**
-   * @default "v0.93.0"
+   * @default "v0.93.1"
    */
   tag?: string;
   /**
@@ -1093,6 +1101,11 @@ export type PrometheusblackboxexporterHelmValues = {
    */
   secretConfig?: boolean;
   /**
+   * NOTE: Binary payloads (!!binary) in module config are corrupted by Helm's toYaml.
+   * The contents of `config:` are passed through `toYaml` in the ConfigMap template,
+   * which round-trips the values through Helm's YAML parser and silently corrupts any
+   * byte >= 0x80. Use configExistingSecretName instead (see README.md).
+   *
    * @default {"modules":{"http_2xx":{"prober":"http","timeout":"5s","http":{"valid_http_versions":["HTTP/1.1","HTTP/2.0"],"follow_redirects":true,"preferred_ip_protocol":"ip4"}}}}
    */
   config?: PrometheusblackboxexporterHelmValuesConfig;
@@ -1176,7 +1189,7 @@ export type PrometheusblackboxexporterHelmValues = {
    */
   replicas?: number;
   /**
-   * @default {...} (8 keys)
+   * @default {...} (9 keys)
    */
   serviceMonitor?: PrometheusblackboxexporterHelmValuesServiceMonitor;
   /**
@@ -1291,6 +1304,7 @@ export type PrometheusblackboxexporterHelmParameters = {
   hostAliases?: string;
   extraArgs?: string;
   replicas?: string;
+  "serviceMonitor.apiVersion"?: string;
   "serviceMonitor.selfMonitor.enabled"?: string;
   "serviceMonitor.selfMonitor.additionalRelabeling"?: string;
   "serviceMonitor.selfMonitor.path"?: string;

@@ -82,8 +82,7 @@ export function useWebSocket(sessionId: string | null) {
         case "assistant": {
           // SDK format: { type: "assistant", message: { role, content, ... } }
           const sdkMessage = message.message as
-            | { content?: ContentBlock[] }
-            | undefined;
+            { content?: ContentBlock[] } | undefined;
           const content =
             sdkMessage?.content ||
             (message.content as ContentBlock[] | undefined);

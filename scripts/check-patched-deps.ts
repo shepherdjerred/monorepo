@@ -127,10 +127,16 @@ async function keyErrors(
   return errors;
 }
 
-// Unpatched resolutions: bun patches only exactly-keyed versions, so any
-// resolved version of a patched package that no key covers ships unpatched
-// to its consumers. Keys may legitimately cover SEVERAL versions of one
-// package — coverage is judged against all of them, not key-by-key.
+// A version may be unpatched only when its upstream release is known to fix
+// the defect. This list deliberately fails closed: adding an entry requires a
+// focused behavioral contract in check-patched-deps.test.ts, rather than a
+// brittle source-text comparison that can mistake formatting for a fix.
+const knownFixedVersions = new Map<string, ReadonlySet<string>>([
+  ["markdown-it", new Set(["15.0.0"])],
+]);
+
+// Bun patches only exactly-keyed versions. Coverage is judged against every
+// resolved version unless that exact release has a behavioral fixed contract.
 function coverageErrors(
   patched: Record<string, string>,
   resolved: Map<string, Set<string>>,
@@ -144,9 +150,16 @@ function coverageErrors(
   }
   const errors: string[] = [];
   for (const [name, patchedVersions] of patchedVersionsByName) {
-    const uncovered = [...(resolved.get(name) ?? new Set<string>())]
-      .filter((v) => !patchedVersions.has(v))
-      .sort();
+    const uncovered: string[] = [];
+    for (const version of resolved.get(name) ?? new Set<string>()) {
+      if (
+        !patchedVersions.has(version) &&
+        !(knownFixedVersions.get(name)?.has(version) ?? false)
+      ) {
+        uncovered.push(version);
+      }
+    }
+    uncovered.sort();
     if (uncovered.length > 0) {
       errors.push(
         `"${name}" also resolves at unpatched version(s) ${uncovered.join(", ")} — ` +
@@ -167,9 +180,11 @@ async function rootOrphanErrors(
   try {
     files = await readdir(`${root}/patches`);
   } catch (error) {
-    if (
-      !(error instanceof Error && "code" in error && error.code === "ENOENT")
-    ) {
+    if (!(
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "ENOENT"
+    )) {
       throw error;
     }
   }

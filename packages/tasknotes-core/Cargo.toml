@@ -33,8 +33,8 @@ uniffi = "=0.31.2"
 # releases, which would make a failing proptest seed unreplayable.
 insta = { version = "1", features = ["json"] }
 proptest = "1"
-proptest-state-machine = "0.5"
-rand_chacha = "0.9"
+proptest-state-machine = "0.8"
+rand_chacha = "0.10"
 
 # ── Lints ──────────────────────────────────────────────────────────────────
 # Every member crate opts in with `[lints] workspace = true`; ci/no-suppressions.sh

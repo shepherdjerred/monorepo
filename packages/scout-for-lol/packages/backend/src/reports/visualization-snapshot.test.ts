@@ -36,15 +36,12 @@ describe("buildVisualizationSnapshot", () => {
     const plan = parseAndCompile(
       "SELECT champion, queue, games FROM match_participants GROUP BY champion, queue DURING LAST 30 DAYS RENDER table",
     );
-    const rows = Array.from(
-      { length: 9 },
-      (_, index): ReportResultRow => ({
-        label: `Champion ${index.toString()} • solo`,
-        dimensions: [`Champion ${index.toString()}`, "solo"],
-        mentionIdentity: null,
-        values: [{ column: "games", value: index + 1 }],
-      }),
-    );
+    const rows = Array.from({ length: 9 }, (_, index): ReportResultRow => ({
+      label: `Champion ${index.toString()} • solo`,
+      dimensions: [`Champion ${index.toString()}`, "solo"],
+      mentionIdentity: null,
+      values: [{ column: "games", value: index + 1 }],
+    }));
 
     const snapshot = buildVisualizationSnapshot(
       { plan, columns: ["label", "games"], rows, rowsScanned: 9 },
@@ -58,15 +55,12 @@ describe("buildVisualizationSnapshot", () => {
     const plan = parseAndCompile(
       "SELECT games FROM match_participants GROUP BY champion, queue DURING LAST 30 DAYS RENDER donut_chart WITH (y = games)",
     );
-    const rows = Array.from(
-      { length: 9 },
-      (_, index): ReportResultRow => ({
-        label: `Champion ${index.toString()} • solo`,
-        dimensions: [`Champion ${index.toString()}`, "solo"],
-        mentionIdentity: null,
-        values: [{ column: "games", value: index + 1 }],
-      }),
-    );
+    const rows = Array.from({ length: 9 }, (_, index): ReportResultRow => ({
+      label: `Champion ${index.toString()} • solo`,
+      dimensions: [`Champion ${index.toString()}`, "solo"],
+      mentionIdentity: null,
+      values: [{ column: "games", value: index + 1 }],
+    }));
 
     expect(() =>
       buildVisualizationSnapshot(

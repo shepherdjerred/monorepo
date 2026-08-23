@@ -32,13 +32,7 @@ export type EnrichmentResult = {
 };
 
 type DeepPathKey =
-  | "amazon"
-  | "venmo"
-  | "bilt"
-  | "usaa"
-  | "scl"
-  | "apple"
-  | "costco";
+  "amazon" | "venmo" | "bilt" | "usaa" | "scl" | "apple" | "costco";
 
 type EnrichResult = {
   enrichments: Map<string, TransactionEnrichment>;

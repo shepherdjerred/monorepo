@@ -5845,7 +5845,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     repository?: string;
     /**
-     * @default "1.8.5"
+     * @default "1.8.7"
      */
     tag?: string;
     /**

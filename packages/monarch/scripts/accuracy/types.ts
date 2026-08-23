@@ -1,12 +1,5 @@
 export type DeepPath =
-  | "amazon"
-  | "venmo"
-  | "bilt"
-  | "usaa"
-  | "scl"
-  | "apple"
-  | "costco"
-  | "regular";
+  "amazon" | "venmo" | "bilt" | "usaa" | "scl" | "apple" | "costco" | "regular";
 
 export type SampledTransaction = {
   id: string;

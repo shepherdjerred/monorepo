@@ -22,17 +22,30 @@ import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
  * staleTime where it affects caching).
  */
 
+async function preloadQuery(query: Promise<unknown>): Promise<void> {
+  try {
+    await query;
+  } catch {
+    // Loaders only warm a cache. Their routes deliberately own error state.
+    return;
+  }
+}
+
 export function requireSessionLoader(): null {
-  void queryClient.prefetchQuery(
-    trpcOptions.auth.sessionState.queryOptions(
-      undefined,
-      SESSION_QUERY_OPTIONS,
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.auth.sessionState.queryOptions(
+        undefined,
+        SESSION_QUERY_OPTIONS,
+      ),
     ),
   );
-  void queryClient.prefetchQuery(
-    trpcOptions.guild.listManageable.queryOptions(undefined, {
-      staleTime: STALE_TIME_SLOW_LIST,
-    }),
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.guild.listManageable.queryOptions(undefined, {
+        staleTime: STALE_TIME_SLOW_LIST,
+      }),
+    ),
   );
   return null;
 }
@@ -40,10 +53,12 @@ export function requireSessionLoader(): null {
 export function guildLoader({ params }: LoaderFunctionArgs): null {
   const { guildId } = params;
   if (guildId === undefined) return null;
-  void queryClient.prefetchQuery(
-    trpcOptions.guild.listChannels.queryOptions(
-      { guildId },
-      { staleTime: STALE_TIME_SLOW_LIST },
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.guild.listChannels.queryOptions(
+        { guildId },
+        { staleTime: STALE_TIME_SLOW_LIST },
+      ),
     ),
   );
   return null;
@@ -52,10 +67,12 @@ export function guildLoader({ params }: LoaderFunctionArgs): null {
 export function subscriptionsLoader({ params }: LoaderFunctionArgs): null {
   const { guildId } = params;
   if (guildId === undefined) return null;
-  void queryClient.prefetchInfiniteQuery(
-    trpcOptions.subscription.list.infiniteQueryOptions(
-      { guildId, limit: 50 },
-      { getNextPageParam: (lastPage) => lastPage.nextCursor },
+  void preloadQuery(
+    queryClient.infiniteQuery(
+      trpcOptions.subscription.list.infiniteQueryOptions(
+        { guildId, limit: 50 },
+        { getNextPageParam: (lastPage) => lastPage.nextCursor },
+      ),
     ),
   );
   return null;
@@ -64,13 +81,15 @@ export function subscriptionsLoader({ params }: LoaderFunctionArgs): null {
 export function playersLoader({ params }: LoaderFunctionArgs): null {
   const { guildId } = params;
   if (guildId === undefined) return null;
-  void queryClient.prefetchInfiniteQuery(
-    trpcOptions.player.listPlayers.infiniteQueryOptions(
-      { guildId, limit: 50 },
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-        staleTime: STALE_TIME_SLOW_LIST,
-      },
+  void preloadQuery(
+    queryClient.infiniteQuery(
+      trpcOptions.player.listPlayers.infiniteQueryOptions(
+        { guildId, limit: 50 },
+        {
+          getNextPageParam: (lastPage) => lastPage.nextCursor,
+          staleTime: STALE_TIME_SLOW_LIST,
+        },
+      ),
     ),
   );
   return null;
@@ -79,8 +98,10 @@ export function playersLoader({ params }: LoaderFunctionArgs): null {
 export function playerDetailLoader({ params }: LoaderFunctionArgs): null {
   const { guildId, alias } = params;
   if (guildId === undefined || alias === undefined) return null;
-  void queryClient.prefetchQuery(
-    trpcOptions.player.getPlayer.queryOptions({ guildId, alias }),
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.player.getPlayer.queryOptions({ guildId, alias }),
+    ),
   );
   return null;
 }
@@ -88,11 +109,19 @@ export function playerDetailLoader({ params }: LoaderFunctionArgs): null {
 export function playerProfileLoader({ params }: LoaderFunctionArgs): null {
   const { guildId, alias } = params;
   if (guildId === undefined || alias === undefined) return null;
-  void queryClient.prefetchQuery(
-    trpcOptions.player.profileSummary.queryOptions({ guildId, alias }),
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.player.profileSummary.queryOptions({ guildId, alias }),
+    ),
   );
-  void queryClient.prefetchQuery(
-    trpcOptions.player.matchHistory.queryOptions({ guildId, alias, limit: 20 }),
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.player.matchHistory.queryOptions({
+        guildId,
+        alias,
+        limit: 20,
+      }),
+    ),
   );
   return null;
 }
@@ -100,13 +129,15 @@ export function playerProfileLoader({ params }: LoaderFunctionArgs): null {
 export function competitionsLoader({ params }: LoaderFunctionArgs): null {
   const { guildId } = params;
   if (guildId === undefined) return null;
-  void queryClient.prefetchInfiniteQuery(
-    trpcOptions.competition.list.infiniteQueryOptions(
-      { guildId, activeOnly: true, limit: 50 },
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-        staleTime: STALE_TIME_SLOW_LIST,
-      },
+  void preloadQuery(
+    queryClient.infiniteQuery(
+      trpcOptions.competition.list.infiniteQueryOptions(
+        { guildId, activeOnly: true, limit: 50 },
+        {
+          getNextPageParam: (lastPage) => lastPage.nextCursor,
+          staleTime: STALE_TIME_SLOW_LIST,
+        },
+      ),
     ),
   );
   return null;
@@ -117,11 +148,13 @@ export function competitionDetailLoader({ params }: LoaderFunctionArgs): null {
   if (guildId === undefined || competitionId === undefined) return null;
   const parsed = CompetitionIdSchema.safeParse(Number(competitionId));
   if (!parsed.success) return null;
-  void queryClient.prefetchQuery(
-    trpcOptions.competition.get.queryOptions({
-      guildId,
-      competitionId: parsed.data,
-    }),
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.competition.get.queryOptions({
+        guildId,
+        competitionId: parsed.data,
+      }),
+    ),
   );
   return null;
 }
@@ -129,10 +162,12 @@ export function competitionDetailLoader({ params }: LoaderFunctionArgs): null {
 export function reportsLoader({ params }: LoaderFunctionArgs): null {
   const { guildId } = params;
   if (guildId === undefined) return null;
-  void queryClient.prefetchQuery(
-    trpcOptions.report.list.queryOptions(
-      { guildId },
-      { staleTime: STALE_TIME_SLOW_LIST },
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.report.list.queryOptions(
+        { guildId },
+        { staleTime: STALE_TIME_SLOW_LIST },
+      ),
     ),
   );
   return null;
@@ -143,21 +178,27 @@ export function reportDetailLoader({ params }: LoaderFunctionArgs): null {
   if (guildId === undefined || reportId === undefined) return null;
   const parsed = ReportIdSchema.safeParse(Number(reportId));
   if (!parsed.success) return null;
-  void queryClient.prefetchQuery(
-    trpcOptions.report.get.queryOptions({ guildId, reportId: parsed.data }),
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.report.get.queryOptions({ guildId, reportId: parsed.data }),
+    ),
   );
   return null;
 }
 
 export function exploreLoader({ params }: LoaderFunctionArgs): null {
-  void queryClient.prefetchQuery(trpcOptions.explore.status.queryOptions());
-  void queryClient.prefetchQuery(trpcOptions.explore.list.queryOptions());
+  void preloadQuery(
+    queryClient.query(trpcOptions.explore.status.queryOptions()),
+  );
+  void preloadQuery(queryClient.query(trpcOptions.explore.list.queryOptions()));
   const { conversationId } = params;
   if (conversationId === undefined) return null;
   const parsed = ExploreConversationIdSchema.safeParse(conversationId);
   if (!parsed.success) return null;
-  void queryClient.prefetchQuery(
-    trpcOptions.explore.get.queryOptions({ conversationId: parsed.data }),
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.explore.get.queryOptions({ conversationId: parsed.data }),
+    ),
   );
   return null;
 }
@@ -165,13 +206,15 @@ export function exploreLoader({ params }: LoaderFunctionArgs): null {
 export function auditLoader({ params }: LoaderFunctionArgs): null {
   const { guildId } = params;
   if (guildId === undefined) return null;
-  void queryClient.prefetchInfiniteQuery(
-    trpcOptions.subscription.listAuditLog.infiniteQueryOptions(
-      { guildId, limit: 50 },
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-        staleTime: STALE_TIME_SLOW_LIST,
-      },
+  void preloadQuery(
+    queryClient.infiniteQuery(
+      trpcOptions.subscription.listAuditLog.infiniteQueryOptions(
+        { guildId, limit: 50 },
+        {
+          getNextPageParam: (lastPage) => lastPage.nextCursor,
+          staleTime: STALE_TIME_SLOW_LIST,
+        },
+      ),
     ),
   );
   return null;
@@ -180,10 +223,12 @@ export function auditLoader({ params }: LoaderFunctionArgs): null {
 export function accessLoader({ params }: LoaderFunctionArgs): null {
   const { guildId } = params;
   if (guildId === undefined) return null;
-  void queryClient.prefetchQuery(
-    trpcOptions.roles.list.queryOptions(
-      { guildId },
-      { staleTime: STALE_TIME_SLOW_LIST },
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.roles.list.queryOptions(
+        { guildId },
+        { staleTime: STALE_TIME_SLOW_LIST },
+      ),
     ),
   );
   return null;
