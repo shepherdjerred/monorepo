@@ -10,7 +10,7 @@ export type PostgresoperatorHelmValuesImage = {
    */
   repository?: string;
   /**
-   * @default "v2.0.1"
+   * @default "v2.0.2"
    */
   tag?: string;
   /**
@@ -769,7 +769,7 @@ export type PostgresoperatorHelmValuesConfigConnectionPooler = {
   /**
    * docker image
    *
-   * @default "ghcr.io/zalando/postgres-operator/pgbouncer:v2.0.1"
+   * @default "ghcr.io/zalando/postgres-operator/pgbouncer:v2.0.2"
    */
   connection_pooler_image?: string;
   /**

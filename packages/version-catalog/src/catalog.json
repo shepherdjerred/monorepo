@@ -287,7 +287,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "5.2.3@sha256:212b86dff59e3962b4082b5ef20a577e76c8f8527d2ab505cfa887b4bcecb0b0",
+      "value": "5.2.3@sha256:304b19cf94bf4fda534e0b086cab9c5f1a9e139a8180c05c0ad7d2ba1526fa99",
       "notes": [
         "Keep this on qBittorrent app versions only. LinuxServer also publishes",
         "stale OS-style tags like 20.04.1 that resolve to old app builds."
@@ -998,7 +998,7 @@
         "registryUrl": "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
         "versioning": "semver"
       },
-      "value": "2.0.1"
+      "value": "2.0.2"
     },
     {
       "name": "cooperspencer/gickup",
@@ -1070,7 +1070,7 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.41.0"
+      "value": "4.44.0"
     },
     {
       "name": "mariadb",
@@ -1082,7 +1082,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "27.0.6"
+      "value": "27.0.7"
     },
     {
       "name": "bitnami/mariadb",
@@ -1217,9 +1217,9 @@
         "managed": true,
         "datasource": "docker",
         "registryUrl": "https://docker.io",
-        "versioning": "semver"
+        "versioning": "docker"
       },
-      "value": "1.31.2@sha256:b5a9a3cfc86b81dd6f1458d53f2ad2b559cc255653d2efd6cacee5636bf2066f"
+      "value": "1.31.2-alpine@sha256:54f2a904c251d5a34adf545a72d32515a15e08418dae0266e23be2e18c66fefa"
     },
     {
       "name": "bugsink/bugsink",
