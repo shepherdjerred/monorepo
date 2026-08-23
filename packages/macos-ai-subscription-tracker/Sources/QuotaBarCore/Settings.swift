@@ -3,8 +3,13 @@ public import Observation
 
 public protocol SettingsPersisting: Sendable {
   func enabledProviders() throws -> Set<ProviderID>?
+  func showsLegacyProviders() throws -> Bool?
   func pollingInterval() throws -> TimeInterval?
-  func save(enabledProviders: Set<ProviderID>, pollingInterval: TimeInterval)
+  func save(
+    enabledProviders: Set<ProviderID>,
+    showsLegacyProviders: Bool,
+    pollingInterval: TimeInterval
+  )
 }
 
 public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sendable {
@@ -35,11 +40,22 @@ public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sen
     return value
   }
 
-  public func save(enabledProviders: Set<ProviderID>, pollingInterval: TimeInterval) {
+  public func showsLegacyProviders() throws -> Bool? {
+    guard let storedValue = defaults.object(forKey: "showsLegacyProviders") else { return nil }
+    guard let value = storedValue as? Bool else { throw QuotaError.settingsCorrupt }
+    return value
+  }
+
+  public func save(
+    enabledProviders: Set<ProviderID>,
+    showsLegacyProviders: Bool,
+    pollingInterval: TimeInterval
+  ) {
     let unknownIdentifiers = (defaults.stringArray(forKey: "enabledProviders") ?? [])
       .filter { ProviderID(rawValue: $0) == nil }
     let knownIdentifiers = enabledProviders.map(\.rawValue)
     defaults.set(Set(knownIdentifiers + unknownIdentifiers).sorted(), forKey: "enabledProviders")
+    defaults.set(showsLegacyProviders, forKey: "showsLegacyProviders")
     defaults.set(pollingInterval, forKey: "pollingInterval")
   }
 }
@@ -47,6 +63,7 @@ public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sen
 @MainActor @Observable
 public final class AppSettings {
   public private(set) var enabledProviders: Set<ProviderID>
+  public private(set) var showsLegacyProviders: Bool
   public private(set) var pollingInterval: TimeInterval
   public private(set) var validationErrorMessage: String?
 
@@ -61,15 +78,21 @@ public final class AppSettings {
     self.minimumPollingInterval = minimumPollingInterval
     var corrupted = false
     do {
-      self.enabledProviders = try store.enabledProviders() ?? Set(ProviderID.allCases)
+      self.enabledProviders = try store.enabledProviders() ?? ProviderID.standard
     } catch {
-      self.enabledProviders = Set(ProviderID.allCases)
+      self.enabledProviders = ProviderID.standard
       corrupted = true
     }
     do {
       self.pollingInterval = max(minimumPollingInterval, try store.pollingInterval() ?? 300)
     } catch {
       self.pollingInterval = minimumPollingInterval
+      corrupted = true
+    }
+    do {
+      self.showsLegacyProviders = try store.showsLegacyProviders() ?? false
+    } catch {
+      self.showsLegacyProviders = false
       corrupted = true
     }
     self.validationErrorMessage = corrupted ? QuotaError.settingsCorrupt.localizedDescription : nil
@@ -89,7 +112,23 @@ public final class AppSettings {
     save()
   }
 
+  public func setShowsLegacyProviders(_ showsLegacyProviders: Bool) {
+    self.showsLegacyProviders = showsLegacyProviders
+    if showsLegacyProviders {
+      enabledProviders.formUnion(ProviderID.legacy)
+    }
+    save()
+  }
+
+  public var visibleProviderIDs: Set<ProviderID> {
+    ProviderID.standard.union(showsLegacyProviders ? ProviderID.legacy : [])
+  }
+
   private func save() {
-    store.save(enabledProviders: enabledProviders, pollingInterval: pollingInterval)
+    store.save(
+      enabledProviders: enabledProviders,
+      showsLegacyProviders: showsLegacyProviders,
+      pollingInterval: pollingInterval
+    )
   }
 }

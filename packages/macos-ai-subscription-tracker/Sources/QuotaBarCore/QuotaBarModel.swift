@@ -13,13 +13,17 @@ private struct ActiveRefresh {
 
 @MainActor @Observable
 public final class QuotaBarModel {
-  public let providers: [any UsageProvider]
+  public private(set) var providers: [any UsageProvider]
   public let settings: AppSettings
   public private(set) var states: [ProviderID: ProviderDisplayState] = [:]
   public private(set) var isRefreshing = false
   public private(set) var cacheErrorMessage: String?
+  public private(set) var history: [UsageHistorySample] = []
+  public private(set) var historyErrorMessage: String?
 
   private let store: any SnapshotPersisting
+  private let historyStore: any UsageHistoryPersisting
+  private let providerFactory: ((Set<ProviderID>) throws -> [any UsageProvider])?
   private let providerTimeout: Duration
   private var lastSuccessful: [ProviderID: UsageSnapshot] = [:]
   private var pollingTask: Task<Void, Never>?
@@ -31,11 +35,15 @@ public final class QuotaBarModel {
     providers: [any UsageProvider],
     settings: AppSettings,
     store: any SnapshotPersisting = JSONSnapshotStore(),
+    historyStore: any UsageHistoryPersisting = JSONUsageHistoryStore(),
+    providerFactory: ((Set<ProviderID>) throws -> [any UsageProvider])? = nil,
     providerTimeout: Duration = .seconds(25)
   ) {
     self.providers = providers
     self.settings = settings
     self.store = store
+    self.historyStore = historyStore
+    self.providerFactory = providerFactory
     self.providerTimeout = providerTimeout
     do {
       lastSuccessful = try store.load()
@@ -47,15 +55,22 @@ public final class QuotaBarModel {
     } catch {
       cacheErrorMessage = QuotaError.cacheCorrupt.localizedDescription
     }
+    do {
+      history = try historyStore.load()
+    } catch {
+      historyErrorMessage = QuotaError.historyCorrupt.localizedDescription
+    }
   }
 
   public func state(for provider: ProviderID) -> ProviderDisplayState {
-    guard settings.enabledProviders.contains(provider) else { return .disabled }
+    guard settings.visibleProviderIDs.contains(provider),
+      settings.enabledProviders.contains(provider)
+    else { return .disabled }
     return states[provider] ?? .loading
   }
 
   public var overallStatus: QuotaStatus {
-    let enabledStates = ProviderID.allCases
+    let enabledStates = settings.visibleProviderIDs
       .filter(settings.enabledProviders.contains)
       .map(state(for:))
     guard !enabledStates.isEmpty else { return .unavailable }
@@ -99,6 +114,25 @@ public final class QuotaBarModel {
         .available($0.markedStale(reason: "Cached data; waiting for a provider refresh."))
       } ?? .loading
     refreshAfterEnabling(provider)
+  }
+
+  public func setShowsLegacyProviders(_ showsLegacyProviders: Bool) {
+    settings.setShowsLegacyProviders(showsLegacyProviders)
+    guard let providerFactory else { return }
+    do {
+      providers = try providerFactory(settings.visibleProviderIDs)
+      if showsLegacyProviders {
+        for provider in ProviderID.legacy {
+          states[provider] =
+            lastSuccessful[provider].map {
+              .available($0.markedStale(reason: "Cached data; waiting for a provider refresh."))
+            } ?? .loading
+        }
+        Task { [weak self] in await self?.refresh() }
+      }
+    } catch {
+      cacheErrorMessage = "Brim could not configure its provider URLs."
+    }
   }
 
   public func refresh() async {
@@ -198,6 +232,7 @@ public final class QuotaBarModel {
     case let .success(provider, snapshot):
       lastSuccessful[provider] = snapshot
       states[provider] = .available(snapshot)
+      recordHistory(snapshot)
       return true
     case let .failure(provider, error):
       if let snapshot = lastSuccessful[provider] {
@@ -208,6 +243,18 @@ public final class QuotaBarModel {
         states[provider] = .unavailable(message: error.localizedDescription)
       }
       return false
+    }
+  }
+
+  private func recordHistory(_ snapshot: UsageSnapshot) {
+    let samples = UsageHistorySample.samples(from: snapshot)
+    guard !samples.isEmpty else { return }
+    history = UsageHistory.compact(history + samples)
+    do {
+      try historyStore.save(history)
+      historyErrorMessage = nil
+    } catch {
+      historyErrorMessage = QuotaError.historyWriteFailed.localizedDescription
     }
   }
 

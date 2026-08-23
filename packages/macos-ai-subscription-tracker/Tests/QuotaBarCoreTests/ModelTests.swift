@@ -34,6 +34,37 @@ final class ModelTests: XCTestCase {
     XCTAssertNil(model.cacheErrorMessage)
   }
 
+  func testSuccessfulRefreshRecordsHistoryButFailureDoesNot() async {
+    let successful = FakeProvider(
+      id: .codex,
+      results: [.success(snapshot(provider: .codex, remaining: 60))]
+    )
+    let historyStore = MemoryHistoryStore()
+    let model = makeModel(providers: [successful], historyStore: historyStore)
+    await model.refresh()
+    XCTAssertEqual(model.history.count, 1)
+    XCTAssertEqual(historyStore.saved.count, 1)
+
+    let failed = FakeProvider(id: .codex, results: [.failure(.network(.codex))])
+    let failedModel = makeModel(providers: [failed], historyStore: MemoryHistoryStore())
+    await failedModel.refresh()
+    XCTAssertTrue(failedModel.history.isEmpty)
+  }
+
+  func testCorruptHistoryDoesNotPreventLiveRefresh() async {
+    let provider = FakeProvider(
+      id: .codex,
+      results: [.success(snapshot(provider: .codex, remaining: 60))]
+    )
+    let model = makeModel(
+      providers: [provider],
+      historyStore: MemoryHistoryStore(loadError: .historyCorrupt)
+    )
+    XCTAssertEqual(model.historyErrorMessage, QuotaError.historyCorrupt.localizedDescription)
+    await model.refresh()
+    XCTAssertEqual(model.overallStatus, .healthy)
+  }
+
   func testRateLimitRetainsLastSnapshotAsStale() async {
     let cached = snapshot(provider: .codex, remaining: 60)
     let codex = FakeProvider(id: .codex, results: [.failure(.rateLimited(.codex))])
@@ -197,7 +228,7 @@ final class ModelTests: XCTestCase {
       results: [.success(snapshot(provider: .kimi, remaining: 65))]
     )
     let settings = AppSettings(
-      store: MemoryModelSettingsStore(enabled: [.codex]),
+      store: MemoryModelSettingsStore(enabled: [.codex], showsLegacy: true),
       minimumPollingInterval: 60
     )
     let model = QuotaBarModel(
@@ -301,17 +332,22 @@ final class ModelTests: XCTestCase {
   private func makeModel(
     providers: [any UsageProvider],
     store: MemorySnapshotStore = MemorySnapshotStore(),
+    historyStore: MemoryHistoryStore = MemoryHistoryStore(),
     timeout: Duration = .seconds(1),
     minimumInterval: TimeInterval = 60
   ) -> QuotaBarModel {
     let settings = AppSettings(
-      store: MemoryModelSettingsStore(enabled: Set(providers.map(\.id))),
+      store: MemoryModelSettingsStore(
+        enabled: Set(providers.map(\.id)),
+        showsLegacy: !Set(providers.map(\.id)).isDisjoint(with: ProviderID.legacy)
+      ),
       minimumPollingInterval: minimumInterval
     )
     return QuotaBarModel(
       providers: providers,
       settings: settings,
       store: store,
+      historyStore: historyStore,
       providerTimeout: timeout
     )
   }
@@ -402,12 +438,37 @@ private final class MemorySnapshotStore: SnapshotPersisting, @unchecked Sendable
 
 private final class MemoryModelSettingsStore: SettingsPersisting, @unchecked Sendable {
   let enabled: Set<ProviderID>
+  let showsLegacy: Bool
 
-  init(enabled: Set<ProviderID>) {
+  init(enabled: Set<ProviderID>, showsLegacy: Bool = false) {
     self.enabled = enabled
+    self.showsLegacy = showsLegacy
   }
 
   func enabledProviders() -> Set<ProviderID>? { enabled }
+  func showsLegacyProviders() -> Bool? { showsLegacy }
   func pollingInterval() -> TimeInterval? { nil }
-  func save(enabledProviders _: Set<ProviderID>, pollingInterval _: TimeInterval) {}
+  func save(
+    enabledProviders _: Set<ProviderID>,
+    showsLegacyProviders _: Bool,
+    pollingInterval _: TimeInterval
+  ) {}
+}
+
+private final class MemoryHistoryStore: UsageHistoryPersisting, @unchecked Sendable {
+  private let loadError: QuotaError?
+  private(set) var saved: [UsageHistorySample] = []
+
+  init(loadError: QuotaError? = nil) {
+    self.loadError = loadError
+  }
+
+  func load() throws -> [UsageHistorySample] {
+    if let loadError { throw loadError }
+    return saved
+  }
+
+  func save(_ samples: [UsageHistorySample]) throws {
+    saved = samples
+  }
 }
