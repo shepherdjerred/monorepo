@@ -1,16 +1,22 @@
 import { ApplicationFailure } from "@temporalio/common";
+import { z } from "zod";
 import {
+  HaApiError,
   HaNotFoundError,
   HomeAssistantRestClient,
   type EntityState,
 } from "@shepherdjerred/home-assistant";
-import { HA_ENTITY_NOT_FOUND_ERROR_TYPE } from "#shared/ha-errors.ts";
+import {
+  HA_ENTITY_NOT_FOUND_ERROR_TYPE,
+  HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+} from "#shared/ha-errors.ts";
 
 // Activity signatures stay monomorphic (Temporal's proxyActivities rejects
 // generic methods), so the runtime client is the loose default. Compile-time
 // type safety lives in src/workflows/ha/util.ts, which wraps each activity
 // with schema-parameterized signatures that forward through as strings.
 let cachedClient: HomeAssistantRestClient | undefined;
+const MediaPlayerEntityId = z.string().startsWith("media_player.");
 
 function getClient(): HomeAssistantRestClient {
   if (cachedClient !== undefined) {
@@ -26,6 +32,38 @@ function getClient(): HomeAssistantRestClient {
   }
   cachedClient = new HomeAssistantRestClient({ baseUrl, token });
   return cachedClient;
+}
+
+function optionalMediaPlayerEntityIds(data: Record<string, unknown>): string[] {
+  const groupMembers = data["group_members"];
+  if (Array.isArray(groupMembers)) {
+    return groupMembers.flatMap((value) => {
+      const result = MediaPlayerEntityId.safeParse(value);
+      return result.success ? [result.data] : [];
+    });
+  }
+
+  const entityId = data["entity_id"];
+  const result = MediaPlayerEntityId.safeParse(entityId);
+  if (result.success) {
+    return [result.data];
+  }
+  return [];
+}
+
+function isOptionalMediaPlayerUnavailable(
+  error: HaApiError,
+  data: Record<string, unknown>,
+): boolean {
+  if (error.status !== 404 && error.status < 500) {
+    return false;
+  }
+  const text = `${error.message}\n${error.body}`;
+  return (
+    optionalMediaPlayerEntityIds(data).some((entityId) =>
+      text.toLowerCase().includes(entityId.toLowerCase()),
+    ) && /unavailable|not found|does not exist|offline/i.test(text)
+  );
 }
 
 export type HaActivities = typeof haActivities;
@@ -63,6 +101,31 @@ export const haActivities = {
   ): Promise<void> {
     await getClient().callService(domain, service, data);
     console.warn(`Called HA service: ${domain}.${service}`);
+  },
+
+  async callOptionalMediaPlayerService(
+    service: string,
+    data: Record<string, unknown>,
+  ): Promise<void> {
+    try {
+      await getClient().callService("media_player", service, data);
+      console.warn(`Called HA service: media_player.${service}`);
+    } catch (error: unknown) {
+      // A missing media entity or a Sonos integration/device failure is a
+      // known degraded condition for optional speakers. Keep the failure
+      // retryable so transient HA reloads get the normal activity retry budget,
+      // then expose it as a stable type for the workflow to handle.
+      if (
+        error instanceof HaApiError &&
+        isOptionalMediaPlayerUnavailable(error, data)
+      ) {
+        throw ApplicationFailure.retryable(
+          `Home Assistant media_player.${service} is unavailable (${String(error.status)})`,
+          HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+        );
+      }
+      throw error;
+    }
   },
 
   async sendNotification(title: string, message: string): Promise<void> {

@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
+  classifyRedactedCommandFailure,
   closeSeasonRefreshPr,
   isGeneratedAtOnlyDiff,
   refreshSeasonRefreshPrMetadata,
@@ -223,13 +224,13 @@ describe("revertGeneratedAtOnlyChanges", () => {
 });
 
 describe("shared proposal PR reconciliation", () => {
-  test("reports a safe operation label when command output is redacted", async () => {
+  test("classifies a stale branch lease without exposing command output", async () => {
     await expect(
       runCommand(
         [
           "bun",
           "-e",
-          'console.error("credential-shaped-secret"); process.exit(7)',
+          'console.error("stale info credential-shaped-secret"); process.exit(7)',
         ],
         {
           cwd: "/tmp",
@@ -237,7 +238,48 @@ describe("shared proposal PR reconciliation", () => {
           operation: "branch-push",
         },
       ),
-    ).rejects.toThrow("Command failed (branch-push): exit 7 <redacted>");
+    ).rejects.toThrow(
+      "Command failed (branch-push): exit 7 remote-lease-rejected",
+    );
+  });
+
+  test("classifies known redacted push failure categories", () => {
+    expect(
+      classifyRedactedCommandFailure(
+        "branch-push",
+        "remote: Authentication failed",
+      ),
+    ).toBe("authentication-or-authorization");
+    expect(
+      classifyRedactedCommandFailure(
+        "branch-push",
+        "GH006: protected branch hook declined",
+      ),
+    ).toBe("protected-branch-policy");
+    expect(
+      classifyRedactedCommandFailure(
+        "branch-push",
+        "fatal: unable to access: Could not resolve host",
+      ),
+    ).toBe("network");
+    expect(
+      classifyRedactedCommandFailure(
+        "branch-push",
+        "remote: Repository not found",
+      ),
+    ).toBe("repository-not-found");
+    expect(classifyRedactedCommandFailure("branch-push", "unexpected")).toBe(
+      "unknown",
+    );
+    expect(
+      classifyRedactedCommandFailure(
+        "branch-push",
+        "failed to push some refs (repository rule violation)",
+      ),
+    ).toBe("unknown");
+    expect(
+      classifyRedactedCommandFailure("pr-create", "Authentication failed"),
+    ).toBe("redacted");
   });
 
   test("refreshes the title and body of a reused PR", async () => {

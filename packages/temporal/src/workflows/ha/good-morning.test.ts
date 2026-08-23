@@ -4,8 +4,12 @@ import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { OutcomeRecord } from "#activities/outcome.ts";
-import { HA_ENTITY_NOT_FOUND_ERROR_TYPE } from "#shared/ha-errors.ts";
 import {
+  HA_ENTITY_NOT_FOUND_ERROR_TYPE,
+  HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+} from "#shared/ha-errors.ts";
+import {
+  goodMorningGetUp,
   goodMorningPreheat,
   goodMorningWakeUp,
   shouldHeatFloor,
@@ -49,6 +53,7 @@ type Scenario = {
   serviceCalls: ServiceCall[];
   notifications: string[];
   outcomes: OutcomeRecord[];
+  mediaPlayerFailures: Set<string>;
 };
 
 function makeScenario(
@@ -64,6 +69,7 @@ function makeScenario(
     serviceCalls: [],
     notifications: [],
     outcomes: [],
+    mediaPlayerFailures: new Set(),
   };
 }
 
@@ -76,6 +82,30 @@ function entityState(
 }
 
 function makeActivities(scenario: Scenario) {
+  const callMediaPlayerService = (
+    service: string,
+    data: Record<string, unknown>,
+  ): Promise<void> => {
+    scenario.serviceCalls.push({
+      domain: "media_player",
+      service,
+      data,
+    });
+    const entityId = data["entity_id"];
+    if (
+      typeof entityId === "string" &&
+      scenario.mediaPlayerFailures.has(`${service}:${entityId}`)
+    ) {
+      return Promise.reject(
+        ApplicationFailure.retryable(
+          `Home Assistant media_player.${service} unavailable for ${entityId}`,
+          HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+        ),
+      );
+    }
+    return Promise.resolve();
+  };
+
   return {
     getEntityState: (entityId: string): Promise<EntityState> => {
       switch (entityId) {
@@ -113,9 +143,13 @@ function makeActivities(scenario: Scenario) {
       service: string,
       data: Record<string, unknown>,
     ): Promise<void> => {
+      if (domain === "media_player") {
+        return callMediaPlayerService(service, data);
+      }
       scenario.serviceCalls.push({ domain, service, data });
       return Promise.resolve();
     },
+    callOptionalMediaPlayerService: callMediaPlayerService,
     sendNotification: (title: string): Promise<void> => {
       scenario.notifications.push(title);
       return Promise.resolve();
@@ -442,6 +476,118 @@ describe("goodMorningWakeUp", () => {
           reason: "wake-routine-complete",
         },
       ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+});
+
+describe("goodMorningGetUp", () => {
+  test(
+    "joins the available bathroom speaker and completes normally",
+    async () => {
+      const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
+
+      await runWorker(
+        scenario,
+        goodMorningGetUp,
+        `getup-complete-${crypto.randomUUID()}`,
+      );
+
+      expect(
+        scenario.serviceCalls.some(
+          (call) => call.domain === "media_player" && call.service === "join",
+        ),
+      ).toBe(true);
+      expect(
+        scenario.serviceCalls.filter(
+          (call) =>
+            call.domain === "media_player" && call.service === "volume_up",
+        ),
+      ).toHaveLength(4);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningGetUp",
+          outcome: "executed",
+          reason: "getup-routine-complete",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    "continues with bedroom playback when the optional join fails",
+    async () => {
+      const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
+      scenario.mediaPlayerFailures.add("join:media_player.bedroom");
+
+      await runWorker(
+        scenario,
+        goodMorningGetUp,
+        `getup-join-degraded-${crypto.randomUUID()}`,
+      );
+
+      expect(
+        scenario.serviceCalls.filter(
+          (call) =>
+            call.domain === "media_player" && call.service === "volume_up",
+        ),
+      ).toHaveLength(2);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningGetUp",
+          outcome: "executed",
+          reason: "getup-routine-complete-optional-media-degraded",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    "skips an optional player whose volume setup fails",
+    async () => {
+      const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
+      scenario.mediaPlayerFailures.add(
+        "volume_set:media_player.master_bathroom",
+      );
+
+      await runWorker(
+        scenario,
+        goodMorningGetUp,
+        `getup-volume-degraded-${crypto.randomUUID()}`,
+      );
+
+      expect(
+        scenario.serviceCalls.some(
+          (call) => call.domain === "media_player" && call.service === "join",
+        ),
+      ).toBe(false);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningGetUp",
+          outcome: "executed",
+          reason: "getup-routine-complete-optional-media-degraded",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    "still fails when required bedroom playback fails",
+    async () => {
+      const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
+      scenario.mediaPlayerFailures.add("volume_up:media_player.bedroom");
+
+      await expect(
+        runWorker(
+          scenario,
+          goodMorningGetUp,
+          `getup-bedroom-failure-${crypto.randomUUID()}`,
+        ),
+      ).rejects.toThrow();
+      expect(scenario.outcomes).toEqual([]);
     },
     WORKFLOW_TEST_TIMEOUT_MS,
   );
