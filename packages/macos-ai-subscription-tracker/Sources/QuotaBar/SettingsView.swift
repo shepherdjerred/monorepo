@@ -27,6 +27,9 @@ struct SettingsView: View {
     .formStyle(.grouped)
     .frame(width: 520, height: 720)
     .task { await loadCredentialStatus() }
+    .onChange(of: model.settings.visibleProviderIDs) { _, _ in
+      Task { await loadCredentialStatus() }
+    }
     .onAppear { launchAtLogin.refresh() }
   }
 

@@ -20,7 +20,7 @@ struct BrimBrandMark: View {
         .fill(Color(red: 0.15, green: 0.15, blue: 0.36))
       Image(nsImage: BrimAssets.markImage)
         .resizable()
-        .aspectRatio(contentMode: .fit)
+        .scaledToFit()
         .padding(4)
     }
     .frame(width: 24, height: 24)

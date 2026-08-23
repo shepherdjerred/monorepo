@@ -56,7 +56,16 @@ public final class QuotaBarModel {
       cacheErrorMessage = QuotaError.cacheCorrupt.localizedDescription
     }
     do {
-      history = try historyStore.load()
+      let loadedHistory = try historyStore.load()
+      let compactedHistory = UsageHistory.compact(loadedHistory)
+      history = compactedHistory
+      if compactedHistory != loadedHistory {
+        do {
+          try historyStore.save(compactedHistory)
+        } catch {
+          historyErrorMessage = QuotaError.historyWriteFailed.localizedDescription
+        }
+      }
     } catch {
       historyErrorMessage = QuotaError.historyCorrupt.localizedDescription
     }
@@ -154,6 +163,7 @@ public final class QuotaBarModel {
 
   public func handleCredentialChange(for provider: ProviderID) async {
     let refreshAtCredentialBoundary = activeRefresh
+    clearHistory(for: provider)
     invalidateCachedSnapshot(for: provider)
     if let refreshAtCredentialBoundary {
       await refreshAtCredentialBoundary.task.value
@@ -250,6 +260,18 @@ public final class QuotaBarModel {
     let samples = UsageHistorySample.samples(from: snapshot)
     guard !samples.isEmpty else { return }
     history = UsageHistory.compact(history + samples)
+    do {
+      try historyStore.save(history)
+      historyErrorMessage = nil
+    } catch {
+      historyErrorMessage = QuotaError.historyWriteFailed.localizedDescription
+    }
+  }
+
+  private func clearHistory(for provider: ProviderID) {
+    let clearedHistory = history.filter { $0.provider != provider }
+    guard clearedHistory.count != history.count else { return }
+    history = clearedHistory
     do {
       try historyStore.save(history)
       historyErrorMessage = nil
