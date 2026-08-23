@@ -218,12 +218,7 @@ export type CompetitionRankHistoryLakeRow = z.infer<
 >;
 
 type DuckDbColumnType =
-  | "VARCHAR"
-  | "INTEGER"
-  | "BIGINT"
-  | "DOUBLE"
-  | "BOOLEAN"
-  | "TIMESTAMP";
+  "VARCHAR" | "INTEGER" | "BIGINT" | "DOUBLE" | "BOOLEAN" | "TIMESTAMP";
 
 export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
   {

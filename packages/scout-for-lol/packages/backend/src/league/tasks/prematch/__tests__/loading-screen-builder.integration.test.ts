@@ -452,7 +452,9 @@ describe("buildLoadingScreenData standard and custom layouts", () => {
     expect(parsed.queueType).toBe("custom");
     expect(parsed.layout).toBe("standard");
   });
+});
 
+describe("buildLoadingScreenData custom rank integration", () => {
   test("partial custom lobbies keep explicit rank states without invented lanes", async () => {
     const baseGameInfo = await loadSpectatorPayload(
       `${currentDir}testdata/spectator-ranked-flex.json`,
