@@ -187,7 +187,7 @@
       },
       "value": "2026.7.2-java25@sha256:6ec1110e4d9236d00ae9436a3e4a5929583e5b19cc94b756a7c603f7cf647a77",
       "notes": [
-        "java25 variant: Paper 26.1.2 (pinned below) requires Java 25+; the java21",
+        "java25 variant: Paper 26.2 (pinned below) requires Java 25+; the java21",
         "image crashes every server at startup (\"Minecraft 26.1 and newer requires",
         "running the server with Java 25 or above\"). Keep this Java major in sync",
         "with the paper pin."
@@ -957,7 +957,7 @@
         "datasource": "custom.papermc",
         "versioning": "semver-coerced"
       },
-      "value": "26.1.2",
+      "value": "26.2",
       "notes": [
         "The papermc datasource lists both 2-part families (e.g. \"26.2\") and 3-part",
         "builds (e.g. \"26.1.2\"); strict semver drops the 2-part ones, so it never",
