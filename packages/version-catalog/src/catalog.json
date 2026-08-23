@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10918@sha256:b0eeee1526088a3307e5869a8fe16255685b136b2f2a4083a583c0f024041911",
+      "value": "2.0.0-10928@sha256:cb059b17d4d3b38bcdaf611a648e9fe5a20bd4d84f23b313121eb12fa56febe7",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -1328,7 +1328,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10860@sha256:5130f3dd6a41e91917389b455a2a4877e93eaa049b5ebea37197222524cad243",
+      "value": "2.0.0-10928@sha256:5e8cd91d653ebbffce376892759bba44c3fb9c97806cc614cd97174846c3f4a3",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
