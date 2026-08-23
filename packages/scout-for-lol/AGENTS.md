@@ -65,11 +65,11 @@ bun run format           # Formatting check across all packages
 bun run test             # Testing across all packages
 bun run generate         # Generate Prisma client and other generated code
 bun run clean            # Clean all node_modules
-bun run duplication-check # Check for code duplication
 ```
 
-Unused code/dependency detection (knip) runs from the monorepo root: `bun run knip`
-covers scout via the root `//#knip` gate. For a scoped local run, use
+Unused code/dependency detection (knip) and code duplication (jscpd) run from
+the monorepo root: `bun run knip` and `bun run jscpd` cover scout via the root
+`//#knip` and `//#jscpd` gates. For a scoped knip run, use
 `bunx knip --workspace scout-for-lol --workspace '@scout-for-lol/*'` from the
 monorepo root. Both selectors are required: `scout-for-lol` is only the parent
 workspace (its knip project is just `scripts/**/*.ts`), and the backend,
@@ -79,7 +79,7 @@ frontend, app, data, and other subpackages are separate workspace keys.
 
 ```bash
 mise run dev             # Setup development environment
-mise run check           # Run all checks (typecheck, lint, format, test, duplication-check)
+mise run check           # Run all checks (typecheck, lint, format, test)
 mise run generate        # Generate Prisma client
 ```
 

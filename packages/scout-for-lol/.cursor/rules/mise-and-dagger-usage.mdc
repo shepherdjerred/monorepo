@@ -32,8 +32,7 @@ mise check
 ├── typecheck (TypeScript compilation)
 ├── lint (ESLint + 12 custom rules)
 ├── format (Prettier check)
-├── test (Vitest on Bun)
-└── duplication-check (JSCPD copy-paste detection)
+└── test (Vitest on Bun)
 ```
 
 All run in parallel, ~60-90 seconds total.
@@ -298,9 +297,9 @@ dagger functions          # List all Dagger targets
 # Formatting
 bun run format:write      # Auto-fix formatting
 
-# Code Quality
-bun run duplication-check # Find duplicate code
-# Unused code detection runs at the monorepo root: `bun run knip`
+# Code Quality (both run at the monorepo root)
+# bun run knip   — unused code detection
+# bun run jscpd  — duplicate code detection (baseline ratchet)
 
 # Database (backend package)
 cd packages/backend

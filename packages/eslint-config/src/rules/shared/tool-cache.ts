@@ -62,12 +62,3 @@ export function getOrComputeJscpd(
   jscpdCache.set(key, { timestamp: Date.now(), results });
   return results;
 }
-
-/**
- * Clear all caches.
- * @lintignore - exposed for testing/debugging purposes
- */
-export function clearAllCaches(): void {
-  knipCache.clear();
-  jscpdCache.clear();
-}

@@ -306,6 +306,8 @@
     "//#jscpd": {
       "inputs": [
         ".jscpd.json",
+        ".jscpd-baseline.json",
+        "scripts/jscpd-check.ts",
         "packages/**/*.{ts,tsx}",
         "scripts/**/*.ts",
         "!**/node_modules/**",

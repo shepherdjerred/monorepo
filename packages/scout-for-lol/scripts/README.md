@@ -10,7 +10,6 @@ detail below; the rest of the directory is indexed here.
 | `audit-unsafe-code.ts`    | Scans the codebase for patterns that can cause runtime issues                                   |
 | `build-bucket.ts`         | Merged Astro site + Vite SPA build for the `scout-for-lol.com` deploy bucket                    |
 | `check-asset-sizes.ts`    | Enforces size limits on committed assets (`bun run check:assets`)                               |
-| `check-duplication.ts`    | Runs jscpd with per-file and aggregate duplication thresholds (`bun run duplication-check`)     |
 | `check-suppressions.ts`   | Fails when new lint- or type-error-suppression comments are added                               |
 | `contract-hash.ts`        | Deterministic hash of the sources defining the frontend ↔ backend tRPC contract                 |
 | `create-minimal-png.ts`   | Writes minimal placeholder Tauri icon PNGs                                                      |
@@ -19,7 +18,6 @@ detail below; the rest of the directory is indexed here.
 | `install-pkgs.ts`         | Workspace install helper: `bun install` plus Prisma client regeneration when the schema drifted |
 | `migration-core.ts`       | Shared helpers for the scripts above (secret checks, minimal PNG bytes, file comparison)        |
 | `run-relevant-tests.ts`   | Finds and runs the affected tests (see below)                                                   |
-| `update-lint-cache.ts`    | Regenerates `.knip-cache.json` and `.jscpd-cache.json`                                          |
 
 `*.test.ts` files are the tests for these scripts (`bun run test ./scripts` from
 the Scout package root).
