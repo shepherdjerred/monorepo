@@ -2006,6 +2006,7 @@
     "@lng2004/node-datachannel",
   ],
   "patchedDependencies": {
+    "@lng2004/node-datachannel@0.32.3-20260815.5": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
     "discord-player-youtubei@2.0.0": "patches/discord-player-youtubei@2.0.0.patch",
     "@astrojs/starlight@0.41.7": "patches/@astrojs%2Fstarlight@0.41.7.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
