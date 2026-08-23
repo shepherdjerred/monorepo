@@ -87,9 +87,8 @@ export default defineConfig({
   forbidOnly: env["CI"] === "true",
   fullyParallel: true,
   // Parallel browser contexts plus the backend, SPA, and two Astro servers
-  // exceeded the nightly pod's 12 GiB limit even at two workers. One worker
-  // keeps the complete 616-case matrix inside that reviewed resource boundary
-  // while remaining within the step's 90-minute timeout.
+  // exceeded the nightly pod's memory boundary even at two workers. One worker
+  // keeps the complete 616-case matrix inside the reviewed 16 GiB limit.
   ...(env["CI"] === "true" ? { workers: 1 } : {}),
   reporter:
     env["CI"] === "true"

@@ -75,9 +75,11 @@ steps:
   # Sixteen sequential Playwright processes cover those 616 cases exactly once
   # and restart the browser every 38-39 cases. The runner owns one server set
   # across every shard so migrations, seeding, and Vite startup are not raced
-  # through sixteen stop/start cycles. The complete stack measured a 11.82Gi
-  # working-set peak in the old 12Gi container, so its request reflects real
-  # use and the 16Gi limit leaves headroom for between-scrape browser peaks.
+  # through sixteen stop/start cycles. The final exact-SHA run measured a
+  # 13.38Gi container working-set peak, so the 12Gi request reflects real use
+  # and the 16Gi limit leaves headroom for between-scrape browser peaks. Render
+  # frames replace fixed per-case sleeps so the run also stays within Kueue's
+  # 30-minute pod-readiness budget.
   #
   # soft_fail is TEMPORARY. The suite had never once passed before the fixes
   # that accompanied this step, so it soaks non-blocking until it has been
