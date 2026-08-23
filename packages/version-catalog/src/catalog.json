@@ -1355,7 +1355,8 @@
         "managed": true,
         "datasource": "docker",
         "registryUrl": "https://docker.io",
-        "versioning": "semver"
+        "versioning": "semver",
+        "packageName": "flipt/flipt"
       },
       "value": "v2.11.0@sha256:d20384874048ef6ac326f4937cee64f1db175a1878a87db32916cc8db46c740e",
       "notes": [

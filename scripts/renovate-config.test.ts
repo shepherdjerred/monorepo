@@ -14,6 +14,7 @@ const RenovateConfigSchema = z.object({
   packageRules: z.array(
     z.object({
       description: z.string().optional(),
+      matchDatasources: z.array(z.string()).optional(),
       matchFileNames: z.array(z.string()).optional(),
       matchDepNames: z.array(z.string()).optional(),
       matchManagers: z.array(z.string()).optional(),
@@ -81,6 +82,12 @@ test("extracts every managed structured version-catalog field", async () => {
   });
 
   expect(actual).toEqual(expected);
+  expect(actual).toContainEqual(
+    expect.objectContaining({
+      depName: "flipt-io/flipt",
+      packageName: "flipt/flipt",
+    }),
+  );
 });
 
 test("excludes all sandbox dependency files", async () => {
@@ -98,6 +105,25 @@ test("excludes all sandbox dependency files", async () => {
     description:
       "Sandbox is personal scratch space outside maintained dependency automation",
     matchFileNames: ["sandbox/**"],
+    enabled: false,
+  });
+});
+
+test("does not query a registry for the repository-owned AsusWRT provider", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) =>
+      candidate.description ===
+      "The repository-owned AsusWRT provider is built and installed from packages/terraform-provider-asuswrt; it is intentionally not published to a provider registry.",
+  );
+
+  expect(rule).toEqual({
+    description:
+      "The repository-owned AsusWRT provider is built and installed from packages/terraform-provider-asuswrt; it is intentionally not published to a provider registry.",
+    matchDatasources: ["terraform-provider"],
+    matchPackageNames: ["shepherdjerred/asuswrt"],
     enabled: false,
   });
 });
