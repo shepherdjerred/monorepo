@@ -11,7 +11,7 @@
  * bump loudly fail until the patch is regenerated for the new version or
  * deliberately deleted.
  */
-import { readdir, readFile } from "node:fs/promises";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 /**
@@ -127,79 +127,20 @@ async function keyErrors(
   return errors;
 }
 
-// A patch targets a concrete upstream defect, not a package name forever. A
-// newer major may already contain its fix, as markdown-it 15 does for the
-// linkify-it 6 ESM API. Require a patch for every resolved version that still
-// contains a removed hunk line; fail closed when the installed source cannot
-// be inspected. This keeps the coverage guard while avoiding a no-op patch
-// that would conceal an already-integrated upstream fix.
-function removedPatchLines(patch: string): string[] {
-  return patch
-    .split("\n")
-    .filter((line) => line.startsWith("-") && !line.startsWith("---"))
-    .map((line) => line.slice(1))
-    .filter((line) => line.length > 0);
-}
-
-async function packageFiles(
-  root: string,
-  name: string,
-  version: string,
-): Promise<string[] | undefined> {
-  const escapedName = name.replace("/", "+");
-  let cacheEntries: string[];
-  try {
-    cacheEntries = await readdir(`${root}/node_modules/.bun`);
-  } catch {
-    return undefined;
-  }
-  const prefix = `${escapedName}@${version}`;
-  const cacheEntry = cacheEntries.find((entry) => entry.startsWith(prefix));
-  if (cacheEntry === undefined) return undefined;
-
-  const files: string[] = [];
-  async function visit(directory: string): Promise<void> {
-    const entries = await readdir(directory, { withFileTypes: true });
-    for (const entry of entries) {
-      const child = path.join(directory, entry.name);
-      if (entry.isDirectory()) {
-        await visit(child);
-      } else if (entry.isFile()) {
-        files.push(child);
-      }
-    }
-  }
-
-  try {
-    await visit(`${root}/node_modules/.bun/${cacheEntry}/node_modules/${name}`);
-  } catch {
-    return undefined;
-  }
-  return files;
-}
-
-async function needsPatch(
-  root: string,
-  name: string,
-  version: string,
-  removedLines: string[],
-): Promise<boolean> {
-  const files = await packageFiles(root, name, version);
-  if (files === undefined) return true;
-  for (const file of files) {
-    const source = await readFile(file, "utf8");
-    if (removedLines.some((line) => source.includes(line))) return true;
-  }
-  return false;
-}
+// A version may be unpatched only when its upstream release is known to fix
+// the defect. This list deliberately fails closed: adding an entry requires a
+// focused behavioral contract in check-patched-deps.test.ts, rather than a
+// brittle source-text comparison that can mistake formatting for a fix.
+const knownFixedVersions = new Map<string, ReadonlySet<string>>([
+  ["markdown-it", new Set(["15.0.0"])],
+]);
 
 // Bun patches only exactly-keyed versions. Coverage is judged against every
-// resolved version that still contains the patched upstream defect.
-async function coverageErrors(
-  root: string,
+// resolved version unless that exact release has a behavioral fixed contract.
+function coverageErrors(
   patched: Record<string, string>,
   resolved: Map<string, Set<string>>,
-): Promise<string[]> {
+): string[] {
   const patchedVersionsByName = new Map<string, Set<string>>();
   for (const key of Object.keys(patched)) {
     const { name, version } = splitKey(key);
@@ -209,23 +150,11 @@ async function coverageErrors(
   }
   const errors: string[] = [];
   for (const [name, patchedVersions] of patchedVersionsByName) {
-    const patchPaths = Object.entries(patched)
-      .filter(([key]) => splitKey(key).name === name)
-      .map(([, patchPath]) => patchPath);
-    const removedLineGroups = await Promise.all(
-      patchPaths.map(async (patchPath) => {
-        const patchFile = Bun.file(`${root}/${patchPath}`);
-        if (!(await patchFile.exists())) return [];
-        return removedPatchLines(await patchFile.text());
-      }),
-    );
-    const removedLines = removedLineGroups.flat();
     const uncovered: string[] = [];
     for (const version of resolved.get(name) ?? new Set<string>()) {
       if (
         !patchedVersions.has(version) &&
-        (removedLines.length === 0 ||
-          (await needsPatch(root, name, version, removedLines)))
+        !(knownFixedVersions.get(name)?.has(version) ?? false)
       ) {
         uncovered.push(version);
       }
@@ -343,7 +272,7 @@ export async function collectErrors(root: string): Promise<string[]> {
   );
   return [
     ...(await keyErrors(root, patched, resolved)),
-    ...(await coverageErrors(root, patched, resolved)),
+    ...coverageErrors(patched, resolved),
     ...(await rootOrphanErrors(root, new Set(Object.values(patched)))),
     ...(await packageLocalOrphanErrors(root)),
   ];

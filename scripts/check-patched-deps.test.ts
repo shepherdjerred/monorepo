@@ -111,28 +111,24 @@ describe("collectErrors against the real repo", () => {
     }
   });
 
-  test("accepts an unpatched release that already contains the upstream fix", async () => {
+  test("requires an explicit known-fixed version for unpatched resolutions", async () => {
     const dir = `${tmpdir()}/check-patched-deps-fixed-${String(process.pid)}`;
     const manifest = {
       patchedDependencies: {
-        "demo@1.0.0": "patches/demo@1.0.0.patch",
+        "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
       },
     };
     const lock = `{
   "packages": {
-    "demo": ["demo@1.0.0", "", {}, "sha512-a"],
-    "other/demo": ["demo@2.0.0", "", {}, "sha512-b"],
+    "markdown-it": ["markdown-it@10.0.0", "", {}, "sha512-a"],
+    "other/markdown-it": ["markdown-it@15.0.0", "", {}, "sha512-b"],
   },
 }`;
     await Bun.write(`${dir}/package.json`, JSON.stringify(manifest));
     await Bun.write(`${dir}/bun.lock`, lock);
     await Bun.write(
-      `${dir}/patches/demo@1.0.0.patch`,
+      `${dir}/patches/markdown-it@10.0.0.patch`,
       "--- a/index.js\n+++ b/index.js\n@@ -1 +1 @@\n-brokenImport\n+fixedImport\n",
-    );
-    await Bun.write(
-      `${dir}/node_modules/.bun/demo@2.0.0/node_modules/demo/index.js`,
-      "fixedImport\n",
     );
     await Bun.write(`${dir}/packages/.keep`, "");
 
@@ -141,6 +137,22 @@ describe("collectErrors against the real repo", () => {
     } finally {
       await Bun.$`rm -rf ${dir}`.quiet();
     }
+  });
+
+  test("markdown-it 15 links URLs with linkify-it 6", () => {
+    const result = Bun.spawnSync(
+      [
+        "bun",
+        "--no-install",
+        "-e",
+        'import MarkdownIt from "markdown-it"; console.log(new MarkdownIt({ linkify: true }).render("https://example.com"));',
+      ],
+      { cwd: `${REPO_ROOT}/packages/sjer.red` },
+    );
+    expect(result.exitCode).toBe(0);
+    expect(new TextDecoder().decode(result.stdout)).toContain(
+      '<a href="https://example.com">https://example.com</a>',
+    );
   });
 
   test("the live repo passes", async () => {
