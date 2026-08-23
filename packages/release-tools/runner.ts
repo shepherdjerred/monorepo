@@ -164,20 +164,61 @@ async function createManifest(
   return manifest;
 }
 
+async function assertTargetBranchSha(
+  options: ReleasePleaseRunnerOptions,
+): Promise<void> {
+  const repository = repositoryParts(options.repoUrl);
+  const currentSha = await branchSha(
+    repository,
+    options.token,
+    options.targetBranch,
+  );
+  if (currentSha !== options.targetBranchSha) {
+    throw new Error(
+      `Release target ${options.targetBranch} moved from ${options.targetBranchSha} ` +
+        `to ${currentSha} during release-please; retry the release lane`,
+    );
+  }
+}
+
+async function createValidatedReleases(
+  manifest: ManifestType,
+  excludedPaths: readonly string[],
+): Promise<readonly unknown[]> {
+  const candidates = await manifest.buildReleases();
+  validateReleaseCandidatePaths(
+    candidates.map((candidate) => candidate.path),
+    excludedPaths,
+  );
+
+  // release-please 17.11.1 discovers candidates again inside createReleases.
+  // Freeze that public method to the validated set for this call so a stale
+  // release PR cannot become publishable between validation and tagging.
+  const originalBuildReleases = manifest.buildReleases;
+  manifest.buildReleases = async () => candidates;
+  try {
+    return await manifest.createReleases();
+  } finally {
+    manifest.buildReleases = originalBuildReleases;
+  }
+}
+
 export async function runReleasePlease(
   options: ReleasePleaseRunnerOptions,
 ): Promise<ReleasePleaseRunnerResult> {
   const manifest = await createManifest(options);
   if (options.phase === "release-pr") {
+    await assertTargetBranchSha(options);
     const pullRequests = await manifest.createPullRequests();
+    await assertTargetBranchSha(options);
     return { phase: options.phase, count: pullRequests.filter(Boolean).length };
   }
 
-  const candidates = await manifest.buildReleases();
-  validateReleaseCandidatePaths(
-    candidates.map((candidate) => candidate.path),
+  await assertTargetBranchSha(options);
+  const releases = await createValidatedReleases(
+    manifest,
     options.excludedPaths,
   );
-  const releases = await manifest.createReleases();
+  await assertTargetBranchSha(options);
   return { phase: options.phase, count: releases.filter(Boolean).length };
 }
