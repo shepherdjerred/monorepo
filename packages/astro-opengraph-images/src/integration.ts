@@ -17,6 +17,7 @@ export function astroOpenGraphImages({
   options,
   render,
   filter,
+  pathFilter,
 }: IntegrationInput): AstroIntegration {
   const optionsWithDefaults: IntegrationOptions = { ...defaults, ...options };
 
@@ -29,6 +30,7 @@ export function astroOpenGraphImages({
           options: optionsWithDefaults,
           render,
           filter,
+          pathFilter,
         });
       },
     },

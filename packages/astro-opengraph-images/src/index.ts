@@ -11,6 +11,7 @@ import type {
   RenderFunctionInput as _RenderFunctionInput,
   RenderFunction as _RenderFunction,
   FilterFunction as _FilterFunction,
+  PathFilterFunction as _PathFilterFunction,
   PageDetails as _PageDetails,
   SatoriWeight as _SatoriWeight,
   SatoriFontStyle as _SatoriFontStyle,
@@ -31,6 +32,7 @@ export type AstroBuildDoneHookInput = _AstroBuildDoneHookInput;
 export type RenderFunctionInput = _RenderFunctionInput;
 export type RenderFunction = _RenderFunction;
 export type FilterFunction = _FilterFunction;
+export type PathFilterFunction = _PathFilterFunction;
 export type PageDetails = _PageDetails;
 export type SatoriWeight = _SatoriWeight;
 export type SatoriFontStyle = _SatoriFontStyle;
