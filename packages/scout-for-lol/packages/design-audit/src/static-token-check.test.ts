@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { findInvalidTokenPairs } from "./static-token-check.ts";
 
 describe("Scout semantic token pairs", () => {

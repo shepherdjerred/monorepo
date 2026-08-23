@@ -30,5 +30,9 @@ export default defineConfig({
     command: `bun run preview --host 127.0.0.1 --port ${PORT.toString()}`,
     reuseExistingServer: !isCI,
     url: baseURL,
+    // Playwright defaults to 60s, which the browser-E2E pod exceeds under load:
+    // it runs several suites at --concurrency=2, so a server can be starved
+    // well past a minute. 120s matches sjer.red, alert-dashboard, and evals.
+    timeout: 120_000,
   },
 });
