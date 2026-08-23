@@ -31,7 +31,12 @@ Bun.env["AWS_EC2_METADATA_DISABLED"] = "true";
 // SQLite stub URL — tests that need real Prisma should mock the client.
 // Without this, modules that eagerly import `#src/database/index.ts` fail
 // with PrismaClientInitializationError before any mock can intercept them.
-Bun.env["DATABASE_URL"] = Bun.env["DATABASE_URL"] ?? "file:./test.db";
+// Vitest runs backend suites in forked processes; a shared stub database makes
+// each process race to enable WAL at module initialization. Give every fork a
+// private stub while integration suites continue to create their own copied
+// template databases.
+Bun.env["DATABASE_URL"] =
+  `file:${tmpdir()}/scout-test-database-${process.pid.toString()}.db`;
 
 // Deterministic HS256 signing secret for session-JWT tests (auth-web,
 // jwt). Must be >= 32 chars (jwt.ts#getKey refuses shorter) and must be
