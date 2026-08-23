@@ -287,7 +287,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "5.2.0@sha256:8bff8880f4e056c068ac6359de4cbcf44fb4811493cf15d83c1341fa05a515c0",
+      "value": "5.2.3@sha256:212b86dff59e3962b4082b5ef20a577e76c8f8527d2ab505cfa887b4bcecb0b0",
       "notes": [
         "Keep this on qBittorrent app versions only. LinuxServer also publishes",
         "stale OS-style tags like 20.04.1 that resolve to old app builds."
