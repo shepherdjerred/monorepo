@@ -3,7 +3,7 @@ import { RawParticipantSchema } from "./raw-participant.schema.ts";
 import { RawTeamSchema } from "./raw-team.schema.ts";
 
 /**
- * Zod schema for RawMatch from the twisted library
+ * Zod schema for Riot Match V5 responses
  * Based on Riot Games Match V5 API
  *
  * This schema validates the structure of match data received from Riot API or read from S3.

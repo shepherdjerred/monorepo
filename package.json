@@ -213,7 +213,6 @@
     "markdown-it@14.3.0": "patches/markdown-it@14.3.0.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "react-native-worklets@0.11.3": "patches/react-native-worklets@0.11.3.patch",
-    "twisted@1.82.0": "patches/twisted@1.82.0.patch",
     "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch"
   },
   "packageManager": "bun@1.4.0"

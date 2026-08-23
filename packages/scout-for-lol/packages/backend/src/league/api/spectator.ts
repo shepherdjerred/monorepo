@@ -1,9 +1,11 @@
-import { z } from "zod";
-import { api } from "#src/league/api/api.ts";
-import { mapRegionToEnum } from "#src/league/model/region.ts";
-import type { Region, RawCurrentGameInfo } from "@scout-for-lol/data/index.ts";
-import { RawCurrentGameInfoSchema } from "@scout-for-lol/data/index.ts";
-import type { LeaguePuuid } from "@scout-for-lol/data/index.ts";
+import { riotClient } from "#src/league/api/api.ts";
+import {
+  type Region,
+  type RawCurrentGameInfo,
+  type LeaguePuuid,
+  RawCurrentGameInfoSchema,
+  regionToPlatformRoute,
+} from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import {
   riotApiErrorsTotal,
@@ -14,7 +16,7 @@ import { withTimeout } from "#src/utils/timeout.ts";
 import {
   extractHttpStatus,
   isExpectedUpstreamError,
-} from "#src/league/api/upstream-errors.ts";
+} from "#src/league/api/client/errors.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("spectator-api");
@@ -27,17 +29,9 @@ const logger = createLogger("spectator-api");
 export type SpectatorResult = {
   /** Active game data, or undefined if the player is not in a game / API errored */
   game: RawCurrentGameInfo | undefined;
-  /** True when the API returned an expected upstream error (502/503) */
+  /** True when the API returned an expected Riot or edge upstream error */
   upstreamError: boolean;
 };
-
-/**
- * Schema to detect a successful spectator response (has a `response` property)
- * vs a SpectatorNotAvailableDTO (has a `message` property, meaning player is not in game)
- */
-const SpectatorSuccessSchema = z.object({
-  response: z.unknown(),
-});
 
 /**
  * Fetch active game data for a player from the Spectator V5 API.
@@ -50,38 +44,25 @@ export async function getActiveGame(
   region: Region,
 ): Promise<SpectatorResult> {
   try {
-    const twistedRegion = mapRegionToEnum(region);
+    const platform = regionToPlatformRoute(region);
 
     Sentry.addBreadcrumb({
       category: "riot-api",
       message: `Checking active game for ${puuid}`,
-      data: { puuid, region, endpoint: "SpectatorV5.activeGame" },
+      data: { puuid, region, platform, endpoint: "SpectatorV5.activeGame" },
       level: "info",
     });
 
     logger.info(`[getActiveGame] 🔍 Checking active game for ${puuid}`);
-    const result = await withTimeout(
-      api.SpectatorV5.activeGame(puuid, twistedRegion),
+    const rawGame = await withTimeout(
+      riotClient.spectator.activeGame(puuid, platform),
     );
-
-    // twisted returns { response: CurrentGameInfoDTO } on success
-    // or { message: "No active game found" } on 404
-    const successResult = SpectatorSuccessSchema.safeParse(result);
-    if (!successResult.success) {
-      // Player is not in a game (SpectatorNotAvailableDTO)
-      riotApiRequestsTotal.inc({ source: "spectator", status: "not_in_game" });
-      updateRiotApiHealth(true);
-      logger.info(`[getActiveGame] ℹ️  ${puuid} is not in a game`);
-      return { game: undefined, upstreamError: false };
-    }
 
     riotApiRequestsTotal.inc({ source: "spectator", status: "success" });
     updateRiotApiHealth(true);
 
     // Validate the response against our schema
-    const parseResult = RawCurrentGameInfoSchema.safeParse(
-      successResult.data.response,
-    );
+    const parseResult = RawCurrentGameInfoSchema.safeParse(rawGame);
     if (!parseResult.success) {
       logger.error(
         `[getActiveGame] ❌ Spectator data validation failed for ${puuid}:`,
@@ -107,7 +88,6 @@ export async function getActiveGame(
     return { game: parseResult.data, upstreamError: false };
   } catch (error: unknown) {
     // 404 = player not in a game — expected/normal case
-    // twisted's GenericError sets `status` from the HTTP response.
     const httpStatus = extractHttpStatus(error);
 
     if (httpStatus === 404) {

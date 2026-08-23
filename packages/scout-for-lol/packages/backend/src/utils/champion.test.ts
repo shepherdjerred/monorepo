@@ -171,10 +171,10 @@ describe("Champion utilities", () => {
       expect(match).toBeDefined();
     });
 
-    test("known gap: space-separated query does not match Rek'Sai", () => {
+    test("space-separated query matches Rek'Sai", () => {
       const results = searchChampions("rek sai");
       const match = results.find((c) => c.id === 421);
-      expect(match).toBeUndefined();
+      expect(match).toBeDefined();
     });
 
     test("default limit is 25", () => {

@@ -78,7 +78,7 @@ client forwards live game events to the same backend.
 | Desktop       | Tauri (Rust) + React             |
 | Reports       | React + Satori + Resvg           |
 | AI            | OpenAI                           |
-| External APIs | Riot Games API (twisted)         |
+| External APIs | Riot Games API (native client)   |
 | Storage       | S3 (SeaweedFS) — raw match store |
 | Monitoring    | Prometheus + Sentry + PostHog    |
 

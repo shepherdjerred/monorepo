@@ -7,7 +7,7 @@ Scout for LoL is a full-stack application built as a Bun monorepo with TypeScrip
 ```mermaid
 flowchart TB
     subgraph External["External Services"]
-        RIOT["Riot Games API<br/>(twisted library)"]
+        RIOT["Riot Games API<br/>(native Scout client)"]
         DISCORD_API["Discord API<br/>(discord.js)"]
         OPENAI["OpenAI API<br/>(GPT-4o-mini, GPT-5.1)"]
         S3["AWS S3<br/>(Match data, images)"]

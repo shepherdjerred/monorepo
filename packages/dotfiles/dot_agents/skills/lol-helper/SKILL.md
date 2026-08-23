@@ -3,7 +3,7 @@ name: lol-helper
 description: |
   League of Legends domain knowledge, terminology, and Riot Games API reference.
   Use when working with match data, champion info, ranked systems, game objectives,
-  items, runes, player statistics, twisted library, API endpoints, rate limiting,
+  items, runes, player statistics, Riot API client, API endpoints, rate limiting,
   PUUID lookups, summoner info, or regional routing.
 ---
 
@@ -610,67 +610,40 @@ Data Dragon can be inaccurate (especially champion spell data). Use Community Dr
 
 ---
 
-## Twisted Library Usage
+## Riot API Client Usage
 
-This project uses the `twisted` npm package for Riot API calls.
-
-### Installation
-
-```bash
-bun add twisted
-```
+This repository uses a native type-safe `RiotClient` in `#src/league/api/client/riot-client.ts`. It combines concurrency limiting, a client-wide `Retry-After` cooldown for 429 responses, and per-request 503 retry.
 
 ### Basic Setup
 
 ```typescript
-import { LolApi, RiotApi, TftApi } from "twisted";
-
-const riotApi = new RiotApi({ key: process.env.RIOT_API_KEY });
-const lolApi = new LolApi({ key: process.env.RIOT_API_KEY });
+import { riotClient } from "#src/league/api/api.ts";
+import { regionToPlatformRoute, platformToRegionalRoute } from "@scout-for-lol/data";
 ```
 
 ### Common Operations
 
 ```typescript
-// Get PUUID from Riot ID
-const account = await riotApi.Account.getByRiotId(
+// Get Account by Riot ID
+const account = await riotClient.account.getByRiotId(
   gameName,
   tagLine,
-  RegionGroups.AMERICAS,
+  "AMERICAS", // RegionalRoute
 );
 
-// Get summoner by PUUID
-const summoner = await lolApi.Summoner.getByPUUID(puuid, Regions.AMERICA_NORTH);
-
 // Get match history
-const matches = await lolApi.Match.list(puuid, RegionGroups.AMERICAS, {
+const matches = await riotClient.match.list(puuid, "AMERICAS", {
   count: 20,
 });
 
-// Get match details
-const match = await lolApi.Match.get(matchId, RegionGroups.AMERICAS);
+// Get match details (raw JSON for Zod parsing via strict-with-fallback)
+const rawMatch = await riotClient.match.get(matchId, "AMERICAS");
 
-// Get ranked data
-const leagues = await lolApi.League.bySummoner(
-  summonerId,
-  Regions.AMERICA_NORTH,
+// Get ranked data by PUUID
+const leagues = await riotClient.league.byPuuid(
+  puuid,
+  "NA1", // PlatformRoute
 );
-```
-
-### Configuration Options
-
-```typescript
-const api = new LolApi({
-  key: "RGAPI-xxx",
-  rateLimitRetry: true, // Auto-retry on 429 (default: true)
-  rateLimitRetryAttempts: 3, // Max retries
-  concurrency: 10, // Max concurrent requests
-  debug: {
-    logTime: true,
-    logUrls: true,
-    logRatelimits: true,
-  },
-});
 ```
 
 ---
@@ -685,8 +658,6 @@ const api = new LolApi({
 - [DarkIntaqt Blog - Routing](https://darkintaqt.com/blog/routing)
 - [DarkIntaqt Blog - Summoner V4](https://darkintaqt.com/blog/summoner-v4)
 - [DarkIntaqt Blog - IDs](https://darkintaqt.com/blog/ids)
-- [Twisted NPM Package](https://www.npmjs.com/package/twisted)
-- [Twisted GitHub](https://github.com/Sansossio/twisted)
 - [Riot Games DevRel - Summoner Names to Riot ID](https://www.riotgames.com/en/DevRel/summoner-names-to-riot-id)
 - [Riot Games DevRel - PUUIDs](https://www.riotgames.com/en/DevRel/player-universally-unique-identifiers-and-a-new-security-layer)
 - [League of Legends Wiki - Terminology](https://wiki.leagueoflegends.com/en-us/Terminology)

@@ -11,6 +11,7 @@ import { MapNameSchema } from "#src/model/map.ts";
 import { ArenaTeamIdSchema } from "#src/model/arena/arena.ts";
 import { LaneSchema } from "#src/model/lane.ts";
 import { match } from "ts-pattern";
+import { SummonerSpellIdSchema, RuneIdSchema } from "#src/model/identifiers.ts";
 
 /**
  * Layout mode determines how participants are arranged visually.
@@ -61,22 +62,6 @@ export function loadingScreenLayoutForQueueType(
  */
 export type GameId = z.infer<typeof GameIdSchema>;
 export const GameIdSchema = z.number().int().positive().brand<"GameId">();
-
-/**
- * Branded type for summoner spell IDs (e.g., 4=Flash, 14=Ignite).
- */
-export type SummonerSpellId = z.infer<typeof SummonerSpellIdSchema>;
-export const SummonerSpellIdSchema = z
-  .number()
-  .int()
-  .nonnegative()
-  .brand<"SummonerSpellId">();
-
-/**
- * Branded type for rune IDs (keystone, tree, etc.).
- */
-export type RuneId = z.infer<typeof RuneIdSchema>;
-export const RuneIdSchema = z.number().int().positive().brand<"RuneId">();
 
 /**
  * Branded type for Riot champion IDs (e.g., 1=Annie, 266=Aatrox).

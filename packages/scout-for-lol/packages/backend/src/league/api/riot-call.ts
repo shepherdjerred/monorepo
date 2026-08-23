@@ -1,7 +1,6 @@
-import type { ZodError } from "zod";
-import { type ZodType } from "zod";
+import type { ZodError, ZodType } from "zod";
 import * as Sentry from "@sentry/bun";
-import type { MatchId } from "@scout-for-lol/data/index.ts";
+import type { MatchId } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import {
   riotApiErrorsTotal,
@@ -15,7 +14,7 @@ import { parseWithUnknownKeyFallback } from "#src/league/api/strict-with-loose-f
 import {
   extractHttpStatus,
   isExpectedUpstreamError,
-} from "#src/league/api/upstream-errors.ts";
+} from "#src/league/api/client/errors.ts";
 
 const logger = createLogger("riot-call");
 
@@ -38,7 +37,7 @@ export type CallRiotConfig<T> = {
   /**
    * Optional override for the `riotApiUnknownKeysTotal{schema=...}` label.
    * Defaults to `source`. Override to keep historical label values
-   * (e.g. `"match"` instead of `"match-data"`) stable across the wrapper
+   * (e.g. `"match"` instead of `"match-data"`) stable across the client
    * migration.
    */
   schemaLabel?: string;
@@ -50,7 +49,7 @@ export type CallRiotConfig<T> = {
   onValidationFailure?: ValidationFailureSaveToS3;
   /**
    * Capture non-404 / non-upstream HTTP errors to Sentry.
-   * 404 and upstream errors (502/503/504) are never captured —
+   * 404 and reviewed upstream errors are never captured —
    * they're expected operational signals, not bugs to investigate.
    */
   sentry?: boolean;
@@ -86,7 +85,7 @@ function contextAsTags(
  */
 async function runRiotCall<T>(
   config: CallRiotConfig<T>,
-  fn: () => Promise<{ response: unknown }>,
+  fn: () => Promise<unknown>,
 ): Promise<CallResult<T>> {
   const {
     source,
@@ -105,9 +104,9 @@ async function runRiotCall<T>(
     level: "info",
   });
 
-  let response: { response: unknown };
+  let payload: unknown;
   try {
-    response = await withTimeout(fn());
+    payload = await withTimeout(fn());
   } catch (error) {
     const isTimeout =
       error instanceof Error && error.message.includes("timed out");
@@ -151,7 +150,7 @@ async function runRiotCall<T>(
   riotApiRequestsTotal.inc({ source, status: "success" });
   updateRiotApiHealth(true);
 
-  const parsed = parseWithUnknownKeyFallback(schema, response.response);
+  const parsed = parseWithUnknownKeyFallback(schema, payload);
   if (!parsed.ok) {
     logger.error(
       `[${source}] ❌ Validation failed${contextSuffix}:`,
@@ -162,7 +161,7 @@ async function runRiotCall<T>(
       await saveFailedPayloadToS3({
         matchId: onValidationFailure.id,
         assetType: onValidationFailure.assetType,
-        rawPayload: response.response,
+        rawPayload: payload,
         validationError: parsed.error,
       });
     }
@@ -187,7 +186,7 @@ async function runRiotCall<T>(
  */
 export async function callRiotOrUndefined<T>(
   config: CallRiotConfig<T>,
-  fn: () => Promise<{ response: unknown }>,
+  fn: () => Promise<unknown>,
 ): Promise<T | undefined> {
   const result = await runRiotCall(config, fn);
   return result.kind === "success" ? result.data : undefined;
@@ -196,11 +195,11 @@ export async function callRiotOrUndefined<T>(
 /**
  * Returns `T` on success; throws on any failure (after full plumbing
  * runs). Validation failures throw the `ZodError`; HTTP/transport
- * failures throw the underlying error from twisted.
+ * failures throw the underlying error.
  */
 export async function callRiotOrThrow<T>(
   config: CallRiotConfig<T>,
-  fn: () => Promise<{ response: unknown }>,
+  fn: () => Promise<unknown>,
 ): Promise<T> {
   const result = await runRiotCall(config, fn);
   switch (result.kind) {

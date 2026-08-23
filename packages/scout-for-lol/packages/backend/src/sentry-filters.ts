@@ -1,30 +1,15 @@
 import type { ErrorEvent, EventHint } from "@sentry/bun";
 import { ZodError } from "zod";
-import { isExpectedUpstreamError } from "#src/league/api/upstream-errors.ts";
+import {
+  isExpectedUpstreamError,
+  RiotHttpError,
+} from "#src/league/api/client/errors.ts";
 
 /**
- * Twisted's two error classes for transient Riot upstream conditions. Both
- * set `name` explicitly on the prototype:
- *
- * - `GenericError` (`name = "GenericError"`) — generic 4xx/5xx from Riot,
- *   the source of the 18,963 502 events seen in the 2026-04-27 audit.
- * - `ServiceUnavailable` (`name = "RiotUnavailable"`) — Riot 503.
- *
- * Matching on `name` rather than `instanceof` avoids importing the
- * implementation classes (twisted is bundled inside the backend's deps,
- * not the data package) and avoids dual-class issues if twisted ever
- * gets versioned in two workspaces.
- *
- * Source: `node_modules/twisted/dist/errors/Generic.error.d.ts` and
- * `service-unavailable.error.d.ts`.
- */
-const TWISTED_ERROR_NAMES = new Set(["GenericError", "RiotUnavailable"]);
-
-/**
- * Sample rate for twisted upstream 5xx events. We don't drop all of them
+ * Sample rate for Riot API upstream 5xx events. We don't drop all of them
  * because a sustained shift in 502/503/504 patterns is itself a signal
  * (Riot region outage, account-flagged auth, etc). 1% gives roughly
- * 15 events/day at the volumes seen in the 2026-04-27 audit (1,460/day),
+ * 15 events/day at the volumes seen in the audit (1,460/day),
  * which is enough to spot a trend change without paging on every one.
  *
  * Tunable via the `SCOUT_RIOT_5XX_SAMPLE_RATE` env var if needed; defaults
@@ -57,20 +42,10 @@ function getRiot5xxSampleRate(): number {
 const RIOT_ID_FORMAT_MESSAGE =
   "Riot ID must be in the format <game_name>#<tag_line>";
 
-function isTwistedUpstreamError(value: unknown): boolean {
-  if (!(value instanceof Error)) {
-    return false;
-  }
-  if (!TWISTED_ERROR_NAMES.has(value.name)) {
-    return false;
-  }
-  // Both classes declare `status: number`. Re-check at runtime so a
-  // mis-named error from elsewhere can't slip through.
-  if (!("status" in value)) {
-    return false;
-  }
-  const status = value.status;
-  return typeof status === "number" && isExpectedUpstreamError(status);
+function isRiotUpstreamError(value: unknown): boolean {
+  return (
+    value instanceof RiotHttpError && isExpectedUpstreamError(value.status)
+  );
 }
 
 /**
@@ -78,21 +53,11 @@ function isTwistedUpstreamError(value: unknown): boolean {
  * conditions in the Scout backend.
  *
  * Behavior:
- * - twisted's `GenericError` / `ServiceUnavailable` with status 502, 503,
- *   or 504 → **sampled** at the rate from `getRiot5xxSampleRate()`. A
- *   sustained shift in upstream-error volume is itself a signal, so we
- *   keep a small fraction. **Only matches twisted's own error classes** —
- *   a 502 from Discord, Bugsink, OpenAI, or anywhere else is unaffected.
+ * - Riot API upstream HTTP errors with status 502, 503, 504, 520, 522, 524 →
+ *   **sampled** at the rate from `getRiot5xxSampleRate()`. Only matches the
+ *   native client's `RiotHttpError`, so other upstream APIs remain visible.
  * - boundary `ZodError`s on user-supplied Riot IDs from Discord slash
- *   commands → **dropped entirely**. The user already gets a friendly
- *   reply, and the schema is fixed; volume here is pure user-input
- *   shape, not a Riot signal. Matched by the literal regex message in
- *   `RiotIdSchema`, so a `ZodError` from any other schema is unaffected.
- *
- * Returning `null` from `beforeSend` discards the event entirely.
- *
- * The `random` parameter is dependency-injected for testability; in
- * production it defaults to `Math.random`.
+ *   commands → **dropped entirely**.
  */
 export function filterScoutSentryEvent(
   event: ErrorEvent,
@@ -101,11 +66,7 @@ export function filterScoutSentryEvent(
 ): ErrorEvent | null {
   const original = hint.originalException;
 
-  if (isTwistedUpstreamError(original)) {
-    // `random() < sampleRate` gives the desired endpoint semantics:
-    // sampleRate=0 always drops, sampleRate=1 always keeps (since
-    // `Math.random()` returns [0, 1)). Any value in between samples
-    // approximately at that rate.
+  if (isRiotUpstreamError(original)) {
     const sampleRate = getRiot5xxSampleRate();
     return random() < sampleRate ? event : null;
   }

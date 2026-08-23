@@ -51,3 +51,6 @@ export * from "./bryan-bucks.ts";
 export * from "./permissions/catalog.ts";
 export * from "./permissions/permission-set.ts";
 export * from "./permissions/roles.ts";
+export * from "./identifiers.ts";
+export * from "./routes.ts";
+export * from "./champion-registry.ts";

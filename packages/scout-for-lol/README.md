@@ -99,7 +99,7 @@ are one-shot and each command starts a new saved conversation.
 
 **Architecture:**
 
-- Automatic match polling every minute via the Riot API (`twisted`)
+- Automatic match polling every minute through Scout's native Riot API client
 - S3 (SeaweedFS) is the canonical store for raw match and prematch JSON
 - A local DuckDB Parquet "report lake" derived from S3 powers ScoutQL
   scheduled/user-authored report queries

@@ -4,6 +4,7 @@ import {
   callRiotOrThrow,
   callRiotOrUndefined,
 } from "#src/league/api/riot-call.ts";
+import { RiotHttpError } from "#src/league/api/client/errors.ts";
 
 const Schema = z
   .object({
@@ -12,14 +13,24 @@ const Schema = z
   })
   .strict();
 
-function ok(value: unknown): () => Promise<{ response: unknown }> {
-  return () => Promise.resolve({ response: value });
+function ok(value: unknown): () => Promise<unknown> {
+  return () => Promise.resolve(value);
 }
 
-function fails(error: unknown): () => Promise<{ response: unknown }> {
+function fails(error: unknown): () => Promise<unknown> {
   return async () => {
     throw error;
   };
+}
+
+function httpError(status: number): RiotHttpError {
+  return new RiotHttpError({
+    status,
+    statusText: "Test error",
+    body: undefined,
+    url: "https://na1.api.riotgames.com/test",
+    headers: new Headers(),
+  });
 }
 
 describe("callRiotOrUndefined", () => {
@@ -54,7 +65,7 @@ describe("callRiotOrUndefined", () => {
   test("returns undefined on HTTP 404", async () => {
     const result = await callRiotOrUndefined(
       { source: "test-404", schema: Schema, context: {} },
-      fails({ status: 404 }),
+      fails(httpError(404)),
     );
     expect(result).toBeUndefined();
   });
@@ -67,7 +78,7 @@ describe("callRiotOrUndefined", () => {
         context: {},
         sentry: true,
       },
-      fails({ status: 503 }),
+      fails(httpError(503)),
     );
     expect(result).toBeUndefined();
   });
@@ -75,7 +86,7 @@ describe("callRiotOrUndefined", () => {
   test("returns undefined on HTTP 500", async () => {
     const result = await callRiotOrUndefined(
       { source: "test-500", schema: Schema, context: {} },
-      fails({ status: 500 }),
+      fails(httpError(500)),
     );
     expect(result).toBeUndefined();
   });
@@ -115,13 +126,12 @@ describe("callRiotOrThrow", () => {
   });
 
   test("throws underlying error on HTTP failure", async () => {
-    const httpError = { status: 500, message: "Internal Server Error" };
+    const error = httpError(500);
     const promise = callRiotOrThrow(
       { source: "test-throw-500", schema: Schema, context: {} },
-      fails(httpError),
+      fails(error),
     );
-    // The original (non-Error) value gets wrapped, but the message should be informative
-    await expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toBe(error);
   });
 
   test("throws Error on transport failure", async () => {

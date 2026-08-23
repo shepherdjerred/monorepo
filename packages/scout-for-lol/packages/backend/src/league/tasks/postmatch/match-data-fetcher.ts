@@ -1,17 +1,13 @@
-import { api } from "#src/league/api/api.ts";
-import { Constants } from "twisted";
-const { regionToRegionGroup } = Constants;
-import { mapRegionToEnum } from "#src/league/model/region.ts";
-import type {
-  Region,
-  MatchId,
-  RawMatch,
-  RawTimeline,
-} from "@scout-for-lol/data/index.ts";
+import { riotClient } from "#src/league/api/api.ts";
 import {
+  type Region,
+  type MatchId,
+  type RawMatch,
+  type RawTimeline,
   RawMatchSchema,
   RawTimelineSchema,
-} from "@scout-for-lol/data/index.ts";
+  platformToRegionalRoute,
+} from "@scout-for-lol/data";
 import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
 
 /**
@@ -23,8 +19,7 @@ export async function fetchMatchData(
   matchId: MatchId,
   playerRegion: Region,
 ): Promise<RawMatch | undefined> {
-  const region = mapRegionToEnum(playerRegion);
-  const regionGroup = regionToRegionGroup(region);
+  const regionalRoute = platformToRegionalRoute(playerRegion);
 
   return callRiotOrUndefined(
     {
@@ -39,7 +34,7 @@ export async function fetchMatchData(
       },
       sentry: true,
     },
-    () => api.MatchV5.get(matchId, regionGroup),
+    () => riotClient.match.get(matchId, regionalRoute),
   );
 }
 
@@ -56,8 +51,7 @@ export async function fetchMatchTimeline(
   matchId: MatchId,
   playerRegion: Region,
 ): Promise<RawTimeline | undefined> {
-  const region = mapRegionToEnum(playerRegion);
-  const regionGroup = regionToRegionGroup(region);
+  const regionalRoute = platformToRegionalRoute(playerRegion);
 
   return callRiotOrUndefined(
     {
@@ -72,6 +66,6 @@ export async function fetchMatchTimeline(
       },
       sentry: true,
     },
-    () => api.MatchV5.timeline(matchId, regionGroup),
+    () => riotClient.match.timeline(matchId, regionalRoute),
   );
 }

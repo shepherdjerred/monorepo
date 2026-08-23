@@ -1,12 +1,13 @@
-import { type Region, type RiotId } from "@scout-for-lol/data/index.ts";
-import { riotApi } from "#src/league/api/api.ts";
-import { mapRegionToEnum } from "#src/league/model/region.ts";
-import { Constants } from "twisted";
-const { regionToRegionGroupForAccountAPI } = Constants;
+import {
+  type Region,
+  type RiotId,
+  platformToAccountRegionalRoute,
+} from "@scout-for-lol/data";
+import { riotClient } from "#src/league/api/api.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
 import { withTimeout } from "#src/utils/timeout.ts";
-import { extractHttpStatus } from "#src/league/api/upstream-errors.ts";
+import { extractHttpStatus } from "#src/league/api/client/errors.ts";
 import { recordRiotResolution } from "#src/lib/riot/summoner-index.ts";
 
 const logger = createLogger("resolve-puuid");
@@ -35,20 +36,18 @@ export async function resolveRiotIdToPuuid(
 
   try {
     const apiStartTime = Date.now();
-    const regionGroup = regionToRegionGroupForAccountAPI(
-      mapRegionToEnum(region),
-    );
+    const regionalRoute = platformToAccountRegionalRoute(region);
     const account = await withTimeout(
-      riotApi.Account.getByRiotId(
+      riotClient.account.getByRiotId(
         riotId.game_name,
         riotId.tag_line,
-        regionGroup,
+        regionalRoute,
       ),
     );
     const lookupTime = Date.now() - apiStartTime;
-    const puuid = account.response.puuid;
-    const gameName = account.response.gameName;
-    const tagLine = account.response.tagLine;
+    const puuid = account.puuid;
+    const gameName = account.gameName;
+    const tagLine = account.tagLine;
     logger.info(
       `✅ Successfully resolved Riot ID to PUUID: ${puuid} (${lookupTime.toString()}ms)`,
     );

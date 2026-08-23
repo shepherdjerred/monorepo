@@ -29,9 +29,9 @@ import {
   processCriteria,
   type SnapshotData,
 } from "#src/league/competition/processors/index.ts";
+import { riotClient } from "#src/league/api/api.ts";
+import { regionToPlatformRoute } from "@scout-for-lol/data";
 import { getSnapshot } from "#src/league/competition/snapshots.ts";
-import { api } from "#src/league/api/api.ts";
-import { mapRegionToEnum } from "#src/league/model/region.ts";
 import { getRank } from "#src/league/model/rank.ts";
 import {
   getHigherRank,
@@ -141,15 +141,16 @@ export async function fetchSnapshotData(options: {
         const allRanks: Record<LeaguePuuid, Ranks> = {};
         for (const account of participant.accounts) {
           try {
-            const region = account.region;
-            const response = await withTimeout(
-              api.League.byPUUID(account.puuid, mapRegionToEnum(region)),
+            const platform = regionToPlatformRoute(account.region);
+            const parsedPuuid = LeaguePuuidSchema.parse(account.puuid);
+            const rawEntries = await withTimeout(
+              riotClient.league.byPuuid(parsedPuuid, platform),
             );
 
             // Validate response with Zod schema to ensure proper types
             const validatedResponse = z
               .array(RawSummonerLeagueSchema)
-              .parse(response.response);
+              .parse(rawEntries);
 
             const solo = getRank(validatedResponse, "RANKED_SOLO_5x5");
             const flex = getRank(validatedResponse, "RANKED_FLEX_SR");

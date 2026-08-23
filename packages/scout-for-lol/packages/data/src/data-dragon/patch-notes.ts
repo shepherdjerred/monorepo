@@ -9,7 +9,7 @@
 
 import { z } from "zod";
 import patchNotesData from "./assets/patch-notes.json" with { type: "json" };
-import { normalizeChampionName } from "#src/data-dragon/images.ts";
+import { normalizeChampionName } from "#src/model/champion-registry.ts";
 import { getItemInfo } from "#src/data-dragon/item.ts";
 import { type Lane } from "#src/model/lane.ts";
 

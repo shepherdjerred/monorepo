@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Zod schema for RawSummonerLeague from the twisted library
+ * Zod schema for Riot League V4 responses
  * Based on Riot Games League V4 API
  *
  * This schema validates the structure of league/rank data received from Riot API.

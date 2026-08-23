@@ -6,7 +6,7 @@
  */
 
 import type { RawMatch, RawTimeline } from "@scout-for-lol/data";
-import { normalizeChampionName } from "#src/data-dragon/images.ts";
+import { normalizeChampionName } from "#src/model/champion-registry.ts";
 
 /**
  * Participant info for the lookup table
