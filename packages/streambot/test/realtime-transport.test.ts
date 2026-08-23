@@ -651,14 +651,21 @@ describe("VoiceAssistantSession feedback and isolation", () => {
     // must speak the retry clip over normal voice while holding teardown for the drain.
     for (let turn = 0; turn < 2; turn += 1) {
       emitMarkerTurn(listener);
-      await Bun.sleep(80);
+      // Pace on the previous turn's RELEASE, not a fixed sleep. A wake that
+      // arrives while a turn is still active is dropped, so on a node slower
+      // than the old 80ms sleep the second wake vanished and the third reached
+      // the cloud path instead of the limiter -- which is exactly the count
+      // mismatch this assertion then reported.
+      await expect.poll(() => releases).toBe(turn + 1);
     }
     const packetsBefore = context.replyPackets.length;
     emitMarkerTurn(listener);
-    await Bun.sleep(200);
-    expect(context.replyPackets.length).toBeGreaterThan(packetsBefore);
-    expect(holds).toBe(3);
-    expect(releases).toBe(3);
+    await expect
+      .poll(() => context.replyPackets.length)
+      .toBeGreaterThan(packetsBefore);
+    await expect.poll(() => holds).toBe(3);
+    // The hold spans the retry clip's drain, so the release trails the packets.
+    await expect.poll(() => releases).toBe(3);
     assistant.close();
   });
 

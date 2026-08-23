@@ -18,9 +18,14 @@ import {
 
 test("release pruning is limited to charts with intentional resource removal", () => {
   expect(
-    ["media", "service-probes", "turbo-cache"].filter(releasePrunesChart),
-  ).toEqual(["media", "service-probes", "turbo-cache"]);
+    ["freshrss", "media", "service-probes", "turbo-cache"].filter(
+      releasePrunesChart,
+    ),
+  ).toEqual(["freshrss", "media", "service-probes", "turbo-cache"]);
   expect(releasePrunesChart("apps")).toBe(false);
+  // Pruning stays opt-in: a chart that never intentionally removes a resource
+  // must not acquire deletion authority by sitting next to one that does.
+  expect(releasePrunesChart("pyroscope")).toBe(false);
 });
 
 describe("activeArgoApplicationNames", () => {
