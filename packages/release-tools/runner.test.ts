@@ -15,7 +15,7 @@ test("applies the same component exclusions to the in-memory manifest", () => {
   };
   applyExcludedPathsToConfig(repositoryConfig, ["packages/webring"]);
   expect(repositoryConfig).toEqual({
-    "packages/webring": { excludePaths: ["packages/webring"] },
+    "packages/webring": { excludePaths: ["packages/webring/"] },
     "packages/astro-opengraph-images": {
       excludePaths: ["packages/astro-opengraph-images/typedoc.json"],
     },
@@ -23,11 +23,13 @@ test("applies the same component exclusions to the in-memory manifest", () => {
 });
 
 test("component exclusions cover descendant files in release-please", () => {
-  const commitExclude = new CommitExclude({
+  const repositoryConfig = {
     "packages/webring": {
-      excludePaths: ["packages/webring"],
+      excludePaths: [],
     },
-  });
+  };
+  applyExcludedPathsToConfig(repositoryConfig, ["packages/webring"]);
+  const commitExclude = new CommitExclude(repositoryConfig);
 
   const filtered = commitExclude.excludeCommits({
     "packages/webring": [

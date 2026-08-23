@@ -1,9 +1,10 @@
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 
 import {
   classifyConsumerChanges,
   classifyPackageRelease,
   classifyPackageReleaseRange,
+  fetchNpmPackageTags,
   NPM_PACKAGE_POLICIES,
   packageJsonHasConsumerChange,
 } from "./npm-release-eligibility.ts";
@@ -128,6 +129,10 @@ describe("consumer file classification", () => {
 });
 
 describe("historical release regressions", () => {
+  beforeAll(async () => {
+    await fetchNpmPackageTags(process.cwd());
+  });
+
   test("Webring analytics and TypeDoc-only releases are excluded", async () => {
     const policy = NPM_PACKAGE_POLICIES.find(
       (candidate) => candidate.name === "webring",

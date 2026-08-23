@@ -24,7 +24,7 @@ import { requireEnv, run } from "./lib/run.ts";
 import { setupGitAuth } from "./lib/github-auth.ts";
 import {
   classifyAllPackageReleases,
-  NPM_PACKAGE_POLICIES,
+  fetchNpmPackageTags,
   type PackageReleaseDecision,
 } from "./lib/npm-release-eligibility.ts";
 import { runReleaseRefiner } from "./lib/release-refiner.ts";
@@ -52,19 +52,6 @@ function printReleaseDecisions(
 /** Repo root = one level up from scripts/. */
 function repoRoot(): string {
   return new URL("..", import.meta.url).pathname;
-}
-
-async function fetchNpmPackageTags(
-  root: string,
-  env: Record<string, string>,
-): Promise<void> {
-  for (const policy of NPM_PACKAGE_POLICIES) {
-    const tagRef = `refs/tags/${policy.tagPrefix}*`;
-    await run(["git", "fetch", "--no-tags", "origin", `${tagRef}:${tagRef}`], {
-      cwd: root,
-      env,
-    });
-  }
 }
 
 function usage(): never {

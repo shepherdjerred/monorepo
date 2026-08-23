@@ -160,6 +160,7 @@ function isKnownRepositoryOnlyPath(relativePath: string): boolean {
     "CHANGELOG.md",
     "AGENTS.md",
     "README.md.tmpl",
+    ".gitignore",
     "_summary.md",
     "bun.lock",
     ".jscpd.json",
@@ -170,6 +171,7 @@ function isKnownRepositoryOnlyPath(relativePath: string): boolean {
     "generate-readme-smoke.test.ts",
     "generate-readme.ts",
     "matomo.js",
+    "mise.toml",
     "plausible.js",
     "posthog.js",
     "tsconfig.scripts.json",
@@ -214,6 +216,19 @@ export function classifyConsumerChanges(
     );
   }
   return { eligible: reasons.length > 0, reasons };
+}
+
+export async function fetchNpmPackageTags(
+  root: string,
+  env: Record<string, string> = {},
+): Promise<void> {
+  for (const policy of NPM_PACKAGE_POLICIES) {
+    const tagRef = `refs/tags/${policy.tagPrefix}*`;
+    await run(["git", "fetch", "--no-tags", "origin", `${tagRef}:${tagRef}`], {
+      cwd: root,
+      env,
+    });
+  }
 }
 
 async function latestTag(
