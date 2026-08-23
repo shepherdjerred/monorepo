@@ -60,9 +60,10 @@ const MARKER_TABLE = "_legacy_sqlite_import";
 
 // The currently promoted SQLite image predates the parlay migration. An absent
 // BucksOpenPosition table is reconstructed from pending bets in open pools;
-// absent parlay tables are empty historical models. Every other missing table
-// remains a hard compatibility error.
+// absent post-baseline attribution and parlay tables are empty historical
+// models. Every other missing table remains a hard compatibility error.
 const LEGACY_OPTIONAL_TABLES = new Set([
+  "InstallAttributionToken",
   "BucksOpenPosition",
   "BucksParlayDefinition",
   "BucksParlayMarket",

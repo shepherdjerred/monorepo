@@ -22,6 +22,7 @@ import {
   toBool,
   toDate,
   toDateOrNull,
+  toDateOrNullIfMissing,
   toStrOrNullIfMissing,
   toInt,
   toIntOrNull,
@@ -45,6 +46,8 @@ export const IMPORT_MODELS_PART_2: ImportModelSpec[] = [
       analyticsUserId: toStr(row, "analyticsUserId"),
       createdAt: toDate(row, "createdAt"),
       updatedAt: toDate(row, "updatedAt"),
+      // These nullable fields were added after the promoted SQLite image.
+      lastSeenAt: toDateOrNullIfMissing(row, "lastSeenAt"),
     }),
     createMany: async (tx, data) => {
       const result = await tx.user.createMany({ data });
@@ -191,6 +194,8 @@ export const IMPORT_MODELS_PART_2: ImportModelSpec[] = [
       outreach30dSentAt: toDateOrNull(row, "outreach30dSentAt"),
       emailNudgeSentAt: toDateOrNull(row, "emailNudgeSentAt"),
       removedAt: toDateOrNull(row, "removedAt"),
+      attributedAt: toDateOrNullIfMissing(row, "attributedAt"),
+      attributionSurface: toStrOrNullIfMissing(row, "attributionSurface"),
     }),
     createMany: async (tx, data) => {
       const result = await tx.guildInstall.createMany({ data });
@@ -198,6 +203,29 @@ export const IMPORT_MODELS_PART_2: ImportModelSpec[] = [
     },
     count: (tx) => tx.guildInstall.count(),
     findAll: (tx) => tx.guildInstall.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "InstallAttributionToken",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.InstallAttributionTokenCreateManyInput => ({
+      id: toInt(row, "id"),
+      token: toStr(row, "token"),
+      discordId: DiscordAccountIdSchema.parse(toStr(row, "discordId")),
+      surface: toStr(row, "surface"),
+      createdAt: toDate(row, "createdAt"),
+      expiresAt: toDate(row, "expiresAt"),
+      consumedAt: toDateOrNull(row, "consumedAt"),
+      guildId: toStrOrNull(row, "guildId"),
+      reconciledAt: toDateOrNull(row, "reconciledAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.installAttributionToken.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.installAttributionToken.count(),
+    findAll: (tx) =>
+      tx.installAttributionToken.findMany({ orderBy: [{ id: "asc" }] }),
   }),
   defineImportModel({
     model: "Feedback",

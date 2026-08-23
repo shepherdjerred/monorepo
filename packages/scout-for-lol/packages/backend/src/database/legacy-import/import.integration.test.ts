@@ -130,6 +130,51 @@ function buildLegacySqlite(
       createdTime: NOW,
       updatedTime: NOW,
     });
+    insert("User", {
+      discordId: OWNER,
+      discordUsername: "alpha",
+      discordAvatar: null,
+      discordAccessToken: null,
+      discordRefreshToken: null,
+      tokenExpiresAt: null,
+      analyticsUserId: "analytics-user-1",
+      createdAt: NOW,
+      updatedAt: NOW,
+      lastSeenAt: NOW + 1_000,
+    });
+    insert("GuildInstall", {
+      id: 1,
+      serverId: GUILD,
+      serverName: "Alpha guild",
+      ownerDiscordId: OWNER,
+      addedByDiscordId: OWNER,
+      memberCount: 10,
+      installedAt: NOW,
+      analyticsInstallationId: "analytics-install-1",
+      analyticsLifecycleTracked: 1,
+      firstSubscriptionAt: null,
+      firstCoreOutputAt: null,
+      outreach3dSentAt: null,
+      outreach14dSentAt: null,
+      outreach30dSentAt: null,
+      emailNudgeSentAt: null,
+      removedAt: null,
+      attributedAt: NOW + 2_000,
+      attributionSurface: "landing",
+    });
+    if (tableColumns.has("InstallAttributionToken")) {
+      insert("InstallAttributionToken", {
+        id: 1,
+        token: "install-token-1",
+        discordId: OWNER,
+        surface: "landing",
+        createdAt: NOW,
+        expiresAt: NOW + 86_400_000,
+        consumedAt: null,
+        guildId: GUILD,
+        reconciledAt: null,
+      });
+    }
     insert("Season", {
       id: "2026-split-2",
       displayName: "2026 Split 2",
@@ -265,6 +310,24 @@ describe("legacy sqlite import", () => {
     expect(summary.rowCounts["Player"]).toBe(2);
     expect(summary.rowCounts["BucksLedgerEntry"]).toBe(2);
     expect(summary.rowCounts["BucksMatchEarning"]).toBe(1);
+    expect(summary.rowCounts["InstallAttributionToken"]).toBe(1);
+
+    await expect(
+      prisma.user.findUniqueOrThrow({ where: { discordId: OWNER } }),
+    ).resolves.toMatchObject({ lastSeenAt: new Date(NOW + 1_000) });
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { id: 1 } }),
+    ).resolves.toMatchObject({
+      attributedAt: new Date(NOW + 2_000),
+      attributionSurface: "landing",
+    });
+    await expect(
+      prisma.installAttributionToken.findUniqueOrThrow({ where: { id: 1 } }),
+    ).resolves.toMatchObject({
+      token: "install-token-1",
+      guildId: GUILD,
+      consumedAt: null,
+    });
 
     // Converted storage formats round-trip.
     const account = await prisma.account.findUniqueOrThrow({
@@ -311,6 +374,8 @@ describe("legacy sqlite import", () => {
 
   test("imports the promoted SQLite schema without later parlay tables", async () => {
     const omittedColumns = new Map<string, ReadonlySet<string>>([
+      ["User", new Set(["lastSeenAt"])],
+      ["GuildInstall", new Set(["attributedAt", "attributionSurface"])],
       ["BucksAccount", new Set(["isHouse", "peekPassExpiresAt"])],
       [
         "BucksBet",
@@ -348,6 +413,7 @@ describe("legacy sqlite import", () => {
     buildLegacySqlite(
       oldSchemaFixturePath,
       new Set([
+        "InstallAttributionToken",
         "BucksOpenPosition",
         "BucksParlayDefinition",
         "BucksParlayMarket",
