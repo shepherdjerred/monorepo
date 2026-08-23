@@ -170,6 +170,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Alertmanager publish. No workflow-level sleeps; each activity carries its
   // own startToCloseTimeout + retry budget.
   "runMainVulnScanWorkflow",
+  // Same shape as runMainVulnScanWorkflow: one lychee scan activity, then
+  // report delivery and the Alertmanager publish. No workflow-level sleeps.
+  "runLinkRotScanWorkflow",
   "monitorReportFreshness",
   "generateDependencySummary",
   "runProtobufWatch",

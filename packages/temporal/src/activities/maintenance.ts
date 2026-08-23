@@ -51,7 +51,8 @@ export type MaintenanceKind =
  * their commands directly (and own their own reporting) without widening the
  * exhaustive `buildMaintenanceCommand` switch.
  */
-export type MaintenanceSubprocessKind = MaintenanceKind | "main-vuln-scan";
+export type MaintenanceSubprocessKind =
+  MaintenanceKind | "main-vuln-scan" | "link-rot-scan";
 
 export type MaintenanceCommand = {
   kind: MaintenanceSubprocessKind;

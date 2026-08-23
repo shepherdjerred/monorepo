@@ -249,6 +249,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly Trivy HIGH/CRITICAL vulnerability scan of main (warm Buildkite Trivy DB) with report delivery; CRITICAL findings page via Alertmanager",
   },
   {
+    id: "link-rot-scan-weekly",
+    workflowType: "runLinkRotScanWorkflow",
+    args: [],
+    // Sun 05:15 PT — staggered after the 05:00 main-vuln-scan and the daily
+    // 05:00 fetcher/golink jobs, ahead of dns-audit (06:00).
+    cronExpression: "15 5 * * 0",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Three 20-minute scan attempts plus backoff, then report delivery and the
+    // Alertmanager publish with their own three-attempt budgets.
+    workflowExecutionTimeout: "90 minutes",
+    memo: "Weekly lychee link-rot scan of main's tracked markdown (root lychee.toml) with report delivery; automates the rot-detection half of the link-liveness rule",
+  },
+  {
     id: "bugsink-housekeeping",
     workflowType: "runBugsinkHousekeepingWorkflow",
     args: [],

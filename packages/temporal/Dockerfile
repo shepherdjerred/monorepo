@@ -116,6 +116,9 @@ ARG GCX_VERSION=1.0.0
 ARG UV_VERSION=0.12.3
 # renovate: datasource=github-releases depName=aquasecurity/trivy
 ARG TRIVY_VERSION=0.72.0
+# lychee tags carry a `lychee-v` prefix, so the pinned value is the full tag.
+# renovate: datasource=github-releases depName=lycheeverse/lychee versioning=loose
+ARG LYCHEE_VERSION=lychee-v0.24.2
 # renovate: datasource=github-releases depName=Kometa-Team/Kometa
 ARG KOMETA_VERSION=2.4.5
 ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
@@ -302,6 +305,28 @@ RUN set -e; \
     chmod +x /usr/local/bin/trivy; \
     rm /tmp/trivy.tar.gz /tmp/trivy.checksums.txt; \
     trivy version
+
+# --- lychee (per-arch release tarball, SHA256-verified) ---
+# Link-rot scanner for the weekly link-rot report. Each release asset ships a
+# sibling `.sha256` file; the tarball nests the binary under
+# `lychee-<target>/lychee`.
+RUN set -e; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in amd64) lycheearch=x86_64 ;; arm64) lycheearch=aarch64 ;; \
+      *) echo "unsupported architecture: $arch" >&2; exit 1 ;; esac; \
+    base="https://github.com/lycheeverse/lychee/releases/download/${LYCHEE_VERSION}"; \
+    dir="lychee-${lycheearch}-unknown-linux-gnu"; \
+    tarball="${dir}.tar.gz"; \
+    curl -fsSL "$base/$tarball" -o /tmp/lychee.tar.gz; \
+    curl -fsSL "$base/$tarball.sha256" -o /tmp/lychee.sha256; \
+    expected="$(awk '{print $1}' /tmp/lychee.sha256)"; \
+    [ -n "$expected" ] || { echo "no checksum for $tarball" >&2; exit 1; }; \
+    actual="$(sha256sum /tmp/lychee.tar.gz | awk '{print $1}')"; \
+    [ "$expected" = "$actual" ] || { echo "lychee checksum mismatch (expected $expected, got $actual)" >&2; exit 1; }; \
+    tar -xzf /tmp/lychee.tar.gz -C /usr/local/bin --strip-components=1 "${dir}/lychee"; \
+    chmod +x /usr/local/bin/lychee; \
+    rm /tmp/lychee.tar.gz /tmp/lychee.sha256; \
+    lychee --version
 
 # --- Kometa (pinned source release, direct command-line install) ---
 # Kometa's supported local installation is the repository's requirements.txt

@@ -1,0 +1,24 @@
+# URL exclusions for lychee (one regex per line) — see lychee.toml for the
+# behavioral configuration. Everything here is unreachable from the scanner or
+# deliberately unverifiable, NOT known-dead links we are hiding.
+#
+# Tailnet-only hosts: resolvable and reachable only inside the Tailscale
+# network; the scanner (Temporal worker / CI) is deliberately outside it.
+^https?://[^/]*\.tailnet-1a49\.ts\.net
+^https?://[^/]*\.ts\.net
+# Internal-only *.sjer.red services (auth-walled ingress endpoints, not public
+# pages). Public sites — sjer.red, public.sjer.red, resume.sjer.red,
+# webring.sjer.red, stocks.sjer.red, cook.sjer.red, scout-for-lol.com — are
+# deliberately NOT excluded and are checked every run.
+^https?://temporal-sleep\.sjer\.red
+^https?://temporal-agent-tasks\.sjer\.red
+^https?://pr-bot\.sjer\.red
+# Golink shorthand only resolves inside the tailnet.
+^https?://go/
+# In-cluster Kubernetes service DNS.
+^https?://[^/]*\.svc\.cluster\.local
+# Documentation placeholders (RFC 2606 reserved names).
+^https?://([^/]*\.)?example\.(com|org|net)
+^https?://[^/]*\.invalid
+^https?://[^/]*\.test(/|$)
+^https?://[^/]*\.example(/|$)
