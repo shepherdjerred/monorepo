@@ -4,7 +4,7 @@ import { z } from "zod";
 import analyticsRegistryJson from "@shepherdjerred/monorepo/config/analytics-sites.json" with { type: "json" };
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
 import versions, {
-  postgresImageVersions,
+  postgresImageDigests,
 } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
@@ -65,7 +65,7 @@ describe("Scout PostHog deployment configuration", () => {
       expect(env.get("POSTHOG_SITE_KEY")).toBe(site?.key);
       expect(env.get("POSTHOG_SITE_HOSTNAME")).toBe(site?.hostname);
       const imageVersion = versions[`shepherdjerred/scout-for-lol/${stage}`];
-      if (scoutImageUsesPostgres(imageVersion, postgresImageVersions)) {
+      if (scoutImageUsesPostgres(imageVersion, postgresImageDigests)) {
         expect(env.get("DATABASE_URL")).toBe(
           `postgresql://$(DB_USER):$(DB_PASSWORD)@scout-${stage}-postgresql.scout-${stage}.svc.cluster.local:5432/scout`,
         );
@@ -93,7 +93,14 @@ describe("Scout PostHog deployment configuration", () => {
       true,
     ],
   ])("classifies the Scout database contract for %s", (version, expected) => {
-    const postgresVersions = expected ? new Set([version]) : new Set<string>();
-    expect(scoutImageUsesPostgres(version, postgresVersions)).toBe(expected);
+    const digest = version.split("@")[1];
+    const postgresDigests = new Set<string>();
+    if (expected) {
+      if (digest === undefined) {
+        throw new Error(`expected a digest in ${version}`);
+      }
+      postgresDigests.add(digest);
+    }
+    expect(scoutImageUsesPostgres(version, postgresDigests)).toBe(expected);
   });
 });

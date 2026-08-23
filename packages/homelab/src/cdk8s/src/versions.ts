@@ -4,12 +4,18 @@ import {
   versionCatalogMap,
 } from "@shepherdjerred/version-catalog";
 import { VersionMapSchema } from "./version-map.generated.ts";
-import { applyCurrentBuildImageOverrides } from "./release-configuration.ts";
+import {
+  applyCurrentBuildImageOverrides,
+  catalogScoutPostgresImageDigests,
+} from "./release-configuration.ts";
 
 export const versionCatalog = parseVersionCatalog(rawCatalog);
 const versions = VersionMapSchema.parse(versionCatalogMap(versionCatalog));
 
-export const postgresImageVersions = applyCurrentBuildImageOverrides(versions);
+export const postgresImageDigests = new Set([
+  ...catalogScoutPostgresImageDigests(versionCatalog),
+  ...applyCurrentBuildImageOverrides(versions),
+]);
 
 /**
  * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned

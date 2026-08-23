@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+/** Durable marker written when the Scout beta image is promoted by CI. */
+export const SCOUT_POSTGRES_IMAGE_NOTE = "database contract: postgresql";
+
 export const VersionCatalogManagementSchema = z.discriminatedUnion("managed", [
   z
     .object({

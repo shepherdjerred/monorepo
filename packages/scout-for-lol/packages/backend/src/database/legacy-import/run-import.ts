@@ -23,6 +23,7 @@ import type {
   ImportTx,
   SqliteRow,
 } from "#src/database/legacy-import/convert.ts";
+import { toDate, toInt, toStr } from "#src/database/legacy-import/convert.ts";
 import { IMPORT_MODELS_PART_1 } from "#src/database/legacy-import/models-part-1.ts";
 import { IMPORT_MODELS_PART_2 } from "#src/database/legacy-import/models-part-2.ts";
 import { IMPORT_MODELS_PART_3 } from "#src/database/legacy-import/models-part-3.ts";
@@ -57,10 +58,10 @@ const SENTINEL_MODELS = new Set([
 
 const MARKER_TABLE = "_legacy_sqlite_import";
 
-// The currently promoted SQLite image predates the parlay migration. These
-// tables did not exist in that source schema, so an absent table is an empty
-// historical model; every other missing table remains a hard compatibility
-// error.
+// The currently promoted SQLite image predates the parlay migration. An absent
+// BucksOpenPosition table is reconstructed from pending bets in open pools;
+// absent parlay tables are empty historical models. Every other missing table
+// remains a hard compatibility error.
 const LEGACY_OPTIONAL_TABLES = new Set([
   "BucksOpenPosition",
   "BucksParlayDefinition",
@@ -230,9 +231,14 @@ function topoSortByParent(rows: SqliteRow[]): SqliteRow[] {
   return sorted;
 }
 
-function readSqliteRows(db: Database, spec: ImportModelSpec): SqliteRow[] {
+function readSqliteRows(
+  db: Database,
+  spec: ImportModelSpec,
+  missingTables: Set<string>,
+): SqliteRow[] {
   if (!sqliteTableExists(db, spec.model)) {
     if (LEGACY_OPTIONAL_TABLES.has(spec.model)) {
+      missingTables.add(spec.model);
       return [];
     }
     throw new Error(
@@ -254,6 +260,72 @@ function readSqliteRows(db: Database, spec: ImportModelSpec): SqliteRow[] {
     }
     return Object.fromEntries(Object.entries(row));
   });
+}
+
+/**
+ * The deleted SQLite migration created one editable-position slot for every
+ * pending bet in an open pool. The promoted image predates that table, so
+ * reconstruct the same rows before the marker is recorded. Keeping this in
+ * the shared source reader makes verifyImport compare against the same
+ * compatibility view that runImport inserts.
+ */
+function restoreMissingOpenPositions(
+  sourceRows: Map<string, SqliteRow[]>,
+  missingTables: ReadonlySet<string>,
+): void {
+  if (!missingTables.has("BucksOpenPosition")) {
+    return;
+  }
+  const pools = sourceRows.get("BucksMatchPool") ?? [];
+  const openPoolIds = new Set(
+    pools
+      .filter((pool) => toStr(pool, "poolState") === "open")
+      .map((pool) => toInt(pool, "id")),
+  );
+  const positions: SqliteRow[] = [];
+  const keys = new Set<string>();
+  for (const bet of sourceRows.get("BucksBet") ?? []) {
+    const poolId = toInt(bet, "poolId");
+    if (!openPoolIds.has(poolId) || toStr(bet, "betOutcome") !== "pending") {
+      continue;
+    }
+    const bucksAccountId = toInt(bet, "bucksAccountId");
+    const key = `${poolId.toString()}\u{0}${bucksAccountId.toString()}`;
+    if (keys.has(key)) {
+      throw new Error(
+        `BucksBet has multiple pending bets for open pool/account ${key}; cannot reconstruct BucksOpenPosition`,
+      );
+    }
+    keys.add(key);
+    toDate(bet, "createdAt");
+    positions.push({
+      poolId,
+      bucksAccountId,
+      betId: toInt(bet, "id"),
+      createdAt: bet["createdAt"],
+    });
+  }
+  positions.sort((left, right) => {
+    const poolDifference = toInt(left, "poolId") - toInt(right, "poolId");
+    return poolDifference === 0
+      ? toInt(left, "bucksAccountId") - toInt(right, "bucksAccountId")
+      : poolDifference;
+  });
+  sourceRows.set("BucksOpenPosition", positions);
+}
+
+function readSourceRows(db: Database): Map<string, SqliteRow[]> {
+  const missingTables = new Set<string>();
+  const sourceRows = new Map<string, SqliteRow[]>();
+  for (const spec of IMPORT_MODELS) {
+    const rows = readSqliteRows(db, spec, missingTables);
+    sourceRows.set(
+      spec.model,
+      spec.model === "ExploreMessage" ? topoSortByParent(rows) : rows,
+    );
+  }
+  restoreMissingOpenPositions(sourceRows, missingTables);
+  return sourceRows;
 }
 
 async function resetSequences(tx: ImportTx): Promise<void> {
@@ -355,14 +427,7 @@ export async function runImport(
   );
   const db = new Database(sqlitePath, { readonly: true, safeIntegers: true });
   try {
-    const sourceRows = new Map<string, SqliteRow[]>();
-    for (const spec of IMPORT_MODELS) {
-      const rows = readSqliteRows(db, spec);
-      sourceRows.set(
-        spec.model,
-        spec.model === "ExploreMessage" ? topoSortByParent(rows) : rows,
-      );
-    }
+    const sourceRows = readSourceRows(db);
 
     const rowCounts: Record<string, number> = {};
     await prisma.$transaction(
@@ -425,8 +490,9 @@ export async function verifyImport(
   const mismatches: VerifyMismatch[] = [];
   const db = new Database(sqlitePath, { readonly: true, safeIntegers: true });
   try {
+    const sourceRows = readSourceRows(db);
     for (const spec of IMPORT_MODELS) {
-      const sqliteRows = readSqliteRows(db, spec);
+      const sqliteRows = sourceRows.get(spec.model) ?? [];
       const pgCount = await spec.count(prisma);
       if (pgCount !== sqliteRows.length) {
         mismatches.push({

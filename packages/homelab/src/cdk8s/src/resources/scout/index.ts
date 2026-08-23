@@ -18,7 +18,7 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions, {
-  postgresImageVersions,
+  postgresImageDigests,
 } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { match } from "ts-pattern";
@@ -104,7 +104,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   );
   const dbEnv: Record<string, EnvValue> = scoutImageUsesPostgres(
     imageVersion,
-    postgresImageVersions,
+    postgresImageDigests,
   )
     ? {
         DB_USER: EnvValue.fromSecretValue({

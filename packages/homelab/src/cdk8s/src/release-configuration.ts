@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  SCOUT_POSTGRES_IMAGE_NOTE,
+  type VersionCatalog,
+} from "@shepherdjerred/version-catalog";
 
 const DigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/);
 const BuildVersionSchema = z.string().regex(/^2\.0\.0-\d+$/);
@@ -7,18 +11,43 @@ const ScoutImageVersionSchema = z
   .regex(/^2\.0\.0-\d+(?:@sha256:[a-f\d]{64})?$/);
 const ImageDigestsSchema = z.record(z.string().min(1), DigestSchema);
 const ChartRevisionsSchema = z.record(z.string().min(1), BuildVersionSchema);
+const ScoutImageDigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/);
+const SCOUT_BETA_IMAGE_KEY = "shepherdjerred/scout-for-lol/beta";
 
 /**
- * A version is PostgreSQL-backed only when the current image build explicitly
- * supplied its digest. Catalogued versions do not carry enough provenance to
- * infer their database contract from the release number.
+ * A version is PostgreSQL-backed only when its immutable digest is present in
+ * the catalog's durable contract marker or in the current image-build
+ * handoff. Release numbers alone do not carry enough provenance.
  */
 export function scoutImageUsesPostgres(
   version: string,
-  postgresImageVersions: ReadonlySet<string>,
+  postgresImageDigests: ReadonlySet<string>,
 ): boolean {
   const parsed = ScoutImageVersionSchema.parse(version);
-  return postgresImageVersions.has(parsed);
+  const digest = parsed.split("@")[1];
+  return digest !== undefined && postgresImageDigests.has(digest);
+}
+
+export function catalogScoutPostgresImageDigests(
+  catalog: VersionCatalog,
+): ReadonlySet<string> {
+  const digests = new Set<string>();
+  for (const entry of catalog.entries) {
+    if (
+      entry.name !== SCOUT_BETA_IMAGE_KEY ||
+      !entry.notes?.includes(SCOUT_POSTGRES_IMAGE_NOTE)
+    ) {
+      continue;
+    }
+    const digest = entry.value.split("@")[1];
+    if (digest === undefined) {
+      throw new Error(
+        `${SCOUT_BETA_IMAGE_KEY} has a PostgreSQL contract but no digest`,
+      );
+    }
+    digests.add(ScoutImageDigestSchema.parse(digest));
+  }
+  return digests;
 }
 
 function parseJson(raw: string, label: string): unknown {
@@ -34,15 +63,15 @@ export function applyCurrentBuildImageOverrides(
   rawDigests: string | undefined = Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"],
   buildVersion: string | undefined = Bun.env["HOMELAB_RELEASE_VERSION"],
 ): ReadonlySet<string> {
-  const postgresImageVersions = new Set<string>();
+  const postgresImageDigests = new Set<string>();
   if (rawDigests === undefined) {
-    return postgresImageVersions;
+    return postgresImageDigests;
   }
   const digests = ImageDigestsSchema.parse(
     parseJson(rawDigests, "HOMELAB_IMAGE_DIGESTS_JSON"),
   );
   if (Object.keys(digests).length === 0) {
-    return postgresImageVersions;
+    return postgresImageDigests;
   }
   const releaseVersion = BuildVersionSchema.parse(buildVersion);
   for (const [imageKey, digest] of Object.entries(digests)) {
@@ -55,7 +84,7 @@ export function applyCurrentBuildImageOverrides(
       const version = `${releaseVersion}@${digest}`;
       versions[candidate] = version;
       if (candidate.startsWith("shepherdjerred/scout-for-lol")) {
-        postgresImageVersions.add(version);
+        postgresImageDigests.add(digest);
       }
       matched = true;
     }
@@ -65,7 +94,7 @@ export function applyCurrentBuildImageOverrides(
       );
     }
   }
-  return postgresImageVersions;
+  return postgresImageDigests;
 }
 
 export function releaseChartRevisions(

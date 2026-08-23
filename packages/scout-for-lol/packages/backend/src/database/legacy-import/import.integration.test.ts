@@ -363,9 +363,17 @@ describe("legacy sqlite import", () => {
     });
 
     expect(summary.action).toBe("imported");
+    expect(summary.rowCounts["BucksOpenPosition"]).toBe(1);
     expect(summary.rowCounts["BucksParlayDefinition"]).toBe(0);
     expect(summary.rowCounts["BucksParlayMarket"]).toBe(0);
     expect(summary.rowCounts["BucksParlayBet"]).toBe(0);
+    await expect(
+      oldSchemaPrisma.bucksOpenPosition.findUniqueOrThrow({
+        where: {
+          poolId_bucksAccountId: { poolId: 1, bucksAccountId: 1 },
+        },
+      }),
+    ).resolves.toMatchObject({ betId: 1, createdAt: new Date(NOW) });
     await expect(
       oldSchemaPrisma.bucksAccount.findUniqueOrThrow({ where: { id: 1 } }),
     ).resolves.toMatchObject({ isHouse: false, peekPassExpiresAt: null });

@@ -229,6 +229,23 @@ describe("version catalog integrity", () => {
     expect(serializePinCandidatesState(state).endsWith("\n")).toBe(true);
   });
 
+  test("records the Scout beta database contract with the pin", async () => {
+    const state = mergePinCandidates(
+      parsePinCandidatesState('{"schema":"pin-candidates-state/v1","pins":{}}'),
+      batch(12, "v12", B, "shepherdjerred/scout-for-lol/beta"),
+    );
+    const rewritten = await rewriteVersionCatalogSource(
+      catalogSource([
+        {
+          name: "shepherdjerred/scout-for-lol/beta",
+          value: `old@${A}`,
+        },
+      ]),
+      state,
+    );
+    expect(rewritten).toContain('"database contract: postgresql"');
+  });
+
   test("fails closed when state and versions drift", () => {
     const state = mergePinCandidates(
       parsePinCandidatesState('{"schema":"pin-candidates-state/v1","pins":{}}'),
