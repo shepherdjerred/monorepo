@@ -34,35 +34,44 @@ const NOW = 1_755_600_000_000; // epoch ms, as the legacy adapter stored dates
 function buildLegacySqlite(
   path: string,
   omittedTables: ReadonlySet<string> = new Set(),
+  omittedColumns: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
 ): void {
   const db = new Database(path);
   try {
+    const tableColumns = new Map<string, ReadonlySet<string>>();
     for (const [table, columns] of Object.entries(LEGACY_TABLE_COLUMNS)) {
       if (omittedTables.has(table)) {
         continue;
       }
-      const cols = columns.map((column) => `"${column}"`).join(", ");
+      const excluded = omittedColumns.get(table) ?? new Set<string>();
+      const presentColumns = columns.filter((column) => !excluded.has(column));
+      tableColumns.set(table, new Set(presentColumns));
+      const cols = presentColumns.map((column) => `"${column}"`).join(", ");
       db.run(`CREATE TABLE "${table}" (${cols})`);
     }
     const insert = (table: string, row: Record<string, unknown>): void => {
-      const keys = Object.keys(row);
+      const columns = tableColumns.get(table);
+      if (columns === undefined) {
+        throw new Error(`fixture table is omitted: ${table}`);
+      }
+      const keys = Object.keys(row).filter((key) => columns.has(key));
       const placeholders = keys.map(() => "?").join(", ");
       const cols = keys.map((key) => `"${key}"`).join(", ");
-      const values: (string | number | bigint | null)[] = Object.values(
-        row,
-      ).map((value) => {
-        if (
-          typeof value === "string" ||
-          typeof value === "number" ||
-          typeof value === "bigint" ||
-          value === null
-        ) {
-          return value;
-        }
-        throw new Error(
-          `fixture value not sqlite-storable: ${JSON.stringify(value)}`,
-        );
-      });
+      const values: (string | number | bigint | null)[] = keys
+        .map((key) => row[key])
+        .map((value) => {
+          if (
+            typeof value === "string" ||
+            typeof value === "number" ||
+            typeof value === "bigint" ||
+            value === null
+          ) {
+            return value;
+          }
+          throw new Error(
+            `fixture value not sqlite-storable: ${JSON.stringify(value)}`,
+          );
+        });
       db.query(`INSERT INTO "${table}" (${cols}) VALUES (${placeholders})`).run(
         ...values,
       );
@@ -137,6 +146,47 @@ function buildLegacySqlite(
       isHouse: 0,
       balance: 90,
       peekPassExpiresAt: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    insert("BucksMatchPool", {
+      id: 1,
+      matchId: "NA1_pool_1",
+      serverId: GUILD,
+      detectedAt: NOW,
+      peekAvailableAt: NOW + 120_000,
+      closesAt: NOW + 300_000,
+      queueType: "RANKED_SOLO_5x5",
+      roster: "{}",
+      messageRefs: "[]",
+      prematchContentBase: null,
+      poolState: "open",
+      matchedAt: null,
+      matchingJson: null,
+      winningTeamId: null,
+      voidReason: null,
+      predictionJson: null,
+      settledAt: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    insert("BucksBet", {
+      id: 1,
+      poolId: 1,
+      bucksAccountId: 1,
+      predictedTeamId: 100,
+      subjectPuuid: PUUID,
+      stake: 10,
+      humanMatchedStake: null,
+      houseMatchedStake: null,
+      matchedStake: null,
+      unmatchedStake: null,
+      betOutcome: "pending",
+      grossPayout: null,
+      fee: null,
+      payout: null,
+      cancelledAt: null,
+      settledAt: null,
       createdAt: NOW,
       updatedAt: NOW,
     });
@@ -253,9 +303,50 @@ describe("legacy sqlite import", () => {
   });
 
   test("imports the promoted SQLite schema without later parlay tables", async () => {
+    const omittedColumns = new Map<string, ReadonlySet<string>>([
+      ["BucksAccount", new Set(["isHouse", "peekPassExpiresAt"])],
+      [
+        "BucksBet",
+        new Set([
+          "humanMatchedStake",
+          "houseMatchedStake",
+          "matchedStake",
+          "unmatchedStake",
+          "grossPayout",
+          "fee",
+          "cancelledAt",
+        ]),
+      ],
+      ["BucksLedgerEntry", new Set(["parlayBetId"])],
+      [
+        "BucksMatchPool",
+        new Set([
+          "peekAvailableAt",
+          "prematchContentBase",
+          "matchedAt",
+          "matchingJson",
+        ]),
+      ],
+      [
+        "BucksMatchEarning",
+        new Set([
+          "phase",
+          "state",
+          "targetSnapshotJson",
+          "retryAt",
+          "matchCreatedAt",
+        ]),
+      ],
+    ]);
     buildLegacySqlite(
       oldSchemaFixturePath,
-      new Set(["BucksParlayDefinition", "BucksParlayMarket", "BucksParlayBet"]),
+      new Set([
+        "BucksOpenPosition",
+        "BucksParlayDefinition",
+        "BucksParlayMarket",
+        "BucksParlayBet",
+      ]),
+      omittedColumns,
     );
     await oldSchemaPrisma.season.deleteMany();
 
@@ -268,6 +359,41 @@ describe("legacy sqlite import", () => {
     expect(summary.rowCounts["BucksParlayDefinition"]).toBe(0);
     expect(summary.rowCounts["BucksParlayMarket"]).toBe(0);
     expect(summary.rowCounts["BucksParlayBet"]).toBe(0);
+    await expect(
+      oldSchemaPrisma.bucksAccount.findUniqueOrThrow({ where: { id: 1 } }),
+    ).resolves.toMatchObject({ isHouse: false, peekPassExpiresAt: null });
+    await expect(
+      oldSchemaPrisma.bucksMatchPool.findUniqueOrThrow({ where: { id: 1 } }),
+    ).resolves.toMatchObject({
+      peekAvailableAt: new Date(NOW + 300_000),
+      prematchContentBase: null,
+      matchedAt: null,
+      matchingJson: null,
+    });
+    await expect(
+      oldSchemaPrisma.bucksBet.findUniqueOrThrow({ where: { id: 1 } }),
+    ).resolves.toMatchObject({
+      humanMatchedStake: null,
+      houseMatchedStake: null,
+      matchedStake: null,
+      unmatchedStake: null,
+      grossPayout: null,
+      fee: null,
+      cancelledAt: null,
+    });
+    await expect(
+      oldSchemaPrisma.bucksMatchEarning.findUniqueOrThrow({
+        where: {
+          matchId_serverId: { matchId: "NA1_earning_1", serverId: GUILD },
+        },
+      }),
+    ).resolves.toMatchObject({
+      phase: "postmatch",
+      state: "complete",
+      targetSnapshotJson: "[]",
+      retryAt: new Date(NOW),
+      matchCreatedAt: new Date(NOW),
+    });
     expect(
       await verifyImport({
         prisma: oldSchemaPrisma,

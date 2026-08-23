@@ -62,6 +62,7 @@ const MARKER_TABLE = "_legacy_sqlite_import";
 // historical model; every other missing table remains a hard compatibility
 // error.
 const LEGACY_OPTIONAL_TABLES = new Set([
+  "BucksOpenPosition",
   "BucksParlayDefinition",
   "BucksParlayMarket",
   "BucksParlayBet",

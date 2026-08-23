@@ -21,10 +21,13 @@ import {
   toBoolOrNull,
   toDate,
   toDateOrNull,
+  toDateOrNullIfMissing,
   toInt,
   toIntOrNull,
+  toIntOrNullIfMissing,
   toStr,
   toStrOrNull,
+  toStrOrNullIfMissing,
   type ImportModelSpec,
 } from "#src/database/legacy-import/convert.ts";
 
@@ -37,9 +40,10 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       id: toInt(row, "id"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
       discordId: DiscordAccountIdSchema.parse(toStr(row, "discordId")),
-      isHouse: toBool(row, "isHouse"),
+      // Synthetic house accounts were added after the promoted SQLite image.
+      isHouse: row["isHouse"] === undefined ? false : toBool(row, "isHouse"),
       balance: toInt(row, "balance"),
-      peekPassExpiresAt: toDateOrNull(row, "peekPassExpiresAt"),
+      peekPassExpiresAt: toDateOrNullIfMissing(row, "peekPassExpiresAt"),
       createdAt: toDate(row, "createdAt"),
       updatedAt: toDate(row, "updatedAt"),
     }),
@@ -59,15 +63,20 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       matchId: toStr(row, "matchId"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
       detectedAt: toDate(row, "detectedAt"),
-      peekAvailableAt: toDate(row, "peekAvailableAt"),
+      // Peek passes were added after the promoted image. Do not make an old
+      // pool peekable immediately; the betting window has already closed.
+      peekAvailableAt:
+        row["peekAvailableAt"] === undefined
+          ? toDate(row, "closesAt")
+          : toDate(row, "peekAvailableAt"),
       closesAt: toDate(row, "closesAt"),
       queueType: toStrOrNull(row, "queueType"),
       roster: toStr(row, "roster"),
       messageRefs: toStr(row, "messageRefs"),
-      prematchContentBase: toStrOrNull(row, "prematchContentBase"),
+      prematchContentBase: toStrOrNullIfMissing(row, "prematchContentBase"),
       poolState: toStr(row, "poolState"),
-      matchedAt: toDateOrNull(row, "matchedAt"),
-      matchingJson: toStrOrNull(row, "matchingJson"),
+      matchedAt: toDateOrNullIfMissing(row, "matchedAt"),
+      matchingJson: toStrOrNullIfMissing(row, "matchingJson"),
       winningTeamId: toIntOrNull(row, "winningTeamId"),
       voidReason: toStrOrNull(row, "voidReason"),
       predictionJson: toStrOrNull(row, "predictionJson"),
@@ -181,10 +190,21 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       // old schema's rows are all post-match earnings; keep that meaning when
       // importing them rather than requiring the source file to be mutated.
       phase: row["phase"] === undefined ? "postmatch" : toStr(row, "phase"),
-      state: toStr(row, "state"),
-      targetSnapshotJson: toStr(row, "targetSnapshotJson"),
-      retryAt: toDate(row, "retryAt"),
-      matchCreatedAt: toDate(row, "matchCreatedAt"),
+      // Older markers are completed post-match awards and have no retry
+      // snapshot. Preserve that durable meaning instead of inventing a retry.
+      state: row["state"] === undefined ? "complete" : toStr(row, "state"),
+      targetSnapshotJson:
+        row["targetSnapshotJson"] === undefined
+          ? "[]"
+          : toStr(row, "targetSnapshotJson"),
+      retryAt:
+        row["retryAt"] === undefined
+          ? toDate(row, "awardedAt")
+          : toDate(row, "retryAt"),
+      matchCreatedAt:
+        row["matchCreatedAt"] === undefined
+          ? toDate(row, "awardedAt")
+          : toDate(row, "matchCreatedAt"),
       entryCount: toInt(row, "entryCount"),
     }),
     createMany: async (tx, data) => {
@@ -257,15 +277,18 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       predictedTeamId: toInt(row, "predictedTeamId"),
       subjectPuuid: toStr(row, "subjectPuuid"),
       stake: toInt(row, "stake"),
-      humanMatchedStake: toIntOrNull(row, "humanMatchedStake"),
-      houseMatchedStake: toIntOrNull(row, "houseMatchedStake"),
-      matchedStake: toIntOrNull(row, "matchedStake"),
-      unmatchedStake: toIntOrNull(row, "unmatchedStake"),
+      // Matched-stake accounting was introduced after the promoted SQLite
+      // image. Null means this historical row predates close-time matching,
+      // which is the model's documented representation for old bets.
+      humanMatchedStake: toIntOrNullIfMissing(row, "humanMatchedStake"),
+      houseMatchedStake: toIntOrNullIfMissing(row, "houseMatchedStake"),
+      matchedStake: toIntOrNullIfMissing(row, "matchedStake"),
+      unmatchedStake: toIntOrNullIfMissing(row, "unmatchedStake"),
       betOutcome: toStr(row, "betOutcome"),
-      grossPayout: toIntOrNull(row, "grossPayout"),
-      fee: toIntOrNull(row, "fee"),
+      grossPayout: toIntOrNullIfMissing(row, "grossPayout"),
+      fee: toIntOrNullIfMissing(row, "fee"),
       payout: toIntOrNull(row, "payout"),
-      cancelledAt: toDateOrNull(row, "cancelledAt"),
+      cancelledAt: toDateOrNullIfMissing(row, "cancelledAt"),
       settledAt: toDateOrNull(row, "settledAt"),
       createdAt: toDate(row, "createdAt"),
       updatedAt: toDate(row, "updatedAt"),
@@ -309,7 +332,7 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       kind: toStr(row, "kind"),
       matchId: toStrOrNull(row, "matchId"),
       betId: toIntOrNull(row, "betId"),
-      parlayBetId: toIntOrNull(row, "parlayBetId"),
+      parlayBetId: toIntOrNullIfMissing(row, "parlayBetId"),
       predictedTeamId: toIntOrNull(row, "predictedTeamId"),
       actualWinningTeamId: toIntOrNull(row, "actualWinningTeamId"),
       context: toStr(row, "context"),

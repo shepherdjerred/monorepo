@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   applyCurrentBuildImageOverrides,
   releaseChartRevisions,
+  scoutImageUsesPostgres,
 } from "./release-configuration.ts";
 
 describe("applyCurrentBuildImageOverrides", () => {
@@ -54,4 +55,10 @@ test("releaseChartRevisions validates exact build revisions", () => {
   expect(() =>
     releaseChartRevisions(JSON.stringify({ worker: "~2.0.0-0" })),
   ).toThrow();
+});
+
+test("keeps the promoted SQLite pin below the Postgres cutover", () => {
+  expect(scoutImageUsesPostgres("2.0.0-9495")).toBe(false);
+  expect(scoutImageUsesPostgres("2.0.0-10760")).toBe(false);
+  expect(scoutImageUsesPostgres("2.0.0-10761")).toBe(true);
 });

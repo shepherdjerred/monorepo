@@ -44,6 +44,18 @@ export function toIntOrNull(row: SqliteRow, column: string): number | null {
   return row[column] === null ? null : toInt(row, column);
 }
 
+/**
+ * Nullable columns added after the promoted SQLite image may not exist in an
+ * older table at all. Callers use this only for reviewed compatibility fields;
+ * an existing non-null value still goes through the strict converter.
+ */
+export function toIntOrNullIfMissing(
+  row: SqliteRow,
+  column: string,
+): number | null {
+  return row[column] === undefined ? null : toIntOrNull(row, column);
+}
+
 export function toBigInt(row: SqliteRow, column: string): bigint {
   const value = row[column];
   if (typeof value === "bigint") {
@@ -107,6 +119,20 @@ export function toDate(row: SqliteRow, column: string): Date {
 
 export function toDateOrNull(row: SqliteRow, column: string): Date | null {
   return row[column] === null ? null : toDate(row, column);
+}
+
+export function toDateOrNullIfMissing(
+  row: SqliteRow,
+  column: string,
+): Date | null {
+  return row[column] === undefined ? null : toDateOrNull(row, column);
+}
+
+export function toStrOrNullIfMissing(
+  row: SqliteRow,
+  column: string,
+): string | null {
+  return row[column] === undefined ? null : toStrOrNull(row, column);
 }
 
 /**

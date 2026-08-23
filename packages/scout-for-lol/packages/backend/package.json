@@ -9,7 +9,7 @@
     "./generated/*": "./generated/*"
   },
   "scripts": {
-    "dev": "bun run scripts/ensure-dev-postgres.ts scout_dev_3000 && bun --watch src/index.ts",
+    "dev": "bun run scripts/ensure-dev-postgres.ts scout_dev_3000 && bun x --no-install prisma migrate deploy && bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun --external=ffmpeg-static --external '@duckdb/*'",
     "test": "DATABASE_URL=${DATABASE_URL:-postgres://scout@127.0.0.1:${SCOUT_PG_PORT:-5471}/scout_test_unbound} bun --no-install --bun vitest --config ../../../../vitest.config.ts run --testTimeout 20000",

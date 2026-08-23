@@ -477,6 +477,7 @@ const commands: Record<
       DISCORD_TOKEN: "smoke-test-dummy",
       APPLICATION_ID: "000000000000000000",
       RIOT_API_KEY: "smoke-test-dummy",
+      FEATURE_FLAGS_MODE: "disabled",
       DATABASE_URL: "postgres://postgres@127.0.0.1:18732/postgres",
       LEGACY_SQLITE_PATH: "/tmp/no-legacy-sqlite.db",
       ENABLE_BACKGROUND_JOBS: "false",

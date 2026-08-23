@@ -22,6 +22,7 @@ import {
   toBool,
   toDate,
   toDateOrNull,
+  toStrOrNullIfMissing,
   toInt,
   toIntOrNull,
   toStr,
@@ -279,6 +280,9 @@ export const IMPORT_MODELS_PART_2: ImportModelSpec[] = [
       trackedPuuids: toStr(row, "trackedPuuids"),
       prematchMessageIds: toStrOrNull(row, "prematchMessageIds"),
       prematchMatchId: toStrOrNull(row, "prematchMatchId"),
+      // Added after the promoted SQLite image; old games have no post-match
+      // message collection to preserve.
+      postmatchMessageIds: toStrOrNullIfMissing(row, "postmatchMessageIds"),
       detectedAt: toDate(row, "detectedAt"),
       expiresAt: toDate(row, "expiresAt"),
       updatedAt: toDate(row, "updatedAt"),
