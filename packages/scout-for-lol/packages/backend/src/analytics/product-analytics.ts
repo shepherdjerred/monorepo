@@ -33,6 +33,19 @@ export type RemovalActivationState =
   | "configured"
   | "activated";
 export type TenureBucket = "<1d" | "1-6d" | "7-29d" | "30-89d" | "90d+";
+export type AttributionSurface = "guild_picker" | "onboarding_wizard";
+export type AttributionTiming = "before_gateway" | "after_gateway";
+export type DiscordCommandName =
+  | "help"
+  | "setup"
+  | "status"
+  | "invite"
+  | "docs"
+  | "track"
+  | "list"
+  | "bb"
+  | "scout";
+export type DiscordCommandStatus = "success" | "error";
 
 type ProductAnalyticsEventProperties = {
   guild_installed: {
@@ -45,6 +58,14 @@ type ProductAnalyticsEventProperties = {
   guild_removed: {
     activation_state: RemovalActivationState;
     tenure_bucket: TenureBucket;
+  };
+  discord_command_used: {
+    command_name: DiscordCommandName;
+    status: DiscordCommandStatus;
+  };
+  guild_install_attributed: {
+    attribution_surface: AttributionSurface;
+    attribution_timing: AttributionTiming;
   };
 };
 

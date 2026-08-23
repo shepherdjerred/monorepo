@@ -75,6 +75,7 @@ function makeUser(discordId: string, overrides?: Partial<User>): User {
     discordRefreshToken: null,
     tokenExpiresAt: null,
     analyticsUserId: `analytics-${discordId}`,
+    lastSeenAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

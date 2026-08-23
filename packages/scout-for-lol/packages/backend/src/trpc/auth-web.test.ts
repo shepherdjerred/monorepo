@@ -1,5 +1,7 @@
-import { describe, expect, test } from "vitest";
+import { afterAll, describe, expect, test } from "vitest";
 import { resetConfigurationForTests } from "#src/configuration.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
+import { testAccountId } from "#src/testing/test-ids.ts";
 
 /**
  * The bot-install endpoint must be gated by the same session cookie the
@@ -27,6 +29,13 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
 const TEST_APP_ORIGIN = "https://scout-for-lol.com";
 
 Bun.env["WEB_APP_ORIGIN"] = TEST_APP_ORIGIN;
+// The install handler now persists an attribution token, so the database
+// singleton (initialized when auth-web.ts is first imported below) must point
+// at a migrated test DB rather than test-setup's schemaless stub URL. Env,
+// not a module stub, for the same leakage reason as the configuration note
+// above; vitest isolates test files, so this cannot bleed into siblings.
+const testDb = createTestDatabase("auth-web-test");
+Bun.env["DATABASE_URL"] = testDb.dbUrl;
 resetConfigurationForTests();
 
 const { handleDiscordInstall } = await import("#src/trpc/auth-web.ts");
@@ -35,12 +44,15 @@ const { signSession } = await import("#src/trpc/jwt.ts");
 
 const INSTALL_URL = "https://scout.example/api/discord/install";
 
-function installRequest(cookieHeader?: string): Request {
+function installRequest(
+  cookieHeader?: string,
+  url: string = INSTALL_URL,
+): Request {
   const headers = new Headers();
   if (cookieHeader !== undefined) {
     headers.set("Cookie", cookieHeader);
   }
-  return new Request(INSTALL_URL, { method: "GET", headers });
+  return new Request(url, { method: "GET", headers });
 }
 
 describe("handleDiscordInstall", () => {
@@ -71,11 +83,10 @@ describe("handleDiscordInstall", () => {
   });
 
   test("redirects to Discord bot-authorize when the session is valid", async () => {
-    // The install handler only requires a verifiable session (non-null
-    // claims), not a DB lookup, so any non-empty subject works. Use a
-    // non-numeric placeholder so gitleaks doesn't mistake an 18-digit
-    // snowflake for a real Discord client id.
-    const { jwt } = await signSession({ discordId: "test-discord-user" });
+    // The subject must be a Discord-shaped snowflake: the handler binds the
+    // minted attribution token to it. testAccountId builds the same
+    // deterministic test snowflakes the rest of the suite uses.
+    const { jwt } = await signSession({ discordId: testAccountId("4242") });
     const response = await handleDiscordInstall(
       installRequest(`${SESSION_COOKIE}=${jwt}`),
     );
@@ -93,5 +104,39 @@ describe("handleDiscordInstall", () => {
     );
     // No response_type=code: this is a pure bot install, not a token grant.
     expect(target.searchParams.get("response_type")).toBeNull();
+
+    // The `state` param is the single-use attribution token, persisted and
+    // bound to the session user + originating surface (default guild_picker).
+    const state = target.searchParams.get("state");
+    expect(state).toMatch(/^[0-9a-f]{64}$/);
+    const tokenRow = await testDb.prisma.installAttributionToken.findUnique({
+      where: { token: state ?? "" },
+    });
+    expect(tokenRow).toMatchObject({
+      discordId: testAccountId("4242"),
+      surface: "guild_picker",
+      consumedAt: null,
+    });
   });
+
+  test("records the onboarding surface from the query param", async () => {
+    const { jwt } = await signSession({ discordId: testAccountId("4242") });
+    const response = await handleDiscordInstall(
+      installRequest(
+        `${SESSION_COOKIE}=${jwt}`,
+        `${INSTALL_URL}?surface=onboarding_wizard`,
+      ),
+    );
+
+    const target = new URL(response.headers.get("Location") ?? "");
+    const state = target.searchParams.get("state");
+    const tokenRow = await testDb.prisma.installAttributionToken.findUnique({
+      where: { token: state ?? "" },
+    });
+    expect(tokenRow?.surface).toBe("onboarding_wizard");
+  });
+});
+
+afterAll(async () => {
+  await testDb.prisma.$disconnect();
 });

@@ -419,6 +419,11 @@ export function startAnalyticsCapture(): void {
   client.optInCapturing();
 }
 
+/** Whether product analytics can currently accept events. */
+export function analyticsCaptureEnabled(): boolean {
+  return captureEnabled;
+}
+
 /** Close the gate while session or route context is unresolved. */
 export function stopAnalyticsCapture(): void {
   if (client === undefined || !captureEnabled) return;

@@ -51,6 +51,15 @@ const SCOUT_ANALYTICS_EVENTS = [
   "competition_members_added_all",
   "competition_participant_removed",
   "competition_leaderboard_refreshed",
+  // Explore
+  "explore_turn_started",
+  "explore_turn_finished",
+  "explore_shared",
+  "explore_share_revoked",
+  "explore_conversation_renamed",
+  "explore_conversation_deleted",
+  "explore_branch_selected",
+  "explore_exported",
   // Access (RBAC)
   "access_granted",
   "access_updated",
@@ -60,6 +69,7 @@ const SCOUT_ANALYTICS_EVENTS = [
   "onboarding_completed",
   "onboarding_skipped",
   "bot_install_click",
+  "bot_install_completed",
   "login_click",
   "sign_out",
   "theme_changed",
@@ -75,8 +85,15 @@ export const ANALYTICS_EVENT_NAMES: ReadonlySet<string> = new Set(
   SCOUT_ANALYTICS_EVENTS,
 );
 
-/** Only these low-cardinality properties may be sent to PostHog. */
+/**
+ * Only these properties may be sent to PostHog. All are low-cardinality
+ * except `guild_id`, the one documented identifier: it is the privacy-policy
+ * disclosed join between a browser session and a bot installation, and on
+ * `bot_install_completed` its value is the server-echoed mutation response,
+ * never a raw query parameter.
+ */
 export type AnalyticsProperty =
+  | "guild_id"
   | "outcome"
   | "reason"
   | "kind"

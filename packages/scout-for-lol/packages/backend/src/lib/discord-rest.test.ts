@@ -36,6 +36,7 @@ function testUser(overrides: Partial<User> = {}): User {
     // Far future, so no refresh is attempted unless a test asks for one.
     tokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
     analyticsUserId: `analytics-${userSeq.toString()}`,
+    lastSeenAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

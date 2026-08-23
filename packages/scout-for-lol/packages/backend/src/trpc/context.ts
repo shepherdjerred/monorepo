@@ -83,6 +83,46 @@ function extractBearerToken(authHeader: string | null): string | null {
 }
 
 /**
+ * `User.lastSeenAt` is a DB-side activity marker (MAU/WAU without PostHog).
+ * One write per user per hour bounds the write amplification of running on
+ * every authenticated request. The update repeats the hour predicate in the
+ * database so concurrent requests cannot all pass a stale in-memory check.
+ */
+const LAST_SEEN_WRITE_INTERVAL_MS = 60 * 60 * 1000;
+
+export async function recordUserSeen(
+  user: Pick<User, "discordId" | "lastSeenAt">,
+  db = prisma,
+  now = new Date(),
+): Promise<void> {
+  if (
+    user.lastSeenAt !== null &&
+    now.getTime() - user.lastSeenAt.getTime() < LAST_SEEN_WRITE_INTERVAL_MS
+  ) {
+    return;
+  }
+  try {
+    await db.user.updateMany({
+      where: {
+        discordId: user.discordId,
+        OR: [
+          { lastSeenAt: null },
+          {
+            lastSeenAt: {
+              lte: new Date(now.getTime() - LAST_SEEN_WRITE_INTERVAL_MS),
+            },
+          },
+        ],
+      },
+      data: { lastSeenAt: now },
+    });
+  } catch (error) {
+    // Best-effort: an activity marker must never fail the request context.
+    logger.warn("Failed to record user lastSeenAt", { error });
+  }
+}
+
+/**
  * Create context from request
  */
 export async function createContext(request: Request): Promise<Context> {
@@ -163,6 +203,10 @@ export async function createContext(request: Request): Promise<Context> {
         );
       }
     }
+  }
+
+  if (user !== null) {
+    await recordUserSeen(user);
   }
 
   return {

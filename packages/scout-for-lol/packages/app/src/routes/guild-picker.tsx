@@ -25,7 +25,7 @@ import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
  * SPA route), which 302s to Discord's add-to-server screen and returns
  * the admin to /app/installed?guild_id=… — see handleDiscordInstall.
  */
-const INSTALL_URL = "/api/discord/install";
+const INSTALL_URL = "/api/discord/install?surface=guild_picker";
 
 function AddServerButton({
   variant = "default",
@@ -39,7 +39,9 @@ function AddServerButton({
       <a
         href={INSTALL_URL}
         onClick={(clickEvent) => {
-          trackOutboundClick(clickEvent, "bot_install_click", INSTALL_URL);
+          trackOutboundClick(clickEvent, "bot_install_click", INSTALL_URL, {
+            surface: "guild_picker",
+          });
         }}
       >
         {children}
