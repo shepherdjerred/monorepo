@@ -8,6 +8,7 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { z } from "zod";
+import { featureFlagMetrics } from "@shepherdjerred/birmel/observability/metrics.ts";
 import { getConfig } from "./index.ts";
 import type { Config } from "./schema.ts";
 
@@ -290,6 +291,7 @@ export async function initializeDynamicConfig(options: {
       ? {}
       : { environment: options.environment }),
     ...(options.provider === undefined ? {} : { provider: options.provider }),
+    metrics: featureFlagMetrics,
     onInitializationFailure: log,
   });
   const config = options.config ?? getConfig();

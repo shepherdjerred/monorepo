@@ -11,6 +11,7 @@ import {
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { createLogger } from "#src/logger.ts";
 import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
+import configuration from "#src/configuration.ts";
 
 const logger = createLogger("config-dynamic");
 
@@ -201,46 +202,52 @@ export async function initializeDynamicConfig(
   }
 }
 
-function getSnapshot(): Snapshot {
-  if (snapshot === undefined) {
-    throw new Error(
-      "dynamic config read before initializeDynamicConfig(); call it during startup",
-    );
-  }
-  return snapshot;
-}
-
 /** Whether dynamic config has been initialized. */
 export function isDynamicConfigReady(): boolean {
   return snapshot !== undefined;
 }
 
 export function exploreGuildAllowlist(): string[] {
-  return getSnapshot().get("exploreGuildAllowlist");
+  return (
+    snapshot?.get("exploreGuildAllowlist") ??
+    configuration.exploreGuildAllowlist
+  );
 }
 
 export function llmHourlyTokenBudget(): number {
-  return getSnapshot().get("llmHourlyTokenBudget");
+  return (
+    snapshot?.get("llmHourlyTokenBudget") ?? configuration.llmHourlyTokenBudget
+  );
 }
 
 export function llmDailyTokenBudget(): number {
-  return getSnapshot().get("llmDailyTokenBudget");
+  return (
+    snapshot?.get("llmDailyTokenBudget") ?? configuration.llmDailyTokenBudget
+  );
 }
 
 export function reportAiModel(): string {
-  return getSnapshot().get("reportAiModel");
+  return (
+    snapshot?.get("reportAiModel") ??
+    configuration.reportAiModel ??
+    "gpt-5.6-sol"
+  );
 }
 
 export function bettingParlayAiModel(): string {
-  return getSnapshot().get("bettingParlayAiModel");
+  return (
+    snapshot?.get("bettingParlayAiModel") ??
+    configuration.bettingParlayAiModel ??
+    "gpt-5.6-sol"
+  );
 }
 
 export function exploreModel(): string {
-  return getSnapshot().get("exploreModel");
+  return snapshot?.get("exploreModel") ?? configuration.exploreModel;
 }
 
 export function bucksAskModel(): string {
-  return getSnapshot().get("bucksAskModel");
+  return snapshot?.get("bucksAskModel") ?? configuration.bucksAskModel;
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {
