@@ -55,6 +55,45 @@ function repoRoot(): string {
   return new URL("..", import.meta.url).pathname;
 }
 
+type ReleaseTarget = {
+  readonly targetBranchSha: string;
+  readonly excludedPaths: readonly string[];
+};
+
+/**
+ * Resolve the exact main revision this release-please phase will read, and
+ * classify npm eligibility at that same revision.
+ *
+ * Both belong to the phase, not to the lane. `runReleasePlease` clones and
+ * pins per invocation and `assertTargetBranchSha` fails closed if main moves
+ * around the operation, so a phase is already atomic on its own. Resolving
+ * once for the whole lane instead made the pin span the CHANGELOG refinement —
+ * a multi-minute agent run — so any unrelated merge in that window aborted the
+ * `github-release` phase with "Release target main moved ...; retry the release
+ * lane". That is what reddened builds 10946, 10958, 10993, 11001 and 11072,
+ * each time with both phases otherwise healthy.
+ *
+ * Resolving per phase narrows the guarded window to the phase itself, which is
+ * what the guard was for; it does not relax any check.
+ */
+async function resolveReleaseTarget(
+  root: string,
+  env: Record<string, string>,
+): Promise<ReleaseTarget> {
+  const targetBranchSha = await fetchReleaseTarget(root, env);
+  const releaseDecisions = await classifyAllPackageReleases(
+    root,
+    "refs/remotes/origin/main",
+  );
+  printReleaseDecisions(releaseDecisions);
+  return {
+    targetBranchSha,
+    excludedPaths: releaseDecisions
+      .filter((decision) => !decision.eligible)
+      .map((decision) => decision.packagePath),
+  };
+}
+
 function usage(): never {
   console.error("Usage: bun scripts/release.ts [--dry-run]");
   process.exit(1);
@@ -87,15 +126,7 @@ async function main(): Promise<void> {
     // The canonical Buildkite checkout intentionally uses --no-tags. Fetch the
     // authoritative package tags before the fail-closed eligibility preflight.
     await fetchNpmPackageTags(root, env);
-    const targetBranchSha = await fetchReleaseTarget(root, env);
-    const releaseDecisions = await classifyAllPackageReleases(
-      root,
-      "refs/remotes/origin/main",
-    );
-    printReleaseDecisions(releaseDecisions);
-    const excludedPaths = releaseDecisions
-      .filter((decision) => !decision.eligible)
-      .map((decision) => decision.packagePath);
+    const releasePrTarget = await resolveReleaseTarget(root, env);
 
     // Validate both providers before release-please mutates the release PR.
     // Codex is an intentional quota fallback, not an optional best-effort path.
@@ -113,8 +144,8 @@ async function main(): Promise<void> {
       token: auth.token,
       repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
       targetBranch: "main",
-      targetBranchSha,
-      excludedPaths,
+      targetBranchSha: releasePrTarget.targetBranchSha,
+      excludedPaths: releasePrTarget.excludedPaths,
     });
 
     // Refine the just-generated CHANGELOGs. The prompt is the source of truth
@@ -140,13 +171,16 @@ async function main(): Promise<void> {
     });
     console.log(`--- CHANGELOG refinement complete (provider=${provider})`);
 
+    // Re-resolve after refinement: the pin above is now minutes old, and this
+    // phase clones and reads main again anyway.
+    const githubReleaseTarget = await resolveReleaseTarget(root, env);
     await runReleasePlease({
       phase: "github-release",
       token: auth.token,
       repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
       targetBranch: "main",
-      targetBranchSha,
-      excludedPaths,
+      targetBranchSha: githubReleaseTarget.targetBranchSha,
+      excludedPaths: githubReleaseTarget.excludedPaths,
     });
     console.log("--- release-please complete");
   } finally {
