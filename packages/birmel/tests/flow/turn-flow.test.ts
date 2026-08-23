@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
+  FLOW_HARNESS_CHILD_TIMEOUT_MS,
   FLOW_RESULT_PREFIX,
   FlowHarnessResultSchema,
   type FlowHarnessResult,
@@ -69,7 +70,7 @@ beforeAll(async () => {
   harnessResult = FlowHarnessResultSchema.parse(
     JSON.parse(resultLine.slice(FLOW_RESULT_PREFIX.length)),
   );
-}, 30_000);
+}, FLOW_HARNESS_CHILD_TIMEOUT_MS);
 
 afterAll(async () => {
   if (temporaryDirectory != null) {

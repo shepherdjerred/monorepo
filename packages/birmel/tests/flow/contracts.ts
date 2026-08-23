@@ -57,3 +57,17 @@ export const FlowHarnessResultSchema = z.object({
 export type FlowHarnessResult = z.infer<typeof FlowHarnessResultSchema>;
 
 export const FLOW_RESULT_PREFIX = "BIRMEL_FLOW_RESULT=";
+
+// The harness runs every scenario in FlowScenarioSchema — migrations, Prisma,
+// and a full turn each — inside one vitest test, so it must not inherit
+// vitest's 5s default. Build 10975 timed out at 5111ms against a ~430ms idle
+// run: a loaded CI agent is an order of magnitude slower, not a few percent.
+export const FLOW_HARNESS_TEST_TIMEOUT_MS = 20_000;
+
+// turn-flow.test.ts spawns the harness as a child vitest run, so its budget has
+// to outlast the harness test itself plus the child's start-up and teardown.
+// Deriving it here keeps the two from contradicting each other: the previous
+// 30s parent budget sat above a 5s inner default, so the inner test failed
+// first and the outer number looked generous while proving nothing.
+export const FLOW_HARNESS_CHILD_TIMEOUT_MS =
+  FLOW_HARNESS_TEST_TIMEOUT_MS + 20_000;
