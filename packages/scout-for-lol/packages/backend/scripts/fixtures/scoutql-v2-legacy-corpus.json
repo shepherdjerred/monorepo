@@ -1,0 +1,126 @@
+{
+  "description": "Every stored Report.queryText captured from beta and prod on 2026-08-23, before the ScoutQL v2 hard cutover. This is the complete live corpus the boot-time migration (migrate-scoutql-v2.ts) must convert; its tests replay each row through the rewriter and the two-route verification property. Do not edit rows — they are evidence, not examples.",
+  "capturedAt": "2026-08-23",
+  "rows": [
+    {
+      "env": "beta",
+      "id": 1,
+      "isEnabled": false,
+      "isSystemManaged": true,
+      "systemSource": "COMPETITION",
+      "queryText": "SELECT player, games FROM competition_match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND competition_id = 9 GROUP BY player ORDER BY games DESC LIMIT 10 RENDER bar_chart"
+    },
+    {
+      "env": "beta",
+      "id": 2,
+      "isEnabled": false,
+      "isSystemManaged": true,
+      "systemSource": "COMPETITION",
+      "queryText": "SELECT player, score FROM competition_rank WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND competition_id = 10 GROUP BY player ORDER BY score DESC LIMIT 25 RENDER leaderboard"
+    },
+    {
+      "env": "beta",
+      "id": 3,
+      "isEnabled": true,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "SELECT player, games, surrenders, surrender_rate FROM match_participants WHERE queue IN ('solo', 'flex') AND games >= 10 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' GROUP BY player ORDER BY surrender_rate DESC LIMIT 10 RENDER leaderboard"
+    },
+    {
+      "env": "beta",
+      "id": 4,
+      "isEnabled": true,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "SELECT group, games, wins, losses, win_rate FROM player_groups WHERE queue IN ('solo', 'flex') AND games >= 10 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' GROUP BY group(all) ORDER BY win_rate DESC LIMIT 25 RENDER leaderboard"
+    },
+    {
+      "env": "beta",
+      "id": 5,
+      "isEnabled": true,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "SELECT group, games, wins, losses, win_rate FROM player_groups WHERE queue IN ('solo', 'flex') AND games >= 10 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' GROUP BY group(all) ORDER BY win_rate ASC LIMIT 25 RENDER leaderboard"
+    },
+    {
+      "env": "beta",
+      "id": 6,
+      "isEnabled": true,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "SELECT group, games, wins, losses, win_rate FROM player_groups WHERE queue IN ('arena') AND games >= 10 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' GROUP BY group(all) ORDER BY win_rate DESC LIMIT 10 RENDER leaderboard"
+    },
+    {
+      "env": "beta",
+      "id": 7,
+      "isEnabled": true,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "SELECT group, games, wins, losses, win_rate FROM player_groups WHERE queue IN ('arena') AND games >= 10 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' GROUP BY group(all) ORDER BY win_rate ASC LIMIT 10 RENDER leaderboard"
+    },
+    {
+      "env": "prod",
+      "id": 221,
+      "isEnabled": false,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "select games, win_rate from match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' group by player order by games desc limit 10 render leaderboard"
+    },
+    {
+      "env": "prod",
+      "id": 224,
+      "isEnabled": false,
+      "isSystemManaged": true,
+      "systemSource": "COMPETITION",
+      "queryText": "SELECT player, score FROM competition_rank WHERE competition_id = 15 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' GROUP BY player ORDER BY score DESC LIMIT 25 RENDER leaderboard"
+    },
+    {
+      "env": "prod",
+      "id": 233,
+      "isEnabled": false,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "SELECT games, win_rate, kills, deaths, assists, kda FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '1 days' GROUP BY player ORDER BY games DESC LIMIT 15 RENDER table"
+    },
+    {
+      "env": "prod",
+      "id": 234,
+      "isEnabled": true,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "SELECT games, win_rate, kills, deaths, assists, kda FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '1 days' GROUP BY player ORDER BY games DESC LIMIT 15 RENDER table"
+    },
+    {
+      "env": "prod",
+      "id": 235,
+      "isEnabled": true,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "SELECT games, win_rate, kills, deaths, assists, kda FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '7 days' GROUP BY player ORDER BY games DESC LIMIT 15 RENDER table"
+    },
+    {
+      "env": "prod",
+      "id": 236,
+      "isEnabled": true,
+      "isSystemManaged": true,
+      "systemSource": "COMPETITION",
+      "queryText": "SELECT player, score FROM competition_rank WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND competition_id = 16 GROUP BY player ORDER BY score DESC LIMIT 10 RENDER leaderboard"
+    },
+    {
+      "env": "prod",
+      "id": 241,
+      "isEnabled": true,
+      "isSystemManaged": false,
+      "systemSource": null,
+      "queryText": "SELECT games, win_rate\nFROM match_participants\nGROUP BY player\nANALYZE LAST 30 DAYS\nBUCKET BY AUTO\nIN TIME ZONE 'Europe/Warsaw'\nORDER BY games desc\nLIMIT 10\nRENDER leaderboard"
+    },
+    {
+      "env": "prod",
+      "id": 242,
+      "isEnabled": true,
+      "isSystemManaged": true,
+      "systemSource": "COMPETITION",
+      "queryText": "SELECT player, score FROM competition_rank WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND competition_id = 19 GROUP BY player ORDER BY score DESC LIMIT 25 RENDER leaderboard"
+    }
+  ]
+}
