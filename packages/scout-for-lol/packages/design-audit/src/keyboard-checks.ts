@@ -61,8 +61,17 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
     }
     skipNextTab = false;
     const focusState = await evaluateBrowser(page, () => {
+      // MUST stay identical to the selector used for `focusBaselines` and
+      // `count` above. It had drifted — this copy omitted `[tabindex]` — so an
+      // element focusable only via `tabindex="0"` was counted in `checks` but
+      // could never appear in `expectedControls`. Its `expectedIndex` came back
+      // -1, the stop was skipped forever, and `visited.size` could never reach
+      // `checks`: "keyboard focus did not reach every visible control" on any
+      // page containing one (27 of 58 routes). The mismatch also misaligned
+      // `focusBaselines[expectedIndex]`, comparing each control's focus ring
+      // against a different element's baseline.
       const baseSelector =
-        ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
+        ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"], [tabindex]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
       const selector =
         window.innerWidth < 800
           ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`

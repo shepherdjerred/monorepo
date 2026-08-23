@@ -51,11 +51,13 @@ export function validatePlaywrightLanes(
       "bun --no-install scripts/namespace-playwright-reports.ts",
       `Playwright lane ${key} does not namespace its Playwright JUnit report before upload`,
     );
-    if (key === "playwright-e2e-main") {
-      requireIncludes(
-        block,
-        "SCOUT_DESIGN_AUDIT_MODE=nightly SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true",
-        "Playwright main lane must boot the deterministic Scout audit server before nightly mode",
+    // The Scout design audit is no longer part of these lanes; it runs nightly
+    // in monorepo-test-reporting. The "must boot the deterministic audit
+    // server" invariant moved with it — validate-reporting-pipeline.ts now
+    // enforces it — rather than being dropped.
+    if (block?.includes("SCOUT_DESIGN_AUDIT_MODE") === true) {
+      fail(
+        `Playwright lane ${key} runs the Scout design audit; it belongs in the nightly monorepo-test-reporting pipeline`,
       );
     }
     for (const forbidden of [

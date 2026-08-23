@@ -27,9 +27,11 @@ if (
     "Nightly Scout design checks require SCOUT_DESIGN_AUDIT_BASE_URL or all three of SCOUT_DESIGN_AUDIT_PUBLIC_URL, SCOUT_DESIGN_AUDIT_DOCS_URL, and SCOUT_DESIGN_AUDIT_APP_URL",
   );
 }
-const browsers = isNightly
-  ? (["chromium", "firefox", "webkit"] as const)
-  : (["chromium"] as const);
+// Chrome and Safari are the browsers that matter for this product. Firefox was
+// dropped deliberately: it added a third of the matrix for a rendering engine
+// nobody targets. The suite runs nightly rather than per-commit, so both
+// browsers run every time and there is no mode branch here.
+const browsers = ["chromium", "webkit"] as const;
 
 // `dev:design-audit` (scripts/dev-web.ts) boots the real Scout backend, which
 // normally requires real DISCORD_TOKEN/DISCORD_CLIENT_SECRET/
@@ -44,22 +46,23 @@ const devDesignAuditCommand =
 const projects: Project[] = [];
 for (const browser of browsers) {
   for (const viewport of viewports) {
+    // Safari is exercised through the iPhone/Desktop Safari device profiles and
+    // Chrome through the Galaxy/Desktop Chrome ones, so each viewport gets a
+    // realistic UA and touch profile rather than a resized desktop.
     const device =
-      browser === "firefox"
-        ? devices["Desktop Firefox"]
-        : browser === "webkit"
-          ? viewport.isMobile
-            ? devices["iPhone 13"]
-            : devices["Desktop Safari"]
-          : viewport.isMobile
-            ? devices["Galaxy S9+"]
-            : devices["Desktop Chrome"];
+      browser === "webkit"
+        ? viewport.isMobile
+          ? devices["iPhone 13"]
+          : devices["Desktop Safari"]
+        : viewport.isMobile
+          ? devices["Galaxy S9+"]
+          : devices["Desktop Chrome"];
     projects.push({
       name: `${browser}-${viewport.name}`,
       use: {
         ...device,
         browserName: browser,
-        isMobile: browser === "firefox" ? false : viewport.isMobile,
+        isMobile: viewport.isMobile,
         viewport: { width: viewport.width, height: viewport.height },
       },
     });
@@ -69,7 +72,13 @@ for (const browser of browsers) {
 export default defineConfig({
   testDir: "./tests",
   timeout: 90_000,
-  expect: { timeout: 10_000 },
+  expect: {
+    timeout: 10_000,
+    // Goldens are generated in the pinned ci-playwright image and compared in
+    // that same image, so this absorbs antialiasing noise rather than papering
+    // over a cross-platform mismatch. Matches packages/sjer.red.
+    toHaveScreenshot: { maxDiffPixelRatio: 0.02 },
+  },
   forbidOnly: env["CI"] === "true",
   fullyParallel: true,
   ...(env["CI"] === "true" ? { workers: 3 } : {}),
@@ -123,7 +132,18 @@ export default defineConfig({
           {
             command: devDesignAuditCommand,
             cwd: "../../../../packages/scout-for-lol",
-            url: "http://localhost:5180/app/login",
+            // Probe the BACKEND, not the SPA. `/app/login` is static vite
+            // output served the moment the dev server binds, so readiness used
+            // to fire while the backend was still running prisma migrate,
+            // prisma generate, and the design-audit seed. Every /api and /trpc
+            // call then hit the proxy with nothing behind it —
+            // `ECONNREFUSED`, surfaced as 502 — which is what failed all 672
+            // app-route tests on build 10794. `/api/version` is proxied to the
+            // backend and reports pure build identity, so it answers only once
+            // the backend is actually listening (unlike `/healthz`, which also
+            // probes the Riot API and would make readiness depend on a third
+            // party).
+            url: "http://localhost:5180/api/version",
             reuseExistingServer: env["CI"] !== "true",
             // This one gets more than the other two on purpose: before it
             // listens it runs `prisma migrate deploy`, `prisma generate`, and

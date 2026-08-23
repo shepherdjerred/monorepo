@@ -1,12 +1,50 @@
 import { expect, type Page } from "@playwright/test";
 
+/**
+ * `role="dialog"` covers two different widgets, and only one of them is modal.
+ *
+ * A Radix Dialog is modal: it traps focus, renders an overlay, and sets
+ * `aria-modal="true"`. A Radix Popover is NOT modal — it is anchored to its
+ * trigger, leaves the rest of the page reachable, and per the ARIA practices
+ * guide correctly omits `aria-modal`. Requiring modal semantics of both was
+ * wrong, and failed on every page carrying a popover (484 failures on build
+ * 10794).
+ *
+ * Popper-anchored content is identified by the positioning attributes Radix
+ * puts on it (`data-side` / `data-align`), which a modal dialog never has.
+ */
+const MODAL_DIALOG =
+  '[role="dialog"]:visible:not([data-side]):not([data-align])';
+
 async function assertVisibleDialogs(page: Page): Promise<void> {
-  const dialogs = page.locator('[role="dialog"]:visible');
-  for (let index = 0; index < (await dialogs.count()); index += 1) {
+  // Matches dialogs that are not THEMSELVES popper-anchored. Deliberately not
+  // `filter({ hasNot })`, which would also skip a genuine modal that happens to
+  // contain a popover.
+  const dialogs = page.locator(MODAL_DIALOG);
+  const dialogCount = await dialogs.count();
+
+  if (dialogCount > 0) {
+    // The invariant is "the rest of the page is hidden from assistive tech",
+    // NOT the presence of `aria-modal`. Radix deliberately never sets that
+    // attribute — its source says so outright: "aria-hide everything except
+    // the content (better supported equivalent to setting aria-modal)". The
+    // old assertion therefore failed on every genuine Scout dialog as well as
+    // on popovers, and satisfying it would mean asking Radix to adopt the
+    // weaker technique.
+    //
+    // Radix marks body's other children `aria-hidden` while a modal is open,
+    // so this is that behaviour observed directly.
+    await expect(
+      page.locator('body > [aria-hidden="true"]'),
+      "an open modal hides the rest of the page from assistive technology",
+    ).not.toHaveCount(0);
+  }
+
+  for (let index = 0; index < dialogCount; index += 1) {
     const dialog = dialogs.nth(index);
-    await expect(dialog, "dialogs expose modal semantics").toHaveAttribute(
-      "aria-modal",
-      "true",
+    await expect(dialog, "dialogs expose an accessible name").toHaveAttribute(
+      "aria-labelledby",
+      /.+/,
     );
     expect(
       await dialog

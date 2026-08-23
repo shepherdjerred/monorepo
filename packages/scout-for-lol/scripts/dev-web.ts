@@ -229,6 +229,13 @@ if (import.meta.main) {
       ...Bun.env,
       DATABASE_URL: options.databaseUrl,
       ENABLE_DEV_LOGIN: "true",
+      // #2314 made this mandatory with no default, on purpose, and updated the
+      // cdk8s charts but not this script — so every local boot crashed at
+      // startup with "FEATURE_FLAGS_MODE is required" before the backend ever
+      // listened. Local dev has no Flipt to reach, so `disabled` is the honest
+      // answer; an explicit ambient value still wins for anyone pointing at a
+      // real flag backend.
+      FEATURE_FLAGS_MODE: Bun.env["FEATURE_FLAGS_MODE"] ?? "disabled",
       PORT: options.backendPort.toString(),
       SCOUT_DEV_BACKEND_URL: backendOrigin,
       SCOUT_DEV_WEB_ORIGIN: webOrigin,

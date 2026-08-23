@@ -22,6 +22,12 @@ export function validateReportingPipeline(pipeline: string): void {
     "allowPrivilegeEscalation: false",
     'image: "${CI_BASE_IMAGE}"',
     'image: "${CI_PLAYWRIGHT_IMAGE}"',
+    // Relocated from validate-pipeline-playwright.ts when the Scout design
+    // audit moved off the per-commit browser lanes. The audit must boot its
+    // own deterministic local stack rather than pointing at a live
+    // environment, so a nightly failure means a real regression and not
+    // someone else's deploy.
+    "SCOUT_DESIGN_AUDIT_MODE=nightly SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true",
   ]) {
     if (!pipeline.includes(required)) {
       fail(`reporting pipeline is missing required contract ${required}`);

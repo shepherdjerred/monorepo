@@ -37,16 +37,16 @@ export function validatePipelineClarity(
   }
 
   for (const [stepKey, required] of [
-    // "(non-blocking)" is load-bearing: the design audit is intentionally not
-    // gating while #2251's failures are fixed, and the scope line is where a
-    // reader learns that. Drop the marker here when the suite is re-blocked.
+    // The Scout design audit is deliberately absent from these steps: it runs
+    // nightly in monorepo-test-reporting instead. The scope line says where it
+    // went, so a reader does not conclude the coverage was simply dropped.
     [
       "playwright-e2e-pr",
-      "Browser E2E scope: sites, Scout public/docs/app design audit (non-blocking), design-system, and eval suites.",
+      "Browser E2E scope: sites, Scout catalog/design-system, and eval suites. The Scout design audit runs nightly in monorepo-test-reporting.",
     ],
     [
       "playwright-e2e-main",
-      "Browser E2E scope: sites, Scout public/docs/app design audit (non-blocking), design-system, and eval suites.",
+      "Browser E2E scope: sites, Scout catalog/design-system, and eval suites. The Scout design audit runs nightly in monorepo-test-reporting.",
     ],
     ["docker-e2e-pr", "llm-observability E2E — Tempo + MinIO"],
     ["docker-e2e-main", "llm-observability E2E — Tempo + MinIO"],
