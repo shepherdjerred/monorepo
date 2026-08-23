@@ -3,7 +3,9 @@ import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
 import analyticsRegistryJson from "@shepherdjerred/monorepo/config/analytics-sites.json" with { type: "json" };
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import versions, {
+  postgresImageVersions,
+} from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 const RegistrySchema = z.object({
@@ -63,7 +65,7 @@ describe("Scout PostHog deployment configuration", () => {
       expect(env.get("POSTHOG_SITE_KEY")).toBe(site?.key);
       expect(env.get("POSTHOG_SITE_HOSTNAME")).toBe(site?.hostname);
       const imageVersion = versions[`shepherdjerred/scout-for-lol/${stage}`];
-      if (scoutImageUsesPostgres(imageVersion)) {
+      if (scoutImageUsesPostgres(imageVersion, postgresImageVersions)) {
         expect(env.get("DATABASE_URL")).toBe(
           `postgresql://$(DB_USER):$(DB_PASSWORD)@scout-${stage}-postgresql.scout-${stage}.svc.cluster.local:5432/scout`,
         );
@@ -91,6 +93,7 @@ describe("Scout PostHog deployment configuration", () => {
       true,
     ],
   ])("classifies the Scout database contract for %s", (version, expected) => {
-    expect(scoutImageUsesPostgres(version)).toBe(expected);
+    const postgresVersions = expected ? new Set([version]) : new Set<string>();
+    expect(scoutImageUsesPostgres(version, postgresVersions)).toBe(expected);
   });
 });

@@ -9,7 +9,7 @@ import { applyCurrentBuildImageOverrides } from "./release-configuration.ts";
 export const versionCatalog = parseVersionCatalog(rawCatalog);
 const versions = VersionMapSchema.parse(versionCatalogMap(versionCatalog));
 
-applyCurrentBuildImageOverrides(versions);
+export const postgresImageVersions = applyCurrentBuildImageOverrides(versions);
 
 /**
  * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned

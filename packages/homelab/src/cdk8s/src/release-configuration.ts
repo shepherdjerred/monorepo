@@ -9,18 +9,16 @@ const ImageDigestsSchema = z.record(z.string().min(1), DigestSchema);
 const ChartRevisionsSchema = z.record(z.string().min(1), BuildVersionSchema);
 
 /**
- * Images from this build onward use the PostgreSQL backend. Older production
- * pins remain on SQLite until Renovate promotes one of these images.
+ * A version is PostgreSQL-backed only when the current image build explicitly
+ * supplied its digest. Catalogued versions do not carry enough provenance to
+ * infer their database contract from the release number.
  */
-// 10860 is the latest catalogued beta image and is still SQLite-backed. The
-// next minted Scout release is the first one this migration can classify as
-// PostgreSQL-backed; never classify an existing SQLite tag by its age alone.
-const SCOUT_POSTGRES_CUTOVER_BUILD = 10_861;
-
-export function scoutImageUsesPostgres(version: string): boolean {
+export function scoutImageUsesPostgres(
+  version: string,
+  postgresImageVersions: ReadonlySet<string>,
+): boolean {
   const parsed = ScoutImageVersionSchema.parse(version);
-  const build = Number.parseInt(parsed.slice(6).split("@")[0] ?? "", 10);
-  return build >= SCOUT_POSTGRES_CUTOVER_BUILD;
+  return postgresImageVersions.has(parsed);
 }
 
 function parseJson(raw: string, label: string): unknown {
@@ -35,15 +33,16 @@ export function applyCurrentBuildImageOverrides(
   versions: Record<string, string>,
   rawDigests: string | undefined = Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"],
   buildVersion: string | undefined = Bun.env["HOMELAB_RELEASE_VERSION"],
-): void {
+): ReadonlySet<string> {
+  const postgresImageVersions = new Set<string>();
   if (rawDigests === undefined) {
-    return;
+    return postgresImageVersions;
   }
   const digests = ImageDigestsSchema.parse(
     parseJson(rawDigests, "HOMELAB_IMAGE_DIGESTS_JSON"),
   );
   if (Object.keys(digests).length === 0) {
-    return;
+    return postgresImageVersions;
   }
   const releaseVersion = BuildVersionSchema.parse(buildVersion);
   for (const [imageKey, digest] of Object.entries(digests)) {
@@ -53,7 +52,11 @@ export function applyCurrentBuildImageOverrides(
       if (!Object.hasOwn(versions, candidate)) {
         continue;
       }
-      versions[candidate] = `${releaseVersion}@${digest}`;
+      const version = `${releaseVersion}@${digest}`;
+      versions[candidate] = version;
+      if (candidate.startsWith("shepherdjerred/scout-for-lol")) {
+        postgresImageVersions.add(version);
+      }
       matched = true;
     }
     if (!matched) {
@@ -62,6 +65,7 @@ export function applyCurrentBuildImageOverrides(
       );
     }
   }
+  return postgresImageVersions;
 }
 
 export function releaseChartRevisions(

@@ -12,7 +12,7 @@ describe("applyCurrentBuildImageOverrides", () => {
       "shepherdjerred/scout/beta": "old@sha256:old",
       "shepherdjerred/scout/prod": "old@sha256:prod",
     };
-    applyCurrentBuildImageOverrides(
+    const postgresImageVersions = applyCurrentBuildImageOverrides(
       versions,
       JSON.stringify({
         "shepherdjerred/worker": `sha256:${"a".repeat(64)}`,
@@ -25,6 +25,21 @@ describe("applyCurrentBuildImageOverrides", () => {
       "shepherdjerred/scout/beta": `2.0.0-42@sha256:${"b".repeat(64)}`,
       "shepherdjerred/scout/prod": "old@sha256:prod",
     });
+    expect(postgresImageVersions).toEqual(new Set());
+
+    const scoutVersions: Record<string, string> = {
+      "shepherdjerred/scout-for-lol/beta": "old@sha256:old",
+    };
+    const migratedVersions = applyCurrentBuildImageOverrides(
+      scoutVersions,
+      JSON.stringify({
+        "shepherdjerred/scout-for-lol/beta": `sha256:${"c".repeat(64)}`,
+      }),
+      "2.0.0-43",
+    );
+    expect(migratedVersions).toEqual(
+      new Set([`2.0.0-43@sha256:${"c".repeat(64)}`]),
+    );
   });
 
   test("fails on an unknown image key", () => {
@@ -41,10 +56,14 @@ describe("applyCurrentBuildImageOverrides", () => {
     const versions: Record<string, string> = {
       "shepherdjerred/worker": "old@sha256:old",
     };
-    applyCurrentBuildImageOverrides(versions, "{}");
+    const postgresImageVersions = applyCurrentBuildImageOverrides(
+      versions,
+      "{}",
+    );
     expect(versions).toEqual({
       "shepherdjerred/worker": "old@sha256:old",
     });
+    expect(postgresImageVersions).toEqual(new Set());
   });
 });
 
@@ -57,8 +76,20 @@ test("releaseChartRevisions validates exact build revisions", () => {
   ).toThrow();
 });
 
-test("keeps the promoted SQLite pin below the Postgres cutover", () => {
-  expect(scoutImageUsesPostgres("2.0.0-9495")).toBe(false);
-  expect(scoutImageUsesPostgres("2.0.0-10860")).toBe(false);
-  expect(scoutImageUsesPostgres("2.0.0-10861")).toBe(true);
+test("classifies Scout images from current-build provenance", () => {
+  const postgresImageVersions = new Set([
+    "2.0.0-10861@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+  ]);
+  expect(
+    scoutImageUsesPostgres(
+      "2.0.0-10860@sha256:c79be8f789dc48b8add32d5c633be88a881899cef91beb8efd450fba483474ff",
+      postgresImageVersions,
+    ),
+  ).toBe(false);
+  expect(
+    scoutImageUsesPostgres(
+      "2.0.0-10861@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      postgresImageVersions,
+    ),
+  ).toBe(true);
 });

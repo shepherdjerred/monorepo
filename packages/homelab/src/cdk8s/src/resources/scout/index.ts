@@ -17,7 +17,9 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import versions, {
+  postgresImageVersions,
+} from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
@@ -100,7 +102,10 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     "scout-pg-secret-ref",
     `scout.scout-${stage}-postgresql.credentials.postgresql.acid.zalan.do`,
   );
-  const dbEnv: Record<string, EnvValue> = scoutImageUsesPostgres(imageVersion)
+  const dbEnv: Record<string, EnvValue> = scoutImageUsesPostgres(
+    imageVersion,
+    postgresImageVersions,
+  )
     ? {
         DB_USER: EnvValue.fromSecretValue({
           secret: pgSecretRef,
