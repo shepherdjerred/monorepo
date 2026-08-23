@@ -692,13 +692,35 @@ steps:
           podSpecPatch:
             <<: *pod_buildkit_pod_spec
             initContainers:
+              # The live ConfigMap is reconciled only after this PR merges.
+              # Render its Tempo 3-compatible subset first, so this PR's new
+              # Tempo image can be accepted before that GitOps reconciliation.
+              - name: render-tempo-config
+                # renovate: datasource=docker depName=mikefarah/yq
+                image: "mikefarah/yq:latest@sha256:cfc4eee658595834ef304eadb0c3ea721f3b7cb6404ad8b7cb909cc5b5145b23"
+                command:
+                  - /bin/sh
+                  - -ec
+                  - >-
+                    yq eval 'del(.ingester, .compactor)'
+                    /config-source/tempo.yaml > /etc/tempo/tempo.yaml
+                volumeMounts:
+                  - {
+                      name: llm-observability-e2e-tempo-source,
+                      mountPath: /config-source,
+                      readOnly: true,
+                    }
+                  - {
+                      name: llm-observability-e2e-tempo-rendered,
+                      mountPath: /etc/tempo,
+                    }
               - name: tempo
                 image: "grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
                 restartPolicy: Always
                 args: ["-config.file=/etc/tempo/tempo.yaml"]
                 volumeMounts:
                   - {
-                      name: llm-observability-e2e-tempo,
+                      name: llm-observability-e2e-tempo-rendered,
                       mountPath: /etc/tempo,
                       readOnly: true,
                     }
@@ -722,9 +744,10 @@ steps:
                   ]
             volumes:
               - {
-                  name: llm-observability-e2e-tempo,
+                  name: llm-observability-e2e-tempo-source,
                   configMap: { name: llm-observability-e2e-tempo },
                 }
+              - { name: llm-observability-e2e-tempo-rendered, emptyDir: {} }
               - {
                   name: llm-observability-e2e-data,
                   emptyDir: { medium: Memory, sizeLimit: 1Gi },
@@ -750,13 +773,35 @@ steps:
           podSpecPatch:
             <<: *pod_buildkit_pod_spec
             initContainers:
+              # The live ConfigMap is reconciled only after this PR merges.
+              # Render its Tempo 3-compatible subset first, so this PR's new
+              # Tempo image can be accepted before that GitOps reconciliation.
+              - name: render-tempo-config
+                # renovate: datasource=docker depName=mikefarah/yq
+                image: "mikefarah/yq:latest@sha256:cfc4eee658595834ef304eadb0c3ea721f3b7cb6404ad8b7cb909cc5b5145b23"
+                command:
+                  - /bin/sh
+                  - -ec
+                  - >-
+                    yq eval 'del(.ingester, .compactor)'
+                    /config-source/tempo.yaml > /etc/tempo/tempo.yaml
+                volumeMounts:
+                  - {
+                      name: llm-observability-e2e-tempo-source,
+                      mountPath: /config-source,
+                      readOnly: true,
+                    }
+                  - {
+                      name: llm-observability-e2e-tempo-rendered,
+                      mountPath: /etc/tempo,
+                    }
               - name: tempo
                 image: "grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
                 restartPolicy: Always
                 args: ["-config.file=/etc/tempo/tempo.yaml"]
                 volumeMounts:
                   - {
-                      name: llm-observability-e2e-tempo,
+                      name: llm-observability-e2e-tempo-rendered,
                       mountPath: /etc/tempo,
                       readOnly: true,
                     }
@@ -780,9 +825,10 @@ steps:
                   ]
             volumes:
               - {
-                  name: llm-observability-e2e-tempo,
+                  name: llm-observability-e2e-tempo-source,
                   configMap: { name: llm-observability-e2e-tempo },
                 }
+              - { name: llm-observability-e2e-tempo-rendered, emptyDir: {} }
               - {
                   name: llm-observability-e2e-data,
                   emptyDir: { medium: Memory, sizeLimit: 1Gi },
