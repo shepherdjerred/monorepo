@@ -1,12 +1,12 @@
 {
   "artifactVersion": 1,
-  "generatedAt": "2026-05-16T20:00:21.251Z",
+  "generatedAt": "2026-08-22T13:11:55.483Z",
   "source": {
     "startDate": "2026-05-06",
     "endDate": "2026-05-13",
     "queueIds": [400, 420, 440, 480, 490],
-    "matchCount": 621,
-    "participantCount": 6210
+    "matchCount": 622,
+    "participantCount": 6220
   },
   "champions": [
     {
@@ -118,20 +118,20 @@
       "championId": 6
     },
     {
-      "total": 26,
+      "total": 27,
       "counts": {
         "top": 0,
         "jungle": 0,
-        "middle": 23,
+        "middle": 24,
         "adc": 0,
         "support": 3
       },
       "probabilities": {
         "top": 0,
         "jungle": 0,
-        "middle": 0.8846153846153846,
+        "middle": 0.8888888888888888,
         "adc": 0,
-        "support": 0.11538461538461539
+        "support": 0.1111111111111111
       },
       "championId": 7
     },
@@ -622,35 +622,35 @@
       "championId": 34
     },
     {
-      "total": 25,
+      "total": 26,
       "counts": {
         "top": 0,
-        "jungle": 21,
+        "jungle": 22,
         "middle": 0,
         "adc": 0,
         "support": 4
       },
       "probabilities": {
         "top": 0,
-        "jungle": 0.84,
+        "jungle": 0.8461538461538461,
         "middle": 0,
         "adc": 0,
-        "support": 0.16
+        "support": 0.15384615384615385
       },
       "championId": 35
     },
     {
-      "total": 26,
+      "total": 27,
       "counts": {
-        "top": 19,
+        "top": 20,
         "jungle": 7,
         "middle": 0,
         "adc": 0,
         "support": 0
       },
       "probabilities": {
-        "top": 0.7307692307692307,
-        "jungle": 0.2692307692307692,
+        "top": 0.7407407407407407,
+        "jungle": 0.25925925925925924,
         "middle": 0,
         "adc": 0,
         "support": 0
@@ -856,19 +856,19 @@
       "championId": 50
     },
     {
-      "total": 90,
+      "total": 91,
       "counts": {
         "top": 0,
         "jungle": 0,
         "middle": 1,
-        "adc": 89,
+        "adc": 90,
         "support": 0
       },
       "probabilities": {
         "top": 0,
         "jungle": 0,
-        "middle": 0.011111111111111112,
-        "adc": 0.9888888888888889,
+        "middle": 0.01098901098901099,
+        "adc": 0.989010989010989,
         "support": 0
       },
       "championId": 51
@@ -1666,13 +1666,13 @@
       "championId": 110
     },
     {
-      "total": 55,
+      "total": 56,
       "counts": {
         "top": 0,
         "jungle": 0,
         "middle": 0,
         "adc": 0,
-        "support": 55
+        "support": 56
       },
       "probabilities": {
         "top": 0,
@@ -1828,18 +1828,18 @@
       "championId": 121
     },
     {
-      "total": 35,
+      "total": 36,
       "counts": {
-        "top": 27,
+        "top": 28,
         "jungle": 7,
         "middle": 1,
         "adc": 0,
         "support": 0
       },
       "probabilities": {
-        "top": 0.7714285714285715,
-        "jungle": 0.2,
-        "middle": 0.02857142857142857,
+        "top": 0.7777777777777778,
+        "jungle": 0.19444444444444445,
+        "middle": 0.027777777777777776,
         "adc": 0,
         "support": 0
       },
@@ -1882,18 +1882,18 @@
       "championId": 127
     },
     {
-      "total": 44,
+      "total": 45,
       "counts": {
         "top": 2,
-        "jungle": 19,
+        "jungle": 20,
         "middle": 23,
         "adc": 0,
         "support": 0
       },
       "probabilities": {
-        "top": 0.045454545454545456,
-        "jungle": 0.4318181818181818,
-        "middle": 0.5227272727272727,
+        "top": 0.044444444444444446,
+        "jungle": 0.4444444444444444,
+        "middle": 0.5111111111111111,
         "adc": 0,
         "support": 0
       },
@@ -1918,20 +1918,20 @@
       "championId": 133
     },
     {
-      "total": 25,
+      "total": 26,
       "counts": {
         "top": 0,
         "jungle": 0,
-        "middle": 22,
+        "middle": 23,
         "adc": 2,
         "support": 1
       },
       "probabilities": {
         "top": 0,
         "jungle": 0,
-        "middle": 0.88,
-        "adc": 0.08,
-        "support": 0.04
+        "middle": 0.8846153846153846,
+        "adc": 0.07692307692307693,
+        "support": 0.038461538461538464
       },
       "championId": 134
     },
@@ -1990,20 +1990,20 @@
       "championId": 142
     },
     {
-      "total": 24,
+      "total": 25,
       "counts": {
         "top": 1,
         "jungle": 7,
         "middle": 0,
         "adc": 0,
-        "support": 16
+        "support": 17
       },
       "probabilities": {
-        "top": 0.041666666666666664,
-        "jungle": 0.2916666666666667,
+        "top": 0.04,
+        "jungle": 0.28,
         "middle": 0,
         "adc": 0,
-        "support": 0.6666666666666666
+        "support": 0.68
       },
       "championId": 143
     },
@@ -2206,20 +2206,20 @@
       "championId": 201
     },
     {
-      "total": 101,
+      "total": 102,
       "counts": {
         "top": 2,
         "jungle": 1,
         "middle": 1,
-        "adc": 95,
+        "adc": 96,
         "support": 2
       },
       "probabilities": {
-        "top": 0.019801980198019802,
-        "jungle": 0.009900990099009901,
-        "middle": 0.009900990099009901,
-        "adc": 0.9405940594059405,
-        "support": 0.019801980198019802
+        "top": 0.0196078431372549,
+        "jungle": 0.00980392156862745,
+        "middle": 0.00980392156862745,
+        "adc": 0.9411764705882353,
+        "support": 0.0196078431372549
       },
       "championId": 202
     },
@@ -3165,10 +3165,10 @@
       "spellIds": [1, 4]
     },
     {
-      "total": 30,
+      "total": 31,
       "counts": {
         "top": 0,
-        "jungle": 30,
+        "jungle": 31,
         "middle": 0,
         "adc": 0,
         "support": 0
@@ -3336,10 +3336,10 @@
       "spellIds": [3, 7]
     },
     {
-      "total": 1167,
+      "total": 1168,
       "counts": {
         "top": 0,
-        "jungle": 1167,
+        "jungle": 1168,
         "middle": 0,
         "adc": 0,
         "support": 0
@@ -3374,39 +3374,39 @@
       "spellIds": [4, 12]
     },
     {
-      "total": 1583,
+      "total": 1588,
       "counts": {
-        "top": 619,
+        "top": 620,
         "jungle": 0,
-        "middle": 510,
+        "middle": 512,
         "adc": 14,
-        "support": 440
+        "support": 442
       },
       "probabilities": {
-        "top": 0.3910296904611497,
+        "top": 0.3904282115869018,
         "jungle": 0,
-        "middle": 0.3221730890713834,
-        "adc": 0.008843967150979154,
-        "support": 0.2779532533164877
+        "middle": 0.3224181360201511,
+        "adc": 0.008816120906801008,
+        "support": 0.2783375314861461
       },
       "spellPair": "4:14",
       "spellIds": [4, 14]
     },
     {
-      "total": 1026,
+      "total": 1028,
       "counts": {
         "top": 24,
         "jungle": 0,
         "middle": 34,
-        "adc": 964,
+        "adc": 966,
         "support": 4
       },
       "probabilities": {
-        "top": 0.023391812865497075,
+        "top": 0.023346303501945526,
         "jungle": 0,
-        "middle": 0.03313840155945419,
-        "adc": 0.9395711500974658,
-        "support": 0.003898635477582846
+        "middle": 0.033073929961089495,
+        "adc": 0.9396887159533074,
+        "support": 0.0038910505836575876
       },
       "spellPair": "4:21",
       "spellIds": [4, 21]
@@ -3469,18 +3469,18 @@
       "spellIds": [6, 11]
     },
     {
-      "total": 32,
+      "total": 33,
       "counts": {
-        "top": 29,
+        "top": 30,
         "jungle": 0,
         "middle": 3,
         "adc": 0,
         "support": 0
       },
       "probabilities": {
-        "top": 0.90625,
+        "top": 0.9090909090909091,
         "jungle": 0,
-        "middle": 0.09375,
+        "middle": 0.09090909090909091,
         "adc": 0,
         "support": 0
       },
