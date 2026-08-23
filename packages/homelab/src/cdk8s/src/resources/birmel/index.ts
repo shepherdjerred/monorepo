@@ -142,6 +142,11 @@ export function createBirmelDeployment(chart: Chart) {
         }),
 
         // OpenRouter ordinary inference
+        // Bootstrap for the flag client — these cannot come from a flag.
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
         OPENROUTER_API_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,

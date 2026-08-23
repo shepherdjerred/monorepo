@@ -134,6 +134,9 @@ async function processGuildActivity(
  * Runs every hour.
  */
 export async function aggregateActivityMetrics(): Promise<void> {
+  if (!getConfig().activityTracking.enabled) {
+    return;
+  }
   return runScheduledJob(
     { name: "aggregate-activity", timeoutMs: 5 * 60 * 1000 },
     async (signal) => {

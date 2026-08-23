@@ -141,6 +141,9 @@ async function processGuildBirthdays(
  * Runs daily at a configured time (default: 09:00 UTC).
  */
 export async function checkAndPostBirthdays(): Promise<void> {
+  if (!getConfig().birthdays.enabled) {
+    return;
+  }
   return runScheduledJob(
     { name: "check-birthdays", timeoutMs: 5 * 60 * 1000 },
     async (signal) => {

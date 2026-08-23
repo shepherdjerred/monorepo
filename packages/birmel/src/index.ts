@@ -8,6 +8,10 @@ initializeObservability();
 import { handleMessage } from "./agent-runtime/message-handler.ts";
 import { executeIsolatedAgentJob } from "./agent-runtime/job-agent.ts";
 import { getConfig } from "./config/index.ts";
+import {
+  initializeDynamicConfig,
+  shutdownDynamicConfig,
+} from "./config/dynamic.ts";
 import { disconnectPrisma } from "./database/index.ts";
 import { destroyDiscordClient, getDiscordClient } from "./discord/client.ts";
 import { registerEventHandlers } from "./discord/events/index.ts";
@@ -38,6 +42,7 @@ async function shutdown(exitCode: number): Promise<void> {
   await destroyMusicPlayer();
   await destroyDiscordClient();
   await disconnectPrisma();
+  await shutdownDynamicConfig();
   await shutdownObservability();
   logger.info("Birmel shutdown complete");
   process.exit(exitCode);
@@ -45,6 +50,11 @@ async function shutdown(exitCode: number): Promise<void> {
 
 async function main(): Promise<void> {
   const config = getConfig();
+  await initializeDynamicConfig({
+    log: (message) => {
+      logger.warn(message);
+    },
+  });
   logger.info("Starting Birmel 3.0", {
     model: config.openRouter.model,
     classifierModel: config.openRouter.classifierModel,

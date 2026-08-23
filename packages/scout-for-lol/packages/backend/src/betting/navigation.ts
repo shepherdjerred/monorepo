@@ -6,7 +6,7 @@ import {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { getLedgerPage, type LedgerPage } from "#src/betting/accounts.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { PEEK_PASS_DURATION_LABEL } from "#src/betting/peek-pass.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -204,7 +204,7 @@ export async function handleBucksNavigation(
   }
 
   const serverId = DiscordGuildIdSchema.parse(interaction.guildId);
-  if (!getFlag("betting_enabled", { server: serverId })) {
+  if (!(await isPolicyEnabled("betting_enabled", { server: serverId }))) {
     await interaction.deferReply({ ephemeral: true });
     await interaction.editReply({
       content: BUCKS_NOT_ENABLED,

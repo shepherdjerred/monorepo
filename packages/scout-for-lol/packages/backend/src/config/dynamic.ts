@@ -11,6 +11,7 @@ import {
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { createLogger } from "#src/logger.ts";
 import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
+import configuration from "#src/configuration.ts";
 
 const logger = createLogger("config-dynamic");
 
@@ -71,6 +72,33 @@ const DEFINITION = {
     sources: ["flag", "env", "default"],
     default: 20_000_000,
   },
+  reportAiModel: {
+    schema: z.string().trim().min(1),
+    sources: ["flag", "env", "default"],
+    default: "gpt-5.6-sol",
+    names: { flag: "scout-report-ai-model", env: "REPORT_AI_MODEL" },
+  },
+  bettingParlayAiModel: {
+    schema: z.string().trim().min(1),
+    sources: ["flag", "env", "default"],
+    default: "gpt-5.6-sol",
+    names: {
+      flag: "scout-betting-parlay-ai-model",
+      env: "BETTING_PARLAY_AI_MODEL",
+    },
+  },
+  exploreModel: {
+    schema: z.string().trim().min(1),
+    sources: ["flag", "env", "default"],
+    default: "gpt-5.6-sol",
+    names: { flag: "scout-explore-model", env: "EXPLORE_MODEL" },
+  },
+  bucksAskModel: {
+    schema: z.string().trim().min(1),
+    sources: ["flag", "env", "default"],
+    default: "gpt-5.6-luna",
+    names: { flag: "scout-bucks-ask-model", env: "BB_ASK_MODEL" },
+  },
 } as const;
 
 const REFRESH_INTERVAL_MS = 60_000;
@@ -83,6 +111,10 @@ function buildSnapshot(
     exploreGuildAllowlist: string[];
     llmHourlyTokenBudget: number;
     llmDailyTokenBudget: number;
+    reportAiModel?: string;
+    bettingParlayAiModel?: string;
+    exploreModel?: string;
+    bucksAskModel?: string;
   },
   flagSourceEnabled: boolean,
 ) {
@@ -97,6 +129,10 @@ function buildSnapshot(
                 exploreGuildAllowlist: "string",
                 llmHourlyTokenBudget: "number",
                 llmDailyTokenBudget: "number",
+                reportAiModel: "string",
+                bettingParlayAiModel: "string",
+                exploreModel: "string",
+                bucksAskModel: "string",
               },
             }),
           }
@@ -122,6 +158,31 @@ function buildSnapshot(
 }
 
 let snapshot: Snapshot | undefined;
+let pollTimer: ReturnType<typeof setInterval> | undefined;
+const refreshListeners = new Set<() => Promise<void>>();
+
+export function addDynamicConfigRefreshListener(
+  listener: () => Promise<void>,
+): () => void {
+  refreshListeners.add(listener);
+  return () => {
+    refreshListeners.delete(listener);
+  };
+}
+
+async function notifyRefreshListeners(): Promise<void> {
+  for (const listener of refreshListeners) {
+    await listener();
+  }
+}
+
+async function refreshDynamicConfigAndNotify(): Promise<void> {
+  try {
+    await refreshDynamicConfig();
+  } catch (error: unknown) {
+    logger.error("dynamic config refresh listener failed", { error });
+  }
+}
 
 export type InitializeDynamicConfigOptions = {
   readonly environment?: InitFeatureFlagsOptions["environment"];
@@ -131,6 +192,10 @@ export type InitializeDynamicConfigOptions = {
     exploreGuildAllowlist: string[];
     llmHourlyTokenBudget: number;
     llmDailyTokenBudget: number;
+    reportAiModel?: string;
+    bettingParlayAiModel?: string;
+    exploreModel?: string;
+    bucksAskModel?: string;
   };
   /** Tests pass false to avoid an interval. */
   readonly startPolling?: boolean;
@@ -158,17 +223,11 @@ export async function initializeDynamicConfig(
   snapshot = buildSnapshot(options.environment ?? Bun.env, options.seed, true);
   await snapshot.refresh();
   if (options.startPolling !== false) {
-    snapshot.start(REFRESH_INTERVAL_MS);
+    pollTimer ??= setInterval(() => {
+      void refreshDynamicConfigAndNotify();
+    }, REFRESH_INTERVAL_MS);
+    pollTimer.unref();
   }
-}
-
-function getSnapshot(): Snapshot {
-  if (snapshot === undefined) {
-    throw new Error(
-      "dynamic config read before initializeDynamicConfig(); call it during startup",
-    );
-  }
-  return snapshot;
 }
 
 /** Whether dynamic config has been initialized. */
@@ -177,19 +236,62 @@ export function isDynamicConfigReady(): boolean {
 }
 
 export function exploreGuildAllowlist(): string[] {
-  return getSnapshot().get("exploreGuildAllowlist");
+  return (
+    snapshot?.get("exploreGuildAllowlist") ??
+    configuration.exploreGuildAllowlist
+  );
 }
 
 export function llmHourlyTokenBudget(): number {
-  return getSnapshot().get("llmHourlyTokenBudget");
+  return (
+    snapshot?.get("llmHourlyTokenBudget") ?? configuration.llmHourlyTokenBudget
+  );
 }
 
 export function llmDailyTokenBudget(): number {
-  return getSnapshot().get("llmDailyTokenBudget");
+  return (
+    snapshot?.get("llmDailyTokenBudget") ?? configuration.llmDailyTokenBudget
+  );
+}
+
+export function reportAiModel(): string {
+  return (
+    snapshot?.get("reportAiModel") ??
+    configuration.reportAiModel ??
+    "gpt-5.6-sol"
+  );
+}
+
+export function bettingParlayAiModel(): string {
+  return (
+    snapshot?.get("bettingParlayAiModel") ??
+    configuration.bettingParlayAiModel ??
+    "gpt-5.6-sol"
+  );
+}
+
+export function exploreModel(): string {
+  return snapshot?.get("exploreModel") ?? configuration.exploreModel;
+}
+
+export function bucksAskModel(): string {
+  return snapshot?.get("bucksAskModel") ?? configuration.bucksAskModel;
+}
+
+export async function refreshDynamicConfig(): Promise<void> {
+  if (snapshot === undefined) {
+    return;
+  }
+  await snapshot.refresh();
+  await notifyRefreshListeners();
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {
-  snapshot?.stop();
+  if (pollTimer !== undefined) {
+    clearInterval(pollTimer);
+    pollTimer = undefined;
+  }
+  refreshListeners.clear();
   snapshot = undefined;
   await shutdownFeatureFlags();
 }

@@ -11,10 +11,12 @@
 # Multi-stage: base-build carries the C/C++ toolchain the native
 # trustedDependencies postinstalls (node-datachannel, node-av) need during
 # `bun install`; BOTH install stages inherit it so the native builds behave
-# identically, while the runtime stage keeps only the ffmpeg/VAAPI runtime
-# stack — no compilers. Dev dependencies and the rest of the monorepo source
-# never reach the final image, and the source layer only invalidates when a
-# closure package changes — not on every repo commit.
+# identically. npm is also installed because prebuild-install uses it for the
+# source-build fallback when a native prebuild is unavailable. The runtime
+# stage keeps only the ffmpeg/VAAPI runtime stack — no compilers. Dev
+# dependencies and the rest of the monorepo source never reach the final
+# image, and the source layer only invalidates when a closure package changes —
+# not on every repo commit.
 FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
 WORKDIR /app
 
@@ -31,7 +33,7 @@ RUN set -e; \
     fi; \
     apt-get update -qq; \
     apt-get install -y -qq --no-install-recommends \
-      ca-certificates curl python3 build-essential cmake pkg-config \
+      ca-certificates curl npm python3 build-essential cmake pkg-config \
       ffmpeg libva2 libva-drm2 vainfo; \
     if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
       apt-get install -y -qq --no-install-recommends intel-media-va-driver-non-free; \

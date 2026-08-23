@@ -15,7 +15,7 @@ import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { PENDING_EARNING_RETRY_DELAY_MS } from "#src/betting/constants.ts";
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
 import { z } from "zod";
@@ -80,7 +80,7 @@ async function findClassicPrematchEarnTargets(input: {
     const player = account.player;
     if (
       player.discordId === null ||
-      !getFlag("betting_enabled", { server: player.serverId })
+      !(await isPolicyEnabled("betting_enabled", { server: player.serverId }))
     ) {
       continue;
     }

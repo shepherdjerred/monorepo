@@ -1,4 +1,5 @@
 import type { RESTPostAPIApplicationCommandsJSONBody } from "discord.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { helpCommand } from "#src/discord/commands/help.ts";
 import {
   docsCommand,
@@ -10,7 +11,10 @@ import { listCommand } from "#src/discord/commands/list.ts";
 import { trackCommand } from "#src/discord/commands/track.ts";
 import { bbCommand } from "#src/discord/commands/bb-definition.ts";
 import { scoutCommand } from "#src/discord/commands/scout-definition.ts";
-import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
+import {
+  isPolicyEnabled,
+  listGuildsWithFlagEnabled,
+} from "#src/configuration/flags.ts";
 import { exploreAllowlist } from "#src/explore/access.ts";
 
 /**
@@ -45,22 +49,33 @@ export const commandPayload = commandDefinitions.map((command) =>
  */
 export type GuildScopedCommandGroup = {
   enabledGuildIds: () => string[];
+  isEnabled?: (guildId: string) => Promise<boolean>;
   payload: RESTPostAPIApplicationCommandsJSONBody[];
 };
 
 export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
   {
     enabledGuildIds: () => listGuildsWithFlagEnabled("betting_enabled"),
+    isEnabled: async (guildId) =>
+      await isPolicyEnabled("betting_enabled", {
+        server: DiscordGuildIdSchema.parse(guildId),
+      }),
     payload: [bbCommand.toJSON()],
   },
   { enabledGuildIds: exploreAllowlist, payload: [scoutCommand.toJSON()] },
 ];
 
 /** Complete guild command payload; an empty array removes stale commands. */
-export function guildCommandPayload(
+export async function guildCommandPayload(
   guildId: string,
-): RESTPostAPIApplicationCommandsJSONBody[] {
-  return guildScopedCommandGroups.flatMap((group) =>
-    group.enabledGuildIds().includes(guildId) ? group.payload : [],
-  );
+): Promise<RESTPostAPIApplicationCommandsJSONBody[]> {
+  const payload: RESTPostAPIApplicationCommandsJSONBody[] = [];
+  for (const group of guildScopedCommandGroups) {
+    const enabled =
+      group.isEnabled === undefined
+        ? group.enabledGuildIds().includes(guildId)
+        : await group.isEnabled(guildId);
+    if (enabled) payload.push(...group.payload);
+  }
+  return payload;
 }

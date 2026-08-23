@@ -11,7 +11,7 @@ import {
   HouseInsufficientError as WalletHouseInsufficientError,
   findEligiblePlayer,
 } from "#src/betting/accounts.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { GeneratedParlaySchema } from "#src/betting/parlay-criteria.ts";
 import {
@@ -142,7 +142,7 @@ async function placeParlayBetInner(
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<PlaceParlayBetResult> {
-  if (!getFlag("betting_enabled", { server: input.serverId })) {
+  if (!(await isPolicyEnabled("betting_enabled", { server: input.serverId }))) {
     return { kind: "feature_disabled" };
   }
   const stake = BucksStakeSchema.safeParse(input.stake);

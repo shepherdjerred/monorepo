@@ -29,7 +29,7 @@ import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
 import { describeParlayResult } from "#src/betting/parlay-bet-button.ts";
 import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
 import { selectParlayMarketForAlias } from "#src/betting/parlay-market-selection.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
 import { buildBbPrizesEmbed } from "#src/discord/commands/bb-prizes.ts";
@@ -365,7 +365,7 @@ export async function executeBb(
     }
 
     const serverId = DiscordGuildIdSchema.parse(interaction.guildId);
-    if (!getFlag("betting_enabled", { server: serverId })) {
+    if (!(await isPolicyEnabled("betting_enabled", { server: serverId }))) {
       // Reachable only if the flag was turned off after registration, since
       // the command is not registered anywhere the flag is off.
       await interaction.reply({

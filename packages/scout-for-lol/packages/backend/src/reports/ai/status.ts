@@ -4,19 +4,20 @@ import {
   type ReportAiEditStatus,
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { reportAiModel } from "#src/config/dynamic.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { getReportAiQuotaStatus } from "#src/reports/ai/rate-limit.ts";
 
-export function getReportAiEditStatus(params: {
+export async function getReportAiEditStatus(params: {
   guildId: DiscordGuildId;
   userId: DiscordAccountId;
-}): ReportAiEditStatus {
-  const model = configuration.reportAiModel ?? "gpt-5.6-sol";
-  const featureEnabled = getFlag("ai_reports_enabled", {
+}): Promise<ReportAiEditStatus> {
+  const model = reportAiModel();
+  const featureEnabled = await isPolicyEnabled("ai_reports_enabled", {
     server: params.guildId,
     user: params.userId,
   });
-  const exempt = getFlag("ai_reports_unlimited", {
+  const exempt = await isPolicyEnabled("ai_reports_unlimited", {
     server: params.guildId,
     user: params.userId,
   });

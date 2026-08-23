@@ -278,6 +278,7 @@ const commands: Record<
       CLAUDE_CODE_OAUTH_TOKEN: "smoke-test-dummy",
       OPENROUTER_API_KEY: "smoke-test-dummy",
       DATABASE_URL: "file:/tmp/smoke-test.db",
+      FEATURE_FLAGS_MODE: "disabled",
       TELEMETRY_ENABLED: "false",
     },
   },

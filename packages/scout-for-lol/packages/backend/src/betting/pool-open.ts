@@ -12,7 +12,7 @@ import {
 import { BETTING_WINDOW_MS } from "#src/betting/constants.ts";
 import { isBettableGame } from "#src/betting/eligibility.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import {
@@ -116,12 +116,16 @@ function buildRoster(input: {
  * helper remains the authoritative gate for the guild-scoped wallet, pool,
  * buttons, and peek-pass surfaces.
  */
-export function bettingEnabledGuilds(
+export async function bettingEnabledGuilds(
   guildIds: readonly DiscordGuildId[],
-): DiscordGuildId[] {
-  return guildIds.filter((serverId) =>
-    getFlag("betting_enabled", { server: serverId }),
-  );
+): Promise<DiscordGuildId[]> {
+  const enabled: DiscordGuildId[] = [];
+  for (const serverId of guildIds) {
+    if (await isPolicyEnabled("betting_enabled", { server: serverId })) {
+      enabled.push(serverId);
+    }
+  }
+  return enabled;
 }
 
 export type OpenPoolsInput = {
@@ -157,7 +161,7 @@ export async function openBettingPoolsForPrematch(
       return opened;
     }
 
-    const enabledGuilds = bettingEnabledGuilds(input.guildIds);
+    const enabledGuilds = await bettingEnabledGuilds(input.guildIds);
     if (enabledGuilds.length === 0) {
       return opened;
     }

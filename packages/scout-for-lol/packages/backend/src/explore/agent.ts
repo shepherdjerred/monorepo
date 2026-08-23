@@ -18,7 +18,7 @@ import {
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import configuration from "#src/configuration.ts";
+import { exploreModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
@@ -80,7 +80,7 @@ type RunState = {
 export async function streamExploreAgent(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
-  const model = configuration.exploreModel;
+  const model = exploreModel();
   const runtime = getOpenRouterRuntime();
   if (runtime === undefined) {
     throw new Error("OPENROUTER_API_KEY is required for explore");

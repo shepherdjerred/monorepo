@@ -1,7 +1,7 @@
 import { Output, stepCountIs, tool, ToolLoopAgent } from "ai";
 import { z } from "zod";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
-import configuration from "#src/configuration.ts";
+import { bucksAskModel } from "#src/config/dynamic.ts";
 import {
   BucksAccountQueryResultSchema,
   BucksAccountQuerySchema,
@@ -144,7 +144,7 @@ async function runBucksAskAgentInternal(
   },
   dependencies: BucksAskAgentDependencies,
 ): Promise<BucksAskAgentResult> {
-  const model = configuration.bucksAskModel;
+  const model = bucksAskModel();
   const injectedModel = dependencies.runModel !== undefined;
   const runModel =
     dependencies.runModel ??

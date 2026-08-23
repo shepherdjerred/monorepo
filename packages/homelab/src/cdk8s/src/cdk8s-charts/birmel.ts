@@ -6,6 +6,7 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createBirmelDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/birmel/index.ts";
+import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 
 export function createBirmelChart(app: App) {
   const chart = new Chart(app, "birmel", {
@@ -64,7 +65,7 @@ export function createBirmelChart(app: App) {
     },
   });
 
-  // NetworkPolicy: Allow egress to DNS, Tempo (OTLP), external HTTPS, and Discord voice UDP
+  // NetworkPolicy: Allow egress to DNS, Flipt, Tempo (OTLP), external HTTPS, and Discord voice UDP
   new KubeNetworkPolicy(chart, "birmel-egress-netpol", {
     metadata: { name: "birmel-egress-netpol" },
     spec: {
@@ -94,6 +95,19 @@ export function createBirmelChart(app: App) {
             },
           ],
           ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
+        },
+        // Flipt evaluation (flipt-flipt-service.flipt.svc.cluster.local:8080)
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+              },
+            },
+          ],
+          ports: [
+            { port: IntOrString.fromNumber(FLIPT_PORT), protocol: "TCP" },
+          ],
         },
         // PinchTab browser automation (pinchtab.pinchtab.svc.cluster.local:9867)
         {

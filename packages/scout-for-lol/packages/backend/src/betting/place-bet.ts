@@ -8,7 +8,7 @@ import {
   type RiotTeamId,
 } from "@scout-for-lol/data";
 import { teamIdForSubjectOutcome } from "#src/betting/team.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {
   ensureBucksAccount,
   HouseInsufficientError,
@@ -156,7 +156,7 @@ async function placeBetInner(
   // are NOT gated: the flag governs taking Bucks, never returning them.
   // Refusing to settle a pool whose stakes were already debited would strand
   // real balances, which is a worse outcome than paying out one last match.
-  if (!getFlag("betting_enabled", { server: input.serverId })) {
+  if (!(await isPolicyEnabled("betting_enabled", { server: input.serverId }))) {
     return { kind: "feature_disabled" };
   }
 

@@ -71,6 +71,10 @@ await initializeDynamicConfig({
     exploreGuildAllowlist: configuration.exploreGuildAllowlist,
     llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
     llmDailyTokenBudget: configuration.llmDailyTokenBudget,
+    reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
+    bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
+    exploreModel: configuration.exploreModel,
+    bucksAskModel: configuration.bucksAskModel,
   },
   metrics: featureFlagMetrics,
 });

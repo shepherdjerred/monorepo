@@ -4,8 +4,14 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
+import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
+import {
   addFlagOverride,
   getFlag,
+  isPolicyEnabled,
   listGuildsWithFlagDeclared,
   listGuildsWithFlagEnabled,
   MY_SERVER,
@@ -115,5 +121,37 @@ describe("listGuildsWithFlagDeclared", () => {
     addFlagOverride("debug", false, { server: OTHER_GUILD });
     const guilds = listGuildsWithFlagDeclared("debug");
     expect(guilds.filter((guild) => guild === OTHER_GUILD)).toHaveLength(1);
+  });
+});
+
+describe("isPolicyEnabled", () => {
+  afterEach(async () => {
+    await shutdownFeatureFlags();
+  });
+
+  test("a resolved false stops the local guild fallback", async () => {
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({ betting_enabled: false }),
+    });
+
+    // The static provider's resolved false must stop the local beta fallback;
+    // this catches the dangerous false-is-absence regression.
+    await expect(
+      isPolicyEnabled("betting_enabled", { server: MY_SERVER }),
+    ).resolves.toBe(false);
+  });
+
+  test("keeps targeted fail-closed defaults when the provider is unavailable", async () => {
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+    });
+
+    await expect(
+      isPolicyEnabled("ai_reports_enabled", { server: OTHER_GUILD }),
+    ).resolves.toBe(false);
+    await expect(
+      isPolicyEnabled("ai_reports_enabled", { server: MY_SERVER }),
+    ).resolves.toBe(true);
   });
 });

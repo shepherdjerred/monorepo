@@ -6,6 +6,7 @@ import {
   KubeNetworkPolicy,
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 
 export type Stage = "prod" | "beta";
 
@@ -55,7 +56,7 @@ export function createScoutChart(app: App, stage: Stage) {
     },
   });
 
-  // NetworkPolicy: Allow egress to DNS, SeaweedFS S3, and external HTTPS
+  // NetworkPolicy: Allow egress to DNS, Flipt, SeaweedFS S3, and external HTTPS
   new KubeNetworkPolicy(chart, "scout-egress-netpol", {
     metadata: { name: "scout-egress-netpol" },
     spec: {
@@ -85,6 +86,19 @@ export function createScoutChart(app: App, stage: Stage) {
             },
           ],
           ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
+        },
+        // Flipt evaluation (flipt-flipt-service.flipt.svc.cluster.local:8080)
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+              },
+            },
+          ],
+          ports: [
+            { port: IntOrString.fromNumber(FLIPT_PORT), protocol: "TCP" },
+          ],
         },
         // External HTTPS (Riot API, Discord, Sentry, OpenAI, Gemini, ElevenLabs)
         {

@@ -36,6 +36,8 @@ FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
   packages/birmel \
+  packages/config \
+  packages/feature-flags \
   packages/glitter-context \
   packages/llm-models \
   ./
@@ -112,6 +114,8 @@ RUN set -e; \
 COPY --parents \
   tsconfig.base.json \
   packages/birmel \
+  packages/config \
+  packages/feature-flags \
   packages/llm-models \
   packages/llm-observability \
   packages/llm-runtime \

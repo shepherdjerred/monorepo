@@ -33,7 +33,7 @@ function dependencies(input: {
   sendMessage?: WeeklyBucksLeaderboardDependencies["sendMessage"];
 }): WeeklyBucksLeaderboardDependencies {
   return {
-    enabledGuilds: () => input.guilds ?? [SERVER_ID],
+    enabledGuilds: async () => input.guilds ?? [SERVER_ID],
     hasGuild: () => input.member ?? true,
     loadRows: () => Promise.resolve(input.rows ?? []),
     sendMessage: input.sendMessage ?? (() => Promise.resolve(undefined)),
