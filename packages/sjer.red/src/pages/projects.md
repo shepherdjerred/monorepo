@@ -6,6 +6,140 @@ description: Some of the things I've worked on over the years
 
 This page documents some of the things I've worked on over the years.
 
+<nav class="project-tabs" aria-label="Project sections" role="tablist">
+  <button id="featured-tab" type="button" role="tab" aria-selected="true" aria-controls="featured-panel">Featured</button>
+  <button id="all-tab" type="button" role="tab" aria-selected="false" aria-controls="all-panel">All</button>
+</nav>
+
+<style>
+  .project-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin: 1.5rem 0 2rem;
+    border-bottom: 1px solid #d1d5db;
+  }
+
+  .project-tabs button {
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .project-tabs button[aria-selected="true"] {
+    border-bottom-color: #2563eb;
+    color: #2563eb;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .project-tabs {
+      border-bottom-color: #374151;
+    }
+  }
+</style>
+
+<script>
+  const initializeProjectTabs = () => {
+    const article = document.querySelector("article");
+    const featuredHeading = article?.querySelector("#featured");
+    const allMarker = article?.querySelector("#all")?.closest("p");
+    const featuredTab = document.querySelector("#featured-tab");
+    const allTab = document.querySelector("#all-tab");
+
+    if (
+      !(article instanceof HTMLElement) ||
+      !(featuredHeading instanceof HTMLElement) ||
+      !(allMarker instanceof HTMLElement) ||
+      !(featuredTab instanceof HTMLButtonElement) ||
+      !(allTab instanceof HTMLButtonElement)
+    ) {
+      return;
+    }
+
+    if (article.dataset.projectTabsInitialized === "true") {
+      return;
+    }
+    article.dataset.projectTabsInitialized = "true";
+
+    const articleChildren = Array.from(article.children);
+    const featuredStart = articleChildren.indexOf(featuredHeading);
+    const allStart = articleChildren.indexOf(allMarker);
+    const featuredContent = articleChildren.slice(featuredStart, allStart);
+    const allContent = articleChildren.slice(allStart);
+    const featuredPanel = document.createElement("div");
+    const allPanel = document.createElement("div");
+
+    featuredPanel.id = "featured-panel";
+    featuredPanel.setAttribute("role", "tabpanel");
+    featuredPanel.setAttribute("tabindex", "0");
+    allPanel.id = "all-panel";
+    allPanel.setAttribute("role", "tabpanel");
+    allPanel.setAttribute("tabindex", "0");
+    article.insertBefore(featuredPanel, featuredContent[0]);
+    article.insertBefore(allPanel, allContent[0]);
+    featuredContent.forEach((element) => featuredPanel.append(element));
+    allContent.forEach((element) => allPanel.append(element));
+    const tabs = [featuredTab, allTab];
+
+    const setActiveTab = (activeTab) => {
+      const showingFeatured = activeTab === "featured";
+      featuredPanel.hidden = !showingFeatured;
+      allPanel.hidden = showingFeatured;
+      featuredTab.setAttribute("aria-selected", String(showingFeatured));
+      allTab.setAttribute("aria-selected", String(!showingFeatured));
+      featuredTab.tabIndex = showingFeatured ? 0 : -1;
+      allTab.tabIndex = showingFeatured ? -1 : 0;
+    };
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () =>
+        setActiveTab(index === 0 ? "featured" : "all"),
+      );
+      tab.addEventListener("keydown", (event) => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+          return;
+        }
+        event.preventDefault();
+        const nextIndex = (index + 1) % 2;
+        const nextTab = tabs[nextIndex];
+        nextTab.focus();
+        setActiveTab(nextIndex === 0 ? "featured" : "all");
+      });
+    });
+    setActiveTab(window.location.hash === "#all" ? "all" : "featured");
+  };
+
+  document.addEventListener("astro:page-load", initializeProjectTabs);
+  initializeProjectTabs();
+</script>
+
+## Featured
+
+### [Astro Open Graph Images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images)
+
+An Astro integration for generating customizable Open Graph images for static pages and content collections.
+
+### [Scout for LoL](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
+
+A Discord bot and dashboard that tracks League of Legends matches, sends game notifications, and produces detailed post-match reports, competitions, and leaderboards.
+
+### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring)
+
+A small TypeScript library that fetches, sanitizes, caches, and truncates updates from RSS and Atom feeds.
+
+### [Cooklang](https://github.com/shepherdjerred/cooklang-for-obsidian)
+
+An Obsidian plugin that renders Cooklang recipes with rich previews, ingredients, directions, timers, nutrition, and metadata.
+
+### [Better Skill Capped](https://github.com/shepherdjerred/monorepo/tree/main/packages/better-skill-capped)
+
+A better interface for Skill Capped.
+
+<span id="all"></span>
+
 ## Timeless
 
 ### [sjer.red](https://github.com/shepherdjerred/monorepo)

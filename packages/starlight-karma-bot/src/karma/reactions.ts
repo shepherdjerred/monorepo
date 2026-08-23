@@ -19,7 +19,7 @@ import {
   type User,
 } from "discord.js";
 import * as Sentry from "@sentry/bun";
-import configuration from "#src/configuration.ts";
+import { karmaEmoji } from "#src/config.ts";
 import { KARMA_GIVE_AMOUNT } from "#src/karma/scoring.ts";
 import { ReactionOperationQueue } from "#src/karma/reaction-operation-queue.ts";
 import {
@@ -53,7 +53,7 @@ async function resolveAdd(
   if (
     !shouldResolveReactionAdd({
       emoji: reaction.emoji,
-      configuredEmoji: configuration.karmaEmoji,
+      configuredEmoji: await karmaEmoji(reaction.message.guildId),
       reactorIsBot: user.bot,
     })
   ) {
@@ -135,7 +135,12 @@ async function applyReactionRemove(
   // refetch throws and the award would silently survive the un-react. The
   // event payload already carries the emoji and the message id, which is
   // everything the revoke needs.
-  if (!emojiMatchesKarma(reaction.emoji, configuration.karmaEmoji)) {
+  if (
+    !emojiMatchesKarma(
+      reaction.emoji,
+      await karmaEmoji(reaction.message.guildId),
+    )
+  ) {
     return;
   }
 
@@ -171,7 +176,12 @@ async function revokeMessageAwards(
 export async function handleReactionRemoveEmoji(
   reaction: MessageReaction | PartialMessageReaction,
 ): Promise<void> {
-  if (!emojiMatchesKarma(reaction.emoji, configuration.karmaEmoji)) {
+  if (
+    !emojiMatchesKarma(
+      reaction.emoji,
+      await karmaEmoji(reaction.message.guildId),
+    )
+  ) {
     return;
   }
   await reactionOperations.run(reactionOperationKey(reaction), () =>

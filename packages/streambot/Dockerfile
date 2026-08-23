@@ -153,11 +153,16 @@ COPY --from=prod-deps /app/ /app/
 
 # Scoped source closure + the built dists from the build stage. The canonical
 # evaluation corpus is intentionally excluded from production layers.
+# config/feature-flags export straight from `src/*.ts` and the isolated linker
+# installs them as symlinks into these directories, so their source has to be
+# present or the bot dies at boot with "Cannot find module".
 COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
   tsconfig.base.json \
   packages/streambot \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
+  packages/config \
+  packages/feature-flags \
   ./
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/discord-video-stream/dist packages/discord-video-stream/dist
@@ -188,7 +193,7 @@ RUN VOICE_ASSISTANT_ENABLED=true \
 FROM runtime AS smoke
 # The general app smoke harness ships in CI context only and never reaches the
 # pushed image. Restore the full development dependency tree only in this stage
-# because the integration smoke now runs Vitest, while the runtime image stays
+# because the integration suite runs Vitest, while the runtime image stays
 # production-only. Depend on voice-smoke so explicit smoke builds prove both.
 COPY --from=deps /app/ /app/
 COPY vitest.config.ts /app/vitest.config.ts
@@ -198,6 +203,14 @@ ARG SMOKE_TARGET=streambot
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 USER 1000:1000
 ENV HOME=/tmp
+# The real-ffmpeg integration suite belongs to this stage and only this stage.
+# It needs the runtime rootfs (ffmpeg + libass + zimg + fonts) AND a Vitest
+# runner, and the published image deliberately carries no development
+# dependencies — so it cannot run from the shared harness, which also executes
+# against the pushed digest (.buildkite/application-image-smoke.Dockerfile).
+RUN mkdir -p /tmp/videos \
+    && cd /app/packages/streambot \
+    && bun run test:integration
 RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
 FROM runtime AS image

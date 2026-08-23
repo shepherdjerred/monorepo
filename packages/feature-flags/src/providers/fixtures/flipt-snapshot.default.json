@@ -1,0 +1,84 @@
+{
+  "namespace": {
+    "key": "default"
+  },
+  "flags": [
+    {
+      "key": "model-name",
+      "name": "",
+      "description": "",
+      "enabled": true,
+      "type": "VARIANT_FLAG_TYPE",
+      "createdAt": "2026-08-21T05:03:24.618486Z",
+      "updatedAt": "2026-08-21T05:03:24.618486Z",
+      "rules": [
+        {
+          "id": "9a47eb09-1b6b-4151-9945-db0534b8b691",
+          "segments": [
+            {
+              "key": "everyone",
+              "name": "",
+              "description": "",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": []
+            }
+          ],
+          "rank": 1,
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "distributions": [
+            {
+              "ruleId": "9a47eb09-1b6b-4151-9945-db0534b8b691",
+              "variantKey": "gpt-5.6-sol",
+              "variantAttachment": "null",
+              "rollout": 100
+            }
+          ]
+        }
+      ],
+      "rollouts": []
+    },
+    {
+      "key": "plain-on",
+      "name": "",
+      "description": "",
+      "enabled": true,
+      "type": "BOOLEAN_FLAG_TYPE",
+      "createdAt": "2026-08-21T05:03:24.618486Z",
+      "updatedAt": "2026-08-21T05:03:24.618486Z",
+      "rules": [],
+      "rollouts": []
+    },
+    {
+      "key": "plain-off",
+      "name": "",
+      "description": "",
+      "enabled": false,
+      "type": "BOOLEAN_FLAG_TYPE",
+      "createdAt": "2026-08-21T05:03:24.618486Z",
+      "updatedAt": "2026-08-21T05:03:24.618486Z",
+      "rules": [],
+      "rollouts": []
+    },
+    {
+      "key": "ramp-30",
+      "name": "",
+      "description": "",
+      "enabled": false,
+      "type": "BOOLEAN_FLAG_TYPE",
+      "createdAt": "2026-08-21T05:03:24.618486Z",
+      "updatedAt": "2026-08-21T05:03:24.618486Z",
+      "rules": [],
+      "rollouts": [
+        {
+          "type": "THRESHOLD_ROLLOUT_TYPE",
+          "rank": 1,
+          "threshold": {
+            "percentage": 30,
+            "value": true
+          }
+        }
+      ]
+    }
+  ],
+  "digest": "75289fe4be9cd9a17d35a567c6384165b7848a49"
+}
