@@ -56,9 +56,14 @@ export function ExploreHeader(props: {
             </SheetContent>
           </Sheet>
         </div>
-        <h2 className="truncate text-xl font-semibold tracking-tight">
+        {/* The page's primary heading, so h1 — axe flagged both Explore routes
+            for page-has-heading-one while this was an h2 and nothing else on
+            the page claimed the top level. explore-shared.tsx already renders
+            the same title as an h1 with these exact classes; this was the
+            outlier, and the visual result is unchanged. */}
+        <h1 className="truncate text-xl font-semibold tracking-tight">
           {props.title}
-        </h2>
+        </h1>
       </div>
 
       {props.actions !== undefined && (

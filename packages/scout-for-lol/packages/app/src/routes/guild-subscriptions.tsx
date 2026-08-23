@@ -262,7 +262,13 @@ export function GuildSubscriptions() {
                 <TableHead>Accounts</TableHead>
                 <TableHead>Channel</TableHead>
                 <TableHead>Filters</TableHead>
-                <TableHead className="w-1" />
+                <TableHead className="w-1">
+                  {/* Named for assistive tech rather than left empty: axe
+                      flags a header cell with no accessible text
+                      (empty-table-header), and a screen reader announcing
+                      "blank" gives no clue what the column holds. */}
+                  <span className="scout-sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

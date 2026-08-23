@@ -31,6 +31,7 @@ Metric kinds:
   <section>
     <h2>{group.kind} metrics ({group.metrics.length})</h2>
     <DataTable
+      label={`${group.kind} metrics`}
       columns={[
         { header: "Metric", values: group.metrics.map((m) => m.id), code: true },
         { header: "Name", values: group.metrics.map((m) => m.label) },

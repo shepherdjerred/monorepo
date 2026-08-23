@@ -21,6 +21,7 @@ displayed. A query with no `RENDER` clause renders as a table.
 ## Text kinds
 
 <DataTable
+  label="Text kinds"
   columns={[
     { header: "Kind", values: textKinds.map((k) => k.id), code: true },
     { header: "Name", values: textKinds.map((k) => k.label) },
@@ -34,6 +35,7 @@ ranked player rows by default; change that with the `mentions` option below.
 ## Chart kinds
 
 <DataTable
+  label="Chart kinds"
   columns={[
     { header: "Kind", values: chartKinds.map((k) => k.id), code: true },
     { header: "Name", values: chartKinds.map((k) => k.label) },

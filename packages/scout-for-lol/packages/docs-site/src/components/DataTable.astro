@@ -18,9 +18,21 @@ interface Column {
 
 interface Props {
   columns: Column[];
+  /**
+   * Distinguishes this table's scroll region from others on the same page.
+   *
+   * The region falls back to naming itself after its column headers, which
+   * collides when a page renders several tables with the same shape — the
+   * metrics reference emits one per metric kind, and the render reference has
+   * matching "Text kinds" and "Chart kinds" tables. Landmarks sharing a role
+   * and an accessible name are an axe `landmark-unique` violation, and a
+   * screen-reader user hears the same name several times with nothing to tell
+   * them apart. Pass the section name when a page has more than one table.
+   */
+  label?: string;
 }
 
-const { columns } = Astro.props;
+const { columns, label } = Astro.props;
 
 const firstColumn = columns[0];
 if (firstColumn === undefined) {
@@ -35,7 +47,7 @@ for (const column of columns) {
   }
 }
 const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
-const tableLabel = columns.map((column) => column.header).join(", ");
+const tableLabel = label ?? columns.map((column) => column.header).join(", ");
 ---
 
 <div
