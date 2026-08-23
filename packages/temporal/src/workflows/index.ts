@@ -107,6 +107,7 @@ import type {
   GlitterContextRefreshInput,
   GlitterContextRefreshResult,
 } from "#activities/glitter-context-refresh.ts";
+import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./main-vuln-scan.ts";
 import {
   runKometaWorkflow as runKometaWorkflowImplementation,
   runBunCacheGcWorkflow as runBunCacheGcWorkflowImplementation,
@@ -122,6 +123,10 @@ export async function fetchSkillCappedManifest(): Promise<void> {
 
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
+}
+
+export async function runMainVulnScanWorkflow(): Promise<void> {
+  return runMainVulnScanWorkflowImplementation();
 }
 
 export async function runBunCacheGcWorkflow(): Promise<void> {

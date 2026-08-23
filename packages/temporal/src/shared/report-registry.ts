@@ -71,6 +71,13 @@ export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
     receiptRequiredAfter: REPORT_RECEIPT_ACTIVATION,
   },
   {
+    scheduleId: "main-vuln-scan-weekly",
+    reportType: "main-vuln-scan",
+    cadenceHours: 168,
+    graceHours: defaultReportGraceHours(168),
+    receiptRequiredAfter: REPORT_RECEIPT_ACTIVATION,
+  },
+  {
     scheduleId: "ci-io-post-merge-impact",
     reportType: "ci-io-impact",
     cadenceHours: 24,

@@ -31,6 +31,8 @@ import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
 import { weatherActivities } from "./weather.ts";
 import { workflowFailureWatchActivities } from "./workflow-failure-watch-activity.ts";
 import { maintenanceActivities } from "./maintenance.ts";
+import { mainVulnScanActivities } from "./main-vuln-scan.ts";
+import { mainVulnScanAlertActivities } from "./main-vuln-scan-alerts.ts";
 import { reportDeliveryActivities } from "./report-delivery.ts";
 import { protobufWatchActivities } from "./protobuf-watch.ts";
 import { tasknotesCanaryActivities } from "./tasknotes-canary.ts";
@@ -52,6 +54,7 @@ export const reportActivities = {
   ...workflowFailureWatchActivities,
   sendAgentTaskEmail: agentTaskActivities.sendAgentTaskEmail,
   sendAgentTaskFailureReport: agentTaskActivities.sendAgentTaskFailureReport,
+  ...mainVulnScanAlertActivities,
 };
 
 export const infraActivities = {
@@ -102,6 +105,11 @@ export const glitterCorpusWorkerActivities = {
 
 export const glitterContextWorkerActivities = {
   ...glitterContextRefreshActivities,
+};
+
+export const maintenanceWorkerActivities = {
+  ...maintenanceActivities,
+  ...mainVulnScanActivities,
 };
 
 /**
