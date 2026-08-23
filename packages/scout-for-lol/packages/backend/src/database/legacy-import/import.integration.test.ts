@@ -31,6 +31,27 @@ const OWNER = DiscordAccountIdSchema.parse("222333444555666777");
 const PUUID = "p".repeat(78);
 const NOW = 1_755_600_000_000; // epoch ms, as the legacy adapter stored dates
 
+function sqliteValues(
+  row: Record<string, unknown>,
+  keys: readonly string[],
+): (string | number | bigint | null)[] {
+  return keys
+    .map((key) => row[key])
+    .map((value) => {
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "bigint" ||
+        value === null
+      ) {
+        return value;
+      }
+      throw new Error(
+        `fixture value not sqlite-storable: ${JSON.stringify(value)}`,
+      );
+    });
+}
+
 function buildLegacySqlite(
   path: string,
   omittedTables: ReadonlySet<string> = new Set(),
@@ -57,21 +78,7 @@ function buildLegacySqlite(
       const keys = Object.keys(row).filter((key) => columns.has(key));
       const placeholders = keys.map(() => "?").join(", ");
       const cols = keys.map((key) => `"${key}"`).join(", ");
-      const values: (string | number | bigint | null)[] = keys
-        .map((key) => row[key])
-        .map((value) => {
-          if (
-            typeof value === "string" ||
-            typeof value === "number" ||
-            typeof value === "bigint" ||
-            value === null
-          ) {
-            return value;
-          }
-          throw new Error(
-            `fixture value not sqlite-storable: ${JSON.stringify(value)}`,
-          );
-        });
+      const values = sqliteValues(row, keys);
       db.query(`INSERT INTO "${table}" (${cols}) VALUES (${placeholders})`).run(
         ...values,
       );
@@ -401,7 +408,9 @@ describe("legacy sqlite import", () => {
       }),
     ).toEqual([]);
   });
+});
 
+describe("legacy sqlite import safety", () => {
   test("refuses to trust a marker after the sqlite source changes", async () => {
     const changedFixturePath = `${fixtureDir}/legacy-changed.sqlite`;
     await Bun.write(
