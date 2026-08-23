@@ -3,13 +3,7 @@
   "source": {
     "startDate": "2026-05-14",
     "endDate": "2026-05-16",
-    "queueIds": [
-      400,
-      420,
-      440,
-      480,
-      490
-    ],
+    "queueIds": [400, 420, 440, 480, 490],
     "sampleSize": 100,
     "seed": "scout-lane-priors-patch-cadence-v1"
   },

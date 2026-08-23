@@ -4,13 +4,7 @@
   "source": {
     "startDate": "2026-05-06",
     "endDate": "2026-05-13",
-    "queueIds": [
-      400,
-      420,
-      440,
-      480,
-      490
-    ],
+    "queueIds": [400, 420, 440, 480, 490],
     "matchCount": 622,
     "participantCount": 6220
   },
@@ -3130,10 +3124,7 @@
         "support": 0
       },
       "spellPair": "1:14",
-      "spellIds": [
-        1,
-        14
-      ]
+      "spellIds": [1, 14]
     },
     {
       "total": 1,
@@ -3152,10 +3143,7 @@
         "support": 0
       },
       "spellPair": "1:3",
-      "spellIds": [
-        1,
-        3
-      ]
+      "spellIds": [1, 3]
     },
     {
       "total": 78,
@@ -3174,10 +3162,7 @@
         "support": 0.01282051282051282
       },
       "spellPair": "1:4",
-      "spellIds": [
-        1,
-        4
-      ]
+      "spellIds": [1, 4]
     },
     {
       "total": 31,
@@ -3196,10 +3181,7 @@
         "support": 0
       },
       "spellPair": "11:14",
-      "spellIds": [
-        11,
-        14
-      ]
+      "spellIds": [11, 14]
     },
     {
       "total": 11,
@@ -3218,10 +3200,7 @@
         "support": 0
       },
       "spellPair": "12:14",
-      "spellIds": [
-        12,
-        14
-      ]
+      "spellIds": [12, 14]
     },
     {
       "total": 3,
@@ -3240,10 +3219,7 @@
         "support": 0
       },
       "spellPair": "14:21",
-      "spellIds": [
-        14,
-        21
-      ]
+      "spellIds": [14, 21]
     },
     {
       "total": 6,
@@ -3262,10 +3238,7 @@
         "support": 0
       },
       "spellPair": "3:11",
-      "spellIds": [
-        3,
-        11
-      ]
+      "spellIds": [3, 11]
     },
     {
       "total": 3,
@@ -3284,10 +3257,7 @@
         "support": 0
       },
       "spellPair": "3:12",
-      "spellIds": [
-        3,
-        12
-      ]
+      "spellIds": [3, 12]
     },
     {
       "total": 11,
@@ -3306,10 +3276,7 @@
         "support": 0.5454545454545454
       },
       "spellPair": "3:14",
-      "spellIds": [
-        3,
-        14
-      ]
+      "spellIds": [3, 14]
     },
     {
       "total": 287,
@@ -3328,10 +3295,7 @@
         "support": 0.43902439024390244
       },
       "spellPair": "3:4",
-      "spellIds": [
-        3,
-        4
-      ]
+      "spellIds": [3, 4]
     },
     {
       "total": 2,
@@ -3350,10 +3314,7 @@
         "support": 0
       },
       "spellPair": "3:6",
-      "spellIds": [
-        3,
-        6
-      ]
+      "spellIds": [3, 6]
     },
     {
       "total": 16,
@@ -3372,10 +3333,7 @@
         "support": 1
       },
       "spellPair": "3:7",
-      "spellIds": [
-        3,
-        7
-      ]
+      "spellIds": [3, 7]
     },
     {
       "total": 1168,
@@ -3394,10 +3352,7 @@
         "support": 0
       },
       "spellPair": "4:11",
-      "spellIds": [
-        4,
-        11
-      ]
+      "spellIds": [4, 11]
     },
     {
       "total": 1012,
@@ -3416,10 +3371,7 @@
         "support": 0.008893280632411068
       },
       "spellPair": "4:12",
-      "spellIds": [
-        4,
-        12
-      ]
+      "spellIds": [4, 12]
     },
     {
       "total": 1588,
@@ -3438,10 +3390,7 @@
         "support": 0.2783375314861461
       },
       "spellPair": "4:14",
-      "spellIds": [
-        4,
-        14
-      ]
+      "spellIds": [4, 14]
     },
     {
       "total": 1028,
@@ -3460,10 +3409,7 @@
         "support": 0.0038910505836575876
       },
       "spellPair": "4:21",
-      "spellIds": [
-        4,
-        21
-      ]
+      "spellIds": [4, 21]
     },
     {
       "total": 230,
@@ -3482,10 +3428,7 @@
         "support": 0.008695652173913044
       },
       "spellPair": "4:6",
-      "spellIds": [
-        4,
-        6
-      ]
+      "spellIds": [4, 6]
     },
     {
       "total": 661,
@@ -3504,10 +3447,7 @@
         "support": 0.962178517397882
       },
       "spellPair": "4:7",
-      "spellIds": [
-        4,
-        7
-      ]
+      "spellIds": [4, 7]
     },
     {
       "total": 39,
@@ -3526,10 +3466,7 @@
         "support": 0
       },
       "spellPair": "6:11",
-      "spellIds": [
-        6,
-        11
-      ]
+      "spellIds": [6, 11]
     },
     {
       "total": 33,
@@ -3548,10 +3485,7 @@
         "support": 0
       },
       "spellPair": "6:12",
-      "spellIds": [
-        6,
-        12
-      ]
+      "spellIds": [6, 12]
     },
     {
       "total": 7,
@@ -3570,10 +3504,7 @@
         "support": 0.14285714285714285
       },
       "spellPair": "6:14",
-      "spellIds": [
-        6,
-        14
-      ]
+      "spellIds": [6, 14]
     },
     {
       "total": 3,
@@ -3592,10 +3523,7 @@
         "support": 0.3333333333333333
       },
       "spellPair": "6:7",
-      "spellIds": [
-        6,
-        7
-      ]
+      "spellIds": [6, 7]
     },
     {
       "total": 1,
@@ -3614,10 +3542,7 @@
         "support": 0
       },
       "spellPair": "7:14",
-      "spellIds": [
-        7,
-        14
-      ]
+      "spellIds": [7, 14]
     }
   ]
 }
