@@ -116,7 +116,13 @@ export function parseDesiredManifest(value: unknown): DesiredManifest {
         `desired manifest.feeds[${String(index)}].filtersActionRead must be a string`,
       );
     }
-    return { title, url, htmlUrl, description, filtersActionRead };
+    return {
+      title,
+      url,
+      ...(htmlUrl === undefined ? {} : { htmlUrl }),
+      ...(description === undefined ? {} : { description }),
+      ...(filtersActionRead === undefined ? {} : { filtersActionRead }),
+    };
   });
   if (new Set(feeds.map((feed) => feed.url)).size !== feeds.length) {
     throw new Error("desired manifest feed URLs must be unique");
@@ -463,37 +469,4 @@ export async function reconcileFreshRss(
     edited: desired.feeds.length,
     pruned: stale.length,
   };
-}
-
-function requiredEnv(name: string): string {
-  const value = Bun.env[name];
-  if (value === undefined || value.length === 0)
-    throw new Error(`${name} is required`);
-  return value;
-}
-
-async function main(): Promise<void> {
-  const manifestPath = requiredEnv("FRESHRSS_MANIFEST_PATH");
-  const manifestValue: unknown = JSON.parse(
-    await Bun.file(manifestPath).text(),
-  );
-  const result = await reconcileFreshRss({
-    apiUrl: requiredEnv("FRESHRSS_API_URL"),
-    user: requiredEnv("FRESHRSS_USER"),
-    password: requiredEnv("FRESHRSS_API_PASSWORD"),
-    category: requiredEnv("FRESHRSS_CATEGORY"),
-    manifest: parseDesiredManifest(manifestValue),
-  });
-  console.log(
-    `FreshRSS reconciliation complete: ${String(result.desired)} desired, ${String(result.edited)} edited, ${String(result.pruned)} pruned`,
-  );
-}
-
-if (import.meta.main) {
-  try {
-    await main();
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 1;
-  }
 }

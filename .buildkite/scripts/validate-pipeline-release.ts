@@ -297,7 +297,7 @@ async function validateSelectorAndUpload(): Promise<void> {
     fail("pipeline upload can omit the source side of renames");
   }
   for (const required of [
-    "packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST",
+    ".buildkite/ci-image/DIGEST",
     ".buildkite/ci-playwright/DIGEST",
     "export CI_BASE_IMAGE CI_PLAYWRIGHT_IMAGE",
   ]) {

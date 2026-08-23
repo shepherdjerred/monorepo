@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Testing } from "cdk8s";
 import { z } from "zod";
-import { MAINTENANCE_IMAGE_READY } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/maintenance-image-readiness.ts";
 import {
   BUILDKITE_CONTROLLER_METRICS_INTERVAL,
   createBuildkiteMonitoring,
@@ -91,23 +90,16 @@ function expectExpressionContains(
 function assertCollectorStaleExpression(rule: Record<string, unknown>): void {
   const expression = ruleExpression(rule);
   expectExpressionContains(expression, ["> 1200"]);
-  if (MAINTENANCE_IMAGE_READY) {
-    expectExpressionContains(expression, [
-      `maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
-      "kubernetes_maintenance_last_success_timestamp_seconds",
-      `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
-      'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
-      'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
-      'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
-      'up{\n        namespace="buildkite",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
-      'condition="Progressing",\n        status="false"',
-      'reason="NewReplicaSetAvailable"',
-    ]);
-    return;
-  }
   expectExpressionContains(expression, [
-    "kube_cronjob_status_last_successful_time",
-    "kube_cronjob_created",
+    `maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
+    "kubernetes_maintenance_last_success_timestamp_seconds",
+    `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
+    'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+    'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+    'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
+    'up{\n        namespace="buildkite",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
+    'condition="Progressing",\n        status="false"',
+    'reason="NewReplicaSetAvailable"',
   ]);
 }
 
@@ -253,15 +245,11 @@ describe("Buildkite monitoring manifests", () => {
       },
     });
     const turboExpression = ruleExpression(turboCleanupStale);
-    if (MAINTENANCE_IMAGE_READY) {
-      expectExpressionContains(turboExpression, [
-        `maintenance_job="${TURBO_CACHE_CLEAN_ACTIVITY}"`,
-        "> 129600",
-        "kubernetes_maintenance_last_success_timestamp_seconds",
-      ]);
-      expect(turboExpression).not.toMatch(/[{,]\s*job=/);
-    } else {
-      expect(turboExpression).toBe("vector(0)");
-    }
+    expectExpressionContains(turboExpression, [
+      `maintenance_job="${TURBO_CACHE_CLEAN_ACTIVITY}"`,
+      "> 129600",
+      "kubernetes_maintenance_last_success_timestamp_seconds",
+    ]);
+    expect(turboExpression).not.toMatch(/[{,]\s*job=/);
   });
 });

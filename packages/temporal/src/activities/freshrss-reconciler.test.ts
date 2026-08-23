@@ -87,7 +87,11 @@ class MockFreshRssApi {
           (candidate) => candidate.url === feed.url,
         );
         if (subscription !== undefined) {
-          subscription.filtersActionRead = feed.filtersActionRead;
+          if (feed.filtersActionRead === undefined) {
+            delete subscription.filtersActionRead;
+          } else {
+            subscription.filtersActionRead = feed.filtersActionRead;
+          }
         }
       }
     }

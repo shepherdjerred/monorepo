@@ -11,13 +11,13 @@ git -C "$FIXTURE" init -q
 git -C "$FIXTURE" config user.email ci-upload@example.invalid
 git -C "$FIXTURE" config user.name "CI upload test"
 mkdir -p "$FIXTURE/packages/sjer.red" "$FIXTURE/packages/docs" "$FIXTURE/fake-bin"
-mkdir -p "$FIXTURE/packages/homelab/src/cdk8s/src/resources/argo-applications"
+mkdir -p "$FIXTURE/.buildkite/ci-image"
 mkdir -p "$FIXTURE/.buildkite/ci-playwright"
 printf 'source\n' > "$FIXTURE/packages/sjer.red/source.ts"
-printf 'sha256:%064d\n' 0 > "$FIXTURE/packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST"
+printf 'sha256:%064d\n' 0 > "$FIXTURE/.buildkite/ci-image/DIGEST"
 printf 'sha256:%064d\n' 1 > "$FIXTURE/.buildkite/ci-playwright/DIGEST"
 git -C "$FIXTURE" add packages/sjer.red/source.ts
-git -C "$FIXTURE" add packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST .buildkite/ci-playwright/DIGEST
+git -C "$FIXTURE" add .buildkite/ci-image/DIGEST .buildkite/ci-playwright/DIGEST
 git -C "$FIXTURE" commit -qm baseline
 BASE=$(git -C "$FIXTURE" rev-parse HEAD)
 git -C "$FIXTURE" mv packages/sjer.red/source.ts packages/docs/source.ts
@@ -173,7 +173,7 @@ if ! grep -q "alternate object directory" "$FIXTURE/alternates-warn"; then
 fi
 rm "$FIXTURE/.git/objects/info/alternates"
 
-printf 'sha256:not-a-digest\n' > "$FIXTURE/packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST"
+printf 'sha256:not-a-digest\n' > "$FIXTURE/.buildkite/ci-image/DIGEST"
 if CAPTURE_PATH="$FIXTURE/invalid" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/invalid-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/invalid-ci-playwright-image" \

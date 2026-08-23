@@ -50,6 +50,15 @@ test("dependency summary timeout covers every retried report phase", () => {
   );
 });
 
+test("FreshRSS sync keeps its bounded pre-refresh schedule", () => {
+  const schedule = findScheduleById("freshrss-sync-hourly");
+  expect(schedule.workflowType).toBe("runFreshRssSyncWorkflow");
+  expect(schedule.cronExpression).toBe("7 * * * *");
+  expect(schedule.taskQueue).toBe(TASK_QUEUES.DEFAULT);
+  expect(schedule.catchupWindow).toBe("5 minutes");
+  expect(schedule.workflowExecutionTimeout).toBe("6 minutes");
+});
+
 test("protobuf watch timeout covers collection and both delivery paths", () => {
   const timeout = findScheduleById(
     "protobufjs-v8-watch-weekly",
@@ -115,6 +124,7 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
+  "runFreshRssSyncWorkflow",
   // These workflows await one direct maintenance activity; the activity
   // timeout and retry policy are the relevant execution budget.
   "runBunCacheGcWorkflow",

@@ -22,7 +22,19 @@ export async function createFreshRssChart(app: App): Promise<void> {
       policyTypes: ["Ingress"],
       ingress: [
         {
-          from: [{ podSelector: { matchLabels: { app: "freshrss-sync" } } }],
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              },
+              podSelector: {
+                matchLabels: {
+                  app: "temporal-worker",
+                  component: "core-worker",
+                },
+              },
+            },
+          ],
           ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
         },
         {

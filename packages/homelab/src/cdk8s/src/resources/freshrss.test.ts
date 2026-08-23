@@ -35,7 +35,7 @@ function findManifest(
 }
 
 describe("FreshRSS chart", () => {
-  test("packages the validated OPML, normalized manifest, and reconciler", async () => {
+  test("packages the validated OPML, normalized manifest, and local filter reconciler", async () => {
     const configMap = z
       .object({
         data: z.object({
@@ -43,9 +43,6 @@ describe("FreshRSS chart", () => {
           "feeds.opml": z.string(),
           "repo-stack.opml": z.string(),
           "desired.json": z.string(),
-          "reconcile.ts": z.string(),
-          "freshrss-exported-opml.ts": z.string(),
-          "freshrss-subscription-safety.ts": z.string(),
           "reconcile-filters.php": z.string(),
         }),
       })
@@ -69,7 +66,6 @@ describe("FreshRSS chart", () => {
     expect(configMap.data["repo-stack.opml"]).not.toContain(
       'outline text="Uncategorized"',
     );
-    expect(configMap.data["reconcile.ts"]).toContain("reconcileFreshRss");
     expect(configMap.data["reconcile-filters.php"]).toContain(
       "FreshRSS_Factory::createFeedDao",
     );
@@ -143,68 +139,16 @@ describe("FreshRSS chart", () => {
     );
   });
 
-  test("renders the bounded hardened hourly reconciler", async () => {
-    const cronJob = z
-      .object({
-        spec: z.object({
-          schedule: z.literal("7 * * * *"),
-          timeZone: z.literal("America/Los_Angeles"),
-          concurrencyPolicy: z.literal("Forbid"),
-          startingDeadlineSeconds: z.literal(300),
-          successfulJobsHistoryLimit: z.literal(1),
-          failedJobsHistoryLimit: z.literal(3),
-          jobTemplate: z.object({
-            spec: z.object({
-              activeDeadlineSeconds: z.literal(300),
-              backoffLimit: z.literal(1),
-              template: z.object({
-                metadata: z.object({
-                  labels: z.object({ app: z.literal("freshrss-sync") }),
-                }),
-                spec: z.object({
-                  automountServiceAccountToken: z.literal(false),
-                  containers: z.array(
-                    z
-                      .object({
-                        image: z.string(),
-                        env: z.array(z.unknown()),
-                        resources: z.unknown(),
-                        securityContext: z.unknown(),
-                        volumeMounts: z.array(z.unknown()),
-                      })
-                      .loose(),
-                  ),
-                }),
-              }),
-            }),
-          }),
-        }),
-      })
-      .parse(findManifest(await synthesize(), "CronJob", "freshrss-sync"));
-    const container = cronJob.spec.jobTemplate.spec.template.spec.containers[0];
-    if (container === undefined)
-      throw new Error("Missing FreshRSS sync container");
-
-    expect(container.image).toMatch(
-      /^docker\.io\/oven\/bun:1\.4\.0-slim@sha256:[a-f0-9]{64}$/,
-    );
-    expect(container.resources).toEqual({
-      limits: { cpu: "250m", memory: "128Mi" },
-      requests: { cpu: "25m", memory: "64Mi" },
-    });
-    expect(container.securityContext).toEqual({
-      allowPrivilegeEscalation: false,
-      capabilities: { drop: ["ALL"] },
-      readOnlyRootFilesystem: true,
-      runAsGroup: 1000,
-      runAsNonRoot: true,
-      runAsUser: 1000,
-    });
-    expect(JSON.stringify(container.env)).toContain("FRESHRSS_API_PASSWORD");
-    expect(JSON.stringify(container.volumeMounts)).toContain('"readOnly":true');
+  test("does not render any CronJobs", async () => {
+    const manifests = await synthesize();
+    expect(
+      manifests.filter((manifest) => {
+        return ManifestSchema.safeParse(manifest).data?.kind === "CronJob";
+      }),
+    ).toHaveLength(0);
   });
 
-  test("admits only labeled reconciler pods through the namespace policy rule", async () => {
+  test("admits only the core Temporal worker through the namespace policy rule", async () => {
     const policy = z
       .object({
         spec: z.object({ ingress: z.array(z.unknown()) }),
@@ -218,7 +162,19 @@ describe("FreshRSS chart", () => {
       );
 
     expect(policy.spec.ingress).toContainEqual({
-      from: [{ podSelector: { matchLabels: { app: "freshrss-sync" } } }],
+      from: [
+        {
+          namespaceSelector: {
+            matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+          },
+          podSelector: {
+            matchLabels: {
+              app: "temporal-worker",
+              component: "core-worker",
+            },
+          },
+        },
+      ],
       ports: [{ port: 80, protocol: "TCP" }],
     });
   });

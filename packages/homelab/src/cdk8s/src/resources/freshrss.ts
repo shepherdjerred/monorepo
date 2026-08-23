@@ -12,10 +12,6 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  KubeCronJob,
-  Quantity,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   setRevisionHistoryLimit,
@@ -27,13 +23,12 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import {
-  buildManagedFreshRssOpml,
-  FRESHRSS_MANAGED_CATEGORY,
-  parseFreshRssOpml,
-} from "./freshrss-opml.ts";
+  FRESHRSS_DESIRED_JSON,
+  FRESHRSS_REPO_STACK_OPML,
+  FRESHRSS_SOURCE_OPML,
+} from "./freshrss-config.ts";
 
 const FRESHRSS_USER = "sjerred";
-const FRESHRSS_SYNC_LABELS = { app: "freshrss-sync" };
 const FRESHRSS_API_CONFIG = `<?php
 return [
     'api_enabled' => true,
@@ -61,33 +56,17 @@ const CONFIG_MAP_NAME = "freshrss-declarative-config";
 const SERVICE_NAME = "freshrss-service";
 
 async function createDeclarativeConfig(chart: Chart): Promise<ConfigMap> {
-  const sourceOpml = await Bun.file(
-    new URL("../../helm/freshrss/feeds.opml", import.meta.url),
-  ).text();
-  const reconcilerSource = await Bun.file(
-    new URL("freshrss-reconciler.ts", import.meta.url),
-  ).text();
-  const exportedOpmlSource = await Bun.file(
-    new URL("freshrss-exported-opml.ts", import.meta.url),
-  ).text();
-  const subscriptionSafetySource = await Bun.file(
-    new URL("freshrss-subscription-safety.ts", import.meta.url),
-  ).text();
   const filterReconcilerSource = await Bun.file(
     new URL("freshrss-filter-reconciler.php", import.meta.url),
   ).text();
-  const manifest = parseFreshRssOpml(sourceOpml);
 
   return new ConfigMap(chart, "freshrss-declarative-config", {
     metadata: { name: CONFIG_MAP_NAME },
     data: {
       "config.custom.php": FRESHRSS_API_CONFIG,
-      "feeds.opml": sourceOpml,
-      "repo-stack.opml": buildManagedFreshRssOpml(manifest),
-      "desired.json": `${JSON.stringify(manifest, null, 2)}\n`,
-      "reconcile.ts": reconcilerSource,
-      "freshrss-exported-opml.ts": exportedOpmlSource,
-      "freshrss-subscription-safety.ts": subscriptionSafetySource,
+      "feeds.opml": FRESHRSS_SOURCE_OPML,
+      "repo-stack.opml": FRESHRSS_REPO_STACK_OPML,
+      "desired.json": FRESHRSS_DESIRED_JSON,
       "reconcile-filters.php": filterReconcilerSource,
     },
   });
@@ -112,6 +91,7 @@ export async function createFreshRssDeployment(chart: Chart): Promise<void> {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     automountServiceAccountToken: false,
+    podMetadata: { labels: { app: "freshrss" } },
     metadata: {
       annotations: {
         "ignore-check.kube-linter.io/run-as-non-root":
@@ -247,106 +227,5 @@ export async function createFreshRssDeployment(chart: Chart): Promise<void> {
     serviceName: service.name,
     subdomain: "freshrss",
     port: 80,
-  });
-
-  new KubeCronJob(chart, "freshrss-sync", {
-    metadata: { name: "freshrss-sync" },
-    spec: {
-      schedule: "7 * * * *",
-      timeZone: "America/Los_Angeles",
-      concurrencyPolicy: "Forbid",
-      startingDeadlineSeconds: 300,
-      successfulJobsHistoryLimit: 1,
-      failedJobsHistoryLimit: 3,
-      jobTemplate: {
-        spec: {
-          activeDeadlineSeconds: 300,
-          backoffLimit: 1,
-          template: {
-            metadata: { labels: FRESHRSS_SYNC_LABELS },
-            spec: {
-              automountServiceAccountToken: false,
-              restartPolicy: "Never",
-              securityContext: {
-                runAsUser: 1000,
-                runAsGroup: 1000,
-                runAsNonRoot: true,
-                fsGroup: 1000,
-                fsGroupChangePolicy: "OnRootMismatch",
-                seccompProfile: { type: "RuntimeDefault" },
-              },
-              containers: [
-                {
-                  name: "reconcile",
-                  image: `docker.io/oven/bun:${versions["oven/bun"]}`,
-                  command: ["bun", "/config/reconcile.ts"],
-                  env: [
-                    {
-                      name: "FRESHRSS_API_URL",
-                      value: `http://${SERVICE_NAME}/api/greader.php`,
-                    },
-                    { name: "FRESHRSS_USER", value: FRESHRSS_USER },
-                    {
-                      name: "FRESHRSS_API_PASSWORD",
-                      valueFrom: {
-                        secretKeyRef: {
-                          name: syncCredential.name,
-                          key: "password",
-                        },
-                      },
-                    },
-                    {
-                      name: "FRESHRSS_CATEGORY",
-                      value: FRESHRSS_MANAGED_CATEGORY,
-                    },
-                    {
-                      name: "FRESHRSS_MANIFEST_PATH",
-                      value: "/config/desired.json",
-                    },
-                    { name: "TMPDIR", value: "/tmp" },
-                  ],
-                  resources: {
-                    requests: {
-                      cpu: Quantity.fromString("25m"),
-                      memory: Quantity.fromString("64Mi"),
-                    },
-                    limits: {
-                      cpu: Quantity.fromString("250m"),
-                      memory: Quantity.fromString("128Mi"),
-                    },
-                  },
-                  securityContext: {
-                    runAsUser: 1000,
-                    runAsGroup: 1000,
-                    runAsNonRoot: true,
-                    allowPrivilegeEscalation: false,
-                    readOnlyRootFilesystem: true,
-                    capabilities: { drop: ["ALL"] },
-                  },
-                  volumeMounts: [
-                    {
-                      name: "declarative-config",
-                      mountPath: "/config",
-                      readOnly: true,
-                    },
-                    { name: "tmp", mountPath: "/tmp" },
-                  ],
-                },
-              ],
-              volumes: [
-                {
-                  name: "declarative-config",
-                  configMap: { name: CONFIG_MAP_NAME },
-                },
-                {
-                  name: "tmp",
-                  emptyDir: { sizeLimit: Quantity.fromString("64Mi") },
-                },
-              ],
-            },
-          },
-        },
-      },
-    },
   });
 }
