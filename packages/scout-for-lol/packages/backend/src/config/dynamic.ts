@@ -71,6 +71,33 @@ const DEFINITION = {
     sources: ["flag", "env", "default"],
     default: 20_000_000,
   },
+  reportAiModel: {
+    schema: z.string().trim().min(1),
+    sources: ["flag", "env", "default"],
+    default: "gpt-5.6-sol",
+    names: { flag: "scout-report-ai-model", env: "REPORT_AI_MODEL" },
+  },
+  bettingParlayAiModel: {
+    schema: z.string().trim().min(1),
+    sources: ["flag", "env", "default"],
+    default: "gpt-5.6-sol",
+    names: {
+      flag: "scout-betting-parlay-ai-model",
+      env: "BETTING_PARLAY_AI_MODEL",
+    },
+  },
+  exploreModel: {
+    schema: z.string().trim().min(1),
+    sources: ["flag", "env", "default"],
+    default: "gpt-5.6-sol",
+    names: { flag: "scout-explore-model", env: "EXPLORE_MODEL" },
+  },
+  bucksAskModel: {
+    schema: z.string().trim().min(1),
+    sources: ["flag", "env", "default"],
+    default: "gpt-5.6-luna",
+    names: { flag: "scout-bucks-ask-model", env: "BB_ASK_MODEL" },
+  },
 } as const;
 
 const REFRESH_INTERVAL_MS = 60_000;
@@ -83,6 +110,10 @@ function buildSnapshot(
     exploreGuildAllowlist: string[];
     llmHourlyTokenBudget: number;
     llmDailyTokenBudget: number;
+    reportAiModel?: string;
+    bettingParlayAiModel?: string;
+    exploreModel?: string;
+    bucksAskModel?: string;
   },
   flagSourceEnabled: boolean,
 ) {
@@ -97,6 +128,10 @@ function buildSnapshot(
                 exploreGuildAllowlist: "string",
                 llmHourlyTokenBudget: "number",
                 llmDailyTokenBudget: "number",
+                reportAiModel: "string",
+                bettingParlayAiModel: "string",
+                exploreModel: "string",
+                bucksAskModel: "string",
               },
             }),
           }
@@ -131,6 +166,10 @@ export type InitializeDynamicConfigOptions = {
     exploreGuildAllowlist: string[];
     llmHourlyTokenBudget: number;
     llmDailyTokenBudget: number;
+    reportAiModel?: string;
+    bettingParlayAiModel?: string;
+    exploreModel?: string;
+    bucksAskModel?: string;
   };
   /** Tests pass false to avoid an interval. */
   readonly startPolling?: boolean;
@@ -186,6 +225,22 @@ export function llmHourlyTokenBudget(): number {
 
 export function llmDailyTokenBudget(): number {
   return getSnapshot().get("llmDailyTokenBudget");
+}
+
+export function reportAiModel(): string {
+  return getSnapshot().get("reportAiModel");
+}
+
+export function bettingParlayAiModel(): string {
+  return getSnapshot().get("bettingParlayAiModel");
+}
+
+export function exploreModel(): string {
+  return getSnapshot().get("exploreModel");
+}
+
+export function bucksAskModel(): string {
+  return getSnapshot().get("bucksAskModel");
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {

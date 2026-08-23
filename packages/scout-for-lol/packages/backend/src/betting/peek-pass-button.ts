@@ -6,7 +6,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
@@ -128,7 +128,9 @@ export async function handlePeekPassButton(
     });
     return;
   }
-  if (!getFlag("betting_enabled", { server: currentServerId })) {
+  if (
+    !(await isPolicyEnabled("betting_enabled", { server: currentServerId }))
+  ) {
     await interaction.editReply({
       content: BUCKS_NOT_ENABLED,
       components: [],

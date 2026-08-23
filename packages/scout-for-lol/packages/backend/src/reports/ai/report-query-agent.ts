@@ -15,7 +15,7 @@ import {
   type ReportAiFinalDraft,
   type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
-import configuration from "#src/configuration.ts";
+import { reportAiModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertWithinBudget,
@@ -55,7 +55,7 @@ type RunState = {
 export async function streamReportQueryAgent(
   params: ReportQueryAgentParams,
 ): Promise<ReportAiFinalDraft> {
-  const model = configuration.reportAiModel ?? "gpt-5.6-sol";
+  const model = reportAiModel();
   const runtime = getOpenRouterRuntime();
   if (runtime === undefined) {
     throw new Error("OPENROUTER_API_KEY is required for report editing");

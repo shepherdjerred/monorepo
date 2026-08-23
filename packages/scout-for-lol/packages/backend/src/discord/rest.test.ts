@@ -31,14 +31,13 @@ const missingAccessPut: DiscordCommandPut = () =>
   Promise.reject(Object.assign(new Error("Missing access"), { code: 50_001 }));
 
 describe("Discord command reconciliation", () => {
-  test("merges /bb and /scout into one guild replacement payload", () => {
+  test("merges /bb and /scout into one guild replacement payload", async () => {
     const guildId = bettingGuild();
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = guildId;
     resetConfigurationForTests();
 
-    expect(guildCommandPayload(guildId).map((command) => command.name)).toEqual(
-      ["bb", "scout"],
-    );
+    const payload = await guildCommandPayload(guildId);
+    expect(payload.map((command) => command.name)).toEqual(["bb", "scout"]);
   });
 
   test("sends empty payloads to clear stale guild commands", async () => {

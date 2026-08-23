@@ -66,7 +66,7 @@ export async function handleReportAiRoute(
     return jsonError(authResult.message, authResult.status, corsHeaders);
   }
 
-  const status = getReportAiEditStatus(authResult.identity);
+  const status = await getReportAiEditStatus(authResult.identity);
   if (!status.enabled) {
     scoutReportAiRunsTotal.inc({ status: "disabled" });
     return jsonError(

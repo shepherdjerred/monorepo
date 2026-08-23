@@ -1,5 +1,5 @@
 import configuration from "#src/configuration.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
 import { SESSION_COOKIE } from "#src/trpc/context.ts";
@@ -33,7 +33,10 @@ async function canViewContractMismatch(request: Request): Promise<boolean> {
     return false;
   }
   const discordId = DiscordAccountIdSchema.safeParse(claims.sub);
-  return discordId.success && getFlag("debug", { user: discordId.data });
+  return (
+    discordId.success &&
+    (await isPolicyEnabled("debug", { user: discordId.data }))
+  );
 }
 
 /**

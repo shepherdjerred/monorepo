@@ -10,9 +10,8 @@ import type {
   QueueType,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data";
-import configuration from "#src/configuration.ts";
+import { bettingParlayAiModel } from "#src/config/dynamic.ts";
 import {
-  DEFAULT_PARLAY_AI_MODEL,
   PARLAY_GENERATION_DEADLINE_MS,
   PARLAY_INITIAL_OUTPUT_TOKENS,
   PARLAY_RETRY_OUTPUT_TOKENS,
@@ -210,7 +209,7 @@ async function generateAndPersistDefinition(
   if (runtime === undefined) {
     throw new Error("OPENROUTER_API_KEY is required for parlay generation");
   }
-  const model = configuration.bettingParlayAiModel ?? DEFAULT_PARLAY_AI_MODEL;
+  const model = bettingParlayAiModel();
 
   const call = async (
     schema: Parameters<typeof generateValidatedObject>[1]["schema"],

@@ -58,7 +58,7 @@ export async function reconcileGuildScopedCommands(
   put: DiscordCommandPut = putCommands,
 ): Promise<void> {
   for (const guildId of new Set(guildIds)) {
-    const payload = guildCommandPayload(guildId);
+    const payload = await guildCommandPayload(guildId);
     const names = payload.map((command) => command.name).join(", ");
     try {
       await put(

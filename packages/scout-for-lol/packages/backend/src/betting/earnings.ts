@@ -20,7 +20,7 @@ import {
   HouseInsufficientError,
 } from "#src/betting/accounts.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
@@ -71,7 +71,9 @@ async function findEarnTargets(
     if (player.discordId === null) {
       continue;
     }
-    if (!getFlag("betting_enabled", { server: player.serverId })) {
+    if (
+      !(await isPolicyEnabled("betting_enabled", { server: player.serverId }))
+    ) {
       continue;
     }
     const participant = matchData.info.participants.find(

@@ -18,6 +18,7 @@ import {
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
+import { isEnabled } from "@shepherdjerred/feature-flags";
 
 // ============================================================================
 // Attribute Types
@@ -141,6 +142,10 @@ export type FlagName =
   | "ai_reviews_enabled"
   | "betting_enabled"
   | "debug";
+
+/** Flipt is authoritative when available. The registry remains a fail-closed
+ * compatibility seed and test fixture for provider-unavailable evaluations. */
+export type PolicyFlagName = FlagName;
 
 /**
  * Central registry for all boolean flags
@@ -335,6 +340,24 @@ export function getFlag(
     attributes,
   );
   return override ?? config.default;
+}
+
+export async function isPolicyEnabled(
+  name: PolicyFlagName,
+  attributes: FlagAttributes = {},
+): Promise<boolean> {
+  const fallback = getFlag(name, attributes);
+  const targetingKey = attributes.user ?? attributes.server ?? "scout-backend";
+  const context: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(attributes)) {
+    if (value !== undefined) context[key] = value;
+  }
+  const result = await isEnabled(name, {
+    default: fallback,
+    targetingKey,
+    attributes: context,
+  });
+  return result.value;
 }
 
 /**

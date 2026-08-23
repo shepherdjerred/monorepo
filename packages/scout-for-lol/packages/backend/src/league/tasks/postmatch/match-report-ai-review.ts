@@ -11,7 +11,7 @@ import {
   isExceptionalGame,
   MIN_GAME_DURATION_SECONDS,
 } from "@scout-for-lol/data/index.ts";
-import { getFlag } from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {
   generateMatchReview,
   selectPlayerIndex,
@@ -38,10 +38,15 @@ export function isRankedQueue(queueType: QueueType | undefined): boolean {
 /**
  * Check if AI reviews are enabled for any of the target guilds
  */
-function isAiReviewEnabledForAnyGuild(guildIds: DiscordGuildId[]): boolean {
-  return guildIds.some((guildId) =>
-    getFlag("ai_reviews_enabled", { server: guildId }),
-  );
+async function isAiReviewEnabledForAnyGuild(
+  guildIds: DiscordGuildId[],
+): Promise<boolean> {
+  for (const guildId of guildIds) {
+    if (await isPolicyEnabled("ai_reviews_enabled", { server: guildId })) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export type AiReviewResult = {
@@ -104,7 +109,7 @@ export async function generateAiReviewIfEnabled(
 ): Promise<AiReviewResult> {
   const { completedMatch, matchId, matchData, timelineData, targetGuildIds } =
     ctx;
-  const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
+  const aiReviewsEnabled = await isAiReviewEnabledForAnyGuild(targetGuildIds);
   if (!aiReviewsEnabled) {
     logger.info(
       `[generateMatchReport] Skipping AI review - feature not enabled for target guilds: ${targetGuildIds.join(", ")}`,

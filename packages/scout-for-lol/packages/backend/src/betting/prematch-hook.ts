@@ -85,7 +85,7 @@ export async function prepareBucksPrematch(
     };
   }
 
-  const enabledGuilds = bettingEnabledGuilds(input.targetGuildIds);
+  const enabledGuilds = await bettingEnabledGuilds(input.targetGuildIds);
 
   const bettable = isBettableGame({
     queueType: input.queueType,

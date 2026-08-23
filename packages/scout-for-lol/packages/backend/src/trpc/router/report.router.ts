@@ -97,9 +97,9 @@ export const reportRouter = router({
 
   aiEditStatus: guildProcedure("reports", "read")
     .input(GuildInput)
-    .query(({ ctx, input }) =>
+    .query(async ({ ctx, input }) =>
       ReportAiEditStatusSchema.parse(
-        getReportAiEditStatus({
+        await getReportAiEditStatus({
           guildId: input.guildId,
           userId: DiscordAccountIdSchema.parse(ctx.user.discordId),
         }),
