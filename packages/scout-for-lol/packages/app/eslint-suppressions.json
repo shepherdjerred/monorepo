@@ -1,0 +1,7 @@
+{
+  "src/hooks/use-explore-run-observer.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

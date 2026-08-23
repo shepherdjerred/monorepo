@@ -7,6 +7,7 @@ import tseslint from "typescript-eslint";
 import regexpPlugin from "eslint-plugin-regexp";
 import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import noSecrets from "eslint-plugin-no-secrets";
+import sonarjs from "eslint-plugin-sonarjs";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { reviewedUnicornConfig } from "./unicorn.js";
 
@@ -134,6 +135,17 @@ export function baseConfig(
             ignoreContent: ["vaults/[a-z0-9]+/items/[a-z0-9-]+"],
           },
         ],
+      },
+    },
+    // Cognitive complexity (how hard code is to READ, vs the cyclomatic
+    // `complexity` rule below, which counts branch paths). Only this single
+    // rule is enabled — deliberately NOT the sonarjs recommended preset.
+    {
+      plugins: {
+        sonarjs,
+      },
+      rules: {
+        "sonarjs/cognitive-complexity": ["error", 15],
       },
     },
     {

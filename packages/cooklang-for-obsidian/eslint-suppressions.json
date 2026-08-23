@@ -1,0 +1,17 @@
+{
+  "src/cook-parser.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 3
+    }
+  },
+  "src/cook-renderer.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/syntax/cook-language.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

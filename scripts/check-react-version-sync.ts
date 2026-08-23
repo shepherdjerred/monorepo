@@ -67,60 +67,75 @@ function isTrailingComma(text: string, commaIndex: number): boolean {
   return after === "}" || after === "]";
 }
 
-function parseJsonc(text: string): unknown {
-  let out = "";
-  let inString = false;
-  let inLine = false;
-  let inBlock = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === undefined) continue;
-    const next = text[i + 1];
-    if (inLine) {
-      if (ch === "\n") {
-        inLine = false;
-        out += ch;
-      }
-      continue;
+type StripState = {
+  /** Index of the next unconsumed character. */
+  index: number;
+  /** Output accumulated so far. */
+  out: string;
+};
+
+/**
+ * If a `//` or `/*` comment starts at `state.index`, consume it whole (keeping
+ * a line comment's terminating newline) and return true.
+ */
+function consumeComment(text: string, state: StripState): boolean {
+  const ch = text[state.index];
+  const next = text[state.index + 1];
+  if (ch !== "/" || (next !== "/" && next !== "*")) return false;
+  if (next === "/") {
+    const newline = text.indexOf("\n", state.index + 2);
+    if (newline === -1) {
+      state.index = text.length;
+    } else {
+      state.out += "\n";
+      state.index = newline + 1;
     }
-    if (inBlock) {
-      if (ch === "*" && next === "/") {
-        inBlock = false;
-        i++;
-      }
-      continue;
-    }
-    if (inString) {
-      out += ch;
-      if (ch === "\\") {
-        out += next ?? "";
-        i++;
-      } else if (ch === '"') {
-        inString = false;
-      }
-      continue;
-    }
-    if (ch === '"') {
-      inString = true;
-      out += ch;
-      continue;
-    }
-    if (ch === "/" && next === "/") {
-      inLine = true;
-      i++;
-      continue;
-    }
-    if (ch === "/" && next === "*") {
-      inBlock = true;
-      i++;
-      continue;
-    }
-    if (ch === "," && isTrailingComma(text, i)) {
-      continue; // drop trailing comma
-    }
-    out += ch;
+    return true;
   }
-  return JSON.parse(out);
+  const close = text.indexOf("*/", state.index + 2);
+  state.index = close === -1 ? text.length : close + 2;
+  return true;
+}
+
+/**
+ * If a string literal starts at `state.index`, consume it whole (honouring
+ * `\` escapes, tolerating an unterminated literal at EOF) and return true.
+ */
+function consumeString(text: string, state: StripState): boolean {
+  if (text[state.index] !== '"') return false;
+  state.out += '"';
+  state.index++;
+  while (state.index < text.length) {
+    const ch = text[state.index];
+    state.out += ch ?? "";
+    state.index++;
+    if (ch === "\\") {
+      state.out += text[state.index] ?? "";
+      state.index++;
+    } else if (ch === '"') {
+      break;
+    }
+  }
+  return true;
+}
+
+/** Consume one plain character, dropping it when it is a trailing comma. */
+function consumePlain(text: string, state: StripState): void {
+  const ch = text[state.index];
+  if (ch !== "," || !isTrailingComma(text, state.index)) {
+    state.out += ch ?? "";
+  }
+  state.index++;
+}
+
+function parseJsonc(text: string): unknown {
+  const state: StripState = { index: 0, out: "" };
+  while (state.index < text.length) {
+    if (!consumeComment(text, state) && !consumeString(text, state)) {
+      consumePlain(text, state);
+    }
+  }
+  return JSON.parse(state.out);
 }
 
 /** Parse `name@version` (handles scoped names like `@types/react@19.2.14`). */

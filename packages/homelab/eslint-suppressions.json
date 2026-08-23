@@ -1,0 +1,12 @@
+{
+  "scripts/argocd-apply-safety.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "scripts/helm-release-core.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

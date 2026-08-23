@@ -1,0 +1,12 @@
+{
+  "scripts/generate-battle-data.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "scripts/knowledge/pokeapi-relations.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

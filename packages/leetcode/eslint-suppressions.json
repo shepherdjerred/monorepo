@@ -1,0 +1,12 @@
+{
+  "src/lib/leetcode-graphql.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/scrape-details.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "src/friend-context.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

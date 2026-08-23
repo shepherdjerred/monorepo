@@ -1,0 +1,12 @@
+{
+  "src/html/visualization-calendar-tooltip.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/html/visualization-snapshot-option.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}
