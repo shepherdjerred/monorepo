@@ -17,6 +17,10 @@ import {
   InsufficientBucksError,
 } from "#src/betting/ledger.ts";
 import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
+import {
+  hasTrackedPlayersOnBothTeams,
+  outcomeLabel,
+} from "#src/betting/team.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
@@ -311,6 +315,8 @@ export type PendingPosition =
       marketType: "outcome";
       gameAlias: string;
       teamId: RiotTeamId;
+      /** WIN/LOSE for this game, or Blue/Red when both teams are tracked. */
+      sideLabel: string;
       offeredStake: number;
       matchedStake: number | null;
       unmatchedStake: number | null;
@@ -415,6 +421,11 @@ export async function getPersonalBucksView(
         matchId: bet.pool.matchId,
         gameAlias: subject.trackedAlias,
         teamId: RiotTeamIdSchema.parse(bet.predictedTeamId),
+        // The roster is already parsed here, so framing costs nothing extra.
+        sideLabel: outcomeLabel(RiotTeamIdSchema.parse(bet.predictedTeamId), {
+          anchorTeamId: subject.teamId,
+          mixedTeams: hasTrackedPlayersOnBothTeams(roster),
+        }),
         offeredStake: bet.stake,
         matchedStake: bet.matchedStake,
         unmatchedStake: bet.unmatchedStake,

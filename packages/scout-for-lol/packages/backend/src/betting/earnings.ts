@@ -24,6 +24,11 @@ import { getFlag } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  bettingEarningsAwardedTotal,
+  bettingEarningsBucksTotal,
+} from "#src/metrics/betting.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { z } from "zod";
 
 const logger = createLogger("betting-earnings");
@@ -97,7 +102,7 @@ type EarnedReward = {
   amount: number;
 };
 
-const EARNED_REWARDS = {
+export const EARNED_REWARDS = {
   played: { kind: "earn_game", amount: 1 },
   "ranked 5s bonus": { kind: "earn_ranked_5s_bonus", amount: 1 },
   "clash bonus": { kind: "earn_clash_bonus", amount: 10 },
@@ -327,7 +332,7 @@ export async function awardForGuild(input: {
   }
 
   try {
-    return await input.prismaClient.$transaction(async (tx) => {
+    const committed = await input.prismaClient.$transaction(async (tx) => {
       // FIRST statement, and the exactly-once token. Only one retry can claim a
       // pending marker; a failure rolls the transient processing state back to
       // pending with the rest of the transaction.
@@ -428,6 +433,27 @@ export async function awardForGuild(input: {
       );
       return awards;
     });
+    // Post-commit: counting inside the transaction would survive a rollback.
+    for (const award of committed) {
+      for (const reason of award.reasons) {
+        const label = reason.replaceAll(" ", "_");
+        bettingEarningsAwardedTotal.inc({ reason: label });
+        bettingEarningsBucksTotal.inc(
+          { reason: label },
+          EARNED_REWARDS[reason].amount,
+        );
+      }
+      logBucksTransition({
+        event: "bucks.earning.awarded",
+        matchId: input.matchId,
+        serverId: award.serverId,
+        actorDiscordId: award.discordId,
+        payout: award.total,
+        reason: award.reasons.join(","),
+        surface: "postmatch",
+      });
+    }
+    return committed;
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       logger.debug(

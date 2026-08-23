@@ -36,7 +36,7 @@ import {
 } from "#src/metrics/index.ts";
 import { capturePredictionForPrematch } from "#src/betting/prediction-capture.ts";
 import { isBettableGame, isStandardLobby } from "#src/betting/eligibility.ts";
-import { appendBucksLine } from "#src/betting/prematch-line.ts";
+import { withBucksDigest } from "#src/betting/prematch-line.ts";
 import {
   prepareBucksPrematch,
   type BucksPrematchAttachment,
@@ -158,7 +158,7 @@ function buildPrematchPayload(input: {
   if (input.loadingScreenAttachment && input.loadingScreenEmbed) {
     return {
       content: input.betsOpen
-        ? appendBucksLine(input.baseContent, input.bucks.footer)
+        ? withBucksDigest(input.baseContent, input.bucks.footer)
         : input.baseContent,
       files: [input.loadingScreenAttachment],
       embeds: [input.loadingScreenEmbed],

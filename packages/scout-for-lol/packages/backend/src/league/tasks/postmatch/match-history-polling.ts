@@ -42,14 +42,17 @@ import {
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
-import { announceParlaySettlements } from "#src/betting/parlay-announce.ts";
 import { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
 import { uniqueBy } from "remeda";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
 import { setLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 import { recoverMissedMatches } from "#src/league/tasks/postmatch/gap-recovery.ts";
-import { getPrematchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
+import {
+  getPostmatchMessageIdsForMatchIdOrEmpty,
+  getPrematchMessageIdsForMatchIdOrEmpty,
+  recordPostmatchMessageIds,
+} from "#src/league/tasks/prematch/active-game-queries.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
@@ -180,6 +183,9 @@ async function processMatch(
     replyToMessageIds: await getPrematchMessageIdsForMatchIdOrEmpty(matchId),
   });
   await recordCoreOutputsDelivered(delivery.deliveredGuildIds, "postmatch");
+  // Durable so a settlement announced by a later process can still reply to
+  // the report. Best-effort by design: the report is already delivered.
+  await recordPostmatchMessageIds(matchId, delivery.messageIdsByChannel);
   return delivery.messageIdsByChannel;
 }
 
@@ -232,7 +238,7 @@ async function processMatchAndUpdatePlayers(
   // After the S3 gate and OUTSIDE `!silent`: Bucks are owed for the game even
   // when the ordinary match report is suppressed. See settleAndAwardBucks.
   const bucks = await settleAndAwardBucks(matchData);
-  let postmatchMessageIds = new Map<DiscordChannelId, string>();
+  let postmatchMessageIds: ReadonlyMap<string, string> = new Map();
 
   if (!silent) {
     // Report generation runs only AFTER the durable copy succeeded. A
@@ -254,6 +260,14 @@ async function processMatchAndUpdatePlayers(
   }
 
   if (shouldAnnounceBucks({ silent, bucks })) {
+    // A silent match skips processMatch entirely, and a restart between the
+    // report and this announcement loses the in-memory map. Either way the
+    // durable copy is the only remaining reply target.
+    if (postmatchMessageIds.size === 0) {
+      postmatchMessageIds =
+        await getPostmatchMessageIdsForMatchIdOrEmpty(matchId);
+    }
+
     // Announced after the report so it reads as a follow-up, and as its own
     // message rather than appended to the report's content, which the AI review
     // already owns and which is delivered to every guild at once. A silent
@@ -269,10 +283,10 @@ async function processMatchAndUpdatePlayers(
       matchId,
       closures: bucks.closures,
       settlements: bucks.settlements,
+      parlaySettlements: bucks.parlaySettlements,
       earnings: bucks.earnings,
       postmatchMessageIds,
     });
-    await announceParlaySettlements(bucks.parlaySettlements);
   }
 
   // Mark as processed

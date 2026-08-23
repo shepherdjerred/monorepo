@@ -23,6 +23,11 @@ import { addInt32 } from "#src/betting/parlay-odds.ts";
 import { bettingOversizedStakeRejectedTotal } from "#src/metrics/betting-parlay.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  bettingBetPlacementsTotal,
+  bettingStakeBucksTotal,
+} from "#src/metrics/betting.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-place-bet");
 
@@ -43,6 +48,8 @@ export type PlaceBetResult =
       totalStake: number;
       balanceAfter: number;
       side: RiotTeamId;
+      /** True when this call added to an already-open position. */
+      wasTopUp: boolean;
     }
   | { kind: "window_closed" }
   | { kind: "no_pool" }
@@ -56,6 +63,8 @@ export type PlaceBetResult =
   | { kind: "side_conflict"; existingTeamId: number };
 
 export type PlaceBetInput = {
+  /** Which surface asked, so the two cannot drift apart unnoticed. */
+  surface?: "button" | "command";
   matchId: string;
   serverId: DiscordGuildId;
   discordId: DiscordAccountId;
@@ -91,7 +100,48 @@ function aliasesOf(roster: readonly BucksPoolParticipant[]): string[] {
     .filter((alias) => alias !== undefined);
 }
 
+/**
+ * Place or top up an outcome bet, counting the result.
+ *
+ * The count and transition log fire here rather than at the two call sites for
+ * the same reason the function is shared: the button and the slash command
+ * must not drift apart. Both are post-commit — `placeBetInner` returns only
+ * after its transaction resolves.
+ */
 export async function placeBet(
+  input: PlaceBetInput,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<PlaceBetResult> {
+  const result = await placeBetInner(input, prismaClient);
+  const surface = input.surface ?? "button";
+  bettingBetPlacementsTotal.inc({ surface, result: result.kind });
+  if (result.kind === "placed") {
+    bettingStakeBucksTotal.inc({ movement: "placed" }, input.stake);
+    logBucksTransition({
+      event: result.wasTopUp ? "bucks.bet.topped_up" : "bucks.bet.placed",
+      matchId: input.matchId,
+      serverId: input.serverId,
+      actorDiscordId: input.discordId,
+      teamId: result.side,
+      stake: input.stake,
+      balanceAfter: result.balanceAfter,
+      surface,
+    });
+  } else {
+    logBucksTransition({
+      event: "bucks.bet.rejected",
+      matchId: input.matchId,
+      serverId: input.serverId,
+      actorDiscordId: input.discordId,
+      reason: result.kind,
+      stake: input.stake,
+      surface,
+    });
+  }
+  return result;
+}
+
+async function placeBetInner(
   input: PlaceBetInput,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<PlaceBetResult> {
@@ -261,6 +311,7 @@ export async function placeBet(
         totalStake: bet.stake,
         balanceAfter,
         side: predictedTeamId,
+        wasTopUp: existing !== null,
       };
     });
   } catch (error) {

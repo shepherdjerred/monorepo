@@ -186,3 +186,56 @@ describe("openBettingPoolsForPrematch", () => {
     ]);
   });
 });
+
+describe("openBettingPoolsForPrematch metrics", () => {
+  test("counts a pool exactly once across a re-detection, not per upsert call", async () => {
+    const { registry } = await import("#src/metrics/registry.ts");
+    const found = registry.getSingleMetric("betting_pools_opened_total");
+    if (found === undefined) {
+      throw new Error("betting_pools_opened_total is not registered");
+    }
+    const metric = found;
+    async function countOf(): Promise<number> {
+      const collected = await metric.get();
+      return (
+        collected.values.find((value) => value.labels["queue_type"] === "solo")
+          ?.value ?? 0
+      );
+    }
+
+    const before = await countOf();
+    const info = gameInfo();
+    const detectedAt = new Date();
+
+    // The prematch poll can re-detect the same game before the notification
+    // lands, so this call happens twice with identical arguments — exactly
+    // the idempotent-upsert path a naive counter would double-count.
+    await openBettingPoolsForPrematch(
+      {
+        matchId: "NA1_5000000001",
+        guildIds: [SERVER_ID],
+        gameInfo: info,
+        trackedAliasByPuuid: new Map([[bucksTestPuuid(0), "jerred"]]),
+        queueType: "solo",
+        detectedAt,
+        prediction: undefined,
+      },
+      db,
+    );
+    await openBettingPoolsForPrematch(
+      {
+        matchId: "NA1_5000000001",
+        guildIds: [SERVER_ID],
+        gameInfo: info,
+        trackedAliasByPuuid: new Map([[bucksTestPuuid(0), "jerred"]]),
+        queueType: "solo",
+        detectedAt,
+        prediction: undefined,
+      },
+      db,
+    );
+
+    expect(await countOf()).toBe(before + 1);
+    expect(await db.bucksMatchPool.count()).toBe(1);
+  });
+});

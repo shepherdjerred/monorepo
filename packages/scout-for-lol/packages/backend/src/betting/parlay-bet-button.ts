@@ -6,7 +6,7 @@ import {
   cancelParlayBet,
   type CancelParlayBetResult,
 } from "#src/betting/parlay-cancel-bet.ts";
-import { announceParlayPlacement } from "#src/betting/parlay-announce.ts";
+import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { parseParlayCustomId } from "#src/betting/parlay-custom-id.ts";
 import {
   placeParlayBet,
@@ -14,6 +14,16 @@ import {
 } from "#src/betting/parlay-place-bet.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BetButtonInteraction } from "#src/betting/bet-button.ts";
+import {
+  BUCKS_GUILD_ONLY,
+  BUCKS_HOUSE_CANNOT_FUND,
+  BUCKS_INVALID_STAKE,
+  BUCKS_NOT_ELIGIBLE,
+  BUCKS_NOT_ENABLED,
+  BUCKS_NO_PARLAY_MARKET,
+  BUCKS_STORAGE_LIMIT,
+  bucksInsufficient,
+} from "#src/betting/copy.ts";
 
 export function describeParlayResult(result: PlaceParlayBetResult): string {
   switch (result.kind) {
@@ -22,21 +32,21 @@ export function describeParlayResult(result: PlaceParlayBetResult): string {
     case "window_closed":
       return "⏰ Parlay betting has closed for this game.";
     case "no_market":
-      return "🚫 There's no parlay market for this game.";
+      return BUCKS_NO_PARLAY_MARKET;
     case "feature_disabled":
-      return "🚫 Bryan Bucks is no longer enabled in this server.";
+      return BUCKS_NOT_ENABLED;
     case "not_eligible":
-      return "🔒 Only tracked players can bet.";
+      return BUCKS_NOT_ELIGIBLE;
     case "invalid_stake":
-      return "💱 Stakes must be a positive whole number of BB.";
+      return BUCKS_INVALID_STAKE;
     case "storage_limit":
-      return "💱 That position is too large for the current Bryan Bucks storage format.";
+      return BUCKS_STORAGE_LIMIT;
     case "insufficient":
-      return `💸 You have **${result.balance.toString()} BB** but need **${result.needed.toString()} BB**.`;
+      return bucksInsufficient(result.balance, result.needed);
     case "wallet_house_insufficient":
-      return "🏦 The Bryan Bucks house cannot fund a new wallet right now. No Bucks moved.";
+      return BUCKS_HOUSE_CANNOT_FUND;
     case "house_insufficient":
-      return "🏦 The Bryan Bucks house cannot fully reserve that payout. No Bucks moved.";
+      return "🏦 The Bryan Bucks house can't fully reserve that payout. No Bucks moved.";
     case "side_conflict":
       return `↔️ You already backed ${result.existingSide}. Cancel that position first.`;
   }
@@ -45,9 +55,11 @@ export function describeParlayResult(result: PlaceParlayBetResult): string {
 export function describeParlayCancel(result: CancelParlayBetResult): string {
   switch (result.kind) {
     case "cancelled":
-      return `↩️ Parlay cancelled. **${result.refunded.toString()} BB** returned; balance **${result.balanceAfter.toString()} BB**.`;
+      // Says "no fee" explicitly: the outcome market charges one and this is
+      // the only place a parlay bettor learns theirs does not.
+      return `↩️ Cancelled: **${result.refunded.toString()} BB** back, no fee · balance **${result.balanceAfter.toString()} BB**.`;
     case "no_market":
-      return "🚫 There's no parlay market for this game.";
+      return BUCKS_NO_PARLAY_MARKET;
     case "no_bet":
       return "🤷 You don't have a parlay position to cancel on this game.";
     case "window_closed":
@@ -68,7 +80,7 @@ export async function handleParlayBetButton(
   await interaction.deferReply({ ephemeral: true });
   if (interaction.guildId === null) {
     await interaction.editReply({
-      content: "🏠 Bryan Bucks only works inside a server.",
+      content: BUCKS_GUILD_ONLY,
     });
     return;
   }
@@ -80,6 +92,14 @@ export async function handleParlayBetButton(
       prismaClient,
     );
     await interaction.editReply({ content: describeParlayCancel(result) });
+    // Newly required: the market message now carries a live position digest,
+    // so a cancellation that did not refresh would leave a stale one.
+    if (result.kind === "cancelled") {
+      await refreshParlayMessages(
+        { matchId: parsed.matchId, serverId },
+        prismaClient,
+      );
+    }
     return;
   }
   const result = await placeParlayBet(
@@ -89,21 +109,14 @@ export async function handleParlayBetButton(
       discordId,
       side: parsed.side,
       stake: parsed.amount,
+      surface: "button",
     },
     prismaClient,
   );
   await interaction.editReply({ content: describeParlayResult(result) });
   if (result.kind === "placed") {
-    await announceParlayPlacement(
-      {
-        matchId: parsed.matchId,
-        serverId,
-        discordId,
-        side: parsed.side,
-        stake: parsed.amount,
-        totalStake: result.totalStake,
-        grossPayout: result.grossPayout,
-      },
+    await refreshParlayMessages(
+      { matchId: parsed.matchId, serverId },
       prismaClient,
     );
   }

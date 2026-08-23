@@ -19,6 +19,13 @@ import {
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  bettingPoolSettlementsTotal,
+  bettingPoolVoidsTotal,
+  bettingSettlementConservationFailuresTotal,
+  bettingStakeBucksTotal,
+} from "#src/metrics/betting.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-settle");
 
@@ -246,6 +253,7 @@ export async function closeAndSettleBettingForMatch(
         });
         if (summary !== undefined) {
           summaries.push(summary);
+          recordSettlementObservations(summary, pool.id);
         }
       } catch (error) {
         logger.error(
@@ -270,6 +278,72 @@ export async function closeAndSettleBettingForMatch(
   }
 
   return { closures, settlements: summaries };
+}
+
+/**
+ * Count and log a settled pool.
+ *
+ * Called from the caller of `settleWithOverflowFallback`, never from inside
+ * it: `settleOnePool` returns from within its `$transaction`, so an increment
+ * there would survive a rollback.
+ */
+function recordSettlementObservations(
+  summary: SettlementSummary,
+  poolId: number,
+): void {
+  const voided = summary.voidReason !== undefined;
+  bettingPoolSettlementsTotal.inc({ result: voided ? "voided" : "decided" });
+  if (summary.voidReason !== undefined) {
+    bettingPoolVoidsTotal.inc({ reason: summary.voidReason });
+  }
+  logBucksTransition({
+    event: voided ? "bucks.pool.voided" : "bucks.pool.settled",
+    matchId: summary.matchId,
+    serverId: summary.serverId,
+    poolId,
+    fromState: "closed",
+    toState: voided ? "voided" : "settled",
+    houseCut: summary.houseCut,
+    surface: "postmatch",
+    ...(summary.winningTeamId === undefined
+      ? {}
+      : { teamId: summary.winningTeamId }),
+    ...(summary.voidReason === undefined ? {} : { reason: summary.voidReason }),
+  });
+  for (const bet of summary.bets) {
+    if (bet.isHouse) {
+      continue;
+    }
+    bettingStakeBucksTotal.inc(
+      { movement: bet.refunded ? "refunded_void" : "paid_out" },
+      bet.payout,
+    );
+    if (bet.houseCut > 0) {
+      bettingStakeBucksTotal.inc(
+        { movement: "house_cut_settlement" },
+        bet.houseCut,
+      );
+    }
+    logBucksTransition({
+      event: bet.refunded
+        ? "bucks.bet.refunded"
+        : bet.won
+          ? "bucks.bet.won"
+          : "bucks.bet.lost",
+      matchId: summary.matchId,
+      serverId: summary.serverId,
+      poolId,
+      betId: bet.betId,
+      bucksAccountId: bet.bucksAccountId,
+      actorDiscordId: bet.discordId,
+      teamId: bet.predictedTeamId,
+      matchedStake: bet.matchedStake,
+      grossPayout: bet.grossPayout,
+      houseCut: bet.houseCut,
+      payout: bet.payout,
+      surface: "postmatch",
+    });
+  }
 }
 
 /** Settle every guild pool for a finished match at fixed even money. */
@@ -389,6 +463,14 @@ async function settleOnePool(input: {
     const staked = settled.bets.reduce((sum, bet) => sum + bet.matchedStake, 0);
     const paid = settled.bets.reduce((sum, bet) => sum + bet.payout, 0);
     if (paid + settled.houseCut !== staked) {
+      // Counted before throwing: the throw aborts the transaction, so without
+      // this the invariant violation only surfaces two frames up.
+      bettingSettlementConservationFailuresTotal.inc({ stage: "settlement" });
+      Sentry.captureMessage("Bryan Bucks settlement did not conserve Bucks", {
+        level: "error",
+        tags: { source: "betting-settle-pool", matchId: input.matchId },
+        extra: { staked, paid, houseCut: settled.houseCut },
+      });
       throw new Error(
         `Settlement for ${input.matchId} did not conserve matched Bucks: staked ${staked.toString()}, paid ${paid.toString()}, winner fees ${settled.houseCut.toString()}`,
       );

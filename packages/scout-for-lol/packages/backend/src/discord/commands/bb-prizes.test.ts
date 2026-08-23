@@ -144,8 +144,9 @@ describe("/bb command contract", () => {
     expect(peek.options).toEqual([
       expect.objectContaining({ name: "game", required: true }),
     ]);
+    // The two-minute delay is a rule, so it lives in /bb rules only.
     expect(JSON.stringify(buildBbRulesEmbed().toJSON())).toContain(
-      "two minutes",
+      "**2 minutes**",
     );
   });
 
@@ -159,6 +160,7 @@ describe("/bb command contract", () => {
         matchId: `NA1_${index.toString()}`,
         gameAlias: `player-${index.toString()}-${"x".repeat(500)}`,
         teamId: 100,
+        sideLabel: "WIN",
         offeredStake: 1,
         matchedStake: null,
         unmatchedStake: null,
@@ -175,7 +177,7 @@ describe("/bb command contract", () => {
     expect(pendingField?.value.endsWith("...")).toBe(true);
   });
 
-  test("renders pending positions as direct team picks", () => {
+  test("renders pending positions with the game's own framing", () => {
     const view: PersonalBucksView = {
       balance: 20,
       totalAtRisk: 5,
@@ -186,6 +188,7 @@ describe("/bb command contract", () => {
           matchId: "NA1_1",
           gameAlias: "bryan",
           teamId: 200,
+          sideLabel: "LOSE",
           offeredStake: 5,
           matchedStake: null,
           unmatchedStake: null,
@@ -196,11 +199,11 @@ describe("/bb command contract", () => {
     };
 
     const rendered = JSON.stringify(buildPersonalBucksEmbed(view, 0).toJSON());
-    expect(rendered).toContain("Red Team");
-    expect(rendered).toContain("game: `bryan`");
+    // The label is resolved where the roster is already parsed, so the view
+    // renders it verbatim rather than re-deriving Blue/Red here.
+    expect(rendered).toContain("bryan LOSE");
     expect(rendered).toContain("offered up to 5 BB");
-    expect(rendered).not.toContain("WIN");
-    expect(rendered).not.toContain("LOSE");
+    expect(rendered).not.toContain("Red Team");
   });
 
   test("renders pending parlays independently from direct team picks", () => {
@@ -233,23 +236,75 @@ describe("/bb command contract", () => {
       "tracked League players",
       "25 BB",
       "+1 BB",
-      "any positive whole-BB amount",
+      "maximum offer",
       "10 minutes",
       "5 minutes",
-      "YES/NO parlay",
-      "cancel",
-      "Human offers match first",
-      "house then fills up to 5 BB",
-      "all unmatched BB are refunded",
-      "Matched outcome stakes are returned",
+      "match first at even money",
+      "house then fills up to **5 BB**",
+      "Unmatched BB are refunded at close, free",
+      "return every matched stake with no fee",
     ]) {
       expect(rendered).toContain(phrase);
     }
     expect(rendered).toContain(
-      "Cancelling an outcome offer costs 20% of the submitted amount",
+      "Cancelling before close costs **20%** of the offer, rounded to the nearest BB",
+    );
+    expect(rendered).toContain("Cancelling a parlay is free");
+  });
+
+  // Gaps that existed while these facts lived only on market messages, or not
+  // at all. /bb rules is now the only explainer, so it has to be complete.
+  test("rules cover what only the market message used to say", () => {
+    const rendered = JSON.stringify(buildBbRulesEmbed().toJSON());
+    expect(rendered).toContain("Every leg must hit for YES");
+    expect(rendered).toContain("live in-play market");
+    // The Clash bonus is the largest single award and was documented nowhere.
+    expect(rendered).toContain("Clash adds **+10 BB**");
+    // The queue list is derived from BUCKS_EARNING_QUEUES rather than typed,
+    // and League Classic's split behaviour (played point, no market) is
+    // stated rather than left for a player to discover.
+    expect(rendered).toContain("Eligible queues:");
+    expect(rendered).toContain(
+      "League Classic pays the played point but carries no market",
+    );
+    expect(rendered).not.toContain("Eligible ranked games");
+    // WIN/LOSE with the documented Blue/Red fallback.
+    expect(rendered).toContain("**WIN** or **LOSE**");
+    expect(rendered).toContain("both teams have a tracked player");
+  });
+
+  // /bb rules used to say "no cash value" while /bb prizes printed CAD figures
+  // up to $1,000,000 with no cross-reference.
+  test("rules and prizes agree that the exchange rate is a joke", () => {
+    const rules = JSON.stringify(buildBbRulesEmbed().toJSON());
+    expect(rules).toContain("a joke");
+    expect(rules).toContain("nothing can actually be redeemed");
+    expect(rules).toContain("`/bb prizes`");
+  });
+
+  // Every number is interpolated from the constant that implements it. The
+  // rules embed and the market copy once stated two different winner fees at
+  // the same time because both were hand-typed.
+  test("rules derive their numbers from the implementing constants", async () => {
+    const [{ HOUSE_CUT_PERCENT }, constants, { MINIMUM_PRICE }] =
+      await Promise.all([
+        import("#src/betting/house-cut.ts"),
+        import("#src/betting/constants.ts"),
+        import("#src/betting/peek-pass.ts"),
+      ]);
+    const rendered = JSON.stringify(buildBbRulesEmbed().toJSON());
+
+    expect(rendered).toContain(`**${HOUSE_CUT_PERCENT.toString()}%**`);
+    expect(rendered).toContain(`**${constants.SEED_GRANT.toString()} BB**`);
+    expect(rendered).toContain(
+      `**${constants.HOUSE_MATCH_LIMIT.toString()} BB** per game`,
+    );
+    expect(rendered).toContain(`minimum **${MINIMUM_PRICE.toString()} BB**`);
+    expect(rendered).toContain(
+      `${Math.floor(constants.BETTING_WINDOW_MS / 60_000).toString()} minutes`,
     );
     expect(rendered).toContain(
-      "cancelling a parlay returns its full stake and releases the house reserve",
+      `${Math.floor(constants.PARLAY_BETTING_WINDOW_MS / 60_000).toString()} minutes`,
     );
   });
 });

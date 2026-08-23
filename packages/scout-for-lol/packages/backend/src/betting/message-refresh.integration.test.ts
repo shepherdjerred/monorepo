@@ -17,6 +17,7 @@ import {
   bucksTestPuuid,
   bucksTestRoster,
 } from "#src/testing/bucks-fixtures.ts";
+import { registry } from "#src/metrics/registry.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
 const { prisma: db } = createTestDatabase("bucks-message-refresh");
@@ -171,9 +172,10 @@ describe("refreshBucksMessages", () => {
     ]);
     expect(edits.every((edit) => edit.suppressedMentions)).toBe(true);
     expect(edits.every((edit) => !edit.removedComponents)).toBe(true);
-    expect(edits[0]?.content).toContain(
-      "Blue **6 BB offered** · Red **5 BB offered**",
-    );
+    expect(edits[0]?.content).toContain("🎲 **Bets open**");
+    // The refresh supplies the authoritative close time from the pool.
+    expect(edits[0]?.content).toContain("closes <t:");
+    expect(edits[0]?.content).toContain("Blue **6 BB** · Red **5 BB**");
     expect(edits[0]?.content).toContain(`<@${bucksTestDiscordId(1)}>`);
     expect(edits[0]?.content).toContain(`<@${bucksTestDiscordId(2)}>`);
     expect(edits[0]?.content).not.toContain(`<@${bucksTestDiscordId(99)}>`);
@@ -189,9 +191,7 @@ describe("refreshBucksMessages", () => {
       recordingEditor(edits),
     );
     expect(edits[0]?.content).not.toContain(`<@${bucksTestDiscordId(2)}>`);
-    expect(edits[0]?.content).toContain(
-      "Blue **6 BB offered** · Red **0 BB offered**",
-    );
+    expect(edits[0]?.content).toContain("Blue **6 BB** · Red **0 BB**");
     expect(await db.bucksBet.count({ where: { poolId: pool.id } })).toBe(2);
   });
 
@@ -285,14 +285,17 @@ describe("refreshBucksMessages", () => {
 
     expect(edits.every((edit) => edit.removedComponents)).toBe(true);
     expect(edits[0]?.content).toContain(
-      "**Final matched stakes** — Blue **5 BB** · Red **5 BB**",
+      "🎲 **Bets closed** — Blue **5 BB** · Red **5 BB**",
     );
+    // The aggregate house fill, without exposing the synthetic account.
+    expect(edits[0]?.content).toContain("(house **4** on Red)");
     expect(edits[0]?.content).toContain(
-      "offered **5 BB** · matched **5 BB** · refunded **0 BB**",
+      `<@${bucksTestDiscordId(1)}> Blue 5 → matched **5**`,
     );
-    expect(edits[0]?.content).toContain(
-      "🏦 House matched **4 BB** on **Red Team**.",
-    );
+    // A fully matched offer says nothing about a zero refund.
+    expect(edits[0]?.content).not.toContain("refunded **0**");
+    // The market never restates the fee schedule.
+    expect(edits[0]?.content).not.toContain("20%");
     expect(edits[0]?.content).not.toContain(`<@${bucksTestDiscordId(99)}>`);
   });
 
@@ -360,6 +363,7 @@ describe("announceSettlements", () => {
       {
         matchId: MATCH_ID,
         closures: [],
+        parlaySettlements: [],
         settlements: [remakeSettlement()],
         earnings: [],
         postmatchMessageIds: new Map([[CHANNEL_ONE, "postmatch-one"]]),
@@ -392,6 +396,7 @@ describe("announceSettlements", () => {
       {
         matchId: MATCH_ID,
         closures: [],
+        parlaySettlements: [],
         settlements: [remakeSettlement()],
         earnings: [],
         postmatchMessageIds: new Map(),
@@ -464,6 +469,7 @@ describe("announceSettlements unmatched receipts", () => {
             ],
           },
         ],
+        parlaySettlements: [],
         settlements: [],
         earnings: [],
         postmatchMessageIds: new Map(),
@@ -480,7 +486,7 @@ describe("announceSettlements unmatched receipts", () => {
 
     expect(sends).toHaveLength(2);
     expect(JSON.stringify(sends[0])).toContain(
-      `offered 9 BB · matched 0 BB · refunded 9 BB → no stake was matched`,
+      `Blue 9 → nothing matched, refunded **9**`,
     );
   });
 
@@ -519,6 +525,7 @@ describe("announceSettlements unmatched receipts", () => {
             ],
           },
         ],
+        parlaySettlements: [],
         settlements: [],
         earnings: [],
         postmatchMessageIds: new Map(),
@@ -563,6 +570,7 @@ describe("announceSettlements unmatched receipts", () => {
       {
         matchId: MATCH_ID,
         closures: [],
+        parlaySettlements: [],
         settlements: [remakeSettlement()],
         earnings: [],
         postmatchMessageIds: new Map(),
@@ -578,7 +586,37 @@ describe("announceSettlements unmatched receipts", () => {
     );
 
     expect(JSON.stringify(sends[0])).toContain(
-      `offered 9 BB · matched 0 BB · refunded 9 BB`,
+      `Blue 9 → nothing matched, refunded **9**`,
     );
+  });
+});
+
+describe("refreshBucksMessages observability", () => {
+  // These three paths returned silently before, which is exactly what made
+  // "why didn't the message update?" unanswerable.
+  test("counts each silent refresh skip instead of returning quietly", async () => {
+    const found = registry.getSingleMetric("betting_message_operations_total");
+    if (found === undefined) {
+      throw new Error("betting_message_operations_total is not registered");
+    }
+    const metric = found;
+    async function skipCount(reason: string): Promise<number> {
+      const collected = await metric.get();
+      return (
+        collected.values.find(
+          (value) =>
+            value.labels["surface"] === "prematch" &&
+            value.labels["result"] === reason,
+        )?.value ?? 0
+      );
+    }
+
+    const before = await skipCount("skipped_no_pool");
+    await refreshBucksMessages(
+      { matchId: "NA1_does-not-exist", serverId: SERVER_ID },
+      db,
+      recordingEditor([]),
+    );
+    expect(await skipCount("skipped_no_pool")).toBe(before + 1);
   });
 });

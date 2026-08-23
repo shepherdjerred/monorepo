@@ -17,6 +17,7 @@ import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { matchBucksOffers } from "#src/betting/matching.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import { recordClosedPool } from "#src/betting/sweep-observability.ts";
 
 const logger = createLogger("betting-sweep");
 
@@ -346,6 +347,7 @@ export async function closeExpiredBettingWindows(
       });
       if (result !== undefined) {
         closed.push(result);
+        recordClosedPool(result, "window_expired");
       }
     } catch (error) {
       logger.error(
@@ -406,6 +408,7 @@ export async function closeBettingWindowsForMatch(
       });
       if (result !== undefined) {
         closed.push(result);
+        recordClosedPool(result, "match_finished");
       }
     } catch (error) {
       // A malformed pool for one guild must not block healthy guild pools,

@@ -1,6 +1,7 @@
 import { type SlashCommandSubcommandsOnlyBuilder } from "discord.js";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { buildPeekPassQuoteReply } from "#src/betting/peek-pass-button.ts";
+import { PEEK_PASS_DURATION_LABEL } from "#src/betting/peek-pass.ts";
 import { describePeekResult, peekAtGame } from "#src/betting/peek.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
 
@@ -11,7 +12,7 @@ export function addBbPeekSubcommands(
     .addSubcommand((subcommand) =>
       subcommand
         .setName("pass")
-        .setDescription("Get a 24-hour peek-pass quote"),
+        .setDescription(`Get a ${PEEK_PASS_DURATION_LABEL} peek-pass quote`),
     )
     .addSubcommand((subcommand) =>
       subcommand

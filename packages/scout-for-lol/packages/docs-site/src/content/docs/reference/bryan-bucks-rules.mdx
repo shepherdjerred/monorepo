@@ -1,0 +1,120 @@
+---
+title: Bryan Bucks rules and limits
+description: Windows, fees, caps, and which queues are eligible — derived from the values the bot actually runs on.
+sidebar:
+  order: 13
+---
+
+import {
+  BETTING_WINDOW_MS,
+  BUCKS_EARNING_QUEUES,
+  BUTTON_STAKES,
+  HOUSE_BANKROLL,
+  HOUSE_MATCH_LIMIT,
+  MIN_STAKE,
+  PARLAY_BETTING_WINDOW_MS,
+  REMAKE_MAX_DURATION_SECONDS,
+  SEED_GRANT,
+  VOID_GRACE_MS,
+} from "@scout-for-lol/backend/betting/constants.ts";
+import { HOUSE_CUT_PERCENT } from "@scout-for-lol/backend/betting/house-cut.ts";
+
+Every number on this page is imported from the constant the bot runs on, so it
+cannot drift from the implementation. `/bb rules` in Discord states the same
+rules from the same constants.
+
+Bryan Bucks have no cash value. Nothing can be redeemed, and `/bb prizes` is a
+joke catalogue.
+
+## Windows
+
+| Market  | Open for                                                                 |
+| ------- | ------------------------------------------------------------------------ |
+| Outcome | {Math.floor(BETTING_WINDOW_MS / 60_000)} minutes from detection          |
+| Parlay  | {Math.floor(PARLAY_BETTING_WINDOW_MS / 60_000)} minutes from publication |
+
+The outcome window runs from when Scout _detected_ the game, not from when the
+game started, and it is clamped against the game's own start time so a late
+detection cannot silently extend it.
+
+A market that never receives a result is voided and fully refunded after{" "}
+{VOID_GRACE_MS / 3_600_000} hours.
+
+## Stakes
+
+| Limit                | Value                            |
+| -------------------- | -------------------------------- |
+| Minimum stake        | {MIN_STAKE} BB                   |
+| Button denominations | {BUTTON_STAKES.join(" BB, ")} BB |
+| Maximum stake        | Your balance                     |
+| New wallet grant     | {SEED_GRANT} BB                  |
+
+There is no product cap on a bet beyond what your wallet can cover. The grant
+for a new wallet is transferred from the house bankroll, not created.
+
+## Fees
+
+| Event                          | Fee                                                              |
+| ------------------------------ | ---------------------------------------------------------------- |
+| Placing a bet                  | none                                                             |
+| Unmatched BB refunded at close | none                                                             |
+| Outcome winner                 | {HOUSE_CUT_PERCENT}% of matched **profit**, rounded down         |
+| Cancelling an outcome bet      | {HOUSE_CUT_PERCENT}% of the **offer**, rounded to the nearest BB |
+| Cancelling a parlay            | none                                                             |
+| Any void or remake refund      | none                                                             |
+
+The two {HOUSE_CUT_PERCENT}% figures use different bases and different
+rounding, and that is deliberate: the winner fee rounds down so a winning 1 BB
+match still profits.
+
+## Matching
+
+| Rule                  | Value                                                  |
+| --------------------- | ------------------------------------------------------ |
+| Human offers match    | first, at even money                                   |
+| Oversubscribed offers | matched proportionally                                 |
+| House fill per game   | up to {HOUSE_MATCH_LIMIT} BB, aggregate                |
+| House bankroll        | {HOUSE_BANKROLL.toLocaleString("en-US")} BB per server |
+| Winner receives       | 2× matched stake, less the winner fee                  |
+
+The house fill is capped **for the whole game**, not per player. See
+[why bets use matched stakes](/docs/explanation/bryan-bucks-matched-stakes/).
+
+## Eligible queues
+
+Markets are published for:
+
+<ul>
+  {BUCKS_EARNING_QUEUES.map((queue) => (
+    <li key={queue}>{queue}</li>
+  ))}
+</ul>
+
+League Classic is a special case: it awards a participation point but carries
+**no market**, because Riot exposes no post-game payload for it and a market
+that cannot be settled reliably should not be opened. ARAM and Arena are not
+eligible at all.
+
+A game shorter than {REMAKE_MAX_DURATION_SECONDS / 60} minutes is treated as a
+remake: no Bucks are earned and every stake is refunded.
+
+## Earnings
+
+Earned on an eligible completed game, per linked tracked player:
+
+| Reason                       | Award                        |
+| ---------------------------- | ---------------------------- |
+| Played                       | +1 BB                        |
+| Won                          | +1 BB                        |
+| MVP                          | +1 BB                        |
+| Ranked 5s bonus              | +1 BB                        |
+| Clash bonus                  | +10 BB                       |
+| League Classic participation | +1 BB (pre-match, no market) |
+
+## Peek passes
+
+A pass lasts 24 hours and covers unlimited peeks. Its price scales with your
+balance and how long you have held it, with a floor. A peek becomes available
+a short time after the game goes live and disappears once the market resolves.
+
+`/bb rules` in Discord states the floor and the delay exactly.

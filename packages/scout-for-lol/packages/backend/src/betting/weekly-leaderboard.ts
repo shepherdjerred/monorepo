@@ -7,6 +7,7 @@ import {
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
 import { client } from "#src/discord/client.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
+import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   ChannelSendError,
@@ -107,10 +108,21 @@ async function sendLeaderboardChunk(
 ): Promise<void> {
   for (let attempt = 1; attempt <= MAX_CHUNK_SEND_ATTEMPTS; attempt++) {
     try {
-      await dependencies.sendMessage(
-        options,
-        COMMON_DENOMINATOR_CHANNEL_ID,
-        serverId,
+      // Wrapped per attempt, so a retried send shows its failures rather than
+      // only its eventual success.
+      await observeBucksDelivery(
+        {
+          surface: "weekly_leaderboard",
+          operation: "send",
+          serverId,
+          channelId: COMMON_DENOMINATOR_CHANNEL_ID,
+        },
+        () =>
+          dependencies.sendMessage(
+            options,
+            COMMON_DENOMINATOR_CHANNEL_ID,
+            serverId,
+          ),
       );
       return;
     } catch (error) {

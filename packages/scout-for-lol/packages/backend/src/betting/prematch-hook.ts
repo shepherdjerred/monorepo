@@ -6,7 +6,11 @@ import type {
   RawCurrentGameInfo,
   BucksPrediction,
 } from "@scout-for-lol/data";
-import { buildBettingRows } from "#src/betting/components.ts";
+import {
+  bettingAnchor,
+  buildBettingRows,
+  subjectFraming,
+} from "#src/betting/components.ts";
 import { awardClassicPrematchForGame } from "#src/betting/classic-prematch-earnings.ts";
 import { isBettableGame, isStandardLobby } from "#src/betting/eligibility.ts";
 import {
@@ -109,18 +113,20 @@ export async function prepareBucksPrematch(
     prismaClient,
   );
 
+  const roster = buildRosterForButtons(input.gameInfo, trackedAliasByPuuid);
   const rows =
-    bettingGuildIds.size === 0
-      ? []
-      : buildBettingRows({
-          matchId,
-          roster: buildRosterForButtons(input.gameInfo, trackedAliasByPuuid),
-        });
+    bettingGuildIds.size === 0 ? [] : buildBettingRows({ matchId, roster });
 
+  // `closesAt` is deliberately omitted here: `recordPrematchOutputs` refreshes
+  // from the persisted pool within a second of delivery, and that refresh has
+  // the authoritative close time. Recomputing it here would duplicate
+  // `computeClosesAt` on the hot path to save one edit.
+  const anchor = bettingAnchor(roster);
   const footer = bucksPrematchSummary({
     prediction: input.prediction,
     poolState: "open",
     positions: [],
+    framing: anchor === undefined ? undefined : subjectFraming(anchor),
   });
 
   return { bettingGuildIds, rows, footer, matchId };

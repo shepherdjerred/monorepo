@@ -604,14 +604,23 @@ model BotState {
 }
 
 model ActiveGame {
-  id                 Int      @id @default(autoincrement())
-  gameId             BigInt // Riot game ID (from Spectator V5 API)
-  trackedPuuids      String // JSON array of tracked puuids detected in this game
-  prematchMessageIds String? // JSON object: Discord channel ID -> prematch message ID
-  prematchMatchId    String?  @unique // Platform-qualified Riot match ID and active-game key
-  detectedAt         DateTime // When we first detected this game
-  expiresAt          DateTime // TTL: auto-cleanup after this time (detectedAt + 3 hours)
-  updatedAt          DateTime @updatedAt
+  id                  Int      @id @default(autoincrement())
+  gameId              BigInt // Riot game ID (from Spectator V5 API)
+  trackedPuuids       String // JSON array of tracked puuids detected in this game
+  prematchMessageIds  String? // JSON object: Discord channel ID -> prematch message ID
+  // JSON object: Discord channel ID -> postmatch report message ID.
+  //
+  // The Bryan Bucks settlement embed replies to the postmatch report, and the
+  // report IDs were previously held only in an in-memory Map for the duration
+  // of one poll. A restart between delivering the report and announcing the
+  // settlement permanently lost the reply target, because the settlement
+  // summary is one-shot and a later pass returns nothing for an already
+  // settled pool.
+  postmatchMessageIds String?
+  prematchMatchId     String?  @unique // Platform-qualified Riot match ID and active-game key
+  detectedAt          DateTime // When we first detected this game
+  expiresAt           DateTime // TTL: auto-cleanup after this time (detectedAt + 3 hours)
+  updatedAt           DateTime @updatedAt
 
   @@index([expiresAt])
 }
@@ -702,17 +711,17 @@ model AuditLog {
 // `reconcileBucksBalances()` re-derives from the ledger and reports drift
 // rather than trusting this column.
 model BucksAccount {
-  id        Int      @id @default(autoincrement())
-  serverId  String
-  discordId String
+  id                Int       @id @default(autoincrement())
+  serverId          String
+  discordId         String
   // Synthetic per-guild house rows use the reserved account ID. They are
   // ledger-audited but excluded from user-facing balances and leaderboards.
-  isHouse   Boolean  @default(false)
-  balance   Int      @default(0)
+  isHouse           Boolean   @default(false)
+  balance           Int       @default(0)
   // Per-guild 24-hour entitlement purchased through the audited ledger.
   peekPassExpiresAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   ledgerEntries BucksLedgerEntry[]
   bets          BucksBet[]
@@ -1059,9 +1068,9 @@ model BucksMatchEarning {
   // durable exactly-once result.
   state String @default("complete")
 
-  targetSnapshotJson String @default("[]")
-  retryAt           DateTime @default(now())
-  matchCreatedAt    DateTime @default(now())
+  targetSnapshotJson String   @default("[]")
+  retryAt            DateTime @default(now())
+  matchCreatedAt     DateTime @default(now())
 
   // Number of ledger rows written, so reconciliation is one comparison once
   // the marker is complete.
