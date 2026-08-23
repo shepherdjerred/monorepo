@@ -222,6 +222,19 @@
       "enabled": false
     },
     {
+      "description": "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
+      "matchManagers": ["npm"],
+      "matchDepNames": ["typescript"],
+      "allowedVersions": "<7"
+    },
+    {
+      "description": "Keep the custom Corretto regex manager authoritative; disable only the native mise java dependency so Renovate cannot replace Corretto with another JDK distribution.",
+      "matchManagers": ["mise"],
+      "matchDepNames": ["java"],
+      "matchFileNames": [".mise.toml"],
+      "enabled": false
+    },
+    {
       "description": "Group @types/node with Node.js major updates",
       "groupName": "Node.js",
       "matchPackageNames": ["@types/node", "node"],
