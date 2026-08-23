@@ -5,8 +5,12 @@ public struct QuotaOverview: Equatable, Sendable {
   public let summary: QuotaOverviewSummary
   public let lastUpdatedAt: Date?
 
-  public init(states: [ProviderID: ProviderDisplayState], at date: Date = .now) {
-    let overviews = ProviderID.allCases.map { provider in
+  public init(
+    states: [ProviderID: ProviderDisplayState],
+    providerIDs: Set<ProviderID> = Set(ProviderID.allCases),
+    at date: Date = .now
+  ) {
+    let overviews = ProviderID.allCases.filter(providerIDs.contains).map { provider in
       guard let state = states[provider] else {
         preconditionFailure("Missing display state for \(provider.rawValue)")
       }

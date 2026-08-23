@@ -21,59 +21,84 @@ struct MenuBarView: View {
     .background(Color(nsColor: .windowBackgroundColor))
   }
 
-  private func content(at date: Date) -> some View {
+  @ViewBuilder private func content(at date: Date) -> some View {
     switch selectedSegment {
     case .subscriptions:
-      let overview = QuotaOverview(states: providerStates, at: date)
-      return AnyView(
-        VStack(spacing: 0) {
-          header(
-            lastUpdatedAt: overview.lastUpdatedAt,
-            isRefreshing: model.isRefreshing,
-            date: date
-          ) {
-            Task { await model.refresh() }
-          }
-          navigationSegments
-          WindowColumnHeader()
-            .padding(.horizontal, 12)
-            .padding(.vertical, 5)
-          Divider()
-          providerList(overview: overview, date: date)
-          Divider()
-          spendRow
-          Spacer(minLength: 0)
-          Divider()
-          footer
-        }
-        .frame(minHeight: menuBarWindowMinimumHeight, alignment: .top)
-      )
+      subscriptionContent(at: date)
     case .api:
-      return AnyView(
-        VStack(spacing: 0) {
-          header(
-            lastUpdatedAt: apiLastUpdatedAt,
-            isRefreshing: apiModel.isRefreshing,
-            date: date
-          ) {
-            Task { await apiModel.refresh() }
-          }
-          navigationSegments
-          Divider()
-          APIPlatformSummaryView(state: apiModel.state, date: date)
-            .frame(minHeight: 220)
-          if let cacheError = apiModel.cacheErrorMessage {
-            Divider()
-            StatusMessage(symbol: "externaldrive.badge.exclamationmark", text: cacheError)
-              .padding(.horizontal, 12)
-          }
-          Spacer(minLength: 0)
-          Divider()
-          footer
-        }
-        .frame(minHeight: menuBarWindowMinimumHeight, alignment: .top)
-      )
+      apiContent(at: date)
+    case .history:
+      historyContent(at: date)
     }
+  }
+
+  private func subscriptionContent(at date: Date) -> some View {
+    let overview = QuotaOverview(
+      states: providerStates,
+      providerIDs: model.settings.visibleProviderIDs,
+      at: date
+    )
+    return VStack(spacing: 0) {
+      header(lastUpdatedAt: overview.lastUpdatedAt, isRefreshing: model.isRefreshing, date: date) {
+        Task { await model.refresh() }
+      }
+      navigationSegments
+      WindowColumnHeader().padding(.horizontal, 12).padding(.vertical, 5)
+      Divider()
+      providerList(overview: overview, date: date)
+      Divider()
+      spendRow
+      Spacer(minLength: 0)
+      Divider()
+      footer
+    }
+    .frame(minHeight: menuBarWindowMinimumHeight, alignment: .top)
+  }
+
+  private func apiContent(at date: Date) -> some View {
+    VStack(spacing: 0) {
+      header(lastUpdatedAt: apiLastUpdatedAt, isRefreshing: apiModel.isRefreshing, date: date) {
+        Task { await apiModel.refresh() }
+      }
+      navigationSegments
+      Divider()
+      APIPlatformSummaryView(state: apiModel.state, date: date).frame(minHeight: 220)
+      if let cacheError = apiModel.cacheErrorMessage {
+        Divider()
+        StatusMessage(symbol: "externaldrive.badge.exclamationmark", text: cacheError)
+          .padding(.horizontal, 12)
+      }
+      Spacer(minLength: 0)
+      Divider()
+      footer
+    }
+    .frame(minHeight: menuBarWindowMinimumHeight, alignment: .top)
+  }
+
+  private func historyContent(at date: Date) -> some View {
+    VStack(spacing: 0) {
+      header(
+        lastUpdatedAt: model.history.last?.recordedAt, isRefreshing: model.isRefreshing, date: date
+      ) {
+        Task { await model.refresh() }
+      }
+      navigationSegments
+      Divider()
+      UsageHistoryView(
+        samples: model.history,
+        visibleProviderIDs: model.settings.visibleProviderIDs,
+        date: date
+      )
+      if let historyError = model.historyErrorMessage {
+        Divider()
+        StatusMessage(symbol: "externaldrive.badge.exclamationmark", text: historyError)
+          .padding(.horizontal, 12)
+      }
+      Spacer(minLength: 0)
+      Divider()
+      footer
+    }
+    .frame(minHeight: menuBarWindowMinimumHeight, alignment: .top)
   }
 
   private var providerStates: [ProviderID: ProviderDisplayState] {
@@ -120,6 +145,7 @@ struct MenuBarView: View {
     HStack(spacing: 2) {
       segmentButton(.subscriptions, title: "Subscriptions")
       segmentButton(.api, title: "API & routers")
+      segmentButton(.history, title: "History")
     }
     .padding(2)
     .background(.quaternary, in: RoundedRectangle(cornerRadius: 7))
@@ -152,7 +178,7 @@ struct MenuBarView: View {
           StatusMessage(symbol: "exclamationmark.triangle", text: startupError)
         }
         ForEach(overview.providers) { provider in
-          ProviderSectionView(overview: provider, date: date)
+          ProviderSectionView(overview: provider, date: date, history: model.history)
           if provider.id != overview.providers.last?.id {
             Divider().padding(.leading, 25)
           }
@@ -184,14 +210,20 @@ struct MenuBarView: View {
     HStack {
       Text("Subscriptions")
       Spacer()
-      Text("$\(SubscriptionPlan.totalMonthlyCostUSD)/mo")
-        .monospacedDigit()
+      Text(
+        "$\(SubscriptionPlan.totalMonthlyCostUSD(includingLegacy: model.settings.showsLegacyProviders))/mo"
+      )
+      .monospacedDigit()
     }
     .font(.caption)
     .foregroundStyle(.secondary)
     .padding(.horizontal, 12)
     .padding(.vertical, 7)
-    .help("Claude Code $200, Codex $200, Kimi $40, Grok $30")
+    .help(
+      model.settings.showsLegacyProviders
+        ? "Claude Code $200, Codex $200, Kimi Code $40, Grok $30"
+        : "Claude Code $200, Codex $200"
+    )
   }
 
   private var footer: some View {
@@ -223,6 +255,7 @@ struct MenuBarView: View {
 private enum DashboardSegment {
   case subscriptions
   case api
+  case history
 }
 
 private struct ProviderListHeightPreference: PreferenceKey {

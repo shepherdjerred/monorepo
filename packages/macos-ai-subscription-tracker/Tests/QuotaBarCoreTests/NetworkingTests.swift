@@ -352,7 +352,14 @@ final class NetworkingTests: XCTestCase {
     XCTAssertThrowsError(
       try ProviderEndpoints.live(environment: ["QUOTABAR_KIMI_USAGE_URL": "http://["]))
     let credentials = StubCredentialStore(tokens: ["token"])
-    XCTAssertEqual(try Providers.live(credentials: credentials).map(\.id), ProviderID.allCases)
+    XCTAssertEqual(
+      try Providers.live(credentials: credentials).map(\.id),
+      [.claudeCode, .codex]
+    )
+    XCTAssertEqual(
+      try Providers.live(credentials: credentials, providerIDs: Set(ProviderID.allCases)).map(\.id),
+      ProviderID.allCases
+    )
   }
 
   func testEndpointRejectsRelativeOverrideURL() throws {

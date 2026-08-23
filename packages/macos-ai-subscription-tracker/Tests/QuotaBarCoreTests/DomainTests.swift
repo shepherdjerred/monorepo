@@ -149,8 +149,9 @@ final class DomainTests: XCTestCase {
   }
 
   func testSubscriptionPlansAndProviderMetadata() {
-    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD, 470)
-    XCTAssertEqual(SubscriptionPlan.active.count, 4)
+    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(), 400)
+    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(includingLegacy: true), 470)
+    XCTAssertEqual(SubscriptionPlan.standard.count, 2)
     XCTAssertEqual(SubscriptionPlan.plan(for: .claudeCode).monthlyCostUSD, 200)
     XCTAssertEqual(SubscriptionPlan.plan(for: .codex).monthlyCostUSD, 200)
     XCTAssertEqual(SubscriptionPlan.plan(for: .kimi).monthlyCostUSD, 40)

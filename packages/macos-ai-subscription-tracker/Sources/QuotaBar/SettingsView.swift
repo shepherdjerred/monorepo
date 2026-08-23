@@ -18,14 +18,18 @@ struct SettingsView: View {
   var body: some View {
     Form {
       providerSection
+      advancedSection
       refreshSection
       loginSection
       credentialSection
       openRouterCredentialSection
     }
     .formStyle(.grouped)
-    .frame(width: 520, height: 680)
+    .frame(width: 520, height: 720)
     .task { await loadCredentialStatus() }
+    .onChange(of: model.settings.visibleProviderIDs) { _, _ in
+      Task { await loadCredentialStatus() }
+    }
     .onAppear { launchAtLogin.refresh() }
   }
 
@@ -64,7 +68,7 @@ struct SettingsView: View {
 
   private var providerSection: some View {
     Section("Providers") {
-      ForEach(ProviderID.allCases) { provider in
+      ForEach(ProviderID.allCases.filter(model.settings.visibleProviderIDs.contains)) { provider in
         HStack {
           Toggle(provider.displayName, isOn: providerBinding(provider))
           Spacer()
@@ -75,6 +79,17 @@ struct SettingsView: View {
         Label(error, systemImage: "exclamationmark.triangle")
           .foregroundStyle(.red)
       }
+    }
+  }
+
+  private var advancedSection: some View {
+    Section("Advanced") {
+      Toggle("Show legacy providers", isOn: legacyProviderBinding)
+      Text(
+        "Kimi Code and Grok use unsupported subscription surfaces. They remain off unless you opt in."
+      )
+      .font(.caption)
+      .foregroundStyle(.secondary)
     }
   }
 
@@ -113,7 +128,7 @@ struct SettingsView: View {
       )
       .font(.caption)
       .foregroundStyle(.secondary)
-      ForEach(ProviderID.allCases) { provider in
+      ForEach(ProviderID.allCases.filter(model.settings.visibleProviderIDs.contains)) { provider in
         VStack(alignment: .leading, spacing: 5) {
           HStack {
             SecureField("\(provider.displayName) token", text: draftBinding(provider))
@@ -145,6 +160,13 @@ struct SettingsView: View {
     Binding(
       get: { model.settings.pollingInterval },
       set: { model.updatePollingInterval($0) }
+    )
+  }
+
+  private var legacyProviderBinding: Binding<Bool> {
+    Binding(
+      get: { model.settings.showsLegacyProviders },
+      set: { model.setShowsLegacyProviders($0) }
     )
   }
 
@@ -191,7 +213,7 @@ struct SettingsView: View {
   }
 
   private func loadCredentialStatus() async {
-    for provider in ProviderID.allCases {
+    for provider in model.settings.visibleProviderIDs {
       do {
         if try await manualCredentials.credentialIfPresent(for: provider) != nil {
           overriddenProviders.insert(provider)

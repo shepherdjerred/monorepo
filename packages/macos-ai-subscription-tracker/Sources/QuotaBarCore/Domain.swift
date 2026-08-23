@@ -6,6 +6,9 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
   case kimi
   case grok
 
+  public static let standard: Set<ProviderID> = [.claudeCode, .codex]
+  public static let legacy: Set<ProviderID> = [.kimi, .grok]
+
   public var id: String { rawValue }
 
   public var displayName: String {
@@ -32,19 +35,26 @@ public struct SubscriptionPlan: Identifiable, Equatable, Sendable {
   public let provider: ProviderID
   public let monthlyCostUSD: Int
 
-  public static let active: [SubscriptionPlan] = [
+  public static let standard: [SubscriptionPlan] = [
     SubscriptionPlan(provider: .claudeCode, monthlyCostUSD: 200),
     SubscriptionPlan(provider: .codex, monthlyCostUSD: 200),
+  ]
+
+  public static let legacy: [SubscriptionPlan] = [
     SubscriptionPlan(provider: .kimi, monthlyCostUSD: 40),
     SubscriptionPlan(provider: .grok, monthlyCostUSD: 30),
   ]
 
-  public static var totalMonthlyCostUSD: Int {
-    active.reduce(0) { total, plan in total + plan.monthlyCostUSD }
+  public static func plans(includingLegacy: Bool) -> [SubscriptionPlan] {
+    standard + (includingLegacy ? legacy : [])
+  }
+
+  public static func totalMonthlyCostUSD(includingLegacy: Bool = false) -> Int {
+    plans(includingLegacy: includingLegacy).reduce(0) { total, plan in total + plan.monthlyCostUSD }
   }
 
   public static func plan(for provider: ProviderID) -> SubscriptionPlan {
-    guard let plan = active.first(where: { $0.provider == provider }) else {
+    guard let plan = (standard + legacy).first(where: { $0.provider == provider }) else {
       preconditionFailure("Missing subscription plan for \(provider.rawValue)")
     }
     return plan
@@ -99,6 +109,11 @@ public struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
     case .entitlement:
       return label == "Fable 5 policy" ? "Provider quota" : "Policy"
     }
+  }
+
+  public var isWeekly: Bool {
+    if kind == .weekly { return true }
+    return label.localizedCaseInsensitiveContains("weekly")
   }
 
   public static func validated(

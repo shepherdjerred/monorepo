@@ -226,8 +226,13 @@ private func decimal(_ value: String) -> Decimal {
 
 private final class APISettingsStore: SettingsPersisting, @unchecked Sendable {
   func enabledProviders() throws -> Set<ProviderID>? { Set(ProviderID.allCases) }
+  func showsLegacyProviders() throws -> Bool? { true }
   func pollingInterval() throws -> TimeInterval? { 300 }
-  func save(enabledProviders _: Set<ProviderID>, pollingInterval _: TimeInterval) {}
+  func save(
+    enabledProviders _: Set<ProviderID>,
+    showsLegacyProviders _: Bool,
+    pollingInterval _: TimeInterval
+  ) {}
 }
 
 private final class MemoryAPIPlatformStore: APIPlatformSnapshotPersisting, @unchecked Sendable {

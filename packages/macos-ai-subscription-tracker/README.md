@@ -1,15 +1,17 @@
 # Brim
 
 Brim is a personal macOS menu-bar app for monitoring AI subscription
-quotas. It currently targets Claude Code, Codex, Kimi Code, and Grok.
+quotas. It targets Claude Code and Codex by default. Kimi Code and Grok remain
+available only through the Advanced legacy-provider setting.
 
 Brim is the product name; QuotaBar is the Xcode target, bundle id
 (`com.sjerred.QuotaBar`), and workspace package id
 (`@shepherdjerred/quotabar`).
 
 The menu bar also shows the configured personal subscription spend: $200/month
-for Claude Code, $200/month for Codex, $40/month for Kimi Code, and $30/month
-for Grok ($470/month total). This is a reminder, not provider billing data.
+for Claude Code and $200/month for Codex ($400/month total). Enabling legacy
+providers adds Kimi Code ($40/month) and Grok ($30/month). This is a reminder,
+not provider billing data.
 
 The compact subscription view sorts providers by their tightest current quota,
 keeps each quota and reset on one line, and uses pressure colors only for low or
@@ -107,10 +109,13 @@ macOS release checks; this package does not add a macOS CI lane.
 Brim reads existing local OAuth credentials or accepts an optional token
 override in Settings. Overrides are stored in the macOS login Keychain, take
 precedence over local discovery, and can be removed from the same screen.
-Brim does not log tokens or include them in its JSON usage cache.
+Brim does not log tokens or include them in its JSON usage cache. It stores only
+local historical quota samples (provider/window metadata, percentages, reset
+times, and timestamps) for up to 30 days so it can render the History graph.
 
-Claude and Codex use their typed local credential formats. Kimi Code reads its
-`KIMI_CODE_HOME` credential directory (default `~/.kimi-code`). Kimi and Grok
+Claude and Codex use their typed local credential formats. When the legacy
+provider setting is enabled, Kimi Code reads its `KIMI_CODE_HOME` credential
+directory (default `~/.kimi-code`). Kimi and Grok
 can also read typed OAuth entries from OpenCode. OpenCode remains the sole owner
 and writer of those OAuth token chains: Brim never rotates, refreshes, or
 rewrites OpenCode files or its credential database. An expired or rejected
@@ -143,10 +148,11 @@ calendar pace against OpenRouter's authoritative monthly usage period. Chatroom
 and Fusion activity is outside this first API-key reporting slice.
 
 Provider contracts are isolated in focused files under `Sources/QuotaBarCore`.
-Claude and Codex endpoints are authenticated subscription web surfaces, while
-Kimi and Grok use private subscription quota surfaces. They are unsupported
-contracts and may change without notice. Provider response changes produce an
-explicit unavailable, partial, or stale state rather than a fabricated zero.
+Claude and Codex endpoints are authenticated subscription web surfaces. Legacy
+Kimi and Grok support uses private subscription quota surfaces and is disabled
+by default because those contracts may change without notice. When enabled,
+provider response changes produce an explicit unavailable, partial, or stale
+state rather than a fabricated zero.
 
 ## Development
 
