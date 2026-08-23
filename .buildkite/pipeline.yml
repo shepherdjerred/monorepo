@@ -1073,11 +1073,23 @@ steps:
         - "**/*.yaml"
         - "**/*.yml"
     cancel_on_build_failing: true
-    # Excludes mirror the .gitleaks.toml allowlist: these paths hold values
-    # already triaged as non-sensitive (legacy/undeployed sandbox archive,
-    # a disabled Minecraft management-server secret, a public Firebase web
-    # apiKey). semgrep's generic-secret rule would otherwise re-print those
-    # values into the log on every build. Real code stays fully scanned.
+    # Excludes mirror the .gitleaks.toml allowlist: these exact paths hold
+    # values already triaged as non-sensitive (legacy/undeployed sandbox
+    # scratch, disabled Minecraft management-server secrets, a public
+    # Firebase web apiKey in the temporal activities fetcher). semgrep's
+    # generic-secret rule would otherwise re-print those values into the log
+    # on every build. Real code stays fully scanned — the old bare
+    # `--exclude fetcher.ts` / `--exclude server.properties` basename
+    # patterns matched every so-named file repo-wide, which silently
+    # excluded files that were never triaged.
+    #
+    # The ruleset is pinned to the explicit registry pack `p/default`
+    # (what `--config auto` resolves to for anonymous scans) so the scanned
+    # rule surface no longer shifts with semgrep's auto heuristics, and
+    # `--metrics=off` stops telemetry. semgrep only hard-requires metrics
+    # for `--config auto` (cli/src/semgrep/commands/scan.py at v1.170.0
+    # aborts on exactly `"auto" in config and metrics == OFF`); explicit
+    # registry packs fetch fine with metrics off.
     command: |
       echo "OPTIONAL SECURITY SCAN: Semgrep findings do not block merge; merge-base/config/runtime failures do."
       set +e
@@ -1085,11 +1097,13 @@ steps:
         echo "semgrep could not resolve the PR merge-base" >&2
         exit 2
       fi
-      semgrep scan --config auto --error \
+      semgrep scan --config p/default --metrics=off --error \
         --baseline-commit "$$base" \
         --exclude sandbox \
-        --exclude server.properties \
-        --exclude fetcher.ts \
+        --exclude packages/homelab/src/cdk8s/config/minecraft-shuxin/server.properties \
+        --exclude packages/homelab/src/cdk8s/config/minecraft-sjerred/server.properties \
+        --exclude packages/homelab/src/cdk8s/config/minecraft-tsmc/server.properties \
+        --exclude packages/temporal/src/activities/fetcher.ts \
         .
       semgrep_status=$$?
       set -e
