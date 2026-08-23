@@ -1,8 +1,8 @@
-import {
-  GitHub,
-  Manifest,
-  type Manifest as ManifestType,
-} from "release-please";
+import { Manifest, type Manifest as ManifestType } from "release-please";
+import { LocalGitHub } from "release-please/build/src/local-github.js";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
 export type ReleasePleasePhase = "release-pr" | "github-release";
 
@@ -24,8 +24,9 @@ type ReleaseConfig = {
   excludePaths?: string[];
 };
 
-type ReleaseTargetPin = {
-  enabled: boolean;
+type CreatedManifest = {
+  readonly manifest: ManifestType;
+  readonly cleanup: () => Promise<void>;
 };
 
 function repositoryParts(repoUrl: string): {
@@ -74,38 +75,25 @@ function applyExcludedPaths(
   applyExcludedPathsToConfig(manifest.repositoryConfig, excludedPaths);
 }
 
-function pinGitHubReads(
-  github: GitHub,
+async function runGit(cwd: string, args: readonly string[]): Promise<void> {
+  const child = Bun.spawn(["git", ...args], { cwd });
+  const exitCode = await child.exited;
+  if (exitCode !== 0) {
+    throw new Error(`git ${args.join(" ")} failed with exit code ${exitCode}`);
+  }
+}
+
+async function pinLocalRepository(
+  repositoryPath: string,
   targetBranch: string,
   targetBranchSha: string,
-): ReleaseTargetPin {
-  const pin: ReleaseTargetPin = { enabled: true };
-  const pinnedBranch = (branch: string): string =>
-    pin.enabled && branch === targetBranch ? targetBranchSha : branch;
-
-  const getFileContentsOnBranch = github.getFileContentsOnBranch.bind(github);
-  github.getFileContentsOnBranch = (path, branch) =>
-    getFileContentsOnBranch(path, pinnedBranch(branch));
-
-  const findFilesByFilenameAndRef =
-    github.findFilesByFilenameAndRef.bind(github);
-  github.findFilesByFilenameAndRef = (filename, ref, prefix) =>
-    findFilesByFilenameAndRef(filename, pinnedBranch(ref), prefix);
-
-  const findFilesByGlobAndRef = github.findFilesByGlobAndRef.bind(github);
-  github.findFilesByGlobAndRef = (glob, ref, prefix) =>
-    findFilesByGlobAndRef(glob, pinnedBranch(ref), prefix);
-
-  const findFilesByExtensionAndRef =
-    github.findFilesByExtensionAndRef.bind(github);
-  github.findFilesByExtensionAndRef = (extension, ref, prefix) =>
-    findFilesByExtensionAndRef(extension, pinnedBranch(ref), prefix);
-
-  const mergeCommitIterator = github.mergeCommitIterator.bind(github);
-  github.mergeCommitIterator = (branch, options) =>
-    mergeCommitIterator(pinnedBranch(branch), options);
-
-  return pin;
+): Promise<void> {
+  await runGit(repositoryPath, ["checkout", "--detach", targetBranchSha]);
+  await runGit(repositoryPath, [
+    "update-ref",
+    `refs/heads/${targetBranch}`,
+    targetBranchSha,
+  ]);
 }
 
 async function branchSha(
@@ -163,48 +151,60 @@ export function validateReleaseCandidatePaths(
 
 async function createManifest(
   options: ReleasePleaseRunnerOptions,
-): Promise<{ manifest: ManifestType; pin: ReleaseTargetPin }> {
+): Promise<CreatedManifest> {
   const repository = repositoryParts(options.repoUrl);
-  const github = await GitHub.create({
-    ...repository,
-    token: options.token,
-    defaultBranch: options.targetBranch,
-  });
-  const pin = pinGitHubReads(
-    github,
-    options.targetBranch,
-    options.targetBranchSha,
+  const localRepositoryPath = await mkdtemp(
+    path.join(tmpdir(), "release-please-"),
   );
-  const beforeManifestSha = await branchSha(
-    repository,
-    options.token,
-    options.targetBranch,
-  );
-  if (beforeManifestSha !== options.targetBranchSha) {
-    throw new Error(
-      `Release target ${options.targetBranch} moved from ${options.targetBranchSha} ` +
-        `to ${beforeManifestSha} before release-please loaded its manifest; retry the release lane`,
+  try {
+    const github = await LocalGitHub.create({
+      ...repository,
+      token: options.token,
+      defaultBranch: options.targetBranch,
+      localRepoPath: localRepositoryPath,
+    });
+    await pinLocalRepository(
+      localRepositoryPath,
+      options.targetBranch,
+      options.targetBranchSha,
     );
-  }
-  const manifest = await Manifest.fromManifest(
-    github,
-    options.targetBranch,
-    "release-please-config.json",
-    ".release-please-manifest.json",
-  );
-  const afterManifestSha = await branchSha(
-    repository,
-    options.token,
-    options.targetBranch,
-  );
-  if (afterManifestSha !== beforeManifestSha) {
-    throw new Error(
-      `Release target ${options.targetBranch} moved while release-please loaded its manifest ` +
-        `(${beforeManifestSha} -> ${afterManifestSha}); retry the release lane`,
+    const beforeManifestSha = await branchSha(
+      repository,
+      options.token,
+      options.targetBranch,
     );
+    if (beforeManifestSha !== options.targetBranchSha) {
+      throw new Error(
+        `Release target ${options.targetBranch} moved from ${options.targetBranchSha} ` +
+          `to ${beforeManifestSha} before release-please loaded its manifest; retry the release lane`,
+      );
+    }
+    const manifest = await Manifest.fromManifest(
+      github,
+      options.targetBranch,
+      "release-please-config.json",
+      ".release-please-manifest.json",
+    );
+    const afterManifestSha = await branchSha(
+      repository,
+      options.token,
+      options.targetBranch,
+    );
+    if (afterManifestSha !== beforeManifestSha) {
+      throw new Error(
+        `Release target ${options.targetBranch} moved while release-please loaded its manifest ` +
+          `(${beforeManifestSha} -> ${afterManifestSha}); retry the release lane`,
+      );
+    }
+    applyExcludedPaths(manifest, options.excludedPaths);
+    return {
+      manifest,
+      cleanup: () => rm(localRepositoryPath, { force: true, recursive: true }),
+    };
+  } catch (error) {
+    await rm(localRepositoryPath, { force: true, recursive: true });
+    throw error;
   }
-  applyExcludedPaths(manifest, options.excludedPaths);
-  return { manifest, pin };
 }
 
 async function assertTargetBranchSha(
@@ -227,15 +227,12 @@ async function assertTargetBranchSha(
 async function createValidatedReleases(
   manifest: ManifestType,
   excludedPaths: readonly string[],
-  pin: ReleaseTargetPin,
 ): Promise<readonly unknown[]> {
   const candidates = await manifest.buildReleases();
   validateReleaseCandidatePaths(
     candidates.map((candidate) => candidate.path),
     excludedPaths,
   );
-  pin.enabled = false;
-
   // release-please 17.11.1 discovers candidates again inside createReleases.
   // Freeze that public method to the validated set for this call so a stale
   // release PR cannot become publishable between validation and tagging.
@@ -250,10 +247,8 @@ async function createValidatedReleases(
 
 async function createPinnedPullRequests(
   manifest: ManifestType,
-  pin: ReleaseTargetPin,
 ): Promise<readonly unknown[]> {
   const candidates = await manifest.buildPullRequests();
-  pin.enabled = false;
 
   const originalBuildPullRequests = manifest.buildPullRequests;
   manifest.buildPullRequests = async () => candidates;
@@ -267,20 +262,26 @@ async function createPinnedPullRequests(
 export async function runReleasePlease(
   options: ReleasePleaseRunnerOptions,
 ): Promise<ReleasePleaseRunnerResult> {
-  const { manifest, pin } = await createManifest(options);
-  if (options.phase === "release-pr") {
-    await assertTargetBranchSha(options);
-    const pullRequests = await createPinnedPullRequests(manifest, pin);
-    await assertTargetBranchSha(options);
-    return { phase: options.phase, count: pullRequests.filter(Boolean).length };
-  }
+  const created = await createManifest(options);
+  try {
+    if (options.phase === "release-pr") {
+      await assertTargetBranchSha(options);
+      const pullRequests = await createPinnedPullRequests(created.manifest);
+      await assertTargetBranchSha(options);
+      return {
+        phase: options.phase,
+        count: pullRequests.filter(Boolean).length,
+      };
+    }
 
-  await assertTargetBranchSha(options);
-  const releases = await createValidatedReleases(
-    manifest,
-    options.excludedPaths,
-    pin,
-  );
-  await assertTargetBranchSha(options);
-  return { phase: options.phase, count: releases.filter(Boolean).length };
+    await assertTargetBranchSha(options);
+    const releases = await createValidatedReleases(
+      created.manifest,
+      options.excludedPaths,
+    );
+    await assertTargetBranchSha(options);
+    return { phase: options.phase, count: releases.filter(Boolean).length };
+  } finally {
+    await created.cleanup();
+  }
 }
