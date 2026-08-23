@@ -141,6 +141,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends postgresql post
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
+COPY .buildkite/scripts/smoke-app-configs.ts /app/.buildkite/scripts/smoke-app-configs.ts
 ARG SMOKE_TARGET=scout-for-lol
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Smoke runs as the non-root deploy uid (1000, the app deployment convention),
