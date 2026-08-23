@@ -544,9 +544,10 @@ surface for filters, queues, channels, competitions, saved report
 configuration, roles, audit history, and Explore follow-ups. Do not recreate
 the removed management command trees.
 
-`/bb` (Bryan Bucks) and `/scout` are the owner-approved guild-scoped exceptions,
-pinned by `definitions.test.ts`. `/bb` follows `betting_enabled`; `/scout`
-follows `EXPLORE_GUILD_ALLOWLIST`. Neither may leak into the global picker.
+`/bb` (Bryan Bucks), `/scout`, and `/lobby` are the owner-approved
+guild-scoped exceptions, pinned by `definitions.test.ts`. `/bb` follows
+`betting_enabled`; `/scout` follows `EXPLORE_GUILD_ALLOWLIST`; `/lobby`
+follows `tournament_lobbies_enabled`. None may leak into the global picker.
 `/scout ask` starts one fresh, private, saved Explore conversation and may post
 its frozen result publicly; Discord never continues the conversation. Adding
 another command still needs the same explicit product decision.
@@ -1199,6 +1200,76 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   `skipped_no_base` is expected forever for pre-column pools and must never be
   alerted on, while `skipped_no_refs` is the leading indicator of "settlement
   had nowhere to announce".
+
+## Tournament-code custom games — `/lobby`
+
+Riot removed custom games from the public API for privacy reasons: Spectator
+sees them only unreliably, and Match-V5 does not carry them at all. The one
+sanctioned exception is the **Tournament API** — a game created from a
+_tournament code_ IS recorded in Match-V5 with `info.tournamentCode`
+populated. `/lobby` mints such a code so a custom game gets the whole Scout
+feature set. Beta-only, via `tournament_lobbies_enabled`.
+
+Code lives in `backend/src/league/tournament/` and
+`backend/src/league/api/tournament/`.
+
+- **`twisted` does not implement the tournament API**, so the client is
+  hand-rolled — but every call still routes through `riot-call.ts`, which is
+  what buys it the same metrics, health, timeout, drift-tolerant parsing, and
+  outage policy as every twisted-backed call. `TournamentHttpError` carries a
+  numeric `status` specifically so `extractHttpStatus` reads it unchanged.
+- **The host is fixed.** Every tournament endpoint is `x-route-enum: regional`
+  with `x-platforms-available: ["americas"]`, so calls always go to
+  `americas.api.riotgames.com` regardless of shard; the tournament region
+  (NA/EUW) travels in the body. `TournamentRegistration.tournamentRegion` is
+  named that way, not `region`, because `brand-prisma-types` maps any field
+  called `region` to Scout's own `Region` enum.
+- **`tournamentApiMode` selects stub or live.** Stub codes create no real
+  lobby, its events are canned, and `games/by-code` does not exist there —
+  `supportsGamesByCode(mode)` branches on config rather than catching a 404,
+  because a 404 is also how Riot reports a code it never saw. Flipping the mode
+  back to `"stub"` is the kill switch; it needs no deploy.
+- **The no-duplicate-notification guarantee is `lifecycle.ts`.**
+  `lobby-events/by-code` replays its entire event list every call, so the dedup
+  mechanism is a monotonic state recompute, not event bookkeeping: a state is
+  only ever _entered_ once, and entering `champ_select` is what sends the card.
+  `processedEventCount` and `lastEventTimestamp` are observability only —
+  correctness must never depend on them, because multiple events can share a
+  millisecond and `timestamp` arrives as a string.
+- **Teams come from the command, not from Riot.** Lobby events carry a PUUID
+  per join and never a side, and spectator is unreliable for customs, so
+  `/lobby create` takes `blue:` and `red:` lists. That is what makes the
+  prematch card and the Bryan Bucks market possible at all. `teamSize` is
+  derived as `max(blue, red)`; two lists and a size option could disagree.
+- **Every participant must be tracked in the calling guild.** Not gatekeeping:
+  the per-player match-history cursor is the only ingest path, so an untracked
+  lobby would produce a code, a game, and no report.
+- **The poller links, it never ingests.** It writes the `ActiveGame` row so the
+  post-match report replies to the card, through the unchanged
+  `getPrematchMessageIdsForMatchIdOrEmpty` path. The match-history cursor still
+  owns ingest, and its S3 write still gates the cursor advance.
+- **Never fabricate a `RawCurrentGameInfo`** from lobby events. That value is
+  the canonical S3 match record the report lake rebuilds from; invented
+  champion IDs would permanently corrupt ScoutQL, Explore, and AI review.
+- **Bryan Bucks needs a Scout-minted code, not `queueType === "custom"`.**
+  `"custom"` is deliberately absent from `BUCKS_EARNING_QUEUES`: an arbitrary
+  custom is trivially farmable and `earn_game` moves real balance. 5v5 only —
+  the MVP formula normalizes against a hardcoded five-man baseline.
+- **The provider callback acknowledges and discards.** tournament-v5 has no
+  shared secret, so the URL is the only credential; a mutating handler would be
+  an unauthenticated injection path into the S3 match store.
+
+Operator setup, once per (mode, region):
+
+```bash
+cd packages/scout-for-lol/packages/backend
+op run --env-file=../../dev-web.env.tpl -- \
+  bun run scripts/register-tournament-provider.ts --mode=stub --region=AMERICA_NORTH
+```
+
+`scripts/tournament-stub-smoke.ts` validates routing, the auth header, and
+every response schema against real Riot today. It cannot validate the feature:
+see the "cannot be validated" list in the PR.
 
 ## Database (Prisma)
 
