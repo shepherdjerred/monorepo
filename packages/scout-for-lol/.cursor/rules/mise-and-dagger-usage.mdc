@@ -33,7 +33,6 @@ mise check
 ├── lint (ESLint + 12 custom rules)
 ├── format (Prettier check)
 ├── test (Vitest on Bun)
-├── knip (unused code detection)
 └── duplication-check (JSCPD copy-paste detection)
 ```
 
@@ -300,8 +299,8 @@ dagger functions          # List all Dagger targets
 bun run format:write      # Auto-fix formatting
 
 # Code Quality
-bun run knip              # Find unused code
 bun run duplication-check # Find duplicate code
+# Unused code detection runs at the monorepo root: `bun run knip`
 
 # Database (backend package)
 cd packages/backend

@@ -25,7 +25,7 @@
     "windows:visual-profile": "bun run --cwd packages/tasknotes-windows windows:visual-profile",
     "windows:visual-matrix": "bun run --cwd packages/tasknotes-windows windows:visual-matrix",
     "windows:verify": "bun run --cwd packages/tasknotes-windows windows:verify",
-    "knip": "knip --no-config-hints",
+    "knip": "bun scripts/knip.ts",
     "markdownlint": "markdownlint-cli2 '**/*.md'",
     "markdownlint:fix": "markdownlint-cli2 --fix '**/*.md'",
     "prettier": "prettier --check .",

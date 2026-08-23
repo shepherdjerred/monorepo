@@ -244,13 +244,13 @@ function create(params: { name: string; email: string; ... }) { }
 
 | Command | Duration | Purpose |
 |---------|----------|---------|
-| `mise check` | 60-90s | All 6 checks (local) |
+| `mise check` | 60-90s | All 5 checks (local) |
 | `dagger call check` | 2-5m | All checks (CI-like) |
 | `bun run format:write` | 5-10s | Auto-fix formatting |
 | `bun run typecheck` | 10-20s | TypeScript only |
 | `bun run lint` | 10-20s | ESLint only |
 | `bun run test` | 20-60s | Tests only |
-| `bun run knip` | 10-20s | Unused code detection |
+| `bun run knip` (monorepo root) | 30-60s | Unused code detection (root `//#knip` gate covers scout) |
 | `bun run duplication-check` | 5-10s | Duplicate code detection |
 
 ## Related Documentation
