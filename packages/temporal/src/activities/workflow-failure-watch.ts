@@ -196,8 +196,7 @@ type CheckpointProgressOptions = {
   checkpoint: WorkflowFailureWatchCheckpoint | undefined;
   lookbackSince: Date;
   onCheckpoint:
-    | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
-    | undefined;
+    ((checkpoint: WorkflowFailureWatchCheckpoint) => void) | undefined;
 };
 
 type PostFailureBatchOptions = {
@@ -328,8 +327,7 @@ type AdvanceRecoveryCheckpointInput = {
   checkpointBlocked: boolean;
   checkpoint: WorkflowFailureWatchCheckpoint | undefined;
   onCheckpoint:
-    | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
-    | undefined;
+    ((checkpoint: WorkflowFailureWatchCheckpoint) => void) | undefined;
   lookbackSince: Date;
 };
 

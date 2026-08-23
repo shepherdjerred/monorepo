@@ -68,53 +68,49 @@ export const WireTaskSchema = z
     customProperties: z.record(z.string(), z.unknown()).default({}),
     details: z.string().optional(),
   })
-  .transform(
-    (raw): Task => ({
-      // Path-as-ID (upstream). `id`, when present, equals the path anyway.
-      id: taskId(raw.path.length > 0 ? raw.path : (raw.id ?? "")),
-      path: raw.path,
-      title: raw.title,
-      status: raw.status,
-      priority: raw.priority,
-      due: raw.due,
-      scheduled: raw.scheduled,
-      contexts: raw.contexts.map((c) => contextName(c)),
-      projects: raw.projects.map((p) => projectName(p)),
-      tags: raw.tags.map((t) => tagName(t)),
-      recurrence: raw.recurrence,
-      recurrenceAnchor: raw.recurrence_anchor,
-      completeInstances: raw.complete_instances,
-      skippedInstances: raw.skipped_instances,
-      completedDate: raw.completedDate,
-      dateCreated: raw.dateCreated,
-      dateModified: raw.dateModified,
-      timeEstimate: raw.timeEstimate,
-      timeEntries: raw.timeEntries.map((e) => ({
-        startTime: e.startTime,
-        ...(e.endTime === undefined ? {} : { endTime: e.endTime }),
-        ...(e.duration === undefined ? {} : { duration: e.duration }),
-      })),
-      blockedBy: raw.blockedBy.map((d) => ({
-        uid: d.uid,
-        ...(d.reltype === undefined ? {} : { reltype: d.reltype }),
-        ...(d.gap === undefined ? {} : { gap: d.gap }),
-      })),
-      reminders: raw.reminders.map((r) => ({
-        type: r.type,
-        ...(r.offset === undefined ? {} : { offset: r.offset }),
-        ...(r.relatedTo === undefined ? {} : { relatedTo: r.relatedTo }),
-        ...(r.absoluteTime === undefined
-          ? {}
-          : { absoluteTime: r.absoluteTime }),
-      })),
-      archived: raw.archived,
-      totalTrackedTime: raw.totalTrackedTime,
-      isBlocked: raw.isBlocked,
-      isBlocking: raw.isBlocking,
-      extraFields: raw.customProperties,
-      details: raw.details,
-    }),
-  );
+  .transform((raw): Task => ({
+    // Path-as-ID (upstream). `id`, when present, equals the path anyway.
+    id: taskId(raw.path.length > 0 ? raw.path : (raw.id ?? "")),
+    path: raw.path,
+    title: raw.title,
+    status: raw.status,
+    priority: raw.priority,
+    due: raw.due,
+    scheduled: raw.scheduled,
+    contexts: raw.contexts.map((c) => contextName(c)),
+    projects: raw.projects.map((p) => projectName(p)),
+    tags: raw.tags.map((t) => tagName(t)),
+    recurrence: raw.recurrence,
+    recurrenceAnchor: raw.recurrence_anchor,
+    completeInstances: raw.complete_instances,
+    skippedInstances: raw.skipped_instances,
+    completedDate: raw.completedDate,
+    dateCreated: raw.dateCreated,
+    dateModified: raw.dateModified,
+    timeEstimate: raw.timeEstimate,
+    timeEntries: raw.timeEntries.map((e) => ({
+      startTime: e.startTime,
+      ...(e.endTime === undefined ? {} : { endTime: e.endTime }),
+      ...(e.duration === undefined ? {} : { duration: e.duration }),
+    })),
+    blockedBy: raw.blockedBy.map((d) => ({
+      uid: d.uid,
+      ...(d.reltype === undefined ? {} : { reltype: d.reltype }),
+      ...(d.gap === undefined ? {} : { gap: d.gap }),
+    })),
+    reminders: raw.reminders.map((r) => ({
+      type: r.type,
+      ...(r.offset === undefined ? {} : { offset: r.offset }),
+      ...(r.relatedTo === undefined ? {} : { relatedTo: r.relatedTo }),
+      ...(r.absoluteTime === undefined ? {} : { absoluteTime: r.absoluteTime }),
+    })),
+    archived: raw.archived,
+    totalTrackedTime: raw.totalTrackedTime,
+    isBlocked: raw.isBlocked,
+    isBlocking: raw.isBlocking,
+    extraFields: raw.customProperties,
+    details: raw.details,
+  }));
 
 /** Domain create/update payloads → v2 wire fields (snake_case). */
 export function toWireTaskFields(
@@ -196,16 +192,14 @@ export const WireTimeSummarySchema = z
       z.object({ task: z.string(), title: z.string(), minutes: z.number() }),
     ),
   })
-  .transform(
-    (raw): TimeSummary => ({
-      totalTime: raw.summary.totalMinutes,
-      topTasks: raw.topTasks.map((t) => ({
-        taskId: taskId(t.task),
-        title: t.title,
-        minutes: t.minutes,
-      })),
-    }),
-  );
+  .transform((raw): TimeSummary => ({
+    totalTime: raw.summary.totalMinutes,
+    topTasks: raw.topTasks.map((t) => ({
+      taskId: taskId(t.task),
+      title: t.title,
+      minutes: t.minutes,
+    })),
+  }));
 
 /** GET /api/tasks/:id/time → per-task tracked time. */
 export const WireTaskTimeSchema = z
@@ -215,12 +209,10 @@ export const WireTaskTimeSchema = z
       activeSessions: z.number(),
     }),
   })
-  .transform(
-    (raw): TaskTime => ({
-      totalTime: raw.summary.totalMinutes,
-      hasActiveSession: raw.summary.activeSessions > 0,
-    }),
-  );
+  .transform((raw): TaskTime => ({
+    totalTime: raw.summary.totalMinutes,
+    hasActiveSession: raw.summary.activeSessions > 0,
+  }));
 
 /** POST /api/nlp/parse → { parsed, taskData }; the app wants `parsed`. */
 export function wireNlpParseSchema<T extends z.ZodType>(parsed: T) {

@@ -111,10 +111,7 @@ export function computeSoftKillDelayMs(
  *   the subprocess with `proc.kill()`).
  */
 export type AgentTerminationSignal =
-  | "natural"
-  | "SIGINT"
-  | "SIGKILL"
-  | "SIGTERM";
+  "natural" | "SIGINT" | "SIGKILL" | "SIGTERM";
 
 /** Per-tick payload passed to the heartbeat callback. */
 export type AgentHeartbeat = {

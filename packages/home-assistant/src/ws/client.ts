@@ -44,11 +44,7 @@ type PendingRequest = {
 };
 
 type ConnectionState =
-  | "idle"
-  | "connecting"
-  | "authenticated"
-  | "closed"
-  | "error";
+  "idle" | "connecting" | "authenticated" | "closed" | "error";
 
 export type ConnectionStateListener = (
   state: ConnectionState,

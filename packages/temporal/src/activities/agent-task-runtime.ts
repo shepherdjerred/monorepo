@@ -95,8 +95,7 @@ export function safeHeartbeat(payload: Record<string, unknown>): void {
 }
 
 export function activityCancellationSignalOrUndefined():
-  | AbortSignal
-  | undefined {
+  AbortSignal | undefined {
   try {
     return Context.current().cancellationSignal;
   } catch {

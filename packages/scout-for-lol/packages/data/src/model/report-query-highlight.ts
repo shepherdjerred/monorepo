@@ -22,12 +22,7 @@ const KEYWORD_TOKEN_NAMES = new Set([
 ]);
 
 export type ReportQueryHighlightKind =
-  | "plain"
-  | "keyword"
-  | "identifier"
-  | "number"
-  | "string"
-  | "operator";
+  "plain" | "keyword" | "identifier" | "number" | "string" | "operator";
 
 export type ReportQueryHighlightToken = {
   text: string;

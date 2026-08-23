@@ -4,8 +4,7 @@ export const AGENT_JOB_LEASE_GRACE_MS = 30_000;
 const LEASE_HEARTBEAT_MS = 10_000;
 
 export type TimedOutExecutionSettlement =
-  | { kind: "success"; output: unknown }
-  | { kind: "failure"; error: unknown };
+  { kind: "success"; output: unknown } | { kind: "failure"; error: unknown };
 
 async function settleExecution(
   operation: Promise<unknown>,

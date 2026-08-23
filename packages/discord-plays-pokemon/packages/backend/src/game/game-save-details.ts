@@ -17,11 +17,7 @@ import {
 } from "./save-block-layout.ts";
 
 export type InventoryPocket =
-  | "items"
-  | "key-items"
-  | "poke-balls"
-  | "tm-hm"
-  | "berries";
+  "items" | "key-items" | "poke-balls" | "tm-hm" | "berries";
 
 export type InventoryItem = Readonly<{
   itemId: number;

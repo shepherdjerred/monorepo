@@ -38,11 +38,9 @@ const agentResult: AgentExecutionResult = {
 describe("isolated scheduled agent", () => {
   test("receives bounded session context, persona, and stored model settings", async () => {
     let observedPacket:
-      | Parameters<IsolatedJobAgentDependencies["executeAgent"]>[0]
-      | undefined;
+      Parameters<IsolatedJobAgentDependencies["executeAgent"]>[0] | undefined;
     let observedOptions:
-      | Parameters<IsolatedJobAgentDependencies["executeAgent"]>[1]
-      | undefined;
+      Parameters<IsolatedJobAgentDependencies["executeAgent"]>[1] | undefined;
     const dependencies: IsolatedJobAgentDependencies = {
       getPersona: async () => "virmel",
       getSession: async () => ({

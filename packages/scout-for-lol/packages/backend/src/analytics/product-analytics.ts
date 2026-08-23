@@ -13,11 +13,7 @@ const logger = createLogger("product-analytics");
 
 export type InstallKind = "first" | "reinstall";
 export type MemberCountBucket =
-  | "1-10"
-  | "11-50"
-  | "51-250"
-  | "251-1000"
-  | "1001+";
+  "1-10" | "11-50" | "51-250" | "251-1000" | "1001+";
 export type SubscriptionSurface = "discord" | "web";
 export type CoreOutputKind =
   | "prematch"
@@ -29,9 +25,7 @@ export type CoreOutputKind =
   | "competition_leaderboard"
   | "pairing_weekly";
 export type RemovalActivationState =
-  | "installed_only"
-  | "configured"
-  | "activated";
+  "installed_only" | "configured" | "activated";
 export type TenureBucket = "<1d" | "1-6d" | "7-29d" | "30-89d" | "90d+";
 export type AttributionSurface = "guild_picker" | "onboarding_wizard";
 export type AttributionTiming = "before_gateway" | "after_gateway";

@@ -8,11 +8,7 @@ const generatorPath = `${import.meta.dirname}/generate-test-template-db.ts`;
 
 type SqlValue = bigint | null | number | string | Uint8Array;
 type JsonValue =
-  | null
-  | number
-  | string
-  | JsonValue[]
-  | { [key: string]: JsonValue };
+  null | number | string | JsonValue[] | { [key: string]: JsonValue };
 type SqlRow = Record<string, SqlValue>;
 type SchemaRow = {
   name: string;
@@ -82,10 +78,9 @@ function normalizeSqlRow(row: SqlRow): JsonValue {
 
 function readTableColumns(db: Database, tableName: string): TableColumnRow[] {
   return db
-    .query<
-      TableColumnRow,
-      []
-    >(`PRAGMA table_info(${quoteIdentifier(tableName)})`)
+    .query<TableColumnRow, []>(
+      `PRAGMA table_info(${quoteIdentifier(tableName)})`,
+    )
     .all();
 }
 
@@ -117,17 +112,25 @@ function readDatabaseSnapshot(path: string): DatabaseSnapshot {
   const db = new Database(path, { readonly: true });
   try {
     const schema = db
-      .query<
-        SchemaRow,
-        []
-      >(["SELECT type, name, tbl_name, sql", "FROM sqlite_schema", "WHERE name NOT LIKE 'sqlite_%'", "ORDER BY type, name, tbl_name"].join(" "))
+      .query<SchemaRow, []>(
+        [
+          "SELECT type, name, tbl_name, sql",
+          "FROM sqlite_schema",
+          "WHERE name NOT LIKE 'sqlite_%'",
+          "ORDER BY type, name, tbl_name",
+        ].join(" "),
+      )
       .all();
 
     const tableNames = db
-      .query<
-        TableNameRow,
-        []
-      >(["SELECT name", "FROM sqlite_schema", "WHERE type = 'table' AND name NOT LIKE 'sqlite_%'", "ORDER BY name"].join(" "))
+      .query<TableNameRow, []>(
+        [
+          "SELECT name",
+          "FROM sqlite_schema",
+          "WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+          "ORDER BY name",
+        ].join(" "),
+      )
       .all();
 
     return {

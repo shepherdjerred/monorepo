@@ -158,8 +158,7 @@ export async function streamExploreAgent(
 }
 
 type ExploreModelMessage =
-  | { role: "user"; content: string }
-  | { role: "assistant"; content: string };
+  { role: "user"; content: string } | { role: "assistant"; content: string };
 
 /**
  * Rebuild the conversation as model messages.
@@ -171,17 +170,16 @@ type ExploreModelMessage =
  */
 function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
   const recent = params.history.slice(-EXPLORE_MAX_HISTORY_TURNS * 2);
-  const messages = recent.map(
-    (message): ExploreModelMessage =>
-      message.role === "assistant"
-        ? {
-            role: "assistant",
-            content:
-              message.queryText === null
-                ? message.content
-                : `${message.content}\n\n[ScoutQL used]\n${message.queryText}`,
-          }
-        : { role: "user", content: message.content },
+  const messages = recent.map((message): ExploreModelMessage =>
+    message.role === "assistant"
+      ? {
+          role: "assistant",
+          content:
+            message.queryText === null
+              ? message.content
+              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}`,
+        }
+      : { role: "user", content: message.content },
   );
   return [...messages, { role: "user", content: params.question }];
 }

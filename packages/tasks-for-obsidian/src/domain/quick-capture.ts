@@ -48,8 +48,7 @@ export type CaptureSeedMetadataChip = CaptureMetadataChipBase & {
 };
 
 export type CaptureMetadataChip =
-  | CaptureParsedMetadataChip
-  | CaptureSeedMetadataChip;
+  CaptureParsedMetadataChip | CaptureSeedMetadataChip;
 
 export type CaptureDraft = {
   readonly input: string;

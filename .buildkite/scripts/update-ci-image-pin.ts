@@ -152,8 +152,7 @@ async function finalizeSkippedPromotion(options: {
   readonly cloneDir: string;
   readonly definition: CiImageDefinition;
   readonly pending:
-    | { readonly sha: string; readonly state: CiImagePinState }
-    | undefined;
+    { readonly sha: string; readonly state: CiImagePinState } | undefined;
   readonly mainState: CiImagePinState;
   readonly reason: string;
   readonly env: Record<string, string>;

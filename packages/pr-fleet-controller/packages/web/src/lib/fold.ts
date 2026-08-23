@@ -49,8 +49,7 @@ export type ProgressUpdate = {
 export type PrProgress = {
   latest: ProgressUpdate | null;
   blocker:
-    | (ProgressUpdate & { failureClass: string; repeatCount: number })
-    | null;
+    (ProgressUpdate & { failureClass: string; repeatCount: number }) | null;
   failures: Map<string, number>;
 };
 

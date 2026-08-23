@@ -8,8 +8,7 @@ export type InMemoryPlaylist = {
 };
 
 type PlaylistResult<T> =
-  | { ok: true; value: T }
-  | { ok: false; message: string };
+  { ok: true; value: T } | { ok: false; message: string };
 
 const playlistsByGuild = new Map<string, Map<string, InMemoryPlaylist>>();
 

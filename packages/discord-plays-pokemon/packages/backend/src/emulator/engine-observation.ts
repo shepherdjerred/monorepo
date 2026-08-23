@@ -4,21 +4,10 @@ export const ENGINE_OBSERVATION_SIZE = 144;
 export type CardinalDirection = "north" | "south" | "west" | "east";
 export type EngineFacing = CardinalDirection | "unknown";
 export type EnginePhase =
-  | "unavailable"
-  | "overworld"
-  | "scripted"
-  | "battle"
-  | "other";
+  "unavailable" | "overworld" | "scripted" | "battle" | "other";
 
 export type BattleMenu =
-  | "none"
-  | "action"
-  | "move"
-  | "bag"
-  | "party"
-  | "yes-no"
-  | "other"
-  | "target";
+  "none" | "action" | "move" | "bag" | "party" | "yes-no" | "other" | "target";
 
 export type CollisionObservation = Readonly<{
   code: number;

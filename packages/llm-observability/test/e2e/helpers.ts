@@ -120,12 +120,7 @@ export async function pollTempoTrace(
 }
 
 export type TempoAttributeValue =
-  | string
-  | number
-  | boolean
-  | string[]
-  | number[]
-  | boolean[];
+  string | number | boolean | string[] | number[] | boolean[];
 export type TempoSpanAttributes = Record<string, TempoAttributeValue>;
 
 export type TempoTraceSpan = {

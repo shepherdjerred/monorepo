@@ -428,9 +428,13 @@ function ExploreQuota(props: {
 }) {
   const binding = props.quota
     .filter((snapshot) => snapshot.remaining < snapshot.limit)
-    .reduce<
-      (typeof props.quota)[number] | null
-    >((tightest, snapshot) => (tightest === null || snapshot.remaining < tightest.remaining ? snapshot : tightest), null);
+    .reduce<(typeof props.quota)[number] | null>(
+      (tightest, snapshot) =>
+        tightest === null || snapshot.remaining < tightest.remaining
+          ? snapshot
+          : tightest,
+      null,
+    );
   if (binding === null) {
     return null;
   }

@@ -160,13 +160,7 @@ export type GenerateValidatedObjectInput<SCHEMA extends z.ZodType> = {
   semanticRetryMaxOutputTokens?: number | undefined;
   seed?: number | undefined;
   reasoningEffort?:
-    | "xhigh"
-    | "high"
-    | "medium"
-    | "low"
-    | "minimal"
-    | "none"
-    | undefined;
+    "xhigh" | "high" | "medium" | "low" | "minimal" | "none" | undefined;
 };
 
 export type GenerateValidatedObjectResult<SCHEMA extends z.ZodType> = {

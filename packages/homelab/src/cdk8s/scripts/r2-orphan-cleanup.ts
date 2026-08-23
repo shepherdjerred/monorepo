@@ -92,7 +92,7 @@ export function parseR2OrphanArguments(args: readonly string[]): Options {
     heldBackupNames: [],
     onlyBackupName: undefined,
   };
-  for (let index = 1; index < args.length; ) {
+  for (let index = 1; index < args.length;) {
     index = parseArgument(args, index, state);
   }
   if (state.manifestPath === undefined) {

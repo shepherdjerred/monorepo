@@ -17,8 +17,7 @@ import type { RunningPod } from "./types.ts";
 const DIGEST_RE = /@(sha256:[a-f0-9]+)/;
 
 export type PodScanResult =
-  | { ok: true; pods: RunningPod[] }
-  | { ok: false; reason: string };
+  { ok: true; pods: RunningPod[] } | { ok: false; reason: string };
 
 let cache: PodScanResult | null = null;
 

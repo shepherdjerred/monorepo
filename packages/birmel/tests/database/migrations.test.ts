@@ -364,10 +364,9 @@ function readAppliedMigrations(database: Database): string[] {
 function expectPreservedProductRows(database: Database): void {
   expect(
     database
-      .query<
-        { guildId: string; channelId: string },
-        []
-      >(`SELECT "guildId", "channelId" FROM "DailyPostConfig" WHERE "id" = 1`)
+      .query<{ guildId: string; channelId: string }, []>(
+        `SELECT "guildId", "channelId" FROM "DailyPostConfig" WHERE "id" = 1`,
+      )
       .get(),
   ).toEqual({
     guildId: "guild-product",
@@ -375,10 +374,9 @@ function expectPreservedProductRows(database: Database): void {
   });
   expect(
     database
-      .query<
-        { messageId: string; question: string },
-        []
-      >(`SELECT "messageId", "question" FROM "PollRecord" WHERE "id" = 1`)
+      .query<{ messageId: string; question: string }, []>(
+        `SELECT "messageId", "question" FROM "PollRecord" WHERE "id" = 1`,
+      )
       .get(),
   ).toEqual({
     messageId: "poll-message",
@@ -473,18 +471,16 @@ function expectPreservedJobRows(database: Database): void {
   });
   expect(
     database
-      .query<
-        CountRow,
-        []
-      >(`SELECT COUNT(*) AS count FROM "AgentJob" WHERE "toolId" IN ('manage-task', 'manage-scheduled-message')`)
+      .query<CountRow, []>(
+        `SELECT COUNT(*) AS count FROM "AgentJob" WHERE "toolId" IN ('manage-task', 'manage-scheduled-message')`,
+      )
       .get()?.count,
   ).toBe(0);
   expect(
     database
-      .query<
-        { jobId: string; output: string | null },
-        []
-      >(`SELECT "jobId", "output" FROM "AgentJobRun" WHERE "id" = 'existing-run'`)
+      .query<{ jobId: string; output: string | null }, []>(
+        `SELECT "jobId", "output" FROM "AgentJobRun" WHERE "id" = 'existing-run'`,
+      )
       .get(),
   ).toEqual({
     jobId: "existing-job",
@@ -572,10 +568,9 @@ function expectPreservedJobRows(database: Database): void {
 
 function expectArchivedLegacyRows(database: Database): void {
   const archivedRows = database
-    .query<
-      { sourceTable: string; sourceId: string; payload: string },
-      []
-    >(`SELECT "sourceTable", "sourceId", "payload" FROM "LegacyAgentRuntimeArchive" ORDER BY "sourceTable"`)
+    .query<{ sourceTable: string; sourceId: string; payload: string }, []>(
+      `SELECT "sourceTable", "sourceId", "payload" FROM "LegacyAgentRuntimeArchive" ORDER BY "sourceTable"`,
+    )
     .all();
   expect(
     archivedRows.map((row) => ({
@@ -797,10 +792,9 @@ describe("Birmel database migrations", () => {
         expect(agentRunColumns).not.toContain("memoryContent");
 
         const schema = database
-          .query<
-            SchemaRow,
-            []
-          >(`SELECT sql FROM sqlite_schema WHERE type = 'table' AND name = 'AgentRun'`)
+          .query<SchemaRow, []>(
+            `SELECT sql FROM sqlite_schema WHERE type = 'table' AND name = 'AgentRun'`,
+          )
           .get();
         expect(schema?.sql).not.toMatch(/\b(prompt|content|contextBundle)\b/i);
       } finally {

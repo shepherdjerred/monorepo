@@ -8,13 +8,9 @@ export const ENGINE_MAP_WARP_SIZE = 24;
 export const ENGINE_MAP_OFFSET = 7;
 
 export type EngineMapConnectionDirection =
-  | CardinalDirection
-  | "dive"
-  | "emerge";
+  CardinalDirection | "dive" | "emerge";
 export type EngineMapWarpActivation =
-  | CardinalDirection
-  | "step"
-  | "unsupported";
+  CardinalDirection | "step" | "unsupported";
 
 export type EngineMapTopologyHeaderV1 = Readonly<{
   version: 1;

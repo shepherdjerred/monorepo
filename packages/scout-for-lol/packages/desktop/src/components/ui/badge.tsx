@@ -71,12 +71,7 @@ function Badge({
 
 type StatusIndicatorProps = HTMLAttributes<HTMLSpanElement> & {
   status:
-    | "connected"
-    | "disconnected"
-    | "connecting"
-    | "idle"
-    | "active"
-    | "error";
+    "connected" | "disconnected" | "connecting" | "idle" | "active" | "error";
   label?: string;
 };
 

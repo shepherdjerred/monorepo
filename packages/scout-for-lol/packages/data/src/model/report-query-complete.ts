@@ -30,12 +30,7 @@ import {
 import { REPORT_METRICS } from "#src/model/report-query-metrics.ts";
 
 export type ReportCompletionKind =
-  | "keyword"
-  | "source"
-  | "metric"
-  | "field"
-  | "function"
-  | "queue";
+  "keyword" | "source" | "metric" | "field" | "function" | "queue";
 
 export type ReportCompletionItem = {
   label: string;

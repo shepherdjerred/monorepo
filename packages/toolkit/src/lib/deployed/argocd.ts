@@ -16,8 +16,7 @@ import type { ArgoStatus } from "./types.ts";
 const REVISION_BUILD_RE = /2\.0\.0-(\d+)/;
 
 export type ArgoResult =
-  | { ok: true; status: ArgoStatus }
-  | { ok: false; reason: string };
+  { ok: true; status: ArgoStatus } | { ok: false; reason: string };
 
 export async function getArgoApp(app: string): Promise<ArgoResult> {
   const result = await $`argocd app get ${app} --grpc-web -o json`

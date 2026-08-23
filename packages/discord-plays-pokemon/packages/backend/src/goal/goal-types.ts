@@ -3,12 +3,7 @@
 // runtime deps (Bun.spawn etc.) into modules that just want the types.
 
 export type GoalStatus =
-  | "running"
-  | "completed"
-  | "failed"
-  | "timeout"
-  | "replaced"
-  | "shutdown";
+  "running" | "completed" | "failed" | "timeout" | "replaced" | "shutdown";
 
 export type GoalState = {
   id: string;

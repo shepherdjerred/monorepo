@@ -144,10 +144,9 @@ type TagRow = { name: string };
 function enrichResults(sourceDb: Database, results: SearchResult[]): void {
   for (const result of results) {
     const problem = sourceDb
-      .query<
-        ProblemMeta,
-        [string]
-      >("SELECT title, difficulty FROM problems WHERE slug = ?")
+      .query<ProblemMeta, [string]>(
+        "SELECT title, difficulty FROM problems WHERE slug = ?",
+      )
       .get(result.slug);
     if (problem) {
       result.title = problem.title;

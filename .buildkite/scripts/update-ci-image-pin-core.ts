@@ -69,9 +69,7 @@ export type CiImageCandidate = {
 };
 
 export type CiImageRuntimePromotionOutcome =
-  | "content-unchanged"
-  | "pin-unresolvable-bumped"
-  | "bumped";
+  "content-unchanged" | "pin-unresolvable-bumped" | "bumped";
 
 export type RuntimeFingerprintReader = (
   image: string,

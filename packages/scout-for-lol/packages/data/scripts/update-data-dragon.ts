@@ -683,8 +683,7 @@ async function downloadClassicChampionAssets(
 type LoadingScreenSource = "ddragon" | "cdragon";
 
 type LoadingScreenDownloadResult =
-  | { status: "success"; source: LoadingScreenSource }
-  | { status: "failed" };
+  { status: "success"; source: LoadingScreenSource } | { status: "failed" };
 
 /**
  * Download a single loading-screen image.
@@ -937,8 +936,7 @@ async function downloadChampionLoadingImages(
 type SplashSource = "cdragon" | "ddragon";
 
 type SplashDownloadResult =
-  | { status: "success"; source: SplashSource }
-  | { status: "failed" };
+  { status: "success"; source: SplashSource } | { status: "failed" };
 
 /**
  * Download a single champion splash-art image (base skin 0 in practice).

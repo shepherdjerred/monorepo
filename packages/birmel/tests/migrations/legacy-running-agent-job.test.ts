@@ -154,10 +154,9 @@ describe("Birmel 3 legacy running AgentJob migration", () => {
 
         expect(
           database
-            .query<
-              MigratedJobRow,
-              []
-            >(`SELECT "status", "nextRunAt", "attemptCount", "lastStatus", "lastError", "claimedAt", "claimedBy", "leaseExpiresAt" FROM "AgentJob" WHERE "id" = 'interrupted-job'`)
+            .query<MigratedJobRow, []>(
+              `SELECT "status", "nextRunAt", "attemptCount", "lastStatus", "lastError", "claimedAt", "claimedBy", "leaseExpiresAt" FROM "AgentJob" WHERE "id" = 'interrupted-job'`,
+            )
             .get(),
         ).toEqual({
           status: "paused",
@@ -171,10 +170,9 @@ describe("Birmel 3 legacy running AgentJob migration", () => {
         });
 
         const migratedRun = database
-          .query<
-            MigratedRunRow,
-            []
-          >(`SELECT "status", "finishedAt", "error", "metadata" FROM "AgentJobRun" WHERE "id" = 'interrupted-run'`)
+          .query<MigratedRunRow, []>(
+            `SELECT "status", "finishedAt", "error", "metadata" FROM "AgentJobRun" WHERE "id" = 'interrupted-run'`,
+          )
           .get();
         expect(migratedRun).toMatchObject({
           status: "effect_ambiguous",
@@ -185,26 +183,23 @@ describe("Birmel 3 legacy running AgentJob migration", () => {
         expect(migratedRun?.finishedAt).not.toBeNull();
         expect(
           database
-            .query<
-              { status: string },
-              []
-            >(`SELECT "status" FROM "AgentJobRun" WHERE "id" = 'replacement-run'`)
+            .query<{ status: string }, []>(
+              `SELECT "status" FROM "AgentJobRun" WHERE "id" = 'replacement-run'`,
+            )
             .get(),
         ).toEqual({ status: "success" });
         expect(
           database
-            .query<
-              CountRow,
-              []
-            >(`SELECT COUNT(*) AS "count" FROM "AgentJob" WHERE "status" = 'running' AND "claimedBy" IS NULL`)
+            .query<CountRow, []>(
+              `SELECT COUNT(*) AS "count" FROM "AgentJob" WHERE "status" = 'running' AND "claimedBy" IS NULL`,
+            )
             .get()?.count,
         ).toBe(0);
         expect(
           database
-            .query<
-              CountRow,
-              []
-            >(`SELECT COUNT(*) AS "count" FROM "AgentJobRun" WHERE "status" = 'running'`)
+            .query<CountRow, []>(
+              `SELECT COUNT(*) AS "count" FROM "AgentJobRun" WHERE "status" = 'running'`,
+            )
             .get()?.count,
         ).toBe(0);
       });
@@ -219,10 +214,9 @@ describe("Birmel 3 legacy running AgentJob migration", () => {
 
       expect(
         database
-          .query<
-            MigratedJobRow,
-            []
-          >(`SELECT "status", "nextRunAt", "attemptCount", "lastStatus", "lastError", "claimedAt", "claimedBy", "leaseExpiresAt" FROM "AgentJob" WHERE "id" = 'retryable-job'`)
+          .query<MigratedJobRow, []>(
+            `SELECT "status", "nextRunAt", "attemptCount", "lastStatus", "lastError", "claimedAt", "claimedBy", "leaseExpiresAt" FROM "AgentJob" WHERE "id" = 'retryable-job'`,
+          )
           .get(),
       ).toEqual({
         status: "retrying",
@@ -236,10 +230,9 @@ describe("Birmel 3 legacy running AgentJob migration", () => {
       });
       expect(
         database
-          .query<
-            { status: string },
-            []
-          >(`SELECT "status" FROM "AgentJobRun" WHERE "id" = 'retryable-run'`)
+          .query<{ status: string }, []>(
+            `SELECT "status" FROM "AgentJobRun" WHERE "id" = 'retryable-run'`,
+          )
           .get(),
       ).toEqual({ status: "error" });
     });
@@ -253,10 +246,9 @@ describe("Birmel 3 legacy running AgentJob migration", () => {
 
       expect(
         database
-          .query<
-            MigratedJobRow,
-            []
-          >(`SELECT "status", "nextRunAt", "attemptCount", "lastStatus", "lastError", "claimedAt", "claimedBy", "leaseExpiresAt" FROM "AgentJob" WHERE "id" = 'orphaned-job'`)
+          .query<MigratedJobRow, []>(
+            `SELECT "status", "nextRunAt", "attemptCount", "lastStatus", "lastError", "claimedAt", "claimedBy", "leaseExpiresAt" FROM "AgentJob" WHERE "id" = 'orphaned-job'`,
+          )
           .get(),
       ).toEqual({
         status: "retrying",

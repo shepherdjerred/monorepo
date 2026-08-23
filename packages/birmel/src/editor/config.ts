@@ -49,8 +49,7 @@ export function getMaxSessionsPerUser(): number {
  * Get GitHub OAuth configuration if configured
  */
 export function getGitHubConfig():
-  | { clientId: string; clientSecret: string; callbackUrl: string }
-  | undefined {
+  { clientId: string; clientSecret: string; callbackUrl: string } | undefined {
   return getConfig().editor.github;
 }
 

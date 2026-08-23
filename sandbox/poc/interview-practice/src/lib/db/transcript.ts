@@ -2,11 +2,7 @@ import type { Database } from "bun:sqlite";
 import { z } from "zod/v4";
 
 export type TranscriptRole =
-  | "user"
-  | "interviewer"
-  | "system"
-  | "tool_call"
-  | "tool_result";
+  "user" | "interviewer" | "system" | "tool_call" | "tool_result";
 
 const TranscriptEntrySchema = z.object({
   id: z.number(),

@@ -53,15 +53,13 @@ export const TaskSchema = z
     extraFields: z.record(z.string(), z.unknown()).default({}),
     details: z.string().optional(),
   })
-  .transform(
-    (raw): Task => ({
-      ...raw,
-      id: taskId(raw.id),
-      contexts: raw.contexts.map((c) => contextName(c)),
-      projects: raw.projects.map((p) => projectName(p)),
-      tags: raw.tags.map((t) => tagName(t)),
-    }),
-  );
+  .transform((raw): Task => ({
+    ...raw,
+    id: taskId(raw.id),
+    contexts: raw.contexts.map((c) => contextName(c)),
+    projects: raw.projects.map((p) => projectName(p)),
+    tags: raw.tags.map((t) => tagName(t)),
+  }));
 
 export const TaskStatsSchema = BaseTaskStatsSchema.transform(
   (raw): TaskStats => raw,
@@ -78,12 +76,10 @@ export const PomodoroStatusSchema = z
     timeRemaining: z.number().optional(),
     type: z.enum(["work", "break"]).optional(),
   })
-  .transform(
-    (raw): PomodoroStatus => ({
-      ...raw,
-      taskId: raw.taskId ? taskId(raw.taskId) : undefined,
-    }),
-  );
+  .transform((raw): PomodoroStatus => ({
+    ...raw,
+    taskId: raw.taskId ? taskId(raw.taskId) : undefined,
+  }));
 
 export const HealthStatusSchema = z
   .object({

@@ -70,8 +70,7 @@ export function parseLegacyDatetime(value: string): Date {
 }
 
 export type LegacyImportDecision =
-  | { action: "skip"; reason: string }
-  | { action: "import"; sourcePath: string };
+  { action: "skip"; reason: string } | { action: "import"; sourcePath: string };
 
 /**
  * Decide whether startup should import the legacy database.

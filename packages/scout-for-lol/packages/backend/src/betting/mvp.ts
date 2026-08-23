@@ -23,12 +23,7 @@ import { isStandardLobby } from "#src/betting/eligibility.ts";
  */
 
 export type MvpRole =
-  | "TOP"
-  | "JUNGLE"
-  | "MIDDLE"
-  | "BOTTOM"
-  | "UTILITY"
-  | "DEFAULT";
+  "TOP" | "JUNGLE" | "MIDDLE" | "BOTTOM" | "UTILITY" | "DEFAULT";
 
 export type MvpComponents = {
   combat: number;

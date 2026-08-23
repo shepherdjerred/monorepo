@@ -2,11 +2,7 @@ import type { CardinalDirection } from "#src/emulator/engine-observation.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
 
 type ActionStatus =
-  | "applied"
-  | "blocked"
-  | "context-changed"
-  | "no-effect"
-  | "unavailable";
+  "applied" | "blocked" | "context-changed" | "no-effect" | "unavailable";
 
 type ActionStopReason =
   | "completed"

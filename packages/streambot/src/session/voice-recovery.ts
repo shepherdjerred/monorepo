@@ -104,10 +104,7 @@ export type RecoverableSession = {
 };
 
 export type ResumeOutcome =
-  | "resumed"
-  | "nothing"
-  | "no-userbot"
-  | "unresumable";
+  "resumed" | "nothing" | "no-userbot" | "unresumable";
 
 export type VoiceRecoveryCoordinatorDeps<TSession extends RecoverableSession> =
   {

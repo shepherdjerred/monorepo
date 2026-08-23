@@ -13,14 +13,7 @@ import type { RiotPatch } from "./riot-patch.ts";
  * typecheck validates the generated source, so a drifted value fails loudly.
  */
 export type ChangelogColor =
-  | "yellow"
-  | "indigo"
-  | "blue"
-  | "purple"
-  | "green"
-  | "red"
-  | "pink"
-  | "teal";
+  "yellow" | "indigo" | "blue" | "purple" | "green" | "red" | "pink" | "teal";
 
 export type ChangelogSectionInput = {
   title: string;

@@ -209,9 +209,7 @@ export default function App() {
 
   // Apply rank overrides to match if enabled
   const getMatchWithRankOverrides = ():
-    | CompletedMatch
-    | ArenaMatch
-    | undefined => {
+    CompletedMatch | ArenaMatch | undefined => {
     if (!matchState.match) {
       return undefined;
     }

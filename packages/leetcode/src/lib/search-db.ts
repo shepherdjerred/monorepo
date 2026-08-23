@@ -106,10 +106,9 @@ export class SearchDb {
   private loadVectorCache(): { slugs: string[]; vectors: Float32Array[] } {
     if (this.vectorCache) return this.vectorCache;
     const rows = this.db
-      .query<
-        { problem_slug: string; vector: Buffer },
-        []
-      >("SELECT problem_slug, vector FROM problem_vectors")
+      .query<{ problem_slug: string; vector: Buffer }, []>(
+        "SELECT problem_slug, vector FROM problem_vectors",
+      )
       .all();
     const slugs: string[] = [];
     const vectors: Float32Array[] = [];

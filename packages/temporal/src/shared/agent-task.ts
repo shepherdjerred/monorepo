@@ -373,8 +373,7 @@ export type AgentTaskStartResult =
 export const AGENT_TASK_CLAUDE_SCHEMA_VERSION = "draft-07-v1";
 
 export type AgentTaskOutputContractFailureReason =
-  | "missing-structured-output"
-  | "invalid-structured-output";
+  "missing-structured-output" | "invalid-structured-output";
 
 export type AgentTaskOutputContractDiagnostics = {
   schemaFingerprint: string;

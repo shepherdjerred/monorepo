@@ -55,11 +55,7 @@ export type ScoutSeasonRefreshInput = {
 };
 
 export type ScoutSeasonRefreshOutcome =
-  | "no-drift"
-  | "pr-created"
-  | "pr-skipped-dry-run"
-  | "partial"
-  | "failed";
+  "no-drift" | "pr-created" | "pr-skipped-dry-run" | "partial" | "failed";
 
 export type ScoutSeasonRefreshResult = {
   outcome: ScoutSeasonRefreshOutcome;

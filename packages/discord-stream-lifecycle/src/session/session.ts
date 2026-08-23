@@ -24,8 +24,4 @@ export type Session<TUserbot extends PooledUserbot> = {
  * may skip writes).
  */
 export type SessionStopReason =
-  | "userStop"
-  | "aloneInVoice"
-  | "idleTimeout"
-  | "shutdown"
-  | "error";
+  "userStop" | "aloneInVoice" | "idleTimeout" | "shutdown" | "error";

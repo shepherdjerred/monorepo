@@ -114,8 +114,7 @@ export class N64Emulator {
   private readonly inputs: PlayerInputState[];
   private readonly inputLatency = new InputLatencyTracker(MAX_SEATS);
   private onFrameCb:
-    | ((rgba: Buffer, contentTimeMs: number) => void)
-    | undefined;
+    ((rgba: Buffer, contentTimeMs: number) => void) | undefined;
   private onAudioCb: ((pcm: Buffer, contentEndMs: number) => void) | undefined;
   private pendingFrameInputReceivedAtMs: number | undefined;
   // Ring-buffer read cursor (int16 sample index) — how far we've drained audio.

@@ -186,8 +186,7 @@ async function latestAcceptedAt(
   );
   let continuationToken: string | undefined;
   let latest:
-    | { Key?: string | undefined; LastModified?: Date | undefined }
-    | undefined;
+    { Key?: string | undefined; LastModified?: Date | undefined } | undefined;
   do {
     const listed = await storage.client.send(
       new ListObjectsV2Command({

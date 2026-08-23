@@ -36,8 +36,7 @@ const BYPASS_PATTERNS = [
 const COMMIT_PATTERN = /^(\w+)\(([^)]+)\)!?:\s+.+/;
 
 export type CommitMessageValidation =
-  | { valid: true }
-  | { valid: false; error: string };
+  { valid: true } | { valid: false; error: string };
 
 export function stripCommitMessageComments(message: string): string {
   return message

@@ -26,8 +26,7 @@ export type TaskOrganizationMetadataPresentation = {
  * their density while retaining one shared precedence across every surface.
  */
 export type TaskMetadataPresentation =
-  | TaskDateMetadataPresentation
-  | TaskOrganizationMetadataPresentation;
+  TaskDateMetadataPresentation | TaskOrganizationMetadataPresentation;
 
 export type TaskIndicatorPresentation =
   | {
@@ -74,8 +73,7 @@ export type TaskPresentationOptions = {
   readonly pending: boolean;
   /** A collection may project a derived occurrence without mutating the task. */
   readonly dateContext?:
-    | { readonly kind: TaskDateKind; readonly date: string }
-    | undefined;
+    { readonly kind: TaskDateKind; readonly date: string } | undefined;
 };
 
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;

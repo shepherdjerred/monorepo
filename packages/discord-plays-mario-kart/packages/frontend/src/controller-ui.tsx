@@ -2,13 +2,7 @@ import type { ReactNode } from "react";
 import { type ControlDefinition, controlCodes } from "./input-map.ts";
 
 type ControlVariant =
-  | "dpad"
-  | "faceA"
-  | "faceB"
-  | "c"
-  | "shoulder"
-  | "start"
-  | "z";
+  "dpad" | "faceA" | "faceB" | "c" | "shoulder" | "start" | "z";
 
 function cx(...parts: (string | false | undefined)[]) {
   return parts.filter(Boolean).join(" ");

@@ -10,11 +10,7 @@ export interface ContainerConfig {
 }
 
 export type ContainerStatus =
-  | "pending"
-  | "starting"
-  | "running"
-  | "stopped"
-  | "error";
+  "pending" | "starting" | "running" | "stopped" | "error";
 
 export interface ContainerInfo {
   id: string;

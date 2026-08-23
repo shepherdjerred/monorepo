@@ -81,11 +81,7 @@ export class ConnectionError extends TaskNotesError {
 }
 
 export type AppError =
-  | NetworkError
-  | ApiError
-  | ValidationError
-  | NotFoundError
-  | ConnectionError;
+  NetworkError | ApiError | ValidationError | NotFoundError | ConnectionError;
 
 /**
  * The closed set of error tags, derived from the union so it can never drift

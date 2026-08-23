@@ -37,8 +37,7 @@ export type OutcomeFraming = {
 };
 
 export type OutcomeChoiceResolution =
-  | { kind: "resolved"; teamId: RiotTeamId }
-  | { kind: "ambiguous" };
+  { kind: "resolved"; teamId: RiotTeamId } | { kind: "ambiguous" };
 
 /**
  * A roster participant Scout tracks and can name.

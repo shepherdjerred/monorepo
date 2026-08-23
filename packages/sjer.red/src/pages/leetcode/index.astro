@@ -62,12 +62,9 @@ const counts = R.pipe(
       </div>
       <div class="flex flex-col gap-12 mt-6 mb-6">
         {
-          R.map(
-            groups,
-            ([date, entries]): JSX.Element => (
-              <LeetCodeDay date={new Date(date)} entries={entries} />
-            ),
-          )
+          R.map(groups, ([date, entries]): JSX.Element => (
+            <LeetCodeDay date={new Date(date)} entries={entries} />
+          ))
         }
       </div>
     </Container>

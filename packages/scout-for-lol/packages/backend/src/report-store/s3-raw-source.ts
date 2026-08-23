@@ -27,11 +27,7 @@ export const MATCH_PREFIX = "games/";
 export const PREMATCH_PREFIX = "prematch/";
 
 export type RawObjectKind =
-  | "match"
-  | "timeline"
-  | "prematch"
-  | "prediction_observation"
-  | "ignored";
+  "match" | "timeline" | "prematch" | "prediction_observation" | "ignored";
 
 export function classifyRawObjectKey(key: string): RawObjectKind {
   if (key.startsWith(MATCH_PREFIX) && key.endsWith("/match.json")) {

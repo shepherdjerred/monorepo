@@ -57,13 +57,7 @@ export interface Action {
 // ============= Standard Catalog Components =============
 
 export type TextUsageHint =
-  | "h1"
-  | "h2"
-  | "h3"
-  | "h4"
-  | "h5"
-  | "caption"
-  | "body";
+  "h1" | "h2" | "h3" | "h4" | "h5" | "caption" | "body";
 
 export interface TextComponent {
   Text: {
@@ -87,12 +81,7 @@ export interface CardComponent {
 }
 
 export type RowDistribution =
-  | "center"
-  | "end"
-  | "spaceAround"
-  | "spaceBetween"
-  | "spaceEvenly"
-  | "start";
+  "center" | "end" | "spaceAround" | "spaceBetween" | "spaceEvenly" | "start";
 
 export type Alignment = "start" | "center" | "end" | "stretch";
 
@@ -105,12 +94,7 @@ export interface RowComponent {
 }
 
 export type ColumnDistribution =
-  | "start"
-  | "center"
-  | "end"
-  | "spaceBetween"
-  | "spaceAround"
-  | "spaceEvenly";
+  "start" | "center" | "end" | "spaceBetween" | "spaceAround" | "spaceEvenly";
 
 export interface ColumnComponent {
   Column: {
@@ -199,11 +183,7 @@ export interface CheckBoxComponent {
 }
 
 export type TextFieldType =
-  | "shortText"
-  | "longText"
-  | "number"
-  | "date"
-  | "obscured";
+  "shortText" | "longText" | "number" | "date" | "obscured";
 
 export interface TextFieldComponent {
   TextField: {
@@ -327,10 +307,7 @@ export interface DeleteSurface {
 }
 
 export type A2UIMessage =
-  | SurfaceUpdate
-  | DataModelUpdate
-  | BeginRendering
-  | DeleteSurface;
+  SurfaceUpdate | DataModelUpdate | BeginRendering | DeleteSurface;
 
 // ============= Client-to-Server Events =============
 
