@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   isClaudeQuotaExhaustion,
+  isClaudeQuotaExhaustionError,
   refinerSdkEnv,
   runReleaseRefiner,
   type RefinerCommandRunner,
@@ -300,6 +301,52 @@ describe("release refiner failure handling", () => {
       }),
     ).toBe(false);
     expect(isClaudeQuotaExhaustion("not-json")).toBe(false);
+  });
+
+  test("recognizes the session limit, not only the weekly one", () => {
+    expect(
+      isClaudeQuotaExhaustion({
+        type: "result",
+        subtype: "success",
+        is_error: true,
+        api_error_status: 429,
+        result: "You've hit your session limit · resets 8:50pm (UTC)",
+      }),
+    ).toBe(true);
+  });
+
+  test("recognizes quota the Agent SDK throws instead of yielding", () => {
+    // Verbatim from build 11045, where this ended the lane instead of falling
+    // back to Codex.
+    expect(
+      isClaudeQuotaExhaustionError(
+        new Error(
+          "Claude Code returned an error result: You've hit your session limit · resets 8:50pm (UTC)",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("re-raises every thrown error that is not validated quota", () => {
+    // Claude Code's verdict, but not a quota one.
+    expect(
+      isClaudeQuotaExhaustionError(
+        new Error(
+          "Claude Code returned an error result: tool execution failed",
+        ),
+      ),
+    ).toBe(false);
+    // A quota phrase with no Claude Code envelope — e.g. a CHANGELOG line or a
+    // tool's own output quoting one. Not Claude Code saying it is out of quota.
+    expect(
+      isClaudeQuotaExhaustionError(
+        new Error("git push failed: You've hit your session limit"),
+      ),
+    ).toBe(false);
+    expect(
+      isClaudeQuotaExhaustionError("Claude Code returned an error result"),
+    ).toBe(false);
+    expect(isClaudeQuotaExhaustionError(undefined)).toBe(false);
   });
 
   test("fails closed on malformed successful Claude output", async () => {
