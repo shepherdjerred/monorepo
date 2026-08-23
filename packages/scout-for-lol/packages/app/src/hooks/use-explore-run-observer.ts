@@ -50,7 +50,7 @@ export function useExploreRunObserver(input: {
   const fetchRunOutcome = useCallback(
     async (runId: string): Promise<ExploreRunOutcome | null> => {
       const result = ExploreRunOutcomeResultSchema.parse(
-        await queryClient.fetchQuery({
+        await queryClient.query({
           ...trpc.explore.runOutcome.queryOptions({ runId }),
           staleTime: 0,
         }),
@@ -73,7 +73,7 @@ export function useExploreRunObserver(input: {
             controller,
             observeRun: observeExploreRun,
             fetchActiveRuns: async () =>
-              await queryClient.fetchQuery({
+              await queryClient.query({
                 ...trpc.explore.activeRuns.queryOptions(),
                 staleTime: 0,
               }),
@@ -109,7 +109,7 @@ export function useExploreRunObserver(input: {
       }
       reconcilingRef.current.add(summary.runId);
       try {
-        const confirmed = await queryClient.fetchQuery({
+        const confirmed = await queryClient.query({
           ...trpc.explore.activeRuns.queryOptions(),
           staleTime: 0,
         });
