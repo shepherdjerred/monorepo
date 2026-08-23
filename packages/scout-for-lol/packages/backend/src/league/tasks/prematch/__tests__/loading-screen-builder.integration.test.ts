@@ -100,10 +100,16 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     expect(blueTeam).toHaveLength(5);
     expect(redTeam).toHaveLength(5);
     const expectedLanes: Lane[] = ["adc", "jungle", "middle", "support", "top"];
-    expect(blueTeam.map((p) => p.lane).toSorted()).toEqual(
+    // `lane` is optional on the participant so a sub-five custom side can omit
+    // it; "MISSING" makes an absent lane fail this assertion loudly rather than
+    // comparing as undefined. A full five must always carry all five lanes.
+    const laneOf = (participant: {
+      lane?: Lane | undefined;
+    }): Lane | "MISSING" => participant.lane ?? "MISSING";
+    expect(blueTeam.map((p) => laneOf(p)).toSorted()).toEqual(
       expectedLanes.toSorted(),
     );
-    expect(redTeam.map((p) => p.lane).toSorted()).toEqual(
+    expect(redTeam.map((p) => laneOf(p)).toSorted()).toEqual(
       expectedLanes.toSorted(),
     );
 

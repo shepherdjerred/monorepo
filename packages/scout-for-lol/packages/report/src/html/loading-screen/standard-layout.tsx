@@ -55,16 +55,22 @@ function TeamRow({
   );
 }
 
+/**
+ * A laneless player (a sub-five custom side, where Riot assigns no role) sorts
+ * last rather than first: `indexOf` returns -1 for undefined, which would
+ * otherwise float them above top lane.
+ */
+function laneRank(lane: (typeof LANE_ORDER)[number] | undefined): number {
+  return lane === undefined ? LANE_ORDER.length : LANE_ORDER.indexOf(lane);
+}
+
 function roleOrderedParticipants(
   data: StandardLoadingScreenData,
   teamSide: "blue" | "red",
 ): StandardLoadingScreenData["participants"] {
   return data.participants
     .filter((participant) => participant.team === teamSide)
-    .toSorted(
-      (left, right) =>
-        LANE_ORDER.indexOf(left.lane) - LANE_ORDER.indexOf(right.lane),
-    );
+    .toSorted((left, right) => laneRank(left.lane) - laneRank(right.lane));
 }
 
 export function StandardLayout({

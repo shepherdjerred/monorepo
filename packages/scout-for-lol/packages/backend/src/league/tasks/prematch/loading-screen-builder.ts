@@ -1,3 +1,4 @@
+import type { QueueType } from "@scout-for-lol/data/index.ts";
 import type {
   RawCurrentGameInfo,
   RawCurrentGameParticipant,
@@ -39,6 +40,11 @@ import {
   resolveChampionKey,
 } from "#src/utils/champion.ts";
 import { getRankByPuuid } from "#src/league/model/rank.ts";
+import {
+  RecoverableLoadingScreenDataError,
+  buildIncompleteLobbyMessage,
+  buildLopsidedTeamMessage,
+} from "#src/league/tasks/prematch/loading-screen-errors.ts";
 import { createLogger } from "#src/logger.ts";
 import { classicAssetResolutionFailuresTotal } from "#src/metrics/index.ts";
 
@@ -47,13 +53,6 @@ const logger = createLogger("prematch-loading-screen-builder");
 const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
 const RANKED_5S_QUEUE_ID = 710;
-
-export class RecoverableLoadingScreenDataError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "RecoverableLoadingScreenDataError";
-  }
-}
 
 export class UnsupportedLoadingScreenQueueError extends Error {
   constructor(message: string) {
@@ -225,48 +224,17 @@ function buildStandardParticipant(
   };
 }
 
-function gameInfoContextSuffix(gameInfo: RawCurrentGameInfo): string {
-  return (
-    `gameId=${gameInfo.gameId.toString()}, ` +
-    `queueConfigId=${gameInfo.gameQueueConfigId.toString()}, ` +
-    `mapId=${gameInfo.mapId.toString()}, ` +
-    `gameMode=${gameInfo.gameMode}, ` +
-    `gameType=${gameInfo.gameType}, ` +
-    `gameLength=${gameInfo.gameLength.toString()}`
-  );
-}
-
-function buildIncompleteLobbyMessage(
-  participants: readonly RankedBuiltParticipant[],
-  gameInfo: RawCurrentGameInfo,
-): string {
-  const presentPuuids = gameInfo.participants
-    .map((p) => p.puuid ?? "scrubbed")
-    .join(",");
-  return (
-    `Standard loading screen requires exactly 10 participants; ` +
-    `received ${participants.length.toString()} ` +
-    `(${gameInfoContextSuffix(gameInfo)}, participants=[${presentPuuids}])`
-  );
-}
-
-function buildLopsidedTeamMessage(
-  team: string,
-  received: number,
-  gameInfo: RawCurrentGameInfo,
-): string {
-  return (
-    `Standard loading screen requires exactly 5 ${team} participants; ` +
-    `received ${received.toString()} ` +
-    `(${gameInfoContextSuffix(gameInfo)})`
-  );
-}
-
 function inferStandardParticipants(
   participants: readonly RankedBuiltParticipant[],
   gameInfo: RawCurrentGameInfo,
+  queueType: QueueType | undefined,
 ): StandardLoadingScreenParticipant[] {
-  if (participants.length !== 10) {
+  // A custom lobby is legitimately not a full ten — a tournament code carries
+  // a teamSize of 1-5. Every other queue arriving short is the partial
+  // pre-start-lobby snapshot the poller defers on, so it must keep raising.
+  const isCustomLobby = queueType === "custom";
+
+  if (!isCustomLobby && participants.length !== 10) {
     throw new RecoverableLoadingScreenDataError(
       buildIncompleteLobbyMessage(participants, gameInfo),
     );
@@ -278,10 +246,26 @@ function inferStandardParticipants(
     const indexedTeam = participants
       .map((participant, index) => ({ participant, index }))
       .filter((entry) => entry.participant.team === team);
-    if (indexedTeam.length !== 5) {
+    // Nobody on a side is broken in every mode, custom included.
+    if (
+      indexedTeam.length === 0 ||
+      (!isCustomLobby && indexedTeam.length !== 5)
+    ) {
       throw new RecoverableLoadingScreenDataError(
         buildLopsidedTeamMessage(team, indexedTeam.length, gameInfo),
       );
+    }
+
+    if (indexedTeam.length !== 5) {
+      // The lane-prior model assigns one player per role across a full five.
+      // On a shorter side its answer would be invented, so omit the lane.
+      for (const entry of indexedTeam) {
+        result.set(
+          entry.index,
+          buildStandardParticipant(entry.participant, undefined),
+        );
+      }
+      continue;
     }
 
     const inference = inferStandardLanesWithCurrentPriors(
@@ -513,7 +497,7 @@ export async function buildLoadingScreenData(
   );
   const participants: LoadingScreenParticipant[] =
     layout === "standard"
-      ? inferStandardParticipants(rankedParticipants, gameInfo)
+      ? inferStandardParticipants(rankedParticipants, gameInfo, queueType)
       : rankedParticipants;
 
   // Build bans (skip for ARAM/Arena which don't have bans)
