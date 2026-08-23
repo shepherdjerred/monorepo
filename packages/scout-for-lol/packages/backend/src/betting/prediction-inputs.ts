@@ -34,6 +34,20 @@ export type PredictionInputDependencies = {
   fetchHistory: typeof fetchPredictionHistory;
 };
 
+function ranksForParticipant(
+  puuid: string | null,
+  ranksByPuuid: ParticipantRanks,
+): Ranks | undefined {
+  if (puuid === null) {
+    return undefined;
+  }
+  const rankState = ranksByPuuid.get(puuid);
+  if (rankState === undefined) {
+    throw new Error(`Missing rank lookup result for ${puuid}`);
+  }
+  return rankState.status === "available" ? rankState.ranks : undefined;
+}
+
 const defaultDependencies: PredictionInputDependencies = {
   fetchHistory: fetchPredictionHistory,
 };
@@ -204,10 +218,7 @@ export async function buildPredictionObservation(
     return buildFeature({
       participant,
       lane,
-      ranks:
-        participant.puuid === null
-          ? undefined
-          : input.ranksByPuuid.get(participant.puuid),
+      ranks: ranksForParticipant(participant.puuid, input.ranksByPuuid),
       queueType: input.queueType,
       history:
         participant.puuid === null

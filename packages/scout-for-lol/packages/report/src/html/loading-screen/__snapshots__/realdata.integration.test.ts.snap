@@ -4,4 +4,4 @@ exports[`loading screen renders image for arena-3v3.json 1`] = `"a5c42f2bc2c313a
 
 exports[`loading screen renders image for custom-classic-5v5.json 1`] = `"23d91d088db8452960243ba608b0c9c8c3f31e50b9f13181c1a41724cd7e8699"`;
 
-exports[`loading screen renders image for ranked-flex-5v5.json 1`] = `"e0aeb23332a0c71d92909422bf189dfd516ed89ddafdfa4e89c9ab12d8a026e4"`;
+exports[`loading screen renders image for ranked-flex-5v5.json 1`] = `"20fad813bf10ece76f4ecce0a74b8fb518a9324901faf8435901daa7a614c71b"`;

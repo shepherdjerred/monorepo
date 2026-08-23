@@ -66,7 +66,11 @@
       "keystoneRuneId": 9923,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": false,
-      "lane": "jungle"
+      "lane": "jungle",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": null,
@@ -80,7 +84,10 @@
       "keystoneRuneId": 8351,
       "secondaryTreeId": 8100,
       "isTrackedPlayer": false,
-      "lane": "support"
+      "lane": "support",
+      "rankState": {
+        "status": "hidden"
+      }
     },
     {
       "puuid": "HSLY2gc9LDSCRW4CjxVWZEWswX-hmhat3Z--LHMX60TMeNyZIN009clTFZ8jGxJw-LFZ9yHsVqHMkQ",
@@ -94,7 +101,11 @@
       "keystoneRuneId": 8010,
       "secondaryTreeId": 8300,
       "isTrackedPlayer": false,
-      "lane": "top"
+      "lane": "top",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "18bi42Gf97CI1VVbLW8sYK_m8kAjYYX3I_uxllKh8sC9PiG2Zzyk68XSvp9dYZOXO1m7vU-xiArtjA",
@@ -108,7 +119,11 @@
       "keystoneRuneId": 8008,
       "secondaryTreeId": 8100,
       "isTrackedPlayer": true,
-      "lane": "adc"
+      "lane": "adc",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "GksNHpwZi2ICy9ccgifFytu9DvPtRYxmGmnGxcbe8shr4IFwa0hajbgj0eblVRYyL6oaqil5znDgGg",
@@ -122,7 +137,11 @@
       "keystoneRuneId": 8992,
       "secondaryTreeId": 8300,
       "isTrackedPlayer": false,
-      "lane": "middle"
+      "lane": "middle",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "aLw-CHkfMnmlaeCR9Mdavh0UusuEitdttlIL-mBqW_NyhwXGbKuq1FVMNv2maN-imIa3r-xLHxRDGw",
@@ -136,7 +155,11 @@
       "keystoneRuneId": 8010,
       "secondaryTreeId": 8100,
       "isTrackedPlayer": false,
-      "lane": "jungle"
+      "lane": "jungle",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "BxEyY6sX-bWFvtXtRD3IWIbmm5Wa7WFSfwOUjOsbhcxDknt8tK8VzfSTBsoGnllxsqqaIV8qTRr8nQ",
@@ -150,7 +173,11 @@
       "keystoneRuneId": 8010,
       "secondaryTreeId": 8400,
       "isTrackedPlayer": false,
-      "lane": "middle"
+      "lane": "middle",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "EjRmQ1H7E1md8UNw_9BwqcIxN3QqKMkP7aPQFLOrIcV5HoH5qulKRCBAT1ibn5EgrljZ82RT1sjccg",
@@ -164,7 +191,11 @@
       "keystoneRuneId": 8437,
       "secondaryTreeId": 8000,
       "isTrackedPlayer": true,
-      "lane": "top"
+      "lane": "top",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "PFmOO4HVmc2U_UhEzEjgAiZORKxWRxpdu4YyqI0uEa9PZqSLhg7sABnCuGBiPHd7BwVl6x4OSEK-fQ",
@@ -178,7 +209,11 @@
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8200,
       "isTrackedPlayer": false,
-      "lane": "adc"
+      "lane": "adc",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": null,
@@ -192,7 +227,10 @@
       "keystoneRuneId": 8992,
       "secondaryTreeId": 8300,
       "isTrackedPlayer": false,
-      "lane": "support"
+      "lane": "support",
+      "rankState": {
+        "status": "hidden"
+      }
     }
   ]
 }

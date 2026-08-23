@@ -1,5 +1,6 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { PlayerConfigEntrySchema } from "@scout-for-lol/data/index.ts";
+import { RiotHttpError } from "#src/league/api/client/errors.ts";
 
 const byPuuid = vi.fn<() => Promise<unknown>>();
 
@@ -11,36 +12,37 @@ vi.doMock("#src/league/api/api.ts", () => ({
   },
 }));
 
-const { getRanks, getRankByPuuid, evaluateQueueRank } =
-  await import("./rank.ts");
+const { getRanks, getRankByPuuid } = await import("./rank.ts");
 
-describe("getRanks and getRankByPuuid", () => {
-  test("returns error status when the Riot rank lookup fails", async () => {
-    byPuuid.mockRejectedValueOnce(
-      new Error("API request timed out after 30000ms"),
-    );
+const puuid = "a".repeat(78);
 
-    const player = PlayerConfigEntrySchema.parse({
-      alias: "Brandon",
-      league: {
-        leagueAccount: {
-          puuid: "a".repeat(78),
-          region: "AMERICA_NORTH",
-        },
-      },
-    });
+beforeEach(() => {
+  byPuuid.mockReset();
+});
 
-    const ranks = await getRanks(player);
+describe("getRankByPuuid", () => {
+  test.each([
+    ["request failure", new Error("network unavailable")],
+    ["timeout", new Error("API request timed out after 30000ms")],
+    [
+      "rate-limit exhaustion",
+      new RiotHttpError({
+        status: 429,
+        statusText: "Too Many Requests",
+        body: "limited",
+        url: "https://na1.api.riotgames.com/lol/league/v4/entries/by-puuid/test",
+        headers: new Headers(),
+      }),
+    ],
+  ])("returns error for %s", async (_name, error) => {
+    byPuuid.mockRejectedValueOnce(error);
 
-    expect(ranks).toEqual({
-      solo: undefined,
-      flex: undefined,
-      soloStatus: "error",
-      flexStatus: "error",
+    await expect(getRankByPuuid(puuid, "AMERICA_NORTH")).resolves.toEqual({
+      status: "error",
     });
   });
 
-  test("returns ranked status for active ranked players", async () => {
+  test("returns available ranks for published Solo and Flex entries", async () => {
     byPuuid.mockResolvedValueOnce([
       {
         queueType: "RANKED_SOLO_5x5",
@@ -60,17 +62,65 @@ describe("getRanks and getRankByPuuid", () => {
       },
     ]);
 
-    const ranks = await getRankByPuuid("a".repeat(78), "AMERICA_NORTH");
+    const result = await getRankByPuuid(puuid, "AMERICA_NORTH");
 
-    expect(ranks.soloStatus).toBe("ranked");
-    expect(ranks.solo?.tier).toBe("emerald");
-    expect(ranks.solo?.division).toBe(4);
-    expect(ranks.flexStatus).toBe("ranked");
-    expect(ranks.flex?.tier).toBe("gold");
-    expect(ranks.flex?.division).toBe(1);
+    expect(result).toEqual({
+      status: "available",
+      ranks: {
+        solo: {
+          tier: "emerald",
+          division: 4,
+          lp: 45,
+          wins: 50,
+          losses: 40,
+        },
+        flex: {
+          tier: "gold",
+          division: 1,
+          lp: 20,
+          wins: 15,
+          losses: 10,
+        },
+      },
+    });
   });
 
-  test("handles unknown queue types without failing validation", async () => {
+  test("treats a successful empty response as available and unranked", async () => {
+    byPuuid.mockResolvedValueOnce([]);
+
+    await expect(getRankByPuuid(puuid, "AMERICA_NORTH")).resolves.toEqual({
+      status: "available",
+      ranks: { solo: undefined, flex: undefined },
+    });
+  });
+
+  test("normalizes omitted numeric fields to zero", async () => {
+    byPuuid.mockResolvedValueOnce([
+      {
+        queueType: "RANKED_SOLO_5x5",
+        tier: "SILVER",
+        rank: "II",
+      },
+    ]);
+
+    const result = await getRankByPuuid(puuid, "AMERICA_NORTH");
+
+    expect(result).toEqual({
+      status: "available",
+      ranks: {
+        solo: {
+          tier: "silver",
+          division: 2,
+          lp: 0,
+          wins: 0,
+          losses: 0,
+        },
+        flex: undefined,
+      },
+    });
+  });
+
+  test("ignores unknown, Arena, and TFT queues", async () => {
     byPuuid.mockResolvedValueOnce([
       {
         queueType: "RANKED_SOLO_5x5",
@@ -80,48 +130,50 @@ describe("getRanks and getRankByPuuid", () => {
         wins: 70,
         losses: 60,
       },
+      { queueType: "CHERRY", ratedTier: "WOOD" },
+      { queueType: "RANKED_TFT_SET_14", tier: { changed: true } },
       {
-        queueType: "CHERRY",
-        ratedTier: "WOOD",
-      },
-      {
-        queueType: "RANKED_TFT_SET_14",
-        tier: "MASTER",
-        rank: "I",
+        queueType: "RANKED_FUTURE_MODE",
+        wins: "not-a-number",
+        futureContract: { changed: true },
       },
     ]);
 
-    const ranks = await getRankByPuuid("a".repeat(78), "AMERICA_NORTH");
+    const result = await getRankByPuuid(puuid, "AMERICA_NORTH");
 
-    expect(ranks.soloStatus).toBe("ranked");
-    expect(ranks.solo?.tier).toBe("diamond");
-    expect(ranks.flexStatus).toBe("unranked");
-    expect(ranks.flex).toBeUndefined();
+    expect(result.status).toBe("available");
+    if (result.status === "available") {
+      expect(result.ranks.solo?.tier).toBe("diamond");
+      expect(result.ranks.flex).toBeUndefined();
+    }
   });
 
-  test("identifies unplaced players in provisional matches", () => {
-    const unplacedEval = evaluateQueueRank(
-      [
-        {
-          queueType: "RANKED_SOLO_5x5",
-          tier: "SILVER",
-          rank: "II",
-          leaguePoints: 0,
-          wins: 0,
-          losses: 0,
-        },
-      ],
-      "RANKED_SOLO_5x5",
-    );
+  test.each([
+    { tier: "INVALID", rank: "I" },
+    { tier: "GOLD", rank: "V" },
+    { tier: undefined, rank: "II" },
+  ])("returns error for malformed relevant entry: %o", async (fields) => {
+    byPuuid.mockResolvedValueOnce([{ queueType: "RANKED_FLEX_SR", ...fields }]);
 
-    expect(unplacedEval.status).toBe("unplaced");
-    expect(unplacedEval.rank?.tier).toBe("silver");
+    await expect(getRankByPuuid(puuid, "AMERICA_NORTH")).resolves.toEqual({
+      status: "error",
+    });
   });
+});
 
-  test("identifies unranked players when queue entry is absent", () => {
-    const unrankedEval = evaluateQueueRank([], "RANKED_SOLO_5x5");
+describe("getRanks", () => {
+  test("keeps persisted player ranks backward-compatible on lookup failure", async () => {
+    byPuuid.mockRejectedValueOnce(new Error("network unavailable"));
+    const player = PlayerConfigEntrySchema.parse({
+      alias: "Brandon",
+      league: {
+        leagueAccount: { puuid, region: "AMERICA_NORTH" },
+      },
+    });
 
-    expect(unrankedEval.status).toBe("unranked");
-    expect(unrankedEval.rank).toBeUndefined();
+    await expect(getRanks(player)).resolves.toEqual({
+      solo: undefined,
+      flex: undefined,
+    });
   });
 });

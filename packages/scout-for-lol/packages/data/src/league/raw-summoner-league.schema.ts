@@ -1,60 +1,14 @@
 import { z } from "zod";
 
-/**
- * Zod schema for Riot League V4 responses
- * Based on Riot Games League V4 API
- *
- * This schema validates the structure of league/rank data received from Riot API.
- * Represents a summoner's ranked queue entry (Solo/Duo, Flex, Arena, etc.).
- */
-
-/**
- * Known queue types for ranked leagues in Riot's League-V4 API
- */
-export const RawRankedQueueTypeSchema = z.enum([
-  // Summoner's Rift & Classic Queues
+export const StandardRankedQueueTypeSchema = z.enum([
   "RANKED_SOLO_5x5",
   "RANKED_FLEX_SR",
-  "RANKED_FLEX_TT", // Legacy Twisted Treeline
-  "RANKED_PREMADE_5x5", // Clash / Premade 5s
-  "RANKED_TEAM_5x5", // Legacy 5v5 ranked teams
-  "RANKED_TEAM_3x3", // Legacy 3v3 ranked teams
-  // Game Modes (Arena & Swiftplay)
-  "CHERRY", // Arena rating
-  "JADE_RANKED_SOLO_5x5", // Jade / Swiftplay Solo
-  "JADE_RANKED_FLEX_5x5", // Jade / Swiftplay Flex
-  // Teamfight Tactics
-  "RANKED_TFT",
-  "RANKED_TFT_DOUBLE_UP",
-  "RANKED_TFT_TURBO",
-  "RANKED_TFT_PAIRS",
-  "RANKED_TFT_SET_1",
-  "RANKED_TFT_SET_2",
-  "RANKED_TFT_SET_3",
-  "RANKED_TFT_SET_4",
-  "RANKED_TFT_SET_5",
-  "RANKED_TFT_SET_6",
-  "RANKED_TFT_SET_7",
-  "RANKED_TFT_SET_8",
-  "RANKED_TFT_SET_9",
-  "RANKED_TFT_SET_10",
-  "RANKED_TFT_SET_11",
-  "RANKED_TFT_SET_12",
-  "RANKED_TFT_SET_13",
-  "RANKED_TFT_SET_14",
-  "RANKED_TFT_SET_15",
-  "RANKED_TFT_SET_16",
-  "RANKED_TFT_SET_17",
-  "RANKED_TFT_SET_18",
-  "RANKED_TFT_SET_19",
-  "RANKED_TFT_SET_20",
 ]);
-export type RawRankedQueueType = z.infer<typeof RawRankedQueueTypeSchema>;
+export type StandardRankedQueueType = z.infer<
+  typeof StandardRankedQueueTypeSchema
+>;
 
-/**
- * Tier names in ranked system (standard League tiers + game-mode specific tiers)
- */
-export const RawTierNameSchema = z.enum([
+export const StandardRankedTierSchema = z.enum([
   "IRON",
   "BRONZE",
   "SILVER",
@@ -65,77 +19,96 @@ export const RawTierNameSchema = z.enum([
   "MASTER",
   "GRANDMASTER",
   "CHALLENGER",
-  "WOOD",
-  "SALT",
-  "UNRANKED",
 ]);
-export type RawTierName = z.infer<typeof RawTierNameSchema>;
+
+export const StandardRankedDivisionSchema = z.enum(["I", "II", "III", "IV"]);
+
+const StandardMiniSeriesSchema = z.strictObject({
+  target: z.number().int().nonnegative().default(0),
+  wins: z.number().int().nonnegative().default(0),
+  losses: z.number().int().nonnegative().default(0),
+  progress: z.string(),
+});
 
 /**
- * Division within a tier (I-V)
+ * A published Solo/Duo or Flex rank from League-V4. Riot omits numeric fields
+ * whose value is zero, so those fields normalize to zero at this boundary.
+ * Unknown-field auditing is performed by RawSummonerLeagueSchema before this
+ * schema is used to interpret a relevant entry.
  */
-export const RawDivisionSchema = z.enum(["I", "II", "III", "IV", "V"]);
-export type RawDivision = z.infer<typeof RawDivisionSchema>;
+export const StandardSummonerLeagueSchema = z.strictObject({
+  leagueId: z.string().optional(),
+  queueType: StandardRankedQueueTypeSchema,
+  tier: StandardRankedTierSchema,
+  rank: StandardRankedDivisionSchema,
+  summonerId: z.string().optional(),
+  puuid: z.string().optional(),
+  leaguePoints: z.number().int().nonnegative().default(0),
+  wins: z.number().int().nonnegative().default(0),
+  losses: z.number().int().nonnegative().default(0),
+  veteran: z.boolean().optional(),
+  inactive: z.boolean().optional(),
+  freshBlood: z.boolean().optional(),
+  hotStreak: z.boolean().optional(),
+  miniSeries: StandardMiniSeriesSchema.optional(),
+});
+export type StandardSummonerLeague = z.infer<
+  typeof StandardSummonerLeagueSchema
+>;
 
 /**
- * RawSummonerLeague - Represents a single ranked queue entry for a summoner from Riot API
+ * Raw League-V4 entry. Queue names are intentionally open because Riot can
+ * add unrelated queues without changing Scout's Solo/Flex rank contract.
+ * Known fields remain unknown until the queue is identified; malformed Arena,
+ * TFT, or future queue variants therefore cannot poison valid Solo/Flex data.
  */
 export const RawSummonerLeagueSchema = z
-  .object({
-    leagueId: z.string().optional(),
-    queueType: RawRankedQueueTypeSchema,
-    tier: RawTierNameSchema.optional(),
-    rank: RawDivisionSchema.optional(),
-    summonerId: z.string().optional(),
-    puuid: z.string().optional(),
-    leaguePoints: z.number().optional(),
-    wins: z.number().optional(),
-    losses: z.number().optional(),
-    veteran: z.boolean().optional(),
-    inactive: z.boolean().optional(),
-    freshBlood: z.boolean().optional(),
-    hotStreak: z.boolean().optional(),
-    provisional: z.boolean().optional(),
-    ratedTier: z.string().optional(),
-    ratedRating: z.number().optional(),
-    miniSeries: z
-      .object({
-        target: z.number().optional(),
-        wins: z.number().optional(),
-        losses: z.number().optional(),
-        progress: z.string().optional(),
-      })
-      .optional(),
+  .strictObject({
+    leagueId: z.unknown().optional(),
+    queueType: z.string().min(1),
+    tier: z.unknown().optional(),
+    rank: z.unknown().optional(),
+    summonerId: z.unknown().optional(),
+    puuid: z.unknown().optional(),
+    leaguePoints: z.unknown().optional(),
+    wins: z.unknown().optional(),
+    losses: z.unknown().optional(),
+    veteran: z.unknown().optional(),
+    inactive: z.unknown().optional(),
+    freshBlood: z.unknown().optional(),
+    hotStreak: z.unknown().optional(),
+    ratedTier: z.unknown().optional(),
+    ratedRating: z.unknown().optional(),
+    miniSeries: z.unknown().optional(),
   })
-  .superRefine((entry, ctx) => {
-    if (
-      entry.queueType !== "RANKED_SOLO_5x5" &&
-      entry.queueType !== "RANKED_FLEX_SR"
-    ) {
+  .superRefine((entry, context) => {
+    if (!StandardRankedQueueTypeSchema.safeParse(entry.queueType).success) {
       return;
     }
 
-    if (entry.leaguePoints === undefined) {
-      ctx.addIssue({
-        code: "custom",
-        message: "standard ranked entries require leaguePoints",
-        path: ["leaguePoints"],
-      });
+    const parsed = StandardSummonerLeagueSchema.safeParse(entry);
+    if (parsed.success) {
+      return;
     }
-    if (entry.wins === undefined) {
-      ctx.addIssue({
+
+    for (const issue of parsed.error.issues) {
+      if (issue.code === "unrecognized_keys") {
+        context.addIssue({
+          code: "unrecognized_keys",
+          keys: issue.keys,
+          message: issue.message,
+          path: issue.path,
+        });
+        continue;
+      }
+
+      context.addIssue({
         code: "custom",
-        message: "standard ranked entries require wins",
-        path: ["wins"],
-      });
-    }
-    if (entry.losses === undefined) {
-      ctx.addIssue({
-        code: "custom",
-        message: "standard ranked entries require losses",
-        path: ["losses"],
+        message: issue.message,
+        path: issue.path,
       });
     }
   });
 
+export const RawSummonerLeagueListSchema = z.array(RawSummonerLeagueSchema);
 export type RawSummonerLeague = z.infer<typeof RawSummonerLeagueSchema>;

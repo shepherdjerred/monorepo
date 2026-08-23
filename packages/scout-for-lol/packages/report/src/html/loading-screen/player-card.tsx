@@ -1,4 +1,8 @@
-import type { LoadingScreenParticipant, QueueType } from "@scout-for-lol/data";
+import type {
+  LoadingScreenParticipant,
+  QueueType,
+  Rank,
+} from "@scout-for-lol/data";
 import {
   getRuneInfo,
   getRuneTreeInfo,
@@ -57,62 +61,47 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function formatRankText(
-  rank: NonNullable<LoadingScreenParticipant["ranks"]>["solo"],
-): string | undefined {
+function formatRankText(rank: Rank | undefined): string | undefined {
   if (rank === undefined) {
     return undefined;
   }
-  return `${capitalize(rank.tier)} ${divisionToString(rank.division)}`;
-}
-
-function getQueueRanks(
-  ranks: LoadingScreenParticipant["ranks"],
-  isFlexMatch: boolean,
-) {
-  if (isFlexMatch) {
-    return {
-      primaryRank: ranks?.flex,
-      secondaryRank: ranks?.solo,
-      primaryStatus: ranks?.flexStatus,
-      secondaryStatus: ranks?.soloStatus,
-    };
+  if (
+    rank.tier === "master" ||
+    rank.tier === "grandmaster" ||
+    rank.tier === "challenger"
+  ) {
+    return capitalize(rank.tier);
   }
-  return {
-    primaryRank: ranks?.solo,
-    secondaryRank: ranks?.flex,
-    primaryStatus: ranks?.soloStatus,
-    secondaryStatus: ranks?.flexStatus,
-  };
+  return `${capitalize(rank.tier)} ${divisionToString(rank.division)}`;
 }
 
 export function resolveParticipantRankDisplay(
   participant: LoadingScreenParticipant,
   queueType?: QueueType,
 ): { text: string; color: string } {
-  if (participant.puuid === null || participant.ranks?.hidden === true) {
+  if (participant.rankState.status === "hidden") {
     return { text: "Hidden", color: palette.grey[1] };
   }
-
-  const { primaryRank, secondaryRank, primaryStatus, secondaryStatus } =
-    getQueueRanks(participant.ranks, queueType === "flex");
-
-  const formattedPrimary = formatRankText(primaryRank);
-  if (formattedPrimary !== undefined) {
-    return { text: formattedPrimary, color: palette.gold[3] };
-  }
-
-  const formattedSecondary = formatRankText(secondaryRank);
-  if (formattedSecondary !== undefined) {
-    return { text: formattedSecondary, color: palette.gold[3] };
-  }
-
-  if (primaryStatus === "unplaced" || secondaryStatus === "unplaced") {
-    return { text: "Unplaced", color: palette.gold[1] };
-  }
-
-  if (primaryStatus === "error" || secondaryStatus === "error") {
+  if (participant.rankState.status === "error") {
     return { text: "Error", color: palette.teams.red };
+  }
+
+  const ranks = participant.rankState.ranks;
+  if (queueType === "solo" || queueType === "flex") {
+    const rank = queueType === "solo" ? ranks.solo : ranks.flex;
+    return {
+      text: formatRankText(rank) ?? "Unranked",
+      color: rank === undefined ? palette.grey[1] : palette.gold[3],
+    };
+  }
+
+  const soloRank = formatRankText(ranks.solo);
+  if (soloRank !== undefined) {
+    return { text: soloRank, color: palette.gold[3] };
+  }
+  const flexRank = formatRankText(ranks.flex);
+  if (flexRank !== undefined) {
+    return { text: `Flex ${flexRank}`, color: palette.gold[3] };
   }
 
   return { text: "Unranked", color: palette.grey[1] };

@@ -9,7 +9,6 @@ import type {
   LoadingScreenLayout,
   LoadingScreenTeam,
   Region,
-  Ranks,
   StandardLoadingScreenParticipant,
 } from "@scout-for-lol/data/index.ts";
 import {
@@ -37,16 +36,12 @@ import {
   getChampionDisplayName,
   resolveChampionKey,
 } from "#src/utils/champion.ts";
-import { getRankByPuuid } from "#src/league/model/rank.ts";
+import {
+  getRankByPuuid,
+  type RankLookupResult,
+} from "#src/league/model/rank.ts";
 import { createLogger } from "#src/logger.ts";
 import { classicAssetResolutionFailuresTotal } from "#src/metrics/index.ts";
-
-const logger = createLogger("prematch-loading-screen-builder");
-
-const RANKED_SOLO_QUEUE_ID = 420;
-const RANKED_FLEX_QUEUE_ID = 440;
-const RANKED_5S_QUEUE_ID = 710;
-
 import {
   RecoverableLoadingScreenDataError,
   UnsupportedLoadingScreenQueueError,
@@ -55,14 +50,23 @@ import {
 } from "./loading-screen-errors.ts";
 import { orderClassicParticipants } from "./loading-screen-classic.ts";
 
+const logger = createLogger("prematch-loading-screen-builder");
+
+const RANKED_SOLO_QUEUE_ID = 420;
+const RANKED_FLEX_QUEUE_ID = 440;
+const RANKED_5S_QUEUE_ID = 710;
+
 type BuildParticipantContext = {
   trackedPuuids: ReadonlySet<string>;
   layout: LoadingScreenLayout;
 };
 
-type BaseBuiltParticipant = Omit<NonStandardLoadingScreenParticipant, "ranks">;
-type RankedBuiltParticipant = BaseBuiltParticipant & { ranks?: Ranks };
-export type ParticipantRanks = ReadonlyMap<string, Ranks>;
+type BaseBuiltParticipant = Omit<
+  NonStandardLoadingScreenParticipant,
+  "rankState"
+>;
+type RankedBuiltParticipant = NonStandardLoadingScreenParticipant;
+export type ParticipantRanks = ReadonlyMap<string, RankLookupResult>;
 
 /** Fetch the lobby rank snapshot once so prediction and presentation share it. */
 export async function fetchParticipantRanks(
@@ -77,19 +81,32 @@ export async function fetchParticipantRanks(
   logger.info(
     `Fetching ranks for ${gameInfo.participants.length.toString()} participants`,
   );
-  const results = await Promise.allSettled(
-    gameInfo.participants.map(async (participant) => {
-      if (participant.puuid === null) {
-        return;
-      }
-      const ranks = await getRankByPuuid(participant.puuid, region);
-      return { puuid: participant.puuid, ranks };
-    }),
+  const lookups = gameInfo.participants.flatMap((participant) =>
+    participant.puuid === null
+      ? []
+      : [
+          {
+            puuid: participant.puuid,
+            request: getRankByPuuid(participant.puuid, region),
+          },
+        ],
   );
-  const ranksByPuuid = new Map<string, Ranks>();
-  for (const result of results) {
-    if (result.status === "fulfilled" && result.value !== undefined) {
-      ranksByPuuid.set(result.value.puuid, result.value.ranks);
+  const results = await Promise.allSettled(
+    lookups.map((lookup) => lookup.request),
+  );
+  const ranksByPuuid = new Map<string, RankLookupResult>();
+  for (const [index, lookup] of lookups.entries()) {
+    const result = results[index];
+    if (result === undefined) {
+      throw new Error(`Missing settled rank result for ${lookup.puuid}`);
+    }
+    if (result.status === "fulfilled") {
+      ranksByPuuid.set(lookup.puuid, result.value);
+    } else {
+      logger.error("Participant rank lookup rejected", result.reason, {
+        puuid: lookup.puuid,
+      });
+      ranksByPuuid.set(lookup.puuid, { status: "error" });
     }
   }
   return ranksByPuuid;
@@ -388,7 +405,7 @@ export async function buildLoadingScreenData(
     });
   }
 
-  // Build base participant data (without ranks)
+  // Build base participant data (without rank lookup state)
   const baseParticipants = gameInfo.participants.map((p) =>
     buildParticipant(p, {
       trackedPuuids,
@@ -405,17 +422,14 @@ export async function buildLoadingScreenData(
       if (base.puuid === null) {
         return {
           ...base,
-          ranks: {
-            solo: undefined,
-            flex: undefined,
-            soloStatus: "hidden",
-            flexStatus: "hidden",
-            hidden: true,
-          },
+          rankState: { status: "hidden" },
         };
       }
-      const ranks = ranksByPuuid.get(base.puuid);
-      return ranks === undefined ? base : { ...base, ranks };
+      const rankState = ranksByPuuid.get(base.puuid);
+      if (rankState === undefined) {
+        throw new Error(`Missing rank lookup result for ${base.puuid}`);
+      }
+      return { ...base, rankState };
     },
   );
 

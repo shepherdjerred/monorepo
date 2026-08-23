@@ -19,208 +19,155 @@ function createParticipant(
     lane: "middle",
     spell1Id: 4,
     spell2Id: 14,
+    rankState: { status: "available", ranks: {} },
     isTrackedPlayer: false,
     ...overrides,
   });
 }
 
 describe("resolveParticipantRankDisplay", () => {
-  test("returns Hidden when puuid is null (privacy-scrubbed)", () => {
-    const participant = createParticipant({ puuid: null });
-    const result = resolveParticipantRankDisplay(participant, "solo");
+  test("renders Hidden for participants without a PUUID", () => {
+    const participant = createParticipant({
+      puuid: null,
+      rankState: { status: "hidden" },
+    });
 
-    expect(result.text).toBe("Hidden");
-    expect(result.color).toBe(palette.grey[1]);
+    expect(resolveParticipantRankDisplay(participant, "solo")).toEqual({
+      text: "Hidden",
+      color: palette.grey[1],
+    });
   });
 
-  test("returns Hidden when ranks.hidden is true", () => {
+  test("renders Error for failed League-V4 lookups", () => {
+    const participant = createParticipant({ rankState: { status: "error" } });
+
+    expect(resolveParticipantRankDisplay(participant, "solo")).toEqual({
+      text: "Error",
+      color: palette.teams.red,
+    });
+  });
+
+  test("renders Unranked for a successful empty League-V4 response", () => {
+    const participant = createParticipant();
+
+    expect(resolveParticipantRankDisplay(participant, "solo")).toEqual({
+      text: "Unranked",
+      color: palette.grey[1],
+    });
+  });
+
+  test("uses only Flex rank in ranked Flex games", () => {
     const participant = createParticipant({
-      ranks: {
-        hidden: true,
+      rankState: {
+        status: "available",
+        ranks: {
+          solo: {
+            tier: "diamond",
+            division: 2,
+            lp: 50,
+            wins: 100,
+            losses: 80,
+          },
+        },
       },
     });
-    const result = resolveParticipantRankDisplay(participant, "solo");
 
-    expect(result.text).toBe("Hidden");
-    expect(result.color).toBe(palette.grey[1]);
+    expect(resolveParticipantRankDisplay(participant, "flex").text).toBe(
+      "Unranked",
+    );
   });
 
-  describe("in Flex matches (queueType: 'flex')", () => {
-    test("prefers Flex rank over Solo rank when both are present", () => {
-      const participant = createParticipant({
+  test("uses only Solo rank in ranked Solo games", () => {
+    const participant = createParticipant({
+      rankState: {
+        status: "available",
         ranks: {
-          solo: { tier: "diamond", division: 2, lp: 50, wins: 100, losses: 80 },
-          flex: { tier: "emerald", division: 4, lp: 10, wins: 20, losses: 15 },
-          soloStatus: "ranked",
-          flexStatus: "ranked",
+          flex: {
+            tier: "emerald",
+            division: 4,
+            lp: 10,
+            wins: 20,
+            losses: 15,
+          },
         },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "flex");
-
-      expect(result.text).toBe("Emerald IV");
-      expect(result.color).toBe(palette.gold[3]);
+      },
     });
 
-    test("falls back to Solo rank when Flex rank is absent", () => {
-      const participant = createParticipant({
-        ranks: {
-          solo: { tier: "diamond", division: 2, lp: 50, wins: 100, losses: 80 },
-          flexStatus: "unranked",
-          soloStatus: "ranked",
-        },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "flex");
-
-      expect(result.text).toBe("Diamond II");
-      expect(result.color).toBe(palette.gold[3]);
-    });
-
-    test("returns Unplaced when Flex is unplaced and no Solo rank exists", () => {
-      const participant = createParticipant({
-        ranks: {
-          flexStatus: "unplaced",
-          soloStatus: "unranked",
-        },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "flex");
-
-      expect(result.text).toBe("Unplaced");
-      expect(result.color).toBe(palette.gold[1]);
-    });
-
-    test("returns Error when Flex fetch failed and no Solo rank exists", () => {
-      const participant = createParticipant({
-        ranks: {
-          flexStatus: "error",
-          soloStatus: "error",
-        },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "flex");
-
-      expect(result.text).toBe("Error");
-      expect(result.color).toBe(palette.teams.red);
-    });
-
-    test("returns Unranked when confirmed unranked in both queues", () => {
-      const participant = createParticipant({
-        ranks: {
-          flexStatus: "unranked",
-          soloStatus: "unranked",
-        },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "flex");
-
-      expect(result.text).toBe("Unranked");
-      expect(result.color).toBe(palette.grey[1]);
-    });
+    expect(resolveParticipantRankDisplay(participant, "solo").text).toBe(
+      "Unranked",
+    );
   });
 
-  describe("in Solo/Duo matches (queueType: 'solo')", () => {
-    test("prefers Solo rank over Flex rank when both are present", () => {
-      const participant = createParticipant({
+  test("prefers Solo rank in non-ranked games", () => {
+    const participant = createParticipant({
+      rankState: {
+        status: "available",
         ranks: {
-          solo: { tier: "diamond", division: 2, lp: 50, wins: 100, losses: 80 },
-          flex: { tier: "emerald", division: 4, lp: 10, wins: 20, losses: 15 },
-          soloStatus: "ranked",
-          flexStatus: "ranked",
+          solo: {
+            tier: "gold",
+            division: 1,
+            lp: 90,
+            wins: 40,
+            losses: 30,
+          },
+          flex: {
+            tier: "silver",
+            division: 2,
+            lp: 10,
+            wins: 5,
+            losses: 5,
+          },
         },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "solo");
-
-      expect(result.text).toBe("Diamond II");
-      expect(result.color).toBe(palette.gold[3]);
+      },
     });
 
-    test("falls back to Flex rank when Solo rank is absent", () => {
-      const participant = createParticipant({
-        ranks: {
-          flex: { tier: "emerald", division: 4, lp: 10, wins: 20, losses: 15 },
-          soloStatus: "unranked",
-          flexStatus: "ranked",
-        },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "solo");
-
-      expect(result.text).toBe("Emerald IV");
-      expect(result.color).toBe(palette.gold[3]);
-    });
-
-    test("returns Unplaced when Solo is unplaced and no Flex rank exists", () => {
-      const participant = createParticipant({
-        ranks: {
-          soloStatus: "unplaced",
-          flexStatus: "unranked",
-        },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "solo");
-
-      expect(result.text).toBe("Unplaced");
-      expect(result.color).toBe(palette.gold[1]);
-    });
-
-    test("returns Error when Solo fetch failed and no Flex rank exists", () => {
-      const participant = createParticipant({
-        ranks: {
-          soloStatus: "error",
-          flexStatus: "error",
-        },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "solo");
-
-      expect(result.text).toBe("Error");
-      expect(result.color).toBe(palette.teams.red);
-    });
-
-    test("returns Unranked when confirmed unranked", () => {
-      const participant = createParticipant({
-        ranks: {
-          soloStatus: "unranked",
-          flexStatus: "unranked",
-        },
-      });
-
-      const result = resolveParticipantRankDisplay(participant, "solo");
-
-      expect(result.text).toBe("Unranked");
-      expect(result.color).toBe(palette.grey[1]);
-    });
+    expect(resolveParticipantRankDisplay(participant, "aram").text).toBe(
+      "Gold I",
+    );
   });
 
-  describe("in non-ranked matches (e.g. ARAM, Normal)", () => {
-    test("defaults to Solo rank first, falling back to Flex rank", () => {
-      const participantSolo = createParticipant({
+  test("labels a Flex fallback in non-ranked games", () => {
+    const participant = createParticipant({
+      rankState: {
+        status: "available",
         ranks: {
-          solo: { tier: "gold", division: 1, lp: 90, wins: 40, losses: 30 },
-          flex: { tier: "silver", division: 2, lp: 10, wins: 5, losses: 5 },
-          soloStatus: "ranked",
-          flexStatus: "ranked",
+          flex: {
+            tier: "silver",
+            division: 2,
+            lp: 10,
+            wins: 5,
+            losses: 5,
+          },
+        },
+      },
+    });
+
+    expect(resolveParticipantRankDisplay(participant, "aram").text).toBe(
+      "Flex Silver II",
+    );
+  });
+
+  test.each(["master", "grandmaster", "challenger"] as const)(
+    "renders %s without a division suffix",
+    (tier) => {
+      const participant = createParticipant({
+        rankState: {
+          status: "available",
+          ranks: {
+            solo: {
+              tier,
+              division: 1,
+              lp: 500,
+              wins: 100,
+              losses: 80,
+            },
+          },
         },
       });
 
-      expect(resolveParticipantRankDisplay(participantSolo, "aram").text).toBe(
-        "Gold I",
+      expect(resolveParticipantRankDisplay(participant, "solo").text).toBe(
+        tier.charAt(0).toUpperCase() + tier.slice(1),
       );
-
-      const participantFlexOnly = createParticipant({
-        ranks: {
-          flex: { tier: "silver", division: 2, lp: 10, wins: 5, losses: 5 },
-          soloStatus: "unranked",
-          flexStatus: "ranked",
-        },
-      });
-
-      expect(
-        resolveParticipantRankDisplay(participantFlexOnly, "aram").text,
-      ).toBe("Silver II");
-    });
-  });
+    },
+  );
 });

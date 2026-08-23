@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { z } from "zod";
 import {
+  RawSummonerLeagueListSchema,
   RawSummonerLeagueSchema,
-  type RawSummonerLeague,
+  StandardSummonerLeagueSchema,
 } from "#src/league/raw-summoner-league.schema.ts";
 
 describe("RawSummonerLeagueSchema", () => {
-  test("validates standard Solo/Duo ranked entry", () => {
-    const data = {
+  test("validates a published Solo/Duo rank", () => {
+    const result = RawSummonerLeagueSchema.safeParse({
       leagueId: "63b651bb-83df-40d3-92f7-7fa56a6a2491",
       queueType: "RANKED_SOLO_5x5",
       tier: "EMERALD",
@@ -21,20 +21,36 @@ describe("RawSummonerLeagueSchema", () => {
       inactive: false,
       freshBlood: false,
       hotStreak: true,
-    };
+    });
 
-    const result = RawSummonerLeagueSchema.safeParse(data);
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.queueType).toBe("RANKED_SOLO_5x5");
-      expect(result.data.tier).toBe("EMERALD");
-      expect(result.data.rank).toBe("IV");
-    }
   });
 
-  test("validates distinct queue types and tiers in closed enums", () => {
-    const RawSummonerLeagueListSchema = z.array(RawSummonerLeagueSchema);
-    const data = [
+  test("normalizes omitted zero-valued numeric fields for relevant queues", () => {
+    const result = StandardSummonerLeagueSchema.parse({
+      queueType: "RANKED_FLEX_SR",
+      tier: "GOLD",
+      rank: "III",
+    });
+
+    expect(result.leaguePoints).toBe(0);
+    expect(result.wins).toBe(0);
+    expect(result.losses).toBe(0);
+  });
+
+  test("accepts future queue names without interpreting their fields", () => {
+    const result = RawSummonerLeagueSchema.safeParse({
+      queueType: "RANKED_FUTURE_MODE",
+      tier: { future: true },
+      rank: 9001,
+      wins: "unknown-contract",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts observed Arena and TFT variants alongside valid ranks", () => {
+    const result = RawSummonerLeagueListSchema.safeParse([
       {
         queueType: "RANKED_SOLO_5x5",
         tier: "DIAMOND",
@@ -44,106 +60,54 @@ describe("RawSummonerLeagueSchema", () => {
         losses: 80,
       },
       {
-        queueType: "RANKED_PREMADE_5x5", // Clash / Premade 5s
-        tier: "GOLD",
-        rank: "I",
-        leaguePoints: 51,
-        wins: 6,
-        losses: 2,
-      },
-      {
-        queueType: "JADE_RANKED_SOLO_5x5", // Jade / Swiftplay
-        tier: "SALT",
-        rank: "II",
-        leaguePoints: 68,
-        wins: 3,
-        losses: 3,
-      },
-      {
-        queueType: "CHERRY", // Arena queue
-        tier: "WOOD",
+        queueType: "CHERRY",
         ratedTier: "WOOD",
         ratedRating: 1200,
       },
       {
-        queueType: "RANKED_TFT_SET_14", // TFT set queue
-        tier: "PLATINUM",
+        queueType: "RANKED_TFT_SET_14",
+        tier: "MASTER",
         rank: "I",
       },
-    ];
-
-    const result = RawSummonerLeagueListSchema.safeParse(data);
+    ]);
 
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data).toHaveLength(5);
-      expect(result.data[0]?.queueType).toBe("RANKED_SOLO_5x5");
-      expect(result.data[1]?.queueType).toBe("RANKED_PREMADE_5x5");
-      expect(result.data[2]?.queueType).toBe("JADE_RANKED_SOLO_5x5");
-      expect(result.data[2]?.tier).toBe("SALT");
-      expect(result.data[3]?.queueType).toBe("CHERRY");
-      expect(result.data[4]?.queueType).toBe("RANKED_TFT_SET_14");
-    }
   });
 
-  test("rejects invalid queue types not in closed enum", () => {
-    const data = {
-      queueType: "INVALID_UNKNOWN_QUEUE_TYPE",
-      tier: "DIAMOND",
-      rank: "I",
-    };
-
-    const result = RawSummonerLeagueSchema.safeParse(data);
-    expect(result.success).toBe(false);
-  });
-
-  test("rejects invalid tiers not in closed enum", () => {
-    const data = {
+  test.each([
+    { tier: "INVALID_TIER", rank: "I" },
+    { tier: "GOLD", rank: "V" },
+    { tier: undefined, rank: "II" },
+    { tier: "GOLD", rank: undefined },
+  ])("rejects malformed relevant entries: %o", ({ tier, rank }) => {
+    const result = RawSummonerLeagueSchema.safeParse({
       queueType: "RANKED_SOLO_5x5",
-      tier: "INVALID_TIER",
-      rank: "I",
-    };
+      tier,
+      rank,
+    });
 
-    const result = RawSummonerLeagueSchema.safeParse(data);
     expect(result.success).toBe(false);
   });
 
-  test("rejects incomplete standard ranked entries", () => {
-    const fields = ["leaguePoints", "wins", "losses"] as const;
-    const queues = ["RANKED_SOLO_5x5", "RANKED_FLEX_SR"] as const;
-
-    for (const queueType of queues) {
-      for (const field of fields) {
-        const result = RawSummonerLeagueSchema.safeParse({
-          queueType,
-          tier: "GOLD",
-          rank: "II",
-          leaguePoints: 25,
-          wins: 10,
-          losses: 8,
-          [field]: undefined,
-        });
-
-        expect(result.success).toBe(false);
-      }
-    }
+  test("rejects empty queue names", () => {
+    expect(RawSummonerLeagueSchema.safeParse({ queueType: "" }).success).toBe(
+      false,
+    );
   });
 
-  test("validates provisional / unplaced entry with optional fields", () => {
-    const data: RawSummonerLeague = {
-      queueType: "RANKED_FLEX_SR",
+  test("keeps unknown fields visible to strict-field auditing", () => {
+    const result = RawSummonerLeagueSchema.safeParse({
+      queueType: "RANKED_SOLO_5x5",
       tier: "GOLD",
-      rank: "III",
-      leaguePoints: 0,
-      wins: 1,
-      losses: 2,
-      provisional: true,
-    };
+      rank: "II",
+      newRiotField: true,
+    });
 
-    const result = RawSummonerLeagueSchema.safeParse(data);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.provisional).toBe(true);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(
+        result.error.issues.some((issue) => issue.code === "unrecognized_keys"),
+      ).toBe(true);
     }
   });
 });

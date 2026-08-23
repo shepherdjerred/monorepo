@@ -13,22 +13,10 @@ export const RankSchema = z.strictObject({
   losses: z.number().nonnegative(),
 });
 
-export const RankStatusSchema = z.enum([
-  "ranked",
-  "unplaced",
-  "unranked",
-  "hidden",
-  "error",
-]);
-export type RankStatus = z.infer<typeof RankStatusSchema>;
-
 export type Ranks = z.infer<typeof RanksSchema>;
 export const RanksSchema = z.strictObject({
   solo: RankSchema.optional(),
   flex: RankSchema.optional(),
-  soloStatus: RankStatusSchema.optional(),
-  flexStatus: RankStatusSchema.optional(),
-  hidden: z.boolean().optional(),
 });
 
 export function rankToString(rank: Rank): string {
