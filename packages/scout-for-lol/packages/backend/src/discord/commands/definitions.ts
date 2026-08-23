@@ -15,6 +15,7 @@ import {
   isPolicyEnabled,
   listGuildsWithFlagEnabled,
 } from "#src/configuration/flags.ts";
+import { lobbyCommand } from "#src/discord/commands/lobby-definition.ts";
 import { exploreAllowlist } from "#src/explore/access.ts";
 
 /**
@@ -63,6 +64,15 @@ export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
     payload: [bbCommand.toJSON()],
   },
   { enabledGuildIds: exploreAllowlist, payload: [scoutCommand.toJSON()] },
+  {
+    enabledGuildIds: () =>
+      listGuildsWithFlagEnabled("tournament_lobbies_enabled"),
+    isEnabled: async (guildId) =>
+      await isPolicyEnabled("tournament_lobbies_enabled", {
+        server: DiscordGuildIdSchema.parse(guildId),
+      }),
+    payload: [lobbyCommand.toJSON()],
+  },
 ];
 
 /** Complete guild command payload; an empty array removes stale commands. */
