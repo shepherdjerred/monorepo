@@ -2,6 +2,7 @@ import "dotenv/config";
 import env from "env-var";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
+import { TournamentApiModeSchema } from "#src/league/api/tournament/mode.ts";
 
 const logger = createLogger("config");
 
@@ -212,6 +213,16 @@ function computeConfiguration() {
       .get("LLM_DAILY_TOKEN_BUDGET")
       .default("20000000")
       .asIntPositive(),
+    // Seeds the dynamic-config snapshot so a read before the first flag
+    // refresh matches the env layer. "stub" is the safe default: stub codes
+    // cannot create a real game.
+    tournamentApiMode: TournamentApiModeSchema.parse(
+      env.get("TOURNAMENT_API_MODE").default("stub").asString(),
+    ),
+    tournamentMaxOpenLobbies: env
+      .get("TOURNAMENT_MAX_OPEN_LOBBIES")
+      .default("10")
+      .asIntPositive(),
   };
   logger.info("✅ Configuration loaded successfully");
   return config;
@@ -334,6 +345,12 @@ const configuration: Configuration = {
   },
   get llmDailyTokenBudget() {
     return getConfiguration().llmDailyTokenBudget;
+  },
+  get tournamentApiMode() {
+    return getConfiguration().tournamentApiMode;
+  },
+  get tournamentMaxOpenLobbies() {
+    return getConfiguration().tournamentMaxOpenLobbies;
   },
 };
 
