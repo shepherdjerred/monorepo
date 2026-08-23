@@ -33,7 +33,9 @@
  *                byte-stably, and a bot-style `git commit` of a scout file
  *                succeeds without any pre-commit hook running
  *                (scout-season-refresh-weekly).
- *  4. crd-imports — the cdk8s bin resolves from the cdk8s package's
+ *  4. preflight — generated-output formatting, diff checks, and focused Scout
+ *                validation run in the same bot clone before publication.
+ *  5. crd-imports — the cdk8s bin resolves from the cdk8s package's
  *                cdk8s-cli devDependency after the hook-free install, and the
  *                update-imports script exists (homelab-crd-imports-daily).
  *
@@ -56,6 +58,7 @@ import {
 } from "#activities/bot-clone.ts";
 import { isAllowedGlitterContextRefreshPath } from "#activities/glitter-context-refresh-paths.ts";
 import { runCommand } from "#activities/data-dragon-shell.ts";
+import { runScoutGeneratedPreflight } from "#activities/scout-generated-preflight.ts";
 import { z } from "zod";
 import {
   CHANGELOG_FILE,
@@ -68,6 +71,8 @@ const REPORT_PACKAGE = "packages/scout-for-lol/packages/report";
 const REALDATA_TEST = "src/html/arena/realdata.integration.test.ts";
 // The import that broke: packages/data → @shepherdjerred/llm-models.
 const DATA_PACKAGE = "packages/scout-for-lol/packages/data";
+const LANE_PRIOR_ARTIFACT =
+  "packages/scout-for-lol/packages/data/src/lane-priors/lane-priors.generated.json";
 const BASELINE_ADD_BATCH_SIZE = 250;
 
 function parseArgs(argv: readonly string[]): {
@@ -272,6 +277,18 @@ async function rehearseSnapshotRefresh(repoDir: string): Promise<void> {
     },
   });
   console.error("[rehearsal] snapshot: snapshot test OK (no install refresh)");
+}
+
+async function rehearseGeneratedPreflight(repoDir: string): Promise<void> {
+  console.error(
+    "[rehearsal] preflight: formatter, diff check, and focused Scout validation",
+  );
+  await runScoutGeneratedPreflight({
+    repoDir,
+    changedFiles: [LANE_PRIOR_ARTIFACT],
+    runCommand,
+  });
+  console.error("[rehearsal] preflight: all publication checks passed");
 }
 
 async function armedHookNames(repoDir: string): Promise<string[]> {
@@ -505,6 +522,7 @@ async function main(): Promise<void> {
   await rehearseScoutWorkspace(repoDir);
   await rehearseGlitterContextRefresh(repoDir);
   await rehearseSnapshotRefresh(repoDir);
+  await rehearseGeneratedPreflight(repoDir);
   await rehearseHookFreeCommit(repoDir);
   await rehearseCrdImportsEnvironment(repoDir);
   await rehearseQueueWindowsEnvironment(repoDir);

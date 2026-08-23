@@ -125,17 +125,6 @@ function dataDragonResult(
   return {
     ...VERSION_STATE,
     mode: "version-check",
-    lanePriors: {
-      bucket: "scout-prod",
-      queueIds: [420],
-      trainingStartDate: "2026-07-01",
-      trainingEndDate: "2026-07-07",
-      holdoutStartDate: "2026-07-08",
-      holdoutEndDate: "2026-07-10",
-      holdoutSampleSize: 10,
-      holdoutSeed: "seed",
-      threshold: 0.95,
-    },
     changedFiles: ["version.json"],
     branchName: "chore/data-dragon",
     commitHash: "b".repeat(40),

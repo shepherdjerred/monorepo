@@ -1,6 +1,6 @@
 import { describe, test, expect, it } from "vitest";
 import type { Duration } from "@temporalio/common";
-import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
+import { LanePriorWorkflowInputSchema } from "#activities/lane-prior-refresh.ts";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
 import {
   DELETED_SCHEDULE_IDS,
@@ -132,6 +132,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "agentTaskWorkflow",
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
+  "runScoutLanePriorsWeeklyRefresh",
   // Clones the monorepo, runs the deterministic catalog cross-check, opens a
   // PR on drift. No long sleeps of its own — the single refreshLlmCatalog
   // activity carries its own startToCloseTimeout + retry budget.
@@ -229,16 +230,10 @@ describe("durationToMs parser", () => {
   });
 });
 
-describe("Scout Data Dragon lane-prior schedule config", () => {
-  test.each([
-    "scout-data-dragon-version-check",
-    "scout-data-dragon-weekly-refresh",
-  ])("%s passes explicit lane-prior eval inputs", (scheduleId) => {
-    const schedule = SCHEDULES.find((candidate) => candidate.id === scheduleId);
-    if (schedule === undefined) {
-      throw new Error(`Missing schedule ${scheduleId}`);
-    }
-    const input = DataDragonWorkflowInputSchema.parse(schedule.args[0]);
+describe("Scout lane-prior schedule config", () => {
+  test("passes explicit lane-prior eval inputs only to its own workflow", () => {
+    const schedule = findScheduleById("scout-lane-priors-weekly-refresh");
+    const input = LanePriorWorkflowInputSchema.parse(schedule.args[0]);
     expect(input.lanePriors).toMatchObject({
       bucket: "scout-prod",
       queueIds: [400, 420, 440, 480, 490],
@@ -250,6 +245,12 @@ describe("Scout Data Dragon lane-prior schedule config", () => {
       holdoutSeed: "scout-lane-priors-patch-cadence-v1",
       threshold: 0.95,
     });
+    expect(findScheduleById("scout-data-dragon-version-check").args).toEqual(
+      [],
+    );
+    expect(findScheduleById("scout-data-dragon-weekly-refresh").args).toEqual(
+      [],
+    );
   });
 });
 

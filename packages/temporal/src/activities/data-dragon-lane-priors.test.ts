@@ -4,9 +4,12 @@ import {
   LANE_PRIOR_EVAL_REPORT_PATH,
   lanePriorArtifactPath,
   lanePriorAwsRegion,
+  lanePriorBranchName,
+  lanePriorContentHash,
   lanePriorEvalReportPath,
   updateLanePriors,
 } from "./data-dragon-lane-priors.ts";
+import { branchName as dataDragonBranchName } from "./data-dragon-util.ts";
 
 const REPO_DIR = "/tmp/repo";
 
@@ -166,6 +169,27 @@ describe("updateLanePriors", () => {
       "s3-region",
     );
     expect(lanePriorAwsRegion(config, {})).toBe("us-east-1");
+  });
+});
+
+describe("lane-prior content identity", () => {
+  test("uses normalized artifact content as a stable branch identity", async () => {
+    const repoDir = `/tmp/lane-prior-hash-${crypto.randomUUID()}`;
+    await Bun.$`mkdir -p ${repoDir}/packages/scout-for-lol/packages/data/src/lane-priors`.quiet();
+    await Bun.write(lanePriorArtifactPath(repoDir), '{"lane":"top"}\n');
+    await Bun.write(lanePriorEvalReportPath(repoDir), '{"accuracy":0.9}\n');
+
+    const first = await lanePriorContentHash(repoDir);
+    const second = await lanePriorContentHash(repoDir);
+    expect(first).toBe(second);
+    expect(lanePriorBranchName(first)).toBe(`chore/scout-lane-priors-${first}`);
+
+    await Bun.write(lanePriorEvalReportPath(repoDir), '{"accuracy":0.91}\n');
+    expect(await lanePriorContentHash(repoDir)).not.toBe(first);
+    expect(lanePriorBranchName(first)).not.toBe(
+      dataDragonBranchName("16.15.1"),
+    );
+    await Bun.$`rm -rf ${repoDir}`.quiet();
   });
 });
 

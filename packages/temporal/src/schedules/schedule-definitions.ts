@@ -213,7 +213,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
   {
     id: "scout-data-dragon-version-check",
     workflowType: "runScoutDataDragonVersionCheck",
-    args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
+    args: [],
     cronExpression: "0 6 * * 0-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
@@ -228,7 +228,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
   {
     id: "scout-data-dragon-weekly-refresh",
     workflowType: "runScoutDataDragonWeeklyRefresh",
-    args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
+    args: [],
     cronExpression: "0 6 * * 6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
@@ -237,6 +237,16 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // always recorded before the workflow times out.
     workflowExecutionTimeout: "4 hours",
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
+  },
+  {
+    id: "scout-lane-priors-weekly-refresh",
+    workflowType: "runScoutLanePriorsWeeklyRefresh",
+    args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
+    cronExpression: "0 7 * * 6",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "4 hours",
+    memo: "Weekly Scout lane-prior refresh and evaluation",
   },
   {
     id: "llm-catalog-refresh-weekly",

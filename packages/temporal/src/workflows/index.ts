@@ -28,10 +28,12 @@ import type {
 } from "#activities/scout-image-gc.ts";
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
+import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./lane-prior-refresh.ts";
+import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
 import type {
-  DataDragonUpdateResult,
-  DataDragonWorkflowInput,
-} from "#activities/data-dragon.ts";
+  LanePriorRefreshResult,
+  LanePriorWorkflowInput,
+} from "#activities/lane-prior-refresh.ts";
 import { runLlmCatalogRefresh as _runLlmCatalogRefresh } from "./llm-catalog-refresh.ts";
 import type { LlmCatalogRefreshResult } from "#activities/llm-catalog-refresh.ts";
 import { runHomelabCrdImportsRefresh as _runHomelabCrdImportsRefresh } from "./homelab-crd-imports-refresh.ts";
@@ -199,16 +201,22 @@ export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   return _runVeleroOrphanAuditWorkflow();
 }
 
-export async function runScoutDataDragonVersionCheck(
-  input: DataDragonWorkflowInput,
-): Promise<DataDragonUpdateResult | undefined> {
-  return _runScoutDataDragonUpdate("version-check", input);
+export async function runScoutDataDragonVersionCheck(): Promise<
+  DataDragonUpdateResult | undefined
+> {
+  return _runScoutDataDragonUpdate("version-check");
 }
 
-export async function runScoutDataDragonWeeklyRefresh(
-  input: DataDragonWorkflowInput,
-): Promise<DataDragonUpdateResult | undefined> {
-  return _runScoutDataDragonUpdate("weekly-refresh", input);
+export async function runScoutDataDragonWeeklyRefresh(): Promise<
+  DataDragonUpdateResult | undefined
+> {
+  return _runScoutDataDragonUpdate("weekly-refresh");
+}
+
+export async function runScoutLanePriorsWeeklyRefresh(
+  input: LanePriorWorkflowInput,
+): Promise<LanePriorRefreshResult> {
+  return _runScoutLanePriorsWeeklyRefresh(input);
 }
 
 export async function runLlmCatalogRefresh(): Promise<LlmCatalogRefreshResult> {

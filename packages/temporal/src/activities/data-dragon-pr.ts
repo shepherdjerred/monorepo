@@ -17,6 +17,90 @@ const OpenPrListSchema = z.array(
   }),
 );
 
+export type OpenPrListItem = z.infer<typeof OpenPrListSchema>[number];
+
+const PrRevisionStateSchema = z.object({
+  baseRefOid: z.string().min(1),
+  headRefOid: z.string().min(1),
+  headRefName: z.string().min(1),
+});
+const GitRefSchema = z.object({ object: z.object({ sha: z.string().min(1) }) });
+
+export type PrRevisionState = z.infer<typeof PrRevisionStateSchema> & {
+  mainRefOid: string;
+};
+
+export async function getPrRevisionState(input: {
+  repoSlug: string;
+  prUrl: string;
+  token: string;
+  run?: typeof runCommand;
+}): Promise<PrRevisionState> {
+  const run = input.run ?? runCommand;
+  const prState = PrRevisionStateSchema.parse(
+    JSON.parse(
+      await run(
+        [
+          "gh",
+          "pr",
+          "view",
+          input.prUrl,
+          "--repo",
+          input.repoSlug,
+          "--json",
+          "baseRefOid,headRefOid,headRefName",
+        ],
+        { cwd: "/tmp", env: { GH_TOKEN: input.token } },
+      ),
+    ),
+  );
+  const mainRef = GitRefSchema.parse(
+    JSON.parse(
+      await run(["gh", "api", `repos/${input.repoSlug}/git/ref/heads/main`], {
+        cwd: "/tmp",
+        env: { GH_TOKEN: input.token },
+      }),
+    ),
+  );
+  return { ...prState, mainRefOid: mainRef.object.sha };
+}
+
+export async function isPrBasedOnCurrentMain(input: {
+  repoSlug: string;
+  prUrl: string;
+  token: string;
+  run?: typeof runCommand;
+}): Promise<boolean> {
+  const state = await getPrRevisionState(input);
+  return state.baseRefOid === state.mainRefOid;
+}
+
+export async function findOpenGeneratedPrUrl(input: {
+  repoSlug: string;
+  filterArgs: string[];
+  token: string;
+  matches: (pr: OpenPrListItem, appSlug: string) => boolean;
+}): Promise<string | undefined> {
+  const appSlug = await resolveGitHubAppSlug();
+  const output = await runCommand(
+    [
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      input.repoSlug,
+      "--state",
+      "open",
+      ...input.filterArgs,
+      "--json",
+      OPEN_PR_JSON_FIELDS,
+    ],
+    { cwd: "/tmp", env: { GH_TOKEN: input.token } },
+  );
+  const prs = OpenPrListSchema.parse(JSON.parse(output));
+  return prs.find((pr) => input.matches(pr, appSlug))?.url;
+}
+
 /**
  * Lists open PRs matching `filterArgs` and returns the URL of the one
  * AUTHENTICATED as this updater's own PR for `version`, or `undefined`. The
@@ -33,24 +117,13 @@ async function findAuthenticatedDataDragonPrUrl(
   version: string,
   token: string,
 ): Promise<string | undefined> {
-  const appSlug = await resolveGitHubAppSlug();
-  const output = await runCommand(
-    [
-      "gh",
-      "pr",
-      "list",
-      "--repo",
-      repoSlug,
-      "--state",
-      "open",
-      ...filterArgs,
-      "--json",
-      OPEN_PR_JSON_FIELDS,
-    ],
-    { cwd: "/tmp", env: { GH_TOKEN: token } },
-  );
-  const prs = OpenPrListSchema.parse(JSON.parse(output));
-  return findDataDragonPr(prs, version, appSlug)?.url;
+  return await findOpenGeneratedPrUrl({
+    repoSlug,
+    filterArgs,
+    token,
+    matches: (pr, appSlug) =>
+      findDataDragonPr([pr], version, appSlug) !== undefined,
+  });
 }
 
 /**
@@ -81,6 +154,30 @@ export function findOpenDataDragonPrUrl(
     latestVersion,
     token,
   );
+}
+
+export async function getOpenDataDragonPrState(input: {
+  repoSlug: string;
+  latestVersion: string;
+  token: string;
+}): Promise<{
+  prUrl: string | undefined;
+  state: PrRevisionState | undefined;
+}> {
+  const prUrl = await findOpenDataDragonPrUrl(
+    input.repoSlug,
+    input.latestVersion,
+    input.token,
+  );
+  if (prUrl === undefined) return { prUrl, state: undefined };
+  return {
+    prUrl,
+    state: await getPrRevisionState({
+      repoSlug: input.repoSlug,
+      prUrl,
+      token: input.token,
+    }),
+  };
 }
 
 /**
@@ -119,25 +216,54 @@ export type CreateDataDragonPrDeps = {
   findOnHead?: typeof findOpenPrUrlForHead;
 };
 
-/**
- * Opens the Data Dragon PR for `branch`, idempotently across concurrent retry
- * attempts. The entry dedup check (`findOpenDataDragonPrUrl`) can't be atomic
- * across the minutes-long clone/install/update window, so two attempts can both
- * pass it and reach here. The deterministic per-version `branch` (see
- * `branchName`) makes GitHub itself the serialization point: it refuses a second
- * open PR for the same head→base, so at most one racing attempt's `gh pr create`
- * succeeds. The loser's create fails; if the authenticated bot PR now exists on
- * this exact head (`findOnHead`, a lag-free `--head` lookup, not the search
- * index), it raced a sibling attempt — return that PR as `recovered` and let the
- * caller finish auto-merge on it rather than erroring the run. Only a create
- * failure with NO bot PR on the head is a genuine failure and rethrows.
- */
-export async function createDataDragonPr(
-  args: CreateDataDragonPrArgs,
-  deps: CreateDataDragonPrDeps = {},
+export type CreateGeneratedPrArgs = {
+  repoSlug: string;
+  repoDir: string;
+  branch: string;
+  base: string;
+  title: string;
+  body: string;
+  token: string;
+};
+
+export type CreateGeneratedPrDeps = {
+  run?: typeof runCommand;
+  findOnHead: () => Promise<string | undefined>;
+};
+
+export async function ensureGeneratedPrAutoMerge(input: {
+  repoSlug: string;
+  prUrl: string;
+  token: string;
+  run?: typeof runCommand;
+  onFailure?: (error: unknown) => void;
+}): Promise<boolean> {
+  try {
+    await (input.run ?? runCommand)(
+      [
+        "gh",
+        "pr",
+        "merge",
+        "--repo",
+        input.repoSlug,
+        "--auto",
+        "--merge",
+        input.prUrl,
+      ],
+      { cwd: "/tmp", env: { GH_TOKEN: input.token }, redactOutput: true },
+    );
+    return true;
+  } catch (error: unknown) {
+    input.onFailure?.(error);
+    return false;
+  }
+}
+
+export async function createGeneratedPr(
+  args: CreateGeneratedPrArgs,
+  deps: CreateGeneratedPrDeps,
 ): Promise<{ url: string; recovered: boolean }> {
   const run = deps.run ?? runCommand;
-  const findOnHead = deps.findOnHead ?? findOpenPrUrlForHead;
   try {
     const url = await run(
       [
@@ -159,15 +285,40 @@ export async function createDataDragonPr(
     );
     return { url, recovered: false };
   } catch (error) {
-    const existing = await findOnHead(
-      args.repoSlug,
-      args.branch,
-      args.version,
-      args.token,
-    );
+    const existing = await deps.findOnHead();
     if (existing === undefined) {
       throw error;
     }
     return { url: existing, recovered: true };
   }
+}
+
+/**
+ * Opens the Data Dragon PR for `branch`, idempotently across concurrent retry
+ * attempts. The entry dedup check (`findOpenDataDragonPrUrl`) can't be atomic
+ * across the minutes-long clone/install/update window, so two attempts can both
+ * pass it and reach here. The deterministic per-version `branch` (see
+ * `branchName`) makes GitHub itself the serialization point: it refuses a second
+ * open PR for the same head→base, so at most one racing attempt's `gh pr create`
+ * succeeds. The loser's create fails; if the authenticated bot PR now exists on
+ * this exact head (`findOnHead`, a lag-free `--head` lookup, not the search
+ * index), it raced a sibling attempt — return that PR as `recovered` and let the
+ * caller finish auto-merge on it rather than erroring the run. Only a create
+ * failure with NO bot PR on the head is a genuine failure and rethrows.
+ */
+export async function createDataDragonPr(
+  args: CreateDataDragonPrArgs,
+  deps: CreateDataDragonPrDeps = {},
+): Promise<{ url: string; recovered: boolean }> {
+  const generatedDeps: CreateGeneratedPrDeps = {
+    findOnHead: async () =>
+      await (deps.findOnHead ?? findOpenPrUrlForHead)(
+        args.repoSlug,
+        args.branch,
+        args.version,
+        args.token,
+      ),
+  };
+  if (deps.run !== undefined) generatedDeps.run = deps.run;
+  return await createGeneratedPr(args, generatedDeps);
 }
