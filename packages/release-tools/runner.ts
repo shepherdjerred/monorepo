@@ -24,10 +24,6 @@ type ReleaseConfig = {
   excludePaths?: string[];
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function repositoryParts(repoUrl: string): {
   readonly owner: string;
   readonly repo: string;
@@ -95,14 +91,22 @@ async function branchSha(
     );
   }
   const payload: unknown = await response.json();
-  if (!isRecord(payload)) {
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    Array.isArray(payload)
+  ) {
     throw new Error(`GitHub returned an invalid ref response for ${branch}`);
   }
-  const object = payload["object"];
-  if (!isRecord(object) || typeof object["sha"] !== "string") {
+  const object = Object.entries(payload).find(([key]) => key === "object")?.[1];
+  if (typeof object !== "object" || object === null || Array.isArray(object)) {
     throw new Error(`GitHub returned no commit SHA for ${branch}`);
   }
-  return object["sha"];
+  const sha = Object.entries(object).find(([key]) => key === "sha")?.[1];
+  if (typeof sha !== "string") {
+    throw new Error(`GitHub returned no commit SHA for ${branch}`);
+  }
+  return sha;
 }
 
 export function validateReleaseCandidatePaths(

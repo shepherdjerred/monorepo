@@ -109,10 +109,6 @@ function parsePackageJson(contents: string, source: string): JsonObject {
   return JsonObjectSchema.parse(parsed);
 }
 
-function isJsonObject(value: unknown): value is JsonObject {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function jsonValuesEqual(left: unknown, right: unknown): boolean {
   if (Object.is(left, right)) return true;
   if (Array.isArray(left) && Array.isArray(right)) {
@@ -121,14 +117,17 @@ function jsonValuesEqual(left: unknown, right: unknown): boolean {
       left.every((value, index) => jsonValuesEqual(value, right[index]))
     );
   }
-  if (isJsonObject(left) && isJsonObject(right)) {
-    const leftKeys = Object.keys(left);
-    const rightKeys = Object.keys(right);
+  const leftObject = JsonObjectSchema.safeParse(left);
+  const rightObject = JsonObjectSchema.safeParse(right);
+  if (leftObject.success && rightObject.success) {
+    const leftKeys = Object.keys(leftObject.data);
+    const rightKeys = Object.keys(rightObject.data);
     return (
       leftKeys.length === rightKeys.length &&
       leftKeys.every(
         (key) =>
-          Object.hasOwn(right, key) && jsonValuesEqual(left[key], right[key]),
+          Object.hasOwn(rightObject.data, key) &&
+          jsonValuesEqual(leftObject.data[key], rightObject.data[key]),
       )
     );
   }
