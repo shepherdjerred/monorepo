@@ -40,10 +40,18 @@ export const SCOUTQL_DIAGNOSTIC_CODES = [
   "function-arity",
   "quantile-out-of-range",
   "distinct-unsupported",
+  // Casting an aggregate RESULT (`SUM(x)::DOUBLE`) is unrepresentable in the
+  // plan IR and unnecessary in DuckDB (`/` is float division); the cast goes
+  // inside the argument (`AVG(win::INT)`).
+  "cast-around-aggregate",
   // Aggregation context
   "aggregate-in-where",
   "nested-aggregate",
   "column-not-grouped",
+  // GROUP BY expressions are limited to the engine's deterministic FLOOR
+  // bucket shapes (`FLOOR(x / w)`, `FLOOR(x / w) * w`) and must be
+  // aggregate-free.
+  "grouping-expression-invalid",
   "alias-required",
   "alias-duplicate",
   "alias-invalid",
