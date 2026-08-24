@@ -8,6 +8,11 @@ import { createStructuredLogger } from "#observability/logging.ts";
 
 const log = createStructuredLogger("scout-weekly-parlay");
 const PACIFIC_TIME_ZONE = WEEKLY_PARLAY_LIFECYCLE.timezone;
+const OPEN_HOUR = WEEKLY_PARLAY_LIFECYCLE.openHour;
+const REMINDER_HOUR = WEEKLY_PARLAY_LIFECYCLE.updateHour;
+const START_HOUR = WEEKLY_PARLAY_LIFECYCLE.bettingCloseHour;
+const FINAL_HOUR = WEEKLY_PARLAY_LIFECYCLE.finalHour;
+const UPDATE_HOUR = WEEKLY_PARLAY_LIFECYCLE.updateHour;
 const UPDATE_COUNT = WEEKLY_PARLAY_LIFECYCLE.updateCount;
 const OPEN_ACTION_TIMEOUT_MS = 4 * 60 * 1000;
 const STANDARD_ACTION_TIMEOUT_MS = 20 * 1000;
@@ -174,13 +179,13 @@ export function buildScoutWeeklyParlayTimeline(
   const finalDate = dateOffset(periodKey, 6);
   return ScoutWeeklyParlayTimelineSchema.parse({
     periodKey,
-    openAt: pacificWallTime(openDate, 12).toISOString(),
-    reminderAt: pacificWallTime(openDate, 19).toISOString(),
-    startsAt: pacificWallTime(periodKey, 0).toISOString(),
+    openAt: pacificWallTime(openDate, OPEN_HOUR).toISOString(),
+    reminderAt: pacificWallTime(openDate, REMINDER_HOUR).toISOString(),
+    startsAt: pacificWallTime(periodKey, START_HOUR).toISOString(),
     updatesAt: Array.from({ length: UPDATE_COUNT }, (_, index) =>
-      pacificWallTime(dateOffset(periodKey, index), 19).toISOString(),
+      pacificWallTime(dateOffset(periodKey, index), UPDATE_HOUR).toISOString(),
     ),
-    finalizesAt: pacificWallTime(finalDate, 11).toISOString(),
+    finalizesAt: pacificWallTime(finalDate, FINAL_HOUR).toISOString(),
   });
 }
 

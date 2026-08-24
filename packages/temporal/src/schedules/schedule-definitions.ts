@@ -1,5 +1,6 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
 import type { Duration } from "@temporalio/common";
+import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
@@ -37,6 +38,7 @@ import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
 export const CATCHUP_TIGHT = "5 minutes";
 export const CATCHUP_RELAXED = "1 hour";
 export const CATCHUP_WEEKLY_PARLAY = "12 hours";
+export const WEEKLY_PARLAY_CRON_EXPRESSION = `0 ${WEEKLY_PARLAY_LIFECYCLE.openHour.toString()} * * 0`;
 
 // The declared catchup tiers as a literal union (not `Duration`), so reading
 // the optional schedule field in buildSchedulePolicies can never yield an
@@ -309,7 +311,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // Sunday 12:00 PT. The workflow remains open through the following Sunday
     // 11:00 PT and owns the reminder, start, six progress updates, and final
     // reconciliation for one immutable period/slot.
-    cronExpression: "0 12 * * 0",
+    cronExpression: WEEKLY_PARLAY_CRON_EXPRESSION,
     taskQueue: TASK_QUEUES.DEFAULT,
     // Preserve the full Sunday betting window when Temporal itself is down.
     catchupWindow: CATCHUP_WEEKLY_PARLAY,
