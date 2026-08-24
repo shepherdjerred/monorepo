@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { deliverWeeklyParlayDiscord } from "#src/betting/weekly-parlay-discord.ts";
+import {
+  deliverWeeklyParlayDiscord,
+  weeklyParlaySettlementActionKey,
+} from "#src/betting/weekly-parlay-discord.ts";
 import { openWeeklyParlay } from "#src/betting/weekly-parlay-open.ts";
 import {
   WEEKLY_PARLAY_SLOT,
@@ -111,7 +114,7 @@ async function reconcileStart(
     await deliverWeeklyParlayDiscord(
       {
         marketId: market.id,
-        actionKey: actionKey(action),
+        actionKey: weeklyParlaySettlementActionKey(market.id),
         kind: "settlement",
         scheduledAt: period.scoringStartsAt,
       },
@@ -176,7 +179,7 @@ async function reconcileFinalize(
     await deliverWeeklyParlayDiscord(
       {
         marketId,
-        actionKey: actionKey(action),
+        actionKey: weeklyParlaySettlementActionKey(marketId),
         kind: "settlement",
         scheduledAt: period.scoringEndsAt,
       },

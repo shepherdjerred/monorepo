@@ -15,7 +15,10 @@ import {
   type WeeklyParlaySubject,
 } from "#src/betting/weekly-parlay-criteria.ts";
 import { settleWeeklyParlayMarket } from "#src/betting/weekly-parlay-settle.ts";
-import { deliverWeeklyParlayDiscord } from "#src/betting/weekly-parlay-discord.ts";
+import {
+  deliverWeeklyParlayDiscord,
+  weeklyParlaySettlementActionKey,
+} from "#src/betting/weekly-parlay-discord.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { bettingWeeklyParlayContributionsTotal } from "#src/metrics/betting-weekly-parlay.ts";
@@ -190,7 +193,7 @@ export async function captureWeeklyParlayContributions(
         await deliverWeeklyParlayDiscord(
           {
             marketId: definition.market.id,
-            actionKey: `${definition.id.toString()}:early-settlement`,
+            actionKey: weeklyParlaySettlementActionKey(definition.market.id),
             kind: "settlement",
             scheduledAt: ingestedAt,
           },
@@ -227,7 +230,7 @@ export async function captureWeeklyParlayContributions(
           await deliverWeeklyParlayDiscord(
             {
               marketId: definition.market.id,
-              actionKey: `${definition.id.toString()}:infrastructure-void`,
+              actionKey: weeklyParlaySettlementActionKey(definition.market.id),
               kind: "settlement",
               scheduledAt: ingestedAt,
             },

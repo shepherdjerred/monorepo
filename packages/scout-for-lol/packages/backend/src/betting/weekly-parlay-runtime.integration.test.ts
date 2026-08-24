@@ -24,6 +24,7 @@ import {
 } from "#src/betting/weekly-parlay-contribution.ts";
 import {
   deliverWeeklyParlayDiscord,
+  weeklyParlaySettlementActionKey,
   type WeeklyParlayDiscordSender,
 } from "#src/betting/weekly-parlay-discord.ts";
 import { runWeeklyParlayControlAction } from "#src/betting/weekly-parlay-control.ts";
@@ -743,6 +744,10 @@ describe("weekly parlay ingestion boundaries", () => {
 });
 
 describe("weekly parlay Discord delivery", () => {
+  test("uses one settlement delivery key across settlement origins", () => {
+    expect(weeklyParlaySettlementActionKey(42)).toBe("settlement:42");
+  });
+
   test("chunks and deduplicates private mention delivery with a stable nonce", async () => {
     const market = await makeMarket({ marketState: "open" });
     const discordIds = Array.from({ length: 25 }, (_unused, index) =>

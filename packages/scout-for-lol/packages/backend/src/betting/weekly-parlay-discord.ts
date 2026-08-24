@@ -31,6 +31,10 @@ import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 export type WeeklyParlayDiscordKind =
   "open" | "reminder" | "progress" | "settlement";
 
+export function weeklyParlaySettlementActionKey(marketId: number): string {
+  return `settlement:${marketId.toString()}`;
+}
+
 export type WeeklyParlayDiscordSender = (
   options: MessageCreateOptions,
   channelId: DiscordChannelId,

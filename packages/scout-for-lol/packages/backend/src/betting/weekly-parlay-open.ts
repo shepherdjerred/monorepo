@@ -72,13 +72,13 @@ async function linkedMemberSubjects(
     },
     orderBy: { id: "asc" },
   });
-  return players.flatMap((player) => {
+  return players.flatMap((player, index) => {
     if (player.discordId === null || !members.has(player.discordId)) {
       return [];
     }
     return [
       WeeklyParlaySubjectsSchema.element.parse({
-        key: "P1",
+        key: `P${(index + 1).toString()}`,
         playerId: player.id,
         alias: player.alias,
         discordId: player.discordId,
