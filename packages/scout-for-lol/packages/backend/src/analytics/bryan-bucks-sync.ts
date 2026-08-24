@@ -39,13 +39,10 @@ export async function syncBucksAnalytics(options?: {
   const database = options?.prismaClient ?? prisma;
   const analytics = options?.analytics ?? getProductAnalytics();
   const now = options?.now ?? new Date();
-  const reserved = new Set(
-    (
-      await database.bucksAnalyticsBackfillEvent.findMany({
-        select: { eventId: true },
-      })
-    ).map((row) => row.eventId),
-  );
+  const reservedRows = await database.bucksAnalyticsBackfillEvent.findMany({
+    select: { eventId: true },
+  });
+  const reserved = new Set(reservedRows.map((row) => row.eventId));
   const outboxEntries = await database.bucksAnalyticsLedgerOutbox.findMany({
     select: {
       id: true,
@@ -62,11 +59,11 @@ export async function syncBucksAnalytics(options?: {
     },
     orderBy: { id: "asc" },
   });
-  const pendingLedgerEvents: Array<{
+  const pendingLedgerEvents: {
     outboxId: number;
     eventId: string;
     captured: boolean;
-  }> = [];
+  }[] = [];
   for (const outboxEntry of outboxEntries) {
     if (reserved.has(outboxEntry.eventId)) continue;
     const entry = outboxEntry.ledgerEntry;
@@ -119,10 +116,10 @@ export async function syncBucksAnalytics(options?: {
   );
   const openMarketsByServer = countBucksOpenMarkets(openPools);
   const bucket = Math.floor(now.getTime() / SNAPSHOT_INTERVAL_MS).toString();
-  const pendingSnapshotEvents: Array<{
+  const pendingSnapshotEvents: {
     eventId: string;
     captured: boolean;
-  }> = [];
+  }[] = [];
   const serverIds = new Set([
     ...accounts.map((account) => account.serverId),
     ...openPools.map((pool) => pool.serverId),
@@ -163,7 +160,8 @@ export async function syncBucksAnalytics(options?: {
   if (pendingEvents.length === 0) {
     return { ledgerEntries: 0, snapshots: 0 };
   }
-  if (!(await (analytics.flush?.() ?? Promise.resolve(true)))) {
+  const flushed = await (analytics.flush?.() ?? Promise.resolve(true));
+  if (!flushed) {
     return { ledgerEntries: 0, snapshots: 0 };
   }
   await database.bucksAnalyticsBackfillEvent.createMany({

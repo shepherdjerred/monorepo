@@ -6,11 +6,11 @@ import {
 import {
   getProductAnalytics,
   type BucksActivitySurface,
-  type BucksLifecycleTransition,
   type BucksMemberActivityKind,
   type ProductAnalytics,
   type ProductAnalyticsEventOptions,
 } from "#src/analytics/product-analytics.ts";
+import type { BucksLifecycleTransition } from "#src/analytics/bryan-bucks-events.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";

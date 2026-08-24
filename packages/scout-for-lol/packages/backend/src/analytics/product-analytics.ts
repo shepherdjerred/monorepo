@@ -11,8 +11,6 @@ import {
 import { getErrorMessage } from "#src/utils/errors.ts";
 import type { BucksLifecycleTransition } from "#src/analytics/bryan-bucks-events.ts";
 
-export type { BucksLifecycleTransition } from "#src/analytics/bryan-bucks-events.ts";
-
 const logger = createLogger("product-analytics");
 
 export type InstallKind = "first" | "reinstall";

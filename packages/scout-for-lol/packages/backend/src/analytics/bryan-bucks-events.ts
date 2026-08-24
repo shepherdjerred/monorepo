@@ -46,9 +46,9 @@ type BucksPendingStake = {
 };
 
 export function aggregateBucksPendingStakes(
-  pendingOutcome: ReadonlyArray<BucksPendingOutcome>,
-  pendingParlay: ReadonlyArray<BucksPendingStake>,
-  pendingWeekly: ReadonlyArray<BucksPendingStake>,
+  pendingOutcome: readonly BucksPendingOutcome[],
+  pendingParlay: readonly BucksPendingStake[],
+  pendingWeekly: readonly BucksPendingStake[],
 ): Map<string, number> {
   const pendingByServer = new Map<string, number>();
   for (const bet of pendingOutcome) {
@@ -73,7 +73,7 @@ function addStake(
 }
 
 export function countBucksOpenMarkets(
-  pools: ReadonlyArray<{ serverId: string }>,
+  pools: readonly { serverId: string }[],
 ): Map<string, number> {
   const openMarketsByServer = new Map<string, number>();
   for (const pool of pools) {

@@ -1,6 +1,5 @@
 import { createLogger } from "#src/logger.ts";
 import { captureBucksLifecycle } from "#src/analytics/bryan-bucks.ts";
-import type { BucksLifecycleTransition } from "#src/analytics/bryan-bucks-events.ts";
 
 const logger = createLogger("betting-transition");
 
@@ -30,7 +29,9 @@ const logger = createLogger("betting-transition");
  * **Every call must be post-commit.** A transition logged inside a transaction
  * that then rolls back is a lie that survives for 90 days.
  */
-export type BucksTransitionEvent = BucksLifecycleTransition;
+export type BucksTransitionEvent = Parameters<
+  typeof captureBucksLifecycle
+>[0]["transition"];
 
 export type BucksTransitionFields = {
   event: BucksTransitionEvent;
