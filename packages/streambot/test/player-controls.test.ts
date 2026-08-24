@@ -8,7 +8,7 @@ import {
   resolveControlAction,
   type ControlOutcome,
 } from "@shepherdjerred/streambot/discord/player-controls.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import {
   UserIdSchema,
   type UserId,

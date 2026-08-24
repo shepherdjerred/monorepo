@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   formatTimecode,
   parseTimecode,
-} from "@shepherdjerred/streambot/discord/timecode.ts";
+} from "@shepherdjerred/streambot/util/timecode.ts";
 
 describe("parseTimecode", () => {
   test("plain seconds", () => {

@@ -66,4 +66,24 @@ describe("fixtureRules", () => {
       path: "^architecture-fixtures/client-",
     });
   });
+
+  it("flattens a nested layer path into the flat fixture directory", () => {
+    const nested = resolveArchitecture({
+      boundaries: [
+        {
+          name: "amazon-is-self-contained",
+          comment: "a vendor parser must not read another vendor's shape",
+          from: "lib/amazon",
+          to: ["lib/venmo"],
+        },
+      ],
+    });
+
+    expect(sourceRules(nested)[1]?.from).toEqual({
+      path: "^src/lib/amazon/",
+    });
+    expect(fixtureRules(nested, "architecture-fixtures")[0]?.from).toEqual({
+      path: "^architecture-fixtures/lib-amazon-",
+    });
+  });
 });

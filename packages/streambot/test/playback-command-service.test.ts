@@ -5,7 +5,7 @@ import {
   PlaybackCommandService,
 } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 
 const USER = UserIdSchema.parse("100000000000000001");

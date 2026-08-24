@@ -82,8 +82,8 @@ export function sourceRules(
  * rather than restating them is the whole point: a boundary can never be
  * proven by a fixture that has drifted away from the rule it is proving.
  *
- * A fixture for boundary `X` is any file named `<X.from>-<something>` directly
- * under the fixture root.
+ * A fixture for boundary `X` is any file whose name starts with
+ * {@link fixtureFilePrefix} directly under the fixture root.
  */
 export function fixtureRules(
   architecture: ResolvedArchitecture,
@@ -94,7 +94,7 @@ export function fixtureRules(
       architecture,
       boundary,
       fixtureRuleName(boundary),
-      `^${fixtureRoot}/${boundary.from}-`,
+      `^${fixtureRoot}/${fixtureFilePrefix(boundary)}`,
     ),
   );
 }
@@ -112,7 +112,14 @@ export function expectedFixtureRuleNames(
     .sort();
 }
 
-/** The file-name prefix a fixture proving `boundary` has to use. */
+/**
+ * The file-name prefix a fixture proving `boundary` has to use.
+ *
+ * Fixtures sit flat in one directory, so a nested layer path is flattened:
+ * a boundary from `lib/amazon` is proven by `lib-amazon-<what-it-does>.ts`.
+ * `resolveArchitecture` refuses a definition in which two distinct layers
+ * would create overlapping prefixes.
+ */
 export function fixtureFilePrefix(boundary: LayerBoundary): string {
-  return `${boundary.from}-`;
+  return `${boundary.from.replaceAll("/", "-")}-`;
 }

@@ -4,6 +4,10 @@ const config: TSESLint.FlatConfig.ConfigArray = [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     ignores: [
+      // Deliberate layer violations, rejected by `check-architecture` rather
+      // than linted. This list overrides the shared config's defaults, which
+      // already exclude them.
+      "**/architecture-fixtures/**/*",
       "**/generated/**/*",
       "**/dist/**/*",
       "**/build/**/*",

@@ -93,6 +93,33 @@ Non-vacuity is enforced rather than assumed, in three places:
 - A fixture that proves no boundary fails it too, so deleting a rule leaves
   evidence behind rather than silently orphaning a file.
 
+## Not every boundary is a layer
+
+"Layer" implies an ordering — this is below that, so the arrows point one way.
+Plenty of real boundaries have no ordering at all. Monarch's deep paths are the
+clearest case: seven directories, one per merchant, each owning that merchant's
+fetch, parse, match and classify pipeline. None of them is beneath another.
+What matters is only that none reaches sideways into another, because a matcher
+that learns a second vendor's shape stops being independently replaceable, and
+a change to one parser silently becomes a change to two deep paths.
+
+That is expressible as a matrix of ordinary one-way rules, and the first
+instinct is to write it that way. The problem is not the typing. It is that
+seven directories yield forty-two clauses which state one idea as forty-two
+unrelated facts, and nothing holds them symmetric: the day an eighth vendor
+arrives, someone adds it to six lists and forgets the seventh, and the gap is
+invisible because every rule that remains still passes. The
+[definition resolver](https://github.com/shepherdjerred/monorepo/blob/c7c461d8bc2251c021877b3273e1404c536e0729/packages/architecture/src/definition.ts)
+takes the idea itself — a set of siblings, none of which may depend on another
+— and generates the matrix from it. The declaration cannot be asymmetric,
+because there is nothing in it to get out of step.
+
+Each generated rule still has to earn its keep the same way a hand-written one
+does, with its own committed fixture proving it can fail. The
+[fixture-rule generator](https://github.com/shepherdjerred/monorepo/blob/c7c461d8bc2251c021877b3273e1404c536e0729/packages/architecture/src/rules.ts)
+derives that proof from the same definition. Deriving the rules does not derive
+the evidence.
+
 ## Each package is judged only on its own tree
 
 Under Bun's isolated linker a `workspace:*` dependency resolves through a

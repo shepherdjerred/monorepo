@@ -5,8 +5,14 @@ import { enqueueCommand, framesFromMs } from "#src/emulator/command-sink.ts";
 import { encodePng } from "#src/emulator/png.ts";
 import { parseCommandInput } from "#src/game/command/command-input.ts";
 import { parseChord } from "#src/game/command/chord.ts";
-import { isValid, type ChordLimits } from "#src/discord/chord-validator.ts";
-import { effectiveChordDelay, execute } from "#src/discord/chord-executor.ts";
+import {
+  isValid,
+  type ChordLimits,
+} from "#src/game/command/chord-validator.ts";
+import {
+  effectiveChordDelay,
+  execute,
+} from "#src/game/command/chord-executor.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";

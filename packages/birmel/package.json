@@ -9,6 +9,7 @@
     "./*": "./src/*"
   },
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#generated/*": "./generated/*"
   },
   "files": [

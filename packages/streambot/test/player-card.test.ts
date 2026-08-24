@@ -8,7 +8,7 @@ import {
   ControlAction,
   encodeControlId,
 } from "@shepherdjerred/streambot/discord/player-controls.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 
 const REQUESTER = UserIdSchema.parse("100000000000000002");

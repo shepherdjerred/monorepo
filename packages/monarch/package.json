@@ -36,5 +36,8 @@
     "@vitest/coverage-istanbul": "4.1.10"
   },
   "author": "Jerred Shepherd",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "imports": {
+    "#architecture": "./architecture.config.ts"
+  }
 }
