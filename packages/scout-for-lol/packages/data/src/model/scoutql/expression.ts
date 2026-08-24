@@ -101,7 +101,15 @@ export type ScoutQlScalarExpr =
       kind: "scalar-call";
       func: ScoutQlScalarFunction;
       args: ScoutQlScalarExpr[];
-    };
+    }
+  // A boolean-valued predicate used as a value, so it can be cast and
+  // aggregated: `AVG((placement <= 2)::INT)`. SQL has no separate "condition"
+  // type — a predicate IS a boolean expression — so wrapping the whole
+  // predicate union here buys comparison, IN, BETWEEN, IS NULL and AND/OR/NOT
+  // at once rather than duplicating the comparison operators in this type.
+  // `player-ref` is rejected in this position by analysis: it resolves to a
+  // set membership at execution, not a per-row boolean.
+  | { kind: "predicate"; predicate: ScoutQlPredicate };
 
 export const ScoutQlScalarExprSchema: z.ZodType<ScoutQlScalarExpr> = z.lazy(
   () =>
@@ -141,6 +149,10 @@ export const ScoutQlScalarExprSchema: z.ZodType<ScoutQlScalarExpr> = z.lazy(
         kind: z.literal("scalar-call"),
         func: ScoutQlScalarFunctionSchema,
         args: z.array(ScoutQlScalarExprSchema).min(1).max(8),
+      }),
+      z.object({
+        kind: z.literal("predicate"),
+        predicate: ScoutQlPredicateSchema,
       }),
     ]),
 );

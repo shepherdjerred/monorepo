@@ -367,6 +367,14 @@ describe("negative corpus: one case per diagnostic code", () => {
   }
 });
 
+/**
+ * Codes no query text can produce today, and why. A backstop's whole claim is
+ * that analysis already refuses everything it would catch, so demanding a
+ * reproducing query would be demanding the bug it exists to survive. The
+ * assertion below is therefore inverted for these: they must stay unreachable.
+ */
+const UNREACHABLE_BY_DESIGN = new Set<string>(["expression-unsupported"]);
+
 describe("the diagnostic registry is exactly what the corpus produces", () => {
   test("every registered code has a negative case", () => {
     const covered = new Set<string>();
@@ -376,9 +384,21 @@ describe("the diagnostic registry is exactly what the corpus produces", () => {
       }
     }
     const uncovered = SCOUTQL_DIAGNOSTIC_CODES.filter(
-      (code) => !covered.has(code),
+      (code) => !covered.has(code) && !UNREACHABLE_BY_DESIGN.has(code),
     );
     expect(uncovered).toEqual([]);
+  });
+
+  test("backstop codes stay unreachable from query text", () => {
+    const produced = new Set<string>();
+    for (const negative of NEGATIVE_CASES) {
+      for (const diagnostic of analyzeScoutQl(negative.query).diagnostics) {
+        produced.add(diagnostic.code);
+      }
+    }
+    for (const code of UNREACHABLE_BY_DESIGN) {
+      expect(produced.has(code)).toBe(false);
+    }
   });
 
   test("no case produces a code outside the registry", () => {

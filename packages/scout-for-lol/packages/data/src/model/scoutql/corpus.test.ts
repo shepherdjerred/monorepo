@@ -525,3 +525,47 @@ describe("properties", () => {
     }
   });
 });
+
+describe("a predicate used as a value", () => {
+  // `AVG((placement <= 2)::INT)` is valid DuckDB, so it must be valid ScoutQL.
+  // It is also the only spelling that keeps a conditional rate rendering as a
+  // percent with Wilson intervals: the COUNT FILTER / NULLIF form is
+  // numerically identical but infers as a plain decimal ratio, which would
+  // silently downgrade the display of a report migrated from a legacy *_rate.
+  const cases = [
+    ["comparison", "AVG((placement <= 2)::INT)"],
+    ["equality", "AVG((placement = 1)::INT)"],
+    ["IN list", "AVG((queue IN ('solo', 'flex'))::INT)"],
+    ["negation", "AVG((NOT win)::INT)"],
+  ] as const;
+
+  for (const [name, expression] of cases) {
+    test(`${name} infers percent display and rate evidence`, () => {
+      const plan = compileScoutQl(
+        `SELECT ${expression} AS r FROM match_participants GROUP BY player`,
+      );
+      const output = plan.outputs[0];
+      expect(output?.displayKind).toBe("percent");
+      expect(output?.evidence.kind).toBe("rate");
+    });
+  }
+
+  test("a plain boolean column keeps working", () => {
+    const plan = compileScoutQl(
+      "SELECT AVG(win::INT) AS win_rate FROM match_participants GROUP BY player",
+    );
+    expect(plan.outputs[0]?.displayKind).toBe("percent");
+  });
+
+  test("player() is refused as a value, not silently reinterpreted", () => {
+    // It resolves to a PUUID set at execution, so as a per-row boolean it
+    // would quietly mean something else.
+    const query =
+      "SELECT AVG((player('x'))::INT) AS r FROM match_participants GROUP BY player";
+    const codes = analyzeScoutQl(query).diagnostics.map(
+      (diagnostic) => diagnostic.code,
+    );
+    expect(codes).toContain("player-ref-unavailable");
+    expect(() => compileScoutQl(query)).toThrow();
+  });
+});

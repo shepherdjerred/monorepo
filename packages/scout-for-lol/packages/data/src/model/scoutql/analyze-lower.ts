@@ -129,7 +129,7 @@ export function lowerScalar(
     }))
     .with({ kind: "unary" }, (node): ScoutQlScalarExpr | undefined => {
       if (node.op !== "-") {
-        return undefined;
+        return lowerScalarPredicate(node);
       }
       const operand = lowerScalar(node.operand);
       return operand === undefined ? undefined : { kind: "negate", operand };
@@ -144,7 +144,9 @@ export function lowerScalar(
       }
       const op = arithmeticOp(node.op);
       if (op === undefined) {
-        return undefined;
+        // Comparison, LIKE/ILIKE, AND/OR: boolean-valued, so it lowers as a
+        // predicate used as a value rather than as arithmetic.
+        return lowerScalarPredicate(node);
       }
       const left = lowerScalar(node.left);
       const right = lowerScalar(node.right);
@@ -161,14 +163,34 @@ export function lowerScalar(
     })
     .with({ kind: "call" }, (node) => lowerScalarCall(node))
     .with(
-      { kind: "null" },
       { kind: "in" },
       { kind: "between" },
       { kind: "is-null" },
-      { kind: "error" },
-      (): undefined => undefined,
+      (node): ScoutQlScalarExpr | undefined => lowerScalarPredicate(node),
     )
+    .with({ kind: "null" }, { kind: "error" }, (): undefined => undefined)
     .exhaustive();
+}
+
+/**
+ * Lower a boolean-valued expression used as a VALUE — `(placement <= 2)::INT`,
+ * `(queue IN ('solo'))::INT`. SQL has no separate condition type, so the same
+ * predicate lowering serves both positions.
+ *
+ * `player('…')` is refused here: it resolves to a PUUID set at execution, so
+ * as a per-row boolean it would silently mean something else. The collector is
+ * local and discarded, so a name lifted while lowering cannot leak into the
+ * plan's playerRefs.
+ */
+function lowerScalarPredicate(
+  expr: ScoutQlExprAst,
+): ScoutQlScalarExpr | undefined {
+  const refs = new PlayerRefCollector();
+  const predicate = lowerPredicate(expr, refs);
+  if (predicate === undefined || refs.names.length > 0) {
+    return undefined;
+  }
+  return { kind: "predicate", predicate };
 }
 
 // ── Predicate lowering ───────────────────────────────────────────────────────

@@ -55,52 +55,57 @@ export function inferScalarType(
   expr: ScoutQlScalarExpr,
   columns: ColumnMap,
 ): SqlTypeClass {
-  return match(expr)
-    .with(
-      { kind: "column" },
-      (node) => resolveColumn(columns, node.column).type,
-    )
-    .with({ kind: "literal" }, (node) =>
-      match(typeof node.value)
-        .with("number", (): SqlTypeClass => "numeric")
-        .with("boolean", (): SqlTypeClass => "boolean")
-        .otherwise((): SqlTypeClass => "text"),
-    )
-    .with({ kind: "interval" }, (): SqlTypeClass => "interval")
-    .with({ kind: "now" }, (node): SqlTypeClass =>
-      node.which === "timestamp" ? "timestamp" : "date",
-    )
-    .with({ kind: "negate" }, (): SqlTypeClass => "numeric")
-    .with({ kind: "arithmetic" }, (node): SqlTypeClass => {
-      const left = inferScalarType(node.left, columns);
-      const right = inferScalarType(node.right, columns);
-      if (left === "timestamp" || left === "date") return left;
-      if (right === "timestamp" || right === "date") return right;
-      return "numeric";
-    })
-    .with({ kind: "at-time-zone" }, (): SqlTypeClass => "timestamp")
-    .with({ kind: "cast" }, (node): SqlTypeClass =>
-      match(node.to)
-        .with("int", "bigint", "double", (): SqlTypeClass => "numeric")
-        .with("date", (): SqlTypeClass => "date")
-        .with("timestamp", (): SqlTypeClass => "timestamp")
-        .with("varchar", (): SqlTypeClass => "text")
-        .exhaustive(),
-    )
-    .with({ kind: "scalar-call" }, (node): SqlTypeClass =>
-      match(node.func)
-        .with("round", "floor", "ceil", "abs", (): SqlTypeClass => "numeric")
-        .with("date_trunc", (): SqlTypeClass => "timestamp")
-        .with("coalesce", "nullif", "greatest", "least", (): SqlTypeClass => {
-          const head = node.args[0];
-          if (head === undefined) {
-            throw new Error(`${node.func}() requires at least one argument.`);
-          }
-          return inferScalarType(head, columns);
-        })
-        .exhaustive(),
-    )
-    .exhaustive();
+  return (
+    match(expr)
+      .with(
+        { kind: "column" },
+        (node) => resolveColumn(columns, node.column).type,
+      )
+      .with({ kind: "literal" }, (node) =>
+        match(typeof node.value)
+          .with("number", (): SqlTypeClass => "numeric")
+          .with("boolean", (): SqlTypeClass => "boolean")
+          .otherwise((): SqlTypeClass => "text"),
+      )
+      .with({ kind: "interval" }, (): SqlTypeClass => "interval")
+      .with({ kind: "now" }, (node): SqlTypeClass =>
+        node.which === "timestamp" ? "timestamp" : "date",
+      )
+      .with({ kind: "negate" }, (): SqlTypeClass => "numeric")
+      .with({ kind: "arithmetic" }, (node): SqlTypeClass => {
+        const left = inferScalarType(node.left, columns);
+        const right = inferScalarType(node.right, columns);
+        if (left === "timestamp" || left === "date") return left;
+        if (right === "timestamp" || right === "date") return right;
+        return "numeric";
+      })
+      .with({ kind: "at-time-zone" }, (): SqlTypeClass => "timestamp")
+      .with({ kind: "cast" }, (node): SqlTypeClass =>
+        match(node.to)
+          .with("int", "bigint", "double", (): SqlTypeClass => "numeric")
+          .with("date", (): SqlTypeClass => "date")
+          .with("timestamp", (): SqlTypeClass => "timestamp")
+          .with("varchar", (): SqlTypeClass => "text")
+          .exhaustive(),
+      )
+      .with({ kind: "scalar-call" }, (node): SqlTypeClass =>
+        match(node.func)
+          .with("round", "floor", "ceil", "abs", (): SqlTypeClass => "numeric")
+          .with("date_trunc", (): SqlTypeClass => "timestamp")
+          .with("coalesce", "nullif", "greatest", "least", (): SqlTypeClass => {
+            const head = node.args[0];
+            if (head === undefined) {
+              throw new Error(`${node.func}() requires at least one argument.`);
+            }
+            return inferScalarType(head, columns);
+          })
+          .exhaustive(),
+      )
+      // A predicate used as a value is BOOLEAN — `(placement <= 2)::INT` casts
+      // it, and the cast arm above types the result.
+      .with({ kind: "predicate" }, (): SqlTypeClass => "boolean")
+      .exhaustive()
+  );
 }
 
 function scalarContext(ctx: AggregateContext): ExprContext {

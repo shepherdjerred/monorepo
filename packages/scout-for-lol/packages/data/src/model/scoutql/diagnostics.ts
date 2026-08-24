@@ -44,6 +44,11 @@ export const SCOUTQL_DIAGNOSTIC_CODES = [
   // plan IR and unnecessary in DuckDB (`/` is float division); the cast goes
   // inside the argument (`AVG(win::INT)`).
   "cast-around-aggregate",
+  // Backstop: an expression that types cleanly but has no plan-IR
+  // representation. Reaching this means analysis is missing a specific rule —
+  // the point is that the author still gets a coded, spanned refusal instead
+  // of an internal crash from the compiler.
+  "expression-unsupported",
   // Aggregation context
   "aggregate-in-where",
   "nested-aggregate",

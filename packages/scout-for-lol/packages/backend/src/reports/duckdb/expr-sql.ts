@@ -185,69 +185,77 @@ export function compileScalarExpr(
   expr: ScoutQlScalarExpr,
   ctx: ExprContext,
 ): SqlFragment {
-  return match(expr)
-    .with({ kind: "column" }, (node) => {
-      const binding = resolveColumn(ctx.columns, node.column);
-      if (binding.identity && ctx.placement === "source") {
-        throw new Error(
-          `Column "${node.column}" is an identity column and cannot be pushed into the source scan.`,
-        );
-      }
-      return frag(binding.sql);
-    })
-    .with({ kind: "literal" }, (node) => frag("?", [scalarParam(node.value)]))
-    .with({ kind: "interval" }, (node) => {
-      if (!Number.isInteger(node.amount) || node.amount <= 0) {
-        throw new TypeError("INTERVAL amount must be a positive integer.");
-      }
-      return frag(`${INTERVAL_CONSTRUCTOR[node.unit]}(?::INTEGER)`, [
-        scalarParam(node.amount),
-      ]);
-    })
-    .with({ kind: "now" }, (node) =>
-      // Lake timestamps are naive UTC; timezone('UTC', now()) is the current
-      // instant in that same shape, independent of DuckDB's session zone.
-      node.which === "timestamp"
-        ? frag("timezone('UTC', now())")
-        : frag("CAST(timezone('UTC', now()) AS DATE)"),
-    )
-    .with({ kind: "negate" }, (node) =>
-      seq("(-(", compileScalarExpr(node.operand, ctx), "))"),
-    )
-    .with({ kind: "arithmetic" }, (node) =>
-      emitArithmetic(
-        node.op,
-        compileScalarExpr(node.left, ctx),
-        compileScalarExpr(node.right, ctx),
-      ),
-    )
-    .with({ kind: "at-time-zone" }, (node) =>
-      // Interpret the naive-UTC operand as an instant, then render its wall
-      // time in the bound zone (still naive, so ::DATE and date_trunc work).
-      seq(
-        "timezone(?, timezone('UTC', (",
-        frag("", [scalarParam(node.timezone)]),
-        compileScalarExpr(node.operand, ctx),
-        ")))",
-      ),
-    )
-    .with({ kind: "cast" }, (node) =>
-      seq(
-        "((",
-        compileScalarExpr(node.operand, ctx),
-        `))::${CAST_TYPE[node.to]}`,
-      ),
-    )
-    .with({ kind: "scalar-call" }, (node) =>
-      emitScalarCall(
-        node.func,
-        node.args.map((arg) => ({
-          fragment: compileScalarExpr(arg, ctx),
-          literal: arg.kind === "literal" ? arg.value : undefined,
-        })),
-      ),
-    )
-    .exhaustive();
+  return (
+    match(expr)
+      .with({ kind: "column" }, (node) => {
+        const binding = resolveColumn(ctx.columns, node.column);
+        if (binding.identity && ctx.placement === "source") {
+          throw new Error(
+            `Column "${node.column}" is an identity column and cannot be pushed into the source scan.`,
+          );
+        }
+        return frag(binding.sql);
+      })
+      .with({ kind: "literal" }, (node) => frag("?", [scalarParam(node.value)]))
+      .with({ kind: "interval" }, (node) => {
+        if (!Number.isInteger(node.amount) || node.amount <= 0) {
+          throw new TypeError("INTERVAL amount must be a positive integer.");
+        }
+        return frag(`${INTERVAL_CONSTRUCTOR[node.unit]}(?::INTEGER)`, [
+          scalarParam(node.amount),
+        ]);
+      })
+      .with({ kind: "now" }, (node) =>
+        // Lake timestamps are naive UTC; timezone('UTC', now()) is the current
+        // instant in that same shape, independent of DuckDB's session zone.
+        node.which === "timestamp"
+          ? frag("timezone('UTC', now())")
+          : frag("CAST(timezone('UTC', now()) AS DATE)"),
+      )
+      .with({ kind: "negate" }, (node) =>
+        seq("(-(", compileScalarExpr(node.operand, ctx), "))"),
+      )
+      .with({ kind: "arithmetic" }, (node) =>
+        emitArithmetic(
+          node.op,
+          compileScalarExpr(node.left, ctx),
+          compileScalarExpr(node.right, ctx),
+        ),
+      )
+      .with({ kind: "at-time-zone" }, (node) =>
+        // Interpret the naive-UTC operand as an instant, then render its wall
+        // time in the bound zone (still naive, so ::DATE and date_trunc work).
+        seq(
+          "timezone(?, timezone('UTC', (",
+          frag("", [scalarParam(node.timezone)]),
+          compileScalarExpr(node.operand, ctx),
+          ")))",
+        ),
+      )
+      .with({ kind: "cast" }, (node) =>
+        seq(
+          "((",
+          compileScalarExpr(node.operand, ctx),
+          `))::${CAST_TYPE[node.to]}`,
+        ),
+      )
+      .with({ kind: "scalar-call" }, (node) =>
+        emitScalarCall(
+          node.func,
+          node.args.map((arg) => ({
+            fragment: compileScalarExpr(arg, ctx),
+            literal: arg.kind === "literal" ? arg.value : undefined,
+          })),
+        ),
+      )
+      // A predicate used as a value: `AVG((placement <= 2)::INT)`. SQL has no
+      // separate condition type, so the predicate compiler serves both
+      // positions; the parens keep it a single operand for any enclosing cast.
+      .with({ kind: "predicate" }, (node) =>
+        seq("(", compilePredicate(node.predicate, ctx), ")"),
+      )
+      .exhaustive()
+  );
 }
 
 function compileInPredicate(
@@ -361,10 +369,16 @@ export function compilePredicate(
     .exhaustive();
 }
 
+export type PredicateWalkNode = ScoutQlPredicate | ScoutQlScalarExpr;
+
 /** Visit every node of a scalar expression tree (pre-order). */
 export function walkScalarExpr(
   expr: ScoutQlScalarExpr,
-  visit: (node: ScoutQlScalarExpr) => void,
+  // The union, not just scalars: a scalar tree can contain a predicate used
+  // as a value, and callers that collect referenced columns must see through
+  // it — a column named only inside `(placement <= 2)` still has to reach the
+  // facts projection.
+  visit: (node: PredicateWalkNode) => void,
 ): void {
   visit(expr);
   match(expr)
@@ -394,10 +408,11 @@ export function walkScalarExpr(
         walkScalarExpr(arg, visit);
       }
     })
+    .with({ kind: "predicate" }, (node) => {
+      walkPredicate(node.predicate, visit);
+    })
     .exhaustive();
 }
-
-export type PredicateWalkNode = ScoutQlPredicate | ScoutQlScalarExpr;
 
 /** Visit every predicate node and every scalar node under it (pre-order). */
 export function walkPredicate(

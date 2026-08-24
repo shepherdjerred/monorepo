@@ -278,6 +278,23 @@ export function analyzeScoutQl(text: string): ScoutQlAnalysis {
 
   const limit = resolveLimit(ast, groupings, render, diagnostics);
 
+  // Backstop: every output that types cleanly must also have a plan-IR
+  // representation. If some shape is expressible in the grammar, survives
+  // typing, and still cannot be lowered, the author gets a coded, spanned
+  // refusal here rather than an internal error from the compiler.
+  for (const output of outputs) {
+    if (output.expr !== undefined) continue;
+    if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
+      break;
+    }
+    diagnostics.push({
+      code: "expression-unsupported",
+      message: `Output "${output.name}" uses an expression ScoutQL cannot execute. Rewrite it with the documented aggregate, scalar, and comparison forms.`,
+      severity: "error",
+      span: output.span,
+    });
+  }
+
   return {
     parse,
     source: catalog,
