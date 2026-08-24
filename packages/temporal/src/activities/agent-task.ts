@@ -32,12 +32,14 @@ import {
   AgentTaskResultPayloadSchema,
   AgentTaskResultPayloadV2Schema,
   type AgentTaskInput,
-  type AgentTaskProvider,
   type AgentTaskResultPayload,
   type AgentTaskResultPayloadV2,
 } from "#shared/agent-task.ts";
 import { extractAgentTaskEvidenceReceipts } from "#shared/agent-task-evidence.ts";
-import type { ReportEvidenceReceiptV1 } from "#shared/report.ts";
+import type {
+  RunAgentTaskResult,
+  RunAgentTaskResultV2,
+} from "#shared/agent-task-result-types.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import {
   activityCancellationSignalOrUndefined,
@@ -69,25 +71,6 @@ export type RunAgentTaskInput = {
   recordSuccess?: boolean;
 };
 
-type RunAgentTaskResultBase = {
-  provider: AgentTaskProvider;
-  model: string;
-  durationMs: number;
-  startedAt: string;
-  evidence: ReportEvidenceReceiptV1[];
-};
-export type RunAgentTaskResultV2 = RunAgentTaskResultBase & {
-  contractVersion: 2;
-  payload: AgentTaskResultPayloadV2;
-};
-export type RunAgentTaskResult = RunAgentTaskResultBase &
-  (
-    | ({
-        contractVersion: 1;
-        payload: AgentTaskResultPayload;
-      } & AgentTaskResultPayload)
-    | RunAgentTaskResultV2
-  );
 export type FinalizeAgentTaskInput = RunAgentTaskInput & {
   investigation: RunAgentTaskResultV2;
 };

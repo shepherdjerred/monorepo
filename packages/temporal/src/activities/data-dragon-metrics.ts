@@ -1,5 +1,5 @@
 import { metricMeter } from "@temporalio/activity";
-import type { DataDragonUpdateMode } from "./data-dragon.ts";
+import type { DataDragonUpdateMode } from "#shared/data-dragon-types.ts";
 
 export type DataDragonRunMetrics = {
   mode: DataDragonUpdateMode;

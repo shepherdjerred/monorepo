@@ -77,20 +77,37 @@ describe("checkArchitecture", () => {
     expect(result.report).toContain("src/server/http.ts");
   });
 
-  it("passes a cycle that is closed only by an import type", async () => {
+  it("passes a cycle whose closing edge is deferred behind an await import", async () => {
     await write(
       "src/domain/rules.ts",
-      'import type { Serve } from "../server/http.ts";\n\nexport const rule: Serve | undefined = undefined;\n',
+      'export async function rule() {\n  const { serve } = await import("../server/http.ts");\n  return serve();\n}\n',
     );
     await write(
       "src/server/http.ts",
-      'import { rule } from "../domain/rules.ts";\n\nexport type Serve = number;\nexport const serve = () => rule;\n',
+      'import { rule } from "../domain/rules.ts";\n\nexport const serve = () => rule;\n',
     );
 
     const result = await checkArchitecture({ packageRoot, definition: {} });
 
     expect(result.errorCount).toBe(0);
     expect(result.report).toBe("");
+  });
+
+  it("still fails a boundary crossed by a deferred import", async () => {
+    // Deferring changes *when* the edge resolves, not whether the layer
+    // depends on the other. Only `no-circular` cares about eagerness.
+    await write(
+      "src/domain/rules.ts",
+      'export async function rule() {\n  const { serve } = await import("../server/http.ts");\n  return serve;\n}\n',
+    );
+
+    const result = await checkArchitecture({
+      packageRoot,
+      definition: { boundaries: [domainIsPure] },
+    });
+
+    expect(result.errorCount).toBe(1);
+    expect(result.report).toContain("domain-is-pure");
   });
 
   it("fails a layer boundary and explains why the boundary exists", async () => {

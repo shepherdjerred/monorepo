@@ -8,7 +8,7 @@
 import type {
   CommandHandlerDeps,
   CommandInteraction,
-} from "@shepherdjerred/streambot/discord/command-handler.ts";
+} from "@shepherdjerred/streambot/discord/command-types.ts";
 import {
   classifyPlayError,
   isHttpUrl,

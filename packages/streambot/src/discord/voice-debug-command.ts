@@ -2,7 +2,7 @@ import { isAdmin } from "@shepherdjerred/streambot/discord/permissions.ts";
 import type {
   CommandHandlerDeps,
   CommandInteraction,
-} from "@shepherdjerred/streambot/discord/command-handler.ts";
+} from "@shepherdjerred/streambot/discord/command-types.ts";
 import type { VoiceDebugCaptureStatus } from "@shepherdjerred/streambot/voice/capture-manager.ts";
 
 type VoiceDebugCommandDeps = Pick<

@@ -11,7 +11,7 @@
     "watch": "PATH=node_modules/@typescript/native/bin:$PATH tsc --watch",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
-    "lint": "bun run lint:check",
+    "lint": "bun run lint:check && check-architecture",
     "lint:fix": "bun run lint:eslint:fix",
     "lint:check": "bun run lint:eslint:check",
     "lint:eslint:check": "bunx eslint .",
@@ -52,6 +52,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.0",
     "@types/express": "^5.0.1",

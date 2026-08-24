@@ -1,7 +1,7 @@
 import type {
   DataDragonUpdateInput,
   DataDragonUpdateResult,
-} from "./data-dragon.ts";
+} from "#shared/data-dragon-types.ts";
 import { recordRun } from "./data-dragon-metrics.ts";
 
 export function jsonLog(

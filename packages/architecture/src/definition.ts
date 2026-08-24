@@ -33,12 +33,6 @@ const LayerBoundarySchema = z.object({
   from: z.string().regex(LAYER_SEGMENT),
   /** Layer directories `from` may not depend on, relative to the source root. */
   to: z.array(z.string().regex(LAYER_SEGMENT)).min(1),
-  /**
-   * Permit `import type` across this boundary. Only set it where the coupling
-   * is a compile-time contract that provably disappears at runtime — the
-   * Temporal workflow sandbox is the motivating case.
-   */
-  allowTypeOnlyImports: z.boolean().optional(),
 });
 
 const ArchitectureDefinitionSchema = z

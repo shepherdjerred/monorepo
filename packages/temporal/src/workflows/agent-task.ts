@@ -1,8 +1,6 @@
 import { patched, proxyActivities, sleep } from "@temporalio/workflow";
-import type {
-  AgentTaskActivities,
-  RunAgentTaskResult,
-} from "#activities/agent-task.ts";
+import type { AgentTaskActivities } from "#activities/agent-task.ts";
+import type { RunAgentTaskResult } from "#shared/agent-task-result-types.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import { collectErrorMessages } from "#shared/error-cause.ts";
 import { AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS } from "#shared/report-delivery-policy.ts";

@@ -10,10 +10,26 @@ import { parseCruiseReport, renderViolations } from "#src/cruise-result.ts";
 import { fixtureFilePrefix, fixtureRules, sourceRules } from "#src/rules.ts";
 
 /**
- * `"specify"` makes dependency-cruiser tag each dependency with whether it
- * survives compilation. Without it `import type` edges are invisible, and a
- * rule that means to *allow* type-only imports would be decorative rather than
- * enforced.
+ * Boundaries apply to every edge kind, including `import type`.
+ *
+ * That is not a stylistic choice, it is the only honest option here.
+ * dependency-cruiser only tags an edge `type-only` from its TypeScript
+ * extractor, which it enables by resolving `typescript` in the range
+ * `>=2.0.0 <7.0.0` through a `createRequire` anchored in its own directory.
+ * Under Bun's isolated linker that lands on the flat fallback at
+ * `node_modules/.bun/node_modules/typescript`, and this repository declares
+ * `@typescript/native: npm:typescript@7.0.2` in a dozen or more packages — so
+ * the version that wins is out of range, the extractor is silently skipped,
+ * and every `import type` arrives as a plain `["local", "import"]`.
+ *
+ * Which version wins that flat fallback is not something a rule set should
+ * depend on: it differs between a long-lived worktree and a fresh CI install,
+ * so a `dependencyTypesNot: ["type-only"]` exemption would pass locally and do
+ * nothing in CI. Rather than encode a knob that lies, boundaries hold for all
+ * edge kinds, and a type shared across a boundary belongs in a shared module.
+ *
+ * `tsPreCompilationDeps` is deliberately absent for the same reason: with the
+ * extractor skipped it changes nothing in any of its three settings.
  *
  * `exportsFields`/`conditionNames` are what let enhanced-resolve follow the
  * `#subpath/*` imports several packages here declare.
@@ -25,7 +41,6 @@ function baseOptions(
 ) {
   return {
     validate: true,
-    tsPreCompilationDeps: "specify",
     baseDir: packageRoot,
     outputType: "json",
     doNotFollow: { path: "node_modules" },

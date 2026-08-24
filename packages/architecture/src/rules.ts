@@ -7,20 +7,34 @@ import {
 } from "#src/definition.ts";
 
 /**
- * Runtime import cycles only. `viaOnly` drops cycles that are closed by an
- * `import type`: those vanish at compile time and cannot deadlock a module
- * initialisation order, so failing a build on them would be noise.
+ * Eager runtime import cycles only.
+ *
+ * `viaOnly` narrows the rule to cycles in which every edge is an eager import.
+ * A cycle closed by an `await import()` inside a function body resolves at call
+ * time, long after every module has finished initialising, so it cannot make
+ * initialisation order significant. It is also the sanctioned way to break a
+ * registry cycle: a module that is itself registered but needs to look up the
+ * complete registry cannot import it eagerly, by construction, so flagging the
+ * deferral would leave no way to comply.
+ *
+ * Type-only edges are deliberately *not* excluded. dependency-cruiser cannot
+ * identify them in this repository — see the note in `cruise.ts` — so an
+ * exclusion would be a rule that silently does nothing.
  */
 function circularRule(): IRegularForbiddenRuleType {
   return {
     name: CIRCULAR_RULE_NAME,
     comment:
-      "A runtime import cycle makes module initialisation order significant, which is a latent " +
-      "crash. Break it by extracting the shared piece into a module both sides depend on, or by " +
-      "inverting one of the two dependencies.",
+      "An eager runtime import cycle makes module initialisation order significant, which is a " +
+      "latent crash. Break it by extracting the shared piece into a module both sides depend on, " +
+      "by inverting one of the two dependencies, or — for a registry lookup that cannot be " +
+      "resolved eagerly — by deferring one edge behind an await import().",
     severity: "error",
     from: {},
-    to: { circular: true, viaOnly: { dependencyTypesNot: ["type-only"] } },
+    to: {
+      circular: true,
+      viaOnly: { dependencyTypesNot: ["dynamic-import"] },
+    },
   };
 }
 
@@ -37,19 +51,12 @@ function boundaryRule(
   name: string,
   fromPattern: string,
 ): IRegularForbiddenRuleType {
-  const to =
-    boundary.allowTypeOnlyImports === true
-      ? {
-          path: targetPattern(architecture, boundary),
-          dependencyTypesNot: ["type-only" as const],
-        }
-      : { path: targetPattern(architecture, boundary) };
   return {
     name,
     comment: boundary.comment,
     severity: "error",
     from: { path: fromPattern },
-    to,
+    to: { path: targetPattern(architecture, boundary) },
   };
 }
 

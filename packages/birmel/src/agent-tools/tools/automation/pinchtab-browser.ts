@@ -2,7 +2,7 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import type {
   BrowserContext,
   BrowserResult,
-} from "@shepherdjerred/birmel/agent-tools/tools/automation/browser.ts";
+} from "@shepherdjerred/birmel/agent-tools/tools/automation/browser-types.ts";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";

@@ -41,7 +41,6 @@ export default defineArchitecture({
         "ships database and secret-bearing modules to the browser.",
       from: "client",
       to: ["server"],
-      allowTypeOnlyImports: true,
     },
   ],
 });

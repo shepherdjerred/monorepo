@@ -29,7 +29,7 @@ import type {
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
 import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./lane-prior-refresh.ts";
-import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
+import type { DataDragonUpdateResult } from "#shared/data-dragon-types.ts";
 import type {
   LanePriorRefreshResult,
   LanePriorWorkflowInput,

@@ -311,22 +311,6 @@ export async function shutdownTracing(): Promise<void> {
   initialized = false;
 }
 
-/**
- * Get the current trace context for log correlation.
- */
-export function getTraceContext(): { traceId?: string; spanId?: string } {
-  const span = trace.getActiveSpan();
-  if (span == null) {
-    return {};
-  }
-
-  const spanContext = span.spanContext();
-  return {
-    traceId: spanContext.traceId,
-    spanId: spanContext.spanId,
-  };
-}
-
 export type DiscordSpanAttributes = {
   guildId?: string;
   channelId?: string;

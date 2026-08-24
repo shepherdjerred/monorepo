@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
-import type { RunAgentTaskResultV2 } from "#activities/agent-task.ts";
+import type { RunAgentTaskResultV2 } from "#shared/agent-task-result-types.ts";
 import type { SendAgentTaskFailureReportInput } from "#activities/agent-task-side-activities.ts";
 import { AgentTaskInputSchema } from "#shared/agent-task.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";

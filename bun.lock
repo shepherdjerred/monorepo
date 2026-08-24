@@ -206,6 +206,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@types/bun": "1.4.0",
         "@typescript-eslint/utils": "^8.67.0",
@@ -517,6 +518,7 @@
       },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@types/bun": "1.4.0",
         "@types/express": "^5.0.1",
@@ -1001,6 +1003,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@typescript/native": "npm:typescript@7.0.2",
         "@vitest/coverage-istanbul": "4.1.10",
@@ -1053,6 +1056,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@tsconfig/node-lts": "^24.0.0",
         "@tsconfig/recommended": "^1.0.13",
@@ -1173,6 +1177,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@tailwindcss/vite": "^4.1.11",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
@@ -1483,6 +1488,7 @@
       },
       "devDependencies": {
         "@astrojs/check": "^0.9.4",
+        "@shepherdjerred/architecture": "workspace:*",
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.1.9",
         "@typescript/native": "npm:typescript@7.0.2",
@@ -1676,6 +1682,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@types/bun": "1.4.0",
         "@typescript-eslint/utils": "^8.67.0",
@@ -1725,6 +1732,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@types/bun": "1.4.0",
         "@typescript-eslint/utils": "^8.67.0",
@@ -1875,6 +1883,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@temporalio/testing": "1.22.0",
         "@tsconfig/node-lts": "^24.0.0",
@@ -1909,6 +1918,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@types/bun": "1.4.0",
         "@typescript/native": "npm:typescript@7.0.2",

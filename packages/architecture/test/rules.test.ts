@@ -15,18 +15,17 @@ const architecture = resolveArchitecture({
       comment: "the browser bundle must not ship server code",
       from: "client",
       to: ["server"],
-      allowTypeOnlyImports: true,
     },
   ],
 });
 
 describe("sourceRules", () => {
-  it("always enforces no-circular, ignoring cycles closed by a type-only import", () => {
+  it("always enforces no-circular, restricted to eager runtime edges", () => {
     const [circular] = sourceRules(architecture);
     expect(circular?.name).toBe("no-circular");
     expect(circular?.to).toEqual({
       circular: true,
-      viaOnly: { dependencyTypesNot: ["type-only"] },
+      viaOnly: { dependencyTypesNot: ["dynamic-import"] },
     });
   });
 
@@ -37,13 +36,6 @@ describe("sourceRules", () => {
       severity: "error",
       from: { path: "^src/domain/" },
       to: { path: "^src/(server|client)/" },
-    });
-  });
-
-  it("exempts type-only imports only where the boundary asks for it", () => {
-    expect(sourceRules(architecture)[2]?.to).toEqual({
-      path: "^src/(server)/",
-      dependencyTypesNot: ["type-only"],
     });
   });
 });

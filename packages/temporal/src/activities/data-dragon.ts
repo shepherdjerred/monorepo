@@ -21,6 +21,12 @@ import {
   runScoutGeneratedPreflight,
 } from "./scout-generated-preflight.ts";
 import { recordAutoMergeFailure, recordRun } from "./data-dragon-metrics.ts";
+import type {
+  DataDragonUpdateInput,
+  DataDragonUpdateMode,
+  DataDragonUpdateResult,
+  DataDragonVersionState,
+} from "#shared/data-dragon-types.ts";
 import {
   createDataDragonPr,
   ensureGeneratedPrAutoMerge,
@@ -49,36 +55,6 @@ const VersionFile = z.object({
 });
 
 const VersionsResponse = z.array(z.string().min(1)).min(1);
-
-export type DataDragonUpdateMode = "version-check" | "weekly-refresh";
-
-export type DataDragonVersionState = {
-  currentVersion: string;
-  latestVersion: string;
-  updateRequired: boolean;
-};
-
-export type DataDragonUpdateInput = DataDragonVersionState & {
-  mode: DataDragonUpdateMode;
-};
-
-export type DataDragonUpdateResult = DataDragonUpdateInput & {
-  changedFiles: string[];
-  branchName: string | undefined;
-  commitHash: string | undefined;
-  prUrl: string | undefined;
-  outcome: "success" | "skipped";
-  reason:
-    | "pr-created"
-    | "no-diff"
-    | "formatting-only-diff"
-    | "image-only-diff"
-    | "pr-already-open";
-  formattingOnlyFiles?: string[];
-  emailSent?: boolean;
-  emailMessageId?: string;
-  autoMergeConfigured?: boolean;
-};
 
 async function fetchJson(url: string): Promise<unknown> {
   const response = await fetch(url, {

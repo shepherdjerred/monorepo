@@ -3,7 +3,7 @@ import type { CiIoImpactResult } from "#activities/ci-io-impact.ts";
 import type {
   DataDragonUpdateResult,
   DataDragonVersionState,
-} from "#activities/data-dragon.ts";
+} from "#shared/data-dragon-types.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout-queue-windows.ts";
 import type { ScoutSeasonRefreshResult } from "#activities/scout-season-refresh.ts";
 import type { TasknotesCanaryResult } from "#activities/tasknotes-canary.ts";

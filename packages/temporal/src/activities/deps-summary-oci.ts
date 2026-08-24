@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import type { DependencyChange } from "./deps-summary.ts";
+import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import { dependencyNoteText } from "./deps-summary-text.ts";
 
 const OciDescriptorSchema = z.object({ digest: z.string().min(1) });

@@ -1,4 +1,4 @@
-import type { SessionManagerDeps } from "@shepherdjerred/streambot/session/session-manager.ts";
+import type { SessionManagerDeps } from "@shepherdjerred/streambot/session/session-types.ts";
 import type { Session } from "@shepherdjerred/streambot/session/session-types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";

@@ -32,7 +32,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryResult,
 } from "./report-delivery.ts";
-import type { RunAgentTaskResult } from "./agent-task.ts";
+import type { RunAgentTaskResult } from "#shared/agent-task-result-types.ts";
 import type { PrepareAgentTaskWorkdirResult } from "./agent-task-workdir.ts";
 import {
   ReportEnvelopeV1Schema,

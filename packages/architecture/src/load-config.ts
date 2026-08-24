@@ -10,6 +10,26 @@ import {
 const CONFIG_FILE_NAME = "architecture.config.ts";
 
 /**
+ * Absent means absent — nothing else.
+ *
+ * Treating any `stat` failure as "no config" would let a permissions or I/O
+ * error silently downgrade a package that declares boundaries to the bare
+ * `no-circular` baseline, which is precisely the vacuous-pass this harness
+ * exists to prevent. Only ENOENT answers the question being asked.
+ */
+async function configFileExists(configPath: string): Promise<boolean> {
+  try {
+    await stat(configPath);
+    return true;
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
+
+/**
  * Load a package's architecture definition.
  *
  * The config file is optional on purpose: `no-circular` is a universal rule
@@ -22,8 +42,7 @@ export async function loadArchitectureDefinition(
   packageRoot: string,
 ): Promise<ArchitectureDefinition> {
   const configPath = path.join(packageRoot, CONFIG_FILE_NAME);
-  const configFile = await stat(configPath).catch(() => null);
-  if (configFile === null) {
+  if (!(await configFileExists(configPath))) {
     return resolveArchitecture({});
   }
   const module: unknown = await import(pathToFileURL(configPath).href);
