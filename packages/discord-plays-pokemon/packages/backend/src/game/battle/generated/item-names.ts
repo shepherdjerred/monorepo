@@ -718,12 +718,7 @@ export function resolveItemId(name: string): number | undefined {
 }
 
 export type ItemBattleUse =
-  | "unavailable"
-  | "direct"
-  | "escape"
-  | "party"
-  | "move"
-  | "poke-ball";
+  "unavailable" | "direct" | "escape" | "party" | "move" | "poke-ball";
 
 export const ITEM_BATTLE_USES: Readonly<
   Partial<Record<number, ItemBattleUse>>
