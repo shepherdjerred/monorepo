@@ -151,6 +151,37 @@ const RenderedResourceSchema = z.object({
     .passthrough(),
 });
 
+// The `apps` chart is namespaced to ArgoCD, so CDK8s stamps that namespace on
+// every rendered object, including cluster-scoped ones. Kubernetes ignores the
+// field on apply, but an Argo resource selector with it can report a successful
+// no-op instead of applying the resource. Keep this table limited to the
+// cluster-scoped kinds emitted directly by the root chart; child charts are
+// reconciled as complete Applications and never use these selectors.
+const CLUSTER_SCOPED_ROOT_RESOURCE_KINDS = new Set([
+  "/Namespace",
+  "admissionregistration.k8s.io/MutatingAdmissionPolicy",
+  "admissionregistration.k8s.io/MutatingAdmissionPolicyBinding",
+  "admissionregistration.k8s.io/ValidatingAdmissionPolicy",
+  "admissionregistration.k8s.io/ValidatingAdmissionPolicyBinding",
+  "kueue.x-k8s.io/ClusterQueue",
+  "kueue.x-k8s.io/ResourceFlavor",
+  "rbac.authorization.k8s.io/ClusterRole",
+  "rbac.authorization.k8s.io/ClusterRoleBinding",
+  "scheduling.k8s.io/PriorityClass",
+  "snapshot.storage.k8s.io/VolumeSnapshotClass",
+  "storage.k8s.io/StorageClass",
+  "tailscale.com/ProxyClass",
+]);
+
+function isClusterScopedRootResource(
+  apiVersion: string,
+  kind: string,
+): boolean {
+  const separator = apiVersion.indexOf("/");
+  const group = separator === -1 ? "" : apiVersion.slice(0, separator);
+  return CLUSTER_SCOPED_ROOT_RESOURCE_KINDS.has(`${group}/${kind}`);
+}
+
 /**
  * A live operation's selector as Argo reports it. `namespace` accepts an empty
  * string on purpose: a cluster-scoped target has two valid spellings on the
@@ -964,7 +995,11 @@ function parseRootManifest(manifestSource: string): ParsedRootManifest {
             : renderedResource.apiVersion.slice(0, separator),
         kind: renderedResource.kind,
         name: renderedResource.metadata.name,
-        ...(renderedResource.metadata.namespace === undefined
+        ...(renderedResource.metadata.namespace === undefined ||
+        isClusterScopedRootResource(
+          renderedResource.apiVersion,
+          renderedResource.kind,
+        )
           ? {}
           : { namespace: renderedResource.metadata.namespace }),
       },
