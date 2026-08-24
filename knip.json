@@ -428,6 +428,7 @@
     "go",
     "golangci-lint",
     "helm",
+    "kubeconform",
     "kubectl",
     "mktemp",
     "op",

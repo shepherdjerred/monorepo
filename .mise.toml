@@ -61,5 +61,9 @@ opentofu = "1.12.6"
 # a repository-owned empty config — no plugins, no `tflint --init`, no network.
 # renovate: datasource=github-releases depName=terraform-linters/tflint
 tflint = "0.64.0"
+# Kubernetes schema validation of the cdk8s synth output (packages/homelab
+# check:kubeconform). Fetches upstream JSON schemas at validation time.
+# renovate: datasource=github-releases depName=yannh/kubeconform
+kubeconform = "0.8.0"
 argocd = "3"
 awscli = "2"
