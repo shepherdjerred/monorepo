@@ -1083,13 +1083,11 @@ steps:
     # patterns matched every so-named file repo-wide, which silently
     # excluded files that were never triaged.
     #
-    # The ruleset is pinned to the explicit registry pack `p/default`
-    # (what `--config auto` resolves to for anonymous scans) so the scanned
-    # rule surface no longer shifts with semgrep's auto heuristics, and
-    # `--metrics=off` stops telemetry. semgrep only hard-requires metrics
-    # for `--config auto` (cli/src/semgrep/commands/scan.py at v1.170.0
-    # aborts on exactly `"auto" in config and metrics == OFF`); explicit
-    # registry packs fetch fine with metrics off.
+    # The checked-in .semgrep/p-default is a reviewed snapshot of the
+    # registry's p/default pack (SHA-256:
+    # e0b51ec96a6685be302583fdae5b802b9f9fe692542d6afb330e67a93b5f45cc).
+    # Its rule contents, rather than the registry alias, are the CI contract.
+    # `--metrics=off` keeps this local-config scan telemetry-free.
     command: |
       echo "OPTIONAL SECURITY SCAN: Semgrep findings do not block merge; merge-base/config/runtime failures do."
       set +e
@@ -1097,7 +1095,7 @@ steps:
         echo "semgrep could not resolve the PR merge-base" >&2
         exit 2
       fi
-      semgrep scan --config p/default --metrics=off --error \
+      semgrep scan --config .semgrep/p-default.yml --metrics=off --error \
         --baseline-commit "$$base" \
         --exclude sandbox \
         --exclude packages/homelab/src/cdk8s/config/minecraft-shuxin/server.properties \
