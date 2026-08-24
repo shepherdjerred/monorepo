@@ -205,6 +205,29 @@ overrides:
     },
   });
 
+  // Codex's ChatGPT-managed auth bundle includes a refresh token, so it must
+  // survive the release lane's ephemeral pods. This claim is deliberately not
+  // part of the agent stack's default pod volumes: only the main-only
+  // release-please step mounts it. The lane is globally serialized, making a
+  // single-writer RWO claim the narrowest valid access mode. Never back up a
+  // live credential bundle; recover it by explicitly re-seeding from a fresh
+  // `codex login` on the trusted operator machine.
+  new KubePersistentVolumeClaim(chart, "buildkite-codex-auth-pvc", {
+    metadata: {
+      name: "buildkite-codex-auth",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteOnce"],
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
+      resources: { requests: { storage: Quantity.fromString("1Gi") } },
+    },
+  });
+
   // uv's artifact cache is safe for concurrent readers and writers, unlike a
   // virtual environment. Persist only downloads/build artifacts and let every
   // job keep its own .venv in the disposable workspace.

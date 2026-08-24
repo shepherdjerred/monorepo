@@ -52,7 +52,10 @@ const PersistentVolumeClaimSchema = z
       }),
     }),
     spec: z.object({
-      accessModes: z.tuple([z.literal("ReadWriteMany")]),
+      accessModes: z.tuple([
+        z.union([z.literal("ReadWriteMany"), z.literal("ReadWriteOnce")]),
+      ]),
+      storageClassName: z.string().optional(),
       resources: z.object({ requests: z.object({ storage: z.string() }) }),
     }),
   })
@@ -416,4 +419,19 @@ describe("Buildkite application", () => {
       ]),
     );
   });
+});
+
+it("provisions an isolated, non-backed-up Codex auth volume", () => {
+  const { persistentVolumeClaims } = synthBuildkiteResources();
+
+  expect(persistentVolumeClaims).toContainEqual(
+    expect.objectContaining({
+      metadata: expect.objectContaining({ name: "buildkite-codex-auth" }),
+      spec: expect.objectContaining({
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: "zfs-ssd-lz4",
+        resources: { requests: { storage: "1Gi" } },
+      }),
+    }),
+  );
 });
