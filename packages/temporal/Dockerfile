@@ -330,6 +330,7 @@ COPY --parents \
   packages/llm-models \
   packages/llm-observability \
   packages/llm-runtime \
+  packages/scout-for-lol/packages/data \
   ./
 
 # Built artifacts from the build stage.
