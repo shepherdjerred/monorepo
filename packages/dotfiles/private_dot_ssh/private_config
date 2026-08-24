@@ -1,3 +1,5 @@
+Include /Users/jerred/.ssh/conductor_config
+
 Include ~/.ssh/conductor_config
 
 Include ~/.orbstack/ssh/config
