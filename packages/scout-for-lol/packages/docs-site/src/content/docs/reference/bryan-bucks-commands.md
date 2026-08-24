@@ -76,7 +76,8 @@ than posting a receipt for each bet.
 | Message          | Buttons                                                            |
 | ---------------- | ------------------------------------------------------------------ |
 | Pre-match card   | `WIN · 1 BB`, `WIN · 5 BB`, `LOSE · 1 BB`, `LOSE · 5 BB`, `Cancel` |
-| Parlay           | `YES 1`, `YES 5`, `NO 1`, `NO 5`, `Cancel`                         |
+| Match parlay     | `YES 1`, `YES 5`, `NO 1`, `NO 5`, `Cancel`                         |
+| Weekly parlay    | `YES · 1 BB`, `NO · 1 BB`, `Cancel`                                |
 | `/bb pass` quote | `Buy for N BB`                                                     |
 | `/bb history`    | `Previous`, `Next`                                                 |
 | `/bb ask` answer | `Post publicly`                                                    |
