@@ -318,6 +318,11 @@
       "reason": "Machine bootstrap precedes Bun"
     },
     {
+      "source": "packages/homelab/mac-ci/provision-host.sh",
+      "disposition": "retain",
+      "reason": "Interactive macOS host provisioning installs and validates the pinned toolchain before Bun is guaranteed"
+    },
+    {
       "source": "packages/homelab/mac-ci/restore-power.sh",
       "disposition": "retain",
       "reason": "Reverts bootstrap.sh's pmset power profile via sudo on the Mac Mini, before Bun is guaranteed"
