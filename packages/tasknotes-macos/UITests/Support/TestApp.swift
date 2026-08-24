@@ -58,7 +58,7 @@ enum TestApp {
         serverAddress: String = unreachableServer,
         file: StaticString = #filePath,
         line: UInt = #line,
-        teardown: (@escaping @Sendable () -> Void) -> Void
+        teardown: (@escaping @Sendable () async -> Void) -> Void
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
@@ -74,7 +74,7 @@ enum TestApp {
             file: file,
             line: line
         )
-        teardown { app.terminate() }
+        teardown { @MainActor in app.terminate() }
         return app
     }
 }
