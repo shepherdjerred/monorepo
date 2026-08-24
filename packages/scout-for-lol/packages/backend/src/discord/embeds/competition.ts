@@ -2,7 +2,7 @@ import type { CompetitionWithCriteria } from "@scout-for-lol/data";
 import { getCompetitionStatus } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 import { match } from "ts-pattern";
-import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
 import {
   formatCriteriaDescription,
   formatScore,

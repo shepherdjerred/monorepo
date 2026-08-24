@@ -19,7 +19,7 @@ describe("backend startup", () => {
       },
     });
 
-    expect(calls).toEqual(["champion-assets", "http-server", "discord"]);
+    expect(calls).toEqual(["champion-assets", "discord", "http-server"]);
     expect(runtime.shutdownHttpServer).toBe(shutdownHttpServer);
   });
 
@@ -44,8 +44,8 @@ describe("backend startup", () => {
     expect(calls).toEqual([
       "champion-assets",
       "report-lake",
-      "http-server",
       "discord",
+      "http-server",
     ]);
     await runtime.shutdownHttpServer();
   });

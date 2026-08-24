@@ -20,7 +20,7 @@ import {
 } from "@scout-for-lol/report";
 import { formatCriteriaDescription } from "#src/discord/embeds/competition-format-helpers.ts";
 import { loadHistoricalLeaderboardSnapshots } from "#src/storage/s3-leaderboard.ts";
-import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
 import { createLogger } from "#src/logger.ts";
 import { logNotification } from "#src/utils/notification-logger.ts";
 import {

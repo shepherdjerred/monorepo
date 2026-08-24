@@ -3,7 +3,7 @@ import { parseAndCompile } from "@scout-for-lol/data";
 import type {
   ReportQueryResult,
   ReportResultRow,
-} from "#src/reports/query-engine.ts";
+} from "#src/reports/query-types.ts";
 import { buildVisualizationSnapshot } from "#src/reports/visualization-snapshot.ts";
 
 describe("buildVisualizationSnapshot", () => {

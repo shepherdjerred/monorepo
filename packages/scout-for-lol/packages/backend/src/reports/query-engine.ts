@@ -3,7 +3,6 @@ import {
   CompetitionIdSchema,
   REPORT_MAX_ROWS_LIMIT,
   RankSchema,
-  type VisualizationSnapshot,
   parseAndCompile,
   parseCompetition,
   rankToString,
@@ -16,6 +15,7 @@ import {
   scoutReportQueryRunsTotal,
 } from "#src/metrics/report-query.ts";
 import { runLakeAggregation } from "#src/reports/duckdb/execute.ts";
+import type { ReportQueryResult } from "#src/reports/query-types.ts";
 import { resolvePlayerRefsToPuuids } from "#src/reports/identity.ts";
 import {
   requireGuildScope,
@@ -35,75 +35,6 @@ import {
 } from "#src/reports/temporal-range.ts";
 import { attachTemporalComparison } from "#src/reports/temporal-comparison.ts";
 import { buildVisualizationSnapshot } from "#src/reports/visualization-snapshot.ts";
-
-export type ReportResultValue = {
-  column: string;
-  value: number | string | null;
-  comparisonValue?: number | string | null;
-  absoluteDelta?: number | null;
-  percentageDelta?: number | null;
-  comparisonSampleSize?: number;
-  comparisonSuccesses?: number;
-  comparisonNumerator?: number;
-  comparisonDenominator?: number;
-  comparisonConfidenceInterval?: {
-    level: 0.95;
-    lower: number;
-    upper: number;
-  } | null;
-  sampleSize?: number;
-  successes?: number;
-  numerator?: number;
-  denominator?: number;
-  confidenceInterval?: {
-    level: 0.95;
-    lower: number;
-    upper: number;
-  } | null;
-};
-
-export type ReportMentionIdentity =
-  | {
-      kind: "player";
-      playerId: number | null;
-      alias: string;
-      discordId: string | null;
-    }
-  | {
-      kind: "group";
-      members: { playerId: number; alias: string }[];
-    };
-
-export type ReportResultRow = {
-  label: string;
-  dimensions: string[];
-  mentionIdentity: ReportMentionIdentity | null;
-  values: ReportResultValue[];
-};
-
-export type ReportQueryResult = {
-  plan: ReportQueryPlan;
-  columns: string[];
-  rows: ReportResultRow[];
-  rowsScanned: number;
-  comparisonRows?: ReportResultRow[];
-  visualization?: VisualizationSnapshot;
-  evidence?: {
-    label: string;
-    values: {
-      column: string;
-      sampleSize: number;
-      successes?: number;
-      numerator?: number;
-      denominator?: number;
-      confidenceInterval?: {
-        level: 0.95;
-        lower: number;
-        upper: number;
-      } | null;
-    }[];
-  }[];
-};
 
 export type ExecuteReportQueryParams = {
   prisma: ExtendedPrismaClient;

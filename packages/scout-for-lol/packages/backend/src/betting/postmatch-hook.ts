@@ -10,10 +10,8 @@ import {
 } from "#src/betting/parlay-settle.ts";
 import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
-import {
-  closeBettingWindowsForMatch,
-  type ClosedPool,
-} from "#src/betting/sweep.ts";
+import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
+import type { ClosedPool } from "#src/betting/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { captureWeeklyParlayContributions } from "#src/betting/weekly-parlay-contribution.ts";

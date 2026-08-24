@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { parseAndCompile } from "@scout-for-lol/data";
-import type { ReportResultRow } from "#src/reports/query-engine.ts";
+import type { ReportResultRow } from "#src/reports/query-types.ts";
 import { attachTemporalComparison } from "#src/reports/temporal-comparison.ts";
 
 function row(patch: string, games: number): ReportResultRow {

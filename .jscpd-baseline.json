@@ -1108,14 +1108,6 @@
       "clones": 1,
       "tokens": 93
     },
-    "packages/scout-for-lol/packages/backend/src/betting/settlement-ledger.ts|packages/scout-for-lol/packages/backend/src/betting/sweep.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/settlement-ledger.ts|packages/scout-for-lol/packages/backend/src/betting/void-stale.ts": {
-      "clones": 1,
-      "tokens": 107
-    },
     "packages/scout-for-lol/packages/backend/src/betting/sweep.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/sweep.integration.test.ts": {
       "clones": 1,
       "tokens": 70
@@ -1965,5 +1957,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-24T21:00:53.066Z"
+  "updated": "2026-08-24T23:08:50.755Z"
 }

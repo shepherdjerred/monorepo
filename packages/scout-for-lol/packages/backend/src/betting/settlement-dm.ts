@@ -1,7 +1,7 @@
 import { RiotTeamIdSchema, type RiotTeamId } from "@scout-for-lol/data";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
-import type { ClosedPosition } from "#src/betting/sweep.ts";
+import type { ClosedPosition } from "#src/betting/sweep-types.ts";
 import { outcomeLabel, type OutcomeFraming } from "#src/betting/team.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 

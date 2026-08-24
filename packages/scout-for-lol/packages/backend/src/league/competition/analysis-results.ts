@@ -3,7 +3,7 @@ import {
   type CachedLeaderboard,
   type CachedLeaderboardEntry,
 } from "@scout-for-lol/data";
-import type { ReportQueryResult } from "#src/reports/query-engine.ts";
+import type { ReportQueryResult } from "#src/reports/query-types.ts";
 
 export function mergeCompetitionRankHistory(
   lakeHistory: CachedLeaderboard[],

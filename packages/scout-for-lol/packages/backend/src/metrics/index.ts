@@ -492,16 +492,6 @@ export const scoutItemCacheMissTotal = new Counter({
   registers: [registry],
 });
 
-/**
- * Total number of database queries
- */
-export const databaseQueriesTotal = new Counter({
-  name: "database_queries_total",
-  help: "Total database queries",
-  labelNames: ["operation"] as const,
-  registers: [registry],
-});
-
 // =======================
 // Riot API Health State
 // =======================

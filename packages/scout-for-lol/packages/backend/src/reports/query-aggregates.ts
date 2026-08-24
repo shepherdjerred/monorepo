@@ -11,67 +11,10 @@ import type {
   ReportQueryPlan,
 } from "@scout-for-lol/data";
 import type {
+  AggregateRow,
   ReportMentionIdentity,
   ReportQueryResult,
-} from "#src/reports/query-engine.ts";
-
-export type AggregateRow = {
-  label: string;
-  playerId: number | null;
-  discordId: string | null;
-  groupMembers: { playerId: number; alias: string }[] | null;
-  games: number;
-  wins: number;
-  surrenders: number;
-  kills: number;
-  deaths: number;
-  assists: number;
-  creepScore: number;
-  damageToChampions: number;
-  goldEarned: number;
-  visionScore: number;
-  damageTaken: number;
-  totalDamageDealt: number;
-  wardsPlaced: number;
-  multikills: number;
-  /** Sum of game durations (seconds), counted once per group row per game. */
-  durationSeconds: number;
-  /** Sum of time played (seconds) across group members. */
-  timePlayedSeconds: number;
-  participantRows: number;
-  earlySurrenders: number;
-  laneMinions: number;
-  neutralMinions: number;
-  goldSpent: number;
-  damageMitigated: number;
-  damageToObjectives: number;
-  damageToTurrets: number;
-  healing: number;
-  teammateHealing: number;
-  wardsKilled: number;
-  controlWardsBought: number;
-  detectorWardsPlaced: number;
-  doubleKills: number;
-  tripleKills: number;
-  quadraKills: number;
-  pentaKills: number;
-  largestMultikill: number;
-  killingSprees: number;
-  firstBloods: number;
-  championLevelTotal: number;
-  championExperienceTotal: number;
-  timeDeadSeconds: number;
-  longestLifeSeconds: number;
-  ccTimeSeconds: number;
-  turretKills: number;
-  inhibitorKills: number;
-  dragonKills: number;
-  baronKills: number;
-  arenaRows: number;
-  placementSum: number;
-  topTwoPlacements: number;
-  firstPlaceFinishes: number;
-};
+} from "#src/reports/query-types.ts";
 
 export function rowsFromAggregates(
   plan: ReportQueryPlan,

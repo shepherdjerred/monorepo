@@ -5,20 +5,16 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import { getActiveCompetitions } from "#src/database/competition/queries.ts";
-import {
-  calculateLeaderboard,
-  type RankedLeaderboardEntry,
-} from "#src/league/competition/leaderboard.ts";
+import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
 import { generateLeaderboardEmbed } from "#src/discord/embeds/competition.ts";
 import {
   send as sendChannelMessage,
   ChannelSendError,
 } from "#src/league/discord/channel.ts";
 import { cacheLeaderboardArtifacts } from "#src/league/competition/refresh.ts";
-import {
-  createSnapshot,
-  getSnapshot,
-} from "#src/league/competition/snapshots.ts";
+import { createSnapshot } from "#src/league/competition/snapshots.ts";
+import { getSnapshot } from "#src/league/competition/snapshot-store.ts";
 import { getParticipants } from "#src/database/competition/participants.ts";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
