@@ -252,17 +252,26 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "link-rot-scan-weekly",
     workflowType: "runLinkRotScanWorkflow",
     args: [],
-    // Sun 05:15 PT — staggered after the 05:00 main-vuln-scan and the daily
-    // 05:00 fetcher/golink jobs, ahead of dns-audit (06:00).
-    cronExpression: "15 5 * * 0",
+    // Sun 09:00 PT. The scan activity contends for the maintenance worker's
+    // SINGLE activity slot, so this is staggered past the worst case of every
+    // sibling on that queue rather than merely past their start times:
+    // uv-cache-prune (03:15 +2h), kometa (04:30 +2h), main-vuln-scan
+    // (05:00 +2h → 07:00), and the 06:30 trivy-db-refresh (+2h → 08:30). The
+    // every-5-minute bun-cache-gc is short and skips while the slot is busy.
+    cronExpression: "0 9 * * 0",
     // The workflow orchestrates from the core queue, but its heavy git/lychee
     // scan activity is proxied to the serial MAINTENANCE queue and delivery /
     // Alertmanager publication back to DEFAULT — see workflows/link-rot-scan.ts.
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // Three 20-minute scan attempts plus backoff, then report delivery and the
-    // Alertmanager publish with their own three-attempt budgets.
-    workflowExecutionTimeout: "90 minutes",
+    // Must cover this workflow's own budget PLUS worst-case time queued behind
+    // another maintenance activity, because the deadline runs while the scan
+    // waits for the slot. Own budget is ~78m (three 20m scan attempts + 3m
+    // backoff, then delivery and alert retries); 4h leaves ~2.5h of queueing
+    // headroom so a long-running sibling cannot time this out before it has
+    // delivered its report. SKIP overlap and the weekly cadence make the wide
+    // ceiling harmless.
+    workflowExecutionTimeout: "4 hours",
     memo: "Weekly lychee link-rot scan of main's tracked markdown (root lychee.toml) with report delivery; automates the rot-detection half of the link-liveness rule",
   },
   {

@@ -81,7 +81,11 @@ configuration is versioned with the docs it governs). The workflow orchestrates
 from the core queue, but its long git/lychee subprocess — which reaches
 arbitrary external hosts — is proxied to the serial `maintenance` queue so that
 network and process-failure risk stays out of the credentialed core pod, with
-delivery and Alertmanager publication proxied back to `TASK_QUEUES.DEFAULT`. It automates the rot-detection half of the root
+delivery and Alertmanager publication proxied back to `TASK_QUEUES.DEFAULT`.
+Because that queue has a single activity slot, the schedule is staggered past
+the worst case of every sibling on it and its execution timeout budgets for
+queueing as well as its own retries — the deadline runs while the scan waits
+for the slot. It automates the rot-detection half of the root
 AGENTS.md link-liveness rule; the commit-time check for new URLs stays manual.
 Dead links map to `warning` findings — email-only in practice — while the
 symmetric `LinkRotScanCritical` fire/resolve occurrence pages only if a
