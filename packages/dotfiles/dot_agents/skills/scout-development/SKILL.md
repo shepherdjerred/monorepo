@@ -3,7 +3,7 @@ name: scout-development
 description: >-
   Scout for League of Legends development workflow for LLM agents, including
   local marketing/docs/webapp surfaces, BETA credentials, dev session bootstrap,
-  report-lake data, beta SQLite snapshots, Kubernetes inspection, and PinchTab
+  report-lake data, beta Postgres snapshots, Kubernetes inspection, and PinchTab
   real-Chrome automation. Use when developing, testing, or investigating Scout.
 ---
 
@@ -42,14 +42,15 @@ bun run --filter='./packages/scout-for-lol' dev:web -- \
 starts the backend with the BETA Discord bot token, starts the Vite SPA, and
 proxies `/api` and `/trpc` from `:5180` to `:3000`.
 
-Each copy can use isolated ports and an isolated SQLite database:
+Each copy can use isolated ports and an isolated Postgres database on the
+shared local dev server (port 5471, `SCOUT_PG_PORT` overrides):
 
 ```bash
 # Gateway owner (the normal/default copy)
 bun run --filter='./packages/scout-for-lol' dev:web
 
 # Secondary copy: backend :3001, SPA :5181, database auto-derived as
-# file:./local-web-dev-3001.db; do not claim the BETA gateway twice.
+# scout_dev_3001 on the shared server; do not claim the BETA gateway twice.
 bun run --filter='./packages/scout-for-lol' dev:web -- \
   --backend-port 3001 \
   --web-port 5181 \
@@ -77,7 +78,8 @@ origin variables/flags aligned when creating another stack; otherwise a
 root-relative `/app/` or `/docs/` link stays on the wrong Astro server. In
 production and beta, unset origins preserve the normal same-origin routes.
 
-`--database-url file:...` overrides the derived database name. The web server
+`--database-url postgres://...` (or `SCOUT_DEV_DATABASE_URL`) overrides the
+derived database; only `postgres://`/`postgresql://` URLs are accepted. The web server
 uses strict port binding, so a busy port fails clearly instead of silently
 moving the SPA to a URL that `dev:login` does not know about. For a secondary
 copy, point the login wrapper at its origins:
@@ -144,7 +146,7 @@ auth bypass.
 
 ## Shared report lake
 
-ScoutQL reads Parquet through DuckDB, not SQLite fact tables. The shared local
+ScoutQL reads Parquet through DuckDB, not Postgres fact tables. The shared local
 lake is:
 
 ```bash
@@ -157,33 +159,33 @@ multiple workspaces at once. Rebuilds read raw match JSON from the BETA S3
 bucket and write the lake, so compaction is an explicit operator action rather
 than part of ordinary UI development.
 
-## Snapshot BETA SQLite safely
+## Snapshot BETA state safely
 
-The BETA pod stores application state at `/data/db.sqlite` and the report lake
-at `/data/report-lake`. Never raw-copy a live SQLite file. First find the pod:
-
-```bash
-kubectl get pods -n scout-beta -o name | rg 'scout-beta-scout-backend-'
-```
-
-Then create a consistent temporary snapshot inside the BETA pod with SQLite's
-`VACUUM INTO`, copy that snapshot to an ignored local path, and remove the
-temporary pod file:
+BETA application state is the `scout` database in the `scout-beta-postgresql`
+cluster (Zalando postgres-operator) in namespace `scout-beta`; the report lake
+is `/data/report-lake` in the backend pod. Run `pg_dump` through the postgres
+pod's local trust socket into an ignored local path, then restore into the
+shared local dev server:
 
 ```bash
-POD="$(kubectl get pods -n scout-beta -o name | rg 'scout-beta-scout-backend-' | head -n 1)"
-LOCAL_DB="$HOME/.local/share/scout-for-lol/scout-beta.db"
-
-kubectl exec -n scout-beta "$POD" -- bun -e 'import { Database } from "bun:sqlite"; const db = new Database("/data/db.sqlite", { readonly: true }); db.exec(`VACUUM INTO "/tmp/scout-beta-snapshot.sqlite"`); db.close();'
-mkdir -p "$(dirname "$LOCAL_DB")"
-kubectl cp -n scout-beta "$POD:/tmp/scout-beta-snapshot.sqlite" "$LOCAL_DB"
-kubectl exec -n scout-beta "$POD" -- rm /tmp/scout-beta-snapshot.sqlite
+kubectl exec -n scout-beta scout-beta-postgresql-0 -- pg_dump -U postgres -Fc scout > "$HOME/.local/share/scout-for-lol/scout-beta.dump"
+mise exec -- createdb -h 127.0.0.1 -p 5471 -U scout scout_beta_snapshot
+mise exec -- pg_restore -h 127.0.0.1 -p 5471 -U scout -d scout_beta_snapshot --no-owner "$HOME/.local/share/scout-for-lol/scout-beta.dump"
+SCOUT_DEV_DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
+  bun run --filter='./packages/scout-for-lol' dev:web -- \
+  --backend-port 3001 --web-port 5181 --no-discord-gateway
 ```
 
-Keep the source read-only and verify the local copy before pointing
-`DATABASE_URL` at it. Do not copy production data or expose the database in
-logs. The exact pod path and local destination must be explicit in every
-command; never use a broad recursive copy.
+Use the same restored `scout_beta_snapshot` for the outreach pre-send review:
+
+```bash
+DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
+  bun run --cwd packages/scout-for-lol/packages/backend scripts/outreach-dry-run.ts
+```
+
+Never copy production data — snapshots are beta-only. Do not expose the
+database or credentials in logs. The exact database name and local destination
+must be explicit in every command; never use a broad recursive copy.
 
 ## PinchTab and real Chrome
 

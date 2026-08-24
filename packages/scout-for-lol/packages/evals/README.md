@@ -22,9 +22,11 @@ Never expose it publicly (no Funnel).
 
 ## Discover Candidates
 
-First sync the sanitized tracked-player profile snapshot from Beta SQLite. The
-command queries only `Player` and `Account` through a read-only connection; it
-does not copy tokens, audit data, or the 4 GB live database.
+First sync the sanitized tracked-player profile snapshot from Beta Postgres.
+The command kubectl-execs one read-only `psql` `json_agg` query against
+`scout-beta-postgresql-0` (database `scout`) covering only `Player` and
+`Account`; it does not copy tokens, audit data, or the rest of the live
+database.
 
 ```bash
 bun run --filter=@scout-for-lol/evals sync-beta

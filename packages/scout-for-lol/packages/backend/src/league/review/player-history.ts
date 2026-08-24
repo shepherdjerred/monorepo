@@ -159,7 +159,7 @@ export async function buildPlayerHistoryContext(options: {
 
   const rankRows = await client.matchRankHistory.findMany({
     where: { puuid: options.puuid, queueType: "solo" },
-    orderBy: { matchGameEndAt: "desc" },
+    orderBy: { matchGameEndAt: { sort: "desc", nulls: "last" } },
     take: WINDOW_SIZE,
   });
   const rankPoints: RankPoint[] = rankRows.flatMap((row) => {

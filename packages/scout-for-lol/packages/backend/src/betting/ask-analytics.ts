@@ -13,6 +13,7 @@ import {
   type LeaguePuuid,
   type RiotTeamId,
 } from "@scout-for-lol/data";
+import { Prisma } from "#generated/prisma/client/index.js";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   BucksAskBetOutcomeSchema,
@@ -117,6 +118,7 @@ export async function loadBucksAskAnalyticsDataset(
   const { accountRows, poolRows, betRows, parlayBetRows, parlayMarketCount } =
     await prismaClient.$transaction(
       async (transaction) => await readAnalyticsSnapshot(serverId, transaction),
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
 
   const pools = new Map<number, PoolFact>();

@@ -56,9 +56,9 @@ export type ApplyBucksDeltaInput = {
   predictedTeamId?: number | undefined;
   actualWinningTeamId?: number | undefined;
   /**
-   * Refundable headroom loaded after the caller acquired the transaction's
-   * write lock. Settlement batches this value for every position so credits
-   * do not issue several aggregate queries per bettor.
+   * Refundable headroom loaded after the caller's guarded first write locked
+   * the account row. Settlement batches this value for every position so
+   * credits do not issue several aggregate queries per bettor.
    */
   knownRefundableHeld?: bigint | undefined;
 };
@@ -214,10 +214,12 @@ export async function applyBucksDelta(
   }
 
   if (input.delta < 0) {
-    // Guarded conditional update: validates "can afford" and takes the SQLite
-    // write lock in a single statement. A plain read-then-write here would race
-    // two concurrent button clicks, and SQLITE_BUSY_SNAPSHOT is not retried by
-    // busy_timeout.
+    // Guarded conditional update: validates "can afford" and locks the row in
+    // a single statement. Under Postgres READ COMMITTED a concurrent committed
+    // debit makes this update re-evaluate its WHERE against the newest row
+    // version (EvalPlanQual), so the losing click matches 0 rows instead of
+    // double-spending. A plain read-then-write here would race two concurrent
+    // button clicks.
     const debited = await tx.bucksAccount.updateMany({
       where: {
         id: input.bucksAccountId,

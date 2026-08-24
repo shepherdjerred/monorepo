@@ -4,14 +4,16 @@
 -- region): stub and live IDs are different namespaces, so a code minted under
 -- the stub is meaningless under the live API.
 CREATE TABLE "TournamentRegistration" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" SERIAL NOT NULL,
     "apiMode" TEXT NOT NULL,
     "tournamentRegion" TEXT NOT NULL,
     "providerId" INTEGER NOT NULL,
     "tournamentId" INTEGER NOT NULL,
     "callbackUrl" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "TournamentRegistration_pkey" PRIMARY KEY ("id")
 );
 
 CREATE UNIQUE INDEX "TournamentRegistration_apiMode_tournamentRegion_key"
@@ -21,7 +23,7 @@ ON "TournamentRegistration"("apiMode", "tournamentRegion");
 -- from ActiveGame, which is keyed by a match ID that does not exist until a
 -- game starts and is hard-deleted by the 3-hour TTL sweep.
 CREATE TABLE "TournamentLobby" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" SERIAL NOT NULL,
     "code" TEXT NOT NULL,
     "apiMode" TEXT NOT NULL,
     "providerId" INTEGER NOT NULL,
@@ -48,10 +50,12 @@ CREATE TABLE "TournamentLobby" (
     "joinedPuuids" TEXT NOT NULL DEFAULT '[]',
     "gameId" BIGINT,
     "matchId" TEXT,
-    "lastPolledAt" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" DATETIME NOT NULL,
-    "updatedAt" DATETIME NOT NULL
+    "lastPolledAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "TournamentLobby_pkey" PRIMARY KEY ("id")
 );
 
 CREATE UNIQUE INDEX "TournamentLobby_code_key" ON "TournamentLobby"("code");

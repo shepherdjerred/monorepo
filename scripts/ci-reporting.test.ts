@@ -852,7 +852,7 @@ describe("CI reporting manifest", () => {
       ],
       [
         "packages/scout-for-lol/packages/backend/turbo.json",
-        '"test:ci": {\n      "env": ["DATABASE_URL"]\n    }',
+        '"test:ci": {\n      "env": ["DATABASE_URL"],\n      "passThroughEnv": ["MISE_DATA_DIR"]\n    }',
       ],
     ] satisfies readonly (readonly [string, string])[]) {
       const turbo = await Bun.file(path.join(repositoryRoot, turboPath)).text();

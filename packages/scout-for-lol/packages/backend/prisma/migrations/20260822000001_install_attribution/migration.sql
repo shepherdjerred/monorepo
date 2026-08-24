@@ -1,18 +1,18 @@
 -- AlterTable
-ALTER TABLE "GuildInstall" ADD COLUMN "attributedAt" DATETIME;
+ALTER TABLE "GuildInstall" ADD COLUMN "attributedAt" TIMESTAMP(3);
 ALTER TABLE "GuildInstall" ADD COLUMN "attributionSurface" TEXT;
 
 -- CreateTable
 CREATE TABLE "InstallAttributionToken" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" SERIAL NOT NULL,
     "token" TEXT NOT NULL,
     "discordId" TEXT NOT NULL,
     "surface" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" DATETIME NOT NULL,
-    "consumedAt" DATETIME,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "consumedAt" TIMESTAMP(3),
     "guildId" TEXT,
-    "reconciledAt" DATETIME
+    "reconciledAt" TIMESTAMP(3)
 );
 
 -- CreateIndex
