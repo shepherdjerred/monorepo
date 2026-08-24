@@ -42,6 +42,7 @@ export async function handleWeeklyParlayControl(
   }
   const result = await runWeeklyParlayControlAction(body.data, {
     serverId: MY_SERVER,
+    signal: request.signal,
   });
   return Response.json(result, { status: 200 });
 }

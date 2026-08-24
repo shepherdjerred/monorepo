@@ -494,7 +494,11 @@ export function createTemporalWorkerDeployment(
   const glitterDeployment = createTemporalGlitterWorker(chart, {
     serviceAccount,
     envVariables: {
-      ...container.env.variables,
+      ...Object.fromEntries(
+        Object.entries(container.env.variables).filter(
+          ([name]) => name !== "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+        ),
+      ),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("glitter"),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-glitter-worker"),
     },

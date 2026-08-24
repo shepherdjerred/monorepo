@@ -95,7 +95,12 @@ async function linkedMemberSubjects(
 }
 
 async function openWeeklyParlayInternal(
-  input: { serverId: string; periodKey: string; slot?: number },
+  input: {
+    serverId: string;
+    periodKey: string;
+    slot?: number;
+    signal?: AbortSignal;
+  },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<OpenWeeklyParlayResult> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
@@ -175,6 +180,7 @@ async function openWeeklyParlayInternal(
         [history.subject.key, history.recentEligibleGames],
       ]),
       historyWindows: history.fullyObservedWindows,
+      abortSignal: input.signal,
     });
     const issues = validateWeeklyParlayProposal({
       proposal: generated.proposal,
@@ -273,7 +279,12 @@ async function openWeeklyParlayInternal(
 }
 
 export async function openWeeklyParlay(
-  input: { serverId: string; periodKey: string; slot?: number },
+  input: {
+    serverId: string;
+    periodKey: string;
+    slot?: number;
+    signal?: AbortSignal;
+  },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<OpenWeeklyParlayResult> {
   const startedAt = Date.now();

@@ -58,6 +58,7 @@ type ControlContext = {
   serverId: string;
   now: Date;
   prismaClient: ExtendedPrismaClient;
+  signal?: AbortSignal;
 };
 
 async function reconcileOpen(
@@ -73,6 +74,7 @@ async function reconcileOpen(
       serverId: context.serverId,
       periodKey: action.periodKey,
       slot: action.slot,
+      signal: context.signal,
     },
     context.prismaClient,
   );
@@ -257,13 +259,14 @@ async function runWeeklyParlayControlActionInternal(
     serverId: string;
     now?: Date;
     prismaClient?: ExtendedPrismaClient;
+    signal?: AbortSignal;
   },
 ): Promise<WeeklyParlayControlResult> {
   const action = WeeklyParlayControlActionSchema.parse(input);
   const serverId = DiscordGuildIdSchema.parse(options.serverId);
   const prismaClient = options.prismaClient ?? prisma;
   const now = options.now ?? new Date();
-  const context = { serverId, prismaClient, now };
+  const context = { serverId, prismaClient, now, signal: options.signal };
   if (action.action === "open") {
     return await reconcileOpen(action, context);
   }
@@ -298,6 +301,7 @@ export async function runWeeklyParlayControlAction(
     serverId: string;
     now?: Date;
     prismaClient?: ExtendedPrismaClient;
+    signal?: AbortSignal;
   },
 ): Promise<WeeklyParlayControlResult> {
   try {
