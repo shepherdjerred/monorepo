@@ -161,12 +161,10 @@ function boundedDiagnostics(
 /**
  * Counts of what the reference tool returned.
  *
- * `metrics`, `groupBys`, and `filters` are v1 vocabularies that ScoutQL v2
- * dissolved — there is no metric enum, groupings are ordinary expressions, and
- * filters are ordinary predicates — so they report `null` rather than a number
- * standing in for something else. Renaming those three fields is a change to
- * `ExploreTraceDetails` in `@scout-for-lol/data` plus the app's trace panel,
- * tracked with the coordinator.
+ * The v1 keys (`metrics`, `groupBys`, `filters`) are simply omitted: those
+ * vocabularies no longer exist, and the trace schema keeps them optional only
+ * so traces stored before the cutover still parse and still render their own
+ * counts. What v2 reads instead is how many columns and idioms the turn saw.
  */
 function referenceDetails(
   output: z.infer<typeof LanguageToolOutputSchema> | null,
@@ -178,13 +176,21 @@ function referenceDetails(
         output.scalarFunctions.length +
         output.macroFunctions.length +
         output.referenceFunctions.length;
+  const columns =
+    output === null
+      ? null
+      : output.sources.reduce(
+          (total, source) => total + source.columns.length,
+          0,
+        );
   return {
     kind: "reference",
     sources: output?.sources.length ?? null,
-    metrics: null,
+    columns,
     functions,
-    groupBys: null,
-    filters: null,
+    aggregateFunctions: output?.aggregateFunctions.length ?? null,
+    scalarFunctions: output?.scalarFunctions.length ?? null,
+    idioms: output?.idioms.length ?? null,
     renderKinds: output?.renderKinds.length ?? null,
     renderOptions: output?.renderOptions.length ?? null,
     queues: output?.queues.length ?? null,

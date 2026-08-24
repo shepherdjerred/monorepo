@@ -4,15 +4,12 @@ import {
   ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
 } from "@scout-for-lol/data";
-import {
-  ReportDisplayKindSchema,
-  ReportOutputFormatSchema,
-} from "@scout-for-lol/data/model/report.ts";
+import { ReportDisplayKindSchema } from "@scout-for-lol/data/model/report.ts";
 import {
   QueueTypeSchema,
   queueTypeToDisplayString,
 } from "@scout-for-lol/data/model/state.ts";
-import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/analyze-render.ts";
+import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
 import {
   scoutQlSourceCatalogs,
   type ScoutQlColumnInfo,
@@ -181,8 +178,18 @@ export const LanguageToolOutputSchema = z
     macroFunctions: z.array(LanguageFunctionSchema),
     /** Entity lookups: `player('…')`, `champion('…')`. */
     referenceFunctions: z.array(LanguageFunctionSchema),
+    /** What `RENDER <kind>` accepts, with the description that says when to
+     * reach for it — the model has to choose one, and "bump_chart" alone does
+     * not say it plots rank movement over time. */
     renderKinds: z.array(
-      z.object({ id: z.string(), isChart: z.boolean() }).strict(),
+      z
+        .object({
+          id: z.string(),
+          label: z.string(),
+          description: z.string(),
+          isChart: z.boolean(),
+        })
+        .strict(),
     ),
     /** Option names accepted inside `RENDER <kind> WITH (…)`. */
     renderOptions: z.array(z.string()),
@@ -282,9 +289,11 @@ export function scoutQlLanguageReference(): LanguageToolOutput {
     scalarFunctions: functions.scalar,
     macroFunctions: functions.macro,
     referenceFunctions: functions.reference,
-    renderKinds: ReportOutputFormatSchema.options.map((format) => ({
-      id: format.toLowerCase(),
-      isChart: isChartRenderKind(format),
+    renderKinds: SCOUTQL_RENDER_KINDS.map((kind) => ({
+      id: kind.id,
+      label: kind.label,
+      description: kind.description,
+      isChart: kind.isChart,
     })),
     renderOptions: [...SCOUTQL_CHART_OPTION_NAMES],
     idioms: SCOUTQL_IDIOMS.map((idiom) => ({
