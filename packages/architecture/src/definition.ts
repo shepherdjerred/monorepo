@@ -83,6 +83,20 @@ function flattenLayerPath(layer: string): string {
   return layer.replaceAll("/", "-");
 }
 
+/**
+ * Fixture files are selected by a flattened layer prefix plus a trailing dash.
+ * Distinct layer paths can therefore still overlap: `foo` matches fixtures for
+ * both `foo-*` and `foo-bar-*`. Such boundaries cannot share the flat fixture
+ * directory, because one deliberate violation would exercise both rules.
+ */
+function fixturePrefixesOverlap(first: string, second: string): boolean {
+  return (
+    first === second ||
+    first.startsWith(`${second}-`) ||
+    second.startsWith(`${first}-`)
+  );
+}
+
 function expandIsolatedGroup(group: IsolatedGroup): LayerBoundary[] {
   return group.layers.map((layer) => ({
     name: `${group.name}-${flattenLayerPath(layer)}`,
@@ -164,12 +178,13 @@ const ArchitectureDefinitionSchema = z
     }
     for (const boundary of expandBoundaries(definition)) {
       const prefix = flattenLayerPath(boundary.from);
-      const collision = seenFixturePrefixes.get(prefix);
-      if (collision !== undefined && collision !== boundary.from) {
-        context.addIssue({
-          code: "custom",
-          message: `layers "${collision}" and "${boundary.from}" flatten to the same fixture prefix "${prefix}"`,
-        });
+      for (const [otherPrefix, otherLayer] of seenFixturePrefixes) {
+        if (fixturePrefixesOverlap(prefix, otherPrefix)) {
+          context.addIssue({
+            code: "custom",
+            message: `layers "${otherLayer}" and "${boundary.from}" have overlapping fixture prefixes "${otherPrefix}-" and "${prefix}-"`,
+          });
+        }
       }
       seenFixturePrefixes.set(prefix, boundary.from);
       if (boundary.name === CIRCULAR_RULE_NAME) {

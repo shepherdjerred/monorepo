@@ -165,7 +165,23 @@ describe("resolveArchitecture isolated groups", () => {
           },
         ],
       }),
-    ).toThrow(/same fixture prefix/u);
+    ).toThrow(/overlapping fixture prefixes/u);
+  });
+
+  it("rejects a fixture prefix that would also match another layer's fixtures", () => {
+    expect(() =>
+      resolveArchitecture({
+        boundaries: [
+          { ...boundary, from: "foo", to: ["server"] },
+          {
+            ...boundary,
+            name: "foo-bar-is-pure",
+            from: "foo-bar",
+            to: ["server"],
+          },
+        ],
+      }),
+    ).toThrow(/overlapping fixture prefixes/u);
   });
 });
 

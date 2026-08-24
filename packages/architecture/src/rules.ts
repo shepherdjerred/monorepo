@@ -118,7 +118,7 @@ export function expectedFixtureRuleNames(
  * Fixtures sit flat in one directory, so a nested layer path is flattened:
  * a boundary from `lib/amazon` is proven by `lib-amazon-<what-it-does>.ts`.
  * `resolveArchitecture` refuses a definition in which two distinct layers
- * would flatten to the same prefix.
+ * would create overlapping prefixes.
  */
 export function fixtureFilePrefix(boundary: LayerBoundary): string {
   return `${boundary.from.replaceAll("/", "-")}-`;
