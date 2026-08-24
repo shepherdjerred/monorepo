@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Compass, Settings } from "lucide-react";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -11,196 +10,111 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import {
-  isOnboardingComplete,
-  isOnboardingSeen,
-  markOnboardingComplete,
-  markOnboardingSeen,
-  shouldRedirectToOnboarding,
-} from "#src/lib/onboarding-storage.ts";
-import { trackOutboundClick } from "#src/lib/analytics.ts";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
-/**
- * Kicks off the bot-install flow. Points at the backend route (not an
- * SPA route), which 302s to Discord's add-to-server screen and returns
- * the admin to /app/installed?guild_id=… — see handleDiscordInstall.
- */
-const INSTALL_URL = "/api/discord/install?surface=guild_picker";
-
-function AddServerButton({
-  variant = "default",
-  children,
-}: {
-  variant?: "default" | "outline";
-  children: React.ReactNode;
-}) {
-  return (
-    <Button asChild variant={variant}>
-      <a
-        href={INSTALL_URL}
-        onClick={(clickEvent) => {
-          trackOutboundClick(clickEvent, "bot_install_click", INSTALL_URL, {
-            surface: "guild_picker",
-          });
-        }}
-      >
-        {children}
-      </a>
-    </Button>
-  );
+export function resolveMemberDestination(input: {
+  exploreAvailable: boolean;
+  profilesAvailable: boolean;
+}): "/explore" | "/players" | null {
+  if (input.exploreAvailable) return "/explore";
+  if (input.profilesAvailable) return "/players";
+  return null;
 }
 
 export function GuildPicker() {
   const trpc = useTRPC();
-  const navigate = useNavigate();
-  const meQuery = useQuery(
-    trpc.auth.sessionState.queryOptions(undefined, SESSION_QUERY_OPTIONS),
+  const exploreQuery = useQuery(trpc.explore.status.queryOptions());
+  const profilesQuery = useQuery(
+    trpc.consumerPlayer.status.queryOptions(undefined, { retry: 2 }),
   );
-  const { data } = useSuspenseQuery(
-    trpc.guild.listManageable.queryOptions(undefined, {
-      staleTime: STALE_TIME_SLOW_LIST,
-    }),
-  );
-  const discordId = meQuery.data?.user?.discordId ?? null;
-  const [bannerDismissed, setBannerDismissed] = useState(false);
-
-  // Keep incomplete users in the guided first-run experience. A user with no
-  // manageable servers always belongs there, even if this browser previously
-  // recorded setup as complete or abandoned. The install redirect (Discord →
-  // /installed → /welcome) still completes setup without passing through here.
-  useEffect(() => {
-    if (discordId === null) return;
-    if (
-      !shouldRedirectToOnboarding(
-        data.length > 0,
-        isOnboardingComplete(discordId),
-      )
-    ) {
-      return;
-    }
-    markOnboardingSeen(discordId);
-    void navigate("/welcome", { replace: true });
-  }, [data.length, discordId, navigate]);
-
-  const showBanner =
-    discordId !== null &&
-    isOnboardingSeen(discordId) &&
-    !isOnboardingComplete(discordId) &&
-    !bannerDismissed;
-
-  const banner = showBanner ? (
-    <GetStartedBanner
-      onDismiss={() => {
-        markOnboardingComplete(discordId);
-        setBannerDismissed(true);
-      }}
-    />
-  ) : null;
-
-  if (data.length === 0) {
-    return (
-      <Shell>
-        {banner}
-        <Card>
-          <CardHeader>
-            <CardTitle>Add Scout to your server</CardTitle>
-            <CardDescription>
-              You need to be a Discord Administrator in a server with Scout
-              installed. Add Scout below — you&apos;ll come right back here to
-              configure it.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <AddServerButton>Add Scout to a server</AddServerButton>
-            <Button asChild variant="outline">
-              <Link to="/welcome">Open setup guide</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </Shell>
-    );
-  }
+  const memberDestination = resolveMemberDestination({
+    exploreAvailable: exploreQuery.data?.enabled === true,
+    profilesAvailable: profilesQuery.data?.state === "available",
+  });
+  const memberPending = exploreQuery.isPending || profilesQuery.isPending;
+  const memberError = exploreQuery.isError || profilesQuery.isError;
 
   return (
-    <Shell>
-      {banner}
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold tracking-tight">Pick a guild</h1>
-        <div className="flex items-center gap-3">
-          <Link
-            to="/explore"
-            className="text-sm text-scout-subtle hover:text-scout-ink"
-          >
-            Explore
-          </Link>
-          <Link
-            to="/welcome"
-            className="text-sm text-scout-subtle hover:text-scout-ink"
-          >
-            Setup guide
-          </Link>
-          <AddServerButton variant="outline">
-            Add another server
-          </AddServerButton>
-        </div>
+    <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:py-12">
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-primary">Scout dashboard</p>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Choose how you want to use Scout
+        </h1>
+        <p className="max-w-2xl text-scout-subtle">
+          Discover the games Scout recorded as a server member, or administer
+          and install Scout for a Discord server.
+        </p>
       </div>
-      <ul className="grid gap-2">
-        {data.map((g) => (
-          <li key={g.id}>
-            <Link
-              to={`/g/${g.id}`}
-              className="flex items-center gap-3 rounded-md border border-border bg-scout-surface p-3 text-scout-ink transition-colors hover:bg-scout-accent hover:text-scout-accent-ink"
-            >
-              {g.icon === null ? (
-                <div className="h-8 w-8 shrink-0 rounded-md bg-scout-hover" />
-              ) : (
-                <img
-                  src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64`}
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 shrink-0 rounded-md"
-                />
-              )}
-              <span className="flex-1 truncate font-medium">{g.name}</span>
-              {g.isOwner && (
-                <span className="text-xs text-scout-subtle">owner</span>
-              )}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </Shell>
-  );
-}
 
-function GetStartedBanner(props: { onDismiss: () => void }) {
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">New to Scout?</CardTitle>
-        <CardDescription>
-          Take the quick setup guide to track your first player and learn the
-          basics.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex gap-2 pt-0">
-        <Button asChild size="sm">
-          <Link to="/welcome">Start setup guide</Link>
-        </Button>
-        <Button variant="ghost" size="sm" onClick={props.onDismiss}>
-          Dismiss
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
+      <div className="grid gap-4 md:grid-cols-2">
+        <ExperienceCard
+          title="Explore Scout"
+          description="Ask questions across Scout's recorded games and find configured players from enabled servers you share."
+          icon={<Compass aria-hidden="true" />}
+        >
+          {memberPending ? (
+            <p className="text-sm text-scout-subtle">Checking access…</p>
+          ) : memberError ? (
+            <div className="space-y-3">
+              <p className="text-sm text-scout-subtle">
+                Scout couldn&apos;t verify your member access. This is usually
+                temporary.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  void exploreQuery.refetch();
+                  void profilesQuery.refetch();
+                }}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : memberDestination === null ? (
+            <p className="text-sm text-scout-subtle">
+              Member discovery is not enabled for a Scout server you currently
+              share. Administrator permission is not required when it becomes
+              available.
+            </p>
+          ) : (
+            <Button asChild size="lg">
+              <Link to={memberDestination}>Explore Scout</Link>
+            </Button>
+          )}
+        </ExperienceCard>
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-8 sm:py-12">
-      {children}
+        <ExperienceCard
+          title="Manage Scout"
+          description="Open an existing server workspace, continue setup, or add Scout to a new Discord server."
+          icon={<Settings aria-hidden="true" />}
+        >
+          <Button asChild size="lg" variant="outline">
+            <Link to="/manage">Manage Scout</Link>
+          </Button>
+        </ExperienceCard>
+      </div>
     </div>
+  );
+}
+
+function ExperienceCard(props: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="flex min-h-72 flex-col border-primary/30 bg-gradient-to-br from-scout-surface to-scout-hover/40">
+      <CardHeader className="flex-1 space-y-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          {props.icon}
+        </div>
+        <div className="space-y-2">
+          <CardTitle className="text-2xl">{props.title}</CardTitle>
+          <CardDescription>{props.description}</CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent>{props.children}</CardContent>
+    </Card>
   );
 }

@@ -43,6 +43,8 @@ const SCOUT_ANALYTICS_EVENTS = [
   "player_renamed",
   "players_merged",
   "player_deleted",
+  "player_search_performed",
+  "player_profile_opened",
   // Competitions
   "competition_created",
   "competition_edited",

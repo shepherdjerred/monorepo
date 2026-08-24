@@ -42,6 +42,34 @@ export function appGlobalPath(pathname: string): string {
   return `/app${pathname}`;
 }
 
+function MemberToolLinks(props: { pathname: string }) {
+  return (
+    <>
+      <a
+        className="scout-navbar__link"
+        href="/app/explore"
+        aria-current={
+          props.pathname.startsWith("/explore") ? "page" : undefined
+        }
+      >
+        Explore
+      </a>
+      <a
+        className="scout-navbar__link"
+        href="/app/players"
+        aria-current={
+          props.pathname.startsWith("/players") ? "page" : undefined
+        }
+      >
+        Players
+      </a>
+      <a className="scout-navbar__link" href="/app/manage">
+        Manage servers
+      </a>
+    </>
+  );
+}
+
 /**
  * Top-level chrome shared by every route (login included): the contract
  * mismatch banner above the routed content and the build-identity footer below
@@ -90,11 +118,19 @@ export function RootLayout() {
       <GlobalNavbar
         signedIn={username !== undefined}
         currentPath={appGlobalPath(location.pathname)}
-        guildAccess={
+        utility={
           username === undefined ? undefined : (
-            <a className="scout-navbar__link" href="/app/">
-              Guilds
-            </a>
+            <nav
+              className="scout-navbar__member-links"
+              aria-label="Member tools"
+            >
+              <MemberToolLinks pathname={location.pathname} />
+            </nav>
+          )
+        }
+        mobileNavigation={
+          username === undefined ? undefined : (
+            <MemberToolLinks pathname={location.pathname} />
           )
         }
         accountMenu={

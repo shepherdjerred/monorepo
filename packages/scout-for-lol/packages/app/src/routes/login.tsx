@@ -2,6 +2,9 @@ import { useSearchParams } from "react-router";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { trackOutboundClick } from "#src/lib/analytics.ts";
 
+export const LOGIN_DESCRIPTION =
+  "Sign in with Discord to ask Scout, find players in shared servers, or manage servers where you have access.";
+
 /**
  * The "Sign in with Discord" anchor points at the backend's
  * /api/auth/discord/start route. That route mints the OAuth state
@@ -22,9 +25,7 @@ export function Login() {
           <h1 className="text-2xl font-semibold tracking-tight">
             Scout for LoL
           </h1>
-          <p className="text-sm text-scout-subtle">
-            Sign in with Discord to manage your guild&apos;s subscriptions.
-          </p>
+          <p className="text-sm text-scout-subtle">{LOGIN_DESCRIPTION}</p>
         </div>
         {error !== null && (
           <p className="text-sm text-scout-danger">{describeError(error)}</p>

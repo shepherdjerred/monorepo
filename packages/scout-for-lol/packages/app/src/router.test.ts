@@ -11,6 +11,7 @@ import { trpcOptions } from "#src/lib/trpc-options.ts";
 const KNOWN_URLS = [
   "/login",
   "/",
+  "/manage",
   "/welcome",
   "/installed",
   // The pair pins react-router's optional-segment support (`:conversationId?`)
@@ -18,6 +19,8 @@ const KNOWN_URLS = [
   "/explore",
   "/explore/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
   "/explore/s/some-share-token",
+  "/players",
+  "/players/42",
   "/g/1/subscriptions",
   "/g/1/players",
   "/g/1/players/Alias",

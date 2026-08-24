@@ -170,6 +170,7 @@ describe("normalizePath", () => {
     expect(normalizePath("/g/123/competitions/7")).toBe(
       "/g/:guildId/competitions/:competitionId",
     );
+    expect(normalizePath("/players/42")).toBe("/players/:playerId");
   });
 
   test("preserves known static routes and rejects unknown routes", () => {
@@ -178,6 +179,8 @@ describe("normalizePath", () => {
       "/g/:guildId/reports/help",
     );
     expect(normalizePath("/login")).toBe("/login");
+    expect(normalizePath("/manage")).toBe("/manage");
+    expect(normalizePath("/players")).toBe("/players");
     expect(normalizePath("/something/private")).toBe("/not-found");
   });
 
@@ -480,6 +483,41 @@ describe("track", () => {
         event: "report_preset_used",
         properties: {
           category: "Champions",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+    ]);
+  });
+
+  test("consumer profile events carry only result state and entry surface", () => {
+    const calls = installClient();
+    track("player_search_performed", {
+      outcome: "results",
+      surface: "players_page",
+    });
+    track("player_profile_opened", {
+      outcome: "succeeded",
+      surface: "search_results",
+    });
+
+    expect(calls).toEqual([
+      {
+        event: "player_search_performed",
+        properties: {
+          outcome: "results",
+          surface: "players_page",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+      {
+        event: "player_profile_opened",
+        properties: {
+          outcome: "succeeded",
+          surface: "search_results",
           site_key: "scout-beta",
           site_hostname: "beta.scout-for-lol.com",
         },

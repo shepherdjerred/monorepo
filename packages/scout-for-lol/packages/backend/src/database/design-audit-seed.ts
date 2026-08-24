@@ -11,6 +11,7 @@ import {
   ReportIdSchema,
 } from "@scout-for-lol/data";
 import { parseAndCompile } from "@scout-for-lol/data/model/report-query-compile.ts";
+import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 
 const DEFAULT_GUILD_ID = "1337623164146155593";
@@ -84,6 +85,7 @@ export async function seedDesignAuditDatabase(
   );
   const channelId = DiscordChannelIdSchema.parse("1337623164146155594");
   const puuid = LeaguePuuidSchema.parse("d".repeat(78));
+  const secondaryPuuid = LeaguePuuidSchema.parse("e".repeat(78));
   const region = RegionSchema.parse("AMERICA_NORTH");
   const playerAlias =
     Bun.env["SCOUT_DESIGN_AUDIT_PLAYER_ALIAS"] ?? DEFAULT_PLAYER_ALIAS;
@@ -194,39 +196,22 @@ export async function seedDesignAuditDatabase(
     await prisma.account.deleteMany({
       where: { serverId: guildId },
     });
+    await prisma.matchRankHistory.deleteMany({
+      where: { puuid: { in: [puuid, secondaryPuuid] } },
+    });
     await prisma.player.deleteMany({
       where: { serverId: guildId },
     });
 
-    const player = await prisma.player.create({
-      data: {
-        serverId: guildId,
-        alias: playerAlias,
-        discordId,
-        creatorDiscordId: discordId,
-        createdTime: now,
-        updatedTime: now,
-      },
-    });
-
-    await prisma.account.upsert({
-      where: { serverId_puuid: { serverId: guildId, puuid } },
-      update: {
-        alias: playerAlias,
-        playerId: player.id,
-        region,
-        updatedTime: now,
-      },
-      create: {
-        alias: playerAlias,
-        puuid,
-        region,
-        playerId: player.id,
-        serverId: guildId,
-        creatorDiscordId: discordId,
-        createdTime: now,
-        updatedTime: now,
-      },
+    const player = await seedDesignAuditPlayerProfile({
+      prisma,
+      guildId,
+      discordId,
+      playerAlias,
+      puuid,
+      secondaryPuuid,
+      region,
+      now,
     });
 
     await prisma.subscription.create({
@@ -305,7 +290,7 @@ export async function seedDesignAuditDatabase(
           discordId,
           matchId: "design-audit-match-1",
           puuid,
-          queue: "RANKED_SOLO_5x5",
+          queue: "solo",
           win: true,
           surrendered: false,
           kills: 8,
@@ -314,6 +299,108 @@ export async function seedDesignAuditDatabase(
           championId: 222,
           championName: "Jinx",
           gameCreationAt: new Date("2026-01-01T12:00:00.000Z"),
+        },
+        {
+          playerId: player.id,
+          playerAlias,
+          discordId,
+          matchId: "design-audit-match-2",
+          puuid: secondaryPuuid,
+          queue: "flex",
+          win: true,
+          surrendered: false,
+          kills: 6,
+          deaths: 3,
+          assists: 14,
+          championId: 40,
+          championName: "Janna",
+          gameCreationAt: new Date("2025-12-30T18:00:00.000Z"),
+        },
+        {
+          playerId: player.id,
+          playerAlias,
+          discordId,
+          matchId: "design-audit-match-3",
+          puuid,
+          queue: "solo",
+          win: false,
+          surrendered: false,
+          kills: 4,
+          deaths: 7,
+          assists: 8,
+          championId: 222,
+          championName: "Jinx",
+          gameCreationAt: new Date("2025-12-29T20:00:00.000Z"),
+        },
+        {
+          playerId: player.id,
+          playerAlias,
+          discordId,
+          matchId: "design-audit-match-4",
+          puuid: secondaryPuuid,
+          queue: "flex",
+          win: false,
+          surrendered: false,
+          kills: 2,
+          deaths: 5,
+          assists: 16,
+          championId: 40,
+          championName: "Janna",
+          gameCreationAt: new Date("2025-12-28T21:00:00.000Z"),
+        },
+      ],
+      untrackedMatchFacts: [
+        {
+          playerId: 901,
+          playerAlias: "Teammate One",
+          matchId: "design-audit-match-1",
+          puuid: "f".repeat(78),
+          queue: "solo",
+          win: true,
+          surrendered: false,
+          kills: 20,
+          deaths: 4,
+          assists: 6,
+          gameCreationAt: new Date("2026-01-01T12:00:00.000Z"),
+        },
+        {
+          playerId: 902,
+          playerAlias: "Teammate Two",
+          matchId: "design-audit-match-2",
+          puuid: "g".repeat(78),
+          queue: "flex",
+          win: true,
+          surrendered: false,
+          kills: 24,
+          deaths: 5,
+          assists: 9,
+          gameCreationAt: new Date("2025-12-30T18:00:00.000Z"),
+        },
+        {
+          playerId: 903,
+          playerAlias: "Teammate Three",
+          matchId: "design-audit-match-3",
+          puuid: "h".repeat(78),
+          queue: "solo",
+          win: false,
+          surrendered: false,
+          kills: 18,
+          deaths: 8,
+          assists: 5,
+          gameCreationAt: new Date("2025-12-29T20:00:00.000Z"),
+        },
+        {
+          playerId: 904,
+          playerAlias: "Teammate Four",
+          matchId: "design-audit-match-4",
+          puuid: "i".repeat(78),
+          queue: "flex",
+          win: false,
+          surrendered: false,
+          kills: 22,
+          deaths: 6,
+          assists: 7,
+          gameCreationAt: new Date("2025-12-28T21:00:00.000Z"),
         },
       ],
     });

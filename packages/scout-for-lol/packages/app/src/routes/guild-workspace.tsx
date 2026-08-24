@@ -175,7 +175,7 @@ export function GuildWorkspace() {
               Setup guide
             </Link>
             <NavLink
-              to="/"
+              to="/manage"
               className="text-sm font-medium text-scout-subtle hover:text-scout-ink"
             >
               Change guild

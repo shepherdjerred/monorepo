@@ -111,6 +111,7 @@ export function GlobalNavbar(props: {
   signedIn?: boolean | undefined;
   currentPath?: string | undefined;
   utility?: ReactNode | undefined;
+  mobileNavigation?: ReactNode | undefined;
   accountMenu?: ReactNode | undefined;
   guildAccess?: ReactNode | undefined;
   getStartedTrackingEvent?: string | undefined;
@@ -167,6 +168,7 @@ export function GlobalNavbar(props: {
                     currentPath={props.currentPath}
                     origins={props.origins}
                   />
+                  {props.mobileNavigation}
                 </nav>
               </SheetContent>
             </Sheet>

@@ -48,4 +48,16 @@ describe("router analytics identity coverage", () => {
     if (guard === undefined) throw new Error("no RequireSession route");
     expect(collectPaths(guard)).not.toContain("login");
   });
+
+  test("consumer player routes remain behind the session guard", () => {
+    const root = rootRoutes[0];
+    if (root === undefined) throw new Error("no RootLayout route");
+    const guard = (root.children ?? []).find(
+      (route) => elementType(route) === RequireSession,
+    );
+    if (guard === undefined) throw new Error("no RequireSession route");
+
+    expect(collectPaths(guard)).toContain("players");
+    expect(collectPaths(guard)).toContain("players/:playerId");
+  });
 });

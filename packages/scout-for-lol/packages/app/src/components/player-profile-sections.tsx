@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
 import { ChampionIcon } from "#src/components/champion-icon.tsx";
+import { formatRiotId } from "#src/lib/riot-id-format.ts";
 
 export function formatPercent(value: number | null): string {
   return value === null ? "—" : `${Math.round(value * 100).toString()}%`;
@@ -86,6 +87,22 @@ export function RecentFormCard(props: { form: RecentForm }) {
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+export function PlayerSummaryCards(props: {
+  ranks: { solo?: Rank; flex?: Rank; ranked5s?: Rank };
+  recentForm: RecentForm | null;
+}) {
+  return (
+    <div className="grid gap-4 md:grid-cols-4">
+      <RankCard label="Ranked solo/duo" rank={props.ranks.solo} />
+      <RankCard label="Ranked flex" rank={props.ranks.flex} />
+      <RankCard label="Ranked 5s" rank={props.ranks.ranked5s} />
+      {props.recentForm === null ? null : (
+        <RecentFormCard form={props.recentForm} />
+      )}
+    </div>
   );
 }
 
@@ -180,7 +197,16 @@ type MatchEntry = {
   csPerMinute: number;
   killParticipation: number | null;
   leaguePointsDelta: number | null;
+  account: {
+    gameName: string | null;
+    tagLine: string | null;
+    region: string;
+  };
 };
+
+function matchAccountLabel(account: MatchEntry["account"]): string {
+  return formatRiotId(account, account.region);
+}
 
 function LeaguePointsBadge(props: { delta: number | null }) {
   if (props.delta === null) return null;
@@ -228,6 +254,9 @@ export function MatchHistoryList(props: { entries: MatchEntry[] }) {
               {entry.queue ?? "Unknown queue"} ·{" "}
               {Math.round(entry.gameDurationSeconds / 60).toString()}m ·{" "}
               {formatRelative(entry.gameCreationMs)}
+            </p>
+            <p className="mt-1 text-xs text-scout-subtle">
+              {matchAccountLabel(entry.account)}
             </p>
           </div>
           <div className="min-w-28">

@@ -22,6 +22,7 @@ export type ComboboxProps<T> = {
   disabled?: boolean | undefined;
   className?: string | undefined;
   id?: string | undefined;
+  maxLength?: number | undefined;
   openOnEmptyQuery?: boolean | undefined;
   onBlur?: (() => void) | undefined;
 };
@@ -81,6 +82,7 @@ export function Combobox<T>(props: ComboboxProps<T>) {
       <PopoverAnchor asChild>
         <Input
           id={props.id}
+          maxLength={props.maxLength}
           value={props.value}
           disabled={props.disabled}
           placeholder={props.placeholder}
