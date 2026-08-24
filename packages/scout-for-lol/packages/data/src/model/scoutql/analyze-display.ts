@@ -222,7 +222,19 @@ function rateEvidence(
       distinct: false,
       ...filterPart,
     },
-    trials: { kind: "count-star", ...filterPart },
+    // COUNT(the same expression), not COUNT(*): AVG ignores NULL, so a
+    // predicate over a nullable column — `AVG((placement <= 2)::INT)`, where
+    // placement is NULL outside Arena — averages only the rows it can answer.
+    // A COUNT(*) denominator would pair that rate with a trial count drawn
+    // from every game, and the interval, not the number, is the part that
+    // reads as authoritative. For a non-nullable boolean the two are equal.
+    trials: {
+      kind: "aggregate",
+      func: "count",
+      arg,
+      distinct: false,
+      ...filterPart,
+    },
   };
 }
 

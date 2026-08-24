@@ -391,21 +391,51 @@ describe("plan details worth pinning exactly", () => {
       left: { kind: "column", column: "queue" },
       right: { kind: "literal", value: "solo" },
     };
+    const arg = {
+      kind: "cast",
+      to: "int",
+      operand: { kind: "column", column: "win" },
+    };
     expect(plan.outputs[0]?.evidence).toEqual({
       kind: "rate",
       successes: {
         kind: "aggregate",
         func: "sum",
-        arg: {
-          kind: "cast",
-          to: "int",
-          operand: { kind: "column", column: "win" },
-        },
+        arg,
         distinct: false,
         filter,
       },
-      trials: { kind: "count-star", filter },
+      // COUNT(the averaged expression), so the denominator matches AVG's.
+      trials: {
+        kind: "aggregate",
+        func: "count",
+        arg,
+        distinct: false,
+        filter,
+      },
     });
+  });
+
+  test("a rate over a nullable predicate counts only the rows AVG averaged", () => {
+    // `placement` is NULL outside Arena, so AVG's denominator is the Arena
+    // games alone. A COUNT(*) denominator would pair a 60%-of-ten-games rate
+    // with a trial count drawn from every game ever played, and the resulting
+    // interval — the part a reader treats as authoritative — would be wrong by
+    // two orders of magnitude.
+    const plan = compileScoutQl(
+      `SELECT AVG((placement <= 2)::INT) AS top_two_rate FROM match_participants WHERE ${BOUND} GROUP BY player`,
+    );
+    const evidence = plan.outputs[0]?.evidence;
+    expect(evidence?.kind).toBe("rate");
+    if (evidence?.kind !== "rate") return;
+    expect(evidence.trials.kind).toBe("aggregate");
+    if (evidence.trials.kind !== "aggregate") return;
+    expect(evidence.trials.func).toBe("count");
+    expect(evidence.trials.arg).toEqual(
+      evidence.successes.kind === "aggregate"
+        ? evidence.successes.arg
+        : undefined,
+    );
   });
 
   test("HAVING references an output by alias", () => {
