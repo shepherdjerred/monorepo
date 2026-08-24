@@ -22,5 +22,7 @@
       ]
     }
   },
-  "exclude": ["**/*.test.ts", "eslint.config.ts"]
+  // architecture-fixtures holds deliberate layer violations. They exist to be
+  // rejected by `check-architecture`, not to compile.
+  "exclude": ["**/*.test.ts", "eslint.config.ts", "architecture-fixtures"]
 }

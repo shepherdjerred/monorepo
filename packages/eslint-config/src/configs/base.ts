@@ -35,6 +35,10 @@ export function baseConfig(
     tsconfigRootDir = process.cwd(),
     projectService = true,
     ignores = [
+      // Deliberate layer violations committed to prove `check-architecture`'s
+      // rules can fail. They exist to be rejected by dependency-cruiser, not
+      // to pass lint.
+      "**/architecture-fixtures/**/*",
       "**/generated/**/*",
       "**/dist/**/*",
       "**/build/**/*",

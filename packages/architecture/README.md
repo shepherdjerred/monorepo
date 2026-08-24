@@ -95,6 +95,32 @@ describe("architecture boundaries", () => {
 boundary has no fixture, or when a fixture proves no boundary. Adding a rule
 without evidence that it bites fails the suite.
 
+### Wiring checklist
+
+Fixtures are deliberately broken code, so three things have to know to leave
+them alone. The first is already done for you:
+
+| Concern    | What is needed                                                                                                                                                                                  |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ESLint     | Nothing — `@shepherdjerred/eslint-config` ignores `**/architecture-fixtures/**/*` by default. **But `ignores` replaces that default**, so a package passing its own list must repeat the entry. |
+| TypeScript | The fixture directory must not be compiled. Packages with an explicit `include` already exclude it; a package without one needs `"exclude": ["architecture-fixtures"]`.                         |
+| Meta-test  | Put it where the package's `test` script **and** its `scripts/ci-test-manifest.json` entry actually look, and reach the config through `#architecture`. **Verify, do not assume** — see below.  |
+
+A meta-test that is never discovered is the same failure this harness exists to
+prevent, one level up: the suite stays green while proving nothing. Several
+packages select test directories explicitly rather than using Vitest's default
+include — toolkit runs only `test/*` plus `scripts`, so a meta-test under
+`src/` is silently skipped. Confirm discovery against the _exact_ selectors
+both the local script and the CI manifest use:
+
+```bash
+bunx vitest --config ../../vitest.config.ts list <the package's test args> \
+  | grep architecture-boundaries
+```
+
+A package whose ESLint uses `projectService.allowDefaultProject` (an explicit
+per-file list) also has to add the meta-test to that list.
+
 ## Design notes
 
 - **Rules are derived, never duplicated.** `sourceRules()` and `fixtureRules()`

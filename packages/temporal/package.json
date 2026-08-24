@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#client": "./src/client.ts",
     "#shared/*": "./src/shared/*",
     "#activities/*": "./src/activities/*",

@@ -29,7 +29,7 @@ import {
   type CapturePageResult,
   type ChannelStateResult,
   type InventoryResult,
-} from "./glitter-corpus-activity-types.ts";
+} from "#shared/glitter-corpus-activity-types.ts";
 import { readBaselineProjection } from "./glitter-corpus-baseline.ts";
 import { discoverGuildInventory } from "./glitter-corpus-discord.ts";
 import {

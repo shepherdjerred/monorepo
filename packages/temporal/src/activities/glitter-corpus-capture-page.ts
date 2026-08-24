@@ -4,7 +4,7 @@ import {
   DiscordRateLimitSchema,
   IsoTimestampSchema,
 } from "#shared/glitter-corpus.ts";
-import type { CapturePageInput } from "./glitter-corpus-activity-types.ts";
+import type { CapturePageInput } from "#shared/glitter-corpus-activity-types.ts";
 import type {
   DiscordRestClient,
   DiscordRestResponse,

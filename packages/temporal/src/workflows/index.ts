@@ -97,7 +97,7 @@ import type {
 import type {
   ChannelStateResult,
   InventoryResult,
-} from "#activities/glitter-corpus-activity-types.ts";
+} from "#shared/glitter-corpus-activity-types.ts";
 import { runGlitterContextRefresh as _runGlitterContextRefresh } from "./glitter-context-refresh.ts";
 import type {
   GlitterContextRefreshInput,

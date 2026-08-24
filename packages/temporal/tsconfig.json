@@ -12,5 +12,8 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true
-  }
+  },
+  // Deliberate layer violations. They exist to be rejected by
+  // `check-architecture`, not to compile or lint.
+  "exclude": ["architecture-fixtures"]
 }

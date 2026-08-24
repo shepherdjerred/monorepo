@@ -2,6 +2,9 @@
   "name": "tasknotes-server",
   "version": "0.1.0",
   "type": "module",
+  "imports": {
+    "#architecture": "./architecture.config.ts"
+  },
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
