@@ -8,7 +8,6 @@ import {
   LeaguePuuidSchema,
   RiotTeamIdSchema,
   type BucksMatchingSummary,
-  type BucksPoolParticipant,
 } from "@scout-for-lol/data";
 import { HOUSE_MATCH_LIMIT } from "#src/betting/constants.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
@@ -17,29 +16,10 @@ import { matchBucksOffers } from "#src/betting/matching.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { recordClosedPool } from "#src/betting/sweep-observability.ts";
+import { aliasesForTeam, subjectAlias } from "#src/betting/sweep-roster.ts";
 import type { ClosedPool } from "#src/betting/sweep-types.ts";
 
 const logger = createLogger("betting-sweep");
-
-function aliasesForTeam(
-  roster: readonly BucksPoolParticipant[],
-  teamId: number,
-): string[] {
-  return roster
-    .filter((participant) => participant.teamId === teamId)
-    .map((participant) => participant.trackedAlias)
-    .filter((alias) => alias !== undefined);
-}
-
-function subjectAlias(
-  roster: readonly BucksPoolParticipant[],
-  subjectPuuid: string,
-): string {
-  const subject = roster.find(
-    (participant) => participant.puuid === subjectPuuid,
-  );
-  return subject?.trackedAlias ?? "a tracked player";
-}
 
 /**
  * Match one pool exactly once. The guarded pool update is deliberately the

@@ -1,40 +1,18 @@
 import * as Sentry from "@sentry/bun";
-import {
-  BucksPoolRosterSchema,
-  type BucksPoolParticipant,
-} from "@scout-for-lol/data";
+import { BucksPoolRosterSchema } from "@scout-for-lol/data";
 import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { SettlementBet } from "#src/betting/settlement-types.ts";
 import { closeBettingPoolById } from "#src/betting/sweep.ts";
+import { aliasesForTeam, subjectAlias } from "#src/betting/sweep-roster.ts";
 import type { ClosedPool } from "#src/betting/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-void-stale");
-
-function aliasesForTeam(
-  roster: readonly BucksPoolParticipant[],
-  teamId: number,
-): string[] {
-  return roster
-    .filter((participant) => participant.teamId === teamId)
-    .map((participant) => participant.trackedAlias)
-    .filter((alias) => alias !== undefined);
-}
-
-function subjectAlias(
-  roster: readonly BucksPoolParticipant[],
-  subjectPuuid: string,
-): string {
-  const subject = roster.find(
-    (participant) => participant.puuid === subjectPuuid,
-  );
-  return subject?.trackedAlias ?? "a tracked player";
-}
 
 async function pendingMatchedBets(tx: Db, poolId: number) {
   const rows = await tx.bucksBet.findMany({
