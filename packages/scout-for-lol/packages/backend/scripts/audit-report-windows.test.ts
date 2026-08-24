@@ -7,7 +7,7 @@ import {
   testGuildId,
 } from "#src/testing/test-ids.ts";
 
-const { prisma, dbPath } = createTestDatabase("audit-report-windows-test");
+const { prisma, dbUrl } = createTestDatabase("audit-report-windows-test");
 const backendRoot = `${import.meta.dir}/..`;
 
 beforeEach(async () => {
@@ -46,7 +46,7 @@ async function runAudit(fix: boolean): Promise<{
       "bun",
       "scripts/audit-report-windows.ts",
       "--database",
-      dbPath,
+      dbUrl,
       ...(fix ? ["--fix"] : []),
     ],
     cwd: backendRoot,

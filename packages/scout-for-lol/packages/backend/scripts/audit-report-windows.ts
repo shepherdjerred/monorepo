@@ -14,10 +14,11 @@
  * parser's own clause span rather than at a string offset — whitespace-proof in
  * a way the migration's SQL cannot be.
  *
- *   bun scripts/audit-report-windows.ts --database file:./snapshot.db
- *   bun scripts/audit-report-windows.ts --database file:./snapshot.db --fix
+ *   bun scripts/audit-report-windows.ts --database postgres://…
+ *   bun scripts/audit-report-windows.ts --database postgres://… --fix
  */
-import { Database } from "bun:sqlite";
+import { PrismaClient } from "#generated/prisma/client/index.js";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { z } from "zod";
 import {
   REPORT_WINDOW_REQUIRED_MESSAGE,
@@ -127,24 +128,15 @@ function withDuringClause(queryText: string): string {
 }
 
 const args = parseArgs(Bun.argv.slice(2));
-// bun:sqlite rejects `{ readonly: false }` outright — the write mode has to be
-// asked for by name, so a plain negation silently made --fix unusable.
-const db = new Database(
-  args.database.replace(/^file:/u, ""),
-  args.fix ? { readwrite: true } : { readonly: true },
-);
-
-const RowSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  queryText: z.string(),
-  isEnabled: z.number(),
+// Writes only happen on the --fix path below; without it this is a pure audit.
+const db = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: args.database }),
 });
-const rows = z
-  .array(RowSchema)
-  .parse(
-    db.query(`SELECT id, title, queryText, isEnabled FROM "Report"`).all(),
-  );
+
+const rows = await db.report.findMany({
+  select: { id: true, title: true, queryText: true },
+  orderBy: { id: "asc" },
+});
 
 let stated = 0;
 const missing: { id: number; title: string; queryText: string }[] = [];
@@ -220,16 +212,16 @@ if (missing.length > 0) {
       );
     }
     if (args.fix) {
-      db.query(`UPDATE "Report" SET "queryText" = ? WHERE "id" = ?`).run(
-        rewritten,
-        row.id,
-      );
+      await db.report.update({
+        where: { id: row.id },
+        data: { queryText: rewritten },
+      });
       logger.info(`      fixed`);
     }
   }
 }
 
-db.close();
+await db.$disconnect();
 
 // A row that cannot be parsed at all is a failure too: it will never run
 // again, and reporting it without a nonzero exit lets a release proceed past it.

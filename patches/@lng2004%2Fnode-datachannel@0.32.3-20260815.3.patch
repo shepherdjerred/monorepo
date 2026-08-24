@@ -1,0 +1,26 @@
+diff --git a/dist/cjs/lib/node-datachannel.cjs b/dist/cjs/lib/node-datachannel.cjs
+index e3abd5386b89952dde418866376c6875d3d804c8..468957855d103287584f1de81a49a55a1432fdb6 100644
+--- a/dist/cjs/lib/node-datachannel.cjs
++++ b/dist/cjs/lib/node-datachannel.cjs
+@@ -3,7 +3,7 @@
+ Object.defineProperty(exports, '__esModule', { value: true });
+ 
+ const loadBinding = require("pkg-prebuilds");
+-const bindingOptions = require("../../binding-options");
++const bindingOptions = require("../../../binding-options");
+ const packageRoot = __dirname + "/../../../" || __dirname + "/../../";
+ const nodeDataChannel = loadBinding(packageRoot, bindingOptions);
+ 
+diff --git a/dist/esm/lib/node-datachannel.mjs b/dist/esm/lib/node-datachannel.mjs
+index 2635ec3e7a9b70a02e81eb789d793972948542ec..70004d60ea6825fea80637e1ee7bda26ad9ebfee 100644
+--- a/dist/esm/lib/node-datachannel.mjs
++++ b/dist/esm/lib/node-datachannel.mjs
+@@ -7,7 +7,7 @@ const __filename = cjsUrl.fileURLToPath(import.meta.url);
+ const __dirname = cjsPath.dirname(__filename);
+ const require = cjsModule.createRequire(import.meta.url);
+ const loadBinding = require("pkg-prebuilds");
+-const bindingOptions = require("../../binding-options");
++const bindingOptions = require("../../../binding-options");
+ const packageRoot = __dirname + "/../../../" || __dirname + "/../../";
+ const nodeDataChannel = loadBinding(packageRoot, bindingOptions);
+ 

@@ -85,7 +85,10 @@ async function latestRanks(
     (["solo", "flex"] as const).map(async (queueType) =>
       prisma.matchRankHistory.findFirst({
         where: { puuid: { in: puuids }, queueType, rankAfter: { not: null } },
-        orderBy: [{ matchGameEndAt: "desc" }, { capturedAt: "desc" }],
+        orderBy: [
+          { matchGameEndAt: { sort: "desc", nulls: "last" } },
+          { capturedAt: "desc" },
+        ],
       }),
     ),
   );

@@ -26,7 +26,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
-    "@lng2004/node-datachannel": "0.32.0-20260202",
+    "@lng2004/node-datachannel": "0.32.3-20260815.3",
     "@snazzah/davey": "^0.1.8",
     "debug-level": "^4.1.1",
     "node-av": "^6.1.1",

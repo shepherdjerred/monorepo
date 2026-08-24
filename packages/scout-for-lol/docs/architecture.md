@@ -36,7 +36,7 @@ flowchart TB
     end
 
     subgraph Storage["Data Storage"]
-        DB[("SQLite<br/>(Prisma ORM)")]
+        DB[("PostgreSQL<br/>(Prisma ORM)")]
     end
 
     subgraph LOL["League Client"]

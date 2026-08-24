@@ -44,6 +44,11 @@ jq = "1"
 # (misc/minecraft-drift-check.test.ts shells out to yq, matching the yq the
 # init container runs at deploy time)
 yq = "4"
+# Shared local/CI Postgres for scout-for-lol dev + tests. Prebuilt binaries
+# (initdb/pg_ctl/psql/createdb/dropdb); major 16 matches the homelab clusters
+# (resources/postgres/*.ts, PostgresqlSpecPostgresqlVersion.VALUE_16).
+# renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
+"ubi:theseus-rs/postgresql-binaries" = { version = "16.15.0", extract_all = "true", bin_path = "bin" }
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
 helm = "4"
 opentofu = "1.12.6"
