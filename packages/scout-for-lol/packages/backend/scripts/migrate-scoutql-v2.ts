@@ -14,10 +14,11 @@
  * string offsets, and every row is checked by two independent routes to the
  * same v2 plan (see scoutql-v2-convert.ts). Read-only by default.
  *
- *   bun scripts/migrate-scoutql-v2.ts --database file:./snapshot.db
- *   bun scripts/migrate-scoutql-v2.ts --database file:./snapshot.db --fix
+ *   bun scripts/migrate-scoutql-v2.ts --database postgres://…
+ *   bun scripts/migrate-scoutql-v2.ts --database postgres://… --fix
  */
-import { Database } from "bun:sqlite";
+import { PrismaClient } from "#generated/prisma/client/index.js";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 import { convertStoredQuery } from "./scoutql-v2-convert.ts";
@@ -44,32 +45,24 @@ function parseArgs(argv: string[]): z.infer<typeof ArgsSchema> {
       continue;
     }
     throw new Error(
-      `Unknown argument ${arg ?? ""}. Expected --database <path> [--fix].`,
+      `Unknown argument ${arg ?? ""}. Expected --database <url> [--fix].`,
     );
   }
   return ArgsSchema.parse(raw);
 }
 
-const RowSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  queryText: z.string(),
-});
-
 type Rewrite = { id: number; title: string; before: string; after: string };
 type Refusal = { id: number; title: string; reason: string };
 
 const args = parseArgs(Bun.argv.slice(2));
-// bun:sqlite rejects `{ readonly: false }` outright — the write mode has to be
-// asked for by name, so a plain negation silently makes --fix a no-op.
-const db = new Database(
-  args.database.replace(/^file:/u, ""),
-  args.fix ? { readwrite: true } : { readonly: true },
-);
+const db = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: args.database }),
+});
 
-const rows = z
-  .array(RowSchema)
-  .parse(db.query(`SELECT id, title, queryText FROM "Report"`).all());
+const rows = await db.report.findMany({
+  select: { id: true, title: true, queryText: true },
+  orderBy: { id: "asc" },
+});
 
 let alreadyV2 = 0;
 const rewrites: Rewrite[] = [];
@@ -114,17 +107,18 @@ for (const refusal of refusals) {
 // half in each language is a state no later boot can tell apart from a
 // deliberate one.
 if (args.fix && rewrites.length > 0 && refusals.length === 0) {
-  const update = db.query(`UPDATE "Report" SET "queryText" = ? WHERE "id" = ?`);
-  const applyAll = db.transaction((pending: Rewrite[]) => {
-    for (const rewrite of pending) {
-      update.run(rewrite.after, rewrite.id);
+  await db.$transaction(async (tx) => {
+    for (const rewrite of rewrites) {
+      await tx.report.update({
+        where: { id: rewrite.id },
+        data: { queryText: rewrite.after },
+      });
     }
   });
-  applyAll(rewrites);
   logger.info(`\nRewrote ${rewrites.length.toString()} reports.`);
 }
 
-db.close();
+await db.$disconnect();
 
 if (refusals.length > 0) {
   logger.info(

@@ -1,8 +1,6 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { Database } from "bun:sqlite";
 import { afterAll, describe, expect, test } from "vitest";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import corpus from "./fixtures/scoutql-v2-legacy-corpus.json" with { type: "json" };
 import {
@@ -13,12 +11,17 @@ import {
 import { UnconvertibleQueryError } from "./scoutql-v2-unconvertible.ts";
 
 const backendRoot = `${import.meta.dir}/..`;
-const temporaryDirectories: string[] = [];
+// Every temporaryDatabase() call gets its own isolated Postgres database
+// cloned from the shared test template (createTestDatabase); the migration
+// CLI runs as a real subprocess against its connection URL, exactly as it
+// runs against production. Keyed by that URL so insertReports/readReports can
+// find the client without changing every call site's signature.
+const openClients = new Map<string, ExtendedPrismaClient>();
 
 afterAll(async () => {
-  for (const directory of temporaryDirectories) {
-    await rm(directory, { recursive: true, force: true });
-  }
+  await Promise.all(
+    [...openClients.values()].map((client) => client.$disconnect()),
+  );
 });
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -59,57 +62,48 @@ function refusal(queryText: string): string {
   return result.reason;
 }
 
+/** A Report row's other required columns, fixed since the migration never reads them. */
+const REPORT_DEFAULTS = {
+  serverId: "880000000000000001",
+  ownerId: "880000000000000002",
+  channelId: "880000000000000003",
+  cronExpression: "0 0 * * 0",
+  createdTime: new Date("2026-01-01T00:00:00.000Z"),
+  updatedTime: new Date("2026-01-01T00:00:00.000Z"),
+};
+
 async function temporaryDatabase(name: string): Promise<string> {
-  const directory = await mkdtemp(
-    path.join(tmpdir(), `scoutql-migration-${name}-`),
-  );
-  temporaryDirectories.push(directory);
-  const databasePath = path.join(directory, "reports.db");
-  const db = new Database(databasePath, { create: true });
-  // Deliberately not the Prisma test template: this migration only ever reads
-  // and writes these three columns, and a throwaway file cannot be mistaken
-  // for — or accidentally aimed at — a real database.
-  db.run(
-    `CREATE TABLE "Report" ("id" INTEGER PRIMARY KEY, "title" TEXT NOT NULL, "queryText" TEXT NOT NULL)`,
-  );
-  db.close();
-  return databasePath;
+  const { prisma, dbUrl } = createTestDatabase(`scoutql-migration-${name}`);
+  openClients.set(dbUrl, prisma);
+  return dbUrl;
 }
 
-function insertReports(
-  databasePath: string,
+function clientFor(databaseUrl: string): ExtendedPrismaClient {
+  const client = openClients.get(databaseUrl);
+  if (client === undefined) {
+    throw new Error(`No test database was created for ${databaseUrl}.`);
+  }
+  return client;
+}
+
+async function insertReports(
+  databaseUrl: string,
   reports: { id: number; title: string; queryText: string }[],
-): void {
-  const db = new Database(databasePath, { readwrite: true });
-  const insert = db.query(
-    `INSERT INTO "Report" ("id", "title", "queryText") VALUES (?, ?, ?)`,
-  );
+): Promise<void> {
+  const prisma = clientFor(databaseUrl);
   for (const report of reports) {
-    insert.run(report.id, report.title, report.queryText);
+    await prisma.report.create({ data: { ...REPORT_DEFAULTS, ...report } });
   }
-  db.close();
 }
 
-function readReports(
-  databasePath: string,
-): { id: number; queryText: string }[] {
-  const db = new Database(databasePath, { readonly: true });
-  const rows = db.query(`SELECT id, queryText FROM "Report" ORDER BY id`).all();
-  db.close();
-  const parsed: { id: number; queryText: string }[] = [];
-  for (const row of rows) {
-    if (
-      typeof row === "object" &&
-      row !== null &&
-      "id" in row &&
-      "queryText" in row &&
-      typeof row.id === "number" &&
-      typeof row.queryText === "string"
-    ) {
-      parsed.push({ id: row.id, queryText: row.queryText });
-    }
-  }
-  return parsed;
+async function readReports(
+  databaseUrl: string,
+): Promise<{ id: number; queryText: string }[]> {
+  const prisma = clientFor(databaseUrl);
+  return prisma.report.findMany({
+    select: { id: true, queryText: true },
+    orderBy: { id: "asc" },
+  });
 }
 
 async function runMigration(
@@ -626,7 +620,7 @@ describe("migrate-scoutql-v2", () => {
     if (first === undefined || second === undefined) {
       throw new Error("The corpus fixture lost its rows.");
     }
-    insertReports(database, [
+    await insertReports(database, [
       {
         id: first.id,
         title: "Competition activity",
@@ -642,7 +636,7 @@ describe("migrate-scoutql-v2", () => {
     const dryRun = await runMigration(database, false);
     expect(dryRun.exitCode).toBe(1);
     expect(dryRun.output).toContain("Re-run with --fix");
-    expect(readReports(database).map((row) => row.queryText)).toEqual([
+    expect((await readReports(database)).map((row) => row.queryText)).toEqual([
       first.queryText,
       second.queryText,
     ]);
@@ -650,7 +644,7 @@ describe("migrate-scoutql-v2", () => {
     const fixed = await runMigration(database, true);
     expect(fixed.exitCode).toBe(0);
     expect(fixed.output).toContain("Rewrote 2 reports.");
-    for (const row of readReports(database)) {
+    for (const row of await readReports(database)) {
       expect(row.queryText).not.toBe(first.queryText);
       expect(() => compileScoutQl(row.queryText)).not.toThrow();
     }
@@ -667,7 +661,7 @@ describe("migrate-scoutql-v2", () => {
     if (convertible === undefined) {
       throw new Error("The corpus fixture lost its rows.");
     }
-    insertReports(database, [
+    await insertReports(database, [
       {
         id: 12,
         title: "Competition activity",
@@ -692,7 +686,7 @@ describe("migrate-scoutql-v2", () => {
     // All or nothing: the refusal already stops startup, so the convertible
     // row beside it is left alone too rather than leaving the database half in
     // each language.
-    expect(readReports(database).map((row) => row.queryText)).toEqual([
+    expect((await readReports(database)).map((row) => row.queryText)).toEqual([
       convertible.queryText,
       expect.stringContaining("COMPARE TO BETWEEN"),
     ]);
@@ -702,7 +696,7 @@ describe("migrate-scoutql-v2", () => {
     // The acceptance criterion for the cutover: every report that exists in
     // beta and prod today survives a single unattended startup.
     const database = await temporaryDatabase("corpus");
-    insertReports(
+    await insertReports(
       database,
       CORPUS_ROWS.map((row, index) => ({
         id: index + 1,
@@ -714,7 +708,7 @@ describe("migrate-scoutql-v2", () => {
     const first = await runMigration(database, true);
     expect(first.exitCode).toBe(0);
     expect(first.output).toContain("Rewrote 15 reports.");
-    for (const row of readReports(database)) {
+    for (const row of await readReports(database)) {
       expect(() => compileScoutQl(row.queryText)).not.toThrow();
     }
 
@@ -729,13 +723,13 @@ describe("migrate-scoutql-v2", () => {
     const row = CORPUS_ROWS[9];
     if (row === undefined) throw new Error("The corpus fixture lost its rows.");
     const migrated = convertLegacyQueryText(row.queryText);
-    insertReports(database, [
+    await insertReports(database, [
       { id: 5, title: "KDA table", queryText: migrated },
     ]);
 
     const result = await runMigration(database, true);
 
     expect(result.exitCode).toBe(0);
-    expect(readReports(database)[0]?.queryText).toBe(migrated);
+    expect((await readReports(database))[0]?.queryText).toBe(migrated);
   });
 });
