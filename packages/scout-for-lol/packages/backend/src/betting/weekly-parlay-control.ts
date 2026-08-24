@@ -1,9 +1,9 @@
 import { z } from "zod";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
-  DiscordGuildIdSchema,
   WEEKLY_PARLAY_LIFECYCLE,
   WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS,
-} from "@scout-for-lol/data";
+} from "@scout-for-lol/data/model/weekly-parlay.ts";
 import {
   deliverWeeklyParlayDiscord,
   weeklyParlaySettlementActionKey,
