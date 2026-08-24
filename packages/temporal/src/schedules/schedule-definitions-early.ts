@@ -1,6 +1,6 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import type { ScheduleDefinition } from "./schedule-definitions.ts";
+import type { ScheduleDefinition } from "./schedule-types.ts";
 
 export const EARLY_SCHEDULES: ScheduleDefinition[] = [
   {

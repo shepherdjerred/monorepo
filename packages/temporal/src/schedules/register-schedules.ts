@@ -2,15 +2,12 @@ import type { Client, ScheduleOverlapPolicy } from "@temporalio/client";
 import { ScheduleNotFoundError } from "@temporalio/client";
 import { detectOrphanSchedules } from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
-import {
-  CATCHUP_RELAXED,
-  SCHEDULES,
-  type CatchupWindow,
-  type ScheduleDefinition,
-} from "./schedule-definitions.ts";
+import { CATCHUP_RELAXED, SCHEDULES } from "./schedule-definitions.ts";
+import type { CatchupWindow, ScheduleDefinition } from "./schedule-types.ts";
 
-// SCHEDULES/ScheduleDefinition/CATCHUP_* live in ./schedule-definitions.ts
-// (this file sits at the repo's max-lines cap). Import SCHEDULES from
+// SCHEDULES/CATCHUP_* live in ./schedule-definitions.ts and the shared types
+// live in ./schedule-types.ts (this file sits at the repo's max-lines cap).
+// Import SCHEDULES from
 // #schedules/schedule-definitions.ts directly, not from this file — no
 // re-export here (custom-rules/no-re-exports).
 

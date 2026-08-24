@@ -1,10 +1,10 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
-import type { Duration } from "@temporalio/common";
 import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 import { EARLY_SCHEDULES } from "./schedule-definitions-early.ts";
 import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
+import type { ScheduleDefinition } from "./schedule-types.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -45,29 +45,6 @@ export const WEEKLY_PARLAY_CRON_EXPRESSION = `0 ${WEEKLY_PARLAY_LIFECYCLE.openHo
 // the optional schedule field in buildSchedulePolicies can never yield an
 // error-typed value. Both literals are valid Temporal `Duration`s at the policies
 // call site.
-export type CatchupWindow =
-  typeof CATCHUP_TIGHT | typeof CATCHUP_RELAXED | typeof CATCHUP_WEEKLY_PARLAY;
-
-export type ScheduleDefinition = {
-  id: string;
-  workflowType: string;
-  args: unknown[];
-  cronExpression: string;
-  taskQueue: string;
-  overlap: ScheduleOverlapPolicy;
-  memo: string;
-  workflowExecutionTimeout?: Duration;
-  // Server-outage replay margin. Omit to inherit CATCHUP_RELAXED; set
-  // CATCHUP_TIGHT on time-of-day home automation that should skip rather than
-  // fire late. See the CATCHUP_* constants above. Typed as the CatchupWindow
-  // literal union (not `Duration`) to stay off the error-typed `Duration` path
-  // under CI's Node16 `ms` resolution — see the constants' comment.
-  catchupWindow?: CatchupWindow;
-  requiredEnvironment?: readonly string[];
-  requiredPresentEnvironment?: readonly string[];
-  initialPauseNote?: string;
-};
-
 export const SCHEDULES: ScheduleDefinition[] = [
   ...EARLY_SCHEDULES,
   {
