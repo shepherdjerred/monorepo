@@ -181,18 +181,36 @@ export const ExploreTraceStatusSchema = z.enum([
 ]);
 export type ExploreTraceStatus = z.infer<typeof ExploreTraceStatusSchema>;
 
+const TraceCount = z.number().int().nonnegative().nullable().optional();
+
+/**
+ * How much of the language reference a turn read.
+ *
+ * Every field is optional because traces are PERSISTED and rendered back for
+ * conversations that already exist. ScoutQL v2 dissolved the metric, group-by
+ * and filter vocabularies into columns and functions, so those three keys
+ * appear only on pre-v2 traces and the v2 keys only on new ones; the panel
+ * renders whichever it finds. Dropping the old keys outright would fail this
+ * strict schema on every stored trace and empty the reasoning panel for them.
+ */
 const ExploreTraceReferenceDetailsSchema = z
   .object({
     kind: z.literal("reference"),
-    sources: z.number().int().nonnegative().nullable(),
-    metrics: z.number().int().nonnegative().nullable(),
-    functions: z.number().int().nonnegative().nullable(),
-    groupBys: z.number().int().nonnegative().nullable(),
-    filters: z.number().int().nonnegative().nullable(),
-    renderKinds: z.number().int().nonnegative().nullable(),
-    renderOptions: z.number().int().nonnegative().nullable(),
-    queues: z.number().int().nonnegative().nullable(),
-    presets: z.number().int().nonnegative().nullable(),
+    sources: TraceCount,
+    functions: TraceCount,
+    renderKinds: TraceCount,
+    renderOptions: TraceCount,
+    queues: TraceCount,
+    presets: TraceCount,
+    // v2
+    columns: TraceCount,
+    aggregateFunctions: TraceCount,
+    scalarFunctions: TraceCount,
+    idioms: TraceCount,
+    // pre-v2 only
+    metrics: TraceCount,
+    groupBys: TraceCount,
+    filters: TraceCount,
   })
   .strict();
 
