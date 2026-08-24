@@ -13,7 +13,10 @@ ARG SMOKE_TARGET
 ARG EXPECTED_CONTRACT_HASH
 
 USER 0:0
-COPY --chown=1000:1000 .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
+COPY --chown=1000:1000 \
+  .buildkite/scripts/smoke-app-in-image.ts \
+  .buildkite/scripts/smoke-app-configs.ts \
+  /app/.buildkite/scripts/
 
 # These applications write their smoke config at the production working
 # directory. Prepare only the writable file while root, then run every smoke

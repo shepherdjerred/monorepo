@@ -75,6 +75,14 @@ describe("application image inputs", () => {
     );
   });
 
+  test("ships the local in-image smoke configuration module", async () => {
+    const dockerfile = await read(
+      ".buildkite/application-image-smoke.Dockerfile",
+    );
+    expect(dockerfile).toContain(".buildkite/scripts/smoke-app-in-image.ts");
+    expect(dockerfile).toContain(".buildkite/scripts/smoke-app-configs.ts");
+  });
+
   test("ships the shared report foundations in the Scout runtime image", async () => {
     const dockerfile = await read(
       "packages/scout-for-lol/packages/backend/Dockerfile",

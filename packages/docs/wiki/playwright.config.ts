@@ -3,6 +3,10 @@ import { defineConfig } from "@playwright/test";
 const PORT = 4358;
 const baseURL = `http://127.0.0.1:${PORT.toString()}`;
 const isCI = process.env.CI !== undefined;
+// Astro's preview command starts a background server and then exits. Keep the
+// Playwright web-server parent alive, and stop that background server when
+// Playwright tears the parent down so local runs never leave a stale preview.
+const previewCommand = `sh -ec 'bun run preview --host 127.0.0.1 --port ${PORT.toString()}; trap "bunx --no-install astro preview stop" EXIT; tail -f /dev/null & wait $!'`;
 
 export default defineConfig({
   fullyParallel: true,
@@ -27,7 +31,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `bun run preview --host 127.0.0.1 --port ${PORT.toString()}`,
+    command: previewCommand,
     reuseExistingServer: !isCI,
     url: baseURL,
     // Playwright defaults to 60s, which the browser-E2E pod exceeds under load:

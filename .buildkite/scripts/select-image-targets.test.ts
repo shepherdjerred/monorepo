@@ -120,6 +120,7 @@ describe("selectImageTargets", () => {
     for (const path of [
       ".buildkite/application-image-smoke.Dockerfile",
       ".buildkite/scripts/application-image-runtime.ts",
+      ".buildkite/scripts/smoke-app-configs.ts",
       ".buildkite/scripts/smoke-app-in-image.ts",
       ".dockerignore",
       "bunfig.toml",

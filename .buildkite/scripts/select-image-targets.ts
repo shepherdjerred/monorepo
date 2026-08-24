@@ -78,6 +78,7 @@ const GLOBAL_IMAGE_INPUTS = [
 const SHARED_APPLICATION_IMAGE_INPUTS = [
   ".buildkite/application-image-smoke.Dockerfile",
   ".buildkite/scripts/application-image-runtime.ts",
+  ".buildkite/scripts/smoke-app-configs.ts",
   ".buildkite/scripts/smoke-app-in-image.ts",
   ".dockerignore",
   "bunfig.toml",
