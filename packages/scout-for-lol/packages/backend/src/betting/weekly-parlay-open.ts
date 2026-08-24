@@ -128,7 +128,11 @@ async function openWeeklyParlayInternal(
     return { kind: "no_candidate" };
   }
   const [histories, previousDefinitions] = await Promise.all([
-    fetchWeeklyCandidateHistories({ periodKey: input.periodKey, subjects }),
+    fetchWeeklyCandidateHistories({
+      periodKey: input.periodKey,
+      subjects,
+      ...(input.signal === undefined ? {} : { abortSignal: input.signal }),
+    }),
     prismaClient.bucksWeeklyParlayDefinition.findMany({
       where: { serverId, scoringStartsAt: { lt: period.scoringStartsAt } },
       select: { periodKey: true, subjects: true },

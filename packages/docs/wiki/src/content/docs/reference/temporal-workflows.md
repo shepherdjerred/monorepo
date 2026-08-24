@@ -44,18 +44,11 @@ changing model identity.
 | image-gc                   | daily 04:00                          | deterministic          | S3 deletions                     |
 | weekly parlay lifecycle    | Sun, source-defined Pacific timeline | deterministic          | beta Scout market reconciliation |
 
-The weekly parlay workflow freezes one Pacific timeline from Temporal's recorded
-workflow start and carries the same period and slot through publication,
-reminder, scoring start, nightly progress, and finalization. Each activity call
-has a stable idempotency key. Exhausting retries for an intermediate call cannot
-prevent later lifecycle work. Scoring start retries until the finalization
-cutoff. The final action begins there, retries through Scout's bounded Match-V5
-ingestion window, and continues in bounded retry slices (continuing as new when
-a slice expires). The schedule has no workflow execution timeout, so a prolonged
-outage cannot abandon bets. Distinct weekly
-executions may overlap so a delayed prior finalization cannot suppress the next
-period. Its schedule remains initially paused until the private-beta Discord
-fixture cycle is approved.
+The weekly parlay workflow uses the Pacific timeline defined by its source
+constants and reconciles each period through finalization. Its schedule remains
+initially paused until the private-beta Discord fixture cycle is approved; see
+the [workflow-family explanation](/explanation/temporal/workflow-families/#weekly-parlay-lifecycle)
+for the durability rationale.
 
 ## Glitter
 

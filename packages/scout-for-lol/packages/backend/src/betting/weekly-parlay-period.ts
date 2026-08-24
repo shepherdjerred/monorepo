@@ -1,13 +1,15 @@
 import { addDays, formatISO, parseISO } from "date-fns";
 import { POLLING_INTERVALS } from "@scout-for-lol/data/polling-config.ts";
+import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
 
-export const WEEKLY_PARLAY_TIMEZONE = "America/Los_Angeles";
-export const WEEKLY_PARLAY_SLOT = 0;
-export const WEEKLY_PARLAY_OPEN_HOUR = 12;
-export const WEEKLY_PARLAY_BETTING_CLOSE_HOUR = 0;
-export const WEEKLY_PARLAY_FINAL_HOUR = 11;
-export const WEEKLY_PARLAY_UPDATE_HOUR = 19;
-export const WEEKLY_PARLAY_UPDATE_COUNT = 6;
+export const WEEKLY_PARLAY_TIMEZONE = WEEKLY_PARLAY_LIFECYCLE.timezone;
+export const WEEKLY_PARLAY_SLOT = WEEKLY_PARLAY_LIFECYCLE.slot;
+export const WEEKLY_PARLAY_OPEN_HOUR = WEEKLY_PARLAY_LIFECYCLE.openHour;
+export const WEEKLY_PARLAY_BETTING_CLOSE_HOUR =
+  WEEKLY_PARLAY_LIFECYCLE.bettingCloseHour;
+export const WEEKLY_PARLAY_FINAL_HOUR = WEEKLY_PARLAY_LIFECYCLE.finalHour;
+export const WEEKLY_PARLAY_UPDATE_HOUR = WEEKLY_PARLAY_LIFECYCLE.updateHour;
+export const WEEKLY_PARLAY_UPDATE_COUNT = WEEKLY_PARLAY_LIFECYCLE.updateCount;
 const WEEKLY_PARLAY_INGESTION_POLL_WINDOWS = 2;
 export const WEEKLY_PARLAY_INGESTION_GRACE_MINUTES =
   POLLING_INTERVALS.MAX * WEEKLY_PARLAY_INGESTION_POLL_WINDOWS;

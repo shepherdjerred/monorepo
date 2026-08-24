@@ -10,6 +10,7 @@
     "module": "Node16",
     "target": "ES2022",
     "noEmit": true,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true
   }
 }

@@ -119,7 +119,7 @@ function claimableStates(mode: WeeklyParlaySettlementMode): string[] {
     case "early_yes":
       return ["active"];
     case "final":
-      return ["open", "active"];
+      return ["publishing", "open", "active"];
   }
 }
 
@@ -248,7 +248,8 @@ export async function settleWeeklyParlayMarket(
         },
       });
       const decision: SettlementDecision | undefined =
-        input.mode === "final" && market.marketState === "open"
+        input.mode === "final" &&
+        (market.marketState === "publishing" || market.marketState === "open")
           ? { kind: "void", reason: "infrastructure_failure" }
           : decisionFor({
               evaluatorVersion: market.definition.evaluatorVersion,

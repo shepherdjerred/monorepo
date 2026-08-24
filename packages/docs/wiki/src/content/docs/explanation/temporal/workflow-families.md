@@ -126,6 +126,19 @@ closing retires a live mode. Reversibility decides the review requirement.
 exemption manifest fails to fetch, after a run without it deleted 60% of the
 showcase's source images.
 
+### Weekly parlay lifecycle
+
+The weekly parlay workflow freezes one Pacific timeline from Temporal's recorded
+workflow start and carries the same period and slot through publication,
+reminder, scoring start, nightly progress, and finalization. Each activity call
+has a stable idempotency key. Exhausting retries for an intermediate call cannot
+prevent later lifecycle work. Scoring start retries until the finalization
+cutoff. The final action begins there, retries through Scout's bounded Match-V5
+ingestion window, and continues in bounded retry slices (continuing as new when
+a slice expires). The schedule has no workflow execution timeout, so a prolonged
+outage cannot abandon bets. Distinct weekly executions may overlap so a delayed
+prior finalization cannot suppress the next period.
+
 ## Glitter
 
 The most guardrailed workflows in the fleet, on dedicated queues so Discord rate

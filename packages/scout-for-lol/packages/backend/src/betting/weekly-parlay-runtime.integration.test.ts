@@ -452,6 +452,33 @@ describe("weekly parlay settlement", () => {
     ).resolves.toMatchObject({ betOutcome: "refunded", payout: 10 });
   });
 
+  test("voids a market stuck in publishing at finalization", async () => {
+    const market = await makeMarket();
+    await place(market.id, "YES", 10);
+    await db.bucksWeeklyParlayMarket.update({
+      where: { id: market.id },
+      data: { marketState: "publishing" },
+    });
+    await expect(
+      settleWeeklyParlayMarket(
+        {
+          marketId: market.id,
+          mode: "final",
+          now: weeklyParlayFinalSettlementAt(market.scoringEndsAt),
+        },
+        db,
+      ),
+    ).resolves.toMatchObject({
+      fromState: "publishing",
+      voidReason: "infrastructure_failure",
+    });
+    await expect(
+      db.bucksWeeklyParlayBet.findFirstOrThrow({
+        where: { marketId: market.id },
+      }),
+    ).resolves.toMatchObject({ betOutcome: "refunded", payout: 10 });
+  });
+
   test("settles YES early only after every persisted leg is irreversible", async () => {
     const market = await makeMarket();
     await place(market.id, "YES", 10);

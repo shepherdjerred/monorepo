@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
 import {
   scoutWeeklyParlayActionDurationSeconds,
   scoutWeeklyParlayActionsTotal,
@@ -6,8 +7,8 @@ import {
 import { createStructuredLogger } from "#observability/logging.ts";
 
 const log = createStructuredLogger("scout-weekly-parlay");
-const PACIFIC_TIME_ZONE = "America/Los_Angeles";
-const UPDATE_COUNT = 6;
+const PACIFIC_TIME_ZONE = WEEKLY_PARLAY_LIFECYCLE.timezone;
+const UPDATE_COUNT = WEEKLY_PARLAY_LIFECYCLE.updateCount;
 const OPEN_ACTION_TIMEOUT_MS = 4 * 60 * 1000;
 const STANDARD_ACTION_TIMEOUT_MS = 20 * 1000;
 
@@ -15,7 +16,7 @@ export const ScoutWeeklyParlayActionSchema = z
   .strictObject({
     periodKey: z.iso.date(),
     slot: z.number().int().nonnegative().default(0),
-    action: z.enum(["open", "reminder", "start", "progress", "finalize"]),
+    action: z.enum(WEEKLY_PARLAY_LIFECYCLE.actions),
     updateIndex: z
       .number()
       .int()
