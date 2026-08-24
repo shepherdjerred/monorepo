@@ -442,9 +442,16 @@ Flag: merge conflicts against `main`, failing required checks, missing approvals
 
 ```bash
 toolkit gh pr list --state open --author "app/renovate" --json number,title,mergeable,statusCheckRollup
+
+toolkit gh issue list --state open --author "app/renovate" \
+  --search '"Dependency Dashboard" in:title' \
+  --json number,title,updatedAt,body
 ```
 
-Flag: Renovate PRs with failing CI (broken upgrade pipeline), or a large backlog of open Renovate PRs (automerge broken).
+Flag: the Dependency Dashboard not updating after its Sunday schedule, a
+dashboard-approved update that never produces a branch or PR, or an approved PR
+with failing CI or no human activity for ~14 days. A backlog of unapproved
+dashboard items is expected and is not a finding.
 
 ## Section 13: Application Health Matrix
 
