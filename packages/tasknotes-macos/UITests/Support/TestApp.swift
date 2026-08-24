@@ -34,6 +34,7 @@ import XCTest
 /// A test that calls `XCUIApplication().launch()` directly bypasses both. That
 /// is why every flow goes through here, and why this is a function rather than
 /// a documented convention.
+@MainActor
 enum TestApp {
     /// An address nothing can be listening on.
     ///

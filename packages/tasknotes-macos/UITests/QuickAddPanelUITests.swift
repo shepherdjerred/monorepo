@@ -19,6 +19,7 @@ import XCTest
 /// being seen when the app is **not** the one receiving keystrokes, so a
 /// per-application send would pass whether or not the feature worked. Posting to
 /// the HID event tap is the only way to ask the real question.
+@MainActor
 final class QuickAddPanelUITests: XCTestCase {
     /// The virtual keycode for Space. `kVK_Space` from `Carbon.HIToolbox`,
     /// spelled literally so this file does not import Carbon for one constant.
@@ -33,7 +34,6 @@ final class QuickAddPanelUITests: XCTestCase {
 
     override func setUp() {
         continueAfterFailure = false
-        requestAccessibilityTrustIfNeeded()
     }
 
     /// Ask for Accessibility trust, with the system prompt, if we do not have it.
@@ -73,6 +73,7 @@ final class QuickAddPanelUITests: XCTestCase {
     /// can be attributed: if this passes and that fails, the hotkey works and
     /// the activation behaviour does not.
     func testTheGlobalHotkeyOpensTheQuickAddPanel() throws {
+        requestAccessibilityTrustIfNeeded()
         let app = launchedApp()
         let panel = app.windows[AccessibilityIdentifier.QuickAdd.panel]
         XCTAssertFalse(panel.exists, "the panel was already open before the hotkey")
@@ -136,6 +137,7 @@ final class QuickAddPanelUITests: XCTestCase {
     /// Finder is the other application: it is always running, it cannot fail to
     /// launch, and activating it costs nothing.
     func testThePanelOpensOverAnotherAppWithoutActivatingTaskNotes() throws {
+        requestAccessibilityTrustIfNeeded()
         let app = launchedApp()
         let finder = XCUIApplication(bundleIdentifier: "com.apple.finder")
         finder.activate()
