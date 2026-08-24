@@ -173,6 +173,10 @@ describe("buildLinkRotReport", () => {
       "packages/docs/wiki/src/content/docs/reference/homelab.md:12",
     );
     expect(report.findings[2]?.section).toBe("Timed-out links");
+    expect(report.findings[2]?.detail).toContain(
+      "Retry the link or investigate its reachability",
+    );
+    expect(report.findings[2]?.detail).not.toContain("Fix the link");
     for (const finding of report.findings) {
       expect(finding.evidenceReceiptIds).toEqual(["lychee-scan"]);
     }
@@ -180,6 +184,33 @@ describe("buildLinkRotReport", () => {
     // publishes a resolve, never a page, for this report.
     expect(countCriticalReportFindings(report)).toBe(0);
     expect(report.headline).toContain("2 dead and 1 timed-out");
+    expect(report.actions).toEqual([
+      "Fix or replace each confirmed dead link, or record a justified exclusion in .lycheeignore.",
+      "Retry timed-out links or investigate their reachability before treating them as dead or adding an exclusion.",
+    ]);
+  });
+
+  test("a timeout-only result recommends retrying rather than excluding", () => {
+    const report = buildLinkRotReport(
+      "2026-08-23T11:55:00.000Z",
+      scanResult({
+        totalLinks: 1,
+        successfulLinks: 0,
+        excludedLinks: 0,
+        deadLinks: [],
+        timedOutLinks: [
+          {
+            url: "https://example.com/slow",
+            source: "README.md",
+            status: "Timeout",
+          },
+        ],
+      }),
+    );
+
+    expect(report.actions).toEqual([
+      "Retry timed-out links or investigate their reachability before treating them as dead or adding an exclusion.",
+    ]);
   });
 });
 

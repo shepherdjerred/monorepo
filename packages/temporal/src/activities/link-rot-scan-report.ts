@@ -14,12 +14,20 @@ function linkSummary(link: DeadLink): string {
   return `${link.url} — ${link.status}`;
 }
 
-function linkDetail(link: DeadLink): string {
+function linkLocation(link: DeadLink): string {
   const location =
     link.line === undefined
       ? link.source
       : `${link.source}:${String(link.line)}`;
-  return `Referenced from ${location}. Fix the link, replace it with a live equivalent, or add a justified exclusion to .lycheeignore.`;
+  return `Referenced from ${location}.`;
+}
+
+function deadLinkDetail(link: DeadLink): string {
+  return `${linkLocation(link)} Fix the link, replace it with a live equivalent, or add a justified exclusion to .lycheeignore.`;
+}
+
+function timedOutLinkDetail(link: DeadLink): string {
+  return `${linkLocation(link)} Retry the link or investigate its reachability before treating it as dead or adding an exclusion.`;
 }
 
 /**
@@ -80,7 +88,7 @@ export function buildLinkRotReport(
         section: "Dead links",
         severity: "warning" as const,
         summary: linkSummary(link),
-        detail: linkDetail(link),
+        detail: deadLinkDetail(link),
         evidenceReceiptIds: [SCAN_RECEIPT_ID],
       })),
       // Timeouts are usually slow or bot-throttled hosts rather than rot;
@@ -89,18 +97,25 @@ export function buildLinkRotReport(
         section: "Timed-out links",
         severity: "info" as const,
         summary: linkSummary(link),
-        detail: linkDetail(link),
+        detail: timedOutLinkDetail(link),
         evidenceReceiptIds: [SCAN_RECEIPT_ID],
       })),
     ],
     limitations: [
       "Scope: tracked Markdown, web links only, verbatim/code-block URLs skipped; 403/429 responses count as alive (bot-hostile hosts). See root lychee.toml.",
     ],
-    actions: clean
-      ? []
-      : [
-          "Fix or replace each dead link, or record a justified exclusion in .lycheeignore.",
-        ],
+    actions: [
+      ...(dead === 0
+        ? []
+        : [
+            "Fix or replace each confirmed dead link, or record a justified exclusion in .lycheeignore.",
+          ]),
+      ...(timedOut === 0
+        ? []
+        : [
+            "Retry timed-out links or investigate their reachability before treating them as dead or adding an exclusion.",
+          ]),
+    ],
     provenance: {
       source: "https://github.com/shepherdjerred/monorepo",
       repoSha: result.repoSha,
