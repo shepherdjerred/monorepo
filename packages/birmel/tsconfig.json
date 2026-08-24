@@ -7,6 +7,7 @@
     }
   },
   "include": [
+    "architecture.config.ts",
     "src/**/*",
     "tests/**/*",
     "e2e/**/*",
