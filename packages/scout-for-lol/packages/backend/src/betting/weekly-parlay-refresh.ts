@@ -14,6 +14,7 @@ import {
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
+import { isWeeklyParlayCatchupTimeline } from "#src/betting/weekly-parlay-period.ts";
 
 /** Edit the original open-market message after a bet or cancellation. */
 export async function refreshWeeklyParlayMessage(
@@ -34,6 +35,10 @@ export async function refreshWeeklyParlayMessage(
             subjects: true,
             criteria: true,
             yesProbabilityBps: true,
+            openAt: true,
+            bettingClosesAt: true,
+            scoringStartsAt: true,
+            scoringEndsAt: true,
           },
         },
         bets: {
@@ -54,14 +59,27 @@ export async function refreshWeeklyParlayMessage(
     const aliases = new Map(
       subjects.map((subject) => [subject.key, subject.alias]),
     );
+    const catchup = isWeeklyParlayCatchupTimeline({
+      periodKey: market.periodKey,
+      openAt: market.definition.openAt,
+      bettingClosesAt: market.definition.bettingClosesAt,
+      scoringStartsAt: market.definition.scoringStartsAt,
+      scoringEndsAt: market.definition.scoringEndsAt,
+    });
     const content = [
-      deliveryTitle("open", market.marketState, null),
+      deliveryTitle("open", market.marketState, null, catchup),
       `Period: **${market.periodKey}** · ${(market.definition.yesProbabilityBps / 100).toFixed(1)}% YES`,
       ...criteria.legs.map((leg) =>
         legLine(leg, undefined, aliases.get(leg.subject) ?? leg.subject),
       ),
       `**${market.bets.length.toString()} ${countLabel(market.bets.length, "bettor")} · ${market.bets.reduce((total, bet) => total + bet.stake, 0).toString()} BB staked**`,
-      deliveryTimeCopy("open", market.bettingClosesAt, market.scoringEndsAt),
+      deliveryTimeCopy({
+        kind: "open",
+        bettingClosesAt: market.bettingClosesAt,
+        scoringEndsAt: market.scoringEndsAt,
+        scoringStartsAt: market.definition.scoringStartsAt,
+        catchup,
+      }),
     ].join("\n");
     for (const [index, ref] of refs.entries()) {
       const channel = await client.channels.fetch(ref.channelId);

@@ -237,6 +237,28 @@ period's Sunday execution. The schedule's initial pause is the private-beta
 fixture gate. After activation, pause it in Temporal for operational suspension
 rather than adding a second enable switch.
 
+`runScoutWeeklyParlayCatchupWorkflow` is the exceptional operator path for a
+missed Sunday opening. It freezes `workflowInfo().startTime`, chooses the first
+Pacific midnight at least the configured minimum betting duration plus the
+open-action budget away, and retains the standard Sunday finalization. It may
+omit the reminder and may run fewer progress updates. Only the open action
+carries the frozen clocks; Scout reads its persisted definition thereafter.
+Start one run with a stable period/slot ID and reject every reuse:
+
+```bash
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+  toolkit temporal workflow start \
+    --workflow-id scout-weekly-parlay-catchup-2026-08-24-0 \
+    --type runScoutWeeklyParlayCatchupWorkflow \
+    --task-queue default \
+    --input '{"periodKey":"2026-08-24","slot":0}' \
+    --id-conflict-policy Fail \
+    --id-reuse-policy RejectDuplicate
+```
+
+Do not add this workflow to `SCHEDULES`. The ordinary
+`scout-weekly-parlay` schedule remains the next-week path.
+
 ## Homelab audit (daily)
 
 `homelab-audit-daily` (cron `30 6 * * *` PT) runs the deterministic

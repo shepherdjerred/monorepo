@@ -10,6 +10,7 @@ import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay
 import type {
   ScoutWeeklyParlayAction,
   ScoutWeeklyParlayActivities,
+  ScoutWeeklyParlayTimeline,
 } from "#activities/scout-weekly-parlay.ts";
 
 const deliveryActivities = proxyActivities<ScoutWeeklyParlayActivities>({
@@ -52,6 +53,15 @@ const ScoutWeeklyParlayWorkflowInputSchema = z.strictObject({
 });
 export type ScoutWeeklyParlayWorkflowInput = z.input<
   typeof ScoutWeeklyParlayWorkflowInputSchema
+>;
+
+const ScoutWeeklyParlayCatchupWorkflowInputSchema = z.strictObject({
+  periodKey: z.iso.date(),
+  slot: z.number().int().nonnegative().default(WEEKLY_PARLAY_LIFECYCLE.slot),
+  phase: z.enum(["lifecycle", "finalize"]).default("lifecycle"),
+});
+export type ScoutWeeklyParlayCatchupWorkflowInput = z.input<
+  typeof ScoutWeeklyParlayCatchupWorkflowInputSchema
 >;
 
 async function sleepUntil(timestamp: string): Promise<void> {
@@ -127,6 +137,7 @@ async function reconcileStartUntilFinalization(
 
 async function reconcileFinalization(
   action: ScoutWeeklyParlayAction,
+  mode: "standard" | "catch_up",
 ): Promise<void> {
   const retryUntil = Date.now() + FINALIZATION_CONTINUE_AS_NEW_AFTER_MS;
   while (Date.now() < retryUntil) {
@@ -161,53 +172,53 @@ async function reconcileFinalization(
     periodKey: action.periodKey,
     slot: action.slot,
   });
-  await continueAsNew<typeof runScoutWeeklyParlayWorkflow>({
-    slot: action.slot,
-    phase: "finalize",
-    periodKey: action.periodKey,
-  });
+  if (mode === "catch_up") {
+    await continueAsNew<typeof runScoutWeeklyParlayCatchupWorkflow>({
+      slot: action.slot,
+      phase: "finalize",
+      periodKey: action.periodKey,
+    });
+  } else {
+    await continueAsNew<typeof runScoutWeeklyParlayWorkflow>({
+      slot: action.slot,
+      phase: "finalize",
+      periodKey: action.periodKey,
+    });
+  }
 }
 
-export async function runScoutWeeklyParlayWorkflow(
-  rawInput: ScoutWeeklyParlayWorkflowInput = {},
+async function runFrozenTimeline(
+  timeline: ScoutWeeklyParlayTimeline,
+  slot: number,
+  mode: "standard" | "catch_up",
 ): Promise<void> {
-  const input = ScoutWeeklyParlayWorkflowInputSchema.parse(rawInput);
-  if (input.phase === "finalize") {
-    if (input.periodKey === undefined) {
-      throw new Error("Finalization continuation requires periodKey.");
-    }
-    await reconcileFinalization({
-      periodKey: input.periodKey,
-      slot: input.slot,
-      action: "finalize",
-    });
-    return;
-  }
-  // Temporal records this instant when the Schedule starts the execution. It
-  // remains stable even if no worker can process the first task until later.
-  const scheduledStartAt = workflowInfo().startTime.toISOString();
-  const timeline =
-    await deliveryActivities.resolveScoutWeeklyParlayTimeline(scheduledStartAt);
-  const base = { periodKey: timeline.periodKey, slot: input.slot };
+  const base = { periodKey: timeline.periodKey, slot };
 
   await sleepUntil(timeline.openAt);
   await invokeDeliveryAction({
     ...base,
     action: "open",
+    ...(mode === "catch_up"
+      ? {
+          window: {
+            kind: "catch_up" as const,
+            openAt: timeline.openAt,
+            bettingClosesAt: timeline.startsAt,
+            scoringStartsAt: timeline.startsAt,
+            scoringEndsAt: timeline.finalizesAt,
+          },
+        }
+      : {}),
   });
 
-  await sleepUntil(timeline.reminderAt);
-  await invokeDeliveryAction({
-    ...base,
-    action: "reminder",
-  });
+  if (timeline.reminderAt !== undefined) {
+    await sleepUntil(timeline.reminderAt);
+    await invokeDeliveryAction({ ...base, action: "reminder" });
+  }
 
   await sleepUntil(timeline.startsAt);
   await reconcileStartUntilFinalization(
-    {
-      ...base,
-      action: "start",
-    },
+    { ...base, action: "start" },
     timeline.finalizesAt,
   );
 
@@ -221,8 +232,55 @@ export async function runScoutWeeklyParlayWorkflow(
   }
 
   await sleepUntil(timeline.finalizesAt);
-  await reconcileFinalization({
-    ...base,
-    action: "finalize",
-  });
+  await reconcileFinalization({ ...base, action: "finalize" }, mode);
+}
+
+export async function runScoutWeeklyParlayWorkflow(
+  rawInput: ScoutWeeklyParlayWorkflowInput = {},
+): Promise<void> {
+  const input = ScoutWeeklyParlayWorkflowInputSchema.parse(rawInput);
+  if (input.phase === "finalize") {
+    if (input.periodKey === undefined) {
+      throw new Error("Finalization continuation requires periodKey.");
+    }
+    await reconcileFinalization(
+      {
+        periodKey: input.periodKey,
+        slot: input.slot,
+        action: "finalize",
+      },
+      "standard",
+    );
+    return;
+  }
+  // Temporal records this instant when the Schedule starts the execution. It
+  // remains stable even if no worker can process the first task until later.
+  const scheduledStartAt = workflowInfo().startTime.toISOString();
+  const timeline =
+    await deliveryActivities.resolveScoutWeeklyParlayTimeline(scheduledStartAt);
+  await runFrozenTimeline(timeline, input.slot, "standard");
+}
+
+export async function runScoutWeeklyParlayCatchupWorkflow(
+  rawInput: ScoutWeeklyParlayCatchupWorkflowInput,
+): Promise<void> {
+  const input = ScoutWeeklyParlayCatchupWorkflowInputSchema.parse(rawInput);
+  if (input.phase === "finalize") {
+    await reconcileFinalization(
+      {
+        periodKey: input.periodKey,
+        slot: input.slot,
+        action: "finalize",
+      },
+      "catch_up",
+    );
+    return;
+  }
+  const workflowStartAt = workflowInfo().startTime.toISOString();
+  const timeline =
+    await deliveryActivities.resolveScoutWeeklyParlayCatchupTimeline(
+      workflowStartAt,
+      input.periodKey,
+    );
+  await runFrozenTimeline(timeline, input.slot, "catch_up");
 }

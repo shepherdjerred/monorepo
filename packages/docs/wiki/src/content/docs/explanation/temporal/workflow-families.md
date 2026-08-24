@@ -139,6 +139,14 @@ a slice expires). The schedule has no workflow execution timeout, so a prolonged
 outage cannot abandon bets. Distinct weekly executions may overlap so a delayed
 prior finalization cannot suppress the next period.
 
+A separate operator-started catch-up workflow repairs a missed Sunday opening
+without changing the recurring schedule. It freezes the workflow start as the
+open time, then chooses the first Pacific midnight beyond the minimum betting
+budget. Scout persists those clocks and uses their shortened weekday shape for
+historical replay. Later activities carry only the period and slot, so Scout
+reconciles against the immutable market rather than trusting caller-supplied
+time overrides.
+
 ## Glitter
 
 The most guardrailed workflows in the fleet, on dedicated queues so Discord rate

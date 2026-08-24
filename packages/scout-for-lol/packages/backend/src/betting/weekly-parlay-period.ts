@@ -1,4 +1,9 @@
-import { addDays, formatISO, parseISO } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  formatISO,
+  parseISO,
+} from "date-fns";
 import { POLLING_INTERVALS } from "@scout-for-lol/data/polling-config.ts";
 import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
 
@@ -10,6 +15,8 @@ export const WEEKLY_PARLAY_BETTING_CLOSE_HOUR =
 export const WEEKLY_PARLAY_FINAL_HOUR = WEEKLY_PARLAY_LIFECYCLE.finalHour;
 export const WEEKLY_PARLAY_UPDATE_HOUR = WEEKLY_PARLAY_LIFECYCLE.updateHour;
 export const WEEKLY_PARLAY_UPDATE_COUNT = WEEKLY_PARLAY_LIFECYCLE.updateCount;
+export const WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS =
+  WEEKLY_PARLAY_LIFECYCLE.catchupMinimumBettingHours;
 const WEEKLY_PARLAY_INGESTION_POLL_WINDOWS = 2;
 export const WEEKLY_PARLAY_INGESTION_GRACE_MINUTES =
   POLLING_INTERVALS.MAX * WEEKLY_PARLAY_INGESTION_POLL_WINDOWS;
@@ -35,6 +42,26 @@ export type WeeklyParlayPeriod = {
   updateAt: Date[];
   scoringEndsAt: Date;
   nextOpenAt: Date;
+};
+
+export type WeeklyParlayFrozenWindow = {
+  periodKey: string;
+  openAt: Date;
+  bettingClosesAt: Date;
+  scoringStartsAt: Date;
+  scoringEndsAt: Date;
+};
+
+export type WeeklyParlayRuntimeTimeline = WeeklyParlayFrozenWindow & {
+  reminderAt?: Date;
+  updateAt: Date[];
+};
+
+export type WeeklyParlayScoringShape = {
+  startDayOffset: number;
+  startHour: number;
+  endDayOffset: number;
+  endHour: number;
 };
 
 function calendarDate(date: Date): string {
@@ -114,6 +141,118 @@ export function pacificWallTime(date: string, hour: number): Date {
 
 function offsetDate(periodKey: string, days: number): string {
   return calendarDate(addDays(parseISO(periodKey), days));
+}
+
+function pacificDateAndHour(instant: Date): { date: string; hour: number } {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: WEEKLY_PARLAY_TIMEZONE,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+  });
+  const parts = new Map(
+    formatter
+      .formatToParts(instant)
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value]),
+  );
+  const year = parts.get("year");
+  const month = parts.get("month");
+  const day = parts.get("day");
+  const hour = parts.get("hour");
+  if (
+    year === undefined ||
+    month === undefined ||
+    day === undefined ||
+    hour === undefined
+  ) {
+    throw new Error("Could not derive Pacific weekly parlay time parts.");
+  }
+  return { date: `${year}-${month}-${day}`, hour: Number(hour) };
+}
+
+export function weeklyParlayScoringShape(
+  window: Pick<
+    WeeklyParlayFrozenWindow,
+    "periodKey" | "scoringStartsAt" | "scoringEndsAt"
+  >,
+): WeeklyParlayScoringShape {
+  weeklyParlayPeriod(window.periodKey);
+  const start = pacificDateAndHour(window.scoringStartsAt);
+  const end = pacificDateAndHour(window.scoringEndsAt);
+  return {
+    startDayOffset: differenceInCalendarDays(
+      parseISO(start.date),
+      parseISO(window.periodKey),
+    ),
+    startHour: start.hour,
+    endDayOffset: differenceInCalendarDays(
+      parseISO(end.date),
+      parseISO(window.periodKey),
+    ),
+    endHour: end.hour,
+  };
+}
+
+export function weeklyParlayScoringWindowForPeriod(
+  periodKey: string,
+  shape: WeeklyParlayScoringShape,
+): Pick<WeeklyParlayFrozenWindow, "scoringStartsAt" | "scoringEndsAt"> {
+  weeklyParlayPeriod(periodKey);
+  return {
+    scoringStartsAt: pacificWallTime(
+      offsetDate(periodKey, shape.startDayOffset),
+      shape.startHour,
+    ),
+    scoringEndsAt: pacificWallTime(
+      offsetDate(periodKey, shape.endDayOffset),
+      shape.endHour,
+    ),
+  };
+}
+
+export function weeklyParlayTimelineFromWindow(
+  window: WeeklyParlayFrozenWindow,
+): WeeklyParlayRuntimeTimeline {
+  weeklyParlayPeriod(window.periodKey);
+  const dailyUpdates = Array.from({ length: 7 }, (_, dayOffset) =>
+    pacificWallTime(
+      offsetDate(window.periodKey, dayOffset),
+      WEEKLY_PARLAY_UPDATE_HOUR,
+    ),
+  );
+  const reminderAt = [
+    pacificWallTime(
+      offsetDate(window.periodKey, -1),
+      WEEKLY_PARLAY_UPDATE_HOUR,
+    ),
+    ...dailyUpdates,
+  ].findLast(
+    (candidate) =>
+      candidate > window.openAt && candidate < window.bettingClosesAt,
+  );
+  return {
+    ...window,
+    ...(reminderAt === undefined ? {} : { reminderAt }),
+    updateAt: dailyUpdates.filter(
+      (candidate) =>
+        candidate >= window.scoringStartsAt && candidate < window.scoringEndsAt,
+    ),
+  };
+}
+
+export function isWeeklyParlayCatchupTimeline(
+  window: WeeklyParlayFrozenWindow,
+): boolean {
+  const standard = weeklyParlayPeriod(window.periodKey);
+  return (
+    window.openAt.getTime() !== standard.openAt.getTime() ||
+    window.bettingClosesAt.getTime() !== standard.bettingClosesAt.getTime() ||
+    window.scoringStartsAt.getTime() !== standard.scoringStartsAt.getTime() ||
+    window.scoringEndsAt.getTime() !== standard.scoringEndsAt.getTime()
+  );
 }
 
 /** Build the immutable clocks for a scoring period identified by its Monday. */

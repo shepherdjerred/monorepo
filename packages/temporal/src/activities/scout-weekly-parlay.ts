@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS,
   WEEKLY_PARLAY_LIFECYCLE,
   WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS,
 } from "@scout-for-lol/data/model/weekly-parlay.ts";
@@ -20,6 +21,14 @@ const UPDATE_COUNT = WEEKLY_PARLAY_LIFECYCLE.updateCount;
 const OPEN_ACTION_TIMEOUT_MS = WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS;
 const STANDARD_ACTION_TIMEOUT_MS = 20 * 1000;
 
+export const ScoutWeeklyParlayCatchupWindowSchema = z.strictObject({
+  kind: z.literal("catch_up"),
+  openAt: z.iso.datetime(),
+  bettingClosesAt: z.iso.datetime(),
+  scoringStartsAt: z.iso.datetime(),
+  scoringEndsAt: z.iso.datetime(),
+});
+
 export const ScoutWeeklyParlayActionSchema = z
   .strictObject({
     periodKey: z.iso.date(),
@@ -31,6 +40,7 @@ export const ScoutWeeklyParlayActionSchema = z
       .min(0)
       .max(UPDATE_COUNT - 1)
       .optional(),
+    window: ScoutWeeklyParlayCatchupWindowSchema.optional(),
   })
   .superRefine((action, context) => {
     if (action.action === "progress" && action.updateIndex === undefined) {
@@ -47,6 +57,13 @@ export const ScoutWeeklyParlayActionSchema = z
         message: "Only progress actions accept an update index.",
       });
     }
+    if (action.action !== "open" && action.window !== undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["window"],
+        message: "Only open actions accept a catch-up window.",
+      });
+    }
   });
 export type ScoutWeeklyParlayAction = z.infer<
   typeof ScoutWeeklyParlayActionSchema
@@ -55,9 +72,9 @@ export type ScoutWeeklyParlayAction = z.infer<
 export const ScoutWeeklyParlayTimelineSchema = z.strictObject({
   periodKey: z.iso.date(),
   openAt: z.iso.datetime(),
-  reminderAt: z.iso.datetime(),
+  reminderAt: z.iso.datetime().optional(),
   startsAt: z.iso.datetime(),
-  updatesAt: z.array(z.iso.datetime()).length(UPDATE_COUNT),
+  updatesAt: z.array(z.iso.datetime()).max(UPDATE_COUNT),
   finalizesAt: z.iso.datetime(),
 });
 export type ScoutWeeklyParlayTimeline = z.infer<
@@ -192,6 +209,56 @@ export function buildScoutWeeklyParlayTimeline(
   });
 }
 
+export function buildScoutWeeklyParlayCatchupTimeline(
+  workflowStartAt: string,
+  periodKey: string,
+): ScoutWeeklyParlayTimeline {
+  const workflowStart = new Date(z.iso.datetime().parse(workflowStartAt));
+  const parsedPeriod = new Date(
+    `${z.iso.date().parse(periodKey)}T00:00:00.000Z`,
+  );
+  if (parsedPeriod.getUTCDay() !== 1) {
+    throw new Error(`Weekly parlay period ${periodKey} must be a Monday.`);
+  }
+  const standardOpen = pacificWallTime(dateOffset(periodKey, -1), OPEN_HOUR);
+  const finalizesAt = pacificWallTime(dateOffset(periodKey, 6), FINAL_HOUR);
+  if (workflowStart < standardOpen || workflowStart >= finalizesAt) {
+    throw new Error("Catch-up workflow start is outside its weekly period.");
+  }
+  const earliestStart =
+    workflowStart.getTime() +
+    WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS +
+    OPEN_ACTION_TIMEOUT_MS;
+  const startsAt = Array.from({ length: 7 }, (_, dayOffset) =>
+    pacificWallTime(dateOffset(periodKey, dayOffset), START_HOUR),
+  ).find(
+    (candidate) =>
+      candidate.getTime() >= earliestStart && candidate < finalizesAt,
+  );
+  if (startsAt === undefined) {
+    throw new Error("No catch-up scoring window remains before finalization.");
+  }
+  const actionTimes = Array.from({ length: 8 }, (_, index) =>
+    pacificWallTime(dateOffset(periodKey, index - 1), UPDATE_HOUR),
+  );
+  const reminderAt = actionTimes.findLast(
+    (candidate) => candidate > workflowStart && candidate < startsAt,
+  );
+  const updatesAt = actionTimes.filter(
+    (candidate) => candidate >= startsAt && candidate < finalizesAt,
+  );
+  return ScoutWeeklyParlayTimelineSchema.parse({
+    periodKey,
+    openAt: workflowStart.toISOString(),
+    ...(reminderAt === undefined
+      ? {}
+      : { reminderAt: reminderAt.toISOString() }),
+    startsAt: startsAt.toISOString(),
+    updatesAt: updatesAt.map((candidate) => candidate.toISOString()),
+    finalizesAt: finalizesAt.toISOString(),
+  });
+}
+
 export function scoutWeeklyParlayActionKey(
   action: ScoutWeeklyParlayAction,
 ): string {
@@ -264,6 +331,10 @@ export type ScoutWeeklyParlayActivities = {
   resolveScoutWeeklyParlayTimeline: (
     scheduledStartAt: string,
   ) => Promise<ScoutWeeklyParlayTimeline>;
+  resolveScoutWeeklyParlayCatchupTimeline: (
+    workflowStartAt: string,
+    periodKey: string,
+  ) => Promise<ScoutWeeklyParlayTimeline>;
   invokeScoutWeeklyParlayAction: (
     action: ScoutWeeklyParlayAction,
   ) => Promise<ScoutWeeklyParlayControlResult>;
@@ -274,5 +345,12 @@ export const scoutWeeklyParlayActivities = {
     scheduledStartAt: string,
   ): Promise<ScoutWeeklyParlayTimeline> =>
     Promise.resolve(buildScoutWeeklyParlayTimeline(scheduledStartAt)),
+  resolveScoutWeeklyParlayCatchupTimeline: (
+    workflowStartAt: string,
+    periodKey: string,
+  ): Promise<ScoutWeeklyParlayTimeline> =>
+    Promise.resolve(
+      buildScoutWeeklyParlayCatchupTimeline(workflowStartAt, periodKey),
+    ),
   invokeScoutWeeklyParlayAction,
 } satisfies ScoutWeeklyParlayActivities;

@@ -130,19 +130,30 @@ async function makeMarket(input?: {
   criteria?: ReturnType<typeof hitCriteria>;
   marketState?: "publishing" | "open" | "active";
   slot?: number;
+  timeline?: {
+    openAt: Date;
+    bettingClosesAt: Date;
+    scoringStartsAt: Date;
+    scoringEndsAt: Date;
+  };
 }) {
   const player = await db.player.findFirstOrThrow({
     where: { serverId: SERVER_ID, discordId: BETTOR },
   });
-  const scoringStartsAt = new Date(COMPLETED_AT.getTime() - 60 * 60_000);
-  const scoringEndsAt = new Date(COMPLETED_AT.getTime() + 60 * 60_000);
+  const timeline = input?.timeline ?? {
+    scoringStartsAt: new Date(COMPLETED_AT.getTime() - 60 * 60_000),
+    scoringEndsAt: new Date(COMPLETED_AT.getTime() + 60 * 60_000),
+    openAt: new Date(COMPLETED_AT.getTime() - 3 * 60 * 60_000),
+    bettingClosesAt: new Date(COMPLETED_AT.getTime() - 2 * 60 * 60_000),
+  };
+  const { bettingClosesAt, openAt, scoringEndsAt, scoringStartsAt } = timeline;
   const definition = await db.bucksWeeklyParlayDefinition.create({
     data: {
       serverId: SERVER_ID,
       periodKey: PERIOD_KEY,
       slot: input?.slot ?? 0,
-      openAt: new Date(COMPLETED_AT.getTime() - 3 * 60 * 60_000),
-      bettingClosesAt: new Date(COMPLETED_AT.getTime() - 2 * 60 * 60_000),
+      openAt,
+      bettingClosesAt,
       scoringStartsAt,
       scoringEndsAt,
       subjects: JSON.stringify([subject(player.id)]),
@@ -169,8 +180,8 @@ async function makeMarket(input?: {
       serverId: SERVER_ID,
       periodKey: PERIOD_KEY,
       slot: input?.slot ?? 0,
-      publishedAt: new Date(COMPLETED_AT.getTime() - 3 * 60 * 60_000),
-      bettingClosesAt: new Date(COMPLETED_AT.getTime() - 2 * 60 * 60_000),
+      publishedAt: openAt,
+      bettingClosesAt,
       scoringEndsAt,
       marketState: input?.marketState ?? "open",
     },
@@ -633,7 +644,90 @@ describe("weekly parlay contributions and control actions", () => {
       ),
     ).resolves.toMatchObject({ status: "skipped", detail: "stale_progress" });
   });
+});
 
+describe("weekly parlay catch-up controls", () => {
+  test("rejects an open retry whose catch-up clocks conflict with the stored definition", async () => {
+    await makeMarket({ marketState: "open" });
+    const period = weeklyParlayPeriod(PERIOD_KEY);
+    const openAt = new Date("2026-08-24T19:00:00.000Z");
+    await expect(
+      runWeeklyParlayControlAction(
+        {
+          periodKey: PERIOD_KEY,
+          action: "open",
+          slot: 0,
+          window: {
+            kind: "catch_up",
+            openAt: openAt.toISOString(),
+            bettingClosesAt: "2026-08-25T07:00:00.000Z",
+            scoringStartsAt: "2026-08-25T07:00:00.000Z",
+            scoringEndsAt: period.scoringEndsAt.toISOString(),
+          },
+        },
+        {
+          serverId: SERVER_ID,
+          now: openAt,
+          prismaClient: db,
+        },
+      ),
+    ).rejects.toThrow("conflicting timeline");
+  });
+
+  test("rejects catch-up clocks that do not preserve the minimum betting window", async () => {
+    const period = weeklyParlayPeriod(PERIOD_KEY);
+    const openAt = new Date("2026-08-25T02:30:00.000Z");
+    await expect(
+      runWeeklyParlayControlAction(
+        {
+          periodKey: PERIOD_KEY,
+          action: "open",
+          slot: 0,
+          window: {
+            kind: "catch_up",
+            openAt: openAt.toISOString(),
+            bettingClosesAt: "2026-08-25T07:00:00.000Z",
+            scoringStartsAt: "2026-08-25T07:00:00.000Z",
+            scoringEndsAt: period.scoringEndsAt.toISOString(),
+          },
+        },
+        {
+          serverId: SERVER_ID,
+          now: openAt,
+          prismaClient: db,
+        },
+      ),
+    ).rejects.toThrow("Invalid weekly parlay catch-up timeline");
+  });
+
+  test("rejects a catch-up scoring cutoff that is not an exact Pacific midnight", async () => {
+    const period = weeklyParlayPeriod(PERIOD_KEY);
+    const openAt = new Date("2026-08-24T19:00:00.000Z");
+    await expect(
+      runWeeklyParlayControlAction(
+        {
+          periodKey: PERIOD_KEY,
+          action: "open",
+          slot: 0,
+          window: {
+            kind: "catch_up",
+            openAt: openAt.toISOString(),
+            bettingClosesAt: "2026-08-25T07:30:00.000Z",
+            scoringStartsAt: "2026-08-25T07:30:00.000Z",
+            scoringEndsAt: period.scoringEndsAt.toISOString(),
+          },
+        },
+        {
+          serverId: SERVER_ID,
+          now: openAt,
+          prismaClient: db,
+        },
+      ),
+    ).rejects.toThrow("Invalid weekly parlay catch-up timeline");
+  });
+});
+
+describe("weekly parlay contribution capture", () => {
   test("appends once and accepts a pre-cutoff completion ingested during reconciliation", async () => {
     const finalOnly = hitCriteria();
     finalOnly.legs[0] = {
@@ -773,6 +867,42 @@ describe("weekly parlay ingestion boundaries", () => {
 describe("weekly parlay Discord delivery", () => {
   test("uses one settlement delivery key across settlement origins", () => {
     expect(weeklyParlaySettlementActionKey(42)).toBe("settlement:42");
+  });
+
+  test("labels catch-up messages and renders their frozen betting and scoring clocks", async () => {
+    const period = weeklyParlayPeriod(PERIOD_KEY);
+    const market = await makeMarket({
+      marketState: "publishing",
+      timeline: {
+        openAt: new Date("2026-08-24T19:00:00.000Z"),
+        bettingClosesAt: new Date("2026-08-25T07:00:00.000Z"),
+        scoringStartsAt: new Date("2026-08-25T07:00:00.000Z"),
+        scoringEndsAt: period.scoringEndsAt,
+      },
+    });
+    const sent: Parameters<WeeklyParlayDiscordSender>[0][] = [];
+    const sender: WeeklyParlayDiscordSender = async (options) => {
+      sent.push(options);
+      return { channelId: "160509172704739999", id: "catch-up-open" };
+    };
+    await expect(
+      deliverWeeklyParlayDiscord(
+        {
+          marketId: market.id,
+          actionKey: "open",
+          kind: "open",
+          scheduledAt: market.definition.openAt,
+        },
+        db,
+        sender,
+      ),
+    ).resolves.toBe("sent");
+    expect(sent[0]?.content).toContain(
+      "Catch-up weekly Bryan Bucks parlay is open",
+    );
+    expect(sent[0]?.content).toContain("Betting closes <t:1787641200:F>");
+    expect(sent[0]?.content).toContain("Scoring runs <t:1787641200:F>");
+    expect(sent[0]?.content).toContain("through <t:1788112800:F>");
   });
 
   test("chunks and deduplicates private mention delivery with a stable nonce", async () => {
