@@ -52,6 +52,11 @@ export async function runReport(
 ): Promise<ReportRunResult> {
   const trigger = ReportRunTriggerSchema.parse(params.trigger);
   const startedAt = params.now ?? new Date();
+  // Duration measures real elapsed wall time. `startedAt` may be an injected
+  // logical clock (the scheduled tick, or a pinned test date), and Postgres
+  // INTEGER rejects the multi-billion-ms "duration" that (real now − logical
+  // start) produces — SQLite silently stored it.
+  const wallStartMs = Date.now();
   // Record the run row up front so any failure — including a malformed stored
   // query whose RENDER clause won't parse — is captured as a FAILED run rather
   // than thrown before the run is ever recorded. The `output_format` metric
@@ -95,7 +100,7 @@ export async function runReport(
       playerDiscordIds,
     });
     const completedAt = new Date();
-    const durationMs = completedAt.getTime() - startedAt.getTime();
+    const durationMs = Date.now() - wallStartMs;
 
     // Archive the rendered output so the web "view posted reports" history is
     // faithful. The PNG remains best-effort, while a configured visualization
@@ -163,7 +168,7 @@ export async function runReport(
       data: {
         status: "FAILED",
         completedAt,
-        durationMs: completedAt.getTime() - startedAt.getTime(),
+        durationMs: Date.now() - wallStartMs,
         errorMessage,
       },
     });
@@ -181,7 +186,7 @@ export async function runReport(
       outputFormat: renderKind,
       trigger,
       status: "FAILED",
-      durationMs: completedAt.getTime() - startedAt.getTime(),
+      durationMs: Date.now() - wallStartMs,
       rowsReturned: 0,
       rowsScanned: 0,
       startedAt,

@@ -113,7 +113,7 @@ export default defineConfig({
   webServer: {
     // Use bun for both local and CI (CI container now has Bun installed)
     // Add --host in CI to bind to all interfaces (not just localhost)
-    command: isCI ? "bun run preview -- --host" : "bun run preview",
+    command: isCI ? "bun run preview -- --host --port 4321" : "bun run preview",
     url: "http://localhost:4321",
     timeout: 120 * 1000,
     reuseExistingServer: !isCI,

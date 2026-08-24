@@ -3,6 +3,10 @@ import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
 import analyticsRegistryJson from "@shepherdjerred/monorepo/config/analytics-sites.json" with { type: "json" };
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
+import versions, {
+  postgresImageDigests,
+} from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 const RegistrySchema = z.object({
   projectToken: z.string(),
@@ -60,6 +64,43 @@ describe("Scout PostHog deployment configuration", () => {
       expect(env.get("POSTHOG_API_HOST")).toBe(registry.apiHost);
       expect(env.get("POSTHOG_SITE_KEY")).toBe(site?.key);
       expect(env.get("POSTHOG_SITE_HOSTNAME")).toBe(site?.hostname);
+      const imageVersion = versions[`shepherdjerred/scout-for-lol/${stage}`];
+      if (scoutImageUsesPostgres(imageVersion, postgresImageDigests)) {
+        expect(env.get("DATABASE_URL")).toBe(
+          `postgresql://$(DB_USER):$(DB_PASSWORD)@scout-${stage}-postgresql.scout-${stage}.svc.cluster.local:5432/scout`,
+        );
+      } else {
+        expect(env.get("DATABASE_URL")).toBe("file:/data/db.sqlite");
+      }
     },
   );
+
+  test.each([
+    [
+      "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      false,
+    ],
+    [
+      "2.0.0-10659@sha256:19a093e214765d13cbb8c59c32b73b4220990e3d71361de83cd25b021b1539f1",
+      false,
+    ],
+    [
+      "2.0.0-10860@sha256:c79be8f789dc48b8add32d5c633be88a881899cef91beb8efd450fba483474ff",
+      false,
+    ],
+    [
+      "2.0.0-10861@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      true,
+    ],
+  ])("classifies the Scout database contract for %s", (version, expected) => {
+    const digest = version.split("@")[1];
+    const postgresDigests = new Set<string>();
+    if (expected) {
+      if (digest === undefined) {
+        throw new Error(`expected a digest in ${version}`);
+      }
+      postgresDigests.add(digest);
+    }
+    expect(scoutImageUsesPostgres(version, postgresDigests)).toBe(expected);
+  });
 });

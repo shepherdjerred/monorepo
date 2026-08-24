@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 
+import { marioSmokeConfig, pokemonSmokeConfig } from "./smoke-app-configs.ts";
+
 /**
  * Runs production-image smoke assertions inside a BuildKit solve.
  *
@@ -57,132 +59,6 @@ function assertPassed(result: SmokeResult, label: string): void {
 
 const discordAuthPattern =
   "TokenInvalid|401|Unauthorized|Invalid token|An invalid token was provided";
-
-const pokemonSmokeConfig = `
-server_id = "000000000000000000"
-
-[bot]
-enabled = true
-discord_token = "smoke-test-dummy-token"
-application_id = "000000000000000000"
-
-[bot.commands]
-enabled = false
-update = false
-
-[bot.commands.screenshot]
-enabled = false
-
-[bot.notifications]
-channel_id = "000000000000000000"
-enabled = false
-
-[stream]
-enabled = false
-channel_id = "000000000000000000"
-dynamic_streaming = false
-minimum_in_channel = 0
-require_watching = false
-
-[stream.userbot]
-id = "000000000000000000"
-token = "smoke-test-dummy-selfbot-token"
-
-[stream.video]
-scale = 3
-frame_rate = 30
-bitrate_kbps = 1500
-bitrate_max_kbps = 4000
-
-[game]
-enabled = false
-wasm_path = "packages/backend/assets/pokeemerald.wasm"
-
-[game.commands]
-enabled = false
-channel_id = "000000000000000000"
-max_actions_per_command = 1
-max_quantity_per_action = 1
-key_press_duration_in_milliseconds = 100
-delay_between_actions_in_milliseconds = 100
-
-[game.commands.burst]
-duration_in_milliseconds = 100
-delay_in_milliseconds = 100
-quantity = 1
-
-[game.commands.chord]
-duration_in_milliseconds = 100
-max_commands = 1
-max_total = 1
-delay = 100
-
-[game.commands.hold]
-duration_in_milliseconds = 100
-
-[web]
-enabled = false
-cors = false
-port = 3000
-assets = "/tmp"
-
-[web.api]
-enabled = false
-`;
-
-const marioSmokeConfig = `
-server_id = "000000000000000000"
-
-[bot]
-enabled = false
-discord_token = "smoke-test-dummy-token"
-application_id = "000000000000000000"
-
-[bot.commands]
-enabled = false
-update = false
-
-[bot.commands.screenshot]
-enabled = false
-
-[bot.notifications]
-channel_id = "000000000000000000"
-enabled = false
-
-[stream]
-enabled = true
-channel_id = "000000000000000000"
-dynamic_streaming = false
-minimum_in_channel = 0
-require_watching = false
-
-[stream.userbot]
-id = "000000000000000000"
-token = "smoke-test-dummy-selfbot-token"
-
-[stream.video]
-scale = 2
-frame_rate = 30
-bitrate_kbps = 1500
-bitrate_max_kbps = 4000
-
-[emulator]
-enabled = false
-wasm_dir = "packages/backend/assets/n64wasm"
-rom_path = "roms/mariokart64.z64"
-fps = 30
-software_render = true
-seats = 4
-
-[web]
-enabled = false
-cors = false
-port = 8081
-assets = "/tmp"
-
-[web.api]
-enabled = false
-`;
 
 const commands: Record<
   string,
@@ -455,10 +331,20 @@ const commands: Record<
     command: [
       "set -eu",
       "cd /app/packages/scout-for-lol/packages/backend",
+      // Throwaway Postgres inside the smoke stage (apt postgresql). Resolve
+      // the installed major version through pg_config; Debian's package
+      // version is independent of the runtime image's base distribution.
+      'postgres_bin="$(pg_config --bindir)"',
+      '"$postgres_bin/initdb" -D /tmp/smoke-pg -U postgres --auth=trust --no-locale >/dev/null',
+      'if ! "$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-p 18732 -c listen_addresses=127.0.0.1 -c unix_socket_directories=/tmp" start; then cat /tmp/smoke-pg.log; exit 1; fi',
       "set +e",
-      'output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run src/index.ts" 2>&1)"',
+      // Mirror the full image CMD: migrate → legacy import (which must take
+      // its fresh-install marker path here) → report audit → boot.
+      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts --allow-fresh-install && bun run scripts/audit-report-windows.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
+      String.raw`printf '%s\n' "$output" | grep -q "Legacy import: fresh" || { echo "importer did not take the fresh-install path"; exit 1; }`,
+      String.raw`printf '%s\n' "$output" | grep -Fq "HTTP server started" || { echo "backend did not reach HTTP startup"; exit 1; }`,
       String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
         '"',
@@ -468,7 +354,9 @@ const commands: Record<
       APPLICATION_ID: "000000000000000000",
       RIOT_API_KEY: "smoke-test-dummy",
       FEATURE_FLAGS_MODE: "disabled",
-      DATABASE_URL: "file:/tmp/smoke-test.db",
+      DATABASE_URL: "postgres://postgres@127.0.0.1:18732/postgres",
+      LEGACY_SQLITE_PATH: "/tmp/no-legacy-sqlite.db",
+      ENABLE_DISCORD_GATEWAY: "false",
       ENABLE_BACKGROUND_JOBS: "false",
       REPORT_LAKE_DIR: "/tmp/report-lake",
       PORT: "18791",

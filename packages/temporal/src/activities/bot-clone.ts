@@ -139,16 +139,35 @@ export async function buildGlitterContext(
 }
 
 /**
- * Install the one root workspace in a bot clone, then build both generated
- * shared-package producers Scout imports. Package-local installs are invalid
- * in this monorepo: every workspace dependency is resolved by the root
- * package.json and root bun.lock.
+ * Generate Scout's Prisma client and branded types inside an already-installed
+ * bot clone. The hook-free root install intentionally skips lifecycle scripts,
+ * so generated backend imports must be prepared explicitly before snapshot
+ * refresh tests run.
+ */
+export async function generateScoutBackend(
+  repoDir: string,
+  commandRunner: BotCloneCommandRunner = runCommand,
+): Promise<void> {
+  const pkgDir = `${repoDir}/packages/scout-for-lol/packages/backend`;
+  const cacheDir = botCloneCacheDir(repoDir);
+  await commandRunner(["bun", "run", "db:generate"], {
+    cwd: pkgDir,
+    env: { BUN_INSTALL_CACHE_DIR: cacheDir },
+  });
+}
+
+/**
+ * Install the one root workspace in a bot clone, generate Scout's backend, then
+ * build both generated shared-package producers Scout imports. Package-local
+ * installs are invalid in this monorepo: every workspace dependency is
+ * resolved by the root package.json and root bun.lock.
  */
 export async function installScoutWorkspace(
   repoDir: string,
   commandRunner: BotCloneCommandRunner = runCommand,
 ): Promise<void> {
   await rootInstallWithoutHooks(repoDir, commandRunner);
+  await generateScoutBackend(repoDir, commandRunner);
   await buildLlmModels(repoDir, commandRunner);
   await buildGlitterContext(repoDir, commandRunner);
 }

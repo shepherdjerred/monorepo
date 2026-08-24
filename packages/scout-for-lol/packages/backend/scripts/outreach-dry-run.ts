@@ -6,8 +6,9 @@
  * real people, so the stage backfill and ladder decisions should be eyeballed
  * against a copy of production before the first real fire.
  *
- * Usage (against a copy of the prod DB — never point this at prod itself):
- *   DATABASE_URL=file:./prod-copy.sqlite bun run scripts/outreach-dry-run.ts
+ * Usage (against a restored PostgreSQL copy — never point this at prod itself):
+ *   DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
+ *     bun run scripts/outreach-dry-run.ts
  */
 
 import { prisma } from "#src/database/index.ts";

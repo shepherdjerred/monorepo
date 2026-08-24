@@ -22,24 +22,23 @@ const PodListSchema = z.object({
   ),
 });
 
+// Runs inside the scout-beta Postgres pod via the local trust socket
+// (pgHba "local all all trust" exists for exactly these exec runbooks).
+// Mixed-case identifiers must be quoted under Postgres.
 const REMOTE_QUERY = `
-  import { Database } from "bun:sqlite";
-  const database = new Database("/data/db.sqlite", { readonly: true, strict: true });
-  const rows = database.query(\`
+  SELECT COALESCE(json_agg(t), '[]') FROM (
     SELECT
-      a.id AS accountId,
-      p.id AS playerId,
+      a.id AS "accountId",
+      p.id AS "playerId",
       p.alias,
-      p.discordId,
-      p.serverId,
+      p."discordId",
+      p."serverId",
       a.puuid,
       a.region
-    FROM Account a
-    JOIN Player p ON p.id = a.playerId
+    FROM "Account" a
+    JOIN "Player" p ON p.id = a."playerId"
     ORDER BY p.alias, a.id
-  \`).all();
-  await Bun.write(Bun.stdout, JSON.stringify(rows));
-  database.close();
+  ) t
 `;
 
 async function run(command: string[]): Promise<string> {
@@ -69,7 +68,7 @@ async function betaPod(): Promise<{ name: string; uid: string }> {
   ]);
   const pods = PodListSchema.parse(JSON.parse(output)).items.filter(
     (pod) =>
-      pod.metadata.name.startsWith("scout-beta-scout-backend-") &&
+      pod.metadata.name.startsWith("scout-beta-postgresql-") &&
       pod.status.phase === "Running" &&
       pod.status.conditions.some(
         (condition) =>
@@ -78,7 +77,7 @@ async function betaPod(): Promise<{ name: string; uid: string }> {
   );
   if (pods.length !== 1) {
     throw new Error(
-      `Expected one ready Scout beta pod, found ${String(pods.length)}`,
+      `Expected one ready Scout beta Postgres pod, found ${String(pods.length)}`,
     );
   }
   const pod = pods[0];
@@ -95,8 +94,15 @@ const output = await run([
   "scout-beta",
   pod.name,
   "--",
-  "bun",
-  "-e",
+  "psql",
+  "-U",
+  "postgres",
+  "-d",
+  "scout",
+  "-At",
+  "-v",
+  "ON_ERROR_STOP=1",
+  "-c",
   REMOTE_QUERY,
 ]);
 const parsed: unknown = JSON.parse(output);

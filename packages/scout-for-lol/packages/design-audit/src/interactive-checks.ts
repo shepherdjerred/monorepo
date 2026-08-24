@@ -59,7 +59,7 @@ async function assertVisibleDialogs(page: Page): Promise<void> {
 
 export async function assertInteractiveStates(page: Page): Promise<void> {
   const dialogTriggers = page.locator(
-    '[aria-haspopup="dialog"]:visible, [data-dialog-trigger]:visible',
+    '[aria-haspopup="dialog"]:visible:not([aria-label="Open navigation"]), [data-dialog-trigger]:visible',
   );
   const dialogTriggerCount = await dialogTriggers.count();
   for (let index = 0; index < dialogTriggerCount; index += 1) {

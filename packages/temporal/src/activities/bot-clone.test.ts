@@ -15,7 +15,7 @@ type RecordedCommand = {
 };
 
 describe("installScoutWorkspace", () => {
-  test("owns one hook-free root install followed by both Scout producers", async () => {
+  test("owns install, backend generation, and both Scout producers", async () => {
     const calls: RecordedCommand[] = [];
     const commandRunner: BotCloneCommandRunner = (command, options) => {
       calls.push({ command, options });
@@ -29,6 +29,13 @@ describe("installScoutWorkspace", () => {
         command: ["bun", "install", "--frozen-lockfile", "--ignore-scripts"],
         options: {
           cwd: REPO_DIR,
+          env: { BUN_INSTALL_CACHE_DIR: CACHE_DIR },
+        },
+      },
+      {
+        command: ["bun", "run", "db:generate"],
+        options: {
+          cwd: `${REPO_DIR}/packages/scout-for-lol/packages/backend`,
           env: { BUN_INSTALL_CACHE_DIR: CACHE_DIR },
         },
       },

@@ -39,6 +39,36 @@ export type RiotAccountInputData = z.infer<typeof RiotAccountInput>;
 export type TransferAccountInputData = z.infer<typeof TransferAccountInput>;
 export type UpdateAccountInputData = z.infer<typeof UpdateAccountInput>;
 
+async function lockPlayerAccountMutations(
+  tx: {
+    $executeRaw: (
+      query: TemplateStringsArray,
+      ...values: unknown[]
+    ) => Promise<number>;
+  },
+  playerId: number,
+): Promise<void> {
+  // The last-account invariant is a read-then-write check. Serialize every
+  // mutation for the source player before counting accounts so PostgreSQL's
+  // READ COMMITTED transactions cannot both observe the same count.
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-player-accounts'), ${playerId})`;
+}
+
+async function lockAccountRow(
+  tx: {
+    $executeRaw: (
+      query: TemplateStringsArray,
+      ...values: unknown[]
+    ) => Promise<number>;
+  },
+  accountId: number,
+): Promise<void> {
+  // The account owner can change between the lookup and the advisory lock.
+  // Lock the row first, then re-read it before choosing which player's
+  // last-account invariant to serialize.
+  await tx.$executeRaw`SELECT 1 FROM "Account" WHERE "id" = ${accountId} FOR UPDATE`;
+}
+
 async function resolvePuuidOrThrow(
   input: RiotAccountInputData,
 ): Promise<LeaguePuuid> {
@@ -141,8 +171,14 @@ export async function deleteAccount(ctx: WebCtx, input: RiotAccountInputData) {
     });
     if (account === null) throw notFound("Account was not found");
 
+    await lockAccountRow(tx, account.id);
+    const currentAccount = await tx.account.findUniqueOrThrow({
+      where: { id: account.id },
+      include: { player: true },
+    });
+    await lockPlayerAccountMutations(tx, currentAccount.player.id);
     const sourceAccountCount = await tx.account.count({
-      where: { playerId: account.player.id },
+      where: { playerId: currentAccount.player.id },
     });
     if (sourceAccountCount === 1) {
       throw conflict("Cannot remove the last account from a player");
@@ -150,7 +186,7 @@ export async function deleteAccount(ctx: WebCtx, input: RiotAccountInputData) {
 
     await tx.account.delete({ where: { id: account.id } });
     await tx.player.update({
-      where: { id: account.player.id },
+      where: { id: currentAccount.player.id },
       data: { updatedTime: new Date() },
     });
     await recordAudit(
@@ -158,19 +194,22 @@ export async function deleteAccount(ctx: WebCtx, input: RiotAccountInputData) {
         action: "ACCOUNT_DELETE",
         actorDiscordId: ctx.user.discordId,
         serverId: input.guildId,
-        targetPlayerId: account.player.id,
+        targetPlayerId: currentAccount.player.id,
         targetAccountId: account.id,
         payload: {
-          playerAlias: account.player.alias,
-          accountAlias: account.alias,
-          region: account.region,
+          playerAlias: currentAccount.player.alias,
+          accountAlias: currentAccount.alias,
+          region: currentAccount.region,
         },
         ipAddress: ctx.webSession.ipAddress,
         userAgent: ctx.webSession.userAgent,
       },
       tx,
     );
-    return { accountId: account.id, playerAlias: account.player.alias };
+    return {
+      accountId: currentAccount.id,
+      playerAlias: currentAccount.player.alias,
+    };
   });
   return {
     deletedAccountId: deleted.accountId,
@@ -192,6 +231,12 @@ export async function transferAccount(
     });
     if (account === null) throw notFound("Account was not found");
 
+    await lockAccountRow(tx, account.id);
+    const currentAccount = await tx.account.findUniqueOrThrow({
+      where: { id: account.id },
+      include: { player: true },
+    });
+    await lockPlayerAccountMutations(tx, currentAccount.player.id);
     const targetPlayer = await tx.player.findUnique({
       where: {
         serverId_alias: {
@@ -203,12 +248,12 @@ export async function transferAccount(
     if (targetPlayer === null) {
       throw notFound(`Player "${input.toPlayerAlias}" was not found`);
     }
-    if (account.player.id === targetPlayer.id) {
+    if (currentAccount.player.id === targetPlayer.id) {
       throw conflict("Account is already attached to that player");
     }
 
     const sourceAccountCount = await tx.account.count({
-      where: { playerId: account.player.id },
+      where: { playerId: currentAccount.player.id },
     });
     if (sourceAccountCount === 1) {
       throw conflict("Cannot transfer the last account from a player");
@@ -219,7 +264,7 @@ export async function transferAccount(
       data: { playerId: targetPlayer.id, updatedTime: now },
     });
     await tx.player.updateMany({
-      where: { id: { in: [account.player.id, targetPlayer.id] } },
+      where: { id: { in: [currentAccount.player.id, targetPlayer.id] } },
       data: { updatedTime: now },
     });
     await recordAudit(
@@ -230,8 +275,8 @@ export async function transferAccount(
         targetPlayerId: targetPlayer.id,
         targetAccountId: account.id,
         payload: {
-          accountAlias: account.alias,
-          fromPlayerAlias: account.player.alias,
+          accountAlias: currentAccount.alias,
+          fromPlayerAlias: currentAccount.player.alias,
           toPlayerAlias: targetPlayer.alias,
         },
         ipAddress: ctx.webSession.ipAddress,
@@ -241,7 +286,7 @@ export async function transferAccount(
     );
     return {
       accountId: account.id,
-      fromPlayerAlias: account.player.alias,
+      fromPlayerAlias: currentAccount.player.alias,
       toPlayerAlias: targetPlayer.alias,
     };
   });
