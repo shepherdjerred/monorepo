@@ -52,6 +52,8 @@ export type PlayerAccountWithState = {
   lastCheckedAt: Date | undefined;
 };
 
+type AccountStateClient = Pick<ExtendedPrismaClient, "player">;
+
 // A channel that should be notified about a match, plus the in-match
 // subscriptions routing to it and their parsed notification filters. Filters
 // are per-subscription; the caller decides delivery (e.g. notify the channel
@@ -177,7 +179,7 @@ export async function getChannelsSubscribedToPlayers(
  * @returns Array of player accounts with their polling state
  */
 export async function getAccountsWithState(
-  prismaClient: ExtendedPrismaClient = prisma,
+  prismaClient: AccountStateClient = prisma,
   activeServerIds?: Set<string>,
 ): Promise<PlayerAccountWithState[]> {
   logger.info("🔍 Fetching all player accounts with state");

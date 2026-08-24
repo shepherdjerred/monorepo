@@ -31,12 +31,13 @@ import {
 export async function ingestMatch(
   match: RawMatch,
   trackedPlayerAliases: string[],
-): Promise<void> {
+): Promise<{ staged: boolean; stored: boolean }> {
   // Authoritative: throws on failure.
-  await saveMatchToS3(match, trackedPlayerAliases);
+  const storageStatus = await saveMatchToS3(match, trackedPlayerAliases);
   // Best-effort lake staging so the DuckDB report engine sees this match
   // before the next compaction; never throws.
-  await writeMatchStagingFile(resolveLakeDir(), match);
+  const staged = await writeMatchStagingFile(resolveLakeDir(), match);
+  return { staged, stored: storageStatus === "saved" };
 }
 
 export async function ingestTimeline(

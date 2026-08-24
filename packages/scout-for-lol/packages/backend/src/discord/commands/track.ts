@@ -26,6 +26,7 @@ import type {
   CommandReply,
 } from "#src/discord/commands/define-command.ts";
 import { getDashboardUrl } from "#src/discord/commands/links.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 
 export const trackCommand = new SlashCommandBuilder()
   .setName("track")
@@ -122,6 +123,10 @@ export async function executeTrack(
     game_name: puuidResult.gameName,
     tag_line: puuidResult.tagLine,
   };
+  const initialHistoryImportEnabled = await isPolicyEnabled(
+    "initial_match_history_import_enabled",
+    { server: args.data.guildId },
+  );
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -137,6 +142,7 @@ export async function executeTrack(
         },
         LeaguePuuidSchema.parse(puuidResult.puuid),
         tx,
+        initialHistoryImportEnabled,
       );
       // The audit log is documented as covering Discord commands too, so the
       // row goes in the same transaction as the mutation — exactly as the web
@@ -207,10 +213,14 @@ export async function executeTrack(
 
     await interaction.editReply({ content: formatTrackResult(result) });
 
-    if (result.kind === "created") {
+    if (
+      !initialHistoryImportEnabled &&
+      (result.kind === "created" ||
+        result.kind === "subscription-already-exists")
+    ) {
       void runBackfillAfterCommit({
         alias: args.data.alias,
-        puuid: LeaguePuuidSchema.parse(result.account.puuid),
+        puuid: LeaguePuuidSchema.parse(puuidResult.puuid),
         region: args.data.region,
         discordUserId: undefined,
       });

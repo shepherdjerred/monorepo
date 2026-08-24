@@ -241,8 +241,7 @@ describe("S3 Match Storage", () => {
       .on(PutObjectCommand)
       .resolves({ $metadata: { httpStatusCode: 200 } });
 
-    // Returns void without throwing and makes no S3 calls.
-    await expect(saveMatchToS3(match, [])).resolves.toBeUndefined();
+    await expect(saveMatchToS3(match, [])).resolves.toBe("skipped_no_bucket");
     expect(s3Mock.calls().length).toBe(0);
   });
 

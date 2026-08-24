@@ -29,10 +29,12 @@ lake is the wrong place to look.
 ```mermaid
 flowchart LR
   accTitle: Scout report lake read and write flow
-  accDescr: Ingest crons write raw JSON to S3 and must succeed. Prematch prediction capture writes frozen observations to S3 and staging as best effort. A fold compaction every fifteen minutes and a nightly rebuild from S3 both publish immutable Parquet builds behind a CURRENT pointer. Readers union the published Parquet with the staging files, so DuckDB queries see a match seconds after ingest. Competition standings bypass the lake and read raw match JSON and leaderboard snapshots from S3 directly.
+  accDescr: Live ingest crons write raw JSON to S3 and stage lake rows as best effort. A quiet first-run import snapshots twenty Match-V5 IDs and requires both writes before checkpointing. Prematch prediction capture writes frozen observations to S3 and staging as best effort. A fold compaction every fifteen minutes and a nightly rebuild from S3 both publish immutable Parquet builds behind a CURRENT pointer. Readers union the published Parquet with the staging files, so DuckDB queries see a match seconds after ingest. Competition standings bypass the lake and read raw match JSON and leaderboard snapshots from S3 directly.
 
   I[Ingest crons] -->|must succeed| S3[(S3 durable objects)]
   I -->|best effort| ST[NDJSON staging]
+  H[Quiet first-run import] -->|must succeed| S3
+  H -->|must succeed before checkpoint| ST
   P[Prematch prediction capture] -->|best effort| S3
   P -->|best effort| ST
   ST --> F[Fold, every 15 min]
@@ -63,13 +65,29 @@ This split is why schema changes are cheap. Adding a lake column needs no
 migration and no backfill: the nightly rebuild re-derives every row from the
 raw JSON, so the new column simply appears the next morning.
 
-## Writes: one must succeed, one may fail
+## Writes: live ingest can recover staging; initial import cannot
 
 Ingest makes two writes with deliberately different contracts, spelled out in
 [store.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-store/store.ts).
 The S3 put throws on failure, because raw data is unrecoverable. The lake
 staging write never throws, because a lost staging row is re-derived from S3
 that night anyway.
+
+The quiet first-run import tightens that contract. It snapshots exactly 20
+Match-V5 IDs once, imports newest first, and checkpoints a match only when the
+S3 put and immediate staging write both succeed. A failed staging write retries
+the same idempotent S3 key. This lets Explore and global ScoutQL read partial
+history immediately without making guild reports claim readiness too early.
+After match and current-rank enrichment, one coalesced fold refreshes
+`accounts.parquet` and publishes all staged matches before the PUUID-level job
+is complete. Guild-scoped lookbacks therefore see the new identity mapping and
+facts together.
+
+The import never enters the normal post-match processor. Historical matches do
+not send Discord messages, generate reports or AI recaps, write ActiveGame
+state, settle Bryan Bucks, award earnings, or fabricate per-match rank deltas.
+The live poller resumes only after the fixed snapshot is stored and its newest
+ID becomes the cursor, so a game completed during import is notified once.
 
 ```mermaid
 sequenceDiagram

@@ -147,6 +147,7 @@ export type FlagName =
   | "betting_player_bet_outcome_dm_enabled"
   | "betting_settlement_dm_enabled"
   | "debug"
+  | "initial_match_history_import_enabled"
   | "tournament_lobbies_enabled";
 
 /** Flipt is authoritative when available. The registry remains a fail-closed
@@ -259,6 +260,10 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
         attributes: { user: ME },
       },
     ],
+  },
+  initial_match_history_import_enabled: {
+    default: false,
+    overrides: [],
   },
 };
 

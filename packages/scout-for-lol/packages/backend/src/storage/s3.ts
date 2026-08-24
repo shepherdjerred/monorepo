@@ -24,14 +24,15 @@ export type PrematchPayloadSaveResult = {
  * Save a League of Legends match to S3 storage
  * @param match The match data to save
  * @param trackedPlayerAliases Array of tracked player aliases in this match (empty array if none)
- * @returns Promise that resolves when the match is saved
+ * @returns whether the canonical write happened or S3 is unavailable
  */
 export async function saveMatchToS3(
   match: RawMatch,
   trackedPlayerAliases: string[],
-): Promise<void> {
+): Promise<"saved" | "skipped_no_bucket"> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const body = JSON.stringify(match, null, 2);
+  const storageAvailable = configuration.s3BucketName !== undefined;
 
   await saveToS3({
     matchId,
@@ -67,6 +68,7 @@ export async function saveMatchToS3(
       gameDuration: match.info.gameDuration,
     },
   });
+  return storageAvailable ? "saved" : "skipped_no_bucket";
 }
 
 /**

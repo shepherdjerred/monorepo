@@ -67,6 +67,21 @@ describe("Scout bot-health alert rules", () => {
     );
   });
 
+  test("warns when the oldest initial history import exceeds six hours", () => {
+    const rule = botHealth?.rules?.find(
+      (candidate) => candidate.alert === "ScoutInitialHistoryImportStale",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing ScoutInitialHistoryImportStale rule");
+    }
+    const expression = JSON.stringify(rule.expr);
+    expect(rule.labels?.["severity"]).toBe("warning");
+    expect(expression).toContain(
+      "scout_initial_history_import_oldest_actionable_timestamp_seconds",
+    );
+    expect(expression).toContain("21600");
+  });
+
   test("warns on a delivery-blocked spike", () => {
     const rule = botHealth?.rules?.find(
       (candidate) => candidate.alert === "ScoutGuildDeliveryBlockedSpike",
