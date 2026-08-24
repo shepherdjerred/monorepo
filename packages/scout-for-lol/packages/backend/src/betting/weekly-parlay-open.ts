@@ -58,11 +58,16 @@ function periodsSinceFeatured(
 function openActionIsActive(
   period: Pick<WeeklyParlayFrozenWindow, "bettingClosesAt">,
   signal: AbortSignal | undefined,
+  generationDeadline: Date | undefined,
 ): boolean {
   if (signal?.aborted === true) {
     throw signal.reason ?? new Error("Weekly parlay open was aborted.");
   }
-  return new Date() < period.bettingClosesAt;
+  return (
+    new Date() < period.bettingClosesAt &&
+    (generationDeadline === undefined ||
+      generationDeadline.getTime() < period.bettingClosesAt.getTime())
+  );
 }
 
 type OpenWeeklyParlayInput = {
@@ -188,12 +193,6 @@ async function openWeeklyParlayInternal(
     assertMatchingTimeline(existing, period);
     return { kind: "existing", marketId: existing.id };
   }
-  if (
-    input.generationDeadline !== undefined &&
-    input.generationDeadline.getTime() >= period.bettingClosesAt.getTime()
-  ) {
-    return { kind: "too_late" };
-  }
   const [bettingEnabled, weeklyEnabled] = await Promise.all([
     isPolicyEnabled("betting_enabled", { server: serverId }),
     isPolicyEnabled("weekly_parlays_enabled", { server: serverId }),
@@ -287,7 +286,7 @@ async function openWeeklyParlayInternal(
     if (priced === undefined) {
       continue;
     }
-    if (!openActionIsActive(period, input.signal)) {
+    if (!openActionIsActive(period, input.signal, input.generationDeadline)) {
       return { kind: "too_late" };
     }
     try {
