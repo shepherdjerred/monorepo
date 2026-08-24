@@ -1,17 +1,14 @@
-# Icons Placeholder
+# Desktop icons
 
-This directory needs icon files for the application. The following files are required:
+These files are generated. Do not edit them by hand or run `bunx tauri icon`
+directly — that bypasses Scout's shared brand kit.
 
-- `32x32.png` - 32x32 pixel PNG icon
-- `128x128.png` - 128x128 pixel PNG icon
-- `128x128@2x.png` - 256x256 pixel PNG icon for retina displays
-- `icon.icns` - macOS icon file
-- `icon.ico` - Windows icon file
-
-You can use the Tauri CLI to generate these from a source image:
+Regenerate from the compass mark and theme tokens:
 
 ```bash
-bunx tauri icon path/to/source-icon.png
+bun run generate:brand
 ```
 
-For now, the build will work without these, but the application icon will be the default Tauri icon.
+That command lives in `@scout-for-lol/design-system` and writes this directory
+plus the marketing/Discord/favicon rasters. `bun run check:generated` in the
+design-system package fails if these icons drift.

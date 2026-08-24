@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { scoutThemes } from "#src/generated/tokens.ts";
 
 export const SCOUT_THEME_STORAGE_KEY = "scout-theme-v1";
 export const SCOUT_LEGACY_APP_THEME_KEY = "scout-app-theme";
@@ -42,16 +43,34 @@ export function resolveScoutTheme(
   return `${preference.skin}-${resolveScoutMode(preference.mode, systemPrefersDark)}`;
 }
 
+export function scoutThemeCanvas(theme: ScoutResolvedTheme): string {
+  return scoutThemes[theme].colors.canvas;
+}
+
+export function writeScoutThemeColor(document: Document, color: string): void {
+  const existing = document.querySelector('meta[name="theme-color"]');
+  if (existing !== null) {
+    existing.setAttribute("content", color);
+    return;
+  }
+  const meta = document.createElement("meta");
+  meta.setAttribute("name", "theme-color");
+  meta.setAttribute("content", color);
+  document.head.append(meta);
+}
+
 export function applyScoutTheme(
   root: HTMLElement,
   preference: ScoutThemePreferenceV1,
   systemPrefersDark: boolean,
 ): ScoutResolvedMode {
   const resolvedMode = resolveScoutMode(preference.mode, systemPrefersDark);
+  const theme = resolveScoutTheme(preference, systemPrefersDark);
   root.dataset["scoutSkin"] = preference.skin;
   root.dataset["scoutMode"] = resolvedMode;
   root.dataset["theme"] = resolvedMode;
   root.classList.toggle("dark", resolvedMode === "dark");
+  writeScoutThemeColor(root.ownerDocument, scoutThemeCanvas(theme));
   return resolvedMode;
 }
 
