@@ -1,5 +1,5 @@
-import { FleetController } from "./controller.ts";
-import type { FleetControllerDependencies } from "./ports.ts";
+import { FleetController } from "./controller/fleet-controller.ts";
+import type { FleetControllerDependencies } from "./domain/ports.ts";
 
 export function createFleetController(
   dependencies: FleetControllerDependencies,

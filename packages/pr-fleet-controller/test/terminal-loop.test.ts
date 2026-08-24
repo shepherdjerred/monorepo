@@ -3,7 +3,7 @@ import {
   consumeTerminalLines,
   createSharedShutdown,
   settleRunResources,
-} from "@shepherdjerred/pr-fleet-controller/src/terminal-loop.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/cli/terminal-loop.ts";
 
 function noLines(): AsyncIterable<string> {
   return {

@@ -3,31 +3,31 @@ import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { codexProvider } from "@shepherdjerred/code-review";
-import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
+import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/domain/fleet-logic.ts";
 import {
   currentCommandCorrelation,
   withCommandCorrelation,
   withoutCommandCorrelation,
-} from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
-import { CommandFleetEnvironment } from "@shepherdjerred/pr-fleet-controller/src/environment.ts";
-import { settleEvidenceParts } from "@shepherdjerred/pr-fleet-controller/src/environment-refresh.ts";
-import { collectInheritedWipEvidence } from "@shepherdjerred/pr-fleet-controller/src/inherited-wip.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/runtime/command-correlation.ts";
+import { CommandFleetEnvironment } from "@shepherdjerred/pr-fleet-controller/src/environment/fleet-environment.ts";
+import { settleEvidenceParts } from "@shepherdjerred/pr-fleet-controller/src/environment/refresh.ts";
+import { collectInheritedWipEvidence } from "@shepherdjerred/pr-fleet-controller/src/workers/inherited-wip.ts";
 import type {
   CommandRequest,
   CommandResult,
   FleetTelemetry,
-} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
 import type {
   RunEventCorrelation,
   RunEventKind,
-} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
 import {
   PrStateSchema,
   type PrState,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
-import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/process-runner.ts";
-import { createWorkerRestackTools } from "@shepherdjerred/pr-fleet-controller/src/worker-restack-tools.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/domain/state.ts";
+import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/runtime/process-runner.ts";
+import { createWorkerRestackTools } from "@shepherdjerred/pr-fleet-controller/src/workers/restack-tools.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 const toolExecutionOptions = {

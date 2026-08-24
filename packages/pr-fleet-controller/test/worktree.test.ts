@@ -2,9 +2,9 @@ import { describe, expect, test } from "vitest";
 import type {
   CommandRequest,
   CommandResult,
-} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
-import type { PrIdentity } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { WorktreeManager } from "@shepherdjerred/pr-fleet-controller/src/worktree.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
+import type { PrIdentity } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { WorktreeManager } from "@shepherdjerred/pr-fleet-controller/src/environment/worktree.ts";
 import { identity } from "./fixtures.ts";
 
 // Script a reuse of the worktree that is already ON this PR's branch, whose

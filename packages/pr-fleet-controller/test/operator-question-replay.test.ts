@@ -2,13 +2,13 @@ import { afterEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
+import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/domain/fleet-logic.ts";
 import {
   loadRunBundle,
   replayRunBundle,
-} from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
-import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
-import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/replay/run-inspection.ts";
+import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/bundle/run-recorder.ts";
+import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 const snapshot: FleetSnapshot = {

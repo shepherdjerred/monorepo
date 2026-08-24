@@ -5,12 +5,12 @@ import path from "node:path";
 import type {
   CommandRequest,
   CommandResult,
-} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
 import {
   loadRunBundle,
   replayRunBundle,
-} from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
-import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/replay/run-inspection.ts";
+import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/bundle/run-recorder.ts";
 import {
   FleetSnapshotSchema,
   OperatorInputAnswerSchema,
@@ -18,16 +18,16 @@ import {
   PrStateSchema,
   type FleetSnapshot,
   type PrIdentity,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
-import { WorktreeManager } from "@shepherdjerred/pr-fleet-controller/src/worktree.ts";
-import { parseWatchArgs } from "@shepherdjerred/pr-fleet-controller/src/watch-cli.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/domain/state.ts";
+import { WorktreeManager } from "@shepherdjerred/pr-fleet-controller/src/environment/worktree.ts";
+import { parseWatchArgs } from "@shepherdjerred/pr-fleet-controller/src/cli/watch.ts";
 import {
   invalidateInheritedWipInspection,
   requireMatchingInheritedWipInspection,
   type InheritedWipEvidence,
-} from "@shepherdjerred/pr-fleet-controller/src/inherited-wip.ts";
-import { boundedInheritedWipEvidence } from "@shepherdjerred/pr-fleet-controller/src/worker-wip-tools.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/workers/inherited-wip.ts";
+import { boundedInheritedWipEvidence } from "@shepherdjerred/pr-fleet-controller/src/workers/wip-tools.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 const temporaryDirectories: string[] = [];

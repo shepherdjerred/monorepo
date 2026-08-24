@@ -2,13 +2,13 @@ import { afterEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { startOperatorControlServer } from "@shepherdjerred/pr-fleet-controller/src/operator-control.ts";
-import { secureRunArtifactFiles } from "@shepherdjerred/pr-fleet-controller/src/run-artifacts.ts";
+import { startOperatorControlServer } from "@shepherdjerred/pr-fleet-controller/src/watch/operator-control.ts";
+import { secureRunArtifactFiles } from "@shepherdjerred/pr-fleet-controller/src/bundle/run-artifacts.ts";
 import type {
   FleetSnapshot,
   OperatorInputAnswer,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { startWatchServer } from "@shepherdjerred/pr-fleet-controller/src/watch-server.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { startWatchServer } from "@shepherdjerred/pr-fleet-controller/src/watch/server.ts";
 
 const snapshot: FleetSnapshot = {
   open: 0,

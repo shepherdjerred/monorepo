@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
-import { settleCliResources } from "@shepherdjerred/pr-fleet-controller/src/cli-shutdown.ts";
-import { ControllerStopError } from "@shepherdjerred/pr-fleet-controller/src/controller-stop-error.ts";
-import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import { settleCliResources } from "@shepherdjerred/pr-fleet-controller/src/cli/shutdown.ts";
+import { ControllerStopError } from "@shepherdjerred/pr-fleet-controller/src/domain/errors.ts";
+import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 
 const snapshot: FleetSnapshot = {
   open: 0,

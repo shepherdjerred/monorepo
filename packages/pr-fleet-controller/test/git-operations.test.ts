@@ -3,14 +3,14 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { codexProvider } from "@shepherdjerred/code-review";
-import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
-import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
-import { GitOperations } from "@shepherdjerred/pr-fleet-controller/src/git-operations.ts";
+import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/runtime/telemetry.ts";
+import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/domain/fleet-logic.ts";
+import { GitOperations } from "@shepherdjerred/pr-fleet-controller/src/environment/git-operations.ts";
 import type {
   CommandRequest,
   CommandResult,
-} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
-import type { PrState } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
+import type { PrState } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 function makePr(crossRepository = false): PrState {

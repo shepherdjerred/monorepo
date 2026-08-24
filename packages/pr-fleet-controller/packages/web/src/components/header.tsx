@@ -2,8 +2,8 @@ import { type ReactElement } from "react";
 import type {
   RunManifest,
   RunSummary,
-} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
-import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
+import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import type { FleetProgress, RunStatus } from "#lib/fold";
 
 function statusLabel(runStatus: RunStatus, summary: RunSummary | null): string {

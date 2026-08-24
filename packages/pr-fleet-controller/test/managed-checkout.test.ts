@@ -5,12 +5,12 @@ import path from "node:path";
 import {
   prepareManagedCheckout,
   resolveManagedCheckoutPaths,
-} from "@shepherdjerred/pr-fleet-controller/src/managed-checkout.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/environment/managed-checkout.ts";
 import type {
   CommandRequest,
   CommandResult,
-} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
-import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/process-runner.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
+import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/runtime/process-runner.ts";
 
 function commandResult(
   exitCode: number,

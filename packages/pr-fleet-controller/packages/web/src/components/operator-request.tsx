@@ -1,5 +1,5 @@
 import { useState, type ReactElement, type SyntheticEvent } from "react";
-import type { OperatorInputRequest } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import type { OperatorInputRequest } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import { z } from "zod";
 
 const ErrorBodySchema = z.object({ error: z.string() });

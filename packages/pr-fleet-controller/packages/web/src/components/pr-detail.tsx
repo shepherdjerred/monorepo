@@ -1,5 +1,5 @@
 import { type ReactElement } from "react";
-import type { PrState } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import type { PrState } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import type { PrProgress, TimelineItem } from "#lib/fold";
 import { EvidencePanel } from "./evidence-panel.tsx";
 import { OperatorRequest } from "./operator-request.tsx";

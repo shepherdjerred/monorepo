@@ -16,15 +16,15 @@ import {
   inspectRunSummary,
   loadRunBundle,
   replayRunBundle,
-} from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
-import { PrStateSchema } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/replay/run-inspection.ts";
+import { PrStateSchema } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import {
   readAndVerifyEvents,
   RunRecorder,
-} from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
-import type { RecordedRunEvent } from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
-import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { writeFileSinkSynchronously } from "@shepherdjerred/pr-fleet-controller/src/synchronous-file-sink.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/bundle/run-recorder.ts";
+import type { RecordedRunEvent } from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
+import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { writeFileSinkSynchronously } from "@shepherdjerred/pr-fleet-controller/src/runtime/synchronous-file-sink.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 const snapshot: FleetSnapshot = {
@@ -97,7 +97,7 @@ async function runCliWithImplicitCheckout(): Promise<{
   const subprocess = Bun.spawn(
     [
       process.execPath,
-      path.join(packageDirectory, "src", "cli.ts"),
+      path.join(packageDirectory, "src", "cli", "main.ts"),
       "--model",
       "openai/gpt-5.6-terra",
       "--max-workers",
@@ -163,7 +163,7 @@ async function runCliInterruptedDuringCheckout(): Promise<{
   const subprocess = Bun.spawn(
     [
       process.execPath,
-      path.join(packageDirectory, "src", "cli.ts"),
+      path.join(packageDirectory, "src", "cli", "main.ts"),
       "--model",
       "openai/gpt-5.6-terra",
       "--max-workers",
@@ -590,7 +590,7 @@ describe("local run bundle integrity", () => {
     const subprocess = Bun.spawn(
       [
         process.execPath,
-        path.join(packageDirectory, "src", "cli.ts"),
+        path.join(packageDirectory, "src", "cli", "main.ts"),
         "--model",
         "openai/gpt-5.6-terra",
         "--checkout",
@@ -646,7 +646,7 @@ describe("CLI command capture", () => {
       [
         "bun",
         "run",
-        "src/cli.ts",
+        "src/cli/main.ts",
         "--model",
         "openai/gpt-5.6-terra",
         "--repo",
