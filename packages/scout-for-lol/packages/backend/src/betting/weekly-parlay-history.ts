@@ -87,6 +87,7 @@ export async function fetchWeeklyCandidateHistories(input: {
   periodKey: string;
   subjects: readonly WeeklyParlaySubject[];
   lakeDir?: string;
+  abortSignal?: AbortSignal;
 }): Promise<WeeklyParlayCandidateHistory[]> {
   if (input.subjects.length === 0) {
     return [];
@@ -111,28 +112,35 @@ export async function fetchWeeklyCandidateHistories(input: {
   if (source === undefined) {
     return [];
   }
-  const rows = await withDuckDBConnection(async (session) => {
-    const result = await session.run(
-      "WITH scoring_rows AS (" +
-        source.sql +
-        "), eligible_matches AS (" +
-        "SELECT match_id FROM scoring_rows GROUP BY match_id HAVING count(*) = 10 " +
-        "AND count_if(team_id = 100) = 5 AND count_if(team_id = 200) = 5 " +
-        "AND bool_and(end_of_game_result = 'GameComplete') " +
-        "AND min(game_duration_seconds) >= 300 AND NOT bool_or(early_surrendered) " +
-        "AND count_if(win) = 5 " +
-        "AND count(DISTINCT CASE WHEN win THEN team_id END) = 1) " +
-        "SELECT match_id, puuid, epoch_ms(game_end_at)::BIGINT AS completed_at_ms, " +
-        "queue, win, champion_name, team_position, kills, deaths, assists, " +
-        "total_damage_dealt_to_champions AS champion_damage, creep_score, " +
-        "gold_earned AS gold, vision_score, time_played FROM scoring_rows " +
-        "INNER JOIN eligible_matches USING (match_id) " +
-        "WHERE puuid IN (SELECT unnest(?)) AND team_position <> '' " +
-        "ORDER BY completed_at_ms ASC, match_id ASC",
-      bindParams(session, [...source.params, listParam(puuids)]),
-    );
-    return result.map((row) => WeeklyHistoryRowSchema.parse(row));
-  });
+  const rows = await withDuckDBConnection(
+    async (session) => {
+      const result = await session.run(
+        "WITH scoring_rows AS (" +
+          source.sql +
+          "), eligible_matches AS (" +
+          "SELECT match_id FROM scoring_rows GROUP BY match_id HAVING count(*) = 10 " +
+          "AND count_if(team_id = 100) = 5 AND count_if(team_id = 200) = 5 " +
+          "AND bool_and(end_of_game_result = 'GameComplete') " +
+          "AND min(game_duration_seconds) >= 300 AND NOT bool_or(early_surrendered) " +
+          "AND count_if(win) = 5 " +
+          "AND count(DISTINCT CASE WHEN win THEN team_id END) = 1) " +
+          "SELECT match_id, puuid, epoch_ms(game_end_at)::BIGINT AS completed_at_ms, " +
+          "queue, win, champion_name, team_position, kills, deaths, assists, " +
+          "total_damage_dealt_to_champions AS champion_damage, creep_score, " +
+          "gold_earned AS gold, vision_score, time_played FROM scoring_rows " +
+          "INNER JOIN eligible_matches USING (match_id) " +
+          "WHERE puuid IN (SELECT unnest(?)) AND team_position <> '' " +
+          "ORDER BY completed_at_ms ASC, match_id ASC",
+        bindParams(session, [...source.params, listParam(puuids)]),
+      );
+      return result.map((row) => WeeklyHistoryRowSchema.parse(row));
+    },
+    {
+      ...(input.abortSignal === undefined
+        ? {}
+        : { abortSignal: input.abortSignal }),
+    },
+  );
   const subjectByPuuid = new Map(
     input.subjects.flatMap((subject) =>
       subject.accounts.map((account) => [account.puuid, subject]),

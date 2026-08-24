@@ -5,10 +5,15 @@
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./model/weekly-parlay.ts": {
+      "types": "./dist/weekly-parlay.d.ts",
+      "default": "./dist/model/weekly-parlay.js"
+    },
     "./browser-assets": "./src/browser-assets.ts",
     "./*": "./src/*"
   },
   "scripts": {
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --emitDeclarationOnly -p tsconfig.weekly-parlay.build.json && bun build src/model/weekly-parlay.ts --outfile dist/model/weekly-parlay.js --target bun --external zod",
     "generate": "bun run scripts/generate-permission-catalog.ts && bun run scripts/generate-asset-manifest.ts --check",
     "generate:asset-manifest": "bun run scripts/generate-asset-manifest.ts --write",
     "check:asset-manifest": "bun run scripts/generate-asset-manifest.ts --check",
@@ -36,6 +41,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "ajv": "^8.20.0",
     "bun-types": "1.4.0",
     "eslint": "^10.3.0",
     "typescript": "^6.0.3",

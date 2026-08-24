@@ -1,5 +1,6 @@
 import { describe, test, expect, it } from "vitest";
 import type { Duration } from "@temporalio/common";
+import { ScheduleOverlapPolicy } from "@temporalio/client";
 import { LanePriorWorkflowInputSchema } from "#activities/lane-prior-refresh.ts";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
 import {
@@ -120,7 +121,16 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
   // run-vacuum: verifyState delaySeconds=180 + 3 inter-attempt retry sleeps.
   // Activity time and retries are covered by SLACK_MS below.
   runVacuumIfNotHome: 7 * ONE_MINUTE,
+  // Sunday noon through the next Sunday 11:00 PT. The fall DST transition
+  // makes the maximum elapsed duration 168 hours.
+  runScoutWeeklyParlayWorkflow: 168 * ONE_HOUR,
 };
+
+// Weekly finalization continues as new without a chain-wide execution timeout;
+// this is deliberate so a prolonged Scout outage cannot strand bets.
+const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set([
+  "runScoutWeeklyParlayWorkflow",
+]);
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
@@ -215,6 +225,9 @@ describe("schedule timeout vs workflow sleep", () => {
         return;
       }
       if (schedule.workflowExecutionTimeout === undefined) {
+        if (WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT.has(schedule.workflowType)) {
+          return;
+        }
         throw new Error(
           `${schedule.id}: workflowExecutionTimeout is unset but workflow ${schedule.workflowType} sleeps up to ${String(maxSleep)}ms`,
         );
@@ -261,6 +274,23 @@ describe("Scout lane-prior schedule config", () => {
     expect(findScheduleById("scout-data-dragon-weekly-refresh").args).toEqual(
       [],
     );
+  });
+});
+
+describe("Scout weekly parlay schedule config", () => {
+  test("starts one Pacific lifecycle at Sunday noon with required control credentials", () => {
+    const schedule = findScheduleById("scout-weekly-parlay");
+    expect(schedule).toMatchObject({
+      workflowType: "runScoutWeeklyParlayWorkflow",
+      args: [{}],
+      cronExpression: "0 12 * * 0",
+      taskQueue: TASK_QUEUES.DEFAULT,
+      overlap: ScheduleOverlapPolicy.ALLOW_ALL,
+      requiredEnvironment: [
+        "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
+        "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+      ],
+    });
   });
 });
 
@@ -405,6 +435,13 @@ describe("catchup window policy", () => {
     expect(buildSchedulePolicies(findScheduleById(id)).catchupWindow).toBe(
       "1 hour",
     );
+  });
+
+  test("weekly Scout publication preserves the Sunday betting window", () => {
+    expect(
+      buildSchedulePolicies(findScheduleById("scout-weekly-parlay"))
+        .catchupWindow,
+    ).toBe("12 hours");
   });
 
   test("tight window is strictly shorter than the relaxed default", () => {

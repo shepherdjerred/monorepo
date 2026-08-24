@@ -452,6 +452,33 @@ describe("weekly parlay settlement", () => {
     ).resolves.toMatchObject({ betOutcome: "refunded", payout: 10 });
   });
 
+  test("voids a market stuck in publishing at finalization", async () => {
+    const market = await makeMarket();
+    await place(market.id, "YES", 10);
+    await db.bucksWeeklyParlayMarket.update({
+      where: { id: market.id },
+      data: { marketState: "publishing" },
+    });
+    await expect(
+      settleWeeklyParlayMarket(
+        {
+          marketId: market.id,
+          mode: "final",
+          now: weeklyParlayFinalSettlementAt(market.scoringEndsAt),
+        },
+        db,
+      ),
+    ).resolves.toMatchObject({
+      fromState: "publishing",
+      voidReason: "infrastructure_failure",
+    });
+    await expect(
+      db.bucksWeeklyParlayBet.findFirstOrThrow({
+        where: { marketId: market.id },
+      }),
+    ).resolves.toMatchObject({ betOutcome: "refunded", payout: 10 });
+  });
+
   test("settles YES early only after every persisted leg is irreversible", async () => {
     const market = await makeMarket();
     await place(market.id, "YES", 10);
@@ -792,6 +819,8 @@ describe("weekly parlay Discord delivery", () => {
       deliverWeeklyParlayDiscord(delivery, db, sender),
     ).resolves.toBe("sent");
     expect(sent).toHaveLength(2);
+    expect(sent[0]?.content).toContain("at least **1 game**");
+    expect(sent[0]?.content).toContain("**25 bettors · 25 BB staked**");
     const mentioned = new Set(
       sent.flatMap((options) => options.allowedMentions?.users ?? []),
     );

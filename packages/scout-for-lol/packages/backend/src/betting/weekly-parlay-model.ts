@@ -83,6 +83,7 @@ export async function generateWeeklyParlayProposal(input: {
   observedRoles: ReadonlyMap<string, ReadonlySet<string>>;
   recentEligibleGames: ReadonlyMap<string, number>;
   historyWindows: number;
+  abortSignal?: AbortSignal;
 }): Promise<{
   proposal: WeeklyParlayProposal;
   model: string;
@@ -126,6 +127,9 @@ export async function generateWeeklyParlayProposal(input: {
     reasoningEffort: "medium",
     maxOutputTokens: PARLAY_INITIAL_OUTPUT_TOKENS,
     semanticRetryMaxOutputTokens: PARLAY_RETRY_OUTPUT_TOKENS,
+    ...(input.abortSignal === undefined
+      ? {}
+      : { abortSignal: input.abortSignal }),
   });
   const parsed = ModelWeeklyProposalSchema.parse(result.object);
   return {

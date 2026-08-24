@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:scout-for-lol:schema:weekly-parlay-lifecycle:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "timezone",
+    "slot",
+    "openHour",
+    "bettingCloseHour",
+    "openActionBudgetMinutes",
+    "finalHour",
+    "updateHour",
+    "updateCount",
+    "actions"
+  ],
+  "properties": {
+    "timezone": { "type": "string", "minLength": 1 },
+    "slot": { "type": "integer", "minimum": 0 },
+    "openHour": { "type": "integer", "minimum": 0, "maximum": 23 },
+    "bettingCloseHour": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 23
+    },
+    "openActionBudgetMinutes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "finalHour": { "type": "integer", "minimum": 0, "maximum": 23 },
+    "updateHour": { "type": "integer", "minimum": 0, "maximum": 23 },
+    "updateCount": { "type": "integer", "minimum": 1 },
+    "actions": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "open" },
+        { "const": "reminder" },
+        { "const": "start" },
+        { "const": "progress" },
+        { "const": "finalize" }
+      ],
+      "minItems": 5,
+      "maxItems": 5,
+      "items": false
+    }
+  }
+}

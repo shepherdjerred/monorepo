@@ -79,24 +79,26 @@ auto-pauses or auto-unpauses anything. This is intentional — pause is the one 
 everything else about a schedule lives in source. Don't add a declarative `enabled` flag, it
 would fight the UI.
 
-| To stop…             | Pause schedule id(s)                                                                                                                                                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                                                                                                                         |
-| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                                                                                                                               |
-| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                                                                                                                   |
-| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                                                                                                                              |
-| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-lane-priors-weekly-refresh`, `scout-season-refresh-weekly`, `scout-showcase-refresh-weekly`, `scout-queue-windows-daily` |
+| To stop…             | Pause schedule id(s)                                                                                                                                                                                                          |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                                                                                                                                                |
+| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                                                                                                                                                      |
+| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                                                                                                                                          |
+| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                                                                                                                                                     |
+| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-lane-priors-weekly-refresh`, `scout-season-refresh-weekly`, `scout-showcase-refresh-weekly`, `scout-queue-windows-daily`, `scout-weekly-parlay` |
 
 ### Catchup window (missed-run replay after a SERVER outage)
 
 `catchupWindow` controls whether a run missed while the Temporal **server** was down gets
 replayed on recovery. (A worker restart/deploy does **not** drop runs — the server still
-creates the action on time and it queues.) Two tiers, set in `buildSchedulePolicies`:
+creates the action on time and it queues.) Three tiers, set in `buildSchedulePolicies`:
 
 - `CATCHUP_TIGHT` (5 min) on time-of-day home automation (vacuum, good-morning): skip rather
   than fire a wake-up/vacuum hours late.
 - `CATCHUP_RELAXED` (1 hour, the default for everything else): reports/maintenance still run
   late after an outage. Override per-schedule via the optional `catchupWindow` field.
+- `CATCHUP_WEEKLY_PARLAY` (12 hours) on `scout-weekly-parlay`: replay Sunday publication
+  through the full betting window when the Temporal server was unavailable.
 
 Caveat: a long _worker_ outage can still execute a home run late (the server already created
 it on time); fully preventing that needs a staleness guard inside the workflow.
@@ -190,6 +192,7 @@ Workflow:
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
 - `SLEEP_WEBHOOK_TOKEN` — bearer token for the direct iOS sleep webhook on port 9469; the listener is skipped when unset (local/dev workers can omit it)
 - `SLEEP_WEBHOOK_PORT` — port for the direct sleep webhook (default `9469`)
+- `SCOUT_WEEKLY_PARLAY_CONTROL_URL`, `SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN` — beta Scout's private weekly-parlay control endpoint and shared bearer credential. Both are required by the `scout-weekly-parlay` schedule; the token is synced from the same 1Password item as Scout and must never be logged.
 - `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to the bundled `runbooks/homelab-audit.md`)
 - `ALERT_DASHBOARD_URL` — in-cluster Alerts API URL (homelab audit)
 - `BUGSINK_URL`, `BUGSINK_TOKEN` — Bugsink REST API base + token (homelab audit)
@@ -208,6 +211,31 @@ Workflow:
 - `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
 - `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by three features: the Xcode Cloud webhook receiver (when enabled), the `temporal-failure-watch` schedule (see below), and `llm-catalog-refresh-weekly`, which publishes its withheld state on every run (firing when the cross-check withholds edits, resolving when it withholds none) — all POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
 - `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `87090` = 24h lookback plus the full 6.5m activity retry budget and a 5m delivery margin).
+
+## Scout weekly parlay lifecycle
+
+`scout-weekly-parlay` starts from the Sunday Pacific schedule and remains one
+durable workflow through finalization. The first activity freezes the complete
+DST-aware timeline from `workflowInfo().startTime`, which is stable even when a
+worker outage delays the first workflow task. Later activity inputs retain the
+period, slot, action, and progress index so retries carry the same endpoint
+idempotency key. Do not derive the period again after a sleep or use
+workflow-local timers outside Temporal's durable `sleep`.
+
+Scout owns generation, Discord delivery, betting, contribution persistence, and
+settlement. Temporal owns only orchestration and calls the authenticated control
+endpoint. Reminder/progress staleness is a Scout decision. Publication,
+reminder, and progress use bounded delivery retries. Scoring start retries
+durably until the finalization cutoff, when an unstarted market can be voided;
+the final action begins at that cutoff, accepts Scout's incomplete response
+through its bounded Match-V5 ingestion window. Final reconciliation uses bounded
+retry slices and continues as new when a slice expires; this schedule deliberately
+has no workflow execution timeout, so a prolonged outage cannot abandon pending bets.
+This schedule alone uses
+`ALLOW_ALL`, because a delayed prior finalization must not suppress the next
+period's Sunday execution. The schedule's initial pause is the private-beta
+fixture gate. After activation, pause it in Temporal for operational suspension
+rather than adding a second enable switch.
 
 ## Homelab audit (daily)
 

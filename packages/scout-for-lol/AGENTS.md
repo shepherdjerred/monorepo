@@ -915,6 +915,38 @@ fails fast without `OPENROUTER_API_KEY`. Discord publication persists a
 retries activation after restarts, and the market becomes bettable only after
 the guarded transition to `open`.
 
+Weekly cross-game parlays are a separate aggregate, never nullable match-parlay
+rows. Definitions freeze subject arrays and all linked accounts; markets,
+contributions, bets, deliveries, selectors, and settlement all retain their
+definition/market and subject keys so one beta slot does not encode a singleton
+assumption. Only eligible completed matches whose completion time is inside the
+half-open Pacific scoring period contribute, and settlement reads persisted,
+idempotent contribution rows rather than re-querying mutable match history.
+Capture accepts both `open` and `active` markets so a delayed Monday control
+transition cannot lose a completed game. Final settlement leaves two worst-case
+polling intervals for Match-V5 ingestion; the guarded market-row write then
+serializes the last valid contribution against settlement.
+
+Weekly generation is deterministic around a closed model boundary. Candidate
+order, coverage/cooldown gates, aligned zero-game windows, threshold search, and
+joint replay pricing are code-owned. The model chooses only 3–5 catalog shapes;
+it cannot author thresholds, expressions, paths, SQL, or settlement behavior.
+Reject a candidate outside the empirical publication band and skip the week
+when none qualify—never weaken or clamp a gate.
+
+Only cumulative/count/distinct/max `gte` legs may become irreversible. Early
+settlement is YES-only and requires every leg irreversibly true; NO and every
+equality, upper-bound, rate, or average leg wait for finalization. Flag
+revocation stops creation and new stakes but, like all Bryan Bucks controls,
+must never block settlement, reserve release, voids, or refunds. Every Discord
+publication is a new nonce-guarded message, mentions deduplicated frozen
+subjects plus pending bettors, and exposes aggregate positions only.
+
+The `scout-weekly-parlay` Temporal schedule is the sole recurring coordinator.
+It calls the beta-only authenticated control endpoint with stable period/action
+keys. Keep the endpoint absent when its token is not configured; do not add an
+in-process timer. Pause the Temporal schedule for operational suspension.
+
 League Classic (`queueType: "classic"`, Riot queue 4310) is not a betting or
 parlay queue because this integration has no supported post-game payload. A
 tracked, linked player in a complete Classic 5v5 receives exactly one

@@ -37,7 +37,9 @@ import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 export type OpenWeeklyParlayResult =
   | { kind: "created" | "existing"; marketId: number }
-  | { kind: "feature_disabled" | "no_candidate" | "no_price" };
+  | {
+      kind: "feature_disabled" | "no_candidate" | "no_price" | "too_late";
+    };
 
 function periodsSinceFeatured(
   current: string,
@@ -48,6 +50,16 @@ function periodsSinceFeatured(
     : differenceInCalendarWeeks(new Date(current), new Date(previous), {
         weekStartsOn: 1,
       });
+}
+
+function openActionIsActive(
+  period: ReturnType<typeof weeklyParlayPeriod>,
+  signal: AbortSignal | undefined,
+): boolean {
+  if (signal?.aborted === true) {
+    throw signal.reason ?? new Error("Weekly parlay open was aborted.");
+  }
+  return new Date() < period.bettingClosesAt;
 }
 
 async function linkedMemberSubjects(
@@ -95,7 +107,12 @@ async function linkedMemberSubjects(
 }
 
 async function openWeeklyParlayInternal(
-  input: { serverId: string; periodKey: string; slot?: number },
+  input: {
+    serverId: string;
+    periodKey: string;
+    slot?: number;
+    signal?: AbortSignal;
+  },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<OpenWeeklyParlayResult> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
@@ -123,7 +140,11 @@ async function openWeeklyParlayInternal(
     return { kind: "no_candidate" };
   }
   const [histories, previousDefinitions] = await Promise.all([
-    fetchWeeklyCandidateHistories({ periodKey: input.periodKey, subjects }),
+    fetchWeeklyCandidateHistories({
+      periodKey: input.periodKey,
+      subjects,
+      ...(input.signal === undefined ? {} : { abortSignal: input.signal }),
+    }),
     prismaClient.bucksWeeklyParlayDefinition.findMany({
       where: { serverId, scoringStartsAt: { lt: period.scoringStartsAt } },
       select: { periodKey: true, subjects: true },
@@ -175,6 +196,7 @@ async function openWeeklyParlayInternal(
         [history.subject.key, history.recentEligibleGames],
       ]),
       historyWindows: history.fullyObservedWindows,
+      ...(input.signal === undefined ? {} : { abortSignal: input.signal }),
     });
     const issues = validateWeeklyParlayProposal({
       proposal: generated.proposal,
@@ -193,6 +215,9 @@ async function openWeeklyParlayInternal(
     });
     if (priced === undefined) {
       continue;
+    }
+    if (!openActionIsActive(period, input.signal)) {
+      return { kind: "too_late" };
     }
     try {
       const market = await prismaClient.$transaction(async (tx) => {
@@ -273,7 +298,12 @@ async function openWeeklyParlayInternal(
 }
 
 export async function openWeeklyParlay(
-  input: { serverId: string; periodKey: string; slot?: number },
+  input: {
+    serverId: string;
+    periodKey: string;
+    slot?: number;
+    signal?: AbortSignal;
+  },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<OpenWeeklyParlayResult> {
   const startedAt = Date.now();

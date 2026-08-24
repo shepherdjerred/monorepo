@@ -378,6 +378,44 @@ ordinary offline tests. Run the opt-in production prompt acceptance suite with
 `bun --cwd packages/scout-for-lol/packages/backend run test:parlay:live`; it
 requires `OPENROUTER_API_KEY` and fails rather than skipping when absent.
 
+### Weekly cross-game parlays
+
+Weekly parlays are a separate aggregate with immutable definitions, guild-local
+markets and bets, match contributions, and delivery records. They do not make
+match-bound parlay rows nullable. Definitions freeze an array of subjects and
+each subject's Scout identity, display alias, Discord identity, and linked Riot
+accounts. Runtime queries and Discord selectors accept arrays of definitions
+and subjects even though the private beta creates one slot with one subject.
+
+Generation considers linked active guild members in a stable order. It uses
+only history after every frozen account had tracking coverage, retains empty
+Pacific scoring windows, enforces the feature cooldown and coverage gates, and
+rejects the week when no candidate yields a defensibly priced market. The model
+chooses shapes from a closed catalog; deterministic threshold search jointly
+replays aligned weeks and publishes only the configured empirical probability
+band. The immutable definition records the proposal, selected criteria, replay
+sample, measured odds, frozen context, and all model/catalog/evaluator versions.
+
+Post-match ingestion appends idempotent definition/match/subject contribution
+rows for eligible games whose completion time is inside the half-open scoring
+window, including when the Monday start transition or Match-V5 ingestion is
+delayed. Final settlement begins at the scoring cutoff but leaves two worst-case
+polling intervals for completed games to ingest. Progress and settlement read
+only persisted contributions, with the market-row guard serializing the final
+append against settlement. Monotonic lower-bound legs can become irreversible;
+every leg must be irreversibly true for early YES. NO, equality, upper-bound,
+rate, and average outcomes remain final-only. A processing or evaluator failure
+voids and refunds, while zero eligible games is an ordinary evaluated result.
+
+One paused-by-default Temporal schedule owns the complete weekly lifecycle. Its
+long-running workflow freezes the Pacific timeline, then invokes an authenticated
+idempotent beta-only control endpoint for publication, reminder, scoring start,
+progress, and final reconciliation. The endpoint is absent without its bearer
+credential. A shared 1Password item supplies that credential to the Temporal and
+Scout namespaces, with ingress and egress restricted to the core worker and beta
+backend. Schedule pause is the operator suspension control; flag revocation stops
+creation and stakes but never settlement or refunds.
+
 ## Next Steps
 
 - [Backend Service](./backend.md) - Detailed backend architecture

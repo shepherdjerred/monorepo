@@ -148,6 +148,19 @@ export function createTemporalWorkerDeployment(
       spec: { itemPath: vaultItemPath("freshrss-sync") },
     },
   );
+  const scoutWeeklyParlayItem = new OnePasswordItem(
+    chart,
+    "temporal-scout-weekly-parlay-control-1p",
+    {
+      metadata: { name: "temporal-scout-weekly-parlay-control" },
+      spec: { itemPath: vaultItemPath("scout-weekly-parlay-control") },
+    },
+  );
+  const scoutWeeklyParlaySecret = Secret.fromSecretName(
+    chart,
+    "temporal-scout-weekly-parlay-control-secret",
+    scoutWeeklyParlayItem.name,
+  );
   const freshRssCredential = Secret.fromSecretName(
     chart,
     "temporal-freshrss-sync-secret",
@@ -342,6 +355,13 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "AGENT_TASK_API_TOKEN",
         }),
+        SCOUT_WEEKLY_PARLAY_CONTROL_URL: EnvValue.fromValue(
+          "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/weekly-parlays/actions",
+        ),
+        SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN: EnvValue.fromSecretValue({
+          secret: scoutWeeklyParlaySecret,
+          key: "token",
+        }),
         ...sleepWebhookEnv(secret),
         // Xcode Cloud webhook receiver (event-bridge/xcode-cloud-webhook.ts).
         // The receiver only starts when XCODE_CLOUD_WEBHOOK_TOKEN is set; the
@@ -474,7 +494,11 @@ export function createTemporalWorkerDeployment(
   const glitterDeployment = createTemporalGlitterWorker(chart, {
     serviceAccount,
     envVariables: {
-      ...container.env.variables,
+      ...Object.fromEntries(
+        Object.entries(container.env.variables).filter(
+          ([name]) => name !== "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+        ),
+      ),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("glitter"),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-glitter-worker"),
     },

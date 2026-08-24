@@ -54,7 +54,25 @@ export function createScoutChart(app: App, stage: Stage) {
                 },
               },
             },
+            ...(stage === "beta"
+              ? [
+                  {
+                    namespaceSelector: {
+                      matchLabels: {
+                        "kubernetes.io/metadata.name": "temporal",
+                      },
+                    },
+                    podSelector: {
+                      matchLabels: {
+                        app: "temporal-worker",
+                        component: "core-worker",
+                      },
+                    },
+                  },
+                ]
+              : []),
           ],
+          ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
         },
       ],
     },

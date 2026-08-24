@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
+  WEEKLY_PARLAY_LIFECYCLE,
+  WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS,
+} from "@scout-for-lol/data/model/weekly-parlay.ts";
+import {
   deliverWeeklyParlayDiscord,
   weeklyParlaySettlementActionKey,
 } from "#src/betting/weekly-parlay-discord.ts";
@@ -22,7 +26,12 @@ export const WeeklyParlayControlActionSchema = z
     periodKey: z.iso.date(),
     slot: z.number().int().nonnegative().default(WEEKLY_PARLAY_SLOT),
     action: z.enum(["open", "reminder", "start", "progress", "finalize"]),
-    updateIndex: z.number().int().min(0).max(5).optional(),
+    updateIndex: z
+      .number()
+      .int()
+      .min(0)
+      .max(WEEKLY_PARLAY_LIFECYCLE.updateCount - 1)
+      .optional(),
   })
   .superRefine((action, context) => {
     if (action.action === "progress" && action.updateIndex === undefined) {
@@ -58,6 +67,7 @@ type ControlContext = {
   serverId: string;
   now: Date;
   prismaClient: ExtendedPrismaClient;
+  signal?: AbortSignal;
 };
 
 async function reconcileOpen(
@@ -65,7 +75,10 @@ async function reconcileOpen(
   context: ControlContext,
 ): Promise<WeeklyParlayControlResult> {
   const period = weeklyParlayPeriod(action.periodKey);
-  if (context.now >= period.bettingClosesAt) {
+  if (
+    context.now.getTime() + WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS >=
+    period.bettingClosesAt.getTime()
+  ) {
     return { status: "skipped", detail: "betting window already closed" };
   }
   const opened = await openWeeklyParlay(
@@ -73,11 +86,22 @@ async function reconcileOpen(
       serverId: context.serverId,
       periodKey: action.periodKey,
       slot: action.slot,
+      ...(context.signal === undefined ? {} : { signal: context.signal }),
     },
     context.prismaClient,
   );
   if (opened.kind !== "created" && opened.kind !== "existing") {
     return { status: "skipped", detail: opened.kind };
+  }
+  if (new Date() >= period.bettingClosesAt) {
+    return {
+      status: "skipped",
+      detail: "betting window already closed",
+      marketId: opened.marketId,
+    };
+  }
+  if (context.signal?.aborted === true) {
+    throw context.signal.reason ?? new Error("Weekly parlay open was aborted.");
   }
   await deliverWeeklyParlayDiscord(
     {
@@ -257,13 +281,19 @@ async function runWeeklyParlayControlActionInternal(
     serverId: string;
     now?: Date;
     prismaClient?: ExtendedPrismaClient;
+    signal?: AbortSignal;
   },
 ): Promise<WeeklyParlayControlResult> {
   const action = WeeklyParlayControlActionSchema.parse(input);
   const serverId = DiscordGuildIdSchema.parse(options.serverId);
   const prismaClient = options.prismaClient ?? prisma;
   const now = options.now ?? new Date();
-  const context = { serverId, prismaClient, now };
+  const context: ControlContext = {
+    serverId,
+    prismaClient,
+    now,
+    ...(options.signal === undefined ? {} : { signal: options.signal }),
+  };
   if (action.action === "open") {
     return await reconcileOpen(action, context);
   }
@@ -298,6 +328,7 @@ export async function runWeeklyParlayControlAction(
     serverId: string;
     now?: Date;
     prismaClient?: ExtendedPrismaClient;
+    signal?: AbortSignal;
   },
 ): Promise<WeeklyParlayControlResult> {
   try {
