@@ -71,12 +71,27 @@ test("keeps only required main jobs when no optional lane changed", () => {
     "release-please",
     "build-summary",
   ]);
+  expect(rendered[1]?.["if_changed"]).toBeUndefined();
   expect(rendered[4]?.["depends_on"]).toEqual([
     "ci-selector-base",
     "verify",
     "homelab-release-admission",
     "release-please",
   ]);
+});
+
+test("retains native path filters for selected optional main lanes", () => {
+  const optionalDocument = parsePipeline(`steps:
+  - key: verify
+  - key: images
+    if: build.branch == pipeline.default_branch
+    if_changed: packages/homelab/**
+`);
+  const rendered = renderSteps(
+    mainSteps(optionalDocument),
+    new Set(["verify", "images"]),
+  );
+  expect(rendered[1]?.["if_changed"]).toBe("packages/homelab/**");
 });
 
 test("keeps fixed-corpus configuration failures hard", async () => {
@@ -308,7 +323,7 @@ test("keeps unmodeled main steps in the fail-open graph", () => {
   expect(rendered[1]?.["if_changed"]).toBeUndefined();
 });
 
-test("preserves native path filters when the selector diff is available", () => {
+test("removes native path filters from mandatory main gates", () => {
   const fallbackDocument = parsePipeline(`steps:
   - key: verify
   - key: alert-dashboard-sqlite
@@ -319,7 +334,7 @@ test("preserves native path filters when the selector diff is available", () => 
     mainSteps(fallbackDocument),
     "/tmp/selector-changes",
   );
-  expect(rendered[1]?.["if_changed"]).toBe("packages/alert-dashboard/**");
+  expect(rendered[1]?.["if_changed"]).toBeUndefined();
 });
 
 test("prepares the selector base from successful metadata", async () => {

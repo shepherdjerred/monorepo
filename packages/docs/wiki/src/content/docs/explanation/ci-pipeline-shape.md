@@ -72,6 +72,11 @@ compares the commit with the last green main build, uploads only the selected
 main steps, and preserves the stable step keys and release dependencies so
 downstream lanes still resolve.
 
+Steps that are selected for every main build do not retain a native
+`if_changed` filter. Buildkite would otherwise withhold a required dependency
+when its path filter does not match. The selector already decides which optional
+lanes changed, so those lanes retain their native filters.
+
 Selection-contract, comparison-base, and lane-decision failures upload the
 complete main graph instead. The fallback is deliberately the expensive
 direction: a broken selector must never be able to skip a lane.
