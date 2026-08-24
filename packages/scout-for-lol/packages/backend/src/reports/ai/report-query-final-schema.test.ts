@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { REPORT_COMMON_PRESETS } from "@scout-for-lol/data";
 import { ValidatedReportAiFinalDraftSchema } from "./report-query-final-schema.ts";
+
+// A draft is validated against the language that will execute it, so this is
+// v2 text rather than a preset from the legacy registry.
+const VALID_QUERY =
+  "SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate FROM match_participants " +
+  "WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY " +
+  "GROUP BY player ORDER BY games DESC LIMIT 10 RENDER leaderboard";
 
 function draft(queryText: string) {
   return {
@@ -14,10 +20,8 @@ function draft(queryText: string) {
 
 describe("ValidatedReportAiFinalDraftSchema", () => {
   test("accepts a valid ScoutQL draft", () => {
-    const queryText = REPORT_COMMON_PRESETS[0]?.query;
-    if (queryText === undefined) throw new Error("Expected a common preset");
-    expect(ValidatedReportAiFinalDraftSchema.parse(draft(queryText))).toEqual(
-      draft(queryText),
+    expect(ValidatedReportAiFinalDraftSchema.parse(draft(VALID_QUERY))).toEqual(
+      draft(VALID_QUERY),
     );
   });
 

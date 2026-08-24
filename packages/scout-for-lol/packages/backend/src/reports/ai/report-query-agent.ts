@@ -3,7 +3,6 @@ import * as Sentry from "@sentry/bun";
 import { z } from "zod";
 import {
   formatReportQuery,
-  parseAndCompile,
   REPORT_AI_MAX_OUTPUT_TOKENS,
   REPORT_AI_MAX_PREVIEW_CALLS,
   REPORT_AI_MAX_STEPS,
@@ -15,6 +14,7 @@ import {
   type ReportAiFinalDraft,
   type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { reportAiModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import {
@@ -124,12 +124,12 @@ export async function streamReportQueryAgent(
   });
 
   const draft = finalized.object;
-  parseAndCompile(draft.queryText);
+  compileScoutQl(draft.queryText);
   const formattedQueryText = formatReportQuery(draft.queryText);
   if (formattedQueryText.length === 0) {
     throw new Error("The AI report draft did not include a query.");
   }
-  // The draft is already validated (parseAndCompile above), and the agent's own
+  // The draft is already validated (compileScoutQl above), and the agent's own
   // preview_report_query tool exercised execution during generation — this final
   // preview is a supplementary UI refresh. A transient lake/DuckDB failure here
   // must not discard the finished draft (which would force the user to re-spend

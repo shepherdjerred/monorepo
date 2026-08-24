@@ -1,304 +1,108 @@
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 import {
-  comparisonDeltas,
-  isAdditiveReportExpression,
-  resolveTemporalBucket,
-  temporalWindowDays,
-  type ReportQueryPlan,
-} from "@scout-for-lol/data";
-import type {
-  ReportQueryResult,
-  ReportResultRow,
-} from "#src/reports/query-engine.ts";
+  addDays,
+  addMonths,
+  addWeeks,
+  differenceInCalendarDays,
+  differenceInCalendarMonths,
+  formatISO,
+  parseISO,
+} from "date-fns";
+import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
 import {
   comparePatchLabels,
   localCalendarDate,
 } from "#src/reports/temporal-labels.ts";
+import type {
+  PlanAggregateRow,
+  PlanComparedRow,
+} from "#src/reports/plan-rows.ts";
+import type { TemporalContext } from "#src/reports/temporal-plan.ts";
 import type { TemporalRange } from "#src/reports/temporal-range.ts";
-import { addDays, addMonths, formatISO, parseISO } from "date-fns";
 
-type TemporalComparisonInput = {
-  currentRows: ReportResultRow[];
-  comparisonRows: ReportResultRow[];
-  comparisonEvidence: ReportQueryResult["evidence"];
-  plan: ReportQueryPlan;
-  ranges: { current: TemporalRange; comparison: TemporalRange | null };
+/**
+ * Pair each current-period row with the same bucket of the preceding period.
+ *
+ * The pairing keys off the plan's typed grouping keys, not the rendered label.
+ * A label is a display string — "2026-05-04" and "2026-04-27" are the same
+ * bucket one period apart and would never match as text — so the two periods
+ * are aligned by BUCKET OFFSET from their own range start, and the remaining
+ * groupings (player, champion, …) must match exactly.
+ *
+ * A baseline bucket the current period has no row for is materialized as an
+ * empty current row, so the comparison series still shows what the previous
+ * period did there rather than dropping the bucket entirely.
+ */
+
+export type TemporalMergeInput = {
+  plan: ScoutQlPlan;
+  context: TemporalContext;
+  current: PlanAggregateRow[];
+  comparison: PlanAggregateRow[];
 };
 
-export function attachTemporalComparison({
-  currentRows,
-  comparisonRows,
-  comparisonEvidence,
-  plan,
-  ranges,
-}: TemporalComparisonInput): {
-  rows: ReportResultRow[];
-  comparisonRows: ReportResultRow[];
-} {
-  const analysis = plan.analysis;
-  const comparisonRange = ranges.comparison;
-  if (analysis === undefined || comparisonRange === null) {
-    throw new Error("Comparison attachment requires resolved temporal ranges.");
-  }
-  const bucket = resolveTemporalBucket(
-    analysis.bucket,
-    temporalWindowDays(analysis.window),
-  );
-  const currentPatchBuckets =
-    bucket === "patch" ? orderedPatchBuckets(currentRows) : [];
-  const comparisonPatchBuckets =
-    bucket === "patch" ? orderedPatchBuckets(comparisonRows) : [];
-  const currentPatchOffsets = new Map(
-    currentPatchBuckets.map((label, index) => [label, index]),
-  );
-  const comparisonPatchOffsets = new Map(
-    comparisonPatchBuckets.map((label, index) => [label, index]),
-  );
-  const currentGroups = groupTemporalRows(currentRows);
-  const comparisonGroups = groupTemporalRows(comparisonRows);
-  const comparisonEvidenceByRow = new Map(
-    comparisonRows.map((row, index) => [row, comparisonEvidence?.[index]]),
-  );
-  const replacements = new Map<ReportResultRow, ReportResultRow>();
-  const mergedRows = [...currentRows];
+export function mergeTemporalPeriods(
+  input: TemporalMergeInput,
+): PlanComparedRow[] {
+  const { plan, context } = input;
+  const currentPatches = orderedPatchKeys(input.current, context);
+  const comparisonPatches = orderedPatchKeys(input.comparison, context);
+  const currentSeries = groupBySeries(input.current, context);
+  const comparisonSeries = groupBySeries(input.comparison, context);
+
+  const merged: PlanComparedRow[] = [];
   const seriesKeys = new Set([
-    ...currentGroups.keys(),
-    ...comparisonGroups.keys(),
+    ...currentSeries.keys(),
+    ...comparisonSeries.keys(),
   ]);
   for (const seriesKey of seriesKeys) {
-    const currentGroup = currentGroups.get(seriesKey) ?? [];
-    const baselineGroup = comparisonGroups.get(seriesKey) ?? [];
-    const compareRows =
-      bucket === "patch" ? comparePatchTemporalRows : compareTemporalRows;
-    const sortedCurrent = currentGroup.toSorted(compareRows);
-    const sortedBaseline = baselineGroup.toSorted(compareRows);
-    const baselineByOffset = new Map(
-      sortedBaseline.map((row) => [
-        temporalBucketOffset({
-          row,
-          range: comparisonRange,
-          bucket,
-          timezone: analysis.timezone,
-          patchOffset: patchOffsetForRow(bucket, comparisonPatchOffsets, row),
-        }),
-        row,
-      ]),
+    const byOffset = offsetMap(
+      currentSeries.get(seriesKey) ?? [],
+      context,
+      context.ranges.current,
+      currentPatches,
     );
-    const currentByOffset = new Map(
-      sortedCurrent.map((row) => [
-        temporalBucketOffset({
-          row,
-          range: ranges.current,
-          bucket,
-          timezone: analysis.timezone,
-          patchOffset: patchOffsetForRow(bucket, currentPatchOffsets, row),
-        }),
-        row,
-      ]),
+    const baselineByOffset = offsetMap(
+      comparisonSeries.get(seriesKey) ?? [],
+      context,
+      context.ranges.comparison,
+      comparisonPatches,
     );
-    for (const offset of baselineByOffset.keys()) {
-      if (currentByOffset.has(offset)) continue;
-      const baseline = baselineByOffset.get(offset);
-      if (baseline === undefined) continue;
-      const currentPatchLabel = currentPatchBuckets[offset];
-      if (bucket === "patch" && currentPatchLabel === undefined) continue;
-      const row = materializeMissingCurrentRow({
-        baseline,
+    for (const [offset, baseline] of baselineByOffset) {
+      if (byOffset.has(offset)) continue;
+      const materialized = materializeMissingRow({
         plan,
-        range: ranges.current,
-        bucket,
-        timezone: analysis.timezone,
+        context,
+        baseline,
         offset,
-        currentPatchLabel,
+        patchKeys: currentPatches,
       });
-      currentByOffset.set(offset, row);
-      mergedRows.push(row);
+      if (materialized !== null) {
+        byOffset.set(offset, materialized);
+      }
     }
-    for (const [offset, row] of currentByOffset) {
-      const baseline = baselineByOffset.get(offset);
-      replacements.set(row, {
-        ...row,
-        values: row.values.map((value) => {
-          const matchedBaseline = baseline?.values.find(
-            (candidate) => candidate.column === value.column,
-          );
-          const matchedBaselineEvidence =
-            baseline === undefined
-              ? undefined
-              : comparisonEvidenceByRow
-                  .get(baseline)
-                  ?.values.find(
-                    (candidate) => candidate.column === value.column,
-                  );
-          const baselineValue =
-            matchedBaseline === undefined
-              ? isAdditiveOutput(plan, value.column)
-                ? 0
-                : null
-              : matchedBaseline.value;
-          const numericBaseline =
-            typeof baselineValue === "number" ? baselineValue : null;
-          const numericValue =
-            typeof value.value === "number" ? value.value : null;
-          const deltas = comparisonDeltas(numericValue, numericBaseline);
-          return {
-            ...value,
-            comparisonValue: baselineValue ?? null,
-            absoluteDelta: deltas.absolute,
-            percentageDelta: deltas.percentage,
-            comparisonSampleSize: matchedBaselineEvidence?.sampleSize ?? 0,
-            comparisonConfidenceInterval:
-              matchedBaselineEvidence?.confidenceInterval ?? null,
-            ...(matchedBaselineEvidence?.successes === undefined
-              ? {}
-              : { comparisonSuccesses: matchedBaselineEvidence.successes }),
-            ...(matchedBaselineEvidence?.numerator === undefined
-              ? {}
-              : { comparisonNumerator: matchedBaselineEvidence.numerator }),
-            ...(matchedBaselineEvidence?.denominator === undefined
-              ? {}
-              : {
-                  comparisonDenominator: matchedBaselineEvidence.denominator,
-                }),
-          };
-        }),
-      });
+    for (const [offset, row] of byOffset) {
+      merged.push({ row, baseline: baselineByOffset.get(offset) ?? null });
     }
   }
-  return {
-    rows: mergedRows.map((row) => replacements.get(row) ?? row),
-    comparisonRows,
-  };
+  return merged;
 }
 
-type MissingCurrentRowInput = {
-  baseline: ReportResultRow;
-  plan: ReportQueryPlan;
-  range: TemporalRange;
-  bucket: "day" | "week" | "month" | "patch";
-  timezone: string;
-  offset: number;
-  currentPatchLabel: string | undefined;
-};
-
-function materializeMissingCurrentRow(
-  input: MissingCurrentRowInput,
-): ReportResultRow {
-  const label = currentBucketLabel(input);
-  const dimensions = [...input.baseline.dimensions.slice(0, -1), label];
-  return {
-    label: dimensions.join(" • "),
-    dimensions,
-    mentionIdentity: input.baseline.mentionIdentity,
-    values: input.baseline.values.map((value) => ({
-      column: value.column,
-      value: isAdditiveOutput(input.plan, value.column) ? 0 : null,
-    })),
-  };
+/** Every grouping key except the temporal one, joined into a series key. */
+function seriesKeyOf(row: PlanAggregateRow, context: TemporalContext): string {
+  return row.keys
+    .filter((_, index) => index !== context.groupingIndex)
+    .map(String)
+    .join("\u{0}");
 }
 
-function currentBucketLabel(input: MissingCurrentRowInput): string {
-  if (input.bucket === "patch") {
-    if (input.currentPatchLabel === undefined) {
-      throw new Error("Current period is missing its patch bucket label.");
-    }
-    return input.currentPatchLabel;
-  }
-  const startLabel = localCalendarDate(input.range.startDate, input.timezone);
-  const start = parseISO(
-    input.bucket === "month" ? `${startLabel.slice(0, 7)}-01` : startLabel,
-  );
-  const aligned =
-    input.bucket === "week"
-      ? addDays(start, -((start.getDay() + 6) % 7))
-      : start;
-  const date =
-    input.bucket === "month"
-      ? addMonths(aligned, input.offset)
-      : addDays(aligned, input.offset * (input.bucket === "week" ? 7 : 1));
-  return formatISO(date, {
-    representation: "date",
-  }).slice(0, input.bucket === "month" ? 7 : 10);
-}
-
-type TemporalBucketOffsetInput = {
-  row: ReportResultRow;
-  range: TemporalRange;
-  bucket: "day" | "week" | "month" | "patch";
-  timezone: string;
-  patchOffset: number | undefined;
-};
-
-function temporalBucketOffset({
-  row,
-  range,
-  bucket,
-  timezone,
-  patchOffset,
-}: TemporalBucketOffsetInput): number {
-  if (bucket === "patch") {
-    if (patchOffset === undefined) {
-      throw new Error("Temporal patch row is missing its period-wide offset.");
-    }
-    return patchOffset;
-  }
-  const label = row.dimensions.at(-1);
-  if (label === undefined) {
-    throw new Error("Temporal comparison row is missing its bucket label.");
-  }
-  const rangeLabel = localCalendarDate(range.startDate, timezone);
-  const labelDate = new Date(
-    Date.parse(bucket === "month" ? `${label}-01` : label),
-  );
-  const rangeDate = new Date(
-    Date.parse(
-      bucket === "month" ? `${rangeLabel.slice(0, 7)}-01` : rangeLabel,
-    ),
-  );
-  if (bucket === "month") {
-    return (
-      (labelDate.getUTCFullYear() - rangeDate.getUTCFullYear()) * 12 +
-      labelDate.getUTCMonth() -
-      rangeDate.getUTCMonth()
-    );
-  }
-  if (bucket === "week") {
-    const daysSinceMonday = (rangeDate.getUTCDay() + 6) % 7;
-    rangeDate.setUTCDate(rangeDate.getUTCDate() - daysSinceMonday);
-  }
-  const days = Math.round(
-    (labelDate.getTime() - rangeDate.getTime()) / 86_400_000,
-  );
-  return bucket === "day" ? days : Math.floor(days / 7);
-}
-
-function orderedPatchBuckets(rows: ReportResultRow[]): string[] {
-  const labels = new Set(
-    rows.map((row) => requirePatchLabel(row.dimensions.at(-1))),
-  );
-  return [...labels].toSorted(comparePatchLabels);
-}
-
-function patchOffsetForRow(
-  bucket: "day" | "week" | "month" | "patch",
-  offsets: ReadonlyMap<string, number>,
-  row: ReportResultRow,
-): number | undefined {
-  return bucket === "patch"
-    ? offsets.get(requirePatchLabel(row.dimensions.at(-1)))
-    : undefined;
-}
-
-function isAdditiveOutput(plan: ReportQueryPlan, column: string): boolean {
-  const item = plan.selectItems.find((candidate) => candidate.key === column);
-  return item !== undefined && isAdditiveReportExpression(item.expression);
-}
-
-function groupTemporalRows(
-  rows: ReportResultRow[],
-): Map<string, ReportResultRow[]> {
-  const groups = new Map<string, ReportResultRow[]>();
+function groupBySeries(
+  rows: PlanAggregateRow[],
+  context: TemporalContext,
+): Map<string, PlanAggregateRow[]> {
+  const groups = new Map<string, PlanAggregateRow[]>();
   for (const row of rows) {
-    const key = row.dimensions.slice(0, -1).join("\u{0}");
+    const key = seriesKeyOf(row, context);
     const group = groups.get(key) ?? [];
     group.push(row);
     groups.set(key, group);
@@ -306,28 +110,166 @@ function groupTemporalRows(
   return groups;
 }
 
-function compareTemporalRows(
-  left: ReportResultRow,
-  right: ReportResultRow,
-): number {
-  return (left.dimensions.at(-1) ?? "").localeCompare(
-    right.dimensions.at(-1) ?? "",
-  );
-}
-
-function comparePatchTemporalRows(
-  left: ReportResultRow,
-  right: ReportResultRow,
-): number {
-  return comparePatchLabels(
-    requirePatchLabel(left.dimensions.at(-1)),
-    requirePatchLabel(right.dimensions.at(-1)),
-  );
-}
-
-function requirePatchLabel(label: string | undefined): string {
-  if (label === undefined) {
-    throw new Error("Temporal patch comparison row is missing its label.");
+function temporalKey(row: PlanAggregateRow, context: TemporalContext): string {
+  const key = row.keys[context.groupingIndex];
+  if (key === null || key === undefined) {
+    throw new Error(
+      "A comparison row is missing its time bucket — the bucket grouping produced no key.",
+    );
   }
-  return label;
+  return String(key);
+}
+
+/** Patch buckets have no calendar arithmetic; their order within a period is
+ * the offset, exactly as the legacy engine aligned them. */
+function orderedPatchKeys(
+  rows: PlanAggregateRow[],
+  context: TemporalContext,
+): string[] {
+  if (context.bucket !== "patch") return [];
+  return [...new Set(rows.map((row) => temporalKey(row, context)))].toSorted(
+    comparePatchLabels,
+  );
+}
+
+function offsetMap(
+  rows: PlanAggregateRow[],
+  context: TemporalContext,
+  range: TemporalRange,
+  patchKeys: string[],
+): Map<number, PlanAggregateRow> {
+  const byOffset = new Map<number, PlanAggregateRow>();
+  for (const row of rows) {
+    byOffset.set(bucketOffset(row, context, range, patchKeys), row);
+  }
+  return byOffset;
+}
+
+function bucketOffset(
+  row: PlanAggregateRow,
+  context: TemporalContext,
+  range: TemporalRange,
+  patchKeys: string[],
+): number {
+  const key = temporalKey(row, context);
+  if (context.bucket === "patch") {
+    const index = patchKeys.indexOf(key);
+    if (index === -1) {
+      throw new Error(`Patch bucket "${key}" is missing from its period.`);
+    }
+    return index;
+  }
+  const anchor = rangeBucketStart(range, context);
+  const bucketDate = parseISO(bucketDatePart(key, context.bucket));
+  if (context.bucket === "month") {
+    return differenceInCalendarMonths(bucketDate, anchor);
+  }
+  const days = differenceInCalendarDays(bucketDate, anchor);
+  return context.bucket === "day" ? days : Math.floor(days / 7);
+}
+
+/**
+ * A DATE_TRUNC key arrives as an ISO timestamp whose date part IS the local
+ * bucket start — the compiler truncates in the grouping's timezone before
+ * DuckDB serializes it — so only the date part participates in the offset.
+ */
+function bucketDatePart(key: string, bucket: "day" | "week" | "month"): string {
+  const date = key.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(date)) {
+    throw new Error(`Time bucket "${key}" is not a date.`);
+  }
+  return bucket === "month" ? `${date.slice(0, 7)}-01` : date;
+}
+
+function rangeBucketStart(
+  range: TemporalRange,
+  context: TemporalContext,
+): Date {
+  const local = localCalendarDate(range.startDate, context.timezone);
+  const parsed = parseISO(
+    context.bucket === "month" ? `${local.slice(0, 7)}-01` : local,
+  );
+  // DuckDB's date_trunc('week', …) is Monday-based; align the anchor to match.
+  return context.bucket === "week"
+    ? addDays(parsed, -((parsed.getDay() + 6) % 7))
+    : parsed;
+}
+
+type MissingRowInput = {
+  plan: ScoutQlPlan;
+  context: TemporalContext;
+  baseline: PlanAggregateRow;
+  offset: number;
+  patchKeys: string[];
+};
+
+/**
+ * The current period's empty counterpart of a baseline bucket. Additive
+ * outputs read zero (nothing happened), everything else reads null (there is
+ * no average of no games).
+ */
+function materializeMissingRow(
+  input: MissingRowInput,
+): PlanAggregateRow | null {
+  const key = currentBucketKey(input);
+  if (key === null) return null;
+  const keys = input.baseline.keys.map((existing, index) =>
+    index === input.context.groupingIndex ? key.key : existing,
+  );
+  const labelParts = input.baseline.label.split(" • ");
+  const label =
+    labelParts.length === input.baseline.keys.length
+      ? labelParts
+          .map((part, index) =>
+            index === input.context.groupingIndex ? key.label : part,
+          )
+          .join(" • ")
+      : key.label;
+  return {
+    label,
+    playerId: input.baseline.playerId,
+    discordId: input.baseline.discordId,
+    keys,
+    groupMembers: input.baseline.groupMembers,
+    outputs: input.plan.outputs.map((output) => ({
+      name: output.name,
+      value: output.additive ? 0 : null,
+      evidence: emptyEvidence(output.evidence.kind),
+    })),
+  };
+}
+
+function emptyEvidence(
+  kind: ScoutQlPlan["outputs"][number]["evidence"]["kind"],
+): PlanAggregateRow["outputs"][number]["evidence"] {
+  if (kind === "rate") return { kind: "rate", successes: 0, trials: 0 };
+  if (kind === "ratio") return { kind: "ratio", numerator: 0, denominator: 0 };
+  return { kind: "sample", sampleCount: 0 };
+}
+
+/**
+ * The key and label the current period would have used at this offset. Patch
+ * buckets can only borrow a patch the current period actually saw; there is no
+ * arithmetic that invents the next patch number.
+ */
+function currentBucketKey(
+  input: MissingRowInput,
+): { key: LakeScalar; label: string } | null {
+  const { context, offset } = input;
+  if (context.bucket === "patch") {
+    const patch = input.patchKeys[offset];
+    return patch === undefined ? null : { key: patch, label: patch };
+  }
+  const anchor = rangeBucketStart(context.ranges.current, context);
+  const date =
+    context.bucket === "month"
+      ? addMonths(anchor, offset)
+      : context.bucket === "week"
+        ? addWeeks(anchor, offset)
+        : addDays(anchor, offset);
+  const iso = formatISO(date, { representation: "date" });
+  return {
+    key: `${iso}T00:00:00.000Z`,
+    label: context.bucket === "month" ? iso.slice(0, 7) : iso,
+  };
 }

@@ -10,8 +10,8 @@ import { createCompetition } from "#src/database/competition/queries.ts";
 import {
   analyzeCompetition,
   cachedCompetitionAnalysis,
-  competitionCriterionQuery,
 } from "#src/league/competition/analysis.ts";
+import { competitionCriterionQuery } from "#src/league/competition/analysis-queries.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
   createTestDatabase,
@@ -336,23 +336,26 @@ describe("competition analysis behavior", () => {
 
   test("generates queue-aware ScoutQL for every match criterion", () => {
     expect(
-      competitionCriterionQuery({
-        type: "MOST_GAMES_PLAYED",
-        queue: "RANKED_ANY",
-      }),
+      competitionCriterionQuery(
+        { type: "MOST_GAMES_PLAYED", queue: "RANKED_ANY" },
+        7,
+      ),
     ).toContain("queue IN ('solo', 'flex')");
     expect(
-      competitionCriterionQuery({
-        type: "MOST_WINS_CHAMPION",
-        championId: targetChampionId,
-        queue: "ALL",
-      }),
-    ).toContain("WHERE champion_id = 99 GROUP BY");
+      competitionCriterionQuery(
+        {
+          type: "MOST_WINS_CHAMPION",
+          championId: targetChampionId,
+          queue: "ALL",
+        },
+        7,
+      ),
+    ).toContain("champion_id = 99");
     expect(
-      competitionCriterionQuery({
-        type: "MOST_GAMES_PLAYED",
-        queue: "DRAFT_PICK",
-      }),
+      competitionCriterionQuery(
+        { type: "MOST_GAMES_PLAYED", queue: "DRAFT_PICK" },
+        7,
+      ),
     ).toContain("queue IN ('draft pick')");
   });
 

@@ -358,22 +358,24 @@ export async function resolvePlayerIdentities(input: {
 }
 
 /**
- * The PUUIDs a `player('…')` reference resolves to, for the executor.
+ * The PUUIDs each `player('…')` reference resolves to, keyed by its index in
+ * `plan.playerRefs` — a plan may hold several references, and each predicate
+ * node names the one it meant.
  *
  * Unresolvable names throw rather than returning an empty set: an empty
  * `puuid IN ()` silently answers "no games", which is indistinguishable from a
  * real zero and is exactly the kind of confidently-wrong answer this change
  * exists to stop.
  */
-export async function resolvePlayerRefsToPuuids(input: {
+export async function resolvePlayerRefPuuids(input: {
   playerRefs: string[];
   guildIds: string[];
   /** False when the caller has no asker, e.g. a scheduled report. */
   aliasScopeAvailable?: boolean;
   lakeDir?: string | undefined;
-}): Promise<string[]> {
-  const puuids: string[] = [];
-  for (const ref of input.playerRefs) {
+}): Promise<Map<number, string[]>> {
+  const byIndex = new Map<number, string[]>();
+  for (const [index, ref] of input.playerRefs.entries()) {
     const identities = await resolvePlayerIdentities({
       query: ref,
       guildIds: input.guildIds,
@@ -394,7 +396,7 @@ export async function resolvePlayerRefsToPuuids(input: {
         `"${ref}" matches more than one player (${names}). Use the exact Riot ID of the one you mean.`,
       );
     }
-    puuids.push(...(identities[0]?.puuids ?? []));
+    byIndex.set(index, [...new Set(identities[0]?.puuids)]);
   }
-  return [...new Set(puuids)];
+  return byIndex;
 }

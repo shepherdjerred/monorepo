@@ -1,18 +1,36 @@
-import type { ReportGroupSize } from "@scout-for-lol/data";
-import type { AggregateRow } from "#src/reports/query-aggregates.ts";
+import type {
+  ScoutQlGroupSize,
+  ScoutQlPlan,
+} from "@scout-for-lol/data/model/scoutql/plan.ts";
+import {
+  evaluateAggregate,
+  evaluateHaving,
+  type AggregateEvalContext,
+  type FactRow,
+} from "#src/reports/aggregate-eval.ts";
+import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
+import type {
+  PlanAggregateRow,
+  PlanGroupMember,
+  PlanOutputValue,
+} from "#src/reports/plan-rows.ts";
 
 /**
- * Teammate-group aggregation for the DuckDB lake path (execute.ts).
+ * Teammate-group folding for the `player_groups` source.
  *
- * A "group unit" is the set of tracked players who shared a team in one
- * match: (matchId, teamId) for standard queues, plus playerSubteamId for
- * Arena, where teamId 100/200 is a whole side spanning several unrelated
- * 2-3 player subteams. All size-k member combinations of each unit are
- * accumulated into one row per distinct player tuple.
+ * A "group unit" is the set of tracked players who shared a team in one match:
+ * (matchId, teamId) for standard queues, plus playerSubteamId for Arena, where
+ * teamId 100/200 is a whole side spanning several unrelated 2-3 player
+ * subteams. Every size-k member combination of each unit becomes one folded
+ * GAME row for that player tuple, and the plan's aggregates then run over
+ * those rows in JS (aggregate-eval.ts).
  *
- * Group semantics generalize the old pair engine: a group wins iff every
- * member won, surrenders iff any member surrendered, counters sum across
- * members, and game duration counts once per group-game.
+ * Folding a member set into one game row follows the catalog's own split:
+ * game-level columns (win, queue, game_duration_seconds …) are identical
+ * across a unit's members and are carried through unchanged, while
+ * member-scoped counters (kills, gold_earned …) are summed. That is why the
+ * catalog refuses to expose per-member identity or position columns for this
+ * source — "which member?" has no answer for a group row.
  */
 
 export type GroupFactRow = {
@@ -22,87 +40,101 @@ export type GroupFactRow = {
   teamId: number;
   /** Arena subteam (1-8); null for every non-Arena queue. */
   playerSubteamId: number | null;
-  win: boolean;
-  surrendered: boolean;
-  kills: number;
-  deaths: number;
-  assists: number;
-  creepScore: number;
-  damageToChampions: number;
-  goldEarned: number;
-  visionScore: number;
-  damageTaken: number;
-  totalDamageDealt: number;
-  wardsPlaced: number;
-  multikills: number;
-  gameDurationSeconds: number;
-  timePlayedSeconds: number;
-  earlySurrendered: boolean;
-  laneMinions: number;
-  neutralMinions: number;
-  goldSpent: number;
-  damageMitigated: number;
-  damageToObjectives: number;
-  damageToTurrets: number;
-  healing: number;
-  teammateHealing: number;
-  wardsKilled: number;
-  controlWardsBought: number;
-  detectorWardsPlaced: number;
-  doubleKills: number;
-  tripleKills: number;
-  quadraKills: number;
-  pentaKills: number;
-  largestMultikill: number;
-  killingSprees: number;
-  firstBlood: boolean;
-  championLevel: number;
-  championExperience: number;
-  timeDeadSeconds: number;
-  longestLifeSeconds: number;
-  ccTimeSeconds: number;
-  turretKills: number;
-  inhibitorKills: number;
-  dragonKills: number;
-  baronKills: number;
-  placement: number | null;
+  /** The referenced value columns for this participant. */
+  values: ReadonlyMap<string, LakeScalar>;
 };
 
-/**
- * Aggregate raw per-player facts into teammate-group rows. `groupSize`
- * selects one size (2-5) or "all" for every size each unit's roster
- * supports. Rows are unsorted — callers feed them through sortedAggregates.
- */
-export function aggregateGroupFacts(
-  facts: GroupFactRow[],
-  groupSize: ReportGroupSize,
-): AggregateRow[] {
-  // Dedupe by player within each unit (a player with two tracked accounts in
-  // one match keeps the last-processed fact, matching the legacy engine; the
-  // lake path already dedupes in SQL so this is a no-op there).
-  const byUnit = new Map<string, Map<number, GroupFactRow>>();
-  for (const fact of facts) {
+export type FoldedGroup = {
+  members: PlanGroupMember[];
+  label: string;
+  games: FactRow[];
+};
+
+export type GroupFoldInput = {
+  facts: readonly GroupFactRow[];
+  size: ScoutQlGroupSize;
+  /** Columns identical across a unit's members (carried, never summed). */
+  gameLevelColumns: ReadonlySet<string>;
+};
+
+export function foldGroupCombinations(input: GroupFoldInput): FoldedGroup[] {
+  const units = new Map<string, Map<number, GroupFactRow>>();
+  for (const fact of input.facts) {
     const unitKey = `${fact.matchId}:${fact.teamId.toString()}:${fact.playerSubteamId?.toString() ?? "-"}`;
-    const unit = byUnit.get(unitKey) ?? new Map<number, GroupFactRow>();
+    const unit = units.get(unitKey) ?? new Map<number, GroupFactRow>();
+    // A player with two tracked accounts in one match keeps one fact; the SQL
+    // projection already deduplicates, so this only guards hand-built inputs.
     unit.set(fact.playerId, fact);
-    byUnit.set(unitKey, unit);
+    units.set(unitKey, unit);
   }
 
-  const byGroup = new Map<string, AggregateRow>();
-  for (const unit of byUnit.values()) {
+  const groups = new Map<string, FoldedGroup>();
+  for (const unit of units.values()) {
     const members = [...unit.values()].toSorted(
       (left, right) => left.playerId - right.playerId,
     );
     const sizes =
-      groupSize === "all" ? rangeInclusive(2, members.length) : [groupSize];
+      input.size === "all" ? rangeInclusive(2, members.length) : [input.size];
     for (const size of sizes) {
-      forEachCombination(members, size, (group) => {
-        addGroupRow(byGroup, group);
+      forEachCombination(members, size, (combination) => {
+        const key = combination
+          .map((member) => member.playerId.toString())
+          .join("|");
+        const existing = groups.get(key) ?? emptyGroup(combination);
+        existing.games.push(foldGameRow(combination, input.gameLevelColumns));
+        groups.set(key, existing);
       });
     }
   }
+  return [...groups.values()];
+}
 
-  return [...byGroup.values()];
+function emptyGroup(combination: GroupFactRow[]): FoldedGroup {
+  return {
+    members: combination.map((member) => ({
+      playerId: member.playerId,
+      alias: member.playerAlias,
+    })),
+    label: combination.map((member) => member.playerAlias).join(" + "),
+    games: [],
+  };
+}
+
+function foldGameRow(
+  combination: GroupFactRow[],
+  gameLevelColumns: ReadonlySet<string>,
+): FactRow {
+  const first = combination[0];
+  if (first === undefined) {
+    throw new Error("unreachable: a combination always holds members");
+  }
+  const folded = new Map<string, LakeScalar>();
+  for (const column of first.values.keys()) {
+    if (gameLevelColumns.has(column)) {
+      folded.set(column, first.values.get(column) ?? null);
+      continue;
+    }
+    folded.set(column, sumAcrossMembers(combination, column));
+  }
+  return folded;
+}
+
+function sumAcrossMembers(
+  combination: GroupFactRow[],
+  column: string,
+): LakeScalar {
+  let total: number | null = null;
+  for (const member of combination) {
+    const value = member.values.get(column) ?? null;
+    if (value === null) continue;
+    if (typeof value !== "number") {
+      throw new TypeError(
+        `Column "${column}" is member-scoped but is not numeric, so a teammate group has no value for it.`,
+      );
+    }
+    total = (total ?? 0) + value;
+  }
+  return total;
 }
 
 function rangeInclusive(from: number, to: number): number[] {
@@ -126,7 +158,9 @@ function forEachCombination(
   const indices = rangeInclusive(0, size - 1);
   for (;;) {
     visit(
-      indices.map((index) => members[index]).filter((m) => m !== undefined),
+      indices
+        .map((index) => members[index])
+        .filter((member) => member !== undefined),
     );
     // Advance to the next combination (rightmost index that can move).
     let cursor = size - 1;
@@ -147,137 +181,139 @@ function forEachCombination(
   }
 }
 
-function addGroupRow(
-  byGroup: Map<string, AggregateRow>,
-  group: GroupFactRow[],
-): void {
-  const key = group.map((member) => member.playerId.toString()).join("|");
-  const current = byGroup.get(key) ?? emptyGroupAggregate(group);
-  current.games++;
-  if (group.every((member) => member.win)) {
-    current.wins++;
-  }
-  if (group.some((member) => member.surrendered)) {
-    current.surrenders++;
-  }
-  for (const member of group) {
-    current.participantRows++;
-    current.kills += member.kills;
-    current.deaths += member.deaths;
-    current.assists += member.assists;
-    current.creepScore += member.creepScore;
-    current.damageToChampions += member.damageToChampions;
-    current.goldEarned += member.goldEarned;
-    current.visionScore += member.visionScore;
-    current.damageTaken += member.damageTaken;
-    current.totalDamageDealt += member.totalDamageDealt;
-    current.wardsPlaced += member.wardsPlaced;
-    current.multikills += member.multikills;
-    current.timePlayedSeconds += member.timePlayedSeconds;
-    if (member.earlySurrendered) current.earlySurrenders++;
-    current.laneMinions += member.laneMinions;
-    current.neutralMinions += member.neutralMinions;
-    current.goldSpent += member.goldSpent;
-    current.damageMitigated += member.damageMitigated;
-    current.damageToObjectives += member.damageToObjectives;
-    current.damageToTurrets += member.damageToTurrets;
-    current.healing += member.healing;
-    current.teammateHealing += member.teammateHealing;
-    current.wardsKilled += member.wardsKilled;
-    current.controlWardsBought += member.controlWardsBought;
-    current.detectorWardsPlaced += member.detectorWardsPlaced;
-    current.doubleKills += member.doubleKills;
-    current.tripleKills += member.tripleKills;
-    current.quadraKills += member.quadraKills;
-    current.pentaKills += member.pentaKills;
-    current.largestMultikill = Math.max(
-      current.largestMultikill,
-      member.largestMultikill,
-    );
-    current.killingSprees += member.killingSprees;
-    if (member.firstBlood) current.firstBloods++;
-    current.championLevelTotal += member.championLevel;
-    current.championExperienceTotal += member.championExperience;
-    current.timeDeadSeconds += member.timeDeadSeconds;
-    current.longestLifeSeconds = Math.max(
-      current.longestLifeSeconds,
-      member.longestLifeSeconds,
-    );
-    current.ccTimeSeconds += member.ccTimeSeconds;
-    current.turretKills += member.turretKills;
-    current.inhibitorKills += member.inhibitorKills;
-    current.dragonKills += member.dragonKills;
-    current.baronKills += member.baronKills;
-    if (member.placement !== null) {
-      current.arenaRows++;
-      current.placementSum += member.placement;
-      if (member.placement <= 2) current.topTwoPlacements++;
-      if (member.placement === 1) current.firstPlaceFinishes++;
+// ── Aggregation: the JS half of what SQL does for every other source ─────────
+
+export type GroupAggregationInput = {
+  plan: ScoutQlPlan;
+  groups: FoldedGroup[];
+  gameLevelColumns: ReadonlySet<string>;
+  limit: number;
+};
+
+/**
+ * Evaluate the plan's outputs, HAVING, ORDER BY and LIMIT over folded groups.
+ * The ordering rule matches the SQL path exactly: every key NULLS LAST, then
+ * `label ASC` as the final tiebreak, so the two paths cannot disagree about
+ * which rows survive a LIMIT.
+ */
+export function aggregateFoldedGroups(
+  input: GroupAggregationInput,
+): PlanAggregateRow[] {
+  const rows = input.groups.flatMap((group) => {
+    const outputs = new Map<string, LakeScalar>();
+    const ctx: AggregateEvalContext = {
+      rows: group.games,
+      outputs,
+      filterableColumns: input.gameLevelColumns,
+    };
+    const values: PlanOutputValue[] = input.plan.outputs.map((output) => {
+      if (output.expr.kind === "grouping-ref") {
+        throw new Error(
+          "player_groups rows have no grouping key to echo — group(...) is the only grouping.",
+        );
+      }
+      const value = evaluateAggregate(output.expr, ctx);
+      outputs.set(output.name, value);
+      return {
+        name: output.name,
+        value: typeof value === "boolean" ? String(value) : value,
+        evidence: groupEvidence(output.evidence, ctx),
+      };
+    });
+    if (
+      input.plan.having !== undefined &&
+      !evaluateHaving(input.plan.having, ctx)
+    ) {
+      return [];
     }
-  }
-  // One duration per group-game so avg_game_duration is a true per-game
-  // average (mirrors the pair engine's p1-only duration).
-  current.durationSeconds += group[0]?.gameDurationSeconds ?? 0;
-  byGroup.set(key, current);
+    return [
+      {
+        label: group.label,
+        playerId: null,
+        discordId: null,
+        keys: [],
+        groupMembers: group.members,
+        outputs: values,
+      },
+    ];
+  });
+  return orderGroupRows(rows, input.plan).slice(0, input.limit);
 }
 
-function emptyGroupAggregate(group: GroupFactRow[]): AggregateRow {
-  return {
-    label: group.map((member) => member.playerAlias).join(" + "),
-    playerId: null,
-    discordId: null,
-    groupMembers: group.map((member) => ({
-      playerId: member.playerId,
-      alias: member.playerAlias,
-    })),
-    games: 0,
-    wins: 0,
-    surrenders: 0,
-    kills: 0,
-    deaths: 0,
-    assists: 0,
-    creepScore: 0,
-    damageToChampions: 0,
-    goldEarned: 0,
-    visionScore: 0,
-    damageTaken: 0,
-    totalDamageDealt: 0,
-    wardsPlaced: 0,
-    multikills: 0,
-    durationSeconds: 0,
-    timePlayedSeconds: 0,
-    participantRows: 0,
-    earlySurrenders: 0,
-    laneMinions: 0,
-    neutralMinions: 0,
-    goldSpent: 0,
-    damageMitigated: 0,
-    damageToObjectives: 0,
-    damageToTurrets: 0,
-    healing: 0,
-    teammateHealing: 0,
-    wardsKilled: 0,
-    controlWardsBought: 0,
-    detectorWardsPlaced: 0,
-    doubleKills: 0,
-    tripleKills: 0,
-    quadraKills: 0,
-    pentaKills: 0,
-    largestMultikill: 0,
-    killingSprees: 0,
-    firstBloods: 0,
-    championLevelTotal: 0,
-    championExperienceTotal: 0,
-    timeDeadSeconds: 0,
-    longestLifeSeconds: 0,
-    ccTimeSeconds: 0,
-    turretKills: 0,
-    inhibitorKills: 0,
-    dragonKills: 0,
-    baronKills: 0,
-    arenaRows: 0,
-    placementSum: 0,
-    topTwoPlacements: 0,
-    firstPlaceFinishes: 0,
-  };
+function groupEvidence(
+  evidence: ScoutQlPlan["outputs"][number]["evidence"],
+  ctx: AggregateEvalContext,
+): PlanOutputValue["evidence"] {
+  if (evidence.kind === "rate") {
+    return {
+      kind: "rate",
+      successes: evidenceCount(evaluateAggregate(evidence.successes, ctx)),
+      trials: evidenceCount(evaluateAggregate(evidence.trials, ctx)),
+    };
+  }
+  if (evidence.kind === "ratio") {
+    return {
+      kind: "ratio",
+      numerator: evidenceCount(evaluateAggregate(evidence.numerator, ctx)),
+      denominator: evidenceCount(evaluateAggregate(evidence.denominator, ctx)),
+    };
+  }
+  return { kind: "sample", sampleCount: ctx.rows.length };
+}
+
+function evidenceCount(value: LakeScalar): number {
+  if (value === null) return 0;
+  if (typeof value !== "number") {
+    throw new TypeError("Evidence companions must evaluate to numbers.");
+  }
+  return value;
+}
+
+function orderGroupRows(
+  rows: PlanAggregateRow[],
+  plan: ScoutQlPlan,
+): PlanAggregateRow[] {
+  return rows.toSorted((left, right) => {
+    for (const key of plan.orderBy) {
+      if (key.target.kind === "grouping") {
+        throw new Error(
+          "player_groups queries cannot ORDER BY a grouping key.",
+        );
+      }
+      const comparison = compareOutputs(
+        outputValue(left, key.target.name),
+        outputValue(right, key.target.name),
+        key.direction,
+      );
+      if (comparison !== 0) return comparison;
+    }
+    return left.label.localeCompare(right.label);
+  });
+}
+
+function outputValue(
+  row: PlanAggregateRow,
+  name: string,
+): number | string | null {
+  const output = row.outputs.find((candidate) => candidate.name === name);
+  if (output === undefined) {
+    throw new Error(`ORDER BY target "${name}" is not an output.`);
+  }
+  return output.value;
+}
+
+function compareOutputs(
+  left: number | string | null,
+  right: number | string | null,
+  direction: "asc" | "desc",
+): number {
+  // NULLS LAST in both directions, exactly as the SQL ORDER BY clause spells.
+  if (left === null && right === null) return 0;
+  if (left === null) return 1;
+  if (right === null) return -1;
+  const ordering =
+    typeof left === "string" || typeof right === "string"
+      ? String(left).localeCompare(String(right))
+      : left - right;
+  return direction === "asc" ? ordering : -ordering;
 }

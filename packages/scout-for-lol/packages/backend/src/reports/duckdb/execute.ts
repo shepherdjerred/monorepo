@@ -1,34 +1,76 @@
-import type { ReportQueryPlan } from "@scout-for-lol/data";
 import type { DuckDBValue } from "@duckdb/node-api";
-import { match } from "ts-pattern";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
+import type {
+  ScoutQlGroupSize,
+  ScoutQlPlan,
+} from "@scout-for-lol/data/model/scoutql/plan.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import type { AggregateRow } from "#src/reports/query-aggregates.ts";
 import {
-  compileGroupFactsQuery,
-  compileMatchQuery,
-  compilePrematchQuery,
-  type CompiledLakeQuery,
-  type LakeQueryInput,
-} from "#src/reports/duckdb/compile.ts";
-import { aggregateGroupFacts } from "#src/reports/group-combinations.ts";
+  compileGroupFactsProjection,
+  compileScoutQlPlanQuery,
+  type CompiledGroupFactsColumns,
+  type PlanQueryInput,
+} from "#src/reports/duckdb/compile-plan.ts";
 import {
   withDuckDBConnection,
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
 import { resolveLakeFiles, type BoundParam } from "#src/reports/duckdb/lake.ts";
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
+import type {
+  CompiledOutputColumn,
+  CompiledPlanColumns,
+} from "#src/reports/duckdb/select-sql.ts";
 import {
-  LakeAggregateRowSchema,
-  LakeGroupFactRowSchema,
+  groupFactRowSchema,
   LakeScannedRowSchema,
+  optionalNumberField,
+  optionalStringField,
+  outputValueField,
+  planRowSchema,
+  requireField,
+  requireNumberField,
+  requireStringField,
+  type LakeScalar,
+  type PlanRowShape,
 } from "#src/reports/duckdb/row-schema.ts";
+import {
+  aggregateFoldedGroups,
+  foldGroupCombinations,
+  type GroupFactRow,
+} from "#src/reports/group-combinations.ts";
+import type {
+  PlanAggregateRow,
+  PlanAggregationResult,
+  PlanOutputEvidence,
+  PlanOutputValue,
+} from "#src/reports/plan-rows.ts";
 
-export type LakeAggregationResult = {
-  aggregates: AggregateRow[];
-  rowsScanned: number;
+/**
+ * Execute a compiled ScoutQL v2 plan against the report lake.
+ *
+ * Aggregation, HAVING, ORDER BY and LIMIT all run in SQL — the JS layer no
+ * longer derives metrics from a fixed counter table, because MEDIAN, QUANTILE
+ * and COUNT(DISTINCT) cannot be computed from pre-summed counters at all. The
+ * one exception is `player_groups`, whose unit (a k-subset of the tracked
+ * players in one game) is not a relation DuckDB can group by; that path reads
+ * raw participant facts and folds them in JS.
+ */
+
+export type PlanExecutionInput = {
+  plan: ScoutQlPlan;
+  scope: LakeQueryScope;
+  range: { start: Date; end: Date };
+  /** Effective row budget, already policy-capped by the caller. */
+  limit: number;
+  /** Resolved `player('…')` PUUIDs, by playerRefs index. */
+  playerPuuids?: Map<number, string[]> | undefined;
+  /** Guild-only pre-resolved player scoping (competition path). */
+  playerIds?: number[] | undefined;
+  lakeDir?: string | undefined;
 };
 
-const EMPTY_RESULT: LakeAggregationResult = { aggregates: [], rowsScanned: 0 };
+const EMPTY_RESULT: PlanAggregationResult = { rows: [], rowsScanned: 0 };
 
 function bindParams(
   session: DuckDBSession,
@@ -39,58 +81,34 @@ function bindParams(
   );
 }
 
-/**
- * Execute a fact-style ScoutQL plan against the report lake and return raw
- * aggregate rows (all counters, ungrouped by metrics) plus the scanned-row
- * count. Sorting, minGames, limits, and metric derivation stay in JS —
- * callers feed the result through sortedAggregates/rowsFromAggregates.
- */
-export async function runLakeAggregation(input: {
-  plan: ReportQueryPlan;
-  scope: LakeQueryScope;
-  startDate: Date;
-  endDate: Date;
-  playerIds?: number[];
-  playerPuuids?: string[] | undefined;
-  lakeDir?: string;
-}): Promise<LakeAggregationResult> {
-  const lakeDir = input.lakeDir ?? resolveLakeDir();
-  const files = await resolveLakeFiles(lakeDir);
-
-  const queryInput: LakeQueryInput = {
+async function queryInput(input: PlanExecutionInput): Promise<PlanQueryInput> {
+  const files = await resolveLakeFiles(input.lakeDir ?? resolveLakeDir());
+  return {
     plan: input.plan,
-    playerPuuids: input.playerPuuids,
     scope: input.scope,
-    startMs: input.startDate.getTime(),
-    endMs: input.endDate.getTime(),
-    ...(input.playerIds === undefined ? {} : { playerIds: input.playerIds }),
     files,
+    range: input.range,
+    limit: input.limit,
+    playerPuuids: input.playerPuuids,
+    ...(input.playerIds === undefined ? {} : { playerIds: input.playerIds }),
   };
+}
 
-  const compiled: CompiledLakeQuery | undefined = match(input.plan.source)
-    .with("match_participants", "competition_match_participants", () =>
-      compileMatchQuery(queryInput),
-    )
-    .with("player_groups", "player_pairs", () =>
-      compileGroupFactsQuery(queryInput),
-    )
-    .with("prematch_participants", () => compilePrematchQuery(queryInput))
-    .with("rank_current", "competition_rank", () => {
-      throw new Error(`rank sources are not lake-backed: ${input.plan.source}`);
-    })
-    .exhaustive();
-
+export async function runPlanAggregation(
+  input: PlanExecutionInput,
+): Promise<PlanAggregationResult> {
+  if (input.plan.source === "player_groups") {
+    return await runGroupAggregation(input);
+  }
+  const compiled = compileScoutQlPlanQuery(await queryInput(input));
   if (compiled === undefined) {
-    // Fresh install / empty lake: same behavior as "no facts yet".
+    // Fresh install / empty lake / no competition participants: the answer is
+    // structurally empty, exactly as "no facts yet".
     return EMPTY_RESULT;
   }
-
-  const isGroupSource =
-    input.plan.source === "player_groups" ||
-    input.plan.source === "player_pairs";
-
+  const RowSchema = planRowSchema(compiled.columns);
   return await withDuckDBConnection(async (session) => {
-    const aggregateRows = await session.run(
+    const rawRows = await session.run(
       compiled.aggregateSql,
       bindParams(session, compiled.aggregateParams),
     );
@@ -98,130 +116,149 @@ export async function runLakeAggregation(input: {
       compiled.scannedSql,
       bindParams(session, compiled.scannedParams),
     );
-    const rowsScanned = LakeScannedRowSchema.parse(scannedRows[0]).scanned;
-
-    if (isGroupSource) {
-      const groupSize = input.plan.groupSize;
-      if (groupSize === undefined) {
-        throw new Error(
-          "player_groups reports require a group size (GROUP BY group(...)).",
-        );
-      }
-      const facts = aggregateRows.map((row) => {
-        const parsed = LakeGroupFactRowSchema.parse(row);
-        return {
-          playerId: parsed.player_id,
-          playerAlias: parsed.player_alias,
-          matchId: parsed.match_id,
-          teamId: parsed.team_id,
-          playerSubteamId: parsed.player_subteam_id,
-          win: parsed.win,
-          surrendered: parsed.surrendered,
-          kills: parsed.kills,
-          deaths: parsed.deaths,
-          assists: parsed.assists,
-          creepScore: parsed.creep_score,
-          damageToChampions: parsed.damage_to_champions,
-          goldEarned: parsed.gold_earned,
-          visionScore: parsed.vision_score,
-          damageTaken: parsed.damage_taken,
-          totalDamageDealt: parsed.total_damage_dealt,
-          wardsPlaced: parsed.wards_placed,
-          multikills: parsed.multikills,
-          gameDurationSeconds: parsed.game_duration_seconds,
-          timePlayedSeconds: parsed.time_played_seconds,
-          earlySurrendered: parsed.early_surrendered,
-          laneMinions: parsed.lane_minions,
-          neutralMinions: parsed.neutral_minions,
-          goldSpent: parsed.gold_spent,
-          damageMitigated: parsed.damage_mitigated,
-          damageToObjectives: parsed.damage_to_objectives,
-          damageToTurrets: parsed.damage_to_turrets,
-          healing: parsed.healing,
-          teammateHealing: parsed.teammate_healing,
-          wardsKilled: parsed.wards_killed,
-          controlWardsBought: parsed.control_wards_bought,
-          detectorWardsPlaced: parsed.detector_wards_placed,
-          doubleKills: parsed.double_kills,
-          tripleKills: parsed.triple_kills,
-          quadraKills: parsed.quadra_kills,
-          pentaKills: parsed.penta_kills,
-          largestMultikill: parsed.largest_multikill,
-          killingSprees: parsed.killing_sprees,
-          firstBlood: parsed.first_blood,
-          championLevel: parsed.champion_level,
-          championExperience: parsed.champion_experience,
-          timeDeadSeconds: parsed.time_dead_seconds,
-          longestLifeSeconds: parsed.longest_life_seconds,
-          ccTimeSeconds: parsed.cc_time_seconds,
-          turretKills: parsed.turret_kills,
-          inhibitorKills: parsed.inhibitor_kills,
-          dragonKills: parsed.dragon_kills,
-          baronKills: parsed.baron_kills,
-          placement: parsed.placement,
-        };
-      });
-      return { aggregates: aggregateGroupFacts(facts, groupSize), rowsScanned };
-    }
-
-    const aggregates = aggregateRows.map((row) => {
-      const parsed = LakeAggregateRowSchema.parse(row);
-      return {
-        label: parsed.label,
-        playerId: parsed.player_id,
-        discordId: parsed.discord_id,
-        groupMembers: null,
-        games: parsed.games,
-        wins: parsed.wins,
-        surrenders: parsed.surrenders,
-        kills: parsed.kills,
-        deaths: parsed.deaths,
-        assists: parsed.assists,
-        creepScore: parsed.creep_score,
-        damageToChampions: parsed.damage_to_champions,
-        goldEarned: parsed.gold_earned,
-        visionScore: parsed.vision_score,
-        damageTaken: parsed.damage_taken,
-        totalDamageDealt: parsed.total_damage_dealt,
-        wardsPlaced: parsed.wards_placed,
-        multikills: parsed.multikills,
-        durationSeconds: parsed.duration_seconds,
-        timePlayedSeconds: parsed.time_played_seconds,
-        participantRows: parsed.participant_rows,
-        earlySurrenders: parsed.early_surrenders,
-        laneMinions: parsed.lane_minions,
-        neutralMinions: parsed.neutral_minions,
-        goldSpent: parsed.gold_spent,
-        damageMitigated: parsed.damage_mitigated,
-        damageToObjectives: parsed.damage_to_objectives,
-        damageToTurrets: parsed.damage_to_turrets,
-        healing: parsed.healing,
-        teammateHealing: parsed.teammate_healing,
-        wardsKilled: parsed.wards_killed,
-        controlWardsBought: parsed.control_wards_bought,
-        detectorWardsPlaced: parsed.detector_wards_placed,
-        doubleKills: parsed.double_kills,
-        tripleKills: parsed.triple_kills,
-        quadraKills: parsed.quadra_kills,
-        pentaKills: parsed.penta_kills,
-        largestMultikill: parsed.largest_multikill,
-        killingSprees: parsed.killing_sprees,
-        firstBloods: parsed.first_bloods,
-        championLevelTotal: parsed.champion_level_total,
-        championExperienceTotal: parsed.champion_experience_total,
-        timeDeadSeconds: parsed.time_dead_seconds,
-        longestLifeSeconds: parsed.longest_life_seconds,
-        ccTimeSeconds: parsed.cc_time_seconds,
-        turretKills: parsed.turret_kills,
-        inhibitorKills: parsed.inhibitor_kills,
-        dragonKills: parsed.dragon_kills,
-        baronKills: parsed.baron_kills,
-        arenaRows: parsed.arena_rows,
-        placementSum: parsed.placement_sum,
-        topTwoPlacements: parsed.top_two_placements,
-        firstPlaceFinishes: parsed.first_place_finishes,
-      };
-    });
-    return { aggregates, rowsScanned };
+    return {
+      rows: rawRows.map((row) =>
+        planRowFrom(RowSchema.parse(row), compiled.columns),
+      ),
+      rowsScanned: scannedCount(scannedRows[0]),
+    };
   });
+}
+
+function scannedCount(row: unknown): number {
+  const scanned = LakeScannedRowSchema.parse(row).scanned;
+  if (typeof scanned !== "number") {
+    throw new TypeError("Scanned-row count is not numeric.");
+  }
+  return scanned;
+}
+
+function planRowFrom(
+  row: PlanRowShape,
+  columns: CompiledPlanColumns,
+): PlanAggregateRow {
+  return {
+    label: requireStringField(row, columns.label),
+    playerId: optionalNumberField(row, columns.playerId),
+    discordId: optionalStringField(row, columns.discordId),
+    keys: columns.groupingKeys.map((key) => requireField(row, key)),
+    groupMembers: null,
+    outputs: columns.outputs.map((output) => outputValueFrom(row, output)),
+  };
+}
+
+function outputValueFrom(
+  row: PlanRowShape,
+  output: CompiledOutputColumn,
+): PlanOutputValue {
+  return {
+    name: output.name,
+    value: outputValueField(row, output.alias),
+    evidence: evidenceFrom(row, output.evidence),
+  };
+}
+
+function evidenceFrom(
+  row: PlanRowShape,
+  evidence: CompiledOutputColumn["evidence"],
+): PlanOutputEvidence {
+  if (evidence.kind === "rate") {
+    return {
+      kind: "rate",
+      successes: requireNumberField(row, evidence.successes),
+      trials: requireNumberField(row, evidence.trials),
+    };
+  }
+  if (evidence.kind === "ratio") {
+    return {
+      kind: "ratio",
+      numerator: requireNumberField(row, evidence.numerator),
+      denominator: requireNumberField(row, evidence.denominator),
+    };
+  }
+  return {
+    kind: "sample",
+    sampleCount: requireNumberField(row, evidence.sampleCount),
+  };
+}
+
+// ── player_groups ────────────────────────────────────────────────────────────
+
+/**
+ * The columns a teammate group carries unchanged rather than summing. They are
+ * exactly the catalog's WHERE-able columns for this source: game- and
+ * team-level facts, identical for every member of one group unit.
+ */
+export function groupGameLevelColumns(): ReadonlySet<string> {
+  const catalog = scoutQlSourceCatalog("player_groups");
+  if (catalog === undefined) {
+    throw new Error("unreachable: player_groups has no source catalog");
+  }
+  const names = new Set<string>();
+  for (const column of catalog.columns.values()) {
+    if (column.contexts.where) {
+      names.add(column.name);
+    }
+  }
+  return names;
+}
+
+function requireGroupSize(plan: ScoutQlPlan): ScoutQlGroupSize {
+  const grouping = plan.groupings[0];
+  if (grouping?.kind !== "group" || plan.groupings.length !== 1) {
+    throw new Error("player_groups reports must GROUP BY group(...).");
+  }
+  return grouping.size;
+}
+
+async function runGroupAggregation(
+  input: PlanExecutionInput,
+): Promise<PlanAggregationResult> {
+  const size = requireGroupSize(input.plan);
+  const projection = compileGroupFactsProjection(await queryInput(input));
+  if (projection === undefined) {
+    return EMPTY_RESULT;
+  }
+  const RowSchema = groupFactRowSchema(projection.columns);
+  const gameLevelColumns = groupGameLevelColumns();
+  return await withDuckDBConnection(async (session) => {
+    const rawRows = await session.run(
+      projection.factsSql,
+      bindParams(session, projection.factsParams),
+    );
+    const scannedRows = await session.run(
+      projection.scannedSql,
+      bindParams(session, projection.scannedParams),
+    );
+    const facts = rawRows.map((row) =>
+      groupFactFrom(RowSchema.parse(row), projection.columns),
+    );
+    const groups = foldGroupCombinations({ facts, size, gameLevelColumns });
+    return {
+      rows: aggregateFoldedGroups({
+        plan: input.plan,
+        groups,
+        gameLevelColumns,
+        limit: input.limit,
+      }),
+      rowsScanned: scannedCount(scannedRows[0]),
+    };
+  });
+}
+
+function groupFactFrom(
+  row: PlanRowShape,
+  columns: CompiledGroupFactsColumns,
+): GroupFactRow {
+  const values = new Map<string, LakeScalar>(
+    columns.raw.map((name: string) => [name, requireField(row, name)]),
+  );
+  return {
+    playerId: requireNumberField(row, columns.playerId),
+    playerAlias: requireStringField(row, columns.playerAlias),
+    matchId: requireStringField(row, columns.matchId),
+    teamId: requireNumberField(row, columns.teamId),
+    playerSubteamId: optionalNumberField(row, columns.playerSubteamId),
+    values,
+  };
 }

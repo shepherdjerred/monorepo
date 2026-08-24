@@ -18,6 +18,8 @@ import {
   type MetricDisplay,
 } from "#src/reports/report-chart-values.ts";
 import { resolveHeatmapAxes } from "#src/reports/heatmap-axes.ts";
+import { planGroupingNames } from "#src/reports/plan-columns.ts";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 
 type ChartRender = Extract<
   ReportRenderSpec,
@@ -39,6 +41,7 @@ type ChartRender = Extract<
 
 type AnalyticsRenderContext = {
   result: ReportQueryResult;
+  plan: ScoutQlPlan;
   render: ChartRender;
   base: AnalyticsChartBase;
   columns: string[];
@@ -57,12 +60,14 @@ export function renderLegacyAnalyticsImage(input: {
   result: ReportQueryResult;
   render: ChartRender;
 }): Buffer {
+  const plan = input.result.plan;
   const columns = yColumns(input.result, input.render);
   const firstColumn = requireFirst(columns);
-  const display = columnDisplay(firstColumn);
-  const rows = chartRows(input.result.rows, input.render, firstColumn);
+  const display = columnDisplay(plan, firstColumn);
+  const rows = chartRows(plan, input.result.rows, input.render, firstColumn);
   const context: AnalyticsRenderContext = {
     result: input.result,
+    plan,
     render: input.render,
     base: chartBase(input.render, input.title),
     columns,
@@ -89,7 +94,7 @@ export function renderLegacyAnalyticsImage(input: {
 }
 
 function renderBumpAnalytics(context: AnalyticsRenderContext): Buffer {
-  const { base, firstColumn, rows } = context;
+  const { base, firstColumn, rows, plan } = context;
   const categories = [
     ...new Set(rows.map((row) => row.dimensions.at(-1) ?? row.label)),
   ].toSorted();
@@ -108,7 +113,7 @@ function renderBumpAnalytics(context: AnalyticsRenderContext): Buffer {
             candidate.dimensions[0] === player &&
             candidate.dimensions.at(-1) === category,
         );
-        return row === undefined ? null : chartNumber(row, firstColumn);
+        return row === undefined ? null : chartNumber(plan, row, firstColumn);
       }),
     })),
     yAxisLabel: "Rank position",
@@ -119,7 +124,7 @@ function renderBumpAnalytics(context: AnalyticsRenderContext): Buffer {
 function renderCalendarHeatmapAnalytics(
   context: AnalyticsRenderContext,
 ): Buffer {
-  const { base, firstColumn, rows } = context;
+  const { base, firstColumn, rows, plan } = context;
   const weeks = [
     ...new Set(
       rows.map((row) =>
@@ -136,25 +141,25 @@ function renderCalendarHeatmapAnalytics(
     chartType: "heatmap",
     xCategories: weeks,
     yCategories: weekdays,
-    valueSuffix: columnDisplay(firstColumn).percent ? "%" : "",
+    valueSuffix: columnDisplay(plan, firstColumn).percent ? "%" : "",
     cells: rows.map((row) => {
       const date = parseISO(row.dimensions.at(-1) ?? row.label);
       return {
         x: weeks.indexOf(format(startOfISOWeek(date), "MMM d")),
         y: getISODay(date) - 1,
-        value: chartNumber(row, firstColumn),
+        value: chartNumber(plan, row, firstColumn),
       };
     }),
   });
 }
 
 function renderCartesianAnalytics(context: AnalyticsRenderContext): Buffer {
-  const { base, columns, display, render, rows } = context;
+  const { base, columns, display, render, rows, plan } = context;
   return analyticsChartToImage({
     ...base,
     chartType: render.kind === "STACKED_BAR" ? "stacked_bar" : "area",
     categories: rows.map((row) => row.label),
-    series: chartSeries(rows, columns),
+    series: chartSeries(plan, rows, columns),
     yAxisLabel: render.options.yAxisLabel ?? display.label,
     valueSuffix: display.percent ? "%" : "",
     ...(render.options.xAxisLabel === undefined
@@ -170,20 +175,20 @@ function renderCartesianAnalytics(context: AnalyticsRenderContext): Buffer {
 }
 
 function renderDonutAnalytics(context: AnalyticsRenderContext): Buffer {
-  const { base, display, firstColumn, rows } = context;
+  const { base, display, firstColumn, rows, plan } = context;
   return analyticsChartToImage({
     ...base,
     chartType: "donut",
     valueSuffix: display.percent ? "%" : "",
     items: rows.map((row) => ({
       name: row.label,
-      value: chartNumber(row, firstColumn),
+      value: chartNumber(plan, row, firstColumn),
     })),
   });
 }
 
 function renderScatterAnalytics(context: AnalyticsRenderContext): Buffer {
-  const { base, firstColumn, render, rows } = context;
+  const { base, firstColumn, render, rows, plan } = context;
   const xColumn = render.encoding.x;
   if (xColumn === undefined) {
     throw new Error("Scatter charts require RENDER x.");
@@ -191,22 +196,23 @@ function renderScatterAnalytics(context: AnalyticsRenderContext): Buffer {
   return analyticsChartToImage({
     ...base,
     chartType: "scatter",
-    xAxisLabel: render.options.xAxisLabel ?? columnDisplay(xColumn).label,
-    yAxisLabel: render.options.yAxisLabel ?? columnDisplay(firstColumn).label,
+    xAxisLabel: render.options.xAxisLabel ?? columnDisplay(plan, xColumn).label,
+    yAxisLabel:
+      render.options.yAxisLabel ?? columnDisplay(plan, firstColumn).label,
     points: rows.map((row) => ({
       name: row.label,
-      x: chartNumber(row, xColumn),
-      y: chartNumber(row, firstColumn),
+      x: chartNumber(plan, row, xColumn),
+      y: chartNumber(plan, row, firstColumn),
       ...(render.encoding.size === undefined
         ? {}
-        : { size: chartNumber(row, render.encoding.size) }),
+        : { size: chartNumber(plan, row, render.encoding.size) }),
     })),
   });
 }
 
 function renderHeatmapAnalytics(context: AnalyticsRenderContext): Buffer {
-  const { base, firstColumn, render, result, rows } = context;
-  const groupBys = result.plan.groupBys;
+  const { base, firstColumn, render, result, rows, plan } = context;
+  const groupBys = planGroupingNames(result.plan);
   if (groupBys.length !== 2) {
     throw new Error("Heatmaps require exactly two GROUP BY dimensions.");
   }
@@ -219,38 +225,38 @@ function renderHeatmapAnalytics(context: AnalyticsRenderContext): Buffer {
     chartType: "heatmap",
     xCategories,
     yCategories,
-    valueSuffix: columnDisplay(valueColumn).percent ? "%" : "",
+    valueSuffix: columnDisplay(plan, valueColumn).percent ? "%" : "",
     cells: rows.map((row) => ({
       x: xCategories.indexOf(row.dimensions[xDim] ?? ""),
       y: yCategories.indexOf(row.dimensions[yDim] ?? ""),
-      value: chartNumber(row, valueColumn),
+      value: chartNumber(plan, row, valueColumn),
     })),
   });
 }
 
 function renderRadarAnalytics(context: AnalyticsRenderContext): Buffer {
-  const { base, columns, rows } = context;
+  const { base, columns, rows, plan } = context;
   return analyticsChartToImage({
     ...base,
     chartType: "radar",
-    indicators: columns.map((column) => columnDisplay(column).label),
+    indicators: columns.map((column) => columnDisplay(plan, column).label),
     series: rows.map((row) => ({
       name: row.label,
-      values: columns.map((column) => chartNumber(row, column)),
+      values: columns.map((column) => chartNumber(plan, row, column)),
     })),
   });
 }
 
 function renderKpiAnalytics(context: AnalyticsRenderContext): Buffer {
-  const { base, columns, rows } = context;
+  const { base, columns, rows, plan } = context;
   const row = rows[0];
   if (row === undefined) throw new Error("KPI cards require one result row.");
   return analyticsChartToImage({
     ...base,
     chartType: "kpi",
     items: columns.map((column) => ({
-      label: columnDisplay(column).label,
-      value: formattedChartValue(row, column),
+      label: columnDisplay(plan, column).label,
+      value: formattedChartValue(plan, row, column),
     })),
   });
 }
@@ -283,7 +289,7 @@ function yColumns(result: ReportQueryResult, render: ChartRender): string[] {
   const configured = render.encoding.y;
   if (Array.isArray(configured)) return configured;
   if (configured !== undefined) return [configured];
-  const first = result.plan.selectItems[0]?.key;
+  const first = result.plan.outputs[0]?.name;
   if (first === undefined) {
     throw new Error("Cannot render a chart without an output column.");
   }
@@ -299,6 +305,7 @@ function requireFirst(columns: string[]): string {
 }
 
 function chartRows(
+  plan: ScoutQlPlan,
   rows: ReportResultRow[],
   render: ChartRender,
   column: string,
@@ -309,6 +316,7 @@ function chartRows(
   const direction = render.options.sort === "asc" ? 1 : -1;
   return rows.toSorted(
     (left, right) =>
-      direction * (chartNumber(left, column) - chartNumber(right, column)),
+      direction *
+      (chartNumber(plan, left, column) - chartNumber(plan, right, column)),
   );
 }

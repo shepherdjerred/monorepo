@@ -14,7 +14,6 @@ import {
   REPORT_MAX_ROWS_LIMIT,
   getCompetitionStatus,
   parseCompetition,
-  reportChampionLiteral,
 } from "@scout-for-lol/data";
 import {
   DEFAULT_COMPETITION_CRON,
@@ -123,17 +122,24 @@ async function competitionReportDefinitions(
     });
 }
 
+// The explicit aggregates a generated competition report selects. Names are
+// the ones render encodings and the app's column headers already use.
+const GAMES_OUTPUT = "COUNT(*) AS games";
+const WINS_OUTPUT = "COUNT(*) FILTER (WHERE win) AS wins";
+const WIN_RATE_OUTPUT = "AVG(win::INT) AS win_rate";
+
 function competitionReportQuery(
   competitionId: CompetitionId,
   criteria: CompetitionCriteria,
 ): string {
   if (criteria.type === "HIGHEST_RANK" || criteria.type === "MOST_RANK_CLIMB") {
+    // A rank snapshot has no time column, so it states no window; MAX(score)
+    // is the aggregate spelling of "this player's standing" under GROUP BY.
     return [
-      "SELECT player, score",
+      "SELECT player, MAX(score) AS score",
       "FROM competition_rank",
       `WHERE competition_id = ${competitionId.toString()}`,
       "GROUP BY player",
-      "DURING ALL TIME",
       "ORDER BY score DESC",
     ].join(" ");
   }
@@ -142,7 +148,7 @@ function competitionReportQuery(
     return competitionMatchQuery({
       competitionId,
       queueClause: queueWhereClause(criteria.queue),
-      metrics: "games",
+      outputs: [GAMES_OUTPUT],
       orderBy: "games",
     });
   }
@@ -150,7 +156,7 @@ function competitionReportQuery(
     return competitionMatchQuery({
       competitionId,
       queueClause: queueWhereClause(criteria.queue),
-      metrics: "games, wins",
+      outputs: [GAMES_OUTPUT, WINS_OUTPUT],
       orderBy: "wins",
     });
   }
@@ -161,40 +167,44 @@ function competitionReportQuery(
         criteria.queue === undefined
           ? undefined
           : queueWhereClause(criteria.queue),
-      metrics: "games, wins",
+      outputs: [GAMES_OUTPUT, WINS_OUTPUT],
       orderBy: "wins",
-      extraFilters: [
-        `champion_id = champion(${reportChampionLiteral(criteria.championId)})`,
-      ],
+      // The criterion already holds the numeric id, so compare it directly
+      // rather than round-tripping through a champion('…') display name.
+      extraFilters: [`champion_id = ${criteria.championId.toString()}`],
     });
   }
   return competitionMatchQuery({
     competitionId,
     queueClause: queueWhereClause(criteria.queue),
-    metrics: "games, wins, win_rate",
+    outputs: [GAMES_OUTPUT, WINS_OUTPUT, WIN_RATE_OUTPUT],
     orderBy: "win_rate",
-    extraFilters: [`games >= ${criteria.minGames.toString()}`],
+    // A floor on an aggregate is HAVING, not WHERE — WHERE runs before the
+    // rows are grouped, where `games` does not exist yet.
+    having: `games >= ${criteria.minGames.toString()}`,
   });
 }
 
 function competitionMatchQuery(params: {
   competitionId: CompetitionId;
   queueClause: string | undefined;
-  metrics: string;
+  outputs: string[];
   orderBy: string;
   extraFilters?: string[];
+  having?: string;
 }): string {
   const filters = [
-    "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'",
+    "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY",
     `competition_id = ${params.competitionId.toString()}`,
     ...(params.queueClause === undefined ? [] : [params.queueClause]),
     ...(params.extraFilters ?? []),
   ];
   return [
-    `SELECT player, ${params.metrics}`,
+    `SELECT player, ${params.outputs.join(", ")}`,
     "FROM competition_match_participants",
     `WHERE ${filters.join(" AND ")}`,
     "GROUP BY player",
+    ...(params.having === undefined ? [] : [`HAVING ${params.having}`]),
     `ORDER BY ${params.orderBy} DESC`,
   ].join(" ");
 }

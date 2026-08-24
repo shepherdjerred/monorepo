@@ -290,7 +290,7 @@ describe("PUUIDs stay in the data layer", () => {
   // `player('…')` keeps the human name in the text and resolves behind it.
   test("a resolved query still reads as the name the author wrote", async () => {
     const queryText =
-      "SELECT games FROM match_participants WHERE player = player('Aaron') GROUP BY player DURING ALL TIME";
+      "SELECT COUNT(*) AS games FROM match_participants WHERE player = player('Aaron') GROUP BY player";
 
     const result = await executeReportQuery({
       prisma,
@@ -317,7 +317,7 @@ describe("PUUIDs stay in the data layer", () => {
       scope: GLOBAL_SCOPE,
       askerGuildIds: [serverId],
       queryText:
-        "SELECT games FROM match_participants WHERE player = player('Aaron') GROUP BY player DURING ALL TIME",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE player = player('Aaron') GROUP BY player",
       now,
     });
 
@@ -332,7 +332,7 @@ describe("player('…') in a query", () => {
   test("counts every account and every past name", async () => {
     expect(
       await games(
-        "SELECT games FROM match_participants WHERE player = player('Aaron') GROUP BY player DURING ALL TIME",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE player = player('Aaron') GROUP BY player",
       ),
     ).toBe(5);
   });
@@ -340,7 +340,7 @@ describe("player('…') in a query", () => {
   test("a bare Riot ID still finds only that name's games", async () => {
     expect(
       await games(
-        "SELECT games FROM match_participants WHERE player = 'GexIsAngry#NA1' GROUP BY player DURING ALL TIME",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE player = 'GexIsAngry#NA1' GROUP BY player",
       ),
     ).toBe(1);
   });
@@ -350,7 +350,7 @@ describe("player('…') in a query", () => {
   test("an unresolvable name fails instead of matching everyone", async () => {
     await expect(
       games(
-        "SELECT games FROM match_participants WHERE player = player('nobody') GROUP BY player DURING ALL TIME",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE player = player('nobody') GROUP BY player",
       ),
     ).rejects.toThrow('No player matches "nobody"');
   });
@@ -364,7 +364,7 @@ test("player('…') also works in guild scope", async () => {
     prisma,
     scope: guildScope(serverId),
     queryText:
-      "SELECT games FROM match_participants WHERE player = player('Aaron') GROUP BY player DURING ALL TIME",
+      "SELECT COUNT(*) AS games FROM match_participants WHERE player = player('Aaron') GROUP BY player",
     now,
   });
 

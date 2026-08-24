@@ -1,37 +1,49 @@
 import {
-  REPORT_METRICS,
   VisualizationSnapshotSchema,
   cumulativeSeries,
-  isAdditiveReportExpression,
   linearTrend,
-  resolveTemporalBucket,
   rollingSeries,
-  temporalWindowDays,
-  type ReportQueryPlan,
   type ResolvedTemporalBucket,
   type TemporalSeries,
-  type TemporalSeriesPoint,
   type VisualizationAnnotation,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { addDays, addMonths, addWeeks, formatISO, parseISO } from "date-fns";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 import type {
   ReportQueryResult,
   ReportResultRow,
-  ReportResultValue,
 } from "#src/reports/query-engine.ts";
-import {
-  localDateStart,
-  resolveTemporalRanges,
-} from "#src/reports/temporal-range.ts";
+import { planGroupingNames } from "#src/reports/plan-columns.ts";
 import { comparePatchLabels } from "#src/reports/temporal-labels.ts";
 import {
-  assertProjectedPointCount,
-  visualizationBucketLabels,
-} from "#src/reports/visualization-buckets.ts";
+  planTemporalGrouping,
+  planTemporalSpec,
+  rangeIsBounded,
+} from "#src/reports/temporal-plan.ts";
+import { assertProjectedPointCount } from "#src/reports/visualization-buckets.ts";
+import {
+  compareHistogramRows,
+  fillMissingBuckets,
+  histogramBuckets,
+  pointFromRow,
+  pointLabel,
+  seriesLabel,
+  type SnapshotAxes,
+  type SnapshotContext,
+} from "#src/reports/visualization-points.ts";
 import { normalizePercentStack } from "#src/reports/visualization-series-transforms.ts";
 import { rankBumpSeries } from "#src/reports/visualization-bump-ranks.ts";
 import { resolveVisualizationAxes } from "#src/reports/heatmap-axes.ts";
+
+/**
+ * Build the renderer-facing snapshot from an executed plan.
+ *
+ * The time axis is now the plan's own DATE_TRUNC (or `patch`) grouping and the
+ * window it executed over, rather than a separate ANALYZE clause. Two kinds
+ * have shapes the renderer enforces and this module must produce exactly:
+ * HISTOGRAM is ONE series of ascending buckets, and BOX_PLOT is FIVE series in
+ * the encoding's `min, q1, median, q3, max` order, zipped by point key.
+ */
 
 export function buildVisualizationSnapshot(
   result: ReportQueryResult,
@@ -39,35 +51,56 @@ export function buildVisualizationSnapshot(
   annotations: VisualizationAnnotation[] = [],
 ): VisualizationSnapshot {
   const plan = result.plan;
-  const bucket = resolvedBucket(plan);
-  const columns = visualizationColumns(plan, result.columns);
-  const series = transformSeries(
-    buildSeries({ result, plan, columns, bucket, generatedAt }),
-    plan,
-  );
+  const context = snapshotContext(result, generatedAt);
+  const columns = visualizationColumns(plan);
+  const series = transformSeries(buildSeries(result, context, columns), plan);
   const chartOptions =
     "encoding" in plan.render ? plan.render.options : undefined;
-  const sparkline = resolveSparkline(plan);
   return VisualizationSnapshotSchema.parse({
     version: 1,
     generatedAt: generatedAt.toISOString(),
     kind: plan.render.kind,
     title: chartOptions?.title ?? null,
-    temporal: plan.analysis ?? null,
-    bucket,
-    display: snapshotDisplay(plan, sparkline),
+    // The same analysis spec stored snapshots have always carried, rebuilt
+    // from the v2 plan — old Explore shares and run history keep parsing.
+    temporal: planTemporalSpec(plan, result.range, result.temporal?.comparison),
+    bucket: context.bucket,
+    display: snapshotDisplay(plan),
     series,
-    annotations: snapshotAnnotations(plan, series, bucket, annotations),
+    annotations: snapshotAnnotations(plan, series, context.bucket, annotations),
     trends: snapshotTrends(plan, series),
   });
 }
 
+function snapshotContext(
+  result: ReportQueryResult,
+  generatedAt: Date,
+): SnapshotContext {
+  const plan = result.plan;
+  const temporal = planTemporalGrouping(plan);
+  return {
+    plan,
+    bucket: temporal?.bucket ?? null,
+    temporalIndex: temporal?.index ?? null,
+    timezone: temporal?.timezone ?? "UTC",
+    range: result.range,
+    fillBuckets: temporal !== null && rangeIsBounded(result.range),
+    hasComparison: result.temporal !== undefined,
+    histogram:
+      plan.render.kind === "HISTOGRAM"
+        ? histogramBuckets(plan.groupings[0])
+        : null,
+    generatedAt,
+  };
+}
+
 function transformSeries(
   initialSeries: TemporalSeries[],
-  plan: ReportQueryPlan,
+  plan: ScoutQlPlan,
 ): TemporalSeries[] {
   if (!("encoding" in plan.render)) return initialSeries;
   const chartOptions = plan.render.options;
+  const hasComparison = chartOptions.compare !== undefined;
   let series = initialSeries;
   const rolling = chartOptions.rolling;
   if (rolling !== undefined) {
@@ -76,19 +109,15 @@ function transformSeries(
       points: rollingSeries(
         item.points,
         rolling.window,
-        item.additive ? "additive" : metricTransformKind(item.metric),
-        plan.analysis?.comparison !== undefined,
+        item.additive ? "additive" : transformKind(plan, item.metric),
+        hasComparison,
       ),
     }));
   }
   if (chartOptions.cumulative === true) {
     series = series.map((item) => ({
       ...item,
-      points: cumulativeSeries(
-        item.points,
-        item.additive,
-        plan.analysis?.comparison !== undefined,
-      ),
+      points: cumulativeSeries(item.points, item.additive, hasComparison),
     }));
   }
   if (chartOptions.stack === "percent") {
@@ -100,7 +129,13 @@ function transformSeries(
   return series;
 }
 
-function snapshotTrends(plan: ReportQueryPlan, series: TemporalSeries[]) {
+/** A rolling window averages rates differently from other measures. */
+function transformKind(plan: ScoutQlPlan, column: string): "rate" | "average" {
+  const output = plan.outputs.find((candidate) => candidate.name === column);
+  return output?.displayKind === "percent" ? "rate" : "average";
+}
+
+function snapshotTrends(plan: ScoutQlPlan, series: TemporalSeries[]) {
   return "encoding" in plan.render && plan.render.options.trend === true
     ? series.flatMap((item) => {
         const trend = linearTrend(item.id, item.points);
@@ -110,7 +145,7 @@ function snapshotTrends(plan: ReportQueryPlan, series: TemporalSeries[]) {
 }
 
 function snapshotAnnotations(
-  plan: ReportQueryPlan,
+  plan: ScoutQlPlan,
   series: TemporalSeries[],
   bucket: ResolvedTemporalBucket | null,
   annotations: VisualizationAnnotation[],
@@ -130,7 +165,7 @@ function snapshotAnnotations(
   return [...annotations, ...derived];
 }
 
-function snapshotDisplay(plan: ReportQueryPlan, sparkline: boolean) {
+function snapshotDisplay(plan: ScoutQlPlan) {
   const options = "encoding" in plan.render ? plan.render.options : undefined;
   return {
     theme: options?.theme ?? null,
@@ -141,12 +176,12 @@ function snapshotDisplay(plan: ReportQueryPlan, sparkline: boolean) {
       (plan.render.kind === "STACKED_BAR" ? "normal" : "none"),
     rollingWindow: options?.rolling?.window ?? null,
     cumulative: options?.cumulative ?? false,
-    sparkline,
+    sparkline: resolveSparkline(plan),
     options: options ?? null,
   };
 }
 
-function resolveSparkline(plan: ReportQueryPlan): boolean {
+function resolveSparkline(plan: ScoutQlPlan): boolean {
   if (plan.render.kind === "TABLE") {
     return plan.render.options?.sparkline ?? false;
   }
@@ -155,106 +190,75 @@ function resolveSparkline(plan: ReportQueryPlan): boolean {
     : false;
 }
 
-function visualizationColumns(
-  plan: ReportQueryPlan,
-  resultColumns: string[],
-): string[] {
-  const numericColumns = resultColumns.filter((column) => column !== "label");
+/**
+ * Which output columns become series. A BOX_PLOT's five `y` outputs are
+ * exactly this list, in the order the author wrote them — that order IS the
+ * min/q1/median/q3/max encoding the renderer zips.
+ */
+function visualizationColumns(plan: ScoutQlPlan): string[] {
+  // Grouping echoes are the axis, not a measure: `SELECT week, COUNT(*)`
+  // plots the count against the week, never the week against itself. This is
+  // the same default the analyzer's render-shape rules apply.
+  const measures = plan.outputs
+    .filter((output) => output.expr.kind !== "grouping-ref")
+    .map((output) => output.name);
   if (!("encoding" in plan.render)) {
-    return numericColumns.slice(0, 8);
+    return measures.slice(0, 8);
   }
   const y = plan.render.encoding.y;
   if (typeof y === "string") return [y];
   if (Array.isArray(y)) return y;
   const value = plan.render.encoding.value;
   if (value !== undefined) return [value];
-  return numericColumns.slice(0, 1);
+  if (plan.render.kind === "BOX_PLOT") {
+    // Five outputs, no explicit encoding: the SELECT order is the encoding.
+    return measures.slice(0, 5);
+  }
+  return measures.slice(0, 1);
 }
 
-function resolvedBucket(plan: ReportQueryPlan): ResolvedTemporalBucket | null {
-  if (plan.analysis === undefined) return null;
-  return resolveTemporalBucket(
-    plan.analysis.bucket,
-    temporalWindowDays(plan.analysis.window),
-  );
-}
-
-type SeriesBuildContext = {
-  result: ReportQueryResult;
-  plan: ReportQueryPlan;
-  columns: string[];
-  bucket: ResolvedTemporalBucket | null;
-  generatedAt: Date;
-};
-
-function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
-  const { result, plan, columns, bucket, generatedAt } = context;
-  const rows = result.rows;
+function buildSeries(
+  result: ReportQueryResult,
+  context: SnapshotContext,
+  columns: string[],
+): TemporalSeries[] {
+  const { plan } = context;
   const axes = resolveVisualizationAxes(
-    plan.groupBys,
+    planGroupingNames(plan),
     plan.render.kind,
     "encoding" in plan.render ? plan.render.encoding : undefined,
-    bucket !== null,
+    context.temporalIndex !== null,
   );
   const grouped = new Map<string, ReportResultRow[]>();
-  for (const row of rows) {
-    const seriesLabel = visualizationSeriesLabel(row, plan, bucket, axes);
-    const group = grouped.get(seriesLabel) ?? [];
+  for (const row of result.rows) {
+    const key = seriesLabel(context, row, axes);
+    const group = grouped.get(key) ?? [];
     group.push(row);
-    grouped.set(seriesLabel, group);
+    grouped.set(key, group);
   }
-  if (bucket !== null && grouped.size === 0 && plan.groupBys.length === 1) {
+  if (
+    context.temporalIndex !== null &&
+    grouped.size === 0 &&
+    plan.groupings.length === 1
+  ) {
     grouped.set("All", []);
   }
   assertProjectedPointCount({
-    rowCount: rows.length,
+    rowCount: result.rows.length,
     columnCount: columns.length,
     seriesGroupCount: grouped.size,
-    bucket,
-    plan,
-    generatedAt,
+    bucket: context.bucket,
+    window: context.fillBuckets
+      ? { range: context.range, timezone: context.timezone }
+      : null,
   });
   const evidenceByRow = new Map(
     result.rows.map((row, index) => [row, result.evidence?.[index]]),
   );
-  const series = [...grouped].flatMap(([seriesLabel, groupRows]) =>
-    columns.map((column) => {
-      const additive = isAdditiveColumn(plan, column);
-      const orderedRows =
-        bucket === "patch" ? groupRows.toSorted(comparePatchRows) : groupRows;
-      const points = orderedRows
-        .map((row, index) =>
-          pointFromRow({
-            row,
-            column,
-            bucket,
-            plan,
-            generatedAt,
-            index,
-            pointDimensionIndex: axes?.pointDim,
-            evidence: evidenceByRow.get(row),
-          }),
-        )
-        .toSorted((left, right) => left.start.localeCompare(right.start));
-      return {
-        id: `${seriesLabel}:${column}`,
-        label:
-          plan.render.kind === "HEATMAP"
-            ? seriesLabel
-            : seriesLabel === "All"
-              ? column
-              : `${seriesLabel} — ${column}`,
-        metric: column,
-        additive,
-        points: fillMissingBuckets({
-          points,
-          bucket,
-          additive,
-          plan,
-          generatedAt,
-        }),
-      };
-    }),
+  const series = [...grouped].flatMap(([label, rows]) =>
+    columns.map((column) =>
+      buildOneSeries({ context, axes, label, rows, column, evidenceByRow }),
+    ),
   );
   if (series.length > 8) {
     if ("encoding" in plan.render) {
@@ -265,231 +269,72 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
   return series;
 }
 
-function visualizationSeriesLabel(
-  row: ReportResultRow,
-  plan: ReportQueryPlan,
-  bucket: ResolvedTemporalBucket | null,
-  axes: { seriesDim: number; pointDim: number } | undefined,
-): string {
-  if (bucket !== null) {
-    return row.dimensions.slice(0, -1).join(" • ") || "All";
-  }
-  if (plan.groupBys.length <= 1) return "All";
-  return row.dimensions[axes?.seriesDim ?? 0] ?? "All";
-}
-
-function comparePatchRows(
-  left: ReportResultRow,
-  right: ReportResultRow,
-): number {
-  return comparePatchLabels(
-    left.dimensions.at(-1) ?? left.label,
-    right.dimensions.at(-1) ?? right.label,
-  );
-}
-
-type PointBuildContext = Omit<SeriesBuildContext, "columns" | "result"> & {
-  row: ReportResultRow;
+type OneSeriesInput = {
+  context: SnapshotContext;
+  axes: SnapshotAxes;
+  label: string;
+  rows: ReportResultRow[];
   column: string;
-  index: number;
-  pointDimensionIndex: number | undefined;
-  evidence: NonNullable<ReportQueryResult["evidence"]>[number] | undefined;
+  evidenceByRow: Map<
+    ReportResultRow,
+    NonNullable<ReportQueryResult["evidence"]>[number] | undefined
+  >;
 };
 
-function pointFromRow(context: PointBuildContext): TemporalSeriesPoint {
-  const {
-    row,
-    column,
-    bucket,
-    plan,
-    generatedAt,
-    index,
-    pointDimensionIndex,
-    evidence,
-  } = context;
-  const value = requireValue(row, column);
-  const label =
-    bucket === null && pointDimensionIndex !== undefined
-      ? (row.dimensions[pointDimensionIndex] ?? row.label)
-      : bucket === null && plan.groupBys.length <= 1
-        ? row.label
-        : (row.dimensions.at(-1) ?? row.label);
-  const bounds = pointBounds({ label, bucket, plan, generatedAt, index });
-  const metricEvidence = evidence?.values.find(
-    (candidate) => candidate.column === column,
+function buildOneSeries(input: OneSeriesInput): TemporalSeries {
+  const { context, axes, label, rows, column } = input;
+  const plan = context.plan;
+  const additive =
+    plan.outputs.find((output) => output.name === column)?.additive ?? false;
+  const points = orderedRows(context, axes, rows).map((row, index) =>
+    pointFromRow({
+      context,
+      row,
+      column,
+      label: pointLabel(context, row, axes),
+      index,
+      evidence: input.evidenceByRow.get(row),
+    }),
   );
-  const currentEvidence = pointMetricEvidence(value, metricEvidence);
-  const comparisonEvidence = pointComparisonEvidence(value, plan);
   return {
-    key: label,
-    label,
-    start: bounds.start.toISOString(),
-    end: bounds.end.toISOString(),
-    value: typeof value.value === "number" ? value.value : null,
-    ...numericChannelValue(row, plan, "x", "xValue"),
-    ...numericChannelValue(row, plan, "size", "sizeValue"),
-    comparisonValue:
-      typeof value.comparisonValue === "number" ? value.comparisonValue : null,
-    absoluteDelta: value.absoluteDelta ?? null,
-    percentageDelta: value.percentageDelta ?? null,
-    evidence: currentEvidence,
-    ...(comparisonEvidence === null ? {} : { comparisonEvidence }),
+    id: `${label}:${column}`,
+    label:
+      plan.render.kind === "HEATMAP"
+        ? label
+        : label === "All"
+          ? column
+          : `${label} — ${column}`,
+    metric: column,
+    additive,
+    points: fillMissingBuckets({ context, points, additive }),
   };
 }
 
-function pointMetricEvidence(
-  value: ReportResultValue,
-  evidence:
-    | NonNullable<ReportQueryResult["evidence"]>[number]["values"][number]
-    | undefined,
-) {
-  return {
-    sampleSize: evidence?.sampleSize ?? value.sampleSize ?? 0,
-    successes: evidence?.successes ?? value.successes,
-    numerator: evidence?.numerator ?? value.numerator,
-    denominator: evidence?.denominator ?? value.denominator,
-    confidenceInterval:
-      evidence?.confidenceInterval ?? value.confidenceInterval ?? null,
-  };
-}
-
-function pointComparisonEvidence(
-  value: ReportResultValue,
-  plan: ReportQueryPlan,
-) {
-  if (plan.analysis?.comparison === undefined) return null;
-  return {
-    sampleSize: value.comparisonSampleSize ?? 0,
-    successes: value.comparisonSuccesses,
-    numerator: value.comparisonNumerator,
-    denominator: value.comparisonDenominator,
-    confidenceInterval: value.comparisonConfidenceInterval ?? null,
-  };
-}
-
-function numericChannelValue(
-  row: ReportResultRow,
-  plan: ReportQueryPlan,
-  channel: "x" | "size",
-  property: "xValue" | "sizeValue",
-): Partial<Pick<TemporalSeriesPoint, "xValue" | "sizeValue">> {
-  if (!("encoding" in plan.render)) return {};
-  const column = plan.render.encoding[channel];
-  if (column === undefined) return {};
-  const value = row.values.find((candidate) => candidate.column === column);
-  return typeof value?.value === "number" ? { [property]: value.value } : {};
-}
-
-function requireValue(row: ReportResultRow, column: string): ReportResultValue {
-  const value = row.values.find((candidate) => candidate.column === column);
-  if (value === undefined) {
-    throw new Error(
-      `Visualization column ${column} is missing from ${row.label}.`,
+/**
+ * Row order within a series. Histogram bars ascend by bucket, patch buckets
+ * follow patch order, and calendar buckets sort by their ISO label — which is
+ * chronological because the SQL label format is ISO.
+ */
+function orderedRows(
+  context: SnapshotContext,
+  axes: SnapshotAxes,
+  rows: ReportResultRow[],
+): ReportResultRow[] {
+  if (context.histogram !== null) {
+    return rows.toSorted(compareHistogramRows);
+  }
+  if (context.bucket === "patch") {
+    return rows.toSorted((left, right) =>
+      comparePatchLabels(
+        pointLabel(context, left, axes),
+        pointLabel(context, right, axes),
+      ),
     );
   }
-  return value;
-}
-
-type PointBoundsContext = {
-  label: string;
-  bucket: ResolvedTemporalBucket | null;
-  plan: ReportQueryPlan;
-  generatedAt: Date;
-  index: number;
-};
-
-function pointBounds(context: PointBoundsContext): { start: Date; end: Date } {
-  const { label, bucket, plan, generatedAt, index } = context;
-  if (bucket === null) {
-    const start = new Date(generatedAt.getTime() + index * 1000);
-    return { start, end: start };
-  }
-  if (bucket === "patch") {
-    if (plan.analysis === undefined)
-      throw new Error("Patch buckets require analysis.");
-    const range = resolveTemporalRanges(plan.analysis, generatedAt).current;
-    const start = new Date(range.startDate.getTime() + index * 1000);
-    return { start, end: start };
-  }
-  if (plan.analysis === undefined)
-    throw new Error("Temporal buckets require analysis.");
-  const date = bucket === "month" ? `${label}-01` : label;
-  const start = localDateStart(date, plan.analysis.timezone);
-  const nextDate =
-    bucket === "day"
-      ? addDays(parseISO(date), 1)
-      : bucket === "week"
-        ? addWeeks(parseISO(date), 1)
-        : addMonths(parseISO(date), 1);
-  const next = localDateStart(
-    formatISO(nextDate, { representation: "date" }),
-    plan.analysis.timezone,
+  if (context.bucket === null) return rows;
+  return rows.toSorted((left, right) =>
+    pointLabel(context, left, axes).localeCompare(
+      pointLabel(context, right, axes),
+    ),
   );
-  return { start, end: new Date(next.getTime() - 1) };
-}
-
-type FillMissingBucketsContext = {
-  points: TemporalSeriesPoint[];
-  bucket: ResolvedTemporalBucket | null;
-  additive: boolean;
-  plan: ReportQueryPlan;
-  generatedAt: Date;
-};
-
-function fillMissingBuckets({
-  points,
-  bucket,
-  additive,
-  plan,
-  generatedAt,
-}: FillMissingBucketsContext): TemporalSeriesPoint[] {
-  if (bucket === null || bucket === "patch") return points;
-  const byLabel = new Map(points.map((point) => [point.label, point]));
-  if (plan.analysis === undefined) return points;
-  const result: TemporalSeriesPoint[] = [];
-  for (const label of visualizationBucketLabels(plan, generatedAt, bucket)) {
-    const existing = byLabel.get(label);
-    if (existing === undefined) {
-      const bounds = pointBounds({
-        label,
-        bucket,
-        plan,
-        generatedAt,
-        index: result.length,
-      });
-      const hasComparison = plan.analysis.comparison !== undefined;
-      result.push({
-        key: label,
-        label,
-        start: bounds.start.toISOString(),
-        end: bounds.end.toISOString(),
-        value: additive ? 0 : null,
-        comparisonValue: additive && hasComparison ? 0 : null,
-        absoluteDelta: additive && hasComparison ? 0 : null,
-        percentageDelta: null,
-        evidence: { sampleSize: 0, confidenceInterval: null },
-        ...(hasComparison
-          ? {
-              comparisonEvidence: {
-                sampleSize: 0,
-                confidenceInterval: null,
-              },
-            }
-          : {}),
-      });
-    } else {
-      result.push(existing);
-    }
-  }
-  return result;
-}
-
-function isAdditiveColumn(plan: ReportQueryPlan, column: string): boolean {
-  const item = plan.selectItems.find((candidate) => candidate.key === column);
-  return item !== undefined && isAdditiveReportExpression(item.expression);
-}
-
-function metricTransformKind(metric: string): "rate" | "average" {
-  const info = REPORT_METRICS.find((candidate) => candidate.id === metric);
-  return info?.kind === "rate" ? "rate" : "average";
 }

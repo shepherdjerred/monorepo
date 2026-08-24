@@ -88,7 +88,7 @@ describe("global scope", () => {
       prisma,
       scope: GLOBAL_SCOPE,
       queryText:
-        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
       now,
     });
 
@@ -103,7 +103,7 @@ describe("global scope", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
       now,
     });
     expect(
@@ -125,7 +125,7 @@ describe("global scope", () => {
       prisma,
       scope: GLOBAL_SCOPE,
       queryText:
-        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
       now,
     });
     expect(global.rows).toHaveLength(3);
@@ -134,7 +134,7 @@ describe("global scope", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
       now,
     });
     expect(guild.rows).toHaveLength(1);
@@ -152,7 +152,7 @@ describe("global scope", () => {
       prisma,
       scope: GLOBAL_SCOPE,
       queryText:
-        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
       now,
     });
 
@@ -166,7 +166,7 @@ describe("global scope", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
       now,
     });
     expect(guild.rows[0]?.label).toBe("Tracked Player");
@@ -196,7 +196,7 @@ describe("global scope", () => {
       prisma,
       scope: GLOBAL_SCOPE,
       queryText:
-        "SELECT champion, games FROM match_participants GROUP BY champion DURING LAST 30 DAYS",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY champion",
       now,
     });
     expect(global.rows).toHaveLength(1);
@@ -217,7 +217,7 @@ describe("global scope", () => {
         prisma,
         scope: GLOBAL_SCOPE,
         queryText:
-          "SELECT group, games FROM player_groups GROUP BY group(2) DURING LAST 30 DAYS",
+          "SELECT COUNT(*) AS games FROM player_groups WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY group(2)",
         now,
       }),
     ).rejects.toThrow(/not available in global scope/);
@@ -251,7 +251,7 @@ describe("global scope", () => {
       prisma,
       scope: GLOBAL_SCOPE,
       queryText:
-        "SELECT player, games FROM match_participants WHERE player IN ('Faker#NA1') GROUP BY player DURING LAST 30 DAYS",
+        "SELECT COUNT(*) AS games FROM match_participants WHERE player IN ('Faker#NA1') AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
       now,
     });
 
@@ -273,7 +273,7 @@ describe("global scope", () => {
         prisma,
         scope: GLOBAL_SCOPE,
         queryText:
-          "SELECT player, games FROM competition_match_participants WHERE competition_id = 1 GROUP BY player DURING LAST 30 DAYS",
+          "SELECT COUNT(*) AS games FROM competition_match_participants WHERE competition_id = 1 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
         now,
       }),
     ).rejects.toThrow(/not available in global scope/);

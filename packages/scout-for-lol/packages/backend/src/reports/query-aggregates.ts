@@ -1,129 +1,235 @@
-import {
-  REPORT_MAX_ROWS_LIMIT,
-  REPORT_METRICS,
-  collectExpressionMetrics,
-  isAdditiveReportExpression,
-  wilsonInterval95,
-} from "@scout-for-lol/data";
+import { REPORT_MAX_ROWS_LIMIT, wilsonInterval95 } from "@scout-for-lol/data";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 import type {
-  ReportExpression,
-  ReportMetric,
-  ReportQueryPlan,
-} from "@scout-for-lol/data";
+  PlanAggregateRow,
+  PlanComparedRow,
+  PlanOutputEvidence,
+  PlanOutputValue,
+} from "#src/reports/plan-rows.ts";
+import { planResultColumnNames } from "#src/reports/plan-columns.ts";
+import {
+  planTemporalGrouping,
+  type TemporalContext,
+} from "#src/reports/temporal-plan.ts";
+import type { TemporalRange } from "#src/reports/temporal-range.ts";
 import type {
   ReportMentionIdentity,
   ReportQueryResult,
+  ReportResultRow,
+  ReportResultValue,
 } from "#src/reports/query-engine.ts";
 
-export type AggregateRow = {
-  label: string;
-  playerId: number | null;
-  discordId: string | null;
-  groupMembers: { playerId: number; alias: string }[] | null;
-  games: number;
-  wins: number;
-  surrenders: number;
-  kills: number;
-  deaths: number;
-  assists: number;
-  creepScore: number;
-  damageToChampions: number;
-  goldEarned: number;
-  visionScore: number;
-  damageTaken: number;
-  totalDamageDealt: number;
-  wardsPlaced: number;
-  multikills: number;
-  /** Sum of game durations (seconds), counted once per group row per game. */
-  durationSeconds: number;
-  /** Sum of time played (seconds) across group members. */
-  timePlayedSeconds: number;
-  participantRows: number;
-  earlySurrenders: number;
-  laneMinions: number;
-  neutralMinions: number;
-  goldSpent: number;
-  damageMitigated: number;
-  damageToObjectives: number;
-  damageToTurrets: number;
-  healing: number;
-  teammateHealing: number;
-  wardsKilled: number;
-  controlWardsBought: number;
-  detectorWardsPlaced: number;
-  doubleKills: number;
-  tripleKills: number;
-  quadraKills: number;
-  pentaKills: number;
-  largestMultikill: number;
-  killingSprees: number;
-  firstBloods: number;
-  championLevelTotal: number;
-  championExperienceTotal: number;
-  timeDeadSeconds: number;
-  longestLifeSeconds: number;
-  ccTimeSeconds: number;
-  turretKills: number;
-  inhibitorKills: number;
-  dragonKills: number;
-  baronKills: number;
-  arenaRows: number;
-  placementSum: number;
-  topTwoPlacements: number;
-  firstPlaceFinishes: number;
+/**
+ * Post-aggregation: turn executed plan rows into a report result.
+ *
+ * Ordering, HAVING, LIMIT and every derived value now happen where they
+ * belong — in SQL (or, for teammate groups, in the JS evaluator that stands in
+ * for it). What is left here is what SQL cannot say: which row can @mention
+ * somebody, and what confidence a rendered number has earned.
+ */
+
+/** Temporal reports plot many more rows than a table ever shows. */
+export const TEMPORAL_ROWS_LIMIT = 2000;
+
+/**
+ * The effective row budget for a plan: its own LIMIT, capped by the display
+ * budget. A bucketed query is capped far higher because its rows are points on
+ * a chart, not lines in a table.
+ */
+export function effectiveRowLimit(plan: ScoutQlPlan): number {
+  const ceiling =
+    planTemporalGrouping(plan) === null
+      ? REPORT_MAX_ROWS_LIMIT
+      : TEMPORAL_ROWS_LIMIT;
+  return Math.min(plan.limit, ceiling);
+}
+
+export type PlanResultInput = {
+  plan: ScoutQlPlan;
+  rows: PlanComparedRow[];
+  rowsScanned: number;
+  /** The range that was executed, which the snapshot buckets against. */
+  range: TemporalRange;
+  temporal?: TemporalContext | undefined;
 };
 
-export function rowsFromAggregates(
-  plan: ReportQueryPlan,
-  rows: AggregateRow[],
-  rowsScanned: number,
-  maxRows: number,
-): ReportQueryResult {
-  const limit = cappedLimit(plan, maxRows);
-  const selectedRows = rows.slice(0, limit);
+export function resultFromPlanRows(input: PlanResultInput): ReportQueryResult {
+  const { plan } = input;
   return {
     plan,
-    columns: ["label", ...plan.selectItems.map((item) => item.key)],
-    rows: selectedRows.map((row) => ({
-      label: row.label,
-      dimensions: row.label.split(" • "),
-      mentionIdentity:
-        plan.groupBy === "group"
-          ? groupMentionIdentity(row)
-          : plan.groupBys.length === 1 && plan.groupBys[0] === "player"
-            ? playerMentionIdentity(row)
-            : null,
-      values: plan.selectItems.map((item) => ({
-        column: item.key,
-        value: evaluateExpression(row, item.expression),
-      })),
-    })),
-    rowsScanned,
-    evidence: selectedRows.map((row) => ({
-      label: row.label,
-      values: plan.selectItems.map((item) => ({
-        column: item.key,
-        ...metricEvidence(row, item.expression),
+    columns: planResultColumnNames(plan),
+    rows: input.rows.map((entry) =>
+      resultRow(plan, entry, input.temporal !== undefined),
+    ),
+    rowsScanned: input.rowsScanned,
+    range: input.range,
+    ...(input.temporal === undefined ? {} : { temporal: input.temporal }),
+    evidence: input.rows.map((entry) => ({
+      label: entry.row.label,
+      values: entry.row.outputs.map((output) => ({
+        column: output.name,
+        ...outputEvidence(output.evidence),
       })),
     })),
   };
 }
 
+/** Every executed row, with no baseline attached. */
+export function withoutComparison(rows: PlanAggregateRow[]): PlanComparedRow[] {
+  return rows.map((row) => ({ row, baseline: null }));
+}
+
+function resultRow(
+  plan: ScoutQlPlan,
+  entry: PlanComparedRow,
+  hasComparison: boolean,
+): ReportResultRow {
+  return {
+    label: entry.row.label,
+    dimensions: entry.row.label.split(" • "),
+    keys: entry.row.keys,
+    mentionIdentity: mentionIdentity(plan, entry.row),
+    values: entry.row.outputs.map((output) =>
+      resultValue(plan, output, hasComparison ? entry.baseline : undefined),
+    ),
+  };
+}
+
+function baseResultValue(output: PlanOutputValue): ReportResultValue {
+  const evidence = outputEvidence(output.evidence);
+  return {
+    column: output.name,
+    value: output.value,
+    sampleSize: evidence.sampleSize,
+    ...(evidence.successes === undefined
+      ? {}
+      : { successes: evidence.successes }),
+    ...(evidence.numerator === undefined
+      ? {}
+      : { numerator: evidence.numerator }),
+    ...(evidence.denominator === undefined
+      ? {}
+      : { denominator: evidence.denominator }),
+    confidenceInterval: evidence.confidenceInterval,
+  };
+}
+
 /**
- * A mention identity for a player-grouped row, or null when the row cannot
- * address anyone.
- *
- * Guild-scoped rows always carry a player id (accounts rows have one), and an
- * unlinked player keeps its identity so the leaderboard can fall back to the
- * alias. Global-scoped rows carry neither id — there is no accounts join, so
- * the row is a Riot account rather than a tracked player. Returning an
- * identity there would claim an addressee that does not exist.
+ * A baseline of `undefined` means the query asked for no comparison; `null`
+ * means it did and the preceding period has no row for this bucket. Those are
+ * different answers: the second one is a real zero for an additive output —
+ * nothing happened — and unknown for everything else.
  */
-function playerMentionIdentity(row: {
-  label: string;
-  playerId: number | null;
-  discordId: string | null;
-}): ReportMentionIdentity | null {
+function resultValue(
+  plan: ScoutQlPlan,
+  output: PlanOutputValue,
+  baseline: PlanAggregateRow | null | undefined,
+): ReportResultValue {
+  const base = baseResultValue(output);
+  if (baseline === undefined) return base;
+  const matched = baseline?.outputs.find(
+    (candidate) => candidate.name === output.name,
+  );
+  const baselineEvidence =
+    matched === undefined ? undefined : outputEvidence(matched.evidence);
+  const additive =
+    plan.outputs.find((candidate) => candidate.name === output.name)
+      ?.additive ?? false;
+  const baselineValue = matched?.value ?? (additive ? 0 : null);
+  const deltas = comparisonDeltasFor(output.value, baselineValue);
+  return {
+    ...base,
+    comparisonValue: baselineValue,
+    absoluteDelta: deltas.absolute,
+    percentageDelta: deltas.percentage,
+    comparisonSampleSize: baselineEvidence?.sampleSize ?? 0,
+    comparisonConfidenceInterval: baselineEvidence?.confidenceInterval ?? null,
+    ...(baselineEvidence?.successes === undefined
+      ? {}
+      : { comparisonSuccesses: baselineEvidence.successes }),
+    ...(baselineEvidence?.numerator === undefined
+      ? {}
+      : { comparisonNumerator: baselineEvidence.numerator }),
+    ...(baselineEvidence?.denominator === undefined
+      ? {}
+      : { comparisonDenominator: baselineEvidence.denominator }),
+  };
+}
+
+function comparisonDeltasFor(
+  value: number | string | null,
+  baseline: number | string | null,
+): { absolute: number | null; percentage: number | null } {
+  if (typeof value !== "number" || typeof baseline !== "number") {
+    return { absolute: null, percentage: null };
+  }
+  const absolute = value - baseline;
+  return {
+    absolute,
+    percentage: baseline === 0 ? null : absolute / Math.abs(baseline),
+  };
+}
+
+export type OutputEvidenceSummary = {
+  sampleSize: number;
+  successes?: number;
+  numerator?: number;
+  denominator?: number;
+  confidenceInterval: ReturnType<typeof wilsonInterval95>;
+};
+
+/**
+ * What the compiler's evidence companions mean for the renderer.
+ *
+ * A rate earns a Wilson interval from its own successes and trials — under a
+ * FILTER those are the filtered counts, which is exactly when a blanket
+ * COUNT(*) denominator would be wrong. A ratio has no such interval, and its
+ * denominator is its sample: `per_minute(x)` is measured over minutes played,
+ * not over games.
+ */
+function outputEvidence(evidence: PlanOutputEvidence): OutputEvidenceSummary {
+  if (evidence.kind === "rate") {
+    return {
+      sampleSize: evidence.trials,
+      successes: evidence.successes,
+      confidenceInterval: wilsonInterval95(evidence.successes, evidence.trials),
+    };
+  }
+  if (evidence.kind === "ratio") {
+    return {
+      sampleSize: evidence.denominator,
+      numerator: evidence.numerator,
+      denominator: evidence.denominator,
+      confidenceInterval: null,
+    };
+  }
+  return { sampleSize: evidence.sampleCount, confidenceInterval: null };
+}
+
+/**
+ * A row's @mention identity, or null when the row cannot address anybody.
+ *
+ * Only a teammate-group row or a single `player` grouping produces one: a row
+ * grouped by champion whose label happens to match an alias is a champion.
+ * Global-scope player rows carry neither a player id nor a Discord id — there
+ * is no accounts join, so the row is a Riot account rather than a tracked
+ * player — and an identity there would claim an addressee that does not exist.
+ */
+function mentionIdentity(
+  plan: ScoutQlPlan,
+  row: PlanAggregateRow,
+): ReportMentionIdentity | null {
+  if (row.groupMembers !== null) {
+    return { kind: "group", members: row.groupMembers };
+  }
+  const [only] = plan.groupings;
+  if (
+    plan.groupings.length !== 1 ||
+    only?.kind !== "column" ||
+    only.column !== "player"
+  ) {
+    return null;
+  }
   if (row.playerId === null && row.discordId === null) {
     return null;
   }
@@ -133,352 +239,4 @@ function playerMentionIdentity(row: {
     alias: row.label,
     discordId: row.discordId,
   };
-}
-
-function groupMentionIdentity(
-  row: AggregateRow,
-): Extract<
-  ReportQueryResult["rows"][number]["mentionIdentity"],
-  { kind: "group" }
-> {
-  if (row.groupMembers === null) {
-    throw new Error("Group aggregate is missing member identities.");
-  }
-  return { kind: "group", members: row.groupMembers };
-}
-
-export function cappedLimit(plan: ReportQueryPlan, maxRows: number): number {
-  return Math.min(
-    plan.limit,
-    maxRows,
-    plan.analysis === undefined ? REPORT_MAX_ROWS_LIMIT : 2000,
-  );
-}
-
-function metricEvidence(
-  row: AggregateRow,
-  expression: ReportExpression,
-): {
-  sampleSize: number;
-  successes?: number;
-  numerator?: number;
-  denominator?: number;
-  confidenceInterval?: ReturnType<typeof wilsonInterval95>;
-} {
-  const metrics = collectExpressionMetrics(expression);
-  const metric = metrics.length === 1 ? metrics[0] : undefined;
-  const directMetric =
-    expression.kind === "metric" ? expression.metric : undefined;
-  const sampleSize =
-    metric === "average_placement" ||
-    metric === "top_two_rate" ||
-    metric === "first_place_rate"
-      ? row.arenaRows
-      : metric === "avg_champion_level" || metric === "avg_champion_experience"
-        ? row.participantRows
-        : row.games;
-  const successes =
-    directMetric === "win_rate"
-      ? row.wins
-      : directMetric === "surrender_rate"
-        ? row.surrenders
-        : directMetric === "early_surrender_rate"
-          ? row.earlySurrenders
-          : directMetric === "first_blood_rate"
-            ? row.firstBloods
-            : directMetric === "top_two_rate"
-              ? row.topTwoPlacements
-              : directMetric === "first_place_rate"
-                ? row.firstPlaceFinishes
-                : undefined;
-  const kind = REPORT_METRICS.find(
-    (candidate) => candidate.id === directMetric,
-  )?.kind;
-  if (kind === "rate" && successes !== undefined) {
-    return {
-      sampleSize,
-      successes,
-      confidenceInterval: wilsonInterval95(successes, sampleSize),
-    };
-  }
-  const ratio =
-    ratioMetricEvidence(row, directMetric) ??
-    calculatedRatioEvidence(row, expression);
-  return { sampleSize, ...ratio };
-}
-
-function ratioMetricEvidence(
-  row: AggregateRow,
-  metric: ReportMetric | undefined,
-): { numerator: number; denominator: number } | undefined {
-  if (metric === "kda") {
-    return { numerator: row.kills + row.assists, denominator: row.deaths };
-  }
-  if (metric === "avg_game_duration") {
-    return { numerator: row.durationSeconds / 60, denominator: row.games };
-  }
-  if (metric === "cs_per_minute") {
-    return {
-      numerator: row.creepScore,
-      denominator: row.timePlayedSeconds / 60,
-    };
-  }
-  if (metric === "avg_champion_level") {
-    return {
-      numerator: row.championLevelTotal,
-      denominator: row.participantRows,
-    };
-  }
-  if (metric === "avg_champion_experience") {
-    return {
-      numerator: row.championExperienceTotal,
-      denominator: row.participantRows,
-    };
-  }
-  if (metric === "average_placement") {
-    return { numerator: row.placementSum, denominator: row.arenaRows };
-  }
-  return undefined;
-}
-
-function calculatedRatioEvidence(
-  row: AggregateRow,
-  expression: ReportExpression,
-): { numerator: number; denominator: number } | Record<string, never> {
-  const candidate =
-    expression.kind === "function" && expression.name === "round"
-      ? expression.arguments[0]
-      : expression;
-  if (
-    candidate?.kind === "function" &&
-    (candidate.name === "per_game" || candidate.name === "per_minute")
-  ) {
-    const source = candidate.arguments[0];
-    if (source === undefined || !isAdditiveReportExpression(source)) return {};
-    const numerator = evaluateExpression(row, source);
-    const denominator =
-      candidate.name === "per_game" ? row.games : row.timePlayedSeconds / 60;
-    return numerator === null ? {} : { numerator, denominator };
-  }
-  if (
-    candidate?.kind !== "binary" ||
-    candidate.operator !== "/" ||
-    !isAdditiveReportExpression(candidate.left) ||
-    !isAdditiveReportExpression(candidate.right)
-  ) {
-    return {};
-  }
-  const numerator = evaluateExpression(row, candidate.left);
-  const denominator = evaluateExpression(row, candidate.right);
-  return numerator === null || denominator === null
-    ? {}
-    : { numerator, denominator };
-}
-
-export function sortedAggregates(
-  plan: ReportQueryPlan,
-  rows: Iterable<AggregateRow>,
-): AggregateRow[] {
-  return [...rows]
-    .filter((row) => plan.minGames === undefined || row.games >= plan.minGames)
-    .filter((row) => matchesHaving(row, plan))
-    .toSorted((left, right) => compareAggregateRows(left, right, plan));
-}
-
-function compareAggregateRows(
-  left: AggregateRow,
-  right: AggregateRow,
-  plan: ReportQueryPlan,
-): number {
-  const direction = plan.orderDirection === "asc" ? 1 : -1;
-  if (plan.orderBy === "label") {
-    return direction * left.label.localeCompare(right.label);
-  }
-
-  const selectItem = plan.selectItems.find((item) => item.key === plan.orderBy);
-  const leftValue =
-    selectItem === undefined
-      ? plan.orderBy === "games"
-        ? left.games
-        : null
-      : evaluateExpression(left, selectItem.expression);
-  const rightValue =
-    selectItem === undefined
-      ? plan.orderBy === "games"
-        ? right.games
-        : null
-      : evaluateExpression(right, selectItem.expression);
-  if (leftValue === null && rightValue !== null) return 1;
-  if (leftValue !== null && rightValue === null) return -1;
-  const valueDiff = (leftValue ?? 0) - (rightValue ?? 0);
-  if (valueDiff !== 0) {
-    return direction * valueDiff;
-  }
-
-  return left.label.localeCompare(right.label);
-}
-
-// Exhaustive per-metric derivations over the raw aggregate counters. Rates
-// and ratios guard division by zero (empty groups read 0).
-const METRIC_VALUES: Record<ReportMetric, (row: AggregateRow) => number> = {
-  games: (row) => row.games,
-  prematches: (row) => row.games,
-  wins: (row) => row.wins,
-  losses: (row) => row.games - row.wins,
-  surrenders: (row) => row.surrenders,
-  surrender_rate: (row) => (row.games === 0 ? 0 : row.surrenders / row.games),
-  win_rate: (row) => (row.games === 0 ? 0 : row.wins / row.games),
-  kills: (row) => row.kills,
-  deaths: (row) => row.deaths,
-  assists: (row) => row.assists,
-  kda: (row) => {
-    const takedowns = row.kills + row.assists;
-    return row.deaths === 0 ? takedowns : takedowns / row.deaths;
-  },
-  creep_score: (row) => row.creepScore,
-  damage_to_champions: (row) => row.damageToChampions,
-  gold_earned: (row) => row.goldEarned,
-  vision_score: (row) => row.visionScore,
-  damage_taken: (row) => row.damageTaken,
-  total_damage_dealt: (row) => row.totalDamageDealt,
-  wards_placed: (row) => row.wardsPlaced,
-  multikills: (row) => row.multikills,
-  avg_game_duration: (row) =>
-    row.games === 0 ? 0 : row.durationSeconds / row.games / 60,
-  cs_per_minute: (row) =>
-    row.timePlayedSeconds === 0
-      ? 0
-      : row.creepScore / (row.timePlayedSeconds / 60),
-  score: (row) => row.games,
-  early_surrenders: (row) => row.earlySurrenders,
-  early_surrender_rate: (row) =>
-    row.games === 0 ? 0 : row.earlySurrenders / row.games,
-  lane_minions: (row) => row.laneMinions,
-  neutral_minions: (row) => row.neutralMinions,
-  gold_spent: (row) => row.goldSpent,
-  damage_mitigated: (row) => row.damageMitigated,
-  damage_to_objectives: (row) => row.damageToObjectives,
-  damage_to_turrets: (row) => row.damageToTurrets,
-  healing: (row) => row.healing,
-  teammate_healing: (row) => row.teammateHealing,
-  wards_killed: (row) => row.wardsKilled,
-  control_wards_bought: (row) => row.controlWardsBought,
-  detector_wards_placed: (row) => row.detectorWardsPlaced,
-  double_kills: (row) => row.doubleKills,
-  triple_kills: (row) => row.tripleKills,
-  quadra_kills: (row) => row.quadraKills,
-  penta_kills: (row) => row.pentaKills,
-  largest_multikill: (row) => row.largestMultikill,
-  killing_sprees: (row) => row.killingSprees,
-  first_bloods: (row) => row.firstBloods,
-  first_blood_rate: (row) =>
-    row.games === 0 ? 0 : row.firstBloods / row.games,
-  avg_champion_level: (row) =>
-    row.participantRows === 0
-      ? 0
-      : row.championLevelTotal / row.participantRows,
-  avg_champion_experience: (row) =>
-    row.participantRows === 0
-      ? 0
-      : row.championExperienceTotal / row.participantRows,
-  time_dead_seconds: (row) => row.timeDeadSeconds,
-  longest_life_seconds: (row) => row.longestLifeSeconds,
-  cc_time_seconds: (row) => row.ccTimeSeconds,
-  turret_kills: (row) => row.turretKills,
-  inhibitor_kills: (row) => row.inhibitorKills,
-  dragon_kills: (row) => row.dragonKills,
-  baron_kills: (row) => row.baronKills,
-  arena_games: (row) => row.arenaRows,
-  average_placement: (row) =>
-    row.arenaRows === 0 ? 0 : row.placementSum / row.arenaRows,
-  top_two_rate: (row) =>
-    row.arenaRows === 0 ? 0 : row.topTwoPlacements / row.arenaRows,
-  first_place_rate: (row) =>
-    row.arenaRows === 0 ? 0 : row.firstPlaceFinishes / row.arenaRows,
-};
-
-export function metricValue(row: AggregateRow, metric: ReportMetric): number {
-  return METRIC_VALUES[metric](row);
-}
-
-export function evaluateExpression(
-  row: AggregateRow,
-  expression: ReportExpression,
-): number | null {
-  if (expression.kind === "metric") {
-    return metricValue(row, expression.metric);
-  }
-  if (expression.kind === "number") {
-    return expression.value;
-  }
-  if (expression.kind === "binary") {
-    return evaluateBinaryExpression(row, expression);
-  }
-  return evaluateFunctionExpression(row, expression);
-}
-
-function evaluateBinaryExpression(
-  row: AggregateRow,
-  expression: Extract<ReportExpression, { kind: "binary" }>,
-): number | null {
-  const left = evaluateExpression(row, expression.left);
-  const right = evaluateExpression(row, expression.right);
-  if (left === null || right === null) return null;
-  switch (expression.operator) {
-    case "+":
-      return left + right;
-    case "-":
-      return left - right;
-    case "*":
-      return left * right;
-    case "/":
-      return right === 0 ? null : left / right;
-  }
-}
-
-function evaluateFunctionExpression(
-  row: AggregateRow,
-  expression: Extract<ReportExpression, { kind: "function" }>,
-): number | null {
-  const values = expression.arguments.map((argument) =>
-    evaluateExpression(row, argument),
-  );
-  if (expression.name === "coalesce") {
-    return values[0] ?? values[1] ?? null;
-  }
-  const first = values[0];
-  if (first === null || first === undefined) return null;
-  if (expression.name === "per_game") {
-    return row.games === 0 ? null : first / row.games;
-  }
-  if (expression.name === "per_minute") {
-    return row.timePlayedSeconds === 0
-      ? null
-      : first / (row.timePlayedSeconds / 60);
-  }
-  const precision = values[1] ?? 0;
-  if (!Number.isInteger(precision) || precision < 0 || precision > 10) {
-    throw new Error("round precision must be an integer from 0 to 10.");
-  }
-  const scale = 10 ** precision;
-  return Math.round(first * scale) / scale;
-}
-
-function matchesHaving(row: AggregateRow, plan: ReportQueryPlan): boolean {
-  return plan.having.every((clause) => {
-    const item = plan.selectItems.find(
-      (candidate) => candidate.key === clause.key,
-    );
-    if (item === undefined) {
-      throw new Error(`HAVING target "${clause.key}" is not a SELECT output.`);
-    }
-    const value = evaluateExpression(row, item.expression);
-    if (value === null) return false;
-    if (clause.operator === "=") return value === clause.value;
-    if (clause.operator === "!=") return value !== clause.value;
-    if (clause.operator === "<") return value < clause.value;
-    if (clause.operator === "<=") return value <= clause.value;
-    if (clause.operator === ">") return value > clause.value;
-    return value >= clause.value;
-  });
 }

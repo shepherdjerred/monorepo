@@ -13,13 +13,25 @@ import {
 } from "#src/testing/test-ids.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
+import {
+  executeReportQuery,
+  type ReportResultRow,
+} from "#src/reports/query-engine.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 
 const { prisma } = createTestDatabase("report-query-engine-test");
 const serverId = testGuildId("919191");
 const now = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));
 const lakeDir = resolveLakeDir();
+const BOUND = "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY";
+
+/** The plain (column, value) pairs, without the evidence a row also carries. */
+function valuesOf(row: ReportResultRow | undefined) {
+  return (row?.values ?? []).map((value) => ({
+    column: value.column,
+    value: value.value,
+  }));
+}
 
 function temporalMatch(matchId: string, date: string, win: boolean) {
   return {
@@ -48,7 +60,7 @@ afterAll(async () => {
 });
 
 describe("executeReportQuery", () => {
-  test("runs a SQL-ish leaderboard query from the report lake", async () => {
+  test("runs a leaderboard query from the report lake", async () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
@@ -98,11 +110,12 @@ describe("executeReportQuery", () => {
       prisma,
       scope: guildScope(serverId),
       queryText: `
-        SELECT player, games, surrenders, surrender_rate
+        SELECT COUNT(*) AS games,
+               COUNT(*) FILTER (WHERE surrendered) AS surrenders,
+               AVG(surrendered::INT) AS surrender_rate
         FROM match_participants
-        WHERE queue IN ('solo')
+        WHERE queue IN ('solo') AND ${BOUND}
         GROUP BY player
-        DURING LAST 30 DAYS
         ORDER BY surrender_rate DESC
         LIMIT 10
       `,
@@ -118,11 +131,15 @@ describe("executeReportQuery", () => {
     ]);
     expect(result.rows).toHaveLength(2);
     expect(result.rows[0]?.label).toBe("First Player");
-    expect(result.rows[0]?.values).toEqual([
+    expect(valuesOf(result.rows[0])).toEqual([
       { column: "games", value: 2 },
       { column: "surrenders", value: 2 },
       { column: "surrender_rate", value: 1 },
     ]);
+    // A rate output earns a Wilson interval from its own successes/trials.
+    expect(
+      result.rows[0]?.values.find((value) => value.column === "surrender_rate"),
+    ).toMatchObject({ sampleSize: 2, successes: 2 });
   });
 
   test("uses the row limit declared in ScoutQL", async () => {
@@ -161,8 +178,7 @@ describe("executeReportQuery", () => {
     const result = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
-      queryText:
-        "SELECT player, games, kills FROM match_participants GROUP BY player DURING LAST 30 DAYS ORDER BY kills DESC LIMIT 1",
+      queryText: `SELECT SUM(kills) AS kills FROM match_participants WHERE ${BOUND} GROUP BY player ORDER BY kills DESC LIMIT 1`,
       now,
     });
 
@@ -170,55 +186,38 @@ describe("executeReportQuery", () => {
     expect(result.rows[0]?.label).toBe("First Player");
   });
 
-  test("runs player pair reports from the report lake", async () => {
+  test("computes percentiles and spread in SQL", async () => {
     await writeTestLake(lakeDir, {
       serverId,
-      matchFacts: [
-        {
-          playerId: 1,
-          playerAlias: "First Player",
-          matchId: "NA1_pair_1",
-          puuid: testPuuid("report-pair-1"),
-          queue: "solo",
-          win: true,
-          surrendered: false,
-          kills: 2,
-          deaths: 1,
-          assists: 10,
-          teamId: 100,
-          gameCreationAt: now,
-        },
-        {
-          playerId: 2,
-          playerAlias: "Second Player",
-          matchId: "NA1_pair_1",
-          puuid: testPuuid("report-pair-2"),
-          queue: "solo",
-          win: true,
-          surrendered: false,
-          kills: 4,
-          deaths: 2,
-          assists: 6,
-          teamId: 100,
-          gameCreationAt: now,
-        },
-      ],
+      matchFacts: [2, 3, 7, 12, 20].map((kills, index) => ({
+        playerId: 1,
+        playerAlias: "First Player",
+        matchId: `NA1_dist_${index.toString()}`,
+        puuid: testPuuid("report-dist"),
+        queue: "solo",
+        win: true,
+        surrendered: false,
+        kills,
+        deaths: 1,
+        assists: 1,
+        gameCreationAt: now,
+      })),
     });
 
     const result = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT pair, games, wins, win_rate FROM player_pairs WHERE queue IN ('solo') GROUP BY pair DURING LAST 30 DAYS ORDER BY win_rate DESC LIMIT 10",
+        "SELECT MEDIAN(kills) AS med, QUANTILE_CONT(kills, 0.9) AS p90, " +
+        "COUNT(DISTINCT kills) AS distinct_kills FROM match_participants " +
+        `WHERE ${BOUND} GROUP BY player`,
       now,
     });
 
-    expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]?.label).toBe("First Player + Second Player");
-    expect(result.rows[0]?.values).toEqual([
-      { column: "games", value: 1 },
-      { column: "wins", value: 1 },
-      { column: "win_rate", value: 1 },
+    expect(valuesOf(result.rows[0])).toEqual([
+      { column: "med", value: 7 },
+      { column: "p90", value: 16.8 },
+      { column: "distinct_kills", value: 5 },
     ]);
   });
 
@@ -241,18 +240,40 @@ describe("executeReportQuery", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT player, prematches FROM prematch_participants WHERE queue IN ('solo') GROUP BY player DURING LAST 30 DAYS ORDER BY prematches DESC",
+        "SELECT COUNT(*) AS prematches FROM prematch_participants " +
+        "WHERE queue IN ('solo') AND observed_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY " +
+        "GROUP BY player ORDER BY prematches DESC",
       now,
     });
 
-    expect(result.rows[0]?.values).toEqual([
+    expect(valuesOf(result.rows[0])).toEqual([
       { column: "prematches", value: 1 },
     ]);
   });
+
+  test("an unbounded query covers all ingested history", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        temporalMatch("NA1_ancient", "2019-01-01T12:00:00.000Z", true),
+        temporalMatch("NA1_recent", "2026-05-16T12:00:00.000Z", true),
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      scope: guildScope(serverId),
+      queryText:
+        "SELECT COUNT(*) AS games FROM match_participants GROUP BY player",
+      now,
+    });
+
+    expect(valuesOf(result.rows[0])).toEqual([{ column: "games", value: 2 }]);
+  });
 });
 
-describe("executeReportQuery temporal prematches", () => {
-  test("runs temporal prematch reports from the report lake", async () => {
+describe("executeReportQuery temporal buckets", () => {
+  test("buckets prematch observations by day", async () => {
     await writeTestLake(lakeDir, {
       serverId,
       prematchFacts: [
@@ -271,20 +292,87 @@ describe("executeReportQuery temporal prematches", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT prematches FROM prematch_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC",
+        "SELECT DATE_TRUNC('day', observed_at) AS day, COUNT(*) AS prematches " +
+        "FROM prematch_participants " +
+        "WHERE observed_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY " +
+        "GROUP BY DATE_TRUNC('day', observed_at) ORDER BY day ASC",
       now,
     });
 
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]?.values).toEqual([
-      { column: "prematches", value: 1 },
-    ]);
+    expect(
+      result.rows[0]?.values.find((value) => value.column === "prematches")
+        ?.value,
+    ).toBe(1);
     expect(result.visualization?.bucket).toBe("day");
+  });
+
+  test("rolls a ratio output using its own numerator and denominator", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        {
+          ...temporalMatch("NA1_ratio_1", "2026-05-16T12:00:00.000Z", true),
+          kills: 10,
+          deaths: 1,
+        },
+        {
+          ...temporalMatch("NA1_ratio_2", "2026-05-17T12:00:00.000Z", false),
+          kills: 10,
+          deaths: 10,
+        },
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      scope: guildScope(serverId),
+      queryText:
+        "SELECT DATE_TRUNC('day', game_creation_at) AS day, " +
+        "SUM(kills) / NULLIF(SUM(deaths), 0) AS kd FROM match_participants " +
+        "WHERE game_creation_at::DATE BETWEEN '2026-05-16' AND '2026-05-17' " +
+        "GROUP BY DATE_TRUNC('day', game_creation_at) ORDER BY day ASC " +
+        "RENDER line_chart WITH (y = kd, rolling = 2)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[0]?.value).toBeNull();
+    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
+      value: 20 / 11,
+      evidence: { numerator: 20, denominator: 11 },
+    });
+  });
+
+  test("keeps signed evidence for a calculated ratio", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        temporalMatch("NA1_signed_ratio", "2026-05-16T12:00:00.000Z", false),
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      scope: guildScope(serverId),
+      queryText:
+        "SELECT DATE_TRUNC('day', game_creation_at) AS day, " +
+        "(SUM(kills) - SUM(deaths)) / NULLIF(COUNT(*), 0) AS differential " +
+        "FROM match_participants " +
+        "WHERE game_creation_at::DATE BETWEEN '2026-05-16' AND '2026-05-16' " +
+        "GROUP BY DATE_TRUNC('day', game_creation_at) ORDER BY day ASC " +
+        "RENDER line_chart WITH (y = differential)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[0]).toMatchObject({
+      value: -3,
+      evidence: { numerator: -3, denominator: 1 },
+    });
   });
 });
 
-describe("executeReportQuery temporal comparisons", () => {
-  test("aligns sparse baselines by relative bucket and fills additive gaps", async () => {
+describe("executeReportQuery compare = previous_period", () => {
+  test("aligns the preceding period bucket by bucket and fills additive gaps", async () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
@@ -298,229 +386,218 @@ describe("executeReportQuery temporal comparisons", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT games, win_rate FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY COMPARE TO BETWEEN '2026-05-14' AND '2026-05-15' IN TIME ZONE 'UTC' ORDER BY label ASC",
+        "SELECT DATE_TRUNC('day', game_creation_at) AS day, COUNT(*) AS games, " +
+        "AVG(win::INT) AS win_rate FROM match_participants " +
+        "WHERE game_creation_at::DATE BETWEEN '2026-05-16' AND '2026-05-17' " +
+        "GROUP BY DATE_TRUNC('day', game_creation_at) ORDER BY day ASC " +
+        "RENDER line_chart WITH (y = (games, win_rate), compare = previous_period)",
       now,
     });
 
-    expect(result.rows[0]?.dimensions.at(-1)).toBe("2026-05-16");
-    expect(result.rows[0]?.values).toEqual([
-      {
-        column: "games",
-        value: 1,
-        comparisonValue: 0,
-        absoluteDelta: 1,
-        percentageDelta: null,
-        comparisonSampleSize: 0,
-        comparisonConfidenceInterval: null,
-      },
-      {
-        column: "win_rate",
-        value: 0,
-        comparisonValue: null,
-        absoluteDelta: null,
-        percentageDelta: null,
-        comparisonSampleSize: 0,
-        comparisonConfidenceInterval: null,
-      },
-    ]);
-    expect(result.rows[1]?.dimensions.at(-1)).toBe("2026-05-17");
+    const byDay = new Map(result.rows.map((row) => [row.label, row]));
+    // 2026-05-16 pairs with 2026-05-14, which has no games at all.
     expect(
-      result.rows[1]?.values.find((value) => value.column === "games")
-        ?.comparisonValue,
-    ).toBe(1);
+      byDay.get("2026-05-16")?.values.find((v) => v.column === "games"),
+    ).toMatchObject({
+      value: 1,
+      comparisonValue: 0,
+      absoluteDelta: 1,
+      percentageDelta: null,
+      comparisonSampleSize: 0,
+    });
+    expect(
+      byDay.get("2026-05-16")?.values.find((v) => v.column === "win_rate"),
+    ).toMatchObject({ value: 0, comparisonValue: null });
+    // 2026-05-17 pairs with 2026-05-15, which has one win.
+    expect(
+      byDay.get("2026-05-17")?.values.find((v) => v.column === "games"),
+    ).toMatchObject({ value: 1, comparisonValue: 1 });
+    expect(
+      byDay.get("2026-05-17")?.values.find((v) => v.column === "win_rate"),
+    ).toMatchObject({ value: 1, comparisonValue: 1, comparisonSuccesses: 1 });
+    // Both periods were scanned.
+    expect(result.rowsScanned).toBe(3);
+    expect(result.visualization?.temporal?.comparison).toEqual({
+      kind: "previous_period",
+    });
   });
 
-  test("rolls ratio metrics using their underlying denominators", async () => {
+  // The analyzer refuses this at compile; the engine asserts it again, because
+  // executing it would silently compare against an arbitrary range.
+  test("refuses a comparison with no time axis to align on", async () => {
+    await expect(
+      executeReportQuery({
+        prisma,
+        scope: guildScope(serverId),
+        queryText:
+          `SELECT COUNT(*) AS games FROM match_participants WHERE ${BOUND} ` +
+          "GROUP BY player RENDER line_chart WITH (y = games, compare = previous_period)",
+        now,
+      }),
+    ).rejects.toThrow(/previous_period/u);
+  });
+});
+
+describe("executeReportQuery distribution renders", () => {
+  test("HISTOGRAM buckets game length into one ascending series", async () => {
     await writeTestLake(lakeDir, {
       serverId,
-      matchFacts: [
-        temporalMatch("NA1_ratio_1", "2026-05-16T12:00:00.000Z", false),
-        temporalMatch("NA1_ratio_2", "2026-05-17T12:00:00.000Z", true),
-      ],
+      matchFacts: [400, 500, 700, 1300].map((duration, index) => ({
+        playerId: 1,
+        playerAlias: "First Player",
+        matchId: `NA1_hist_${index.toString()}`,
+        puuid: testPuuid("report-hist"),
+        queue: "solo",
+        win: true,
+        surrendered: false,
+        kills: 1,
+        deaths: 1,
+        assists: 1,
+        gameDurationSeconds: duration,
+        timePlayedSeconds: duration,
+        gameCreationAt: now,
+      })),
     });
 
     const result = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT kda FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kda, rolling = 2)",
+        "SELECT FLOOR(game_duration_seconds / 300) * 300 AS bucket, COUNT(*) AS games " +
+        `FROM match_participants WHERE ${BOUND} ` +
+        "GROUP BY FLOOR(game_duration_seconds / 300) * 300 RENDER histogram",
       now,
     });
 
-    expect(result.visualization?.series[0]?.points[0]?.value).toBeNull();
-    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
-      value: 3,
-      evidence: { sampleSize: 2, numerator: 15, denominator: 5 },
-    });
+    expect(result.visualization?.series).toHaveLength(1);
+    expect(
+      result.visualization?.series[0]?.points.map((point) => [
+        point.label,
+        point.value,
+      ]),
+    ).toEqual([
+      ["300–599", 2],
+      ["600–899", 1],
+      ["1200–1499", 1],
+    ]);
   });
 
-  test("rolls calculated ratios using their expression denominators", async () => {
+  test("BOX_PLOT emits five series in encoding order", async () => {
     await writeTestLake(lakeDir, {
       serverId,
-      matchFacts: [
-        {
-          ...temporalMatch(
-            "NA1_calculated_ratio_1",
-            "2026-05-16T12:00:00.000Z",
-            true,
-          ),
-          kills: 10,
-          deaths: 1,
-        },
-        {
-          ...temporalMatch(
-            "NA1_calculated_ratio_2",
-            "2026-05-17T12:00:00.000Z",
-            false,
-          ),
-          kills: 10,
-          deaths: 10,
-        },
-      ],
+      matchFacts: [0, 2, 4, 7, 12].map((kills, index) => ({
+        playerId: 1,
+        playerAlias: "First Player",
+        matchId: `NA1_box_${index.toString()}`,
+        puuid: testPuuid("report-box"),
+        queue: "solo",
+        win: true,
+        surrendered: false,
+        kills,
+        deaths: 1,
+        assists: 1,
+        championName: "Ahri",
+        championId: 103,
+        gameCreationAt: now,
+      })),
     });
 
     const result = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT kills / deaths AS kd FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kd, rolling = 2)",
+        "SELECT MIN(kills) AS low, QUANTILE_CONT(kills, 0.25) AS q1, " +
+        "MEDIAN(kills) AS med, QUANTILE_CONT(kills, 0.75) AS q3, MAX(kills) AS high " +
+        `FROM match_participants WHERE ${BOUND} GROUP BY champion ` +
+        "RENDER box_plot WITH (y = (low, q1, med, q3, high))",
       now,
     });
 
-    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
-      value: 20 / 11,
-      evidence: { sampleSize: 2, numerator: 20, denominator: 11 },
-    });
-  });
-
-  test("rolls per-minute expressions using time played", async () => {
-    await writeTestLake(lakeDir, {
-      serverId,
-      matchFacts: [
-        {
-          ...temporalMatch(
-            "NA1_per_minute_1",
-            "2026-05-16T12:00:00.000Z",
-            true,
-          ),
-          kills: 10,
-          gameDurationSeconds: 600,
-          timePlayedSeconds: 600,
-        },
-        {
-          ...temporalMatch(
-            "NA1_per_minute_2",
-            "2026-05-17T12:00:00.000Z",
-            false,
-          ),
-          kills: 10,
-          gameDurationSeconds: 3600,
-          timePlayedSeconds: 3600,
-        },
-      ],
-    });
-
-    const result = await executeReportQuery({
-      prisma,
-      scope: guildScope(serverId),
-      queryText:
-        "SELECT per_minute(kills) AS kpm FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kpm, rolling = 2)",
-      now,
-    });
-
-    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
-      value: 20 / 70,
-      evidence: { sampleSize: 2, numerator: 20, denominator: 70 },
-    });
-  });
-
-  test("preserves signed evidence for calculated ratios", async () => {
-    await writeTestLake(lakeDir, {
-      serverId,
-      matchFacts: [
-        temporalMatch("NA1_signed_ratio", "2026-05-16T12:00:00.000Z", false),
-      ],
-    });
-
-    const result = await executeReportQuery({
-      prisma,
-      scope: guildScope(serverId),
-      queryText:
-        "SELECT (kills - deaths) / games AS differential FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-16' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = differential)",
-      now,
-    });
-
-    expect(result.visualization?.series[0]?.points[0]).toMatchObject({
-      value: -3,
-      evidence: { sampleSize: 1, numerator: -3, denominator: 1 },
-    });
+    expect(result.visualization?.series.map((series) => series.metric)).toEqual(
+      ["low", "q1", "med", "q3", "high"],
+    );
+    expect(
+      result.visualization?.series.map((series) => series.points[0]?.value),
+    ).toEqual([0, 2, 4, 7, 12]);
+    expect(
+      result.visualization?.series.every(
+        (series) => series.points[0]?.key === "Ahri",
+      ),
+    ).toBe(true);
   });
 });
 
 describe("executeReportQuery player groups", () => {
-  test("group(2) matches the legacy pair query on the same lake", async () => {
-    const matchFacts = [
-      {
-        playerId: 1,
-        playerAlias: "First Player",
-        matchId: "NA1_group_eq",
-        puuid: testPuuid("report-group-1"),
-        queue: "solo",
-        win: true,
-        surrendered: false,
-        kills: 2,
-        deaths: 1,
-        assists: 10,
-        teamId: 100,
-        gameCreationAt: now,
-      },
-      {
-        playerId: 2,
-        playerAlias: "Second Player",
-        matchId: "NA1_group_eq",
-        puuid: testPuuid("report-group-2"),
-        queue: "solo",
-        win: true,
-        surrendered: false,
-        kills: 4,
-        deaths: 2,
-        assists: 6,
-        teamId: 100,
-        gameCreationAt: now,
-      },
-    ];
-    await writeTestLake(lakeDir, { serverId, matchFacts });
+  test("group(2) folds a duo's counters and carries the game's outcome", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        {
+          playerId: 1,
+          playerAlias: "First Player",
+          matchId: "NA1_group_eq",
+          puuid: testPuuid("report-group-1"),
+          queue: "solo",
+          win: true,
+          surrendered: false,
+          kills: 2,
+          deaths: 1,
+          assists: 10,
+          teamId: 100,
+          gameCreationAt: now,
+        },
+        {
+          playerId: 2,
+          playerAlias: "Second Player",
+          matchId: "NA1_group_eq",
+          puuid: testPuuid("report-group-2"),
+          queue: "solo",
+          win: true,
+          surrendered: false,
+          kills: 4,
+          deaths: 2,
+          assists: 6,
+          teamId: 100,
+          gameCreationAt: now,
+        },
+      ],
+    });
 
-    const base = {
+    const result = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
+      queryText:
+        "SELECT COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins, " +
+        "SUM(kills) AS kills, AVG(win::INT) AS win_rate FROM player_groups " +
+        `WHERE ${BOUND} GROUP BY group(2)`,
       now,
-    };
-    const legacy = await executeReportQuery({
-      ...base,
-      queryText:
-        "SELECT pair, games, wins, kills, win_rate FROM player_pairs GROUP BY pair DURING LAST 30 DAYS",
     });
-    const modern = await executeReportQuery({
-      ...base,
-      queryText:
-        "SELECT group, games, wins, kills, win_rate FROM player_groups GROUP BY group(2) DURING LAST 30 DAYS",
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]?.label).toBe("First Player + Second Player");
+    expect(valuesOf(result.rows[0])).toEqual([
+      { column: "games", value: 1 },
+      { column: "wins", value: 1 },
+      { column: "kills", value: 6 },
+      { column: "win_rate", value: 1 },
+    ]);
+    expect(result.rows[0]?.mentionIdentity).toEqual({
+      kind: "group",
+      members: [
+        { playerId: 1, alias: "First Player" },
+        { playerId: 2, alias: "Second Player" },
+      ],
     });
-    expect(modern.rows).toEqual(legacy.rows);
-    expect(modern.rows[0]?.label).toBe("First Player + Second Player");
-    expect(
-      modern.rows[0]?.values.find((value) => value.column === "kills")?.value,
-    ).toBe(6);
   });
 
-  test("group(all) on a trio yields pairs and the trio, all-win semantics", async () => {
+  test("group(all) on a trio yields pairs and the trio", async () => {
     const trio = [1, 2, 3].map((playerId) => ({
       playerId,
       playerAlias: `Player ${playerId.toString()}`,
       matchId: "NA1_group_trio",
       puuid: testPuuid(`report-trio-${playerId.toString()}`),
       queue: "solo",
-      win: playerId !== 3, // one loser breaks every group containing them
+      win: true,
       surrendered: false,
       kills: playerId,
       deaths: 1,
@@ -534,7 +611,8 @@ describe("executeReportQuery player groups", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT group, games, wins FROM player_groups GROUP BY group(all) DURING LAST 30 DAYS ORDER BY label ASC",
+        "SELECT COUNT(*) AS games, SUM(kills) AS kills FROM player_groups " +
+        `WHERE ${BOUND} GROUP BY group(all)`,
       now,
     });
 
@@ -544,20 +622,19 @@ describe("executeReportQuery player groups", () => {
       "Player 1 + Player 3",
       "Player 2 + Player 3",
     ]);
-    const winsByLabel = new Map(
+    const killsByLabel = new Map(
       result.rows.map((row) => [
         row.label,
-        row.values.find((value) => value.column === "wins")?.value,
+        row.values.find((value) => value.column === "kills")?.value,
       ]),
     );
-    expect(winsByLabel.get("Player 1 + Player 2")).toBe(1);
-    expect(winsByLabel.get("Player 1 + Player 3")).toBe(0);
-    expect(winsByLabel.get("Player 1 + Player 2 + Player 3")).toBe(0);
+    expect(killsByLabel.get("Player 1 + Player 2")).toBe(3);
+    expect(killsByLabel.get("Player 1 + Player 2 + Player 3")).toBe(6);
   });
 
   test("Arena groups scope to the subteam, never the whole team side", async () => {
-    // Two duos share team side 100 in one Arena match — the old pair engine
-    // wrongly joined all four; subteam scoping must keep the duos apart.
+    // Two duos share team side 100 in one Arena match — subteam scoping must
+    // keep the duos apart rather than reporting a four-stack.
     const arenaFacts = [
       { playerId: 1, subteam: 1 },
       { playerId: 2, subteam: 1 },
@@ -584,7 +661,9 @@ describe("executeReportQuery player groups", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT group, games, wins FROM player_groups WHERE queue IN ('arena') GROUP BY group(all) DURING LAST 30 DAYS ORDER BY label ASC",
+        "SELECT COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins " +
+        `FROM player_groups WHERE queue IN ('arena') AND ${BOUND} ` +
+        "GROUP BY group(all)",
       now,
     });
 
@@ -592,11 +671,19 @@ describe("executeReportQuery player groups", () => {
       "Arena 1 + Arena 2",
       "Arena 3 + Arena 4",
     ]);
+    const winsByLabel = new Map(
+      result.rows.map((row) => [
+        row.label,
+        row.values.find((value) => value.column === "wins")?.value,
+      ]),
+    );
+    expect(winsByLabel.get("Arena 1 + Arena 2")).toBe(1);
+    expect(winsByLabel.get("Arena 3 + Arena 4")).toBe(0);
   });
 });
 
 describe("executeReportQuery competition rank reports", () => {
-  test("formats highest-rank competition report scores as ranks", async () => {
+  test("renders a highest-rank competition score as a rank name", async () => {
     const player = await prisma.player.create({
       data: {
         discordId: testAccountId("919191001"),
@@ -667,16 +754,16 @@ describe("executeReportQuery competition rank reports", () => {
     const result = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
-      queryText: `SELECT player, score FROM competition_rank WHERE competition_id = ${competition.id.toString()} GROUP BY player DURING ALL TIME ORDER BY score DESC`,
+      queryText: `SELECT MAX(score) AS score FROM competition_rank WHERE competition_id = ${competition.id.toString()} GROUP BY player ORDER BY score DESC`,
       sourceCompetitionId: competition.id,
       now: new Date("2026-06-01T00:00:00Z"),
     });
 
-    expect(result.columns).toEqual(["label", "rank"]);
+    expect(result.columns).toEqual(["label", "score"]);
     expect(result.rows).toHaveLength(1);
     expect(result.rows[0]?.label).toBe("Ranked Player");
-    expect(result.rows[0]?.values).toEqual([
-      { column: "rank", value: "Gold II, 75LP" },
+    expect(valuesOf(result.rows[0])).toEqual([
+      { column: "score", value: "Gold II, 75LP" },
     ]);
   });
 });
