@@ -9,7 +9,6 @@ import {
   diag,
   DiagLogLevel,
   trace,
-  context,
   type DiagLogger,
   type Tracer,
 } from "@opentelemetry/api";
@@ -124,18 +123,10 @@ export function initializeTracing(): void {
 
   // AsyncLocalStorage-backed context manager so OTel active span propagates
   // across awaits — required for the LLM wrappers to see the current span.
-  // `setGlobalContextManager` is one-shot and returns false when another
-  // manager already holds the global: ignoring that leaves this manager
-  // enabled but unregistered, so every wrapper silently sees no active span
-  // while looking correctly configured.
+  // Pass it to NodeSDK rather than registering it here: NodeSDK owns the
+  // global provider registration, and registering twice produces a misleading
+  // duplicate-registration diagnostic during startup.
   const contextManager = new AsyncLocalStorageContextManager();
-  contextManager.enable();
-  if (!context.setGlobalContextManager(contextManager)) {
-    contextManager.disable();
-    throw new Error(
-      "OpenTelemetry context manager is already registered; tracing must own it to propagate spans across awaits",
-    );
-  }
 
   const exporter = new LoggingSpanExporter(
     new OTLPTraceExporter({
@@ -158,6 +149,7 @@ export function initializeTracing(): void {
   });
 
   sdk = new NodeSDK({
+    contextManager,
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
