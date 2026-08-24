@@ -1,8 +1,9 @@
 import { match } from "ts-pattern";
-import type {
-  ReportDisplayKind,
-  ReportResultColumn,
-  ReportValueFormat,
+import {
+  UNGROUPED_LABEL_COLUMN_LABEL,
+  type ReportDisplayKind,
+  type ReportResultColumn,
+  type ReportValueFormat,
 } from "@scout-for-lol/data";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 
@@ -73,7 +74,7 @@ export function columnLabel(column: string): string {
 export function planLabelColumnLabel(plan: ScoutQlPlan): string {
   const names = planGroupingNames(plan);
   return names.length === 0
-    ? "Label"
+    ? UNGROUPED_LABEL_COLUMN_LABEL
     : names.map((name) => columnLabel(name)).join(" • ");
 }
 

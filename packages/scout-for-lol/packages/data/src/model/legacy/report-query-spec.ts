@@ -4,7 +4,7 @@ import {
   REPORT_DEFAULT_MAX_ROWS,
   ReportRenderSpecSchema,
 } from "#src/model/report.ts";
-import { ReportQueryWindowSchema } from "#src/model/report-query-window.ts";
+import { ReportQueryWindowSchema } from "#src/model/legacy/report-query-window.ts";
 import { TemporalAnalysisSpecSchema } from "#src/model/temporal-analysis.ts";
 
 // ── Report query language: schema enums + query plan ─────────────────────────

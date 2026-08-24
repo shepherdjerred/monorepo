@@ -9,12 +9,14 @@ import {
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { visualizationSnapshotToImage } from "@scout-for-lol/report";
 import {
-  formatAbsoluteDelta,
+  formatSeriesAbsoluteDelta,
+  formatSeriesValue,
+  visualizationSnapshotToImage,
+} from "@scout-for-lol/report";
+import {
   formatNativeSeriesValue,
   formatPreviewValueWithEvidence,
-  formatSeriesValue,
   displayWidth,
   padDisplayWidth,
   truncateNativeCell,
@@ -192,7 +194,7 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
             snapshot,
             series,
             point.comparisonValue ?? null,
-          )} · Δ ${formatAbsoluteDelta(
+          )} · Δ ${formatSeriesAbsoluteDelta(
             snapshot,
             series,
             point.absoluteDelta ?? null,

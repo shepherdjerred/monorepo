@@ -7,7 +7,7 @@ import type {
   ReportQuerySpan,
   ReportWhereClause,
   ReportFilterValue,
-} from "#src/model/report-query-spec.ts";
+} from "#src/model/legacy/report-query-spec.ts";
 import {
   And,
   Analyze,
@@ -36,11 +36,11 @@ import {
   tokenizeReportQuery,
   tokenSpan,
   Where,
-} from "#src/model/report-query-lexer.ts";
+} from "#src/model/legacy/report-query-lexer.ts";
 import {
   matchChampionClause,
   matchPlayerClause,
-} from "#src/model/report-query-call-forms.ts";
+} from "#src/model/legacy/report-query-call-forms.ts";
 import {
   firstPositive,
   indexOfGroupBy,
@@ -53,8 +53,8 @@ import {
   sliceText,
   tokenItem,
   wholeSpan,
-} from "#src/model/report-query-parser-helpers.ts";
-import { parseReportStringLiteral } from "#src/model/report-query-string-literal.ts";
+} from "#src/model/legacy/report-query-parser-helpers.ts";
+import { parseReportStringLiteral } from "#src/model/legacy/report-query-string-literal.ts";
 
 const INVALID_QUERY_MESSAGE =
   "Invalid report query. Expected: SELECT <metrics> FROM <source> [WHERE queue IN (...)] GROUP BY <field> [ORDER BY <metric> DESC] [LIMIT n]";

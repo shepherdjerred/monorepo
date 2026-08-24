@@ -2,15 +2,15 @@ import type { IToken } from "chevrotain";
 import type {
   ReportQuerySpan,
   ReportWhereClause,
-} from "#src/model/report-query-spec.ts";
+} from "#src/model/legacy/report-query-spec.ts";
 import {
   Equals,
   LParen,
   RParen,
   StringLiteral,
-} from "#src/model/report-query-lexer.ts";
-import { normalize } from "#src/model/report-query-parser-helpers.ts";
-import { parseReportStringLiteral } from "#src/model/report-query-string-literal.ts";
+} from "#src/model/legacy/report-query-lexer.ts";
+import { normalize } from "#src/model/legacy/report-query-parser-helpers.ts";
+import { parseReportStringLiteral } from "#src/model/legacy/report-query-string-literal.ts";
 
 /**
  * The two `field = name('…')` call forms.

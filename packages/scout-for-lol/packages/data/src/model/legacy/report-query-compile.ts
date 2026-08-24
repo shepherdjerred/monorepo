@@ -14,32 +14,32 @@ import {
   type ReportQueryPlan,
   type ReportSelectItem,
   parseReportQueryPlan,
-} from "#src/model/report-query-spec.ts";
+} from "#src/model/legacy/report-query-spec.ts";
 import {
   collectExpressionMetrics,
   isAdditiveReportExpression,
   parseReportSelectItem,
-} from "#src/model/report-query-expression.ts";
-import { parseRenderClause } from "#src/model/report-query-render.ts";
+} from "#src/model/legacy/report-query-expression.ts";
+import { parseRenderClause } from "#src/model/legacy/report-query-render.ts";
 import {
   INVALID_QUERY_MESSAGE,
   parseReportQuery,
-} from "#src/model/report-query-parser.ts";
-import { compileReportWhere } from "#src/model/report-query-where.ts";
+} from "#src/model/legacy/report-query-parser.ts";
+import { compileReportWhere } from "#src/model/legacy/report-query-where.ts";
 import {
   REPORT_WINDOW_REQUIRED_MESSAGE,
   resolveReportQueryWindow,
-} from "#src/model/report-query-window.ts";
+} from "#src/model/legacy/report-query-window.ts";
 import {
   validateSourceFilters,
   validateSourcePlayerRefs,
   validateSourceWindow,
-} from "#src/model/report-query-source-validation.ts";
+} from "#src/model/legacy/report-query-source-validation.ts";
 import {
-  parseTemporalAnalysisClause,
   resolveTemporalBucket,
   temporalWindowDays,
 } from "#src/model/temporal-analysis.ts";
+import { parseTemporalAnalysisClause } from "#src/model/legacy/temporal-analysis-clause.ts";
 
 const PositiveIntSchema = z.coerce.number().int().positive();
 

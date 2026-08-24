@@ -1,7 +1,7 @@
 import type {
   ReportFilter,
   ReportQueryPlan,
-} from "#src/model/report-query-spec.ts";
+} from "#src/model/legacy/report-query-spec.ts";
 
 export function validateSourceFilters(
   source: ReportQueryPlan["source"],

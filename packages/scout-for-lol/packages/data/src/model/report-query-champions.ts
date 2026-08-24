@@ -27,42 +27,11 @@ const champions: ReportChampion[] = Object.values(
 const championByName = new Map(
   champions.map((champion) => [normalizeName(champion.name), champion]),
 );
-const championById = new Map(
-  champions.map((champion) => [champion.id, champion]),
-);
-
-export function reportChampions(): ReportChampion[] {
-  return champions;
-}
 
 export function resolveReportChampion(
   name: string,
 ): ReportChampion | undefined {
   return championByName.get(normalizeName(name));
-}
-
-export function requireReportChampionName(championId: number): string {
-  const champion = championById.get(championId);
-  if (champion === undefined) {
-    throw new Error(`Unknown champion id ${championId.toString()}.`);
-  }
-  return champion.name;
-}
-
-// Champion display names such as Vel'Koz, Kha'Zix, and Cho'Gath contain an
-// apostrophe. Interpolated into a single-quoted `champion('...')` ScoutQL
-// literal, the lexer would tokenize `'Vel'` as a string and `Koz` as a bare
-// identifier, breaking the clause. The lexer accepts double-quoted strings too,
-// and no champion name contains a double quote, so switch delimiters when the
-// name has an apostrophe.
-export function reportChampionLiteral(championId: number): string {
-  const name = requireReportChampionName(championId);
-  if (name.includes('"')) {
-    throw new Error(
-      `Champion name ${name} contains a double quote; cannot build a ScoutQL literal.`,
-    );
-  }
-  return name.includes("'") ? `"${name}"` : `'${name}'`;
 }
 
 export function requireReportChampion(name: string): ReportChampion {

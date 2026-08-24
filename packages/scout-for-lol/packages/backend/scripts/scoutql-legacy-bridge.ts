@@ -1,16 +1,19 @@
-import { compileReportQuery, parseReportQuery } from "@scout-for-lol/data";
+import { parseReportQuery } from "@scout-for-lol/data/model/legacy/report-query-parser.ts";
+import { compileReportQuery } from "@scout-for-lol/data/model/legacy/report-query-compile.ts";
 import type {
   ReportParseResult,
   ReportQueryAst,
   ReportQueryPlan,
-} from "@scout-for-lol/data";
+} from "@scout-for-lol/data/model/legacy/report-query-spec.ts";
 
 // ── The one legacy import site ───────────────────────────────────────────────
 // Every other module in the ScoutQL v2 migration reaches the legacy language
-// through this file. The legacy lexer/parser/compiler are scheduled to move to
-// `data/src/model/legacy/` (importable only by this migration and its tests)
-// and to be deleted one release after production logs a zero-rewrite boot, so
-// the relocation has to be a one-file edit rather than a sweep.
+// through this file. The legacy lexer/parser/compiler live in
+// `data/src/model/legacy/`, are absent from the `@scout-for-lol/data` barrel,
+// and an ESLint `no-restricted-imports` rule (scout-for-lol/eslint.config.ts)
+// admits exactly this file and its tests — so the eventual deletion, one
+// release after production logs a zero-rewrite boot, is `rm -r legacy/` plus a
+// one-file edit rather than a sweep.
 //
 // Nothing here re-exports: the repo's `no-re-exports` rule forbids it, and the
 // wrapper functions are what make the seam real — a direct re-export would let

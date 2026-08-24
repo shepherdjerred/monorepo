@@ -1,6 +1,6 @@
 import {
   formatReportDisplayValue,
-  reportGroupByColumnLabel,
+  UNGROUPED_LABEL_COLUMN_LABEL,
   type ExploreMessage,
 } from "@scout-for-lol/data";
 import { ReportResultTable } from "#src/components/report-result-table.tsx";
@@ -9,11 +9,11 @@ import { ReportResultTable } from "#src/components/report-result-table.tsx";
  * Is this an ungrouped result — one row describing everything, rather than one
  * row that happens to be the only member of a group?
  *
- * `GROUP BY all` labels its dimension column with
- * {@link reportGroupByColumnLabel}`("all")`, so the check is derived from the
- * registry that produces the label rather than from a literal. A grouped query
- * heads that column `Champion` or `Player` and never matches, which is what
- * keeps a single-champion result an ordinary table — its label carries
+ * A query with no GROUP BY heads its dimension column with
+ * {@link UNGROUPED_LABEL_COLUMN_LABEL}, so the check is derived from the same
+ * constant the engine labels it from rather than from a literal. A grouped
+ * query heads that column `Champion` or `Player` and never matches, which is
+ * what keeps a single-champion result an ordinary table — its label carries
  * information, and a stat tile would drop it.
  */
 export function isUngroupedResult(
@@ -23,8 +23,7 @@ export function isUngroupedResult(
     preview.rows.length === 1 &&
     preview.columns.some(
       (column) =>
-        column.key === "label" &&
-        column.label === reportGroupByColumnLabel("all"),
+        column.key === "label" && column.label === UNGROUPED_LABEL_COLUMN_LABEL,
     )
   );
 }

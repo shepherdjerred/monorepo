@@ -8,7 +8,6 @@ import {
   EXPLORE_MAX_TOOL_CALLS,
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
-  formatReportStringLiteral,
   modelSupportsParameter,
   ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
@@ -18,6 +17,7 @@ import {
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/format-expr.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
@@ -257,7 +257,7 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
             found.length === 0
               ? `No player matches "${inputData.query}". Say the data does not cover them rather than guessing at a similar name.`
               : found.length === 1
-                ? `One match. Use player(${formatReportStringLiteral(found[0]?.displayName ?? inputData.query)}) in the query.`
+                ? `One match. Use player(${quoteScoutQlString(found[0]?.displayName ?? inputData.query)}) in the query.`
                 : `${found.length.toString()} people match. Ask which one they meant before querying.`,
         };
       }),

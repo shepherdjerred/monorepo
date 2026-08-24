@@ -1,7 +1,7 @@
 import { match } from "ts-pattern";
 import { z } from "zod";
 import { requireReportChampion } from "#src/model/report-query-champions.ts";
-import { UNSUPPORTED_WHERE_MESSAGE } from "#src/model/report-query-parser.ts";
+import { UNSUPPORTED_WHERE_MESSAGE } from "#src/model/legacy/report-query-parser.ts";
 import {
   ReportFilterFieldSchema,
   ReportFilterOperatorSchema,
@@ -9,7 +9,7 @@ import {
   type ReportFilter,
   type ReportQueryPlan,
   type ReportWhereClause,
-} from "#src/model/report-query-spec.ts";
+} from "#src/model/legacy/report-query-spec.ts";
 
 const PositiveIntSchema = z.coerce.number().int().positive();
 

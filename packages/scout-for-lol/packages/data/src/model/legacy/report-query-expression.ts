@@ -3,8 +3,8 @@ import {
   type ReportMetric,
   ReportMetricSchema,
   type ReportSelectItem,
-} from "#src/model/report-query-spec.ts";
-import { REPORT_METRICS } from "#src/model/report-query-metrics.ts";
+} from "#src/model/legacy/report-query-spec.ts";
+import { REPORT_METRICS } from "#src/model/legacy/report-query-metrics.ts";
 
 type Token =
   | { kind: "number"; value: string }

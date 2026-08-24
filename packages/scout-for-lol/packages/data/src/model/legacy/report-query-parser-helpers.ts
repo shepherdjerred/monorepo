@@ -2,7 +2,7 @@ import type { IToken, TokenType } from "chevrotain";
 import type {
   ReportQueryItem,
   ReportQuerySpan,
-} from "#src/model/report-query-spec.ts";
+} from "#src/model/legacy/report-query-spec.ts";
 import {
   By,
   Comma,
@@ -10,8 +10,8 @@ import {
   LParen,
   RParen,
   tokenSpan,
-} from "#src/model/report-query-lexer.ts";
-import { parseReportStringLiteral } from "#src/model/report-query-string-literal.ts";
+} from "#src/model/legacy/report-query-lexer.ts";
+import { parseReportStringLiteral } from "#src/model/legacy/report-query-string-literal.ts";
 
 // ── token helpers ────────────────────────────────────────────────────────────
 

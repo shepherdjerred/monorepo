@@ -1,4 +1,4 @@
-import type { ReportGroupBy } from "#src/model/report-query-spec.ts";
+import type { ReportGroupBy } from "#src/model/legacy/report-query-spec.ts";
 import type {
   ReportRenderChannel,
   ReportRenderSpec,

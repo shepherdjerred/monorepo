@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { validateRenderShape } from "#src/model/report-query-render-validation.ts";
-import type { ReportGroupBy } from "#src/model/report-query-spec.ts";
+import { validateRenderShape } from "#src/model/legacy/report-query-render-validation.ts";
+import type { ReportGroupBy } from "#src/model/legacy/report-query-spec.ts";
 import {
   DEFAULT_RENDER_SPEC,
   ReportChartLabelsSchema,

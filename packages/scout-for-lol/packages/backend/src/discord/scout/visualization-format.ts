@@ -1,10 +1,13 @@
 import {
   formatReportDisplayValue,
-  REPORT_METRICS,
   type ReportAiPreviewSummary,
   type TemporalSeries,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import {
+  formatSeriesAbsoluteDelta,
+  formatSeriesValue,
+} from "@scout-for-lol/report";
 
 const MAX_NATIVE_CELL_LENGTH = 160;
 const nativeCellGraphemeSegmenter = new Intl.Segmenter(undefined, {
@@ -240,7 +243,7 @@ export function formatNativeSeriesValue(
     snapshot,
     series,
     point.comparisonValue ?? null,
-  )} · Δ ${formatAbsoluteDelta(snapshot, series, point.absoluteDelta ?? null)} · ${
+  )} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, point.absoluteDelta ?? null)} · ${
     percentage === null || percentage === undefined
       ? "Unknown"
       : `${(percentage * 100).toFixed(1)}%`
@@ -260,42 +263,6 @@ function formatConfidenceInterval(
         series,
         confidenceInterval.lower,
       )}–${formatSeriesValue(snapshot, series, confidenceInterval.upper)}`;
-}
-
-export function formatSeriesValue(
-  snapshot: VisualizationSnapshot,
-  series: TemporalSeries,
-  value: number | null,
-): string {
-  if (value === null) {
-    return "Unknown";
-  }
-  const isRate =
-    snapshot.display.stack === "percent" ||
-    REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
-      "rate";
-  if (isRate) {
-    return `${(value * 100).toFixed(1)}%`;
-  }
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-    value,
-  );
-}
-
-export function formatAbsoluteDelta(
-  snapshot: VisualizationSnapshot,
-  series: TemporalSeries,
-  value: number | null,
-): string {
-  const isRate =
-    snapshot.display.stack === "percent" ||
-    REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
-      "rate";
-  return isRate
-    ? value === null
-      ? "Unknown"
-      : `${(value * 100).toFixed(1)} pp`
-    : formatSeriesValue(snapshot, series, value);
 }
 
 export function requireNumericRowValue(

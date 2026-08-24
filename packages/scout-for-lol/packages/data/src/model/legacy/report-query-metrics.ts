@@ -1,4 +1,4 @@
-import type { ReportMetric } from "#src/model/report-query-spec.ts";
+import type { ReportMetric } from "#src/model/legacy/report-query-spec.ts";
 
 export type ReportMetricKind = "count" | "rate" | "ratio" | "score";
 export type ReportMetricInfo = {

@@ -10,7 +10,7 @@ import {
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
-import { formatReportQuery } from "@scout-for-lol/data";
+import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/format.ts";
 
 /**
  * Identity: one person, several accounts, several names.
@@ -300,7 +300,7 @@ describe("PUUIDs stay in the data layer", () => {
       now,
     });
 
-    const formatted = formatReportQuery(queryText);
+    const formatted = formatScoutQl(queryText);
     expect(formatted).toContain("player = player('Aaron')");
     for (const puuid of [AARON_MAIN, AARON_SMURF, EDWARD]) {
       expect(formatted).not.toContain(puuid);

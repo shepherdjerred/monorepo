@@ -1,5 +1,5 @@
 import { createToken, Lexer, type IToken, type TokenType } from "chevrotain";
-import type { ReportQuerySpan } from "#src/model/report-query-spec.ts";
+import type { ReportQuerySpan } from "#src/model/legacy/report-query-spec.ts";
 
 // ── Report query lexer (Chevrotain) ──────────────────────────────────────────
 // Tokenizes the bespoke SQL-like report language with per-token source offsets.
