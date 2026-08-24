@@ -1,6 +1,12 @@
 import { afterAll, describe, expect, test } from "vitest";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  ReportIdSchema,
+} from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import corpus from "./fixtures/scoutql-v2-legacy-corpus.json" with { type: "json" };
 import {
@@ -64,9 +70,9 @@ function refusal(queryText: string): string {
 
 /** A Report row's other required columns, fixed since the migration never reads them. */
 const REPORT_DEFAULTS = {
-  serverId: "880000000000000001",
-  ownerId: "880000000000000002",
-  channelId: "880000000000000003",
+  serverId: DiscordGuildIdSchema.parse("880000000000000001"),
+  ownerId: DiscordAccountIdSchema.parse("880000000000000002"),
+  channelId: DiscordChannelIdSchema.parse("880000000000000003"),
   cronExpression: "0 0 * * 0",
   createdTime: new Date("2026-01-01T00:00:00.000Z"),
   updatedTime: new Date("2026-01-01T00:00:00.000Z"),
@@ -92,7 +98,13 @@ async function insertReports(
 ): Promise<void> {
   const prisma = clientFor(databaseUrl);
   for (const report of reports) {
-    await prisma.report.create({ data: { ...REPORT_DEFAULTS, ...report } });
+    await prisma.report.create({
+      data: {
+        ...REPORT_DEFAULTS,
+        ...report,
+        id: ReportIdSchema.parse(report.id),
+      },
+    });
   }
 }
 

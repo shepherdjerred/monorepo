@@ -38,7 +38,7 @@ export const MatchLakeRowSchema = z.object({
   // Settlement voids a match whose result is not GameComplete. History has to
   // apply the same predicate, or prices are conditioned on games that could
   // never have settled either way.
-  end_of_game_result: z.string(),
+  end_of_game_result: z.string().nullable(),
   map_id: z.number(),
   // Participant identity (global — attribution happens at query time)
   puuid: z.string(),
@@ -46,7 +46,7 @@ export const MatchLakeRowSchema = z.object({
   team_id: z.number(),
   riot_id_game_name: z.string().nullable(),
   riot_id_tagline: z.string(),
-  summoner_name: z.string(),
+  summoner_name: z.string().nullable(),
   // Champion / position
   champion_id: z.number(),
   champion_name: z.string(),
