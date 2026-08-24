@@ -107,6 +107,13 @@ export async function rankReportResult(
  * Evaluate the plan's WHERE, GROUP BY, outputs, HAVING, ORDER BY and LIMIT
  * over an already-computed leaderboard. Pulled out of `rankReportResult` so
  * this — the part under test — needs no database or S3 access.
+ *
+ * Every output stays numeric through HAVING and ORDER BY; rank-name display
+ * formatting is a final pass applied only to the rows that survive, over the
+ * whole leaderboard, so a `HIGHEST_RANK` competition's `ORDER BY score DESC`
+ * sorts on league points rather than lexicographically on rendered strings
+ * like "Diamond II" vs "Emerald I" (Emerald sorts alphabetically first, but
+ * outranks nothing — DuckDB's own tier ordering would put it well behind).
  */
 export function aggregateRankLeaderboard(
   plan: ScoutQlPlan,
@@ -123,12 +130,13 @@ export function aggregateRankLeaderboard(
         );
 
   const groups = rankGroups(plan, survivors);
-  const rows = groups.flatMap((group) =>
-    rankGroupRow(plan, group, showsRankNames),
-  );
-  return rows
+  const rows = groups.flatMap((group) => rankGroupRow(plan, group));
+  const ordered = rows
     .toSorted((left, right) => compareRankRows(left, right, plan))
     .slice(0, limit);
+  return showsRankNames
+    ? ordered.map((row) => formatRankNames(plan, row, leaderboard))
+    : ordered;
 }
 
 function factRowFor(entry: RankedLeaderboardEntry): FactRow {
@@ -181,11 +189,7 @@ function rankGroups(
 }
 
 /** Evaluate one group's outputs and HAVING; returns no row when HAVING fails. */
-function rankGroupRow(
-  plan: ScoutQlPlan,
-  group: RankGroup,
-  showsRankNames: boolean,
-): PlanAggregateRow[] {
+function rankGroupRow(plan: ScoutQlPlan, group: RankGroup): PlanAggregateRow[] {
   const outputs = new Map<string, LakeScalar>();
   const ctx: AggregateEvalContext = {
     rows: group.entries.map((entry) => factRowFor(entry)),
@@ -193,7 +197,7 @@ function rankGroupRow(
     filterableColumns: new Set(["rank", "score", "player"]),
   };
   const values: PlanOutputValue[] = plan.outputs.map((output) => {
-    const value = rankOutputValue(output, group, ctx, showsRankNames);
+    const value = rankOutputValue(output, group, ctx);
     outputs.set(output.name, value);
     return {
       name: output.name,
@@ -217,44 +221,61 @@ function rankGroupRow(
 }
 
 /**
- * What one output evaluates to over a group, decided by the column(s) its
- * expression names rather than by the alias the author chose: `score` is the
- * criterion's own measure — rendered as a rank name, when the criterion IS a
- * rank, for exactly the aggregates that reproduce one real entry's score
- * (MIN/MAX, or any aggregate over a singleton per-player group) — and `rank`
- * is the numeric position within the standings.
+ * What one output evaluates to over a group: a grouping echo, or the plan's
+ * aggregate expression evaluated numerically. Display formatting (rank names)
+ * is deliberately NOT done here — see `formatRankNames` — so HAVING and
+ * ORDER BY always compare the same numbers the SQL path would.
  */
 function rankOutputValue(
   output: ScoutQlOutput,
   group: RankGroup,
   ctx: AggregateEvalContext,
-  showsRankNames: boolean,
 ): LakeScalar {
   if (output.expr.kind === "grouping-ref") {
     return group.keys[output.expr.index] ?? null;
   }
-  const referenced = new Set<string>();
-  collectAggregateColumnNames(output.expr, referenced);
-  const value = evaluateAggregate(output.expr, ctx);
-  // Only an output that reads `score` (and not, say, `COUNT(*)`, a literal,
-  // or `rank`, which is already a plain position) can ever be a rank name.
-  if (
-    !showsRankNames ||
-    typeof value !== "number" ||
-    !referenced.has("score")
-  ) {
-    return value;
-  }
-  // Only an aggregate that reproduces one real entry's score (MIN/MAX, or any
-  // aggregate over the singleton group `GROUP BY player` always produces) can
-  // be shown as a rank name; SUM/AVG across several entries has no rank of
-  // its own, so it falls back to the plain league-points number.
-  const source = group.entries.find(
-    (entry) => scoreToNumber(entry.score) === value,
-  );
-  return source === undefined
-    ? value
-    : rankToString(RankSchema.parse(source.score));
+  return evaluateAggregate(output.expr, ctx);
+}
+
+/**
+ * The final display pass: for every output whose expression reads `score`,
+ * substitute a rank name for exactly the numeric values that reproduce one
+ * real leaderboard entry's score (MIN/MAX, or any aggregate over the
+ * singleton `GROUP BY player` groups always produces one). SUM/AVG across
+ * several entries has no rank of its own and is left as the plain
+ * league-points number. `rank` (a plain standings position) is never
+ * formatted, and this runs only after HAVING/ORDER BY/LIMIT have already
+ * used the numeric values.
+ */
+function formatRankNames(
+  plan: ScoutQlPlan,
+  row: PlanAggregateRow,
+  leaderboard: RankedLeaderboardEntry[],
+): PlanAggregateRow {
+  return {
+    ...row,
+    outputs: row.outputs.map((output, index) => {
+      const expr = plan.outputs[index]?.expr;
+      if (
+        expr === undefined ||
+        expr.kind === "grouping-ref" ||
+        typeof output.value !== "number"
+      ) {
+        return output;
+      }
+      const referenced = new Set<string>();
+      collectAggregateColumnNames(expr, referenced);
+      if (!referenced.has("score")) {
+        return output;
+      }
+      const source = leaderboard.find(
+        (entry) => scoreToNumber(entry.score) === output.value,
+      );
+      return source === undefined
+        ? output
+        : { ...output, value: rankToString(RankSchema.parse(source.score)) };
+    }),
+  };
 }
 
 function scoreToNumber(score: CachedLeaderboardEntry["score"]): number {

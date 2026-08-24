@@ -144,6 +144,14 @@ export const NEGATIVE_CASES: NegativeCase[] = [
     code: "distinct-unsupported",
   },
   {
+    // rank_current/competition_rank fold leaderboard entries in JS the same
+    // way player_groups folds teammate groups, so DISTINCT is unreachable
+    // there too (rank-report.ts's aggregate-eval.ts call throws).
+    name: "COUNT(DISTINCT) on rank_current",
+    query: "SELECT COUNT(DISTINCT score) AS n FROM rank_current",
+    code: "distinct-unsupported",
+  },
+  {
     name: "casting an aggregate result",
     query: `SELECT SUM(kills)::DOUBLE AS x FROM match_participants WHERE ${BOUND} GROUP BY player`,
     code: "cast-around-aggregate",

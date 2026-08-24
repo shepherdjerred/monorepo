@@ -3,6 +3,7 @@ import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import {
   DiscordAccountIdSchema,
   PlayerIdSchema,
+  rankToLeaguePoints,
   type Rank,
 } from "@scout-for-lol/data";
 import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard.ts";
@@ -133,6 +134,64 @@ describe("aggregateRankLeaderboard", () => {
     );
     const rows = aggregateRankLeaderboard(plan, leaderboard, true);
     expect(rows[0]?.outputs[1]?.value).toBe("Diamond II, 60LP");
+  });
+
+  test("ORDER BY score sorts numerically, not on the rendered rank-name string", () => {
+    // Emerald sorts alphabetically ahead of Diamond ("E" < "D" is false, but
+    // string DESC would put "Emerald…" before "Diamond…"), yet Diamond
+    // outranks Emerald — this is exactly the case a display-string sort
+    // would get backwards.
+    const leaderboard: RankedLeaderboardEntry[] = [
+      entry({
+        playerId: PlayerIdSchema.parse(1),
+        playerName: "Alice",
+        score: rank({ tier: "emerald", division: 1, lp: 20 }),
+      }),
+      entry({
+        playerId: PlayerIdSchema.parse(2),
+        playerName: "Bob",
+        score: rank({ tier: "diamond", division: 2, lp: 60 }),
+      }),
+    ];
+    const plan = compileScoutQl(
+      "SELECT player, MAX(score) AS score FROM rank_current GROUP BY player ORDER BY score DESC",
+    );
+    const rows = aggregateRankLeaderboard(plan, leaderboard, true);
+    expect(rows.map((row) => row.label)).toEqual(["Bob", "Alice"]);
+    expect(rows.map((row) => row.outputs[1]?.value)).toEqual([
+      "Diamond II, 60LP",
+      "Emerald I, 20LP",
+    ]);
+  });
+
+  test("HAVING compares the numeric value, not the rendered rank-name string", () => {
+    const aliceRank = rank({ tier: "emerald", division: 1, lp: 20 });
+    const bobRank = rank({ tier: "diamond", division: 2, lp: 60 });
+    const leaderboard: RankedLeaderboardEntry[] = [
+      entry({
+        playerId: PlayerIdSchema.parse(1),
+        playerName: "Alice",
+        score: aliceRank,
+      }),
+      entry({
+        playerId: PlayerIdSchema.parse(2),
+        playerName: "Bob",
+        score: bobRank,
+      }),
+    ];
+    // A threshold strictly between the two entries' true numeric league
+    // points — only reachable by comparing numbers, not display strings.
+    const aliceLeaguePoints = rankToLeaguePoints(aliceRank);
+    const bobLeaguePoints = rankToLeaguePoints(bobRank);
+    expect(bobLeaguePoints).toBeGreaterThan(aliceLeaguePoints + 1);
+    const threshold = aliceLeaguePoints + 1;
+    const plan = compileScoutQl(
+      `SELECT player, MAX(score) AS score FROM rank_current GROUP BY player HAVING score > ${threshold.toString()}`,
+    );
+    const rows = aggregateRankLeaderboard(plan, leaderboard, true);
+    // Only Bob's numeric league-points value clears the HAVING threshold;
+    // a string-compared HAVING could pass either row depending on rendering.
+    expect(rows.map((row) => row.label)).toEqual(["Bob"]);
   });
 
   test("falls back to the numeric league-points value for a multi-entry aggregate over rank scores", () => {
