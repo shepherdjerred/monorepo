@@ -1,11 +1,12 @@
 import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import { scoutThemes } from "#src/generated/tokens.ts";
 import { scoutOgCard } from "#src/brand/og-card.ts";
+import { outlineText } from "./outline-font.ts";
 import {
   scoutMarkInner,
   scoutMarkStroke,
@@ -79,61 +80,27 @@ function sameBytes(left: Uint8Array, right: Uint8Array): boolean {
   return left.every((value, index) => value === right[index]);
 }
 
-async function emit(path: string, data: string | Uint8Array): Promise<void> {
+async function emit(
+  filePath: string,
+  data: string | Uint8Array,
+): Promise<void> {
   if (!check) {
-    await Bun.write(path, data);
+    await Bun.write(filePath, data);
     return;
   }
-  const file = Bun.file(path);
+  const file = Bun.file(filePath);
   if (!(await file.exists())) {
-    throw new Error(`Missing generated Scout brand file: ${path}`);
+    throw new Error(`Missing generated Scout brand file: ${filePath}`);
   }
   if (typeof data === "string") {
     if ((await file.text()) !== data) {
-      throw new Error(`Scout brand asset drifted: ${path}`);
+      throw new Error(`Scout brand asset drifted: ${filePath}`);
     }
     return;
   }
   if (!sameBytes(new Uint8Array(await file.arrayBuffer()), data)) {
-    throw new Error(`Scout brand asset drifted: ${path}`);
+    throw new Error(`Scout brand asset drifted: ${filePath}`);
   }
-}
-
-function outlineText(input: {
-  font: string;
-  text: string;
-  x: number;
-  y: number;
-  size: number;
-  tracking: number;
-}): string {
-  const result = Bun.spawnSync(
-    [
-      "uv",
-      "run",
-      "--with",
-      "fonttools",
-      "python3",
-      `${packageRoot}scripts/outline-text.py`,
-      "--font",
-      input.font,
-      "--text",
-      input.text,
-      "--x",
-      String(input.x),
-      "--y",
-      String(input.y),
-      "--size",
-      String(input.size),
-      "--tracking",
-      String(input.tracking),
-    ],
-    { stdout: "pipe", stderr: "pipe" },
-  );
-  if (result.exitCode !== 0) {
-    throw new Error(`Failed to outline text: ${result.stderr.toString()}`);
-  }
-  return result.stdout.toString();
 }
 
 const emblem = scoutMarkSvg({
@@ -175,7 +142,7 @@ const discordIcon = scoutTileSvg({
   ariaLabel: "Scout",
 });
 
-const scoutWord = outlineText({
+const scoutWord = await outlineText({
   font: beaufortBold,
   text: "SCOUT",
   x: 176,
@@ -183,7 +150,7 @@ const scoutWord = outlineText({
   size: 72,
   tracking: 10,
 });
-const bannerScout = outlineText({
+const bannerScout = await outlineText({
   font: beaufortBold,
   text: "SCOUT",
   x: 500,
@@ -191,7 +158,7 @@ const bannerScout = outlineText({
   size: 92,
   tracking: 14,
 });
-const bannerLeague = outlineText({
+const bannerLeague = await outlineText({
   font: beaufortBold,
   text: "FOR LEAGUE OF LEGENDS",
   x: 500,
@@ -199,7 +166,7 @@ const bannerLeague = outlineText({
   size: 28,
   tracking: 3,
 });
-const bannerTag = outlineText({
+const bannerTag = await outlineText({
   font: spiegelRegular,
   text: "Match alerts and post-match reports in Discord",
   x: 500,
@@ -207,7 +174,7 @@ const bannerTag = outlineText({
   size: 24,
   tracking: 0,
 });
-const discordScout = outlineText({
+const discordScout = await outlineText({
   font: beaufortBold,
   text: "SCOUT",
   x: 230,
@@ -215,7 +182,7 @@ const discordScout = outlineText({
   size: 64,
   tracking: 8,
 });
-const discordLeague = outlineText({
+const discordLeague = await outlineText({
   font: beaufortBold,
   text: "FOR LEAGUE OF LEGENDS",
   x: 230,
@@ -329,11 +296,11 @@ const ogSvg = await satori(
 await emit(`${brandDir}og-default.png`, pngFromSvg(ogSvg, 1200));
 
 const tauriOut = check
-  ? join(tmpdir(), `scout-brand-icons-${String(process.pid)}`)
+  ? path.join(tmpdir(), `scout-brand-icons-${String(process.pid)}`)
   : desktopIcons;
 await mkdir(tauriOut, { recursive: true });
 const tauriSource = check
-  ? join(tauriOut, "source.png")
+  ? path.join(tauriOut, "source.png")
   : `${brandDir}app-icon-512.png`;
 if (check) {
   await Bun.write(tauriSource, png512);
@@ -360,7 +327,7 @@ if (check) {
       await Bun.file(`${desktopIcons}${name}`).arrayBuffer(),
     );
     const actual = new Uint8Array(
-      await Bun.file(join(tauriOut, name)).arrayBuffer(),
+      await Bun.file(path.join(tauriOut, name)).arrayBuffer(),
     );
     if (!sameBytes(expected, actual)) {
       throw new Error(`Scout desktop icon drifted: ${name}`);
