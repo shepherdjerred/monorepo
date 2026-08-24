@@ -22,7 +22,7 @@ export function orderWeeklyParlayCandidates(
         candidate.recentEligibleGames >= WEEKLY_PARLAY_MIN_RECENT_GAMES &&
         candidate.fullyObservedWindows >= WEEKLY_PARLAY_MIN_HISTORY_WINDOWS &&
         (candidate.periodsSinceFeatured === null ||
-          candidate.periodsSinceFeatured >=
+          candidate.periodsSinceFeatured >
             WEEKLY_PARLAY_FEATURE_COOLDOWN_PERIODS),
     )
     .toSorted((left, right) => {

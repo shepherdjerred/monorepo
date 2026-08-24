@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
   isWithinWeeklyScoringPeriod,
+  WEEKLY_PARLAY_INGESTION_GRACE_MS,
+  weeklyParlayFinalSettlementAt,
   weeklyParlayPeriod,
 } from "#src/betting/weekly-parlay-period.ts";
 
@@ -42,6 +44,17 @@ describe("weekly parlay Pacific periods", () => {
     expect(isWithinWeeklyScoringPeriod(period.scoringEndsAt, period)).toBe(
       false,
     );
+  });
+
+  test("reserves a bounded ingestion reconciliation window after scoring", () => {
+    const period = weeklyParlayPeriod("2026-03-09");
+    expect(
+      weeklyParlayFinalSettlementAt(period.scoringEndsAt).getTime() -
+        period.scoringEndsAt.getTime(),
+    ).toBe(WEEKLY_PARLAY_INGESTION_GRACE_MS);
+    expect(
+      weeklyParlayFinalSettlementAt(period.scoringEndsAt).getTime(),
+    ).toBeLessThan(period.nextOpenAt.getTime());
   });
 
   test("rejects a non-Monday period key", () => {

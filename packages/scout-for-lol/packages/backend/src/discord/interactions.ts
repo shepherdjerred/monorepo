@@ -31,6 +31,11 @@ import {
 } from "#src/betting/parlay-custom-id.ts";
 import { handleParlayBetButton } from "#src/betting/parlay-bet-button.ts";
 import {
+  isWeeklyParlayCustomId,
+  parseWeeklyParlayCustomId,
+} from "#src/betting/weekly-parlay-custom-id.ts";
+import { handleWeeklyParlayBetButton } from "#src/betting/weekly-parlay-bet-button.ts";
+import {
   handlePeekPassButton,
   type PeekPassButtonInteraction,
 } from "#src/betting/peek-pass-button.ts";
@@ -122,6 +127,28 @@ export type RoutableButtonInteraction = BetButtonInteraction &
     replied: boolean;
   };
 
+async function routeWeeklyParlayButton(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    if (parseWeeklyParlayCustomId(interaction.customId) === undefined) {
+      discordComponentsTotal.inc({ namespace: "bbw", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handleWeeklyParlayBetButton(interaction);
+    discordComponentsTotal.inc({ namespace: "bbw", status: "success" });
+  } catch (error) {
+    logger.error("❌ Error handling a weekly Bryan Bucks button:", error);
+    discordComponentsTotal.inc({ namespace: "bbw", status: "error" });
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({
+        content: "😵 Weekly bet failed. Try again shortly.",
+      });
+    }
+  }
+}
+
 export async function routeButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
@@ -153,6 +180,10 @@ export async function routeButton(
         });
       }
     }
+    return;
+  }
+  if (isWeeklyParlayCustomId(interaction.customId)) {
+    await routeWeeklyParlayButton(interaction);
     return;
   }
   if (isBucksNavigationId(interaction.customId)) {

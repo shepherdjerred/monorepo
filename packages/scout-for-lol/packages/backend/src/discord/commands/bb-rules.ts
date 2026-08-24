@@ -14,6 +14,19 @@ import {
   MINIMUM_PRICE,
   PEEK_PASS_DURATION_MS,
 } from "#src/betting/peek-pass.ts";
+import {
+  WEEKLY_PARLAY_ELIGIBLE_QUEUES,
+  WEEKLY_PARLAY_MAX_LEGS,
+  WEEKLY_PARLAY_MIN_LEGS,
+} from "#src/betting/weekly-parlay-criteria.ts";
+import {
+  WEEKLY_PARLAY_BETTING_CLOSE_HOUR,
+  WEEKLY_PARLAY_FINAL_HOUR,
+  WEEKLY_PARLAY_INGESTION_GRACE_MINUTES,
+  WEEKLY_PARLAY_OPEN_HOUR,
+  WEEKLY_PARLAY_TIMEZONE,
+  weeklyParlayWallClockLabel,
+} from "#src/betting/weekly-parlay-period.ts";
 
 const BUCKS_COLOR = 0x2e_cc_71;
 
@@ -82,6 +95,15 @@ export function buildBbRulesEmbed(): EmbedBuilder {
           "Odds are fixed and quoted when you bet, and the house reserves the full payout at that price. " +
           "It is a live in-play market published after the game starts, so early events may already be visible. " +
           "Cancelling a parlay is free and returns the whole stake.",
+      },
+      {
+        name: "Weekly parlays",
+        value:
+          `A ${WEEKLY_PARLAY_MIN_LEGS.toString()}-${WEEKLY_PARLAY_MAX_LEGS.toString()} leg YES/NO market across one or more tracked players. ` +
+          `It opens Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_OPEN_HOUR)} and betting closes Monday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_BETTING_CLOSE_HOUR)} in ${WEEKLY_PARLAY_TIMEZONE}. ` +
+          `Only completed ${WEEKLY_PARLAY_ELIGIBLE_QUEUES.join(", ")} games count, through Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_FINAL_HOUR)}. ` +
+          `Scout waits **${WEEKLY_PARLAY_INGESTION_GRACE_MINUTES.toString()} minutes** after that cutoff for completed games to ingest. ` +
+          "Scout may settle YES early only after every leg is impossible to undo; NO always waits for final settlement. Cancelling before Monday is free.",
       },
       {
         name: "Voids",

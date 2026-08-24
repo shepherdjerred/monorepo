@@ -1,0 +1,301 @@
+import { differenceInCalendarWeeks } from "date-fns";
+import {
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
+import {
+  WEEKLY_PARLAY_CATALOG_VERSION,
+  WEEKLY_PARLAY_ELIGIBLE_QUEUES,
+  WEEKLY_PARLAY_EVALUATOR_VERSION,
+  WEEKLY_PARLAY_PRICING_VERSION,
+  WEEKLY_PARLAY_SCHEMA_VERSION,
+  WeeklyParlaySubjectsSchema,
+  validateWeeklyParlayProposal,
+  type WeeklyParlaySubject,
+} from "#src/betting/weekly-parlay-criteria.ts";
+import { fetchWeeklyCandidateHistories } from "#src/betting/weekly-parlay-history.ts";
+import {
+  generateWeeklyParlayProposal,
+  WEEKLY_PARLAY_PROMPT_VERSION,
+} from "#src/betting/weekly-parlay-model.ts";
+import {
+  WEEKLY_PARLAY_SLOT,
+  weeklyParlayPeriod,
+} from "#src/betting/weekly-parlay-period.ts";
+import { priceWeeklyParlay } from "#src/betting/weekly-parlay-pricing.ts";
+import { orderWeeklyParlayCandidates } from "#src/betting/weekly-parlay-selection.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { client } from "#src/discord/client.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
+import {
+  bettingWeeklyParlayGenerationDurationSeconds,
+  bettingWeeklyParlayGenerationTotal,
+} from "#src/metrics/betting-weekly-parlay.ts";
+import { logBucksTransition } from "#src/betting/transition-log.ts";
+
+export type OpenWeeklyParlayResult =
+  | { kind: "created" | "existing"; marketId: number }
+  | { kind: "feature_disabled" | "no_candidate" | "no_price" };
+
+function periodsSinceFeatured(
+  current: string,
+  previous: string | undefined,
+): number | null {
+  return previous === undefined
+    ? null
+    : differenceInCalendarWeeks(new Date(current), new Date(previous), {
+        weekStartsOn: 1,
+      });
+}
+
+async function linkedMemberSubjects(
+  serverId: DiscordGuildId,
+  prismaClient: ExtendedPrismaClient,
+): Promise<WeeklyParlaySubject[]> {
+  const guild = client.guilds.cache.get(serverId);
+  if (guild === undefined) {
+    return [];
+  }
+  const members = await guild.members.fetch();
+  const players = await prismaClient.player.findMany({
+    where: { serverId, discordId: { not: null }, accounts: { some: {} } },
+    select: {
+      id: true,
+      alias: true,
+      discordId: true,
+      accounts: {
+        select: { puuid: true, createdTime: true },
+        orderBy: { id: "asc" },
+      },
+    },
+    orderBy: { id: "asc" },
+  });
+  return players.flatMap((player) => {
+    if (player.discordId === null || !members.has(player.discordId)) {
+      return [];
+    }
+    return [
+      WeeklyParlaySubjectsSchema.element.parse({
+        key: "P1",
+        playerId: player.id,
+        alias: player.alias,
+        discordId: player.discordId,
+        accounts: player.accounts.map((account) => ({
+          puuid: LeaguePuuidSchema.parse(account.puuid),
+          trackingStartedAt: account.createdTime.toISOString(),
+        })),
+      }),
+    ];
+  });
+}
+
+async function openWeeklyParlayInternal(
+  input: { serverId: string; periodKey: string; slot?: number },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<OpenWeeklyParlayResult> {
+  const serverId = DiscordGuildIdSchema.parse(input.serverId);
+  const slot = input.slot ?? WEEKLY_PARLAY_SLOT;
+  const existing = await prismaClient.bucksWeeklyParlayMarket.findUnique({
+    where: {
+      serverId_periodKey_slot: { serverId, periodKey: input.periodKey, slot },
+    },
+    select: { id: true },
+  });
+  if (existing !== null) {
+    return { kind: "existing", marketId: existing.id };
+  }
+  const [bettingEnabled, weeklyEnabled] = await Promise.all([
+    isPolicyEnabled("betting_enabled", { server: serverId }),
+    isPolicyEnabled("weekly_parlays_enabled", { server: serverId }),
+  ]);
+  if (!bettingEnabled || !weeklyEnabled) {
+    return { kind: "feature_disabled" };
+  }
+  const startedAt = Date.now();
+  const period = weeklyParlayPeriod(input.periodKey);
+  const subjects = await linkedMemberSubjects(serverId, prismaClient);
+  if (subjects.length === 0) {
+    return { kind: "no_candidate" };
+  }
+  const [histories, previousDefinitions] = await Promise.all([
+    fetchWeeklyCandidateHistories({ periodKey: input.periodKey, subjects }),
+    prismaClient.bucksWeeklyParlayDefinition.findMany({
+      where: { serverId, scoringStartsAt: { lt: period.scoringStartsAt } },
+      select: { periodKey: true, subjects: true },
+      orderBy: { scoringStartsAt: "desc" },
+      take: 52,
+    }),
+  ]);
+  const lastFeaturedByPlayer = new Map<number, string>();
+  for (const definition of previousDefinitions) {
+    for (const subject of WeeklyParlaySubjectsSchema.parse(
+      JSON.parse(definition.subjects),
+    )) {
+      if (!lastFeaturedByPlayer.has(subject.playerId)) {
+        lastFeaturedByPlayer.set(subject.playerId, definition.periodKey);
+      }
+    }
+  }
+  const historyByPlayer = new Map(
+    histories.map((history) => [history.subject.playerId, history]),
+  );
+  const ordered = orderWeeklyParlayCandidates(
+    histories.map((history) => ({
+      playerId: history.subject.playerId,
+      linkedGuildMember: true,
+      recentEligibleGames: history.recentEligibleGames,
+      fullyObservedWindows: history.fullyObservedWindows,
+      periodsSinceFeatured: periodsSinceFeatured(
+        input.periodKey,
+        lastFeaturedByPlayer.get(history.subject.playerId),
+      ),
+    })),
+  );
+  if (ordered.length === 0) {
+    return { kind: "no_candidate" };
+  }
+  for (const candidate of ordered) {
+    const history = historyByPlayer.get(candidate.playerId);
+    if (history === undefined) {
+      throw new Error("Ordered weekly candidate lost its history snapshot.");
+    }
+    const generated = await generateWeeklyParlayProposal({
+      periodKey: input.periodKey,
+      subjects: [history.subject],
+      observedChampions: new Map([
+        [history.subject.key, history.observedChampions],
+      ]),
+      observedRoles: new Map([[history.subject.key, history.observedRoles]]),
+      recentEligibleGames: new Map([
+        [history.subject.key, history.recentEligibleGames],
+      ]),
+      historyWindows: history.fullyObservedWindows,
+    });
+    const issues = validateWeeklyParlayProposal({
+      proposal: generated.proposal,
+      subjects: [history.subject],
+      observedChampions: new Map([
+        [history.subject.key, history.observedChampions],
+      ]),
+      observedRoles: new Map([[history.subject.key, history.observedRoles]]),
+    });
+    if (issues.length > 0) {
+      continue;
+    }
+    const priced = priceWeeklyParlay({
+      proposal: generated.proposal,
+      windows: history.windows,
+    });
+    if (priced === undefined) {
+      continue;
+    }
+    try {
+      const market = await prismaClient.$transaction(async (tx) => {
+        const definition = await tx.bucksWeeklyParlayDefinition.create({
+          data: {
+            serverId,
+            periodKey: input.periodKey,
+            slot,
+            openAt: period.openAt,
+            bettingClosesAt: period.bettingClosesAt,
+            scoringStartsAt: period.scoringStartsAt,
+            scoringEndsAt: period.scoringEndsAt,
+            subjects: JSON.stringify([history.subject]),
+            eligibleQueues: JSON.stringify(WEEKLY_PARLAY_ELIGIBLE_QUEUES),
+            proposal: JSON.stringify(generated.proposal),
+            criteria: JSON.stringify(priced.criteria),
+            historySample: JSON.stringify(history.windows),
+            pricing: JSON.stringify({
+              yesProbabilityBps: priced.yesProbabilityBps,
+              yesWindows: priced.yesWindows,
+              sampleSize: priced.sampleSize,
+              periodKeys: priced.periodKeys,
+            }),
+            yesProbabilityBps: priced.yesProbabilityBps,
+            promptVersion: WEEKLY_PARLAY_PROMPT_VERSION,
+            catalogVersion: WEEKLY_PARLAY_CATALOG_VERSION,
+            schemaVersion: WEEKLY_PARLAY_SCHEMA_VERSION,
+            evaluatorVersion: WEEKLY_PARLAY_EVALUATOR_VERSION,
+            pricingVersion: WEEKLY_PARLAY_PRICING_VERSION,
+            generationContext: JSON.stringify({
+              candidateOrder: ordered.map((entry) => entry.playerId),
+              selectedPlayerId: history.subject.playerId,
+              observedChampions: [...history.observedChampions].toSorted(),
+              observedRoles: [...history.observedRoles].toSorted(),
+              recentEligibleGames: history.recentEligibleGames,
+              fullyObservedWindows: history.fullyObservedWindows,
+            }),
+            requestedModel: generated.model,
+            resolvedModel: generated.resolvedModel,
+            usage: JSON.stringify(generated.usage),
+            durationMs: Date.now() - startedAt,
+          },
+          select: { id: true },
+        });
+        return await tx.bucksWeeklyParlayMarket.create({
+          data: {
+            definitionId: definition.id,
+            serverId,
+            periodKey: input.periodKey,
+            slot,
+            publishedAt: period.openAt,
+            bettingClosesAt: period.bettingClosesAt,
+            scoringEndsAt: period.scoringEndsAt,
+          },
+          select: { id: true },
+        });
+      });
+      return { kind: "created", marketId: market.id };
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error;
+      }
+      const racedMarket =
+        await prismaClient.bucksWeeklyParlayMarket.findUniqueOrThrow({
+          where: {
+            serverId_periodKey_slot: {
+              serverId,
+              periodKey: input.periodKey,
+              slot,
+            },
+          },
+          select: { id: true },
+        });
+      return { kind: "existing", marketId: racedMarket.id };
+    }
+  }
+  return { kind: "no_price" };
+}
+
+export async function openWeeklyParlay(
+  input: { serverId: string; periodKey: string; slot?: number },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<OpenWeeklyParlayResult> {
+  const startedAt = Date.now();
+  let result: OpenWeeklyParlayResult;
+  try {
+    result = await openWeeklyParlayInternal(input, prismaClient);
+  } catch (error) {
+    bettingWeeklyParlayGenerationTotal.inc({ result: "error" });
+    throw error;
+  }
+  bettingWeeklyParlayGenerationTotal.inc({ result: result.kind });
+  if (result.kind === "created") {
+    bettingWeeklyParlayGenerationDurationSeconds.observe(
+      (Date.now() - startedAt) / 1000,
+    );
+    logBucksTransition({
+      event: "bucks.weekly_parlay.published",
+      serverId: input.serverId,
+      marketId: result.marketId,
+      periodKey: input.periodKey,
+      slot: input.slot ?? WEEKLY_PARLAY_SLOT,
+      fromState: "none",
+      toState: "publishing",
+      surface: "cron",
+    });
+  }
+  return result;
+}

@@ -143,6 +143,7 @@ export type FlagName =
   | "ai_reports_unlimited"
   | "ai_reviews_enabled"
   | "betting_enabled"
+  | "weekly_parlays_enabled"
   | "betting_player_bet_outcome_dm_enabled"
   | "betting_settlement_dm_enabled"
   | "debug"
@@ -164,6 +165,7 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "ai_reports_unlimited",
     "ai_reviews_enabled",
     "betting_enabled",
+    "weekly_parlays_enabled",
     "betting_player_bet_outcome_dm_enabled",
     "betting_settlement_dm_enabled",
     "tournament_lobbies_enabled",
@@ -229,6 +231,13 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
         attributes: { server: MY_SERVER },
       },
     ],
+  },
+  // Week-spanning Bryan Bucks markets remain a narrower private-beta rollout
+  // than the betting economy itself. New positions require both flags;
+  // settlement and refunds deliberately do not.
+  weekly_parlays_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
   // Settlement messages are a separate rollout from the betting economy: the
   // economy must keep paying or refunding open positions even while Discord

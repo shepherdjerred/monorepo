@@ -16,6 +16,7 @@ import {
 } from "#src/betting/sweep.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { captureWeeklyParlayContributions } from "#src/betting/weekly-parlay-contribution.ts";
 
 export async function refreshSettledPoolMessages(
   straightPools: readonly { matchId: string; serverId: string }[],
@@ -72,6 +73,10 @@ export async function settleAndAwardBucks(
     matchData,
     prismaClient,
   );
+  // The canonical match has already been persisted by the caller. Weekly
+  // progress is append-only and may settle only an irreversible YES here;
+  // Sunday finalization remains the only path to an early-false result.
+  await captureWeeklyParlayContributions(matchData, prismaClient);
   const earnings = await awardBucksForMatch(matchData, prismaClient);
   // Discord cleanup runs after the committed local operations and regardless
   // of whether the caller suppresses an old match's post-match notification.

@@ -424,6 +424,7 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
   }),
   z.strictObject({
     type: z.literal("weekly_parlay_stake"),
+    version: z.literal(1),
     definitionId: z.number().int().positive(),
     periodKey: z.iso.date(),
     slot: z.number().int().nonnegative(),
@@ -434,6 +435,7 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
   }),
   z.strictObject({
     type: z.literal("weekly_parlay_reserve"),
+    version: z.literal(1),
     definitionId: z.number().int().positive(),
     periodKey: z.iso.date(),
     slot: z.number().int().nonnegative(),
@@ -445,6 +447,7 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
   }),
   z.strictObject({
     type: z.literal("weekly_parlay_settlement"),
+    version: z.literal(1),
     definitionId: z.number().int().positive(),
     periodKey: z.iso.date(),
     slot: z.number().int().nonnegative(),
