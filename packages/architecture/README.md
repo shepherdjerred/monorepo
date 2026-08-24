@@ -70,6 +70,15 @@ not have to narrow `sourceRoot` to reach them: monarch's vendor adapters live
 in `src/lib/`, and setting `sourceRoot: "src/lib"` would take `src/index.ts`
 out of the always-on cycle check.
 
+Layers in a **containment relationship are refused**: `lib` and `lib/amazon`
+cannot both be ruled, and a boundary may not target a layer that contains its
+own source. A layer path becomes an anchored directory pattern, so a boundary
+from `lib/amazon` targeting `lib` would generate `to: ^src/(lib)/` — which
+every import _inside_ `src/lib/amazon/` matches, reporting ordinary same-layer
+imports as cross-layer violations. Targeting both a layer and its descendant is
+refused for the same reason it reads wrong: the wider target already covers the
+narrower one.
+
 Fixtures live flat in one directory, so a nested path is flattened for its
 fixture prefix: a boundary from `lib/amazon` is proven by
 `architecture-fixtures/lib-amazon-<what-it-does>.ts`. A definition in which two

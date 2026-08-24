@@ -65,6 +65,19 @@ const IsolatedGroupSchema = z.object({
 
 type IsolatedGroup = z.output<typeof IsolatedGroupSchema>;
 
+/**
+ * Whether `ancestor` contains `descendant` in the directory tree, counting a
+ * layer as containing itself.
+ *
+ * A layer path becomes an anchored directory pattern, so containment is not a
+ * stylistic concern: `^src/lib/` matches every file under `src/lib/amazon/`
+ * too. Two layers in a containment relationship cannot both be treated as
+ * distinct regions of the tree.
+ */
+function contains(ancestor: string, descendant: string): boolean {
+  return descendant === ancestor || descendant.startsWith(`${ancestor}/`);
+}
+
 /** Rule and fixture names are flat, so a nested layer path is flattened. */
 function flattenLayerPath(layer: string): string {
   return layer.replaceAll("/", "-");
@@ -77,6 +90,41 @@ function expandIsolatedGroup(group: IsolatedGroup): LayerBoundary[] {
     from: layer,
     to: group.layers.filter((other) => other !== layer),
   }));
+}
+
+type IssueSink = {
+  addIssue: (issue: { code: "custom"; message: string }) => void;
+};
+
+/**
+ * A boundary's targets have to be regions distinct from its source, and from
+ * each other.
+ *
+ * This is stricter than `to.includes(from)` because layer paths nest. A
+ * boundary from `lib/amazon` targeting `lib` generates `to: ^src/(lib)/`,
+ * which every import *inside* `src/lib/amazon/` matches — ordinary same-layer
+ * imports would be reported as cross-layer violations, and the reverse
+ * direction makes the rule claim the descendant's files as its own sources.
+ * Targeting both a layer and its descendant is merely redundant, but it reads
+ * as though the narrower one adds something, so it is refused too.
+ */
+function checkTargets(boundary: LayerBoundary, sink: IssueSink): void {
+  for (const target of boundary.to) {
+    if (contains(target, boundary.from) || contains(boundary.from, target)) {
+      sink.addIssue({
+        code: "custom",
+        message: `boundary "${boundary.name}" forbids "${boundary.from}" from depending on "${target}", which is the same layer or contains it`,
+      });
+    }
+    for (const other of boundary.to) {
+      if (target !== other && contains(target, other)) {
+        sink.addIssue({
+          code: "custom",
+          message: `boundary "${boundary.name}" targets both "${target}" and its descendant "${other}"; the wider target already covers it`,
+        });
+      }
+    }
+  }
 }
 
 const ArchitectureDefinitionSchema = z
@@ -103,6 +151,16 @@ const ArchitectureDefinitionSchema = z
           message: `isolated group "${group.name}" repeats a layer`,
         });
       }
+      for (const layer of group.layers) {
+        for (const other of group.layers) {
+          if (layer !== other && contains(layer, other)) {
+            context.addIssue({
+              code: "custom",
+              message: `isolated group "${group.name}" contains "${layer}" and its descendant "${other}"; a group's members have to be disjoint regions of the tree`,
+            });
+          }
+        }
+      }
     }
     for (const boundary of expandBoundaries(definition)) {
       const prefix = flattenLayerPath(boundary.from);
@@ -127,12 +185,7 @@ const ArchitectureDefinitionSchema = z
         });
       }
       seenNames.add(boundary.name);
-      if (boundary.to.includes(boundary.from)) {
-        context.addIssue({
-          code: "custom",
-          message: `boundary "${boundary.name}" forbids "${boundary.from}" from depending on itself`,
-        });
-      }
+      checkTargets(boundary, context);
       if (new Set(boundary.to).size !== boundary.to.length) {
         context.addIssue({
           code: "custom",

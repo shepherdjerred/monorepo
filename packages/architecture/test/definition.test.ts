@@ -53,7 +53,7 @@ describe("resolveArchitecture", () => {
   it("rejects a boundary that forbids a layer from depending on itself", () => {
     expect(() =>
       resolveArchitecture({ boundaries: [{ ...boundary, to: ["domain"] }] }),
-    ).toThrow(/depending on itself/u);
+    ).toThrow(/same layer or contains it/u);
   });
 
   it("rejects a boundary with no target layers", () => {
@@ -166,5 +166,61 @@ describe("resolveArchitecture isolated groups", () => {
         ],
       }),
     ).toThrow(/same fixture prefix/u);
+  });
+});
+
+describe("resolveArchitecture overlapping layers", () => {
+  it("rejects a boundary that targets a layer containing its own source", () => {
+    // `to: ^src/(lib)/` matches every file under `src/lib/amazon/`, so this
+    // would report ordinary same-layer imports as cross-layer violations.
+    expect(() =>
+      resolveArchitecture({
+        boundaries: [{ ...boundary, from: "lib/amazon", to: ["lib"] }],
+      }),
+    ).toThrow(/same layer or contains it/u);
+  });
+
+  it("rejects a boundary that targets a descendant of its own source", () => {
+    expect(() =>
+      resolveArchitecture({
+        boundaries: [{ ...boundary, from: "lib", to: ["lib/amazon"] }],
+      }),
+    ).toThrow(/same layer or contains it/u);
+  });
+
+  it("rejects a boundary targeting both a layer and its descendant", () => {
+    expect(() =>
+      resolveArchitecture({
+        boundaries: [{ ...boundary, from: "app", to: ["lib", "lib/amazon"] }],
+      }),
+    ).toThrow(/already covers it/u);
+  });
+
+  it("rejects an isolated group whose members overlap", () => {
+    expect(() =>
+      resolveArchitecture({
+        isolatedGroups: [
+          {
+            name: "vendors-are-isolated",
+            comment: "why",
+            layers: ["lib", "lib/amazon"],
+          },
+        ],
+      }),
+    ).toThrow(/disjoint regions of the tree/u);
+  });
+
+  it("still accepts sibling nested layers", () => {
+    expect(
+      resolveArchitecture({
+        isolatedGroups: [
+          {
+            name: "vendors-are-isolated",
+            comment: "why",
+            layers: ["lib/amazon", "lib/venmo"],
+          },
+        ],
+      }).boundaries,
+    ).toHaveLength(2);
   });
 });
