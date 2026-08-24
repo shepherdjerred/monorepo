@@ -50,6 +50,7 @@ COPY --parents \
   packages/code-review \
   packages/glitter-context \
   packages/llm-models \
+  packages/scout-for-lol/packages/data \
   packages/toolkit \
   ./
 # llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so a
