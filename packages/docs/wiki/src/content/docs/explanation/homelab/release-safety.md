@@ -134,9 +134,11 @@ one. Unchanged resources again use the exact source, while the self-managed root
 Application alone uses a local override to stay suspended so it cannot launch
 an unowned full-source operation between batches. Only then does the owned
 full-source operation restore the root policy and perform verified pruning.
-That final operation must report the root Application and every prune candidate;
-other desired-resource coverage comes from the completed batches. Aggregate
-child health remains deferred to the scoped release gate.
+That final operation must report the root Application and every prune candidate
+captured before it began; other desired-resource coverage comes from the
+completed batches. A resumed exact prune does not classify new candidates from
+the post-prune tree, because successful candidates are absent by design.
+Aggregate child health remains deferred to the scoped release gate.
 
 This split proof is deliberate. The root chart contains its own Application,
 and ordinary child Applications can be degraded. Argo waits for their health

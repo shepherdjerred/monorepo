@@ -1466,6 +1466,7 @@ async function finalizeRootRelease(
       revision: exactRevision,
       releasePhase: "prune",
       terminateAfterApplied: true,
+      recoverActiveRootPrune: true,
       verifiedRootDesiredIdentities,
     });
     return [...verifiedRootDesiredIdentities].sort();
@@ -1661,6 +1662,7 @@ type SyncOptions = {
   requestId?: string;
   releasePhase?: ReleasePhase;
   terminateAfterApplied?: boolean;
+  recoverActiveRootPrune?: boolean;
   verifiedRootDesiredIdentities?: ReadonlySet<string>;
   waitForCompletion?: boolean;
   revision?: string;
@@ -1726,6 +1728,19 @@ async function sync(
       "Verified root desired state can only narrow an applied-result boundary for atomic apps pruning",
     );
   }
+  if (
+    options.recoverActiveRootPrune === true &&
+    (appName !== "apps" ||
+      !options.prune ||
+      options.releasePhase !== "prune" ||
+      options.terminateAfterApplied !== true ||
+      options.requestId === undefined ||
+      options.revision === undefined)
+  ) {
+    throw new Error(
+      "Active-root-prune recovery requires an identity-bound atomic apps prune",
+    );
+  }
   let expectedResourceIdentities: ExpectedSyncResultIdentities | undefined;
   if (appName === "apps" && options.prune) {
     if (options.revision === undefined) {
@@ -1733,28 +1748,38 @@ async function sync(
         "Root Application pruning requires an exact --revision so prune candidates can be verified against the rendered source",
       );
     }
-    const rootExpectedResourceIdentities = await assertRootPruneSafe(
-      token,
-      options.revision,
-    );
-    if (verifiedRootDesiredIdentities === undefined) {
-      expectedResourceIdentities = rootExpectedResourceIdentities;
+    if (options.recoverActiveRootPrune === true) {
+      // The initial prune preflight classifies live children before the
+      // operation starts. A recovery sees the post-prune tree, where a
+      // successful candidate is already absent; reclassifying it would demand
+      // a different result from the exact operation being recovered. The
+      // identity and full-source admission checks below still bind recovery to
+      // that preflighted operation, while every reported result must apply.
+      expectedResourceIdentities = { desired: new Set(), pruned: new Set() };
     } else {
-      for (const identity of verifiedRootDesiredIdentities) {
-        if (!rootExpectedResourceIdentities.desired.has(identity)) {
-          throw new Error(
-            `Verified root desired identity ${identity} is absent from the exact rendered revision`,
-          );
+      const rootExpectedResourceIdentities = await assertRootPruneSafe(
+        token,
+        options.revision,
+      );
+      if (verifiedRootDesiredIdentities === undefined) {
+        expectedResourceIdentities = rootExpectedResourceIdentities;
+      } else {
+        for (const identity of verifiedRootDesiredIdentities) {
+          if (!rootExpectedResourceIdentities.desired.has(identity)) {
+            throw new Error(
+              `Verified root desired identity ${identity} is absent from the exact rendered revision`,
+            );
+          }
         }
-      }
-      expectedResourceIdentities = {
-        desired: new Set(
-          [...rootExpectedResourceIdentities.desired].filter(
-            (identity) => !verifiedRootDesiredIdentities.has(identity),
+        expectedResourceIdentities = {
+          desired: new Set(
+            [...rootExpectedResourceIdentities.desired].filter(
+              (identity) => !verifiedRootDesiredIdentities.has(identity),
+            ),
           ),
-        ),
-        pruned: rootExpectedResourceIdentities.pruned,
-      };
+          pruned: rootExpectedResourceIdentities.pruned,
+        };
+      }
     }
   }
   if (
