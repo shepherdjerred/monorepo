@@ -2993,6 +2993,377 @@ export function toJson_DnsConfigSpecNameserverPodAffinityPodAntiAffinityPreferre
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ *
+ *
+ * @schema PeerRelay
+ */
+export class PeerRelay extends ApiObject {
+  /**
+   * Returns the apiVersion and kind for "PeerRelay"
+   */
+  public static readonly GVK: GroupVersionKind = {
+    apiVersion: "tailscale.com/v1alpha1",
+    kind: "PeerRelay",
+  };
+
+  /**
+   * Renders a Kubernetes manifest for "PeerRelay".
+   *
+   * This can be used to inline resource manifests inside other objects (e.g. as templates).
+   *
+   * @param props initialization props
+   */
+  public static manifest(props: PeerRelayProps): any {
+    return {
+      ...PeerRelay.GVK,
+      ...toJson_PeerRelayProps(props),
+    };
+  }
+
+  /**
+   * Defines a "PeerRelay" API object
+   * @param scope the scope in which to define this object
+   * @param id a scope-local name for the object
+   * @param props initialization props
+   */
+  public constructor(scope: Construct, id: string, props: PeerRelayProps) {
+    super(scope, id, {
+      ...PeerRelay.GVK,
+      ...props,
+    });
+  }
+
+  /**
+   * Renders the object to Kubernetes JSON.
+   */
+  public override toJson(): any {
+    const resolved = super.toJson();
+
+    return {
+      ...PeerRelay.GVK,
+      ...toJson_PeerRelayProps(resolved),
+    };
+  }
+}
+
+/**
+ * @schema PeerRelay
+ */
+export interface PeerRelayProps {
+  /**
+   * @schema PeerRelay#metadata
+   */
+  readonly metadata: ApiObjectMetadata;
+
+  /**
+   * Spec describes the desired state of the PeerRelay.
+   * More info:
+   * https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   *
+   * @schema PeerRelay#spec
+   */
+  readonly spec: PeerRelaySpec;
+}
+
+/**
+ * Converts an object of type 'PeerRelayProps' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PeerRelayProps(
+  obj: PeerRelayProps | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    metadata: obj.metadata,
+    spec: toJson_PeerRelaySpec(obj.spec),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Spec describes the desired state of the PeerRelay.
+ * More info:
+ * https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+ *
+ * @schema PeerRelaySpec
+ */
+export interface PeerRelaySpec {
+  /**
+   * AWS contains configuration for pinning each replica to a specific AWS Elastic IP and subnet. Only meaningful
+   * when running on EKS with the AWS Load Balancer Controller. When set, the per-replica values override any
+   * aws-load-balancer-eip-allocations or aws-load-balancer-subnets values supplied via spec.service.annotations.
+   *
+   * Leave this unset unless the peer relays must be reachable on addresses you control. Pinning a subnet
+   * confines a replica's load balancer to that subnet's availability zone, and an AWS Network Load Balancer
+   * only forwards to targets in a zone that is enabled on it, so a replica whose pod is scheduled into any
+   * other zone stops receiving traffic. Setting this field therefore also requires pinning the pods to the
+   * matching zone with a ProxyClass, as described on ElasticIPs. Without this field the AWS Load Balancer
+   * Controller instead provisions each load balancer across every zone it discovers, and the operator turns on
+   * cross-zone load balancing so the replica is reachable wherever it happens to be scheduled, with no
+   * scheduling constraints needed.
+   *
+   * @schema PeerRelaySpec#aws
+   */
+  readonly aws?: PeerRelaySpecAws;
+
+  /**
+   * HostnamePrefix specifies the hostname prefix for each
+   * replica. Each device will have the integer number
+   * from its StatefulSet pod appended to this prefix to form the full hostname.
+   * HostnamePrefix can contain lower case letters, numbers and dashes, it
+   * must not start with a dash and must be between 1 and 62 characters long.
+   *
+   * @schema PeerRelaySpec#hostnamePrefix
+   */
+  readonly hostnamePrefix?: string;
+
+  /**
+   * ProxyClass is the name of the ProxyClass custom resource that
+   * contains configuration options that should be applied to the
+   * resources created for this PeerRelay. If unset, the operator will
+   * create resources with the default configuration.
+   *
+   * @schema PeerRelaySpec#proxyClass
+   */
+  readonly proxyClass?: string;
+
+  /**
+   * Replicas specifies how many devices to create. Set this to enable
+   * high availability for peer relays.
+   * https://tailscale.com/kb/1115/high-availability. Defaults to 1.
+   *
+   * @default 1.
+   * @schema PeerRelaySpec#replicas
+   */
+  readonly replicas?: number;
+
+  /**
+   * Service contains configuration values to modify the LoadBalancer service used to expose the peer relay.
+   *
+   * @schema PeerRelaySpec#service
+   */
+  readonly service?: PeerRelaySpecService;
+
+  /**
+   * Tags that the Tailscale node will be tagged with.
+   * Defaults to [tag:k8s].
+   * To autoapprove the device defined by a PeerRelay,
+   * you can configure Tailscale ACLs to give these tags the necessary
+   * permissions.
+   * See https://tailscale.com/kb/1337/acl-syntax#autoapprovers.
+   * If you specify custom tags here, you must also make the operator an owner of these tags.
+   * See  https://tailscale.com/kb/1236/kubernetes-operator/#setting-up-the-kubernetes-operator.
+   * Tags cannot be changed once a PeerRelay node has been created.
+   * Tag values must be in form ^tag:[a-zA-Z][a-zA-Z0-9-]*$.
+   *
+   * @default tag:k8s].
+   * @schema PeerRelaySpec#tags
+   */
+  readonly tags?: string[];
+
+  /**
+   * Tailnet specifies the tailnet this PeerRelay should join. If blank, the default tailnet is used. When set, this
+   * name must match that of a valid Tailnet resource. This field is immutable and cannot be changed once set.
+   *
+   * @schema PeerRelaySpec#tailnet
+   */
+  readonly tailnet?: string;
+}
+
+/**
+ * Converts an object of type 'PeerRelaySpec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PeerRelaySpec(
+  obj: PeerRelaySpec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    aws: toJson_PeerRelaySpecAws(obj.aws),
+    hostnamePrefix: obj.hostnamePrefix,
+    proxyClass: obj.proxyClass,
+    replicas: obj.replicas,
+    service: toJson_PeerRelaySpecService(obj.service),
+    tags: obj.tags?.map((y) => y),
+    tailnet: obj.tailnet,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * AWS contains configuration for pinning each replica to a specific AWS Elastic IP and subnet. Only meaningful
+ * when running on EKS with the AWS Load Balancer Controller. When set, the per-replica values override any
+ * aws-load-balancer-eip-allocations or aws-load-balancer-subnets values supplied via spec.service.annotations.
+ *
+ * Leave this unset unless the peer relays must be reachable on addresses you control. Pinning a subnet
+ * confines a replica's load balancer to that subnet's availability zone, and an AWS Network Load Balancer
+ * only forwards to targets in a zone that is enabled on it, so a replica whose pod is scheduled into any
+ * other zone stops receiving traffic. Setting this field therefore also requires pinning the pods to the
+ * matching zone with a ProxyClass, as described on ElasticIPs. Without this field the AWS Load Balancer
+ * Controller instead provisions each load balancer across every zone it discovers, and the operator turns on
+ * cross-zone load balancing so the replica is reachable wherever it happens to be scheduled, with no
+ * scheduling constraints needed.
+ *
+ * @schema PeerRelaySpecAws
+ */
+export interface PeerRelaySpecAws {
+  /**
+   * ElasticIPs pins each replica to a specific AWS EIP allocation and subnet. Only meaningful when Network Load
+   * Balancers are provisioned by the AWS Load Balancer Controller. ElasticIPs supplies one allocation-subnet pair
+   * per replica: replica N uses ElasticIPs[N]. The list must be at least as long as spec.replicas so every replica
+   * has a distinct EIP; extra entries are permitted so that scale-up doesn't immediately trip validation.
+   *
+   * Pinning a subnet enables only that subnet's availability zone on the replica's load balancer, and a Network
+   * Load Balancer only forwards to targets in an enabled zone. Nothing constrains the scheduler to place the
+   * replica's pod in that zone, so a pod scheduled elsewhere, including after a reschedule, becomes unreachable
+   * on its Elastic IP while still appearing healthy.
+   *
+   * Every replica of a PeerRelay shares one pod template, so a ProxyClass referenced by spec.proxyClass can
+   * confine the pods to a zone but cannot place different replicas in different zones. To use this field
+   * safely, name subnets in a single availability zone and pin the pods to that same zone with a ProxyClass
+   * setting spec.statefulSet.pod.nodeSelector to topology.kubernetes.io/zone. Note that this trades the zone
+   * redundancy that running several replicas would otherwise buy. Spreading replicas across zones with their
+   * own Elastic IPs needs a per-replica scheduling constraint that neither PeerRelay nor ProxyClass can
+   * currently express.
+   *
+   * When set, the reconciler stamps
+   * service.beta.kubernetes.io/aws-load-balancer-eip-allocations and
+   * service.beta.kubernetes.io/aws-load-balancer-subnets on each per-replica Service, overriding any values in
+   * spec.service.annotations.
+   *
+   * @schema PeerRelaySpecAws#elasticIPs
+   */
+  readonly elasticIPs: PeerRelaySpecAwsElasticIPs[];
+}
+
+/**
+ * Converts an object of type 'PeerRelaySpecAws' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PeerRelaySpecAws(
+  obj: PeerRelaySpecAws | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    elasticIPs: obj.elasticIPs?.map((y) =>
+      toJson_PeerRelaySpecAwsElasticIPs(y),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Service contains configuration values to modify the LoadBalancer service used to expose the peer relay.
+ *
+ * @schema PeerRelaySpecService
+ */
+export interface PeerRelaySpecService {
+  /**
+   * Annotations to apply to the LoadBalancer service. Any annotations that conflict with those used by known
+   * cloud providers to ensure IP addresses rather than DNS names are ignored.
+   *
+   * @schema PeerRelaySpecService#annotations
+   */
+  readonly annotations?: { [key: string]: string };
+}
+
+/**
+ * Converts an object of type 'PeerRelaySpecService' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PeerRelaySpecService(
+  obj: PeerRelaySpecService | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotations:
+      obj.annotations === undefined
+        ? undefined
+        : Object.entries(obj.annotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * PeerRelayAWSElasticIP pairs an EIP allocation with the subnet it is attached to.
+ *
+ * @schema PeerRelaySpecAwsElasticIPs
+ */
+export interface PeerRelaySpecAwsElasticIPs {
+  /**
+   * AllocationID is the AWS EIP allocation ID (e.g. eipalloc-0123abcd) whose public IP this replica is reachable
+   * on. Stamped as service.beta.kubernetes.io/aws-load-balancer-eip-allocations on the replica's Service.
+   *
+   * @schema PeerRelaySpecAwsElasticIPs#allocationID
+   */
+  readonly allocationId: string;
+
+  /**
+   * SubnetID is the AWS subnet the replica's load balancer is provisioned in (e.g. subnet-0123abcd). It must be
+   * a public subnet, and no two replicas may name subnets in the same availability zone, since a load balancer
+   * accepts only one Elastic IP per zone. A standard VPC Elastic IP is regional rather than zonal, so it takes
+   * the zone of whichever subnet it is paired with here. Stamped as
+   * service.beta.kubernetes.io/aws-load-balancer-subnets on the replica's Service.
+   *
+   * @schema PeerRelaySpecAwsElasticIPs#subnetID
+   */
+  readonly subnetId: string;
+}
+
+/**
+ * Converts an object of type 'PeerRelaySpecAwsElasticIPs' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PeerRelaySpecAwsElasticIPs(
+  obj: PeerRelaySpecAwsElasticIPs | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    allocationID: obj.allocationId,
+    subnetID: obj.subnetId,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * ProxyClass describes a set of configuration parameters that can be applied to
 proxy resources created by the Tailscale Kubernetes operator.
 To apply a given ProxyClass to resources created for a tailscale Ingress or
@@ -5542,8 +5913,7 @@ export interface ProxyClassSpecStatefulSetPodTailscaleContainerSecurityContext {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ProxyClassSpecStatefulSetPodTailscaleContainerSecurityContext(
   obj:
-    | ProxyClassSpecStatefulSetPodTailscaleContainerSecurityContext
-    | undefined,
+    ProxyClassSpecStatefulSetPodTailscaleContainerSecurityContext | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -6488,8 +6858,7 @@ export interface ProxyClassSpecStatefulSetPodTailscaleContainerResourcesClaims {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ProxyClassSpecStatefulSetPodTailscaleContainerResourcesClaims(
   obj:
-    | ProxyClassSpecStatefulSetPodTailscaleContainerResourcesClaims
-    | undefined,
+    ProxyClassSpecStatefulSetPodTailscaleContainerResourcesClaims | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -11770,8 +12139,7 @@ export interface RecorderSpecStatefulSetPodContainerSecurityContextCapabilities 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_RecorderSpecStatefulSetPodContainerSecurityContextCapabilities(
   obj:
-    | RecorderSpecStatefulSetPodContainerSecurityContextCapabilities
-    | undefined,
+    RecorderSpecStatefulSetPodContainerSecurityContextCapabilities | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -13588,7 +13956,7 @@ export function toJson_TailnetProps(
  */
 export interface TailnetSpec {
   /**
-   * Denotes the location of the OAuth credentials to use for authenticating with this Tailnet.
+   * Denotes the location of the credentials to use for authenticating with this Tailnet.
    *
    * @schema TailnetSpec#credentials
    */
@@ -13625,14 +13993,17 @@ export function toJson_TailnetSpec(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
- * Denotes the location of the OAuth credentials to use for authenticating with this Tailnet.
+ * Denotes the location of the credentials to use for authenticating with this Tailnet.
  *
  * @schema TailnetSpecCredentials
  */
 export interface TailnetSpecCredentials {
   /**
-   * The name of the secret containing the OAuth credentials. This secret must contain two fields "client_id" and
-   * "client_secret".
+   * The name of the secret containing the credentials used to authenticate with this Tailnet. The secret must always
+   * contain a "client_id" field. To authenticate with a static OAuth client, also set "client_secret". To authenticate
+   * via workload identity federation, set "audience" to the audience value expected by the Tailscale OAuth
+   * client; the operator will mint a ServiceAccount token for itself with that audience and exchange it for an API
+   * token. "client_secret" and "audience" are mutually exclusive.
    *
    * @schema TailnetSpecCredentials#secretName
    */

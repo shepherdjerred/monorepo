@@ -296,7 +296,7 @@ export interface OperatorConfigurationConfiguration {
   /**
    * @schema OperatorConfigurationConfiguration#sidecars
    */
-  readonly sidecars?: any;
+  readonly sidecars?: OperatorConfigurationConfigurationSidecars[];
 
   /**
    * TeamsAPIConfiguration defines the configuration of TeamsAPI
@@ -392,7 +392,9 @@ export function toJson_OperatorConfigurationConfiguration(
             (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
             {},
           ),
-    sidecars: obj.sidecars,
+    sidecars: obj.sidecars?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecars(y),
+    ),
     teams_api: toJson_OperatorConfigurationConfigurationTeamsApi(obj.teamsApi),
     timeouts: toJson_OperatorConfigurationConfigurationTimeouts(obj.timeouts),
     users: toJson_OperatorConfigurationConfigurationUsers(obj.users),
@@ -1607,6 +1609,370 @@ export function toJson_OperatorConfigurationConfigurationScalyr(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * A single application container that you want to run within a pod.
+ *
+ * @schema OperatorConfigurationConfigurationSidecars
+ */
+export interface OperatorConfigurationConfigurationSidecars {
+  /**
+   * Arguments to the entrypoint.
+   * The container image's CMD is used if this is not provided.
+   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+   * of whether the variable exists or not. Cannot be updated.
+   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#args
+   */
+  readonly args?: string[];
+
+  /**
+   * Entrypoint array. Not executed within a shell.
+   * The container image's ENTRYPOINT is used if this is not provided.
+   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+   * of whether the variable exists or not. Cannot be updated.
+   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#command
+   */
+  readonly command?: string[];
+
+  /**
+   * List of environment variables to set in the container.
+   * Cannot be updated.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#env
+   */
+  readonly env?: OperatorConfigurationConfigurationSidecarsEnv[];
+
+  /**
+   * List of sources to populate environment variables in the container.
+   * The keys defined within a source may consist of any printable ASCII characters except '='.
+   * When a key exists in multiple
+   * sources, the value associated with the last source will take precedence.
+   * Values defined by an Env with a duplicate key will take precedence.
+   * Cannot be updated.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#envFrom
+   */
+  readonly envFrom?: OperatorConfigurationConfigurationSidecarsEnvFrom[];
+
+  /**
+   * Container image name.
+   * More info: https://kubernetes.io/docs/concepts/containers/images
+   * This field is optional to allow higher level config management to default or override
+   * container images in workload controllers like Deployments and StatefulSets.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#image
+   */
+  readonly image?: string;
+
+  /**
+   * Image pull policy.
+   * One of Always, Never, IfNotPresent.
+   * Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
+   *
+   * @default Always if :latest tag is specified, or IfNotPresent otherwise.
+   * @schema OperatorConfigurationConfigurationSidecars#imagePullPolicy
+   */
+  readonly imagePullPolicy?: string;
+
+  /**
+   * Actions that the management system should take in response to container lifecycle events.
+   * Cannot be updated.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#lifecycle
+   */
+  readonly lifecycle?: OperatorConfigurationConfigurationSidecarsLifecycle;
+
+  /**
+   * Periodic probe of container liveness.
+   * Container will be restarted if the probe fails.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#livenessProbe
+   */
+  readonly livenessProbe?: OperatorConfigurationConfigurationSidecarsLivenessProbe;
+
+  /**
+   * Name of the container specified as a DNS_LABEL.
+   * Each container in a pod must have a unique name (DNS_LABEL).
+   * Cannot be updated.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#name
+   */
+  readonly name: string;
+
+  /**
+   * List of ports to expose from the container. Not specifying a port here
+   * DOES NOT prevent that port from being exposed. Any port which is
+   * listening on the default "0.0.0.0" address inside a container will be
+   * accessible from the network.
+   * Modifying this array with strategic merge patch may corrupt the data.
+   * For more information See https://github.com/kubernetes/kubernetes/issues/108255.
+   * Cannot be updated.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#ports
+   */
+  readonly ports?: OperatorConfigurationConfigurationSidecarsPorts[];
+
+  /**
+   * Periodic probe of container service readiness.
+   * Container will be removed from service endpoints if the probe fails.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#readinessProbe
+   */
+  readonly readinessProbe?: OperatorConfigurationConfigurationSidecarsReadinessProbe;
+
+  /**
+   * Resources resize policy for the container.
+   * This field cannot be set on ephemeral containers.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#resizePolicy
+   */
+  readonly resizePolicy?: OperatorConfigurationConfigurationSidecarsResizePolicy[];
+
+  /**
+   * Compute Resources required by this container.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#resources
+   */
+  readonly resources?: OperatorConfigurationConfigurationSidecarsResources;
+
+  /**
+   * RestartPolicy defines the restart behavior of individual containers in a pod.
+   * This overrides the pod-level restart policy. When this field is not specified,
+   * the restart behavior is defined by the Pod's restart policy and the container type.
+   * Additionally, setting the RestartPolicy as "Always" for the init container will
+   * have the following effect:
+   * this init container will be continually restarted on
+   * exit until all regular containers have terminated. Once all regular
+   * containers have completed, all init containers with restartPolicy "Always"
+   * will be shut down. This lifecycle differs from normal init containers and
+   * is often referred to as a "sidecar" container. Although this init
+   * container still starts in the init container sequence, it does not wait
+   * for the container to complete before proceeding to the next init
+   * container. Instead, the next init container starts immediately after this
+   * init container is started, or after any startupProbe has successfully
+   * completed.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#restartPolicy
+   */
+  readonly restartPolicy?: string;
+
+  /**
+   * Represents a list of rules to be checked to determine if the
+   * container should be restarted on exit. The rules are evaluated in
+   * order. Once a rule matches a container exit condition, the remaining
+   * rules are ignored. If no rule matches the container exit condition,
+   * the Container-level restart policy determines the whether the container
+   * is restarted or not. Constraints on the rules:
+   * - At most 20 rules are allowed.
+   * - Rules can have the same action.
+   * - Identical rules are not forbidden in validations.
+   * When rules are specified, container MUST set RestartPolicy explicitly
+   * even it if matches the Pod's RestartPolicy.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#restartPolicyRules
+   */
+  readonly restartPolicyRules?: OperatorConfigurationConfigurationSidecarsRestartPolicyRules[];
+
+  /**
+   * SecurityContext defines the security options the container should be run with.
+   * If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
+   * More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#securityContext
+   */
+  readonly securityContext?: OperatorConfigurationConfigurationSidecarsSecurityContext;
+
+  /**
+   * StartupProbe indicates that the Pod has successfully initialized.
+   * If specified, no other probes are executed until this completes successfully.
+   * If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+   * This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+   * when it might take a long time to load data or warm a cache, than during steady-state operation.
+   * This cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#startupProbe
+   */
+  readonly startupProbe?: OperatorConfigurationConfigurationSidecarsStartupProbe;
+
+  /**
+   * Whether this container should allocate a buffer for stdin in the container runtime. If this
+   * is not set, reads from stdin in the container will always result in EOF.
+   * Default is false.
+   *
+   * @default false.
+   * @schema OperatorConfigurationConfigurationSidecars#stdin
+   */
+  readonly stdin?: boolean;
+
+  /**
+   * Whether the container runtime should close the stdin channel after it has been opened by
+   * a single attach. When stdin is true the stdin stream will remain open across multiple attach
+   * sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the
+   * first client attaches to stdin, and then remains open and accepts data until the client disconnects,
+   * at which time stdin is closed and remains closed until the container is restarted. If this
+   * flag is false, a container processes that reads from stdin will never receive an EOF.
+   * Default is false
+   *
+   * @default false
+   * @schema OperatorConfigurationConfigurationSidecars#stdinOnce
+   */
+  readonly stdinOnce?: boolean;
+
+  /**
+   * Optional: Path at which the file to which the container's termination message
+   * will be written is mounted into the container's filesystem.
+   * Message written is intended to be brief final status, such as an assertion failure message.
+   * Will be truncated by the node if greater than 4096 bytes. The total message length across
+   * all containers will be limited to 12kb.
+   * Defaults to /dev/termination-log.
+   * Cannot be updated.
+   *
+   * @default dev/termination-log.
+   * @schema OperatorConfigurationConfigurationSidecars#terminationMessagePath
+   */
+  readonly terminationMessagePath?: string;
+
+  /**
+   * Indicate how the termination message should be populated. File will use the contents of
+   * terminationMessagePath to populate the container status message on both success and failure.
+   * FallbackToLogsOnError will use the last chunk of container log output if the termination
+   * message file is empty and the container exited with an error.
+   * The log output is limited to 2048 bytes or 80 lines, whichever is smaller.
+   * Defaults to File.
+   * Cannot be updated.
+   *
+   * @default File.
+   * @schema OperatorConfigurationConfigurationSidecars#terminationMessagePolicy
+   */
+  readonly terminationMessagePolicy?: string;
+
+  /**
+   * Whether this container should allocate a TTY for itself, also requires 'stdin' to be true.
+   * Default is false.
+   *
+   * @default false.
+   * @schema OperatorConfigurationConfigurationSidecars#tty
+   */
+  readonly tty?: boolean;
+
+  /**
+   * volumeDevices is the list of block devices to be used by the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#volumeDevices
+   */
+  readonly volumeDevices?: OperatorConfigurationConfigurationSidecarsVolumeDevices[];
+
+  /**
+   * Pod volumes to mount into the container's filesystem.
+   * Cannot be updated.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#volumeMounts
+   */
+  readonly volumeMounts?: OperatorConfigurationConfigurationSidecarsVolumeMounts[];
+
+  /**
+   * Container's working directory.
+   * If not specified, the container runtime's default will be used, which
+   * might be configured in the container image.
+   * Cannot be updated.
+   *
+   * @schema OperatorConfigurationConfigurationSidecars#workingDir
+   */
+  readonly workingDir?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecars(
+  obj: OperatorConfigurationConfigurationSidecars | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    args: obj.args?.map((y) => y),
+    command: obj.command?.map((y) => y),
+    env: obj.env?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsEnv(y),
+    ),
+    envFrom: obj.envFrom?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsEnvFrom(y),
+    ),
+    image: obj.image,
+    imagePullPolicy: obj.imagePullPolicy,
+    lifecycle: toJson_OperatorConfigurationConfigurationSidecarsLifecycle(
+      obj.lifecycle,
+    ),
+    livenessProbe:
+      toJson_OperatorConfigurationConfigurationSidecarsLivenessProbe(
+        obj.livenessProbe,
+      ),
+    name: obj.name,
+    ports: obj.ports?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsPorts(y),
+    ),
+    readinessProbe:
+      toJson_OperatorConfigurationConfigurationSidecarsReadinessProbe(
+        obj.readinessProbe,
+      ),
+    resizePolicy: obj.resizePolicy?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsResizePolicy(y),
+    ),
+    resources: toJson_OperatorConfigurationConfigurationSidecarsResources(
+      obj.resources,
+    ),
+    restartPolicy: obj.restartPolicy,
+    restartPolicyRules: obj.restartPolicyRules?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsRestartPolicyRules(y),
+    ),
+    securityContext:
+      toJson_OperatorConfigurationConfigurationSidecarsSecurityContext(
+        obj.securityContext,
+      ),
+    startupProbe: toJson_OperatorConfigurationConfigurationSidecarsStartupProbe(
+      obj.startupProbe,
+    ),
+    stdin: obj.stdin,
+    stdinOnce: obj.stdinOnce,
+    terminationMessagePath: obj.terminationMessagePath,
+    terminationMessagePolicy: obj.terminationMessagePolicy,
+    tty: obj.tty,
+    volumeDevices: obj.volumeDevices?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsVolumeDevices(y),
+    ),
+    volumeMounts: obj.volumeMounts?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsVolumeMounts(y),
+    ),
+    workingDir: obj.workingDir,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * TeamsAPIConfiguration defines the configuration of TeamsAPI
  *
  * @schema OperatorConfigurationConfigurationTeamsApi
@@ -2173,6 +2539,1206 @@ export enum OperatorConfigurationConfigurationMajorVersionUpgradeMajorVersionUpg
 }
 
 /**
+ * EnvVar represents an environment variable present in a Container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnv
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnv {
+  /**
+   * Name of the environment variable.
+   * May consist of any printable ASCII characters except '='.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * Variable references $(VAR_NAME) are expanded
+   * using the previously defined environment variables in the container and
+   * any service environment variables. If a variable cannot be resolved,
+   * the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e.
+   * "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+   * Escaped references will never be expanded, regardless of whether the variable
+   * exists or not.
+   * Defaults to "".
+   *
+   * @default .
+   * @schema OperatorConfigurationConfigurationSidecarsEnv#value
+   */
+  readonly value?: string;
+
+  /**
+   * Source for the environment variable's value. Cannot be used if value is not empty.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnv#valueFrom
+   */
+  readonly valueFrom?: OperatorConfigurationConfigurationSidecarsEnvValueFrom;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnv(
+  obj: OperatorConfigurationConfigurationSidecarsEnv | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+    valueFrom: toJson_OperatorConfigurationConfigurationSidecarsEnvValueFrom(
+      obj.valueFrom,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * EnvFromSource represents the source of a set of ConfigMaps or Secrets
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvFrom
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnvFrom {
+  /**
+   * The ConfigMap to select from
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvFrom#configMapRef
+   */
+  readonly configMapRef?: OperatorConfigurationConfigurationSidecarsEnvFromConfigMapRef;
+
+  /**
+   * Optional text to prepend to the name of each environment variable.
+   * May consist of any printable ASCII characters except '='.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvFrom#prefix
+   */
+  readonly prefix?: string;
+
+  /**
+   * The Secret to select from
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvFrom#secretRef
+   */
+  readonly secretRef?: OperatorConfigurationConfigurationSidecarsEnvFromSecretRef;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnvFrom' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnvFrom(
+  obj: OperatorConfigurationConfigurationSidecarsEnvFrom | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    configMapRef:
+      toJson_OperatorConfigurationConfigurationSidecarsEnvFromConfigMapRef(
+        obj.configMapRef,
+      ),
+    prefix: obj.prefix,
+    secretRef:
+      toJson_OperatorConfigurationConfigurationSidecarsEnvFromSecretRef(
+        obj.secretRef,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Actions that the management system should take in response to container lifecycle events.
+ * Cannot be updated.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecycle
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecycle {
+  /**
+   * PostStart is called immediately after a container is created. If the handler fails,
+   * the container is terminated and restarted according to its restart policy.
+   * Other management of the container blocks until the hook completes.
+   * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecycle#postStart
+   */
+  readonly postStart?: OperatorConfigurationConfigurationSidecarsLifecyclePostStart;
+
+  /**
+   * PreStop is called immediately before a container is terminated due to an
+   * API request or management event such as liveness/startup probe failure,
+   * preemption, resource contention, etc. The handler is not called if the
+   * container crashes or exits. The Pod's termination grace period countdown begins before the
+   * PreStop hook is executed. Regardless of the outcome of the handler, the
+   * container will eventually terminate within the Pod's termination grace
+   * period (unless delayed by finalizers). Other management of the container blocks until the hook completes
+   * or until the termination grace period is reached.
+   * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecycle#preStop
+   */
+  readonly preStop?: OperatorConfigurationConfigurationSidecarsLifecyclePreStop;
+
+  /**
+   * StopSignal defines which signal will be sent to a container when it is being stopped.
+   * If not specified, the default is defined by the container runtime in use.
+   * StopSignal can only be set for Pods with a non-empty .spec.os.name
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecycle#stopSignal
+   */
+  readonly stopSignal?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecycle' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecycle(
+  obj: OperatorConfigurationConfigurationSidecarsLifecycle | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    postStart:
+      toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStart(
+        obj.postStart,
+      ),
+    preStop: toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStop(
+      obj.preStop,
+    ),
+    stopSignal: obj.stopSignal,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Periodic probe of container liveness.
+ * Container will be restarted if the probe fails.
+ * Cannot be updated.
+ * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe
+ */
+export interface OperatorConfigurationConfigurationSidecarsLivenessProbe {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#exec
+   */
+  readonly exec?: OperatorConfigurationConfigurationSidecarsLivenessProbeExec;
+
+  /**
+   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
+   * Defaults to 3. Minimum value is 1.
+   *
+   * @default 3. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#failureThreshold
+   */
+  readonly failureThreshold?: number;
+
+  /**
+   * GRPC specifies a GRPC HealthCheckRequest.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#grpc
+   */
+  readonly grpc?: OperatorConfigurationConfigurationSidecarsLivenessProbeGrpc;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#httpGet
+   */
+  readonly httpGet?: OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet;
+
+  /**
+   * Number of seconds after the container has started before liveness probes are initiated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#initialDelaySeconds
+   */
+  readonly initialDelaySeconds?: number;
+
+  /**
+   * How often (in seconds) to perform the probe.
+   * Default to 10 seconds. Minimum value is 1.
+   *
+   * @default 10 seconds. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#periodSeconds
+   */
+  readonly periodSeconds?: number;
+
+  /**
+   * Minimum consecutive successes for the probe to be considered successful after having failed.
+   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+   *
+   * @default 1. Must be 1 for liveness and startup. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#successThreshold
+   */
+  readonly successThreshold?: number;
+
+  /**
+   * TCPSocket specifies a connection to a TCP port.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#tcpSocket
+   */
+  readonly tcpSocket?: OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocket;
+
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+   * value overrides the value provided by the pod spec.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#terminationGracePeriodSeconds
+   */
+  readonly terminationGracePeriodSeconds?: number;
+
+  /**
+   * Number of seconds after which the probe times out.
+   * Defaults to 1 second. Minimum value is 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @default 1 second. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbe#timeoutSeconds
+   */
+  readonly timeoutSeconds?: number;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLivenessProbe' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLivenessProbe(
+  obj: OperatorConfigurationConfigurationSidecarsLivenessProbe | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeExec(
+      obj.exec,
+    ),
+    failureThreshold: obj.failureThreshold,
+    grpc: toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeGrpc(
+      obj.grpc,
+    ),
+    httpGet:
+      toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet(
+        obj.httpGet,
+      ),
+    initialDelaySeconds: obj.initialDelaySeconds,
+    periodSeconds: obj.periodSeconds,
+    successThreshold: obj.successThreshold,
+    tcpSocket:
+      toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocket(
+        obj.tcpSocket,
+      ),
+    terminationGracePeriodSeconds: obj.terminationGracePeriodSeconds,
+    timeoutSeconds: obj.timeoutSeconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ContainerPort represents a network port in a single container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsPorts
+ */
+export interface OperatorConfigurationConfigurationSidecarsPorts {
+  /**
+   * Number of port to expose on the pod's IP address.
+   * This must be a valid port number, 0 < x < 65536.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsPorts#containerPort
+   */
+  readonly containerPort: number;
+
+  /**
+   * What host IP to bind the external port to.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsPorts#hostIP
+   */
+  readonly hostIp?: string;
+
+  /**
+   * Number of port to expose on the host.
+   * If specified, this must be a valid port number, 0 < x < 65536.
+   * If HostNetwork is specified, this must match ContainerPort.
+   * Most containers do not need this.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsPorts#hostPort
+   */
+  readonly hostPort?: number;
+
+  /**
+   * If specified, this must be an IANA_SVC_NAME and unique within the pod. Each
+   * named port in a pod must have a unique name. Name for the port that can be
+   * referred to by services.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsPorts#name
+   */
+  readonly name?: string;
+
+  /**
+   * Protocol for port. Must be UDP, TCP, or SCTP.
+   * Defaults to "TCP".
+   *
+   * @default TCP".
+   * @schema OperatorConfigurationConfigurationSidecarsPorts#protocol
+   */
+  readonly protocol?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsPorts' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsPorts(
+  obj: OperatorConfigurationConfigurationSidecarsPorts | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    containerPort: obj.containerPort,
+    hostIP: obj.hostIp,
+    hostPort: obj.hostPort,
+    name: obj.name,
+    protocol: obj.protocol,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Periodic probe of container service readiness.
+ * Container will be removed from service endpoints if the probe fails.
+ * Cannot be updated.
+ * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe
+ */
+export interface OperatorConfigurationConfigurationSidecarsReadinessProbe {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#exec
+   */
+  readonly exec?: OperatorConfigurationConfigurationSidecarsReadinessProbeExec;
+
+  /**
+   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
+   * Defaults to 3. Minimum value is 1.
+   *
+   * @default 3. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#failureThreshold
+   */
+  readonly failureThreshold?: number;
+
+  /**
+   * GRPC specifies a GRPC HealthCheckRequest.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#grpc
+   */
+  readonly grpc?: OperatorConfigurationConfigurationSidecarsReadinessProbeGrpc;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#httpGet
+   */
+  readonly httpGet?: OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet;
+
+  /**
+   * Number of seconds after the container has started before liveness probes are initiated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#initialDelaySeconds
+   */
+  readonly initialDelaySeconds?: number;
+
+  /**
+   * How often (in seconds) to perform the probe.
+   * Default to 10 seconds. Minimum value is 1.
+   *
+   * @default 10 seconds. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#periodSeconds
+   */
+  readonly periodSeconds?: number;
+
+  /**
+   * Minimum consecutive successes for the probe to be considered successful after having failed.
+   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+   *
+   * @default 1. Must be 1 for liveness and startup. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#successThreshold
+   */
+  readonly successThreshold?: number;
+
+  /**
+   * TCPSocket specifies a connection to a TCP port.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#tcpSocket
+   */
+  readonly tcpSocket?: OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocket;
+
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+   * value overrides the value provided by the pod spec.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#terminationGracePeriodSeconds
+   */
+  readonly terminationGracePeriodSeconds?: number;
+
+  /**
+   * Number of seconds after which the probe times out.
+   * Defaults to 1 second. Minimum value is 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @default 1 second. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbe#timeoutSeconds
+   */
+  readonly timeoutSeconds?: number;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsReadinessProbe' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsReadinessProbe(
+  obj: OperatorConfigurationConfigurationSidecarsReadinessProbe | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeExec(
+      obj.exec,
+    ),
+    failureThreshold: obj.failureThreshold,
+    grpc: toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeGrpc(
+      obj.grpc,
+    ),
+    httpGet:
+      toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet(
+        obj.httpGet,
+      ),
+    initialDelaySeconds: obj.initialDelaySeconds,
+    periodSeconds: obj.periodSeconds,
+    successThreshold: obj.successThreshold,
+    tcpSocket:
+      toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocket(
+        obj.tcpSocket,
+      ),
+    terminationGracePeriodSeconds: obj.terminationGracePeriodSeconds,
+    timeoutSeconds: obj.timeoutSeconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ContainerResizePolicy represents resource resize policy for the container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsResizePolicy
+ */
+export interface OperatorConfigurationConfigurationSidecarsResizePolicy {
+  /**
+   * Name of the resource to which this resource resize policy applies.
+   * Supported values: cpu, memory.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsResizePolicy#resourceName
+   */
+  readonly resourceName: string;
+
+  /**
+   * Restart policy to apply when specified resource is resized.
+   * If not specified, it defaults to NotRequired.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsResizePolicy#restartPolicy
+   */
+  readonly restartPolicy: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsResizePolicy' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsResizePolicy(
+  obj: OperatorConfigurationConfigurationSidecarsResizePolicy | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    resourceName: obj.resourceName,
+    restartPolicy: obj.restartPolicy,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Compute Resources required by this container.
+ * Cannot be updated.
+ * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsResources
+ */
+export interface OperatorConfigurationConfigurationSidecarsResources {
+  /**
+   * Claims lists the names of resources, defined in spec.resourceClaims,
+   * that are used by this container.
+   *
+   * This field depends on the
+   * DynamicResourceAllocation feature gate.
+   *
+   * This field is immutable. It can only be set for containers.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsResources#claims
+   */
+  readonly claims?: OperatorConfigurationConfigurationSidecarsResourcesClaims[];
+
+  /**
+   * Limits describes the maximum amount of compute resources allowed.
+   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsResources#limits
+   */
+  readonly limits?: {
+    [key: string]: OperatorConfigurationConfigurationSidecarsResourcesLimits;
+  };
+
+  /**
+   * Requests describes the minimum amount of compute resources required.
+   * If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+   * otherwise to an implementation-defined value. Requests cannot exceed Limits.
+   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsResources#requests
+   */
+  readonly requests?: {
+    [key: string]: OperatorConfigurationConfigurationSidecarsResourcesRequests;
+  };
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsResources' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsResources(
+  obj: OperatorConfigurationConfigurationSidecarsResources | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    claims: obj.claims?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsResourcesClaims(y),
+    ),
+    limits:
+      obj.limits === undefined
+        ? undefined
+        : Object.entries(obj.limits).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1]?.value }),
+            {},
+          ),
+    requests:
+      obj.requests === undefined
+        ? undefined
+        : Object.entries(obj.requests).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1]?.value }),
+            {},
+          ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ContainerRestartRule describes how a container exit is handled.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsRestartPolicyRules
+ */
+export interface OperatorConfigurationConfigurationSidecarsRestartPolicyRules {
+  /**
+   * Specifies the action taken on a container exit if the requirements
+   * are satisfied. The only possible value is "Restart" to restart the
+   * container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsRestartPolicyRules#action
+   */
+  readonly action: string;
+
+  /**
+   * Represents the exit codes to check on container exits.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsRestartPolicyRules#exitCodes
+   */
+  readonly exitCodes?: OperatorConfigurationConfigurationSidecarsRestartPolicyRulesExitCodes;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsRestartPolicyRules' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsRestartPolicyRules(
+  obj: OperatorConfigurationConfigurationSidecarsRestartPolicyRules | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    action: obj.action,
+    exitCodes:
+      toJson_OperatorConfigurationConfigurationSidecarsRestartPolicyRulesExitCodes(
+        obj.exitCodes,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * SecurityContext defines the security options the container should be run with.
+ * If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
+ * More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsSecurityContext
+ */
+export interface OperatorConfigurationConfigurationSidecarsSecurityContext {
+  /**
+   * AllowPrivilegeEscalation controls whether a process can gain more
+   * privileges than its parent process. This bool directly controls if
+   * the no_new_privs flag will be set on the container process.
+   * AllowPrivilegeEscalation is true always when the container is:
+   * 1) run as Privileged
+   * 2) has CAP_SYS_ADMIN
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#allowPrivilegeEscalation
+   */
+  readonly allowPrivilegeEscalation?: boolean;
+
+  /**
+   * appArmorProfile is the AppArmor options to use by this container. If set, this profile
+   * overrides the pod's appArmorProfile.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#appArmorProfile
+   */
+  readonly appArmorProfile?: OperatorConfigurationConfigurationSidecarsSecurityContextAppArmorProfile;
+
+  /**
+   * The capabilities to add/drop when running containers.
+   * Defaults to the default set of capabilities granted by the container runtime.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @default the default set of capabilities granted by the container runtime.
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#capabilities
+   */
+  readonly capabilities?: OperatorConfigurationConfigurationSidecarsSecurityContextCapabilities;
+
+  /**
+   * Run container in privileged mode.
+   * Processes in privileged containers are essentially equivalent to root on the host.
+   * Defaults to false.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @default false.
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#privileged
+   */
+  readonly privileged?: boolean;
+
+  /**
+   * procMount denotes the type of proc mount to use for the containers.
+   * The default value is Default which uses the container runtime defaults for
+   * readonly paths and masked paths.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#procMount
+   */
+  readonly procMount?: string;
+
+  /**
+   * Whether this container has a read-only root filesystem.
+   * Default is false.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @default false.
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#readOnlyRootFilesystem
+   */
+  readonly readOnlyRootFilesystem?: boolean;
+
+  /**
+   * The GID to run the entrypoint of the container process.
+   * Uses runtime default if unset.
+   * May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#runAsGroup
+   */
+  readonly runAsGroup?: number;
+
+  /**
+   * Indicates that the container must run as a non-root user.
+   * If true, the Kubelet will validate the image at runtime to ensure that it
+   * does not run as UID 0 (root) and fail to start the container if it does.
+   * If unset or false, no such validation will be performed.
+   * May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#runAsNonRoot
+   */
+  readonly runAsNonRoot?: boolean;
+
+  /**
+   * The UID to run the entrypoint of the container process.
+   * Defaults to user specified in image metadata if unspecified.
+   * May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @default user specified in image metadata if unspecified.
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#runAsUser
+   */
+  readonly runAsUser?: number;
+
+  /**
+   * The SELinux context to be applied to the container.
+   * If unspecified, the container runtime will allocate a random SELinux context for each
+   * container.  May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#seLinuxOptions
+   */
+  readonly seLinuxOptions?: OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions;
+
+  /**
+   * The seccomp options to use by this container. If seccomp options are
+   * provided at both the pod & container level, the container options
+   * override the pod options.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#seccompProfile
+   */
+  readonly seccompProfile?: OperatorConfigurationConfigurationSidecarsSecurityContextSeccompProfile;
+
+  /**
+   * The Windows specific settings applied to all containers.
+   * If unspecified, the options from the PodSecurityContext will be used.
+   * If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is linux.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContext#windowsOptions
+   */
+  readonly windowsOptions?: OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsSecurityContext' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsSecurityContext(
+  obj: OperatorConfigurationConfigurationSidecarsSecurityContext | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    allowPrivilegeEscalation: obj.allowPrivilegeEscalation,
+    appArmorProfile:
+      toJson_OperatorConfigurationConfigurationSidecarsSecurityContextAppArmorProfile(
+        obj.appArmorProfile,
+      ),
+    capabilities:
+      toJson_OperatorConfigurationConfigurationSidecarsSecurityContextCapabilities(
+        obj.capabilities,
+      ),
+    privileged: obj.privileged,
+    procMount: obj.procMount,
+    readOnlyRootFilesystem: obj.readOnlyRootFilesystem,
+    runAsGroup: obj.runAsGroup,
+    runAsNonRoot: obj.runAsNonRoot,
+    runAsUser: obj.runAsUser,
+    seLinuxOptions:
+      toJson_OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions(
+        obj.seLinuxOptions,
+      ),
+    seccompProfile:
+      toJson_OperatorConfigurationConfigurationSidecarsSecurityContextSeccompProfile(
+        obj.seccompProfile,
+      ),
+    windowsOptions:
+      toJson_OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions(
+        obj.windowsOptions,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * StartupProbe indicates that the Pod has successfully initialized.
+ * If specified, no other probes are executed until this completes successfully.
+ * If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+ * This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+ * when it might take a long time to load data or warm a cache, than during steady-state operation.
+ * This cannot be updated.
+ * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsStartupProbe
+ */
+export interface OperatorConfigurationConfigurationSidecarsStartupProbe {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#exec
+   */
+  readonly exec?: OperatorConfigurationConfigurationSidecarsStartupProbeExec;
+
+  /**
+   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
+   * Defaults to 3. Minimum value is 1.
+   *
+   * @default 3. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#failureThreshold
+   */
+  readonly failureThreshold?: number;
+
+  /**
+   * GRPC specifies a GRPC HealthCheckRequest.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#grpc
+   */
+  readonly grpc?: OperatorConfigurationConfigurationSidecarsStartupProbeGrpc;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#httpGet
+   */
+  readonly httpGet?: OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet;
+
+  /**
+   * Number of seconds after the container has started before liveness probes are initiated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#initialDelaySeconds
+   */
+  readonly initialDelaySeconds?: number;
+
+  /**
+   * How often (in seconds) to perform the probe.
+   * Default to 10 seconds. Minimum value is 1.
+   *
+   * @default 10 seconds. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#periodSeconds
+   */
+  readonly periodSeconds?: number;
+
+  /**
+   * Minimum consecutive successes for the probe to be considered successful after having failed.
+   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+   *
+   * @default 1. Must be 1 for liveness and startup. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#successThreshold
+   */
+  readonly successThreshold?: number;
+
+  /**
+   * TCPSocket specifies a connection to a TCP port.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#tcpSocket
+   */
+  readonly tcpSocket?: OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocket;
+
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+   * value overrides the value provided by the pod spec.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#terminationGracePeriodSeconds
+   */
+  readonly terminationGracePeriodSeconds?: number;
+
+  /**
+   * Number of seconds after which the probe times out.
+   * Defaults to 1 second. Minimum value is 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @default 1 second. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbe#timeoutSeconds
+   */
+  readonly timeoutSeconds?: number;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsStartupProbe' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsStartupProbe(
+  obj: OperatorConfigurationConfigurationSidecarsStartupProbe | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_OperatorConfigurationConfigurationSidecarsStartupProbeExec(
+      obj.exec,
+    ),
+    failureThreshold: obj.failureThreshold,
+    grpc: toJson_OperatorConfigurationConfigurationSidecarsStartupProbeGrpc(
+      obj.grpc,
+    ),
+    httpGet:
+      toJson_OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet(
+        obj.httpGet,
+      ),
+    initialDelaySeconds: obj.initialDelaySeconds,
+    periodSeconds: obj.periodSeconds,
+    successThreshold: obj.successThreshold,
+    tcpSocket:
+      toJson_OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocket(
+        obj.tcpSocket,
+      ),
+    terminationGracePeriodSeconds: obj.terminationGracePeriodSeconds,
+    timeoutSeconds: obj.timeoutSeconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * volumeDevice describes a mapping of a raw block device within a container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsVolumeDevices
+ */
+export interface OperatorConfigurationConfigurationSidecarsVolumeDevices {
+  /**
+   * devicePath is the path inside of the container that the device will be mapped to.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsVolumeDevices#devicePath
+   */
+  readonly devicePath: string;
+
+  /**
+   * name must match the name of a persistentVolumeClaim in the pod
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsVolumeDevices#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsVolumeDevices' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsVolumeDevices(
+  obj: OperatorConfigurationConfigurationSidecarsVolumeDevices | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    devicePath: obj.devicePath,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * VolumeMount describes a mounting of a Volume within a container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsVolumeMounts
+ */
+export interface OperatorConfigurationConfigurationSidecarsVolumeMounts {
+  /**
+   * Path within the container at which the volume should be mounted.  Must
+   * not contain ':'.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsVolumeMounts#mountPath
+   */
+  readonly mountPath: string;
+
+  /**
+   * mountPropagation determines how mounts are propagated from the host
+   * to container and the other way around.
+   * When not set, MountPropagationNone is used.
+   * This field is beta in 1.10.
+   * When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+   * (which defaults to None).
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsVolumeMounts#mountPropagation
+   */
+  readonly mountPropagation?: string;
+
+  /**
+   * This must match the Name of a Volume.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsVolumeMounts#name
+   */
+  readonly name: string;
+
+  /**
+   * Mounted read-only if true, read-write otherwise (false or unspecified).
+   * Defaults to false.
+   *
+   * @default false.
+   * @schema OperatorConfigurationConfigurationSidecarsVolumeMounts#readOnly
+   */
+  readonly readOnly?: boolean;
+
+  /**
+   * RecursiveReadOnly specifies whether read-only mounts should be handled
+   * recursively.
+   *
+   * If ReadOnly is false, this field has no meaning and must be unspecified.
+   *
+   * If ReadOnly is true, and this field is set to Disabled, the mount is not made
+   * recursively read-only.  If this field is set to IfPossible, the mount is made
+   * recursively read-only, if it is supported by the container runtime.  If this
+   * field is set to Enabled, the mount is made recursively read-only if it is
+   * supported by the container runtime, otherwise the pod will not be started and
+   * an error will be generated to indicate the reason.
+   *
+   * If this field is set to IfPossible or Enabled, MountPropagation must be set to
+   * None (or be unspecified, which defaults to None).
+   *
+   * If this field is not specified, it is treated as an equivalent of Disabled.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsVolumeMounts#recursiveReadOnly
+   */
+  readonly recursiveReadOnly?: string;
+
+  /**
+   * Path within the volume from which the container's volume should be mounted.
+   * Defaults to "" (volume's root).
+   *
+   * @default volume's root).
+   * @schema OperatorConfigurationConfigurationSidecarsVolumeMounts#subPath
+   */
+  readonly subPath?: string;
+
+  /**
+   * Expanded path within the volume from which the container's volume should be mounted.
+   * Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+   * Defaults to "" (volume's root).
+   * SubPathExpr and SubPath are mutually exclusive.
+   *
+   * @default volume's root).
+   * @schema OperatorConfigurationConfigurationSidecarsVolumeMounts#subPathExpr
+   */
+  readonly subPathExpr?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsVolumeMounts' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsVolumeMounts(
+  obj: OperatorConfigurationConfigurationSidecarsVolumeMounts | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    mountPath: obj.mountPath,
+    mountPropagation: obj.mountPropagation,
+    name: obj.name,
+    readOnly: obj.readOnly,
+    recursiveReadOnly: obj.recursiveReadOnly,
+    subPath: obj.subPath,
+    subPathExpr: obj.subPathExpr,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * Exec specifies a command to execute in the container.
  *
  * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeExec
@@ -2196,8 +3762,7 @@ export interface OperatorConfigurationConfigurationKubernetesLivenessProbeExec {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeExec(
   obj:
-    | OperatorConfigurationConfigurationKubernetesLivenessProbeExec
-    | undefined,
+    OperatorConfigurationConfigurationKubernetesLivenessProbeExec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -2243,8 +3808,7 @@ export interface OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc(
   obj:
-    | OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc
-    | undefined,
+    OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -2387,6 +3951,1399 @@ export function toJson_OperatorConfigurationConfigurationKubernetesLivenessProbe
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * Source for the environment variable's value. Cannot be used if value is not empty.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvValueFrom
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnvValueFrom {
+  /**
+   * Selects a key of a ConfigMap.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFrom#configMapKeyRef
+   */
+  readonly configMapKeyRef?: OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef;
+
+  /**
+   * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+   * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFrom#fieldRef
+   */
+  readonly fieldRef?: OperatorConfigurationConfigurationSidecarsEnvValueFromFieldRef;
+
+  /**
+   * FileKeyRef selects a key of the env file.
+   * Requires the EnvFiles feature gate to be enabled.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFrom#fileKeyRef
+   */
+  readonly fileKeyRef?: OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef;
+
+  /**
+   * Selects a resource of the container: only resources limits and requests
+   * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFrom#resourceFieldRef
+   */
+  readonly resourceFieldRef?: OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef;
+
+  /**
+   * Selects a key of a secret in the pod's namespace
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFrom#secretKeyRef
+   */
+  readonly secretKeyRef?: OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnvValueFrom' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnvValueFrom(
+  obj: OperatorConfigurationConfigurationSidecarsEnvValueFrom | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    configMapKeyRef:
+      toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef(
+        obj.configMapKeyRef,
+      ),
+    fieldRef:
+      toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromFieldRef(
+        obj.fieldRef,
+      ),
+    fileKeyRef:
+      toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef(
+        obj.fileKeyRef,
+      ),
+    resourceFieldRef:
+      toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef(
+        obj.resourceFieldRef,
+      ),
+    secretKeyRef:
+      toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef(
+        obj.secretKeyRef,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The ConfigMap to select from
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvFromConfigMapRef
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnvFromConfigMapRef {
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvFromConfigMapRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the ConfigMap must be defined
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvFromConfigMapRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnvFromConfigMapRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnvFromConfigMapRef(
+  obj:
+    OperatorConfigurationConfigurationSidecarsEnvFromConfigMapRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The Secret to select from
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvFromSecretRef
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnvFromSecretRef {
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvFromSecretRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the Secret must be defined
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvFromSecretRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnvFromSecretRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnvFromSecretRef(
+  obj: OperatorConfigurationConfigurationSidecarsEnvFromSecretRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * PostStart is called immediately after a container is created. If the handler fails,
+ * the container is terminated and restarted according to its restart policy.
+ * Other management of the container blocks until the hook completes.
+ * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStart
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePostStart {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStart#exec
+   */
+  readonly exec?: OperatorConfigurationConfigurationSidecarsLifecyclePostStartExec;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStart#httpGet
+   */
+  readonly httpGet?: OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet;
+
+  /**
+   * Sleep represents a duration that the container should sleep.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStart#sleep
+   */
+  readonly sleep?: OperatorConfigurationConfigurationSidecarsLifecyclePostStartSleep;
+
+  /**
+   * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
+   * for backward compatibility. There is no validation of this field and
+   * lifecycle hooks will fail at runtime when it is specified.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStart#tcpSocket
+   */
+  readonly tcpSocket?: OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocket;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePostStart' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStart(
+  obj: OperatorConfigurationConfigurationSidecarsLifecyclePostStart | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartExec(
+      obj.exec,
+    ),
+    httpGet:
+      toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet(
+        obj.httpGet,
+      ),
+    sleep:
+      toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartSleep(
+        obj.sleep,
+      ),
+    tcpSocket:
+      toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocket(
+        obj.tcpSocket,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * PreStop is called immediately before a container is terminated due to an
+ * API request or management event such as liveness/startup probe failure,
+ * preemption, resource contention, etc. The handler is not called if the
+ * container crashes or exits. The Pod's termination grace period countdown begins before the
+ * PreStop hook is executed. Regardless of the outcome of the handler, the
+ * container will eventually terminate within the Pod's termination grace
+ * period (unless delayed by finalizers). Other management of the container blocks until the hook completes
+ * or until the termination grace period is reached.
+ * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStop
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePreStop {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStop#exec
+   */
+  readonly exec?: OperatorConfigurationConfigurationSidecarsLifecyclePreStopExec;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStop#httpGet
+   */
+  readonly httpGet?: OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet;
+
+  /**
+   * Sleep represents a duration that the container should sleep.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStop#sleep
+   */
+  readonly sleep?: OperatorConfigurationConfigurationSidecarsLifecyclePreStopSleep;
+
+  /**
+   * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
+   * for backward compatibility. There is no validation of this field and
+   * lifecycle hooks will fail at runtime when it is specified.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStop#tcpSocket
+   */
+  readonly tcpSocket?: OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocket;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePreStop' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStop(
+  obj: OperatorConfigurationConfigurationSidecarsLifecyclePreStop | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopExec(
+      obj.exec,
+    ),
+    httpGet:
+      toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet(
+        obj.httpGet,
+      ),
+    sleep:
+      toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopSleep(
+        obj.sleep,
+      ),
+    tcpSocket:
+      toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocket(
+        obj.tcpSocket,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeExec
+ */
+export interface OperatorConfigurationConfigurationSidecarsLivenessProbeExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLivenessProbeExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeExec(
+  obj: OperatorConfigurationConfigurationSidecarsLivenessProbeExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * GRPC specifies a GRPC HealthCheckRequest.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeGrpc
+ */
+export interface OperatorConfigurationConfigurationSidecarsLivenessProbeGrpc {
+  /**
+   * Port number of the gRPC service. Number must be in the range 1 to 65535.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeGrpc#port
+   */
+  readonly port: number;
+
+  /**
+   * Service is the name of the service to place in the gRPC HealthCheckRequest
+   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+   *
+   * If this is not specified, the default behavior is defined by gRPC.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeGrpc#service
+   */
+  readonly service?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLivenessProbeGrpc' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeGrpc(
+  obj: OperatorConfigurationConfigurationSidecarsLivenessProbeGrpc | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    port: obj.port,
+    service: obj.service,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet
+ */
+export interface OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet(
+  obj:
+    OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGet | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetHttpHeaders(
+        y,
+      ),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * TCPSocket specifies a connection to a TCP port.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocket
+ */
+export interface OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocket#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocket(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocket
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeExec
+ */
+export interface OperatorConfigurationConfigurationSidecarsReadinessProbeExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsReadinessProbeExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeExec(
+  obj: OperatorConfigurationConfigurationSidecarsReadinessProbeExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * GRPC specifies a GRPC HealthCheckRequest.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeGrpc
+ */
+export interface OperatorConfigurationConfigurationSidecarsReadinessProbeGrpc {
+  /**
+   * Port number of the gRPC service. Number must be in the range 1 to 65535.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeGrpc#port
+   */
+  readonly port: number;
+
+  /**
+   * Service is the name of the service to place in the gRPC HealthCheckRequest
+   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+   *
+   * If this is not specified, the default behavior is defined by gRPC.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeGrpc#service
+   */
+  readonly service?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsReadinessProbeGrpc' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeGrpc(
+  obj: OperatorConfigurationConfigurationSidecarsReadinessProbeGrpc | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    port: obj.port,
+    service: obj.service,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet
+ */
+export interface OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet(
+  obj:
+    OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGet | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetHttpHeaders(
+        y,
+      ),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * TCPSocket specifies a connection to a TCP port.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocket
+ */
+export interface OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocket#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocket(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocket
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ResourceClaim references one entry in PodSpec.ResourceClaims.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsResourcesClaims
+ */
+export interface OperatorConfigurationConfigurationSidecarsResourcesClaims {
+  /**
+   * Name must match the name of one entry in pod.spec.resourceClaims of
+   * the Pod where this field is used. It makes that resource available
+   * inside a container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsResourcesClaims#name
+   */
+  readonly name: string;
+
+  /**
+   * Request is the name chosen for a request in the referenced claim.
+   * If empty, everything from the claim is made available, otherwise
+   * only the result of this request.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsResourcesClaims#request
+   */
+  readonly request?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsResourcesClaims' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsResourcesClaims(
+  obj: OperatorConfigurationConfigurationSidecarsResourcesClaims | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    request: obj.request,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema OperatorConfigurationConfigurationSidecarsResourcesLimits
+ */
+export class OperatorConfigurationConfigurationSidecarsResourcesLimits {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsResourcesLimits {
+    return new OperatorConfigurationConfigurationSidecarsResourcesLimits(value);
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsResourcesLimits {
+    return new OperatorConfigurationConfigurationSidecarsResourcesLimits(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * @schema OperatorConfigurationConfigurationSidecarsResourcesRequests
+ */
+export class OperatorConfigurationConfigurationSidecarsResourcesRequests {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsResourcesRequests {
+    return new OperatorConfigurationConfigurationSidecarsResourcesRequests(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsResourcesRequests {
+    return new OperatorConfigurationConfigurationSidecarsResourcesRequests(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Represents the exit codes to check on container exits.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsRestartPolicyRulesExitCodes
+ */
+export interface OperatorConfigurationConfigurationSidecarsRestartPolicyRulesExitCodes {
+  /**
+   * Represents the relationship between the container exit code(s) and the
+   * specified values. Possible values are:
+   * - In: the requirement is satisfied if the container exit code is in the
+   * set of specified values.
+   * - NotIn: the requirement is satisfied if the container exit code is
+   * not in the set of specified values.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsRestartPolicyRulesExitCodes#operator
+   */
+  readonly operator: string;
+
+  /**
+   * Specifies the set of values to check for container exit codes.
+   * At most 255 elements are allowed.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsRestartPolicyRulesExitCodes#values
+   */
+  readonly values?: number[];
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsRestartPolicyRulesExitCodes' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsRestartPolicyRulesExitCodes(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsRestartPolicyRulesExitCodes
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    operator: obj.operator,
+    values: obj.values?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * appArmorProfile is the AppArmor options to use by this container. If set, this profile
+ * overrides the pod's appArmorProfile.
+ * Note that this field cannot be set when spec.os.name is windows.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsSecurityContextAppArmorProfile
+ */
+export interface OperatorConfigurationConfigurationSidecarsSecurityContextAppArmorProfile {
+  /**
+   * localhostProfile indicates a profile loaded on the node that should be used.
+   * The profile must be preconfigured on the node to work.
+   * Must match the loaded name of the profile.
+   * Must be set if and only if type is "Localhost".
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextAppArmorProfile#localhostProfile
+   */
+  readonly localhostProfile?: string;
+
+  /**
+   * type indicates which kind of AppArmor profile will be applied.
+   * Valid options are:
+   * Localhost - a profile pre-loaded on the node.
+   * RuntimeDefault - the container runtime's default profile.
+   * Unconfined - no AppArmor enforcement.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextAppArmorProfile#type
+   */
+  readonly type: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsSecurityContextAppArmorProfile' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsSecurityContextAppArmorProfile(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsSecurityContextAppArmorProfile
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    localhostProfile: obj.localhostProfile,
+    type: obj.type,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The capabilities to add/drop when running containers.
+ * Defaults to the default set of capabilities granted by the container runtime.
+ * Note that this field cannot be set when spec.os.name is windows.
+ *
+ * @default the default set of capabilities granted by the container runtime.
+ * @schema OperatorConfigurationConfigurationSidecarsSecurityContextCapabilities
+ */
+export interface OperatorConfigurationConfigurationSidecarsSecurityContextCapabilities {
+  /**
+   * Added capabilities
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextCapabilities#add
+   */
+  readonly add?: string[];
+
+  /**
+   * Removed capabilities
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextCapabilities#drop
+   */
+  readonly drop?: string[];
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsSecurityContextCapabilities' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsSecurityContextCapabilities(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsSecurityContextCapabilities
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    add: obj.add?.map((y) => y),
+    drop: obj.drop?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The SELinux context to be applied to the container.
+ * If unspecified, the container runtime will allocate a random SELinux context for each
+ * container.  May also be set in PodSecurityContext.  If set in both SecurityContext and
+ * PodSecurityContext, the value specified in SecurityContext takes precedence.
+ * Note that this field cannot be set when spec.os.name is windows.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions
+ */
+export interface OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions {
+  /**
+   * Level is SELinux level label that applies to the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions#level
+   */
+  readonly level?: string;
+
+  /**
+   * Role is a SELinux role label that applies to the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions#role
+   */
+  readonly role?: string;
+
+  /**
+   * Type is a SELinux type label that applies to the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions#type
+   */
+  readonly type?: string;
+
+  /**
+   * User is a SELinux user label that applies to the container.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions#user
+   */
+  readonly user?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsSecurityContextSeLinuxOptions
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    level: obj.level,
+    role: obj.role,
+    type: obj.type,
+    user: obj.user,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The seccomp options to use by this container. If seccomp options are
+ * provided at both the pod & container level, the container options
+ * override the pod options.
+ * Note that this field cannot be set when spec.os.name is windows.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsSecurityContextSeccompProfile
+ */
+export interface OperatorConfigurationConfigurationSidecarsSecurityContextSeccompProfile {
+  /**
+   * localhostProfile indicates a profile defined in a file on the node should be used.
+   * The profile must be preconfigured on the node to work.
+   * Must be a descending path, relative to the kubelet's configured seccomp profile location.
+   * Must be set if type is "Localhost". Must NOT be set for any other type.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextSeccompProfile#localhostProfile
+   */
+  readonly localhostProfile?: string;
+
+  /**
+   * type indicates which kind of seccomp profile will be applied.
+   * Valid options are:
+   *
+   * Localhost - a profile defined in a file on the node should be used.
+   * RuntimeDefault - the container runtime default profile should be used.
+   * Unconfined - no profile should be applied.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextSeccompProfile#type
+   */
+  readonly type: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsSecurityContextSeccompProfile' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsSecurityContextSeccompProfile(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsSecurityContextSeccompProfile
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    localhostProfile: obj.localhostProfile,
+    type: obj.type,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The Windows specific settings applied to all containers.
+ * If unspecified, the options from the PodSecurityContext will be used.
+ * If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+ * Note that this field cannot be set when spec.os.name is linux.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions
+ */
+export interface OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions {
+  /**
+   * GMSACredentialSpec is where the GMSA admission webhook
+   * (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the
+   * GMSA credential spec named by the GMSACredentialSpecName field.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions#gmsaCredentialSpec
+   */
+  readonly gmsaCredentialSpec?: string;
+
+  /**
+   * GMSACredentialSpecName is the name of the GMSA credential spec to use.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions#gmsaCredentialSpecName
+   */
+  readonly gmsaCredentialSpecName?: string;
+
+  /**
+   * HostProcess determines if a container should be run as a 'Host Process' container.
+   * All of a Pod's containers must have the same effective HostProcess value
+   * (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).
+   * In addition, if HostProcess is true then HostNetwork must also be set to true.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions#hostProcess
+   */
+  readonly hostProcess?: boolean;
+
+  /**
+   * The UserName in Windows to run the entrypoint of the container process.
+   * Defaults to the user specified in image metadata if unspecified.
+   * May also be set in PodSecurityContext. If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   *
+   * @default the user specified in image metadata if unspecified.
+   * @schema OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions#runAsUserName
+   */
+  readonly runAsUserName?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsSecurityContextWindowsOptions
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    gmsaCredentialSpec: obj.gmsaCredentialSpec,
+    gmsaCredentialSpecName: obj.gmsaCredentialSpecName,
+    hostProcess: obj.hostProcess,
+    runAsUserName: obj.runAsUserName,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsStartupProbeExec
+ */
+export interface OperatorConfigurationConfigurationSidecarsStartupProbeExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsStartupProbeExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsStartupProbeExec(
+  obj: OperatorConfigurationConfigurationSidecarsStartupProbeExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * GRPC specifies a GRPC HealthCheckRequest.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsStartupProbeGrpc
+ */
+export interface OperatorConfigurationConfigurationSidecarsStartupProbeGrpc {
+  /**
+   * Port number of the gRPC service. Number must be in the range 1 to 65535.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeGrpc#port
+   */
+  readonly port: number;
+
+  /**
+   * Service is the name of the service to place in the gRPC HealthCheckRequest
+   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+   *
+   * If this is not specified, the default behavior is defined by gRPC.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeGrpc#service
+   */
+  readonly service?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsStartupProbeGrpc' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsStartupProbeGrpc(
+  obj: OperatorConfigurationConfigurationSidecarsStartupProbeGrpc | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    port: obj.port,
+    service: obj.service,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet
+ */
+export interface OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet(
+  obj:
+    OperatorConfigurationConfigurationSidecarsStartupProbeHttpGet | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetHttpHeaders(
+        y,
+      ),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * TCPSocket specifies a connection to a TCP port.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocket
+ */
+export interface OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocket#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocket(
+  obj:
+    OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocket | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * HTTPHeader describes a custom header to be used in HTTP probes
  *
  * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders
@@ -2476,6 +5433,1201 @@ export class OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketP
     value: string,
   ): OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketPort {
     return new OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Selects a key of a ConfigMap.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef {
+  /**
+   * The key to select.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the ConfigMap or its key must be defined
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsEnvValueFromConfigMapKeyRef
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+ * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromFieldRef
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnvValueFromFieldRef {
+  /**
+   * Version of the schema the FieldPath is written in terms of, defaults to "v1".
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromFieldRef#apiVersion
+   */
+  readonly apiVersion?: string;
+
+  /**
+   * Path of the field to select in the specified API version.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromFieldRef#fieldPath
+   */
+  readonly fieldPath: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnvValueFromFieldRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromFieldRef(
+  obj:
+    OperatorConfigurationConfigurationSidecarsEnvValueFromFieldRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersion: obj.apiVersion,
+    fieldPath: obj.fieldPath,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * FileKeyRef selects a key of the env file.
+ * Requires the EnvFiles feature gate to be enabled.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef {
+  /**
+   * The key within the env file. An invalid key will prevent the pod from starting.
+   * The keys defined within a source may consist of any printable ASCII characters except '='.
+   * During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Specify whether the file or its key must be defined. If the file or key
+   * does not exist, then the env var is not published.
+   * If optional is set to true and the specified key does not exist,
+   * the environment variable will not be set in the Pod's containers.
+   *
+   * If optional is set to false and the specified key does not exist,
+   * an error will be returned during Pod creation.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef#optional
+   */
+  readonly optional?: boolean;
+
+  /**
+   * The path within the volume from which to select the file.
+   * Must be relative and may not contain the '..' path or start with '..'.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef#path
+   */
+  readonly path: string;
+
+  /**
+   * The name of the volume mount containing the env file.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef#volumeName
+   */
+  readonly volumeName: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsEnvValueFromFileKeyRef
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    optional: obj.optional,
+    path: obj.path,
+    volumeName: obj.volumeName,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a resource of the container: only resources limits and requests
+ * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef {
+  /**
+   * Container name: required for volumes, optional for env vars
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef#containerName
+   */
+  readonly containerName?: string;
+
+  /**
+   * Specifies the output format of the exposed resources, defaults to "1"
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef#divisor
+   */
+  readonly divisor?: OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRefDivisor;
+
+  /**
+   * Required: resource to select
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef#resource
+   */
+  readonly resource: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRef
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    containerName: obj.containerName,
+    divisor: obj.divisor?.value,
+    resource: obj.resource,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a key of a secret in the pod's namespace
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef
+ */
+export interface OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef {
+  /**
+   * The key of the secret to select from.  Must be a valid secret key.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the Secret or its key must be defined
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsEnvValueFromSecretKeyRef
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartExec
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePostStartExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePostStartExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartExec(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLifecyclePostStartExec
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetHttpHeaders(
+        y,
+      ),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Sleep represents a duration that the container should sleep.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartSleep
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePostStartSleep {
+  /**
+   * Seconds is the number of seconds to sleep.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartSleep#seconds
+   */
+  readonly seconds: number;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePostStartSleep' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartSleep(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLifecyclePostStartSleep
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    seconds: obj.seconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
+ * for backward compatibility. There is no validation of this field and
+ * lifecycle hooks will fail at runtime when it is specified.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocket
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocket#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocket(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocket
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopExec
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePreStopExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePreStopExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopExec(
+  obj:
+    OperatorConfigurationConfigurationSidecarsLifecyclePreStopExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetHttpHeaders(
+        y,
+      ),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Sleep represents a duration that the container should sleep.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopSleep
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePreStopSleep {
+  /**
+   * Seconds is the number of seconds to sleep.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopSleep#seconds
+   */
+  readonly seconds: number;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePreStopSleep' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopSleep(
+  obj:
+    OperatorConfigurationConfigurationSidecarsLifecyclePreStopSleep | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    seconds: obj.seconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
+ * for backward compatibility. There is no validation of this field and
+ * lifecycle hooks will fail at runtime when it is specified.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocket
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocket#port
+   */
+  readonly port: OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocket(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocket
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetHttpHeaders
+ */
+export interface OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetHttpHeaders(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetHttpHeaders
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetPort
+ */
+export class OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsLivenessProbeHttpGetPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocketPort
+ */
+export class OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocketPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsLivenessProbeTcpSocketPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetHttpHeaders
+ */
+export interface OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetHttpHeaders(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetHttpHeaders
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetPort
+ */
+export class OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsReadinessProbeHttpGetPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocketPort
+ */
+export class OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocketPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsReadinessProbeTcpSocketPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetHttpHeaders
+ */
+export interface OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetHttpHeaders(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetHttpHeaders
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetPort
+ */
+export class OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsStartupProbeHttpGetPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocketPort
+ */
+export class OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocketPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsStartupProbeTcpSocketPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Specifies the output format of the exposed resources, defaults to "1"
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRefDivisor
+ */
+export class OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRefDivisor {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRefDivisor {
+    return new OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRefDivisor(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRefDivisor {
+    return new OperatorConfigurationConfigurationSidecarsEnvValueFromResourceFieldRefDivisor(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetHttpHeaders
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetHttpHeaders(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetHttpHeaders
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetPort
+ */
+export class OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsLifecyclePostStartHttpGetPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocketPort
+ */
+export class OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocketPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsLifecyclePostStartTcpSocketPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetHttpHeaders
+ */
+export interface OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetHttpHeaders(
+  obj:
+    | OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetHttpHeaders
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetPort
+ */
+export class OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetPort {
+    return new OperatorConfigurationConfigurationSidecarsLifecyclePreStopHttpGetPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocketPort
+ */
+export class OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocketPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocketPort {
+    return new OperatorConfigurationConfigurationSidecarsLifecyclePreStopTcpSocketPort(
       value,
     );
   }
@@ -10988,8 +15140,7 @@ export interface PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders(
   obj:
-    | PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders
-    | undefined,
+    PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;

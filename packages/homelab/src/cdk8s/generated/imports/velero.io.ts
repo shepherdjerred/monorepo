@@ -5494,8 +5494,7 @@ export interface ScheduleSpecTemplateHooksResourcesLabelSelectorMatchExpressions
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScheduleSpecTemplateHooksResourcesLabelSelectorMatchExpressions(
   obj:
-    | ScheduleSpecTemplateHooksResourcesLabelSelectorMatchExpressions
-    | undefined,
+    ScheduleSpecTemplateHooksResourcesLabelSelectorMatchExpressions | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
