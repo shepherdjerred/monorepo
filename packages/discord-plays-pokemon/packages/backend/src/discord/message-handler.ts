@@ -1,8 +1,11 @@
 import type { Client, Message } from "discord.js";
 import { Events, ChannelType } from "discord.js";
 import { parseChord, type Chord } from "#src/game/command/chord.ts";
-import { effectiveChordDelay, execute } from "./chord-executor.ts";
-import { isValid } from "./chord-validator.ts";
+import {
+  effectiveChordDelay,
+  execute,
+} from "#src/game/command/chord-executor.ts";
+import { isValid } from "#src/game/command/chord-validator.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 import { logger } from "#src/logger.ts";

@@ -59,8 +59,54 @@ export default defineArchitecture({
 | `sourceRoot`       | top-level: directory to cruise (default `src`)                              |
 | `tsConfigFileName` | top-level: tsconfig used to resolve and transpile (default `tsconfig.json`) |
 
-Layer names are restricted to `kebab-case`, so a layer name can never inject
-regular-expression syntax into a generated rule.
+Layer paths are restricted to `kebab-case` segments, so a layer path can never
+inject regular-expression syntax into a generated rule.
+
+### Nested layers
+
+A layer may be a nested directory — `lib/amazon` as well as `amazon`. That
+exists so a package whose layers do not sit directly under the source root does
+not have to narrow `sourceRoot` to reach them: monarch's vendor adapters live
+in `src/lib/`, and setting `sourceRoot: "src/lib"` would take `src/index.ts`
+out of the always-on cycle check.
+
+Fixtures live flat in one directory, so a nested path is flattened for its
+fixture prefix: a boundary from `lib/amazon` is proven by
+`architecture-fixtures/lib-amazon-<what-it-does>.ts`. A definition in which two
+distinct layers would flatten onto the same prefix is refused at resolve time,
+rather than letting one fixture appear to prove both.
+
+### Mutually independent layers
+
+Some relationships are horizontal. Monarch's seven vendor adapters have no
+ordering among them; the requirement is only that none reaches into another.
+Writing that as a hand-maintained 7×6 matrix states one architectural idea as
+seven unrelated rules, and nothing then keeps the matrix symmetric when an
+eighth vendor arrives.
+
+```ts
+export default defineArchitecture({
+  isolatedGroups: [
+    {
+      name: "vendor-adapters-are-self-contained",
+      comment: "Reading another vendor's modules couples two deep paths.",
+      layers: ["lib/amazon", "lib/apple", "lib/venmo"],
+    },
+  ],
+});
+```
+
+| Field     | Meaning                                                                                |
+| --------- | -------------------------------------------------------------------------------------- |
+| `name`    | prefix for the generated rule names (`<name>-<flattened layer>`)                       |
+| `comment` | why the members must stay independent; applied to every generated rule                 |
+| `layers`  | the mutually independent layers; at least two, and each needs its own negative fixture |
+
+A group expands into ordinary boundaries during resolution, so rule generation,
+fixture derivation and the coverage guard see one flat list and know nothing
+about how a boundary was declared. A generated name colliding with a
+hand-written boundary is caught by the same duplicate-name check as any other
+collision.
 
 ## Proving the rules are not vacuous
 
@@ -119,7 +165,10 @@ bunx vitest --config ../../vitest.config.ts list <the package's test args> \
 ```
 
 A package whose ESLint uses `projectService.allowDefaultProject` (an explicit
-per-file list) also has to add the meta-test to that list.
+per-file list) also has to add the meta-test to that list — and, since these
+rules are usually satisfied by moving modules, remember that relocating an
+existing test file means editing its entry there too. ESLint fails with a
+parsing error rather than a missing-file error, so the cause is not obvious.
 
 ## Design notes
 

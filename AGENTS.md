@@ -748,6 +748,17 @@ optional and declared in an `architecture.config.ts` at the package root.
   fixture, or a fixture matching no boundary, fails the suite. The check also
   fails when a cruise inspects zero modules, because a vacuous rule set reads
   as a green check.
+- **A layer may be a nested directory.** `from`/`to` accept a path such as
+  `lib/amazon`, so a package whose layers do not sit directly under the source
+  root does not have to narrow `sourceRoot` and drop its entry point out of the
+  cycle check. Fixture names flatten the path: `lib/amazon` is proven by
+  `architecture-fixtures/lib-amazon-<what-it-does>.ts`.
+- **Mutually independent siblings are one declaration, not a matrix.**
+  `isolatedGroups: [{ name, comment, layers }]` says no member may depend on
+  another and expands to one ordinary boundary per member, so adding a member
+  forbids it in both directions with no chance of an asymmetric hand-written
+  matrix. Monarch's vendor adapters are the motivating case. Each generated
+  boundary still needs its own fixture.
 - Expose the config to the meta-test with `"#architecture":
 "./architecture.config.ts"` in the package's `imports`; parent-relative
   imports are banned.
