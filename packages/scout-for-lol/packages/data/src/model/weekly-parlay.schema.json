@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://scout-for-lol.com/schemas/weekly-parlay-lifecycle-v1.json",
+  "$id": "urn:scout-for-lol:schema:weekly-parlay-lifecycle:v1",
   "type": "object",
   "additionalProperties": false,
   "required": [

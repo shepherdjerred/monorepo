@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   DiscordGuildIdSchema,
+  WEEKLY_PARLAY_LIFECYCLE,
   WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS,
 } from "@scout-for-lol/data";
 import {
@@ -25,7 +26,12 @@ export const WeeklyParlayControlActionSchema = z
     periodKey: z.iso.date(),
     slot: z.number().int().nonnegative().default(WEEKLY_PARLAY_SLOT),
     action: z.enum(["open", "reminder", "start", "progress", "finalize"]),
-    updateIndex: z.number().int().min(0).max(5).optional(),
+    updateIndex: z
+      .number()
+      .int()
+      .min(0)
+      .max(WEEKLY_PARLAY_LIFECYCLE.updateCount - 1)
+      .optional(),
   })
   .superRefine((action, context) => {
     if (action.action === "progress" && action.updateIndex === undefined) {
@@ -86,6 +92,16 @@ async function reconcileOpen(
   );
   if (opened.kind !== "created" && opened.kind !== "existing") {
     return { status: "skipped", detail: opened.kind };
+  }
+  if (new Date() >= period.bettingClosesAt) {
+    return {
+      status: "skipped",
+      detail: "betting window already closed",
+      marketId: opened.marketId,
+    };
+  }
+  if (context.signal?.aborted === true) {
+    throw context.signal.reason ?? new Error("Weekly parlay open was aborted.");
   }
   await deliverWeeklyParlayDiscord(
     {

@@ -37,7 +37,9 @@ import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 export type OpenWeeklyParlayResult =
   | { kind: "created" | "existing"; marketId: number }
-  | { kind: "feature_disabled" | "no_candidate" | "no_price" };
+  | {
+      kind: "feature_disabled" | "no_candidate" | "no_price" | "too_late";
+    };
 
 function periodsSinceFeatured(
   current: string,
@@ -48,6 +50,16 @@ function periodsSinceFeatured(
     : differenceInCalendarWeeks(new Date(current), new Date(previous), {
         weekStartsOn: 1,
       });
+}
+
+function openActionIsActive(
+  period: ReturnType<typeof weeklyParlayPeriod>,
+  signal: AbortSignal | undefined,
+): boolean {
+  if (signal?.aborted === true) {
+    throw signal.reason ?? new Error("Weekly parlay open was aborted.");
+  }
+  return new Date() < period.bettingClosesAt;
 }
 
 async function linkedMemberSubjects(
@@ -203,6 +215,9 @@ async function openWeeklyParlayInternal(
     });
     if (priced === undefined) {
       continue;
+    }
+    if (!openActionIsActive(period, input.signal)) {
+      return { kind: "too_late" };
     }
     try {
       const market = await prismaClient.$transaction(async (tx) => {
