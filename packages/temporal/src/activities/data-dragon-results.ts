@@ -28,10 +28,11 @@ export function noDiffResult(
     formattingOnlyFiles?: string[];
   } = {},
 ): DataDragonUpdateResult {
+  const reason = options.reason ?? "no-diff";
   recordRun({
     mode: input.mode,
     outcome: "success",
-    reason: "no-diff",
+    reason,
     currentVersion: input.currentVersion,
     latestVersion: input.latestVersion,
     changedFiles: 0,
@@ -45,7 +46,7 @@ export function noDiffResult(
     commitHash: undefined,
     prUrl: undefined,
     outcome: "skipped",
-    reason: options.reason ?? "no-diff",
+    reason,
     ...(options.formattingOnlyFiles !== undefined &&
     options.formattingOnlyFiles.length > 0
       ? { formattingOnlyFiles: options.formattingOnlyFiles }
