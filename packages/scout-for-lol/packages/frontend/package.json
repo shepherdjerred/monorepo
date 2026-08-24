@@ -10,6 +10,7 @@
     "@scout-for-lol/backend": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/design-system": "workspace:*",
+    "@resvg/resvg-js": "^2.6.2",
     "@scout-for-lol/report": "workspace:*",
     "@openrouter/ai-sdk-provider": "^3.0.0",
     "@shepherdjerred/llm-models": "workspace:*",

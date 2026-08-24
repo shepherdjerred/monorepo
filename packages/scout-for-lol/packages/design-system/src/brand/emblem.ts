@@ -1,4 +1,10 @@
 import { createElement, type SVGProps } from "react";
+import {
+  scoutMarkCircles,
+  scoutMarkPaths,
+  scoutMarkStroke,
+  scoutMarkViewBox,
+} from "./geometry.ts";
 
 /**
  * Scout's compass/ward-eye emblem without JSX transform dependencies.
@@ -10,34 +16,37 @@ export function ScoutEmblem(props: SVGProps<SVGSVGElement>) {
   return createElement(
     "svg",
     {
-      viewBox: "0 0 32 32",
+      viewBox: scoutMarkViewBox,
       fill: "none",
       xmlns: "http://www.w3.org/2000/svg",
       "aria-hidden": props["aria-label"] === undefined ? "true" : undefined,
       ...props,
     },
     createElement("path", {
-      d: "M16 1.75 28.25 8.8v14.4L16 30.25 3.75 23.2V8.8L16 1.75Z",
+      d: scoutMarkPaths.hexagon,
+      fill: "none",
       stroke: "currentColor",
-      strokeWidth: "1.5",
+      strokeWidth: scoutMarkStroke.ui,
     }),
     createElement("path", {
-      d: "m16 5.25 2.45 7.8L26.25 16l-7.8 2.95L16 26.75l-2.45-7.8L5.75 16l7.8-2.95L16 5.25Z",
+      d: scoutMarkPaths.star,
+      fill: "none",
       stroke: "currentColor",
-      strokeWidth: "1.5",
+      strokeWidth: scoutMarkStroke.ui,
       strokeLinejoin: "round",
     }),
     createElement("circle", {
-      cx: "16",
-      cy: "16",
-      r: "3.25",
+      cx: scoutMarkCircles.ring.cx,
+      cy: scoutMarkCircles.ring.cy,
+      r: scoutMarkCircles.ring.r,
+      fill: "none",
       stroke: "currentColor",
-      strokeWidth: "1.5",
+      strokeWidth: scoutMarkStroke.ui,
     }),
     createElement("circle", {
-      cx: "16",
-      cy: "16",
-      r: "1.15",
+      cx: scoutMarkCircles.pupil.cx,
+      cy: scoutMarkCircles.pupil.cy,
+      r: scoutMarkCircles.pupil.r,
       fill: "currentColor",
     }),
   );

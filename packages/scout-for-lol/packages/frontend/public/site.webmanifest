@@ -4,10 +4,12 @@
   "description": "Get notified when your friends start League of Legends matches and get beautiful post-match reports in Discord.",
   "icons": [
     { "src": "/favicon-48x48.png", "sizes": "48x48", "type": "image/png" },
-    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ],
-  "theme_color": "#4f46e5",
-  "background_color": "#0f172a",
+  "theme_color": "#C8AA6E",
+  "background_color": "#010A13",
   "display": "standalone",
   "start_url": "/"
 }

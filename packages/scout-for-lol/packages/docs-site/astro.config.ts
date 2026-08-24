@@ -48,7 +48,7 @@ export default defineConfig({
       customCss: ["./src/styles/scout.css"],
       description:
         "Learn how to install, configure, and get the most from Scout for League of Legends.",
-      favicon: "/assets/scout/brand/emblem.svg",
+      favicon: "/assets/scout/brand/compass.svg",
       head: [
         {
           tag: "script",
