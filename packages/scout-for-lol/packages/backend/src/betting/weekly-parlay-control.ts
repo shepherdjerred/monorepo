@@ -124,10 +124,7 @@ function catchupTimeline(
     action.periodKey,
     shape,
   );
-  const minimumClose =
-    now.getTime() +
-    WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS +
-    WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS;
+  const minimumClose = now.getTime() + WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS;
   if (
     timeline.openAt > now ||
     timeline.openAt < standard.openAt ||
@@ -163,18 +160,20 @@ async function reconcileOpen(
   context: ControlContext,
 ): Promise<WeeklyParlayControlResult> {
   const period = catchupTimeline(action, context.now);
-  if (
-    context.now.getTime() + WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS >=
-    period.bettingClosesAt.getTime()
-  ) {
-    return { status: "skipped", detail: "betting window already closed" };
-  }
+  const generationDeadline = new Date(
+    context.now.getTime() +
+      (action.window === undefined
+        ? WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS
+        : WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS +
+          WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS),
+  );
   const opened = await openWeeklyParlay(
     {
       serverId: context.serverId,
       periodKey: action.periodKey,
       slot: action.slot,
       timeline: period,
+      generationDeadline,
       ...(context.signal === undefined ? {} : { signal: context.signal }),
     },
     context.prismaClient,
@@ -358,6 +357,13 @@ async function reconcileProgress(
   const scheduledAt = period.updateAt[updateIndex];
   if (scheduledAt === undefined) {
     throw new Error("Weekly progress index has no scheduled wall time.");
+  }
+  if (context.now < scheduledAt) {
+    return {
+      status: "skipped",
+      detail: "before_progress_time",
+      marketId,
+    };
   }
   const nextScheduledAt =
     period.updateAt[updateIndex + 1] ?? period.scoringEndsAt;

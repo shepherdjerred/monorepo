@@ -70,6 +70,7 @@ type OpenWeeklyParlayInput = {
   periodKey: string;
   slot?: number;
   timeline?: WeeklyParlayFrozenWindow;
+  generationDeadline?: Date;
   signal?: AbortSignal;
 };
 
@@ -186,6 +187,12 @@ async function openWeeklyParlayInternal(
   if (existing !== null) {
     assertMatchingTimeline(existing, period);
     return { kind: "existing", marketId: existing.id };
+  }
+  if (
+    input.generationDeadline !== undefined &&
+    input.generationDeadline.getTime() >= period.bettingClosesAt.getTime()
+  ) {
+    return { kind: "too_late" };
   }
   const [bettingEnabled, weeklyEnabled] = await Promise.all([
     isPolicyEnabled("betting_enabled", { server: serverId }),

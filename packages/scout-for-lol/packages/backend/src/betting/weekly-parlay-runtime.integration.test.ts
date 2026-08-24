@@ -28,6 +28,7 @@ import {
   type WeeklyParlayDiscordSender,
 } from "#src/betting/weekly-parlay-discord.ts";
 import { runWeeklyParlayControlAction } from "#src/betting/weekly-parlay-control.ts";
+import { openWeeklyParlay } from "#src/betting/weekly-parlay-open.ts";
 import {
   WEEKLY_PARLAY_INGESTION_GRACE_MS,
   weeklyParlayFinalSettlementAt,
@@ -726,6 +727,41 @@ describe("weekly parlay catch-up controls", () => {
     ).rejects.toThrow("Invalid weekly parlay catch-up timeline");
   });
 
+  test("allows a matching publication retry inside the generation budget", async () => {
+    const period = weeklyParlayPeriod(PERIOD_KEY);
+    const openAt = new Date("2026-08-24T19:00:00.000Z");
+    const market = await makeMarket({
+      marketState: "open",
+      timeline: {
+        openAt,
+        bettingClosesAt: new Date("2026-08-25T07:00:00.000Z"),
+        scoringStartsAt: new Date("2026-08-25T07:00:00.000Z"),
+        scoringEndsAt: period.scoringEndsAt,
+      },
+    });
+    await expect(
+      openWeeklyParlay(
+        {
+          serverId: SERVER_ID,
+          periodKey: PERIOD_KEY,
+          slot: 0,
+          timeline: {
+            periodKey: PERIOD_KEY,
+            openAt,
+            bettingClosesAt: new Date("2026-08-25T07:00:00.000Z"),
+            scoringStartsAt: new Date("2026-08-25T07:00:00.000Z"),
+            scoringEndsAt: period.scoringEndsAt,
+          },
+          generationDeadline: new Date("2026-08-25T07:04:00.000Z"),
+        },
+        db,
+      ),
+    ).resolves.toMatchObject({
+      kind: "existing",
+      marketId: market.id,
+    });
+  });
+
   test("defers a start received before the persisted scoring clock", async () => {
     const period = weeklyParlayPeriod(PERIOD_KEY);
     const market = await makeMarket({
@@ -757,6 +793,38 @@ describe("weekly parlay catch-up controls", () => {
         select: { marketState: true },
       }),
     ).resolves.toMatchObject({ marketState: "open" });
+  });
+
+  test("defers progress received before the persisted update clock", async () => {
+    const period = weeklyParlayPeriod(PERIOD_KEY);
+    const market = await makeMarket({
+      marketState: "open",
+      timeline: {
+        openAt: period.openAt,
+        bettingClosesAt: period.bettingClosesAt,
+        scoringStartsAt: new Date("2026-08-25T07:00:00.000Z"),
+        scoringEndsAt: period.scoringEndsAt,
+      },
+    });
+    await expect(
+      runWeeklyParlayControlAction(
+        {
+          periodKey: PERIOD_KEY,
+          action: "progress",
+          slot: 0,
+          updateIndex: 0,
+        },
+        {
+          serverId: SERVER_ID,
+          now: new Date("2026-08-25T07:00:00.000Z"),
+          prismaClient: db,
+        },
+      ),
+    ).resolves.toMatchObject({
+      status: "skipped",
+      detail: "before_progress_time",
+      marketId: market.id,
+    });
   });
 
   test("rejects a catch-up scoring cutoff that is not an exact Pacific midnight", async () => {
