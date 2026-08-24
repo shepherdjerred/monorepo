@@ -1,4 +1,6 @@
 import { mkdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
@@ -11,6 +13,7 @@ import {
   scoutTileSvg,
 } from "#src/brand/geometry.ts";
 
+const check = Bun.argv.includes("--check");
 const packageRoot = fileURLToPath(new URL("..", import.meta.url));
 const brandDir = `${packageRoot}assets/brand/`;
 const fontsDir = `${packageRoot}assets/fonts/`;
@@ -69,6 +72,31 @@ function icoFromPngs(images: { size: number; png: Uint8Array }[]): Uint8Array {
     out.set(entry.png, entry.offset);
   });
   return out;
+}
+
+function sameBytes(left: Uint8Array, right: Uint8Array): boolean {
+  if (left.byteLength !== right.byteLength) return false;
+  return left.every((value, index) => value === right[index]);
+}
+
+async function emit(path: string, data: string | Uint8Array): Promise<void> {
+  if (!check) {
+    await Bun.write(path, data);
+    return;
+  }
+  const file = Bun.file(path);
+  if (!(await file.exists())) {
+    throw new Error(`Missing generated Scout brand file: ${path}`);
+  }
+  if (typeof data === "string") {
+    if ((await file.text()) !== data) {
+      throw new Error(`Scout brand asset drifted: ${path}`);
+    }
+    return;
+  }
+  if (!sameBytes(new Uint8Array(await file.arrayBuffer()), data)) {
+    throw new Error(`Scout brand asset drifted: ${path}`);
+  }
 }
 
 function outlineText(input: {
@@ -233,12 +261,12 @@ const discordBanner = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 
 await mkdir(brandDir, { recursive: true });
 await mkdir(evalsPublic, { recursive: true });
 
-await Bun.write(`${brandDir}emblem.svg`, emblem);
-await Bun.write(`${brandDir}compass.svg`, compass);
-await Bun.write(`${brandDir}apple-touch.svg`, appleTouch);
-await Bun.write(`${brandDir}app-icon.svg`, appIcon);
-await Bun.write(`${brandDir}wordmark.svg`, wordmark);
-await Bun.write(`${brandDir}banner.svg`, banner);
+await emit(`${brandDir}emblem.svg`, emblem);
+await emit(`${brandDir}compass.svg`, compass);
+await emit(`${brandDir}apple-touch.svg`, appleTouch);
+await emit(`${brandDir}app-icon.svg`, appIcon);
+await emit(`${brandDir}wordmark.svg`, wordmark);
+await emit(`${brandDir}banner.svg`, banner);
 
 const png48 = pngFromSvg(compass, 48);
 const png16 = pngFromSvg(compass, 16);
@@ -247,20 +275,17 @@ const png180 = pngFromSvg(appleTouch, 180);
 const png192 = pngFromSvg(appleTouch, 192);
 const png512 = pngFromSvg(appIcon, 512);
 
-await Bun.write(`${brandDir}wordmark.png`, pngFromSvg(wordmark, 720));
-await Bun.write(`${brandDir}banner.png`, pngFromSvg(banner, 1500));
-await Bun.write(`${brandDir}app-icon-512.png`, png512);
-await Bun.write(`${brandDir}discord-icon.png`, pngFromSvg(discordIcon, 1024));
-await Bun.write(
-  `${brandDir}discord-banner.png`,
-  pngFromSvg(discordBanner, 680),
-);
-await Bun.write(`${frontendPublic}favicon.svg`, compass);
-await Bun.write(`${frontendPublic}favicon-48x48.png`, png48);
-await Bun.write(`${frontendPublic}apple-touch-icon.png`, png180);
-await Bun.write(`${frontendPublic}icon-192.png`, png192);
-await Bun.write(`${frontendPublic}icon-512.png`, png512);
-await Bun.write(
+await emit(`${brandDir}wordmark.png`, pngFromSvg(wordmark, 720));
+await emit(`${brandDir}banner.png`, pngFromSvg(banner, 1500));
+await emit(`${brandDir}app-icon-512.png`, png512);
+await emit(`${brandDir}discord-icon.png`, pngFromSvg(discordIcon, 1024));
+await emit(`${brandDir}discord-banner.png`, pngFromSvg(discordBanner, 680));
+await emit(`${frontendPublic}favicon.svg`, compass);
+await emit(`${frontendPublic}favicon-48x48.png`, png48);
+await emit(`${frontendPublic}apple-touch-icon.png`, png180);
+await emit(`${frontendPublic}icon-192.png`, png192);
+await emit(`${frontendPublic}icon-512.png`, png512);
+await emit(
   `${frontendPublic}favicon.ico`,
   icoFromPngs([
     { size: 16, png: png16 },
@@ -268,7 +293,7 @@ await Bun.write(
     { size: 48, png: png48 },
   ]),
 );
-await Bun.write(`${evalsPublic}favicon.svg`, compass);
+await emit(`${evalsPublic}favicon.svg`, compass);
 
 const ogSvg = await satori(
   scoutOgCard({
@@ -301,16 +326,26 @@ const ogSvg = await satori(
     ],
   },
 );
-await Bun.write(`${brandDir}og-default.png`, pngFromSvg(ogSvg, 1200));
+await emit(`${brandDir}og-default.png`, pngFromSvg(ogSvg, 1200));
 
+const tauriOut = check
+  ? join(tmpdir(), `scout-brand-icons-${String(process.pid)}`)
+  : desktopIcons;
+await mkdir(tauriOut, { recursive: true });
+const tauriSource = check
+  ? join(tauriOut, "source.png")
+  : `${brandDir}app-icon-512.png`;
+if (check) {
+  await Bun.write(tauriSource, png512);
+}
 const tauri = Bun.spawnSync(
   [
     "bunx",
     "@tauri-apps/cli",
     "icon",
-    `${brandDir}app-icon-512.png`,
+    tauriSource,
     "-o",
-    desktopIcons,
+    tauriOut,
     "--ios-color",
     colors.canvas,
   ],
@@ -319,5 +354,20 @@ const tauri = Bun.spawnSync(
 if (tauri.exitCode !== 0) {
   throw new Error("Failed to generate Tauri icons");
 }
+if (check) {
+  for (const name of ["icon.png", "32x32.png", "128x128.png"]) {
+    const expected = new Uint8Array(
+      await Bun.file(`${desktopIcons}${name}`).arrayBuffer(),
+    );
+    const actual = new Uint8Array(
+      await Bun.file(join(tauriOut, name)).arrayBuffer(),
+    );
+    if (!sameBytes(expected, actual)) {
+      throw new Error(`Scout desktop icon drifted: ${name}`);
+    }
+  }
+}
 
-console.log("Generated Scout brand assets");
+console.log(
+  check ? "Scout brand assets are in sync" : "Generated Scout brand assets",
+);
