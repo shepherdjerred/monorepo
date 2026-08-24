@@ -18,9 +18,10 @@ import {
   TeamBooleanFieldSchema,
   TeamObjectiveSchema,
 } from "#src/betting/parlay-catalog.ts";
+import { formatParlayNumericValue } from "#src/betting/display-format.ts";
 
 export const PARLAY_SCHEMA_VERSION = 1;
-export const PARLAY_CATALOG_VERSION = "2026-08-19";
+export const PARLAY_CATALOG_VERSION = "2026-08-23";
 // Deliberately NOT bumped for the opponent-ping condition. This version is a
 // settlement gate: evaluateParlay voids any stored definition whose recorded
 // version differs, which refunds it. Adding a condition kind leaves every
@@ -310,14 +311,18 @@ export function parlaySemanticIssues(
   return [...issues, ...logicalContradictionIssues(parlay)];
 }
 
-function numericPhrase(operator: "gte" | "lte" | "eq", threshold: number) {
+function numericPhrase(
+  operator: "gte" | "lte" | "eq",
+  threshold: number,
+  field: string,
+) {
   const comparison =
     operator === "gte"
       ? "at least"
       : operator === "lte"
         ? "at most"
         : "exactly";
-  return `${comparison} ${threshold.toString()}`;
+  return `${comparison} ${formatParlayNumericValue(field, threshold)}`;
 }
 
 function subjectAlias(subjects: readonly ParlaySubject[], key: string): string {
@@ -330,7 +335,7 @@ export function renderParlayCondition(
 ): string {
   switch (condition.kind) {
     case "participant_numeric":
-      return `${subjectAlias(subjects, condition.subject)} gets ${numericPhrase(condition.operator, condition.threshold)} ${PARTICIPANT_NUMERIC_SETTLEMENT_CATALOG[condition.field].label}`;
+      return `${subjectAlias(subjects, condition.subject)} gets ${numericPhrase(condition.operator, condition.threshold, condition.field)} ${PARTICIPANT_NUMERIC_SETTLEMENT_CATALOG[condition.field].label}`;
     case "participant_boolean": {
       const name = subjectAlias(subjects, condition.subject);
       const field = PARTICIPANT_BOOLEAN_CATALOG[condition.field].label;
@@ -347,11 +352,11 @@ export function renderParlayCondition(
         : `Their team does not get first ${objective}`;
     }
     case "team_objective_kills":
-      return `Their team gets ${numericPhrase(condition.operator, condition.threshold)} ${TEAM_OBJECTIVE_CATALOG[condition.objective].label}${condition.threshold === 1 ? "" : "s"}`;
+      return `Their team gets ${numericPhrase(condition.operator, condition.threshold, condition.objective)} ${TEAM_OBJECTIVE_CATALOG[condition.objective].label}${condition.threshold === 1 ? "" : "s"}`;
     case "match_numeric":
-      return `The ${MATCH_NUMERIC_CATALOG[condition.field].label} is ${numericPhrase(condition.operator, condition.threshold)}`;
+      return `The ${MATCH_NUMERIC_CATALOG[condition.field].label} is ${numericPhrase(condition.operator, condition.threshold, condition.field)}`;
     case "opponent_team_pings":
-      return `The ${OPPONENT_PING_CATALOG[condition.field].label} is ${numericPhrase(condition.operator, condition.threshold)}`;
+      return `The ${OPPONENT_PING_CATALOG[condition.field].label} is ${numericPhrase(condition.operator, condition.threshold, condition.field)}`;
   }
 }
 

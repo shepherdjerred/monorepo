@@ -233,7 +233,7 @@ describe("bucksPrematchSummary", () => {
     });
     const content = withBucksDigest(base, summary);
 
-    expect(summary).toContain("2147483647 → matched **1073741824**");
+    expect(summary).toContain("2,147,483,647 → matched **1,073,741,824**");
     expect(summary).toContain("more.");
     expect(summary.length).toBeLessThanOrEqual(digestBudgetFor(base));
     expect(content.length).toBeLessThanOrEqual(2000);

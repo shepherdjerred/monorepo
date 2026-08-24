@@ -325,13 +325,37 @@ messages have no buttons, and the recurring prematch task retries activation
 after restarts. The five-minute clock begins only when persisted messages are
 successfully activated.
 
-GPT-5.6 Sol generates a versioned 2–6 leg criteria tree through OpenRouter with
-medium reasoning, a 4,096-token initial output limit, a 6,144-token truncated
-retry limit, and a shared 60-second deadline. It receives anonymous lobby and
-recent-form context plus the complete allowed field catalog. The model never
+Scout first builds an ordered shortlist of exactly 20 match-specific targets:
+16 player targets distributed evenly across the tracked subjects and four
+game-wide targets. Every selection is SHA-256-ranked from a versioned match seed,
+so retries and parallel workers reproduce the same order regardless of source
+ordering. Player eligibility combines a universal pool, a reviewed inferred-lane
+pool, and Riot champion-tag pools read from the bundled Data Dragon assets.
+Champion tags are coarse by design; for example, a Support-tagged champion may
+receive a healing target even when its individual kit makes that line dubious.
+Zero-heavy participant objective last-hits, multikills, killing sprees, true
+damage, and player `timePlayed` remain evaluable for stored criteria but are not
+shortlisted.
+
+Global candidates are team win, five history-grounded team-objective counts,
+and game duration. Exactly one of 16 hash buckets admits opponent-team pings;
+when admitted, one of the 13 ping subtypes is selected deterministically and
+occupies one global slot. The versioned generation context stores the exact 20
+candidates for audit, and structured model output is rejected unless every
+target is in that list and bound to its listed subject or team.
+
+GPT-5.6 Sol then generates a versioned 2–6 leg criteria tree through OpenRouter
+with medium reasoning, a 4,096-token initial output limit, a 6,144-token
+truncated retry limit, and a shared 60-second deadline. It receives anonymous
+lobby and recent-form context plus only the shortlist. The first pass chooses
+targets and operators while covering every tracked subject; the second pass
+chooses thresholds from measured history. Pricing still replays those thresholds
+over the same history snapshot and is never model-authored. The model never
 supplies code, paths, settlement expressions, or authoritative result prose.
 Settlement evaluates only the persisted canonical tree against the final Riot
-`RawMatch`; remakes take precedence and refund both outcome and parlay markets.
+`RawMatch`; the evaluator version is unchanged because existing criteria retain
+identical meaning. Remakes take precedence and refund both outcome and parlay
+markets.
 
 Neither market has a product stake cap. Positive whole-BB positions are bounded
 by wallet balance, parlay house liability, and the existing Int32 persistence
@@ -339,6 +363,15 @@ domain. Parlay liability is reserved when the position is accepted; total
 positions are repriced with integer-ceiling fixed odds on every top-up. Credits
 also preserve Int32 headroom for every pending stake and house reserve, so a
 later cancellation, remake, or stale-market refund is always representable.
+
+Post-game presentation uses separate `BET WINNERS`, `BET LOSERS`,
+`PARLAY WINNERS`, and `PARLAY LOSERS` sections. Winners show net profit and a
+nonzero fee where applicable; losers show the stake actually lost. Matching,
+predicted sides, house fill, pool totals, and gross-return arithmetic remain on
+the pre-game close receipt and are omitted post-game. Outcome and parlay refunds
+are summarized separately without listing refunded bettors. All user-facing
+whole numbers use fixed comma grouping, while game duration and stored parlay
+time fields render as `MM:SS` without wrapping minutes at 60.
 
 Prompt rendering, semantic validation, catalog coverage, and evaluation run in
 ordinary offline tests. Run the opt-in production prompt acceptance suite with

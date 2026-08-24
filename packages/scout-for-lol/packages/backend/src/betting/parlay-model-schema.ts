@@ -11,6 +11,12 @@ import {
   PARLAY_HISTORY_COLUMNS,
   TEAM_OBJECTIVE_HISTORY_COLUMNS,
 } from "#src/betting/parlay-stat-fields.ts";
+import {
+  candidateTargetKey,
+  ParlayCandidateTargetSchema,
+  type ParlayCandidateTarget,
+  type ParlayShortlist,
+} from "#src/betting/parlay-shortlist.ts";
 import { proposalConditionIssues } from "#src/betting/parlay-proposal-validation.ts";
 import {
   GeneratedParlaySchema,
@@ -100,9 +106,63 @@ const ModelParlayProposalSchema = z.strictObject({
 });
 
 export type ModelParlayProposal = z.infer<typeof ModelParlayProposalSchema>;
+type ModelParlayProposalCondition = ModelParlayProposal["conditions"][number];
 
 type ModelParlayCondition = z.infer<typeof ModelParlayConditionSchema>;
 type ModelGeneratedParlay = z.infer<typeof ModelGeneratedParlaySchema>;
+
+function proposalCandidateTarget(
+  condition: ModelParlayProposalCondition,
+): ParlayCandidateTarget | undefined {
+  let candidate: unknown;
+  switch (condition.kind) {
+    case "participant_numeric":
+      candidate = {
+        kind: condition.kind,
+        subject: condition.subject,
+        participantNumericField: condition.participantNumericField,
+      };
+      break;
+    case "team_boolean":
+      candidate = {
+        kind: condition.kind,
+        team: condition.team,
+        teamBooleanField: condition.teamBooleanField,
+      };
+      break;
+    case "team_objective_kills":
+      candidate = {
+        kind: condition.kind,
+        team: condition.team,
+        objective: condition.objective,
+      };
+      break;
+    case "match_numeric":
+      candidate = {
+        kind: condition.kind,
+        matchNumericField: condition.matchNumericField,
+      };
+      break;
+    case "opponent_team_pings":
+      candidate = {
+        kind: condition.kind,
+        opponentPingField: condition.opponentPingField,
+      };
+      break;
+  }
+  const result = ParlayCandidateTargetSchema.safeParse(candidate);
+  return result.success ? result.data : undefined;
+}
+
+function shortlistConditionIssues(
+  condition: ModelParlayProposalCondition,
+  allowedTargets: ReadonlySet<string>,
+): string[] {
+  const target = proposalCandidateTarget(condition);
+  return target !== undefined && allowedTargets.has(candidateTargetKey(target))
+    ? []
+    : ["Condition target is not in the match shortlist"];
+}
 
 function canonicalConditionCandidate(condition: ModelParlayCondition): unknown {
   switch (condition.kind) {
@@ -345,13 +405,20 @@ export function generatedParlaySchemaFor(
 /** Pass-one schema: legs only, restricted to subjects actually in this game. */
 export function parlayProposalSchemaFor(
   subjects: readonly ParlaySubject[],
+  shortlist: ParlayShortlist,
 ): z.ZodType<ModelParlayProposal> {
   const selected = new Set(subjects.map((subject) => subject.key));
+  const allowedTargets = new Set(
+    shortlist.candidates.map((candidate) => candidateTargetKey(candidate)),
+  );
   return ModelParlayProposalSchema.superRefine((proposal, context) => {
     const covered = new Set<string>();
     const targets = new Set<string>();
     for (const [index, condition] of proposal.conditions.entries()) {
-      for (const message of proposalConditionIssues(condition, targets)) {
+      for (const message of [
+        ...proposalConditionIssues(condition, targets),
+        ...shortlistConditionIssues(condition, allowedTargets),
+      ]) {
         context.addIssue({
           code: "custom",
           path: ["conditions", index],

@@ -162,17 +162,17 @@ describe("formatSettlementBody", () => {
       predictionVerdictLine: undefined,
     });
 
+    expect(body).toContain("**BET WINNERS:**");
     expect(body).toContain(
-      `• <@${WINNER_DISCORD_ID}> Blue 10 → matched **10** · +**6 BB** (20 − 4 fee = 16 back)`,
+      `• <@${WINNER_DISCORD_ID}> bet 10BB, won 6BB (4BB fee)`,
     );
-    expect(body).toContain("Matched pool **20 BB** · winner fees **4 BB**");
-    expect(body).toContain(
-      `• <@${LOSER_DISCORD_ID}> Red 10 → matched **10** · −**10 BB**`,
-    );
+    expect(body).toContain("**BET LOSERS:**");
+    expect(body).toContain(`• <@${LOSER_DISCORD_ID}> bet 10BB, lost 10BB`);
+    expect(body).not.toContain("Matched pool");
     expect(body).toContain("🪙 **Aaron** +11 BB (played, clash bonus)");
   });
 
-  test("labels refunds while retaining the original stake", () => {
+  test("summarizes voided and fully unmatched refunds without bettor rows", () => {
     const summary: SettlementSummary = {
       matchId: "NA1_5000000042",
       serverId: "1337623164146155593",
@@ -202,6 +202,64 @@ describe("formatSettlementBody", () => {
       ],
     };
 
+    const unmatchedDiscordId = bucksTestDiscordId(3);
+    const body = formatSettlementBody({
+      includeOutcome: true,
+      parlay: undefined,
+      framing: undefined,
+      summary,
+      earnings: [],
+      predictionSentence: undefined,
+      predictionVerdictLine: undefined,
+      unmatchedPositions: [
+        {
+          betId: 3,
+          discordId: unmatchedDiscordId,
+          teamId: 100,
+          submittedStake: 5,
+          matchedStake: 0,
+          unmatchedStake: 5,
+        },
+      ],
+    });
+
+    expect(body).toContain(
+      "BET REFUNDS: **19BB** across 2 bets (no takers on the other side).",
+    );
+    expect(body).not.toContain(`<@${WINNER_DISCORD_ID}>`);
+    expect(body).not.toContain(`<@${unmatchedDiscordId}>`);
+  });
+
+  test("shows a partial result and summarizes only its unmatched refund", () => {
+    const summary: SettlementSummary = {
+      matchId: "NA1_5000000042",
+      serverId: "1337623164146155593",
+      winningTeamId: 100,
+      voidReason: undefined,
+      winnersPool: 10,
+      losersPool: 10,
+      houseCut: 2,
+      bets: [
+        {
+          betId: 1,
+          bucksAccountId: 1,
+          discordId: WINNER_DISCORD_ID,
+          isHouse: false,
+          predictedTeamId: 100,
+          submittedStake: 15,
+          matchedStake: 10,
+          unmatchedStake: 5,
+          grossPayout: 20,
+          houseCut: 2,
+          payout: 18,
+          winnings: 8,
+          won: true,
+          refunded: false,
+          subjectPuuid: "winner-puuid",
+        },
+      ],
+    };
+
     const body = formatSettlementBody({
       includeOutcome: true,
       parlay: undefined,
@@ -213,14 +271,16 @@ describe("formatSettlementBody", () => {
     });
 
     expect(body).toContain(
-      `• <@${WINNER_DISCORD_ID}> Blue 14 → matched **10**, refunded **4** · refunded **10 BB**`,
+      `• <@${WINNER_DISCORD_ID}> bet 15BB, won 8BB (2BB fee)`,
     );
-    expect(body).toContain("Matched pool **10 BB** · winner fees **0 BB**");
+    expect(body).toContain("BET REFUNDS: **5BB** across 1 bet.");
+    expect(body).not.toContain("matched stake");
+    expect(body).not.toContain("Blue");
   });
 });
 
 describe("formatSettlementBody house cuts", () => {
-  test("shows complete arithmetic when a small winning payout has no cut", () => {
+  test("omits the fee parenthetical when a small winner pays no fee", () => {
     const summary: SettlementSummary = {
       matchId: "NA1_5000000042",
       serverId: "1337623164146155593",
@@ -277,13 +337,11 @@ describe("formatSettlementBody house cuts", () => {
       predictionVerdictLine: undefined,
     });
 
-    expect(body).toContain("Matched pool **2 BB** · winner fees **0 BB**");
-    expect(body).toContain(
-      "Blue 1 → matched **1** · +**1 BB** (2 − 0 fee = 2 back)",
-    );
+    expect(body).toContain(`• <@${WINNER_DISCORD_ID}> bet 1BB, won 1BB`);
+    expect(body).not.toContain("0BB fee");
   });
 
-  test("summarizes the house without exposing its synthetic account", () => {
+  test("omits house-match details and the synthetic account", () => {
     const summary: SettlementSummary = {
       matchId: "NA1_5000000042",
       serverId: "1337623164146155593",
@@ -340,12 +398,10 @@ describe("formatSettlementBody house cuts", () => {
       predictionVerdictLine: undefined,
     });
 
-    expect(body).toContain(
-      "🏦 Bryan Bucks house matched 25 BB on the other side.",
-    );
+    expect(body).not.toContain("Bryan Bucks house matched");
     expect(body).not.toContain(`<@${HOUSE_ACCOUNT_DISCORD_ID}>`);
     expect(body).toContain(
-      `• <@${WINNER_DISCORD_ID}> Blue 25 → matched **25**`,
+      `• <@${WINNER_DISCORD_ID}> bet 25BB, won 15BB (10BB fee)`,
     );
   });
 });
@@ -442,10 +498,9 @@ describe("settlement outcome message", () => {
         0,
       );
     expect(embedLength).toBeLessThanOrEqual(6000);
-    expect(delivered).toContain(
-      "Matched pool **80 BB** · winner fees **32 BB**",
-    );
-    expect(delivered).toContain("+**3 BB** (10 − 2 fee = 8 back)");
+    expect(delivered).toContain("BET WINNERS");
+    expect(delivered).toContain("bet 5BB, won 3BB (2BB fee)");
+    expect(delivered).not.toContain("Matched pool");
     expect(delivered).toContain("🪙 **Aaron** +13 BB");
     expect(delivered).toContain("…and 1 more — see `/bb history`");
   });

@@ -245,13 +245,14 @@ async function generateAndPersistDefinition(
 
   // Pass one: which legs, no numbers.
   const proposed = await call(
-    parlayProposalSchemaFor(setup.subjects),
+    parlayProposalSchemaFor(setup.subjects, setup.context.shortlist),
     buildParlayProposalPrompt(setup.context),
     "bryan_bucks_parlay_proposal",
   );
-  const proposal = parlayProposalSchemaFor(setup.subjects).parse(
-    proposed.object,
-  );
+  const proposal = parlayProposalSchemaFor(
+    setup.subjects,
+    setup.context.shortlist,
+  ).parse(proposed.object);
   deadline.throwIfAborted();
 
   // The one history snapshot that both the thresholds and the price come from.

@@ -133,7 +133,13 @@ export * from "./data-dragon/summoner.ts";
 export * from "./data-dragon/classic.ts";
 export * from "./data-dragon/item.ts";
 export * from "./data-dragon/runes.ts";
-export { getChampionInfo, getChampionList } from "./data-dragon/champion.ts";
+export {
+  ChampionTagSchema,
+  getChampionInfo,
+  getChampionList,
+  getChampionTags,
+  type ChampionTag,
+} from "./data-dragon/champion.ts";
 export {
   getPatchChangeset,
   selectRelevantPatchChanges,

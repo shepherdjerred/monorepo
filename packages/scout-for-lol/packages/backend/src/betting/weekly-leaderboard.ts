@@ -18,6 +18,7 @@ import {
 } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 const logger = createLogger("betting-weekly-leaderboard");
 const MAX_CHUNK_SEND_ATTEMPTS = 3;
@@ -61,7 +62,7 @@ export function formatWeeklyBucksLeaderboard(
   const body = rankBucksLeaderboard(rows)
     .map(
       (row) =>
-        `**${row.rank.toString()}.** <@${row.discordId}> — **${row.balance.toString()} BB**`,
+        `**${formatInteger(row.rank)}.** <@${row.discordId}> — **${formatInteger(row.balance)} BB**`,
     )
     .join("\n");
   return splitMessageIntoChunks(

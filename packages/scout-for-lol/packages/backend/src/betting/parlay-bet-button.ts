@@ -24,11 +24,12 @@ import {
   BUCKS_STORAGE_LIMIT,
   bucksInsufficient,
 } from "#src/betting/copy.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 export function describeParlayResult(result: PlaceParlayBetResult): string {
   switch (result.kind) {
     case "placed":
-      return `✅ Parlay **${result.side}** position is now **${result.totalStake.toString()} BB**, paying **${result.grossPayout.toString()} BB** if it wins. Balance: **${result.balanceAfter.toString()} BB**.`;
+      return `✅ Parlay **${result.side}** position is now **${formatInteger(result.totalStake)} BB**, paying **${formatInteger(result.grossPayout)} BB** if it wins. Balance: **${formatInteger(result.balanceAfter)} BB**.`;
     case "window_closed":
       return "⏰ Parlay betting has closed for this game.";
     case "no_market":
@@ -57,7 +58,7 @@ export function describeParlayCancel(result: CancelParlayBetResult): string {
     case "cancelled":
       // Says "no fee" explicitly: the outcome market charges one and this is
       // the only place a parlay bettor learns theirs does not.
-      return `↩️ Cancelled: **${result.refunded.toString()} BB** back, no fee · balance **${result.balanceAfter.toString()} BB**.`;
+      return `↩️ Cancelled: **${formatInteger(result.refunded)} BB** back, no fee · balance **${formatInteger(result.balanceAfter)} BB**.`;
     case "no_market":
       return BUCKS_NO_PARLAY_MARKET;
     case "no_bet":

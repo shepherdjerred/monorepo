@@ -485,9 +485,9 @@ describe("announceSettlements unmatched receipts", () => {
     );
 
     expect(sends).toHaveLength(2);
-    expect(JSON.stringify(sends[0])).toContain(
-      `Blue 9 → nothing matched, refunded **9**`,
-    );
+    const outcome = JSON.stringify(sends[0]);
+    expect(outcome).toContain(`BET REFUNDS: **9BB** across 1 bet.`);
+    expect(outcome).not.toContain(`<@${bucksTestDiscordId(1)}>`);
   });
 
   test("does not announce a partial close before matched refunds commit", async () => {
@@ -585,9 +585,9 @@ describe("announceSettlements unmatched receipts", () => {
       },
     );
 
-    expect(JSON.stringify(sends[0])).toContain(
-      `Blue 9 → nothing matched, refunded **9**`,
-    );
+    const outcome = JSON.stringify(sends[0]);
+    expect(outcome).toContain(`BET REFUNDS: **9BB** across 1 bet (remake).`);
+    expect(outcome).not.toContain(`<@${bucksTestDiscordId(1)}>`);
   });
 });
 

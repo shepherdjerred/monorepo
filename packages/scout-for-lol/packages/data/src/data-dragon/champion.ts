@@ -8,6 +8,16 @@ const ChampionSpellSchema = z.object({
   tooltip: z.string(),
 });
 
+export const ChampionTagSchema = z.enum([
+  "Assassin",
+  "Fighter",
+  "Mage",
+  "Marksman",
+  "Support",
+  "Tank",
+]);
+export type ChampionTag = z.infer<typeof ChampionTagSchema>;
+
 const ChampionDataSchema = z.object({
   data: z.record(
     z.string(),
@@ -15,6 +25,7 @@ const ChampionDataSchema = z.object({
       id: z.string(),
       name: z.string(),
       title: z.string(),
+      tags: z.array(ChampionTagSchema).min(1),
       spells: z.array(ChampionSpellSchema), // Q, W, E, R
       passive: z.object({
         name: z.string(),
@@ -30,6 +41,7 @@ const championCache = new Map<
   {
     spells: { name: string; description: string; tooltip: string }[];
     passive: { name: string; description: string };
+    tags: ChampionTag[];
   }
 >();
 
@@ -82,6 +94,7 @@ export async function getChampionInfo(championName: string): Promise<
   | {
       spells: { name: string; description: string; tooltip: string }[];
       passive: { name: string; description: string };
+      tags: ChampionTag[];
     }
   | undefined
 > {
@@ -109,6 +122,7 @@ export async function getChampionInfo(championName: string): Promise<
         tooltip: s.tooltip,
       })),
       passive: championData.passive,
+      tags: championData.tags,
     };
 
     // Cache the result
@@ -118,4 +132,12 @@ export async function getChampionInfo(championName: string): Promise<
   } catch {
     return undefined;
   }
+}
+
+/** Read Riot's coarse champion classes from the bundled Data Dragon snapshot. */
+export async function getChampionTags(
+  championName: string,
+): Promise<ChampionTag[] | undefined> {
+  const champion = await getChampionInfo(championName);
+  return champion?.tags;
 }

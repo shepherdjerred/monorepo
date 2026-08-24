@@ -1,6 +1,5 @@
 import { EmbedBuilder, type MessageCreateOptions } from "discord.js";
 import {
-  RiotTeamIdSchema,
   type BucksPrediction,
   type BucksVoidReason,
 } from "@scout-for-lol/data";
@@ -9,7 +8,11 @@ import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementBet, SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPosition } from "#src/betting/sweep.ts";
-import { outcomeLabel, type OutcomeFraming } from "#src/betting/team.ts";
+import type { OutcomeFraming } from "#src/betting/team.ts";
+import {
+  formatInteger,
+  formatParlayNumericValue,
+} from "#src/betting/display-format.ts";
 
 /** Beyond this the message stops being readable, so the tail is summarised. */
 const MAX_BET_ROWS = 15;
@@ -36,91 +39,38 @@ export type SettlementMessageInput = {
 
 type SettlementDisplay = {
   summaryLines: string[];
-  betLines: string[];
+  betWinnerLines: string[];
+  betLoserLines: string[];
   parlayLegLines: string[];
-  parlayPositionLines: string[];
+  parlayWinnerLines: string[];
+  parlayLoserLines: string[];
   earningLines: string[];
 };
 
 function voidReasonText(reason: BucksVoidReason): string {
   switch (reason) {
     case "remake":
-      return "Remake — every matched stake refunded.";
+      return "remake";
     case "no_counterparty":
-      return "No takers on the other side — every matched stake refunded.";
+      return "no takers on the other side";
     case "house_unavailable":
-      return "The Bryan Bucks house reserve was unavailable — every matched stake refunded.";
+      return "house reserve unavailable";
     case "expired":
-      return "This game never resolved — every matched stake refunded.";
+      return "game never resolved";
     case "storage_overflow":
-      return "The result exceeded Bryan Bucks storage limits — every matched stake refunded.";
+      return "result exceeded storage limits";
     case "unsupported_mode":
-      return "Unsupported game mode — every matched stake refunded.";
+      return "unsupported game mode";
   }
 }
 
-function settlementSummaryLines(input: SettlementMessageInput): string[] {
-  const { summary } = input;
-  const pool = summary.bets.reduce((total, bet) => total + bet.matchedStake, 0);
-  let outcome: string;
-  if (
-    (input.unmatchedPositions?.length ?? 0) > 0 &&
-    summary.bets.length === 0
-  ) {
-    outcome =
-      "Matched pool **0 BB** · winner fees **0 BB**. No stake was matched; every offer was refunded.";
-  } else if (summary.voidReason === undefined) {
-    outcome = `Matched pool **${pool.toString()} BB** · winner fees **${summary.houseCut.toString()} BB** (winners matched ${summary.winnersPool.toString()} / losers matched ${summary.losersPool.toString()})`;
-  } else {
-    outcome = `Matched pool **${pool.toString()} BB** · winner fees **0 BB**. ${voidReasonText(summary.voidReason)}`;
-  }
-
-  const lines = [outcome];
-  if (input.predictionSentence !== undefined) {
-    const verdict =
-      input.predictionVerdictLine === undefined
-        ? ""
-        : ` ${input.predictionVerdictLine}`;
-    lines.push(`${input.predictionSentence}${verdict}`);
-  }
-  const houseStake = summary.bets
-    .filter((bet) => bet.isHouse)
-    .reduce((total, bet) => total + bet.matchedStake, 0);
-  if (houseStake > 0) {
-    lines.push(
-      `🏦 Bryan Bucks house matched ${houseStake.toString()} BB on the other side.`,
-    );
-  }
-  return lines;
-}
-
-/**
- * The gross/cut/net arithmetic is preserved verbatim: public outcome copy must
- * never make a reader reconstruct it from ledger rows.
- */
-function settlementBetResult(bet: SettlementBet): string {
-  if (bet.refunded) {
-    return `refunded **${bet.payout.toString()} BB**`;
-  }
-  if (bet.won) {
-    return `+**${bet.winnings.toString()} BB** (${bet.grossPayout.toString()} − ${bet.houseCut.toString()} fee = ${bet.payout.toString()} back)`;
-  }
-  return `−**${bet.matchedStake.toString()} BB**`;
-}
-
-function settlementBetLines(input: SettlementMessageInput): string[] {
-  const humanBets = input.summary.bets.filter((bet) => !bet.isHouse);
-  const unmatchedPositions = input.unmatchedPositions ?? [];
-  const visibleHumanBets = humanBets.slice(0, MAX_BET_ROWS);
-  const lines = visibleHumanBets.map((bet) => {
-    const refunded =
-      bet.unmatchedStake > 0
-        ? `, refunded **${bet.unmatchedStake.toString()}**`
-        : "";
-    return `• <@${bet.discordId}> ${outcomeLabel(RiotTeamIdSchema.parse(bet.predictedTeamId), input.framing)} ${bet.submittedStake.toString()} → matched **${bet.matchedStake.toString()}**${refunded} · ${settlementBetResult(bet)}`;
-  });
-  const unmatchedLimit = MAX_BET_ROWS - visibleHumanBets.length;
-  for (const position of unmatchedPositions.slice(0, unmatchedLimit)) {
+function outcomeRefundSummary(
+  input: SettlementMessageInput,
+): string | undefined {
+  const refundedAmounts = input.summary.bets
+    .filter((bet) => !bet.isHouse)
+    .map((bet) => bet.unmatchedStake + (bet.refunded ? bet.matchedStake : 0));
+  for (const position of input.unmatchedPositions ?? []) {
     if (
       position.matchedStake !== 0 ||
       position.unmatchedStake !== position.submittedStake
@@ -129,16 +79,84 @@ function settlementBetLines(input: SettlementMessageInput): string[] {
         `Outcome receipt received non-terminal unmatched bet ${position.betId.toString()}`,
       );
     }
-    lines.push(
-      `• <@${position.discordId}> ${outcomeLabel(position.teamId, input.framing)} ${position.submittedStake.toString()} → nothing matched, refunded **${position.unmatchedStake.toString()}**`,
+    refundedAmounts.push(position.unmatchedStake);
+  }
+  const refunded = refundedAmounts.reduce((total, amount) => total + amount, 0);
+  const count = refundedAmounts.filter((amount) => amount > 0).length;
+  if (refunded === 0) return;
+  const reason =
+    input.summary.voidReason === undefined
+      ? ""
+      : ` (${voidReasonText(input.summary.voidReason)})`;
+  return `BET REFUNDS: **${formatInteger(refunded)}BB** across ${formatInteger(count)} bet${count === 1 ? "" : "s"}${reason}.`;
+}
+
+function parlayRefundSummary(
+  parlay: ParlaySettlementSummary | undefined,
+): string | undefined {
+  if (parlay === undefined) return;
+  const refundedBets = parlay.bets.filter((bet) => bet.outcome === "refunded");
+  const refunded = refundedBets.reduce((total, bet) => total + bet.stake, 0);
+  if (refunded === 0) return;
+  const reason =
+    parlay.voidReason === undefined
+      ? ""
+      : ` (${parlayVoidText(parlay.voidReason)})`;
+  return `PARLAY REFUNDS: **${formatInteger(refunded)}BB** across ${formatInteger(refundedBets.length)} parlay${refundedBets.length === 1 ? "" : "s"}${reason}.`;
+}
+
+function settlementSummaryLines(input: SettlementMessageInput): string[] {
+  const lines: string[] = [];
+  if (input.predictionSentence !== undefined) {
+    const verdict =
+      input.predictionVerdictLine === undefined
+        ? ""
+        : ` ${input.predictionVerdictLine}`;
+    lines.push(`${input.predictionSentence}${verdict}`);
+  }
+  const betRefund = input.includeOutcome
+    ? outcomeRefundSummary(input)
+    : undefined;
+  if (betRefund !== undefined) lines.push(betRefund);
+  const parlayRefund = parlayRefundSummary(input.parlay);
+  if (parlayRefund !== undefined) lines.push(parlayRefund);
+  return lines;
+}
+
+function settlementBetLine(bet: SettlementBet): string {
+  if (bet.refunded) {
+    throw new Error("Refunded bets do not belong in result sections");
+  }
+  if (!bet.won) {
+    return `• <@${bet.discordId}> bet ${formatInteger(bet.submittedStake)}BB, lost ${formatInteger(bet.matchedStake)}BB`;
+  }
+  const fee =
+    bet.houseCut === 0 ? "" : ` (${formatInteger(bet.houseCut)}BB fee)`;
+  return `• <@${bet.discordId}> bet ${formatInteger(bet.submittedStake)}BB, won ${formatInteger(bet.winnings)}BB${fee}`;
+}
+
+function settlementBetLines(input: SettlementMessageInput): {
+  winners: string[];
+  losers: string[];
+} {
+  const humanBets = input.summary.bets.filter(
+    (bet) => !bet.isHouse && !bet.refunded,
+  );
+  const visible = humanBets.slice(0, MAX_BET_ROWS);
+  const winners = visible
+    .filter((bet) => bet.won)
+    .map((bet) => settlementBetLine(bet));
+  const losers = visible
+    .filter((bet) => !bet.won)
+    .map((bet) => settlementBetLine(bet));
+  const hiddenCount = humanBets.length - MAX_BET_ROWS;
+  if (hiddenCount > 0) {
+    const destination = losers.length > 0 ? losers : winners;
+    destination.push(
+      `…and ${formatInteger(hiddenCount)} more — see \`/bb history\``,
     );
   }
-  const hiddenCount =
-    humanBets.length + unmatchedPositions.length - MAX_BET_ROWS;
-  if (hiddenCount > 0) {
-    lines.push(`…and ${hiddenCount.toString()} more — see \`/bb history\``);
-  }
-  return lines;
+  return { winners, losers };
 }
 
 function formatEarningAlias(alias: string): string {
@@ -153,7 +171,7 @@ function settlementEarningLines(input: SettlementMessageInput): string[] {
     .filter((award) => award.serverId === input.summary.serverId)
     .map(
       (award) =>
-        `🪙 **${formatEarningAlias(award.alias)}** +${award.total.toString()} BB (${award.reasons.join(", ")})`,
+        `🪙 **${formatEarningAlias(award.alias)}** +${formatInteger(award.total)} BB (${award.reasons.join(", ")})`,
     );
 }
 
@@ -184,33 +202,64 @@ function parlayLegLines(parlay: ParlaySettlementSummary | undefined): string[] {
     return [];
   }
   if (parlay.voidReason !== undefined) {
-    return [
-      `Every stake and house reserve was returned (${parlayVoidText(parlay.voidReason)}).`,
-    ];
+    return [`Voided — ${parlayVoidText(parlay.voidReason)}.`];
   }
-  return parlay.legs.map(
-    (leg) =>
-      `${leg.passed ? "✅" : "❌"} ${leg.rendered} — ${String(leg.actualValue)}`,
-  );
+  return parlay.legs.map((leg) => {
+    let actual: string;
+    if (typeof leg.actualValue === "boolean") {
+      actual = String(leg.actualValue);
+    } else {
+      switch (leg.condition.kind) {
+        case "participant_numeric":
+        case "match_numeric":
+        case "opponent_team_pings":
+          actual = formatParlayNumericValue(
+            leg.condition.field,
+            leg.actualValue,
+          );
+          break;
+        case "team_objective_kills":
+          actual = formatInteger(leg.actualValue);
+          break;
+        case "participant_boolean":
+        case "team_boolean":
+        case "team_objective_first":
+          throw new Error("Boolean parlay leg carried a numeric result");
+      }
+    }
+    return `${leg.passed ? "✅" : "❌"} ${leg.rendered} — ${actual}`;
+  });
 }
 
-function parlayPositionLines(
-  parlay: ParlaySettlementSummary | undefined,
-): string[] {
+function parlayPositionLines(parlay: ParlaySettlementSummary | undefined): {
+  winners: string[];
+  losers: string[];
+} {
   if (parlay === undefined) {
-    return [];
+    return { winners: [], losers: [] };
   }
-  const lines = parlay.bets
-    .slice(0, MAX_BET_ROWS)
-    .map(
-      (bet) =>
-        `• <@${bet.discordId}> ${bet.side} ${bet.stake.toString()} → ${bet.outcome}, **${bet.payout.toString()} BB**`,
-    );
-  const hidden = parlay.bets.length - MAX_BET_ROWS;
+  const settled = parlay.bets.filter((bet) => bet.outcome !== "refunded");
+  const visible = settled.slice(0, MAX_BET_ROWS).map((bet) => ({
+    outcome: bet.outcome,
+    line:
+      bet.outcome === "won"
+        ? `• <@${bet.discordId}> bet ${formatInteger(bet.stake)}BB, won ${formatInteger(bet.grossPayout - bet.stake)}BB`
+        : `• <@${bet.discordId}> bet ${formatInteger(bet.stake)}BB, lost ${formatInteger(bet.stake)}BB`,
+  }));
+  const winners = visible
+    .filter((row) => row.outcome === "won")
+    .map((row) => row.line);
+  const losers = visible
+    .filter((row) => row.outcome === "lost")
+    .map((row) => row.line);
+  const hidden = settled.length - MAX_BET_ROWS;
   if (hidden > 0) {
-    lines.push(`…and ${hidden.toString()} more — see \`/bb history\``);
+    const destination = losers.length > 0 ? losers : winners;
+    destination.push(
+      `…and ${formatInteger(hidden)} more — see \`/bb history\``,
+    );
   }
-  return lines;
+  return { winners, losers };
 }
 
 /** `Parlay — NO (1/2 legs)`, or the void headline. */
@@ -219,17 +268,21 @@ export function parlayFieldTitle(parlay: ParlaySettlementSummary): string {
     return `Parlay — voided (${parlayVoidText(parlay.voidReason)})`;
   }
   const passed = parlay.legs.filter((leg) => leg.passed).length;
-  return `Parlay — ${parlay.yesResult === true ? "YES" : "NO"} (${passed.toString()}/${parlay.legs.length.toString()} legs)`;
+  return `Parlay — ${parlay.yesResult === true ? "YES" : "NO"} (${formatInteger(passed)}/${formatInteger(parlay.legs.length)} legs)`;
 }
 
 function formatSettlementDisplay(
   input: SettlementMessageInput,
 ): SettlementDisplay {
+  const bets = settlementBetLines(input);
+  const parlays = parlayPositionLines(input.parlay);
   return {
-    summaryLines: input.includeOutcome ? settlementSummaryLines(input) : [],
-    betLines: input.includeOutcome ? settlementBetLines(input) : [],
+    summaryLines: settlementSummaryLines(input),
+    betWinnerLines: input.includeOutcome ? bets.winners : [],
+    betLoserLines: input.includeOutcome ? bets.losers : [],
     parlayLegLines: parlayLegLines(input.parlay),
-    parlayPositionLines: parlayPositionLines(input.parlay),
+    parlayWinnerLines: parlays.winners,
+    parlayLoserLines: parlays.losers,
     earningLines: settlementEarningLines(input),
   };
 }
@@ -262,9 +315,20 @@ export function predictionVerdict(
 
 export function formatSettlementBody(input: SettlementMessageInput): string {
   const display = formatSettlementDisplay(input);
-  const blocks = [display.summaryLines.join("\n")];
-  if (display.betLines.length > 0) {
-    blocks.push(["**Bets**", ...display.betLines].join("\n"));
+  const blocks = [display.summaryLines.join("\n")].filter(
+    (block) => block.length > 0,
+  );
+  for (const [title, lines] of [
+    ["BET WINNERS", display.betWinnerLines],
+    ["BET LOSERS", display.betLoserLines],
+    [
+      input.parlay === undefined ? "PARLAY" : parlayFieldTitle(input.parlay),
+      display.parlayLegLines,
+    ],
+    ["PARLAY WINNERS", display.parlayWinnerLines],
+    ["PARLAY LOSERS", display.parlayLoserLines],
+  ] satisfies readonly (readonly [string, readonly string[]])[]) {
+    if (lines.length > 0) blocks.push([`**${title}:**`, ...lines].join("\n"));
   }
   if (display.earningLines.length > 0) {
     blocks.push(display.earningLines.join("\n"));
@@ -326,15 +390,15 @@ type EmbedSection = {
   title: string;
   lines: string[];
   overflow: (hidden: number) => string;
+  trimPriority: number;
 };
 
 function renderEmbed(
   description: string,
   sections: readonly EmbedSection[],
 ): EmbedBuilder {
-  const embed = new EmbedBuilder()
-    .setTitle("💰 Bryan Bucks")
-    .setDescription(description);
+  const embed = new EmbedBuilder().setTitle("💰 Bryan Bucks");
+  if (description.length > 0) embed.setDescription(description);
   for (const section of sections) {
     addEmbedSection(embed, section.title, section.lines);
   }
@@ -378,7 +442,9 @@ function fitSections(
     if (embedTextLength(embed) <= EMBED_TOTAL_TEXT_LIMIT) {
       return embed;
     }
-    const trimmable = working.find((section) => section.lines.length > 0);
+    const trimmable = working
+      .toSorted((left, right) => left.trimPriority - right.trimPriority)
+      .find((section) => section.lines.length > 0);
     if (trimmable === undefined) {
       throw new Error("A Bryan Bucks outcome exceeds Discord's embed limit");
     }
@@ -393,34 +459,49 @@ export function buildSettlementMessage(
 ): MessageCreateOptions {
   const display = formatSettlementDisplay(input);
   const descriptionLines = [...display.summaryLines];
-  if (input.parlay !== undefined && !input.includeOutcome) {
-    descriptionLines.push(parlayFieldTitle(input.parlay));
-  }
-  // Drop-first order: earnings are the least load-bearing, the outcome bet
-  // rows the most.
+  // Earnings trim first, followed by leg detail and parlay rows. Outcome result
+  // rows remain the last content removed from an oversized embed.
   const allSections: EmbedSection[] = [
     {
-      title: "Bucks earned",
-      lines: display.earningLines,
-      overflow: (hidden) => `…and ${hidden.toString()} more.`,
+      title: "BET WINNERS",
+      lines: display.betWinnerLines,
+      overflow: (hidden) =>
+        `…and ${formatInteger(hidden)} more — see \`/bb history\``,
+      trimPriority: 4,
+    },
+    {
+      title: "BET LOSERS",
+      lines: display.betLoserLines,
+      overflow: (hidden) =>
+        `…and ${formatInteger(hidden)} more — see \`/bb history\``,
+      trimPriority: 4,
     },
     {
       title:
         input.parlay === undefined ? "Parlay" : parlayFieldTitle(input.parlay),
       lines: display.parlayLegLines,
-      overflow: (hidden) => `…and ${hidden.toString()} more legs.`,
+      overflow: (hidden) => `…and ${formatInteger(hidden)} more legs.`,
+      trimPriority: 1,
     },
     {
-      title: "Parlay positions",
-      lines: display.parlayPositionLines,
+      title: "PARLAY WINNERS",
+      lines: display.parlayWinnerLines,
       overflow: (hidden) =>
-        `…and ${hidden.toString()} more — see \`/bb history\``,
+        `…and ${formatInteger(hidden)} more — see \`/bb history\``,
+      trimPriority: 3,
     },
     {
-      title: "Bets",
-      lines: display.betLines,
+      title: "PARLAY LOSERS",
+      lines: display.parlayLoserLines,
       overflow: (hidden) =>
-        `…and ${hidden.toString()} more — see \`/bb history\``,
+        `…and ${formatInteger(hidden)} more — see \`/bb history\``,
+      trimPriority: 3,
+    },
+    {
+      title: "Bucks earned",
+      lines: display.earningLines,
+      overflow: (hidden) => `…and ${formatInteger(hidden)} more.`,
+      trimPriority: 0,
     },
   ];
   const sections = allSections.filter((section) => section.lines.length > 0);
