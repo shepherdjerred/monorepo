@@ -5,6 +5,10 @@ import type {
 import type * as echarts from "echarts";
 import { calendarOption } from "#src/html/visualization-snapshot-calendar-option.ts";
 import {
+  boxPlotOption,
+  histogramOption,
+} from "#src/html/visualization-snapshot-distribution-option.ts";
+import {
   donutOption,
   heatmapOption,
   radarOption,
@@ -48,6 +52,12 @@ export function visualizationSnapshotToOption(
   }
   if (snapshot.kind === "RADAR_CHART") {
     return radarOption(snapshot);
+  }
+  if (snapshot.kind === "HISTOGRAM") {
+    return histogramOption(snapshot, mode);
+  }
+  if (snapshot.kind === "BOX_PLOT") {
+    return boxPlotOption(snapshot, mode);
   }
   const presentation = visualizationSnapshotPresentation(snapshot);
   const horizontal =
