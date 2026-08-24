@@ -64,16 +64,15 @@ export function GuildPicker() {
   const discordId = meQuery.data?.user?.discordId ?? null;
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
-  // First sign-in for this user: send them through the guided setup once.
-  // The install-redirect flow (Discord → /installed → /welcome) finishes the
-  // wizard without ever passing through here, so `seen` can still be false
-  // while `complete` is already true. Bail out in that case (and just record
-  // `seen`) so a finished user isn't bounced back into the wizard.
+  // Keep incomplete users in the guided first-run experience. The old
+  // `seen`-only gate sent anyone who had previously opened or abandoned setup
+  // to the generic empty guild-picker card, which duplicated the install step
+  // and hid the useful onboarding path. The install redirect (Discord →
+  // /installed → /welcome) still completes setup without passing through here.
   useEffect(() => {
     if (discordId === null) return;
-    if (isOnboardingSeen(discordId)) return;
-    markOnboardingSeen(discordId);
     if (isOnboardingComplete(discordId)) return;
+    markOnboardingSeen(discordId);
     void navigate("/welcome", { replace: true });
   }, [discordId, navigate]);
 
