@@ -284,8 +284,8 @@ type OneSeriesInput = {
 function buildOneSeries(input: OneSeriesInput): TemporalSeries {
   const { context, axes, label, rows, column } = input;
   const plan = context.plan;
-  const additive =
-    plan.outputs.find((output) => output.name === column)?.additive ?? false;
+  const output = plan.outputs.find((candidate) => candidate.name === column);
+  const additive = output?.additive ?? false;
   const points = orderedRows(context, axes, rows).map((row, index) =>
     pointFromRow({
       context,
@@ -305,6 +305,9 @@ function buildOneSeries(input: OneSeriesInput): TemporalSeries {
           ? column
           : `${label} — ${column}`,
     metric: column,
+    // Carried so the renderer formats by what the value IS, not by what the
+    // author happened to call it.
+    ...(output === undefined ? {} : { displayKind: output.displayKind }),
     additive,
     points: fillMissingBuckets({ context, points, additive }),
   };

@@ -287,10 +287,13 @@ function kpiOption(
             left: 12,
             top: 53,
             style: {
+              // The backend writes null (not undefined) when a query has no
+              // `compare = previous_period`, so an undefined-only guard let
+              // every comparison-less KPI card render "Δ Unknown · Unknown".
               text:
-                delta === undefined
+                delta === undefined || delta === null
                   ? ""
-                  : `Δ ${formatSeriesAbsoluteDelta(snapshot, series, delta ?? null)} · ${formatPercent(percent ?? null)}`,
+                  : `Δ ${formatSeriesAbsoluteDelta(snapshot, series, delta)} · ${formatPercent(percent ?? null)}`,
               fill: presentation.theme.accent,
               font: "11px sans-serif",
             },

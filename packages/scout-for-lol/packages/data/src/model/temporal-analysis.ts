@@ -5,6 +5,7 @@ import {
   ReportChartOptionsSchema,
   ReportChartPaletteSchema,
   ReportChartThemeSchema,
+  ReportDisplayKindSchema,
 } from "#src/model/report.ts";
 
 export const VISUALIZATION_MAX_SERIES = 8;
@@ -258,6 +259,19 @@ export const TemporalSeriesSchema = z
     id: z.string().min(1),
     label: z.string().min(1),
     metric: z.string().min(1),
+    /**
+     * How this series' values format — percent, duration, count, decimal.
+     *
+     * Optional because snapshots are persisted: one stored before ScoutQL v2
+     * has no display kind, and the renderer falls back to the frozen legacy
+     * metric table for those. New snapshots always carry it, which is what
+     * makes formatting independent of what an author happened to name the
+     * output. Under v1 `metric` was a member of a closed metric enum, so the
+     * renderer could look its kind up; in v2 it is an arbitrary alias, and a
+     * rate aliased anything other than a known metric name would have
+     * rendered as a bare 0.6 rather than 60%.
+     */
+    displayKind: ReportDisplayKindSchema.optional(),
     additive: z.boolean(),
     points: z.array(TemporalSeriesPointSchema),
   })
