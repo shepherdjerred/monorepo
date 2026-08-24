@@ -20,6 +20,8 @@ describe("generatedTextPaths", () => {
         "packages/data/schema.yaml",
         "packages/data/styles.css",
         "packages/data/raw.txt",
+        "packages/scout-for-lol/packages/data/patch-notes-archive/raw.html",
+        "packages/scout-for-lol/packages/data/src/__snapshots__/data.snap",
       ]),
     ).toEqual([
       "packages/data/a.ts",
@@ -110,6 +112,12 @@ describe("discardFormattingOnlyChanges", () => {
     expect(reverted).toEqual(["item.ts"]);
     expect(
       await shellRunCommand(["git", "status", "--porcelain", "--", "item.ts"], {
+        cwd: repoDir,
+        trimStdout: false,
+      }),
+    ).toBe("");
+    expect(
+      await shellRunCommand(["git", "status", "--porcelain"], {
         cwd: repoDir,
         trimStdout: false,
       }),

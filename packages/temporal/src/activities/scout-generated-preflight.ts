@@ -1,3 +1,5 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { runCommand as defaultRunCommand } from "./data-dragon-shell.ts";
 import { botCloneCacheDir } from "./bot-clone.ts";
 
@@ -12,7 +14,6 @@ const PRETTIER_EXTENSIONS = new Set([
   ".tsx",
   ".mts",
   ".cts",
-  ".snap",
   ".md",
   ".mdx",
   ".css",
@@ -27,6 +28,12 @@ const PRETTIER_EXTENSIONS = new Set([
   ".astro",
 ]);
 
+const PRETTIER_EXCLUDED_PATH_PREFIXES = [
+  // Raw third-party HTML is intentionally byte-faithful; Prettier's HTML
+  // parser cannot cleanly parse every archived page.
+  "packages/scout-for-lol/packages/data/patch-notes-archive/",
+];
+
 type RunCommand = typeof defaultRunCommand;
 
 function fileExtension(path: string): string {
@@ -36,7 +43,14 @@ function fileExtension(path: string): string {
 
 export function generatedTextPaths(changedFiles: readonly string[]): string[] {
   return changedFiles
-    .filter((path) => PRETTIER_EXTENSIONS.has(fileExtension(path)))
+    .filter(
+      (path) =>
+        PRETTIER_EXTENSIONS.has(fileExtension(path)) &&
+        !PRETTIER_EXCLUDED_PATH_PREFIXES.some((prefix) =>
+          path.startsWith(prefix),
+        ) &&
+        !(path.includes("/__snapshots__/") && fileExtension(path) === ".snap"),
+    )
     .toSorted();
 }
 
@@ -67,70 +81,73 @@ export async function discardFormattingOnlyChanges(input: {
     return [];
   }
 
-  const baselineDir = `${input.repoDir}/.context/formatting-baselines`;
-  await runCommand(["mkdir", "-p", baselineDir], { cwd: input.repoDir });
-  const reverted: string[] = [];
-  for (const [index, path] of textPaths.entries()) {
-    const tracked = await runCommand(["git", "ls-files", "--", path], {
-      cwd: input.repoDir,
-    });
-    if (tracked.length === 0) {
-      continue;
-    }
-
-    const baselinePath = `${baselineDir}/${String(index)}${fileExtension(path)}`;
-    await Bun.write(
-      baselinePath,
-      await runCommand(["git", "show", `HEAD:${path}`], {
+  const baselineDir = await mkdtemp(`${tmpdir()}/temporal-format-baseline-`);
+  try {
+    const reverted: string[] = [];
+    for (const [index, path] of textPaths.entries()) {
+      const tracked = await runCommand(["git", "ls-files", "--", path], {
         cwd: input.repoDir,
-        trimStdout: false,
-      }),
-    );
-    const commandOptions = {
-      cwd: input.repoDir,
-      env: {
-        ENVIRONMENT: undefined,
-        BUN_INSTALL_CACHE_DIR: botCloneCacheDir(input.repoDir),
-      },
-    };
-    await runCommand(
-      [
-        "bunx",
-        "--no-install",
-        "prettier",
-        "--write",
-        "--ignore-path",
-        "/dev/null",
-        "--",
-        path,
-        baselinePath,
-      ],
-      commandOptions,
-    );
+      });
+      if (tracked.length === 0) {
+        continue;
+      }
 
-    const [current, baseline] = await Promise.all([
-      Bun.file(`${input.repoDir}/${path}`).text(),
-      Bun.file(baselinePath).text(),
-    ]);
-    if (current !== baseline) {
-      continue;
+      const baselinePath = `${baselineDir}/${String(index)}${fileExtension(path)}`;
+      await Bun.write(
+        baselinePath,
+        await runCommand(["git", "show", `HEAD:${path}`], {
+          cwd: input.repoDir,
+          trimStdout: false,
+        }),
+      );
+      const commandOptions = {
+        cwd: input.repoDir,
+        env: {
+          ENVIRONMENT: undefined,
+          BUN_INSTALL_CACHE_DIR: botCloneCacheDir(input.repoDir),
+        },
+      };
+      await runCommand(
+        [
+          "bunx",
+          "--no-install",
+          "prettier",
+          "--write",
+          "--ignore-path",
+          "/dev/null",
+          "--",
+          path,
+          baselinePath,
+        ],
+        commandOptions,
+      );
+
+      const [current, baseline] = await Promise.all([
+        Bun.file(`${input.repoDir}/${path}`).text(),
+        Bun.file(baselinePath).text(),
+      ]);
+      if (current !== baseline) {
+        continue;
+      }
+      await runCommand(["git", "restore", "--", path], {
+        cwd: input.repoDir,
+      });
+      reverted.push(path);
     }
-    await runCommand(["git", "restore", "--", path], {
-      cwd: input.repoDir,
-    });
-    reverted.push(path);
+    if (reverted.length > 0) {
+      console.warn(
+        JSON.stringify({
+          level: "info",
+          msg: "Generated refresh discarded formatting-only changes",
+          component: input.component ?? "temporal-generated-refresh",
+          files: reverted,
+        }),
+      );
+    }
+    return reverted;
+  } finally {
+    await rm(baselineDir, { recursive: true, force: true });
   }
-  if (reverted.length > 0) {
-    console.warn(
-      JSON.stringify({
-        level: "info",
-        msg: "Generated refresh discarded formatting-only changes",
-        component: input.component ?? "temporal-generated-refresh",
-        files: reverted,
-      }),
-    );
-  }
-  return reverted;
 }
 
 /**
