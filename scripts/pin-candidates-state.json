@@ -42,14 +42,14 @@
       "buildNumber": 10760
     },
     "shepherdjerred/scout-evals": {
-      "buildNumber": 11254,
-      "version": "2.0.0-11254",
-      "digest": "sha256:b3b852516af90a412c8c876dae43278cc6d2067f5fad7f810f271d03ab4c6ee4"
+      "buildNumber": 11281,
+      "version": "2.0.0-11281",
+      "digest": "sha256:30ee18da2ac37b78d777f09352c9fefff119e323913824b9c598ab7669bc0d14"
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 11254,
-      "version": "2.0.0-11254",
-      "digest": "sha256:85e51719ae707a14cc9a0615990b0b7d5fdd65b956adca1209cb53ad786b8c4c"
+      "buildNumber": 11281,
+      "version": "2.0.0-11281",
+      "digest": "sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-11178",
