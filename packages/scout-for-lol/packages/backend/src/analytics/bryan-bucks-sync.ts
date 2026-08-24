@@ -22,9 +22,10 @@ export type BryanBucksAnalyticsSyncResult = {
  *
  * This is deliberately called by a Temporal activity, outside the betting
  * transaction. A ledger row is therefore visible only after its transaction
- * commits; the durable event marker is written after the SDK capture is
- * enqueued. PostHog receives a deterministic UUID, so a process failure
- * between those two operations is harmless on retry.
+ * commits; the durable event marker and ledger outbox acknowledgement are
+ * written only after the SDK queue has flushed successfully. PostHog
+ * receives a deterministic UUID, so a process failure between those
+ * operations is harmless on retry.
  */
 export async function syncBucksAnalytics(options?: {
   prismaClient?: ExtendedPrismaClient;
@@ -41,37 +42,44 @@ export async function syncBucksAnalytics(options?: {
       })
     ).map((row) => row.eventId),
   );
-  let ledgerEntries = 0;
-  let snapshots = 0;
-
-  const entries = await database.bucksLedgerEntry.findMany({
+  const outboxEntries = await database.bucksAnalyticsLedgerOutbox.findMany({
     select: {
       id: true,
-      delta: true,
-      balanceAfter: true,
-      kind: true,
-      createdAt: true,
-      bucksAccount: { select: { serverId: true } },
+      eventId: true,
+      ledgerEntry: {
+        select: {
+          delta: true,
+          balanceAfter: true,
+          kind: true,
+          createdAt: true,
+          bucksAccount: { select: { serverId: true } },
+        },
+      },
     },
     orderBy: { id: "asc" },
   });
-  for (const entry of entries) {
-    const eventId = deterministicBucksAnalyticsEventId("ledger", entry.id);
-    if (reserved.has(eventId)) continue;
+  const pendingLedgerEvents: Array<{
+    outboxId: number;
+    eventId: string;
+    captured: boolean;
+  }> = [];
+  for (const outboxEntry of outboxEntries) {
+    if (reserved.has(outboxEntry.eventId)) continue;
+    const entry = outboxEntry.ledgerEntry;
     captureBucksEconomy({
       serverId: entry.bucksAccount.serverId,
       movement: BucksLedgerKindSchema.parse(entry.kind),
       deltaBucks: entry.delta,
       balanceAfterBucks: entry.balanceAfter,
       timestamp: entry.createdAt,
-      uuid: eventId,
+      uuid: outboxEntry.eventId,
       analytics,
     });
-    await database.bucksAnalyticsBackfillEvent.create({
-      data: { eventId },
+    pendingLedgerEvents.push({
+      outboxId: outboxEntry.id,
+      eventId: outboxEntry.eventId,
+      captured: true,
     });
-    reserved.add(eventId);
-    ledgerEntries += 1;
   }
 
   const [accounts, pendingOutcome, pendingParlay, pendingWeekly, openPools] =
@@ -122,7 +130,15 @@ export async function syncBucksAnalytics(options?: {
     );
   }
   const bucket = Math.floor(now.getTime() / SNAPSHOT_INTERVAL_MS).toString();
-  for (const serverId of new Set(accounts.map((account) => account.serverId))) {
+  const pendingSnapshotEvents: Array<{
+    eventId: string;
+    captured: boolean;
+  }> = [];
+  const serverIds = new Set([
+    ...accounts.map((account) => account.serverId),
+    ...openPools.map((pool) => pool.serverId),
+  ]);
+  for (const serverId of serverIds) {
     const eventId = deterministicBucksAnalyticsEventId(
       "live-snapshot",
       serverId,
@@ -148,12 +164,33 @@ export async function syncBucksAnalytics(options?: {
       uuid: eventId,
       analytics,
     });
-    await database.bucksAnalyticsBackfillEvent.create({
-      data: { eventId },
-    });
-    reserved.add(eventId);
-    snapshots += 1;
+    pendingSnapshotEvents.push({ eventId, captured: true });
   }
 
-  return { ledgerEntries, snapshots };
+  const pendingEvents = [
+    ...pendingLedgerEvents.filter((event) => event.captured),
+    ...pendingSnapshotEvents.filter((event) => event.captured),
+  ];
+  if (pendingEvents.length === 0) {
+    return { ledgerEntries: 0, snapshots: 0 };
+  }
+  if (!(await (analytics.flush?.() ?? Promise.resolve(true)))) {
+    return { ledgerEntries: 0, snapshots: 0 };
+  }
+  await database.bucksAnalyticsBackfillEvent.createMany({
+    data: pendingEvents.map((event) => ({ eventId: event.eventId })),
+    skipDuplicates: true,
+  });
+  const acknowledgedOutboxIds = pendingLedgerEvents
+    .filter((event) => event.captured)
+    .map((event) => event.outboxId);
+  if (acknowledgedOutboxIds.length > 0) {
+    await database.bucksAnalyticsLedgerOutbox.deleteMany({
+      where: { id: { in: acknowledgedOutboxIds } },
+    });
+  }
+  return {
+    ledgerEntries: pendingLedgerEvents.filter((event) => event.captured).length,
+    snapshots: pendingSnapshotEvents.filter((event) => event.captured).length,
+  };
 }

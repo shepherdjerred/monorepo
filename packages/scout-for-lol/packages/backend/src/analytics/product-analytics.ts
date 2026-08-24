@@ -182,6 +182,7 @@ export type ProductAnalyticsTransport = {
     timestamp?: Date;
     uuid?: string;
   }) => void;
+  flush?: () => Promise<void>;
   shutdown: () => Promise<void>;
 };
 
@@ -201,6 +202,7 @@ export type ProductAnalytics = {
     event: BucksSystemAnalyticsEvent,
     options?: ProductAnalyticsEventOptions,
   ) => void;
+  flush?: () => Promise<boolean>;
   shutdown: () => Promise<void>;
 };
 
@@ -251,6 +253,9 @@ function createPostHogTransport(
     capture(message) {
       client.capture(message);
     },
+    flush() {
+      return client.flush();
+    },
     async shutdown() {
       await client.shutdown();
     },
@@ -290,7 +295,7 @@ export function createProductAnalytics(options: {
     event,
     eventOptions,
     additionalProperties = {},
-  }: CaptureInput): void => {
+  }: CaptureInput): boolean => {
     try {
       const metadata: { timestamp?: Date; uuid?: string } = {};
       if (eventOptions?.timestamp !== undefined) {
@@ -320,12 +325,14 @@ export function createProductAnalytics(options: {
       };
       transport.capture(message);
       productAnalyticsEventsTotal.inc({ event: event.event });
+      return true;
     } catch (error) {
       productAnalyticsFailuresTotal.inc({ operation: "capture" });
       logger.error(
         `Failed to enqueue ${event.event} product analytics event`,
         getErrorMessage(error),
       );
+      return false;
     }
   };
 
@@ -358,6 +365,19 @@ export function createProductAnalytics(options: {
         event,
         eventOptions,
       });
+    },
+    async flush() {
+      try {
+        await transport.flush?.();
+        return true;
+      } catch (error) {
+        productAnalyticsFailuresTotal.inc({ operation: "flush" });
+        logger.error(
+          "Failed to flush product analytics events",
+          getErrorMessage(error),
+        );
+        return false;
+      }
     },
     async shutdown() {
       try {

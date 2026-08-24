@@ -72,7 +72,12 @@ async function main(): Promise<void> {
       skipped += 1;
       return;
     }
-    if (!seedOnly) callback();
+    if (!seedOnly) {
+      callback();
+      if (!(await (analytics.flush?.() ?? Promise.resolve(true)))) {
+        throw new Error(`PostHog flush failed for event ${eventId}`);
+      }
+    }
     await prisma.bucksAnalyticsBackfillEvent.create({ data: { eventId } });
     reservedEventIds.add(eventId);
   };
