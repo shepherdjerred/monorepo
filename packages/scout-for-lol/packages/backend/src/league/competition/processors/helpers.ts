@@ -1,7 +1,8 @@
 import {
   resolveQueueTypeFromGame,
+  isClassicQueueType,
   type CompetitionQueueType,
-  type QueueType,
+  type CompetitionGameVariant,
   type RawMatch,
   type RawParticipant,
 } from "@scout-for-lol/data";
@@ -23,9 +24,10 @@ export function isPlayerInMatch(
 /**
  * Check if a match belongs to the specified queue type
  */
-export function matchesQueue(
+export function matchesQueues(
   match: RawMatch,
-  queueFilter: CompetitionQueueType,
+  queueFilters: readonly CompetitionQueueType[],
+  gameVariant: CompetitionGameVariant,
 ): boolean {
   const queueType = resolveQueueTypeFromGame(
     match.info.queueId,
@@ -33,33 +35,15 @@ export function matchesQueue(
     match.info.gameType,
   );
 
-  // Handle special queue filters
-  if (queueFilter === "RANKED_ANY") {
-    return queueType === "solo" || queueType === "flex";
+  if (queueType === undefined) {
+    return false;
   }
-
-  if (queueFilter === "ALL") {
-    return true;
+  if (queueFilters.includes("ALL")) {
+    return gameVariant === "CLASSIC"
+      ? isClassicQueueType(queueType)
+      : !isClassicQueueType(queueType);
   }
-
-  // Map CompetitionQueueType to QueueType
-  // Note: RANKED_ANY and ALL are handled by special cases above
-  const queueMap: Partial<Record<CompetitionQueueType, QueueType>> = {
-    SOLO: "solo",
-    FLEX: "flex",
-    ARENA: "arena",
-    ARAM: "aram",
-    URF: "urf",
-    ARURF: "arurf",
-    QUICKPLAY: "quickplay",
-    SWIFTPLAY: "swiftplay",
-    BRAWL: "brawl",
-    DRAFT_PICK: "draft pick",
-    CUSTOM: "custom",
-  };
-
-  const expectedQueue = queueMap[queueFilter];
-  return expectedQueue !== undefined && queueType === expectedQueue;
+  return queueFilters.includes(queueType);
 }
 
 /**

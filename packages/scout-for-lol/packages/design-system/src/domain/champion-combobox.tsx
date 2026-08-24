@@ -26,6 +26,7 @@ export function syncedChampionQuery(input: {
 export function ChampionCombobox(props: {
   value: ChampionOption | undefined;
   onChange: (champion: ChampionOption) => void;
+  items?: ChampionOption[] | undefined;
   disabled?: boolean | undefined;
   id?: string | undefined;
   placeholder?: string | undefined;
@@ -41,12 +42,13 @@ export function ChampionCombobox(props: {
   }
   const items = useMemo(() => {
     const normalized = query.trim().toLowerCase();
+    const source = props.items ?? browserChampions;
     return normalized.length === 0
-      ? browserChampions
-      : browserChampions.filter((champion) =>
+      ? source
+      : source.filter((champion) =>
           champion.name.toLowerCase().includes(normalized),
         );
-  }, [query]);
+  }, [props.items, query]);
   return (
     <Combobox
       id={props.id}

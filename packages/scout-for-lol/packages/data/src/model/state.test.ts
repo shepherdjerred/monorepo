@@ -178,7 +178,7 @@ describe("queueTypeToDisplayString", () => {
     ["urf", "URF"],
     ["arena", "arena"],
     ["classic", "League Classic"],
-    ["classic aram mayhem", "ARAM: Mayhem Classic-ish"],
+    ["classic aram mayhem", "Classic ARAM Mayhem"],
     ["brawl", "brawl"],
     ["aram mayhem", "ARAM: Mayhem"],
     ["draft pick", "draft pick"],

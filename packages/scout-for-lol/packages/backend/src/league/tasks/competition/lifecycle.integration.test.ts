@@ -143,7 +143,7 @@ describe("Competition Lifecycle - Query for Starting", () => {
   test("finds competition with past start date and no START snapshots", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date("2025-01-15T12:00:00Z");
@@ -178,7 +178,7 @@ describe("Competition Lifecycle - Query for Starting", () => {
   test("does not find competition with future start date", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date("2025-01-15T12:00:00Z");
@@ -208,7 +208,7 @@ describe("Competition Lifecycle - Query for Starting", () => {
   test("does not find cancelled competition", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date("2025-01-15T12:00:00Z");
@@ -248,7 +248,7 @@ describe("Competition Lifecycle - Query for Starting", () => {
   test("does not find competition that already has START snapshots", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date("2025-01-15T12:00:00Z");
@@ -302,7 +302,7 @@ describe("Competition Lifecycle - Start Retry Semantics", () => {
   test("does not mark start processed when start notification fails", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
     const now = new Date("2025-01-15T12:00:00Z");
     const startDate = new Date("2025-01-15T10:00:00Z");
@@ -349,7 +349,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
   test("finds competition with past end date and START but no END snapshots", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date("2025-01-20T12:00:00Z");
@@ -409,7 +409,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
   test("does not find competition with future end date", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date("2025-01-18T12:00:00Z");
@@ -468,7 +468,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
   test("does not find competition without START snapshots", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date("2025-01-20T12:00:00Z");
@@ -505,7 +505,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
   test("does not find competition that already has END snapshots", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date("2025-01-20T12:00:00Z");
@@ -580,7 +580,7 @@ describe("Competition Lifecycle - Multiple Competitions", () => {
   test("correctly identifies multiple competitions needing transitions", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date("2025-01-18T12:00:00Z");

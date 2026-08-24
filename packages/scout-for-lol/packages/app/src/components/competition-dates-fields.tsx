@@ -95,6 +95,7 @@ export function CompetitionDatesFields(props: {
               <Input
                 id="competition-start"
                 type="date"
+                required
                 value={value.startDate}
                 disabled={disabled}
                 onChange={(event) => {
@@ -107,6 +108,7 @@ export function CompetitionDatesFields(props: {
               <Input
                 id="competition-end"
                 type="date"
+                required
                 value={value.endDate}
                 disabled={disabled}
                 onChange={(event) => {
@@ -132,8 +134,8 @@ export function CompetitionDatesFields(props: {
         <div className="space-y-2">
           <Label htmlFor="competition-season">Season</Label>
           <p className="text-sm text-scout-subtle">
-            Classic is the current League season name. This only sets the
-            competition dates; games from every mode remain eligible.
+            The season sets only the competition dates. Game version and queue
+            choices determine which matches count.
           </p>
           <Select
             value={value.seasonId}

@@ -89,7 +89,8 @@ function buildRankPreset(seasonId: string): CompetitionExample {
       channelId,
       criteria: {
         criteriaType: "HIGHEST_RANK",
-        queue: "SOLO",
+        queues: ["solo"],
+        aggregation: "MAX",
         championId: "",
         minGames: "10",
       },
@@ -131,7 +132,8 @@ export const COMPETITION_EXAMPLES: CompetitionExample[] = [
         channelId,
         criteria: {
           criteriaType: "MOST_GAMES_PLAYED",
-          queue: "ALL",
+          queues: ["ALL"],
+          aggregation: "MAX",
           championId: "",
           minGames: "10",
         },
@@ -158,7 +160,8 @@ export const COMPETITION_EXAMPLES: CompetitionExample[] = [
         channelId,
         criteria: {
           criteriaType: "MOST_WINS_CHAMPION",
-          queue: "__ANY__",
+          queues: ["ALL"],
+          aggregation: "MAX",
           championId: "350",
           minGames: "10",
         },

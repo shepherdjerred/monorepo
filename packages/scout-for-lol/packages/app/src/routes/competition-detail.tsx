@@ -5,7 +5,11 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { visibilityToString, visibilityDescription } from "@scout-for-lol/data";
+import {
+  competitionGameVariantToString,
+  visibilityToString,
+  visibilityDescription,
+} from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { channelLabel } from "#src/lib/format.ts";
@@ -181,6 +185,9 @@ export function CompetitionDetail() {
             <CardTitle>Criteria</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
+            <p className="font-medium">
+              {competitionGameVariantToString(competition.gameVariant)}
+            </p>
             <p>{summarizeCriteria(competition.criteria)}</p>
           </CardContent>
         </Card>
@@ -193,6 +200,7 @@ export function CompetitionDetail() {
         startDate={competition.startDate}
         endDate={competition.endDate}
         analysisTimezone={competition.analysisTimezone}
+        criteria={competition.criteria}
       />
 
       <CompetitionParticipantsPanel

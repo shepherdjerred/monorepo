@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { QueueType } from "@scout-for-lol/data";
+import type { RankedQueueType } from "@scout-for-lol/data";
 import {
   BLUE_TEAM_ID,
   PARTICIPANTS_PER_TEAM,
@@ -34,7 +34,7 @@ import {
  * leg set. Deriving them from one snapshot is what stops a parlay being priced
  * against a different history than it was written against.
  *
- * Solo and flex are pooled. Their per-lane population medians are effectively
+ * Ranked ladders are pooled. Their per-lane population medians are effectively
  * identical (vision 18/18, 25/25, 20/20, 21/21, 68/69 across the five lanes),
  * and the queue split was starving the players who mostly queue flex — four of
  * the ten tracked subjects had fewer than 30 solo games against 116-405 pooled.
@@ -42,7 +42,7 @@ import {
  */
 
 /** Queues a parlay may be generated for, and therefore priced against. */
-export const PARLAY_HISTORY_QUEUES = ["solo", "flex"] as const;
+export const PARLAY_HISTORY_QUEUES = ["solo", "flex", "ranked 5s"] as const;
 
 /**
  * How many settled matches back the window reaches.
@@ -62,7 +62,7 @@ export const PARLAY_HISTORY_TIMEOUT_MS = 5000;
 type FetchParlayHistoryOptions = {
   puuids: readonly string[];
   excludeMatchId: string;
-  queueType?: Extract<QueueType, "solo" | "flex">;
+  queueType?: RankedQueueType;
   lakeDir?: string;
   limit?: number;
   timeoutMs?: number;
@@ -208,9 +208,7 @@ function historyValues(
   return { values, teamValues, opponentValues };
 }
 
-function historyQueueFilter(
-  queueType: Extract<QueueType, "solo" | "flex"> | undefined,
-): {
+function historyQueueFilter(queueType: RankedQueueType | undefined): {
   sql: string;
   param: BoundParam;
 } {

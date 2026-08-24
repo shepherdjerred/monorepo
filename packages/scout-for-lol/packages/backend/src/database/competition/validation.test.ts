@@ -291,7 +291,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
     maxParticipants: 50,
     dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
   };
 
   test("accepts valid Discord snowflake IDs", () => {
@@ -335,7 +335,7 @@ describe("CompetitionCreationSchema - title validation", () => {
     maxParticipants: 50,
     dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
   };
 
   test("accepts valid title", () => {
@@ -396,7 +396,7 @@ describe("CompetitionCreationSchema - description validation", () => {
     maxParticipants: 50,
     dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
   };
 
   test("accepts valid description", () => {
@@ -454,7 +454,7 @@ describe("CompetitionCreationSchema - visibility validation", () => {
     maxParticipants: 50,
     dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
   };
 
   test("accepts OPEN visibility", () => {
@@ -498,7 +498,7 @@ describe("CompetitionCreationSchema - maxParticipants validation", () => {
     maxParticipants: 50,
     dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
   };
 
   test("accepts valid maxParticipants", () => {
@@ -552,11 +552,13 @@ describe("CompetitionCreationSchema - maxParticipants validation", () => {
     expect(result.success).toBe(false);
   });
 
-  test("defaults to 50 if not provided", () => {
-    const result = CompetitionCreationSchema.safeParse(validInput);
+  test("defaults to 100 if not provided", () => {
+    const { maxParticipants: _maxParticipants, ...inputWithoutCap } =
+      validInput;
+    const result = CompetitionCreationSchema.safeParse(inputWithoutCap);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.maxParticipants).toBe(50);
+      expect(result.data.maxParticipants).toBe(100);
     }
   });
 });
@@ -572,7 +574,7 @@ describe("CompetitionCreationSchema - criteria validation", () => {
     maxParticipants: 50,
     dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
   };
 
   test("accepts valid MOST_GAMES_PLAYED criteria", () => {
@@ -584,7 +586,7 @@ describe("CompetitionCreationSchema - criteria validation", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
       criteriaType: "HIGHEST_RANK",
-      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      criteriaConfig: JSON.stringify({ queues: ["solo"] }),
     });
     expect(result.success).toBe(true);
   });
@@ -593,16 +595,72 @@ describe("CompetitionCreationSchema - criteria validation", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
       criteriaType: "MOST_WINS_CHAMPION",
-      criteriaConfig: JSON.stringify({ championId: 157, queue: "SOLO" }),
+      criteriaConfig: JSON.stringify({ championId: 157, queues: ["solo"] }),
     });
     expect(result.success).toBe(true);
+  });
+
+  test("accepts a Classic champion only with Classic queues", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      gameVariant: "CLASSIC",
+      criteriaType: "MOST_WINS_CHAMPION",
+      criteriaConfig: JSON.stringify({
+        championId: 60_084,
+        queues: ["classic", "classic aram mayhem"],
+      }),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects champions from the other game variant", () => {
+    expect(
+      CompetitionCreationSchema.safeParse({
+        ...validInput,
+        gameVariant: "MODERN",
+        criteriaType: "MOST_WINS_CHAMPION",
+        criteriaConfig: JSON.stringify({
+          championId: 60_084,
+          queues: ["solo"],
+        }),
+      }).success,
+    ).toBe(false);
+    expect(
+      CompetitionCreationSchema.safeParse({
+        ...validInput,
+        gameVariant: "CLASSIC",
+        criteriaType: "MOST_WINS_CHAMPION",
+        criteriaConfig: JSON.stringify({
+          championId: 84,
+          queues: ["classic"],
+        }),
+      }).success,
+    ).toBe(false);
+  });
+
+  test("rejects rank criteria and Modern queues for Classic", () => {
+    expect(
+      CompetitionCreationSchema.safeParse({
+        ...validInput,
+        gameVariant: "CLASSIC",
+        criteriaType: "HIGHEST_RANK",
+        criteriaConfig: JSON.stringify({ queues: ["ranked 5s"] }),
+      }).success,
+    ).toBe(false);
+    expect(
+      CompetitionCreationSchema.safeParse({
+        ...validInput,
+        gameVariant: "CLASSIC",
+        criteriaConfig: JSON.stringify({ queues: ["aram"] }),
+      }).success,
+    ).toBe(false);
   });
 
   test("accepts valid HIGHEST_WIN_RATE criteria with minGames", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
       criteriaType: "HIGHEST_WIN_RATE",
-      criteriaConfig: JSON.stringify({ minGames: 25, queue: "SOLO" }),
+      criteriaConfig: JSON.stringify({ minGames: 25, queues: ["solo"] }),
     });
     expect(result.success).toBe(true);
   });
@@ -611,7 +669,7 @@ describe("CompetitionCreationSchema - criteria validation", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
       criteriaType: "MOST_WINS_CHAMPION",
-      criteriaConfig: JSON.stringify({ queue: "SOLO" }), // Missing championId!
+      criteriaConfig: JSON.stringify({ queues: ["solo"] }), // Missing championId!
     });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -625,7 +683,7 @@ describe("CompetitionCreationSchema - criteria validation", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
       criteriaType: "HIGHEST_RANK",
-      criteriaConfig: JSON.stringify({ queue: "ARENA" }), // ARENA has no ranks!
+      criteriaConfig: JSON.stringify({ queues: ["arena"] }), // ARENA has no ranks!
     });
     expect(result.success).toBe(false);
   });

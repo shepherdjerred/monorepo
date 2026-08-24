@@ -53,6 +53,13 @@ const fetchCurrentRanks = vi.fn(() =>
       losses: 9,
     },
     flex: undefined,
+    ranked5s: {
+      tier: "platinum",
+      division: 3,
+      lp: 44,
+      wins: 8,
+      losses: 5,
+    },
   }),
 );
 const recordMatchForReportStore = vi.fn(() =>
@@ -239,6 +246,7 @@ describe("initial history worker", () => {
     ).toEqual({ matchIds: [completedDuringImport], gapDetected: false });
     expect(rank.soloRank).toContain('"tier":"gold"');
     expect(rank.flexRank).toBeNull();
+    expect(rank.ranked5sRank).toContain('"tier":"platinum"');
     expect(fetchInitialMatchIds).toHaveBeenCalledTimes(1);
     expect(fetchInitialMatch).toHaveBeenCalledTimes(20);
     expect(fetchCurrentRanks).toHaveBeenCalledTimes(1);

@@ -66,6 +66,12 @@ export const browserChampions = Object.entries(champions.data)
     name: champion.name,
   }))
   .toSorted((left, right) => left.name.localeCompare(right.name));
+export const browserModernChampions = browserChampions.filter(
+  (champion) => champions.data[champion.key]?.modernKey === undefined,
+);
+export const browserClassicChampions = browserChampions.filter(
+  (champion) => champions.data[champion.key]?.modernKey !== undefined,
+);
 const assetByIdentity = new Map(
   gameAssetManifest.assets.map((asset) => [
     `${asset.kind}:${asset.canonicalId.toLowerCase()}`,

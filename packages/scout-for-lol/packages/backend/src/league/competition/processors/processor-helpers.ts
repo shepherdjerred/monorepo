@@ -1,6 +1,7 @@
 import type {
   RawMatch,
   CompetitionQueueType,
+  CompetitionGameVariant,
   RawParticipant,
 } from "@scout-for-lol/data";
 import type {
@@ -18,7 +19,8 @@ import {
 type WinBasedProcessorConfig<T> = {
   matches: RawMatch[];
   participants: PlayerWithAccounts[];
-  queue: CompetitionQueueType;
+  queues: readonly CompetitionQueueType[];
+  gameVariant: CompetitionGameVariant;
   participantFilter?: (participantData: RawParticipant) => boolean;
   scoreFn: (wins: number, games: number) => number;
   metadataFn: (
@@ -40,7 +42,8 @@ export function createWinBasedProcessor<T>(
   const {
     matches,
     participants,
-    queue,
+    queues,
+    gameVariant,
     participantFilter,
     scoreFn,
     metadataFn,
@@ -51,7 +54,8 @@ export function createWinBasedProcessor<T>(
   const { wins: winCounts, games: totalGames } = countWinsAndGames(
     matches,
     participants,
-    queue,
+    queues,
+    gameVariant,
     participantFilter,
   );
 

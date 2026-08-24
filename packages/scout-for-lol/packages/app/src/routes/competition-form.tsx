@@ -5,6 +5,7 @@ import {
   CompetitionIdSchema,
   type CompetitionCriteria,
   type CompetitionVisibility,
+  type CompetitionGameVariant,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
@@ -137,7 +138,7 @@ export function CompetitionForm() {
         visibility: state.visibility,
         maxParticipants,
         analysisTimezone: state.analysisTimezone,
-        ...(isDraft ? { dates, criteria } : {}),
+        ...(isDraft ? { dates, criteria, gameVariant: state.gameVariant } : {}),
       });
       return;
     }
@@ -148,6 +149,7 @@ export function CompetitionForm() {
       description: state.description,
       visibility: state.visibility,
       maxParticipants,
+      gameVariant: state.gameVariant,
       dates,
       criteria,
       analysisTimezone: state.analysisTimezone,
@@ -273,6 +275,7 @@ function existingToFormState(existing: {
   endDate: Date | string | null;
   criteria: CompetitionCriteria;
   analysisTimezone: string;
+  gameVariant: CompetitionGameVariant;
 }): FormState {
   return {
     title: existing.title,
@@ -281,6 +284,7 @@ function existingToFormState(existing: {
     visibility: existing.visibility,
     maxParticipants: existing.maxParticipants.toString(),
     analysisTimezone: existing.analysisTimezone,
+    gameVariant: existing.gameVariant,
     dates:
       existing.seasonId === null
         ? {
@@ -314,10 +318,11 @@ function existingToFormState(existing: {
 function criteriaToState(criteria: CompetitionCriteria): CriteriaState {
   return {
     criteriaType: criteria.type,
-    queue:
-      criteria.type === "MOST_WINS_CHAMPION"
-        ? (criteria.queue ?? "__ANY__")
-        : criteria.queue,
+    queues: criteria.queues,
+    aggregation:
+      criteria.type === "HIGHEST_RANK" || criteria.type === "MOST_RANK_CLIMB"
+        ? criteria.aggregation
+        : "MAX",
     championId:
       criteria.type === "MOST_WINS_CHAMPION"
         ? criteria.championId.toString()

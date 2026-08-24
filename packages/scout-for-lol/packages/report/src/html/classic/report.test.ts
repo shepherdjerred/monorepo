@@ -101,7 +101,7 @@ describe("Classic match report geometry", () => {
     expect(svg).toContain(">ARAM</text>");
     expect(svg).toContain(">MAYHEM</text>");
     expect(svg).toContain(">CLASSIC</text>");
-    expect(svg).toContain(">ISH</text>");
+    expect(svg).not.toContain(">ISH</text>");
     expect(svg).not.toContain(">LEAGUE</text>");
   });
 });

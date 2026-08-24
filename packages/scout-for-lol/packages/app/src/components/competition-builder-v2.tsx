@@ -212,8 +212,26 @@ function CompetitionBuilderReady(props: {
       >
         <CompetitionCriteriaFields
           value={state.criteria}
+          gameVariant={state.gameVariant}
           onChange={(criteria) => {
             edit({ criteria });
+          }}
+          onGameVariantChange={(gameVariant) => {
+            edit({
+              gameVariant,
+              criteria: {
+                ...state.criteria,
+                criteriaType:
+                  gameVariant === "CLASSIC" &&
+                  (state.criteria.criteriaType === "HIGHEST_RANK" ||
+                    state.criteria.criteriaType === "MOST_RANK_CLIMB")
+                    ? "MOST_GAMES_PLAYED"
+                    : state.criteria.criteriaType,
+                queues: ["ALL"],
+                championId: "",
+                aggregation: "MAX",
+              },
+            });
           }}
         />
       </BuilderSection>
@@ -234,13 +252,13 @@ function CompetitionBuilderReady(props: {
       </BuilderSection>
       <BuilderSection
         title="Updates"
-        description="Start and final announcements always post. Interim standings are optional."
+        description="Start and final announcements always post. Leaderboard updates are optional."
       >
         {props.canSchedule ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-4">
               <Label htmlFor="competition-updates">
-                Post interim standings
+                Post leaderboard updates
               </Label>
               <Switch
                 id="competition-updates"
@@ -277,7 +295,7 @@ function CompetitionBuilderReady(props: {
           </div>
         ) : (
           <p className="text-sm text-scout-subtle">
-            Interim updates are off. The competition schedule permission is
+            Leaderboard updates are off. The competition schedule permission is
             required to enable or customize them.
           </p>
         )}

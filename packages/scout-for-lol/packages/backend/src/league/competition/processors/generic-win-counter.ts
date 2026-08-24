@@ -1,6 +1,7 @@
 import type {
   RawMatch,
   CompetitionQueueType,
+  CompetitionGameVariant,
   RawParticipant,
 } from "@scout-for-lol/data";
 import type {
@@ -10,7 +11,7 @@ import type {
 import {
   getPlayerParticipant,
   isWin,
-  matchesQueue,
+  matchesQueues,
 } from "#src/league/competition/processors/helpers.ts";
 
 /**
@@ -32,15 +33,19 @@ export type WinGameCounts = {
 export function countWinsAndGames(
   matches: RawMatch[],
   participants: PlayerWithAccounts[],
-  queueFilter: CompetitionQueueType,
-  participantFilter?: (participantData: RawParticipant) => boolean,
+  queueFilters: readonly CompetitionQueueType[],
+  ...configuration: [
+    gameVariant: CompetitionGameVariant,
+    participantFilter?: (participantData: RawParticipant) => boolean,
+  ]
 ): WinGameCounts {
+  const [gameVariant, participantFilter] = configuration;
   const winCounts: Record<number, number> = {};
   const totalGames: Record<number, number> = {};
 
   for (const match of matches) {
     // Filter by queue
-    if (!matchesQueue(match, queueFilter)) {
+    if (!matchesQueues(match, queueFilters, gameVariant)) {
       continue;
     }
 

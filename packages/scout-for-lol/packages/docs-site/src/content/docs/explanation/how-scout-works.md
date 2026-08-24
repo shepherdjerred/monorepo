@@ -104,7 +104,7 @@ as ingest succeeds.
 Competition standings are recomputed from the same match data, but two clocks
 drive delivery. A fifteen-minute lifecycle check starts and closes competitions,
 including their mandatory announcements. A Temporal workflow runs every minute
-and asks each Scout environment to post interim standings only for competitions
+and asks each Scout environment to post leaderboard updates only for competitions
 with an enabled, active, due schedule. Old competitions remain disabled, so
 wiring the dispatcher does not create a backlog of surprise posts.
 

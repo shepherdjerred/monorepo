@@ -548,7 +548,7 @@ describe("processMostGamesPlayed", () => {
     ];
 
     const result = processCriteria(
-      { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
       matches,
       [playerA, playerB],
     );
@@ -603,7 +603,7 @@ describe("processMostGamesPlayed", () => {
     ];
 
     const result = processCriteria(
-      { type: "MOST_GAMES_PLAYED", queue: "ARENA" },
+      { type: "MOST_GAMES_PLAYED", queues: ["arena"] },
       matches,
       [playerA, playerB],
     );
@@ -614,8 +614,10 @@ describe("processMostGamesPlayed", () => {
     expect(playerAEntry?.score).toBe(1); // 1 arena game
     expect(playerBEntry?.score).toBe(2); // 2 arena games
   });
+});
 
-  it("should count games in RANKED_ANY (SOLO + FLEX)", () => {
+describe("processMostGamesPlayed across queue selections", () => {
+  it("should count games across selected Solo and Flex queues", () => {
     const matches = [
       // SOLO queue
       createMatch(420, [
@@ -671,7 +673,7 @@ describe("processMostGamesPlayed", () => {
     ];
 
     const result = processCriteria(
-      { type: "MOST_GAMES_PLAYED", queue: "RANKED_ANY" },
+      { type: "MOST_GAMES_PLAYED", queues: ["solo", "flex"] },
       matches,
       [playerA, playerB],
     );
@@ -681,6 +683,43 @@ describe("processMostGamesPlayed", () => {
 
     expect(playerAEntry?.score).toBe(3); // 2 solo + 1 flex
     expect(playerBEntry?.score).toBe(0); // 0 ranked games
+  });
+
+  it("interprets ALL within the selected game variant", () => {
+    const matches = [
+      createMatch(420, [
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+      ]),
+      createMatch(4310, [
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(60_001),
+          win: true,
+        },
+      ]),
+    ];
+
+    const modern = processCriteria(
+      { type: "MOST_GAMES_PLAYED", queues: ["ALL"] },
+      matches,
+      [playerA],
+      undefined,
+      "MODERN",
+    );
+    const classic = processCriteria(
+      { type: "MOST_GAMES_PLAYED", queues: ["ALL"] },
+      matches,
+      [playerA],
+      undefined,
+      "CLASSIC",
+    );
+
+    expect(modern[0]?.score).toBe(1);
+    expect(classic[0]?.score).toBe(1);
   });
 });
 
@@ -697,7 +736,7 @@ describe("processHighestRank", () => {
     };
 
     const result = processCriteria(
-      { type: "HIGHEST_RANK", queue: "SOLO" },
+      { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
       [],
       allParticipants,
       {
@@ -738,7 +777,7 @@ describe("processHighestRank", () => {
     };
 
     const result = processCriteria(
-      { type: "HIGHEST_RANK", queue: "SOLO" },
+      { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
       [],
       [playerA, playerB],
       {
@@ -761,7 +800,7 @@ describe("processHighestRank", () => {
     };
 
     const result = processCriteria(
-      { type: "HIGHEST_RANK", queue: "SOLO" },
+      { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
       [],
       [playerA, playerB],
       {
@@ -782,7 +821,7 @@ describe("processHighestRank", () => {
     };
 
     const result = processCriteria(
-      { type: "HIGHEST_RANK", queue: "SOLO" },
+      { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
       [],
       [playerA, playerB, playerC],
       {
@@ -822,7 +861,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
       [],
       [playerA, playerB],
       {
@@ -857,7 +896,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
       [],
       [playerA, playerB],
       {
@@ -884,7 +923,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
       [],
       [playerA, playerB],
       {
@@ -911,7 +950,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
       [],
       [playerA, playerB],
       {
@@ -938,7 +977,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
       [],
       [playerA, playerB],
       {
@@ -1052,7 +1091,7 @@ describe("processMostWinsPlayer", () => {
     ];
 
     const result = processCriteria(
-      { type: "MOST_WINS_PLAYER", queue: "SOLO" },
+      { type: "MOST_WINS_PLAYER", queues: ["solo"] },
       matches,
       [playerA, playerB],
     );
@@ -1171,7 +1210,7 @@ describe("processMostWinsChampion", () => {
       {
         type: "MOST_WINS_CHAMPION",
         championId: ChampionIdSchema.parse(yasuoId),
-        queue: "SOLO",
+        queues: ["solo"],
       },
       matches,
       [playerA, playerB],
@@ -1284,7 +1323,7 @@ describe("processHighestWinRate", () => {
     ];
 
     const result = processCriteria(
-      { type: "HIGHEST_WIN_RATE", minGames: 10, queue: "SOLO" },
+      { type: "HIGHEST_WIN_RATE", minGames: 10, queues: ["solo"] },
       matches,
       allParticipants,
     );
@@ -1348,7 +1387,7 @@ describe("processHighestWinRate", () => {
     ];
 
     const result = processCriteria(
-      { type: "HIGHEST_WIN_RATE", minGames: 10, queue: "SOLO" },
+      { type: "HIGHEST_WIN_RATE", minGames: 10, queues: ["solo"] },
       matches,
       [playerA, playerB],
     );
@@ -1379,7 +1418,7 @@ describe("processCriteria dispatcher", () => {
 
     expect(() =>
       processCriteria(
-        { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+        { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
         emptyMatches,
         emptyParticipants,
       ),
@@ -1387,16 +1426,7 @@ describe("processCriteria dispatcher", () => {
 
     expect(() =>
       processCriteria(
-        { type: "HIGHEST_RANK", queue: "SOLO" },
-        emptyMatches,
-        emptyParticipants,
-        emptySnapshots,
-      ),
-    ).not.toThrow();
-
-    expect(() =>
-      processCriteria(
-        { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+        { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
         emptyMatches,
         emptyParticipants,
         emptySnapshots,
@@ -1405,7 +1435,16 @@ describe("processCriteria dispatcher", () => {
 
     expect(() =>
       processCriteria(
-        { type: "MOST_WINS_PLAYER", queue: "SOLO" },
+        { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
+        emptyMatches,
+        emptyParticipants,
+        emptySnapshots,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      processCriteria(
+        { type: "MOST_WINS_PLAYER", queues: ["solo"] },
         emptyMatches,
         emptyParticipants,
       ),
@@ -1416,7 +1455,7 @@ describe("processCriteria dispatcher", () => {
         {
           type: "MOST_WINS_CHAMPION",
           championId: ChampionIdSchema.parse(1),
-          queue: "SOLO",
+          queues: ["solo"],
         },
         emptyMatches,
         emptyParticipants,
@@ -1425,7 +1464,7 @@ describe("processCriteria dispatcher", () => {
 
     expect(() =>
       processCriteria(
-        { type: "HIGHEST_WIN_RATE", minGames: 10, queue: "SOLO" },
+        { type: "HIGHEST_WIN_RATE", minGames: 10, queues: ["solo"] },
         emptyMatches,
         emptyParticipants,
       ),

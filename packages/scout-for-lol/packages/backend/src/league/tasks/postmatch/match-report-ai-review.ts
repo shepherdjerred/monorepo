@@ -30,6 +30,7 @@ export function isRankedQueue(queueType: QueueType | undefined): boolean {
   return (
     queueType === "solo" ||
     queueType === "flex" ||
+    queueType === "ranked 5s" ||
     queueType === "clash" ||
     queueType === "aram clash"
   );

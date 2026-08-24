@@ -1,6 +1,7 @@
 export * from "./arena/index.ts";
 export * from "./champion.ts";
 export * from "./competition.ts";
+export * from "./competition-format.ts";
 export * from "./discord.ts";
 export * from "./division.ts";
 export * from "./lane.ts";

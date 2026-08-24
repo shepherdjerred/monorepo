@@ -139,32 +139,12 @@ export function queueAvailabilityNote(
  * means the choice is not tied to a limited-time mode (it always stays
  * selectable).
  */
-export const COMPETITION_QUEUE_TO_QUEUE_TYPES: Record<
-  CompetitionQueueType,
-  QueueType[]
-> = {
-  SOLO: ["solo"],
-  FLEX: ["flex"],
-  RANKED_ANY: [],
-  ARENA: ["arena"],
-  ARAM: ["aram"],
-  URF: ["urf"],
-  ARURF: ["arurf"],
-  QUICKPLAY: ["quickplay"],
-  SWIFTPLAY: ["swiftplay"],
-  BRAWL: ["brawl"],
-  DRAFT_PICK: ["draft pick"],
-  CUSTOM: [],
-  ALL: [],
-};
-
 export function isCompetitionQueueCurrentlyAvailable(
   queue: CompetitionQueueType,
   now: Date = new Date(),
 ): boolean {
-  const queues = COMPETITION_QUEUE_TO_QUEUE_TYPES[queue];
-  if (queues.length === 0) {
+  if (queue === "ALL") {
     return true;
   }
-  return queues.some((entry) => isQueueCurrentlyAvailable(entry, now));
+  return isQueueCurrentlyAvailable(queue, now);
 }

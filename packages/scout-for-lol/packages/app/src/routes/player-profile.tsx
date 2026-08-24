@@ -1,4 +1,5 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { RanksSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { usePlayerParams } from "#src/lib/route-params.ts";
 import { PlayerTabsNav } from "#src/components/player-tabs-nav.tsx";
@@ -30,6 +31,7 @@ export function PlayerProfile() {
 
   const summary = summaryQuery.data;
   const accountCount = summary.accountCount;
+  const ranks = RanksSchema.parse(summary.ranks);
 
   return (
     <div className="space-y-4">
@@ -46,9 +48,10 @@ export function PlayerProfile() {
 
       <PlayerTabsNav guildId={guildId} alias={alias} />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <RankCard label="Ranked solo/duo" rank={summary.ranks.solo} />
-        <RankCard label="Ranked flex" rank={summary.ranks.flex} />
+      <div className="grid gap-4 md:grid-cols-4">
+        <RankCard label="Ranked solo/duo" rank={ranks.solo} />
+        <RankCard label="Ranked flex" rank={ranks.flex} />
+        <RankCard label="Ranked 5s" rank={ranks.ranked5s} />
         {summary.recentForm !== null && (
           <RecentFormCard form={summary.recentForm} />
         )}

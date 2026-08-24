@@ -13,6 +13,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
   CompetitionCriteriaSchema,
+  CompetitionGameVariantSchema,
   CompetitionIdSchema,
   CompetitionVisibilitySchema,
   DiscordAccountIdSchema,
@@ -30,9 +31,11 @@ import {
   DEFAULT_SCHEDULE_TIMEZONE,
   ReportScheduleTimezoneSchema,
 } from "@scout-for-lol/data/model/competition-cron.ts";
+import { validateCompetitionConfiguration } from "#src/database/competition/configuration-validation.ts";
 import {
   CompetitionEditInputSchema,
   WebCompetitionDatesSchema,
+  assertCompetitionEditable,
   buildCompetitionUpdateInput,
 } from "#src/trpc/router/competition-edit-input.ts";
 import { router } from "#src/trpc/trpc.ts";
@@ -80,7 +83,8 @@ const CompetitionWriteSchema = z.object({
   title: z.string().trim().min(1).max(100),
   description: z.string().trim().min(1).max(500),
   visibility: CompetitionVisibilitySchema,
-  maxParticipants: z.number().int().min(2).max(100).default(50),
+  maxParticipants: z.number().int().min(2).max(100).default(100),
+  gameVariant: CompetitionGameVariantSchema.default("MODERN"),
   dates: WebCompetitionDatesSchema,
   criteria: CompetitionCriteriaSchema,
   initialPlayerIds: z.array(PlayerIdSchema).max(100).default([]),
@@ -210,6 +214,11 @@ export const competitionRouter = router({
       });
       const ownerId = DiscordAccountIdSchema.parse(ctx.user.discordId);
       const dates = CompetitionDatesSchema.parse(input.dates);
+      try {
+        validateCompetitionConfiguration(input.criteria, input.gameVariant);
+      } catch (error) {
+        asBadRequest(error);
+      }
 
       if (!ctx.permissions.isRoot && !checkRateLimit(input.guildId, ownerId)) {
         const remainingMinutes = Math.ceil(
@@ -261,7 +270,7 @@ export const competitionRouter = router({
         throw new TRPCError({
           code: "FORBIDDEN",
           message:
-            "Configuring interim updates requires the schedule permission.",
+            "Configuring leaderboard updates requires the schedule permission.",
         });
       }
 
@@ -277,6 +286,7 @@ export const competitionRouter = router({
             channelId: input.channelId,
             title: input.title,
             description: input.description,
+            gameVariant: input.gameVariant,
             visibility: input.visibility,
             maxParticipants: input.maxParticipants,
             dates,
@@ -320,16 +330,9 @@ export const competitionRouter = router({
         input.competitionId,
         input.guildId,
       );
-      const status = getCompetitionStatus(competition);
-      if (status === "CANCELLED" || status === "ENDED") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `A ${status} competition cannot be edited.`,
-        });
-      }
+      assertCompetitionEditable(competition, input);
 
-      // Bulk-enroll (invite-permission gated) when a competition becomes
-      // SERVER_WIDE, or an already-SERVER_WIDE cap is raised (refill the slots).
+      // Refill server-wide entrants when visibility changes or the cap rises.
       const enrollsServerWide =
         (input.visibility ?? competition.visibility) === "SERVER_WIDE" &&
         (competition.visibility !== "SERVER_WIDE" ||
@@ -343,27 +346,6 @@ export const competitionRouter = router({
         });
       }
 
-      const changesCriteriaOrDates =
-        input.criteria !== undefined || input.dates !== undefined;
-      if (status === "ACTIVE" && changesCriteriaOrDates) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message:
-            "Criteria and dates are locked once a competition is active — they would invalidate snapshots and the lifecycle schedule.",
-        });
-      }
-      if (
-        status === "ACTIVE" &&
-        input.maxParticipants !== undefined &&
-        input.maxParticipants < competition.maxParticipants
-      ) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message:
-            "Participant cap can only be increased while a competition is active.",
-        });
-      }
-
       if (input.channelId !== undefined) {
         assertChannelInGuild({
           guildId: input.guildId,
@@ -371,10 +353,17 @@ export const competitionRouter = router({
         });
       }
 
+      try {
+        validateCompetitionConfiguration(
+          input.criteria ?? competition.criteria,
+          input.gameVariant ?? competition.gameVariant,
+        );
+      } catch (error) {
+        asBadRequest(error);
+      }
+
       const updateInput = buildCompetitionUpdateInput(input);
-      // Persist the update and (when flipping to SERVER_WIDE) enroll the whole
-      // server in one transaction, so an enrollment failure rolls the
-      // visibility change back and a retry still satisfies enrollsServerWide.
+      // Keep the update and any server-wide enrollment atomic.
       let updated: CompetitionWithCriteria;
       try {
         updated = await prisma.$transaction(async (tx) => {

@@ -110,7 +110,8 @@ describe("createSnapshot - START snapshot", () => {
   test("creates START snapshot successfully", async () => {
     const criteria: CompetitionCriteria = {
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      aggregation: "MAX",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -177,7 +178,7 @@ describe("createSnapshot - START snapshot", () => {
   test("throws error if player not found", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -196,7 +197,7 @@ describe("createSnapshot - START snapshot", () => {
   test("throws error if player has no accounts", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -233,7 +234,8 @@ describe("createSnapshot - END snapshot", () => {
   test("creates both START and END snapshots", async () => {
     const criteria: CompetitionCriteria = {
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      aggregation: "MAX",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -296,7 +298,7 @@ describe("createSnapshot - Idempotency", () => {
   test("updates existing snapshot when called twice", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_WINS_PLAYER",
-      queue: "RANKED_ANY",
+      queues: ["solo", "flex"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -377,7 +379,7 @@ describe("createSnapshotsForAllParticipants", () => {
   test("creates snapshots for all JOINED participants", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -436,7 +438,7 @@ describe("createSnapshotsForAllParticipants", () => {
   test("only creates snapshots for JOINED participants, not INVITED", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -499,7 +501,7 @@ describe("getSnapshot", () => {
   test("returns null for non-existent snapshot", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -523,7 +525,8 @@ describe("getSnapshot", () => {
   test("retrieves existing snapshot and parses data correctly", async () => {
     const criteria: CompetitionCriteria = {
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      aggregation: "MAX",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -582,7 +585,8 @@ describe("createSnapshot - Different criteria types", () => {
   test("creates snapshot for HIGHEST_RANK criteria", async () => {
     const criteria: CompetitionCriteria = {
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      aggregation: "MAX",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -620,7 +624,7 @@ describe("createSnapshot - Different criteria types", () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_WINS_CHAMPION",
       championId: ChampionIdSchema.parse(157), // Yasuo
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const { competitionId } = await createTestCompetition(criteria);
@@ -658,7 +662,7 @@ describe("createSnapshot - Different criteria types", () => {
   test("creates snapshot for HIGHEST_WIN_RATE criteria", async () => {
     const criteria: CompetitionCriteria = {
       type: "HIGHEST_WIN_RATE",
-      queue: "SOLO",
+      queues: ["solo"],
       minGames: 10,
     };
 

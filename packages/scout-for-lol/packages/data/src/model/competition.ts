@@ -5,10 +5,15 @@ import type {
   DiscordChannelId,
   DiscordGuildId,
 } from "#src/model/discord.ts";
-import { RankSchema } from "#src/model/rank.ts";
+import { RankSchema, RankedQueueTypeSchema } from "#src/model/rank.ts";
 import type { SeasonId } from "#src/seasons.ts";
 import { ReportScheduleTimezoneSchema } from "#src/model/competition-cron.ts";
 import { ChampionIdSchema } from "#src/model/identifiers.ts";
+import {
+  isClassicQueueType,
+  QueueTypeSchema,
+  type QueueType,
+} from "#src/model/state.ts";
 
 /**
  * Competition database row shape — mirrors backend/prisma/schema.prisma.
@@ -37,6 +42,7 @@ export type Competition = {
   ownerId: DiscordAccountId;
   title: string;
   description: string;
+  gameVariant: string;
   channelId: DiscordChannelId;
   isCancelled: boolean;
   visibility: CompetitionVisibility;
@@ -130,20 +136,41 @@ export const PermissionTypeSchema = z.enum([
 
 export type CompetitionQueueType = z.infer<typeof CompetitionQueueTypeSchema>;
 export const CompetitionQueueTypeSchema = z.enum([
-  "SOLO",
-  "FLEX",
-  "RANKED_ANY",
-  "ARENA",
-  "ARAM",
-  "URF",
-  "ARURF",
-  "QUICKPLAY",
-  "SWIFTPLAY",
-  "BRAWL",
-  "DRAFT_PICK",
-  "CUSTOM",
+  ...QueueTypeSchema.options,
   "ALL",
 ]);
+
+export const CompetitionGameVariantSchema = z.enum(["MODERN", "CLASSIC"]);
+export type CompetitionGameVariant = z.infer<
+  typeof CompetitionGameVariantSchema
+>;
+
+export const RankAggregationSchema = z.enum(["MAX", "SUM"]);
+export type RankAggregation = z.infer<typeof RankAggregationSchema>;
+
+const CompetitionQueuesSchema = z
+  .array(CompetitionQueueTypeSchema)
+  .min(1)
+  .superRefine((queues, context) => {
+    if (new Set(queues).size !== queues.length) {
+      context.addIssue({ code: "custom", message: "Queues must be unique" });
+    }
+    if (queues.includes("ALL") && queues.length !== 1) {
+      context.addIssue({
+        code: "custom",
+        message: "ALL cannot be combined with another queue",
+      });
+    }
+  });
+
+const RankedCompetitionQueuesSchema = z
+  .array(RankedQueueTypeSchema)
+  .min(1)
+  .superRefine((queues, context) => {
+    if (new Set(queues).size !== queues.length) {
+      context.addIssue({ code: "custom", message: "Queues must be unique" });
+    }
+  });
 
 // ============================================================================
 // Competition Criteria (Discriminated Union)
@@ -154,7 +181,7 @@ export const CompetitionQueueTypeSchema = z.enum([
  */
 export const MostGamesPlayedCriteriaSchema = z.object({
   type: z.literal("MOST_GAMES_PLAYED"),
-  queue: CompetitionQueueTypeSchema,
+  queues: CompetitionQueuesSchema,
 });
 
 export type MostGamesPlayedCriteria = z.infer<
@@ -166,7 +193,8 @@ export type MostGamesPlayedCriteria = z.infer<
  */
 export const HighestRankCriteriaSchema = z.object({
   type: z.literal("HIGHEST_RANK"),
-  queue: z.enum(["SOLO", "FLEX"]), // Only ranked queues
+  queues: RankedCompetitionQueuesSchema,
+  aggregation: RankAggregationSchema.default("MAX"),
 });
 
 export type HighestRankCriteria = z.infer<typeof HighestRankCriteriaSchema>;
@@ -176,7 +204,8 @@ export type HighestRankCriteria = z.infer<typeof HighestRankCriteriaSchema>;
  */
 export const MostRankClimbCriteriaSchema = z.object({
   type: z.literal("MOST_RANK_CLIMB"),
-  queue: z.enum(["SOLO", "FLEX"]), // Only ranked queues
+  queues: RankedCompetitionQueuesSchema,
+  aggregation: RankAggregationSchema.default("MAX"),
 });
 
 export type MostRankClimbCriteria = z.infer<typeof MostRankClimbCriteriaSchema>;
@@ -186,7 +215,7 @@ export type MostRankClimbCriteria = z.infer<typeof MostRankClimbCriteriaSchema>;
  */
 export const MostWinsPlayerCriteriaSchema = z.object({
   type: z.literal("MOST_WINS_PLAYER"),
-  queue: CompetitionQueueTypeSchema,
+  queues: CompetitionQueuesSchema,
 });
 
 export type MostWinsPlayerCriteria = z.infer<
@@ -200,7 +229,7 @@ export type MostWinsPlayerCriteria = z.infer<
 export const MostWinsChampionCriteriaSchema = z.object({
   type: z.literal("MOST_WINS_CHAMPION"),
   championId: ChampionIdSchema,
-  queue: CompetitionQueueTypeSchema.optional(),
+  queues: CompetitionQueuesSchema,
 });
 
 export type MostWinsChampionCriteria = z.infer<
@@ -213,7 +242,7 @@ export type MostWinsChampionCriteria = z.infer<
 export const HighestWinRateCriteriaSchema = z.object({
   type: z.literal("HIGHEST_WIN_RATE"),
   minGames: z.number().int().positive().default(10),
-  queue: CompetitionQueueTypeSchema,
+  queues: CompetitionQueuesSchema,
 });
 
 export type HighestWinRateCriteria = z.infer<
@@ -234,6 +263,50 @@ export const CompetitionCriteriaSchema = z.discriminatedUnion("type", [
 ]);
 
 export type CompetitionCriteria = z.infer<typeof CompetitionCriteriaSchema>;
+
+export function queueMatchesGameVariant(
+  queue: QueueType,
+  gameVariant: CompetitionGameVariant,
+): boolean {
+  return gameVariant === "CLASSIC"
+    ? isClassicQueueType(queue)
+    : !isClassicQueueType(queue);
+}
+
+export function criteriaMatchesGameVariant(
+  criteria: CompetitionCriteria,
+  gameVariant: CompetitionGameVariant,
+): boolean {
+  if (
+    gameVariant === "CLASSIC" &&
+    (criteria.type === "HIGHEST_RANK" || criteria.type === "MOST_RANK_CLIMB")
+  ) {
+    return false;
+  }
+  return criteria.queues.every(
+    (queue) => queue === "ALL" || queueMatchesGameVariant(queue, gameVariant),
+  );
+}
+
+export const CompetitionConfigurationSchema = z
+  .object({
+    gameVariant: CompetitionGameVariantSchema,
+    criteria: CompetitionCriteriaSchema,
+  })
+  .superRefine((configuration, context) => {
+    if (
+      !criteriaMatchesGameVariant(
+        configuration.criteria,
+        configuration.gameVariant,
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["criteria", "queues"],
+        message: "Criteria queues are incompatible with the game variant",
+      });
+    }
+  });
 
 // ============================================================================
 // Competition Status (Calculated, Not Stored)
@@ -315,71 +388,6 @@ export function getCompetitionStatus(
 }
 
 // ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Format queue type to human-readable string
- */
-export function competitionQueueTypeToString(
-  queueType: CompetitionQueueType,
-): string {
-  return match(queueType)
-    .with("SOLO", () => "Solo Queue")
-    .with("FLEX", () => "Flex Queue")
-    .with("RANKED_ANY", () => "Ranked (Any)")
-    .with("ARENA", () => "Arena")
-    .with("ARAM", () => "ARAM")
-    .with("URF", () => "URF")
-    .with("ARURF", () => "ARURF")
-    .with("QUICKPLAY", () => "Quickplay")
-    .with("SWIFTPLAY", () => "Swiftplay")
-    .with("BRAWL", () => "Brawl")
-    .with("DRAFT_PICK", () => "Draft Pick")
-    .with("CUSTOM", () => "Custom")
-    .with("ALL", () => "All Queues")
-    .exhaustive();
-}
-
-/**
- * Format visibility to human-readable string
- */
-export function visibilityToString(visibility: CompetitionVisibility): string {
-  return match(visibility)
-    .with("OPEN", () => "Open to All")
-    .with("INVITE_ONLY", () => "Invite Only")
-    .with("SERVER_WIDE", () => "Server-Wide")
-    .exhaustive();
-}
-
-/**
- * Describe what a visibility setting means for participants
- */
-export function visibilityDescription(
-  visibility: CompetitionVisibility,
-): string {
-  return match(visibility)
-    .with("OPEN", () => "Anyone in the server can join themselves (opt-in).")
-    .with("INVITE_ONLY", () => "Players join only when invited.")
-    .with(
-      "SERVER_WIDE",
-      () => "Every tracked player is entered automatically (opt-out).",
-    )
-    .exhaustive();
-}
-
-/**
- * Format participant status to human-readable string
- */
-export function participantStatusToString(status: ParticipantStatus): string {
-  return match(status)
-    .with("INVITED", () => "Invited")
-    .with("JOINED", () => "Joined")
-    .with("LEFT", () => "Left")
-    .exhaustive();
-}
-
-// ============================================================================
 // Competition Parsing - Database to Domain Type
 // ============================================================================
 
@@ -410,9 +418,14 @@ export type CompetitionWithSeason = Competition & {
  */
 export type CompetitionWithCriteria = Omit<
   Competition,
-  "criteriaType" | "criteriaConfig" | "analysisTimezone" | "scheduleTimezone"
+  | "criteriaType"
+  | "criteriaConfig"
+  | "analysisTimezone"
+  | "scheduleTimezone"
+  | "gameVariant"
 > & {
   criteria: CompetitionCriteria;
+  gameVariant: CompetitionGameVariant;
   analysisTimezone: string;
   scheduleTimezone: string;
 };
@@ -477,6 +490,7 @@ export function parseCompetition(
 
   return {
     ...rest,
+    gameVariant: CompetitionGameVariantSchema.parse(raw.gameVariant),
     analysisTimezone: ReportScheduleTimezoneSchema.parse(raw.analysisTimezone),
     scheduleTimezone: ReportScheduleTimezoneSchema.parse(raw.scheduleTimezone),
     startDate,
@@ -506,6 +520,7 @@ export type RankSnapshotData = z.infer<typeof RankSnapshotDataSchema>;
 export const RankSnapshotDataSchema = z.object({
   solo: RankSchema.optional(),
   flex: RankSchema.optional(),
+  ranked5s: RankSchema.optional(),
 });
 
 /**
@@ -529,7 +544,7 @@ export const WinsSnapshotDataSchema = z.object({
   wins: z.number().int().nonnegative(),
   games: z.number().int().nonnegative(),
   championId: ChampionIdSchema.optional(),
-  queue: CompetitionQueueTypeSchema.optional(),
+  queues: CompetitionQueuesSchema.optional(),
 });
 
 // ============================================================================

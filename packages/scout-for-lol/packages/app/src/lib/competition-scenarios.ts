@@ -9,6 +9,7 @@ import {
 export type CompetitionScenarioValue = {
   title: string;
   description: string;
+  gameVariant: "MODERN";
   criteria: CriteriaState;
   dates: DatesState;
 };
@@ -29,7 +30,8 @@ type ScenarioContext = {
 
 const EMPTY_CRITERIA: CriteriaState = {
   criteriaType: "MOST_GAMES_PLAYED",
-  queue: "SOLO",
+  queues: ["ALL"],
+  aggregation: "MAX",
   championId: "",
   minGames: "10",
 };
@@ -61,7 +63,7 @@ function rankedScenario(options: {
   description: string;
   title: string;
   criteriaType: "HIGHEST_RANK" | "MOST_RANK_CLIMB";
-  queue: "SOLO" | "FLEX";
+  queue: "solo" | "flex" | "ranked 5s";
   season: SeasonData | undefined;
 }): CompetitionScenario {
   if (options.season === undefined) {
@@ -80,10 +82,11 @@ function rankedScenario(options: {
     value: {
       title: options.title,
       description: options.description,
+      gameVariant: "MODERN",
       criteria: {
         ...EMPTY_CRITERIA,
         criteriaType: options.criteriaType,
-        queue: options.queue,
+        queues: [options.queue],
       },
       dates: {
         mode: "SEASON",
@@ -110,6 +113,7 @@ function rollingScenario(options: {
     value: {
       title: options.title,
       description: options.description,
+      gameVariant: "MODERN",
       criteria: options.criteria,
       dates: options.dates,
     },
@@ -129,6 +133,7 @@ export function buildCompetitionScenarios(
       value: {
         title: "",
         description: "",
+        gameVariant: "MODERN",
         criteria: EMPTY_CRITERIA,
         dates: {
           mode: "FIXED_DATES",
@@ -144,7 +149,7 @@ export function buildCompetitionScenarios(
       title: "Biggest Solo Queue climb this season",
       description: "Gain the most Solo Queue LP before the season ends.",
       criteriaType: "MOST_RANK_CLIMB",
-      queue: "SOLO",
+      queue: "solo",
       season,
     }),
     rankedScenario({
@@ -153,7 +158,7 @@ export function buildCompetitionScenarios(
       title: "Biggest Flex Queue climb this season",
       description: "Gain the most Flex Queue LP before the season ends.",
       criteriaType: "MOST_RANK_CLIMB",
-      queue: "FLEX",
+      queue: "flex",
       season,
     }),
     rankedScenario({
@@ -162,7 +167,7 @@ export function buildCompetitionScenarios(
       title: "Highest Solo Queue rank this season",
       description: "Reach the highest Solo Queue rank before the season ends.",
       criteriaType: "HIGHEST_RANK",
-      queue: "SOLO",
+      queue: "solo",
       season,
     }),
     rankedScenario({
@@ -171,7 +176,7 @@ export function buildCompetitionScenarios(
       title: "Highest Flex Queue rank this season",
       description: "Reach the highest Flex Queue rank before the season ends.",
       criteriaType: "HIGHEST_RANK",
-      queue: "FLEX",
+      queue: "flex",
       season,
     }),
     rollingScenario({
@@ -179,7 +184,7 @@ export function buildCompetitionScenarios(
       label: "All-queue activity",
       title: "Most games — 30-day sprint",
       description: "Play the most games across every queue over 30 days.",
-      criteria: { ...EMPTY_CRITERIA, queue: "ALL" },
+      criteria: EMPTY_CRITERIA,
       dates,
     }),
     rollingScenario({
@@ -187,7 +192,7 @@ export function buildCompetitionScenarios(
       label: "Solo activity",
       title: "Most Solo Queue games — 30-day sprint",
       description: "Play the most Solo Queue games over 30 days.",
-      criteria: EMPTY_CRITERIA,
+      criteria: { ...EMPTY_CRITERIA, queues: ["solo"] },
       dates,
     }),
     rollingScenario({
@@ -195,7 +200,7 @@ export function buildCompetitionScenarios(
       label: "ARAM activity",
       title: "Most ARAM games — 30-day sprint",
       description: "Play the most ARAM games over 30 days.",
-      criteria: { ...EMPTY_CRITERIA, queue: "ARAM" },
+      criteria: { ...EMPTY_CRITERIA, queues: ["aram"] },
       dates,
     }),
     rollingScenario({
@@ -206,6 +211,7 @@ export function buildCompetitionScenarios(
       criteria: {
         ...EMPTY_CRITERIA,
         criteriaType: "MOST_WINS_PLAYER",
+        queues: ["solo"],
       },
       dates,
     }),
@@ -217,7 +223,7 @@ export function buildCompetitionScenarios(
       criteria: {
         ...EMPTY_CRITERIA,
         criteriaType: "MOST_WINS_CHAMPION",
-        queue: "__ANY__",
+        queues: ["ALL"],
         championId: ChampionIdSchema.parse(350).toString(),
       },
       dates,
@@ -230,6 +236,7 @@ export function buildCompetitionScenarios(
       criteria: {
         ...EMPTY_CRITERIA,
         criteriaType: "HIGHEST_WIN_RATE",
+        queues: ["solo"],
       },
       dates,
     }),

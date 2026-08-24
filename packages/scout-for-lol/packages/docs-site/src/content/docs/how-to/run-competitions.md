@@ -16,11 +16,11 @@ nobody trusts.
 
 - **Most games played** — rewards volume. Good for a server-wide activity push,
   bad if you want to reward playing well.
-- **Highest rank** — peak rank reached, solo or flex only. Favors whoever was
-  already highest; use it when the point is bragging rights, not improvement.
-- **Most rank climb** — LP gained across the window, solo or flex only. This is
-  the one that lets a Silver player beat a Diamond player, so it is usually the
-  better "season race".
+- **Highest rank** — peak rank reached across Solo/Duo, Flex, or Ranked 5s.
+  Choose **Best selected rank** for one winning ladder or **Combined ranks** to
+  add the selected ladders' normalized points.
+- **Most rank climb** — LP gained across Solo/Duo, Flex, or Ranked 5s. Choose
+  the best complete ladder climb or add every complete selected-ladder change.
 - **Most wins** — wins in a queue you choose.
 - **Most wins on a champion** — wins on one specific champion, optionally
   restricted to a queue. The basis of one-trick challenges.
@@ -29,6 +29,12 @@ nobody trusts.
 
 Every criteria type and the queues each accepts are listed in the [competition
 reference](/docs/reference/competitions/).
+
+Choose **Modern League** or **League Classic** before choosing queues. Modern
+and Classic matches never mix. Classic has its own champion catalog and cannot
+use rank criteria because Scout has no Classic ladder. Choose **All queues** by
+itself, or select any number of compatible queues. Limited-time queues remain
+available and are labeled when they are not live.
 
 ## Control who takes part
 
@@ -56,19 +62,21 @@ Choose either:
 - **Season** — the competition follows a League season's boundaries.
 
 Use a season for a climb race that should end when the season does; use fixed
-dates for anything shorter. Fixed dates mean local day start through local day
-end in the **Competition timezone**, including on daylight-saving transitions.
+dates for anything shorter. A season changes only the dates. Game version and
+queues decide which matches count. Fixed dates mean local day start through
+local day end in the **Competition timezone**, including on daylight-saving
+transitions.
 
-## Configure interim standings
+## Configure leaderboard updates
 
-Start and final announcements are mandatory. **Post interim standings** controls
-only the standings posted while the competition is active. New competitions
+Start and final announcements are mandatory. **Post leaderboard updates**
+controls only the standings posted while the competition is active. New competitions
 default to daily at 9:00 AM in your browser's timezone; you can disable them,
 choose a preset cadence, enter a custom at-most-daily cron expression, and save a
 separate schedule timezone.
 
 Selecting initial entrants requires `competitions:invite`. Enabling or
-customizing interim delivery requires `competitions:schedule`.
+customizing leaderboard delivery requires `competitions:schedule`.
 
 ## Let the lifecycle drive it
 

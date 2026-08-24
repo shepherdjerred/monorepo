@@ -1,11 +1,15 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import {
   CompetitionCriteriaSchema,
   CompetitionIdSchema,
+  CompetitionGameVariantSchema,
   CompetitionVisibilitySchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   SeasonIdSchema,
+  getCompetitionStatus,
+  type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
 import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
 import type { UpdateCompetitionInput } from "#src/database/competition/queries.ts";
@@ -31,6 +35,7 @@ export const CompetitionEditInputSchema = z.object({
   channelId: DiscordChannelIdSchema.optional(),
   title: z.string().trim().min(1).max(100).optional(),
   description: z.string().trim().min(1).max(500).optional(),
+  gameVariant: CompetitionGameVariantSchema.optional(),
   visibility: CompetitionVisibilitySchema.optional(),
   maxParticipants: z.number().int().min(2).max(100).optional(),
   dates: WebCompetitionDatesSchema.optional(),
@@ -38,18 +43,59 @@ export const CompetitionEditInputSchema = z.object({
   analysisTimezone: ReportScheduleTimezoneSchema.optional(),
 });
 
+export type CompetitionEditInput = z.infer<typeof CompetitionEditInputSchema>;
+
+export function assertCompetitionEditable(
+  competition: CompetitionWithCriteria,
+  input: CompetitionEditInput,
+): void {
+  const status = getCompetitionStatus(competition);
+  if (status === "CANCELLED" || status === "ENDED") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: `A ${status} competition cannot be edited.`,
+    });
+  }
+
+  const changesCriteriaOrDates =
+    input.criteria !== undefined ||
+    input.dates !== undefined ||
+    input.gameVariant !== undefined;
+  if (status === "ACTIVE" && changesCriteriaOrDates) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message:
+        "Criteria and dates are locked once a competition is active — they would invalidate snapshots and the lifecycle schedule.",
+    });
+  }
+  if (
+    status === "ACTIVE" &&
+    input.maxParticipants !== undefined &&
+    input.maxParticipants < competition.maxParticipants
+  ) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message:
+        "Participant cap can only be increased while a competition is active.",
+    });
+  }
+}
+
 /**
  * Build the sparse update payload — only the keys the caller actually provided,
  * as required by exactOptionalPropertyTypes.
  */
 export function buildCompetitionUpdateInput(
-  input: z.infer<typeof CompetitionEditInputSchema>,
+  input: CompetitionEditInput,
 ): UpdateCompetitionInput {
   return {
     ...(input.title === undefined ? {} : { title: input.title }),
     ...(input.description === undefined
       ? {}
       : { description: input.description }),
+    ...(input.gameVariant === undefined
+      ? {}
+      : { gameVariant: input.gameVariant }),
     ...(input.channelId === undefined ? {} : { channelId: input.channelId }),
     ...(input.visibility === undefined ? {} : { visibility: input.visibility }),
     ...(input.maxParticipants === undefined

@@ -5,6 +5,7 @@ import {
   visibilityToString,
   visibilityDescription,
   type CompetitionVisibility,
+  type CompetitionGameVariant,
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Input } from "@scout-for-lol/design-system/components/input";
@@ -32,6 +33,7 @@ export type FormState = {
   channelId: string;
   visibility: CompetitionVisibility;
   maxParticipants: string;
+  gameVariant: CompetitionGameVariant;
   analysisTimezone: string;
   dates: DatesState;
   criteria: CriteriaState;
@@ -42,12 +44,14 @@ export const EMPTY_STATE: FormState = {
   description: "",
   channelId: "",
   visibility: "OPEN",
-  maxParticipants: "50",
+  maxParticipants: "100",
+  gameVariant: "MODERN",
   analysisTimezone: browserTimezone(),
   dates: { mode: "FIXED_DATES", startDate: "", endDate: "", seasonId: "" },
   criteria: {
     criteriaType: "MOST_GAMES_PLAYED",
-    queue: "SOLO",
+    queues: ["ALL"],
+    aggregation: "MAX",
     championId: "",
     minGames: "10",
   },
@@ -184,9 +188,28 @@ export function CompetitionFormFields(props: {
 
       <CompetitionCriteriaFields
         value={state.criteria}
+        gameVariant={state.gameVariant}
         disabled={locked}
         onChange={(criteria) => {
           setState((prev) => ({ ...prev, criteria }));
+        }}
+        onGameVariantChange={(gameVariant) => {
+          setState((prev) => ({
+            ...prev,
+            gameVariant,
+            criteria: {
+              ...prev.criteria,
+              criteriaType:
+                gameVariant === "CLASSIC" &&
+                (prev.criteria.criteriaType === "HIGHEST_RANK" ||
+                  prev.criteria.criteriaType === "MOST_RANK_CLIMB")
+                  ? "MOST_GAMES_PLAYED"
+                  : prev.criteria.criteriaType,
+              queues: ["ALL"],
+              championId: "",
+              aggregation: "MAX",
+            },
+          }));
         }}
       />
 

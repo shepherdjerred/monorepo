@@ -4,9 +4,12 @@ import {
   type CompetitionId,
   type CompetitionStatus,
   type CompetitionAnalysisPreset,
+  type CompetitionCriteria,
   type VisualizationSnapshot,
   RankSchema,
   rankToString,
+  QueueTypeSchema,
+  queueTypeToDisplayString,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
@@ -38,6 +41,30 @@ function formatScore(score: unknown): string {
   return String(score);
 }
 
+function formatOfficialScore(
+  score: unknown,
+  criteria: CompetitionCriteria,
+  metadata: Record<string, unknown> | undefined,
+): string {
+  const winningQueue = metadata?.["winningQueue"];
+  const parsedQueue = QueueTypeSchema.safeParse(winningQueue);
+  const queueSuffix = parsedQueue.success
+    ? ` · ${queueTypeToDisplayString(parsedQueue.data)}`
+    : "";
+
+  if (criteria.type === "HIGHEST_RANK") {
+    return typeof score === "number" && criteria.aggregation === "SUM"
+      ? `${score.toString()} combined ladder points`
+      : `${formatScore(score)}${queueSuffix}`;
+  }
+  if (typeof score === "number" && criteria.type === "MOST_RANK_CLIMB") {
+    return criteria.aggregation === "SUM"
+      ? `${score.toString()} combined LP`
+      : `${score.toString()} LP${queueSuffix}`;
+  }
+  return formatScore(score);
+}
+
 export function CompetitionLeaderboardPanel(props: {
   guildId: string;
   competitionId: CompetitionId;
@@ -45,6 +72,7 @@ export function CompetitionLeaderboardPanel(props: {
   startDate: Date | string | null;
   endDate: Date | string | null;
   analysisTimezone: string;
+  criteria: CompetitionCriteria;
 }) {
   const { guildId, competitionId, status } = props;
   const trpc = useTRPC();
@@ -152,6 +180,7 @@ export function CompetitionLeaderboardPanel(props: {
           visible={mode === "official" && preset === "criterion_score"}
           leaderboard={leaderboard}
           chartSrc={chartSrc}
+          criteria={props.criteria}
         />
         <PeriodAnalysis
           visible={mode === "selected_period" || preset !== "criterion_score"}
@@ -167,6 +196,7 @@ type StandingsEntry = {
   playerName: string;
   rank: number;
   score: unknown;
+  metadata?: Record<string, unknown>;
 };
 
 function AnalysisControls(props: {
@@ -301,7 +331,10 @@ function StandingsStatus(props: {
   );
 }
 
-function StandingsTable(props: { entries: StandingsEntry[] }) {
+function StandingsTable(props: {
+  entries: StandingsEntry[];
+  scoreFormatter?: (entry: StandingsEntry) => string;
+}) {
   return (
     <Table>
       <TableHeader>
@@ -316,7 +349,9 @@ function StandingsTable(props: { entries: StandingsEntry[] }) {
           <TableRow key={entry.playerId}>
             <TableCell>{entry.rank}</TableCell>
             <TableCell className="font-medium">{entry.playerName}</TableCell>
-            <TableCell>{formatScore(entry.score)}</TableCell>
+            <TableCell>
+              {props.scoreFormatter?.(entry) ?? formatScore(entry.score)}
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -331,6 +366,7 @@ function OfficialStandings(props: {
     | null
     | undefined;
   chartSrc: string;
+  criteria: CompetitionCriteria;
 }) {
   if (!props.visible || props.leaderboard?.entries.length === 0) return null;
   if (props.leaderboard === null || props.leaderboard === undefined)
@@ -340,7 +376,12 @@ function OfficialStandings(props: {
       <p className="text-xs text-scout-subtle">
         Updated {formatDate(props.leaderboard.calculatedAt)}
       </p>
-      <StandingsTable entries={props.leaderboard.entries} />
+      <StandingsTable
+        entries={props.leaderboard.entries}
+        scoreFormatter={(entry) =>
+          formatOfficialScore(entry.score, props.criteria, entry.metadata)
+        }
+      />
       <ChartImage src={props.chartSrc} alt="Leaderboard chart" />
     </>
   );

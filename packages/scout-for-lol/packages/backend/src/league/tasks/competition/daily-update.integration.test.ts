@@ -201,7 +201,7 @@ describe("Daily Leaderboard Update", () => {
   test("posts update for single active competition", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     // Use dates relative to actual current time
@@ -246,7 +246,7 @@ describe("Daily Leaderboard Update", () => {
   test("posts updates for multiple active competitions", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     // Use dates relative to actual current time
@@ -308,7 +308,7 @@ describe("Daily Leaderboard Update", () => {
   test("skips non-active competitions", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date();
@@ -354,7 +354,7 @@ describe("Daily Leaderboard Update", () => {
   test("handles competition with no participants", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date();
@@ -382,7 +382,7 @@ describe("Daily Leaderboard Update - Error Handling & Edge Cases", () => {
   test("continues processing after error in one competition", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date();
@@ -443,7 +443,7 @@ describe("Daily Leaderboard Update - Error Handling & Edge Cases", () => {
   test("message includes day count for active competition", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date();
@@ -489,7 +489,7 @@ describe("Daily Leaderboard Update - Error Handling & Edge Cases", () => {
   test("respects rate limiting with delays between posts", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const now = new Date();

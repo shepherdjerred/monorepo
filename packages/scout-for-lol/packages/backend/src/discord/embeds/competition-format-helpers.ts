@@ -6,7 +6,10 @@ import type {
   getCompetitionStatus,
 } from "@scout-for-lol/data";
 import {
+  competitionQueuesToString,
   competitionQueueTypeToString,
+  queueTypeToDisplayString,
+  QueueTypeSchema,
   rankToString,
   RankSchema,
 } from "@scout-for-lol/data";
@@ -56,29 +59,31 @@ export function formatCriteriaDescription(
   return match(criteria)
     .with(
       { type: "MOST_GAMES_PLAYED" },
-      (c) => `Most games played in ${formatQueue(c.queue)}`,
+      (c) => `Most games played in ${competitionQueuesToString(c.queues)}`,
     )
     .with(
       { type: "HIGHEST_RANK" },
-      (c) => `Highest rank in ${formatQueue(c.queue)}`,
+      (c) =>
+        `Highest rank in ${competitionQueuesToString(c.queues)} (${c.aggregation === "MAX" ? "best selected rank" : "combined ranks"})`,
     )
     .with(
       { type: "MOST_RANK_CLIMB" },
-      (c) => `Most rank climb in ${formatQueue(c.queue)}`,
+      (c) =>
+        `Most rank climb in ${competitionQueuesToString(c.queues)} (${c.aggregation === "MAX" ? "best ladder climb" : "combined ladder climbs"})`,
     )
     .with(
       { type: "MOST_WINS_PLAYER" },
-      (c) => `Most wins in ${formatQueue(c.queue)}`,
+      (c) => `Most wins in ${competitionQueuesToString(c.queues)}`,
     )
     .with({ type: "MOST_WINS_CHAMPION" }, (c) => {
       const championName = getChampionDisplayName(c.championId);
-      const queueSuffix = c.queue ? ` in ${formatQueue(c.queue)}` : "";
+      const queueSuffix = ` in ${competitionQueuesToString(c.queues)}`;
       return `Most wins with ${championName}${queueSuffix}`;
     })
     .with(
       { type: "HIGHEST_WIN_RATE" },
       (c) =>
-        `Highest win rate in ${formatQueue(c.queue)} (min ${c.minGames.toString()} games)`,
+        `Highest win rate in ${competitionQueuesToString(c.queues)} (min ${c.minGames.toString()} games)`,
     )
     .exhaustive();
 }
@@ -96,13 +101,36 @@ export function formatScore(
       const numScore = z.number().parse(score);
       return `${numScore.toString()} game${numScore === 1 ? "" : "s"}`;
     })
-    .with({ type: "HIGHEST_RANK" }, () => {
-      const rankScore = RankSchema.parse(score);
-      return rankToString(rankScore);
+    .with({ type: "HIGHEST_RANK" }, (criterion) => {
+      if (criterion.aggregation === "SUM") {
+        return `${z.number().parse(score).toString()} combined ladder points`;
+      }
+      const rankText = rankToString(RankSchema.parse(score));
+      const parsedMetadata = z
+        .object({ winningQueue: z.string().optional() })
+        .safeParse(metadata);
+      const winningQueue = parsedMetadata.success
+        ? parsedMetadata.data.winningQueue
+        : undefined;
+      return winningQueue === undefined
+        ? rankText
+        : `${rankText} · ${queueTypeToDisplayString(QueueTypeSchema.parse(winningQueue))}`;
     })
-    .with({ type: "MOST_RANK_CLIMB" }, () => {
+    .with({ type: "MOST_RANK_CLIMB" }, (criterion) => {
       const numScore = z.number().parse(score);
-      return `${numScore.toString()} LP gained`;
+      const parsedMetadata = z
+        .object({ winningQueue: z.string().optional() })
+        .safeParse(metadata);
+      const winningQueue = parsedMetadata.success
+        ? parsedMetadata.data.winningQueue
+        : undefined;
+      const scoreText =
+        criterion.aggregation === "SUM"
+          ? `${numScore.toString()} combined LP`
+          : `${numScore.toString()} LP gained`;
+      return winningQueue === undefined || criterion.aggregation === "SUM"
+        ? scoreText
+        : `${scoreText} · ${queueTypeToDisplayString(QueueTypeSchema.parse(winningQueue))}`;
     })
     .with({ type: "MOST_WINS_PLAYER" }, () => {
       const numScore = z.number().parse(score);

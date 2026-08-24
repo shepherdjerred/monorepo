@@ -93,6 +93,7 @@ export function buildCompetitionSubmission(state: CompetitionBuilderState):
         title: string;
         description: string;
         visibility: CompetitionBuilderState["visibility"];
+        gameVariant: CompetitionBuilderState["gameVariant"];
         maxParticipants: number;
         dates: DatesValue;
         criteria: CompetitionCriteria;
@@ -121,6 +122,7 @@ export function buildCompetitionSubmission(state: CompetitionBuilderState):
       title: state.title,
       description: state.description,
       visibility: state.visibility,
+      gameVariant: state.gameVariant,
       maxParticipants: validated.maxParticipants,
       dates: validated.dates,
       criteria: validated.criteria,

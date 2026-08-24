@@ -1,5 +1,6 @@
 import {
   type CompetitionCriteria,
+  type CompetitionGameVariant,
   type CompetitionVisibility,
   type CompetitionWithCriteria,
   type DiscordAccountId,
@@ -18,6 +19,7 @@ import { match } from "ts-pattern";
 import { type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import type { CompetitionDates } from "#src/database/competition/competition-dates.ts";
+import { validateCompetitionConfiguration } from "#src/database/competition/configuration-validation.ts";
 import { competitionWithSeasonInclude } from "#src/database/competition/include.ts";
 
 // ============================================================================
@@ -57,6 +59,7 @@ export type CreateCompetitionInput = {
   channelId: DiscordChannelId;
   title: string;
   description: string;
+  gameVariant?: CompetitionGameVariant;
   visibility: CompetitionVisibility;
   maxParticipants: number;
   dates: CompetitionDates;
@@ -81,6 +84,8 @@ export async function createCompetition(
   input: CreateCompetitionInput,
 ): Promise<CompetitionWithCriteria> {
   const now = new Date();
+  const gameVariant = input.gameVariant ?? "MODERN";
+  validateCompetitionConfiguration(input.criteria, gameVariant);
 
   // Extract dates based on type
   const { startDate, endDate, seasonId } = match(input.dates)
@@ -105,6 +110,7 @@ export async function createCompetition(
       ownerId: input.ownerId,
       title: input.title,
       description: input.description,
+      gameVariant,
       channelId: input.channelId,
       isCancelled: false,
       visibility: input.visibility,
@@ -305,6 +311,7 @@ export async function getDueCompetitions(
 export type UpdateCompetitionInput = {
   title?: string;
   description?: string;
+  gameVariant?: CompetitionGameVariant;
   channelId?: DiscordChannelId;
   visibility?: CompetitionVisibility;
   maxParticipants?: number;
@@ -333,6 +340,7 @@ export async function updateCompetition(
   const updateData: {
     title?: string;
     description?: string;
+    gameVariant?: CompetitionGameVariant;
     channelId?: DiscordChannelId;
     visibility?: CompetitionVisibility;
     maxParticipants?: number;
@@ -356,6 +364,9 @@ export async function updateCompetition(
   }
   if (input.description !== undefined) {
     updateData.description = input.description;
+  }
+  if (input.gameVariant !== undefined) {
+    updateData.gameVariant = input.gameVariant;
   }
   if (input.channelId !== undefined) {
     updateData.channelId = input.channelId;

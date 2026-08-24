@@ -70,6 +70,7 @@ function competitionWith(
     isCancelled: false,
     visibility: "OPEN",
     maxParticipants: 50,
+    gameVariant: "MODERN",
     analysisTimezone: "UTC",
     startDate: START,
     endDate: END,
@@ -109,7 +110,7 @@ describe("buildCompetitionChartAttachment", () => {
     s3Mock.loaded = [];
     reportRenderCalls.image = 0;
     const result = await buildCompetitionChartAttachment(
-      competitionWith({ type: "MOST_GAMES_PLAYED", queue: "ALL" }),
+      competitionWith({ type: "MOST_GAMES_PLAYED", queues: ["ALL"] }),
       [],
     );
     expect(result).toBeNull();
@@ -120,7 +121,7 @@ describe("buildCompetitionChartAttachment", () => {
     s3Mock.loaded = []; // bar mode never reads S3
     reportRenderCalls.image = 0;
     const result = await buildCompetitionChartAttachment(
-      competitionWith({ type: "MOST_GAMES_PLAYED", queue: "ALL" }),
+      competitionWith({ type: "MOST_GAMES_PLAYED", queues: ["ALL"] }),
       [
         {
           playerId: PlayerIdSchema.parse(1),
@@ -154,7 +155,11 @@ describe("buildCompetitionChartAttachment", () => {
     ];
     reportRenderCalls.image = 0;
     const result = await buildCompetitionChartAttachment(
-      competitionWith({ type: "HIGHEST_RANK", queue: "SOLO" }),
+      competitionWith({
+        type: "HIGHEST_RANK",
+        aggregation: "MAX",
+        queues: ["solo"],
+      }),
       [
         {
           playerId: PlayerIdSchema.parse(1),
@@ -211,7 +216,11 @@ describe("buildCompetitionChartAttachment", () => {
     ];
     reportRenderCalls.image = 0;
     const result = await buildCompetitionChartAttachment(
-      competitionWith({ type: "HIGHEST_RANK", queue: "SOLO" }),
+      competitionWith({
+        type: "HIGHEST_RANK",
+        aggregation: "MAX",
+        queues: ["solo"],
+      }),
       [
         {
           playerId: PlayerIdSchema.parse(1),
@@ -263,7 +272,11 @@ describe("buildCompetitionChartAttachment", () => {
     ];
     reportRenderCalls.image = 0;
     const result = await buildCompetitionChartAttachment(
-      competitionWith({ type: "HIGHEST_RANK", queue: "SOLO" }),
+      competitionWith({
+        type: "HIGHEST_RANK",
+        aggregation: "MAX",
+        queues: ["solo"],
+      }),
       [
         {
           playerId: PlayerIdSchema.parse(1),

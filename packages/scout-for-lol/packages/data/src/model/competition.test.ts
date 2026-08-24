@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   type CompetitionCriteria,
   CompetitionCriteriaSchema,
+  CompetitionConfigurationSchema,
   CompetitionIdSchema,
   CompetitionQueueTypeSchema,
   CompetitionVisibilitySchema,
@@ -18,12 +19,14 @@ import {
   RankSnapshotDataSchema,
   SnapshotTypeSchema,
   WinsSnapshotDataSchema,
-  competitionQueueTypeToString,
   getCompetitionStatus,
   getSnapshotSchemaForCriteria,
+} from "#src/model/competition.ts";
+import {
+  competitionQueueTypeToString,
   participantStatusToString,
   visibilityToString,
-} from "#src/model/competition.ts";
+} from "#src/model/competition-format.ts";
 import { ChampionIdSchema } from "#src/model/identifiers.ts";
 import {
   DiscordAccountIdSchema,
@@ -31,8 +34,10 @@ import {
   DiscordGuildIdSchema,
 } from "#src/model/discord.ts";
 import type { Competition } from "#src/model/competition.ts";
+import { QueueTypeSchema } from "#src/model/state.ts";
 
 const SCHEDULE_FIELDS = {
+  gameVariant: "MODERN",
   updateCronExpression: null,
   nextScheduledUpdateAt: null,
   lastScheduledUpdateAt: null,
@@ -47,6 +52,7 @@ const SCHEDULE_FIELDS = {
   | "analysisTimezone"
   | "scheduledUpdatesEnabled"
   | "scheduleTimezone"
+  | "gameVariant"
 >;
 
 const DEFAULT_COMPETITION_NOTIFICATION_FIELDS = {
@@ -192,29 +198,10 @@ describe("PermissionType enum", () => {
 });
 
 describe("CompetitionQueueType enum", () => {
-  test("accepts SOLO", () => {
-    const result = CompetitionQueueTypeSchema.safeParse("SOLO");
-    expect(result.success).toBe(true);
-  });
-
-  test("accepts FLEX", () => {
-    const result = CompetitionQueueTypeSchema.safeParse("FLEX");
-    expect(result.success).toBe(true);
-  });
-
-  test("accepts RANKED_ANY", () => {
-    const result = CompetitionQueueTypeSchema.safeParse("RANKED_ANY");
-    expect(result.success).toBe(true);
-  });
-
-  test("accepts ARENA", () => {
-    const result = CompetitionQueueTypeSchema.safeParse("ARENA");
-    expect(result.success).toBe(true);
-  });
-
-  test("accepts ARAM", () => {
-    const result = CompetitionQueueTypeSchema.safeParse("ARAM");
-    expect(result.success).toBe(true);
+  test("accepts every canonical queue", () => {
+    for (const queue of QueueTypeSchema.options) {
+      expect(CompetitionQueueTypeSchema.safeParse(queue).success).toBe(true);
+    }
   });
 
   test("accepts ALL", () => {
@@ -225,6 +212,51 @@ describe("CompetitionQueueType enum", () => {
   test("rejects invalid values", () => {
     const result = CompetitionQueueTypeSchema.safeParse("NORMALS");
     expect(result.success).toBe(false);
+  });
+
+  test("rejects the removed uppercase and ranked-any values", () => {
+    expect(CompetitionQueueTypeSchema.safeParse("SOLO").success).toBe(false);
+    expect(CompetitionQueueTypeSchema.safeParse("RANKED_ANY").success).toBe(
+      false,
+    );
+  });
+});
+
+describe("competition game variant compatibility", () => {
+  test("keeps Modern and Classic queues separate", () => {
+    expect(
+      CompetitionConfigurationSchema.safeParse({
+        gameVariant: "MODERN",
+        criteria: { type: "MOST_GAMES_PLAYED", queues: ["classic"] },
+      }).success,
+    ).toBe(false);
+    expect(
+      CompetitionConfigurationSchema.safeParse({
+        gameVariant: "CLASSIC",
+        criteria: { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
+      }).success,
+    ).toBe(false);
+  });
+
+  test("allows ALL in either variant and rejects Classic rank criteria", () => {
+    for (const gameVariant of ["MODERN", "CLASSIC"] as const) {
+      expect(
+        CompetitionConfigurationSchema.safeParse({
+          gameVariant,
+          criteria: { type: "MOST_GAMES_PLAYED", queues: ["ALL"] },
+        }).success,
+      ).toBe(true);
+    }
+    expect(
+      CompetitionConfigurationSchema.safeParse({
+        gameVariant: "CLASSIC",
+        criteria: {
+          type: "HIGHEST_RANK",
+          queues: ["ranked 5s"],
+          aggregation: "MAX",
+        },
+      }).success,
+    ).toBe(false);
   });
 });
 
@@ -634,28 +666,28 @@ describe("getCompetitionStatus - Error cases", () => {
 });
 
 describe("competitionQueueTypeToString", () => {
-  test("formats SOLO correctly", () => {
-    expect(competitionQueueTypeToString("SOLO")).toBe("Solo Queue");
+  test("formats solo correctly", () => {
+    expect(competitionQueueTypeToString("solo")).toBe("Ranked Solo/Duo");
   });
 
-  test("formats FLEX correctly", () => {
-    expect(competitionQueueTypeToString("FLEX")).toBe("Flex Queue");
+  test("formats flex correctly", () => {
+    expect(competitionQueueTypeToString("flex")).toBe("Ranked Flex");
   });
 
-  test("formats RANKED_ANY correctly", () => {
-    expect(competitionQueueTypeToString("RANKED_ANY")).toBe("Ranked (Any)");
+  test("formats ranked 5s correctly", () => {
+    expect(competitionQueueTypeToString("ranked 5s")).toBe("Ranked 5s");
   });
 
-  test("formats ARENA correctly", () => {
-    expect(competitionQueueTypeToString("ARENA")).toBe("Arena");
+  test("formats arena correctly", () => {
+    expect(competitionQueueTypeToString("arena")).toBe("Arena");
   });
 
   test("formats ARAM correctly", () => {
-    expect(competitionQueueTypeToString("ARAM")).toBe("ARAM");
+    expect(competitionQueueTypeToString("aram")).toBe("ARAM");
   });
 
   test("formats ALL correctly", () => {
-    expect(competitionQueueTypeToString("ALL")).toBe("All Queues");
+    expect(competitionQueueTypeToString("ALL")).toBe("All queues");
   });
 });
 
@@ -695,20 +727,44 @@ describe("MostGamesPlayedCriteria", () => {
   test("accepts valid criteria with SOLO queue", () => {
     const result = MostGamesPlayedCriteriaSchema.safeParse({
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(true);
   });
 
   test("accepts all queue types", () => {
-    const queues = ["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"];
+    const queues = CompetitionQueueTypeSchema.options;
     for (const queue of queues) {
       const result = MostGamesPlayedCriteriaSchema.safeParse({
         type: "MOST_GAMES_PLAYED",
-        queue,
+        queues: [queue],
       });
       expect(result.success).toBe(true);
     }
+  });
+
+  test("rejects duplicate queues and ALL combined with a concrete queue", () => {
+    expect(
+      MostGamesPlayedCriteriaSchema.safeParse({
+        type: "MOST_GAMES_PLAYED",
+        queues: ["solo", "solo"],
+      }).success,
+    ).toBe(false);
+    expect(
+      MostGamesPlayedCriteriaSchema.safeParse({
+        type: "MOST_GAMES_PLAYED",
+        queues: ["ALL", "solo"],
+      }).success,
+    ).toBe(false);
+  });
+
+  test("rejects an empty queue selection", () => {
+    expect(
+      MostGamesPlayedCriteriaSchema.safeParse({
+        type: "MOST_GAMES_PLAYED",
+        queues: [],
+      }).success,
+    ).toBe(false);
   });
 
   test("rejects missing queue field", () => {
@@ -729,7 +785,7 @@ describe("MostGamesPlayedCriteria", () => {
   test("rejects wrong type discriminator", () => {
     const result = MostGamesPlayedCriteriaSchema.safeParse({
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(false);
   });
@@ -739,7 +795,7 @@ describe("HighestRankCriteria", () => {
   test("accepts SOLO queue", () => {
     const result = HighestRankCriteriaSchema.safeParse({
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(true);
   });
@@ -747,7 +803,7 @@ describe("HighestRankCriteria", () => {
   test("accepts FLEX queue", () => {
     const result = HighestRankCriteriaSchema.safeParse({
       type: "HIGHEST_RANK",
-      queue: "FLEX",
+      queues: ["flex"],
     });
     expect(result.success).toBe(true);
   });
@@ -755,7 +811,7 @@ describe("HighestRankCriteria", () => {
   test("rejects ARENA queue", () => {
     const result = HighestRankCriteriaSchema.safeParse({
       type: "HIGHEST_RANK",
-      queue: "ARENA",
+      queues: ["arena"],
     });
     expect(result.success).toBe(false);
   });
@@ -763,7 +819,7 @@ describe("HighestRankCriteria", () => {
   test("rejects ARAM queue", () => {
     const result = HighestRankCriteriaSchema.safeParse({
       type: "HIGHEST_RANK",
-      queue: "ARAM",
+      queues: ["aram"],
     });
     expect(result.success).toBe(false);
   });
@@ -780,7 +836,7 @@ describe("MostRankClimbCriteria", () => {
   test("accepts SOLO queue", () => {
     const result = MostRankClimbCriteriaSchema.safeParse({
       type: "MOST_RANK_CLIMB",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(true);
   });
@@ -788,7 +844,7 @@ describe("MostRankClimbCriteria", () => {
   test("accepts FLEX queue", () => {
     const result = MostRankClimbCriteriaSchema.safeParse({
       type: "MOST_RANK_CLIMB",
-      queue: "FLEX",
+      queues: ["flex"],
     });
     expect(result.success).toBe(true);
   });
@@ -796,17 +852,17 @@ describe("MostRankClimbCriteria", () => {
   test("rejects ARENA queue", () => {
     const result = MostRankClimbCriteriaSchema.safeParse({
       type: "MOST_RANK_CLIMB",
-      queue: "ARENA",
+      queues: ["arena"],
     });
     expect(result.success).toBe(false);
   });
 
-  test("rejects RANKED_ANY queue", () => {
+  test("accepts multiple ranked queues", () => {
     const result = MostRankClimbCriteriaSchema.safeParse({
       type: "MOST_RANK_CLIMB",
-      queue: "RANKED_ANY",
+      queues: ["solo", "flex", "ranked 5s"],
     });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 });
 
@@ -814,17 +870,17 @@ describe("MostWinsPlayerCriteria", () => {
   test("accepts valid criteria with SOLO queue", () => {
     const result = MostWinsPlayerCriteriaSchema.safeParse({
       type: "MOST_WINS_PLAYER",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(true);
   });
 
   test("accepts all queue types", () => {
-    const queues = ["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"];
+    const queues = CompetitionQueueTypeSchema.options;
     for (const queue of queues) {
       const result = MostWinsPlayerCriteriaSchema.safeParse({
         type: "MOST_WINS_PLAYER",
-        queue,
+        queues: [queue],
       });
       expect(result.success).toBe(true);
     }
@@ -843,7 +899,7 @@ describe("MostWinsChampionCriteria", () => {
     const result = MostWinsChampionCriteriaSchema.safeParse({
       type: "MOST_WINS_CHAMPION",
       championId: 157, // Yasuo
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(true);
   });
@@ -852,6 +908,7 @@ describe("MostWinsChampionCriteria", () => {
     const result = MostWinsChampionCriteriaSchema.safeParse({
       type: "MOST_WINS_CHAMPION",
       championId: 157,
+      queues: ["ALL"],
     });
     expect(result.success).toBe(true);
   });
@@ -859,7 +916,7 @@ describe("MostWinsChampionCriteria", () => {
   test("rejects missing championId", () => {
     const result = MostWinsChampionCriteriaSchema.safeParse({
       type: "MOST_WINS_CHAMPION",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(false);
   });
@@ -868,7 +925,7 @@ describe("MostWinsChampionCriteria", () => {
     const result = MostWinsChampionCriteriaSchema.safeParse({
       type: "MOST_WINS_CHAMPION",
       championId: -1,
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(false);
   });
@@ -877,7 +934,7 @@ describe("MostWinsChampionCriteria", () => {
     const result = MostWinsChampionCriteriaSchema.safeParse({
       type: "MOST_WINS_CHAMPION",
       championId: 0,
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(false);
   });
@@ -886,7 +943,7 @@ describe("MostWinsChampionCriteria", () => {
     const result = MostWinsChampionCriteriaSchema.safeParse({
       type: "MOST_WINS_CHAMPION",
       championId: 999,
-      queue: "ARENA",
+      queues: ["arena"],
     });
     expect(result.success).toBe(true);
   });
@@ -897,7 +954,7 @@ describe("HighestWinRateCriteria", () => {
     const result = HighestWinRateCriteriaSchema.safeParse({
       type: "HIGHEST_WIN_RATE",
       minGames: 20,
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -908,7 +965,7 @@ describe("HighestWinRateCriteria", () => {
   test("applies default minGames of 10 when not provided", () => {
     const result = HighestWinRateCriteriaSchema.safeParse({
       type: "HIGHEST_WIN_RATE",
-      queue: "FLEX",
+      queues: ["flex"],
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -920,7 +977,7 @@ describe("HighestWinRateCriteria", () => {
     const result = HighestWinRateCriteriaSchema.safeParse({
       type: "HIGHEST_WIN_RATE",
       minGames: -5,
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(false);
   });
@@ -929,18 +986,18 @@ describe("HighestWinRateCriteria", () => {
     const result = HighestWinRateCriteriaSchema.safeParse({
       type: "HIGHEST_WIN_RATE",
       minGames: 0,
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(false);
   });
 
   test("accepts all queue types", () => {
-    const queues = ["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"];
+    const queues = CompetitionQueueTypeSchema.options;
     for (const queue of queues) {
       const result = HighestWinRateCriteriaSchema.safeParse({
         type: "HIGHEST_WIN_RATE",
         minGames: 15,
-        queue,
+        queues: [queue],
       });
       expect(result.success).toBe(true);
     }
@@ -951,48 +1008,48 @@ describe("CompetitionCriteria discriminated union", () => {
   test("parses MOST_GAMES_PLAYED criteria", () => {
     const result = CompetitionCriteriaSchema.safeParse({
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.type).toBe("MOST_GAMES_PLAYED");
-      expect(result.data.queue).toBe("SOLO");
+      expect(result.data.queues).toEqual(["solo"]);
     }
   });
 
   test("parses HIGHEST_RANK criteria", () => {
     const result = CompetitionCriteriaSchema.safeParse({
       type: "HIGHEST_RANK",
-      queue: "FLEX",
+      queues: ["flex"],
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.type).toBe("HIGHEST_RANK");
-      expect(result.data.queue).toBe("FLEX");
+      expect(result.data.queues).toEqual(["flex"]);
     }
   });
 
   test("parses MOST_RANK_CLIMB criteria", () => {
     const result = CompetitionCriteriaSchema.safeParse({
       type: "MOST_RANK_CLIMB",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.type).toBe("MOST_RANK_CLIMB");
-      expect(result.data.queue).toBe("SOLO");
+      expect(result.data.queues).toEqual(["solo"]);
     }
   });
 
   test("parses MOST_WINS_PLAYER criteria", () => {
     const result = CompetitionCriteriaSchema.safeParse({
       type: "MOST_WINS_PLAYER",
-      queue: "ARENA",
+      queues: ["arena"],
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.type).toBe("MOST_WINS_PLAYER");
-      expect(result.data.queue).toBe("ARENA");
+      expect(result.data.queues).toEqual(["arena"]);
     }
   });
 
@@ -1000,14 +1057,14 @@ describe("CompetitionCriteria discriminated union", () => {
     const result = CompetitionCriteriaSchema.safeParse({
       type: "MOST_WINS_CHAMPION",
       championId: 157,
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.type).toBe("MOST_WINS_CHAMPION");
       if (result.data.type === "MOST_WINS_CHAMPION") {
         expect(result.data.championId).toBe(ChampionIdSchema.parse(157));
-        expect(result.data.queue).toBe("SOLO");
+        expect(result.data.queues).toEqual(["solo"]);
       }
     }
   });
@@ -1016,14 +1073,14 @@ describe("CompetitionCriteria discriminated union", () => {
     const result = CompetitionCriteriaSchema.safeParse({
       type: "HIGHEST_WIN_RATE",
       minGames: 25,
-      queue: "FLEX",
+      queues: ["flex"],
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.type).toBe("HIGHEST_WIN_RATE");
       if (result.data.type === "HIGHEST_WIN_RATE") {
         expect(result.data.minGames).toBe(25);
-        expect(result.data.queue).toBe("FLEX");
+        expect(result.data.queues).toEqual(["flex"]);
       }
     }
   });
@@ -1031,7 +1088,7 @@ describe("CompetitionCriteria discriminated union", () => {
   test("fails with invalid criteria type", () => {
     const result = CompetitionCriteriaSchema.safeParse({
       type: "INVALID_TYPE",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     expect(result.success).toBe(false);
   });
@@ -1039,13 +1096,14 @@ describe("CompetitionCriteria discriminated union", () => {
   test("HIGHEST_RANK only allows SOLO or FLEX", () => {
     const invalid = CompetitionCriteriaSchema.safeParse({
       type: "HIGHEST_RANK",
-      queue: "ARENA",
+      queues: ["arena"],
     });
     expect(invalid.success).toBe(false);
 
     const valid = CompetitionCriteriaSchema.safeParse({
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      queues: ["solo"],
+      aggregation: "MAX",
     });
     expect(valid.success).toBe(true);
   });
@@ -1054,14 +1112,14 @@ describe("CompetitionCriteria discriminated union", () => {
     const criteria = CompetitionCriteriaSchema.parse({
       type: "MOST_WINS_CHAMPION",
       championId: 157,
-      queue: "SOLO",
+      queues: ["solo"],
     });
 
     // TypeScript should narrow the type based on discriminator
     if (criteria.type === "MOST_WINS_CHAMPION") {
       // This should compile without errors - championId exists on this type
       expect(criteria.championId).toBe(ChampionIdSchema.parse(157));
-      expect(criteria.queue).toBe("SOLO");
+      expect(criteria.queues).toEqual(["solo"]);
     } else {
       // This branch should never be reached
       expect(true).toBe(false);
@@ -1071,13 +1129,15 @@ describe("CompetitionCriteria discriminated union", () => {
   test("Each criteria type has distinct properties", () => {
     const criteria1 = CompetitionCriteriaSchema.parse({
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      queues: ["solo"],
+      aggregation: "MAX",
     });
     expect(criteria1.type).toBe("HIGHEST_RANK");
 
     const criteria2 = CompetitionCriteriaSchema.parse({
       type: "MOST_WINS_CHAMPION",
       championId: 157,
+      queues: ["ALL"],
     });
     expect(criteria2.type).toBe("MOST_WINS_CHAMPION");
     // Verify type narrowing allows access to type-specific fields
@@ -1087,7 +1147,7 @@ describe("CompetitionCriteria discriminated union", () => {
 
     const criteria3 = CompetitionCriteriaSchema.parse({
       type: "HIGHEST_WIN_RATE",
-      queue: "FLEX",
+      queues: ["flex"],
     });
     expect(criteria3.type).toBe("HIGHEST_WIN_RATE");
     if (criteria3.type === "HIGHEST_WIN_RATE") {
@@ -1314,7 +1374,7 @@ describe("WinsSnapshotDataSchema", () => {
     const data = {
       wins: 15,
       games: 25,
-      queue: "SOLO",
+      queues: ["solo"],
     };
     const result = WinsSnapshotDataSchema.safeParse(data);
     expect(result.success).toBe(true);
@@ -1325,7 +1385,7 @@ describe("WinsSnapshotDataSchema", () => {
       wins: 8,
       games: 12,
       championId: 157,
-      queue: "FLEX",
+      queues: ["flex"],
     };
     const result = WinsSnapshotDataSchema.safeParse(data);
     expect(result.success).toBe(true);
@@ -1422,7 +1482,7 @@ describe("WinsSnapshotDataSchema", () => {
     const data = {
       wins: 10,
       games: 20,
-      queue: "INVALID_QUEUE",
+      queues: ["INVALID_QUEUE"],
     };
     const result = WinsSnapshotDataSchema.safeParse(data);
     expect(result.success).toBe(false);
@@ -1437,7 +1497,8 @@ describe("getSnapshotSchemaForCriteria", () => {
   test("returns RankSnapshotDataSchema for HIGHEST_RANK", () => {
     const criteria: CompetitionCriteria = {
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      queues: ["solo"],
+      aggregation: "MAX",
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
     expect(schema).toBe(RankSnapshotDataSchema);
@@ -1446,7 +1507,8 @@ describe("getSnapshotSchemaForCriteria", () => {
   test("returns RankSnapshotDataSchema for MOST_RANK_CLIMB", () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_RANK_CLIMB",
-      queue: "FLEX",
+      queues: ["flex"],
+      aggregation: "MAX",
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
     expect(schema).toBe(RankSnapshotDataSchema);
@@ -1455,7 +1517,7 @@ describe("getSnapshotSchemaForCriteria", () => {
   test("returns GamesPlayedSnapshotDataSchema for MOST_GAMES_PLAYED", () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "RANKED_ANY",
+      queues: ["solo", "flex"],
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
     expect(schema).toBe(GamesPlayedSnapshotDataSchema);
@@ -1464,7 +1526,7 @@ describe("getSnapshotSchemaForCriteria", () => {
   test("returns WinsSnapshotDataSchema for MOST_WINS_PLAYER", () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_WINS_PLAYER",
-      queue: "ARENA",
+      queues: ["arena"],
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
     expect(schema).toBe(WinsSnapshotDataSchema);
@@ -1474,6 +1536,7 @@ describe("getSnapshotSchemaForCriteria", () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_WINS_CHAMPION",
       championId: ChampionIdSchema.parse(157),
+      queues: ["ALL"],
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
     expect(schema).toBe(WinsSnapshotDataSchema);
@@ -1483,7 +1546,7 @@ describe("getSnapshotSchemaForCriteria", () => {
     const criteria: CompetitionCriteria = {
       type: "HIGHEST_WIN_RATE",
       minGames: 10,
-      queue: "SOLO",
+      queues: ["solo"],
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
     expect(schema).toBe(WinsSnapshotDataSchema);
@@ -1492,7 +1555,8 @@ describe("getSnapshotSchemaForCriteria", () => {
   test("factory returns working schema - HIGHEST_RANK", () => {
     const criteria: CompetitionCriteria = {
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      queues: ["solo"],
+      aggregation: "MAX",
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
 
@@ -1512,7 +1576,7 @@ describe("getSnapshotSchemaForCriteria", () => {
   test("factory returns working schema - MOST_GAMES_PLAYED", () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "ALL",
+      queues: ["ALL"],
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
 
@@ -1530,7 +1594,7 @@ describe("getSnapshotSchemaForCriteria", () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_WINS_CHAMPION",
       championId: ChampionIdSchema.parse(157),
-      queue: "SOLO",
+      queues: ["solo"],
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
 
@@ -1538,7 +1602,7 @@ describe("getSnapshotSchemaForCriteria", () => {
       wins: 20,
       games: 30,
       championId: ChampionIdSchema.parse(157),
-      queue: "SOLO",
+      queues: ["solo"],
     };
     const result = schema.safeParse(validData);
     expect(result.success).toBe(true);

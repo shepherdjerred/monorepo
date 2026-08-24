@@ -1,9 +1,11 @@
 import { z } from "zod";
 import {
   getChampionTags,
+  rankForQueue,
   rankToString,
+  RankedQueueTypeSchema,
   type LoadingScreenData,
-  type QueueType,
+  type RankedQueueType,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import type { ParlaySubject } from "#src/betting/parlay-criteria.ts";
@@ -46,7 +48,7 @@ const LobbyParticipantSchema = z.strictObject({
 });
 
 export const ParlayGenerationContextSchema = z.strictObject({
-  queue: z.enum(["solo", "flex"]),
+  queue: RankedQueueTypeSchema,
   selectedSubjects: z
     .array(z.string().regex(/^P[1-5]$/))
     .min(1)
@@ -65,13 +67,13 @@ function currentRank(
     LoadingScreenData,
     { layout: "standard" }
   >["participants"][number],
-  queue: QueueType,
+  queue: RankedQueueType,
 ): string {
   const ranks =
     participant.rankState.status === "available"
       ? participant.rankState.ranks
       : undefined;
-  const rank = queue === "solo" ? ranks?.solo : ranks?.flex;
+  const rank = ranks === undefined ? undefined : rankForQueue(ranks, queue);
   return rank === undefined ? "unranked or unavailable" : rankToString(rank);
 }
 
@@ -104,7 +106,7 @@ function summarize(
 
 async function recentHistory(input: {
   matchId: string;
-  queue: "solo" | "flex";
+  queue: RankedQueueType;
   subjects: readonly ParlaySubject[];
   championByPuuid: ReadonlyMap<string, string>;
 }) {
@@ -149,7 +151,7 @@ async function recentHistory(input: {
 
 export async function buildParlayGenerationContext(input: {
   matchId: string;
-  queue: "solo" | "flex";
+  queue: RankedQueueType;
   loadingScreenData: LoadingScreenData;
   selectedTeamId: 100 | 200;
   subjects: readonly ParlaySubject[];

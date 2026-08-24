@@ -11,6 +11,7 @@ import {
   type PlayerId,
   RankSchema,
   rankToLeaguePoints,
+  competitionGameVariantToString,
 } from "@scout-for-lol/data/index.ts";
 import {
   competitionChartToImage,
@@ -33,6 +34,10 @@ const logger = createLogger("competition-chart-builder");
 
 const TOP_N = 10;
 const MIN_SNAPSHOTS_FOR_LINE_CHART = 2;
+
+function chartSubtitle(competition: CompetitionWithCriteria): string {
+  return `${competitionGameVariantToString(competition.gameVariant)} · ${formatCriteriaDescription(competition.criteria)}`;
+}
 
 /**
  * Cumulative count metrics render as a horizontal bar chart of current
@@ -237,7 +242,7 @@ export async function renderCompetitionChartBuffer(
         return Promise.resolve({
           chartType: "bar",
           title: competition.title,
-          subtitle: formatCriteriaDescription(competition.criteria),
+          subtitle: chartSubtitle(competition),
           yAxisLabel: valueAxisLabelForCriteria(competition.criteria),
           bars: buildBars(topEntries),
         });
@@ -259,7 +264,7 @@ export async function renderCompetitionChartBuffer(
         return {
           chartType: "line",
           title: competition.title,
-          subtitle: formatCriteriaDescription(competition.criteria),
+          subtitle: chartSubtitle(competition),
           yAxisLabel: valueAxisLabelForCriteria(competition.criteria),
           startDate: window.startDate,
           endDate: window.endDate,

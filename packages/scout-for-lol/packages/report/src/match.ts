@@ -81,13 +81,21 @@ export function toMatch(
         rankBeforeMatch,
         rankAfterMatch,
         wins:
-          queueType === "solo" || queueType === "flex"
-            ? (player.ranks[queueType]?.wins ?? undefined)
-            : undefined,
+          queueType === "solo"
+            ? player.ranks.solo?.wins
+            : queueType === "flex"
+              ? player.ranks.flex?.wins
+              : queueType === "ranked 5s"
+                ? player.ranks.ranked5s?.wins
+                : undefined,
         losses:
-          queueType === "solo" || queueType === "flex"
-            ? (player.ranks[queueType]?.losses ?? undefined)
-            : undefined,
+          queueType === "solo"
+            ? player.ranks.solo?.losses
+            : queueType === "flex"
+              ? player.ranks.flex?.losses
+              : queueType === "ranked 5s"
+                ? player.ranks.ranked5s?.losses
+                : undefined,
         champion,
         outcome: getOutcome(participant),
         team: team,

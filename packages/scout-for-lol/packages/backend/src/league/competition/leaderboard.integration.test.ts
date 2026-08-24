@@ -128,7 +128,7 @@ describe("calculateLeaderboard integration tests", () => {
         visibility: "OPEN",
         maxParticipants: 10,
         criteriaType: "MOST_GAMES_PLAYED",
-        criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+        criteriaConfig: JSON.stringify({ queues: ["solo"] }),
         isCancelled: false,
         startDate: futureDate,
         endDate: endDate,
@@ -142,7 +142,11 @@ describe("calculateLeaderboard integration tests", () => {
     // Parse it to get CompetitionWithCriteria
     const competition = {
       ...rawCompetition,
-      criteria: { type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const },
+      gameVariant: "MODERN" as const,
+      criteria: {
+        type: "MOST_GAMES_PLAYED" as const,
+        queues: [...(["solo"] as const)],
+      },
     };
 
     // Should throw error for DRAFT competition
@@ -168,7 +172,7 @@ describe("calculateLeaderboard integration tests", () => {
       },
       criteria: {
         type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
+        queues: ["solo"],
       },
     });
 
@@ -253,7 +257,7 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
       },
       criteria: {
         type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
+        queues: ["solo"],
       },
     });
 
@@ -314,7 +318,7 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
       visibility: "OPEN",
       maxParticipants: 10,
       dates: { type: "FIXED_DATES", startDate, endDate: activeEndDate },
-      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+      criteria: { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
     });
 
     await addParticipant({
@@ -461,7 +465,8 @@ describe("calculateLeaderboard - MOST_RANK_CLIMB Criteria", () => {
       },
       criteria: {
         type: "MOST_RANK_CLIMB",
-        queue: "SOLO",
+        aggregation: "MAX",
+        queues: ["solo"],
       },
     });
 
@@ -580,7 +585,8 @@ describe("calculateLeaderboard integration tests - rank history", () => {
       },
       criteria: {
         type: "HIGHEST_RANK",
-        queue: "SOLO",
+        aggregation: "MAX",
+        queues: ["solo"],
       },
     });
     await prisma.competitionParticipant.create({
@@ -718,7 +724,7 @@ describe("calculateLeaderboard integration tests - Filters", () => {
       },
       criteria: {
         type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
+        queues: ["solo"],
       },
     });
 

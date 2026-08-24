@@ -32,8 +32,9 @@ Go to the [Scout dashboard](/app/), choose your server, and open the
 Choose **All-queue activity** from the scenario library.
 
 The starter fills in the title, description, `MOST_GAMES_PLAYED` criterion,
-`ALL` queue, and a 30-day window together. It is only a starting point: changing
-any field labels the setup **Customized from All-queue activity**.
+Modern League, the `ALL` queue choice, and a 30-day window together. It is only
+a starting point: changing any field labels the setup **Customized from
+All-queue activity**.
 
 ## 3. Set a short window
 
@@ -65,11 +66,11 @@ a first run.
 
 ## 6. Review updates
 
-New competitions start with **Post interim standings** enabled every day at
+New competitions start with **Post leaderboard updates** enabled every day at
 9:00 AM in your browser's timezone. Leave that setting on for this tutorial.
-The **Review** section should say **Most games played · All queues**, list the
-server-wide roster, show your inclusive date window, and show the 9:00 AM
-delivery schedule.
+The **Review** section should say **Modern League** and **Most games played · All
+queues**, list the server-wide roster, show your inclusive date window, and show
+the 9:00 AM delivery schedule.
 
 ## 7. Create it
 
@@ -95,7 +96,7 @@ arrives, it closes the competition and posts the final standings to the
 announcement channel you chose — nobody has to remember to do it.
 
 While it is active, the Temporal-owned minute dispatcher posts standings when
-the saved schedule is due. Turning interim updates off does not suppress the
+the saved schedule is due. Turning leaderboard updates off does not suppress the
 mandatory start and final announcements.
 
 ## What you did

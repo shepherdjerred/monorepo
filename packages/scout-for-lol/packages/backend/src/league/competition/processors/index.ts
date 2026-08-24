@@ -1,4 +1,9 @@
-import type { CompetitionCriteria, Ranks, RawMatch } from "@scout-for-lol/data";
+import type {
+  CompetitionCriteria,
+  CompetitionGameVariant,
+  Ranks,
+  RawMatch,
+} from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { processMostGamesPlayed } from "#src/league/competition/processors/most-games-played.ts";
 import { processHighestRank } from "#src/league/competition/processors/highest-rank.ts";
@@ -34,11 +39,15 @@ export function processCriteria(
   criteria: CompetitionCriteria,
   matches: RawMatch[],
   participants: PlayerWithAccounts[],
-  snapshotData?: SnapshotData,
+  ...configuration: [
+    snapshotData?: SnapshotData,
+    gameVariant?: CompetitionGameVariant,
+  ]
 ): LeaderboardEntry[] {
+  const [snapshotData, gameVariant = "MODERN"] = configuration;
   return match(criteria)
     .with({ type: "MOST_GAMES_PLAYED" }, (c) =>
-      processMostGamesPlayed(matches, participants, c),
+      processMostGamesPlayed(matches, participants, c, gameVariant),
     )
     .with({ type: "HIGHEST_RANK" }, (c) => {
       if (!snapshotData) {
@@ -58,13 +67,13 @@ export function processCriteria(
       );
     })
     .with({ type: "MOST_WINS_PLAYER" }, (c) =>
-      processMostWinsPlayer(matches, participants, c),
+      processMostWinsPlayer(matches, participants, c, gameVariant),
     )
     .with({ type: "MOST_WINS_CHAMPION" }, (c) =>
-      processMostWinsChampion(matches, participants, c),
+      processMostWinsChampion(matches, participants, c, gameVariant),
     )
     .with({ type: "HIGHEST_WIN_RATE" }, (c) =>
-      processHighestWinRate(matches, participants, c),
+      processHighestWinRate(matches, participants, c, gameVariant),
     )
     .exhaustive();
 }

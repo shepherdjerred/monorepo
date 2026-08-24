@@ -24,7 +24,7 @@ export type GameModeCategory = "ranked" | "arena" | "aram";
 function getQueueTypesForCategory(category: GameModeCategory): QueueType[] {
   switch (category) {
     case "ranked":
-      return ["solo", "flex"];
+      return ["solo", "flex", "ranked 5s"];
     case "arena":
       return ["arena"];
     case "aram":

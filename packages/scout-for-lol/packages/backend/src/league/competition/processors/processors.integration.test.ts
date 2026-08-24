@@ -115,7 +115,7 @@ function testEmptyMatchData() {
 
   // Test all criteria types with empty matches
   const gamesResult = processCriteria(
-    { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+    { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
     emptyMatches,
     players,
   );
@@ -123,7 +123,7 @@ function testEmptyMatchData() {
   expect(gamesResult.every((entry) => entry.score === 0)).toBe(true);
 
   const winsResult = processCriteria(
-    { type: "MOST_WINS_PLAYER", queue: "SOLO" },
+    { type: "MOST_WINS_PLAYER", queues: ["solo"] },
     emptyMatches,
     players,
   );
@@ -134,7 +134,7 @@ function testEmptyMatchData() {
     {
       type: "MOST_WINS_CHAMPION",
       championId: ChampionIdSchema.parse(157),
-      queue: "SOLO",
+      queues: ["solo"],
     },
     emptyMatches,
     players,
@@ -158,7 +158,7 @@ describe("processCriteria integration tests", () => {
 
     // Test MOST_GAMES_PLAYED
     const gamesResult = processCriteria(
-      { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
       [match],
       players,
     );
@@ -193,14 +193,14 @@ describe("processCriteria integration tests", () => {
     if (queueId === 420) {
       // SOLO queue match
       const matchingResult = processCriteria(
-        { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+        { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
         [match],
         [player],
       );
       expect(matchingResult[0]?.score).toBe(1);
 
       const nonMatchingResult = processCriteria(
-        { type: "MOST_GAMES_PLAYED", queue: "ARENA" },
+        { type: "MOST_GAMES_PLAYED", queues: ["arena"] },
         [match],
         [player],
       );
@@ -208,14 +208,14 @@ describe("processCriteria integration tests", () => {
     } else if (queueId === 1700) {
       // ARENA queue match
       const matchingResult = processCriteria(
-        { type: "MOST_GAMES_PLAYED", queue: "ARENA" },
+        { type: "MOST_GAMES_PLAYED", queues: ["arena"] },
         [match],
         [player],
       );
       expect(matchingResult[0]?.score).toBe(1);
 
       const nonMatchingResult = processCriteria(
-        { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+        { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
         [match],
         [player],
       );
@@ -223,7 +223,7 @@ describe("processCriteria integration tests", () => {
     } else {
       // Unknown queue type - just verify ALL works
       const allResult = processCriteria(
-        { type: "MOST_GAMES_PLAYED", queue: "ALL" },
+        { type: "MOST_GAMES_PLAYED", queues: ["ALL"] },
         [match],
         [player],
       );
@@ -244,7 +244,7 @@ describe("processCriteria integration tests", () => {
     const player = createTestPlayerFromParticipant(firstParticipant);
 
     const result = processCriteria(
-      { type: "MOST_WINS_PLAYER", queue: "ALL" },
+      { type: "MOST_WINS_PLAYER", queues: ["ALL"] },
       [match],
       [player],
     );
@@ -295,7 +295,7 @@ describe("processCriteria integration tests", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_GAMES_PLAYED", queue: "ALL" },
+      { type: "MOST_GAMES_PLAYED", queues: ["ALL"] },
       [match1, match2],
       [player],
     );
@@ -339,7 +339,7 @@ describe("processCriteria integration tests - Rank & Filter", () => {
     };
 
     const result = processCriteria(
-      { type: "HIGHEST_RANK", queue: "SOLO" },
+      { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
       [],
       testPlayers,
       {
@@ -383,7 +383,7 @@ describe("processCriteria integration tests - Rank & Filter", () => {
       {
         type: "MOST_WINS_CHAMPION",
         championId: ChampionIdSchema.parse(firstParticipant.championId),
-        queue: "ALL",
+        queues: ["ALL"],
       },
       [match],
       [player],
@@ -399,7 +399,7 @@ describe("processCriteria integration tests - Rank & Filter", () => {
       {
         type: "MOST_WINS_CHAMPION",
         championId: ChampionIdSchema.parse(9999),
-        queue: "ALL",
+        queues: ["ALL"],
       }, // Champion ID that doesn't exist
       [match],
       [player],
@@ -434,7 +434,7 @@ describe("processCriteria integration tests - Rank & Filter", () => {
 
     // With only 1 match and minGames=1, player should be included
     const result = processCriteria(
-      { type: "HIGHEST_WIN_RATE", minGames: 1, queue: "ALL" },
+      { type: "HIGHEST_WIN_RATE", minGames: 1, queues: ["ALL"] },
       [match],
       [player],
     );
@@ -449,7 +449,7 @@ describe("processCriteria integration tests - Rank & Filter", () => {
 
     // Test with minGames too high - should exclude player
     const filteredResult = processCriteria(
-      { type: "HIGHEST_WIN_RATE", minGames: 10, queue: "ALL" },
+      { type: "HIGHEST_WIN_RATE", minGames: 10, queues: ["ALL"] },
       [match],
       [player],
     );

@@ -1,6 +1,6 @@
 import {
-  CompetitionQueueTypeSchema,
-  competitionQueueTypeToString,
+  competitionGameVariantToString,
+  competitionQueuesToString,
   visibilityToString,
 } from "@scout-for-lol/data";
 import type { CompetitionBuilderState } from "#src/lib/competition-builder-state.ts";
@@ -18,14 +18,19 @@ const CRITERION_LABELS: Record<
 };
 
 function queueLabel(state: CompetitionBuilderState): string {
+  return competitionQueuesToString(state.criteria.queues);
+}
+
+function aggregationLabel(state: CompetitionBuilderState): string {
   if (
-    state.criteria.criteriaType === "MOST_WINS_CHAMPION" &&
-    state.criteria.queue === "__ANY__"
+    state.criteria.criteriaType !== "HIGHEST_RANK" &&
+    state.criteria.criteriaType !== "MOST_RANK_CLIMB"
   ) {
-    return "Any queue";
+    return "";
   }
-  const queue = CompetitionQueueTypeSchema.safeParse(state.criteria.queue);
-  return queue.success ? competitionQueueTypeToString(queue.data) : "Not set";
+  return state.criteria.aggregation === "MAX"
+    ? " · Best selected rank"
+    : " · Combined ranks";
 }
 
 function windowLabel(state: CompetitionBuilderState): string {
@@ -41,6 +46,10 @@ export function CompetitionBuilderReview(props: {
   const summary = competitionReviewSummary(props.state, props.channelName);
   return (
     <dl className="grid gap-3 text-sm sm:grid-cols-2">
+      <div>
+        <dt className="text-scout-subtle">Game version</dt>
+        <dd className="font-medium text-scout-ink">{summary.gameVariant}</dd>
+      </div>
       <div>
         <dt className="text-scout-subtle">Scoring</dt>
         <dd className="font-medium text-scout-ink">{summary.scoring}</dd>
@@ -64,7 +73,13 @@ export function CompetitionBuilderReview(props: {
 export function competitionReviewSummary(
   state: CompetitionBuilderState,
   channelName: string | undefined,
-): { scoring: string; window: string; entrants: string; delivery: string } {
+): {
+  gameVariant: string;
+  scoring: string;
+  window: string;
+  entrants: string;
+  delivery: string;
+} {
   const roster =
     state.visibility === "SERVER_WIDE"
       ? `All eligible tracked players, capped at ${state.maxParticipants}`
@@ -73,9 +88,10 @@ export function competitionReviewSummary(
     ? `${state.scheduledUpdates.cronExpression} in ${state.scheduledUpdates.timezone}`
     : "Disabled";
   return {
-    scoring: `${CRITERION_LABELS[state.criteria.criteriaType]} · ${queueLabel(state)}`,
+    gameVariant: competitionGameVariantToString(state.gameVariant),
+    scoring: `${CRITERION_LABELS[state.criteria.criteriaType]} · ${queueLabel(state)}${aggregationLabel(state)}`,
     window: windowLabel(state),
     entrants: `${visibilityToString(state.visibility)} · ${roster}`,
-    delivery: `#${channelName ?? "not set"} · Updates ${updates}`,
+    delivery: `#${channelName ?? "not set"} · Leaderboard updates ${updates}`,
   };
 }

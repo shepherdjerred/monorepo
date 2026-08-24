@@ -23,6 +23,7 @@ function competition(
     isCancelled: false,
     visibility: "OPEN",
     maxParticipants: 50,
+    gameVariant: "MODERN",
     analysisTimezone: "UTC",
     startDate: new Date("2025-12-01T00:00:00.000Z"),
     endDate: new Date("2026-12-01T00:00:00.000Z"),
@@ -41,7 +42,7 @@ function competition(
     creatorDiscordId: DiscordAccountIdSchema.parse("100000000000000002"),
     createdTime: now,
     updatedTime: now,
-    criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+    criteria: { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
   };
 }
 

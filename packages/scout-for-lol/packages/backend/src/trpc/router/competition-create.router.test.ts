@@ -70,7 +70,10 @@ function createInput(
       startDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
       endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
     },
-    criteria: { type: "MOST_GAMES_PLAYED" as const, queue: "FLEX" as const },
+    criteria: {
+      type: "MOST_GAMES_PLAYED" as const,
+      queues: [...(["flex"] as const)],
+    },
     updateCronExpression: null,
   };
 }
@@ -132,12 +135,17 @@ describe("competition.create auto-enrollment", () => {
     expect(participants).toHaveLength(0);
   });
 
-  test("persists the submitted criterion, timezone, schedule, and selected JOINED roster", async () => {
+  test("round-trips multi-queue Ranked 5s scoring, timezone, schedule, and selected JOINED roster", async () => {
     const guildId = nextGuildId();
     const playerIds = await seedPlayers(guildId, 2);
     const competition = await trpc.authedCaller().competition.create({
       ...createInput(guildId, "OPEN"),
-      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+      gameVariant: "MODERN",
+      criteria: {
+        type: "HIGHEST_RANK",
+        aggregation: "SUM",
+        queues: ["solo", "flex", "ranked 5s"],
+      },
       initialPlayerIds: playerIds,
       analysisTimezone: "America/Los_Angeles",
       scheduledUpdates: {
@@ -155,9 +163,11 @@ describe("competition.create auto-enrollment", () => {
     });
     expect(competition.criteria).toEqual({
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      aggregation: "SUM",
+      queues: ["solo", "flex", "ranked 5s"],
     });
     expect(saved).toMatchObject({
+      gameVariant: "MODERN",
       criteriaType: "HIGHEST_RANK",
       analysisTimezone: "America/Los_Angeles",
       scheduledUpdatesEnabled: true,
@@ -222,7 +232,7 @@ describe("competition.create auto-enrollment", () => {
     ).toBe(0);
   });
 
-  test("legacy create input keeps interim updates disabled in UTC", async () => {
+  test("legacy create input keeps leaderboard updates disabled in UTC", async () => {
     const guildId = nextGuildId();
     const competition = await trpc
       .authedCaller()
@@ -232,6 +242,57 @@ describe("competition.create auto-enrollment", () => {
     });
     expect(saved.scheduledUpdatesEnabled).toBe(false);
     expect(saved.scheduleTimezone).toBe("UTC");
+  });
+
+  test("uses the API and database participant-cap default of 100", async () => {
+    const guildId = nextGuildId();
+    const { maxParticipants: _maxParticipants, ...input } = createInput(
+      guildId,
+      "OPEN",
+    );
+    const competition = await trpc.authedCaller().competition.create(input);
+    const saved = await testPrisma.competition.findUniqueOrThrow({
+      where: { id: competition.id },
+    });
+    expect(competition.maxParticipants).toBe(100);
+    expect(saved.maxParticipants).toBe(100);
+  });
+
+  test("round-trips Classic queues and a Jade champion", async () => {
+    const guildId = nextGuildId();
+    const competition = await trpc.authedCaller().competition.create({
+      ...createInput(guildId, "OPEN"),
+      gameVariant: "CLASSIC",
+      criteria: {
+        type: "MOST_WINS_CHAMPION",
+        championId: 60_084,
+        queues: ["classic", "classic aram mayhem"],
+      },
+    });
+    expect(competition.gameVariant).toBe("CLASSIC");
+    expect(competition.criteria).toEqual({
+      type: "MOST_WINS_CHAMPION",
+      championId: 60_084,
+      queues: ["classic", "classic aram mayhem"],
+    });
+  });
+
+  test("rejects a champion from the other game variant transactionally", async () => {
+    const guildId = nextGuildId();
+    await expect(
+      trpc.authedCaller().competition.create({
+        ...createInput(guildId, "OPEN"),
+        gameVariant: "MODERN",
+        criteria: {
+          type: "MOST_WINS_CHAMPION",
+          championId: 60_084,
+          queues: ["aram"],
+        },
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(
+      await testPrisma.competition.count({ where: { serverId: guildId } }),
+    ).toBe(0);
   });
 });
 

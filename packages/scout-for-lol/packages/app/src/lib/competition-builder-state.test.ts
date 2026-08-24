@@ -81,7 +81,7 @@ describe("competition scenario library", () => {
     expect(blank?.value).toMatchObject({
       title: "",
       description: "",
-      criteria: { criteriaType: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      criteria: { criteriaType: "MOST_GAMES_PLAYED", queues: ["ALL"] },
       dates: { startDate: "", endDate: "" },
     });
   });
@@ -100,7 +100,8 @@ describe("competition builder reducer and submission", () => {
     if (!submission.ok) return;
     expect(submission.value.criteria).toEqual({
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      queues: ["solo"],
+      aggregation: "MAX",
     });
   });
 
@@ -111,7 +112,11 @@ describe("competition builder reducer and submission", () => {
     const result = validateForm(rank.build("200000000000000005"));
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.criteria).toEqual({ type: "HIGHEST_RANK", queue: "SOLO" });
+    expect(result.criteria).toEqual({
+      type: "HIGHEST_RANK",
+      queues: ["solo"],
+      aggregation: "MAX",
+    });
   });
 
   test("preset switching is atomic and preserves roster and delivery settings", () => {
@@ -152,7 +157,7 @@ describe("competition builder reducer and submission", () => {
         cronExpression: "30 18 * * 1",
         timezone: "Asia/Tokyo",
       },
-      criteria: { criteriaType: "MOST_GAMES_PLAYED", queue: "ARAM" },
+      criteria: { criteriaType: "MOST_GAMES_PLAYED", queues: ["aram"] },
       customized: false,
     });
   });
@@ -200,11 +205,12 @@ describe("competition builder reducer and submission", () => {
       scenarioId: "rank",
     });
     expect(competitionReviewSummary(state, "competition-updates")).toEqual({
-      scoring: "Highest rank · Solo Queue",
+      gameVariant: "Modern League",
+      scoring: "Highest rank · Ranked Solo/Duo · Best selected rank",
       window: "League season 2026_SEASON_3_ACT_1",
       entrants: "Open to All · 0 selected tracked player(s)",
       delivery:
-        "#competition-updates · Updates 0 9 * * * in America/Los_Angeles",
+        "#competition-updates · Leaderboard updates 0 9 * * * in America/Los_Angeles",
     });
   });
 });

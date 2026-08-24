@@ -242,7 +242,9 @@ async function getRandomMatchFromS3(
       (matchType === "arena" && queueType === "arena") ||
       (matchType === "aram" && queueType === "aram") ||
       (matchType === "ranked" &&
-        (queueType === "solo" || queueType === "flex")) ||
+        (queueType === "solo" ||
+          queueType === "flex" ||
+          queueType === "ranked 5s")) ||
       (matchType === "unranked" &&
         (queueType === "quickplay" || queueType === "draft pick"));
 
