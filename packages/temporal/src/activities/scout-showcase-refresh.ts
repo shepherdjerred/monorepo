@@ -3,6 +3,7 @@ import { simpleGit } from "simple-git";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import { installScoutWorkspace } from "./bot-clone.ts";
+import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
 import {
   changedFilesInPaths,
   getUnifiedDiff,
@@ -104,7 +105,13 @@ export const scoutShowcaseRefreshActivities = {
         },
       );
 
-      const files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
+      let files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
+      await discardFormattingOnlyChanges({
+        repoDir,
+        changedFiles: files,
+        component: "scout-showcase-refresh",
+      });
+      files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
       if (files.length === 0) {
         return {
           changedFiles: [],

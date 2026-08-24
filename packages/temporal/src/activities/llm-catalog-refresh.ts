@@ -10,6 +10,7 @@ import {
 import { parsePorcelainPaths } from "#shared/porcelain.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
 import { runCommand } from "./data-dragon-shell.ts";
+import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
 import { openSeasonRefreshPr } from "./scout-season-refresh-git.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
@@ -191,7 +192,18 @@ export const llmCatalogRefreshActivities = {
 
       // trimStdout: false so porcelain v1's leading-space status code isn't
       // stripped (see parsePorcelainPaths in #shared/porcelain.ts).
-      const dirty = parsePorcelainPaths(
+      let dirty = parsePorcelainPaths(
+        await runCommand(["git", "status", "--porcelain", "--", CATALOG_FILE], {
+          cwd: repoDir,
+          trimStdout: false,
+        }),
+      );
+      await discardFormattingOnlyChanges({
+        repoDir,
+        changedFiles: dirty,
+        component: "llm-catalog-refresh",
+      });
+      dirty = parsePorcelainPaths(
         await runCommand(["git", "status", "--porcelain", "--", CATALOG_FILE], {
           cwd: repoDir,
           trimStdout: false,

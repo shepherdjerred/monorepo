@@ -3,6 +3,7 @@ import { simpleGit } from "simple-git";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
+import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
 import {
   changedFilesInPaths,
   openSeasonRefreshPr,
@@ -85,7 +86,13 @@ export const pokeemeraldDataRefreshActivities = {
         cwd: `${repoDir}/${DPP_ROOT}`,
       });
 
-      const files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
+      let files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
+      await discardFormattingOnlyChanges({
+        repoDir,
+        changedFiles: files,
+        component: "dpp-pokeemerald-data-refresh",
+      });
+      files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
       if (files.length === 0) {
         return {
           changedFiles: [],
