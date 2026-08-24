@@ -9,8 +9,7 @@ Talos Linux nodes: `torvalds` (control plane, all production workloads) and
 (media, home, postal, etc.) using an app-of-apps pattern in ArgoCD.
 
 See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes, cluster
-topology details, the 1Password secret linter, and operator runbooks
-(including Tracker Tracker bootstrap/export).
+topology details, the 1Password secret linter, and operator runbooks.
 
 ## Layout
 
@@ -22,7 +21,7 @@ topology details, the 1Password secret linter, and operator runbooks
 | `src/helm-types` | Generator for type-safe Helm chart value interfaces                                                          |
 | `mac-ci`         | Bootstrap for a macOS Buildkite agent (currently dormant) — see its [README](mac-ci/README.md)               |
 | `images`         | Custom Docker images (caddy-s3proxy, obsidian-headless, redlib)                                              |
-| `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero, Tracker Tracker         |
+| `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero                          |
 
 ## Details
 

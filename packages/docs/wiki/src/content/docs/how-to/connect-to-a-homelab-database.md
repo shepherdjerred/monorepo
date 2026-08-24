@@ -5,7 +5,7 @@ sidebar:
   order: 12
 ---
 
-The homelab runs four PostgreSQL clusters under the Zalando
+The homelab runs three PostgreSQL clusters under the Zalando
 [postgres-operator](https://github.com/zalando/postgres-operator). None of them
 is reachable from your laptop directly — there is no ingress, no `LoadBalancer`,
 and no tailnet hostname. Every connection goes through the Kubernetes API, either
