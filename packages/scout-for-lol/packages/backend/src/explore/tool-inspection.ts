@@ -138,14 +138,18 @@ export function inspectExploreToolResult(
   return { succeeded: true, details: null, rawOutput: null };
 }
 
-function boundedDiagnostics(diagnostics: string[]): string[] {
-  const visible = diagnostics
-    .slice(0, 5)
-    .map((diagnostic) =>
-      diagnostic.length <= 500
-        ? diagnostic
-        : `${diagnostic.slice(0, 499).trimEnd()}…`,
-    );
+/**
+ * The trace carries diagnostics as display lines, not as structure: it is a
+ * read-only "what did the agent do" panel, and the code and span are what make
+ * a line self-explanatory to someone reading it after the fact.
+ */
+function boundedDiagnostics(
+  diagnostics: z.infer<typeof ValidationToolOutputSchema>["diagnostics"],
+): string[] {
+  const visible = diagnostics.slice(0, 5).map((diagnostic) => {
+    const line = `[${diagnostic.code}] ${diagnostic.message} (${diagnostic.span.start.toString()}–${diagnostic.span.end.toString()})`;
+    return line.length <= 500 ? line : `${line.slice(0, 499).trimEnd()}…`;
+  });
   if (diagnostics.length > visible.length) {
     visible.push(
       `${(diagnostics.length - visible.length).toString()} more diagnostics omitted.`,
@@ -154,16 +158,33 @@ function boundedDiagnostics(diagnostics: string[]): string[] {
   return visible;
 }
 
+/**
+ * Counts of what the reference tool returned.
+ *
+ * `metrics`, `groupBys`, and `filters` are v1 vocabularies that ScoutQL v2
+ * dissolved — there is no metric enum, groupings are ordinary expressions, and
+ * filters are ordinary predicates — so they report `null` rather than a number
+ * standing in for something else. Renaming those three fields is a change to
+ * `ExploreTraceDetails` in `@scout-for-lol/data` plus the app's trace panel,
+ * tracked with the coordinator.
+ */
 function referenceDetails(
   output: z.infer<typeof LanguageToolOutputSchema> | null,
 ): ExploreTraceDetails {
+  const functions =
+    output === null
+      ? null
+      : output.aggregateFunctions.length +
+        output.scalarFunctions.length +
+        output.macroFunctions.length +
+        output.referenceFunctions.length;
   return {
     kind: "reference",
     sources: output?.sources.length ?? null,
-    metrics: output?.metrics.length ?? null,
-    functions: output?.functions.length ?? null,
-    groupBys: output?.groupBys.length ?? null,
-    filters: output?.filters.length ?? null,
+    metrics: null,
+    functions,
+    groupBys: null,
+    filters: null,
     renderKinds: output?.renderKinds.length ?? null,
     renderOptions: output?.renderOptions.length ?? null,
     queues: output?.queues.length ?? null,
