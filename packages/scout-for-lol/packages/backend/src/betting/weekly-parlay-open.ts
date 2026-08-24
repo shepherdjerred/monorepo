@@ -180,7 +180,7 @@ async function openWeeklyParlayInternal(
         [history.subject.key, history.recentEligibleGames],
       ]),
       historyWindows: history.fullyObservedWindows,
-      abortSignal: input.signal,
+      ...(input.signal === undefined ? {} : { abortSignal: input.signal }),
     });
     const issues = validateWeeklyParlayProposal({
       proposal: generated.proposal,

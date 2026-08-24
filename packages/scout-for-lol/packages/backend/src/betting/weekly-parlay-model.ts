@@ -127,7 +127,9 @@ export async function generateWeeklyParlayProposal(input: {
     reasoningEffort: "medium",
     maxOutputTokens: PARLAY_INITIAL_OUTPUT_TOKENS,
     semanticRetryMaxOutputTokens: PARLAY_RETRY_OUTPUT_TOKENS,
-    abortSignal: input.abortSignal,
+    ...(input.abortSignal === undefined
+      ? {}
+      : { abortSignal: input.abortSignal }),
   });
   const parsed = ModelWeeklyProposalSchema.parse(result.object);
   return {
