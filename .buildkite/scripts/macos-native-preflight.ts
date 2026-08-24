@@ -2,6 +2,10 @@
 
 const MINIMUM_FREE_GIB = 40;
 const KIB_PER_GIB = 1024 * 1024;
+const TASKNOTES_RUST_TARGETS = [
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+] as const;
 
 type NativeSuite = "quotabar" | "tasknotes";
 
@@ -55,6 +59,16 @@ export function availableDiskKib(output: string): number {
     );
   }
   return Number.parseInt(available, 10);
+}
+
+export function missingTaskNotesRustTargets(output: string): string[] {
+  const installed = new Set(
+    output
+      .split("\n")
+      .map((target) => target.trim())
+      .filter((target) => target.length > 0),
+  );
+  return TASKNOTES_RUST_TARGETS.filter((target) => !installed.has(target));
 }
 
 async function run(command: readonly string[]): Promise<string> {
@@ -161,6 +175,15 @@ async function preflight(suite: NativeSuite): Promise<string | undefined> {
   }
 
   if (suite === "tasknotes") {
+    const missingRustTargets = missingTaskNotesRustTargets(
+      await run(["rustup", "target", "list", "--installed"]),
+    );
+    if (missingRustTargets.length > 0) {
+      throw new Error(
+        `TaskNotes CI requires Rust targets ${TASKNOTES_RUST_TARGETS.join(", ")}; missing ${missingRustTargets.join(", ")}. Re-run packages/homelab/mac-ci/bootstrap.sh`,
+      );
+    }
+
     const identities = appleDevelopmentIdentities(
       await run([
         "/usr/bin/security",

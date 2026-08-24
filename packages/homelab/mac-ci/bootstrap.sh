@@ -81,6 +81,14 @@ echo "==> Installing the repository-pinned Bun and Rust toolchains"
 mise install --cd "$REPO_ROOT" --yes bun rust
 mise reshim
 
+# TaskNotes packages a universal macOS XCFramework. rustup installs only the
+# host architecture's standard library with a new toolchain, so provision both
+# slices against the repository-pinned Rust version.
+echo "==> Installing TaskNotes Rust targets"
+mise exec --cd "$REPO_ROOT" -- rustup target add \
+  aarch64-apple-darwin \
+  x86_64-apple-darwin
+
 # Buildkite checks jobs out below the configured build path, not below this
 # bootstrap checkout. Trust that path so mise can load the job checkout's
 # repository-pinned tools when the native preflight runs through its shims.

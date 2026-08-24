@@ -100,6 +100,12 @@ if ! rg -Fq 'AGENT_BUILD_PATH="$HOME/.buildkite-agent/builds"' "$MAC_CI_BOOTSTRA
   echo "macOS bootstrap must trust the same Buildkite checkout root it configures" >&2
   exit 1
 fi
+if ! rg -Fq 'mise exec --cd "$REPO_ROOT" -- rustup target add' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'aarch64-apple-darwin' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'x86_64-apple-darwin' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS bootstrap must install both TaskNotes universal Rust targets" >&2
+  exit 1
+fi
 
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT

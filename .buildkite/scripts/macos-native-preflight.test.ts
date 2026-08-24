@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   appleDevelopmentIdentities,
   availableDiskKib,
+  missingTaskNotesRustTargets,
   parseNativeSuite,
   pinnedToolVersion,
 } from "./macos-native-preflight.ts";
@@ -11,6 +12,26 @@ describe("native macOS suite parsing", () => {
     expect(parseNativeSuite("quotabar")).toBe("quotabar");
     expect(parseNativeSuite("tasknotes")).toBe("tasknotes");
     expect(() => parseNativeSuite("ios")).toThrow("quotabar|tasknotes");
+  });
+});
+
+describe("TaskNotes Rust targets", () => {
+  test("accepts both universal macOS slices", () => {
+    expect(
+      missingTaskNotesRustTargets(
+        "aarch64-apple-darwin\nx86_64-apple-darwin\n",
+      ),
+    ).toEqual([]);
+  });
+
+  test("reports every missing slice", () => {
+    expect(missingTaskNotesRustTargets("aarch64-apple-darwin\n")).toEqual([
+      "x86_64-apple-darwin",
+    ]);
+    expect(missingTaskNotesRustTargets("wasm32-unknown-unknown\n")).toEqual([
+      "aarch64-apple-darwin",
+      "x86_64-apple-darwin",
+    ]);
   });
 });
 

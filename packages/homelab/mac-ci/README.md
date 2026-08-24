@@ -75,6 +75,8 @@ The bootstrap:
 - installs `buildkite-agent@3`, `mise`, `xcodes`, XcodeGen, SwiftLint, and
   Tailscale with Homebrew;
 - installs the Bun and Rust versions pinned by the root `.mise.toml`;
+- installs the `aarch64-apple-darwin` and `x86_64-apple-darwin` standard
+  libraries needed for TaskNotes' universal macOS XCFramework;
 - configures the per-user Buildkite LaunchAgent on `queue=macos`, pinning
   `shell="/bin/bash -e -c"` so the native steps that source
   `macos-native-env.sh` get the bash guarantee Kubernetes steps get from
@@ -204,6 +206,7 @@ GUI session must satisfy the native preflight.
 - Darwin on `arm64`;
 - the exact Xcode from `.xcode-version` selected as a full Xcode installation;
 - the Bun and Rust versions pinned by the root `.mise.toml`, selected through `mise`;
+- both Rust standard-library targets required by TaskNotes' universal macOS XCFramework;
 - XcodeGen and SwiftLint;
 - active FileVault and the Buildkite user as the console user;
 - at least 40 GiB free in the checkout filesystem;
