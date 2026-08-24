@@ -37,6 +37,11 @@ const LEDGER_KIND_LABELS = {
   parlay_payout: "parlay payout",
   parlay_refund: "parlay refund",
   parlay_release: "parlay reserve release",
+  weekly_parlay_stake: "weekly parlay stake",
+  weekly_parlay_reserve: "weekly parlay house reserve",
+  weekly_parlay_payout: "weekly parlay payout",
+  weekly_parlay_refund: "weekly parlay refund",
+  weekly_parlay_release: "weekly parlay reserve release",
   peek_pass: `${PEEK_PASS_DURATION_LABEL} peek pass`,
   adjustment: "adjustment",
 } satisfies Record<BucksLedgerKind, string>;

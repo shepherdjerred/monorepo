@@ -335,6 +335,10 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       matchId: toStrOrNull(row, "matchId"),
       betId: toIntOrNull(row, "betId"),
       parlayBetId: toIntOrNullIfMissing(row, "parlayBetId"),
+      // Weekly parlays did not exist in the legacy SQLite deployment. Include
+      // the post-cutover nullable column in the canonical digest material so
+      // verification compares the imported row to its full Postgres shape.
+      weeklyParlayBetId: null,
       predictedTeamId: toIntOrNull(row, "predictedTeamId"),
       actualWinningTeamId: toIntOrNull(row, "actualWinningTeamId"),
       context: toStr(row, "context"),
