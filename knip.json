@@ -382,7 +382,6 @@
     "packages/discord-plays-pokemon/packages/backend/src/observability/tracing.ts": [
       "exports"
     ],
-    "packages/eslint-config/src/rules/shared/tool-cache.ts": ["exports"],
     "packages/home-assistant/src/codegen/introspect.ts": ["exports"],
     "packages/monarch/src/lib/classifier/cache.ts": ["exports"],
     "packages/monarch/src/lib/classifier/claude.ts": ["exports"],

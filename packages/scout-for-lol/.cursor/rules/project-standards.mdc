@@ -92,8 +92,8 @@ bun run test             # eslint-rules tests + all packages tests
 
 # Code analysis
 bun run test:eslint-rules # Test custom ESLint rules only
-bun run duplication-check # Find duplicate code (JSCPD)
-# Unused code detection (Knip) runs at the monorepo root: `bun run knip`
+# Unused code (Knip) and duplicate code (JSCPD baseline ratchet) run at the
+# monorepo root: `bun run knip` and `bun run jscpd`
 
 # Generation & maintenance
 bun run generate         # Generate code in all packages

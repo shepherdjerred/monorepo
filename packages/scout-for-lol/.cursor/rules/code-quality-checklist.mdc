@@ -139,7 +139,8 @@ src/helpers.ts [45:60]
 
 **Fix:** Extract common code into shared utility.
 
-**Config:** `.jscpd.json` (threshold: 12%, minLines: 9, minTokens: 30)
+**Config:** root `.jscpd.json` + `.jscpd-baseline.json` (per-file-pair baseline
+ratchet, minTokens: 70) — gate runs at the monorepo root via `bun run jscpd`
 
 ## Order to Fix Issues
 
@@ -244,14 +245,14 @@ function create(params: { name: string; email: string; ... }) { }
 
 | Command | Duration | Purpose |
 |---------|----------|---------|
-| `mise check` | 60-90s | All 5 checks (local) |
+| `mise check` | 60-90s | All 4 checks (local) |
 | `dagger call check` | 2-5m | All checks (CI-like) |
 | `bun run format:write` | 5-10s | Auto-fix formatting |
 | `bun run typecheck` | 10-20s | TypeScript only |
 | `bun run lint` | 10-20s | ESLint only |
 | `bun run test` | 20-60s | Tests only |
 | `bun run knip` (monorepo root) | 30-60s | Unused code detection (root `//#knip` gate covers scout) |
-| `bun run duplication-check` | 5-10s | Duplicate code detection |
+| `bun run jscpd` (monorepo root) | 30-60s | Duplicate code detection (baseline ratchet) |
 
 ## Related Documentation
 

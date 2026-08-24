@@ -9,7 +9,6 @@
     "**/archive/**"
   ],
   "minTokens": 70,
-  "threshold": 3,
   "gitignore": true,
   "silent": true
 }

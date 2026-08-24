@@ -36,7 +36,7 @@
     "prettier:fix": "prettier --write .",
     "shellcheck": "bun scripts/shellcheck.ts",
     "gitleaks": "gitleaks detect --source . --no-git --redact --no-banner",
-    "jscpd": "jscpd",
+    "jscpd": "bun scripts/jscpd-check.ts",
     "quality-ratchet": "bun scripts/quality-ratchet.ts",
     "compliance-check": "bun scripts/compliance-check.ts",
     "lockfile-check": "bun install --frozen-lockfile --dry-run",

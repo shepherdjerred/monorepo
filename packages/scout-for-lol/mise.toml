@@ -13,7 +13,6 @@ run = [
     "bun run lint",
     "bun run format",
     "bun run test",
-    "bun run duplication-check",
 ]
 
 [tasks.typecheck]

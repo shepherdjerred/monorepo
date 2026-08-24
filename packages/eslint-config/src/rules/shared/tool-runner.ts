@@ -1,19 +1,16 @@
 /**
  * Tool runner for knip and jscpd.
  *
- * Executes project-wide analysis tools and parses their JSON output.
- *
- * Performance optimization: If cache files exist (.knip-cache.json, .jscpd-cache.json),
- * the runner will use those instead of running the tools.
+ * Executes project-wide analysis tools and parses their JSON output. Results
+ * are memoized only by the in-memory TTL cache in tool-cache.ts — there is
+ * deliberately no on-disk cache layer, because a stale cache file silently
+ * replaced live analysis with old results and disabled both rules.
  */
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, relative, resolve, sep } from "node:path";
-
-const KNIP_CACHE_FILE = ".knip-cache.json";
-const JSCPD_CACHE_FILE = ".jscpd-cache.json";
 
 export type KnipFileResult = {
   isUnusedFile: boolean;
@@ -135,27 +132,8 @@ export function parseKnipOutput(output: string, basePath: string): KnipResults {
   return results;
 }
 
-function readKnipCache(projectRoot: string): string | null {
-  const cachePath = resolve(projectRoot, KNIP_CACHE_FILE);
-  if (existsSync(cachePath)) {
-    try {
-      return readFileSync(cachePath, "utf-8");
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
 export function runKnip(projectRoot: string): KnipResults {
   try {
-    const cached = readKnipCache(projectRoot);
-    if (cached !== null) {
-      // Cache files are written by the linted package itself, so their paths
-      // are resolved relative to that package dir.
-      return parseKnipOutput(cached, projectRoot);
-    }
-
     const knipRoot = findKnipRoot(projectRoot);
     if (knipRoot === null) {
       console.error(
@@ -235,57 +213,38 @@ export type DuplicationInfo = {
 
 export type JscpdResults = Map<string, DuplicationInfo[]>;
 
-function readJscpdCache(projectRoot: string): string | null {
-  const cachePath = resolve(projectRoot, JSCPD_CACHE_FILE);
-  if (existsSync(cachePath)) {
-    try {
-      return readFileSync(cachePath, "utf-8");
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
 export function runJscpd(projectRoot: string): JscpdResults {
   const results: JscpdResults = new Map();
   let tempDir: string | undefined;
 
   try {
-    const cachedOutput = readJscpdCache(projectRoot);
-    let output: string;
+    tempDir = mkdtempSync(resolve(tmpdir(), "jscpd-"));
 
-    if (cachedOutput === null) {
-      tempDir = mkdtempSync(resolve(tmpdir(), "jscpd-"));
+    const result = spawnSync(
+      "bunx",
+      ["jscpd", "--reporters", "json", "--output", tempDir, "."],
+      {
+        cwd: projectRoot,
+        encoding: "utf-8",
+        timeout: 180_000,
+        shell: false,
+      },
+    );
 
-      const result = spawnSync(
-        "bunx",
-        ["jscpd", "--reporters", "json", "--output", tempDir, "."],
-        {
-          cwd: projectRoot,
-          encoding: "utf-8",
-          timeout: 180_000,
-          shell: false,
-        },
+    if (result.error) {
+      console.error(
+        "[no-code-duplication] Failed to run jscpd:",
+        result.error.message,
       );
-
-      if (result.error) {
-        console.error(
-          "[no-code-duplication] Failed to run jscpd:",
-          result.error.message,
-        );
-        return results;
-      }
-
-      const reportPath = resolve(tempDir, "jscpd-report.json");
-      if (!existsSync(reportPath)) {
-        return results;
-      }
-
-      output = readFileSync(reportPath, "utf-8");
-    } else {
-      output = cachedOutput;
+      return results;
     }
+
+    const reportPath = resolve(tempDir, "jscpd-report.json");
+    if (!existsSync(reportPath)) {
+      return results;
+    }
+
+    const output = readFileSync(reportPath, "utf-8");
 
     const parsed = JSON.parse(output) as JscpdOutput;
 

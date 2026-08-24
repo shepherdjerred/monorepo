@@ -129,8 +129,9 @@ packages/
 
 **Development:**
 
-- `mise run check` runs typecheck, lint, format, test, knip, and
-  duplication-check across all packages
+- `mise run check` runs typecheck, lint, format, and test across all packages;
+  unused-code (knip) and duplication (jscpd baseline ratchet) gates run at the
+  monorepo root (`bun run knip`, `bun run jscpd`)
 - Type-safe with strict TypeScript; linting via ESLint + Prettier
 - CI runs on Buildkite for every PR and on merge to main (verification,
   Playwright e2e, image build + smoke); lefthook git hooks run staged-file
