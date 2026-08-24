@@ -7,7 +7,7 @@ const NATIVE_PR_STEP_KEYS = new Set([
   "quotabar-macos-pr",
   "tasknotes-native-pr",
 ]);
-const ACTIVE_STATES = new Set(["assigned", "accepted", "running"]);
+const ACTIVE_STATES = new Set(["running"]);
 const TERMINAL_STATES = new Set([
   "passed",
   "failed",

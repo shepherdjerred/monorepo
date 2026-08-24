@@ -105,4 +105,12 @@ describe("native macOS dispatch watch", () => {
       pending: jobs,
     });
   });
+
+  test("does not trust an assignment that the agent never accepted", () => {
+    const jobs = [job("quotabar-macos-pr", "assigned", null)];
+    expect(dispatchDecision(jobs, 300_000, 0, 300_000)).toEqual({
+      kind: "timed-out",
+      pending: jobs,
+    });
+  });
 });
