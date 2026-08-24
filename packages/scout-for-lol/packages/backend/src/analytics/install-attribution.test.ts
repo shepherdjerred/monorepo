@@ -20,8 +20,17 @@ const T_PLUS_20M = new Date("2026-08-22T12:20:00Z");
 
 function createAnalyticsFixture() {
   const capture = vi.fn<ProductAnalytics["capture"]>(() => null);
+  const captureBucksMember = vi.fn<ProductAnalytics["captureBucksMember"]>(
+    () => null,
+  );
+  const captureBucksSystem = vi.fn<ProductAnalytics["captureBucksSystem"]>(
+    () => null,
+  );
   const shutdown = vi.fn<ProductAnalytics["shutdown"]>(() => Promise.resolve());
-  return { analytics: { capture, shutdown }, capture };
+  return {
+    analytics: { capture, captureBucksMember, captureBucksSystem, shutdown },
+    capture,
+  };
 }
 
 async function seedInstall(options?: { installedAt?: Date }) {

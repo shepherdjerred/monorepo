@@ -1,4 +1,5 @@
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { captureBucksEconomySnapshot } from "#src/analytics/bryan-bucks.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   bettingHouseBalanceBucks,
@@ -10,6 +11,8 @@ import {
 const logger = createLogger("metrics-betting-sweep");
 
 const POOL_STATES = ["open", "closed", "settled", "voided"] as const;
+const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000;
+const lastSnapshotAtByServer = new Map<string, number>();
 
 /**
  * Refresh the Bryan Bucks gauges from the database.
@@ -32,6 +35,7 @@ export async function updateBettingMetrics(
       pendingParlayStake,
       pendingWeeklyStake,
       houseAccounts,
+      memberAccounts,
     ] = await Promise.all([
       prisma.bucksMatchPool.groupBy({
         by: ["poolState"],
@@ -56,7 +60,11 @@ export async function updateBettingMetrics(
       }),
       prisma.bucksAccount.findMany({
         where: { isHouse: true },
-        select: { balance: true },
+        select: { serverId: true, balance: true },
+      }),
+      prisma.bucksAccount.findMany({
+        where: { isHouse: false },
+        select: { serverId: true, balance: true },
       }),
     ]);
 
@@ -78,18 +86,47 @@ export async function updateBettingMetrics(
           ),
     );
 
-    bettingPendingStakeBucks.set(
+    const pendingStakeBucks =
       pendingStake.reduce(
         (total, bet) => total + (bet.matchedStake ?? bet.stake),
         0,
       ) +
-        (pendingParlayStake._sum.stake ?? 0) +
-        (pendingWeeklyStake._sum.stake ?? 0),
-    );
+      (pendingParlayStake._sum.stake ?? 0) +
+      (pendingWeeklyStake._sum.stake ?? 0);
+    bettingPendingStakeBucks.set(pendingStakeBucks);
 
     bettingHouseBalanceBucks.set(
       houseAccounts.reduce((total, account) => total + account.balance, 0),
     );
+
+    const now = Date.now();
+    const serverIds = new Set([
+      ...houseAccounts.map((account) => account.serverId),
+      ...memberAccounts.map((account) => account.serverId),
+    ]);
+    for (const serverId of serverIds) {
+      const lastSnapshotAt = lastSnapshotAtByServer.get(serverId) ?? 0;
+      if (now - lastSnapshotAt < SNAPSHOT_INTERVAL_MS) continue;
+
+      const serverHouseBalance = houseAccounts
+        .filter((account) => account.serverId === serverId)
+        .reduce((total, account) => total + account.balance, 0);
+      const serverMembers = memberAccounts.filter(
+        (account) => account.serverId === serverId,
+      );
+      captureBucksEconomySnapshot({
+        serverId,
+        memberAccounts: serverMembers.length,
+        totalMemberBalanceBucks: serverMembers.reduce(
+          (total, account) => total + account.balance,
+          0,
+        ),
+        pendingStakeBucks,
+        houseBalanceBucks: serverHouseBalance,
+        openMarkets: (counts.get("open") ?? 0) + (counts.get("closed") ?? 0),
+      });
+      lastSnapshotAtByServer.set(serverId, now);
+    }
   } catch (error) {
     logger.error("❌ Error updating Bryan Bucks metrics:", error);
     // Deliberately not rethrown: a metrics query must never fail /metrics.

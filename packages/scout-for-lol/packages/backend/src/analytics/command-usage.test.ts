@@ -9,8 +9,17 @@ const SERVER_ID = testGuildId("880");
 
 function createAnalyticsFixture() {
   const capture = vi.fn<ProductAnalytics["capture"]>(() => null);
+  const captureBucksMember = vi.fn<ProductAnalytics["captureBucksMember"]>(
+    () => null,
+  );
+  const captureBucksSystem = vi.fn<ProductAnalytics["captureBucksSystem"]>(
+    () => null,
+  );
   const shutdown = vi.fn<ProductAnalytics["shutdown"]>(() => Promise.resolve());
-  return { analytics: { capture, shutdown }, capture };
+  return {
+    analytics: { capture, captureBucksMember, captureBucksSystem, shutdown },
+    capture,
+  };
 }
 
 async function seedInstall(options?: { analyticsLifecycleTracked?: boolean }) {
@@ -140,6 +149,8 @@ describe("captureDiscordCommandUsed", () => {
     });
     const analytics: ProductAnalytics = {
       capture,
+      captureBucksMember: () => null,
+      captureBucksSystem: () => null,
       shutdown: () => Promise.resolve(),
     };
 

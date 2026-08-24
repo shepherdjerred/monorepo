@@ -102,6 +102,56 @@ describe("Scout product analytics adapter", () => {
     expect(transport.shutdown).toHaveBeenCalledTimes(1);
   });
 
+  test("uses opaque Bucks identities and preserves historical event metadata", () => {
+    const transport = createTransportFixture();
+    const analytics = createProductAnalytics({
+      analyticsConfiguration,
+      environment: "beta",
+      version: "test-version",
+      transport,
+    });
+    const timestamp = new Date("2026-08-17T12:00:00.000Z");
+
+    analytics.captureBucksMember(
+      {
+        analyticsUserId: "5a9c8c6e-1ad6-4bb5-a3de-7c5d9a0ef123",
+        serverId: "1310000000000000001",
+      },
+      {
+        event: "bryan_bucks_member_activity",
+        properties: {
+          activity_kind: "outcome_bet",
+          surface: "button",
+          status: "success",
+        },
+      },
+      {
+        timestamp,
+        uuid: "6f6a2bca-9c1a-4ee4-89a2-5e35b57c8d70",
+      },
+    );
+
+    expect(transport.capture).toHaveBeenCalledWith({
+      distinctId:
+        "scout-beta:bucks-member:5a9c8c6e-1ad6-4bb5-a3de-7c5d9a0ef123",
+      event: "bryan_bucks_member_activity",
+      disableGeoip: true,
+      timestamp,
+      uuid: "6f6a2bca-9c1a-4ee4-89a2-5e35b57c8d70",
+      properties: {
+        activity_kind: "outcome_bet",
+        surface: "button",
+        status: "success",
+        $insert_id: "6f6a2bca-9c1a-4ee4-89a2-5e35b57c8d70",
+        stage: "beta",
+        site_key: "scout-beta",
+        site_hostname: "beta.scout-for-lol.com",
+        source: "scout-backend",
+        version: "test-version",
+      },
+    });
+  });
+
   test("keeps synchronous capture and shutdown failures non-fatal", async () => {
     const capture = vi.fn<ProductAnalyticsTransport["capture"]>(() => {
       throw new Error("capture failed");

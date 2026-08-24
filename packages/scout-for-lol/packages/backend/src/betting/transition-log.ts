@@ -1,4 +1,5 @@
 import { createLogger } from "#src/logger.ts";
+import { captureBucksLifecycle } from "#src/analytics/bryan-bucks.ts";
 
 const logger = createLogger("betting-transition");
 
@@ -103,6 +104,14 @@ export function logBucksTransition(fields: BucksTransitionFields): void {
     // `exactOptionalPropertyTypes` stops a caller passing an explicit
     // `undefined`, so the bag is already minimal for Loki.
     logger.info(fields.event, fields);
+    captureBucksLifecycle({
+      serverId: fields.serverId,
+      transition: fields.event,
+      amountBucks: fields.stake,
+      matchedBucks: fields.matchedStake,
+      payoutBucks: fields.payout,
+      balanceAfterBucks: fields.balanceAfter,
+    });
   } catch {
     // Intentionally empty: a failed log must not abort a settlement.
   }
