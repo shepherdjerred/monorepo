@@ -42,14 +42,14 @@
       "buildNumber": 10760
     },
     "shepherdjerred/scout-evals": {
-      "buildNumber": 11349,
       "version": "2.0.0-11349",
-      "digest": "sha256:80938d909a215c26220fe6889f1cb740194cc68dcf73b1d5bdef45391a318b38"
+      "digest": "sha256:80938d909a215c26220fe6889f1cb740194cc68dcf73b1d5bdef45391a318b38",
+      "buildNumber": 11349
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 11349,
-      "version": "2.0.0-11349",
-      "digest": "sha256:15c27e4ed6b60d3f6278c2ce83a0df05a8872723269d5d7ae250f1ff9878c2fc"
+      "buildNumber": 11365,
+      "version": "2.0.0-11365",
+      "digest": "sha256:37d0db242ed69d2e10cb307a43221b606f3881740389be4f2abd8d5a10d0db79"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-11178",
@@ -67,9 +67,9 @@
       "buildNumber": 11178
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 11349,
-      "version": "2.0.0-11349",
-      "digest": "sha256:541656e87f0127172f5a575a4b0ce024ee2fed8577ec4ecb72f1dca2a1f5321b"
+      "buildNumber": 11365,
+      "version": "2.0.0-11365",
+      "digest": "sha256:f3e70448d0e2c30387ab38240fbdb8f41c7c93a0d0016e542c3d36a50f03421f"
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-11178",
