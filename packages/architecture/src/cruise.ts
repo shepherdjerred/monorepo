@@ -7,7 +7,12 @@ import {
   resolveArchitecture,
 } from "#src/definition.ts";
 import { parseCruiseReport, renderViolations } from "#src/cruise-result.ts";
-import { fixtureFilePrefix, fixtureRules, sourceRules } from "#src/rules.ts";
+import {
+  expectedFixtureRuleNames,
+  fixtureFilePrefix,
+  fixtureRules,
+  sourceRules,
+} from "#src/rules.ts";
 
 /**
  * Boundaries apply to every edge kind, including `import type`.
@@ -202,4 +207,31 @@ export async function cruiseArchitectureFixtures(options: {
     errorCount: report.summary.error,
     violatedRuleNames,
   };
+}
+
+/**
+ * Assert the complete negative-fixture contract for a package's declared
+ * layer boundaries. Package tests call this shared assertion so the contract
+ * is maintained in one place rather than copied into every adopter.
+ */
+export async function assertArchitectureFixtures(options: {
+  packageRoot: string;
+  definition: unknown;
+  fixtureRoot?: string;
+}): Promise<void> {
+  const result = await cruiseArchitectureFixtures(options);
+  const expectedRuleNames = expectedFixtureRuleNames(
+    resolveArchitecture(options.definition),
+  );
+
+  if (result.violatedRuleNames.join("\n") !== expectedRuleNames.join("\n")) {
+    throw new Error(
+      `negative fixtures violated ${result.violatedRuleNames.join(", ")}, expected ${expectedRuleNames.join(", ")}`,
+    );
+  }
+  if (result.errorCount !== result.fixtureFiles.length) {
+    throw new Error(
+      `negative fixtures produced ${String(result.errorCount)} errors for ${String(result.fixtureFiles.length)} fixture files`,
+    );
+  }
 }

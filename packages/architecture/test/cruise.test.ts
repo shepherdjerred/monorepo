@@ -2,7 +2,11 @@ import { mkdtemp, mkdir, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { checkArchitecture, cruiseArchitectureFixtures } from "#src/cruise.ts";
+import {
+  assertArchitectureFixtures,
+  checkArchitecture,
+  cruiseArchitectureFixtures,
+} from "#src/cruise.ts";
 
 /**
  * Every case here builds a throwaway package in a temp directory. Nothing in
@@ -144,6 +148,15 @@ describe("cruiseArchitectureFixtures", () => {
     expect(result.fixtureFiles).toEqual(["domain-imports-server.ts"]);
     expect(result.violatedRuleNames).toEqual(["negative-domain-is-pure"]);
     expect(result.errorCount).toBe(1);
+  });
+
+  it("asserts the complete fixture contract", async () => {
+    await expect(
+      assertArchitectureFixtures({
+        packageRoot,
+        definition: { boundaries: [domainIsPure] },
+      }),
+    ).resolves.toBeUndefined();
   });
 
   it("refuses a boundary that has no negative fixture", async () => {
