@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 import { resolveGitHubAppSlug } from "#lib/github-app-token.ts";
 import { runCommand } from "./data-dragon-shell.ts";
-import { findDataDragonPr } from "./data-dragon-util.ts";
+import { findDataDragonPr } from "#shared/data-dragon-util.ts";
 
 const OPEN_PR_JSON_FIELDS =
   "title,url,baseRefName,headRefName,isCrossRepository,author";

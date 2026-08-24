@@ -7,7 +7,7 @@ import {
   temporalHealthQueries,
 } from "./homelab-audit-collectors.ts";
 import { interpretKubernetesWorkloads } from "./homelab-audit-kubernetes.ts";
-import { buildHomelabAuditReport } from "./homelab-audit-report.ts";
+import { buildHomelabAuditReport } from "#activities/homelab-audit-report.ts";
 
 describe("homelab audit collector interpretation", () => {
   test("does not mistake a healthy manual Argo application for broken automation", () => {

@@ -5,6 +5,7 @@ import {
 import {
   type ArchitectureCheckResult,
   type FixtureCruiseResult,
+  assertArchitectureFixtures as assertFixtures,
   checkArchitecture as cruiseSourceTree,
   cruiseArchitectureFixtures as cruiseFixtures,
 } from "#src/cruise.ts";
@@ -39,6 +40,18 @@ export async function cruiseArchitectureFixtures(options: {
   fixtureRoot?: string;
 }): Promise<FixtureCruiseResult> {
   return cruiseFixtures(options);
+}
+
+/**
+ * Assert that every declared boundary has a negative fixture and that each
+ * fixture provokes exactly its derived rule.
+ */
+export async function assertArchitectureFixtures(options: {
+  packageRoot: string;
+  definition: unknown;
+  fixtureRoot?: string;
+}): Promise<void> {
+  return assertFixtures(options);
 }
 
 /**

@@ -8,7 +8,7 @@ import type {
 import {
   resolveTerminalFailureReason,
   UPDATE_DATA_DRAGON_MAX_ATTEMPTS,
-} from "#activities/data-dragon-util.ts";
+} from "#shared/data-dragon-util.ts";
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,

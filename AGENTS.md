@@ -751,6 +751,11 @@ optional and declared in an `architecture.config.ts` at the package root.
 - Expose the config to the meta-test with `"#architecture":
 "./architecture.config.ts"` in the package's `imports`; parent-relative
   imports are banned.
+- Fixtures must not be compiled or linted. `@shepherdjerred/eslint-config`
+  ignores `**/architecture-fixtures/**/*` by default, but passing an explicit
+  `ignores` list **replaces** that default, so such a package has to repeat the
+  entry. A tsconfig without an explicit `include` needs
+  `"exclude": ["architecture-fixtures"]`.
 
 See `packages/architecture/README.md` for the API and the wiki's
 `explanation/architecture-enforcement.md` for the reasoning.

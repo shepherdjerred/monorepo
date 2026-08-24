@@ -5,7 +5,7 @@ import type {
   ChannelStateResult,
   DailyBaseline,
   InventoryResult,
-} from "#activities/glitter-corpus-activity-types.ts";
+} from "#shared/glitter-corpus-activity-types.ts";
 import * as glitterFailures from "./glitter-corpus-failures.ts";
 
 const PAGE_LIMIT_SAFETY_CEILING = 100_000;

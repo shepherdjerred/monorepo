@@ -5,6 +5,7 @@ const config = [
     projectService: {
       allowDefaultProject: [
         "eslint.config.ts",
+        "src/architecture-boundaries.test.ts",
         "src/config/index.test.ts",
         "src/config/schema.test.ts",
         "src/game/command/chord.test.ts",

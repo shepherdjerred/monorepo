@@ -38,7 +38,7 @@ import {
   branchName,
   dataDragonPrTitle,
   validateVersion,
-} from "./data-dragon-util.ts";
+} from "#shared/data-dragon-util.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
