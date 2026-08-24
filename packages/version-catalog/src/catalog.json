@@ -638,7 +638,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-11377@sha256:8fbf476fad2c1717519451f6623cc5c0a74bf7abaddc1b4adb320d00b137f385",
+      "value": "2.0.0-11457@sha256:261f526f5f8488dfd89d5f11c889c660e19c0b1ac5bb8b9aec3fe04e06f7dbf8",
       "notes": [
         "not managed by renovate — beta updated by version-commit-back",
         "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
@@ -648,7 +648,8 @@
         "database contract: postgresql sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34",
         "database contract: postgresql sha256:15c27e4ed6b60d3f6278c2ce83a0df05a8872723269d5d7ae250f1ff9878c2fc",
         "database contract: postgresql sha256:37d0db242ed69d2e10cb307a43221b606f3881740389be4f2abd8d5a10d0db79",
-        "database contract: postgresql sha256:8fbf476fad2c1717519451f6623cc5c0a74bf7abaddc1b4adb320d00b137f385"
+        "database contract: postgresql sha256:8fbf476fad2c1717519451f6623cc5c0a74bf7abaddc1b4adb320d00b137f385",
+        "database contract: postgresql sha256:261f526f5f8488dfd89d5f11c889c660e19c0b1ac5bb8b9aec3fe04e06f7dbf8"
       ]
     },
     {
@@ -740,7 +741,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-11349@sha256:80938d909a215c26220fe6889f1cb740194cc68dcf73b1d5bdef45391a318b38",
+      "value": "2.0.0-11457@sha256:b5ca3ff7d4c31218c659c54b8adea3065b17dbb1a1b9caee983349b9a3442f8f",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful scout-evals image push."
@@ -1326,7 +1327,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-11383@sha256:510d4713f8d71379e8695cf9e6f2a8042b91d5155bd2489f683f9c62df81948f",
+      "value": "2.0.0-11457@sha256:5d64a4d8655ca490fa73b40d7ce40149a301718bf6df43a92c8ddb14dd6e2765",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
