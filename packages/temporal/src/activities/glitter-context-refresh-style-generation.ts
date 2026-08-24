@@ -17,6 +17,7 @@ import {
   buildStyleEvidenceChunks,
   type StyleEvidenceChunk,
 } from "./glitter-context-refresh-chunks.ts";
+import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
 import {
   generateGlitterObject,
   glitterObjectArtifactSchema,
@@ -481,7 +482,7 @@ export async function generateStyleCard(input: {
   // at all would be a fabrication rather than a refresh. Fail this person so the
   // caller can skip them and still refresh everyone else.
   if (summarizedMessages === 0) {
-    throw new Error(
+    throw new GlitterEvidenceError(
       `no chunk for ${input.candidate.person.id} yielded verifiable evidence across ${String(chunks.length)} chunks`,
     );
   }
@@ -521,5 +522,10 @@ export async function generateStyleCard(input: {
       previous = repaired;
     }
   }
-  throw lastError;
+  // Every bounded synthesis repair produced a card the contract rejects. That is
+  // this person's evidence, not a fault in the run.
+  throw new GlitterEvidenceError(
+    `style synthesis for ${input.candidate.person.id} failed after ${String(MAX_SYNTHESIS_REPAIR_ATTEMPTS)} repairs: ${lastError.message}`,
+    { cause: lastError },
+  );
 }

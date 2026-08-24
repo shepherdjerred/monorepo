@@ -4,6 +4,7 @@ import {
   StyleCardSchema,
 } from "@shepherdjerred/glitter-context/schema";
 import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
+import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
 import { finalizeStyleSynthesis } from "./glitter-context-refresh-style-finalize.ts";
 import {
   STYLE_ARRAY_FIELDS,
@@ -459,6 +460,13 @@ describe("Glitter extraction repair loop", () => {
     // sanitization empties the only chunk entirely. The chunk itself degrades
     // rather than throwing, but a card backed by nothing at all is a fabrication
     // rather than a refresh, so the person is rejected.
+    // The TYPE matters as much as the message: the refresh activity skips a
+    // person on `GlitterEvidenceError` and lets everything else escape to
+    // Temporal's retry, so a plain Error here would make a storage blip
+    // indistinguishable from unusable evidence.
+    await expect(
+      generateWithStubbedModel(() => badChunkSummary),
+    ).rejects.toThrow(GlitterEvidenceError);
     await expect(
       generateWithStubbedModel(() => badChunkSummary),
     ).rejects.toThrow("no chunk for ryan yielded verifiable evidence");

@@ -1,6 +1,5 @@
 import { mkdir, rm } from "node:fs/promises";
 import { Context } from "@temporalio/activity";
-import { ApplicationFailure } from "@temporalio/common";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import {
@@ -28,6 +27,7 @@ import {
   estimateRelationshipGenerationCost,
   proposeRelationships,
 } from "./glitter-context-refresh-generate.ts";
+import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
 import {
   estimateStyleGenerationCost,
   generateStyleCard,
@@ -298,15 +298,18 @@ export const glitterContextRefreshActivities = {
           await Bun.write(path, jsonText(card));
           refreshedPeople.add(candidate.person.id);
         } catch (error: unknown) {
-          // Every `ApplicationFailure` raised under here is a deliberate
-          // stop-the-run signal about the run rather than about this person —
-          // an exhausted budget (continuing just re-refuses for everyone left)
-          // or a billed completion that could not be persisted (retrying would
-          // re-bill it). Only ordinary evidence failures are this person's.
-          if (error instanceof ApplicationFailure) {
+          // Skip on `GlitterEvidenceError` and nothing else. That type means the
+          // model would not produce a usable card from this person's corpus,
+          // which a retry would only reproduce from the same cached artifacts.
+          // Everything else keeps escaping so Temporal's activity retry can
+          // recover it: a transient S3 read inside the artifact cache, a failed
+          // write, a cancellation, or an exhausted budget are all about the run,
+          // and swallowing one would turn a recoverable blip into a stale card
+          // behind a PR that looks complete.
+          if (!(error instanceof GlitterEvidenceError)) {
             throw error;
           }
-          const reason = z.instanceof(Error).parse(error).message;
+          const reason = error.message;
           log("warning", "Glitter style card skipped", {
             personId: candidate.person.id,
             reason,
