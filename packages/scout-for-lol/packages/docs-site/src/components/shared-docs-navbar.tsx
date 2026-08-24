@@ -1,4 +1,7 @@
-import { GlobalNavbar } from "@scout-for-lol/design-system/layout";
+import {
+  GlobalNavbar,
+  useNavbarSessionState,
+} from "@scout-for-lol/design-system/layout";
 import { ScoutThemeProvider } from "@scout-for-lol/design-system/runtime";
 import type { ReactNode } from "react";
 
@@ -22,13 +25,15 @@ const marketingOrigin = localSurfaceOrigin(
 );
 
 export function SharedDocsNavbar(props: { children?: ReactNode }) {
+  const signedIn = useNavbarSessionState();
+
   return (
     <ScoutThemeProvider surface="docs">
       <GlobalNavbar
+        signedIn={signedIn}
         currentPath="/docs/"
         landmark="div"
         origins={{ app: appOrigin, marketing: marketingOrigin }}
-        showGetStarted={false}
         utility={props.children}
       />
     </ScoutThemeProvider>

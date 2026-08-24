@@ -727,6 +727,10 @@ button.scout-control > span:first-child {
   align-items: center;
   gap: 0.35rem;
 }
+.scout-navbar__utility .scout-button {
+  flex: none;
+  white-space: nowrap;
+}
 .scout-navbar__member-links {
   display: contents;
 }

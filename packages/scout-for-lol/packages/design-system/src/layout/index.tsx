@@ -1,5 +1,6 @@
 import { Menu } from "lucide-react";
 import type { HTMLAttributes, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { ScoutMark } from "#src/brand/index.tsx";
 import { Button } from "#src/components/button.tsx";
 import {
@@ -26,17 +27,89 @@ export function surfaceHref(
 }
 
 export const SCOUT_NAV_LINKS = [
-  { label: "Home", href: "/", surface: "marketing" },
+  { label: "Home", href: "/", surface: "marketing", match: "exact" },
   {
-    label: "Getting Started",
-    href: "/getting-started",
-    surface: "marketing",
+    label: "Documentation",
+    href: "/docs/",
+    surface: "docs",
+    match: "prefix",
   },
-  { label: "Documentation", href: "/docs/", surface: "docs" },
-  { label: "What’s New", href: "/whatsnew", surface: "marketing" },
-  { label: "Support", href: "/support", surface: "marketing" },
-  { label: "Dashboard", href: "/app/", surface: "app" },
+  {
+    label: "What’s New",
+    href: "/whatsnew",
+    surface: "marketing",
+    match: "prefix",
+  },
+  {
+    label: "Support",
+    href: "/support",
+    surface: "marketing",
+    match: "prefix",
+  },
 ] as const;
+
+export function isNavLinkActive(
+  currentPath: string | undefined,
+  href: string,
+  match: "exact" | "prefix",
+): boolean {
+  if (currentPath === undefined) return false;
+  if (currentPath === href) return true;
+  if (match === "exact") return false;
+  const prefix = href.endsWith("/") ? href : `${href}/`;
+  return currentPath.startsWith(prefix);
+}
+
+export function globalNavbarCta(signedIn: boolean | undefined): {
+  label: "Dashboard" | "Get Started";
+  href: "/app/" | "/app/login?returnTo=/app/";
+} {
+  return signedIn === true
+    ? { label: "Dashboard", href: "/app/" }
+    : { label: "Get Started", href: "/app/login?returnTo=/app/" };
+}
+
+export function parseNavbarSessionState(payload: unknown): boolean | undefined {
+  if (typeof payload !== "object" || payload === null || !("result" in payload))
+    return undefined;
+  const result: unknown = payload.result;
+  if (typeof result !== "object" || result === null || !("data" in result))
+    return undefined;
+  const data: unknown = result.data;
+  if (typeof data !== "object" || data === null || !("user" in data))
+    return undefined;
+  const user: unknown = data.user;
+  if (user === null) return false;
+  return typeof user === "object" ? true : undefined;
+}
+
+export function useNavbarSessionState(): boolean {
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function resolveSession(): Promise<void> {
+      try {
+        const response = await fetch("/trpc/auth.sessionState", {
+          credentials: "same-origin",
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const session = parseNavbarSessionState(await response.json());
+        if (session !== undefined) setSignedIn(session);
+      } catch {
+        // An unavailable session endpoint intentionally keeps Get Started.
+      }
+    }
+    void resolveSession();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  return signedIn;
+}
 
 export function Container({
   className,
@@ -97,7 +170,11 @@ function NavLinks(props: {
           key={link.href}
           href={surfaceHref(props.origins?.[link.surface], link.href)}
           className="scout-navbar__link"
-          aria-current={props.currentPath === link.href ? "page" : undefined}
+          aria-current={
+            isNavLinkActive(props.currentPath, link.href, link.match)
+              ? "page"
+              : undefined
+          }
         >
           {link.label}
         </a>
@@ -116,10 +193,10 @@ export function GlobalNavbar(props: {
   guildAccess?: ReactNode | undefined;
   getStartedTrackingEvent?: string | undefined;
   getStartedLocation?: string | undefined;
-  showGetStarted?: boolean | undefined;
   origins?: ScoutSurfaceOrigins | undefined;
 }) {
   const Landmark = props.landmark ?? "header";
+  const cta = globalNavbarCta(props.signedIn);
   return (
     <Landmark className="scout-navbar">
       <Container className="scout-navbar__inner">
@@ -137,17 +214,21 @@ export function GlobalNavbar(props: {
           {props.guildAccess}
           <ThemeMenu />
           {props.signedIn === true ? props.accountMenu : null}
-          {props.signedIn !== true && props.showGetStarted !== false ? (
-            <Button asChild size="sm">
-              <a
-                href={surfaceHref(props.origins?.app, "/app/login")}
-                data-scout-conversion={props.getStartedTrackingEvent}
-                data-scout-cta-location={props.getStartedLocation}
-              >
-                Get Started
-              </a>
-            </Button>
-          ) : null}
+          <Button asChild size="sm">
+            <a
+              href={surfaceHref(props.origins?.app, cta.href)}
+              data-scout-conversion={
+                props.signedIn === true
+                  ? undefined
+                  : props.getStartedTrackingEvent
+              }
+              data-scout-cta-location={
+                props.signedIn === true ? undefined : props.getStartedLocation
+              }
+            >
+              {cta.label}
+            </a>
+          </Button>
           <div className="scout-mobile-nav">
             <Sheet>
               <SheetTrigger asChild>

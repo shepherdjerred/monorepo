@@ -57,6 +57,25 @@ function installRequest(
   return new Request(url, { method: "GET", headers });
 }
 
+async function expectRecordedSurface(
+  surface: "marketing_home" | "onboarding_wizard",
+): Promise<void> {
+  const { jwt } = await signSession({ discordId: testAccountId("4242") });
+  const response = await handleDiscordInstall(
+    installRequest(
+      `${SESSION_COOKIE}=${jwt}`,
+      `${INSTALL_URL}?surface=${surface}`,
+    ),
+  );
+
+  const target = new URL(response.headers.get("Location") ?? "");
+  const state = target.searchParams.get("state");
+  const tokenRow = await testDb.prisma.installAttributionToken.findUnique({
+    where: { token: state ?? "" },
+  });
+  expect(tokenRow?.surface).toBe(surface);
+}
+
 describe("handleDiscordInstall", () => {
   test("redirects to /app/login when no session cookie is present", async () => {
     const response = await handleDiscordInstall(installRequest());
@@ -125,20 +144,11 @@ describe("handleDiscordInstall", () => {
   });
 
   test("records the onboarding surface from the query param", async () => {
-    const { jwt } = await signSession({ discordId: testAccountId("4242") });
-    const response = await handleDiscordInstall(
-      installRequest(
-        `${SESSION_COOKIE}=${jwt}`,
-        `${INSTALL_URL}?surface=onboarding_wizard`,
-      ),
-    );
+    await expectRecordedSurface("onboarding_wizard");
+  });
 
-    const target = new URL(response.headers.get("Location") ?? "");
-    const state = target.searchParams.get("state");
-    const tokenRow = await testDb.prisma.installAttributionToken.findUnique({
-      where: { token: state ?? "" },
-    });
-    expect(tokenRow?.surface).toBe("onboarding_wizard");
+  test("records the marketing homepage surface from the query param", async () => {
+    await expectRecordedSurface("marketing_home");
   });
 
   test("returns advanced bot installs to the installed landing page", async () => {

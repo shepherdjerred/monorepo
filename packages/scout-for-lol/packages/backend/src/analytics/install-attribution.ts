@@ -30,6 +30,7 @@ const logger = createLogger("install-attribution");
 
 export const AttributionSurfaceSchema = z.enum([
   "guild_picker",
+  "marketing_home",
   "onboarding_wizard",
 ]);
 

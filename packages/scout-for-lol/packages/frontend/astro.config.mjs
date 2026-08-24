@@ -111,6 +111,14 @@ export default defineConfig({
   ],
   vite: {
     plugins: [tailwindcss(), scoutAssetsPlugin()],
+    server: {
+      proxy: {
+        "/trpc": {
+          target: env.PUBLIC_APP_ORIGIN ?? "http://localhost:5180",
+          changeOrigin: true,
+        },
+      },
+    },
     assetsInclude: ["**/*.txt"],
     optimizeDeps: {
       // Don't pre-bundle these native modules - they're only used server-side

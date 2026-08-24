@@ -1,0 +1,140 @@
+---
+import { CONSUMER_PREVIEW } from "#src/data/consumer-previews.ts";
+import {
+  APP_EXPLORE_URL,
+  APP_PLAYERS_URL,
+} from "#src/lib/marketing-constants.ts";
+---
+
+<section
+  class="bg-scout-raised py-20 sm:py-24"
+  aria-labelledby="consumer-preview-title"
+>
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl text-center">
+      <p class="text-sm font-semibold text-scout-brand">
+        New · Explore &amp; Player Profiles
+      </p>
+      <h2
+        id="consumer-preview-title"
+        class="mt-2 text-3xl font-semibold tracking-tight text-scout-ink sm:text-4xl"
+      >
+        Turn Scout&apos;s match history into answers
+      </h2>
+      <p class="mt-4 text-lg text-scout-subtle">
+        Ask Explore about every game Scout has recorded, then open a player
+        profile to see the accounts, ranks, champions, and matches your shared
+        Discord server tracks.
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <article
+        class="rounded-2xl border border-scout-border bg-scout-surface p-6 shadow-sm sm:p-8"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <p class="font-semibold text-scout-ink">Explore conversation</p>
+          <span
+            class="rounded-full bg-scout-raised px-3 py-1 text-xs text-scout-subtle"
+            >Global recorded corpus</span
+          >
+        </div>
+        <div class="mt-6 rounded-xl bg-scout-raised p-4 text-scout-ink">
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-scout-subtle"
+          >
+            You
+          </p>
+          <p class="mt-1 font-medium">{CONSUMER_PREVIEW.explore.question}</p>
+        </div>
+        <div class="mt-4 rounded-xl border border-scout-border p-4">
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-scout-brand"
+          >
+            Scout
+          </p>
+          <p class="mt-2 text-scout-ink">{CONSUMER_PREVIEW.explore.answer}</p>
+          <ol class="mt-4 space-y-2">
+            {
+              CONSUMER_PREVIEW.explore.leaders.map((leader, index) => (
+                <li class="flex items-center justify-between gap-4 text-sm">
+                  <span class="font-medium text-scout-ink">
+                    {index + 1}. {leader.champion}
+                  </span>
+                  <span class="text-scout-subtle">
+                    {leader.winRate} · {leader.games} games
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+          <p
+            class="mt-4 border-t border-scout-border pt-3 text-xs text-scout-subtle"
+          >
+            {CONSUMER_PREVIEW.explore.caveat}
+          </p>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p class="text-sm text-scout-subtle">
+            Follow up: “{CONSUMER_PREVIEW.explore.followUp}”
+          </p>
+          <a
+            class="font-semibold text-scout-brand hover:underline"
+            href={APP_EXPLORE_URL}>Open Explore →</a
+          >
+        </div>
+      </article>
+
+      <article
+        class="rounded-2xl border border-scout-border bg-scout-surface p-6 shadow-sm sm:p-8"
+      >
+        <p class="text-sm text-scout-subtle">
+          {CONSUMER_PREVIEW.profile.guild}
+        </p>
+        <h3 class="mt-1 text-2xl font-semibold text-scout-ink">
+          {CONSUMER_PREVIEW.profile.alias}
+        </h3>
+        <p class="mt-1 text-sm text-scout-subtle">
+          2 Riot accounts combined · only games Scout recorded
+        </p>
+
+        <div class="mt-6 space-y-3">
+          {
+            CONSUMER_PREVIEW.profile.accounts.map((account) => (
+              <div class="rounded-xl border border-scout-border p-4">
+                <p class="font-semibold text-scout-ink">{account.riotId}</p>
+                <div class="mt-2 flex items-center justify-between gap-3 text-sm">
+                  <span class="text-scout-subtle">{account.queue}</span>
+                  <span class="font-medium text-scout-ink">{account.rank}</span>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="mt-5 grid grid-cols-2 gap-3">
+          <div class="rounded-xl bg-scout-raised p-4">
+            <p class="text-xs text-scout-subtle">Recent form</p>
+            <p class="mt-1 text-lg font-semibold text-scout-ink">
+              {CONSUMER_PREVIEW.profile.recentForm}
+            </p>
+          </div>
+          <div class="rounded-xl bg-scout-raised p-4">
+            <p class="text-xs text-scout-subtle">Recorded champions</p>
+            <p class="mt-1 text-sm font-semibold text-scout-ink">
+              {
+                CONSUMER_PREVIEW.profile.champions
+                  .map((champion) => `${champion.name} (${champion.games})`)
+                  .join(" · ")
+              }
+            </p>
+          </div>
+        </div>
+        <a
+          class="mt-6 inline-block font-semibold text-scout-brand hover:underline"
+          href={APP_PLAYERS_URL}>Find a player →</a
+        >
+      </article>
+    </div>
+  </div>
+</section>
