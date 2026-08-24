@@ -107,7 +107,7 @@ export type RunReleaseRefinerInput = {
   prompt: string;
   env: Record<string, string>;
   claudeToken: string;
-  codexAccessToken: string;
+  codexHome: string;
   execute?: RefinerCommandRunner;
   runClaude?: ReleaseAgentRunner;
   runCodex?: ReleaseAgentRunner;
@@ -258,8 +258,8 @@ const AGENT_PROCESS_ENVIRONMENT_KEYS = new Set([
  * Both SDKs replace the child environment wholesale rather than layering onto
  * `process.env` the way `run()` does, so passing only the git-auth env would
  * drop the CI image's mise `PATH`. Copy only the allowlisted process/TLS
- * settings, then add the git auth and the single provider credential this run
- * needs.
+ * settings, then add the git auth and the provider-specific auth boundary this
+ * run needs.
  */
 export function refinerSdkEnv(
   input: Pick<RunReleaseRefinerInput, "env">,
@@ -341,7 +341,10 @@ async function runCodexSdk(
 ): Promise<ReleaseAgentOutcome> {
   const codex = new Codex({
     env: refinerSdkEnv(input, {
-      CODEX_ACCESS_TOKEN: input.codexAccessToken,
+      // Codex reads the full, ChatGPT-managed auth bundle from this isolated
+      // persistent directory and refreshes it in place. Do not extract its
+      // short-lived access token into an environment variable.
+      CODEX_HOME: input.codexHome,
     }),
     config: {
       project_doc_max_bytes: 0,

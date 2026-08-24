@@ -17,9 +17,10 @@
  *   bun scripts/release.ts [--dry-run]
  *
  * Env: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY,
- *      CLAUDE_CODE_OAUTH_TOKEN, CODEX_ACCESS_TOKEN (refine step)
+ *      CLAUDE_CODE_OAUTH_TOKEN, CODEX_HOME (refine step)
  */
 
+import path from "node:path";
 import { requireEnv, run } from "./lib/run.ts";
 import { setupGitAuth } from "./lib/github-auth.ts";
 import {
@@ -99,6 +100,19 @@ function usage(): never {
   process.exit(1);
 }
 
+async function requireCodexAuthHome(): Promise<string> {
+  const codexHome = requireEnv("CODEX_HOME");
+  const authPath = path.join(codexHome, "auth.json");
+  const authFile = Bun.file(authPath);
+  if (!(await authFile.exists())) {
+    throw new Error(
+      `CODEX_HOME does not contain auth.json at ${authPath}; ` +
+        "seed the trusted, persistent Codex auth volume before running release-please",
+    );
+  }
+  return codexHome;
+}
+
 async function main(): Promise<void> {
   const argv = new Set(Bun.argv.slice(2));
   if (argv.has("--help") || argv.has("-h")) {
@@ -131,7 +145,7 @@ async function main(): Promise<void> {
     // Validate both providers before release-please mutates the release PR.
     // Codex is an intentional quota fallback, not an optional best-effort path.
     const claudeToken = requireEnv("CLAUDE_CODE_OAUTH_TOKEN");
-    const codexAccessToken = requireEnv("CODEX_ACCESS_TOKEN");
+    const codexHome = await requireCodexAuthHome();
     // Codex runs tool calls through a login shell. Verify that exact boundary,
     // not only this process's mise-aware PATH, before release-please mutates a PR.
     await run(["/bin/bash", "-lc", "gh --version"], {
@@ -167,7 +181,7 @@ async function main(): Promise<void> {
       // git clone/push needs (the old helper's withAskpass: true).
       env,
       claudeToken,
-      codexAccessToken,
+      codexHome,
     });
     console.log(`--- CHANGELOG refinement complete (provider=${provider})`);
 

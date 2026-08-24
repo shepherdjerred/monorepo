@@ -482,8 +482,10 @@ Codex rollout bridge described above. Set it when creating the build, as with
 
 The main-only `release-please` lane runs `scripts/release.ts`. Its CHANGELOG
 refiner uses Claude first and falls back to Codex only when Claude returns a
-validated usage-quota error. Both `CLAUDE_CODE_OAUTH_TOKEN` and
-`CODEX_ACCESS_TOKEN` are required; unknown provider failures and fallback
+validated usage-quota error. `CLAUDE_CODE_OAUTH_TOKEN` and the isolated
+`CODEX_HOME/auth.json` ChatGPT-managed bundle are required; Codex refreshes the
+bundle in its persistent, non-backed-up, release-only PVC instead of receiving
+an extracted short-lived access token. Unknown provider failures and fallback
 failures remain hard CI failures. Claude Agent SDK and Codex SDK are pinned
 production dependencies of `@shepherdjerred/root-scripts`, so the lane's
 filtered install provides both native SDK runtimes without globally installed

@@ -106,7 +106,7 @@ function harness(options: HarnessInput = {}): {
     received: RunReleaseRefinerInput,
   ): Promise<ReleaseAgentOutcome> => {
     expect(received.claudeToken).toBe("claude-token");
-    expect(received.codexAccessToken).toBe("codex-credential");
+    expect(received.codexHome).toBe("/buildkite/codex-auth");
     agentProviders.push(provider);
     const step = agentSteps.shift();
     if (step?.provider !== provider) {
@@ -120,7 +120,7 @@ function harness(options: HarnessInput = {}): {
     prompt: "refine the release notes",
     env: { GH_TOKEN: "github-token", GIT_ASKPASS: "/tmp/askpass" },
     claudeToken: "claude-token",
-    codexAccessToken: "codex-credential",
+    codexHome: "/buildkite/codex-auth",
     execute,
     runClaude: (received) => runAgent("claude", received),
     runCodex: (received) => runAgent("codex", received),
@@ -506,10 +506,10 @@ describe("refinerSdkEnv", () => {
     });
   });
 
-  test("strips every inference credential the launched provider did not ask for", () => {
+  test("passes the isolated Codex auth home without an extracted token", () => {
     const environment = refinerSdkEnv(
       gitAuth,
-      { CODEX_ACCESS_TOKEN: "codex-credential" },
+      { CODEX_HOME: "/buildkite/codex-auth" },
       {
         PATH: "/usr/bin",
         ANTHROPIC_API_KEY: "anthropic-key",
@@ -522,10 +522,11 @@ describe("refinerSdkEnv", () => {
       },
     );
 
-    expect(environment["CODEX_ACCESS_TOKEN"]).toBe("codex-credential");
+    expect(environment["CODEX_HOME"]).toBe("/buildkite/codex-auth");
     for (const stripped of [
       "ANTHROPIC_API_KEY",
       "CLAUDE_CODE_OAUTH_TOKEN",
+      "CODEX_ACCESS_TOKEN",
       "CODEX_API_KEY",
       "CODEX_ID_TOKEN",
       "CODEX_REFRESH_TOKEN",

@@ -247,6 +247,11 @@ function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
       `release-please lane is missing exact filtered install ${releaseInstall}`,
     );
   }
+  requireIncludes(
+    releasePlease,
+    "<<: *pod_release_codex_auth_kubernetes",
+    "release-please is missing the managed Codex auth pod",
+  );
 
   validateVersionCommitBackInstall(stepBlocks.get("version-commit-back"));
 }

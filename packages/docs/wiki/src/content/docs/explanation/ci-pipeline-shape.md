@@ -92,6 +92,23 @@ and downstream release jobs read either form through
 The alternative — always using artifacts — would add a download to every handoff
 for values that are usually a few hundred bytes.
 
+## Release refinement has its own authentication boundary
+
+The main-only release refiner can use a ChatGPT subscription for Codex without
+placing a reusable credential in ordinary CI jobs. Its dedicated pod mounts a
+persistent auth bundle that Codex refreshes in place, while the other shared
+pod shapes do not mount that storage. The release lane is serialized, so a
+single-writer volume is sufficient. The bundle is deliberately excluded from
+backups because recovery means reauthenticating on a trusted operator machine.
+
+This separates a renewable login session from an extracted short-lived token.
+The distinction lets the release refiner recover normally when its Codex access
+token expires without broadening the rest of the Buildkite credential surface.
+The [release pod definition](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml),
+[PVC declaration](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts),
+and [refiner boundary](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/release-refiner.ts)
+define that separation.
+
 ## Related
 
 - [About the monorepo](/explanation/monorepo/) — why CI is Buildkite at all

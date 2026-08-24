@@ -165,6 +165,41 @@ common:
                   readOnly: true
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
+  # The Codex fallback authenticates with its refreshable ChatGPT auth bundle,
+  # never an extracted access token. This private claim is absent from the
+  # default agent-stack pod volumes and appears only in this main-only lane.
+  - pod_release_codex_auth: &pod_release_codex_auth
+      kubernetes: &pod_release_codex_auth_kubernetes
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          volumes:
+            - name: buildkite-codex-auth
+              persistentVolumeClaim:
+                claimName: buildkite-codex-auth
+          containers:
+            - *checkout_container
+            - name: container-0
+              image: "${CI_BASE_IMAGE}"
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
+                - name: CODEX_HOME
+                  value: /buildkite/codex-auth
+              resources:
+                requests:
+                  { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
+                limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
+              volumeMounts:
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
+                - name: buildkite-codex-auth
+                  mountPath: /buildkite/codex-auth
+              envFrom:
+                - secretRef: { name: buildkite-ci-secrets }
   # OpenTofu's provider cache is shared across the selected CI jobs on Liskov.
   # Those commands use `flock` around Terraform itself: OpenTofu explicitly
   # does not guarantee concurrent writes to TF_PLUGIN_CACHE_DIR are safe.
@@ -1891,7 +1926,7 @@ steps:
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_light_kubernetes
+          <<: *pod_release_codex_auth_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: release-please
