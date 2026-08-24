@@ -36,6 +36,10 @@ import {
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { fetchCompetitionRankHistory } from "#src/reports/duckdb/lake-reads.ts";
+import {
+  buildMatchesSource,
+  resolveLakeFiles,
+} from "#src/reports/duckdb/lake.ts";
 
 const { prisma } = createTestDatabase("report-lake-test");
 const serverId = testGuildId("888");
@@ -469,6 +473,40 @@ describe("compactor", () => {
       await runReportLakeFold({ prisma, lakeDir });
       const builds = await readdir(path.join(lakeDir, "builds"));
       expect(builds.length).toBeLessThanOrEqual(2);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("compactor idempotency and schema transitions", () => {
+  test("re-importing a folded match remains one logical row per participant", async () => {
+    const match = await loadMatchFixture();
+    const lakeDir = await makeLakeDir();
+    try {
+      await runReportLakeRebuild({ prisma, lakeDir });
+      expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
+      await runReportLakeFold({ prisma, lakeDir });
+
+      // A later cooldown refetch can stage the same immutable Match-V5 ID.
+      expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
+      await runReportLakeFold({ prisma, lakeDir });
+
+      const source = buildMatchesSource(await resolveLakeFiles(lakeDir), {
+        sql: "",
+        params: [],
+      });
+      if (source === undefined) throw new Error("missing match lake source");
+      const rowCount = await withDuckDBConnection(async (session) => {
+        const rows = await session.run(
+          `SELECT COUNT(*)::BIGINT AS n FROM (${source.sql})`,
+          source.params.map((param) =>
+            param.kind === "list" ? session.list(param.values) : param.value,
+          ),
+        );
+        return CountRowSchema.parse(rows[0]).n;
+      });
+      expect(rowCount).toBe(match.info.participants.length);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }

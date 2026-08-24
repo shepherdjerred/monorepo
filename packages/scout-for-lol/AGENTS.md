@@ -1286,6 +1286,16 @@ Code lives in `backend/src/league/tournament/` and
   post-match report replies to the card, through the unchanged
   `getPrematchMessageIdsForMatchIdOrEmpty` path. The match-history cursor still
   owns ingest, and its S3 write still gates the cursor advance.
+- **First-run history is a separate, quiet ingest path.** An enabled guild's
+  account-creation transaction enqueues one global PUUID job. The worker runs
+  after live polling, snapshots 20 Match-V5 IDs once, requires both canonical
+  S3 and lake staging before each checkpoint, then fetches current Solo/Flex
+  rank and coalesces completion into a lake fold. It must never call the normal
+  post-match processor: no Discord, reports, AI recaps, ActiveGame writes,
+  Bryan Bucks, earnings, or per-match rank history. `queued` and `matches`
+  PUUIDs stay out of live polling until the newest snapshot ID is installed as
+  their cursor. Reuse within 24 hours republishes the guild account mapping but
+  does not refetch Riot.
 - **Never fabricate a `RawCurrentGameInfo`** from lobby events. That value is
   the canonical S3 match record the report lake rebuilds from; invented
   champion IDs would permanently corrupt ScoutQL, Explore, and AI review.

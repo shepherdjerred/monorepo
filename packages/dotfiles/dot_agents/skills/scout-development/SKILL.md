@@ -153,6 +153,14 @@ lake is:
 export REPORT_LAKE_DIR="$HOME/.local/share/scout-for-lol/dev-seed/report-lake"
 ```
 
+First-run account history uses `backend/src/league/initial-history/`. Keep it
+separate from the normal post-match processor: the durable PUUID job imports a
+fixed 20-match snapshot into S3 and immediate lake staging, fetches one current
+rank snapshot, and folds account identity before completion. Historical import
+must produce no Discord, report/AI, ActiveGame, Bryan Bucks, earnings, or
+per-match rank-history side effects. Live polling has priority and excludes a
+PUUID only during the `queued` and `matches` phases.
+
 Pass that variable when starting a local backend or `dev:web`. Treat it as
 shared derived data: concurrent reads are fine, but do not run compaction from
 multiple workspaces at once. Rebuilds read raw match JSON from the BETA S3

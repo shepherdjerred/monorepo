@@ -44,6 +44,7 @@ import { ListSubscriptionsInputSchema } from "#src/lib/subscription/types.ts";
 import { recordAudit, AuditActionSchema } from "#src/lib/audit/index.ts";
 import { runAuditedMutation } from "#src/lib/audit/audited-mutation.ts";
 import { captureFirstSubscriptionCreated } from "#src/analytics/guild-lifecycle.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 
 const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
 
@@ -136,12 +137,16 @@ export const subscriptionRouter = router({
         game_name: puuidResult.gameName,
         tag_line: puuidResult.tagLine,
       };
+      const initialHistoryImportEnabled = await isPolicyEnabled(
+        "initial_match_history_import_enabled",
+        { server: input.guildId },
+      );
 
-      const result = await runAuditedMutation(
+      const result: AddSubscriptionResult = await runAuditedMutation(
         ctx,
         input.guildId,
-        (tx) =>
-          addSubscription(
+        async (tx): Promise<AddSubscriptionResult> => {
+          const created = await addSubscription(
             {
               guildId: input.guildId,
               channelId: input.channelId,
@@ -154,7 +159,18 @@ export const subscriptionRouter = router({
             },
             puuid,
             tx,
-          ),
+            initialHistoryImportEnabled,
+          );
+          // addSubscription preserves its public result contract by turning
+          // database failures into `internal-error`. Rethrow inside this
+          // transaction so Account and import-job creation stay atomic.
+          if (created.kind === "internal-error") {
+            throw new Error(
+              `Subscription creation failed for ${input.alias}: ${created.message}`,
+            );
+          }
+          return created;
+        },
         (r) => {
           if (r.kind === "created") {
             return {
@@ -188,14 +204,14 @@ export const subscriptionRouter = router({
         },
       );
 
-      if (result.kind === "created") {
-        if (result.isFirstSubscription) {
-          await captureFirstSubscriptionCreated(input.guildId, "web");
-        }
-        // Best-effort match-history backfill so the poll cycle doesn't
-        // emit notifications for historical matches the first time it
-        // encounters the account. Fire-and-forget; never block the
-        // mutation response on it.
+      if (result.kind === "created" && result.isFirstSubscription) {
+        await captureFirstSubscriptionCreated(input.guildId, "web");
+      }
+      if (
+        !initialHistoryImportEnabled &&
+        (result.kind === "created" ||
+          result.kind === "subscription-already-exists")
+      ) {
         void runBackfillAfterCommit({
           alias: input.alias,
           puuid,

@@ -11,8 +11,9 @@ chart, and schedule it to post itself to a channel every week. You will meet
 `SELECT`, `FROM`, `GROUP BY`, DURING LAST 30 DAYS `ORDER BY`, and `RENDER`.
 
 You need at least one tracked player who has played recently. Reports read the
-last 30 days of match history by default, so a server that has just been set up
-will return empty rows.
+last 30 days of match history by default. When you add an account, Scout quietly
+imports up to its 20 most recent games, so a new server usually has useful rows
+within a few minutes. An account with no recent games still returns empty rows.
 
 ## What you will end up with
 

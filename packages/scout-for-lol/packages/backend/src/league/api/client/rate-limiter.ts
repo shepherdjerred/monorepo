@@ -9,6 +9,11 @@ export type RateLimiterOptions = {
   maxRetries?: number | undefined;
 };
 
+export type RateLimitedRequestOptions = {
+  /** Override automatic retries for one request without bypassing the limiter. */
+  maxRetries?: number | undefined;
+};
+
 type RateLimiterRuntime = {
   now: () => number;
   sleep: (milliseconds: number) => Promise<void>;
@@ -144,10 +149,12 @@ export class RateLimiter {
   public async execute(
     url: string,
     executeRequest: RequestExecutor,
+    options: RateLimitedRequestOptions = {},
   ): Promise<Response> {
+    const maxRetries = options.maxRetries ?? this.maxRetries;
     let attempts = 0;
 
-    while (attempts <= this.maxRetries) {
+    while (attempts <= maxRetries) {
       attempts += 1;
 
       const response = await this.executeAttempt(executeRequest);
@@ -159,12 +166,12 @@ export class RateLimiter {
       const status = response.status;
 
       // 429: Rate Limit Exceeded
-      if (status === 429 && attempts <= this.maxRetries) {
+      if (status === 429 && attempts <= maxRetries) {
         continue;
       }
 
       // 503: Service Unavailable (Riot API server overload / temporary outage)
-      if (status === 503 && attempts <= this.maxRetries) {
+      if (status === 503 && attempts <= maxRetries) {
         const baseDelayMs = 1000 * 2 ** (attempts - 1);
         const delayMs = baseDelayMs + this.runtime.random() * 300;
         await this.runtime.sleep(delayMs);
@@ -184,7 +191,7 @@ export class RateLimiter {
     }
 
     throw new Error(
-      `Exceeded maximum retry attempts (${this.maxRetries.toString()}) for ${url}`,
+      `Exceeded maximum retry attempts (${maxRetries.toString()}) for ${url}`,
     );
   }
 }

@@ -16,6 +16,10 @@ import {
   testGuildId,
   testPuuid,
 } from "#src/testing/test-ids.ts";
+import {
+  addFlagOverride,
+  resetFlagOverrides,
+} from "#src/configuration/flags.ts";
 
 const { prisma } = createTestDatabase("account-admin-mutations");
 const puuidsByRiotName = new Map<string, LeaguePuuid>();
@@ -41,7 +45,7 @@ vi.doMock("#src/lib/riot/resolve-puuid.ts", () => ({
     }),
 }));
 
-const { deleteAccount, transferAccount } =
+const { addAccount, deleteAccount, transferAccount } =
   await import("#src/lib/player-admin/account-mutations.ts");
 
 const guildId = testGuildId("9931");
@@ -52,7 +56,9 @@ const ctx = {
 };
 
 beforeEach(async () => {
+  resetFlagOverrides("initial_match_history_import_enabled");
   puuidsByRiotName.clear();
+  await deleteIfExists(() => prisma.initialMatchHistoryImport.deleteMany());
   await deleteIfExists(() => prisma.auditLog.deleteMany());
   await deleteIfExists(() => prisma.subscription.deleteMany());
   await deleteIfExists(() => prisma.account.deleteMany());
@@ -66,6 +72,43 @@ afterAll(async () => {
 });
 
 describe("account admin mutations", () => {
+  test("atomically enqueues first-run history when the guild flag is enabled", async () => {
+    await createPlayer("History Player");
+    const puuid = testPuuid("history-account");
+    puuidsByRiotName.set("HistoryMain", puuid);
+    addFlagOverride("initial_match_history_import_enabled", true, {
+      server: guildId,
+    });
+
+    await addAccount(ctx, {
+      guildId,
+      playerAlias: "History Player",
+      riotId: { game_name: "HistoryMain", tag_line: "NA1" },
+      region: "AMERICA_NORTH",
+    });
+
+    expect(
+      await prisma.initialMatchHistoryImport.findUnique({ where: { puuid } }),
+    ).toMatchObject({ phase: "queued", region: "AMERICA_NORTH" });
+  });
+
+  test("preserves timestamp-only onboarding when the guild flag is disabled", async () => {
+    await createPlayer("Legacy Player");
+    const puuid = testPuuid("legacy-account");
+    puuidsByRiotName.set("LegacyMain", puuid);
+
+    await addAccount(ctx, {
+      guildId,
+      playerAlias: "Legacy Player",
+      riotId: { game_name: "LegacyMain", tag_line: "NA1" },
+      region: "AMERICA_NORTH",
+    });
+
+    expect(
+      await prisma.initialMatchHistoryImport.findUnique({ where: { puuid } }),
+    ).toBeNull();
+  });
+
   test("deleteAccount rejects deleting the last account without audit", async () => {
     const player = await createPlayer("Solo");
     const puuid = testPuuid("solo-account");

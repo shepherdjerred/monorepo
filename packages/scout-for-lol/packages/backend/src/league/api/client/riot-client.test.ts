@@ -175,4 +175,29 @@ describe("RiotClient", () => {
     expect(callCount).toBe(2);
     expect(result).toEqual({ matchId: testMatchId });
   });
+
+  test("can disable internal retries without bypassing the shared limiter", async () => {
+    const mockFetch: FetchFunction = vi.fn(() =>
+      Promise.resolve(
+        Response.json(
+          { message: "Rate limit exceeded" },
+          {
+            status: 429,
+            statusText: "Too Many Requests",
+            headers: { "Retry-After": "0" },
+          },
+        ),
+      ),
+    );
+    const client = new RiotClient({
+      apiKey,
+      fetchFn: mockFetch,
+      maxRetries: 3,
+    });
+
+    await expect(
+      client.match.get(testMatchId, "AMERICAS", { maxRetries: 0 }),
+    ).rejects.toThrow(RiotHttpError);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
 });

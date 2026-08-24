@@ -54,6 +54,7 @@ import {
   recordPostmatchMessageIds,
 } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
+import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -405,12 +406,19 @@ export async function checkMatchHistory(): Promise<void> {
 
   try {
     // Get all tracked player accounts with their polling state
-    const accountsWithState = await getAccountsWithState(
-      prisma,
-      getActiveServerIds(),
+    const [allAccountsWithState, blockedPuuids] = await prisma.$transaction(
+      async (tx) =>
+        await Promise.all([
+          getAccountsWithState(tx, getActiveServerIds()),
+          getPuuidsBlockedFromLivePolling(tx),
+        ]),
+      { isolationLevel: "RepeatableRead" },
+    );
+    const accountsWithState = allAccountsWithState.filter(
+      ({ config }) => !blockedPuuids.has(config.league.leagueAccount.puuid),
     );
     logger.info(
-      `📊 Found ${accountsWithState.length.toString()} total player account(s)`,
+      `📊 Found ${accountsWithState.length.toString()} pollable player account(s); ${blockedPuuids.size.toString()} PUUID(s) are completing initial history import`,
     );
 
     if (accountsWithState.length === 0) {

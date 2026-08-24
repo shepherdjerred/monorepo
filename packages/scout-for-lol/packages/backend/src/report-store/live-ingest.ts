@@ -74,13 +74,17 @@ function recordFailure(
 
 export async function recordMatchForReportStore(
   options: MatchIngestOptions,
-): Promise<void> {
+): Promise<{ staged: boolean; stored: boolean }> {
   try {
-    await ingestMatch(options.match, options.trackedPlayerAliases);
+    const result = await ingestMatch(
+      options.match,
+      options.trackedPlayerAliases,
+    );
     recordSuccess("match", options.source);
     logger.info(
       `[ReportStoreIngest] Stored match ${options.match.metadata.matchId} from ${options.source}`,
     );
+    return result;
   } catch (error) {
     recordFailure("match", options.source, error);
     throw error;

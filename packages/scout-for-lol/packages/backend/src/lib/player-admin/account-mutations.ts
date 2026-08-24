@@ -12,6 +12,8 @@ import { recordAudit } from "#src/lib/audit/index.ts";
 import { resolvePuuidFromRiotId } from "#src/lib/riot/resolve-puuid.ts";
 import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts";
 import { getRiotIdByPuuid } from "#src/lib/riot/account-riot-id.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { enqueueInitialMatchHistoryImport } from "#src/league/initial-history/enqueue.ts";
 import {
   AliasSchema,
   conflict,
@@ -88,6 +90,10 @@ export async function addAccount(ctx: WebCtx, input: AddAccountInputData) {
     alias: input.playerAlias,
   });
   const puuid = await resolvePuuidOrThrow(input);
+  const initialHistoryImportEnabled = await isPolicyEnabled(
+    "initial_match_history_import_enabled",
+    { server: input.guildId },
+  );
 
   const now = new Date();
   const accountAlias = `${input.riotId.game_name}#${input.riotId.tag_line}`;
@@ -120,6 +126,14 @@ export async function addAccount(ctx: WebCtx, input: AddAccountInputData) {
           updatedTime: now,
         },
       });
+      if (initialHistoryImportEnabled) {
+        await enqueueInitialMatchHistoryImport({
+          puuid,
+          region: input.region,
+          db: tx,
+          requestedAt: now,
+        });
+      }
       await recordAudit(
         {
           action: "ACCOUNT_ADD",
@@ -157,7 +171,9 @@ export async function addAccount(ctx: WebCtx, input: AddAccountInputData) {
           },
         }),
   };
-  void backfillLastMatchTime(playerConfigEntry, puuid);
+  if (!initialHistoryImportEnabled) {
+    void backfillLastMatchTime(playerConfigEntry, puuid);
+  }
   return { accountId: created.id, accountAlias: created.alias };
 }
 

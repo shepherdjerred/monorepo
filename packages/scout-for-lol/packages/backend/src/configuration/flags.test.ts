@@ -41,6 +41,7 @@ afterEach(() => {
   // The registry is process-wide. Restoring rather than clearing keeps this
   // file from switching `debug` off for every test that runs after it.
   resetFlagOverrides("debug");
+  resetFlagOverrides("initial_match_history_import_enabled");
   for (const flag of PRODUCTION_DENIED_FLAGS) {
     resetFlagOverrides(flag);
   }
@@ -105,6 +106,28 @@ describe("Bryan Bucks settlement DM flags", () => {
     expect(
       getFlag("betting_player_bet_outcome_dm_enabled", { server: MY_SERVER }),
     ).toBe(true);
+  });
+});
+
+describe("initial history import flag", () => {
+  test("is default-off and can target one guild in production", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+    expect(
+      getFlag("initial_match_history_import_enabled", {
+        server: OTHER_GUILD,
+      }),
+    ).toBe(false);
+
+    addFlagOverride("initial_match_history_import_enabled", true, {
+      server: OTHER_GUILD,
+    });
+    expect(
+      getFlag("initial_match_history_import_enabled", {
+        server: OTHER_GUILD,
+      }),
+    ).toBe(true);
+    resetFlagOverrides("initial_match_history_import_enabled");
   });
 });
 
