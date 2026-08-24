@@ -46,6 +46,7 @@ RUN bun install --frozen-lockfile \
 FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
+  packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
   packages/code-review \
   packages/glitter-context \
