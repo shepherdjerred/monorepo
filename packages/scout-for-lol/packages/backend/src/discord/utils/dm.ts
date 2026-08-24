@@ -47,6 +47,8 @@ export const DmKindSchema = z.enum([
   "outreach_30d",
   "outreach_manual",
   "data_validation",
+  "betting_settlement_receipt",
+  "betting_player_bet_outcome",
 ]);
 export type DmKind = z.infer<typeof DmKindSchema>;
 
@@ -95,6 +97,8 @@ const CORE_DM_KINDS: ReadonlySet<string> = new Set([
   "competition_invite",
   "prune_notice",
   "data_validation",
+  "betting_settlement_receipt",
+  "betting_player_bet_outcome",
 ]);
 
 export type SendDmOptions = {
@@ -114,6 +118,8 @@ export type SendDmOptions = {
    * appended automatically, and a successful delivery advances the counter.
    */
   budget?: DmBudget;
+  /** Keep rendered mentions informational instead of notifying other users. */
+  suppressMentions?: boolean;
 };
 
 /**
@@ -403,7 +409,11 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
   try {
     const user = await client.users.fetch(userId);
     recipientTag = recipientTag ?? user.tag;
-    await user.send(message);
+    await user.send(
+      options.suppressMentions
+        ? { content: message, allowedMentions: { parse: [] } }
+        : message,
+    );
     logger.info(`[DM] Successfully sent ${kind} DM to user ${userId}`);
     if (reservedRowId === null) {
       await recordDmAudit(db, {

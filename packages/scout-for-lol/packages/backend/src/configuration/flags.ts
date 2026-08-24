@@ -142,6 +142,8 @@ export type FlagName =
   | "ai_reports_unlimited"
   | "ai_reviews_enabled"
   | "betting_enabled"
+  | "betting_player_bet_outcome_dm_enabled"
+  | "betting_settlement_dm_enabled"
   | "debug"
   | "tournament_lobbies_enabled";
 
@@ -209,6 +211,18 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
         attributes: { server: MY_SERVER },
       },
     ],
+  },
+  // Settlement messages are a separate rollout from the betting economy: the
+  // economy must keep paying or refunding open positions even while Discord
+  // delivery is disabled. The player-facing notice depends on the bettor
+  // receipt flag so a bettor who is also playing still has exactly one result.
+  betting_settlement_dm_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+  },
+  betting_player_bet_outcome_dm_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
   debug: {
     default: false,

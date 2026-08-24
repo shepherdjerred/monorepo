@@ -148,6 +148,13 @@ export const bettingMessageOperationDurationSeconds = new Histogram({
   registers: [registry],
 });
 
+export const bettingSettlementDmsTotal = new Counter({
+  name: "betting_settlement_dms_total",
+  help: "Bryan Bucks post-settlement DM delivery attempts by recipient role and result.",
+  labelNames: ["recipient", "result"] as const,
+  registers: [registry],
+});
+
 export const bettingMessageRefsRecordedTotal = new Counter({
   name: "betting_message_refs_recorded_total",
   help: "Whether a pool's prematch message references became durable.",

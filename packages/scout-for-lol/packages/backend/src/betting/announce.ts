@@ -18,6 +18,7 @@ import {
 } from "#src/betting/outcome-message.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { deliverSettlementDms } from "#src/betting/settlement-dm-delivery.ts";
 import { bettingSettlementUndeliverableTotal } from "#src/metrics/betting.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
@@ -441,9 +442,31 @@ export async function announceSettlements(
           : BucksPredictionSchema.safeParse(JSON.parse(pool.predictionJson))
               .data;
 
-      const anchor = bettingAnchor(
-        BucksPoolRosterSchema.parse(JSON.parse(pool.roster)).participants,
-      );
+      const roster = BucksPoolRosterSchema.parse(
+        JSON.parse(pool.roster),
+      ).participants;
+      const anchor = bettingAnchor(roster);
+      try {
+        await deliverSettlementDms({
+          summary,
+          includeOutcome,
+          parlay,
+          unmatchedPositions,
+          roster,
+          prismaClient,
+        });
+      } catch (error) {
+        // Settlement is already committed. DMs are audited best-effort output,
+        // so an outage in flags, roster resolution, or dispatch must never
+        // block the public report or the next guild's settlement.
+        logger.error(
+          `❌ Could not prepare Bryan Bucks DMs for ${summary.matchId}:`,
+          error,
+        );
+        Sentry.captureException(error, {
+          tags: { source: "betting-settlement-dm", matchId: summary.matchId },
+        });
+      }
       const message = buildSettlementMessage({
         summary,
         includeOutcome,
