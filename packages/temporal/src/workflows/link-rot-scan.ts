@@ -1,7 +1,11 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { LinkRotScanActivities } from "#activities/link-rot-scan.ts";
+import type {
+  LinkRotScanActivities,
+  LinkRotScanResult,
+} from "#activities/link-rot-scan.ts";
 import type { LinkRotScanAlertActivities } from "#activities/link-rot-scan-alerts.ts";
 import type { ReportDeliveryActivities } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   buildLinkRotFailureReport,
   buildLinkRotReport,
@@ -17,20 +21,30 @@ const RETRY = {
 
 // Clone + full markdown link check (hundreds of URLs at bounded concurrency
 // with retries) fits well inside 20 minutes; heartbeats fire every 15s.
-// Everything runs on TASK_QUEUES.DEFAULT — the schedule targets that queue,
-// and unlike the Trivy scan there is no warm cache confining this to the
-// maintenance pod.
+//
+// The scan runs on the isolated MAINTENANCE queue, not the core default queue:
+// it is a long git/lychee subprocess reaching arbitrary external hosts, and the
+// core deployment also serves latency-sensitive HA, webhook, and report work.
+// The maintenance worker is already serial (one activity slot), runs the same
+// image (so it carries the pinned lychee binary), and keeps that failure and
+// memory risk out of the credentialed core pod — the same split the Trivy scan
+// uses.
 const { scanMainForLinkRot } = proxyActivities<LinkRotScanActivities>({
+  taskQueue: TASK_QUEUES.MAINTENANCE,
   startToCloseTimeout: "20 minutes",
   heartbeatTimeout: "90 seconds",
   retry: RETRY,
 });
+// Delivery and alert publication stay on the core queue, which owns the Postal,
+// report-state S3, and ALERTMANAGER_URL credentials.
 const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+  taskQueue: TASK_QUEUES.DEFAULT,
   startToCloseTimeout: "2 minutes",
   retry: RETRY,
 });
 const { publishLinkRotScanAlerts } =
   proxyActivities<LinkRotScanAlertActivities>({
+    taskQueue: TASK_QUEUES.DEFAULT,
     startToCloseTimeout: "1 minute",
     retry: RETRY,
   });
@@ -45,16 +59,23 @@ const { publishLinkRotScanAlerts } =
  */
 export async function runLinkRotScanWorkflow(): Promise<void> {
   const startedAt = new Date().toISOString();
+  // Only a clone/scan failure produces the failure report. Wrapping the
+  // delivery and alert calls too would let an Alertmanager outage — after the
+  // scan completed and its results were already emailed — send a second report
+  // claiming the scan failed and produced no verdict, replacing a valid result
+  // with a false one. A publication failure instead fails the workflow, which
+  // `temporal-failure-watch` turns into its own occurrence.
+  let result: LinkRotScanResult;
   try {
-    const result = await scanMainForLinkRot();
-    const report = buildLinkRotReport(startedAt, result);
-    await deliverActivityReport(report);
-    await publishLinkRotScanAlerts({
-      criticalCount: countCriticalReportFindings(report),
-      repoSha: result.repoSha,
-    });
+    result = await scanMainForLinkRot();
   } catch (error) {
     await deliverActivityReport(buildLinkRotFailureReport(startedAt, error));
     throw error;
   }
+  const report = buildLinkRotReport(startedAt, result);
+  await deliverActivityReport(report);
+  await publishLinkRotScanAlerts({
+    criticalCount: countCriticalReportFindings(report),
+    repoSha: result.repoSha,
+  });
 }

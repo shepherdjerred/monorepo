@@ -74,11 +74,14 @@ every run; Alertmanager receives one fire/resolve occurrence
 (`MainVulnScanCritical`) that fires only while ≥1 CRITICAL finding exists and
 resolves on the next clean run (`src/shared/main-vuln-scan-alert.ts`).
 
-`link-rot-scan-weekly` (`runLinkRotScanWorkflow`, `TASK_QUEUES.DEFAULT`) is the
-same shape without the warm-cache constraint: it shallow-clones public `main`
-and runs the image's pinned `lychee` binary over the tracked markdown using the
-clone's root `lychee.toml` + `.lycheeignore` (so configuration is versioned
-with the docs it governs). It automates the rot-detection half of the root
+`link-rot-scan-weekly` (`runLinkRotScanWorkflow`) is the same shape: it
+shallow-clones public `main` and runs the image's pinned `lychee` binary over
+the tracked markdown using the clone's root `lychee.toml` + `.lycheeignore` (so
+configuration is versioned with the docs it governs). The workflow orchestrates
+from the core queue, but its long git/lychee subprocess — which reaches
+arbitrary external hosts — is proxied to the serial `maintenance` queue so that
+network and process-failure risk stays out of the credentialed core pod, with
+delivery and Alertmanager publication proxied back to `TASK_QUEUES.DEFAULT`. It automates the rot-detection half of the root
 AGENTS.md link-liveness rule; the commit-time check for new URLs stays manual.
 Dead links map to `warning` findings — email-only in practice — while the
 symmetric `LinkRotScanCritical` fire/resolve occurrence pages only if a

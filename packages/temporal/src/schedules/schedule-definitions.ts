@@ -255,6 +255,9 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // Sun 05:15 PT — staggered after the 05:00 main-vuln-scan and the daily
     // 05:00 fetcher/golink jobs, ahead of dns-audit (06:00).
     cronExpression: "15 5 * * 0",
+    // The workflow orchestrates from the core queue, but its heavy git/lychee
+    // scan activity is proxied to the serial MAINTENANCE queue and delivery /
+    // Alertmanager publication back to DEFAULT — see workflows/link-rot-scan.ts.
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 20-minute scan attempts plus backoff, then report delivery and the
