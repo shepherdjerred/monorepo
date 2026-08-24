@@ -20,6 +20,7 @@ import {
 import { parsePorcelainPaths } from "#shared/porcelain.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
 import { runCommand } from "./data-dragon-shell.ts";
+import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
 import {
   GlitterCorpusSnapshotPinSchema,
   loadVerifiedGlitterCorpus,
@@ -399,7 +400,13 @@ export const glitterContextRefreshActivities = {
         jsonText(updatedState),
       );
       await validateRefreshClone(repoDir);
-      const files = await changedFiles(repoDir);
+      let files = await changedFiles(repoDir);
+      await discardFormattingOnlyChanges({
+        repoDir,
+        changedFiles: files,
+        component: "glitter-context-refresh",
+      });
+      files = await changedFiles(repoDir);
       const proposalSha256 = await changedFileProposalChecksum(repoDir, files);
       glitterContextRefreshPeople.set(
         { state: "refreshed" },

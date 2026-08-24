@@ -3,6 +3,7 @@ import { simpleGit } from "simple-git";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
+import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
 import {
   changedFilesInPaths,
   openSeasonRefreshPr,
@@ -73,7 +74,13 @@ export const homelabCrdImportsRefreshActivities = {
         cwd: `${repoDir}/${CDK8S_ROOT}`,
       });
 
-      const files = await changedFilesInPaths(repoDir, [GENERATED_PATH]);
+      let files = await changedFilesInPaths(repoDir, [GENERATED_PATH]);
+      await discardFormattingOnlyChanges({
+        repoDir,
+        changedFiles: files,
+        component: "homelab-crd-imports-refresh",
+      });
+      files = await changedFilesInPaths(repoDir, [GENERATED_PATH]);
       if (files.length === 0) {
         return {
           changedFiles: [],
