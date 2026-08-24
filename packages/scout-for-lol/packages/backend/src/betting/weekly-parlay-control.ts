@@ -191,23 +191,30 @@ async function reconcileFinalize(
 
 async function reconcileReminder(
   action: WeeklyParlayControlAction,
-  marketId: number,
+  market: { id: number; marketState: string },
   context: ControlContext,
 ): Promise<WeeklyParlayControlResult> {
   const period = weeklyParlayPeriod(action.periodKey);
   if (context.now >= period.bettingClosesAt) {
-    return { status: "skipped", detail: "stale_reminder", marketId };
+    return { status: "skipped", detail: "stale_reminder", marketId: market.id };
+  }
+  if (market.marketState !== "open") {
+    return {
+      status: "skipped",
+      detail: "market_not_open",
+      marketId: market.id,
+    };
   }
   await deliverWeeklyParlayDiscord(
     {
-      marketId,
+      marketId: market.id,
       actionKey: actionKey(action),
       kind: "reminder",
       scheduledAt: period.reminderAt,
     },
     context.prismaClient,
   );
-  return { status: "reconciled", detail: "reminded", marketId };
+  return { status: "reconciled", detail: "reminded", marketId: market.id };
 }
 
 async function reconcileProgress(
@@ -280,7 +287,7 @@ async function runWeeklyParlayControlActionInternal(
     return await reconcileFinalize(action, market.id, context);
   }
   if (action.action === "reminder") {
-    return await reconcileReminder(action, market.id, context);
+    return await reconcileReminder(action, market, context);
   }
   return await reconcileProgress(action, market.id, context);
 }

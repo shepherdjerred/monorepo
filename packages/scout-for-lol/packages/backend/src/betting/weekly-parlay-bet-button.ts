@@ -9,6 +9,7 @@ import {
   type PlaceWeeklyParlayBetResult,
 } from "#src/betting/weekly-parlay-bet.ts";
 import { parseWeeklyParlayCustomId } from "#src/betting/weekly-parlay-custom-id.ts";
+import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-discord.ts";
 import type { BetButtonInteraction } from "#src/betting/bet-button.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 
@@ -81,6 +82,9 @@ export async function handleWeeklyParlayBetButton(
   if (parsed.action === "x") {
     const result = await cancelWeeklyParlayBet(common, prismaClient);
     await interaction.editReply({ content: describeCancel(result) });
+    if (result.kind === "cancelled") {
+      await refreshWeeklyParlayMessage(parsed.marketId, prismaClient);
+    }
     return;
   }
   const result = await placeWeeklyParlayBet(
@@ -88,4 +92,7 @@ export async function handleWeeklyParlayBetButton(
     prismaClient,
   );
   await interaction.editReply({ content: describeWeeklyParlayBet(result) });
+  if (result.kind === "placed") {
+    await refreshWeeklyParlayMessage(parsed.marketId, prismaClient);
+  }
 }

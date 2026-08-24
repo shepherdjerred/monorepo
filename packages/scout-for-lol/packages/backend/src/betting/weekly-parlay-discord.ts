@@ -35,6 +35,25 @@ export function weeklyParlaySettlementActionKey(marketId: number): string {
   return `settlement:${marketId.toString()}`;
 }
 
+export async function refreshWeeklyParlayMessage(
+  marketId: number,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  const market = await prismaClient.bucksWeeklyParlayMarket.findUniqueOrThrow({
+    where: { id: marketId },
+    select: { updatedAt: true },
+  });
+  await deliverWeeklyParlayDiscord(
+    {
+      marketId,
+      actionKey: `mutation:${marketId.toString()}:${market.updatedAt.getTime().toString()}`,
+      kind: "reminder",
+      scheduledAt: market.updatedAt,
+    },
+    prismaClient,
+  );
+}
+
 export type WeeklyParlayDiscordSender = (
   options: MessageCreateOptions,
   channelId: DiscordChannelId,
@@ -206,6 +225,7 @@ export async function deliverWeeklyParlayDiscord(
       slot: true,
       marketState: true,
       yesResult: true,
+      voidReason: true,
       bettingClosesAt: true,
       scoringEndsAt: true,
       definition: {
@@ -253,28 +273,36 @@ export async function deliverWeeklyParlayDiscord(
     });
     return "stale";
   }
-  const subjects = WeeklyParlaySubjectsSchema.parse(
-    JSON.parse(market.definition.subjects),
-  );
-  const criteria = WeeklyParlayDefinitionCriteriaSchema.parse(
-    JSON.parse(market.definition.criteria),
-  );
-  const contributions = z
-    .array(WeeklyParlayContributionSnapshotSchema)
-    .parse(
-      market.definition.contributions.map((row) => JSON.parse(row.snapshot)),
-    );
-  const evaluation = evaluateWeeklyParlay(criteria, contributions);
+  const isVoidedSettlement =
+    input.kind === "settlement" && market.marketState === "voided";
+  const subjects = isVoidedSettlement
+    ? []
+    : WeeklyParlaySubjectsSchema.parse(JSON.parse(market.definition.subjects));
+  const evaluation = isVoidedSettlement
+    ? undefined
+    : evaluateWeeklyParlay(
+        WeeklyParlayDefinitionCriteriaSchema.parse(
+          JSON.parse(market.definition.criteria),
+        ),
+        z
+          .array(WeeklyParlayContributionSnapshotSchema)
+          .parse(
+            market.definition.contributions.map((row) =>
+              JSON.parse(row.snapshot),
+            ),
+          ),
+      );
   const aliases = new Map(
     subjects.map((subject) => [subject.key, subject.alias]),
   );
-  const legs = evaluation.legs.map((result) =>
-    legLine(
-      result.leg,
-      currentLegValue(input.kind, result.current),
-      aliases.get(result.leg.subject) ?? result.leg.subject,
-    ),
-  );
+  const legs =
+    evaluation?.legs.map((result) =>
+      legLine(
+        result.leg,
+        currentLegValue(input.kind, result.current),
+        aliases.get(result.leg.subject) ?? result.leg.subject,
+      ),
+    ) ?? [];
   const bettorIds = market.bets.map((bet) => bet.bucksAccount.discordId);
   const mentionIds = [
     ...new Set([...subjects.map((subject) => subject.discordId), ...bettorIds]),
@@ -282,6 +310,9 @@ export async function deliverWeeklyParlayDiscord(
   const totalStaked = market.bets.reduce((total, bet) => total + bet.stake, 0);
   const content = [
     deliveryTitle(input.kind, market.marketState, market.yesResult),
+    ...(isVoidedSettlement
+      ? [`Reason: **${market.voidReason ?? "unknown"}**`]
+      : []),
     `Period: **${market.periodKey}** · ${(market.definition.yesProbabilityBps / 100).toFixed(1)}% YES`,
     ...legs,
     `**${market.bets.length.toString()} bettors · ${totalStaked.toString()} BB staked**`,
