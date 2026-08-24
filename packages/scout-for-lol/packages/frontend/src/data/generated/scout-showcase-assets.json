@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-12T00:58:53.729Z",
+  "generatedAt": "2026-08-24T17:00:50.581Z",
   "assets": [
     {
       "id": "draft-prematch",
@@ -384,7 +384,7 @@
       "status": "generated",
       "fileName": "arena-discord.png",
       "src": "/generated/scout-showcase/arena-discord.png",
-      "byteLength": 425218
+      "byteLength": 425097
     },
     {
       "id": "ranked-solo-discord",
@@ -402,7 +402,7 @@
       "status": "generated",
       "fileName": "ranked-solo-discord.png",
       "src": "/generated/scout-showcase/ranked-solo-discord.png",
-      "byteLength": 273508
+      "byteLength": 273381
     },
     {
       "id": "aram-discord",
@@ -420,7 +420,7 @@
       "status": "generated",
       "fileName": "aram-discord.png",
       "src": "/generated/scout-showcase/aram-discord.png",
-      "byteLength": 296642
+      "byteLength": 296478
     },
     {
       "id": "competition-graph",
