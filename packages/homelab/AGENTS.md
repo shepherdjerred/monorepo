@@ -307,6 +307,38 @@ missing credential, and that is a deliberate guardrail.
 
 OpenTofu/Terraform state for the `src/tofu/*` stacks is stored in **SeaweedFS** (S3-compatible), not locally. `tofu init` therefore needs AWS credentials for the backend. To validate `.tf` without state access, use `tofu init -backend=false` (syntax) and `tofu validate` (resource schemas).
 
+### PostHog control-plane stack
+
+`src/tofu/posthog/` owns the provider-supported PostHog resources for project
+`549883`, while `src/tofu/cloudflare/sjer-red.tf` owns the unproxied `j.sjer.red`
+ProxyHog CNAME. Its permanent `import` blocks are bootstrap provenance: do not
+replace them with imperative `tofu import` commands or delete them after a
+successful apply.
+
+The stack's SeaweedFS state and saved plans use enforced PBKDF2-derived AES-GCM
+encryption. Supply its passphrase only through `TF_VAR_state_passphrase`; it is
+not recoverable from SeaweedFS or OpenTofu if the passphrase is lost. Never put
+the value in a `.tfvars` file, a shell history argument, or repository content.
+
+`tofu-stack.ts posthog` requires both `POSTHOG_CLI_API_KEY` and
+`POSTHOG_TOFU_STATE_PASSPHRASE`, then maps them to the provider's
+`POSTHOG_API_KEY` and the encryption variable. Buildkite injects those values
+only through explicit keys of `buildkite/posthog-tofu-credentials`; do not add
+them to `buildkite-ci-secrets` or another shared pod template.
+
+After import, OpenTofu is authoritative for supported dashboards, layouts,
+insights, cohort, source, proxy, owner membership, project, and project
+settings. UI edits to those resources are drift. Dashboard layouts are fully
+authoritative, so preserve every existing tile. Unsupported project options
+remain UI-managed. `app_urls` and `recording_domains` are derived from
+`config/analytics-sites.json`; product rollout flags remain in Flipt, not
+PostHog.
+
+Run the dedicated PostHog plan before an apply and treat a no-change plan as
+the ownership check. Source inspection and the proxy CNAME only prove setup;
+runtime acceptance requires Live Events for every registry site, including a
+pageview and a session recording where replay is enabled.
+
 ## R2 orphan cleanup (destructive)
 
 `bun run r2:orphans` (in `src/cdk8s`) permanently deletes ZFS backup data from

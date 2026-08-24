@@ -233,6 +233,49 @@ common:
                   mountPath: /buildkite/tofu-plugin-cache
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
+  # PostHog state credentials have a narrower boundary than the shared CI
+  # secret: only this pod maps the API key and state passphrase, and each key
+  # is explicit so a future field on the item cannot leak into the container.
+  - pod_posthog_tofu: &pod_posthog_tofu
+      kubernetes: &pod_posthog_tofu_kubernetes
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          volumes:
+            - name: buildkite-tofu-plugin-cache
+              persistentVolumeClaim:
+                claimName: buildkite-tofu-plugin-cache
+          containers:
+            - *checkout_container
+            - name: container-0
+              image: "${CI_BASE_IMAGE}"
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
+                - name: POSTHOG_CLI_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: posthog-tofu-credentials
+                      key: POSTHOG_API_KEY
+                - name: POSTHOG_TOFU_STATE_PASSPHRASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: posthog-tofu-credentials
+                      key: POSTHOG_TOFU_STATE_PASSPHRASE
+              resources:
+                requests:
+                  { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
+                limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
+              volumeMounts:
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
+                - name: buildkite-tofu-plugin-cache
+                  mountPath: /buildkite/tofu-plugin-cache
+              envFrom:
+                - secretRef: { name: buildkite-ci-secrets }
   # The combined PR deploy rehearsal needs the OpenTofu provider cache but its
   # measured command-container working set is higher than the light Tofu lanes.
   - pod_pr_dryrun: &pod_pr_dryrun
@@ -1297,6 +1340,59 @@ steps:
             labels:
               ci.sjer.red/step-key: pr-dryrun
 
+  # PostHog requires its own credential boundary, so it cannot join the shared
+  # PR dry-run pod. The generic Tofu plan above continues to cover Cloudflare.
+  - label: ":terraform: OpenTofu plan — PostHog control plane"
+    key: tofu-posthog-plan
+    timeout_in_minutes: 60
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/scripts/buildkite-handoff.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/homelab/src/tofu/posthog/**"
+        - "packages/homelab/scripts/tofu-stack.ts"
+        - "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts"
+        - "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json"
+        - "scripts/lib/run.ts"
+        - "scripts/lib/transient.ts"
+        - "config/analytics-sites.json"
+    depends_on: verify
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      if ! CI_CHANGED_BASE=$(git merge-base origin/main HEAD); then
+        CI_CHANGED_BASE=""
+      fi
+      export CI_CHANGED_BASE
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-posthog; then exit 0; fi
+      (
+        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+        export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+        flock -x 9
+        bun --no-install packages/homelab/scripts/tofu-stack.ts posthog plan
+      ) 9>/buildkite/tofu-plugin-cache/.lock
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_posthog_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-posthog-plan
+
   - label: ":docker: images — build + smoke (PR dry-run)"
     key: images-pr
     timeout_in_minutes: 60
@@ -1713,6 +1809,38 @@ steps:
             labels:
               ci.sjer.red/step-key: tofu-github
 
+  - label: ":terraform: OpenTofu apply — PostHog control plane"
+    key: tofu-posthog
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: homelab-release-admission
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/tofu-posthog
+    command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-posthog; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      (
+        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+        export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+        flock -x 9
+        bun --no-install packages/homelab/scripts/tofu-stack.ts posthog apply
+      ) 9>/buildkite/tofu-plugin-cache/.lock
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_posthog_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-posthog
+
   - label: ":argo: sync + wait"
     key: argocd-sync
     timeout_in_minutes: 60
@@ -2022,6 +2150,7 @@ steps:
       - helm-push
       - tofu-apply
       - tofu-github
+      - tofu-posthog
       - argocd-sync
       - scout-beta-release
       - publish

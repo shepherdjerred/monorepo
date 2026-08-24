@@ -69,6 +69,7 @@ resource "cloudflare_dns_record" "discord_plays_pokemon_com_dkim_wildcard" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "discord_plays_pokemon_com" {
   zone_id = cloudflare_zone.discord_plays_pokemon_com.id
+  status  = "active"
 }
 
 # ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────

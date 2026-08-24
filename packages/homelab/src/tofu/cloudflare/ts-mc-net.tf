@@ -105,10 +105,11 @@ resource "cloudflare_dns_record" "ts_mc_net_mx_wildcard2" {
 # ── SRV ─────────────────────────────────────────────────────────────────────
 
 resource "cloudflare_dns_record" "ts_mc_net_srv_minecraft" {
-  zone_id = cloudflare_zone.ts_mc_net.id
-  ttl     = 1
-  name    = "_minecraft._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.ts_mc_net.id
+  ttl      = 1
+  name     = "_minecraft._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 5
@@ -138,6 +139,7 @@ resource "cloudflare_dns_record" "ts_mc_net_dmarc" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "ts_mc_net" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  status  = "active"
 }
 
 # ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────

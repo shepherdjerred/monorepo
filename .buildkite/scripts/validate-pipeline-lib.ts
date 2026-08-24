@@ -10,6 +10,7 @@ export const SHARED_POD_ANCHORS = [
   "pod_light_kubernetes",
   "pod_release_codex_auth_kubernetes",
   "pod_tofu_kubernetes",
+  "pod_posthog_tofu_kubernetes",
   "pod_pr_dryrun_kubernetes",
 ] as const;
 export const CHECKOUT_CONTAINER_ALIAS = "- *checkout_container";

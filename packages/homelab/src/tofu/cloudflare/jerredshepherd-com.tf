@@ -50,6 +50,7 @@ resource "cloudflare_dns_record" "jerredshepherd_com_dkim_wildcard" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "jerredshepherd_com" {
   zone_id = cloudflare_zone.jerredshepherd_com.id
+  status  = "active"
 }
 
 # ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────

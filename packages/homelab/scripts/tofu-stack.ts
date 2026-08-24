@@ -20,6 +20,9 @@
  *   TF_VAR_PROWLARR_API_KEY, TF_VAR_QBITTORRENT_PASSWORD,
  *   TF_VAR_PRIVATEHD_PASSWORD, TF_VAR_PRIVATEHD_PID, TF_VAR_AVISTAZ_PASSWORD,
  *   TF_VAR_AVISTAZ_PID, TF_VAR_ANIMEZ_PASSWORD, TF_VAR_ANIMEZ_PID,
+ *
+ * Env (required for the `posthog` stack only):
+ *   POSTHOG_CLI_API_KEY, POSTHOG_TOFU_STATE_PASSPHRASE
  */
 
 import { existsSync } from "node:fs";
@@ -84,6 +87,17 @@ function buildTofuEnv(stack: string): Record<string, string> {
     env["AWS_DEFAULT_REGION"] = "us-east-1";
     env["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED";
     env["AWS_RESPONSE_CHECKSUM_VALIDATION"] = "WHEN_REQUIRED";
+  }
+
+  // The PostHog provider uses its standard POSTHOG_API_KEY name, while the
+  // repository's CLI environment deliberately uses POSTHOG_CLI_API_KEY. The
+  // encrypted backend also fails closed unless this stack's passphrase is
+  // supplied; never make either an optional cross-stack secret.
+  if (stack === "posthog") {
+    env["POSTHOG_API_KEY"] = requireEnv("POSTHOG_CLI_API_KEY");
+    env["TF_VAR_state_passphrase"] = requireEnv(
+      "POSTHOG_TOFU_STATE_PASSPHRASE",
+    );
   }
 
   for (const [source, target] of OPTIONAL_SECRET_ENV) {

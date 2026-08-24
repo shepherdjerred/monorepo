@@ -35,7 +35,11 @@ import path from "node:path";
 import { parse } from "yaml";
 import { Project, SyntaxKind, type SourceFile } from "ts-morph";
 import { z } from "zod";
-import { commandScopes } from "./lib/ci-env-command.ts";
+import {
+  CI_SECRET_NAME,
+  collectSteps,
+  type PipelineStep,
+} from "./lib/ci-env-pipeline.ts";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dir, "..");
 const PIPELINE_PATH = path.join(REPOSITORY_ROOT, ".buildkite", "pipeline.yml");
@@ -47,8 +51,6 @@ const SNAPSHOT_PATH = path.join(
   "cdk8s",
   "onepassword-vault-snapshot.json",
 );
-/** The secret `envFrom: { secretRef: { name } }` names in every pipeline step. */
-const CI_SECRET_NAME = "buildkite-ci-secrets";
 /**
  * cdk8s owns which 1Password item backs that secret, so the item id is read
  * from the `OnePasswordItem` declaration rather than duplicated here — a
@@ -115,6 +117,34 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
 }[] = [
   {
     step: "pr-dryrun",
+    script: "packages/homelab/scripts/tofu-stack.ts",
+    names: ["POSTHOG_CLI_API_KEY", "POSTHOG_TOFU_STATE_PASSPHRASE"],
+    reason:
+      "The shared PR Tofu pod plans only seaweedfs, tailscale, buildkite, arr, " +
+      "github, and cloudflare. posthog has its own credential-isolated plan pod.",
+  },
+  {
+    step: "tofu-apply",
+    script: "packages/homelab/scripts/tofu-stack.ts",
+    names: ["POSTHOG_CLI_API_KEY", "POSTHOG_TOFU_STATE_PASSPHRASE"],
+    reason:
+      "The infra-state apply loop excludes posthog, which has a dedicated " +
+      "credential-isolated main apply lane.",
+  },
+  {
+    step: "tofu-github",
+    script: "packages/homelab/scripts/tofu-stack.ts",
+    names: ["POSTHOG_CLI_API_KEY", "POSTHOG_TOFU_STATE_PASSPHRASE"],
+    reason: "This lane invokes only the github stack.",
+  },
+  {
+    step: "tofu-cloudflare",
+    script: "packages/homelab/scripts/tofu-stack.ts",
+    names: ["POSTHOG_CLI_API_KEY", "POSTHOG_TOFU_STATE_PASSPHRASE"],
+    reason: "This lane invokes only the cloudflare stack.",
+  },
+  {
+    step: "pr-dryrun",
     script: "scripts/deploy-site.ts",
     names: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
     reason:
@@ -175,6 +205,32 @@ export function hash(value: string): string {
  * unreadable declaration means this check would otherwise validate against
  * the wrong item and report a clean run.
  */
+export function onePasswordItemIds(
+  declarationSource: string,
+): Map<string, string> {
+  const declarations = declarationSource.split("new OnePasswordItem(chart,");
+  const ids = new Map<string, string>();
+  for (const declaration of declarations.slice(1)) {
+    const name = /^\s*"([^"]+)"/u.exec(declaration)?.[1];
+    if (name === undefined) continue;
+    const nextDeclaration = declaration.indexOf("new OnePasswordItem(chart,");
+    const body =
+      nextDeclaration === -1
+        ? declaration
+        : declaration.slice(0, nextDeclaration);
+    const itemId = /vaults\/[\w-]+\/items\/([\w-]+)/u.exec(body)?.[1];
+    if (itemId === undefined) continue;
+    if (ids.has(name)) {
+      throw new Error(
+        `multiple OnePasswordItem declarations are named "${name}"`,
+      );
+    }
+    ids.set(name, itemId);
+  }
+  return ids;
+}
+
+/** The item id backing the shared `buildkite-ci-secrets` Secret. */
 export function ciSecretItemId(declarationSource: string): string {
   const anchor = declarationSource.indexOf(`"${CI_SECRET_NAME}"`);
   if (anchor === -1) {
@@ -182,129 +238,13 @@ export function ciSecretItemId(declarationSource: string): string {
       `no OnePasswordItem named "${CI_SECRET_NAME}" in the cdk8s declaration`,
     );
   }
-  const itemPath = /vaults\/[\w-]+\/items\/([\w-]+)/u.exec(
-    declarationSource.slice(anchor),
-  );
-  const id = itemPath?.[1];
+  const id = onePasswordItemIds(declarationSource).get(CI_SECRET_NAME);
   if (id === undefined) {
     throw new Error(
       `the "${CI_SECRET_NAME}" OnePasswordItem declares no vaults/…/items/… itemPath`,
     );
   }
   return id;
-}
-
-type PipelineStep = {
-  key: string;
-  providedNames: Set<string>;
-  usesCiSecret: boolean;
-  scripts: string[];
-};
-
-const StepSchema = z
-  .object({
-    key: z.string().optional(),
-    label: z.string().optional(),
-    command: z.union([z.string(), z.array(z.string())]).optional(),
-    env: z.record(z.string(), z.unknown()).optional(),
-    plugins: z.array(z.unknown()).optional(),
-  })
-  .loose();
-
-const ContainerEnvSchema = z.object({
-  env: z
-    .array(z.object({ name: z.string(), value: z.string().optional() }).loose())
-    .optional(),
-  envFrom: z
-    .array(
-      z.object({ secretRef: z.object({ name: z.string() }).loose() }).loose(),
-    )
-    .optional(),
-});
-const RecordSchema = z.record(z.string(), z.unknown());
-
-/**
- * Every `env` name and `envFrom` secret reachable anywhere inside a step. The
- * kubernetes plugin nests containers differently per anchor (`podSpec` vs
- * `podSpecPatch`), so this walks the whole subtree rather than a fixed path.
- */
-function collectContainerEnv(
-  node: unknown,
-  names: Set<string>,
-  secrets: Set<string>,
-): void {
-  if (Array.isArray(node)) {
-    for (const item of node) collectContainerEnv(item, names, secrets);
-    return;
-  }
-  const record = RecordSchema.safeParse(node);
-  if (!record.success) return;
-  const container = ContainerEnvSchema.safeParse(record.data);
-  if (container.success) {
-    for (const entry of container.data.env ?? []) {
-      // An explicitly empty value is not a provision: requireEnv treats "" as
-      // missing and throws, so counting it would pass the check on a step
-      // whose script fails at runtime. An absent `value` means `valueFrom`
-      // (secret/fieldRef), which does provide one.
-      if (entry.value === "") continue;
-      names.add(entry.name);
-    }
-    for (const entry of container.data.envFrom ?? []) {
-      secrets.add(entry.secretRef.name);
-    }
-  }
-  for (const value of Object.values(record.data)) {
-    collectContainerEnv(value, names, secrets);
-  }
-}
-
-export function collectSteps(
-  pipeline: unknown,
-  globalEnvNames: readonly string[],
-): PipelineStep[] {
-  const document = z
-    .object({
-      env: z.record(z.string(), z.unknown()).optional(),
-      steps: z.array(z.unknown()).optional(),
-    })
-    .loose()
-    .parse(pipeline);
-  const steps: PipelineStep[] = [];
-  for (const [index, raw] of (document.steps ?? []).entries()) {
-    const parsed = StepSchema.safeParse(raw);
-    if (!parsed.success) continue;
-    const step = parsed.data;
-    const command =
-      step.command === undefined
-        ? ""
-        : Array.isArray(step.command)
-          ? step.command.join("\n")
-          : step.command;
-    if (command.trim() === "") continue;
-    const stepNames = new Set<string>([
-      ...globalEnvNames,
-      // Same rule as container env: a step-level key set to an empty string
-      // satisfies nothing, because requireEnv rejects "" as missing.
-      ...Object.entries(step.env ?? {})
-        .filter(([, value]) => value !== "")
-        .map(([key]) => key),
-    ]);
-    const secrets = new Set<string>();
-    collectContainerEnv(step.plugins, stepNames, secrets);
-    const key = step.key ?? step.label ?? `step[${String(index)}]`;
-    // One entry per subshell scope: a name exported inside `( … )` reaches the
-    // scripts in that block and no others.
-    for (const scope of commandScopes(command)) {
-      if (scope.scripts.length === 0) continue;
-      steps.push({
-        key,
-        providedNames: new Set([...stepNames, ...scope.assigned]),
-        usesCiSecret: secrets.has(CI_SECRET_NAME),
-        scripts: [...new Set(scope.scripts)].toSorted(),
-      });
-    }
-  }
-  return steps;
 }
 
 export type RequiredEnv = {
@@ -416,11 +356,36 @@ function unmetRequirement(
     site: string;
   },
   secret: SecretFields,
+  explicitSecrets: ReadonlyMap<string, SecretFields>,
 ): string | null {
   const { step, entry, name, site } = requirement;
   if (isAgentProvided(name)) return null;
   if (step.providedNames.has(name)) return null;
   const prefix = `step "${step.key}" runs ${entry}, which requires ${name} (${site})`;
+  const explicitRef = step.explicitSecretRefs?.get(name);
+  if (explicitRef !== undefined) {
+    const referencedSecret = explicitSecrets.get(explicitRef.secretName);
+    if (referencedSecret === undefined) {
+      return (
+        `${prefix}, but its secretKeyRef names ${explicitRef.secretName}, which has no ` +
+        `OnePasswordItem declaration backed by the vault snapshot.`
+      );
+    }
+    if (!referencedSecret.hasField(explicitRef.key)) {
+      return (
+        `${prefix}, but ${explicitRef.secretName} does not contain key ${explicitRef.key} ` +
+        `in its declared 1Password item. Refresh the vault snapshot after adding it.`
+      );
+    }
+    if (referencedSecret.isBlank(explicitRef.key)) {
+      return (
+        `${prefix}, but ${explicitRef.secretName} key ${explicitRef.key} is BLANK ` +
+        `in its declared 1Password item. The operator skips empty fields, so the ` +
+        `variable would be missing at runtime.`
+      );
+    }
+    return null;
+  }
   if (step.usesCiSecret && secret.hasField(name)) {
     if (!secret.isBlank(name)) return null;
     return (
@@ -442,6 +407,7 @@ function errorsForInvocation(
     required: RequiredEnv;
   },
   secret: SecretFields,
+  explicitSecrets: ReadonlyMap<string, SecretFields>,
   exceptionsByFile: ReadonlyMap<string, DynamicCallException>,
 ): string[] {
   const { step, entry, required } = invocation;
@@ -469,7 +435,11 @@ function errorsForInvocation(
   );
   for (const [name, site] of names) {
     if (excepted.has(name)) continue;
-    const unmet = unmetRequirement({ step, entry, name, site }, secret);
+    const unmet = unmetRequirement(
+      { step, entry, name, site },
+      secret,
+      explicitSecrets,
+    );
     if (unmet !== null) errors.push(unmet);
   }
   return errors;
@@ -478,6 +448,8 @@ function errorsForInvocation(
 export function collectErrors(input: {
   steps: readonly PipelineStep[];
   secret: SecretFields;
+  /** Secrets addressed through explicit Kubernetes secretKeyRefs. */
+  explicitSecrets?: ReadonlyMap<string, SecretFields>;
   requiredFor: (entry: string) => RequiredEnv;
   /** Defaults to the declared table; injected by tests. */
   dynamicCallExceptions?: readonly DynamicCallException[];
@@ -495,6 +467,7 @@ export function collectErrors(input: {
         ...errorsForInvocation(
           { step, entry, required: input.requiredFor(entry) },
           input.secret,
+          input.explicitSecrets ?? new Map(),
           exceptionsByFile,
         ),
       );
@@ -511,6 +484,7 @@ function fail(message: string, code: number): never {
 async function main(): Promise<void> {
   let steps: PipelineStep[];
   let secret: SecretFields;
+  let explicitSecrets: Map<string, SecretFields>;
   try {
     const pipeline: unknown = parse(await Bun.file(PIPELINE_PATH).text(), {
       merge: true,
@@ -528,7 +502,9 @@ async function main(): Promise<void> {
   }
   try {
     const snapshot = SnapshotSchema.parse(await Bun.file(SNAPSHOT_PATH).json());
-    const itemId = ciSecretItemId(await Bun.file(CI_SECRET_DECLARATION).text());
+    const declarations = await Bun.file(CI_SECRET_DECLARATION).text();
+    const itemIds = onePasswordItemIds(declarations);
+    const itemId = ciSecretItemId(declarations);
     const item = snapshot.items.find((entry) => entry.ref === hash(itemId));
     if (item === undefined) {
       fail(
@@ -543,6 +519,19 @@ async function main(): Promise<void> {
       hasField: (name: string) => fields.has(hash(name)),
       isBlank: (name: string) => blanks.has(hash(name)),
     };
+    explicitSecrets = new Map();
+    for (const [secretName, declaredItemId] of itemIds) {
+      const declaredItem = snapshot.items.find(
+        (entry) => entry.ref === hash(declaredItemId),
+      );
+      if (declaredItem === undefined) continue;
+      const declaredFields = new Set(declaredItem.fields);
+      const declaredBlanks = new Set(declaredItem.blankFields);
+      explicitSecrets.set(secretName, {
+        hasField: (name: string) => declaredFields.has(hash(name)),
+        isBlank: (name: string) => declaredBlanks.has(hash(name)),
+      });
+    }
   } catch (error: unknown) {
     fail(
       `check-ci-env: could not read the vault snapshot: ${String(error)}`,
@@ -564,7 +553,12 @@ async function main(): Promise<void> {
     return computed;
   };
 
-  const errors = collectErrors({ steps, secret, requiredFor });
+  const errors = collectErrors({
+    steps,
+    secret,
+    explicitSecrets,
+    requiredFor,
+  });
   if (errors.length > 0) {
     for (const error of errors) console.error(`✗ ${error}`);
     fail(
