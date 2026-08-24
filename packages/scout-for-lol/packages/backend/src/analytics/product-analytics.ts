@@ -212,7 +212,6 @@ type CaptureInput = {
   event: ProductAnalyticsEvent;
   eventOptions?: ProductAnalyticsEventOptions | undefined;
   additionalProperties?: Record<string, CapturePropertyValue>;
-  includeGuildId?: boolean;
 };
 
 function omitUndefinedProperties(
@@ -291,7 +290,6 @@ export function createProductAnalytics(options: {
     event,
     eventOptions,
     additionalProperties = {},
-    includeGuildId = true,
   }: CaptureInput): void => {
     try {
       const metadata: { timestamp?: Date; uuid?: string } = {};
@@ -311,7 +309,7 @@ export function createProductAnalytics(options: {
           ...(eventOptions?.uuid === undefined
             ? {}
             : { $insert_id: eventOptions.uuid }),
-          ...(includeGuildId ? { guild_id: serverId } : {}),
+          guild_id: serverId,
           stage: options.environment,
           site_key: analyticsConfiguration.siteKey,
           site_hostname: analyticsConfiguration.siteHostname,
@@ -343,7 +341,6 @@ export function createProductAnalytics(options: {
             ? "tracked"
             : "legacy",
         },
-        includeGuildId: true,
       });
     },
     captureBucksMember(member, event, eventOptions) {
@@ -352,7 +349,6 @@ export function createProductAnalytics(options: {
         serverId: member.serverId,
         event,
         eventOptions,
-        includeGuildId: false,
       });
     },
     captureBucksSystem(serverId, event, eventOptions) {
@@ -361,7 +357,6 @@ export function createProductAnalytics(options: {
         serverId,
         event,
         eventOptions,
-        includeGuildId: false,
       });
     },
     async shutdown() {

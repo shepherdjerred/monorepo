@@ -327,6 +327,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     ],
   },
   {
+    id: "scout-bryan-bucks-analytics",
+    workflowType: "runScoutBryanBucksAnalyticsWorkflow",
+    args: [],
+    cronExpression: "*/15 * * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "5 minutes",
+    memo: "Every-15-minute committed Bryan Bucks ledger and economy analytics sync",
+    requiredEnvironment: [
+      "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
+      "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+    ],
+  },
+  {
     id: "scout-queue-windows-daily",
     workflowType: "runScoutQueueWindowsWatch",
     args: [],

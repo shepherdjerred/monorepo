@@ -809,10 +809,9 @@ model BucksAccount {
   @@index([serverId, balance])
 }
 
-// Durable reservation for a historical PostHog event. PostHog's event UUID is
-// deterministic for replay, but historical timestamps are outside its normal
-// ingestion deduplication window, so the beta database is the idempotency
-// boundary for the one-time backfill.
+// Durable reservation for a Bryan Bucks PostHog event. PostHog's event UUID is
+// deterministic for replay, while this beta database is the idempotency
+// boundary for both the historical backfill and the post-commit live sync.
 model BucksAnalyticsBackfillEvent {
   id        Int      @id @default(autoincrement())
   eventId   String   @unique

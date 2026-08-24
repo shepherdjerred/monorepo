@@ -72,9 +72,9 @@ async function main(): Promise<void> {
       skipped += 1;
       return;
     }
+    if (!seedOnly) callback();
     await prisma.bucksAnalyticsBackfillEvent.create({ data: { eventId } });
     reservedEventIds.add(eventId);
-    if (!seedOnly) callback();
   };
 
   const accounts = await prisma.bucksAccount.findMany({
@@ -354,28 +354,55 @@ async function main(): Promise<void> {
       }),
       prisma.bucksBet.findMany({
         where: { betOutcome: "pending" },
-        select: { stake: true, matchedStake: true },
+        select: {
+          stake: true,
+          matchedStake: true,
+          bucksAccount: { select: { serverId: true } },
+        },
       }),
-      prisma.bucksParlayBet.aggregate({
+      prisma.bucksParlayBet.findMany({
         where: { betOutcome: "pending" },
-        _sum: { stake: true },
+        select: { stake: true, bucksAccount: { select: { serverId: true } } },
       }),
-      prisma.bucksWeeklyParlayBet.aggregate({
+      prisma.bucksWeeklyParlayBet.findMany({
         where: { betOutcome: "pending" },
-        _sum: { stake: true },
+        select: { stake: true, bucksAccount: { select: { serverId: true } } },
       }),
-      prisma.bucksMatchPool.count({
+      prisma.bucksMatchPool.findMany({
         where: { poolState: { in: ["open", "closed"] } },
+        select: { serverId: true },
       }),
     ]);
   const serverIds = new Set(allAccounts.map((account) => account.serverId));
-  const pendingStakeBucks =
-    pendingOutcome.reduce(
-      (total, bet) => total + (bet.matchedStake ?? bet.stake),
-      0,
-    ) +
-    (pendingParlay._sum.stake ?? 0) +
-    (pendingWeekly._sum.stake ?? 0);
+  const pendingByServer = new Map<string, number>();
+  for (const bet of pendingOutcome) {
+    pendingByServer.set(
+      bet.bucksAccount.serverId,
+      (pendingByServer.get(bet.bucksAccount.serverId) ?? 0) +
+        (bet.matchedStake ?? bet.stake),
+    );
+  }
+  for (const bet of pendingParlay) {
+    pendingByServer.set(
+      bet.bucksAccount.serverId,
+      (pendingByServer.get(bet.bucksAccount.serverId) ?? 0) + bet.stake,
+    );
+  }
+  for (const bet of pendingWeekly) {
+    pendingByServer.set(
+      bet.bucksAccount.serverId,
+      (pendingByServer.get(bet.bucksAccount.serverId) ?? 0) + bet.stake,
+    );
+  }
+  const openMarketsByServer = new Map<string, number>();
+  for (const pool of openPools) {
+    openMarketsByServer.set(
+      pool.serverId,
+      (openMarketsByServer.get(pool.serverId) ?? 0) + 1,
+    );
+  }
+  const snapshotDate = new Date();
+  const snapshotDay = snapshotDate.toISOString().slice(0, 10);
   await forEachAsync([...serverIds], async (serverId) => {
     const members = allAccounts.filter(
       (account) => account.serverId === serverId && !account.isHouse,
@@ -384,11 +411,7 @@ async function main(): Promise<void> {
       (account) => account.serverId === serverId && account.isHouse,
     );
     await capture(
-      deterministicBucksAnalyticsEventId(
-        "snapshot",
-        serverId,
-        new Date().toISOString().slice(0, 10),
-      ),
+      deterministicBucksAnalyticsEventId("snapshot", serverId, snapshotDay),
       () => {
         captureBucksEconomySnapshot({
           serverId,
@@ -397,17 +420,17 @@ async function main(): Promise<void> {
             (total, account) => total + account.balance,
             0,
           ),
-          pendingStakeBucks,
+          pendingStakeBucks: pendingByServer.get(serverId) ?? 0,
           houseBalanceBucks: house.reduce(
             (total, account) => total + account.balance,
             0,
           ),
-          openMarkets: openPools,
-          timestamp: new Date(),
+          openMarkets: openMarketsByServer.get(serverId) ?? 0,
+          timestamp: snapshotDate,
           uuid: deterministicBucksAnalyticsEventId(
             "snapshot",
             serverId,
-            new Date().toISOString().slice(0, 10),
+            snapshotDay,
           ),
           analytics,
         });

@@ -143,6 +143,7 @@ describe("Scout product analytics adapter", () => {
         surface: "button",
         status: "success",
         $insert_id: "6f6a2bca-9c1a-4ee4-89a2-5e35b57c8d70",
+        guild_id: "1310000000000000001",
         stage: "beta",
         site_key: "scout-beta",
         site_hostname: "beta.scout-for-lol.com",
