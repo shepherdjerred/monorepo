@@ -7,7 +7,7 @@ import {
   type GitStatusEntry,
 } from "./data-dragon-diff.ts";
 import { runCommand } from "./data-dragon-shell.ts";
-import type { DataDragonUpdateInput } from "./data-dragon.ts";
+import type { DataDragonUpdateInput } from "#shared/data-dragon-types.ts";
 
 function parseStatusLines(lines: string[]): GitStatusEntry[] {
   return lines.map((line) => {

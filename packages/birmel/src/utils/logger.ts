@@ -1,5 +1,5 @@
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { getTraceContext } from "@shepherdjerred/birmel/observability/tracing.ts";
+import { getTraceContext } from "@shepherdjerred/birmel/observability/trace-context.ts";
 import {
   logs as logsAPI,
   SeverityNumber,

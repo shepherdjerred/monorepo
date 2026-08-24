@@ -13,6 +13,10 @@ import {
   fetchDependencyReleaseNotes,
   synthesizeDependencyChanges,
 } from "./deps-summary-release-notes.ts";
+import type {
+  DependencyChange,
+  DependencyChangeKind,
+} from "#shared/deps-summary-types.ts";
 
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 // The catalog lived here before it became its own workspace, and `versions.ts`
@@ -68,27 +72,6 @@ const CheckpointSchema = z.object({
   acceptedAt: z.iso.datetime({ offset: true }),
   reportRunId: z.string().min(1),
 });
-
-export type DependencyChangeKind =
-  "upstream-upgrade" | "internal-promotion" | "addition" | "removal" | "revert";
-
-export type DependencyChange = {
-  name: string;
-  category: "upstream" | "internal-image";
-  artifactType: "image" | "helm-chart" | "package" | "source";
-  datasource: string | undefined;
-  registryUrl: string | undefined;
-  packageName: string | undefined;
-  oldValue: string | undefined;
-  newValue: string | undefined;
-  oldVersion: string | undefined;
-  newVersion: string | undefined;
-  kind: DependencyChangeKind;
-  commitSha: string;
-  commitSubject: string;
-  releaseNotesOverride:
-    { url?: string | undefined; summary: string } | undefined;
-};
 
 export type DependencyCollectionResult = {
   baseSha: string;

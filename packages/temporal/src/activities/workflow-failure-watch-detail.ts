@@ -16,7 +16,7 @@ import {
   classifyWorkflowTimeoutHistory,
   type WorkflowTimeoutHistoryClassification,
 } from "./workflow-failure-history.ts";
-import type { WorkflowVisibilityClient } from "./workflow-failure-watch.ts";
+import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 
 const COMPONENT = "temporal-failure-watch";
 

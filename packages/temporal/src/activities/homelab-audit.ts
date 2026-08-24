@@ -41,6 +41,11 @@ import {
   type HomelabAuditArchiveMetadataInput,
   type HomelabAuditArchiveMetadataResult,
 } from "./homelab-audit-archive.ts";
+import type {
+  HomelabAuditAgentResult,
+  HomelabAuditEmailInput,
+  HomelabAuditEmailResult,
+} from "#shared/homelab-audit-types.ts";
 import {
   runAuditPreflight,
   type HomelabAuditPreflightResult,
@@ -80,25 +85,6 @@ export type HomelabAuditAgentInput = {
   model?: string;
   /** Override max-turns budget. */
   maxTurns?: number;
-};
-
-export type HomelabAuditAgentResult = {
-  markdown: string;
-  durationMs: number;
-  numTurns: number | undefined;
-  totalCostUsd: number | undefined;
-  model: string;
-};
-
-export type HomelabAuditEmailInput = {
-  date: string;
-  markdown: string;
-};
-
-export type HomelabAuditEmailResult = {
-  subject: string;
-  messageId: string;
-  recipientId: number | "unknown";
 };
 
 function jsonLog(

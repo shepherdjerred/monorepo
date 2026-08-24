@@ -81,6 +81,7 @@
   },
   "workspaces": [
     "packages/alert-dashboard",
+    "packages/architecture",
     "packages/astro-opengraph-images",
     "packages/better-skill-capped",
     "packages/birmel",

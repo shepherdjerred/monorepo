@@ -17,8 +17,7 @@
         "src/**/*.test.ts",
         "integration/**/*.ts",
         "e2e/**/*.ts",
-        "architecture-fixtures/**/*.ts",
-        "dependency-cruiser.config.cjs"
+        "architecture-fixtures/**/*.ts"
       ],
       "project": [
         "src/**/*.{ts,tsx,css}",
@@ -28,6 +27,10 @@
         "prisma/**/*.prisma",
         "*.{ts,cjs}"
       ]
+    },
+    "packages/architecture": {
+      "entry": ["bin/*.ts", "test/**/*.ts"],
+      "project": ["src/**/*.ts", "bin/**/*.ts", "test/**/*.ts"]
     },
     "packages/discord-plays-core": {
       "project": ["src/**/*.ts"]

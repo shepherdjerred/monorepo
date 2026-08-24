@@ -5,7 +5,7 @@ import { putS3Object, type S3PutObjectConfig } from "#shared/s3.ts";
 import type {
   HomelabAuditAgentResult,
   HomelabAuditEmailResult,
-} from "./homelab-audit.ts";
+} from "#shared/homelab-audit-types.ts";
 
 export type HomelabAuditArchiveBodyInput = {
   date: string;

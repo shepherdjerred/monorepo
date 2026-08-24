@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
-import type { DependencyChange } from "./deps-summary.ts";
+import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import { ociManifestAttempt } from "./deps-summary-oci.ts";
 
 const originalFetch = globalThis.fetch;

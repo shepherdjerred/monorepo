@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "bun run generate && vite build",
-    "check:architecture": "bun scripts/check-architecture.ts",
+    "check:architecture": "check-architecture",
     "dev": "bun run src/dev.ts",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/alert-dashboard:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t alert-dashboard:dev -f Dockerfile ../..",
     "generate": "prisma generate",
@@ -20,6 +20,7 @@
     "typecheck": "bun run generate && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#application/*": "./src/application/*.ts",
     "#client/*": "./src/client/*.tsx",
     "#components/*": "./src/components/*.tsx",
@@ -60,6 +61,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
     "@types/bun": "1.4.0",
@@ -69,7 +71,6 @@
     "@playwright/test": "1.62.1",
     "@vitejs/plugin-react": "^6.0.1",
     "@typescript/native": "npm:typescript@7.0.2",
-    "dependency-cruiser": "^18.2.0",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "shadcn": "^4.14.1",
