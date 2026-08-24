@@ -75,4 +75,96 @@ describe("resolveArchitecture", () => {
       resolveArchitecture({ boundaries: [{ ...boundary, comment: "" }] }),
     ).toThrow();
   });
+
+  it("accepts a nested layer path", () => {
+    expect(
+      resolveArchitecture({
+        boundaries: [{ ...boundary, from: "lib/amazon", to: ["lib/venmo"] }],
+      }).boundaries,
+    ).toEqual([{ ...boundary, from: "lib/amazon", to: ["lib/venmo"] }]);
+  });
+
+  it("rejects a nested layer path with an empty segment", () => {
+    expect(() =>
+      resolveArchitecture({
+        boundaries: [{ ...boundary, from: "lib//amazon" }],
+      }),
+    ).toThrow(/from/u);
+  });
+});
+
+const isolatedGroup = {
+  name: "vendors-are-isolated",
+  comment: "a vendor parser must not read another vendor's shape",
+  layers: ["lib/amazon", "lib/venmo", "lib/usaa"],
+};
+
+describe("resolveArchitecture isolated groups", () => {
+  it("expands a group into one boundary per member forbidding the others", () => {
+    expect(
+      resolveArchitecture({ isolatedGroups: [isolatedGroup] }).boundaries,
+    ).toEqual([
+      {
+        name: "vendors-are-isolated-lib-amazon",
+        comment: isolatedGroup.comment,
+        from: "lib/amazon",
+        to: ["lib/venmo", "lib/usaa"],
+      },
+      {
+        name: "vendors-are-isolated-lib-venmo",
+        comment: isolatedGroup.comment,
+        from: "lib/venmo",
+        to: ["lib/amazon", "lib/usaa"],
+      },
+      {
+        name: "vendors-are-isolated-lib-usaa",
+        comment: isolatedGroup.comment,
+        from: "lib/usaa",
+        to: ["lib/amazon", "lib/venmo"],
+      },
+    ]);
+  });
+
+  it("rejects a group of fewer than two layers", () => {
+    expect(() =>
+      resolveArchitecture({
+        isolatedGroups: [{ ...isolatedGroup, layers: ["lib/amazon"] }],
+      }),
+    ).toThrow();
+  });
+
+  it("rejects a group that repeats a layer", () => {
+    expect(() =>
+      resolveArchitecture({
+        isolatedGroups: [
+          { ...isolatedGroup, layers: ["lib/amazon", "lib/amazon"] },
+        ],
+      }),
+    ).toThrow(/repeats a layer/u);
+  });
+
+  it("rejects a generated name that collides with a hand-written boundary", () => {
+    expect(() =>
+      resolveArchitecture({
+        boundaries: [{ ...boundary, name: "vendors-are-isolated-lib-amazon" }],
+        isolatedGroups: [isolatedGroup],
+      }),
+    ).toThrow(/duplicate boundary name/u);
+  });
+
+  it("rejects two layers that would share one flattened fixture prefix", () => {
+    expect(() =>
+      resolveArchitecture({
+        boundaries: [
+          { ...boundary, from: "lib/amazon", to: ["server"] },
+          {
+            ...boundary,
+            name: "second",
+            from: "lib-amazon",
+            to: ["server"],
+          },
+        ],
+      }),
+    ).toThrow(/same fixture prefix/u);
+  });
 });
