@@ -32,6 +32,29 @@
       "entry": ["bin/*.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "bin/**/*.ts", "test/**/*.ts"]
     },
+    // The controller has five executable entry points (the fleet CLI plus the
+    // inspect, replay and two watch entries the supervisor spawns by path),
+    // and `architecture-fixtures/` is deliberately unimported.
+    "packages/pr-fleet-controller": {
+      "entry": [
+        "src/index.ts",
+        "src/cli/main.ts",
+        "src/cli/inspect.ts",
+        "src/cli/replay.ts",
+        "src/cli/watch.ts",
+        "src/cli/live-watch.ts",
+        "src/**/*.test.ts",
+        "test/**/*.ts",
+        "architecture-fixtures/**/*.ts",
+        "architecture.config.ts"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "architecture-fixtures/**/*.ts",
+        "architecture.config.ts"
+      ]
+    },
     "packages/discord-plays-core": {
       "project": ["src/**/*.ts"]
     },

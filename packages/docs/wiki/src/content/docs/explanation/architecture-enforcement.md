@@ -120,6 +120,34 @@ does, with its own committed fixture proving it can fail. The
 derives that proof from the same definition. Deriving the rules does not derive
 the evidence.
 
+## A rule needs a shape to point at
+
+The rules are path-prefix rules: a boundary says that nothing under
+`src/<layer>/` may import anything under `src/<other>/`. That is deliberate —
+it keeps the generated patterns literal and the failure message readable — but
+it has a consequence worth stating plainly, because it decides how much work
+adopting the harness is.
+
+A package whose `src/` is flat cannot express a single boundary. The PR fleet
+controller was the clearest case: around seventy modules in one directory, with
+the only structure being a filename prefix (`controller-*`, `worker-*`,
+`run-*`, `cli-*`). Nothing stopped the bundle writer from importing the replay
+verifier, and nothing could be written down to stop it, because there were no
+directories for a rule to name.
+
+So the boundaries were not the work; the restructure was. And the prefixes
+turned out to be an unreliable guide to it. `controller-telemetry.ts` was not
+part of the controller at all — it is a cross-cutting span recorder that
+eighteen modules depend on, so it belongs underneath them. `cli-failures.ts`
+was two pure functions that the controller's shutdown path needed just as
+much as the CLI did. Grouping by the import graph rather than by the names
+moved both of them, and only then did the layering the package had always
+claimed to have become something a rule could check.
+
+The lesson generalises: if declaring a boundary is easy, the package already
+had the shape. If it is hard, the harness has found something worth knowing
+before it has enforced anything.
+
 ## Each package is judged only on its own tree
 
 Under Bun's isolated linker a `workspace:*` dependency resolves through a

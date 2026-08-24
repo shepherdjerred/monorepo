@@ -117,6 +117,15 @@ about how a boundary was declared. A generated name colliding with a
 hand-written boundary is caught by the same duplicate-name check as any other
 collision.
 
+### First: does the package have layers to name?
+
+`from` and `to` are directories directly under the source root, so a package
+whose `src/` is flat has nothing to declare. Grouping it is the real work, and
+filename prefixes are not a reliable guide to how — in the PR fleet controller
+the two most-depended-on modules were both filed under a prefix that belonged
+to a layer above them. Group by the import graph, land that move on its own,
+then add the boundaries on top.
+
 ## Proving the rules are not vacuous
 
 A boundary is only worth having if it can fail. Each package that declares

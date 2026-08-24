@@ -11,6 +11,7 @@
     "./src/*": "./src/*"
   },
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#domain/*": "./src/domain/*",
     "#runtime/*": "./src/runtime/*",
     "#bundle/*": "./src/bundle/*",
