@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import {
   exploreGuildAllowlist,
+  exploreModel,
   initializeDynamicConfig,
   isDynamicConfigReady,
   llmHourlyTokenBudget,
@@ -14,6 +15,7 @@ const DISABLED = { FEATURE_FLAGS_MODE: "disabled" } as const;
 
 const SEED: DynamicConfigSeed = {
   exploreGuildAllowlist: ["seeded-guild"],
+  exploreModel: "gpt-5.6-luna",
   llmHourlyTokenBudget: 2_000_000,
   llmDailyTokenBudget: 20_000_000,
   tournamentApiMode: "stub",
@@ -75,6 +77,26 @@ describe("scout dynamic config", () => {
       provider: new StaticProvider({ "llm-hourly-token-budget": 500 }),
     });
     expect(llmHourlyTokenBudget()).toBe(500);
+  });
+
+  test("Explore defaults to Luna and accepts the authoritative flag", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreModel()).toBe("gpt-5.6-luna");
+    await shutdownDynamicConfig();
+
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({
+        "scout-explore-model": "gpt-5.6-terra",
+      }),
+    });
+    expect(exploreModel()).toBe("gpt-5.6-terra");
   });
 
   test("reads are synchronous, which is why the snapshot exists", async () => {

@@ -11,6 +11,7 @@ import {
   type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { createContext, type Context } from "#src/trpc/context.ts";
 import { resolveGuildPermissions } from "#src/trpc/guild-permission.ts";
 import { streamReportQueryAgent } from "#src/reports/ai/report-query-agent.ts";
@@ -37,6 +38,10 @@ export async function handleReportAiRoute(
 ): Promise<Response | null> {
   if (url.pathname !== STREAM_PATH) {
     return null;
+  }
+
+  if (isFeatureHardDisabled("ai_reports_enabled")) {
+    return jsonError("Not found.", 404, corsHeaders);
   }
 
   if (request.method !== "POST") {

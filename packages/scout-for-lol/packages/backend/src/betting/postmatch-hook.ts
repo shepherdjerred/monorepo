@@ -15,6 +15,7 @@ import {
   type ClosedPool,
 } from "#src/betting/sweep.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 
 export async function refreshSettledPoolMessages(
   straightPools: readonly { matchId: string; serverId: string }[],
@@ -53,6 +54,14 @@ export async function settleAndAwardBucks(
   parlaySettlements: ParlaySettlementSummary[];
   earnings: EarnedAward[];
 }> {
+  if (isFeatureHardDisabled("betting_enabled")) {
+    return {
+      closures: [],
+      settlements: [],
+      parlaySettlements: [],
+      earnings: [],
+    };
+  }
   const closures = await closeBettingWindowsForMatch(
     matchData.metadata.matchId,
     prismaClient,

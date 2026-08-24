@@ -134,8 +134,8 @@ export async function executeScout(
     const terminal = await dependencies.runTurn({
       ticket,
       identity,
-      // The command is registered per guild and re-checks this exact guild, so
-      // the invoking server is the whole alias scope for a Discord ask.
+      // Discord asks always carry a guild context (global in production,
+      // guild-scoped in beta), so the invoking server is the whole alias scope.
       guildIds: [interaction.guildId],
       started,
       history: transcript.messages,

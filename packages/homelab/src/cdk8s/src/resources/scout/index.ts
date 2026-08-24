@@ -236,27 +236,26 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     ),
     LLM_HOURLY_TOKEN_BUDGET: EnvValue.fromValue("2000000"),
     LLM_DAILY_TOKEN_BUDGET: EnvValue.fromValue("20000000"),
+    OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+      secret: Secret.fromSecretName(
+        chart,
+        "openrouter-api-key-secret",
+        onePasswordItem.name,
+      ),
+      key: "OPENROUTER_API_KEY",
+    }),
   };
 
-  // Add AI secrets only for beta stage
+  // Beta keeps its operator-managed Explore preview allowlist. Production
+  // authorizes signed-in users against the bot's live connected-guild set.
   const envVariables =
     stage === "beta"
       ? {
           ...baseEnvVariables,
-          // Explore's entire access gate: sign in, and belong to one of these
-          // Discord servers. Beta-only, alongside the AI credentials the
-          // surface needs — prod has neither, so it stays closed. An unset or
-          // empty list denies everyone, so this must be present for anyone to
-          // reach /app/explore.
+          // Beta's entire access gate: sign in, and belong to one of these
+          // Discord servers. An unset or empty list denies everyone, so this
+          // must be present for anyone to reach /app/explore in beta.
           EXPLORE_GUILD_ALLOWLIST: EnvValue.fromValue("1337623164146155593"),
-          OPENROUTER_API_KEY: EnvValue.fromSecretValue({
-            secret: Secret.fromSecretName(
-              chart,
-              "openrouter-api-key-secret",
-              onePasswordItem.name,
-            ),
-            key: "OPENROUTER_API_KEY",
-          }),
         }
       : baseEnvVariables;
 

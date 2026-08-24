@@ -31,9 +31,9 @@ const logger = createLogger("config-dynamic");
  * Resolution is async because the flag layer is, but both call sites here are
  * synchronous and cannot become async without real risk:
  *
- * - `exploreAllowlist()` is handed to Discord guild command registration as a
- *   `() => string[]`. An empty array there does not disable a feature — it
- *   UNREGISTERS `/scout` in every guild.
+ * - `exploreAllowlist()` is handed to beta's Discord guild command
+ *   registration as a `() => string[]`. An empty array there does not merely
+ *   disable a feature — it unregisters `/scout` in every beta guild.
  * - `assertWithinBudget()` runs before every model generation, on the money
  *   path.
  *
@@ -43,13 +43,11 @@ const logger = createLogger("config-dynamic");
  */
 const DEFINITION = {
   /**
-   * Discord servers allowed to use explore.
+   * Discord servers allowed to use Explore in beta.
    *
-   * Explore reads the whole match lake, so this is the entire gate for that
-   * surface. Empty denies everyone, deliberately: "not configured" must mean
-   * "nobody", never "everybody". That property survives the migration — with
-   * Flipt unreachable the env layer answers, and with neither the default is
-   * an empty list.
+   * Explore reads the whole match lake, so this is beta's entire gate. Empty
+   * denies everyone deliberately. Production instead verifies that the caller
+   * shares a live connected guild with the production bot.
    */
   exploreGuildAllowlist: {
     schema: z.union([
@@ -94,7 +92,7 @@ const DEFINITION = {
   exploreModel: {
     schema: z.string().trim().min(1),
     sources: ["flag", "env", "default"],
-    default: "gpt-5.6-sol",
+    default: "gpt-5.6-luna",
     names: { flag: "scout-explore-model", env: "EXPLORE_MODEL" },
   },
   bucksAskModel: {

@@ -62,13 +62,13 @@ export function buildBbRulesEmbed(): EmbedBuilder {
 /**
  * `/bb` — the Bryan Bucks surface.
  *
- * `AGENTS.md` says Scout intentionally exposes only seven commands and pushes
- * management to the dashboard. This is a deliberate, narrow exception: the
- * feature is gated to a single guild by `betting_enabled`, and a balance you
- * cannot check from the same place you bet is not usable.
+ * Scout intentionally keeps management in the dashboard. This is a deliberate,
+ * narrow beta exception: the feature is gated to a single guild by
+ * `betting_enabled`, and a balance you cannot check from the same place you bet
+ * is not usable.
  *
- * That gate is per guild, not per environment, and the one guild it is on for
- * runs the beta bot — so this only ever answers in beta in practice.
+ * Production's hard-disable policy wins before the guild flag or Flipt, so the
+ * command never registers or answers there.
  *
  * The command is registered per guild rather than globally
  * (`guildScopedCommandGroups`), so it is invisible everywhere it would not

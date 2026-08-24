@@ -6,7 +6,7 @@ import {
 import { z } from "zod";
 import configuration from "#src/configuration.ts";
 import {
-  commandPayload,
+  globalCommandPayload,
   guildCommandPayload,
 } from "#src/discord/commands/definitions.ts";
 import { createLogger } from "#src/logger.ts";
@@ -36,6 +36,7 @@ export async function registerDiscordCommands(
   connectedGuildIds: Iterable<string>,
   put: DiscordCommandPut = putCommands,
 ): Promise<void> {
+  const commandPayload = globalCommandPayload();
   logger.info(
     `🚀 Registering ${commandPayload.length.toString()} global Discord commands`,
   );

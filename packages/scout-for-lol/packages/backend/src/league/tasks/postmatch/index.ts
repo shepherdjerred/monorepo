@@ -7,6 +7,7 @@ import { voidStaleParlayMarkets } from "#src/betting/parlay-sweep.ts";
 import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 
 const logger = createLogger("tasks-postmatch");
 
@@ -20,6 +21,7 @@ function asError(error: unknown, message: string): Error {
 export async function checkPostMatch() {
   logger.info("🏁 Starting post-match check task");
   const startTime = Date.now();
+  const bettingHardDisabled = isFeatureHardDisabled("betting_enabled");
 
   try {
     let matchHistoryError: unknown;
@@ -28,9 +30,22 @@ export async function checkPostMatch() {
     } catch (error) {
       matchHistoryError = error;
       logger.error(
-        "❌ Match history polling failed; running Bryan Bucks recovery anyway:",
+        bettingHardDisabled
+          ? "❌ Match history polling failed:"
+          : "❌ Match history polling failed; running Bryan Bucks recovery anyway:",
         error,
       );
+    }
+
+    if (bettingHardDisabled) {
+      if (matchHistoryError !== undefined) {
+        throw asError(matchHistoryError, "Match history polling failed");
+      }
+      const executionTime = Date.now() - startTime;
+      logger.info(
+        `✅ Post-match check completed successfully in ${executionTime.toString()}ms`,
+      );
+      return;
     }
 
     let earningsRecoveryError: unknown;

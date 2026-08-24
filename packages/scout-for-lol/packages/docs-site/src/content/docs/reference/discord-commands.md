@@ -5,28 +5,24 @@ sidebar:
   order: 1
 ---
 
-Scout registers seven global slash commands. It also registers `/scout` only in
-servers enabled for the Explore beta. Command replies are **ephemeral** — visible
-only to the person who ran the command — unless the asker explicitly chooses
-**Post publicly** on a completed Scout answer.
+Scout registers eight global slash commands in production. During the Explore
+beta, `/scout` remains guild-scoped to the selected beta servers. Command
+replies are **ephemeral** — visible only to the person who ran the command —
+unless the asker explicitly chooses **Post publicly** on a completed Scout
+answer.
 
 ## Command summary
 
-| Command   | Description                                     | Options         |
-| --------- | ----------------------------------------------- | --------------- |
-| `/help`   | Get help and view Scout's lightweight commands  | none            |
-| `/setup`  | See the recommended Scout setup flow            | none            |
-| `/status` | Check Scout's connection status                 | none            |
-| `/invite` | Add Scout to another Discord server             | none            |
-| `/docs`   | Open Scout's documentation                      | none            |
-| `/track`  | Track one League player in this Discord channel | 3, all required |
-| `/list`   | List the players Scout tracks for this server   | none            |
-
-In Explore-enabled servers, Scout also registers this guild-scoped command:
-
-| Command      | Description                                   | Options              |
-| ------------ | --------------------------------------------- | -------------------- |
-| `/scout ask` | Ask a private question about Scout match data | `question`, required |
+| Command      | Description                                     | Options              |
+| ------------ | ----------------------------------------------- | -------------------- |
+| `/help`      | Get help and view Scout's lightweight commands  | none                 |
+| `/setup`     | See the recommended Scout setup flow            | none                 |
+| `/status`    | Check Scout's connection status                 | none                 |
+| `/invite`    | Add Scout to another Discord server             | none                 |
+| `/docs`      | Open Scout's documentation                      | none                 |
+| `/track`     | Track one League player in this Discord channel | 3, all required      |
+| `/list`      | List the players Scout tracks for this server   | none                 |
+| `/scout ask` | Ask a private question about Scout match data   | `question`, required |
 
 ![The Discord slash-command entry for /track, showing the riot-id, region, and alias option pills with the riot-id hint "Riot ID, for example Faker#KR1".](../../../assets/discord-track-options.png)
 
@@ -87,8 +83,9 @@ gateway latency in milliseconds.
 ## `/help`
 
 An embed containing the dashboard URL, the documentation URL, the command list,
-and a summary of what the dashboard is for. It includes `/scout ask` only when
-run inside an Explore-enabled server.
+and a summary of what the dashboard is for. Production includes `/scout ask` in
+every server where Scout is installed; beta includes it only in selected beta
+servers.
 
 ![The /help embed listing the dashboard and documentation links, the lightweight commands with one-line descriptions, and what the dashboard is for.](../../../assets/discord-help.png)
 
@@ -96,8 +93,9 @@ run inside an Explore-enabled server.
 
 Asks Scout Explore a one-shot question over the match data Scout has ingested.
 The `question` option accepts 1–2,000 characters. The command is available only
-in servers listed by the operator-managed Explore allowlist and does not work in
-direct messages.
+inside Discord servers and does not work in direct messages. Production makes
+it available everywhere Scout is installed; beta keeps it limited to selected
+servers.
 
 Each invocation starts a **new saved Explore conversation** owned by the Discord
 user who ran it. The answer is initially private and can include caveats plus

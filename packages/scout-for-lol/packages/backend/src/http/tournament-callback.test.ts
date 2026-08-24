@@ -1,5 +1,17 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 import { handleTournamentCallback } from "#src/http/tournament-callback.ts";
+
+const originalEnvironment = Bun.env["ENVIRONMENT"];
+
+afterEach(() => {
+  if (originalEnvironment === undefined) {
+    delete Bun.env["ENVIRONMENT"];
+  } else {
+    Bun.env["ENVIRONMENT"] = originalEnvironment;
+  }
+  resetConfigurationForTests();
+});
 
 function post(body: string): Request {
   return new Request(
@@ -13,6 +25,16 @@ function post(body: string): Request {
 }
 
 describe("handleTournamentCallback", () => {
+  test("is absent in production", async () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+
+    const response = await handleTournamentCallback(
+      post(JSON.stringify({ shortCode: "NA1234a-abc" })),
+    );
+    expect(response.status).toBe(404);
+  });
+
   test("acknowledges a well-formed callback", async () => {
     const response = await handleTournamentCallback(
       post(JSON.stringify({ shortCode: "NA1234a-abc", gameId: 42 })),

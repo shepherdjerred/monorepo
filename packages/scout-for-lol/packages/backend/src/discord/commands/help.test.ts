@@ -5,12 +5,18 @@ import { executeHelp } from "#src/discord/commands/help.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
+const originalEnvironment = Bun.env["ENVIRONMENT"];
 
 afterEach(() => {
   if (originalAllowlist === undefined) {
     delete Bun.env["EXPLORE_GUILD_ALLOWLIST"];
   } else {
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = originalAllowlist;
+  }
+  if (originalEnvironment === undefined) {
+    delete Bun.env["ENVIRONMENT"];
+  } else {
+    Bun.env["ENVIRONMENT"] = originalEnvironment;
   }
   resetConfigurationForTests();
 });
@@ -36,6 +42,7 @@ describe("/help", () => {
   });
 
   test("includes Scout Explore only inside an allowlisted guild", async () => {
+    Bun.env["ENVIRONMENT"] = "beta";
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "100000000000000001";
     resetConfigurationForTests();
     const replyMock = vi.fn(
@@ -45,6 +52,22 @@ describe("/help", () => {
     const reply: CommandReply = replyMock;
 
     await executeHelp({ guildId: "100000000000000001", reply });
+    expect(JSON.stringify(replyMock.mock.calls[0]?.[0])).toContain(
+      "/scout ask",
+    );
+  });
+
+  test("includes Scout Explore in every production guild", async () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    delete Bun.env["EXPLORE_GUILD_ALLOWLIST"];
+    resetConfigurationForTests();
+    const replyMock = vi.fn(
+      (payload: Parameters<ChatInputCommandInteraction["reply"]>[0]) =>
+        Promise.resolve(payload),
+    );
+
+    await executeHelp({ guildId: "100000000000000002", reply: replyMock });
+
     expect(JSON.stringify(replyMock.mock.calls[0]?.[0])).toContain(
       "/scout ask",
     );

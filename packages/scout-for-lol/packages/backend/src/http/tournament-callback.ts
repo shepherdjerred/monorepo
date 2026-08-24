@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { createLogger } from "#src/logger.ts";
 import { tournamentCallbacksTotal } from "#src/metrics/tournament.ts";
 
@@ -26,6 +27,10 @@ const CallbackShapeSchema = z.object({ shortCode: z.string() });
 export async function handleTournamentCallback(
   request: Request,
 ): Promise<Response> {
+  if (isFeatureHardDisabled("tournament_lobbies_enabled")) {
+    return new Response("Not found", { status: 404 });
+  }
+
   if (request.method !== "POST") {
     tournamentCallbacksTotal.inc({ status: "bad_method" });
     return new Response("Method not allowed", { status: 405 });
