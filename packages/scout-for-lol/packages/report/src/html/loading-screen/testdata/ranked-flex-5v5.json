@@ -16,18 +16,21 @@
       "spell2Id": 14,
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8400,
-      "ranks": {
-        "solo": {
-          "tier": "diamond",
-          "division": 3,
-          "lp": 45,
-          "wins": 120,
-          "losses": 98
-        }
-      },
       "isTrackedPlayer": false,
       "championId": 84,
-      "lane": "middle"
+      "lane": "middle",
+      "rankState": {
+        "status": "available",
+        "ranks": {
+          "solo": {
+            "tier": "diamond",
+            "division": 3,
+            "lp": 45,
+            "wins": 120,
+            "losses": 98
+          }
+        }
+      }
     },
     {
       "puuid": "n9a3nW9BKtj6vf7kSzmM_uTGu5A9ahTRgDYzz26tNhdH-i9cqf4G3UJCPcd7pXOOy2Q3ZXoTTZlVJA",
@@ -39,18 +42,21 @@
       "spell2Id": 6,
       "keystoneRuneId": 8010,
       "secondaryTreeId": 8200,
-      "ranks": {
-        "solo": {
-          "tier": "gold",
-          "division": 2,
-          "lp": 75,
-          "wins": 80,
-          "losses": 72
-        }
-      },
       "isTrackedPlayer": false,
       "championId": 27,
-      "lane": "top"
+      "lane": "top",
+      "rankState": {
+        "status": "available",
+        "ranks": {
+          "solo": {
+            "tier": "gold",
+            "division": 2,
+            "lp": 75,
+            "wins": 80,
+            "losses": 72
+          }
+        }
+      }
     },
     {
       "puuid": "VMkz_anidJk366oY7X5EILE1BkRiTALvRPE4S_kea1WbiQxTVmwWy1op4ZllJ31QQEy5XmlMUOIqgw",
@@ -64,7 +70,11 @@
       "secondaryTreeId": 8100,
       "isTrackedPlayer": false,
       "championId": 234,
-      "lane": "jungle"
+      "lane": "jungle",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "d0BwgxqBVJI5zToYm5isFg-RvA1rsFr-vIRJytEZ9Dy_s4Cpmc3tQuoUWm9uWHGGY_f-VRKRSdYwRg",
@@ -76,18 +86,21 @@
       "spell2Id": 21,
       "keystoneRuneId": 8021,
       "secondaryTreeId": 8200,
-      "ranks": {
-        "solo": {
-          "tier": "silver",
-          "division": 1,
-          "lp": 50,
-          "wins": 45,
-          "losses": 40
-        }
-      },
       "isTrackedPlayer": false,
       "championId": 202,
-      "lane": "adc"
+      "lane": "adc",
+      "rankState": {
+        "status": "available",
+        "ranks": {
+          "solo": {
+            "tier": "silver",
+            "division": 1,
+            "lp": 50,
+            "wins": 45,
+            "losses": 40
+          }
+        }
+      }
     },
     {
       "puuid": "2L4f8DdtVLFkdN0mCSPofO70tNP0EGsQEQQFs_A1xAT4Ws5gab54ADAYYbIemeUPzma5oahbRFYL-g",
@@ -99,18 +112,21 @@
       "spell2Id": 4,
       "keystoneRuneId": 8229,
       "secondaryTreeId": 8100,
-      "ranks": {
-        "solo": {
-          "tier": "platinum",
-          "division": 4,
-          "lp": 20,
-          "wins": 200,
-          "losses": 190
-        }
-      },
       "isTrackedPlayer": false,
       "championId": 143,
-      "lane": "support"
+      "lane": "support",
+      "rankState": {
+        "status": "available",
+        "ranks": {
+          "solo": {
+            "tier": "platinum",
+            "division": 4,
+            "lp": 20,
+            "wins": 200,
+            "losses": 190
+          }
+        }
+      }
     },
     {
       "puuid": "I78a3uUXZh_DzpKAhvzXaNILtNQqak1gC9gGxUL8fo1WNGDcvlIyABFcry60Kg1sykinHi_xFPBmBw",
@@ -122,18 +138,21 @@
       "spell2Id": 14,
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8200,
-      "ranks": {
-        "solo": {
-          "tier": "emerald",
-          "division": 1,
-          "lp": 88,
-          "wins": 150,
-          "losses": 130
-        }
-      },
       "isTrackedPlayer": false,
       "championId": 103,
-      "lane": "middle"
+      "lane": "middle",
+      "rankState": {
+        "status": "available",
+        "ranks": {
+          "solo": {
+            "tier": "emerald",
+            "division": 1,
+            "lp": 88,
+            "wins": 150,
+            "losses": 130
+          }
+        }
+      }
     },
     {
       "puuid": "fBrlXXgc8Lx7PtOfI7TiKBHjZKMcK4dJgDrtiMZVdMkaq3tOuk5DmwIv284H-YFcgNi2n-eGTpp_Cw",
@@ -147,7 +166,11 @@
       "secondaryTreeId": 8300,
       "isTrackedPlayer": false,
       "championId": 22,
-      "lane": "adc"
+      "lane": "adc",
+      "rankState": {
+        "status": "available",
+        "ranks": {}
+      }
     },
     {
       "puuid": "3LKY6Joqu_yu97w3qDmUiQOOiWd0i_EPJMfJM6u63LHJ7oS2Svwxq5cLVd8ui8pDt3syEHfHQTAoyA",
@@ -159,18 +182,21 @@
       "spell2Id": 11,
       "keystoneRuneId": 8008,
       "secondaryTreeId": 8300,
-      "ranks": {
-        "solo": {
-          "tier": "master",
-          "division": 1,
-          "lp": 250,
-          "wins": 300,
-          "losses": 220
-        }
-      },
       "isTrackedPlayer": false,
       "championId": 24,
-      "lane": "jungle"
+      "lane": "jungle",
+      "rankState": {
+        "status": "available",
+        "ranks": {
+          "solo": {
+            "tier": "master",
+            "division": 1,
+            "lp": 250,
+            "wins": 300,
+            "losses": 220
+          }
+        }
+      }
     },
     {
       "puuid": "AlYREV57O6o49QaM2iZVQ361vKtpc4mTwNYyqiZSLb9EF1EDBABA8xi4hiGwkSs1GIgRzXqjVm-2xg",
@@ -182,18 +208,21 @@
       "spell2Id": 4,
       "keystoneRuneId": 8005,
       "secondaryTreeId": 8400,
-      "ranks": {
-        "solo": {
-          "tier": "gold",
-          "division": 1,
-          "lp": 30,
-          "wins": 60,
-          "losses": 55
-        }
-      },
       "isTrackedPlayer": true,
       "championId": 19,
-      "lane": "top"
+      "lane": "top",
+      "rankState": {
+        "status": "available",
+        "ranks": {
+          "solo": {
+            "tier": "gold",
+            "division": 1,
+            "lp": 30,
+            "wins": 60,
+            "losses": 55
+          }
+        }
+      }
     },
     {
       "puuid": null,
@@ -207,7 +236,10 @@
       "secondaryTreeId": 8400,
       "isTrackedPlayer": false,
       "championId": 267,
-      "lane": "support"
+      "lane": "support",
+      "rankState": {
+        "status": "hidden"
+      }
     }
   ],
   "bans": [

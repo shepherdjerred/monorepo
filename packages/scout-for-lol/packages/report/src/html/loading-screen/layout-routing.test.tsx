@@ -131,3 +131,68 @@ test("Classic ARAM Mayhem uses the Classic loading-screen layout", async () => {
     height: 1280,
   });
 });
+
+function stripLane(participant: Record<string, unknown>) {
+  const { lane: _lane, ...withoutLane } = participant;
+  return withoutLane;
+}
+
+test("a full 5v5 keeps the exact 1600x1350 canvas", async () => {
+  // The byte-identity guard for the committed baselines: deriving the width
+  // from the roster must reproduce the previous constant at ten players. If
+  // PlayerCard's width or gap ever changes, this fails loudly rather than
+  // silently rewriting every loading-screen artifact.
+  const data = await loadFixture("ranked-flex-5v5.json");
+
+  expect(getLoadingScreenCanvasDimensions(data)).toEqual({
+    width: 1600,
+    height: 1350,
+  });
+});
+
+test("a smaller custom lobby gets a narrower canvas", async () => {
+  const ranked = await loadFixture("ranked-flex-5v5.json");
+  const threeVthree = LoadingScreenDataSchema.parse({
+    ...ranked,
+    queueType: "custom",
+    queueDisplayName: "custom",
+    isRanked: false,
+    bans: [],
+    participants: [
+      ...ranked.participants
+        .filter((participant) => participant.team === "blue")
+        .slice(0, 3),
+      ...ranked.participants
+        .filter((participant) => participant.team === "red")
+        .slice(0, 3),
+    ].map((participant) => stripLane(participant)),
+  });
+
+  // 3 * 280 + 2 * 8 + 168
+  expect(getLoadingScreenCanvasDimensions(threeVthree)).toEqual({
+    width: 1024,
+    height: 1350,
+  });
+});
+
+test("a 1v1 is floored rather than rendered 448 wide", async () => {
+  const ranked = await loadFixture("ranked-flex-5v5.json");
+  const oneVone = LoadingScreenDataSchema.parse({
+    ...ranked,
+    queueType: "custom",
+    queueDisplayName: "custom",
+    isRanked: false,
+    bans: [],
+    participants: [
+      ranked.participants.find((p) => p.team === "blue"),
+      ranked.participants.find((p) => p.team === "red"),
+    ]
+      .filter((participant) => participant !== undefined)
+      .map((participant) => stripLane(participant)),
+  });
+
+  expect(getLoadingScreenCanvasDimensions(oneVone)).toEqual({
+    width: 640,
+    height: 1350,
+  });
+});

@@ -90,9 +90,13 @@ tracked players](/docs/how-to/add-players/).
 
 When a subscription is created, Scout records where that account's history
 currently stands so it does not flood your channel with old games. Matches
-finished **before** you ran `/track` will not post.
+finished **before** you ran `/track` will not post notifications.
 
-Track first, then play.
+Scout quietly imports up to the 20 most recent games for Explore, ScoutQL
+reports, AI review context, and the player profile. Those older games may appear
+in history after a few minutes, but they never produce recaps, betting results,
+earnings, or other automatic messages. Only games completed after the import's
+snapshot can notify.
 
 ## 9. Check the audit log
 
@@ -111,10 +115,9 @@ If a _scheduled report_ did not post:
    away fires at a time that looks wrong locally.
 4. Confirm Scout has **Attach Files** in the report's channel.
 
-Freshly finished games take a few minutes to become available to reports — match
-data is folded into the report store every fifteen minutes, so a report run
-immediately after a game may not include it. Notifications are unaffected; they
-do not wait for this.
+Freshly finished games are staged for reports immediately. A newly tracked
+account can still take a few minutes to appear in a server-scoped report while
+Scout publishes the account mapping and imported history together.
 
 ## Still missing
 

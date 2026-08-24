@@ -295,6 +295,7 @@ for (const selectorInput of [
   ".buildkite/scripts/select-image-targets.ts",
   ".buildkite/scripts/select-image-targets-lockfile.ts",
   ".buildkite/scripts/select-image-targets-workspaces.ts",
+  ".buildkite/scripts/smoke-app-configs.ts",
   ".buildkite/scripts/smoke-app-in-image.ts",
   "scripts/lib/image-pin-catalog.ts",
 ]) {

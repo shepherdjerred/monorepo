@@ -16,12 +16,14 @@ import {
 } from "#src/explore/http-route.ts";
 import { exploreRunManager } from "#src/explore/run-manager.ts";
 import { handleVersion } from "#src/http/version.ts";
+import { handleTournamentCallback } from "#src/http/tournament-callback.ts";
 import {
   classifyMethod,
   classifyRoute,
   statusClass,
 } from "#src/http/route-label.ts";
 import { httpRequestDuration, httpRequestsTotal } from "#src/metrics/web.ts";
+import { handleWeeklyParlayControl } from "#src/http/weekly-parlay-control.ts";
 
 const logger = createLogger("http-server");
 
@@ -276,6 +278,33 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
   // Build/deploy identity: version, git SHA, tRPC contract hash
   if (url.pathname === "/api/version") {
     return handleVersion(request, corsHeadersFor(request));
+  }
+
+  // Riot tournament provider callback.
+  //
+  // Registering a provider REQUIRES a callback URL, so this endpoint has to
+  // exist. It acknowledges and discards, and mutates nothing.
+  //
+  // That restraint is the point. tournament-v5 has no shared secret and no
+  // signature, so the URL is the only credential — a handler that wrote
+  // anything would be an unauthenticated injection path into the canonical S3
+  // match store. It would also be a second ingest path competing with the
+  // match-history cursor, whose S3 write is what gates the cursor advance. And
+  // the stub emits no callbacks at all, so none of it could be tested before
+  // the key gains tournament access.
+  //
+  // What it does buy: proof the URL is live if Riot ever validates it at
+  // registration, and real latency data (callback arrival vs. games/by-code
+  // resolution) to justify promoting this to an accelerator later.
+  if (url.pathname === "/api/riot/tournament-callback") {
+    return handleTournamentCallback(request);
+  }
+
+  // Temporal-only weekly Bryan Bucks control surface. The handler is absent
+  // (returns null) unless its bootstrap credential is configured.
+  const weeklyParlayResponse = await handleWeeklyParlayControl(request, url);
+  if (weeklyParlayResponse !== null) {
+    return weeklyParlayResponse;
   }
 
   // Metrics endpoint for Prometheus

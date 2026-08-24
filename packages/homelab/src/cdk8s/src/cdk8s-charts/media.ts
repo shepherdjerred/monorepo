@@ -4,7 +4,6 @@ import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-sata-v
 import { createBazarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bazarr.ts";
 import { createTautulliDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/tautulli.ts";
 import { createPlexDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/plex.ts";
-import { createKometaCronJob } from "@shepherdjerred/homelab/cdk8s/src/resources/media/kometa.ts";
 import { createRadarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/radarr.ts";
 import { createSeerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/seerr.ts";
 import { createQBitTorrentDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/qbittorrent.ts";
@@ -18,7 +17,6 @@ import {
   IntOrString,
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { MAINTENANCE_IMAGE_READY } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/maintenance-image-readiness.ts";
 
 export async function createMediaChart(app: App) {
   const chart = new Chart(app, "media", {
@@ -46,9 +44,6 @@ export async function createMediaChart(app: App) {
     tv: tvVolume.claim,
     movies: moviesVolume.claim,
   });
-  if (!MAINTENANCE_IMAGE_READY) {
-    createKometaCronJob(chart);
-  }
   createRadarrDeployment(chart, {
     movies: moviesVolume.claim,
     downloads: downloadsVolume.claim,
@@ -131,29 +126,6 @@ export async function createMediaChart(app: App) {
             },
           ],
           ports: [{ port: IntOrString.fromNumber(32_400), protocol: "TCP" }],
-        },
-      ],
-    },
-  });
-
-  // Tracker Tracker reads only qBittorrent's Web API from its dedicated namespace.
-  new KubeNetworkPolicy(chart, "qbittorrent-tracker-tracker-policy", {
-    metadata: { name: "qbittorrent-tracker-tracker-policy" },
-    spec: {
-      podSelector: { matchLabels: { app: "qbittorrent" } },
-      policyTypes: ["Ingress"],
-      ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "tracker-tracker",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
         },
       ],
     },

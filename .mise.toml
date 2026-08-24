@@ -12,10 +12,9 @@ node = "24.19.0"
 rust = "1.98.0"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk
 dotnet = "10.0.302"
-# C# is a third-party UniFFI binding. Keep the generator outside Cargo.toml:
-# it is a developer/CI tool, not part of the shipped Rust dependency graph.
-# renovate: datasource=github-tags depName=NordSecurity/uniffi-bindgen-cs
-"cargo:https://github.com/NordSecurity/uniffi-bindgen-cs" = { version = "tag:v0.11.0+v0.31.0", bin = "uniffi-bindgen-cs" }
+# The C# UniFFI generator is built by tasknotes-core's xtask from its
+# source-controlled 0.32 retarget. It is not a global tool: the generated
+# bindings must match the core's exact UniFFI ABI.
 # Explicit deep-quality tools. These are scheduled/operator gates, not ordinary
 # PR-lane work, but they stay pinned with the rest of the repository toolchain.
 # renovate: datasource=crate depName=cargo-mutants
@@ -44,6 +43,11 @@ jq = "1"
 # (misc/minecraft-drift-check.test.ts shells out to yq, matching the yq the
 # init container runs at deploy time)
 yq = "4"
+# Shared local/CI Postgres for scout-for-lol dev + tests. Prebuilt binaries
+# (initdb/pg_ctl/psql/createdb/dropdb); major 16 matches the homelab clusters
+# (resources/postgres/*.ts, PostgresqlSpecPostgresqlVersion.VALUE_16).
+# renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
+"ubi:theseus-rs/postgresql-binaries" = { version = "16.15.0", extract_all = "true", bin_path = "bin" }
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
 helm = "4"
 opentofu = "1.12.6"

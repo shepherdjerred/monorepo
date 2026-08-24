@@ -15,8 +15,19 @@ import {
 } from "#src/dataDragon/image-cache.ts";
 import { svgToPng } from "#src/html/index.tsx";
 
-// Standard/ARAM: 5 cards per row × 2 rows + header/bans
-const STANDARD_WIDTH = 1600;
+// Standard/ARAM: one row of cards per side + header/bans. The width is derived
+// from the larger side so a tournament-code custom (teamSize 1-5) is not
+// rendered onto a canvas sized for ten players, which would leave most of the
+// image empty. PlayerCard's standard variant is 280 wide with an 8px gap, and
+// 5 * 280 + 4 * 8 + 168 = 1600 — so a full 5v5 reproduces the previous constant
+// exactly and every committed baseline is unchanged.
+const STANDARD_CARD_WIDTH = 280;
+const STANDARD_CARD_GAP = 8;
+const STANDARD_HORIZONTAL_PADDING = 168;
+const STANDARD_FULL_SIDE = 5;
+// A 1v1 would otherwise be 448 wide, too narrow for the header and ban row.
+// Same floor the arena layout uses.
+const STANDARD_MIN_WIDTH = 640;
 const STANDARD_HEIGHT = 1350;
 // Arena prematch only renders tracked player champions; Riot does not expose
 // reliable subteams in current 3v3 spectator payloads.
@@ -90,6 +101,27 @@ function getArenaCanvasDimensions(data: LoadingScreenData): CanvasDimensions {
   };
 }
 
+function getStandardCanvasDimensions(
+  data: LoadingScreenData,
+): CanvasDimensions {
+  const sideSize = (team: "blue" | "red") =>
+    data.participants.filter((participant) => participant.team === team).length;
+  const largestSide = Math.max(sideSize("blue"), sideSize("red"));
+  const columns = Math.min(STANDARD_FULL_SIDE, Math.max(1, largestSide));
+
+  const width = rowWidth({
+    columns,
+    cardWidth: STANDARD_CARD_WIDTH,
+    gap: STANDARD_CARD_GAP,
+    padding: STANDARD_HORIZONTAL_PADDING,
+  });
+
+  return {
+    width: Math.max(STANDARD_MIN_WIDTH, width),
+    height: STANDARD_HEIGHT,
+  };
+}
+
 export function getLoadingScreenCanvasDimensions(
   data: LoadingScreenData,
 ): CanvasDimensions {
@@ -100,7 +132,7 @@ export function getLoadingScreenCanvasDimensions(
     return getArenaCanvasDimensions(data);
   }
 
-  return { width: STANDARD_WIDTH, height: STANDARD_HEIGHT };
+  return getStandardCanvasDimensions(data);
 }
 
 async function preloadLoadingScreenImages(

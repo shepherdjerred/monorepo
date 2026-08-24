@@ -1,0 +1,143 @@
+---
+import MobileMenuToggle from "@astrojs/starlight/components/MobileMenuToggle.astro";
+
+const { hasSidebar } = Astro.locals.starlightRoute;
+---
+
+<div class="page">
+  <header class="header"><slot name="header" /></header>
+  {
+    hasSidebar && (
+      <nav
+        class="sidebar print:hidden"
+        aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}
+      >
+        <MobileMenuToggle />
+        <div id="starlight__sidebar" class="sidebar-pane">
+          <div class="sidebar-content sl-flex">
+            <slot name="sidebar" />
+          </div>
+        </div>
+      </nav>
+    )
+  }
+  <div class="main-frame"><slot /></div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .page {
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header {
+      z-index: var(--sl-z-index-navbar);
+      position: fixed;
+      inset-inline-start: 0;
+      inset-block-start: 0;
+      width: 100%;
+      height: var(--sl-nav-height);
+      border-bottom: 1px solid var(--sl-color-hairline-shade);
+      padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
+      padding-inline-end: var(--sl-nav-pad-x);
+      background-color: var(--sl-color-bg-nav);
+    }
+
+    :global([data-has-sidebar]) .header {
+      padding-inline-end: calc(
+        var(--sl-nav-gap) + var(--sl-nav-pad-x) + var(--sl-menu-button-size)
+      );
+    }
+
+    .sidebar-pane {
+      visibility: var(--sl-sidebar-visibility, hidden);
+      position: fixed;
+      z-index: var(--sl-z-index-menu);
+      inset-block: var(--sl-nav-height) 0;
+      inset-inline-start: 0;
+      width: 100%;
+      background-color: var(--sl-color-black);
+      overflow-y: auto;
+      scrollbar-gutter: stable;
+    }
+
+    :global([aria-expanded="true"]) ~ .sidebar-pane {
+      --sl-sidebar-visibility: visible;
+    }
+
+    .sidebar-content {
+      height: 100%;
+      min-height: max-content;
+      padding: 1rem var(--sl-sidebar-pad-x) 0;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    @media (min-width: 50rem) {
+      .page {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: var(--sl-nav-height) auto;
+      }
+
+      .header {
+        grid-column: 1 / -1;
+        grid-row: 1;
+      }
+
+      .main-frame {
+        grid-column: 1;
+        grid-row: 2;
+        min-width: 0;
+      }
+
+      :global([data-has-sidebar]) .header {
+        padding-inline-end: var(--sl-nav-pad-x);
+      }
+
+      :global(:root[data-has-sidebar]) .page {
+        grid-template-columns: var(--sl-sidebar-width) minmax(0, 1fr);
+      }
+
+      :global(:root[data-has-sidebar]) .sidebar {
+        grid-column: 1;
+        grid-row: 2;
+        /* The sticky pane must share the full article/footer grid track. If
+           this item only sizes to the viewport, its sticky containing block
+           ends as soon as the initial viewport does. */
+        align-self: stretch;
+      }
+
+      .sidebar-content::after {
+        content: "";
+        padding-bottom: 1px;
+      }
+
+      :global(:root[data-has-sidebar]) .sidebar-pane {
+        --sl-sidebar-visibility: visible;
+        position: sticky;
+        inset-block: auto;
+        top: var(--sl-nav-height);
+        width: var(--sl-sidebar-width);
+        height: calc(100vh - var(--sl-nav-height));
+        background-color: var(--sl-color-bg-sidebar);
+        border-inline-end: 1px solid var(--sl-color-hairline-shade);
+      }
+
+      :global(:root[data-has-sidebar]) .main-frame {
+        grid-column: 2;
+        grid-row: 2;
+        padding-top: 0;
+        padding-inline-start: 0;
+      }
+    }
+
+    @media (max-width: 49.999rem) {
+      .main-frame {
+        padding-top: calc(var(--sl-nav-height) + var(--sl-mobile-toc-height));
+        padding-inline-start: var(--sl-content-inline-start);
+      }
+    }
+  }
+</style>

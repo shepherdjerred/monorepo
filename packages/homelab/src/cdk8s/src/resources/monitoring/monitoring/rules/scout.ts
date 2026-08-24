@@ -298,6 +298,22 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
+          alert: "ScoutInitialHistoryImportStale",
+          annotations: {
+            summary: "Scout initial match history import is stalled",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} has an actionable first-run history import older than six hours. Check the import phase metrics, Riot 429s, SeaweedFS, and report-lake folding.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "scout_initial_history_import_oldest_actionable_timestamp_seconds > 0 and (time() - scout_initial_history_import_oldest_actionable_timestamp_seconds) > 21600",
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
           // Individual blocked guilds are a USER problem (the owner is DM'd via
           // the backed-off escalation), so don't page on one or two. A spike in
           // blocked guilds at once instead points at a bot-side delivery bug.

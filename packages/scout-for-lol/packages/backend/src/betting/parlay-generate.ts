@@ -31,7 +31,7 @@ import {
 } from "#src/betting/parlay-model-schema.ts";
 import { fetchParlayHistory } from "#src/betting/parlay-history.ts";
 import {
-  numericThresholdsAreMeasured,
+  numericThresholdDiagnostics,
   priceParlay,
   type ParlayPrice,
 } from "#src/betting/parlay-pricing.ts";
@@ -245,13 +245,14 @@ async function generateAndPersistDefinition(
 
   // Pass one: which legs, no numbers.
   const proposed = await call(
-    parlayProposalSchemaFor(setup.subjects),
+    parlayProposalSchemaFor(setup.subjects, setup.context.shortlist),
     buildParlayProposalPrompt(setup.context),
     "bryan_bucks_parlay_proposal",
   );
-  const proposal = parlayProposalSchemaFor(setup.subjects).parse(
-    proposed.object,
-  );
+  const proposal = parlayProposalSchemaFor(
+    setup.subjects,
+    setup.context.shortlist,
+  ).parse(proposed.object);
   deadline.throwIfAborted();
 
   // The one history snapshot that both the thresholds and the price come from.
@@ -296,9 +297,18 @@ async function generateAndPersistDefinition(
   deadline.throwIfAborted();
 
   const candidate = parseModelGeneratedParlay(filledParlay, 5000);
-  if (
-    !numericThresholdsAreMeasured(candidate.conditions, setup.subjects, history)
-  ) {
+  const thresholdDiagnostics = numericThresholdDiagnostics(
+    candidate.conditions,
+    setup.subjects,
+    history,
+  );
+  if (thresholdDiagnostics.length > 0) {
+    logger.info("Parlay threshold rejected by measured hit-rate guard", {
+      matchId: setup.matchId,
+      minimumHitRate: 0.4,
+      maximumHitRate: 0.7,
+      diagnostics: thresholdDiagnostics,
+    });
     throw new ParlayUnpriceableError(
       "filled thresholds were outside the measured 40-70% hit-rate range",
     );

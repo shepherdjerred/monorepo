@@ -2964,8 +2964,7 @@ export interface ChallengeSpecSolverDns01Route53AuthKubernetesServiceAccountRef 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ChallengeSpecSolverDns01Route53AuthKubernetesServiceAccountRef(
   obj:
-    | ChallengeSpecSolverDns01Route53AuthKubernetesServiceAccountRef
-    | undefined,
+    ChallengeSpecSolverDns01Route53AuthKubernetesServiceAccountRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -3482,8 +3481,7 @@ export interface ChallengeSpecSolverHttp01IngressPodTemplateSpecImagePullSecrets
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecImagePullSecrets(
   obj:
-    | ChallengeSpecSolverHttp01IngressPodTemplateSpecImagePullSecrets
-    | undefined,
+    ChallengeSpecSolverHttp01IngressPodTemplateSpecImagePullSecrets | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -3692,8 +3690,7 @@ export interface ChallengeSpecSolverHttp01IngressPodTemplateSpecSecurityContext 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecSecurityContext(
   obj:
-    | ChallengeSpecSolverHttp01IngressPodTemplateSpecSecurityContext
-    | undefined,
+    ChallengeSpecSolverHttp01IngressPodTemplateSpecSecurityContext | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;

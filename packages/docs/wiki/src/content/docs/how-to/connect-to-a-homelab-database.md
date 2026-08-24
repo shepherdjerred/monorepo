@@ -5,7 +5,7 @@ sidebar:
   order: 12
 ---
 
-The homelab runs four PostgreSQL clusters under the Zalando
+The homelab runs five PostgreSQL clusters under the Zalando
 [postgres-operator](https://github.com/zalando/postgres-operator). None of them
 is reachable from your laptop directly — there is no ingress, no `LoadBalancer`,
 and no tailnet hostname. Every connection goes through the Kubernetes API, either
@@ -13,12 +13,13 @@ by running `psql` inside the pod or by port-forwarding the service.
 
 ## The clusters
 
-| Cluster                      | Namespace         | User             | Databases                         |
-| ---------------------------- | ----------------- | ---------------- | --------------------------------- |
-| `bugsink-postgresql`         | `bugsink`         | `bugsink`        | `bugsink_db`                      |
-| `grafana-postgresql`         | `prometheus`      | `grafana`        | `grafana`                         |
-| `temporal-postgresql`        | `temporal`        | `temporal`       | `temporal`, `temporal_visibility` |
-| `tracker-tracker-postgresql` | `tracker-tracker` | `trackertracker` | `tracker_tracker`                 |
+| Cluster                 | Namespace    | User       | Databases                         |
+| ----------------------- | ------------ | ---------- | --------------------------------- |
+| `bugsink-postgresql`    | `bugsink`    | `bugsink`  | `bugsink_db`                      |
+| `grafana-postgresql`    | `prometheus` | `grafana`  | `grafana`                         |
+| `scout-beta-postgresql` | `scout-beta` | `scout`    | `scout`                           |
+| `scout-prod-postgresql` | `scout-prod` | `scout`    | `scout`                           |
+| `temporal-postgresql`   | `temporal`   | `temporal` | `temporal`, `temporal_visibility` |
 
 They are defined in
 [`packages/homelab/src/cdk8s/src/resources/postgres/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/cdk8s/src/resources/postgres).

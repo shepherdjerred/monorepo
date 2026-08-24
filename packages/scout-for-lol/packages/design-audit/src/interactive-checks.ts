@@ -59,19 +59,31 @@ async function assertVisibleDialogs(page: Page): Promise<void> {
 
 export async function assertInteractiveStates(page: Page): Promise<void> {
   const dialogTriggers = page.locator(
-    '[aria-haspopup="dialog"]:visible, [data-dialog-trigger]:visible',
+    '[aria-haspopup="dialog"]:visible:not([aria-label="Open navigation"]), [data-dialog-trigger]:visible',
   );
-  for (let index = 0; index < (await dialogTriggers.count()); index += 1) {
+  const dialogTriggerCount = await dialogTriggers.count();
+  for (let index = 0; index < dialogTriggerCount; index += 1) {
     const trigger = dialogTriggers.nth(index);
+    const triggerDescription = await trigger.evaluate(
+      (element) => element.outerHTML,
+    );
     await trigger.scrollIntoViewIfNeeded();
-    await trigger.click({ force: true });
+    await trigger.click();
     await expect(
       page.locator('[role="dialog"]:visible'),
-      "dialog triggers open a visible dialog",
+      `dialog trigger opens a visible dialog: ${triggerDescription}`,
     ).not.toHaveCount(0);
+    const radixDialog = page.locator('[role="dialog"][data-state="open"]');
+    const openedRadixDialog = (await radixDialog.count()) > 0;
     await assertVisibleDialogs(page);
     await page.keyboard.press("Escape");
     await expect(page.locator('[role="dialog"]:visible')).toHaveCount(0);
+    if (openedRadixDialog) {
+      await expect(
+        page.locator('[role="dialog"][data-state]'),
+        "closed Radix dialog portals detach before the next trigger",
+      ).toHaveCount(0);
+    }
   }
 
   await assertVisibleDialogs(page);

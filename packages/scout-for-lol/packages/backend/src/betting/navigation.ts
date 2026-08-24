@@ -11,6 +11,7 @@ import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { PEEK_PASS_DURATION_LABEL } from "#src/betting/peek-pass.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 export const BUCKS_NAVIGATION_NAMESPACE = "bbnav";
 export const BUCKS_NAVIGATION_VERSION = "1";
@@ -37,6 +38,11 @@ const LEDGER_KIND_LABELS = {
   parlay_payout: "parlay payout",
   parlay_refund: "parlay refund",
   parlay_release: "parlay reserve release",
+  weekly_parlay_stake: "weekly parlay stake",
+  weekly_parlay_reserve: "weekly parlay house reserve",
+  weekly_parlay_payout: "weekly parlay payout",
+  weekly_parlay_refund: "weekly parlay refund",
+  weekly_parlay_release: "weekly parlay reserve release",
   peek_pass: `${PEEK_PASS_DURATION_LABEL} peek pass`,
   adjustment: "adjustment",
 } satisfies Record<BucksLedgerKind, string>;
@@ -155,11 +161,11 @@ export function renderBucksHistory(
   const lines = page.entries.map((entry) => {
     const sign = entry.delta > 0 ? "+" : "";
     const where = entry.matchId === null ? "" : ` · ${entry.matchId}`;
-    return `\`${sign}${entry.delta.toString()}\` ${ledgerKindLabel(entry.kind)}${where} → ${entry.balanceAfter.toString()} BB`;
+    return `\`${sign}${formatInteger(entry.delta)}\` ${ledgerKindLabel(entry.kind)}${where} → ${formatInteger(entry.balanceAfter)} BB`;
   });
   return {
     content: [
-      `**Bryan Bucks history** · Page ${(page.page + 1).toString()}/${page.totalPages.toString()}`,
+      `**Bryan Bucks history** · Page ${formatInteger(page.page + 1)}/${formatInteger(page.totalPages)}`,
       ...lines,
     ].join("\n"),
     components: navigationRow(ownerId, page),

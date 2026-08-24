@@ -76,15 +76,19 @@ async function getInstance(): Promise<DuckDBInstance> {
  */
 export async function withDuckDBConnection<T>(
   fn: (session: DuckDBSession) => Promise<T>,
-  options: { timeoutMs?: number } = {},
+  options: { timeoutMs?: number; abortSignal?: AbortSignal } = {},
 ): Promise<T> {
   const timeoutMs = options.timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS;
   const duckdb = await loadDuckDB();
   const instance = await getInstance();
   const connection = await instance.connect();
 
-  const timeoutState = { timedOut: false };
+  const timeoutState = { timedOut: false, aborted: false };
   const hasTimedOut = () => timeoutState.timedOut;
+  const abort = () => {
+    timeoutState.aborted = true;
+    connection.interrupt();
+  };
   const timer = setTimeout(() => {
     timeoutState.timedOut = true;
     connection.interrupt();
@@ -93,6 +97,10 @@ export async function withDuckDBConnection<T>(
   if (timeoutMs <= 0) {
     timeoutState.timedOut = true;
     connection.interrupt();
+  }
+  options.abortSignal?.addEventListener("abort", abort, { once: true });
+  if (options.abortSignal?.aborted === true) {
+    abort();
   }
 
   const session: DuckDBSession = {
@@ -104,6 +112,9 @@ export async function withDuckDBConnection<T>(
         const reader = await connection.runAndReadAll(sql, params);
         return reader.getRowObjects();
       } catch (error) {
+        if (timeoutState.aborted) {
+          throw new DOMException("DuckDB query aborted.", "AbortError");
+        }
         if (hasTimedOut()) {
           throw new ReportQueryTimeoutError(timeoutMs);
         }
@@ -117,6 +128,7 @@ export async function withDuckDBConnection<T>(
     return await fn(session);
   } finally {
     clearTimeout(timer);
+    options.abortSignal?.removeEventListener("abort", abort);
     connection.closeSync();
   }
 }

@@ -10,6 +10,7 @@ import {
 } from "#src/betting/parlay-criteria.ts";
 import { formatDecimalOdds } from "#src/betting/parlay-odds.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 /**
  * The parlay market message.
@@ -63,7 +64,7 @@ function headerLines(input: {
   return [
     "🎲 **Bryan Bucks Parlay** — every leg must hit for YES",
     ...renderParlay(input.criteria, input.subjects).map(
-      (leg, index) => `${(index + 1).toString()}. ${leg}`,
+      (leg, index) => `${formatInteger(index + 1)}. ${leg}`,
     ),
   ];
 }
@@ -99,7 +100,8 @@ function positionLines(positions: readonly ParlayPosition[]): string[] {
     }
     const names = held
       .map(
-        (position) => `<@${position.discordId}> ${position.stake.toString()}`,
+        (position) =>
+          `<@${position.discordId}> ${formatInteger(position.stake)}`,
       )
       .join(" · ");
     lines.push(`**${side}** ${names}`);
@@ -139,7 +141,7 @@ export function buildParlayContent(input: {
       "",
       status,
       ...positionLines(shown),
-      ...(hidden > 0 ? [`…and ${hidden.toString()} more.`] : []),
+      ...(hidden > 0 ? [`…and ${formatInteger(hidden)} more.`] : []),
     ];
     const chunks = splitMessageIntoChunks(lines.join("\n"));
     const message = chunks[0];

@@ -10,10 +10,10 @@ relationships are styled distinctly.
 
 All graph data comes from the workspace package
 [`@shepherdjerred/glitter-context`](../glitter-context/): the build imports its
-`people` and `currentRelationships` exports, filters to people that appear in
-at least one current relationship, and inlines the result as a frozen
-`globalThis.GLITTER_CONTEXT` object in `dist/context-data.js`. There is no
-runtime data fetching — the site is fully static.
+`people` and `currentRelationships` exports and inlines them as a frozen
+`globalThis.GLITTER_CONTEXT` object in `dist/context-data.js`. People without a
+current relationship are included as isolated nodes. There is no runtime data
+fetching — the site is fully static.
 
 ## Structure
 

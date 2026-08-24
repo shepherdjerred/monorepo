@@ -1,5 +1,5 @@
 import path from "node:path";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "#generated/prisma/client/index.js";
 import {
   CompetitionIdSchema,
@@ -10,6 +10,7 @@ import {
   RegionSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 
 const DEFAULT_GUILD_ID = "1337623164146155593";
@@ -49,14 +50,19 @@ function requiredPositiveInteger(
 }
 
 function databaseUrl(
-  backendCwd: string,
   environment: Readonly<Record<string, string | undefined>>,
 ): string {
-  const configured = environment["DATABASE_URL"] ?? "file:./db.sqlite";
-  if (!configured.startsWith("file:") || configured.startsWith("file:/")) {
-    return configured;
+  const configured = environment["DATABASE_URL"];
+  if (
+    configured === undefined ||
+    (!configured.startsWith("postgres://") &&
+      !configured.startsWith("postgresql://"))
+  ) {
+    throw new Error(
+      "Design-audit fixtures require DATABASE_URL to be a PostgreSQL URL",
+    );
   }
-  return `file:${path.resolve(backendCwd, configured.slice("file:".length))}`;
+  return configured;
 }
 
 /** Seed only the read models exercised by the local design-audit routes. */
@@ -69,34 +75,37 @@ export async function seedDesignAuditDatabase(
       "Design-audit fixtures require SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true",
     );
   }
-  const configuredDatabaseUrl = environment["DATABASE_URL"] ?? "";
-  if (!configuredDatabaseUrl.includes("design-audit")) {
+  const configuredDatabaseUrl = databaseUrl(environment);
+  if (new URL(configuredDatabaseUrl).pathname !== "/scout_design_audit") {
     throw new Error(
       "Design-audit fixtures require a dedicated design-audit database",
     );
   }
+  for (const query of [STARTER_QUERY, EXPLORE_ANSWER_QUERY]) {
+    compileScoutQl(query);
+  }
   const guildId = DiscordGuildIdSchema.parse(
-    environment["SCOUT_DESIGN_AUDIT_GUILD_ID"] ?? DEFAULT_GUILD_ID,
+    Bun.env["SCOUT_DESIGN_AUDIT_GUILD_ID"] ?? DEFAULT_GUILD_ID,
   );
   const discordId = DiscordAccountIdSchema.parse(
-    environment["SCOUT_DESIGN_AUDIT_DISCORD_ID"] ?? DEFAULT_DISCORD_ID,
+    Bun.env["SCOUT_DESIGN_AUDIT_DISCORD_ID"] ?? DEFAULT_DISCORD_ID,
   );
   const channelId = DiscordChannelIdSchema.parse("1337623164146155594");
   const puuid = LeaguePuuidSchema.parse("d".repeat(78));
   const region = RegionSchema.parse("AMERICA_NORTH");
   const playerAlias =
-    environment["SCOUT_DESIGN_AUDIT_PLAYER_ALIAS"] ?? DEFAULT_PLAYER_ALIAS;
+    Bun.env["SCOUT_DESIGN_AUDIT_PLAYER_ALIAS"] ?? DEFAULT_PLAYER_ALIAS;
   const competitionId = CompetitionIdSchema.parse(
     requiredPositiveInteger(
       "SCOUT_DESIGN_AUDIT_COMPETITION_ID",
-      environment["SCOUT_DESIGN_AUDIT_COMPETITION_ID"],
+      Bun.env["SCOUT_DESIGN_AUDIT_COMPETITION_ID"],
       DEFAULT_COMPETITION_ID,
     ),
   );
   const reportId = ReportIdSchema.parse(
     requiredPositiveInteger(
       "SCOUT_DESIGN_AUDIT_REPORT_ID",
-      environment["SCOUT_DESIGN_AUDIT_REPORT_ID"],
+      Bun.env["SCOUT_DESIGN_AUDIT_REPORT_ID"],
       DEFAULT_REPORT_ID,
     ),
   );
@@ -108,10 +117,7 @@ export async function seedDesignAuditDatabase(
     DESIGN_AUDIT_EXPLORE_SHARE_TOKEN;
   const now = new Date("2026-01-01T00:00:00.000Z");
   const prisma = new PrismaClient({
-    adapter: new PrismaLibSql(
-      { url: databaseUrl(backendCwd, environment) },
-      { timestampFormat: "unixepoch-ms" },
-    ),
+    adapter: new PrismaPg({ connectionString: databaseUrl(environment) }),
   });
   // The audit owns this disposable fixture lake. Never inherit REPORT_LAKE_DIR,
   // which may point at a developer's normal working lake.

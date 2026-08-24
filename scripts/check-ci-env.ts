@@ -8,8 +8,8 @@
  * operator synced. The cdk8s linter (`check-1password-items.ts`) only sees
  * `secretKeyRef` and volume `items[].key`, so it cannot see a single key the
  * pipeline consumes — exactly one key of that item is under its coverage today.
- * A script calling `requireEnv("CODEX_ACCESS_TOKEN")` against an item with no
- * such field therefore passed every gate and would only fail on `main`, after
+ * A script calling `requireEnv("RELEASE_PROVIDER_TOKEN")` against an item with
+ * no such field would therefore pass every gate and fail only on `main` after
  * merge, in the release step.
  *
  * The check is offline: it reads the committed vault snapshot (sha256 hashes,
@@ -141,6 +141,15 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
       "script's own header documents it as 'required unless --dry-run'. The " +
       "steps that call argocd.ts for real (argocd-sync, tofu-cloudflare) " +
       "export ARGOCD_TOKEN in their command and are checked normally.",
+  },
+  {
+    step: "pr-dryrun",
+    script: "scripts/release.ts",
+    names: ["CODEX_HOME"],
+    reason:
+      "The step runs release.ts with --dry-run, which returns before the " +
+      "main-only Codex auth-volume preflight. The release-please step mounts " +
+      "and supplies CODEX_HOME and is checked normally.",
   },
 ];
 

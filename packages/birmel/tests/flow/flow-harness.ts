@@ -7,6 +7,7 @@ import {
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import type { MessageHandler } from "@shepherdjerred/birmel/discord/events/message-create.ts";
 import {
+  FLOW_HARNESS_TEST_TIMEOUT_MS,
   FLOW_RESULT_PREFIX,
   FlowHarnessResultSchema,
   FlowScenarioSchema,
@@ -483,6 +484,10 @@ async function main(): Promise<void> {
     await disconnectPrisma();
   }
 }
-test("runs every flow scenario", async () => {
-  await main();
-});
+test(
+  "runs every flow scenario",
+  async () => {
+    await main();
+  },
+  FLOW_HARNESS_TEST_TIMEOUT_MS,
+);

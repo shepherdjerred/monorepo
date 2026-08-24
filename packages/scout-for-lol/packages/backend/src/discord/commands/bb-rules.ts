@@ -7,12 +7,26 @@ import {
   SEED_GRANT,
 } from "#src/betting/constants.ts";
 import { EARNED_REWARDS } from "#src/betting/earnings.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
 import { PEEK_DELAY_MS } from "#src/betting/pool-open.ts";
 import {
   MINIMUM_PRICE,
   PEEK_PASS_DURATION_MS,
 } from "#src/betting/peek-pass.ts";
+import {
+  WEEKLY_PARLAY_ELIGIBLE_QUEUES,
+  WEEKLY_PARLAY_MAX_LEGS,
+  WEEKLY_PARLAY_MIN_LEGS,
+} from "#src/betting/weekly-parlay-criteria.ts";
+import {
+  WEEKLY_PARLAY_BETTING_CLOSE_HOUR,
+  WEEKLY_PARLAY_FINAL_HOUR,
+  WEEKLY_PARLAY_INGESTION_GRACE_MINUTES,
+  WEEKLY_PARLAY_OPEN_HOUR,
+  WEEKLY_PARLAY_TIMEZONE,
+  weeklyParlayWallClockLabel,
+} from "#src/betting/weekly-parlay-period.ts";
 
 const BUCKS_COLOR = 0x2e_cc_71;
 
@@ -55,12 +69,12 @@ export function buildBbRulesEmbed(): EmbedBuilder {
       {
         name: "Getting Bucks",
         value:
-          `Link your Discord account to a tracked player. A new wallet starts with **${SEED_GRANT.toString()} BB**. ` +
-          `Every eligible game pays **+${EARNED_REWARDS.played.amount.toString()} BB** for playing, ` +
-          `**+${EARNED_REWARDS.win.amount.toString()} BB** for winning, and ` +
-          `**+${EARNED_REWARDS.mvp.amount.toString()} BB** for MVP. ` +
-          `Ranked 5s adds **+${EARNED_REWARDS["ranked 5s bonus"].amount.toString()} BB** and Clash adds ` +
-          `**+${EARNED_REWARDS["clash bonus"].amount.toString()} BB**. ` +
+          `Link your Discord account to a tracked player. A new wallet starts with **${formatInteger(SEED_GRANT)} BB**. ` +
+          `Every eligible game pays **+${formatInteger(EARNED_REWARDS.played.amount)} BB** for playing, ` +
+          `**+${formatInteger(EARNED_REWARDS.win.amount)} BB** for winning, and ` +
+          `**+${formatInteger(EARNED_REWARDS.mvp.amount)} BB** for MVP. ` +
+          `Ranked 5s adds **+${formatInteger(EARNED_REWARDS["ranked 5s bonus"].amount)} BB** and Clash adds ` +
+          `**+${formatInteger(EARNED_REWARDS["clash bonus"].amount)} BB**. ` +
           `Eligible queues: ${BUCKS_EARNING_QUEUES.join(", ")}. ` +
           "League Classic pays the played point but carries no market, because Riot exposes no post-game payload for it.",
       },
@@ -69,7 +83,7 @@ export function buildBbRulesEmbed(): EmbedBuilder {
         value:
           "Bet **WIN** or **LOSE** on the tracked player. When both teams have a tracked player, pick **Blue** or **Red** instead. " +
           "Your amount is a maximum offer: human offers match first at even money, oversubscribed offers match proportionally, " +
-          `and the house then fills up to **${HOUSE_MATCH_LIMIT.toString()} BB** per game if its balance allows. ` +
+          `and the house then fills up to **${formatInteger(HOUSE_MATCH_LIMIT)} BB** per game if its balance allows. ` +
           "Unmatched BB are refunded at close, free. " +
           `Winners get twice their matched stake, less **${cut}%** of matched profit, rounded down. ` +
           `Cancelling before close costs **${cut}%** of the offer, rounded to the nearest BB.`,
@@ -83,6 +97,15 @@ export function buildBbRulesEmbed(): EmbedBuilder {
           "Cancelling a parlay is free and returns the whole stake.",
       },
       {
+        name: "Weekly parlays",
+        value:
+          `A ${WEEKLY_PARLAY_MIN_LEGS.toString()}-${WEEKLY_PARLAY_MAX_LEGS.toString()} leg YES/NO market across one or more tracked players. ` +
+          `It opens Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_OPEN_HOUR)} and betting closes Monday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_BETTING_CLOSE_HOUR)} in ${WEEKLY_PARLAY_TIMEZONE}. ` +
+          `Only completed ${WEEKLY_PARLAY_ELIGIBLE_QUEUES.join(", ")} games count, through Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_FINAL_HOUR)}. ` +
+          `Scout waits **${WEEKLY_PARLAY_INGESTION_GRACE_MINUTES.toString()} minutes** after that cutoff for completed games to ingest. ` +
+          "Scout may settle YES early only after every leg is impossible to undo; NO always waits for final settlement. Cancelling before Monday is free.",
+      },
+      {
         name: "Voids",
         value:
           "Remakes, unsupported modes, and games that never resolve return every matched stake with no fee. " +
@@ -92,7 +115,7 @@ export function buildBbRulesEmbed(): EmbedBuilder {
         name: "Peek passes",
         value:
           `\`/bb pass\` buys **${hours(PEEK_PASS_DURATION_MS)} hours** of private pregame estimates. ` +
-          `The price scales with your balance and how long you have held it, minimum **${MINIMUM_PRICE.toString()} BB**. ` +
+          `The price scales with your balance and how long you have held it, minimum **${formatInteger(MINIMUM_PRICE)} BB**. ` +
           `Then \`/bb peek game:<tracked player>\` once the game has been live for **${minutes(PEEK_DELAY_MS)} minutes**. ` +
           "Estimates are experimental, frozen before the game, and disappear when the market resolves.",
       },

@@ -98,7 +98,7 @@ private struct OverviewPreview: View {
       WindowColumnHeader()
         .padding(.vertical, 5)
       ForEach(overview.providers) { provider in
-        ProviderSectionView(overview: provider, date: PreviewData.now)
+        ProviderSectionView(overview: provider, date: PreviewData.now, history: [])
         if provider.id != overview.providers.last?.id {
           Divider().padding(.leading, 25)
         }

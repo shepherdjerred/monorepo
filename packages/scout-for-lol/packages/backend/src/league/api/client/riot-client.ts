@@ -12,7 +12,11 @@ import {
   MatchIdSchema,
 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { RateLimiter, type RateLimiterOptions } from "./rate-limiter.ts";
+import {
+  RateLimiter,
+  type RateLimitedRequestOptions,
+  type RateLimiterOptions,
+} from "./rate-limiter.ts";
 
 export type MatchListParams = {
   count?: number | undefined;
@@ -49,14 +53,20 @@ export class RiotClient {
     this.fetchFn = options.fetchFn ?? fetch;
   }
 
-  private async fetchJson(url: string): Promise<unknown> {
-    const response = await this.rateLimiter.execute(url, () =>
-      this.fetchFn(url, {
-        headers: {
-          "X-Riot-Token": this.apiKey,
-          Accept: "application/json",
-        },
-      }),
+  private async fetchJson(
+    url: string,
+    requestOptions: RateLimitedRequestOptions = {},
+  ): Promise<unknown> {
+    const response = await this.rateLimiter.execute(
+      url,
+      () =>
+        this.fetchFn(url, {
+          headers: {
+            "X-Riot-Token": this.apiKey,
+            Accept: "application/json",
+          },
+        }),
+      requestOptions,
     );
     return response.json();
   }
@@ -89,6 +99,7 @@ export class RiotClient {
       puuid: LeaguePuuid,
       regionalRoute: RegionalRoute,
       params: MatchListParams = {},
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<MatchId[]> => {
       const searchParams = new URLSearchParams();
       if (params.count !== undefined)
@@ -106,16 +117,17 @@ export class RiotClient {
       const qs = searchParams.toString();
       const queryString = qs.length > 0 ? `?${qs}` : "";
       const url = `https://${regionalRoute.toLowerCase()}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids${queryString}`;
-      const data = await this.fetchJson(url);
+      const data = await this.fetchJson(url, requestOptions);
       return MatchIdListSchema.parse(data);
     },
 
     get: async (
       matchId: MatchId | string,
       regionalRoute: RegionalRoute,
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<unknown> => {
       const url = `https://${regionalRoute.toLowerCase()}.api.riotgames.com/lol/match/v5/matches/${encodeURIComponent(matchId)}`;
-      return this.fetchJson(url);
+      return this.fetchJson(url, requestOptions);
     },
 
     timeline: async (
@@ -131,9 +143,10 @@ export class RiotClient {
     byPuuid: async (
       puuid: LeaguePuuid,
       platform: PlatformRoute,
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<unknown> => {
       const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/league/v4/entries/by-puuid/${encodeURIComponent(puuid)}`;
-      return this.fetchJson(url);
+      return this.fetchJson(url, requestOptions);
     },
   };
 

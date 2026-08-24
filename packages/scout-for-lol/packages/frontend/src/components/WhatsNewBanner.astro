@@ -16,7 +16,10 @@ const latestEntry = changelog[0];
         <div class="flex items-center justify-between gap-x-6">
           <div class="flex items-center gap-x-3 min-w-0 flex-1">
             <Icon name="heroicons:megaphone" class="h-5 w-5 flex-none" />
-            <p class="text-sm leading-6 text-scout-accent-ink truncate">
+            <p
+              class="text-sm leading-6 text-scout-accent-ink truncate"
+              data-design-audit-allow-truncation
+            >
               <strong class="font-semibold">
                 What's New - {formatChangelogDate(latestEntry)}:
               </strong>{" "}

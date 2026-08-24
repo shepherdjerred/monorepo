@@ -13,6 +13,7 @@ import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker.ts";
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker-network-policy.ts";
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker.ts";
+import { createTemporalScoutBetaNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/scout-beta-network.ts";
 
 export function createTemporalChart(app: App) {
   const chart = new Chart(app, "temporal", {
@@ -419,4 +420,37 @@ export function createTemporalChart(app: App) {
       ],
     },
   });
+
+  // FreshRSS Repo Stack reconciliation is limited to the core worker. Keep
+  // it separate from the shared worker policy because the agent and Glitter
+  // workers intentionally reuse the temporal-worker app label.
+  new KubeNetworkPolicy(chart, "temporal-worker-freshrss-netpol", {
+    metadata: { name: "temporal-worker-freshrss-netpol" },
+    spec: {
+      podSelector: {
+        matchLabels: {
+          app: "temporal-worker",
+          component: "core-worker",
+        },
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "freshrss",
+                },
+              },
+              podSelector: { matchLabels: { app: "freshrss" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+
+  createTemporalScoutBetaNetworkPolicy(chart);
 }

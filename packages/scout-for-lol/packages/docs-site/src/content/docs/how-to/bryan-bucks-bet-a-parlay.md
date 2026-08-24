@@ -1,12 +1,13 @@
 ---
 title: Bet a Bryan Bucks parlay
-description: Read the leg list and odds, take YES or NO on a live in-play market, and cancel for free.
+description: Read the legs and odds, choose the exact match or weekly market, take YES or NO, and cancel for free.
 sidebar:
   order: 12
 ---
 
-A parlay is a second, separate market on the same game. Scout posts it as its
-own message shortly after the pre-match card.
+A parlay is a fixed-odds YES/NO market where every leg must hit for YES. Scout
+posts match parlays shortly after a pre-match card and weekly parlays before
+their scoring period begins.
 
 ```text
 🎲 Bryan Bucks Parlay — every leg must hit for YES
@@ -27,7 +28,8 @@ Three things matter, and all three are on the message:
   you are not matched against another player — the house reserves your full
   payout at the price you took.
 - **It is a live in-play market.** It is published after the game has already
-  started, so early events may already be decided.
+  started, so early events may already be decided. A weekly parlay is published
+  before scoring begins and is labelled separately.
 
 ## Take a side
 
@@ -36,6 +38,10 @@ Click `YES 1`, `YES 5`, `NO 1`, or `NO 5`, or use the command for any amount:
 ```text
 /bb parlay player: <tracked player> side: YES amount: 20
 ```
+
+Use the message buttons whenever the same player appears in more than one open
+market. The slash command refuses that ambiguity instead of choosing the wrong
+market.
 
 The confirmation is private and tells you the payout you locked in:
 
@@ -65,7 +71,9 @@ market. It also releases the payout the house had reserved for you.
 
 ## When there is no parlay
 
-Not every game gets one. Scout only publishes a parlay it can _price_ from
-history — if the match lake cannot answer a leg, generation records the parlay
-as unpriceable rather than guessing a number. See
+Not every game or week gets one. Scout only publishes a parlay it can _price_
+from history—if the match lake cannot answer a leg, generation records the
+parlay as unpriceable rather than guessing a number. Weekly candidate, coverage,
+and probability-band requirements are listed in
+[the rules reference](/docs/reference/bryan-bucks-rules/). See
 [how parlay odds are set](/docs/explanation/bryan-bucks-parlay-odds/).

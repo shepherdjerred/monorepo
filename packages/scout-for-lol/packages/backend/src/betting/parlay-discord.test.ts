@@ -3,6 +3,7 @@ import {
   ParlayConditionSchema,
   PARLAY_SUBJECT_ALIAS_MAX_LENGTH,
   ParlaySubjectsSchema,
+  renderParlayCondition,
 } from "#src/betting/parlay-criteria.ts";
 import { buildSettlementMessage } from "#src/betting/outcome-message.ts";
 import { buildParlayButtons } from "#src/betting/parlay-components.ts";
@@ -172,7 +173,7 @@ describe("parlay Discord experience", () => {
 
   // The parlay result is now a section on the settlement embed rather than its
   // own message, so these assert the embed's parlay fields.
-  test("renders leg actuals, the overall side, positions, and payouts", () => {
+  test("renders leg actuals plus winner profit and loser stake", () => {
     const rendered = parlayEmbed({
       matchId: "NA1_42",
       serverId: "1337623164146155593",
@@ -202,12 +203,24 @@ describe("parlay Discord experience", () => {
           payout: 42,
           outcome: "won",
         },
+        {
+          discordId: "losing-discord-account",
+          side: "YES",
+          stake: 30,
+          grossPayout: 50,
+          payout: 0,
+          outcome: "lost",
+        },
       ],
     });
     expect(rendered).toContain("Parlay — NO (1/2 legs)");
     expect(rendered).toContain("Bryan gets at least 5 kills — 4");
     expect(rendered).toContain("Their team gets first baron — true");
-    expect(rendered).toContain("NO 25 → won, **42 BB**");
+    expect(rendered).toContain("PARLAY WINNERS");
+    expect(rendered).toContain("<@test-discord-account> bet 25BB, won 17BB");
+    expect(rendered).toContain("PARLAY LOSERS");
+    expect(rendered).toContain("<@losing-discord-account> bet 30BB, lost 30BB");
+    expect(rendered).not.toContain("NO 25");
   });
 
   test("names a void in prose rather than leaking the enum", () => {
@@ -218,10 +231,56 @@ describe("parlay Discord experience", () => {
       voidReason: "expired",
       messageRefs: [],
       legs: [],
-      bets: [],
+      bets: [
+        {
+          discordId: "refunded-discord-account",
+          side: "YES",
+          stake: 3000,
+          grossPayout: 5000,
+          payout: 3000,
+          outcome: "refunded",
+        },
+      ],
     });
     expect(rendered).toContain("Parlay — voided (the game never resolved)");
+    expect(rendered).toContain(
+      "PARLAY REFUNDS: **3,000BB** across 1 parlay (the game never resolved).",
+    );
+    expect(rendered).not.toContain("refunded-discord-account");
     expect(rendered).not.toContain("expired");
+  });
+
+  test("formats legacy duration thresholds and leg results as MM:SS", () => {
+    const durationCondition = ParlayConditionSchema.parse({
+      kind: "participant_numeric",
+      subject: "P1",
+      field: "timePlayed",
+      operator: "gte",
+      threshold: 3661,
+    });
+    const rendered = parlayEmbed({
+      matchId: "NA1_42",
+      serverId: "1337623164146155593",
+      yesResult: true,
+      voidReason: undefined,
+      messageRefs: [],
+      legs: [
+        {
+          condition: durationCondition,
+          rendered: renderParlayCondition(durationCondition, subjects),
+          actualValue: 3662,
+          passed: true,
+        },
+        {
+          condition: objectiveCondition,
+          rendered: "Their team gets first baron",
+          actualValue: true,
+          passed: true,
+        },
+      ],
+      bets: [],
+    });
+    expect(rendered).toContain("at least 61:01 time played — 61:02");
   });
 
   // Merging the parlay into the outcome embed made Discord's 6000-character

@@ -1,0 +1,422 @@
+/**
+ * One entry per Prisma model, in FK-safe topological order across the part
+ * files (concatenated by run-import.ts). Authored via one-time codegen from
+ * schema.prisma, maintained by hand: each transform is typed as the model's
+ * branded CreateManyInput, so adding a model or column — or changing a
+ * brand in scripts/brand-prisma-types.ts — without updating these maps is a
+ * compile error here.
+ */
+import type { Prisma } from "#generated/prisma/client/index.js";
+import {
+  DesktopClientIdSchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  RegionSchema,
+  PlayerIdSchema,
+  SubscriptionIdSchema,
+} from "@scout-for-lol/data";
+import {
+  defineImportModel,
+  toBool,
+  toBoolOrNull,
+  toBigIntOrNull,
+  toDate,
+  toDateOrNull,
+  toDateOrNullIfMissing,
+  toInt,
+  toIntOrNull,
+  toIntOrNullIfMissing,
+  toStr,
+  toStrOrNull,
+  toStrOrNullIfMissing,
+  type ImportModelSpec,
+} from "#src/database/legacy-import/convert.ts";
+
+export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
+  defineImportModel({
+    model: "BucksAccount",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.BucksAccountCreateManyInput => ({
+      id: toInt(row, "id"),
+      serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
+      discordId: DiscordAccountIdSchema.parse(toStr(row, "discordId")),
+      // Synthetic house accounts were added after the promoted SQLite image.
+      isHouse: row["isHouse"] === undefined ? false : toBool(row, "isHouse"),
+      balance: toInt(row, "balance"),
+      peekPassExpiresAt: toDateOrNullIfMissing(row, "peekPassExpiresAt"),
+      createdAt: toDate(row, "createdAt"),
+      updatedAt: toDate(row, "updatedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.bucksAccount.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.bucksAccount.count(),
+    findAll: (tx) => tx.bucksAccount.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "BucksMatchPool",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.BucksMatchPoolCreateManyInput => ({
+      id: toInt(row, "id"),
+      matchId: toStr(row, "matchId"),
+      serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
+      detectedAt: toDate(row, "detectedAt"),
+      // Peek passes were added after the promoted image. Do not make an old
+      // pool peekable immediately; the betting window has already closed.
+      peekAvailableAt:
+        row["peekAvailableAt"] === undefined
+          ? toDate(row, "closesAt")
+          : toDate(row, "peekAvailableAt"),
+      closesAt: toDate(row, "closesAt"),
+      queueType: toStrOrNull(row, "queueType"),
+      roster: toStr(row, "roster"),
+      messageRefs: toStr(row, "messageRefs"),
+      prematchContentBase: toStrOrNullIfMissing(row, "prematchContentBase"),
+      poolState: toStr(row, "poolState"),
+      matchedAt: toDateOrNullIfMissing(row, "matchedAt"),
+      matchingJson: toStrOrNullIfMissing(row, "matchingJson"),
+      winningTeamId: toIntOrNull(row, "winningTeamId"),
+      voidReason: toStrOrNull(row, "voidReason"),
+      predictionJson: toStrOrNull(row, "predictionJson"),
+      settledAt: toDateOrNull(row, "settledAt"),
+      createdAt: toDate(row, "createdAt"),
+      updatedAt: toDate(row, "updatedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.bucksMatchPool.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.bucksMatchPool.count(),
+    findAll: (tx) => tx.bucksMatchPool.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "BucksParlayDefinition",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.BucksParlayDefinitionCreateManyInput => ({
+      id: toInt(row, "id"),
+      matchId: toStr(row, "matchId"),
+      queueType: toStr(row, "queueType"),
+      selectedTeamId: toInt(row, "selectedTeamId"),
+      subjects: toStr(row, "subjects"),
+      criteria: toStr(row, "criteria"),
+      yesProbabilityBps: toInt(row, "yesProbabilityBps"),
+      promptVersion: toStr(row, "promptVersion"),
+      catalogVersion: toStr(row, "catalogVersion"),
+      schemaVersion: toInt(row, "schemaVersion"),
+      evaluatorVersion: toStr(row, "evaluatorVersion"),
+      generationContext: toStr(row, "generationContext"),
+      proposal: toStrOrNull(row, "proposal"),
+      pricing: toStrOrNull(row, "pricing"),
+      requestedModel: toStr(row, "requestedModel"),
+      resolvedModel: toStrOrNull(row, "resolvedModel"),
+      usage: toStr(row, "usage"),
+      durationMs: toInt(row, "durationMs"),
+      createdAt: toDate(row, "createdAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.bucksParlayDefinition.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.bucksParlayDefinition.count(),
+    findAll: (tx) =>
+      tx.bucksParlayDefinition.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "BucksParlayMarket",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.BucksParlayMarketCreateManyInput => ({
+      id: toInt(row, "id"),
+      definitionId: toInt(row, "definitionId"),
+      outcomePoolId: toInt(row, "outcomePoolId"),
+      matchId: toStr(row, "matchId"),
+      serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
+      publishedAt: toDate(row, "publishedAt"),
+      closesAt: toDate(row, "closesAt"),
+      messageRefs: toStr(row, "messageRefs"),
+      marketState: toStr(row, "marketState"),
+      yesResult: toBoolOrNull(row, "yesResult"),
+      legResults: toStrOrNull(row, "legResults"),
+      voidReason: toStrOrNull(row, "voidReason"),
+      settledAt: toDateOrNull(row, "settledAt"),
+      createdAt: toDate(row, "createdAt"),
+      updatedAt: toDate(row, "updatedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.bucksParlayMarket.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.bucksParlayMarket.count(),
+    findAll: (tx) =>
+      tx.bucksParlayMarket.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "BucksParlayBet",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.BucksParlayBetCreateManyInput => ({
+      id: toInt(row, "id"),
+      marketId: toInt(row, "marketId"),
+      bucksAccountId: toInt(row, "bucksAccountId"),
+      side: toStr(row, "side"),
+      stake: toInt(row, "stake"),
+      houseReserve: toInt(row, "houseReserve"),
+      grossPayout: toInt(row, "grossPayout"),
+      betOutcome: toStr(row, "betOutcome"),
+      payout: toIntOrNull(row, "payout"),
+      settledAt: toDateOrNull(row, "settledAt"),
+      createdAt: toDate(row, "createdAt"),
+      updatedAt: toDate(row, "updatedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.bucksParlayBet.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.bucksParlayBet.count(),
+    findAll: (tx) => tx.bucksParlayBet.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "BucksMatchEarning",
+    idColumns: ["matchId", "serverId"],
+    resetIdSequence: false,
+    transform: (row): Prisma.BucksMatchEarningCreateManyInput => ({
+      matchId: toStr(row, "matchId"),
+      serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
+      awardedAt: toDate(row, "awardedAt"),
+      // This column was added after the currently promoted SQLite image. The
+      // old schema's rows are all post-match earnings; keep that meaning when
+      // importing them rather than requiring the source file to be mutated.
+      phase: row["phase"] === undefined ? "postmatch" : toStr(row, "phase"),
+      // Older markers are completed post-match awards and have no retry
+      // snapshot. Preserve that durable meaning instead of inventing a retry.
+      state: row["state"] === undefined ? "complete" : toStr(row, "state"),
+      targetSnapshotJson:
+        row["targetSnapshotJson"] === undefined
+          ? "[]"
+          : toStr(row, "targetSnapshotJson"),
+      retryAt:
+        row["retryAt"] === undefined
+          ? toDate(row, "awardedAt")
+          : toDate(row, "retryAt"),
+      matchCreatedAt:
+        row["matchCreatedAt"] === undefined
+          ? toDate(row, "awardedAt")
+          : toDate(row, "matchCreatedAt"),
+      entryCount: toInt(row, "entryCount"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.bucksMatchEarning.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.bucksMatchEarning.count(),
+    findAll: (tx) =>
+      tx.bucksMatchEarning.findMany({
+        orderBy: [{ matchId: "asc" }, { serverId: "asc" }],
+      }),
+  }),
+  defineImportModel({
+    model: "Subscription",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.SubscriptionCreateManyInput => ({
+      id: SubscriptionIdSchema.parse(toInt(row, "id")),
+      playerId: PlayerIdSchema.parse(toInt(row, "playerId")),
+      channelId: DiscordChannelIdSchema.parse(toStr(row, "channelId")),
+      filters: toStrOrNull(row, "filters"),
+      isMuted: toBool(row, "isMuted"),
+      serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
+      creatorDiscordId: DiscordAccountIdSchema.parse(
+        toStr(row, "creatorDiscordId"),
+      ),
+      createdTime: toDate(row, "createdTime"),
+      updatedTime: toDate(row, "updatedTime"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.subscription.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.subscription.count(),
+    findAll: (tx) => tx.subscription.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "DesktopClient",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.DesktopClientCreateManyInput => ({
+      id: DesktopClientIdSchema.parse(toInt(row, "id")),
+      userId: DiscordAccountIdSchema.parse(toStr(row, "userId")),
+      clientId: toStr(row, "clientId"),
+      hostname: toStrOrNull(row, "hostname"),
+      isConnected: toBool(row, "isConnected"),
+      lastHeartbeat: toDateOrNull(row, "lastHeartbeat"),
+      currentGameId: toStrOrNull(row, "currentGameId"),
+      voiceChannelId: toStrOrNull(row, "voiceChannelId"),
+      guildId: toStrOrNull(row, "guildId"),
+      activeSoundPackId: toIntOrNull(row, "activeSoundPackId"),
+      createdAt: toDate(row, "createdAt"),
+      updatedAt: toDate(row, "updatedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.desktopClient.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.desktopClient.count(),
+    findAll: (tx) => tx.desktopClient.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "BucksBet",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.BucksBetCreateManyInput => ({
+      id: toInt(row, "id"),
+      poolId: toInt(row, "poolId"),
+      bucksAccountId: toInt(row, "bucksAccountId"),
+      predictedTeamId: toInt(row, "predictedTeamId"),
+      subjectPuuid: toStr(row, "subjectPuuid"),
+      stake: toInt(row, "stake"),
+      // Matched-stake accounting was introduced after the promoted SQLite
+      // image. Null means this historical row predates close-time matching,
+      // which is the model's documented representation for old bets.
+      humanMatchedStake: toIntOrNullIfMissing(row, "humanMatchedStake"),
+      houseMatchedStake: toIntOrNullIfMissing(row, "houseMatchedStake"),
+      matchedStake: toIntOrNullIfMissing(row, "matchedStake"),
+      unmatchedStake: toIntOrNullIfMissing(row, "unmatchedStake"),
+      betOutcome: toStr(row, "betOutcome"),
+      grossPayout: toIntOrNullIfMissing(row, "grossPayout"),
+      fee: toIntOrNullIfMissing(row, "fee"),
+      payout: toIntOrNull(row, "payout"),
+      cancelledAt: toDateOrNullIfMissing(row, "cancelledAt"),
+      settledAt: toDateOrNull(row, "settledAt"),
+      createdAt: toDate(row, "createdAt"),
+      updatedAt: toDate(row, "updatedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.bucksBet.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.bucksBet.count(),
+    findAll: (tx) => tx.bucksBet.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "BucksOpenPosition",
+    idColumns: ["poolId", "bucksAccountId"],
+    resetIdSequence: false,
+    transform: (row): Prisma.BucksOpenPositionCreateManyInput => ({
+      poolId: toInt(row, "poolId"),
+      bucksAccountId: toInt(row, "bucksAccountId"),
+      betId: toInt(row, "betId"),
+      createdAt: toDate(row, "createdAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.bucksOpenPosition.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.bucksOpenPosition.count(),
+    findAll: (tx) =>
+      tx.bucksOpenPosition.findMany({
+        orderBy: [{ poolId: "asc" }, { bucksAccountId: "asc" }],
+      }),
+  }),
+  defineImportModel({
+    model: "BucksLedgerEntry",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.BucksLedgerEntryCreateManyInput => ({
+      id: toInt(row, "id"),
+      bucksAccountId: toInt(row, "bucksAccountId"),
+      delta: toInt(row, "delta"),
+      balanceAfter: toInt(row, "balanceAfter"),
+      kind: toStr(row, "kind"),
+      matchId: toStrOrNull(row, "matchId"),
+      betId: toIntOrNull(row, "betId"),
+      parlayBetId: toIntOrNullIfMissing(row, "parlayBetId"),
+      // Weekly parlays did not exist in the legacy SQLite deployment. Include
+      // the post-cutover nullable column in the canonical digest material so
+      // verification compares the imported row to its full Postgres shape.
+      weeklyParlayBetId: null,
+      predictedTeamId: toIntOrNull(row, "predictedTeamId"),
+      actualWinningTeamId: toIntOrNull(row, "actualWinningTeamId"),
+      context: toStr(row, "context"),
+      createdAt: toDate(row, "createdAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.bucksLedgerEntry.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.bucksLedgerEntry.count(),
+    findAll: (tx) => tx.bucksLedgerEntry.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "TournamentRegistration",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.TournamentRegistrationCreateManyInput => ({
+      id: toInt(row, "id"),
+      apiMode: toStr(row, "apiMode"),
+      tournamentRegion: toStr(row, "tournamentRegion"),
+      providerId: toInt(row, "providerId"),
+      tournamentId: toInt(row, "tournamentId"),
+      callbackUrl: toStr(row, "callbackUrl"),
+      name: toStr(row, "name"),
+      createdAt: toDate(row, "createdAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.tournamentRegistration.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.tournamentRegistration.count(),
+    findAll: (tx) =>
+      tx.tournamentRegistration.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    model: "TournamentLobby",
+    idColumns: ["id"],
+    resetIdSequence: true,
+    transform: (row): Prisma.TournamentLobbyCreateManyInput => ({
+      id: toInt(row, "id"),
+      code: toStr(row, "code"),
+      apiMode: toStr(row, "apiMode"),
+      providerId: toInt(row, "providerId"),
+      tournamentId: toInt(row, "tournamentId"),
+      region: RegionSchema.parse(toStr(row, "region")),
+      platformId: toStr(row, "platformId"),
+      serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
+      channelId: DiscordChannelIdSchema.parse(toStr(row, "channelId")),
+      creatorDiscordId: DiscordAccountIdSchema.parse(
+        toStr(row, "creatorDiscordId"),
+      ),
+      bluePuuids: toStr(row, "bluePuuids"),
+      redPuuids: toStr(row, "redPuuids"),
+      blueAliases: toStr(row, "blueAliases"),
+      redAliases: toStr(row, "redAliases"),
+      teamSize: toInt(row, "teamSize"),
+      pickType: toStr(row, "pickType"),
+      mapType: toStr(row, "mapType"),
+      spectatorType: toStr(row, "spectatorType"),
+      lobbyName: toStrOrNull(row, "lobbyName"),
+      password: toStrOrNull(row, "password"),
+      state: toStr(row, "state"),
+      processedEventCount: toInt(row, "processedEventCount"),
+      lastEventTimestamp: toStrOrNull(row, "lastEventTimestamp"),
+      prematchMessageIds: toStrOrNull(row, "prematchMessageIds"),
+      joinedPuuids: toStr(row, "joinedPuuids"),
+      gameId: toBigIntOrNull(row, "gameId"),
+      matchId: toStrOrNull(row, "matchId"),
+      lastPolledAt: toDateOrNull(row, "lastPolledAt"),
+      createdAt: toDate(row, "createdAt"),
+      expiresAt: toDate(row, "expiresAt"),
+      updatedAt: toDate(row, "updatedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.tournamentLobby.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.tournamentLobby.count(),
+    findAll: (tx) => tx.tournamentLobby.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+];

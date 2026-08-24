@@ -583,6 +583,7 @@ for (const clusterScoped of [
 }
 
 test("root release finalization adopts the exact active prune without another POST", async () => {
+  const postPruneCandidate = "post-prune-candidate";
   const activeOperation = operationForRootSyncRequest({
     infos: releaseOperationInfo("prune"),
     prune: true,
@@ -631,6 +632,19 @@ test("root release finalization adopts the exact active prune without another PO
         return Response.json({});
       }
       if (
+        request.method === "GET" &&
+        url.pathname === `/api/v1/applications/${postPruneCandidate}`
+      ) {
+        return Response.json({
+          metadata: {
+            annotations: {
+              "ci.sjer.red/application-lifecycle": "cascade",
+            },
+            finalizers: ["resources-finalizer.argocd.argoproj.io"],
+          },
+        });
+      }
+      if (
         request.method === "DELETE" &&
         url.pathname === "/api/v1/applications/apps/operation"
       ) {
@@ -653,7 +667,13 @@ test("root release finalization adopts the exact active prune without another PO
             syncPolicy: { syncOptions: ["CreateNamespace=true"] },
           },
           status: {
-            resources: [],
+            resources: [
+              {
+                group: "argoproj.io",
+                kind: "Application",
+                name: postPruneCandidate,
+              },
+            ],
             operationState: {
               phase: "Running",
               startedAt: new Date().toISOString(),

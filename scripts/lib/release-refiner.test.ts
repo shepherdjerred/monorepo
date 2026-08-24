@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   isClaudeQuotaExhaustion,
+  isClaudeQuotaExhaustionError,
   refinerSdkEnv,
   runReleaseRefiner,
   type RefinerCommandRunner,
@@ -105,7 +106,7 @@ function harness(options: HarnessInput = {}): {
     received: RunReleaseRefinerInput,
   ): Promise<ReleaseAgentOutcome> => {
     expect(received.claudeToken).toBe("claude-token");
-    expect(received.codexAccessToken).toBe("codex-credential");
+    expect(received.codexHome).toBe("/buildkite/codex-auth");
     agentProviders.push(provider);
     const step = agentSteps.shift();
     if (step?.provider !== provider) {
@@ -119,7 +120,7 @@ function harness(options: HarnessInput = {}): {
     prompt: "refine the release notes",
     env: { GH_TOKEN: "github-token", GIT_ASKPASS: "/tmp/askpass" },
     claudeToken: "claude-token",
-    codexAccessToken: "codex-credential",
+    codexHome: "/buildkite/codex-auth",
     execute,
     runClaude: (received) => runAgent("claude", received),
     runCodex: (received) => runAgent("codex", received),
@@ -302,6 +303,52 @@ describe("release refiner failure handling", () => {
     expect(isClaudeQuotaExhaustion("not-json")).toBe(false);
   });
 
+  test("recognizes the session limit, not only the weekly one", () => {
+    expect(
+      isClaudeQuotaExhaustion({
+        type: "result",
+        subtype: "success",
+        is_error: true,
+        api_error_status: 429,
+        result: "You've hit your session limit · resets 8:50pm (UTC)",
+      }),
+    ).toBe(true);
+  });
+
+  test("recognizes quota the Agent SDK throws instead of yielding", () => {
+    // Verbatim from build 11045, where this ended the lane instead of falling
+    // back to Codex.
+    expect(
+      isClaudeQuotaExhaustionError(
+        new Error(
+          "Claude Code returned an error result: You've hit your session limit · resets 8:50pm (UTC)",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("re-raises every thrown error that is not validated quota", () => {
+    // Claude Code's verdict, but not a quota one.
+    expect(
+      isClaudeQuotaExhaustionError(
+        new Error(
+          "Claude Code returned an error result: tool execution failed",
+        ),
+      ),
+    ).toBe(false);
+    // A quota phrase with no Claude Code envelope — e.g. a CHANGELOG line or a
+    // tool's own output quoting one. Not Claude Code saying it is out of quota.
+    expect(
+      isClaudeQuotaExhaustionError(
+        new Error("git push failed: You've hit your session limit"),
+      ),
+    ).toBe(false);
+    expect(
+      isClaudeQuotaExhaustionError("Claude Code returned an error result"),
+    ).toBe(false);
+    expect(isClaudeQuotaExhaustionError(undefined)).toBe(false);
+  });
+
   test("fails closed on malformed successful Claude output", async () => {
     const testHarness = harness({
       agentSteps: [{ provider: "claude", outcome: completed("not-json") }],
@@ -459,10 +506,10 @@ describe("refinerSdkEnv", () => {
     });
   });
 
-  test("strips every inference credential the launched provider did not ask for", () => {
+  test("passes the isolated Codex auth home without an extracted token", () => {
     const environment = refinerSdkEnv(
       gitAuth,
-      { CODEX_ACCESS_TOKEN: "codex-credential" },
+      { CODEX_HOME: "/buildkite/codex-auth" },
       {
         PATH: "/usr/bin",
         ANTHROPIC_API_KEY: "anthropic-key",
@@ -475,10 +522,11 @@ describe("refinerSdkEnv", () => {
       },
     );
 
-    expect(environment["CODEX_ACCESS_TOKEN"]).toBe("codex-credential");
+    expect(environment["CODEX_HOME"]).toBe("/buildkite/codex-auth");
     for (const stripped of [
       "ANTHROPIC_API_KEY",
       "CLAUDE_CODE_OAUTH_TOKEN",
+      "CODEX_ACCESS_TOKEN",
       "CODEX_API_KEY",
       "CODEX_ID_TOKEN",
       "CODEX_REFRESH_TOKEN",

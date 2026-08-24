@@ -15,18 +15,6 @@
       "value": "v0.31.1@sha256:df744af5a0c976e2ec671052ecc1f8a9aa757fa12b8f9930b59910b7295f0da6"
     },
     {
-      "name": "jordanlambrecht/tracker-tracker",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://ghcr.io",
-        "versioning": "semver"
-      },
-      "value": "2.10.0@sha256:f7e4b80a928714dd361f125ddd5cb5db6bb372a7a1694ca4e8ac7fe67313e824"
-    },
-    {
       "name": "connect",
       "category": "upstream",
       "artifactType": "helm-chart",
@@ -152,7 +140,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:05c123f253150f75ee35f0a8a8ed4176910fdb900ac6ee28893a424d38b84462",
+      "value": "2.0.0-11178@sha256:bce4c0659e56e77cbcbda047e22e20ab5c5bfbacab4845dedda57d4c900756be",
       "notes": [
         "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
         "real tag@digest after the first image push. Seed digest is a placeholder until then."
@@ -185,7 +173,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2026.8.1-java25@sha256:1bfb278ea9ee9a319ff2b6ebf6e996e7217fbcd825a925f6382d05bd348c046b",
+      "value": "2026.8.2-java25@sha256:efa878ddb49cf5251b2e5f2ad71b08fd2f7236c1f7907433f6697258b31d2ce4",
       "notes": [
         "java25 variant: Paper 26.2 (pinned below) requires Java 25+; the java21",
         "image crashes every server at startup (\"Minecraft 26.1 and newer requires",
@@ -287,7 +275,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "5.2.3@sha256:212b86dff59e3962b4082b5ef20a577e76c8f8527d2ab505cfa887b4bcecb0b0",
+      "value": "5.2.3@sha256:304b19cf94bf4fda534e0b086cab9c5f1a9e139a8180c05c0ad7d2ba1526fa99",
       "notes": [
         "Keep this on qBittorrent app versions only. LinuxServer also publishes",
         "stale OS-style tags like 20.04.1 that resolve to old app builds."
@@ -650,8 +638,17 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:2fcc180271d1c14095be6385581fa1bb3761de559b07ea8d3abf7768ed51c6a0",
-      "notes": ["not managed by renovate — beta updated by version-commit-back"]
+      "value": "2.0.0-11365@sha256:37d0db242ed69d2e10cb307a43221b606f3881740389be4f2abd8d5a10d0db79",
+      "notes": [
+        "not managed by renovate — beta updated by version-commit-back",
+        "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
+        "database contract: postgresql sha256:edf75ad84ac0e6054bc89c287f5bb77f6476e1edd5ce772c45c9fae7cf0817b6",
+        "database contract: postgresql sha256:85e51719ae707a14cc9a0615990b0b7d5fdd65b956adca1209cb53ad786b8c4c",
+        "database contract: postgresql sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34",
+        "database contract: postgresql sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34",
+        "database contract: postgresql sha256:15c27e4ed6b60d3f6278c2ce83a0df05a8872723269d5d7ae250f1ff9878c2fc",
+        "database contract: postgresql sha256:37d0db242ed69d2e10cb307a43221b606f3881740389be4f2abd8d5a10d0db79"
+      ]
     },
     {
       "name": "shepherdjerred/scout-for-lol/prod",
@@ -682,7 +679,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:6a2cace4a6ecfe5835d9af8cb44fe5df3e381dd98412177e82848e84781dec33",
+      "value": "2.0.0-11178@sha256:57fd0e6e714872c96d97539cd6cf85797ccdcace1f915a5cdd9c85dadb422c73",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -705,7 +702,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:8b399f9d247ccfed4e94b97adaf6e3e6a3b74a86caef1d7b839c6cffa82bea7b",
+      "value": "2.0.0-11178@sha256:e71240146adad25abb7f4951ed133a6727f290f5306122dc74b016c18d3dbb97",
       "notes": ["not managed by renovate"]
     },
     {
@@ -715,7 +712,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:d838ae0090367b2fd9bf248338d97a6989630ce190ff089d33035c9bb24494f7",
+      "value": "2.0.0-11178@sha256:9d484f97911485326926c7f96a07db44781382f503dfa13970a922e77897a4fd",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -728,7 +725,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:8c1657d3ed8d94a32fbc74b1247e2838c227bad53b5217b09e74ccb4ee2bb370",
+      "value": "2.0.0-11178@sha256:e0f5a50d7ecd39fb0a23a96cad31fd7aced142fc29b51f10c72883977880b43e",
       "notes": [
         "not managed by renovate — pre-first-publish placeholder. The main image",
         "release injects the built digest into chart synthesis and version",
@@ -742,7 +739,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:4cd03ba15ce6900591d32d3f7307bac7bb56dd1a768dcca186907a1b8a0c3a59",
+      "value": "2.0.0-11349@sha256:80938d909a215c26220fe6889f1cb740194cc68dcf73b1d5bdef45391a318b38",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful scout-evals image push."
@@ -755,7 +752,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:66741a38369ccfc885e51da0a61e611c8b3cd62958221cad9b3e7cc287b821e6",
+      "value": "2.0.0-11178@sha256:1dab8b50d933b7881ebafea2d8cd40ef5545617d81062fc4edc0ba86009a726d",
       "notes": ["not managed by renovate"]
     },
     {
@@ -765,7 +762,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:839fd564bc1db612209d80217be32b84eed7838f33978266a98b2d349ddb6e39",
+      "value": "2.0.0-11178@sha256:b616b78b5cb93bb5e40c76663ba2da4df0acce58f9473ddc9899787d13403929",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful image push."
@@ -946,7 +943,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.36.3"
+      "value": "v1.36.4"
     },
     {
       "name": "paper",
@@ -986,7 +983,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "1.13.8"
+      "value": "1.13.9"
     },
     {
       "name": "postgres-operator",
@@ -998,7 +995,7 @@
         "registryUrl": "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
         "versioning": "semver"
       },
-      "value": "2.0.1"
+      "value": "2.0.2"
     },
     {
       "name": "cooperspencer/gickup",
@@ -1070,7 +1067,7 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.41.0"
+      "value": "4.44.0"
     },
     {
       "name": "mariadb",
@@ -1082,7 +1079,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "27.0.6"
+      "value": "27.0.7"
     },
     {
       "name": "bitnami/mariadb",
@@ -1217,9 +1214,9 @@
         "managed": true,
         "datasource": "docker",
         "registryUrl": "https://docker.io",
-        "versioning": "semver"
+        "versioning": "docker"
       },
-      "value": "1.31.2-alpine@sha256:54f2a904c251d5a34adf545a72d32515a15e08418dae0266e23be2e18c66fefa"
+      "value": "1.31.3-alpine@sha256:4a73073bd557c65b759505da037898b61f1be6cbcc3c2c3aeac22d2a470c1752"
     },
     {
       "name": "bugsink/bugsink",
@@ -1266,7 +1263,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:404b069d6e1c6070c9dce2f90c9833ec27281afaa4efcaefabe7ace4eae53f57",
+      "value": "2.0.0-11178@sha256:90fce2b5d1937e1cf21064ac93cc708fcbb6728714804724e4e02fb93b8336e0",
       "notes": [
         "Custom tasknotes-server image - TaskNotes API server for mobile app",
         "not managed by renovate"
@@ -1328,7 +1325,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:e1512fdfd78dba8701053e2e31c94cac9d8a750a68ebf657b28777e4df51ab89",
+      "value": "2.0.0-11365@sha256:f3e70448d0e2c30387ab38240fbdb8f41c7c93a0d0016e542c3d36a50f03421f",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1341,7 +1338,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10989@sha256:2e126eb2c2648354df7a4d72c9660173ba1234e5e60a2a041165172c2a0fca51",
+      "value": "2.0.0-11178@sha256:8c5267298f692e3eca3c955e54275a5556d23f7aa37a30a939f7bd8376576795",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"

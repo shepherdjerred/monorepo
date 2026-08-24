@@ -1,47 +1,51 @@
 import {
-  type Ranks,
+  type LoadingScreenRankState,
   type PlayerConfigEntry,
   type Rank,
+  type Ranks,
   type RawSummonerLeague,
   type Region,
-  parseDivision,
-  TierSchema,
-  RawSummonerLeagueSchema,
+  type StandardRankedQueueType,
   LeaguePuuidSchema,
+  RawSummonerLeagueListSchema,
+  StandardSummonerLeagueSchema,
+  TierSchema,
+  parseDivision,
   regionToPlatformRoute,
 } from "@scout-for-lol/data";
 import { riotClient } from "#src/league/api/api.ts";
-import { filter, first, pipe } from "remeda";
-import { z } from "zod";
 import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
 
-const solo = "RANKED_SOLO_5x5";
-const flex = "RANKED_FLEX_SR";
-export type RankedQueueTypes = typeof solo | typeof flex;
+const solo: StandardRankedQueueType = "RANKED_SOLO_5x5";
+const flex: StandardRankedQueueType = "RANKED_FLEX_SR";
+
+export type RankLookupResult = Exclude<
+  LoadingScreenRankState,
+  { status: "hidden" }
+>;
 
 function getRawEntry(
-  entries: RawSummonerLeague[],
-  queue: RankedQueueTypes,
+  entries: readonly RawSummonerLeague[],
+  queue: StandardRankedQueueType,
 ): RawSummonerLeague | undefined {
-  return pipe(
-    entries,
-    filter((entry: RawSummonerLeague) => entry.queueType === queue),
-    first(),
-  );
+  return entries.find((entry) => entry.queueType === queue);
 }
 
 export function getRank(
-  entries: RawSummonerLeague[],
-  queue: RankedQueueTypes,
+  entries: readonly RawSummonerLeague[],
+  queue: StandardRankedQueueType,
 ): Rank | undefined {
-  const entry = getRawEntry(entries, queue);
-  if (entry == undefined) {
+  const rawEntry = getRawEntry(entries, queue);
+  if (rawEntry === undefined) {
     return undefined;
   }
 
+  const entry = StandardSummonerLeagueSchema.parse(rawEntry);
   const division = parseDivision(entry.rank);
-  if (division == undefined) {
-    return undefined;
+  if (division === undefined) {
+    throw new Error(
+      `Validated League-V4 division ${entry.rank} is unsupported`,
+    );
   }
 
   return {
@@ -53,56 +57,62 @@ export function getRank(
   };
 }
 
-/**
- * Fetch ranks (solo + flex) for any player by PUUID and region.
- * Used by the loading screen to display ranks for all participants.
- * Returns undefined on any error (graceful — does not throw).
- */
-export async function getRankByPuuid(
-  puuid: string,
-  region: Region,
-): Promise<Ranks | undefined> {
-  const platform = regionToPlatformRoute(region);
-  const parsedPuuid = LeaguePuuidSchema.parse(puuid);
-  const entries = await callRiotOrUndefined(
-    {
-      source: "rank-by-puuid",
-      schema: z.array(RawSummonerLeagueSchema),
-      schemaLabel: "summoner-league",
-      context: { puuid, region },
-    },
-    () => riotClient.league.byPuuid(parsedPuuid, platform),
-  );
-  if (entries === undefined) return undefined;
+function ranksFromEntries(entries: readonly RawSummonerLeague[]): Ranks {
   return {
     solo: getRank(entries, solo),
     flex: getRank(entries, flex),
   };
 }
 
-export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
-  const platform = regionToPlatformRoute(player.league.leagueAccount.region);
+async function fetchRanksByPuuid(input: {
+  puuid: string;
+  region: Region;
+  source: "rank" | "rank-by-puuid";
+  context: Record<string, string>;
+}): Promise<RankLookupResult> {
+  const platform = regionToPlatformRoute(input.region);
+  const parsedPuuid = LeaguePuuidSchema.parse(input.puuid);
   const entries = await callRiotOrUndefined(
     {
-      source: "rank",
-      schema: z.array(RawSummonerLeagueSchema),
+      source: input.source,
+      schema: RawSummonerLeagueListSchema,
       schemaLabel: "summoner-league",
-      context: {
-        alias: player.alias,
-        region: player.league.leagueAccount.region,
-      },
+      context: input.context,
     },
-    () =>
-      riotClient.league.byPuuid(player.league.leagueAccount.puuid, platform),
+    () => riotClient.league.byPuuid(parsedPuuid, platform),
   );
-  if (entries === undefined) {
-    return {
-      solo: undefined,
-      flex: undefined,
-    };
-  }
-  return {
-    solo: getRank(entries, solo),
-    flex: getRank(entries, flex),
-  };
+
+  return entries === undefined
+    ? { status: "error" }
+    : { status: "available", ranks: ranksFromEntries(entries) };
+}
+
+/** Fetch the published Solo/Duo and Flex ranks for a loading-screen player. */
+export async function getRankByPuuid(
+  puuid: string,
+  region: Region,
+): Promise<RankLookupResult> {
+  return fetchRanksByPuuid({
+    puuid,
+    region,
+    source: "rank-by-puuid",
+    context: { puuid, region },
+  });
+}
+
+/** Preserve the persisted player-rank shape for non-loading-screen consumers. */
+export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
+  const result = await fetchRanksByPuuid({
+    puuid: player.league.leagueAccount.puuid,
+    region: player.league.leagueAccount.region,
+    source: "rank",
+    context: {
+      alias: player.alias,
+      region: player.league.leagueAccount.region,
+    },
+  });
+
+  return result.status === "available"
+    ? result.ranks
+    : { solo: undefined, flex: undefined };
 }

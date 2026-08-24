@@ -45,7 +45,7 @@ dependency changes.
 | Runtime       | Bun                              |
 | Language      | TypeScript (strict mode)         |
 | Linting       | ESLint + Prettier                |
-| Database      | Prisma ORM                       |
+| Database      | PostgreSQL 16 + Prisma ORM       |
 | Validation    | Zod                              |
 | Task Runner   | mise                             |
 | Bot Framework | Discord.js                       |
@@ -84,8 +84,8 @@ cd packages/backend
 bun run dev              # Start with hot reload
 bun run build            # Build for production
 bun run db:generate      # Generate Prisma client
-bun run db:push          # Push schema to database
-bun run db:migrate       # Run migrations
+bun run db:push          # Push schema to the shared local dev Postgres
+bun run db:migrate       # Run migrations (prisma migrate dev) against it
 bun run db:studio        # Open Prisma Studio
 ```
 
@@ -97,9 +97,16 @@ bun run --filter='./packages/scout-for-lol' dev:web
 
 This boots the backend on `:3000` (logging in as the BETA Discord bot) and the
 Vite dev server on `:5180` (proxying `/trpc` + `/api` to the backend). It
-applies Prisma migrations against a local `local-web-dev.db` first. To run a
-second copy, use different ports and `--no-discord-gateway`; the SQLite file
-then defaults to `local-web-dev-<backend-port>.db`:
+first ensures the shared machine-wide Postgres server is running (mise-pinned
+PostgreSQL 16 binaries from the root `.mise.toml`,
+`ubi:theseus-rs/postgresql-binaries`; data dir
+`~/.local/share/scout-for-lol/postgres/16`, honours `XDG_DATA_HOME`; port
+`5471`, `SCOUT_PG_PORT` overrides — managed by
+`packages/backend/src/testing/postgres-server.ts`'s `ensureDevPostgres`), then
+applies Prisma migrations against a per-copy `scout_dev_<backend-port>`
+database on it. To run a second copy, use different ports and
+`--no-discord-gateway`; the database name follows the backend port
+(`scout_dev_3001`):
 
 ```bash
 bun run --filter='./packages/scout-for-lol' dev:web -- \
@@ -109,8 +116,9 @@ bun run --filter='./packages/scout-for-lol' dev:web -- \
   --no-backend-watch
 ```
 
-Use `--database-url file:...` for an explicit local database. Ports are strict:
-a busy port fails instead of silently changing the URL.
+Use `--database-url postgres://...` (or `SCOUT_DEV_DATABASE_URL`) for an
+explicit local database; only `postgres://`/`postgresql://` URLs are accepted.
+Ports are strict: a busy port fails instead of silently changing the URL.
 `--no-backend-watch` keeps a browser-testing backend stable while tests and
 code generation rewrite imported artifacts; restart `dev:web` deliberately
 after backend edits. Vite still hot-reloads app changes.
@@ -329,25 +337,25 @@ or beta build, links remain same-origin (`/app/` and `/docs/`) as expected.
 The shared local report lake is
 `$HOME/.local/share/scout-for-lol/dev-seed/report-lake`; set
 `REPORT_LAKE_DIR` explicitly when using it. It is derived Parquet data queried
-by DuckDB, not the SQLite application database, and compaction is an explicit
+by DuckDB, not the Postgres application database, and compaction is an explicit
 single-operator action. Multiple copies may read it concurrently.
 
-BETA application state is `/data/db.sqlite` in the
-`scout-beta-scout-backend-*` pod in namespace `scout-beta`; the lake is
-`/data/report-lake`. To copy BETA state, create a consistent temporary snapshot
-with SQLite `VACUUM INTO`, then `kubectl cp` only that snapshot to an ignored
-local path. For example:
+BETA application state is the `scout` database in the `scout-beta-postgresql`
+cluster (Zalando postgres-operator) in namespace `scout-beta`; the lake is
+`/data/report-lake` in the backend pod. To copy BETA state, run `pg_dump`
+through the postgres pod's local trust socket into an ignored local path, then
+restore into the shared local dev server. For example:
 
 ```bash
-POD="$(kubectl get pods -n scout-beta -o name | rg 'scout-beta-scout-backend-' | head -n 1)"
-LOCAL_DB="$HOME/.local/share/scout-for-lol/scout-beta.db"
-kubectl exec -n scout-beta "$POD" -- bun -e 'import { Database } from "bun:sqlite"; const db = new Database("/data/db.sqlite", { readonly: true }); db.exec(`VACUUM INTO "/tmp/scout-beta-snapshot.sqlite"`); db.close();'
-mkdir -p "$(dirname "$LOCAL_DB")"
-kubectl cp -n scout-beta "$POD:/tmp/scout-beta-snapshot.sqlite" "$LOCAL_DB"
-kubectl exec -n scout-beta "$POD" -- rm /tmp/scout-beta-snapshot.sqlite
+kubectl exec -n scout-beta scout-beta-postgresql-0 -- pg_dump -U postgres -Fc scout > "$HOME/.local/share/scout-for-lol/scout-beta.dump"
+mise exec -- createdb -h 127.0.0.1 -p 5471 -U scout scout_beta_snapshot
+mise exec -- pg_restore -h 127.0.0.1 -p 5471 -U scout -d scout_beta_snapshot --no-owner "$HOME/.local/share/scout-for-lol/scout-beta.dump"
+SCOUT_DEV_DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
+  bun run --filter='./packages/scout-for-lol' dev:web -- \
+  --backend-port 3001 --web-port 5181 --no-discord-gateway
 ```
 
-Never raw-copy a live SQLite file, copy production data, or print credentials.
+Never copy production data (snapshots are beta-only) or print credentials.
 The BETA pod uses the real BETA Discord token and one gateway connection, so the
 gateway-owner `dev:web` intentionally disconnects the deployed BETA bot until
 stopped. That disconnect is authorized and expected for local
@@ -370,22 +378,23 @@ tokens/profiles/cookies in Git.
 `bun run --filter=@scout-for-lol/evals dev`. Candidate discovery and explicit
 S3/model-backed draft materialization are documented in `packages/evals/README.md`.
 The corpus is Beta-only. `sync-beta` creates a sanitized local profile snapshot
-from Beta SQLite, and discovery/materialization use that snapshot with the
+by kubectl-execing one `psql` `json_agg` query against `scout-beta-postgresql-0`
+(database `scout`), and discovery/materialization use that snapshot with the
 `scout-beta` S3 bucket. Raw S3 match objects do not preserve Scout aliases or
 tracked membership; never infer those identities from arbitrary Riot
 participants or substitute the production bucket.
 
 The full operator workflow (flags and examples in `packages/evals/README.md`):
 
-| Command                                                                                  | Purpose                                                                                                    |
-| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `bun run --filter=@scout-for-lol/evals dev`                                              | Launch the loopback web app to rate cases and run style-batch freshness checks.                            |
-| `bun run --filter=@scout-for-lol/evals sync-beta`                                        | Snapshot a sanitized Beta profile corpus into the local SQLite snapshot used by discovery/materialization. |
-| `AWS_PROFILE=seaweedfs bun run --filter=@scout-for-lol/evals discover -- …`              | Discover candidate matches from the `scout-beta` bucket against the snapshot.                              |
-| `bun run --filter=@scout-for-lol/evals materialize -- --spec <file>`                     | Materialize a new draft — or extend an existing draft via the spec's `datasetId` — with S3/model cases.    |
-| `bun run --filter=@scout-for-lol/evals dataset:push -- --dataset <id> --server <url>`    | Push a locally-materialized draft to the hosted instance over the tailnet (additive, never overwrites).    |
-| `bun run --filter=@scout-for-lol/evals dataset:export -- --dataset <id> --output <file>` | Export a finalized dataset to a checksummed, generation-set-bound transfer file.                           |
-| `bun run --filter=@scout-for-lol/evals dataset:import -- --input <file>`                 | Import a transfer file into another eval database (rejects tampered checksums or freshness bindings).      |
+| Command                                                                                  | Purpose                                                                                                                                         |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun run --filter=@scout-for-lol/evals dev`                                              | Launch the loopback web app to rate cases and run style-batch freshness checks.                                                                 |
+| `bun run --filter=@scout-for-lol/evals sync-beta`                                        | Snapshot a sanitized Beta profile corpus (read from Beta Postgres via `psql`) into the local SQLite snapshot used by discovery/materialization. |
+| `AWS_PROFILE=seaweedfs bun run --filter=@scout-for-lol/evals discover -- …`              | Discover candidate matches from the `scout-beta` bucket against the snapshot.                                                                   |
+| `bun run --filter=@scout-for-lol/evals materialize -- --spec <file>`                     | Materialize a new draft — or extend an existing draft via the spec's `datasetId` — with S3/model cases.                                         |
+| `bun run --filter=@scout-for-lol/evals dataset:push -- --dataset <id> --server <url>`    | Push a locally-materialized draft to the hosted instance over the tailnet (additive, never overwrites).                                         |
+| `bun run --filter=@scout-for-lol/evals dataset:export -- --dataset <id> --output <file>` | Export a finalized dataset to a checksummed, generation-set-bound transfer file.                                                                |
+| `bun run --filter=@scout-for-lol/evals dataset:import -- --input <file>`                 | Import a transfer file into another eval database (rejects tampered checksums or freshness bindings).                                           |
 
 Run the deterministic browser suite with
 `bunx turbo run test:e2e --filter=@scout-for-lol/evals`. It uses a test-only
@@ -538,15 +547,16 @@ Enforced by ESLint:
 
 ### Command Structure
 
-Scout exposes seven global Discord commands: `/help`, `/setup`, `/status`,
-`/invite`, `/docs`, `/track`, and `/list`. The web dashboard is the canonical
-surface for filters, queues, channels, competitions, saved report
-configuration, roles, audit history, and Explore follow-ups. Do not recreate
-the removed management command trees.
+Production exposes eight global Discord commands: `/help`, `/setup`, `/status`,
+`/invite`, `/docs`, `/track`, `/list`, and `/scout`. Beta exposes the first
+seven globally and registers `/scout` only in `EXPLORE_GUILD_ALLOWLIST` guilds.
+The web dashboard is the canonical surface for filters, queues, channels,
+competitions, saved report configuration, roles, audit history, and Explore
+follow-ups. Do not recreate the removed management command trees.
 
-`/bb` (Bryan Bucks) and `/scout` are the owner-approved guild-scoped exceptions,
-pinned by `definitions.test.ts`. `/bb` follows `betting_enabled`; `/scout`
-follows `EXPLORE_GUILD_ALLOWLIST`. Neither may leak into the global picker.
+`/bb` (Bryan Bucks) and `/lobby` are beta-only guild-scoped exceptions, pinned
+by `definitions.test.ts`; production's hard-disable policy keeps them out of
+both global and guild payloads regardless of local or Flipt overrides.
 `/scout ask` starts one fresh, private, saved Explore conversation and may post
 its frozen result publicly; Discord never continues the conversation. Adding
 another command still needs the same explicit product decision.
@@ -681,7 +691,7 @@ loading art, so a missing refresh fails deployment immediately.
 
 Scheduled/user-authored ScoutQL reports execute as **compiled SQL on embedded
 DuckDB** (`@duckdb/node-api`, lazy-loaded) over a local Parquet "report lake"
-(`REPORT_LAKE_DIR`, prod `/data/report-lake`) — not over SQLite fact tables.
+(`REPORT_LAKE_DIR`, prod `/data/report-lake`) — not over Postgres fact tables.
 
 ### Leaderboard mentions
 
@@ -754,17 +764,20 @@ Two sources **refuse** global scope rather than answering wrongly:
 `app/src/routes/explore.tsx`). Remaining product work is tracked in Linear as
 SJ-147.
 
-- **Access is `EXPLORE_GUILD_ALLOWLIST`**, an operator-managed list of Discord
-  server ids: sign in, and belong to one of them. An empty or unset list denies
-  everyone — it is the entire gate for this surface, so an omitted config must
-  fail closed. Every tRPC procedure re-checks it, so losing membership removes
-  access to conversations already saved.
+- **Access is stage-aware.** Beta uses `EXPLORE_GUILD_ALLOWLIST`: sign in and
+  belong to one listed server; an empty list denies everyone. Production
+  requires the signed-in user to share at least one guild with the production
+  bot. The live bot guild cache is an authorization dependency, so an unready
+  cache returns service unavailable rather than widening access. Every tRPC
+  procedure re-checks access, and only eligible shared guild ids scope alias
+  resolution.
 - **Discord Explore is one-shot and uses the same persisted turn runner.**
-  `/scout ask` is registered only in allowlisted guilds, re-checks that exact
-  guild on command and publish-button execution, creates a new user-owned
-  conversation, and renders the saved answer privately. Follow-ups happen only
-  in `/app/explore`. The Discord user upsert may refresh username/avatar but
-  must omit OAuth token fields. HTTP/SSE and Discord both call
+  Production registers `/scout ask` globally for guild installs and guild
+  contexts; beta registers it only in allowlisted guilds. Both re-check the
+  invoking guild on command and publish-button execution, create a new
+  user-owned conversation, and render the saved answer privately. Follow-ups
+  happen only in `/app/explore`. The Discord user upsert may refresh
+  username/avatar but must omit OAuth token fields. HTTP/SSE and Discord call
   `explore/run-turn.ts`, which owns quota charging, timeout, metrics, trace,
   partial salvage, agent execution, answer persistence, and generated titles.
 - **Publishing is a frozen copy, not Explore sharing.** The versioned component
@@ -839,17 +852,15 @@ A per-guild betting economy over the existing match lifecycle, in
 `backend/src/betting/` (no barrel), gated by the `betting_enabled` flag. Design
 notes: `packages/docs/archive/completed/2026-08-15_scout-bryan-bucks-betting.md`.
 
-**Scope: one server, effectively beta-only.** This is a private single-server
+**Scope: one server, beta-only.** This is a private single-server
 experiment, not a Scout-wide feature, and is not intended to become one.
 `betting_enabled` is `false` by default and overridden `true` for exactly one
-guild — the owner's — and that guild runs the beta bot, so in practice Bryan
-Bucks only ever appears in beta. That is a consequence of which bot is in that
-guild, **not** a second gate: there is deliberately no environment check, because
-one override should be the whole answer to "is it on here?".
+guild — the owner's — while the centralized production policy hard-disables
+betting before the registry or Flipt is evaluated.
 
-**`/bb` is registered per guild, not globally.** `commandDefinitions` holds the
-seven global commands; `guildScopedCommandGroups` (same file) supplies an
-enabled-guild resolver and payload for both `/bb` and `/scout`.
+**`/bb` is registered per guild, not globally.** `baseCommandDefinitions` holds
+the seven commands shared by both stages; production adds `/scout` globally,
+while `guildScopedCommandGroups` supplies beta's `/bb`, `/scout`, and `/lobby`.
 `discord/rest.ts` walks the connected client's complete guild cache and PUTs
 each guild's merged payload to `applicationGuildCommands`. A globally
 registered gated command would sit in every guild's picker and do nothing
@@ -913,6 +924,38 @@ fails fast without `OPENROUTER_API_KEY`. Discord publication persists a
 retries activation after restarts, and the market becomes bettable only after
 the guarded transition to `open`.
 
+Weekly cross-game parlays are a separate aggregate, never nullable match-parlay
+rows. Definitions freeze subject arrays and all linked accounts; markets,
+contributions, bets, deliveries, selectors, and settlement all retain their
+definition/market and subject keys so one beta slot does not encode a singleton
+assumption. Only eligible completed matches whose completion time is inside the
+half-open Pacific scoring period contribute, and settlement reads persisted,
+idempotent contribution rows rather than re-querying mutable match history.
+Capture accepts both `open` and `active` markets so a delayed Monday control
+transition cannot lose a completed game. Final settlement leaves two worst-case
+polling intervals for Match-V5 ingestion; the guarded market-row write then
+serializes the last valid contribution against settlement.
+
+Weekly generation is deterministic around a closed model boundary. Candidate
+order, coverage/cooldown gates, aligned zero-game windows, threshold search, and
+joint replay pricing are code-owned. The model chooses only 3–5 catalog shapes;
+it cannot author thresholds, expressions, paths, SQL, or settlement behavior.
+Reject a candidate outside the empirical publication band and skip the week
+when none qualify—never weaken or clamp a gate.
+
+Only cumulative/count/distinct/max `gte` legs may become irreversible. Early
+settlement is YES-only and requires every leg irreversibly true; NO and every
+equality, upper-bound, rate, or average leg wait for finalization. Flag
+revocation stops creation and new stakes but, like all Bryan Bucks controls,
+must never block settlement, reserve release, voids, or refunds. Every Discord
+publication is a new nonce-guarded message, mentions deduplicated frozen
+subjects plus pending bettors, and exposes aggregate positions only.
+
+The `scout-weekly-parlay` Temporal schedule is the sole recurring coordinator.
+It calls the beta-only authenticated control endpoint with stable period/action
+keys. Keep the endpoint absent when its token is not configured; do not add an
+in-process timer. Pause the Temporal schedule for operational suspension.
+
 League Classic (`queueType: "classic"`, Riot queue 4310) is not a betting or
 parlay queue because this integration has no supported post-game payload. A
 tracked, linked player in a complete Classic 5v5 receives exactly one
@@ -920,14 +963,31 @@ tracked, linked player in a complete Classic 5v5 receives exactly one
 processed. The grant is idempotent per match and guild, and Classic ARAM
 Mayhem (`"classic aram mayhem"`) receives neither the grant nor any market.
 
-**Generation is two passes, and the model never sets the price.** GPT-5.6 Sol
-first proposes 2–6 leg _shapes_ — subject, field, operator, no numbers. Only
-then does the harness know which distributions to measure, so it fetches one
-history snapshot and hands back, per leg, the player's own distribution plus the
-lane and overall population, sliced by game duration and expressed as "the
-threshold that lands N% of the time" already oriented to that leg's operator. A
-second call fills in thresholds, targeting legs that land 40–70% individually.
-Both calls share one 60-second deadline.
+**Generation is two passes, and the model never sets the price.** Before GPT-5.6
+Sol runs, Scout creates an ordered, match-specific shortlist of exactly 20
+targets: 16 player targets distributed as evenly as possible across the tracked
+subjects, plus four game-wide targets. SHA-256 ranks every choice from a
+versioned match seed, so retries, source ordering, and parallel instances
+produce the same shortlist. A player's eligibility is the union of universal
+stats, their inferred lane pool, and Riot's bundled Data Dragon champion tags.
+The tags are deliberately coarse: a Support-tagged champion may receive a
+healing target even when that champion's current kit makes it questionable.
+Participant objective last-hits, multikills, killing sprees, true damage, and
+player `timePlayed` remain settlement-compatible but are never shortlisted.
+
+The four global targets come from team win, five grounded team-objective counts,
+and game duration. Exactly one of 16 hash buckets admits the opponent-ping
+family; when admitted, one of its 13 subtypes is selected deterministically and
+takes one global slot. The exact 20 candidates are stored in the generation
+context and are the validation boundary: model output outside that shortlist is
+rejected. GPT-5.6 Sol first proposes 2–6 leg _shapes_ — subject, field, operator,
+no numbers — and every tracked subject must appear. Only then does the harness
+know which distributions to measure, so it fetches one history snapshot and
+hands back, per leg, the player's own distribution plus the lane and overall
+population, sliced by game duration and expressed as "the threshold that lands
+N% of the time" already oriented to that leg's operator. A second call fills in
+thresholds, targeting legs that land 40–70% individually. Both calls share one
+60-second deadline.
 
 - **`thresholdsMatchProposal` is the load-bearing guard.** Pass two may change
   numbers and nothing else. A response that re-targets a field, flips an
@@ -946,11 +1006,12 @@ Both calls share one 60-second deadline.
   publishing a guess. Which fields the lake can answer is
   `PARLAY_HISTORY_COLUMNS`, exhaustive over the catalog so adding a field is a
   compile error until someone decides whether it is groundable.
-- **Pings are opponent-only.** Every ping type is excluded from subject
-  conditions and available as an enemy-team total. Pings cost nothing to send,
-  and subjects do bet on their own parlays mid-game, so a leg on a subject's own
-  pings is settled by whoever holds the ticket. Nobody in the market can move
-  the enemy team's count.
+- **Pings are opponent-only and rare.** Every ping type is excluded from subject
+  conditions. The one admitted subtype is an enemy-team total in exactly one of
+  16 deterministic match buckets. Pings cost nothing to send, and subjects do
+  bet on their own parlays mid-game, so a leg on a subject's own pings is settled
+  by whoever holds the ticket. Nobody in the market can move the enemy team's
+  count.
 - **`PARLAY_EVALUATOR_VERSION` gates settlement.** `evaluateParlay` voids any
   stored definition whose recorded version differs, which refunds it. Bump it
   only when the meaning of an existing condition changes — never merely because
@@ -1012,19 +1073,22 @@ cannot split the facts. The command is stateless, supplies the model an injected
 current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
 (default `gpt-5.6-luna`) through the shared OpenRouter runtime and token budget.
 
-- **The allowlist gates taking Bucks, never returning them.** `betting_enabled`
-  is checked in four places: command registration, pool creation, `placeBet`,
-  and earning. Settlement and the refund sweeps are deliberately **not** gated —
-  a guild removed from the allowlist mid-match still has stakes that were
+- **The beta allowlist gates taking Bucks, never returning them.** Production
+  hard-disables betting before local or Flipt evaluation. In beta,
+  `betting_enabled` is checked in four places: command registration, pool
+  creation, `placeBet`, and earning. Settlement and refund sweeps remain
+  available for beta stakes already taken — a guild removed from the allowlist
+  mid-match still has stakes that were
   already debited, and refusing to settle would strand real balances. So the
   flag stops new stake from being taken while in-flight pools still pay out or
   refund. `placeBet` carries the check rather than relying on the pool
   disappearing, because a revoked guild's pools outlive the revocation.
 - **The first statement of every mutating transaction is a guarded conditional
-  write.** It validates the precondition _and_ takes the SQLite write lock in
-  one round trip. This is the whole double-spend guard and the whole
-  exactly-once story; a read-then-write would race, and
-  `SQLITE_BUSY_SNAPSHOT` is **not** retried by `busy_timeout`.
+  write.** Under PostgreSQL READ COMMITTED, a concurrent committed update
+  forces the guard's WHERE to re-evaluate against the newest row version
+  (EvalPlanQual), so the losing racer matches 0 rows; composite-PK/unique
+  creates race-fail with P2002. This is the whole double-spend guard and the
+  whole exactly-once story; a read-then-write would race.
 - **`BucksAccount.balance` is stored, and `src/betting/ledger.ts` is the only
   module allowed to move it.** This departs from the `DmAuditLog` "derive,
   never store" rule deliberately: that rule guards a counter written after a
@@ -1093,7 +1157,7 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
     earlier tick" case; `settleParlaysForMatch` returns nothing for it
     afterwards, so omitting the pass loses the result outright.
   - `fitSections` trims in priority order — earnings, then parlay legs, then
-    parlay positions, then outcome rows — instead of throwing at Discord's
+    parlay result rows, then outcome result rows — instead of throwing at Discord's
     6000-character ceiling, which merging made reachable. The description is
     never trimmed and an over-length description still throws.
     The cost, stated plainly: the parlay result now shares a channel's fate with
@@ -1109,8 +1173,14 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   matched totals, and any aggregate house fill without exposing the synthetic
   house account. Cancellations disappear from the public digest while remaining
   in the audit tables, and mention notifications are suppressed. `/bb history`
-  remains the transaction-level audit trail, while public outcome copy retains
-  the exact gross-cut-net arithmetic.
+  remains the transaction-level audit trail. The post-game embed deliberately
+  omits sides, matching, house fill, pool totals, and gross-return arithmetic.
+  It separates `BET WINNERS`, `BET LOSERS`, `PARLAY WINNERS`, and
+  `PARLAY LOSERS`; winners show net profit, losers show the actual lost stake,
+  and winner fees appear only when nonzero. Outcome and parlay refunds are
+  aggregate summaries with no refunded-bettor rows. User-visible whole numbers
+  use fixed comma grouping, and parlay duration fields render as `MM:SS` with
+  total minutes allowed above 59.
 - **This applies to the parlay market too, and it is why there are no
   per-placement receipts.** The parlay market message is **recomputed from its
   stored definition** rather than snapshotted: legs, subjects, odds, and close
@@ -1209,10 +1279,105 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   alerted on, while `skipped_no_refs` is the leading indicator of "settlement
   had nowhere to announce".
 
+## Tournament-code custom games — `/lobby`
+
+Riot removed custom games from the public API for privacy reasons: Spectator
+sees them only unreliably, and Match-V5 does not carry them at all. The one
+sanctioned exception is the **Tournament API** — a game created from a
+_tournament code_ IS recorded in Match-V5 with `info.tournamentCode`
+populated. `/lobby` mints such a code so a custom game gets the whole Scout
+feature set. It is beta-only via `tournament_lobbies_enabled`, with the
+centralized production policy winning before local or Flipt overrides.
+
+Code lives in `backend/src/league/tournament/` and
+`backend/src/league/api/tournament/`.
+
+- **`twisted` does not implement the tournament API**, so the client is
+  hand-rolled — but every call still routes through `riot-call.ts`, which is
+  what buys it the same metrics, health, timeout, drift-tolerant parsing, and
+  outage policy as every twisted-backed call. `TournamentHttpError` carries a
+  numeric `status` specifically so `extractHttpStatus` reads it unchanged.
+- **The host is fixed.** Every tournament endpoint is `x-route-enum: regional`
+  with `x-platforms-available: ["americas"]`, so calls always go to
+  `americas.api.riotgames.com` regardless of shard; the tournament region
+  (NA/EUW) travels in the body. `TournamentRegistration.tournamentRegion` is
+  named that way, not `region`, because `brand-prisma-types` maps any field
+  called `region` to Scout's own `Region` enum.
+- **`tournamentApiMode` selects stub or live.** Stub codes create no real
+  lobby, its events are canned, and `games/by-code` does not exist there —
+  `supportsGamesByCode(mode)` branches on config rather than catching a 404,
+  because a 404 is also how Riot reports a code it never saw. Flipping the mode
+  back to `"stub"` is the kill switch; it needs no deploy.
+- **The no-duplicate-notification guarantee is `lifecycle.ts`.**
+  `lobby-events/by-code` replays its entire event list every call, so the dedup
+  mechanism is a monotonic state recompute, not event bookkeeping: a state is
+  only ever _entered_ once, and entering `champ_select` is what sends the card.
+  `processedEventCount` and `lastEventTimestamp` are observability only —
+  correctness must never depend on them, because multiple events can share a
+  millisecond and `timestamp` arrives as a string.
+- **Teams come from the command, not from Riot.** Lobby events carry a PUUID
+  per join and never a side, and spectator is unreliable for customs, so
+  `/lobby create` takes `blue:` and `red:` lists. That is what makes the
+  prematch card and the Bryan Bucks market possible at all. `teamSize` is
+  derived as `max(blue, red)`; two lists and a size option could disagree.
+- **Every participant must be tracked in the calling guild.** Not gatekeeping:
+  the per-player match-history cursor is the only ingest path, so an untracked
+  lobby would produce a code, a game, and no report.
+- **The poller links, it never ingests.** It writes the `ActiveGame` row so the
+  post-match report replies to the card, through the unchanged
+  `getPrematchMessageIdsForMatchIdOrEmpty` path. The match-history cursor still
+  owns ingest, and its S3 write still gates the cursor advance.
+- **First-run history is a separate, quiet ingest path.** An enabled guild's
+  account-creation transaction enqueues one global PUUID job. The worker runs
+  after live polling, snapshots 20 Match-V5 IDs once, requires both canonical
+  S3 and lake staging before each checkpoint, then fetches current Solo/Flex
+  rank and coalesces completion into a lake fold. It must never call the normal
+  post-match processor: no Discord, reports, AI recaps, ActiveGame writes,
+  Bryan Bucks, earnings, or per-match rank history. `queued` and `matches`
+  PUUIDs stay out of live polling until the newest snapshot ID is installed as
+  their cursor. Reuse within 24 hours republishes the guild account mapping but
+  does not refetch Riot.
+- **Never fabricate a `RawCurrentGameInfo`** from lobby events. That value is
+  the canonical S3 match record the report lake rebuilds from; invented
+  champion IDs would permanently corrupt ScoutQL, Explore, and AI review.
+- **Bryan Bucks needs a Scout-minted code, not `queueType === "custom"`.**
+  `"custom"` is deliberately absent from `BUCKS_EARNING_QUEUES`: an arbitrary
+  custom is trivially farmable and `earn_game` moves real balance. 5v5 only —
+  the MVP formula normalizes against a hardcoded five-man baseline.
+- **The provider callback acknowledges and discards.** tournament-v5 has no
+  shared secret, so the URL is the only credential; a mutating handler would be
+  an unauthenticated injection path into the S3 match store.
+
+Operator setup, once per (mode, region):
+
+```bash
+cd packages/scout-for-lol/packages/backend
+op run --env-file=../../dev-web.env.tpl -- \
+  bun run scripts/register-tournament-provider.ts --mode=stub --region=AMERICA_NORTH
+```
+
+`scripts/tournament-stub-smoke.ts` validates routing, the auth header, and
+every response schema against real Riot today. It cannot validate the feature:
+see the "cannot be validated" list in the PR.
+
 ## Database (Prisma)
 
+- **PostgreSQL 16** - `datasource provider = "postgresql"`, connected through
+  Prisma's `@prisma/adapter-pg`. Locally, `ensureDevPostgres`
+  (`src/testing/postgres-server.ts`) runs the shared machine-wide server; in
+  beta/prod each namespace runs a Zalando postgres-operator cluster
+  (`scout-<stage>-postgresql`) and the deployment composes `DATABASE_URL` from
+  the operator secret.
 - **Schema-first approach** - Define models in `schema.prisma`
-- **Migration strategy** - Use `prisma migrate` for production, `db:push` for development
+- **Migration strategy** - Use `prisma migrate` for production, `db:push` for
+  development. The 67 SQLite-era migrations were squashed into one baseline
+  migration (`prisma/migrations/20260820000000_postgresql_baseline/`).
+- **Legacy SQLite import** - the entrypoint chain is
+  `prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/audit-report-windows.ts --database "$DATABASE_URL" --fix && bun run src/index.ts`.
+  The boot-time importer reads the legacy `/data/db.sqlite` (still on the 24Gi
+  PVC as `LEGACY_SQLITE_PATH`) exactly once, tracked by the
+  `_legacy_sqlite_import` marker table with a fail-closed decision table;
+  rollback = repin the previous image, which reads the untouched file.
 - **Type safety** - Generated client provides full type safety
 - **Connection management** - Proper connection pooling and cleanup
 - Validate database inputs with Zod schemas
@@ -1260,7 +1425,10 @@ documented under **Web UI** above — it substitutes for the Discord _membership
 lookup_ only, and never for the session, CSRF, or the allowlist itself.
 
 To exercise the web/tRPC surface offline, use one of these — both
-run fully in-process against an isolated SQLite copy of `template.db`, no OAuth,
+run fully in-process against an isolated Postgres database cloned from the
+hash-scoped template on the shared local dev server (`createdb -T`, ~100ms; the
+bun test preload rebuilds the template when the hash of migrations + SEASONS +
+harness changes — `src/testing/test-template.ts`), no OAuth,
 no Discord API:
 
 - **Domain layer (simplest)** — call the exported functions directly (e.g.
@@ -1490,9 +1658,11 @@ drift from reality. Treat this as an invariant:
   after that timestamp, there is no list of counters to remember to clear —
   which is exactly what previously left a re-installed server exhausted.
 
-Validate ladder changes with `bun run scripts/outreach-dry-run.ts` against a
-copy of production before the first real fire — the failure mode here is
-messaging real people.
+Validate ladder changes with `DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_beta_snapshot \
+  bun run scripts/outreach-dry-run.ts` against a restored beta copy before the
+first real fire — the failure mode here is messaging real people. Create that
+copy with the `pg_dump`/`createdb`/`pg_restore` sequence above; never point the
+dry run at production itself.
 
 ## Server-side product analytics invariants
 

@@ -19,8 +19,19 @@ const AGENT_CREDENTIAL_ENVIRONMENT = [
   "OPENAI_API_KEY",
 ];
 const OUTPUT_TAIL_LIMIT = 16_384;
+// Claude Code meters a subscription on more than one axis, and a release lane
+// that runs for minutes can exhaust any of them. `session` is the short-window
+// limit ("You've hit your session limit · resets 8:50pm (UTC)") — it exhausted
+// the refiner on builds 11022-11045 and, because it was absent here, was
+// classified as an unknown provider failure instead of a quota fallback.
 const CLAUDE_QUOTA_PATTERN =
-  /\b(?:hit|reached|exceeded) (?:your )?(?:weekly|monthly|usage)(?: usage)? limit\b/i;
+  /\b(?:hit|reached|exceeded) (?:your )?(?:weekly|monthly|session|usage)(?: usage)? limit\b/i;
+
+// The Agent SDK prefixes every error it surfaces from a terminal Claude Code
+// result with this. Requiring it keeps the thrown-error classifier as narrow as
+// the parsed-result one: a quota phrase alone (in a tool's output, a prompt, a
+// CHANGELOG line) is not enough — it has to be Claude Code's own verdict.
+const CLAUDE_SDK_ERROR_RESULT_PREFIX = "Claude Code returned an error result";
 const REFINER_RESULT_START = "<!-- release-refiner-result -->";
 const REFINER_RESULT_END = "<!-- /release-refiner-result -->";
 
@@ -96,7 +107,7 @@ export type RunReleaseRefinerInput = {
   prompt: string;
   env: Record<string, string>;
   claudeToken: string;
-  codexAccessToken: string;
+  codexHome: string;
   execute?: RefinerCommandRunner;
   runClaude?: ReleaseAgentRunner;
   runCodex?: ReleaseAgentRunner;
@@ -144,6 +155,30 @@ export function isClaudeQuotaExhaustion(result: unknown): boolean {
     parsed.data.is_error &&
     parsed.data.api_error_status === 429 &&
     CLAUDE_QUOTA_PATTERN.test(detail)
+  );
+}
+
+/**
+ * Quota exhaustion the Agent SDK raises as a thrown error rather than a
+ * `result` message.
+ *
+ * `isClaudeQuotaExhaustion` can only see a terminal result the async iterator
+ * actually yielded. When Claude Code ends the turn on a subscription limit the
+ * SDK instead rejects inside `readMessages`, so the loop throws, no result is
+ * ever assigned, and the Codex fallback the release lane depends on is never
+ * reached — the lane died on `Claude Code returned an error result: You've hit
+ * your session limit` with both providers healthy.
+ *
+ * This stays a *validated* signature, matching the documented contract that
+ * only a confirmed usage-quota error may fall back: it requires Claude Code's
+ * own error-result envelope together with a quota phrase. Every other thrown
+ * error is re-raised unchanged and remains a hard CI failure.
+ */
+export function isClaudeQuotaExhaustionError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.message.includes(CLAUDE_SDK_ERROR_RESULT_PREFIX) &&
+    CLAUDE_QUOTA_PATTERN.test(error.message)
   );
 }
 
@@ -223,8 +258,8 @@ const AGENT_PROCESS_ENVIRONMENT_KEYS = new Set([
  * Both SDKs replace the child environment wholesale rather than layering onto
  * `process.env` the way `run()` does, so passing only the git-auth env would
  * drop the CI image's mise `PATH`. Copy only the allowlisted process/TLS
- * settings, then add the git auth and the single provider credential this run
- * needs.
+ * settings, then add the git auth and the provider-specific auth boundary this
+ * run needs.
  */
 export function refinerSdkEnv(
   input: Pick<RunReleaseRefinerInput, "env">,
@@ -268,6 +303,13 @@ async function runClaudeAgentSdk(
         result = ClaudeResultSchema.parse(message);
       }
     }
+  } catch (error) {
+    // `instanceof` here rather than a type guard on the classifier: the repo
+    // bans predicate signatures (custom-rules/no-type-guards).
+    if (error instanceof Error && isClaudeQuotaExhaustionError(error)) {
+      return { kind: "quota-exhausted", detail: error.message };
+    }
+    throw error;
   } finally {
     messages.close();
   }
@@ -299,7 +341,10 @@ async function runCodexSdk(
 ): Promise<ReleaseAgentOutcome> {
   const codex = new Codex({
     env: refinerSdkEnv(input, {
-      CODEX_ACCESS_TOKEN: input.codexAccessToken,
+      // Codex reads the full, ChatGPT-managed auth bundle from this isolated
+      // persistent directory and refreshes it in place. Do not extract its
+      // short-lived access token into an environment variable.
+      CODEX_HOME: input.codexHome,
     }),
     config: {
       project_doc_max_bytes: 0,

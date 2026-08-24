@@ -21,6 +21,7 @@ import {
   type PeekPassPrice,
   type PeekPassQuoteResult,
 } from "#src/betting/peek-pass.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 export type PeekPassButtonInteraction = {
   customId: string;
@@ -53,7 +54,7 @@ function quoteButton(input: {
             quotedPrice: input.quote.price,
           }),
         )
-        .setLabel(`Buy for ${input.quote.price.toString()} BB`)
+        .setLabel(`Buy for ${formatInteger(input.quote.price)} BB`)
         .setStyle(ButtonStyle.Primary),
     ),
   ];
@@ -73,7 +74,7 @@ export function renderPeekPassQuote(
       };
     case "insufficient":
       return {
-        content: `A peek pass costs at least **5 BB**. Your balance is **${result.balance.toString()} BB**.`,
+        content: `A peek pass costs at least **5 BB**. Your balance is **${formatInteger(result.balance)} BB**.`,
         components: [],
       };
     case "active":
@@ -87,7 +88,7 @@ export function renderPeekPassQuote(
       );
       return {
         content:
-          `A **${PEEK_PASS_DURATION_LABEL} peek pass** costs **${result.quote.price.toString()} BB** for you right now. ` +
+          `A **${PEEK_PASS_DURATION_LABEL} peek pass** costs **${formatInteger(result.quote.price)} BB** for you right now. ` +
           `This quote expires ${relativeTime(expiresAt)}.`,
         components: quoteButton({
           ownerId,
@@ -152,7 +153,7 @@ export async function handlePeekPassButton(
       await interaction.editReply({
         content:
           `✅ Peek pass active until ${relativeTime(result.expiresAt)}. ` +
-          `Paid **${result.price.toString()} BB** · balance **${result.balanceAfter.toString()} BB**. Use \`/bb peek game:<player>\`.`,
+          `Paid **${formatInteger(result.price)} BB** · balance **${formatInteger(result.balanceAfter)} BB**. Use \`/bb peek game:<player>\`.`,
         components: [],
       });
       return;

@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Subscription {
@@ -94,7 +94,8 @@ model SummonerIndex {
   createdTime    DateTime
   updatedTime    DateTime
 
-  // Prefix-autocomplete on gameName (SQLite LIKE 'q%', ASCII case-insensitive).
+  // Prefix-autocomplete on gameName (case-insensitive via Prisma mode:
+  // "insensitive" → ILIKE; the b-tree index serves exact-prefix scans only).
   @@index([gameName])
 }
 
@@ -116,6 +117,47 @@ model MatchRankHistory {
   @@index([puuid, capturedAt])
   @@index([puuid, queueType, matchGameEndAt])
   @@index([matchId])
+}
+
+// Durable, globally deduplicated first-run import. The PUUID key makes one
+// Riot snapshot serve every guild that tracks the same account.
+model InitialMatchHistoryImport {
+  puuid  String @id
+  region String
+  phase  String
+
+  // JSON-serialized MatchId[] validated by the application. The list is
+  // captured once so retries cannot move the notification boundary.
+  matchIdsJson      String?
+  snapshotAt        DateTime?
+  nextMatchIndex    Int       @default(0)
+  newestMatchId     String?
+  newestMatchTime   DateTime?
+  cursorHandedOffAt DateTime?
+
+  attemptCount  Int       @default(0)
+  lastAttemptAt DateTime?
+  nextAttemptAt DateTime
+  errorCode     String?
+
+  requestedAt    DateTime
+  completedAt    DateTime?
+  lastImportedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([phase, nextAttemptAt, requestedAt])
+}
+
+// Current rank is not a per-match observation. Keeping it separate prevents
+// imported games from fabricating historical LP deltas.
+model CurrentRankSnapshot {
+  puuid     String   @id
+  soloRank  String?
+  flexRank  String?
+  fetchedAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Report {
@@ -754,10 +796,11 @@ model BucksAccount {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  ledgerEntries BucksLedgerEntry[]
-  bets          BucksBet[]
-  parlayBets    BucksParlayBet[]
-  openPositions BucksOpenPosition[]
+  ledgerEntries    BucksLedgerEntry[]
+  bets             BucksBet[]
+  parlayBets       BucksParlayBet[]
+  weeklyParlayBets BucksWeeklyParlayBet[]
+  openPositions    BucksOpenPosition[]
 
   @@unique([serverId, discordId])
   @@index([serverId, balance])
@@ -787,7 +830,8 @@ model BucksLedgerEntry {
   // bet_payout | bet_*_refund | winner_fee | house_match | cancel_fee |
   // parlay_stake | parlay_reserve | parlay_payout | parlay_refund |
   // parlay_release | peek_pass | legacy bet_refund/house_rake | adjustment.
-  // Not a Prisma enum — the SQLite provider has none. Zod-validated on write
+  // Not a Prisma enum (kept a plain string through the Postgres migration).
+  // Zod-validated on write
   // and on read.
   kind String
 
@@ -799,6 +843,9 @@ model BucksLedgerEntry {
 
   parlayBetId Int?
   parlayBet   BucksParlayBet? @relation(fields: [parlayBetId], references: [id])
+
+  weeklyParlayBetId Int?
+  weeklyParlayBet   BucksWeeklyParlayBet? @relation(fields: [weeklyParlayBetId], references: [id])
 
   // Riot team IDs (100/200). Both null for seed/earn_*/adjustment.
   // `actualWinningTeamId` is also null for bet_stake (unknown at bet time) and
@@ -1070,6 +1117,145 @@ model BucksParlayBet {
   @@index([marketId, side])
 }
 
+// Immutable cross-game proposition for one guild-local Pacific scoring period.
+// The subject/account snapshots and every generation/pricing input are frozen
+// here so later alias, account, model, or catalog changes cannot alter it.
+model BucksWeeklyParlayDefinition {
+  id        Int    @id @default(autoincrement())
+  serverId  String
+  periodKey String
+  slot      Int
+
+  openAt          DateTime
+  bettingClosesAt DateTime
+  scoringStartsAt DateTime
+  scoringEndsAt   DateTime
+
+  subjects       String
+  eligibleQueues String
+  proposal       String
+  criteria       String
+  historySample  String
+  pricing        String
+
+  yesProbabilityBps Int
+  promptVersion     String
+  catalogVersion    String
+  schemaVersion     Int
+  evaluatorVersion  String
+  pricingVersion    String
+  generationContext String
+  requestedModel    String
+  resolvedModel     String?
+  usage             String
+  durationMs        Int
+
+  createdAt DateTime @default(now())
+
+  market        BucksWeeklyParlayMarket?
+  contributions BucksWeeklyParlayContribution[]
+
+  @@unique([serverId, scoringStartsAt, slot])
+  @@unique([serverId, periodKey, slot])
+  @@index([scoringStartsAt, scoringEndsAt])
+}
+
+// Guild-local publication and settlement state for one weekly definition.
+model BucksWeeklyParlayMarket {
+  id           Int                         @id @default(autoincrement())
+  definitionId Int                         @unique
+  definition   BucksWeeklyParlayDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  serverId     String
+  periodKey    String
+  slot         Int
+
+  publishedAt     DateTime
+  bettingClosesAt DateTime
+  scoringEndsAt   DateTime
+  messageRefs     String   @default("[]")
+
+  // publishing | open | active | settled | voided
+  marketState String    @default("publishing")
+  yesResult   Boolean?
+  legResults  String?
+  voidReason  String?
+  settledAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bets       BucksWeeklyParlayBet[]
+  deliveries BucksWeeklyParlayDelivery[]
+
+  @@unique([serverId, periodKey, slot])
+  @@index([marketState, bettingClosesAt])
+  @@index([marketState, scoringEndsAt])
+}
+
+// One fixed-odds YES/NO position per wallet and weekly market.
+model BucksWeeklyParlayBet {
+  id             Int                     @id @default(autoincrement())
+  marketId       Int
+  market         BucksWeeklyParlayMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  bucksAccountId Int
+  bucksAccount   BucksAccount            @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
+
+  side         String
+  stake        Int
+  houseReserve Int
+  grossPayout  Int
+  betOutcome   String    @default("pending")
+  payout       Int?
+  settledAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ledgerEntries BucksLedgerEntry[]
+
+  @@unique([marketId, bucksAccountId])
+  @@index([marketId, side])
+}
+
+// Idempotent contribution from one completed, eligible match for one frozen
+// subject. Progress and settlement are derived only from these rows.
+model BucksWeeklyParlayContribution {
+  id           Int                         @id @default(autoincrement())
+  definitionId Int
+  definition   BucksWeeklyParlayDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  matchId      String
+  subjectKey   String
+  completedAt  DateTime
+  ingestedAt   DateTime
+  queueType    String
+  snapshot     String
+  createdAt    DateTime                    @default(now())
+
+  @@unique([definitionId, matchId, subjectKey])
+  @@index([definitionId, completedAt])
+  @@index([matchId])
+}
+
+// One durable Discord action attempt per market/action key. The action key is
+// also the enforced Discord nonce, so activity retries cannot duplicate posts.
+model BucksWeeklyParlayDelivery {
+  id            Int                     @id @default(autoincrement())
+  marketId      Int
+  market        BucksWeeklyParlayMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  actionKey     String
+  kind          String
+  scheduledAt   DateTime
+  deliveryState String                  @default("pending")
+  messageRefs   String                  @default("[]")
+  attemptedAt   DateTime?
+  deliveredAt   DateTime?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@unique([marketId, actionKey])
+  @@index([deliveryState, scheduledAt])
+}
+
 // Durable marker for Bucks EARNINGS on a (match, guild).
 //
 // A pending row is created before wallet funding so house exhaustion leaves a
@@ -1110,4 +1296,121 @@ model BucksMatchEarning {
   @@id([matchId, serverId])
   @@index([phase, state, retryAt])
   @@index([state, retryAt])
+}
+
+// =============================================================================
+// Tournament-code custom lobbies
+//
+// Riot removed custom games from the public API for privacy reasons, so
+// Spectator sees them only unreliably and Match-V5 does not carry them at all.
+// The one sanctioned exception is the Tournament API: a game created from a
+// tournament code IS recorded in Match-V5, with `info.tournamentCode`
+// populated. These two tables are what let Scout mint such a lobby and follow
+// it to its report.
+//
+// Deliberately provider-agnostic: only Int/String/BigInt/DateTime/Boolean, no
+// Prisma enum (SQLite has none) and no @db.* native types. Enum-shaped columns
+// are TEXT validated by Zod on read and write, matching how `AuditLog.action`
+// and `DmAuditLog.kind` already work. That keeps the migration portable across
+// the pending Postgres cutover.
+// =============================================================================
+
+/// A registered tournament provider and tournament.
+///
+/// Both are long-lived registrations produced by an API call, not per-game
+/// state and not a credential — so they live here rather than in 1Password or
+/// an env var. Created by scripts/register-tournament-provider.ts; call sites
+/// read the row and fail loudly naming that script when it is absent, rather
+/// than lazily creating one (which would race two concurrent /lobby create
+/// calls into two providers and silently mint a new one on a fresh volume).
+///
+/// Keyed by (apiMode, region) because stub and live IDs are different
+/// namespaces: a code minted under the stub is meaningless under the live API.
+model TournamentRegistration {
+  id               Int      @id @default(autoincrement())
+  apiMode          String // TournamentApiMode: "stub" | "live"
+  /// Riot tournament region code, e.g. "NA". Deliberately NOT named `region`:
+  /// that field name is branded as Scout's own Region enum, and these are a
+  /// different naming scheme entirely.
+  tournamentRegion String
+  providerId       Int
+  tournamentId     Int
+  callbackUrl      String
+  name             String
+  createdAt        DateTime @default(now())
+
+  @@unique([apiMode, tournamentRegion])
+}
+
+/// One Scout-created custom lobby, from minted code to delivered report.
+///
+/// Not folded into ActiveGame: that row is keyed by prematchMatchId, which does
+/// not exist until a game starts, and it is hard-deleted every 30 seconds once
+/// past its 3-hour TTL. A lobby exists before any game, may never produce one,
+/// and has to survive for /lobby status and for audit.
+///
+/// The link to ActiveGame is by value — TournamentLobby.matchId equals
+/// ActiveGame.prematchMatchId — so the post-match reply path needs no change.
+model TournamentLobby {
+  id           Int    @id @default(autoincrement())
+  /// The Riot tournament code. This is the join credential, so it is never
+  /// posted to a public channel.
+  code         String @unique
+  apiMode      String // TournamentApiMode
+  providerId   Int
+  tournamentId Int
+  /// Scout Region enum value, e.g. "AMERICA_NORTH".
+  region       String
+  /// Platform id, e.g. "NA1". games/by-code answers with a bare numeric gameId
+  /// and Match-V5 wants {PLATFORM}_{gameId}; this is the missing half.
+  platformId   String
+
+  serverId         String
+  channelId        String
+  creatorDiscordId String
+
+  /// JSON string arrays. Teams come from the /lobby create arguments because
+  /// lobby events carry a PUUID per join and never a side, and spectator is
+  /// unreliable for customs — so this is the only pregame source of the split.
+  bluePuuids    String
+  redPuuids     String
+  blueAliases   String
+  redAliases    String
+  teamSize      Int
+  pickType      String // TournamentPickType
+  mapType       String // TournamentMapType
+  spectatorType String // TournamentSpectatorType
+  lobbyName     String?
+  password      String?
+
+  /// TournamentLobbyState. Advances monotonically; see lifecycle.ts.
+  state String
+
+  /// Observability only. Correctness must NOT depend on these: lobby-events
+  /// replays its whole list every call, multiple events can share a
+  /// millisecond, and `timestamp` is a string. The monotonic state recompute
+  /// is what makes a replay idempotent.
+  processedEventCount Int     @default(0)
+  lastEventTimestamp  String?
+
+  /// JSON object: Discord channel ID -> prematch message ID. Copied onto the
+  /// ActiveGame row once the match ID is known, so the post-match report
+  /// replies to the right message.
+  prematchMessageIds String?
+
+  /// JSON string array of PUUIDs seen in a PlayerJoinedGameEvent.
+  joinedPuuids String @default("[]")
+
+  gameId  BigInt?
+  /// Platform-qualified Riot match ID; joins to ActiveGame.prematchMatchId.
+  matchId String?
+
+  lastPolledAt DateTime?
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+  updatedAt    DateTime  @updatedAt
+
+  @@index([state, expiresAt])
+  @@index([serverId, state])
+  @@index([matchId])
 }

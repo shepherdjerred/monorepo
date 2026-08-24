@@ -15,6 +15,9 @@ Run this in the channel that should receive the notifications:
 
 `/track` is a single happy path: one account, one channel, no filters. It
 creates the player if the alias is new and attaches the Riot account to it.
+Scout then quietly imports up to that account's 20 most recent games and its
+current Solo/Flex ranks. The history fills Explore, reports, AI review context,
+and the player profile; old games never post notifications.
 
 Use it when you want a player tracked in the channel you are already standing
 in. For anything else, use the dashboard.
@@ -54,6 +57,9 @@ not two players. That way their games aggregate into one leaderboard row.
 
 Both accounts now feed the same alias. Any subscription for that player covers
 matches on either account.
+
+The added account receives the same quiet history import. Re-adding an account
+within 24 hours reuses its existing import instead of refetching Riot data.
 
 ## Move an account to a different player
 

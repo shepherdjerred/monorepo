@@ -6640,8 +6640,7 @@ export interface ApplicationSpecSourceHydratorDrySourceDirectoryJsonnetExtVars {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSpecSourceHydratorDrySourceDirectoryJsonnetExtVars(
   obj:
-    | ApplicationSpecSourceHydratorDrySourceDirectoryJsonnetExtVars
-    | undefined,
+    ApplicationSpecSourceHydratorDrySourceDirectoryJsonnetExtVars | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -10554,8 +10553,7 @@ export interface ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpec
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpec(
   obj:
-    | ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpec
-    | undefined,
+    ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -13003,8 +13001,7 @@ export interface ApplicationSetSpecGeneratorsPullRequestBitbucketServerBasicAuth
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPullRequestBitbucketServerBasicAuth(
   obj:
-    | ApplicationSetSpecGeneratorsPullRequestBitbucketServerBasicAuth
-    | undefined,
+    ApplicationSetSpecGeneratorsPullRequestBitbucketServerBasicAuth | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -13431,8 +13428,7 @@ export interface ApplicationSetSpecGeneratorsScmProviderAwsCodeCommitTagFilters 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsScmProviderAwsCodeCommitTagFilters(
   obj:
-    | ApplicationSetSpecGeneratorsScmProviderAwsCodeCommitTagFilters
-    | undefined,
+    ApplicationSetSpecGeneratorsScmProviderAwsCodeCommitTagFilters | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -13509,8 +13505,7 @@ export interface ApplicationSetSpecGeneratorsScmProviderBitbucketAppPasswordRef 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsScmProviderBitbucketAppPasswordRef(
   obj:
-    | ApplicationSetSpecGeneratorsScmProviderBitbucketAppPasswordRef
-    | undefined,
+    ApplicationSetSpecGeneratorsScmProviderBitbucketAppPasswordRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -13548,8 +13543,7 @@ export interface ApplicationSetSpecGeneratorsScmProviderBitbucketServerBasicAuth
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsScmProviderBitbucketServerBasicAuth(
   obj:
-    | ApplicationSetSpecGeneratorsScmProviderBitbucketServerBasicAuth
-    | undefined,
+    ApplicationSetSpecGeneratorsScmProviderBitbucketServerBasicAuth | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -15794,8 +15788,7 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydrator 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydrator(
   obj:
-    | ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydrator
-    | undefined,
+    ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydrator | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -16529,8 +16522,7 @@ export interface ApplicationSetSpecGeneratorsListTemplateSpecIgnoreDifferences {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecIgnoreDifferences(
   obj:
-    | ApplicationSetSpecGeneratorsListTemplateSpecIgnoreDifferences
-    | undefined,
+    ApplicationSetSpecGeneratorsListTemplateSpecIgnoreDifferences | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -17256,8 +17248,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginConfigMapRef 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginConfigMapRef(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsPluginConfigMapRef
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsPluginConfigMapRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -17585,8 +17576,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestFilters 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestFilters(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestFilters
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestFilters | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -17709,8 +17699,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestGithub {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestGithub(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestGithub
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestGithub | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -17780,8 +17769,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestGitlab {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestGitlab(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestGitlab
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestGitlab | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -17830,8 +17818,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplate
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplate(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplate
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplate | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -18136,8 +18123,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderFilters 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderFilters(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderFilters
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderFilters | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -18262,8 +18248,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGithub {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGithub(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGithub
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGithub | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -18348,8 +18333,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitlab {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitlab(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitlab
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderGitlab | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -18401,8 +18385,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplate
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplate(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplate
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplate | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -18558,8 +18541,7 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecIgnoreDifferences
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecIgnoreDifferences(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixTemplateSpecIgnoreDifferences
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixTemplateSpecIgnoreDifferences | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -19285,8 +19267,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginConfigMapRef {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginConfigMapRef(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsPluginConfigMapRef
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsPluginConfigMapRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -19483,8 +19464,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestBitbucket
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestBitbucket(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestBitbucket
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestBitbucket | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -19614,8 +19594,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestFilters {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestFilters(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestFilters
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestFilters | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -19855,8 +19834,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplate 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplate(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplate
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplate | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -20024,8 +20002,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderBitbucket
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderBitbucket(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderBitbucket
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderBitbucket | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -20161,8 +20138,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderFilters {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderFilters(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderFilters
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderFilters | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -20422,8 +20398,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplate 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplate(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplate
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplate | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -20579,8 +20554,7 @@ export interface ApplicationSetSpecGeneratorsMergeTemplateSpecIgnoreDifferences 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecIgnoreDifferences(
   obj:
-    | ApplicationSetSpecGeneratorsMergeTemplateSpecIgnoreDifferences
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeTemplateSpecIgnoreDifferences | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -21039,8 +21013,7 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecIgnoreDifferences
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecIgnoreDifferences(
   obj:
-    | ApplicationSetSpecGeneratorsPluginTemplateSpecIgnoreDifferences
-    | undefined,
+    ApplicationSetSpecGeneratorsPluginTemplateSpecIgnoreDifferences | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -21592,8 +21565,7 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecDestination 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecDestination(
   obj:
-    | ApplicationSetSpecGeneratorsPullRequestTemplateSpecDestination
-    | undefined,
+    ApplicationSetSpecGeneratorsPullRequestTemplateSpecDestination | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -22006,8 +21978,7 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSyncPolicy {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSyncPolicy(
   obj:
-    | ApplicationSetSpecGeneratorsPullRequestTemplateSpecSyncPolicy
-    | undefined,
+    ApplicationSetSpecGeneratorsPullRequestTemplateSpecSyncPolicy | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -22139,8 +22110,7 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecDestination 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecDestination(
   obj:
-    | ApplicationSetSpecGeneratorsScmProviderTemplateSpecDestination
-    | undefined,
+    ApplicationSetSpecGeneratorsScmProviderTemplateSpecDestination | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -22553,8 +22523,7 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSyncPolicy {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSyncPolicy(
   obj:
-    | ApplicationSetSpecGeneratorsScmProviderTemplateSpecSyncPolicy
-    | undefined,
+    ApplicationSetSpecGeneratorsScmProviderTemplateSpecSyncPolicy | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -22926,8 +22895,7 @@ export interface ApplicationSetSpecTemplateSpecSourceHydratorDrySourceDirectory 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecTemplateSpecSourceHydratorDrySourceDirectory(
   obj:
-    | ApplicationSetSpecTemplateSpecSourceHydratorDrySourceDirectory
-    | undefined,
+    ApplicationSetSpecTemplateSpecSourceHydratorDrySourceDirectory | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -23173,8 +23141,7 @@ export interface ApplicationSetSpecTemplateSpecSourceHydratorDrySourceKustomize 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecTemplateSpecSourceHydratorDrySourceKustomize(
   obj:
-    | ApplicationSetSpecTemplateSpecSourceHydratorDrySourceKustomize
-    | undefined,
+    ApplicationSetSpecTemplateSpecSourceHydratorDrySourceKustomize | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -24745,8 +24712,7 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourceDirectory
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourceDirectory(
   obj:
-    | ApplicationSetSpecGeneratorsClustersTemplateSpecSourceDirectory
-    | undefined,
+    ApplicationSetSpecGeneratorsClustersTemplateSpecSourceDirectory | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -24992,8 +24958,7 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourceKustomize
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourceKustomize(
   obj:
-    | ApplicationSetSpecGeneratorsClustersTemplateSpecSourceKustomize
-    | undefined,
+    ApplicationSetSpecGeneratorsClustersTemplateSpecSourceKustomize | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -25611,8 +25576,7 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesPlugin {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesPlugin(
   obj:
-    | ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesPlugin
-    | undefined,
+    ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesPlugin | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -25766,8 +25730,7 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSyncPolicyRetry
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSyncPolicyRetry(
   obj:
-    | ApplicationSetSpecGeneratorsClustersTemplateSpecSyncPolicyRetry
-    | undefined,
+    ApplicationSetSpecGeneratorsClustersTemplateSpecSyncPolicyRetry | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -26729,8 +26692,7 @@ export interface ApplicationSetSpecGeneratorsGitTemplateSpecSyncPolicyAutomated 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSyncPolicyAutomated(
   obj:
-    | ApplicationSetSpecGeneratorsGitTemplateSpecSyncPolicyAutomated
-    | undefined,
+    ApplicationSetSpecGeneratorsGitTemplateSpecSyncPolicyAutomated | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -27789,8 +27751,7 @@ export interface ApplicationSetSpecGeneratorsListTemplateSpecSyncPolicyAutomated
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSyncPolicyAutomated(
   obj:
-    | ApplicationSetSpecGeneratorsListTemplateSpecSyncPolicyAutomated
-    | undefined,
+    ApplicationSetSpecGeneratorsListTemplateSpecSyncPolicyAutomated | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -28380,8 +28341,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateMetadata
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateMetadata(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateMetadata
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateMetadata | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -28811,8 +28771,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpec 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpec(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpec
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -30019,8 +29978,7 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceDirectory {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceDirectory(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceDirectory
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceDirectory | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -30266,8 +30224,7 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceKustomize {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceKustomize(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceKustomize
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceKustomize | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -30558,8 +30515,7 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesDirectory 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesDirectory(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesDirectory
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesDirectory | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -30805,8 +30761,7 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesKustomize 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesKustomize(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesKustomize
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesKustomize | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -31036,8 +30991,7 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSyncPolicyRetry {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSyncPolicyRetry(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixTemplateSpecSyncPolicyRetry
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixTemplateSpecSyncPolicyRetry | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -31447,8 +31401,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpec
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpec(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpec
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -31532,8 +31485,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateMetadata 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateMetadata(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateMetadata
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateMetadata | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -31702,8 +31654,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateMetadata
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateMetadata(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateMetadata
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateMetadata | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -31961,8 +31912,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpec {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpec(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpec
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -33704,8 +33654,7 @@ export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesDirectory {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesDirectory(
   obj:
-    | ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesDirectory
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesDirectory | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -33951,8 +33900,7 @@ export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomize {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomize(
   obj:
-    | ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomize
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomize | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -34233,8 +34181,7 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectory {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectory(
   obj:
-    | ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectory
-    | undefined,
+    ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectory | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -34480,8 +34427,7 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourceKustomize {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourceKustomize(
   obj:
-    | ApplicationSetSpecGeneratorsPluginTemplateSpecSourceKustomize
-    | undefined,
+    ApplicationSetSpecGeneratorsPluginTemplateSpecSourceKustomize | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -34772,8 +34718,7 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesDirectory 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesDirectory(
   obj:
-    | ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesDirectory
-    | undefined,
+    ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesDirectory | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -35019,8 +34964,7 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesKustomize 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesKustomize(
   obj:
-    | ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesKustomize
-    | undefined,
+    ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesKustomize | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -35250,8 +35194,7 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSyncPolicyRetry {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSyncPolicyRetry(
   obj:
-    | ApplicationSetSpecGeneratorsPluginTemplateSpecSyncPolicyRetry
-    | undefined,
+    ApplicationSetSpecGeneratorsPluginTemplateSpecSyncPolicyRetry | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -35412,8 +35355,7 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHelm {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHelm(
   obj:
-    | ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHelm
-    | undefined,
+    ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHelm | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -35632,8 +35574,7 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcePlugin
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcePlugin(
   obj:
-    | ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcePlugin
-    | undefined,
+    ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcePlugin | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -35957,8 +35898,7 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesHelm 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesHelm(
   obj:
-    | ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesHelm
-    | undefined,
+    ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesHelm | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -36494,8 +36434,7 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHelm {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHelm(
   obj:
-    | ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHelm
-    | undefined,
+    ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHelm | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -36714,8 +36653,7 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcePlugin
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcePlugin(
   obj:
-    | ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcePlugin
-    | undefined,
+    ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcePlugin | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -37039,8 +36977,7 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesHelm 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesHelm(
   obj:
-    | ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesHelm
-    | undefined,
+    ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesHelm | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -37867,8 +37804,7 @@ export interface ApplicationSetSpecTemplateSpecSourceHydratorDrySourcePluginEnv 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecTemplateSpecSourceHydratorDrySourcePluginEnv(
   obj:
-    | ApplicationSetSpecTemplateSpecSourceHydratorDrySourcePluginEnv
-    | undefined,
+    ApplicationSetSpecTemplateSpecSourceHydratorDrySourcePluginEnv | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -39469,8 +39405,7 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourcePluginEnv
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourcePluginEnv(
   obj:
-    | ApplicationSetSpecGeneratorsClustersTemplateSpecSourcePluginEnv
-    | undefined,
+    ApplicationSetSpecGeneratorsClustersTemplateSpecSourcePluginEnv | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -40426,8 +40361,7 @@ export interface ApplicationSetSpecGeneratorsGitTemplateSpecSourceHelmParameters
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSourceHelmParameters(
   obj:
-    | ApplicationSetSpecGeneratorsGitTemplateSpecSourceHelmParameters
-    | undefined,
+    ApplicationSetSpecGeneratorsGitTemplateSpecSourceHelmParameters | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -43577,8 +43511,7 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecInfo
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecInfo(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecInfo
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecInfo | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -46308,8 +46241,7 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcePluginEnv {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcePluginEnv(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcePluginEnv
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcePluginEnv | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -47027,8 +46959,7 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesPluginEnv 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesPluginEnv(
   obj:
-    | ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesPluginEnv
-    | undefined,
+    ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesPluginEnv | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -48232,8 +48163,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecInfo 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecInfo(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecInfo
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecInfo | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -48707,8 +48637,7 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecInfo
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecInfo(
   obj:
-    | ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecInfo
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecInfo | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -51680,8 +51609,7 @@ export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesPluginEnv {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesPluginEnv(
   obj:
-    | ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesPluginEnv
-    | undefined,
+    ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesPluginEnv | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -52057,8 +51985,7 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourcePluginEnv {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourcePluginEnv(
   obj:
-    | ApplicationSetSpecGeneratorsPluginTemplateSpecSourcePluginEnv
-    | undefined,
+    ApplicationSetSpecGeneratorsPluginTemplateSpecSourcePluginEnv | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -52776,8 +52703,7 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesPluginEnv 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesPluginEnv(
   obj:
-    | ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesPluginEnv
-    | undefined,
+    ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesPluginEnv | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;

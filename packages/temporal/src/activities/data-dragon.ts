@@ -10,12 +10,16 @@ import {
   shouldCreateDataDragonPr,
   type GitStatusEntry,
 } from "./data-dragon-diff.ts";
+import { jsonLog, noDiffResult } from "./data-dragon-results.ts";
 import {
   botCloneCacheDir,
   disarmGitHooks,
   installScoutWorkspace,
 } from "./bot-clone.ts";
-import { runScoutGeneratedPreflight } from "./scout-generated-preflight.ts";
+import {
+  discardFormattingOnlyChanges,
+  runScoutGeneratedPreflight,
+} from "./scout-generated-preflight.ts";
 import { recordAutoMergeFailure, recordRun } from "./data-dragon-metrics.ts";
 import {
   createDataDragonPr,
@@ -64,26 +68,17 @@ export type DataDragonUpdateResult = DataDragonUpdateInput & {
   commitHash: string | undefined;
   prUrl: string | undefined;
   outcome: "success" | "skipped";
-  reason: "pr-created" | "no-diff" | "image-only-diff" | "pr-already-open";
+  reason:
+    | "pr-created"
+    | "no-diff"
+    | "formatting-only-diff"
+    | "image-only-diff"
+    | "pr-already-open";
+  formattingOnlyFiles?: string[];
   emailSent?: boolean;
   emailMessageId?: string;
   autoMergeConfigured?: boolean;
 };
-
-function jsonLog(
-  level: "info" | "warning" | "error",
-  message: string,
-  fields: Record<string, unknown> = {},
-): void {
-  console.warn(
-    JSON.stringify({
-      level,
-      msg: message,
-      component: "scout-data-dragon-update",
-      ...fields,
-    }),
-  );
-}
 
 async function fetchJson(url: string): Promise<unknown> {
   const response = await fetch(url, {
@@ -364,28 +359,29 @@ export const dataDragonActivities = {
       const durationSeconds = (Date.now() - start) / 1000;
 
       if (files.length === 0) {
-        recordRun({
-          mode: input.mode,
-          outcome: "success",
-          reason: "no-diff",
-          currentVersion: input.currentVersion,
-          latestVersion: input.latestVersion,
-          changedFiles: 0,
+        return noDiffResult(
+          input,
           durationSeconds,
-        });
-        jsonLog("info", "Data Dragon update produced no diff", {
-          ...input,
+          "Data Dragon update produced no diff",
+        );
+      }
+
+      const formattingOnlyFiles = await discardFormattingOnlyChanges({
+        repoDir,
+        changedFiles: files,
+        component: "scout-data-dragon-update",
+      });
+      changes = await changedFiles(repoDir);
+      if (changes.length === 0) {
+        return noDiffResult(
+          input,
           durationSeconds,
-        });
-        return {
-          ...input,
-          changedFiles: [],
-          branchName: undefined,
-          commitHash: undefined,
-          prUrl: undefined,
-          outcome: "skipped",
-          reason: "no-diff",
-        };
+          "Data Dragon update skipped formatting-only diff",
+          {
+            reason: "formatting-only-diff",
+            formattingOnlyFiles,
+          },
+        );
       }
 
       if (!shouldCreateDataDragonPr(changes)) {

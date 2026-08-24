@@ -19,9 +19,12 @@ struct QuotaBarApp: App {
       local: LocalCredentialStore()
     )
     let providers: [any UsageProvider]
+    let providerFactory: (Set<ProviderID>) throws -> [any UsageProvider] = { providerIDs in
+      try Providers.live(credentials: credentials, providerIDs: providerIDs)
+    }
     let startupError: String?
     do {
-      providers = try Providers.live(credentials: credentials)
+      providers = try providerFactory(settings.visibleProviderIDs)
       startupError = nil
     } catch {
       providers = []
@@ -31,7 +34,11 @@ struct QuotaBarApp: App {
     let openRouterCredentials = OpenRouterCredentialStore()
     self.openRouterCredentials = openRouterCredentials
     self.startupError = startupError
-    let model = QuotaBarModel(providers: providers, settings: settings)
+    let model = QuotaBarModel(
+      providers: providers,
+      settings: settings,
+      providerFactory: providerFactory
+    )
     let apiModel = APIPlatformModel(settings: settings, credentials: openRouterCredentials)
     _model = State(initialValue: model)
     _apiModel = State(initialValue: apiModel)

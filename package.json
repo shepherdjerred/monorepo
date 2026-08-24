@@ -174,7 +174,7 @@
     "brace-expansion": "5.0.9",
     "ip-address": "10.5.0",
     "js-cookie": "3.0.8",
-    "nanoid": "6.0.0",
+    "nanoid": "6.0.1",
     "pdfjs-dist": "6.2.108",
     "postcss": "8.5.26",
     "protobufjs": "^7.5.7",
@@ -211,7 +211,8 @@
     "markdown-it@14.3.0": "patches/markdown-it@14.3.0.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "react-native-worklets@0.11.4": "patches/react-native-worklets@0.11.4.patch",
-    "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch"
+    "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch",
+    "@lng2004/node-datachannel@0.32.3-20260815.3": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.3.patch"
   },
   "packageManager": "bun@1.4.0"
 }

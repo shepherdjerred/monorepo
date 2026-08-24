@@ -79,24 +79,26 @@ auto-pauses or auto-unpauses anything. This is intentional — pause is the one 
 everything else about a schedule lives in source. Don't add a declarative `enabled` flag, it
 would fight the UI.
 
-| To stop…             | Pause schedule id(s)                                                                                                                                                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                                                                                                                         |
-| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                                                                                                                               |
-| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                                                                                                                   |
-| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                                                                                                                              |
-| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-lane-priors-weekly-refresh`, `scout-season-refresh-weekly`, `scout-showcase-refresh-weekly`, `scout-queue-windows-daily` |
+| To stop…             | Pause schedule id(s)                                                                                                                                                                                                          |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                                                                                                                                                |
+| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                                                                                                                                                      |
+| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                                                                                                                                          |
+| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                                                                                                                                                     |
+| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-lane-priors-weekly-refresh`, `scout-season-refresh-weekly`, `scout-showcase-refresh-weekly`, `scout-queue-windows-daily`, `scout-weekly-parlay` |
 
 ### Catchup window (missed-run replay after a SERVER outage)
 
 `catchupWindow` controls whether a run missed while the Temporal **server** was down gets
 replayed on recovery. (A worker restart/deploy does **not** drop runs — the server still
-creates the action on time and it queues.) Two tiers, set in `buildSchedulePolicies`:
+creates the action on time and it queues.) Three tiers, set in `buildSchedulePolicies`:
 
 - `CATCHUP_TIGHT` (5 min) on time-of-day home automation (vacuum, good-morning): skip rather
   than fire a wake-up/vacuum hours late.
 - `CATCHUP_RELAXED` (1 hour, the default for everything else): reports/maintenance still run
   late after an outage. Override per-schedule via the optional `catchupWindow` field.
+- `CATCHUP_WEEKLY_PARLAY` (12 hours) on `scout-weekly-parlay`: replay Sunday publication
+  through the full betting window when the Temporal server was unavailable.
 
 Caveat: a long _worker_ outage can still execute a home run late (the server already created
 it on time); fully preventing that needs a staleness guard inside the workflow.
@@ -177,6 +179,8 @@ Workflow:
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
+- `FRESHRSS_API_URL`, `FRESHRSS_USER`, `FRESHRSS_CATEGORY` — FreshRSS Repo Stack reconciliation settings
+- `FRESHRSS_MANIFEST_PATH`, `FRESHRSS_API_PASSWORD_FILE` — mounted FreshRSS manifest and password paths
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
 - `REVIEW_SIGNAL_ARCHIVE_BUCKET` — S3/SeaweedFS bucket the review-signal collector writes NDJSON archives to (`review-signals/<temporal-run-id>.ndjson` — the object is keyed by the Temporal workflow run id, with no wall-clock component, so an activity retry overwrites idempotently rather than forking a second object; each NDJSON event carries its own `ts`). Optional — defaults to the existing `llm-archive` bucket (namespaced by the key prefix), so no new bucket/env is needed to start collecting
 - `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for GitHub automation so GitHub attributes those actions to the app bot.
@@ -188,6 +192,7 @@ Workflow:
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
 - `SLEEP_WEBHOOK_TOKEN` — bearer token for the direct iOS sleep webhook on port 9469; the listener is skipped when unset (local/dev workers can omit it)
 - `SLEEP_WEBHOOK_PORT` — port for the direct sleep webhook (default `9469`)
+- `SCOUT_WEEKLY_PARLAY_CONTROL_URL`, `SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN` — beta Scout's private weekly-parlay control endpoint and shared bearer credential. Both are required by the `scout-weekly-parlay` schedule; the token is synced from the same 1Password item as Scout and must never be logged.
 - `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to the bundled `runbooks/homelab-audit.md`)
 - `ALERT_DASHBOARD_URL` — in-cluster Alerts API URL (homelab audit)
 - `BUGSINK_URL`, `BUGSINK_TOKEN` — Bugsink REST API base + token (homelab audit)
@@ -206,6 +211,31 @@ Workflow:
 - `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
 - `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by three features: the Xcode Cloud webhook receiver (when enabled), the `temporal-failure-watch` schedule (see below), and `llm-catalog-refresh-weekly`, which publishes its withheld state on every run (firing when the cross-check withholds edits, resolving when it withholds none) — all POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
 - `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `87090` = 24h lookback plus the full 6.5m activity retry budget and a 5m delivery margin).
+
+## Scout weekly parlay lifecycle
+
+`scout-weekly-parlay` starts from the Sunday Pacific schedule and remains one
+durable workflow through finalization. The first activity freezes the complete
+DST-aware timeline from `workflowInfo().startTime`, which is stable even when a
+worker outage delays the first workflow task. Later activity inputs retain the
+period, slot, action, and progress index so retries carry the same endpoint
+idempotency key. Do not derive the period again after a sleep or use
+workflow-local timers outside Temporal's durable `sleep`.
+
+Scout owns generation, Discord delivery, betting, contribution persistence, and
+settlement. Temporal owns only orchestration and calls the authenticated control
+endpoint. Reminder/progress staleness is a Scout decision. Publication,
+reminder, and progress use bounded delivery retries. Scoring start retries
+durably until the finalization cutoff, when an unstarted market can be voided;
+the final action begins at that cutoff, accepts Scout's incomplete response
+through its bounded Match-V5 ingestion window. Final reconciliation uses bounded
+retry slices and continues as new when a slice expires; this schedule deliberately
+has no workflow execution timeout, so a prolonged outage cannot abandon pending bets.
+This schedule alone uses
+`ALLOW_ALL`, because a delayed prior finalization must not suppress the next
+period's Sunday execution. The schedule's initial pause is the private-beta
+fixture gate. After activation, pause it in Temporal for operational suspension
+rather than adding a second enable switch.
 
 ## Homelab audit (daily)
 
@@ -340,6 +370,24 @@ op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-loca
 # Real send through the shared report sender (use a +audit-test alias):
 op run --env-file=.env.audit -- bun run scripts/run-homelab-audit-local.ts
 ```
+
+**Local Glitter context refresh (no Temporal)** — see
+`scripts/run-glitter-context-refresh-local.ts`, exposed as `glitter:refresh-local`.
+It runs the real `refreshGlitterContext` activity under `MockActivityEnvironment`
+against the real corpus and the real generation-artifact cache, so it reproduces
+a production failure without waiting for a worker image to ship:
+
+```bash
+cd packages/temporal
+bun run glitter:refresh-local --dry-run=true --max-cost-usd=50 \
+  --snapshot-id=<snapshot-id> --snapshot-sha256=<snapshot-sha256>
+```
+
+Needs `GLITTER_DISCORD_GUILD_ID`, the `GLITTER_CORPUS_S3_*` credentials, and
+`OPENROUTER_API_KEY`; `--dry-run=false` also opens a PR and needs `GITHUB_APP_*`.
+Artifacts are cached by request digest rather than by run, so this re-reads
+whatever a production run already paid for instead of re-billing it — which is
+also why pinning a snapshot reuses more cache than reading the latest one.
 
 **Cluster RBAC** — the core and agent worker SAs get the cluster-wide read-only
 `temporal-worker-audit-reader` ClusterRole (see
@@ -523,12 +571,14 @@ adjudicating.
 
 To add a "regenerate X on a schedule, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh/kubectl (in-cluster SA — `homelab-crd-imports-daily` runs `kubectl get crds` with the read-only `temporal-worker-crd-reader` ClusterRole) but **not** helm — add tools to the worker image build (`Dockerfile`) if the job needs them (`bunx turbo run smoke --filter=temporal` builds + smoke-tests the image; CI builds/smokes/pushes it on merge to main). The image smoke must cover each toolkit passthrough whose native target is installed in the image. CLIs a job needs from the repo itself (e.g. `cdk8s` for the CRD imports) come from the bot clone's workspace install via a package devDependency, not the image.
 
+Every PR-producing refresh must run `discardFormattingOnlyChanges` from `src/activities/scout-generated-preflight.ts` against its scoped generated text paths, then re-read Git status before publication. It compares generated bytes with committed `HEAD` bytes after both pass through the pinned Prettier and restores a path when they are formatter-equivalent. A formatter-only difference is no drift: it must not reach `git commit` or `gh pr create`; new files and real content changes remain eligible for review.
+
 ### Bot-clone environment — use `bot-clone.ts`, never hand-rolled installs
 
 Every PR-creating activity clones the monorepo into `/tmp` and must prepare that clone through `src/activities/bot-clone.ts`:
 
 - **`rootInstallWithoutHooks(repoDir)`** — root `bun install --frozen-lockfile --ignore-scripts`. Bot clones are **not dev checkouts**: historically a plain root install ran a root `prepare` script that armed the full dev pre-commit suite for the bot's later `git commit` inside the worker pod, where it couldn't pass (no gitleaks binary, no per-package toolchains) — this exact mistake broke `scout-season-refresh-weekly` and `readme-refresh-weekly` every week through June–July 2026. In dev, lefthook is armed manually (`bunx lefthook install`, not by an install script), and the bot must keep the hook-free `--ignore-scripts` install regardless: it's faster and skips any postinstall side-effects, while the Buildkite pipeline running on the bot's opened PR (plus a human reviewer) is the real gate.
-- **`buildLlmModels(repoDir)` / `buildGlitterContext(repoDir)` / `installScoutWorkspace(repoDir)`** — the shared producers have gitignored `dist/` entrypoints, so a fresh clone must build them before Scout can run. `installScoutWorkspace` is the single owner of the hook-free root install plus both producer builds; Scout activity callers must not call `rootInstallWithoutHooks` before it.
+- **`generateScoutBackend(repoDir)` / `buildLlmModels(repoDir)` / `buildGlitterContext(repoDir)` / `installScoutWorkspace(repoDir)`** — the hook-free install skips lifecycle scripts, so a fresh clone must explicitly generate Scout's Prisma client and branded types before snapshot tests, then build the shared producers with gitignored `dist/` entrypoints before Scout can run. `installScoutWorkspace` is the single owner of the hook-free root install plus backend generation and both producer builds; Scout activity callers must not call `rootInstallWithoutHooks` before it.
 
 The **`scripts/rehearse-bot-clone.ts`** rehearsal script drives these same helpers plus a canary for the hook-free commit path. It is exposed as the `check:rehearsal` turbo task (`bunx turbo run check:rehearsal --filter=@shepherdjerred/temporal`, driven by `scripts/check-schedule-rehearsal.ts`; `cache:false` because it copies the whole repo tree and shells out to real tools turbo can't hash). It is part of the root `bun run verify` graph, which the Buildkite pipeline runs on every PR — nothing runs it on push, because the repo has no `pre-push` hook and the `pre-commit` hook only checks staged files. So a break in a scheduled activity's install/repo-path assumptions is caught by CI pre-merge rather than surfacing silently on the weekend; to catch it before you push, run it yourself with `bunx turbo run check:rehearsal --filter=@shepherdjerred/temporal`. If you add a new repo-path or install-step dependency to a scheduled activity, extend the rehearsal script in the same PR.
 

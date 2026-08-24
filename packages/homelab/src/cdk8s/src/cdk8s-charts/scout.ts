@@ -1,6 +1,7 @@
 import { Chart } from "cdk8s";
 import type { App } from "cdk8s";
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
+import { createScoutPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/scout-db.ts";
 import { Namespace } from "cdk8s-plus-31";
 import {
   KubeNetworkPolicy,
@@ -22,6 +23,7 @@ export function createScoutChart(app: App, stage: Stage) {
     },
   });
 
+  createScoutPostgreSQLDatabase(chart, stage);
   createScoutDeployment(chart, stage);
 
   // NetworkPolicy: Allow ingress from Prometheus (scrapes scout-backend
@@ -32,7 +34,9 @@ export function createScoutChart(app: App, stage: Stage) {
   new KubeNetworkPolicy(chart, "scout-ingress-netpol", {
     metadata: { name: "scout-ingress-netpol" },
     spec: {
-      podSelector: {},
+      // Backend pods only: the Patroni/Spilo postgres pods stay unselected
+      // so this policy does not sever their Kubernetes API access.
+      podSelector: { matchLabels: { app: "scout-backend" } },
       policyTypes: ["Ingress"],
       ingress: [
         {
@@ -50,17 +54,36 @@ export function createScoutChart(app: App, stage: Stage) {
                 },
               },
             },
+            ...(stage === "beta"
+              ? [
+                  {
+                    namespaceSelector: {
+                      matchLabels: {
+                        "kubernetes.io/metadata.name": "temporal",
+                      },
+                    },
+                    podSelector: {
+                      matchLabels: {
+                        app: "temporal-worker",
+                        component: "core-worker",
+                      },
+                    },
+                  },
+                ]
+              : []),
           ],
+          ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
         },
       ],
     },
   });
 
-  // NetworkPolicy: Allow egress to DNS, Flipt, SeaweedFS S3, and external HTTPS
+  // NetworkPolicy: Allow egress to DNS, Flipt, SeaweedFS S3, PostgreSQL, and external HTTPS
   new KubeNetworkPolicy(chart, "scout-egress-netpol", {
     metadata: { name: "scout-egress-netpol" },
     spec: {
-      podSelector: {},
+      // Keep the operator-managed PostgreSQL pods outside this policy.
+      podSelector: { matchLabels: { app: "scout-backend" } },
       policyTypes: ["Egress"],
       egress: [
         // DNS
@@ -99,6 +122,11 @@ export function createScoutChart(app: App, stage: Stage) {
           ports: [
             { port: IntOrString.fromNumber(FLIPT_PORT), protocol: "TCP" },
           ],
+        },
+        // In-namespace PostgreSQL (scout-<stage>-postgresql:5432)
+        {
+          to: [{ podSelector: {} }],
+          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
         },
         // External HTTPS (Riot API, Discord, Sentry, OpenAI, Gemini, ElevenLabs)
         {

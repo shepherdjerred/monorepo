@@ -24,7 +24,7 @@ read_ci_image_ref() {
 
 CI_BASE_IMAGE=$(read_ci_image_ref \
   ghcr.io/shepherdjerred/ci-base \
-  packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST)
+  .buildkite/ci-image/DIGEST)
 CI_PLAYWRIGHT_IMAGE=$(read_ci_image_ref \
   ghcr.io/shepherdjerred/ci-playwright \
   .buildkite/ci-playwright/DIGEST)

@@ -25,8 +25,8 @@ describe("/bb history labels", () => {
       entries: [
         {
           id: 2,
-          delta: -1,
-          balanceAfter: 9,
+          delta: -3000,
+          balanceAfter: 12_345,
           kind: BucksLedgerKindSchema.parse("cancel_fee"),
           matchId: "NA1_1",
           context: "{}",
@@ -50,6 +50,9 @@ describe("/bb history labels", () => {
     });
     expect(rendered.content).toContain("house cut on payout");
     expect(rendered.content).toContain("cancellation fee");
+    expect(rendered.content).toContain("`-3,000`");
+    expect(rendered.content).toContain("12,345 BB");
+    expect(rendered.content).toContain("NA1_1");
     // History is an audit trail, not a place to re-explain the fee schedule.
     expect(rendered.content).not.toContain("20%");
     expect(rendered.content).not.toContain("legacy");

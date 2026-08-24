@@ -9,10 +9,10 @@ BUN_INSTALL_WRAPPER="${SCRIPT_DIR}/bun-install.sh"
 BUN_CACHE_GC="${SCRIPT_DIR}/../../packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite-bun-cache-gc.sh"
 
 if ! awk '
-  $0 == "mise install --yes" { install_line = NR }
-  $0 == "mise reshim" { reshim_line = NR }
-  $0 == "GH_EXECUTABLE=$(mise which gh)" { gh_lookup_line = NR }
-  $0 == "ln -sf \"$GH_EXECUTABLE\" /usr/local/bin/gh" { gh_link_line = NR }
+  $0 ~ /^[[:space:]]*mise install --yes[[:space:]]*$/ { install_line = NR }
+  $0 ~ /^[[:space:]]*mise reshim[[:space:]]*$/ { reshim_line = NR }
+  $0 ~ /^[[:space:]]*GH_EXECUTABLE=\$\(mise which gh\)[[:space:]]*$/ { gh_lookup_line = NR }
+  $0 ~ /^[[:space:]]*ln -sf "\$GH_EXECUTABLE" \/usr\/local\/bin\/gh[[:space:]]*$/ { gh_link_line = NR }
   END {
     valid = install_line > 0
     valid = valid && reshim_line > install_line
@@ -36,6 +36,12 @@ fi
 if ! rg -wq 'util-linux' "$CI_IMAGE" ||
   ! rg -Fq '&& flock --version' "$CI_IMAGE"; then
   echo "ci image must explicitly install and verify flock for cross-pod cache locking" >&2
+  exit 1
+fi
+
+if ! rg -wq 'libxml2' "$CI_IMAGE" ||
+  ! rg -Fq "libxml2.so.2" "$TOOLCHAIN"; then
+  echo "CI toolchain must provide libxml2 for the mise-managed PostgreSQL binaries" >&2
   exit 1
 fi
 

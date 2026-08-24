@@ -15,7 +15,13 @@ export type ParticipantLookup = {
   participantId: number;
   championName: string;
   team: "Blue" | "Red";
-  summonerName: string;
+  /**
+   * Undefined when Riot supplies neither a Riot ID nor the deprecated summoner
+   * name — which a custom-game payload legitimately may not. Serialized into
+   * the review prompt, so absence simply drops the key rather than asserting a
+   * placeholder name the model would then repeat back as fact.
+   */
+  summonerName: string | undefined;
 };
 
 /**

@@ -1,6 +1,5 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
-import { MAINTENANCE_IMAGE_READY } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/maintenance-image-readiness.ts";
 import { escapePrometheusTemplate } from "./shared.ts";
 
 export const BUILDKITE_JOB_POD_PATTERN =
@@ -83,51 +82,24 @@ or (
 )`;
 }
 
-const MAINTENANCE_WORKER_STALE_EXPRESSION = MAINTENANCE_IMAGE_READY
-  ? maintenanceWorkerStaleExpression(BUILDKITE_BUN_CACHE_GC_ACTIVITY, 1200)
-  : "";
+const MAINTENANCE_WORKER_STALE_EXPRESSION = maintenanceWorkerStaleExpression(
+  BUILDKITE_BUN_CACHE_GC_ACTIVITY,
+  1200,
+);
 
-const MAINTENANCE_STALE_EXPRESSION = MAINTENANCE_IMAGE_READY
-  ? `(
+const MAINTENANCE_STALE_EXPRESSION = `(
   time() - kubernetes_maintenance_last_success_timestamp_seconds{
     maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
   } > 1200
 )
-${MAINTENANCE_WORKER_STALE_EXPRESSION}`
-  : `(
-  time() - kube_cronjob_status_last_successful_time{
-    namespace="buildkite",
-    cronjob="buildkite-bun-cache-gc"
-  } > 1200
-)
-or
-(
-  time() - kube_cronjob_created{
-    namespace="buildkite",
-    cronjob="buildkite-bun-cache-gc"
-  } > 1200
-  unless on (namespace, cronjob)
-  kube_cronjob_status_last_successful_time{
-    namespace="buildkite",
-    cronjob="buildkite-bun-cache-gc"
-  }
-)
-or
-absent(
-  kube_cronjob_created{
-    namespace="buildkite",
-    cronjob="buildkite-bun-cache-gc"
-  }
-)`;
+${MAINTENANCE_WORKER_STALE_EXPRESSION}`;
 
-const TURBO_CACHE_CLEAN_STALE_EXPRESSION = MAINTENANCE_IMAGE_READY
-  ? `(
+const TURBO_CACHE_CLEAN_STALE_EXPRESSION = `(
   time() - kubernetes_maintenance_last_success_timestamp_seconds{
     maintenance_job="${TURBO_CACHE_CLEAN_ACTIVITY}"
   } > 129600
 )
-${maintenanceWorkerStaleExpression(TURBO_CACHE_CLEAN_ACTIVITY, 129_600)}`
-  : "vector(0)";
+${maintenanceWorkerStaleExpression(TURBO_CACHE_CLEAN_ACTIVITY, 129_600)}`;
 
 const POD_LABEL_METADATA = [
   "label_buildkite_com_job_uuid",

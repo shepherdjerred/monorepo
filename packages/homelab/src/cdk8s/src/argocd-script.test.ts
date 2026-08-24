@@ -56,6 +56,7 @@ const StagedAdmissionPolicy = JSON.stringify({
   kind: "ValidatingAdmissionPolicy",
   metadata: {
     name: "pvc-backup-policy.sjer.red",
+    namespace: "argocd",
     annotations: { "argocd.argoproj.io/sync-wave": "1" },
   },
   spec: { failurePolicy: "Fail" },

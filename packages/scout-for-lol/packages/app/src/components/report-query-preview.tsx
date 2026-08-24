@@ -61,7 +61,7 @@ export function ReportQueryPreview(props: {
   const result = previewQuery.data;
 
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       <h3 className="text-sm font-semibold">Live preview</h3>
       {!hasQuery && (
         <p className="text-sm text-scout-subtle">
@@ -72,7 +72,7 @@ export function ReportQueryPreview(props: {
         <p className="text-sm text-scout-subtle">Running preview…</p>
       )}
       {previewQuery.error !== null && (
-        <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-border bg-scout-hover/50 p-3 text-xs text-scout-danger">
+        <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-scout-danger bg-scout-danger p-3 text-xs text-scout-danger-ink">
           {previewQuery.error.message}
         </pre>
       )}

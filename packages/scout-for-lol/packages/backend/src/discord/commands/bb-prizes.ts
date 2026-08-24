@@ -1,4 +1,5 @@
 import { EmbedBuilder } from "discord.js";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 const BUCKS_COLOR = 0x2e_cc_71;
 const CAD_PER_BB = 10;
@@ -98,10 +99,6 @@ export const BB_PRIZES = [
     bbCost: 100,
   },
 ] as const satisfies readonly BbPrize[];
-
-function formatInteger(value: number): string {
-  return value.toLocaleString("en-CA");
-}
 
 export function buildBbPrizesEmbed(): EmbedBuilder {
   const categories = [...new Set(BB_PRIZES.map((prize) => prize.category))];

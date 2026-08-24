@@ -18,12 +18,9 @@ import {
 import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/buildkite.ts";
 import {
   BUN_CACHE_MOUNT_PATH,
-  createLegacyBuildkiteBunCacheJob,
   createBuildkiteBunCache,
 } from "./buildkite-bun-cache.ts";
-import { createLegacyBuildkiteMaintenanceJobs } from "./buildkite-legacy-maintenance.ts";
 import { createBuildkiteMaintenanceWorker } from "./buildkite-maintenance-worker.ts";
-import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 
 function createBuildkiteNamespace(chart: Chart): void {
   new Namespace(chart, "buildkite-namespace", {
@@ -59,10 +56,6 @@ sleep 20
 export function createBuildkiteApp(chart: Chart) {
   createBuildkiteNamespace(chart);
   createBuildkiteBunCache(chart);
-  if (!MAINTENANCE_IMAGE_READY) {
-    createLegacyBuildkiteBunCacheJob(chart);
-    createLegacyBuildkiteMaintenanceJobs(chart);
-  }
   createBuildkiteMaintenanceWorker(chart);
 
   new OnePasswordItem(chart, "buildkite-agent-token", {
@@ -209,6 +202,29 @@ overrides:
       accessModes: ["ReadWriteMany"],
       storageClassName: NVME_STORAGE_CLASS_LZ4,
       resources: { requests: { storage: Quantity.fromString("10Gi") } },
+    },
+  });
+
+  // Codex's ChatGPT-managed auth bundle includes a refresh token, so it must
+  // survive the release lane's ephemeral pods. This claim is deliberately not
+  // part of the agent stack's default pod volumes: only the main-only
+  // release-please step mounts it. The lane is globally serialized, making a
+  // single-writer RWO claim the narrowest valid access mode. Never back up a
+  // live credential bundle; recover it by explicitly re-seeding from a fresh
+  // `codex login` on the trusted operator machine.
+  new KubePersistentVolumeClaim(chart, "buildkite-codex-auth-pvc", {
+    metadata: {
+      name: "buildkite-codex-auth",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteOnce"],
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
+      resources: { requests: { storage: Quantity.fromString("1Gi") } },
     },
   });
 

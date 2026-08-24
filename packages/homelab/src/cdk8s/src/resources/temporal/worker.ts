@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
   Cpu,
+  ConfigMap,
   Deployment,
   DeploymentStrategy,
   EnvValue,
@@ -31,6 +32,7 @@ import { glitterCorpusEnv } from "./glitter-corpus-env.ts";
 import { createTemporalGlitterWorker } from "./glitter-worker.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
+import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
   createTemporalWorkerServiceAccount,
@@ -138,6 +140,36 @@ export function createTemporalWorkerDeployment(
     "temporal-starlight-bot-secret",
     starlightBotItem.name,
   );
+  const freshRssCredentialItem = new OnePasswordItem(
+    chart,
+    "temporal-freshrss-sync-1p",
+    {
+      metadata: { name: "temporal-freshrss-sync" },
+      spec: { itemPath: vaultItemPath("freshrss-sync") },
+    },
+  );
+  const scoutWeeklyParlayItem = new OnePasswordItem(
+    chart,
+    "temporal-scout-weekly-parlay-control-1p",
+    {
+      metadata: { name: "temporal-scout-weekly-parlay-control" },
+      spec: { itemPath: vaultItemPath("scout-weekly-parlay-control") },
+    },
+  );
+  const scoutWeeklyParlaySecret = Secret.fromSecretName(
+    chart,
+    "temporal-scout-weekly-parlay-control-secret",
+    scoutWeeklyParlayItem.name,
+  );
+  const freshRssCredential = Secret.fromSecretName(
+    chart,
+    "temporal-freshrss-sync-secret",
+    freshRssCredentialItem.name,
+  );
+  const freshRssManifest = new ConfigMap(chart, "temporal-freshrss-manifest", {
+    metadata: { name: "temporal-freshrss-manifest" },
+    data: { "desired.json": FRESHRSS_DESIRED_JSON },
+  });
 
   const serviceAccount = createTemporalWorkerServiceAccount(chart);
   const agentServiceAccount = new ServiceAccount(
@@ -170,6 +202,7 @@ export function createTemporalWorkerDeployment(
     podMetadata: {
       labels: {
         app: "temporal-worker",
+        component: "core-worker",
       },
     },
   });
@@ -226,6 +259,17 @@ export function createTemporalWorkerDeployment(
         TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("core"),
+        FRESHRSS_API_URL: EnvValue.fromValue(
+          "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",
+        ),
+        FRESHRSS_USER: EnvValue.fromValue("sjerred"),
+        FRESHRSS_CATEGORY: EnvValue.fromValue("Repo Stack"),
+        FRESHRSS_MANIFEST_PATH: EnvValue.fromValue(
+          "/etc/freshrss/desired.json",
+        ),
+        FRESHRSS_API_PASSWORD_FILE: EnvValue.fromValue(
+          "/run/secrets/freshrss/password",
+        ),
         ENVIRONMENT: EnvValue.fromValue("production"),
         // Keep headless Claude Agent SDK sessions from starting optional traffic or updates.
         CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
@@ -311,6 +355,13 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "AGENT_TASK_API_TOKEN",
         }),
+        SCOUT_WEEKLY_PARLAY_CONTROL_URL: EnvValue.fromValue(
+          "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/weekly-parlays/actions",
+        ),
+        SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN: EnvValue.fromSecretValue({
+          secret: scoutWeeklyParlaySecret,
+          key: "token",
+        }),
         ...sleepWebhookEnv(secret),
         // Xcode Cloud webhook receiver (event-bridge/xcode-cloud-webhook.ts).
         // The receiver only starts when XCODE_CLOUD_WEBHOOK_TOKEN is set; the
@@ -381,6 +432,24 @@ export function createTemporalWorkerDeployment(
   // of the 2 GiB pod memory budget.
   const tmpVolume = Volume.fromEmptyDir(chart, "temporal-worker-tmp", "tmp");
   container.mount("/tmp", tmpVolume);
+  const freshRssManifestVolume = Volume.fromConfigMap(
+    chart,
+    "temporal-freshrss-manifest-volume",
+    freshRssManifest,
+    { items: { "desired.json": { path: "desired.json" } } },
+  );
+  const freshRssCredentialVolume = Volume.fromSecret(
+    chart,
+    "temporal-freshrss-sync-secret-volume",
+    freshRssCredential,
+    { items: { password: { path: "password" } } },
+  );
+  container.mount("/etc/freshrss", freshRssManifestVolume, {
+    readOnly: true,
+  });
+  container.mount("/run/secrets/freshrss", freshRssCredentialVolume, {
+    readOnly: true,
+  });
 
   const agentDeployment = createTemporalAgentWorker(chart, {
     serviceAccount: agentServiceAccount,
@@ -425,7 +494,11 @@ export function createTemporalWorkerDeployment(
   const glitterDeployment = createTemporalGlitterWorker(chart, {
     serviceAccount,
     envVariables: {
-      ...container.env.variables,
+      ...Object.fromEntries(
+        Object.entries(container.env.variables).filter(
+          ([name]) => name !== "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+        ),
+      ),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("glitter"),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-glitter-worker"),
     },

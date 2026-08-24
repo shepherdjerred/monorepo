@@ -10,6 +10,21 @@ const RegexManagerSchema = z.object({
 });
 
 const RenovateConfigSchema = z.object({
+  dependencyDashboardApproval: z.boolean(),
+  automerge: z.boolean(),
+  automergeStrategy: z.string().optional(),
+  platformAutomerge: z.boolean(),
+  rebaseWhen: z.string(),
+  vulnerabilityAlerts: z.object({
+    enabled: z.boolean(),
+  }),
+  osvVulnerabilityAlerts: z.boolean(),
+  env: z.record(z.string(), z.string()),
+  mode: z.string().optional(),
+  schedule: z.array(z.string()),
+  commitHourlyLimit: z.number().optional(),
+  prHourlyLimit: z.number(),
+  prConcurrentLimit: z.number(),
   customManagers: z.array(RegexManagerSchema),
   packageRules: z.array(
     z.object({
@@ -30,6 +45,32 @@ const RenovateConfigSchema = z.object({
 });
 
 const root = `${import.meta.dir}/..`;
+
+test("uses Renovate as a manually approved dependency dashboard", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+
+  expect(config).toMatchObject({
+    dependencyDashboardApproval: true,
+    automerge: false,
+    platformAutomerge: false,
+    rebaseWhen: "never",
+    vulnerabilityAlerts: {
+      enabled: false,
+    },
+    osvVulnerabilityAlerts: false,
+    schedule: ["after 3am on Sunday"],
+    prHourlyLimit: 5,
+    prConcurrentLimit: 3,
+  });
+  expect(config.automergeStrategy).toBeUndefined();
+  expect(config.mode).toBeUndefined();
+  expect(config.commitHourlyLimit).toBeUndefined();
+  expect(config.env).toEqual({
+    BUN_CONFIG_MAX_HTTP_REQUESTS: "4",
+  });
+});
 
 test("extracts every managed structured version-catalog field", async () => {
   const config = RenovateConfigSchema.parse(
@@ -90,6 +131,16 @@ test("extracts every managed structured version-catalog field", async () => {
       packageName: "flipt/flipt",
     }),
   );
+  const nginx = expected.find((entry) => entry.depName === "library/nginx");
+  if (nginx === undefined) {
+    throw new Error("Managed nginx catalog entry is missing");
+  }
+  expect(nginx).toMatchObject({
+    datasource: "docker",
+    versioning: "docker",
+  });
+  expect(nginx.currentValue).toMatch(/^\d+\.\d+\.\d+-alpine$/);
+  expect(actual).toContainEqual(nginx);
 });
 
 test("excludes all sandbox dependency files", async () => {
@@ -142,7 +193,7 @@ test("drives Playwright upgrades from the official image source only", async () 
   expect(rule).toEqual({
     description:
       "Playwright client packages are promoted atomically with the tested ci-playwright image digest; Renovate owns only the official Dockerfile source pin.",
-    matchManagers: ["npm"],
+    matchManagers: ["bun", "npm"],
     matchPackageNames: ["playwright", "@playwright/test"],
     enabled: false,
   });
@@ -156,6 +207,67 @@ test("drives Playwright upgrades from the official image source only", async () 
   expect(dockerfile).toMatch(
     /^FROM mcr\.microsoft\.com\/playwright:v\d+\.\d+\.\d+-noble@sha256:[a-f0-9]{64}$/m,
   );
+});
+
+test("groups Talos, Kubernetes, and installer updates into one PR", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) => candidate.groupName === "Talos and Kubernetes",
+  );
+
+  expect(rule).toEqual({
+    description:
+      "Bundle Talos, Kubernetes, and the node installer because they are validated and rolled out together",
+    groupName: "Talos and Kubernetes",
+    matchPackageNames: [
+      "siderolabs/talos",
+      "ghcr.io/siderolabs/installer",
+      "kubernetes/kubernetes",
+    ],
+    minimumReleaseAge: "0 days",
+  });
+});
+
+test("keeps direct TypeScript on 6 without constraining the native alias", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) =>
+      candidate.description ===
+      "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
+  );
+
+  expect(rule).toEqual({
+    description:
+      "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
+    matchManagers: ["bun", "npm"],
+    matchDepNames: ["typescript"],
+    allowedVersions: "<7",
+  });
+  expect(rule?.matchDepNames).not.toContain("@typescript/native");
+});
+
+test("keeps the custom Corretto manager authoritative for mise Java", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) =>
+      candidate.description ===
+      "Keep the custom Corretto regex manager authoritative; disable only the native mise java dependency so Renovate cannot replace Corretto with another JDK distribution.",
+  );
+
+  expect(rule).toEqual({
+    description:
+      "Keep the custom Corretto regex manager authoritative; disable only the native mise java dependency so Renovate cannot replace Corretto with another JDK distribution.",
+    matchManagers: ["mise"],
+    matchDepNames: ["java"],
+    matchFileNames: [".mise.toml"],
+    enabled: false,
+  });
 });
 
 test("ignores only the bogus qBittorrent v20 release while retaining semantic tags", async () => {

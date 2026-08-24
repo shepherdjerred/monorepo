@@ -8,6 +8,7 @@ import {
 import type { BucksPoolParticipant, RiotTeamId } from "@scout-for-lol/data";
 import { BLUE_TEAM_ID, BUTTON_STAKES } from "#src/betting/constants.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 import {
   BETTING_TEAM_IDS,
   hasTrackedPlayersOnBothTeams,
@@ -94,7 +95,7 @@ function buildRow(input: {
             }),
           )
           .setLabel(
-            `${outcomeLabel(teamId, subjectFraming(input.anchor))} · ${stake.toString()} BB`,
+            `${outcomeLabel(teamId, subjectFraming(input.anchor))} · ${formatInteger(stake)} BB`,
           )
           .setStyle(buttonStyleFor(teamId, input.anchor))
           .setDisabled(input.disabled),

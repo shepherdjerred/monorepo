@@ -1,6 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { BUTTON_STAKES } from "#src/betting/constants.ts";
 import { formatParlayCustomId } from "#src/betting/parlay-custom-id.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 export function buildParlayButtons(input: {
   matchId: string;
@@ -20,7 +21,7 @@ export function buildParlayButtons(input: {
               amount: stake,
             }),
           )
-          .setLabel(`${side} ${stake.toString()}`)
+          .setLabel(`${side} ${formatInteger(stake)}`)
           .setStyle(side === "YES" ? ButtonStyle.Success : ButtonStyle.Danger)
           .setDisabled(disabled),
       );

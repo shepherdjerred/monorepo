@@ -23,6 +23,7 @@ import {
   openSeasonRefreshPr,
   runCommand,
 } from "./scout-season-refresh-git.ts";
+import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
 import {
   assessSeasonEvidence,
   type SeasonEvidenceAssessment,
@@ -425,6 +426,12 @@ async function run(
       });
       files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
     }
+    await discardFormattingOnlyChanges({
+      repoDir: workdir.repoDir,
+      changedFiles: files,
+      component: "scout-season-refresh",
+    });
+    files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
     const diff =
       files.length > 0
         ? await getUnifiedDiff(workdir.repoDir, SEASON_PATHS)

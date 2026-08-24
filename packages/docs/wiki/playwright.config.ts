@@ -3,6 +3,10 @@ import { defineConfig } from "@playwright/test";
 const PORT = 4358;
 const baseURL = `http://127.0.0.1:${PORT.toString()}`;
 const isCI = process.env.CI !== undefined;
+// Astro 7 detects agent environments and daemonizes preview automatically.
+// Disable that behavior so Playwright owns the server process, observes startup
+// failures, and tears it down with the test run.
+const previewCommand = `ASTRO_PREVIEW_BACKGROUND=0 bun run preview --host 127.0.0.1 --port ${PORT.toString()}`;
 
 export default defineConfig({
   fullyParallel: true,
@@ -27,7 +31,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `bun run preview --host 127.0.0.1 --port ${PORT.toString()}`,
+    command: previewCommand,
     reuseExistingServer: !isCI,
     url: baseURL,
     // Playwright defaults to 60s, which the browser-E2E pod exceeds under load:

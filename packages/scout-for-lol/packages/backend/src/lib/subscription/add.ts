@@ -16,6 +16,7 @@ import type {
 } from "#src/lib/subscription/types.ts";
 import { resolveRiotIdToPuuid } from "#src/lib/riot/resolve-puuid.ts";
 import { checkSubscriptionAndAccountLimits } from "#src/lib/subscription/limits.ts";
+import { enqueueInitialMatchHistoryImport } from "#src/league/initial-history/enqueue.ts";
 
 const logger = createLogger("subscription-add");
 
@@ -34,8 +35,9 @@ async function commitSubscription(params: {
   input: AddSubscriptionInput;
   puuid: LeaguePuuid;
   db: Db;
+  initialHistoryImportEnabled: boolean;
 }): Promise<AddSubscriptionResult> {
-  const { input, puuid, db } = params;
+  const { input, puuid, db, initialHistoryImportEnabled } = params;
   const {
     guildId,
     channelId,
@@ -107,6 +109,15 @@ async function commitSubscription(params: {
       updatedTime: now,
     },
   });
+
+  if (initialHistoryImportEnabled) {
+    await enqueueInitialMatchHistoryImport({
+      puuid,
+      region,
+      db,
+      requestedAt: now,
+    });
+  }
 
   const playerAccount = await db.account.findUnique({
     where: { id: account.id },
@@ -225,9 +236,15 @@ export async function addSubscription(
   input: AddSubscriptionInput,
   puuid: LeaguePuuid,
   db: Db,
+  initialHistoryImportEnabled: boolean,
 ): Promise<AddSubscriptionResult> {
   try {
-    return await commitSubscription({ input, puuid, db });
+    return await commitSubscription({
+      input,
+      puuid,
+      db,
+      initialHistoryImportEnabled,
+    });
   } catch (error) {
     logger.error("❌ Database error during subscription:", error);
     return { kind: "internal-error", message: getErrorMessage(error) };

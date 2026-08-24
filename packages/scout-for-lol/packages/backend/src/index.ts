@@ -41,6 +41,9 @@ if (
   Sentry.init({
     dsn: configuration.sentryDsn,
     environment: configuration.environment,
+    // Scout's NodeSDK owns the global OpenTelemetry providers. Sentry remains
+    // responsible for error tracking without attempting a second registration.
+    skipOpenTelemetrySetup: true,
     // Use image tag (e.g. "2.0.0-998") as the release so Bugsink groups
     // events per deploy and matches what ArgoCD reports.
     release: configuration.version,
@@ -75,6 +78,8 @@ await initializeDynamicConfig({
     bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
     exploreModel: configuration.exploreModel,
     bucksAskModel: configuration.bucksAskModel,
+    tournamentApiMode: configuration.tournamentApiMode,
+    tournamentMaxOpenLobbies: configuration.tournamentMaxOpenLobbies,
   },
   metrics: featureFlagMetrics,
 });

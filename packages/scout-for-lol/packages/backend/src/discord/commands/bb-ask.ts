@@ -12,6 +12,7 @@ import {
   runBucksAskAgent,
 } from "#src/betting/ask-agent.ts";
 import { BucksAskDatasetTooLargeError } from "#src/betting/ask-analytics.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 import { formatBucksAskPublishCustomId } from "#src/betting/ask-custom-id.ts";
 import { tryStartBucksAsk } from "#src/betting/ask-rate-limit.ts";
 import { classifyLlmProviderIssue } from "#src/alerts/provider-metrics.ts";
@@ -52,7 +53,7 @@ export async function replyBucksAsk(
   );
   if (!parsedQuestion.success) {
     await interaction.editReply({
-      content: `Ask a Bryan Bucks question between 1 and ${BB_ASK_MAX_QUESTION_LENGTH.toString()} characters.`,
+      content: `Ask a Bryan Bucks question between 1 and ${formatInteger(BB_ASK_MAX_QUESTION_LENGTH)} characters.`,
     });
     return;
   }

@@ -47,6 +47,13 @@ correlation exactly.
 The model never sees a probability field it could fill in. It does not exist in
 the schema it answers.
 
+Weekly parlays use the same principle over aligned Pacific scoring windows.
+Every historical week participates—including a week with zero eligible games—
+so the replay measures the proposed legs together instead of multiplying their
+individual rates. Threshold search is deterministic and the market is rejected
+unless the measured joint YES rate is inside the publication band in
+[the rules reference](/docs/reference/bryan-bucks-rules/).
+
 ## No history, no parlay
 
 If the match lake cannot answer a leg, Scout records the parlay as unpriceable

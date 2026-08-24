@@ -1,18 +1,4 @@
 import { expect, type Page } from "@playwright/test";
-import { z } from "zod";
-
-/**
- * The tRPC HTTP envelope for `auth.sessionState`. Parsed rather than cast so a
- * shape change surfaces here instead of silently reading `undefined` and
- * passing the not-null assertion below.
- */
-const SessionStateSchema = z.object({
-  result: z.object({
-    data: z.object({
-      user: z.object({ discordId: z.string() }).loose().nullable(),
-    }),
-  }),
-});
 
 function appUrl(page: Page): URL {
   return new URL(page.url());
@@ -26,7 +12,10 @@ function requiredSecret(name: string): string {
   return value;
 }
 
-export async function signInForAudit(page: Page): Promise<void> {
+export async function signInForAudit(
+  page: Page,
+  returnTo = "/app/",
+): Promise<void> {
   const url = appUrl(page);
 
   if (url.hostname === "127.0.0.1" || url.hostname === "localhost") {
@@ -34,10 +23,12 @@ export async function signInForAudit(page: Page): Promise<void> {
       process.env["SCOUT_DESIGN_AUDIT_DISCORD_ID"] ?? "000000000000000001";
     const login = new URL("/api/dev/login", url.origin);
     login.searchParams.set("discordId", discordId);
-    login.searchParams.set("returnTo", "/app/");
+    login.searchParams.set("returnTo", returnTo);
     await page.goto(login.toString(), { waitUntil: "domcontentloaded" });
   } else {
-    await page.goto(new URL("/app/login", url.origin).toString(), {
+    const login = new URL("/app/login", url.origin);
+    login.searchParams.set("returnTo", returnTo);
+    await page.goto(login.toString(), {
       waitUntil: "domcontentloaded",
     });
     const loginLink = page.getByRole("link", { name: /discord/i });
@@ -84,21 +75,16 @@ export async function signInForAudit(page: Page): Promise<void> {
   // browser never followed a redirect, and this guard waved it through.
   await expect(page, "dev login must land on the app").toHaveURL(/\/app(\/|$)/);
 
-  const sessionState = await page.request.get(
-    new URL("/trpc/auth.sessionState", url.origin).toString(),
-  );
+  // Assert the login response established the browser session without issuing
+  // a second request on Playwright's separate API connection. The protected
+  // target route then independently proves the backend accepts this cookie;
+  // duplicating its session query introduced an ECONNRESET race under the
+  // three-worker audit load.
+  const cookies = await page.context().cookies(url.origin);
   expect(
-    sessionState.status(),
-    "design audit session probe did not reach the backend",
-  ).toBe(200);
-
-  // `auth.sessionState` is a public query: it answers `{ user: null }` with HTTP
-  // 200 for anonymous callers, so a status check alone proves only that the
-  // backend is up. The session itself is the body.
-  const sessionBody: unknown = await sessionState.json();
-  const signedInUser = SessionStateSchema.parse(sessionBody).result.data.user;
-  expect(
-    signedInUser,
-    "design audit login did not create a valid session",
-  ).not.toBeNull();
+    cookies.some(
+      (cookie) => cookie.name === "scout_session" && cookie.value.length > 0,
+    ),
+    "design audit login must establish a session cookie",
+  ).toBe(true);
 }

@@ -4841,752 +4841,752 @@ static class _UniFFILib {
     static void uniffiCheckApiChecksums() {
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_core_version();
-            if (checksum != 34405) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_core_version` checksum `34405`, library returned `{checksum}`");
+            if (checksum != 36876) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_core_version` checksum `36876`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_filter_chain_from_json();
-            if (checksum != 19415) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_filter_chain_from_json` checksum `19415`, library returned `{checksum}`");
+            if (checksum != 38163) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_filter_chain_from_json` checksum `38163`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_filter_chain_to_json();
-            if (checksum != 12287) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_filter_chain_to_json` checksum `12287`, library returned `{checksum}`");
+            if (checksum != 60346) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_filter_chain_to_json` checksum `60346`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_filter_config_from_json();
-            if (checksum != 9077) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_filter_config_from_json` checksum `9077`, library returned `{checksum}`");
+            if (checksum != 64475) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_filter_config_from_json` checksum `64475`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_filter_config_to_json();
-            if (checksum != 12951) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_filter_config_to_json` checksum `12951`, library returned `{checksum}`");
+            if (checksum != 25120) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_filter_config_to_json` checksum `25120`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_priority_all();
-            if (checksum != 30828) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_all` checksum `30828`, library returned `{checksum}`");
+            if (checksum != 36484) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_all` checksum `36484`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_priority_label();
-            if (checksum != 28767) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_label` checksum `28767`, library returned `{checksum}`");
+            if (checksum != 20392) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_label` checksum `20392`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_priority_parse();
-            if (checksum != 51954) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_parse` checksum `51954`, library returned `{checksum}`");
+            if (checksum != 31607) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_parse` checksum `31607`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_priority_rank();
-            if (checksum != 29896) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_rank` checksum `29896`, library returned `{checksum}`");
+            if (checksum != 35910) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_rank` checksum `35910`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_priority_wire_value();
-            if (checksum != 60241) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_wire_value` checksum `60241`, library returned `{checksum}`");
+            if (checksum != 30301) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_priority_wire_value` checksum `30301`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_project_display_name();
-            if (checksum != 50707) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_project_display_name` checksum `50707`, library returned `{checksum}`");
+            if (checksum != 29491) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_project_display_name` checksum `29491`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_project_matches();
-            if (checksum != 31616) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_project_matches` checksum `31616`, library returned `{checksum}`");
+            if (checksum != 45845) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_project_matches` checksum `45845`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_project_path();
-            if (checksum != 27994) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_project_path` checksum `27994`, library returned `{checksum}`");
+            if (checksum != 32198) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_project_path` checksum `32198`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_parse();
-            if (checksum != 60401) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_parse` checksum `60401`, library returned `{checksum}`");
+            if (checksum != 39192) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_parse` checksum `39192`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_wire_value();
-            if (checksum != 51521) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_wire_value` checksum `51521`, library returned `{checksum}`");
+            if (checksum != 64979) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_wire_value` checksum `64979`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_sort_config_from_json();
-            if (checksum != 3755) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_sort_config_from_json` checksum `3755`, library returned `{checksum}`");
+            if (checksum != 11667) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_sort_config_from_json` checksum `11667`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_sort_config_to_json();
-            if (checksum != 22573) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_sort_config_to_json` checksum `22573`, library returned `{checksum}`");
+            if (checksum != 33579) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_sort_config_to_json` checksum `33579`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_filter_active_count();
-            if (checksum != 56001) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_active_count` checksum `56001`, library returned `{checksum}`");
+            if (checksum != 29746) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_active_count` checksum `29746`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_filter_apply();
-            if (checksum != 25841) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_apply` checksum `25841`, library returned `{checksum}`");
+            if (checksum != 36211) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_apply` checksum `36211`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_apply();
-            if (checksum != 38320) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_apply` checksum `38320`, library returned `{checksum}`");
+            if (checksum != 27912) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_apply` checksum `27912`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_is_active();
-            if (checksum != 31915) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_is_active` checksum `31915`, library returned `{checksum}`");
+            if (checksum != 6267) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_is_active` checksum `6267`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_matches();
-            if (checksum != 24866) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_matches` checksum `24866`, library returned `{checksum}`");
+            if (checksum != 22737) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_matches` checksum `22737`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_filter_is_active();
-            if (checksum != 21417) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_is_active` checksum `21417`, library returned `{checksum}`");
+            if (checksum != 24767) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_is_active` checksum `24767`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_filter_matches();
-            if (checksum != 11559) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_matches` checksum `11559`, library returned `{checksum}`");
+            if (checksum != 43506) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_filter_matches` checksum `43506`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_from_json();
-            if (checksum != 45575) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_from_json` checksum `45575`, library returned `{checksum}`");
+            if (checksum != 11682) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_from_json` checksum `11682`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_id_parse();
-            if (checksum != 33590) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_id_parse` checksum `33590`, library returned `{checksum}`");
+            if (checksum != 19155) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_id_parse` checksum `19155`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_search_matches();
-            if (checksum != 25107) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_search_matches` checksum `25107`, library returned `{checksum}`");
+            if (checksum != 20779) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_search_matches` checksum `20779`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_sort_apply();
-            if (checksum != 34754) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_sort_apply` checksum `34754`, library returned `{checksum}`");
+            if (checksum != 44098) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_sort_apply` checksum `44098`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_status_all();
-            if (checksum != 58249) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_all` checksum `58249`, library returned `{checksum}`");
+            if (checksum != 59603) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_all` checksum `59603`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_status_is_active();
-            if (checksum != 42590) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_is_active` checksum `42590`, library returned `{checksum}`");
+            if (checksum != 18483) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_is_active` checksum `18483`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_status_label();
-            if (checksum != 60755) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_label` checksum `60755`, library returned `{checksum}`");
+            if (checksum != 14756) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_label` checksum `14756`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_status_next();
-            if (checksum != 37000) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_next` checksum `37000`, library returned `{checksum}`");
+            if (checksum != 49979) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_next` checksum `49979`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_status_parse();
-            if (checksum != 15713) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_parse` checksum `15713`, library returned `{checksum}`");
+            if (checksum != 38507) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_parse` checksum `38507`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_status_wire_value();
-            if (checksum != 20184) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_wire_value` checksum `20184`, library returned `{checksum}`");
+            if (checksum != 55000) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_status_wire_value` checksum `55000`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_task_to_json();
-            if (checksum != 6949) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_to_json` checksum `6949`, library returned `{checksum}`");
+            if (checksum != 55965) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_task_to_json` checksum `55965`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_update_task_request_from_json();
-            if (checksum != 61758) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_update_task_request_from_json` checksum `61758`, library returned `{checksum}`");
+            if (checksum != 36440) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_update_task_request_from_json` checksum `36440`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_update_task_request_to_json();
-            if (checksum != 26014) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_update_task_request_to_json` checksum `26014`, library returned `{checksum}`");
+            if (checksum != 57966) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_update_task_request_to_json` checksum `57966`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_calendar_max_year();
-            if (checksum != 8178) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_max_year` checksum `8178`, library returned `{checksum}`");
+            if (checksum != 62313) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_max_year` checksum `62313`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_calendar_min_year();
-            if (checksum != 9294) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_min_year` checksum `9294`, library returned `{checksum}`");
+            if (checksum != 45016) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_min_year` checksum `45016`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_calendar_month_add();
-            if (checksum != 43736) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_add` checksum `43736`, library returned `{checksum}`");
+            if (checksum != 3434) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_add` checksum `3434`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_calendar_month_day_count();
-            if (checksum != 31922) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_day_count` checksum `31922`, library returned `{checksum}`");
+            if (checksum != 11172) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_day_count` checksum `11172`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_calendar_month_first_day();
-            if (checksum != 60066) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_first_day` checksum `60066`, library returned `{checksum}`");
+            if (checksum != 15014) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_first_day` checksum `15014`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_calendar_month_grid();
-            if (checksum != 6257) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_grid` checksum `6257`, library returned `{checksum}`");
+            if (checksum != 40709) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_grid` checksum `40709`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_calendar_month_of();
-            if (checksum != 13824) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_of` checksum `13824`, library returned `{checksum}`");
+            if (checksum != 32107) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_of` checksum `32107`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_calendar_month_title();
-            if (checksum != 7413) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_title` checksum `7413`, library returned `{checksum}`");
+            if (checksum != 23501) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_month_title` checksum `23501`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_calendar_weekdays();
-            if (checksum != 49245) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_weekdays` checksum `49245`, library returned `{checksum}`");
+            if (checksum != 25686) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_calendar_weekdays` checksum `25686`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_add_days();
-            if (checksum != 61756) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_add_days` checksum `61756`, library returned `{checksum}`");
+            if (checksum != 32597) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_add_days` checksum `32597`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_default_upcoming_days();
-            if (checksum != 37878) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_default_upcoming_days` checksum `37878`, library returned `{checksum}`");
+            if (checksum != 35100) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_default_upcoming_days` checksum `35100`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_group();
-            if (checksum != 3121) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_group` checksum `3121`, library returned `{checksum}`");
+            if (checksum != 37147) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_group` checksum `37147`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_group_heading();
-            if (checksum != 22392) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_group_heading` checksum `22392`, library returned `{checksum}`");
+            if (checksum != 29894) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_group_heading` checksum `29894`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_instant_millis();
-            if (checksum != 38175) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_instant_millis` checksum `38175`, library returned `{checksum}`");
+            if (checksum != 1944) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_instant_millis` checksum `1944`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_is_overdue();
-            if (checksum != 57635) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_is_overdue` checksum `57635`, library returned `{checksum}`");
+            if (checksum != 50815) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_is_overdue` checksum `50815`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_is_today();
-            if (checksum != 62306) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_is_today` checksum `62306`, library returned `{checksum}`");
+            if (checksum != 41662) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_is_today` checksum `41662`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_is_upcoming();
-            if (checksum != 27566) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_is_upcoming` checksum `27566`, library returned `{checksum}`");
+            if (checksum != 37609) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_is_upcoming` checksum `37609`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_next_monday();
-            if (checksum != 37650) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_next_monday` checksum `37650`, library returned `{checksum}`");
+            if (checksum != 7152) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_next_monday` checksum `7152`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_next_saturday();
-            if (checksum != 36413) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_next_saturday` checksum `36413`, library returned `{checksum}`");
+            if (checksum != 49767) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_next_saturday` checksum `49767`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_next_weekday();
-            if (checksum != 37797) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_next_weekday` checksum `37797`, library returned `{checksum}`");
+            if (checksum != 22361) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_next_weekday` checksum `22361`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_parse_local();
-            if (checksum != 63277) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_parse_local` checksum `63277`, library returned `{checksum}`");
+            if (checksum != 47880) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_parse_local` checksum `47880`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_elapsed_format();
-            if (checksum != 36720) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_elapsed_format` checksum `36720`, library returned `{checksum}`");
+            if (checksum != 49010) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_elapsed_format` checksum `49010`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since();
-            if (checksum != 34364) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since` checksum `34364`, library returned `{checksum}`");
+            if (checksum != 23598) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since` checksum `23598`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version();
-            if (checksum != 28916) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version` checksum `28916`, library returned `{checksum}`");
+            if (checksum != 13709) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version` checksum `13709`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_run_migrations();
-            if (checksum != 4864) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_run_migrations` checksum `4864`, library returned `{checksum}`");
+            if (checksum != 15367) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_run_migrations` checksum `15367`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_api_default_timeout_millis();
-            if (checksum != 10604) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_api_default_timeout_millis` checksum `10604`, library returned `{checksum}`");
+            if (checksum != 58063) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_api_default_timeout_millis` checksum `58063`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_parse_task_input();
-            if (checksum != 23175) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_parse_task_input` checksum `23175`, library returned `{checksum}`");
+            if (checksum != 63614) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_parse_task_input` checksum `63614`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date();
-            if (checksum != 7381) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date` checksum `7381`, library returned `{checksum}`");
+            if (checksum != 846) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date` checksum `846`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count();
-            if (checksum != 14740) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count` checksum `14740`, library returned `{checksum}`");
+            if (checksum != 59178) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count` checksum `59178`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_frequency();
-            if (checksum != 13193) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_frequency` checksum `13193`, library returned `{checksum}`");
+            if (checksum != 37929) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_frequency` checksum `37929`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_is_expandable();
-            if (checksum != 49957) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_is_expandable` checksum `49957`, library returned `{checksum}`");
+            if (checksum != 56592) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_is_expandable` checksum `56592`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_next_uncompleted_occurrence();
-            if (checksum != 35131) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_next_uncompleted_occurrence` checksum `35131`, library returned `{checksum}`");
+            if (checksum != 40205) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_next_uncompleted_occurrence` checksum `40205`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurrences();
-            if (checksum != 37554) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurrences` checksum `37554`, library returned `{checksum}`");
+            if (checksum != 64435) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurrences` checksum `64435`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on();
-            if (checksum != 52626) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on` checksum `52626`, library returned `{checksum}`");
+            if (checksum != 64285) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on` checksum `64285`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary();
-            if (checksum != 21932) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary` checksum `21932`, library returned `{checksum}`");
+            if (checksum != 42582) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary` checksum `42582`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_cancel_all();
-            if (checksum != 23149) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_cancel_all` checksum `23149`, library returned `{checksum}`");
+            if (checksum != 1495) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_cancel_all` checksum `1495`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_discard_dead_letter();
-            if (checksum != 3778) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_discard_dead_letter` checksum `3778`, library returned `{checksum}`");
+            if (checksum != 49713) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_discard_dead_letter` checksum `49713`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_dispatch();
-            if (checksum != 57833) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_dispatch` checksum `57833`, library returned `{checksum}`");
+            if (checksum != 8068) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_dispatch` checksum `8068`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_disposed();
-            if (checksum != 829) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_disposed` checksum `829`, library returned `{checksum}`");
+            if (checksum != 37160) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_disposed` checksum `37160`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_sync_requested();
-            if (checksum != 53643) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_sync_requested` checksum `53643`, library returned `{checksum}`");
+            if (checksum != 16586) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_sync_requested` checksum `16586`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_request_sync();
-            if (checksum != 32242) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_request_sync` checksum `32242`, library returned `{checksum}`");
+            if (checksum != 32913) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_request_sync` checksum `32913`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_resolve_task_id();
-            if (checksum != 14154) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_resolve_task_id` checksum `14154`, library returned `{checksum}`");
+            if (checksum != 20318) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_resolve_task_id` checksum `20318`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_restore();
-            if (checksum != 54014) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_restore` checksum `54014`, library returned `{checksum}`");
+            if (checksum != 22608) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_restore` checksum `22608`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_retry_dead_letter();
-            if (checksum != 48781) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_retry_dead_letter` checksum `48781`, library returned `{checksum}`");
+            if (checksum != 13972) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_retry_dead_letter` checksum `13972`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_settle();
-            if (checksum != 39142) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_settle` checksum `39142`, library returned `{checksum}`");
+            if (checksum != 49052) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_settle` checksum `49052`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_shutdown();
-            if (checksum != 2258) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_shutdown` checksum `2258`, library returned `{checksum}`");
+            if (checksum != 23364) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_shutdown` checksum `23364`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_snapshot();
-            if (checksum != 19360) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_snapshot` checksum `19360`, library returned `{checksum}`");
+            if (checksum != 26124) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_snapshot` checksum `26124`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_status();
-            if (checksum != 46356) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_status` checksum `46356`, library returned `{checksum}`");
+            if (checksum != 40074) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_status` checksum `40074`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now();
-            if (checksum != 15372) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now` checksum `15372`, library returned `{checksum}`");
+            if (checksum != 53642) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now` checksum `53642`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_clock_now_millis();
-            if (checksum != 34337) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_clock_now_millis` checksum `34337`, library returned `{checksum}`");
+            if (checksum != 20431) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_clock_now_millis` checksum `20431`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_clock_local_ymd();
-            if (checksum != 65262) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_clock_local_ymd` checksum `65262`, library returned `{checksum}`");
+            if (checksum != 7698) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_clock_local_ymd` checksum `7698`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_schema_version();
-            if (checksum != 30192) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_schema_version` checksum `30192`, library returned `{checksum}`");
+            if (checksum != 2508) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_schema_version` checksum `2508`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_schema_version();
-            if (checksum != 44402) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_schema_version` checksum `44402`, library returned `{checksum}`");
+            if (checksum != 1237) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_schema_version` checksum `1237`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_legacy_queue();
-            if (checksum != 30304) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_legacy_queue` checksum `30304`, library returned `{checksum}`");
+            if (checksum != 29071) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_legacy_queue` checksum `29071`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_remove_legacy_queue();
-            if (checksum != 36742) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_remove_legacy_queue` checksum `36742`, library returned `{checksum}`");
+            if (checksum != 20471) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_remove_legacy_queue` checksum `20471`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_queue();
-            if (checksum != 21826) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_queue` checksum `21826`, library returned `{checksum}`");
+            if (checksum != 56627) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_queue` checksum `56627`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_queue();
-            if (checksum != 30021) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_queue` checksum `30021`, library returned `{checksum}`");
+            if (checksum != 40256) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_queue` checksum `40256`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_queue();
-            if (checksum != 16671) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_queue` checksum `16671`, library returned `{checksum}`");
+            if (checksum != 21367) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_queue` checksum `21367`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_queue();
-            if (checksum != 26654) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_queue` checksum `26654`, library returned `{checksum}`");
+            if (checksum != 11348) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_queue` checksum `11348`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_dead_letter();
-            if (checksum != 17012) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_dead_letter` checksum `17012`, library returned `{checksum}`");
+            if (checksum != 4176) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_dead_letter` checksum `4176`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_dead_letter();
-            if (checksum != 18473) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_dead_letter` checksum `18473`, library returned `{checksum}`");
+            if (checksum != 59065) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_dead_letter` checksum `59065`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_randomness_next_unit_ppm();
-            if (checksum != 49130) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_randomness_next_unit_ppm` checksum `49130`, library returned `{checksum}`");
+            if (checksum != 1177) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_randomness_next_unit_ppm` checksum `1177`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_arm();
-            if (checksum != 5742) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_arm` checksum `5742`, library returned `{checksum}`");
+            if (checksum != 24888) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_arm` checksum `24888`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_cancel();
-            if (checksum != 4065) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_cancel` checksum `4065`, library returned `{checksum}`");
+            if (checksum != 8334) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_cancel` checksum `8334`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_tasks();
-            if (checksum != 2156) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_tasks` checksum `2156`, library returned `{checksum}`");
+            if (checksum != 64622) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_tasks` checksum `64622`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_tasks();
-            if (checksum != 26425) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_tasks` checksum `26425`, library returned `{checksum}`");
+            if (checksum != 26146) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_tasks` checksum `26146`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_aliases();
-            if (checksum != 53449) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_aliases` checksum `53449`, library returned `{checksum}`");
+            if (checksum != 23076) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_aliases` checksum `23076`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_aliases();
-            if (checksum != 53591) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_aliases` checksum `53591`, library returned `{checksum}`");
+            if (checksum != 63551) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_aliases` checksum `63551`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_counters();
-            if (checksum != 21846) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_counters` checksum `21846`, library returned `{checksum}`");
+            if (checksum != 25107) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_counters` checksum `25107`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_counters();
-            if (checksum != 26948) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_counters` checksum `26948`, library returned `{checksum}`");
+            if (checksum != 53555) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_counters` checksum `53555`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_completion_restores();
-            if (checksum != 47169) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_completion_restores` checksum `47169`, library returned `{checksum}`");
+            if (checksum != 46062) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_completion_restores` checksum `46062`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_completion_restores();
-            if (checksum != 52684) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_completion_restores` checksum `52684`, library returned `{checksum}`");
+            if (checksum != 7660) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_completion_restores` checksum `7660`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time();
-            if (checksum != 47989) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time` checksum `47989`, library returned `{checksum}`");
+            if (checksum != 62042) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time` checksum `62042`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time();
-            if (checksum != 41669) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time` checksum `41669`, library returned `{checksum}`");
+            if (checksum != 62486) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time` checksum `62486`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_httpclient_send();
-            if (checksum != 45508) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_httpclient_send` checksum `45508`, library returned `{checksum}`");
+            if (checksum != 10136) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_httpclient_send` checksum `10136`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_httpclient_cancel_all();
-            if (checksum != 38866) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_httpclient_cancel_all` checksum `38866`, library returned `{checksum}`");
+            if (checksum != 717) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_httpclient_cancel_all` checksum `717`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_base_url();
-            if (checksum != 25373) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_base_url` checksum `25373`, library returned `{checksum}`");
+            if (checksum != 88) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_base_url` checksum `88`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all();
-            if (checksum != 25500) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all` checksum `25500`, library returned `{checksum}`");
+            if (checksum != 59292) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all` checksum `59292`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro();
-            if (checksum != 54250) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro` checksum `54250`, library returned `{checksum}`");
+            if (checksum != 58341) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro` checksum `58341`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status();
-            if (checksum != 14635) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status` checksum `14635`, library returned `{checksum}`");
+            if (checksum != 54685) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status` checksum `54685`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro();
-            if (checksum != 6368) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro` checksum `6368`, library returned `{checksum}`");
+            if (checksum != 52891) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro` checksum `52891`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking();
-            if (checksum != 50502) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking` checksum `50502`, library returned `{checksum}`");
+            if (checksum != 7312) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking` checksum `7312`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro();
-            if (checksum != 55687) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro` checksum `55687`, library returned `{checksum}`");
+            if (checksum != 34297) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro` checksum `34297`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking();
-            if (checksum != 31911) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking` checksum `31911`, library returned `{checksum}`");
+            if (checksum != 23374) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking` checksum `23374`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time();
-            if (checksum != 65051) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time` checksum `65051`, library returned `{checksum}`");
+            if (checksum != 12914) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time` checksum `12914`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary();
-            if (checksum != 60823) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary` checksum `60823`, library returned `{checksum}`");
+            if (checksum != 8961) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary` checksum `8961`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new();
-            if (checksum != 45268) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new` checksum `45268`, library returned `{checksum}`");
+            if (checksum != 55747) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new` checksum `55747`, library returned `{checksum}`");
             }
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new();
-            if (checksum != 8408) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new` checksum `8408`, library returned `{checksum}`");
+            if (checksum != 55934) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new` checksum `55934`, library returned `{checksum}`");
             }
         }
     }
@@ -16014,14 +16014,6 @@ class FfiConverterSequenceTypeTaskId: FfiConverterRustBuffer<TaskId[]> {
 
 
 
-/**
- * Typealias from the type name used in the UDL file to the builtin type.  This
- * is needed because the UDL type name is used in function/method signatures.
- * It's also what we have an external type that references a custom type.
- */
-
-
-
 
 
 /**
@@ -16031,14 +16023,6 @@ class FfiConverterSequenceTypeTaskId: FfiConverterRustBuffer<TaskId[]> {
  */
 
 
-
-
-
-/**
- * Typealias from the type name used in the UDL file to the builtin type.  This
- * is needed because the UDL type name is used in function/method signatures.
- * It's also what we have an external type that references a custom type.
- */
 
 
 
@@ -16054,6 +16038,20 @@ class FfiConverterSequenceTypeTaskId: FfiConverterRustBuffer<TaskId[]> {
 
 
 
+
+
+/**
+ * Typealias from the type name used in the UDL file to the builtin type.  This
+ * is needed because the UDL type name is used in function/method signatures.
+ * It's also what we have an external type that references a custom type.
+ */
+
+
+
+
+
+
+
 /**
  * Typealias from the type name used in the UDL file to the builtin type.  This
  * is needed because the UDL type name is used in function/method signatures.
@@ -16064,11 +16062,27 @@ class FfiConverterSequenceTypeTaskId: FfiConverterRustBuffer<TaskId[]> {
 
 
 
+
+
 /**
  * Typealias from the type name used in the UDL file to the builtin type.  This
  * is needed because the UDL type name is used in function/method signatures.
  * It's also what we have an external type that references a custom type.
  */
+
+
+
+
+
+
+
+/**
+ * Typealias from the type name used in the UDL file to the builtin type.  This
+ * is needed because the UDL type name is used in function/method signatures.
+ * It's also what we have an external type that references a custom type.
+ */
+
+
 
 
 #pragma warning restore 8625

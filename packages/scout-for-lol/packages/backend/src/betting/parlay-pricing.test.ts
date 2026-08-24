@@ -12,6 +12,8 @@ import {
   MIN_PRICING_GAMES,
   MAX_PRICE_BPS,
   MIN_PRICE_BPS,
+  numericThresholdDiagnostics,
+  numericThresholdsAreMeasured,
   priceParlay,
 } from "#src/betting/parlay-pricing.ts";
 
@@ -115,6 +117,61 @@ describe("joint replay pricing", () => {
 });
 
 describe("refusing to price", () => {
+  test("reports the field, operator, threshold, and hit rate outside the guard", () => {
+    const matches = Array.from({ length: 20 }, (_, index) =>
+      historyMatch({ index, kills: index + 1 }),
+    );
+    const conditions = [killsAtLeast(16)];
+    const subjects = [subject("P1", PUUID_A)];
+    const history: ParlayHistory = new Map([[PUUID_A, matches]]);
+
+    expect(numericThresholdsAreMeasured(conditions, subjects, history)).toBe(
+      false,
+    );
+    expect(numericThresholdDiagnostics(conditions, subjects, history)).toEqual([
+      {
+        conditionKind: "participant_numeric",
+        field: "kills",
+        operator: "gte",
+        threshold: 16,
+        realizedRate: 0.25,
+        reason: "outside_target_range",
+      },
+    ]);
+  });
+
+  test("reports an unmeasured numeric field without inventing a hit rate", () => {
+    const condition: ParlayCondition = {
+      kind: "participant_numeric",
+      subject: "P1",
+      field: "consumablesPurchased",
+      operator: "lte",
+      threshold: 10,
+    };
+    const subjects = [subject("P1", PUUID_A)];
+    const history: ParlayHistory = new Map([
+      [
+        PUUID_A,
+        Array.from({ length: 20 }, (_, index) =>
+          historyMatch({ index, kills: index + 1 }),
+        ),
+      ],
+    ]);
+
+    expect(numericThresholdDiagnostics([condition], subjects, history)).toEqual(
+      [
+        {
+          conditionKind: "participant_numeric",
+          field: "consumablesPurchased",
+          operator: "lte",
+          threshold: 10,
+          realizedRate: null,
+          reason: "unmeasured",
+        },
+      ],
+    );
+  });
+
   test("a leg history cannot answer yields no price at all", () => {
     const matches = Array.from({ length: 20 }, (_, index) =>
       historyMatch({ index, kills: index + 1 }),

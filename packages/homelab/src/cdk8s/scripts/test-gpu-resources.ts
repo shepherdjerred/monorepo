@@ -1,5 +1,14 @@
 #!/usr/bin/env bun
 
+// Reads the synth output in dist/ — it never produces it. `build` owns dist/
+// and starts with `rm -rf dist/`, so a nested rebuild here deletes the
+// directory out from under whatever turbo is running alongside this test:
+// `homelab#lint:helm` reads dist/, and `@homelab/cdk8s#lint` walks the package
+// root. That race is what failed build 11002 — lint:helm read
+// dist/service-probes.k8s.yaml during the window between the rm and the
+// re-synth. turbo already orders `test`/`test:ci` after `build`, so dist/ is
+// present and current by the time this runs.
+
 const EXPECTED_VALUE = 1;
 
 // Services that should have Intel GPU resources, mapped to their chart files
@@ -12,19 +21,6 @@ async function testGpuResources() {
   console.log("🧪 Testing Intel GPU resource allocation...");
 
   try {
-    // Build first
-    console.log("🔨 Building YAML files...");
-    const buildProcess = Bun.spawn(["bun", "run", "build"], {
-      cwd: process.cwd(),
-      stdio: ["inherit", "inherit", "inherit"],
-    });
-    const buildStatus = await buildProcess.exited;
-    if (buildStatus !== 0) {
-      console.error(`❌ Build failed with exit code ${buildStatus.toString()}`);
-      process.exit(1);
-    }
-    console.log("✅ Build completed\n");
-
     let errors = 0;
     let successes = 0;
 
@@ -32,9 +28,9 @@ async function testGpuResources() {
     for (const [service, yamlFile] of Object.entries(GPU_SERVICES)) {
       const file = Bun.file(yamlFile);
       if (!(await file.exists())) {
-        console.error(`❌ File ${yamlFile} does not exist after build.`);
-        errors++;
-        continue;
+        throw new Error(
+          `${yamlFile} is missing. Run the synth first: \`bunx turbo run build --filter=@homelab/cdk8s\`.`,
+        );
       }
       const content = await file.text();
 

@@ -1,6 +1,6 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "#src/storage/s3-client.ts";
-import { z, type ZodError } from "zod";
+import { z } from "zod";
 import configuration from "#src/configuration.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import type { MatchId } from "@scout-for-lol/data/index.ts";
@@ -146,11 +146,25 @@ function generateFailedValidationS3Key(
   return `failed-validations/${dateStr}/${matchId}/${assetType}.json`;
 }
 
+/**
+ * The shape this function actually reads off a validation failure. A `ZodError`
+ * satisfies it, and so does a hand-built completeness report — the payload that
+ * omitted a field Riot always sends for a matchmade game is just as much a
+ * failed validation, and deserves the same debug artifact.
+ */
+export type ValidationIssueReport = {
+  issues: readonly {
+    path: readonly PropertyKey[];
+    message: string;
+    code: string;
+  }[];
+};
+
 type SaveFailedPayloadConfig = {
   matchId: MatchId;
   assetType: "match" | "timeline";
   rawPayload: unknown;
-  validationError: ZodError;
+  validationError: ValidationIssueReport;
 };
 
 /**
@@ -178,7 +192,7 @@ export async function saveFailedPayloadToS3(
 
     // Extract the first few validation issues for metadata (limited to avoid hitting S3 metadata size limits)
     const firstIssues = validationError.issues.slice(0, 5).map((issue) => ({
-      path: issue.path.join("."),
+      path: issue.path.map(String).join("."),
       message: issue.message,
       code: issue.code,
     }));

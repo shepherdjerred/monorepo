@@ -99,6 +99,41 @@ export const QueueDisplayNameSchema = z
   .min(1)
   .brand<"QueueDisplayName">();
 
+export const LoadingScreenRankStateSchema = z.discriminatedUnion("status", [
+  z.strictObject({ status: z.literal("hidden") }),
+  z.strictObject({ status: z.literal("error") }),
+  z.strictObject({
+    status: z.literal("available"),
+    ranks: RanksSchema,
+  }),
+]);
+export type LoadingScreenRankState = z.infer<
+  typeof LoadingScreenRankStateSchema
+>;
+
+function validateRankVisibility(
+  participant: {
+    puuid: string | null;
+    rankState: LoadingScreenRankState;
+  },
+  context: z.RefinementCtx,
+): void {
+  if (participant.puuid === null && participant.rankState.status !== "hidden") {
+    context.addIssue({
+      code: "custom",
+      message: "Participants without a PUUID must have hidden rank state",
+      path: ["rankState"],
+    });
+  }
+  if (participant.puuid !== null && participant.rankState.status === "hidden") {
+    context.addIssue({
+      code: "custom",
+      message: "Identifiable participants cannot have hidden rank state",
+      path: ["rankState"],
+    });
+  }
+}
+
 export const BaseLoadingScreenParticipantSchema = z.strictObject({
   /** Riot PUUID — null for participants we cannot identify (rare, e.g., bots) */
   puuid: LeaguePuuidSchema.nullable(),
@@ -120,8 +155,8 @@ export const BaseLoadingScreenParticipantSchema = z.strictObject({
   keystoneRuneId: RuneIdSchema.optional(),
   /** Secondary rune tree ID */
   secondaryTreeId: RuneIdSchema.optional(),
-  /** Ranks (solo + flex, fetched via LeagueV4) */
-  ranks: RanksSchema.optional(),
+  /** League-V4 lookup state for loading-screen presentation. */
+  rankState: LoadingScreenRankStateSchema,
   /** Whether this player is tracked by the bot */
   isTrackedPlayer: z.boolean(),
 });
@@ -130,9 +165,16 @@ export const StandardLoadingScreenParticipantSchema =
   BaseLoadingScreenParticipantSchema.extend({
     /** Standard 5v5 side assignment */
     team: TeamSchema,
-    /** Inferred standard 5v5 lane. Required for standard loading screens. */
-    lane: LaneSchema,
-  });
+    /**
+     * Inferred standard 5v5 lane.
+     *
+     * Optional because a side that is not a full five has no roles to infer:
+     * Riot reports an empty `teamPosition`, and the lane-prior model is trained
+     * on 5-stacks, so running it on a 2-man side produces confident nonsense.
+     * A full 5v5 still always carries one — see `inferStandardParticipants`.
+     */
+    lane: LaneSchema.optional(),
+  }).superRefine(validateRankVisibility);
 
 export type StandardLoadingScreenParticipant = z.infer<
   typeof StandardLoadingScreenParticipantSchema
@@ -142,7 +184,7 @@ export const NonStandardLoadingScreenParticipantSchema =
   BaseLoadingScreenParticipantSchema.extend({
     /** Team assignment for ARAM or Arena */
     team: LoadingScreenTeamSchema,
-  });
+  }).superRefine(validateRankVisibility);
 
 export type NonStandardLoadingScreenParticipant = z.infer<
   typeof NonStandardLoadingScreenParticipantSchema
@@ -191,13 +233,70 @@ const BaseLoadingScreenDataSchema = z.strictObject({
   gameStartTime: z.number().int().nonnegative(),
 });
 
+/**
+ * Both sides must hold 1-5 players. Applied to the standard and ARAM layouts,
+ * mirroring the check `ClassicLoadingScreenDataSchema` already performs — a
+ * bare length bound would accept a 10v0.
+ */
+function refineSideSizes(
+  data: { participants: { team: unknown }[] },
+  context: z.RefinementCtx,
+): void {
+  for (const team of ["blue", "red"] as const) {
+    const teamSize = data.participants.filter(
+      (participant) => participant.team === team,
+    ).length;
+    if (teamSize < 1 || teamSize > 5) {
+      context.addIssue({
+        code: "custom",
+        message: `${team} team must contain between 1 and 5 participants`,
+        path: ["participants"],
+      });
+    }
+  }
+}
+
+/**
+ * A full five has one player per lane, so every member must carry one. Making
+ * `lane` optional on the participant is what lets a short side omit it; without
+ * this, a full 5v5 that lost its lanes would render as a laneless column and
+ * nothing would object. Short sides are exempt because Riot reports no
+ * `teamPosition` for them at all.
+ */
+function refineFullSidesHaveLanes(
+  data: { participants: { team: unknown; lane?: unknown }[] },
+  context: z.RefinementCtx,
+): void {
+  for (const team of ["blue", "red"] as const) {
+    const side = data.participants.filter(
+      (participant) => participant.team === team,
+    );
+    if (side.length !== 5) continue;
+    if (side.some((participant) => participant.lane === undefined)) {
+      context.addIssue({
+        code: "custom",
+        message: `every player on a full ${team} team must have an inferred lane`,
+        path: ["participants"],
+      });
+    }
+  }
+}
+
 export const StandardLoadingScreenDataSchema =
   BaseLoadingScreenDataSchema.extend({
     /** Layout mode for standard 5v5 games */
     layout: z.literal("standard"),
-    /** Standard games must have inferred lanes for every participant */
-    participants: z.array(StandardLoadingScreenParticipantSchema).length(10),
-  });
+    /**
+     * 2-10 rather than exactly 10: a tournament-code custom lobby carries a
+     * teamSize of 1-5. Sides are bounded individually by the refinement below.
+     */
+    participants: z
+      .array(StandardLoadingScreenParticipantSchema)
+      .min(2)
+      .max(10),
+  })
+    .superRefine(refineSideSizes)
+    .superRefine(refineFullSidesHaveLanes);
 
 export type StandardLoadingScreenData = z.infer<
   typeof StandardLoadingScreenDataSchema
@@ -207,8 +306,11 @@ export const AramLoadingScreenDataSchema = BaseLoadingScreenDataSchema.extend({
   /** Layout mode for ARAM games */
   layout: z.literal("aram"),
   /** ARAM participants do not carry standard lane assignments */
-  participants: z.array(NonStandardLoadingScreenParticipantSchema).length(10),
-});
+  participants: z
+    .array(NonStandardLoadingScreenParticipantSchema)
+    .min(2)
+    .max(10),
+}).superRefine(refineSideSizes);
 
 export type AramLoadingScreenData = z.infer<typeof AramLoadingScreenDataSchema>;
 

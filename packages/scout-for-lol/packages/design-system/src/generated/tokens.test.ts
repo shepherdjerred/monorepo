@@ -28,6 +28,7 @@ describe("Scout theme contrast", () => {
       ["text/canvas", theme.colors.text, theme.colors.canvas],
       ["text/surface", theme.colors.text, theme.colors.surface],
       ["muted/surface", theme.colors.textMuted, theme.colors.surface],
+      ["muted/hover", theme.colors.textMuted, theme.colors.interactiveHover],
       ["primary", theme.colors.primaryText, theme.colors.primary],
       ["accent", theme.colors.accentText, theme.colors.accent],
       ["success", theme.colors.successText, theme.colors.success],

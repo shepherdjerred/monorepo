@@ -48,8 +48,16 @@ feeling immediate and staying within what Riot allows.
 
 Scout also tracks where each account's history stands, which is what stops a
 freshly created subscription from replaying an entire back catalogue of old
-games into your channel. It also means matches finished before you tracked
-someone will never post.
+games into your channel. During onboarding it snapshots and quietly imports up
+to the account's 20 most recent games for Explore, reports, AI review context,
+and the player profile. Matches finished before that snapshot enrich history
+but never post notifications or trigger automatic post-match side effects.
+
+The import runs only after the live post-match poll and uses a small shared Riot
+API budget. Scout pauses live polling for that account until its fixed snapshot
+is stored, then hands the newest snapshot match to the normal cursor. A game
+that finishes during the import is therefore detected once on the next live
+poll instead of being lost or replayed.
 
 ## Delivery is decided per subscription
 
@@ -80,15 +88,16 @@ reports query that store rather than replaying Riot's API. This is what makes a
 query over 30 days of a server's history return in a moment instead of costing
 thousands of API calls.
 
-That store is refreshed on a schedule: freshly ingested matches are folded in
-every 15 minutes, and the whole thing is rebuilt nightly from the raw match data
-Scout keeps. The rebuild exists so the store can be treated as disposable —
-derived data that can always be reconstructed from the raw JSON, which is the
-real source of truth.
+Freshly ingested matches are staged for reads immediately, folded into Parquet
+every 15 minutes, and rebuilt nightly from the raw match data Scout keeps. The
+rebuild exists so the store can be treated as disposable — derived data that
+can always be reconstructed from the raw JSON, which is the real source of
+truth. Initial history waits for a fold before it is marked ready so the new
+guild identity mapping and its matches become visible together.
 
-The visible consequence: a game that finished two minutes ago has certainly
-produced a notification, and may not yet appear in a report. If a report looks
-like it is missing a recent game, waiting for the next fold usually resolves it.
+The visible consequence: a newly tracked account's imported history may fill in
+over several minutes. Normal live matches can be queried from staging as soon
+as ingest succeeds.
 
 ## Competitions sit in between
 
@@ -107,7 +116,7 @@ no stored state to repair.
 - A recap that never arrives after a game genuinely ended is a delivery problem
   — mute, filter, or channel permissions — not a detection problem. See
   [Diagnose a missing notification](/docs/how-to/troubleshoot-notifications/).
-- A report missing the last few minutes of games is expected, not broken.
+- A newly tracked account can take a few minutes to populate historical reports.
 
 ## Related
 

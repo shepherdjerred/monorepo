@@ -4,8 +4,10 @@ import { requireCliValue, unresolvedSecrets } from "./migration-core.ts";
 
 const DEFAULT_BACKEND_PORT = 3000;
 const DEFAULT_WEB_PORT = 5180;
-const DEFAULT_DATABASE_URL = "file:./local-web-dev.db";
+const DEFAULT_PG_PORT = "5471";
 const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
+const BACKEND_START_TIMEOUT_MS = 300_000;
+const DEFAULT_DESIGN_AUDIT_DATABASE_NAME = "scout_design_audit";
 
 type DevWebOptions = {
   readonly backendPort: number;
@@ -30,10 +32,47 @@ function parsePort(value: string, flag: string): number {
 }
 
 function parseDatabaseUrl(value: string): string {
-  if (!value.startsWith("file:")) {
-    throw new Error("--database-url must use a local file: SQLite URL");
+  if (!value.startsWith("postgres://") && !value.startsWith("postgresql://")) {
+    throw new Error(
+      "--database-url must be a postgres:// URL (SQLite is no longer supported)",
+    );
   }
   return value;
+}
+
+function sharedServerUrl(
+  backendPort: number,
+  environment: Readonly<Record<string, string | undefined>>,
+  databaseName = `scout_dev_${backendPort.toString()}`,
+): string {
+  const pgPort = environment["SCOUT_PG_PORT"] ?? DEFAULT_PG_PORT;
+  return `postgres://scout@127.0.0.1:${pgPort}/${databaseName}`;
+}
+
+/**
+ * When the resolved URL targets the shared local dev server, return the
+ * database name so the boot path can ensure server + database exist.
+ * External URLs (e.g. a restored beta snapshot database) return undefined
+ * and are used as-is.
+ */
+export function sharedServerDatabaseName(
+  databaseUrl: string,
+  environment: Readonly<Record<string, string | undefined>>,
+): string | undefined {
+  const pgPort = environment["SCOUT_PG_PORT"] ?? DEFAULT_PG_PORT;
+  let parsed: URL;
+  try {
+    parsed = new URL(databaseUrl);
+  } catch {
+    return undefined;
+  }
+  const isLoopback =
+    parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
+  if (!isLoopback || parsed.port !== pgPort) {
+    return undefined;
+  }
+  const dbName = parsed.pathname.replace(/^\//, "");
+  return /^[a-z][a-z0-9_]*$/.test(dbName) ? dbName : undefined;
 }
 
 function parseOrigin(value: string, flag: string): string {
@@ -59,7 +98,11 @@ function defaultDatabaseUrl(
   environment: Readonly<Record<string, string | undefined>>,
 ): string {
   if (environment["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] === "true") {
-    return "file:./design-audit-local.db";
+    return sharedServerUrl(
+      backendPort,
+      environment,
+      DEFAULT_DESIGN_AUDIT_DATABASE_NAME,
+    );
   }
   const configured = environment["SCOUT_DEV_DATABASE_URL"];
   if (configured !== undefined) return parseDatabaseUrl(configured);
@@ -72,8 +115,7 @@ function defaultDatabaseUrl(
   ) {
     return parseDatabaseUrl(inherited);
   }
-  if (backendPort === DEFAULT_BACKEND_PORT) return DEFAULT_DATABASE_URL;
-  return `file:./local-web-dev-${backendPort.toString()}.db`;
+  return sharedServerUrl(backendPort, environment);
 }
 
 export function parseDevWebArgs(
@@ -175,7 +217,8 @@ function printHelp(): void {
 Options:
   --backend-port <port>  Backend port (default: 3000)
   --web-port <port>      Vite SPA port (default: 5180)
-  --database-url <url>   Local file: SQLite URL
+  --database-url <url>   Postgres URL (default: scout_dev_<backend-port> on
+                         the shared local dev server, port 5471 / SCOUT_PG_PORT)
   --no-discord-gateway   Run as a secondary UI/API copy without BETA gateway
   --no-backend-watch     Keep the backend stable until this command is restarted
   --marketing-origin <url>  Marketing site origin for cross-surface links
@@ -183,7 +226,7 @@ Options:
   --help                 Show this help
 
 For a second copy, choose different ports. Its database defaults to
-file:./local-web-dev-<backend-port>.db. The BETA Discord gateway still has one
+scout_dev_<backend-port> on the shared local Postgres. The BETA Discord gateway still has one
 owner: run one gateway owner and pass --no-discord-gateway to secondary copies.
 Secondary copies do not have the live bot guild/channel cache, so guild-picker
 and channel-picker flows require the gateway owner.`);
@@ -197,6 +240,35 @@ function origins(options: DevWebOptions): {
     backendOrigin: `http://127.0.0.1:${options.backendPort.toString()}`,
     webOrigin: `http://localhost:${options.webPort.toString()}`,
   };
+}
+
+async function waitForBackend(
+  backendOrigin: string,
+  backend: Bun.Subprocess,
+): Promise<void> {
+  const startedAt = Date.now();
+  let lastFailure: unknown;
+  while (Date.now() - startedAt < BACKEND_START_TIMEOUT_MS) {
+    if (backend.exitCode !== null) {
+      throw new Error(
+        `Scout backend exited with code ${backend.exitCode.toString()} before becoming ready`,
+      );
+    }
+    try {
+      const response = await fetch(`${backendOrigin}/api/version`);
+      if (response.ok) return;
+      lastFailure = new Error(
+        `Scout backend readiness returned HTTP ${response.status.toString()}`,
+      );
+    } catch (error) {
+      lastFailure = error;
+    }
+    await Bun.sleep(250);
+  }
+  throw new Error(
+    `Scout backend did not become ready within ${BACKEND_START_TIMEOUT_MS.toString()}ms`,
+    { cause: lastFailure },
+  );
 }
 
 if (import.meta.main) {
@@ -272,6 +344,23 @@ if (import.meta.main) {
         : {}),
     };
 
+    const sharedDbName = sharedServerDatabaseName(options.databaseUrl, Bun.env);
+    if (sharedDbName !== undefined) {
+      const ensure = Bun.spawn(
+        ["bun", "run", "scripts/ensure-dev-postgres.ts", sharedDbName],
+        {
+          cwd: backendCwd,
+          env: environment,
+          stdin: "inherit",
+          stdout: "inherit",
+          stderr: "inherit",
+        },
+      );
+      if ((await ensure.exited) !== 0) {
+        throw new Error("Failed to start the shared local dev Postgres");
+      }
+    }
+
     console.log(
       `Applying Prisma migrations against ${environment.DATABASE_URL}`,
     );
@@ -325,9 +414,10 @@ if (import.meta.main) {
       }
     }
 
-    const backendCommand = options.backendWatchEnabled
-      ? ["bun", "--watch", "src/index.ts"]
-      : ["bun", "src/index.ts"];
+    const backendCommand =
+      !isDesignAuditBoot && options.backendWatchEnabled
+        ? ["bun", "--watch", "src/index.ts"]
+        : ["bun", "src/index.ts"];
     const backend = Bun.spawn(backendCommand, {
       cwd: backendCwd,
       env: {
@@ -338,6 +428,19 @@ if (import.meta.main) {
       stdout: "inherit",
       stderr: "inherit",
     });
+    // Playwright probes the SPA through Vite's backend proxy. Starting Vite
+    // before the backend is ready can leave that first proxy request hanging
+    // for the entire webServer timeout. The audit checkout is immutable, so it
+    // also has no reason to pay for a backend file watcher.
+    if (isDesignAuditBoot) {
+      try {
+        await waitForBackend(backendOrigin, backend);
+      } catch (error) {
+        backend.kill();
+        await backend.exited;
+        throw error;
+      }
+    }
     const app = Bun.spawn(
       [
         "bun",
@@ -349,6 +452,12 @@ if (import.meta.main) {
         "--port",
         options.webPort.toString(),
         "--strictPort",
+        // Playwright restarts this server between sequential audit shards.
+        // A Vite optimizer process killed with the preceding shard can leave
+        // the shared dependency cache waiting indefinitely before the next
+        // server binds. Re-optimizing made the same live CI checkout ready in
+        // under a second and keeps this lifecycle repair audit-only.
+        ...(isDesignAuditBoot ? ["--force"] : []),
       ],
       {
         cwd: path.join(root, "packages", "app"),

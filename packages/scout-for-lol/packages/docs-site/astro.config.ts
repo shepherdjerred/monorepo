@@ -47,6 +47,7 @@ export default defineConfig({
       components: {
         Footer: "./src/components/overrides/Footer.astro",
         Header: "./src/components/overrides/Header.astro",
+        PageFrame: "./src/components/overrides/PageFrame.astro",
         ThemeProvider: "./src/components/overrides/ThemeProvider.astro",
         ThemeSelect: "./src/components/overrides/ThemeSelect.astro",
       },

@@ -13,7 +13,7 @@
  * feature-disabled message.
  */
 
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,
@@ -21,7 +21,9 @@ import {
   permissionKey,
 } from "@scout-for-lol/data";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
-import configuration from "#src/configuration.ts";
+import configuration, {
+  resetConfigurationForTests,
+} from "#src/configuration.ts";
 
 const trpc = await createOfflineTrpcHarness("report-ai-http-e2e");
 const { handleReportAiRoute } = await import("#src/reports/ai/http-route.ts");
@@ -31,6 +33,7 @@ const guildId = DiscordGuildIdSchema.parse("100000000000009301");
 const member = DiscordAccountIdSchema.parse("900000000000009301");
 const cors: Record<string, string> = {};
 let cookie = "";
+const originalEnvironment = Bun.env["ENVIRONMENT"];
 
 const ErrBody = z.object({ error: z.string() });
 
@@ -87,7 +90,25 @@ afterAll(async () => {
   await trpc.prisma.$disconnect();
 });
 
+afterEach(() => {
+  if (originalEnvironment === undefined) {
+    delete Bun.env["ENVIRONMENT"];
+  } else {
+    Bun.env["ENVIRONMENT"] = originalEnvironment;
+  }
+  resetConfigurationForTests();
+});
+
 describe("report AI stream endpoint authorization", () => {
+  test("is absent in production before authorization or generation", async () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+
+    const res = await post();
+    expect(res?.status).toBe(404);
+    expect(ErrBody.parse(await res?.json()).error).toBe("Not found.");
+  });
+
   test("member without reports:create is denied on the missing permission", async () => {
     trpc.setMembership([{ guildId, asAdmin: false }]);
     await seedGrants();

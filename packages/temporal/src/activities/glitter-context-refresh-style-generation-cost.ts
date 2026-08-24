@@ -26,6 +26,12 @@ export type SummarizedChunk = {
   key: string;
   month: string;
   summary: StyleChunkSummary;
+  /**
+   * How many of this chunk's messages actually reached the card as evidence:
+   * the chunk's full message count, or zero when the chunk yielded nothing.
+   * Summed into the card's `coverage.evidence.summarized_messages`.
+   */
+  summarizedMessageCount: number;
 };
 
 type StyleSynthesisPromptInput = {

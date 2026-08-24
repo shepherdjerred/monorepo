@@ -1,5 +1,6 @@
 import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
 import { checkPreMatch } from "#src/league/tasks/prematch/index.ts";
+import { checkTournamentLobbies } from "#src/league/tournament/poller.ts";
 import { runLifecycleCheck } from "#src/league/tasks/competition/lifecycle.ts";
 import { runPlayerPruning } from "#src/league/tasks/cleanup/prune-players.ts";
 import { reconcileRemovedGuilds } from "#src/league/tasks/cleanup/reconcile-removed-guilds.ts";
@@ -24,6 +25,7 @@ import {
   BUCKS_RECONCILIATION_CRON,
   reconcileBucksBalances,
 } from "#src/betting/reconcile.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 
 const logger = createLogger("league-cron");
 
@@ -44,25 +46,45 @@ export async function startCronJobs() {
     runOnInit: true,
   });
 
+  // Tournament lobbies get their own tick rather than riding checkPreMatch,
+  // which already carries six tasks under one lock — a seventh would couple a
+  // tournament-API outage to the betting sweeps. 20 seconds guarantees at least
+  // two polls inside a ~40-second blind-pick champ select, and lands between the
+  // 30s prematch tick and the 60s postmatch tick, which is what wins the
+  // match-linkage race.
+  if (!isFeatureHardDisabled("tournament_lobbies_enabled")) {
+    logger.info("📅 Setting up tournament lobby check (every 20 seconds)");
+    createCronJob({
+      schedule: "*/20 * * * * *",
+      jobName: "tournament_lobby_check",
+      task: checkTournamentLobbies,
+      logMessage: "🏟️ Polling tournament lobby events",
+      timezone: "UTC",
+      runOnInit: false,
+    });
+  }
+
   // Full wallet disclosure happens only on this fixed weekly cadence; there is
   // deliberately no on-demand leaderboard command.
-  logger.info(
-    "📅 Setting up Bryan Bucks leaderboard (Friday 5 PM America/Los_Angeles)",
-  );
-  createCronJob({
-    ...WEEKLY_BUCKS_CRON,
-    task: async () => {
-      await runWeeklyBucksLeaderboard();
-    },
-  });
+  if (!isFeatureHardDisabled("betting_enabled")) {
+    logger.info(
+      "📅 Setting up Bryan Bucks leaderboard (Friday 5 PM America/Los_Angeles)",
+    );
+    createCronJob({
+      ...WEEKLY_BUCKS_CRON,
+      task: async () => {
+        await runWeeklyBucksLeaderboard();
+      },
+    });
 
-  logger.info("📅 Setting up Bryan Bucks reconciliation (daily 5 AM UTC)");
-  createCronJob({
-    ...BUCKS_RECONCILIATION_CRON,
-    task: async () => {
-      await reconcileBucksBalances();
-    },
-  });
+    logger.info("📅 Setting up Bryan Bucks reconciliation (daily 5 AM UTC)");
+    createCronJob({
+      ...BUCKS_RECONCILIATION_CRON,
+      task: async () => {
+        await reconcileBucksBalances();
+      },
+    });
+  }
 
   // check match history every minute
   logger.info("📅 Setting up match history polling job (every minute at :00)");

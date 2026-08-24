@@ -80,6 +80,7 @@ struct ProviderBadgeView: View {
 struct ProviderSectionView: View {
   let overview: ProviderOverview
   let date: Date
+  let history: [UsageHistorySample]
 
   var body: some View {
     VStack(alignment: .leading, spacing: 7) {
@@ -160,7 +161,15 @@ struct ProviderSectionView: View {
           window: window,
           date: date,
           stale: isStale,
-          entitlementDetail: window.kind == .entitlement ? entitlementDetail : nil
+          entitlementDetail: window.kind == .entitlement ? entitlementDetail : nil,
+          todayUsedPercent: window.isWeekly
+            ? UsageHistory.todayUsedPercent(
+              provider: snapshot.provider,
+              windowID: window.id,
+              samples: history,
+              at: date
+            )
+            : nil
         )
       }
     }
@@ -181,6 +190,7 @@ struct WindowRow: View {
   let date: Date
   let stale: Bool
   let entitlementDetail: String?
+  let todayUsedPercent: Double?
 
   var body: some View {
     if window.kind == .entitlement {
@@ -210,6 +220,10 @@ struct WindowRow: View {
         pacingCaption(pacing)
           .padding(.leading, 103)
       }
+      if window.isWeekly {
+        todayCaption
+          .padding(.leading, 103)
+      }
     }
     .font(.caption)
     .foregroundStyle(stale ? .secondary : .primary)
@@ -228,6 +242,18 @@ struct WindowRow: View {
       .monospacedDigit()
       .foregroundStyle(stale ? .secondary : pacingColor(for: pacing.status))
       .help(pacingHelp(pacing))
+      .accessibilityHidden(true)
+  }
+
+  private var todayCaption: some View {
+    Text(todayUsedPercent.map { "Today: \(Int($0.rounded()))% used" } ?? "Today: —")
+      .font(.caption2)
+      .monospacedDigit()
+      .foregroundStyle(stale ? .secondary : .secondary)
+      .help(
+        "Usage percentage points consumed since local midnight from Brim's successful samples. "
+          + "A quota reset does not subtract from today's total."
+      )
       .accessibilityHidden(true)
   }
 
@@ -323,6 +349,13 @@ struct WindowRow: View {
       let actual = WindowPacing.format(pacing.actualPacePerDay)
       let even = WindowPacing.format(pacing.evenPacePerDay)
       values.append("\(label), pace \(actual), even split \(even)")
+    }
+    if window.isWeekly {
+      if let todayUsedPercent {
+        values.append("\(Int(todayUsedPercent.rounded())) percent used today")
+      } else {
+        values.append("today's usage unavailable until another sample is recorded")
+      }
     }
     return values.joined(separator: ", ")
   }

@@ -248,6 +248,13 @@ async function runContextRefresh(
         proposalSha256: z.string().regex(/^[0-9a-f]{64}$/),
         eligiblePeople: z.array(z.string()),
         refreshedPeople: z.array(z.string()),
+        // People this run could not refresh, with the reason. The schema is
+        // strict, so this has to track the activity's result type or a waiting
+        // operator's `.parse()` throws after a billable run has already
+        // succeeded — hiding the result and inviting a needless rerun.
+        skippedPeople: z.array(
+          z.object({ personId: z.string(), reason: z.string() }).strict(),
+        ),
         relationshipProposalCount: z.number().int().nonnegative(),
         generation: z
           .object({

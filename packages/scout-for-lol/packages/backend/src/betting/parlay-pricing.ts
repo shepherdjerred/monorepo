@@ -142,13 +142,87 @@ export function conditionRealizedRate(
   return hits / matches.length;
 }
 
-function isNumericCondition(condition: ParlayCondition): boolean {
-  return (
-    condition.kind === "participant_numeric" ||
-    condition.kind === "team_objective_kills" ||
-    condition.kind === "match_numeric" ||
-    condition.kind === "opponent_team_pings"
-  );
+type NumericCondition = Extract<
+  ParlayCondition,
+  | { kind: "participant_numeric" }
+  | { kind: "team_objective_kills" }
+  | { kind: "match_numeric" }
+  | { kind: "opponent_team_pings" }
+>;
+
+export type NumericThresholdDiagnostic = {
+  conditionKind: NumericCondition["kind"];
+  field: string;
+  operator: NumericCondition["operator"];
+  threshold: number;
+  realizedRate: number | null;
+  reason: "missing_subject" | "unmeasured" | "outside_target_range";
+};
+
+function numericConditionField(condition: NumericCondition): string {
+  switch (condition.kind) {
+    case "participant_numeric":
+    case "match_numeric":
+    case "opponent_team_pings":
+      return condition.field;
+    case "team_objective_kills":
+      return `${condition.objective}_kills`;
+  }
+}
+
+/** Explain numeric threshold failures without changing the pricing guard. */
+export function numericThresholdDiagnostics(
+  conditions: readonly ParlayCondition[],
+  subjects: readonly ParlaySubject[],
+  history: ParlayHistory,
+): readonly NumericThresholdDiagnostic[] {
+  const anchor = subjects[0];
+  const diagnostics: NumericThresholdDiagnostic[] = [];
+  for (const condition of conditions) {
+    if (
+      condition.kind !== "participant_numeric" &&
+      condition.kind !== "team_objective_kills" &&
+      condition.kind !== "match_numeric" &&
+      condition.kind !== "opponent_team_pings"
+    ) {
+      continue;
+    }
+    const subject =
+      condition.kind === "participant_numeric"
+        ? subjects.find((candidate) => candidate.key === condition.subject)
+        : anchor;
+    const base = {
+      conditionKind: condition.kind,
+      field: numericConditionField(condition),
+      operator: condition.operator,
+      threshold: condition.threshold,
+    };
+    if (subject === undefined) {
+      diagnostics.push({
+        ...base,
+        realizedRate: null,
+        reason: "missing_subject",
+      });
+      continue;
+    }
+    const rate = conditionRealizedRate(
+      condition,
+      history.get(subject.puuid) ?? [],
+      subject.key,
+    );
+    if (rate === undefined) {
+      diagnostics.push({ ...base, realizedRate: null, reason: "unmeasured" });
+      continue;
+    }
+    if (rate < 0.4 || rate > 0.7) {
+      diagnostics.push({
+        ...base,
+        realizedRate: rate,
+        reason: "outside_target_range",
+      });
+    }
+  }
+  return diagnostics;
 }
 
 /** Require every filled numeric threshold to land in the intended target band. */
@@ -157,28 +231,12 @@ export function numericThresholdsAreMeasured(
   subjects: readonly ParlaySubject[],
   history: ParlayHistory,
 ): boolean {
-  const anchor = subjects[0];
-  if (anchor === undefined) {
+  if (subjects[0] === undefined) {
     return false;
   }
-  return conditions.every((condition) => {
-    if (!isNumericCondition(condition)) {
-      return true;
-    }
-    const subject =
-      condition.kind === "participant_numeric"
-        ? subjects.find((candidate) => candidate.key === condition.subject)
-        : anchor;
-    if (subject === undefined) {
-      return false;
-    }
-    const rate = conditionRealizedRate(
-      condition,
-      history.get(subject.puuid) ?? [],
-      subject.key,
-    );
-    return rate !== undefined && rate >= 0.4 && rate <= 0.7;
-  });
+  return (
+    numericThresholdDiagnostics(conditions, subjects, history).length === 0
+  );
 }
 
 function conditionSubject(condition: ParlayCondition): string | undefined {

@@ -288,11 +288,26 @@ deploys.
 
 ## Renovate Configuration
 
-The project uses Renovate for automated updates:
+The project uses Mend-hosted Renovate as a dashboard-first dependency inventory:
 
 1. Renovate's custom manager parses structured entries in `catalog.json`
-2. Creates PRs for version bumps
-3. PRs run `bun run verify` (affected-scoped) on the static Buildkite pipeline (`.buildkite/pipeline.yml`) — check the `buildkite/monorepo/pr` status before merging
+2. Renovate reports available updates in the GitHub Dependency Dashboard
+3. A human selects a dashboard checkbox to authorize a branch and PR for one update
+4. Humans rebase and merge approved PRs; Renovate never does either automatically
+5. PRs run `bun run verify` (affected-scoped) on the static Buildkite pipeline (`.buildkite/pipeline.yml`) — check the `buildkite/monorepo/pr` status before merging
+
+Renovate vulnerability remediation and OSV alerts are disabled so they cannot
+bypass dashboard approval. GitHub's separate security-alert interface is
+unchanged. Approved Bun updates still run a full install, so
+`BUN_CONFIG_MAX_HTTP_REQUESTS=4` limits their HTTP concurrency for the
+Mend-hosted 3 GB runner. Validate the repository configuration against Mend's
+exact Renovate version and environment allowlist:
+
+```bash
+RENOVATE_ALLOWED_ENV='["BUN_CONFIG_MAX_HTTP_REQUESTS"]' \
+  bunx --package renovate@44.39.0 \
+  renovate-config-validator --no-global renovate.json
+```
 
 ### Digest/pin updates bypass `minimumReleaseAge`
 

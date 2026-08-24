@@ -89,12 +89,14 @@ sequenceDiagram
 ```
 
 Discord registration keeps `/help`, `/setup`, `/status`, `/invite`, `/docs`,
-`/track`, and `/list` global. `/bb` and `/scout` are complete guild-scoped
-payloads reconciled after the gateway connects and whenever the bot joins a
-guild. `/scout ask` calls the same persisted Explore runner as HTTP/SSE; only
-delivery differs. Publishing reloads the frozen owner-scoped transcript and
-cannot call the agent or query engine. All configuration and Explore follow-ups
-remain in the web UI.
+`/track`, and `/list` global in both stages. Production adds `/scout` globally;
+beta registers it only in allowlisted guilds. `/bb` and `/lobby` remain
+beta-only guild payloads. Guild payloads are reconciled after the gateway
+connects and whenever the bot joins a guild, including empty replacements that
+clear stale commands. `/scout ask` calls the same persisted Explore runner as
+HTTP/SSE; only delivery differs. Publishing reloads the frozen owner-scoped
+transcript and cannot call the agent or query engine. All configuration and
+Explore follow-ups remain in the web UI.
 
 ## Cron Job System
 

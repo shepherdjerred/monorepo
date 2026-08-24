@@ -16,7 +16,7 @@
     "./runner": "./runner.ts"
   },
   "devDependencies": {
-    "@vitest/coverage-istanbul": "4.1.9",
-    "vitest": "4.1.9"
+    "@vitest/coverage-istanbul": "4.1.10",
+    "vitest": "4.1.10"
   }
 }

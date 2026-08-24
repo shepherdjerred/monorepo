@@ -9,10 +9,10 @@
     "./generated/*": "./generated/*"
   },
   "scripts": {
-    "dev": "bun --watch src/index.ts",
+    "dev": "bun run scripts/ensure-dev-postgres.ts scout_dev_3000 && bun x --no-install prisma migrate deploy && bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun --external=ffmpeg-static --external '@duckdb/*'",
-    "test": "DATABASE_URL=${DATABASE_URL:-file:./test.db} bun --no-install --bun vitest --config ../../../../vitest.config.ts run --testTimeout 20000",
+    "test": "DATABASE_URL=${DATABASE_URL:-postgres://scout@127.0.0.1:${SCOUT_PG_PORT:-5471}/scout_test_unbound} bun --no-install --bun vitest --config ../../../../vitest.config.ts run --testTimeout 20000",
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:coverage:threshold": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage --bail=1",
@@ -31,9 +31,7 @@
     "evaluate-lane-priors": "bun run scripts/evaluate-lane-priors.ts",
     "evaluate-predictions": "bun run scripts/evaluate-predictions.ts",
     "update-queue-windows": "bun run scripts/update-queue-windows.ts",
-    "db:generate": "bun x --trust prisma generate && bun run brand-types && bun x prettier --write generated/ && bun run generate:test-template",
-    "generate:test-template": "RUST_LOG=info bun run scripts/generate-test-template-db.ts",
-    "check:test-template": "bun run scripts/check-test-template-db.ts",
+    "db:generate": "bun x --trust prisma generate && bun run brand-types && bun x prettier --write generated/",
     "brand-types": "bun run scripts/brand-prisma-types.ts",
     "db:push": "bun x prisma db push",
     "db:migrate": "bun x prisma migrate dev",
@@ -43,13 +41,13 @@
     "generate:marketing-showcase": "bun run scripts/generate-marketing-showcase.ts",
     "test:review": "bun run src/league/review/test-reviews.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts",
-    "test:parlay:live": "bun run scripts/test-parlay-live.ts"
+    "test:parlay:live": "bun run scripts/test-parlay-live.ts",
+    "test:weekly-parlay:live": "bun run scripts/test-weekly-parlay-live.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1001.0",
     "@discordjs/voice": "^0.19.0",
     "@duckdb/node-api": "1.5.4-r.1",
-    "@libsql/client": "0.17.4",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/context-async-hooks": "^2.7.1",
     "@opentelemetry/core": "^2.7.1",
@@ -58,7 +56,7 @@
     "@opentelemetry/sdk-node": "^0.221.0",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
-    "@prisma/adapter-libsql": "7.9.1",
+    "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "^7.9.1",
     "@prisma/client-runtime-utils": "7.9.1",
     "@scout-for-lol/data": "workspace:*",

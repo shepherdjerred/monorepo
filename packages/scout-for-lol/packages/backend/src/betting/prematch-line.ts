@@ -5,6 +5,7 @@ import type {
 } from "@scout-for-lol/data";
 import { BETTING_TEAM_IDS, outcomeLabel } from "#src/betting/team.ts";
 import type { OutcomeFraming } from "#src/betting/team.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 /**
  * The Bryan Bucks lines appended to a prematch message.
@@ -76,7 +77,7 @@ function openPositionLines(
     const names = side
       .map(
         (position) =>
-          `<@${position.discordId}> ${position.offeredStake.toString()}`,
+          `<@${position.discordId}> ${formatInteger(position.offeredStake)}`,
       )
       .join(" · ");
     lines.push(`**${outcomeLabel(teamId, framing)}** ${names}`);
@@ -96,9 +97,9 @@ function closedPositionLines(
     const allocation = finalAllocation(position);
     const refunded =
       allocation.unmatchedStake > 0
-        ? `, refunded **${allocation.unmatchedStake.toString()}**`
+        ? `, refunded **${formatInteger(allocation.unmatchedStake)}**`
         : "";
-    return `• <@${position.discordId}> ${outcomeLabel(position.teamId, framing)} ${position.offeredStake.toString()} → matched **${allocation.matchedStake.toString()}**${refunded}`;
+    return `• <@${position.discordId}> ${outcomeLabel(position.teamId, framing)} ${formatInteger(position.offeredStake)} → matched **${formatInteger(allocation.matchedStake)}**${refunded}`;
   });
 }
 
@@ -131,7 +132,7 @@ function boundedPositionDigest(input: {
     ];
     const hiddenCount = input.positions.length - visibleCount;
     if (hiddenCount > 0) {
-      candidateLines.push(`…and ${hiddenCount.toString()} more.`);
+      candidateLines.push(`…and ${formatInteger(hiddenCount)} more.`);
     }
     const candidate = candidateLines.join("\n");
     if (candidate.length <= input.maxLength) {
@@ -221,7 +222,7 @@ export function bucksPrematchSummary(input: {
     }),
   }));
   const totalsText = totals
-    .map((side) => `${side.label} **${side.total.toString()} BB**`)
+    .map((side) => `${side.label} **${formatInteger(side.total)} BB**`)
     .join(" · ");
 
   const header = isOpen
@@ -247,7 +248,7 @@ function houseClause(
   }
   const parts = houseMatches.map(
     (match) =>
-      `house **${match.matchedStake.toString()}** on ${outcomeLabel(match.teamId, framing)}`,
+      `house **${formatInteger(match.matchedStake)}** on ${outcomeLabel(match.teamId, framing)}`,
   );
   return ` (${parts.join(", ")})`;
 }

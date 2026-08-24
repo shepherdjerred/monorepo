@@ -151,6 +151,37 @@ const RenderedResourceSchema = z.object({
     .passthrough(),
 });
 
+// The `apps` chart is namespaced to ArgoCD, so CDK8s stamps that namespace on
+// every rendered object, including cluster-scoped ones. Kubernetes ignores the
+// field on apply, but an Argo resource selector with it can report a successful
+// no-op instead of applying the resource. Keep this table limited to the
+// cluster-scoped kinds emitted directly by the root chart; child charts are
+// reconciled as complete Applications and never use these selectors.
+const CLUSTER_SCOPED_ROOT_RESOURCE_KINDS = new Set([
+  "/Namespace",
+  "admissionregistration.k8s.io/MutatingAdmissionPolicy",
+  "admissionregistration.k8s.io/MutatingAdmissionPolicyBinding",
+  "admissionregistration.k8s.io/ValidatingAdmissionPolicy",
+  "admissionregistration.k8s.io/ValidatingAdmissionPolicyBinding",
+  "kueue.x-k8s.io/ClusterQueue",
+  "kueue.x-k8s.io/ResourceFlavor",
+  "rbac.authorization.k8s.io/ClusterRole",
+  "rbac.authorization.k8s.io/ClusterRoleBinding",
+  "scheduling.k8s.io/PriorityClass",
+  "snapshot.storage.k8s.io/VolumeSnapshotClass",
+  "storage.k8s.io/StorageClass",
+  "tailscale.com/ProxyClass",
+]);
+
+function isClusterScopedRootResource(
+  apiVersion: string,
+  kind: string,
+): boolean {
+  const separator = apiVersion.indexOf("/");
+  const group = separator === -1 ? "" : apiVersion.slice(0, separator);
+  return CLUSTER_SCOPED_ROOT_RESOURCE_KINDS.has(`${group}/${kind}`);
+}
+
 /**
  * A live operation's selector as Argo reports it. `namespace` accepts an empty
  * string on purpose: a cluster-scoped target has two valid spellings on the
@@ -964,7 +995,11 @@ function parseRootManifest(manifestSource: string): ParsedRootManifest {
             : renderedResource.apiVersion.slice(0, separator),
         kind: renderedResource.kind,
         name: renderedResource.metadata.name,
-        ...(renderedResource.metadata.namespace === undefined
+        ...(renderedResource.metadata.namespace === undefined ||
+        isClusterScopedRootResource(
+          renderedResource.apiVersion,
+          renderedResource.kind,
+        )
           ? {}
           : { namespace: renderedResource.metadata.namespace }),
       },
@@ -1431,6 +1466,7 @@ async function finalizeRootRelease(
       revision: exactRevision,
       releasePhase: "prune",
       terminateAfterApplied: true,
+      recoverActiveRootPrune: true,
       verifiedRootDesiredIdentities,
     });
     return [...verifiedRootDesiredIdentities].sort();
@@ -1626,6 +1662,7 @@ type SyncOptions = {
   requestId?: string;
   releasePhase?: ReleasePhase;
   terminateAfterApplied?: boolean;
+  recoverActiveRootPrune?: boolean;
   verifiedRootDesiredIdentities?: ReadonlySet<string>;
   waitForCompletion?: boolean;
   revision?: string;
@@ -1691,6 +1728,19 @@ async function sync(
       "Verified root desired state can only narrow an applied-result boundary for atomic apps pruning",
     );
   }
+  if (
+    options.recoverActiveRootPrune === true &&
+    (appName !== "apps" ||
+      !options.prune ||
+      options.releasePhase !== "prune" ||
+      options.terminateAfterApplied !== true ||
+      options.requestId === undefined ||
+      options.revision === undefined)
+  ) {
+    throw new Error(
+      "Active-root-prune recovery requires an identity-bound atomic apps prune",
+    );
+  }
   let expectedResourceIdentities: ExpectedSyncResultIdentities | undefined;
   if (appName === "apps" && options.prune) {
     if (options.revision === undefined) {
@@ -1698,28 +1748,38 @@ async function sync(
         "Root Application pruning requires an exact --revision so prune candidates can be verified against the rendered source",
       );
     }
-    const rootExpectedResourceIdentities = await assertRootPruneSafe(
-      token,
-      options.revision,
-    );
-    if (verifiedRootDesiredIdentities === undefined) {
-      expectedResourceIdentities = rootExpectedResourceIdentities;
+    if (options.recoverActiveRootPrune === true) {
+      // The initial prune preflight classifies live children before the
+      // operation starts. A recovery sees the post-prune tree, where a
+      // successful candidate is already absent; reclassifying it would demand
+      // a different result from the exact operation being recovered. The
+      // identity and full-source admission checks below still bind recovery to
+      // that preflighted operation, while every reported result must apply.
+      expectedResourceIdentities = { desired: new Set(), pruned: new Set() };
     } else {
-      for (const identity of verifiedRootDesiredIdentities) {
-        if (!rootExpectedResourceIdentities.desired.has(identity)) {
-          throw new Error(
-            `Verified root desired identity ${identity} is absent from the exact rendered revision`,
-          );
+      const rootExpectedResourceIdentities = await assertRootPruneSafe(
+        token,
+        options.revision,
+      );
+      if (verifiedRootDesiredIdentities === undefined) {
+        expectedResourceIdentities = rootExpectedResourceIdentities;
+      } else {
+        for (const identity of verifiedRootDesiredIdentities) {
+          if (!rootExpectedResourceIdentities.desired.has(identity)) {
+            throw new Error(
+              `Verified root desired identity ${identity} is absent from the exact rendered revision`,
+            );
+          }
         }
-      }
-      expectedResourceIdentities = {
-        desired: new Set(
-          [...rootExpectedResourceIdentities.desired].filter(
-            (identity) => !verifiedRootDesiredIdentities.has(identity),
+        expectedResourceIdentities = {
+          desired: new Set(
+            [...rootExpectedResourceIdentities.desired].filter(
+              (identity) => !verifiedRootDesiredIdentities.has(identity),
+            ),
           ),
-        ),
-        pruned: rootExpectedResourceIdentities.pruned,
-      };
+          pruned: rootExpectedResourceIdentities.pruned,
+        };
+      }
     }
   }
   if (

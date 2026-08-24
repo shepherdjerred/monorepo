@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, test } from "vitest";
+import { ApplicationIntegrationType, InteractionContextType } from "discord.js";
 import {
-  commandDefinitions,
+  baseCommandDefinitions,
+  globalCommandPayload,
   guildScopedCommandGroups,
 } from "#src/discord/commands/definitions.ts";
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
@@ -9,6 +11,7 @@ import { isPublicBbSubcommand } from "#src/discord/commands/bb.ts";
 import { bbCommand } from "#src/discord/commands/bb-definition.ts";
 
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
+const originalEnvironment = Bun.env["ENVIRONMENT"];
 
 afterEach(() => {
   if (originalAllowlist === undefined) {
@@ -16,12 +19,19 @@ afterEach(() => {
   } else {
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = originalAllowlist;
   }
+  if (originalEnvironment === undefined) {
+    delete Bun.env["ENVIRONMENT"];
+  } else {
+    Bun.env["ENVIRONMENT"] = originalEnvironment;
+  }
   resetConfigurationForTests();
 });
 
 describe("registered Discord commands", () => {
-  test("exposes only the web-first command surface globally", () => {
-    expect(commandDefinitions.map((command) => command.name)).toEqual([
+  test("keeps beta's global surface web-first", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    resetConfigurationForTests();
+    expect(globalCommandPayload().map((command) => command.name)).toEqual([
       "help",
       "setup",
       "status",
@@ -32,23 +42,41 @@ describe("registered Discord commands", () => {
     ]);
   });
 
-  test("keeps flag-gated commands out of the global surface", () => {
+  test("adds guild-only /scout to production's global surface", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+    const payload = globalCommandPayload();
+    expect(payload.map((command) => command.name)).toEqual([
+      "help",
+      "setup",
+      "status",
+      "invite",
+      "docs",
+      "track",
+      "list",
+      "scout",
+    ]);
+    expect(payload.find((command) => command.name === "scout")).toEqual(
+      expect.objectContaining({
+        contexts: [InteractionContextType.Guild],
+        integration_types: [ApplicationIntegrationType.GuildInstall],
+      }),
+    );
+  });
+
+  test("keeps beta-only commands out of the global surface", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
     // `bb` is registered per guild, so it must not leak into the global list —
     // that would put it in the picker of every guild Scout is in, where it
     // cannot do anything.
-    const globalNames = commandDefinitions.map((command) => command.name);
-    const guildScopedNames = guildScopedCommandGroups.flatMap((group) =>
-      group.payload.map((command) => command.name),
-    );
-
-    expect(guildScopedNames).toContain("bb");
-    expect(guildScopedNames).toContain("scout");
-    for (const name of guildScopedNames) {
-      expect(globalNames).not.toContain(name);
-    }
+    const globalNames = globalCommandPayload().map((command) => command.name);
+    expect(globalNames).not.toContain("bb");
+    expect(globalNames).not.toContain("lobby");
   });
 
   test("resolves flag and Explore guild scopes independently", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "100000000000000001";
     resetConfigurationForTests();
     expect(listGuildsWithFlagEnabled("betting_enabled").length).toBeGreaterThan(
@@ -88,6 +116,15 @@ describe("registered Discord commands", () => {
     );
   });
 
+  test("keeps global-only fields out of beta's guild /scout payload", () => {
+    const scout = guildScopedCommandGroups
+      .flatMap((group) => group.payload)
+      .find((command) => command.name === "scout");
+    const wirePayload = JSON.stringify(scout);
+    expect(wirePayload).not.toContain('"contexts"');
+    expect(wirePayload).not.toContain('"integration_types"');
+  });
+
   test("registers a bounded one-shot /bb ask subcommand that starts private", () => {
     const ask = bbCommand
       .toJSON()
@@ -110,7 +147,7 @@ describe("registered Discord commands", () => {
 
   test("does not register autocomplete options", () => {
     expect(
-      commandDefinitions.flatMap((command) =>
+      baseCommandDefinitions.flatMap((command) =>
         "options" in command ? command.options : [],
       ),
     ).not.toContainEqual(expect.objectContaining({ autocomplete: true }));
@@ -118,7 +155,7 @@ describe("registered Discord commands", () => {
 
   test("defines no redemption, donation, burn, or claim command", () => {
     const registered = [
-      ...commandDefinitions.map((command) => command.toJSON()),
+      ...baseCommandDefinitions.map((command) => command.toJSON()),
       ...guildScopedCommandGroups.flatMap((group) => group.payload),
     ];
     const serialized = JSON.stringify(registered).toLowerCase();

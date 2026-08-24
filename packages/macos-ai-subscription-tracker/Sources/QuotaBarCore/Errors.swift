@@ -14,6 +14,8 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
   case unsupportedResponse(ProviderID)
   case cacheCorrupt
   case cacheWriteFailed
+  case historyCorrupt
+  case historyWriteFailed
   case commandFailed(String)
   case settingsCorrupt
 
@@ -54,6 +56,10 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
       "The saved Brim cache is corrupt."
     case .cacheWriteFailed:
       "Brim could not save its latest successful usage data."
+    case .historyCorrupt:
+      "The saved Brim usage history is corrupt."
+    case .historyWriteFailed:
+      "Brim could not save usage history."
     case let .commandFailed(command):
       "Brim could not read local credentials with \(command)."
     case .settingsCorrupt:

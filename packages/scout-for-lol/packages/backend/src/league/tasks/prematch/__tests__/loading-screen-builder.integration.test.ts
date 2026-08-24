@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   RawCurrentGameInfoSchema,
   LoadingScreenDataSchema,
@@ -7,18 +7,25 @@ import {
   type Lane,
 } from "@scout-for-lol/data/index.ts";
 let rankFetchCount = 0;
+let rejectRankFetch = false;
 
 // Mock the rank fetcher to avoid real API calls in tests
 vi.doMock("#src/league/model/rank.ts", () => ({
   getRankByPuuid: async () => {
     rankFetchCount += 1;
+    if (rejectRankFetch) {
+      throw new Error("rank worker rejected");
+    }
     return {
-      solo: {
-        tier: "gold",
-        division: 2,
-        lp: 50,
-        wins: 100,
-        losses: 90,
+      status: "available",
+      ranks: {
+        solo: {
+          tier: "gold",
+          division: 2,
+          lp: 50,
+          wins: 100,
+          losses: 90,
+        },
       },
     };
   },
@@ -29,6 +36,10 @@ const { buildLoadingScreenData, fetchParticipantRanks } =
 
 const currentDir = new URL(".", import.meta.url).pathname;
 const realS3ClassicAramMayhemFixture = `${currentDir}testdata/spectator-classic-aram-mayhem-s3.json`;
+
+beforeEach(() => {
+  rejectRankFetch = false;
+});
 
 async function loadSpectatorPayload(path: string) {
   const file = Bun.file(path);
@@ -100,10 +111,16 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     expect(blueTeam).toHaveLength(5);
     expect(redTeam).toHaveLength(5);
     const expectedLanes: Lane[] = ["adc", "jungle", "middle", "support", "top"];
-    expect(blueTeam.map((p) => p.lane).toSorted()).toEqual(
+    // `lane` is optional on the participant so a sub-five custom side can omit
+    // it; "MISSING" makes an absent lane fail this assertion loudly rather than
+    // comparing as undefined. A full five must always carry all five lanes.
+    const laneOf = (participant: {
+      lane?: Lane | undefined;
+    }): Lane | "MISSING" => participant.lane ?? "MISSING";
+    expect(blueTeam.map((p) => laneOf(p)).toSorted()).toEqual(
       expectedLanes.toSorted(),
     );
-    expect(redTeam.map((p) => p.lane).toSorted()).toEqual(
+    expect(redTeam.map((p) => laneOf(p)).toSorted()).toEqual(
       expectedLanes.toSorted(),
     );
 
@@ -131,16 +148,58 @@ describe("buildLoadingScreenData with real spectator payload", () => {
       `${currentDir}testdata/spectator-ranked-flex.json`,
     );
     const before = rankFetchCount;
+    const prefetchedRanks = new Map(
+      gameInfo.participants.flatMap((participant) =>
+        participant.puuid === null
+          ? []
+          : [
+              [
+                participant.puuid,
+                { status: "available" as const, ranks: {} },
+              ] as const,
+            ],
+      ),
+    );
 
     const result = await buildLoadingScreenData(
       gameInfo,
       new Set(),
       "AMERICA_NORTH",
-      new Map(),
+      prefetchedRanks,
     );
 
     expect(result.layout).toBe("standard");
     expect(rankFetchCount).toBe(before);
+  });
+
+  test("treats a missing prefetched result as a contract violation", async () => {
+    const gameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    await expect(
+      buildLoadingScreenData(gameInfo, new Set(), "AMERICA_NORTH", new Map()),
+    ).rejects.toThrow("Missing rank lookup result");
+  });
+
+  test("converts rejected participant workers to explicit error results", async () => {
+    const gameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+    rejectRankFetch = true;
+
+    const ranksByPuuid = await fetchParticipantRanks(gameInfo, "AMERICA_NORTH");
+
+    expect(ranksByPuuid.size).toBe(
+      gameInfo.participants.filter((participant) => participant.puuid !== null)
+        .length,
+    );
+    expect([...ranksByPuuid.values()]).toEqual(
+      expect.arrayContaining([{ status: "error" }]),
+    );
+    expect(
+      [...ranksByPuuid.values()].every((result) => result.status === "error"),
+    ).toBe(true);
   });
 });
 
@@ -392,6 +451,53 @@ describe("buildLoadingScreenData standard and custom layouts", () => {
     const parsed = LoadingScreenDataSchema.parse(result);
     expect(parsed.queueType).toBe("custom");
     expect(parsed.layout).toBe("standard");
+  });
+});
+
+describe("buildLoadingScreenData custom rank integration", () => {
+  test("partial custom lobbies keep explicit rank states without invented lanes", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+    const participants = [
+      ...baseGameInfo.participants
+        .filter((participant) => participant.teamId === 100)
+        .slice(0, 3),
+      ...baseGameInfo.participants
+        .filter((participant) => participant.teamId === 200)
+        .slice(0, 3),
+    ];
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 3100,
+      gameMode: "CLASSIC",
+      bannedChampions: [],
+      participants,
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    expect(result.layout).toBe("standard");
+    if (result.layout !== "standard") {
+      throw new Error("Expected standard loading screen data");
+    }
+    expect(result.participants).toHaveLength(6);
+    expect(
+      result.participants.every(
+        (participant) => participant.lane === undefined,
+      ),
+    ).toBe(true);
+    expect(
+      result.participants.every((participant) =>
+        participant.puuid === null
+          ? participant.rankState.status === "hidden"
+          : participant.rankState.status === "available",
+      ),
+    ).toBe(true);
   });
 
   test("normal CLASSIC queues keep normal champion assets", async () => {
@@ -699,5 +805,40 @@ describe("buildLoadingScreenData with Arena spectator payloads", () => {
         (p) => typeof p.team !== "string" && p.team.arenaTeam === null,
       ),
     ).toBe(true);
+  });
+
+  test("assigns hidden rank state to privacy-scrubbed participants with null puuid", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      participants: baseGameInfo.participants.map((p, index) =>
+        index === 0 ? { ...p, puuid: null, riotId: "Aatrox" } : p,
+      ),
+    });
+
+    const rankFetchCountBefore = rankFetchCount;
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    expect(rankFetchCount - rankFetchCountBefore).toBe(
+      gameInfo.participants.filter((participant) => participant.puuid !== null)
+        .length,
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.layout).toBe("standard");
+    if (parsed.layout === "standard") {
+      const scrubbedParticipant = parsed.participants.find(
+        (p) => p.puuid === null,
+      );
+      expect(scrubbedParticipant).toBeDefined();
+      expect(scrubbedParticipant?.rankState).toEqual({ status: "hidden" });
+    }
   });
 });

@@ -28,6 +28,10 @@ import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
 import { describeParlayResult } from "#src/betting/parlay-bet-button.ts";
 import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
+import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly-parlay-criteria.ts";
+import { placeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet.ts";
+import { describeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet-button.ts";
+import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-refresh.ts";
 import { selectParlayMarketForAlias } from "#src/betting/parlay-market-selection.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
@@ -52,6 +56,7 @@ import {
   truncateEmbedFieldValue,
 } from "#src/discord/utils/message.ts";
 import { createLogger } from "#src/logger.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 const logger = createLogger("command-bb");
 
@@ -62,13 +67,13 @@ export function buildBbRulesEmbed(): EmbedBuilder {
 /**
  * `/bb` — the Bryan Bucks surface.
  *
- * `AGENTS.md` says Scout intentionally exposes only seven commands and pushes
- * management to the dashboard. This is a deliberate, narrow exception: the
- * feature is gated to a single guild by `betting_enabled`, and a balance you
- * cannot check from the same place you bet is not usable.
+ * Scout intentionally keeps management in the dashboard. This is a deliberate,
+ * narrow beta exception: the feature is gated to a single guild by
+ * `betting_enabled`, and a balance you cannot check from the same place you bet
+ * is not usable.
  *
- * That gate is per guild, not per environment, and the one guild it is on for
- * runs the beta bot — so this only ever answers in beta in practice.
+ * Production's hard-disable policy wins before the guild flag or Flipt, so the
+ * command never registers or answers there.
  *
  * The command is registered per guild rather than globally
  * (`guildScopedCommandGroups`), so it is invisible everywhere it would not
@@ -98,15 +103,15 @@ export function buildPersonalBucksEmbed(
     if (position.marketType === "outcome") {
       const amount =
         position.matchedStake === null
-          ? `offered up to ${position.offeredStake.toString()} BB · match pending`
-          : `matched ${position.matchedStake.toString()} BB · refunded ${(position.unmatchedStake ?? 0).toString()} BB`;
+          ? `offered up to ${formatInteger(position.offeredStake)} BB · match pending`
+          : `matched ${formatInteger(position.matchedStake)} BB · refunded ${formatInteger(position.unmatchedStake ?? 0)} BB`;
       return `• **${position.gameAlias} ${position.sideLabel}** — ${amount} · ${timing}`;
     }
-    return `• **${position.subjectAlias} ${position.side}** — ${position.stake.toString()} BB · ${timing}`;
+    return `• **${position.subjectAlias} ${position.side}** — ${formatInteger(position.stake)} BB · ${timing}`;
   });
   if (view.pendingPositionCount > view.pendingPositions.length) {
     positions.push(
-      `…and ${(view.pendingPositionCount - view.pendingPositions.length).toString()} more pending position(s).`,
+      `…and ${formatInteger(view.pendingPositionCount - view.pendingPositions.length)} more pending position(s).`,
     );
   }
 
@@ -116,12 +121,12 @@ export function buildPersonalBucksEmbed(
     .addFields(
       {
         name: "Available",
-        value: `**${view.balance.toString()} BB**`,
+        value: `**${formatInteger(view.balance)} BB**`,
         inline: true,
       },
       {
         name: "Reserved / at risk",
-        value: `**${view.totalAtRisk.toString()} BB**`,
+        value: `**${formatInteger(view.totalAtRisk)} BB**`,
         inline: true,
       },
     );
@@ -200,8 +205,29 @@ async function replyOpen(
     },
     orderBy: { closesAt: "asc" },
   });
+  const weeklyParlays = await prisma.bucksWeeklyParlayMarket.findMany({
+    where: {
+      serverId,
+      marketState: "open",
+      bettingClosesAt: { gt: new Date() },
+    },
+    select: {
+      id: true,
+      bettingClosesAt: true,
+      definition: { select: { subjects: true } },
+      bets: {
+        where: { betOutcome: "pending" },
+        select: { stake: true },
+      },
+    },
+    orderBy: { bettingClosesAt: "asc" },
+  });
 
-  if (pools.length === 0 && parlays.length === 0) {
+  if (
+    pools.length === 0 &&
+    parlays.length === 0 &&
+    weeklyParlays.length === 0
+  ) {
     await interaction.editReply({
       content: "Nothing open right now.",
     });
@@ -216,6 +242,19 @@ async function replyOpen(
     const closesAtUnix = Math.floor(parlay.closesAt.getTime() / 1000);
     sections.push(
       `**Parlay · ${aliases.join(", ")}** · closes <t:${closesAtUnix.toString()}:R> — \`/bb parlay player:${aliases[0] ?? ""}\``,
+    );
+  }
+  for (const parlay of weeklyParlays) {
+    const aliases = WeeklyParlaySubjectsSchema.parse(
+      JSON.parse(parlay.definition.subjects),
+    ).map((subject) => subject.alias);
+    const closesAtUnix = Math.floor(parlay.bettingClosesAt.getTime() / 1000);
+    const totalStaked = parlay.bets.reduce(
+      (total, bet) => total + bet.stake,
+      0,
+    );
+    sections.push(
+      `**Weekly parlay · ${aliases.join(", ")}** · ${parlay.bets.length.toString()} bettors · ${totalStaked.toString()} BB · closes <t:${closesAtUnix.toString()}:R> — use its message buttons`,
     );
   }
   await editReplyInChunks(
@@ -239,13 +278,48 @@ async function replyParlay(
       definition: { select: { subjects: true } },
     },
   });
+  const weeklyMarkets = await prisma.bucksWeeklyParlayMarket.findMany({
+    where: {
+      serverId,
+      marketState: "open",
+      bettingClosesAt: { gt: new Date() },
+    },
+    select: { id: true, definition: { select: { subjects: true } } },
+  });
+  const normalizedAlias = requestedAlias.trim().toLocaleLowerCase();
+  const matchingWeekly = weeklyMarkets.filter((market) =>
+    WeeklyParlaySubjectsSchema.parse(
+      JSON.parse(market.definition.subjects),
+    ).some((subject) => subject.alias.toLocaleLowerCase() === normalizedAlias),
+  );
   const selection = selectParlayMarketForAlias(markets, requestedAlias);
-  if (selection.kind === "ambiguous") {
+  if (
+    selection.kind === "ambiguous" ||
+    matchingWeekly.length > 1 ||
+    (selection.kind === "selected" && matchingWeekly.length > 0)
+  ) {
     await interaction.editReply({
       content:
-        `Multiple open parlays include **${requestedAlias}** (matches: ${selection.matchIds.map((matchId) => `\`${matchId}\``).join(", ")}). ` +
-        "Use the buttons on the desired parlay message.",
+        `Multiple open parlays include **${requestedAlias}**. ` +
+        "Use the buttons on the desired message so Scout can identify the market.",
     });
+    return;
+  }
+  const weekly = matchingWeekly[0];
+  if (weekly !== undefined && selection.kind === "not_found") {
+    const parsedSide = side === "YES" ? "YES" : "NO";
+    const result = await placeWeeklyParlayBet({
+      marketId: weekly.id,
+      serverId,
+      discordId,
+      side: parsedSide,
+      stake,
+      surface: "command",
+    });
+    await interaction.editReply({ content: describeWeeklyParlayBet(result) });
+    if (result.kind === "placed") {
+      await refreshWeeklyParlayMessage(weekly.id);
+    }
     return;
   }
   if (selection.kind === "not_found") {

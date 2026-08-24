@@ -11,6 +11,7 @@ import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS } from "#shared/scout-queue-windows-lookback.ts";
 import { installScoutWorkspace } from "./bot-clone.ts";
+import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
 import {
   BUCKET,
   QueueWindowsReportSchema,
@@ -291,7 +292,13 @@ export const scoutQueueWindowsActivities = {
       );
       const details = resultDetails(report, warningState);
 
-      const files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
+      let files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
+      await discardFormattingOnlyChanges({
+        repoDir,
+        changedFiles: files,
+        component: "scout-queue-windows",
+      });
+      files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
       if (files.length === 0) {
         // Fresh match evidence can invalidate a close proposal that is still
         // awaiting human review. Reconcile the shared branch's open PR before

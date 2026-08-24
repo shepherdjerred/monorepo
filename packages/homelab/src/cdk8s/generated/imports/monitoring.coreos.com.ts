@@ -10383,8 +10383,7 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalOpsGenieApiKey {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalOpsGenieApiKey(
   obj:
-    | AlertmanagerSpecAlertmanagerConfigurationGlobalOpsGenieApiKey
-    | undefined,
+    AlertmanagerSpecAlertmanagerConfigurationGlobalOpsGenieApiKey | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -10440,8 +10439,7 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalOpsGenieApiUrl {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalOpsGenieApiUrl(
   obj:
-    | AlertmanagerSpecAlertmanagerConfigurationGlobalOpsGenieApiUrl
-    | undefined,
+    AlertmanagerSpecAlertmanagerConfigurationGlobalOpsGenieApiUrl | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -16419,8 +16417,7 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2(
   obj:
-    | AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2
-    | undefined,
+    AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -16728,8 +16725,7 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalRocketChatToken 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalRocketChatToken(
   obj:
-    | AlertmanagerSpecAlertmanagerConfigurationGlobalRocketChatToken
-    | undefined,
+    AlertmanagerSpecAlertmanagerConfigurationGlobalRocketChatToken | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -16844,8 +16840,7 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpAuthPassword
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpAuthPassword(
   obj:
-    | AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpAuthPassword
-    | undefined,
+    AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpAuthPassword | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -16901,8 +16896,7 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpAuthSecret {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpAuthSecret(
   obj:
-    | AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpAuthSecret
-    | undefined,
+    AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpAuthSecret | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -17095,8 +17089,7 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalVictoropsApiKey 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalVictoropsApiKey(
   obj:
-    | AlertmanagerSpecAlertmanagerConfigurationGlobalVictoropsApiKey
-    | undefined,
+    AlertmanagerSpecAlertmanagerConfigurationGlobalVictoropsApiKey | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -17152,8 +17145,7 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalWechatApiSecret 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalWechatApiSecret(
   obj:
-    | AlertmanagerSpecAlertmanagerConfigurationGlobalWechatApiSecret
-    | undefined,
+    AlertmanagerSpecAlertmanagerConfigurationGlobalWechatApiSecret | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -19231,8 +19223,7 @@ export interface AlertmanagerSpecInitContainersLivenessProbeHttpGetHttpHeaders {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecInitContainersLivenessProbeHttpGetHttpHeaders(
   obj:
-    | AlertmanagerSpecInitContainersLivenessProbeHttpGetHttpHeaders
-    | undefined,
+    AlertmanagerSpecInitContainersLivenessProbeHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -19319,8 +19310,7 @@ export interface AlertmanagerSpecInitContainersReadinessProbeHttpGetHttpHeaders 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecInitContainersReadinessProbeHttpGetHttpHeaders(
   obj:
-    | AlertmanagerSpecInitContainersReadinessProbeHttpGetHttpHeaders
-    | undefined,
+    AlertmanagerSpecInitContainersReadinessProbeHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -22422,8 +22412,7 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsConfigCa 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsConfigCa(
   obj:
-    | AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsConfigCa
-    | undefined,
+    AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsConfigCa | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -22641,8 +22630,7 @@ export interface AlertmanagerSpecContainersLifecyclePostStartHttpGetHttpHeaders 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecContainersLifecyclePostStartHttpGetHttpHeaders(
   obj:
-    | AlertmanagerSpecContainersLifecyclePostStartHttpGetHttpHeaders
-    | undefined,
+    AlertmanagerSpecContainersLifecyclePostStartHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -23249,8 +23237,7 @@ export interface AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpecSelector
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpecSelector(
   obj:
-    | AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpecSelector
-    | undefined,
+    AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpecSelector | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -23651,8 +23638,7 @@ export interface AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpecSelector
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpecSelector(
   obj:
-    | AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpecSelector
-    | undefined,
+    AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpecSelector | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -25210,8 +25196,7 @@ export interface AlertmanagerSpecVolumesProjectedSourcesDownwardApiItemsFieldRef
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerSpecVolumesProjectedSourcesDownwardApiItemsFieldRef(
   obj:
-    | AlertmanagerSpecVolumesProjectedSourcesDownwardApiItemsFieldRef
-    | undefined,
+    AlertmanagerSpecVolumesProjectedSourcesDownwardApiItemsFieldRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -28596,8 +28581,7 @@ export interface AlertmanagerConfigSpecMuteTimeIntervalsTimeIntervalsDaysOfMonth
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecMuteTimeIntervalsTimeIntervalsDaysOfMonth(
   obj:
-    | AlertmanagerConfigSpecMuteTimeIntervalsTimeIntervalsDaysOfMonth
-    | undefined,
+    AlertmanagerConfigSpecMuteTimeIntervalsTimeIntervalsDaysOfMonth | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -33111,8 +33095,7 @@ export interface AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2 {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2(
   obj:
-    | AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2
-    | undefined,
+    AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -33470,8 +33453,7 @@ export interface AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigKeySecret {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigKeySecret(
   obj:
-    | AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigKeySecret
-    | undefined,
+    AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigKeySecret | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -33793,8 +33775,7 @@ export interface AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2 {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2(
   obj:
-    | AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2
-    | undefined,
+    AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -34272,8 +34253,7 @@ export interface AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2(
   obj:
-    | AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2
-    | undefined,
+    AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -34751,8 +34731,7 @@ export interface AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2(
   obj:
-    | AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2
-    | undefined,
+    AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -35250,8 +35229,7 @@ export interface AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2(
   obj:
-    | AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2
-    | undefined,
+    AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -35729,8 +35707,7 @@ export interface AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2(
   obj:
-    | AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2
-    | undefined,
+    AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -36566,8 +36543,7 @@ export interface AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigBasicAuth 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigBasicAuth(
   obj:
-    | AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigBasicAuth
-    | undefined,
+    AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigBasicAuth | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -36930,8 +36906,7 @@ export interface AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsConfig 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsConfig(
   obj:
-    | AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsConfig
-    | undefined,
+    AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsConfig | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -37813,8 +37788,7 @@ export interface AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2(
   obj:
-    | AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2
-    | undefined,
+    AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -38292,8 +38266,7 @@ export interface AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2(
   obj:
-    | AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2
-    | undefined,
+    AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -38586,8 +38559,7 @@ export interface AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigBasicAuth 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigBasicAuth(
   obj:
-    | AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigBasicAuth
-    | undefined,
+    AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigBasicAuth | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -38950,8 +38922,7 @@ export interface AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsConfig 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsConfig(
   obj:
-    | AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsConfig
-    | undefined,
+    AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsConfig | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -39248,8 +39219,7 @@ export interface AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2 {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2(
   obj:
-    | AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2
-    | undefined,
+    AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2 | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -39542,8 +39512,7 @@ export interface AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigBasicAuth
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigBasicAuth(
   obj:
-    | AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigBasicAuth
-    | undefined,
+    AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigBasicAuth | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -39906,8 +39875,7 @@ export interface AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTlsConfig
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTlsConfig(
   obj:
-    | AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTlsConfig
-    | undefined,
+    AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTlsConfig | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -40606,8 +40574,7 @@ export interface AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCaConfigMap
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCaConfigMap(
   obj:
-    | AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCaConfigMap
-    | undefined,
+    AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCaConfigMap | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -40775,8 +40742,7 @@ export interface AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCertSecret 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCertSecret(
   obj:
-    | AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCertSecret
-    | undefined,
+    AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCertSecret | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -45682,8 +45648,7 @@ export interface AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsConfigCa 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsConfigCa(
   obj:
-    | AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsConfigCa
-    | undefined,
+    AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsConfigCa | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -62747,8 +62712,7 @@ export interface PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigCertConfigMap {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigCertConfigMap(
   obj:
-    | PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigCertConfigMap
-    | undefined,
+    PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigCertConfigMap | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -78691,8 +78655,7 @@ export interface PrometheusSpecServiceMonitorNamespaceSelectorMatchExpressions {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusSpecServiceMonitorNamespaceSelectorMatchExpressions(
   obj:
-    | PrometheusSpecServiceMonitorNamespaceSelectorMatchExpressions
-    | undefined,
+    PrometheusSpecServiceMonitorNamespaceSelectorMatchExpressions | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -97991,8 +97954,7 @@ export interface PrometheusSpecInitContainersLifecyclePreStopHttpGetHttpHeaders 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusSpecInitContainersLifecyclePreStopHttpGetHttpHeaders(
   obj:
-    | PrometheusSpecInitContainersLifecyclePreStopHttpGetHttpHeaders
-    | undefined,
+    PrometheusSpecInitContainersLifecyclePreStopHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -98534,8 +98496,7 @@ export interface PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecDataSource
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecDataSource(
   obj:
-    | PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecDataSource
-    | undefined,
+    PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecDataSource | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -98683,8 +98644,7 @@ export interface PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecResources 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecResources(
   obj:
-    | PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecResources
-    | undefined,
+    PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecResources | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -98742,8 +98702,7 @@ export interface PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecSelector {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecSelector(
   obj:
-    | PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecSelector
-    | undefined,
+    PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecSelector | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -98936,8 +98895,7 @@ export interface PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource(
   obj:
-    | PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource
-    | undefined,
+    PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -99085,8 +99043,7 @@ export interface PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecResources 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecResources(
   obj:
-    | PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecResources
-    | undefined,
+    PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecResources | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -99144,8 +99101,7 @@ export interface PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecSelector {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecSelector(
   obj:
-    | PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecSelector
-    | undefined,
+    PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecSelector | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -99938,8 +99894,7 @@ export interface PrometheusSpecVolumesProjectedSourcesDownwardApiItemsFieldRef {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusSpecVolumesProjectedSourcesDownwardApiItemsFieldRef(
   obj:
-    | PrometheusSpecVolumesProjectedSourcesDownwardApiItemsFieldRef
-    | undefined,
+    PrometheusSpecVolumesProjectedSourcesDownwardApiItemsFieldRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -108644,8 +108599,7 @@ export interface PrometheusAgentSpecPodMonitorNamespaceSelectorMatchExpressions 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecPodMonitorNamespaceSelectorMatchExpressions(
   obj:
-    | PrometheusAgentSpecPodMonitorNamespaceSelectorMatchExpressions
-    | undefined,
+    PrometheusAgentSpecPodMonitorNamespaceSelectorMatchExpressions | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -116773,8 +116727,7 @@ export interface PrometheusAgentSpecInitContainersSecurityContextAppArmorProfile
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecInitContainersSecurityContextAppArmorProfile(
   obj:
-    | PrometheusAgentSpecInitContainersSecurityContextAppArmorProfile
-    | undefined,
+    PrometheusAgentSpecInitContainersSecurityContextAppArmorProfile | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -116882,8 +116835,7 @@ export interface PrometheusAgentSpecInitContainersSecurityContextSeLinuxOptions 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecInitContainersSecurityContextSeLinuxOptions(
   obj:
-    | PrometheusAgentSpecInitContainersSecurityContextSeLinuxOptions
-    | undefined,
+    PrometheusAgentSpecInitContainersSecurityContextSeLinuxOptions | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -116940,8 +116892,7 @@ export interface PrometheusAgentSpecInitContainersSecurityContextSeccompProfile 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecInitContainersSecurityContextSeccompProfile(
   obj:
-    | PrometheusAgentSpecInitContainersSecurityContextSeccompProfile
-    | undefined,
+    PrometheusAgentSpecInitContainersSecurityContextSeccompProfile | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -117011,8 +116962,7 @@ export interface PrometheusAgentSpecInitContainersSecurityContextWindowsOptions 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecInitContainersSecurityContextWindowsOptions(
   obj:
-    | PrometheusAgentSpecInitContainersSecurityContextWindowsOptions
-    | undefined,
+    PrometheusAgentSpecInitContainersSecurityContextWindowsOptions | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -121821,8 +121771,7 @@ export interface PrometheusAgentSpecContainersReadinessProbeHttpGetHttpHeaders {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecContainersReadinessProbeHttpGetHttpHeaders(
   obj:
-    | PrometheusAgentSpecContainersReadinessProbeHttpGetHttpHeaders
-    | undefined,
+    PrometheusAgentSpecContainersReadinessProbeHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -122170,8 +122119,7 @@ export interface PrometheusAgentSpecInitContainersEnvValueFromResourceFieldRef {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecInitContainersEnvValueFromResourceFieldRef(
   obj:
-    | PrometheusAgentSpecInitContainersEnvValueFromResourceFieldRef
-    | undefined,
+    PrometheusAgentSpecInitContainersEnvValueFromResourceFieldRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -122854,8 +122802,7 @@ export interface PrometheusAgentSpecInitContainersStartupProbeHttpGetHttpHeaders
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecInitContainersStartupProbeHttpGetHttpHeaders(
   obj:
-    | PrometheusAgentSpecInitContainersStartupProbeHttpGetHttpHeaders
-    | undefined,
+    PrometheusAgentSpecInitContainersStartupProbeHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -123995,8 +123942,7 @@ export interface PrometheusAgentSpecStorageVolumeClaimTemplateSpecDataSourceRef 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecStorageVolumeClaimTemplateSpecDataSourceRef(
   obj:
-    | PrometheusAgentSpecStorageVolumeClaimTemplateSpecDataSourceRef
-    | undefined,
+    PrometheusAgentSpecStorageVolumeClaimTemplateSpecDataSourceRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -124243,8 +124189,7 @@ export interface PrometheusAgentSpecStorageVolumeClaimTemplateStatusConditions {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatusConditions(
   obj:
-    | PrometheusAgentSpecStorageVolumeClaimTemplateStatusConditions
-    | undefined,
+    PrometheusAgentSpecStorageVolumeClaimTemplateStatusConditions | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -125266,8 +125211,7 @@ export interface PrometheusAgentSpecVolumesProjectedSourcesServiceAccountToken {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecVolumesProjectedSourcesServiceAccountToken(
   obj:
-    | PrometheusAgentSpecVolumesProjectedSourcesServiceAccountToken
-    | undefined,
+    PrometheusAgentSpecVolumesProjectedSourcesServiceAccountToken | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -126384,8 +126328,7 @@ export interface PrometheusAgentSpecContainersLifecyclePreStopHttpGetHttpHeaders
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_PrometheusAgentSpecContainersLifecyclePreStopHttpGetHttpHeaders(
   obj:
-    | PrometheusAgentSpecContainersLifecyclePreStopHttpGetHttpHeaders
-    | undefined,
+    PrometheusAgentSpecContainersLifecyclePreStopHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -140606,8 +140549,7 @@ export interface ScrapeConfigSpecOpenstackSdConfigsApplicationCredentialSecret {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecOpenstackSdConfigsApplicationCredentialSecret(
   obj:
-    | ScrapeConfigSpecOpenstackSdConfigsApplicationCredentialSecret
-    | undefined,
+    ScrapeConfigSpecOpenstackSdConfigsApplicationCredentialSecret | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -142980,8 +142922,7 @@ export interface ScrapeConfigSpecDigitalOceanSdConfigsAuthorizationCredentials {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecDigitalOceanSdConfigsAuthorizationCredentials(
   obj:
-    | ScrapeConfigSpecDigitalOceanSdConfigsAuthorizationCredentials
-    | undefined,
+    ScrapeConfigSpecDigitalOceanSdConfigsAuthorizationCredentials | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -143142,8 +143083,7 @@ export interface ScrapeConfigSpecDigitalOceanSdConfigsOauth2ProxyConnectHeader {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecDigitalOceanSdConfigsOauth2ProxyConnectHeader(
   obj:
-    | ScrapeConfigSpecDigitalOceanSdConfigsOauth2ProxyConnectHeader
-    | undefined,
+    ScrapeConfigSpecDigitalOceanSdConfigsOauth2ProxyConnectHeader | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -152780,8 +152720,7 @@ export interface ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigKeySecret {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigKeySecret(
   obj:
-    | ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigKeySecret
-    | undefined,
+    ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigKeySecret | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -160609,8 +160548,7 @@ export interface ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCaConfigMap
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCaConfigMap(
   obj:
-    | ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCaConfigMap
-    | undefined,
+    ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCaConfigMap | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -160778,8 +160716,7 @@ export interface ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCertSecret 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCertSecret(
   obj:
-    | ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCertSecret
-    | undefined,
+    ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCertSecret | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -161055,8 +160992,7 @@ export interface ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCaConfigMap 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCaConfigMap(
   obj:
-    | ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCaConfigMap
-    | undefined,
+    ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCaConfigMap | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -161224,8 +161160,7 @@ export interface ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCertSecret {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCertSecret(
   obj:
-    | ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCertSecret
-    | undefined,
+    ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCertSecret | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -162161,8 +162096,7 @@ export interface ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCaConfigMap {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCaConfigMap(
   obj:
-    | ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCaConfigMap
-    | undefined,
+    ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCaConfigMap | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -162273,8 +162207,7 @@ export interface ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCertConfigMap
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCertConfigMap(
   obj:
-    | ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCertConfigMap
-    | undefined,
+    ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCertConfigMap | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -162715,8 +162648,7 @@ export interface ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCertConfigMap 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCertConfigMap(
   obj:
-    | ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCertConfigMap
-    | undefined,
+    ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCertConfigMap | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -163377,8 +163309,7 @@ export interface ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigCertConfigMap {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigCertConfigMap(
   obj:
-    | ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigCertConfigMap
-    | undefined,
+    ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigCertConfigMap | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -185665,8 +185596,7 @@ export interface ThanosRulerSpecInitContainersReadinessProbeHttpGetHttpHeaders {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ThanosRulerSpecInitContainersReadinessProbeHttpGetHttpHeaders(
   obj:
-    | ThanosRulerSpecInitContainersReadinessProbeHttpGetHttpHeaders
-    | undefined,
+    ThanosRulerSpecInitContainersReadinessProbeHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -188728,8 +188658,7 @@ export interface ThanosRulerSpecContainersLifecyclePostStartHttpGetHttpHeaders {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ThanosRulerSpecContainersLifecyclePostStartHttpGetHttpHeaders(
   obj:
-    | ThanosRulerSpecContainersLifecyclePostStartHttpGetHttpHeaders
-    | undefined,
+    ThanosRulerSpecContainersLifecyclePostStartHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -189021,8 +188950,7 @@ export interface ThanosRulerSpecInitContainersLifecyclePreStopHttpGetHttpHeaders
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ThanosRulerSpecInitContainersLifecyclePreStopHttpGetHttpHeaders(
   obj:
-    | ThanosRulerSpecInitContainersLifecyclePreStopHttpGetHttpHeaders
-    | undefined,
+    ThanosRulerSpecInitContainersLifecyclePreStopHttpGetHttpHeaders | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -189497,8 +189425,7 @@ export interface ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecResources
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecResources(
   obj:
-    | ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecResources
-    | undefined,
+    ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecResources | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -189556,8 +189483,7 @@ export interface ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecSelector 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecSelector(
   obj:
-    | ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecSelector
-    | undefined,
+    ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecSelector | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -189899,8 +189825,7 @@ export interface ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecResources
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecResources(
   obj:
-    | ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecResources
-    | undefined,
+    ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecResources | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -189958,8 +189883,7 @@ export interface ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecSelector 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecSelector(
   obj:
-    | ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecSelector
-    | undefined,
+    ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecSelector | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -190752,8 +190676,7 @@ export interface ThanosRulerSpecVolumesProjectedSourcesDownwardApiItemsFieldRef 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ThanosRulerSpecVolumesProjectedSourcesDownwardApiItemsFieldRef(
   obj:
-    | ThanosRulerSpecVolumesProjectedSourcesDownwardApiItemsFieldRef
-    | undefined,
+    ThanosRulerSpecVolumesProjectedSourcesDownwardApiItemsFieldRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;

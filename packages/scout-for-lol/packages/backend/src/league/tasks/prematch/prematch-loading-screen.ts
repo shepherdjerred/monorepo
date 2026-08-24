@@ -9,8 +9,8 @@ import * as Sentry from "@sentry/bun";
 import {
   RecoverableLoadingScreenDataError,
   UnsupportedLoadingScreenQueueError,
-  buildLoadingScreenData,
-} from "#src/league/tasks/prematch/loading-screen-builder.ts";
+} from "#src/league/tasks/prematch/loading-screen-errors.ts";
+import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
 import {
   loadingScreenToImage,
   loadingScreenToSvg,

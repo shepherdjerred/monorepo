@@ -165,6 +165,41 @@ common:
                   readOnly: true
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
+  # The Codex fallback authenticates with its refreshable ChatGPT auth bundle,
+  # never an extracted access token. This private claim is absent from the
+  # default agent-stack pod volumes and appears only in this main-only lane.
+  - pod_release_codex_auth: &pod_release_codex_auth
+      kubernetes: &pod_release_codex_auth_kubernetes
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          volumes:
+            - name: buildkite-codex-auth
+              persistentVolumeClaim:
+                claimName: buildkite-codex-auth
+          containers:
+            - *checkout_container
+            - name: container-0
+              image: "${CI_BASE_IMAGE}"
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
+                - name: CODEX_HOME
+                  value: /buildkite/codex-auth
+              resources:
+                requests:
+                  { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
+                limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
+              volumeMounts:
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
+                - name: buildkite-codex-auth
+                  mountPath: /buildkite/codex-auth
+              envFrom:
+                - secretRef: { name: buildkite-ci-secrets }
   # OpenTofu's provider cache is shared across the selected CI jobs on Liskov.
   # Those commands use `flock` around Terraform itself: OpenTofu explicitly
   # does not guarantee concurrent writes to TF_PLUGIN_CACHE_DIR are safe.
@@ -358,7 +393,7 @@ steps:
         - "packages/eslint-config/**"
     cancel_on_build_failing: true
     command: |
-      . .buildkite/scripts/toolchain.sh
+      MISE_TOOLCHAIN_SCOPE=runtime . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'
       export DATABASE_URL='file:/tmp/alert-dashboard.db'
       bun --no-install run --cwd packages/alert-dashboard generate
@@ -409,6 +444,7 @@ steps:
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
         - ".buildkite/scripts/read-buildkite-handoff.ts"
         - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/toolchain.sh"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/ci-playwright/**"
         - "bun.lock"
@@ -442,6 +478,7 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
+      MISE_TOOLCHAIN_SCOPE=postgres . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
       bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
       bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
@@ -500,6 +537,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
+      MISE_TOOLCHAIN_SCOPE=postgres . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
       bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
       bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
@@ -1146,6 +1184,7 @@ steps:
         - ".buildkite/scripts/select-image-targets.ts"
         - ".buildkite/scripts/select-image-targets-lockfile.ts"
         - ".buildkite/scripts/select-image-targets-workspaces.ts"
+        - ".buildkite/scripts/smoke-app-configs.ts"
         - ".buildkite/scripts/smoke-app-in-image.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/validate-image-migration.ts"
@@ -1281,6 +1320,7 @@ steps:
         - ".buildkite/scripts/select-image-targets.ts"
         - ".buildkite/scripts/select-image-targets-lockfile.ts"
         - ".buildkite/scripts/select-image-targets-workspaces.ts"
+        - ".buildkite/scripts/smoke-app-configs.ts"
         - ".buildkite/scripts/smoke-app-in-image.ts"
         - ".buildkite/scripts/toolchain.sh"
         - ".buildkite/scripts/upload-pipeline.sh"
@@ -1886,7 +1926,7 @@ steps:
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_light_kubernetes
+          <<: *pod_release_codex_auth_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: release-please

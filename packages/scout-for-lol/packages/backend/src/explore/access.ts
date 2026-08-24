@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import type { User } from "#generated/prisma/client/index.js";
+import type { Environment } from "#src/configuration.ts";
 import configuration from "#src/configuration.ts";
 import {
   exploreGuildAllowlist,
@@ -10,14 +11,10 @@ import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 /**
  * Access control for explore.
  *
- * Explore reads every match Scout has ingested, so it is not gated by a
- * permission on any single server — there is no server whose admins should
- * decide who may query the whole lake. Access is an operator-managed
- * allowlist of Discord servers: sign in, and be a member of one of them.
- *
- * The allowlist being empty denies everyone. It is the entire gate for this
- * surface, so a deploy that forgot to set `EXPLORE_GUILD_ALLOWLIST` must fail
- * closed rather than open the lake to every signed-in user.
+ * Explore reads every match Scout has ingested, so server administrators do
+ * not grant access to the lake. Beta uses an operator-managed guild allowlist.
+ * Production admits signed-in users who share at least one guild with the
+ * production bot.
  */
 
 export function exploreAllowlist(): string[] {
@@ -36,12 +33,53 @@ export function exploreAllowlist(): string[] {
 }
 
 export function isExploreConfigured(): boolean {
-  return exploreAllowlist().length > 0;
+  return configuration.environment === "prod" || exploreAllowlist().length > 0;
 }
 
 /** Whether Discord Explore is enabled in this exact guild right now. */
 export function isExploreGuildAllowed(guildId: string): boolean {
-  return exploreAllowlist().includes(guildId);
+  return (
+    configuration.environment === "prod" || exploreAllowlist().includes(guildId)
+  );
+}
+
+/** Guilds that receive beta's guild-scoped `/scout` registration. */
+export function exploreGuildCommandGuildIds(): string[] {
+  return configuration.environment === "prod" ? [] : exploreAllowlist();
+}
+
+export function eligibleExploreGuildIds(
+  allowedGuildIds: Iterable<string>,
+  userGuildIds: string[],
+): string[] {
+  const allowed = new Set(allowedGuildIds);
+  return userGuildIds.filter((guildId) => allowed.has(guildId));
+}
+
+export type ExploreAccessResult =
+  | { kind: "allowed"; guildIds: string[] }
+  | { kind: "forbidden" }
+  | { kind: "unavailable" };
+
+export function resolveExploreAccess(
+  environment: Environment,
+  allowlist: string[],
+  userGuildIds: string[],
+  connectedGuildIds: Iterable<string> | undefined,
+): ExploreAccessResult {
+  let allowedGuildIds: Iterable<string>;
+  if (environment === "prod") {
+    if (connectedGuildIds === undefined) {
+      return { kind: "unavailable" };
+    }
+    allowedGuildIds = connectedGuildIds;
+  } else {
+    allowedGuildIds = allowlist;
+  }
+  const guildIds = eligibleExploreGuildIds(allowedGuildIds, userGuildIds);
+  return guildIds.length === 0
+    ? { kind: "forbidden" }
+    : { kind: "allowed", guildIds };
 }
 
 /**
@@ -55,14 +93,12 @@ export function isExploreAllowed(
   allowlist: string[],
   userGuildIds: string[],
 ): boolean {
-  if (allowlist.length === 0) {
-    return false;
-  }
-  return userGuildIds.some((guildId) => allowlist.includes(guildId));
+  return eligibleExploreGuildIds(allowlist, userGuildIds).length > 0;
 }
 
 /**
- * Throws unless the user belongs to at least one allowlisted server.
+ * Throws unless the user belongs to at least one eligible server for this
+ * stage.
  *
  * A Discord outage propagates as UNAUTHORIZED or SERVICE_UNAVAILABLE from
  * `fetchUserGuildsForRequest` rather than being caught here: not knowing
@@ -70,15 +106,16 @@ export function isExploreAllowed(
  * answering FORBIDDEN would tell them something untrue.
  */
 /**
- * The asker's servers, which double as the scope for alias resolution.
+ * The asker's eligible servers, which double as the scope for alias resolution.
  *
  * Returned rather than discarded: `player('…')` resolves a Scout alias from
  * the accounts dimension, which is per-server data, so it must answer only for
- * servers this person actually belongs to.
+ * servers this person actually belongs to and may use for this stage.
  */
 export async function assertExploreAccess(user: User): Promise<string[]> {
   const allowlist = exploreAllowlist();
-  if (allowlist.length === 0) {
+  const production = configuration.environment === "prod";
+  if (!production && allowlist.length === 0) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Explore is not enabled.",
@@ -87,11 +124,31 @@ export async function assertExploreAccess(user: User): Promise<string[]> {
 
   const guilds = await fetchUserGuildsForRequest(user);
   const guildIds = guilds.map((guild) => guild.id);
-  if (!isExploreAllowed(allowlist, guildIds)) {
+  let connectedGuildIds: Iterable<string> | undefined;
+  if (production) {
+    const { getConnectedServerIds } =
+      await import("#src/discord/utils/guild-membership.ts");
+    connectedGuildIds = getConnectedServerIds();
+  }
+  const access = resolveExploreAccess(
+    configuration.environment,
+    allowlist,
+    guildIds,
+    connectedGuildIds,
+  );
+  if (access.kind === "unavailable") {
     throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Explore is currently limited to a few servers.",
+      code: "SERVICE_UNAVAILABLE",
+      message: "Scout could not verify its connected servers.",
     });
   }
-  return guildIds;
+  if (access.kind === "forbidden") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: production
+        ? "Join a server that uses Scout to access Explore."
+        : "Explore is currently limited to a few servers.",
+    });
+  }
+  return access.guildIds;
 }

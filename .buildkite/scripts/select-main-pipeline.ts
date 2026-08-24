@@ -347,7 +347,15 @@ export function renderSteps(
   const rendered: PipelineStep[] = [];
   for (const [key, original] of steps) {
     if (!selected.has(key)) continue;
-    let step = withDependency(original, "ci-selector-base");
+    // `ALWAYS_SELECTED` gates are part of every main build. Keeping their
+    // native `if_changed` filter would ask Buildkite to omit a required job;
+    // Buildkite reports that condition as broken rather than a satisfied
+    // dependency. Optional lanes are still selected from the same diff and
+    // retain their native filters below.
+    const source = ALWAYS_SELECTED.has(key)
+      ? withoutNativeChangedFiles(original)
+      : original;
+    let step = withDependency(source, "ci-selector-base");
     if (key === "build-summary") {
       const summaryDependencies = dependencyKeys(original).filter(
         (dependency) => selected.has(dependency),

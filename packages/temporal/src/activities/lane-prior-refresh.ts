@@ -26,7 +26,10 @@ import {
 import { parseGitStatusLine, type GitStatusEntry } from "./data-dragon-diff.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import { disarmGitHooks, installScoutWorkspace } from "./bot-clone.ts";
-import { runScoutGeneratedPreflight } from "./scout-generated-preflight.ts";
+import {
+  discardFormattingOnlyChanges,
+  runScoutGeneratedPreflight,
+} from "./scout-generated-preflight.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
@@ -182,6 +185,12 @@ export const lanePriorActivities = {
       }
 
       let files = await changedLanePriorFiles(repoDir);
+      await discardFormattingOnlyChanges({
+        repoDir,
+        changedFiles: files,
+        component: "scout-lane-prior-refresh",
+      });
+      files = await changedLanePriorFiles(repoDir);
       if (files.length === 0) {
         return {
           changedFiles: [],
@@ -200,6 +209,17 @@ export const lanePriorActivities = {
         runCommand,
       });
       files = await changedLanePriorFiles(repoDir);
+      if (files.length === 0) {
+        return {
+          changedFiles: [],
+          contentHash: undefined,
+          branchName: undefined,
+          commitHash: undefined,
+          prUrl: undefined,
+          outcome: "skipped",
+          reason: "no-diff",
+        };
+      }
       const contentHash = await lanePriorContentHash(repoDir);
       const branch = lanePriorBranchName(contentHash);
       const title = lanePriorPrTitle();

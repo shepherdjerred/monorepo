@@ -12,6 +12,7 @@ import {
   type OutcomeFraming,
 } from "#src/betting/team.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 type OpenBettingPool = {
   matchId: string;
@@ -109,7 +110,7 @@ export function buildOpenMarketSections(
     const sides = sideEntries
       .map(
         (entry) =>
-          `${outcomeLabel(entry.teamId, framing)} **${entry.side.totalStake.toString()} BB** (${entry.side.betCount.toString()})`,
+          `${outcomeLabel(entry.teamId, framing)} **${formatInteger(entry.side.totalStake)} BB** (${formatInteger(entry.side.betCount)})`,
       )
       .join(" · ");
     const selector =

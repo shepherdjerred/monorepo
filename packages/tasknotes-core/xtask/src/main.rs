@@ -40,8 +40,8 @@ OPTIONS:
                         One of: macos, ios, ios-sim
 
 NOTES:
-    generate-bindings and check-bindings run on any host, Linux included, and
-    require the mise-pinned uniffi-bindgen-cs tool.
+    generate-bindings and check-bindings run on any host, Linux included. They
+    build the source-controlled, pinned C# UniFFI generator retarget.
     build-xcframework and verify-swift require macOS.
     check-xcframework only compares timestamps, so it runs anywhere — but it
     can only pass where build-xcframework has run.

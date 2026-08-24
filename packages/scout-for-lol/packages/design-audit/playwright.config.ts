@@ -1,6 +1,10 @@
 import { defineConfig, devices, type Project } from "@playwright/test";
 import { env } from "node:process";
-import { viewports } from "./src/constants.ts";
+import {
+  auditProjectGrep,
+  auditProjects,
+  auditViewport,
+} from "./src/matrix.ts";
 
 const mode = env["SCOUT_DESIGN_AUDIT_MODE"];
 if (mode !== undefined && mode !== "pr" && mode !== "nightly") {
@@ -8,6 +12,13 @@ if (mode !== undefined && mode !== "pr" && mode !== "nightly") {
     `SCOUT_DESIGN_AUDIT_MODE must be pr or nightly, received ${mode}`,
   );
 }
+const ciShard = env["SCOUT_DESIGN_AUDIT_SHARD"];
+if (ciShard !== undefined && !/^(?:[1-9]|1[0-6])$/.test(ciShard)) {
+  throw new Error(
+    `SCOUT_DESIGN_AUDIT_SHARD must be an integer from 1 through 16, received ${ciShard}`,
+  );
+}
+const ciShardSuffix = ciShard === undefined ? "" : `-shard-${ciShard}`;
 const isNightly = mode === "nightly";
 const startLocalServers =
   env["SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS"] === "true";
@@ -27,12 +38,6 @@ if (
     "Nightly Scout design checks require SCOUT_DESIGN_AUDIT_BASE_URL or all three of SCOUT_DESIGN_AUDIT_PUBLIC_URL, SCOUT_DESIGN_AUDIT_DOCS_URL, and SCOUT_DESIGN_AUDIT_APP_URL",
   );
 }
-// Chrome and Safari are the browsers that matter for this product. Firefox was
-// dropped deliberately: it added a third of the matrix for a rendering engine
-// nobody targets. The suite runs nightly rather than per-commit, so both
-// browsers run every time and there is no mode branch here.
-const browsers = ["chromium", "webkit"] as const;
-
 // `dev:design-audit` (scripts/dev-web.ts) boots the real Scout backend, which
 // normally requires real DISCORD_TOKEN/DISCORD_CLIENT_SECRET/
 // JWT_SIGNING_SECRET/RIOT_API_KEY (and a live Discord login). The design
@@ -44,29 +49,29 @@ const devDesignAuditCommand =
   "SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true bun --no-install run dev:design-audit -- --no-discord-gateway";
 
 const projects: Project[] = [];
-for (const browser of browsers) {
-  for (const viewport of viewports) {
-    // Safari is exercised through the iPhone/Desktop Safari device profiles and
-    // Chrome through the Galaxy/Desktop Chrome ones, so each viewport gets a
-    // realistic UA and touch profile rather than a resized desktop.
-    const device =
-      browser === "webkit"
-        ? viewport.isMobile
-          ? devices["iPhone 13"]
-          : devices["Desktop Safari"]
-        : viewport.isMobile
-          ? devices["Galaxy S9+"]
-          : devices["Desktop Chrome"];
-    projects.push({
-      name: `${browser}-${viewport.name}`,
-      use: {
-        ...device,
-        browserName: browser,
-        isMobile: viewport.isMobile,
-        viewport: { width: viewport.width, height: viewport.height },
-      },
-    });
-  }
+for (const project of auditProjects) {
+  const viewport = auditViewport(project);
+  // WebKit uses the iPhone/Desktop Safari device profiles and Chromium uses
+  // the Galaxy/Desktop Chrome ones, so each viewport gets a realistic UA and
+  // touch profile rather than a resized desktop.
+  const device =
+    project.browser === "webkit"
+      ? viewport.isMobile
+        ? devices["iPhone 13"]
+        : devices["Desktop Safari"]
+      : viewport.isMobile
+        ? devices["Galaxy S9+"]
+        : devices["Desktop Chrome"];
+  projects.push({
+    name: project.name,
+    grep: auditProjectGrep(project),
+    use: {
+      ...device,
+      browserName: project.browser,
+      isMobile: viewport.isMobile,
+      viewport: { width: viewport.width, height: viewport.height },
+    },
+  });
 }
 
 export default defineConfig({
@@ -81,7 +86,10 @@ export default defineConfig({
   },
   forbidOnly: env["CI"] === "true",
   fullyParallel: true,
-  ...(env["CI"] === "true" ? { workers: 3 } : {}),
+  // Parallel browser contexts plus the backend, SPA, and two Astro servers
+  // exceeded the nightly pod's memory boundary even at two workers. One worker
+  // keeps the complete 616-case matrix inside the reviewed 16 GiB limit.
+  ...(env["CI"] === "true" ? { workers: 1 } : {}),
   reporter:
     env["CI"] === "true"
       ? [
@@ -89,22 +97,20 @@ export default defineConfig({
           [
             "junit",
             {
-              outputFile:
-                "../../../../.ci-reports/junit/scout-for-lol__design-audit/playwright.xml",
+              outputFile: `../../../../.ci-reports/junit/scout-for-lol__design-audit/playwright${ciShardSuffix}.xml`,
             },
           ],
         ]
       : "list",
   outputDir:
     env["CI"] === "true"
-      ? "../../../../.ci-reports/playwright/scout-for-lol__design-audit"
+      ? `../../../../.ci-reports/playwright/scout-for-lol__design-audit${ciShardSuffix}`
       : "./test-results",
   snapshotDir: "./tests/__screenshots__",
   snapshotPathTemplate:
     "{snapshotDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}",
   use: {
     baseURL: env["SCOUT_DESIGN_AUDIT_BASE_URL"] ?? "http://127.0.0.1:4321",
-    permissions: ["clipboard-read", "clipboard-write"],
     screenshot: "only-on-failure",
     trace: "off",
   },
@@ -116,14 +122,19 @@ export default defineConfig({
           // --concurrency=2, where a starved server needs well past a minute.
           // 120s matches sjer.red, alert-dashboard, and evals.
           {
-            command: "bun --no-install run dev -- --host 127.0.0.1 --port 4321",
+            // Astro 7 backgrounds dev servers when it detects an AI agent.
+            // Playwright owns this foreground process; ignoring Astro's own
+            // lock avoids leaving a stale PID after Playwright stops it.
+            command:
+              "ASTRO_DEV_BACKGROUND=0 bun --no-install run dev -- --host 127.0.0.1 --port 4321 --ignore-lock",
             cwd: "../../../../packages/scout-for-lol/packages/frontend",
             url: "http://127.0.0.1:4321/",
             reuseExistingServer: env["CI"] !== "true",
             timeout: 120_000,
           },
           {
-            command: "bun --no-install run dev -- --host 127.0.0.1 --port 4322",
+            command:
+              "ASTRO_DEV_BACKGROUND=0 bun --no-install run dev -- --host 127.0.0.1 --port 4322 --ignore-lock",
             cwd: "../../../../packages/scout-for-lol/packages/docs-site",
             url: "http://127.0.0.1:4322/docs/",
             reuseExistingServer: env["CI"] !== "true",

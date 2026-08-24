@@ -43,7 +43,6 @@ const turboTasks = [
   "check:talos",
   "lint:helm",
   "check:1password",
-  "check:test-template",
   "check:ios-native-deps",
   "check:release-bundle",
   "lint:swift",

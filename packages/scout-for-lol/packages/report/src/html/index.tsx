@@ -86,10 +86,40 @@ export async function matchToSvg(
   }
 
   return satori(<Report match={match} />, {
-    width: 4760,
-    height: 3500,
+    width: STANDARD_REPORT_WIDTH,
+    height: standardReportHeight(match),
     fonts,
   });
+}
+
+const STANDARD_REPORT_WIDTH = 4760;
+/** Canvas height for a full ten-player report. */
+const STANDARD_REPORT_HEIGHT_10 = 3500;
+/**
+ * Vertical distance between two champion rows: a 202px row plus a 64px (4rem)
+ * gap, measured off the committed 5v5 baseline. The per-team block checks out
+ * as 101 (team header) + 64 (gap) + 5 * 202 + 4 * 64 = 1431, and two of those
+ * plus the 96px (6rem) inter-team gap is the 2958px teams container.
+ */
+const CHAMPION_ROW_STRIDE = 266;
+const FULL_LOBBY_SIZE = 10;
+
+/**
+ * Height of the legacy report canvas for the roster it actually holds.
+ *
+ * A tournament-code custom lobby can be as small as 1v1, and a fixed 3500px
+ * canvas would leave most of the image empty. At ten players this returns
+ * exactly STANDARD_REPORT_HEIGHT_10, so every committed baseline is unchanged
+ * by construction — `layout-routing`-style tests pin that.
+ *
+ * The width deliberately stays 4760 even though the inner gradient is 4864 and
+ * already clips 104px horizontally. Widening it would rewrite every baseline.
+ */
+export function standardReportHeight(match: CompletedMatch): number {
+  const total = match.teams.blue.length + match.teams.red.length;
+  return (
+    STANDARD_REPORT_HEIGHT_10 - (FULL_LOBBY_SIZE - total) * CHAMPION_ROW_STRIDE
+  );
 }
 
 export async function svgToPng(

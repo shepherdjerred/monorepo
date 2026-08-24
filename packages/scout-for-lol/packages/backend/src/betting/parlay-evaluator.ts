@@ -100,6 +100,7 @@ function evaluateCondition(input: {
     );
     if (participant === undefined) return;
     const actualValue = participantBooleanValue(participant, condition.field);
+    if (actualValue === undefined) return;
     return { actualValue, passed: actualValue === condition.expected };
   }
   if (condition.kind === "opponent_team_pings") {

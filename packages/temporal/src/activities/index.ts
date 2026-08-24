@@ -33,6 +33,8 @@ import { protobufWatchActivities } from "./protobuf-watch.ts";
 import { tasknotesCanaryActivities } from "./tasknotes-canary.ts";
 import { reportFreshnessActivities } from "./report-freshness.ts";
 import { ciIoImpactActivities } from "./ci-io-impact.ts";
+import { freshrssActivities } from "./freshrss.ts";
+import { scoutWeeklyParlayActivities } from "./scout-weekly-parlay.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -70,4 +72,6 @@ export const activities = {
   ...tasknotesCanaryActivities,
   ...reportFreshnessActivities,
   ...ciIoImpactActivities,
+  ...freshrssActivities,
+  ...scoutWeeklyParlayActivities,
 };

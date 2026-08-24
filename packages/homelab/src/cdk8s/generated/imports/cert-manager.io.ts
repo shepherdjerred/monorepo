@@ -5349,8 +5349,7 @@ export interface ClusterIssuerSpecAcmeSolversDns01AzureDnsClientSecretSecretRef 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ClusterIssuerSpecAcmeSolversDns01AzureDnsClientSecretSecretRef(
   obj:
-    | ClusterIssuerSpecAcmeSolversDns01AzureDnsClientSecretSecretRef
-    | undefined,
+    ClusterIssuerSpecAcmeSolversDns01AzureDnsClientSecretSecretRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -6053,8 +6052,7 @@ export interface ClusterIssuerSpecAcmeSolversHttp01GatewayHttpRoutePodTemplate {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ClusterIssuerSpecAcmeSolversHttp01GatewayHttpRoutePodTemplate(
   obj:
-    | ClusterIssuerSpecAcmeSolversHttp01GatewayHttpRoutePodTemplate
-    | undefined,
+    ClusterIssuerSpecAcmeSolversHttp01GatewayHttpRoutePodTemplate | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -16372,8 +16370,7 @@ export interface IssuerSpecAcmeSolversHttp01GatewayHttpRoutePodTemplateMetadata 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_IssuerSpecAcmeSolversHttp01GatewayHttpRoutePodTemplateMetadata(
   obj:
-    | IssuerSpecAcmeSolversHttp01GatewayHttpRoutePodTemplateMetadata
-    | undefined,
+    IssuerSpecAcmeSolversHttp01GatewayHttpRoutePodTemplateMetadata | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;

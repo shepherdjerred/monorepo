@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { Testing } from "cdk8s";
 import { z } from "zod";
 import { createBuildkiteApp } from "./buildkite.ts";
-import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 
 const ApplicationSchema = z
   .object({
@@ -53,7 +52,10 @@ const PersistentVolumeClaimSchema = z
       }),
     }),
     spec: z.object({
-      accessModes: z.tuple([z.literal("ReadWriteMany")]),
+      accessModes: z.tuple([
+        z.union([z.literal("ReadWriteMany"), z.literal("ReadWriteOnce")]),
+      ]),
+      storageClassName: z.string().optional(),
       resources: z.object({ requests: z.object({ storage: z.string() }) }),
     }),
   })
@@ -303,9 +305,7 @@ describe("Buildkite application", () => {
       return resource.success && resource.data.kind === "CronJob";
     });
 
-    // The legacy schedulers remain only while the committed worker image pin
-    // predates maintenance support; the follow-up image pin removes them.
-    expect(cronJobs).toHaveLength(MAINTENANCE_IMAGE_READY ? 0 : 3);
+    expect(cronJobs).toHaveLength(0);
     expect(bunCacheGcConfigMap.data["bun-cache-gc.sh"]).toContain(
       "flock --exclusive 9",
     );
@@ -321,7 +321,7 @@ describe("Buildkite application", () => {
     if (container === undefined) {
       throw new Error("maintenance worker container is missing");
     }
-    expect(deployment.spec.replicas).toBe(MAINTENANCE_IMAGE_READY ? 1 : 0);
+    expect(deployment.spec.replicas).toBe(1);
     const envNames = container.env.flatMap((entry) => {
       const parsed = z.object({ name: z.string() }).safeParse(entry);
       return parsed.success ? [parsed.data.name] : [];
@@ -419,4 +419,19 @@ describe("Buildkite application", () => {
       ]),
     );
   });
+});
+
+it("provisions an isolated, non-backed-up Codex auth volume", () => {
+  const { persistentVolumeClaims } = synthBuildkiteResources();
+
+  expect(persistentVolumeClaims).toContainEqual(
+    expect.objectContaining({
+      metadata: expect.objectContaining({ name: "buildkite-codex-auth" }),
+      spec: expect.objectContaining({
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: "zfs-ssd-lz4",
+        resources: { requests: { storage: "1Gi" } },
+      }),
+    }),
+  );
 });

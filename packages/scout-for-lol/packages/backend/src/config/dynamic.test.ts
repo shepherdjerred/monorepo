@@ -2,18 +2,24 @@ import { afterEach, describe, expect, test } from "vitest";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import {
   exploreGuildAllowlist,
+  exploreModel,
   initializeDynamicConfig,
   isDynamicConfigReady,
   llmHourlyTokenBudget,
   shutdownDynamicConfig,
+  tournamentApiMode,
+  type DynamicConfigSeed,
 } from "#src/config/dynamic.ts";
 
 const DISABLED = { FEATURE_FLAGS_MODE: "disabled" } as const;
 
-const SEED = {
+const SEED: DynamicConfigSeed = {
   exploreGuildAllowlist: ["seeded-guild"],
+  exploreModel: "gpt-5.6-luna",
   llmHourlyTokenBudget: 2_000_000,
   llmDailyTokenBudget: 20_000_000,
+  tournamentApiMode: "stub",
+  tournamentMaxOpenLobbies: 10,
 };
 
 afterEach(async () => {
@@ -73,6 +79,26 @@ describe("scout dynamic config", () => {
     expect(llmHourlyTokenBudget()).toBe(500);
   });
 
+  test("Explore defaults to Luna and accepts the authoritative flag", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreModel()).toBe("gpt-5.6-luna");
+    await shutdownDynamicConfig();
+
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({
+        "scout-explore-model": "gpt-5.6-terra",
+      }),
+    });
+    expect(exploreModel()).toBe("gpt-5.6-terra");
+  });
+
   test("reads are synchronous, which is why the snapshot exists", async () => {
     // exploreAllowlist() is handed to Discord guild command registration as a
     // () => string[]. Making it async would ripple into the registration loop,
@@ -96,5 +122,47 @@ describe("scout dynamic config", () => {
     expect(isDynamicConfigReady()).toBe(true);
     await shutdownDynamicConfig();
     expect(isDynamicConfigReady()).toBe(false);
+  });
+});
+
+describe("tournament api mode", () => {
+  test("defaults to the stub", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+    });
+    // The safe state: a stub code cannot create a real game, so a deploy that
+    // forgot to configure this fails visibly at lobby creation rather than
+    // minting live codes nobody expected.
+    expect(tournamentApiMode()).toBe("stub");
+  });
+
+  test("env can select the live API", async () => {
+    await initializeDynamicConfig({
+      environment: { ...DISABLED, TOURNAMENT_API_MODE: "live" },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(tournamentApiMode()).toBe("live");
+  });
+
+  test("a flag outranks env, so the swap needs no deploy", async () => {
+    await initializeDynamicConfig({
+      environment: { ...DISABLED, TOURNAMENT_API_MODE: "stub" },
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({ "scout-tournament-api-mode": "live" }),
+    });
+    expect(tournamentApiMode()).toBe("live");
+  });
+
+  test("an unparseable value keeps the seed rather than guessing", async () => {
+    await initializeDynamicConfig({
+      environment: { ...DISABLED, TOURNAMENT_API_MODE: "nonsense" },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(tournamentApiMode()).toBe("stub");
   });
 });

@@ -28,6 +28,7 @@ const allowedGuild = DiscordGuildIdSchema.parse("100000000000009401");
 const otherGuild = DiscordGuildIdSchema.parse("100000000000009402");
 const owner = DiscordAccountIdSchema.parse("900000000000009401");
 const cors: Record<string, string> = {};
+const originalEnvironment = Bun.env["ENVIRONMENT"];
 
 const ErrorBody = z.object({ error: z.string() });
 
@@ -49,6 +50,11 @@ function setAllowlist(value: string | undefined): void {
   } else {
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = value;
   }
+  resetConfigurationForTests();
+}
+
+function setEnvironment(value: string): void {
+  Bun.env["ENVIRONMENT"] = value;
   resetConfigurationForTests();
 }
 
@@ -86,6 +92,7 @@ async function getShared(token: string): Promise<Response> {
 }
 
 beforeEach(async () => {
+  setEnvironment("beta");
   await trpc.prisma.exploreMessage.deleteMany();
   await trpc.prisma.exploreConversation.deleteMany();
   await trpc.prisma.user.upsert({
@@ -99,6 +106,12 @@ beforeEach(async () => {
 
 afterAll(async () => {
   setAllowlist(undefined);
+  if (originalEnvironment === undefined) {
+    delete Bun.env["ENVIRONMENT"];
+  } else {
+    Bun.env["ENVIRONMENT"] = originalEnvironment;
+  }
+  resetConfigurationForTests();
   await trpc.prisma.$disconnect();
 });
 
@@ -198,6 +211,15 @@ async function branchAfterShare(shareToken: string): Promise<void> {
 }
 
 describe("explore http route", () => {
+  test("production fails closed when connected bot guilds are unavailable", async () => {
+    setEnvironment("prod");
+
+    const response = await postObserver(await authedHeaders());
+    expect(response.status).toBe(503);
+    const body = ErrorBody.parse(await response.json());
+    expect(body.error).toMatch(/could not verify/i);
+  });
+
   test("an observer without a session is rejected", async () => {
     const response = await postObserver({});
     expect(response.status).toBe(401);

@@ -35,6 +35,14 @@ const gameInfo = RawCurrentGameInfoSchema.parse({
   bannedChampions: [],
 });
 
+const explicitRankResults = new Map(
+  gameInfo.participants.flatMap((participant) =>
+    participant.puuid === null
+      ? []
+      : [[participant.puuid, { status: "error" as const }] as const],
+  ),
+);
+
 const observation = BucksPredictionObservationSchema.parse({
   version: 1,
   matchId: "NA1_5000000001",
@@ -69,7 +77,7 @@ describe("capturePredictionForPrematch", () => {
     const built = await buildPredictionObservation(
       {
         gameInfo,
-        ranksByPuuid: new Map(),
+        ranksByPuuid: explicitRankResults,
         matchId: "NA1_5000000001",
         platformId: "NA1",
         queueType: "solo",

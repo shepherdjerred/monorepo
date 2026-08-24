@@ -693,6 +693,13 @@ button.scout-control > span:first-child {
   color: var(--scout-color-text);
 }
 
+/* Browser focus-visible heuristics can reset during a long page traversal.
+   Footer navigation stays visibly focused whenever it owns focus. */
+.scout-footer a:focus {
+  outline: 3px solid var(--scout-color-focus);
+  outline-offset: 2px;
+}
+
 .scout-mark {
   display: inline-flex;
   align-items: center;
@@ -827,6 +834,12 @@ button.scout-control > span:first-child {
 .scout-section-header h2 {
   margin: 0;
   font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+@media (max-width: 30rem) {
+  .scout-navbar .scout-wordmark {
+    display: none;
+  }
 }
 
 @media (max-width: 48rem) {

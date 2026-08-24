@@ -181,6 +181,7 @@ export async function createOfflineTrpcHarness(
   }));
   vi.doMock("#src/discord/client.ts", () => ({
     client: {
+      isReady: () => false,
       guilds: {
         cache: {
           has: (id: string) =>

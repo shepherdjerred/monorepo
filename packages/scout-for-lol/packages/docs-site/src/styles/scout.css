@@ -41,6 +41,16 @@
   max-width: none;
 }
 
+@media (max-width: 49.999rem) {
+  :root[data-has-sidebar] .header .scout-container {
+    /* Starlight fixes its docs-menu button over the global header. Reserve
+       that button's slot so Scout's own mobile navigation remains reachable. */
+    padding-inline-end: calc(
+      var(--sl-nav-pad-x) + var(--sl-nav-gap) + var(--sl-menu-button-size)
+    );
+  }
+}
+
 .header .scout-navbar a:not(.scout-button) {
   color: var(--scout-color-text);
 }
@@ -88,10 +98,35 @@
   margin-inline-start: calc(50% - 50dvw);
 }
 
-:root[data-has-sidebar] .scout-footer {
-  /* Fixed docs navigation stays above the full-width footer at page end. */
-  position: relative;
-  z-index: 0;
+html,
+body {
+  overflow-x: clip;
+}
+
+/* The global footer is the last content in its Starlight panel. Do not leave
+   the panel's default bottom padding below it as a second page background. */
+.content-panel:has(> .sl-container > .scout-footer) {
+  padding-bottom: 0;
+}
+
+@media (min-width: 50rem) {
+  :root[data-has-sidebar] .scout-footer {
+    /* The sidebar remains sticky through the article's grid track. At the end
+       of the page, the full-bleed footer must paint over that track instead
+       of appearing underneath the sidebar. Keep this desktop-only so the
+       mobile menu can remain above the footer. */
+    position: relative;
+    z-index: calc(var(--sl-z-index-menu) + 1);
+    margin-inline-start: calc(
+      -1 * (var(--sl-content-inline-start) + var(--sl-content-pad-x))
+    );
+  }
+}
+
+@media (min-width: 90rem) {
+  :root[data-has-sidebar] .scout-footer {
+    margin-inline-start: calc(50% - 50dvw + var(--sl-content-pad-x));
+  }
 }
 
 @media (min-width: 50rem) {
@@ -111,6 +146,6 @@
   }
 }
 
-:root:not([data-has-sidebar]) {
+:root {
   --sl-main-pad: 0;
 }

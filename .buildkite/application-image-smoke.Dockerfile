@@ -13,7 +13,22 @@ ARG SMOKE_TARGET
 ARG EXPECTED_CONTRACT_HASH
 
 USER 0:0
-COPY --chown=1000:1000 .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
+COPY --chown=1000:1000 \
+  .buildkite/scripts/smoke-app-in-image.ts \
+  .buildkite/scripts/smoke-app-configs.ts \
+  /app/.buildkite/scripts/
+
+# Scout's production image deliberately excludes PostgreSQL. Its exact-digest
+# smoke starts an ephemeral database to exercise the deployed migration path,
+# so install that harness-only dependency before switching to the deployment
+# uid.
+RUN case "${SMOKE_TARGET}" in \
+      scout-for-lol) \
+        apt-get update \
+        && apt-get install -y --no-install-recommends postgresql postgresql-client \
+        && rm -rf /var/lib/apt/lists/* \
+        ;; \
+    esac
 
 # These applications write their smoke config at the production working
 # directory. Prepare only the writable file while root, then run every smoke

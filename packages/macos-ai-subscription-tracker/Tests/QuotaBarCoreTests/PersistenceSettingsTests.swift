@@ -40,7 +40,7 @@ final class PersistenceSettingsTests: XCTestCase {
 
   @MainActor
   func testSettingsLoadClampAndPersist() {
-    let store = MemorySettingsStore(enabled: [.codex], interval: 5)
+    let store = MemorySettingsStore(enabled: [.codex], showsLegacy: false, interval: 5)
     let settings = AppSettings(store: store, minimumPollingInterval: 60)
     XCTAssertEqual(settings.enabledProviders, [.codex])
     XCTAssertEqual(settings.pollingInterval, 60)
@@ -51,6 +51,22 @@ final class PersistenceSettingsTests: XCTestCase {
     XCTAssertEqual(settings.pollingInterval, 900)
     XCTAssertEqual(store.savedEnabled, [.grok])
     XCTAssertEqual(store.savedInterval, 900)
+    XCTAssertFalse(store.savedShowsLegacy)
+  }
+
+  @MainActor
+  func testLegacyProvidersAreHiddenByDefaultAndRestoredOnOptIn() {
+    let store = MemorySettingsStore(enabled: nil, showsLegacy: nil, interval: nil)
+    let settings = AppSettings(store: store)
+
+    XCTAssertEqual(settings.visibleProviderIDs, ProviderID.standard)
+    XCTAssertFalse(settings.showsLegacyProviders)
+
+    settings.setShowsLegacyProviders(true)
+
+    XCTAssertEqual(settings.visibleProviderIDs, Set(ProviderID.allCases))
+    XCTAssertTrue(settings.enabledProviders.isSuperset(of: ProviderID.legacy))
+    XCTAssertTrue(store.savedShowsLegacy)
   }
 
   @MainActor
@@ -64,7 +80,7 @@ final class PersistenceSettingsTests: XCTestCase {
     defaults.set([ProviderID.codex.rawValue, "future-provider"], forKey: "enabledProviders")
     let settings = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
 
-    XCTAssertEqual(settings.enabledProviders, Set(ProviderID.allCases))
+    XCTAssertEqual(settings.enabledProviders, ProviderID.standard)
     XCTAssertEqual(
       settings.validationErrorMessage,
       QuotaError.settingsCorrupt.localizedDescription
@@ -122,21 +138,30 @@ final class PersistenceSettingsTests: XCTestCase {
 private final class MemorySettingsStore: SettingsPersisting, @unchecked Sendable {
   private let lock = NSLock()
   private let initialEnabled: Set<ProviderID>?
+  private let initialShowsLegacy: Bool?
   private let initialInterval: TimeInterval?
   private(set) var savedEnabled: Set<ProviderID> = []
+  private(set) var savedShowsLegacy = false
   private(set) var savedInterval: TimeInterval = 0
 
-  init(enabled: Set<ProviderID>?, interval: TimeInterval?) {
+  init(enabled: Set<ProviderID>?, showsLegacy: Bool? = nil, interval: TimeInterval?) {
     self.initialEnabled = enabled
+    self.initialShowsLegacy = showsLegacy
     self.initialInterval = interval
   }
 
   func enabledProviders() -> Set<ProviderID>? { initialEnabled }
+  func showsLegacyProviders() -> Bool? { initialShowsLegacy }
   func pollingInterval() -> TimeInterval? { initialInterval }
 
-  func save(enabledProviders: Set<ProviderID>, pollingInterval: TimeInterval) {
+  func save(
+    enabledProviders: Set<ProviderID>,
+    showsLegacyProviders: Bool,
+    pollingInterval: TimeInterval
+  ) {
     lock.withLock {
       savedEnabled = enabledProviders
+      savedShowsLegacy = showsLegacyProviders
       savedInterval = pollingInterval
     }
   }
