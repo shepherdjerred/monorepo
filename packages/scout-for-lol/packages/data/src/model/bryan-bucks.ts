@@ -66,6 +66,11 @@ export const BucksLedgerKindSchema = z.enum([
   "parlay_payout",
   "parlay_refund",
   "parlay_release",
+  "weekly_parlay_stake",
+  "weekly_parlay_reserve",
+  "weekly_parlay_payout",
+  "weekly_parlay_refund",
+  "weekly_parlay_release",
   "peek_pass",
   "adjustment",
 ]);
@@ -109,6 +114,28 @@ export const BucksParlayVoidReasonSchema = z.enum([
   "missing_data",
   "unknown_evaluator",
   "invalid_definition",
+  "storage_overflow",
+]);
+
+export type BucksWeeklyParlayMarketState = z.infer<
+  typeof BucksWeeklyParlayMarketStateSchema
+>;
+export const BucksWeeklyParlayMarketStateSchema = z.enum([
+  "publishing",
+  "open",
+  "active",
+  "settled",
+  "voided",
+]);
+
+export type BucksWeeklyParlayVoidReason = z.infer<
+  typeof BucksWeeklyParlayVoidReasonSchema
+>;
+export const BucksWeeklyParlayVoidReasonSchema = z.enum([
+  "infrastructure_failure",
+  "unknown_evaluator",
+  "invalid_definition",
+  "missing_data",
   "storage_overflow",
 ]);
 
@@ -394,6 +421,40 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     grossPayout: BucksStakeSchema,
     credited: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
     voidReason: BucksParlayVoidReasonSchema.optional(),
+  }),
+  z.strictObject({
+    type: z.literal("weekly_parlay_stake"),
+    definitionId: z.number().int().positive(),
+    periodKey: z.iso.date(),
+    slot: z.number().int().nonnegative(),
+    side: BucksParlaySideSchema,
+    yesProbabilityBps: z.number().int().min(4000).max(6000),
+    totalStake: BucksStakeSchema,
+    quotedGrossPayout: BucksStakeSchema,
+  }),
+  z.strictObject({
+    type: z.literal("weekly_parlay_reserve"),
+    definitionId: z.number().int().positive(),
+    periodKey: z.iso.date(),
+    slot: z.number().int().nonnegative(),
+    side: BucksParlaySideSchema,
+    yesProbabilityBps: z.number().int().min(4000).max(6000),
+    totalStake: BucksStakeSchema,
+    totalReserve: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
+    quotedGrossPayout: BucksStakeSchema,
+  }),
+  z.strictObject({
+    type: z.literal("weekly_parlay_settlement"),
+    definitionId: z.number().int().positive(),
+    periodKey: z.iso.date(),
+    slot: z.number().int().nonnegative(),
+    side: BucksParlaySideSchema,
+    yesResult: z.boolean().optional(),
+    stake: BucksStakeSchema,
+    reserve: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
+    grossPayout: BucksStakeSchema,
+    credited: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
+    voidReason: BucksWeeklyParlayVoidReasonSchema.optional(),
   }),
   z.strictObject({
     type: z.literal("peek_pass"),
