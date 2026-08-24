@@ -31,7 +31,7 @@ The editor opens with a categorized preset list on the left and a **Live
 preview** on the right. Under **Leaderboards**, choose **Most games played**. It
 loads this query into the editor:
 
-```sql
+```scoutql
 select games, win_rate
 from match_participants
 group by player
@@ -65,7 +65,7 @@ in the window.
 
 Replace `games, win_rate` in the `SELECT` with damage:
 
-```sql
+```scoutql
 select damage_to_champions
 from match_participants
 group by player
@@ -84,7 +84,7 @@ reference](/docs/reference/scoutql-metrics/) for all of them.
 
 Change the last line to render a bar chart, and tell it which column to plot:
 
-```sql
+```scoutql
 select damage_to_champions
 from match_participants
 group by player

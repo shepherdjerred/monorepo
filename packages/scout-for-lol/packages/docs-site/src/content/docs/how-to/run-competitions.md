@@ -103,7 +103,7 @@ The built-in criteria are deliberately a short list. For anything else — damag
 vision, CS per minute, teammate groups, champion-specific splits — write a
 report instead:
 
-```sql
+```scoutql
 select games, win_rate, kda
 from match_participants
 where queue in (solo)

@@ -45,7 +45,7 @@ Metric kinds:
 
 Order by any metric you selected:
 
-```sql
+```scoutql
 select games, win_rate, kda
 from match_participants
 group by player
@@ -55,7 +55,7 @@ order by win_rate desc
 
 Derive one that is not in the list with a function:
 
-```sql
+```scoutql
 select per_game(vision_score) as vision_per_game, games
 from match_participants
 group by player

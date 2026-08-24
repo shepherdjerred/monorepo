@@ -17,6 +17,12 @@ const posthogHeadAttrs = {
 };
 
 /**
+ * Expressive Code options live in `ec.config.mjs`, not here: the ScoutQL
+ * highlighting plugin is a function, and Starlight's `<Code>` component
+ * re-creates the renderer from a JSON copy of this config, so a plugin
+ * configured here fails the build with "Expressive Code options that are not
+ * serializable to JSON".
+ *
  * Sidebar links are resolved through Starlight's `pathWithBase()`, which
  * prepends `base` ("/docs/") on its own. Every group below therefore uses
  * `autogenerate`, and ordering comes from each page's `sidebar.order`

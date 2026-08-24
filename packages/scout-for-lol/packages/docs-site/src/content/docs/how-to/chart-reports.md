@@ -32,7 +32,7 @@ options](/docs/reference/scoutql-render/).
 
 `WITH (...)` binds your query's outputs to chart channels:
 
-```sql
+```scoutql
 select games, win_rate
 from match_participants
 group by champion
@@ -55,7 +55,7 @@ the `SELECT`.
 
 Group by a time dimension rather than a player or champion:
 
-```sql
+```scoutql
 select games, win_rate
 from match_participants
 where queue in (solo, flex)
@@ -72,7 +72,7 @@ the default.
 
 A heatmap needs two grouping dimensions and a value:
 
-```sql
+```scoutql
 select games
 from match_participants
 group by champion, team_position
@@ -83,7 +83,7 @@ render heatmap with (value = games, series = team_position)
 
 ## Show one number
 
-```sql
+```scoutql
 select games, win_rate, kda
 from match_participants
 where queue in (solo)
@@ -97,7 +97,7 @@ displays.
 
 ## Style it
 
-```sql
+```scoutql
 render bar_chart with (
   y = win_rate,
   title = "Ranked win rate",

@@ -46,7 +46,7 @@ Every query states the period it covers. There is no default — a window nobody
 states is a window nobody checks, and an answer computed over a narrower period
 than the reader assumed looks exactly like a correct one.
 
-```sql
+```scoutql
 DURING LAST 90 DAYS
 DURING BETWEEN '2026-01-01' AND '2026-01-31' IN TIME ZONE 'America/Los_Angeles'
 DURING ALL TIME
@@ -95,7 +95,7 @@ Use these in `SELECT` to compute a value, and name the result with `AS`.
   ]}
 />
 
-```sql
+```scoutql
 select per_minute(damage_to_champions) as dpm, games
 from match_participants
 group by player

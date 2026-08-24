@@ -41,25 +41,25 @@ aliases.
 
 Ranked games only:
 
-```sql
+```scoutql
 where queue in (solo, flex)
 ```
 
 Only games the player won, on one champion:
 
-```sql
+```scoutql
 where win = true and champion_id = 350
 ```
 
 Exclude very short games, which distort per-minute metrics:
 
-```sql
+```scoutql
 where game_duration_seconds >= 900
 ```
 
 Require a minimum sample before ranking by a rate:
 
-```sql
+```scoutql
 select games, win_rate
 from match_participants
 where queue in (solo)
@@ -75,7 +75,7 @@ that stops a 1-0 record topping a win-rate leaderboard.
 Scope to a competition's participants. Rank sources are snapshots and therefore
 accept only `DURING ALL TIME`:
 
-```sql
+```scoutql
 select score
 from competition_rank
 where competition_id = 42

@@ -34,7 +34,7 @@ an alias.
 
 Mentions are a `RENDER` option, so you set them per report:
 
-```sql
+```scoutql
 render leaderboard with (mentions = 5)
 ```
 
