@@ -12,7 +12,7 @@ import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
 // `catchupWindow` controls replay after the Temporal SERVER was down/unavailable
 // across a scheduled time and then recovers (the "backfill" of missed runs). A
 // normal worker restart/deploy does NOT drop runs — the server still creates the
-// action on time and it queues until a worker is free. Two tiers, by intent:
+// action on time and it queues until a worker is free. Three tiers, by intent:
 //
 //   * CATCHUP_TIGHT — time-of-day home automation (vacuum, good-morning). If the
 //     server missed the slot by more than a few minutes, skip rather than fire
@@ -21,6 +21,9 @@ import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
 //     that needs a staleness guard inside the workflow.)
 //   * CATCHUP_RELAXED (default) — reports / maintenance / data jobs. The intent
 //     is "ran this cycle," so running late after a server outage is acceptable.
+//   * CATCHUP_WEEKLY_PARLAY — Scout's Sunday publication window. A missed
+//     publication may be replayed through the betting window so the market is
+//     still available before Monday scoring begins.
 //
 // Inferred string-literal types, NOT `: Duration`. `Duration` is
 // `StringValue | number`, and under the old CI's per-package Node16 install the canary
@@ -33,12 +36,14 @@ import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
 // keeps every catchup value off the error-typed `Duration` path entirely.
 export const CATCHUP_TIGHT = "5 minutes";
 export const CATCHUP_RELAXED = "1 hour";
+export const CATCHUP_WEEKLY_PARLAY = "12 hours";
 
-// The two declared catchup tiers as a literal union (not `Duration`), so reading
+// The declared catchup tiers as a literal union (not `Duration`), so reading
 // the optional schedule field in buildSchedulePolicies can never yield an
 // error-typed value. Both literals are valid Temporal `Duration`s at the policies
 // call site.
-export type CatchupWindow = typeof CATCHUP_TIGHT | typeof CATCHUP_RELAXED;
+export type CatchupWindow =
+  typeof CATCHUP_TIGHT | typeof CATCHUP_RELAXED | typeof CATCHUP_WEEKLY_PARLAY;
 
 export type ScheduleDefinition = {
   id: string;
@@ -306,6 +311,8 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // reconciliation for one immutable period/slot.
     cronExpression: "0 12 * * 0",
     taskQueue: TASK_QUEUES.DEFAULT,
+    // Preserve the full Sunday betting window when Temporal itself is down.
+    catchupWindow: CATCHUP_WEEKLY_PARLAY,
     // A delayed final reconciliation for one period must not suppress the
     // next Sunday's distinct period execution.
     overlap: ScheduleOverlapPolicy.ALLOW_ALL,

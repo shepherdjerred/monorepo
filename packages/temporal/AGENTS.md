@@ -91,12 +91,14 @@ would fight the UI.
 
 `catchupWindow` controls whether a run missed while the Temporal **server** was down gets
 replayed on recovery. (A worker restart/deploy does **not** drop runs — the server still
-creates the action on time and it queues.) Two tiers, set in `buildSchedulePolicies`:
+creates the action on time and it queues.) Three tiers, set in `buildSchedulePolicies`:
 
 - `CATCHUP_TIGHT` (5 min) on time-of-day home automation (vacuum, good-morning): skip rather
   than fire a wake-up/vacuum hours late.
 - `CATCHUP_RELAXED` (1 hour, the default for everything else): reports/maintenance still run
   late after an outage. Override per-schedule via the optional `catchupWindow` field.
+- `CATCHUP_WEEKLY_PARLAY` (12 hours) on `scout-weekly-parlay`: replay Sunday publication
+  through the full betting window when the Temporal server was unavailable.
 
 Caveat: a long _worker_ outage can still execute a home run late (the server already created
 it on time); fully preventing that needs a staleness guard inside the workflow.
@@ -226,9 +228,9 @@ endpoint. Reminder/progress staleness is a Scout decision. Publication,
 reminder, and progress use bounded delivery retries. Scoring start retries
 durably until the finalization cutoff, when an unstarted market can be voided;
 the final action begins at that cutoff, accepts Scout's incomplete response
-through its bounded Match-V5 ingestion window, and retries for the rest of the
-workflow execution so bets are never abandoned after a short outage. This
-schedule alone uses
+through its bounded Match-V5 ingestion window. Final reconciliation uses bounded
+retry slices and continues as new when a slice expires, so a per-run execution
+timeout cannot abandon pending bets. This schedule alone uses
 `ALLOW_ALL`, because a delayed prior finalization must not suppress the next
 period's Sunday execution. The schedule's initial pause is the private-beta
 fixture gate. After activation, pause it in Temporal for operational suspension

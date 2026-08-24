@@ -1,4 +1,5 @@
 import {
+  continueAsNew,
   log,
   proxyActivities,
   sleep,
@@ -31,9 +32,12 @@ const lifecycleActivities = proxyActivities<ScoutWeeklyParlayActivities>({
 });
 
 const LIFECYCLE_RETRY_INTERVAL_MS = 5 * 60 * 1000;
+const FINALIZATION_CONTINUE_AS_NEW_AFTER_MS = 15 * 60 * 1000;
 
 const ScoutWeeklyParlayWorkflowInputSchema = z.strictObject({
   slot: z.number().int().nonnegative().default(0),
+  phase: z.enum(["lifecycle", "finalize"]).default("lifecycle"),
+  periodKey: z.iso.date().optional(),
 });
 export type ScoutWeeklyParlayWorkflowInput = z.input<
   typeof ScoutWeeklyParlayWorkflowInputSchema
@@ -111,13 +115,13 @@ async function reconcileStartUntilFinalization(
 async function reconcileFinalization(
   action: ScoutWeeklyParlayAction,
 ): Promise<void> {
-  let finalized = false;
-  while (!finalized) {
+  const retryUntil = Date.now() + FINALIZATION_CONTINUE_AS_NEW_AFTER_MS;
+  while (Date.now() < retryUntil) {
     try {
       const result =
         await lifecycleActivities.invokeScoutWeeklyParlayAction(action);
       if (result.status === "reconciled" || result.detail === "no_market") {
-        finalized = true;
+        return;
       } else {
         log.warn("Weekly Scout parlay finalization was incomplete; retrying", {
           periodKey: action.periodKey,
@@ -135,16 +139,37 @@ async function reconcileFinalization(
         },
       );
     }
-    if (!finalized) {
-      await sleep(LIFECYCLE_RETRY_INTERVAL_MS);
+    const remaining = retryUntil - Date.now();
+    if (remaining > 0) {
+      await sleep(Math.min(LIFECYCLE_RETRY_INTERVAL_MS, remaining));
     }
   }
+  log.warn("Weekly Scout parlay finalization slice ended; continuing as new", {
+    periodKey: action.periodKey,
+    slot: action.slot,
+  });
+  await continueAsNew<typeof runScoutWeeklyParlayWorkflow>({
+    slot: action.slot,
+    phase: "finalize",
+    periodKey: action.periodKey,
+  });
 }
 
 export async function runScoutWeeklyParlayWorkflow(
   rawInput: ScoutWeeklyParlayWorkflowInput = {},
 ): Promise<void> {
   const input = ScoutWeeklyParlayWorkflowInputSchema.parse(rawInput);
+  if (input.phase === "finalize") {
+    if (input.periodKey === undefined) {
+      throw new Error("Finalization continuation requires periodKey.");
+    }
+    await reconcileFinalization({
+      periodKey: input.periodKey,
+      slot: input.slot,
+      action: "finalize",
+    });
+    return;
+  }
   // Temporal records this instant when the Schedule starts the execution. It
   // remains stable even if no worker can process the first task until later.
   const scheduledStartAt = workflowInfo().startTime.toISOString();

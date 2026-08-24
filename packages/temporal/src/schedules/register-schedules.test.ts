@@ -429,6 +429,13 @@ describe("catchup window policy", () => {
     );
   });
 
+  test("weekly Scout publication preserves the Sunday betting window", () => {
+    expect(
+      buildSchedulePolicies(findScheduleById("scout-weekly-parlay"))
+        .catchupWindow,
+    ).toBe("12 hours");
+  });
+
   test("tight window is strictly shorter than the relaxed default", () => {
     const tight = buildSchedulePolicies(
       findScheduleById("vacuum-9am"),
