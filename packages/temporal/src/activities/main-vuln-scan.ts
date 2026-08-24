@@ -41,7 +41,22 @@ const TrivyResultSchema = z.object({
   Vulnerabilities: z.array(TrivyVulnerabilitySchema).optional(),
 });
 
+/**
+ * `Results` is legitimately absent from a clean scan — trivy 0.72.0 emits only
+ * the envelope (`SchemaVersion`, `Trivy`, `ArtifactName`, …) when it finds
+ * nothing. An optional-only schema therefore cannot tell "nothing found" from
+ * "the top-level contract drifted", and the latter would publish a false
+ * `clear` report and resolve a live critical alert.
+ *
+ * Pinning the expected `SchemaVersion` closes that: `{}` or a renamed result
+ * field fails loudly instead of reading as a clean scan. The trivy binary is
+ * version-pinned in the worker image, so a schema bump is a deliberate,
+ * reviewed event rather than a surprise.
+ */
+const TRIVY_SCHEMA_VERSION = 2;
+
 const TrivyReportSchema = z.object({
+  SchemaVersion: z.literal(TRIVY_SCHEMA_VERSION),
   Results: z.array(TrivyResultSchema).optional(),
 });
 

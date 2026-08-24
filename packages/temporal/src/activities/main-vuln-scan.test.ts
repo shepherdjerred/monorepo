@@ -67,11 +67,39 @@ describe("parseTrivyReport", () => {
   });
 
   test("a clean scan (no Results) parses to zero findings", () => {
+    // Real trivy 0.72.0 output for a clean filesystem scan: the envelope is
+    // present and `Results` is omitted entirely (captured from the pinned
+    // binary in the worker image).
+    const cleanScan = JSON.stringify({
+      SchemaVersion: 2,
+      Trivy: { Version: "0.72.0" },
+      ArtifactName: "/probe",
+      ArtifactType: "filesystem",
+    });
+    expect(parseTrivyReport(cleanScan)).toEqual([]);
     expect(parseTrivyReport(JSON.stringify({ SchemaVersion: 2 }))).toEqual([]);
+  });
+
+  test("refuses drifted top-level output instead of reading it as clean", () => {
+    // The fail-open this guards: valid JSON whose contract drifted would
+    // otherwise yield zero findings, publishing a false `clear` report and
+    // resolving a live critical alert.
+    expect(() => parseTrivyReport("{}")).toThrow();
+    expect(() =>
+      parseTrivyReport(JSON.stringify({ SchemaVersion: 3, Results: [] })),
+    ).toThrow();
+    expect(() =>
+      parseTrivyReport(
+        JSON.stringify({ Findings: [], Trivy: { Version: "0.72.0" } }),
+      ),
+    ).toThrow();
   });
 
   test("rejects a severity outside the requested HIGH/CRITICAL set", () => {
     const drifted = JSON.stringify({
+      // Envelope present, so this asserts severity rejection specifically and
+      // not merely a missing SchemaVersion.
+      SchemaVersion: 2,
       Results: [
         {
           Target: "bun.lock",
