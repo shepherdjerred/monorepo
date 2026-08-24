@@ -96,8 +96,6 @@ try {
       size,
       "--scale",
       scale,
-      "--design-generation",
-      "26",
     ]);
   }
   run(["iconutil", "-c", "icns", iconset, "-o", join(resources, "Brim.icns")]);
