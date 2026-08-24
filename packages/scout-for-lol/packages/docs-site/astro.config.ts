@@ -51,6 +51,29 @@ export default defineConfig({
       favicon: "/assets/scout/brand/compass.svg",
       head: [
         {
+          tag: "meta",
+          attrs: { name: "color-scheme", content: "light dark" },
+        },
+        {
+          tag: "meta",
+          attrs: { name: "theme-color", content: "#F0E6D2" },
+        },
+        {
+          tag: "meta",
+          attrs: {
+            name: "apple-mobile-web-app-status-bar-style",
+            content: "default",
+          },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "mask-icon",
+            href: "/assets/scout/brand/emblem.svg",
+            color: "#005A82",
+          },
+        },
+        {
           tag: "script",
           attrs: {
             ...posthogHeadAttrs,
