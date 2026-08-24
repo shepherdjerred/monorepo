@@ -5,6 +5,7 @@
     "emitDeclarationOnly": true,
     "noEmit": false,
     "rootDir": "src/model",
+    "types": ["bun-types"],
     "outDir": "dist"
   },
   "include": ["src/model/weekly-parlay.ts"]
