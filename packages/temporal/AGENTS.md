@@ -229,8 +229,9 @@ reminder, and progress use bounded delivery retries. Scoring start retries
 durably until the finalization cutoff, when an unstarted market can be voided;
 the final action begins at that cutoff, accepts Scout's incomplete response
 through its bounded Match-V5 ingestion window. Final reconciliation uses bounded
-retry slices and continues as new when a slice expires, so a per-run execution
-timeout cannot abandon pending bets. This schedule alone uses
+retry slices and continues as new when a slice expires; this schedule deliberately
+has no workflow execution timeout, so a prolonged outage cannot abandon pending bets.
+This schedule alone uses
 `ALLOW_ALL`, because a delayed prior finalization must not suppress the next
 period's Sunday execution. The schedule's initial pause is the private-beta
 fixture gate. After activation, pause it in Temporal for operational suspension

@@ -316,7 +316,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // A delayed final reconciliation for one period must not suppress the
     // next Sunday's distinct period execution.
     overlap: ScheduleOverlapPolicy.ALLOW_ALL,
-    workflowExecutionTimeout: "8 days",
     memo: "Weekly Scout Bryan Bucks parlay lifecycle from Sunday publication through final settlement",
     initialPauseNote:
       "Awaiting the approved Discord fixture cycle before private-beta activation",

@@ -126,6 +126,12 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
   runScoutWeeklyParlayWorkflow: 168 * ONE_HOUR,
 };
 
+// Weekly finalization continues as new without a chain-wide execution timeout;
+// this is deliberate so a prolonged Scout outage cannot strand bets.
+const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set([
+  "runScoutWeeklyParlayWorkflow",
+]);
+
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
@@ -219,6 +225,9 @@ describe("schedule timeout vs workflow sleep", () => {
         return;
       }
       if (schedule.workflowExecutionTimeout === undefined) {
+        if (WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT.has(schedule.workflowType)) {
+          return;
+        }
         throw new Error(
           `${schedule.id}: workflowExecutionTimeout is unset but workflow ${schedule.workflowType} sleeps up to ${String(maxSleep)}ms`,
         );
@@ -277,7 +286,6 @@ describe("Scout weekly parlay schedule config", () => {
       cronExpression: "0 12 * * 0",
       taskQueue: TASK_QUEUES.DEFAULT,
       overlap: ScheduleOverlapPolicy.ALLOW_ALL,
-      workflowExecutionTimeout: "8 days",
       requiredEnvironment: [
         "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
         "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",

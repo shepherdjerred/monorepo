@@ -51,8 +51,8 @@ has a stable idempotency key. Exhausting retries for an intermediate call cannot
 prevent later lifecycle work. Scoring start retries until the finalization
 cutoff. The final action begins there, retries through Scout's bounded Match-V5
 ingestion window, and continues in bounded retry slices (continuing as new when
-a slice expires) rather than abandoning bets after a workflow execution timeout.
-Distinct weekly
+a slice expires). The schedule has no workflow execution timeout, so a prolonged
+outage cannot abandon bets. Distinct weekly
 executions may overlap so a delayed prior finalization cannot suppress the next
 period. Its schedule remains initially paused until the private-beta Discord
 fixture cycle is approved.
