@@ -700,6 +700,65 @@ describe("weekly parlay catch-up controls", () => {
     ).rejects.toThrow("Invalid weekly parlay catch-up timeline");
   });
 
+  test("rechecks the minimum betting window from the retry time", async () => {
+    const period = weeklyParlayPeriod(PERIOD_KEY);
+    const openAt = new Date("2026-08-24T19:00:00.000Z");
+    await expect(
+      runWeeklyParlayControlAction(
+        {
+          periodKey: PERIOD_KEY,
+          action: "open",
+          slot: 0,
+          window: {
+            kind: "catch_up",
+            openAt: openAt.toISOString(),
+            bettingClosesAt: "2026-08-25T07:00:00.000Z",
+            scoringStartsAt: "2026-08-25T07:00:00.000Z",
+            scoringEndsAt: period.scoringEndsAt.toISOString(),
+          },
+        },
+        {
+          serverId: SERVER_ID,
+          now: new Date("2026-08-25T02:00:00.000Z"),
+          prismaClient: db,
+        },
+      ),
+    ).rejects.toThrow("Invalid weekly parlay catch-up timeline");
+  });
+
+  test("defers a start received before the persisted scoring clock", async () => {
+    const period = weeklyParlayPeriod(PERIOD_KEY);
+    const market = await makeMarket({
+      marketState: "open",
+      timeline: {
+        openAt: period.openAt,
+        bettingClosesAt: period.bettingClosesAt,
+        scoringStartsAt: new Date("2026-08-26T07:00:00.000Z"),
+        scoringEndsAt: period.scoringEndsAt,
+      },
+    });
+    await expect(
+      runWeeklyParlayControlAction(
+        { periodKey: PERIOD_KEY, action: "start", slot: 0 },
+        {
+          serverId: SERVER_ID,
+          now: new Date("2026-08-25T07:00:00.000Z"),
+          prismaClient: db,
+        },
+      ),
+    ).resolves.toMatchObject({
+      status: "skipped",
+      detail: "before_scoring_start",
+      marketId: market.id,
+    });
+    await expect(
+      db.bucksWeeklyParlayMarket.findUniqueOrThrow({
+        where: { id: market.id },
+        select: { marketState: true },
+      }),
+    ).resolves.toMatchObject({ marketState: "open" });
+  });
+
   test("rejects a catch-up scoring cutoff that is not an exact Pacific midnight", async () => {
     const period = weeklyParlayPeriod(PERIOD_KEY);
     const openAt = new Date("2026-08-24T19:00:00.000Z");

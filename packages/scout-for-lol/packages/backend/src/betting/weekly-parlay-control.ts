@@ -125,7 +125,7 @@ function catchupTimeline(
     shape,
   );
   const minimumClose =
-    timeline.openAt.getTime() +
+    now.getTime() +
     WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS +
     WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS;
   if (
@@ -214,6 +214,13 @@ async function reconcileStart(
   context: ControlContext,
 ): Promise<WeeklyParlayControlResult> {
   const period = persistedTimeline(action, market);
+  if (context.now < period.scoringStartsAt) {
+    return {
+      status: "skipped",
+      detail: "before_scoring_start",
+      marketId: market.id,
+    };
+  }
   if (market.marketState === "publishing") {
     await settleWeeklyParlayMarket(
       {
