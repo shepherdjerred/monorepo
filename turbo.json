@@ -264,9 +264,27 @@
       "inputs": ["**/*.sh", "!**/node_modules/**", "scripts/shellcheck.ts"]
     },
     "//#knip": {
+      // Knip resolves `#generated/prisma/...` imports, so the Prisma clients
+      // must exist before it runs. Inside the verify graph these generate
+      // tasks are otherwise unordered against //#knip, and on a cold CI
+      // checkout knip won the race and reported 61 unresolved imports
+      // (build 11163). Declaring the dependency lets turbo order and dedupe
+      // them; a nested `turbo run generate` inside the gate would instead
+      // race the outer graph for each package's Prisma generate lock.
+      "dependsOn": [
+        "@shepherdjerred/alert-dashboard#generate",
+        "@shepherdjerred/birmel#generate",
+        "@discord-plays-mario-kart/backend#generate",
+        "@scout-for-lol/backend#generate",
+        "starlight-karma-bot#generate"
+      ],
       "inputs": [
         "knip.json",
-        "**/*.{ts,tsx,js,jsx,astro}",
+        "scripts/knip.ts",
+        // Must cover every extension knip.json's entry/project globs analyze,
+        // or turbo replays a stale green result when only e.g. a .css or .mdx
+        // file changed. Kept in sync with the extensions listed in knip.json.
+        "**/*.{ts,tsx,cts,mts,js,jsx,cjs,mjs,astro,css,sass,scss,mdx,prisma,html}",
         "**/package.json",
         "!**/node_modules/**",
         "!**/dist/**",

@@ -1,6 +1,5 @@
 {
   "name": "homelab",
-  "module": "index.ts",
   "type": "module",
   "private": true,
   "dependencies": {
