@@ -22,7 +22,7 @@ import {
   renderPlayerCard,
   type PlayerCardPayload,
 } from "@shepherdjerred/streambot/discord/player-card.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type {
   ChannelId,
   GuildId,

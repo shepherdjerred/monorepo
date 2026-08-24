@@ -15,7 +15,7 @@ import type {
   PlaybackEvent,
   PlaybackInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type {
   PlayerCardManager,
   PlayerCardPort,

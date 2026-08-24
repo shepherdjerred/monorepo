@@ -3,7 +3,7 @@ import type {
   PlaybackEvent,
   ResolvedSource,
 } from "@shepherdjerred/streambot/machine/types.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type { PaginatedPages } from "@shepherdjerred/streambot/discord/help-text.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";

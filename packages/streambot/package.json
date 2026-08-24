@@ -7,6 +7,9 @@
     ".": "./src/index.ts",
     "./*": "./src/*"
   },
+  "imports": {
+    "#architecture": "./architecture.config.ts"
+  },
   "files": [
     "src"
   ],
