@@ -16,6 +16,7 @@ import {
   isOnboardingSeen,
   markOnboardingComplete,
   markOnboardingSeen,
+  shouldRedirectToOnboarding,
 } from "#src/lib/onboarding-storage.ts";
 import { trackOutboundClick } from "#src/lib/analytics.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
@@ -64,17 +65,23 @@ export function GuildPicker() {
   const discordId = meQuery.data?.user?.discordId ?? null;
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
-  // Keep incomplete users in the guided first-run experience. The old
-  // `seen`-only gate sent anyone who had previously opened or abandoned setup
-  // to the generic empty guild-picker card, which duplicated the install step
-  // and hid the useful onboarding path. The install redirect (Discord →
+  // Keep incomplete users in the guided first-run experience. A user with no
+  // manageable servers always belongs there, even if this browser previously
+  // recorded setup as complete or abandoned. The install redirect (Discord →
   // /installed → /welcome) still completes setup without passing through here.
   useEffect(() => {
     if (discordId === null) return;
-    if (isOnboardingComplete(discordId)) return;
+    if (
+      !shouldRedirectToOnboarding(
+        data.length > 0,
+        isOnboardingComplete(discordId),
+      )
+    ) {
+      return;
+    }
     markOnboardingSeen(discordId);
     void navigate("/welcome", { replace: true });
-  }, [discordId, navigate]);
+  }, [data.length, discordId, navigate]);
 
   const showBanner =
     discordId !== null &&
