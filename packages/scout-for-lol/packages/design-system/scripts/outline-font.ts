@@ -12,6 +12,70 @@ type OutlinedFont = {
 
 const cache = new Map<string, OutlinedFont>();
 
+function finite(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function serializeCommands(commands: unknown): string {
+  if (!Array.isArray(commands)) {
+    throw new TypeError("glyph path commands missing");
+  }
+  let lastX = 0;
+  let lastY = 0;
+  const parts: string[] = [];
+  for (const raw of commands) {
+    const command: unknown = raw;
+    if (
+      typeof command !== "object" ||
+      command === null ||
+      !("type" in command)
+    ) {
+      throw new TypeError("glyph path command is invalid");
+    }
+    const type = command.type;
+    if (typeof type !== "string") {
+      throw new TypeError("glyph path command type is invalid");
+    }
+    const x = finite("x" in command ? command.x : undefined, lastX);
+    const y = finite("y" in command ? command.y : undefined, lastY);
+    const x1 = finite("x1" in command ? command.x1 : undefined, lastX);
+    const y1 = finite("y1" in command ? command.y1 : undefined, lastY);
+    switch (type) {
+      case "M":
+        parts.push(`M${String(x)} ${String(y)}`);
+        lastX = x;
+        lastY = y;
+        break;
+      case "L":
+        parts.push(`L${String(x)} ${String(y)}`);
+        lastX = x;
+        lastY = y;
+        break;
+      case "Q":
+        parts.push(`Q${String(x1)} ${String(y1)} ${String(x)} ${String(y)}`);
+        lastX = x;
+        lastY = y;
+        break;
+      case "C": {
+        const x2 = finite("x2" in command ? command.x2 : undefined, lastX);
+        const y2 = finite("y2" in command ? command.y2 : undefined, lastY);
+        parts.push(
+          `C${String(x1)} ${String(y1)} ${String(x2)} ${String(y2)} ${String(x)} ${String(y)}`,
+        );
+        lastX = x;
+        lastY = y;
+        break;
+      }
+      case "Z":
+        parts.push("Z");
+        break;
+      default:
+        break;
+    }
+  }
+  return parts.join("");
+}
+
 function invoke(fn: unknown, thisArg: object, args: unknown[]): unknown {
   if (typeof fn !== "function") {
     throw new TypeError("expected a function");
@@ -74,15 +138,9 @@ async function loadFont(fontPath: string): Promise<OutlinedFont> {
           ) {
             throw new TypeError("glyph path.toPathData missing");
           }
-          const toPathDataFn = drawn.toPathData;
+          const commands = "commands" in drawn ? drawn.commands : undefined;
           return {
-            toPathData: (decimals: number) => {
-              const data = invoke(toPathDataFn, drawn, [decimals]);
-              if (typeof data !== "string") {
-                throw new TypeError("glyph path data is not a string");
-              }
-              return data;
-            },
+            toPathData: () => serializeCommands(commands),
           };
         },
       };
@@ -107,6 +165,9 @@ export async function outlineText(input: {
     const char = input.text.charAt(index);
     const glyph = font.charToGlyph(char);
     const path = glyph.getPath(cursor, input.y, input.size).toPathData(2);
+    if (path.includes("NaN")) {
+      throw new Error(`outlined path for ${char} contains NaN`);
+    }
     if (path.length > 0) parts.push(path);
     cursor += (glyph.advanceWidth / font.unitsPerEm) * input.size;
     if (index < input.text.length - 1) cursor += input.tracking;
