@@ -38,6 +38,7 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     model: "BucksAccount",
     idColumns: ["id"],
     resetIdSequence: true,
+    digestIgnoreColumns: new Set(["analyticsUserId"]),
     transform: (row): Prisma.BucksAccountCreateManyInput => ({
       id: toInt(row, "id"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),

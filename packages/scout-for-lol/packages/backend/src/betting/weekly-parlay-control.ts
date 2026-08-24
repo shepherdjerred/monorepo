@@ -23,6 +23,7 @@ import { settleWeeklyParlayMarket } from "#src/betting/weekly-parlay-settle.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { bettingWeeklyParlayControlActionsTotal } from "#src/metrics/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
+import { syncBucksAnalytics } from "#src/analytics/bryan-bucks-sync.ts";
 
 export const WEEKLY_PARLAY_CONTROL_PATH =
   "/api/internal/weekly-parlays/actions";
@@ -39,7 +40,14 @@ export const WeeklyParlayControlActionSchema = z
   .strictObject({
     periodKey: z.iso.date(),
     slot: z.number().int().nonnegative().default(WEEKLY_PARLAY_SLOT),
-    action: z.enum(["open", "reminder", "start", "progress", "finalize"]),
+    action: z.enum([
+      "open",
+      "reminder",
+      "start",
+      "progress",
+      "finalize",
+      "analytics_sync",
+    ]),
     updateIndex: z
       .number()
       .int()
@@ -401,6 +409,13 @@ async function runWeeklyParlayControlActionInternal(
     now,
     ...(options.signal === undefined ? {} : { signal: options.signal }),
   };
+  if (action.action === "analytics_sync") {
+    const result = await syncBucksAnalytics({ prismaClient });
+    return {
+      status: "reconciled",
+      detail: `ledger_entries=${result.ledgerEntries.toString()},snapshots=${result.snapshots.toString()}`,
+    };
+  }
   if (action.action === "open") {
     return await reconcileOpen(action, context);
   }

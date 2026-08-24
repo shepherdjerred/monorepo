@@ -787,6 +787,9 @@ model BucksAccount {
   id                Int       @id @default(autoincrement())
   serverId          String
   discordId         String
+  // Opaque, app-owned identity for Bryan Bucks PostHog retention. The
+  // Discord snowflake must never become an analytics distinct id.
+  analyticsUserId   String    @unique @default(uuid())
   // Synthetic per-guild house rows use the reserved account ID. They are
   // ledger-audited but excluded from user-facing balances and leaderboards.
   isHouse           Boolean   @default(false)
@@ -804,6 +807,15 @@ model BucksAccount {
 
   @@unique([serverId, discordId])
   @@index([serverId, balance])
+}
+
+// Durable reservation for a Bryan Bucks PostHog event. PostHog's event UUID is
+// deterministic for replay, while this beta database is the idempotency
+// boundary for both the historical backfill and the post-commit live sync.
+model BucksAnalyticsBackfillEvent {
+  id        Int      @id @default(autoincrement())
+  eventId   String   @unique
+  createdAt DateTime @default(now())
 }
 
 // Append-only ledger. Every Buck anyone holds is the sum of these rows.
@@ -858,8 +870,22 @@ model BucksLedgerEntry {
 
   createdAt DateTime @default(now())
 
+  analyticsOutbox BucksAnalyticsLedgerOutbox?
+
   @@index([bucksAccountId, createdAt])
   @@index([matchId])
+}
+
+// Created atomically with each live ledger entry. Temporal consumes the
+// committed ledger row after the transaction and sends the PostHog event.
+model BucksAnalyticsLedgerOutbox {
+  id            Int             @id @default(autoincrement())
+  ledgerEntryId Int             @unique
+  ledgerEntry   BucksLedgerEntry @relation(fields: [ledgerEntryId], references: [id], onDelete: Cascade)
+  eventId       String          @unique
+  createdAt     DateTime        @default(now())
+
+  @@index([createdAt])
 }
 
 // One user's position on one match in one guild.

@@ -1,4 +1,5 @@
 import { createLogger } from "#src/logger.ts";
+import { captureBucksLifecycle } from "#src/analytics/bryan-bucks.ts";
 
 const logger = createLogger("betting-transition");
 
@@ -28,41 +29,9 @@ const logger = createLogger("betting-transition");
  * **Every call must be post-commit.** A transition logged inside a transaction
  * that then rolls back is a lie that survives for 90 days.
  */
-export type BucksTransitionEvent =
-  | "bucks.pool.opened"
-  | "bucks.pool.closed"
-  | "bucks.pool.settled"
-  | "bucks.pool.voided"
-  | "bucks.bet.placed"
-  | "bucks.bet.topped_up"
-  | "bucks.bet.rejected"
-  | "bucks.bet.cancelled"
-  | "bucks.bet.matched"
-  | "bucks.bet.unmatched_refunded"
-  | "bucks.bet.house_filled"
-  | "bucks.bet.won"
-  | "bucks.bet.lost"
-  | "bucks.bet.refunded"
-  | "bucks.parlay.published"
-  | "bucks.parlay.opened"
-  | "bucks.parlay.closed"
-  | "bucks.parlay.settled"
-  | "bucks.parlay.voided"
-  | "bucks.parlay_bet.placed"
-  | "bucks.parlay_bet.cancelled"
-  | "bucks.parlay_bet.settled"
-  | "bucks.weekly_parlay.published"
-  | "bucks.weekly_parlay.opened"
-  | "bucks.weekly_parlay.started"
-  | "bucks.weekly_parlay.settled"
-  | "bucks.weekly_parlay.voided"
-  | "bucks.weekly_parlay_bet.placed"
-  | "bucks.weekly_parlay_bet.topped_up"
-  | "bucks.weekly_parlay_bet.cancelled"
-  | "bucks.weekly_parlay_bet.settled"
-  | "bucks.weekly_parlay.contribution_recorded"
-  | "bucks.earning.awarded"
-  | "bucks.peek_pass.purchased";
+export type BucksTransitionEvent = Parameters<
+  typeof captureBucksLifecycle
+>[0]["transition"];
 
 export type BucksTransitionFields = {
   event: BucksTransitionEvent;
@@ -103,6 +72,14 @@ export function logBucksTransition(fields: BucksTransitionFields): void {
     // `exactOptionalPropertyTypes` stops a caller passing an explicit
     // `undefined`, so the bag is already minimal for Loki.
     logger.info(fields.event, fields);
+    captureBucksLifecycle({
+      serverId: fields.serverId,
+      transition: fields.event,
+      amountBucks: fields.stake,
+      matchedBucks: fields.matchedStake,
+      payoutBucks: fields.payout,
+      balanceAfterBucks: fields.balanceAfter,
+    });
   } catch {
     // Intentionally empty: a failed log must not abort a settlement.
   }

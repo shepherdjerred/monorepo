@@ -355,6 +355,7 @@ export const LEGACY_TABLE_COLUMNS: Record<string, string[]> = {
     "id",
     "serverId",
     "discordId",
+    "analyticsUserId",
     "isHouse",
     "balance",
     "peekPassExpiresAt",

@@ -5,6 +5,7 @@ import {
   type BucksLedgerKind,
 } from "@scout-for-lol/data";
 import type { Db } from "#src/lib/audit/index.ts";
+import { deterministicBucksAnalyticsEventId } from "#src/analytics/bryan-bucks-backfill.ts";
 
 /**
  * The one place `BucksAccount.balance` is allowed to change.
@@ -328,7 +329,7 @@ export async function applyBucksDelta(
     select: { balance: true },
   });
 
-  await tx.bucksLedgerEntry.create({
+  const ledgerEntry = await tx.bucksLedgerEntry.create({
     data: {
       bucksAccountId: input.bucksAccountId,
       delta: input.delta,
@@ -343,6 +344,12 @@ export async function applyBucksDelta(
       // Validated on the way in, so a malformed explanation can never be
       // persisted and surface later as an unparseable ledger row.
       context: JSON.stringify(BucksLedgerContextSchema.parse(input.context)),
+    },
+  });
+  await tx.bucksAnalyticsLedgerOutbox.create({
+    data: {
+      ledgerEntryId: ledgerEntry.id,
+      eventId: deterministicBucksAnalyticsEventId("ledger", ledgerEntry.id),
     },
   });
 

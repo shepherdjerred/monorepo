@@ -52,6 +52,8 @@ import type {
   ScoutWeeklyParlayCatchupWorkflowInput,
   ScoutWeeklyParlayWorkflowInput,
 } from "./scout-weekly-parlay.ts";
+import { runScoutBryanBucksAnalyticsWorkflow as _runScoutBryanBucksAnalyticsWorkflow } from "./scout-bryan-bucks.ts";
+import type { ScoutBryanBucksAnalyticsResult } from "#activities/scout-bryan-bucks.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
@@ -258,6 +260,10 @@ export async function runScoutWeeklyParlayCatchupWorkflow(
   input: ScoutWeeklyParlayCatchupWorkflowInput,
 ): Promise<void> {
   return _runScoutWeeklyParlayCatchupWorkflow(input);
+}
+
+export async function runScoutBryanBucksAnalyticsWorkflow(): Promise<ScoutBryanBucksAnalyticsResult> {
+  return await _runScoutBryanBucksAnalyticsWorkflow();
 }
 
 export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResult> {

@@ -171,6 +171,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runScoutShowcaseRefresh",
   "runScoutQueueWindowsWatch",
   "runScoutSeasonRefreshWorkflow",
+  "runScoutBryanBucksAnalyticsWorkflow",
   "runZfsMaintenanceWorkflow",
   "runBugsinkHousekeepingWorkflow",
   // Awaits a single pruneScoutImages activity (list+delete). No workflow-level
@@ -286,6 +287,23 @@ describe("Scout weekly parlay schedule config", () => {
       cronExpression: "0 12 * * 0",
       taskQueue: TASK_QUEUES.DEFAULT,
       overlap: ScheduleOverlapPolicy.ALLOW_ALL,
+      requiredEnvironment: [
+        "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
+        "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+      ],
+    });
+  });
+});
+
+describe("Scout Bryan Bucks analytics schedule config", () => {
+  test("runs the committed-ledger sync every fifteen minutes", () => {
+    expect(findScheduleById("scout-bryan-bucks-analytics")).toMatchObject({
+      workflowType: "runScoutBryanBucksAnalyticsWorkflow",
+      args: [],
+      cronExpression: "*/15 * * * *",
+      taskQueue: TASK_QUEUES.DEFAULT,
+      overlap: ScheduleOverlapPolicy.SKIP,
+      workflowExecutionTimeout: "5 minutes",
       requiredEnvironment: [
         "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
         "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",

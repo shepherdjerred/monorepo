@@ -1,5 +1,6 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data/index.ts";
+import { captureBucksMemberActivity } from "#src/analytics/bryan-bucks.ts";
 import { captureDiscordCommandUsed } from "#src/analytics/command-usage.ts";
 import type { DiscordCommandStatus } from "#src/analytics/product-analytics.ts";
 import { createLogger } from "#src/logger.ts";
@@ -113,5 +114,14 @@ export async function handleChatInputCommand(
       commandName,
       status: commandStatus,
     });
+    if (commandName === "bb") {
+      await captureBucksMemberActivity({
+        serverId: interaction.guildId,
+        discordId: interaction.user.id,
+        activityKind: "command",
+        surface: "command",
+        status: commandStatus,
+      });
+    }
   }
 }

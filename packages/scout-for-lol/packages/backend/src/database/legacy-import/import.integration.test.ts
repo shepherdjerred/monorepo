@@ -505,7 +505,10 @@ describe("legacy sqlite import", () => {
     const omittedColumns = new Map<string, ReadonlySet<string>>([
       ["User", new Set(["lastSeenAt"])],
       ["GuildInstall", new Set(["attributedAt", "attributionSurface"])],
-      ["BucksAccount", new Set(["isHouse", "peekPassExpiresAt"])],
+      [
+        "BucksAccount",
+        new Set(["analyticsUserId", "isHouse", "peekPassExpiresAt"]),
+      ],
       [
         "BucksBet",
         new Set([
