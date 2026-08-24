@@ -1856,8 +1856,7 @@ export interface NodeFeatureRuleSpecRulesMatchAnyMatchFeaturesMatchExpressions {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_NodeFeatureRuleSpecRulesMatchAnyMatchFeaturesMatchExpressions(
   obj:
-    | NodeFeatureRuleSpecRulesMatchAnyMatchFeaturesMatchExpressions
-    | undefined,
+    NodeFeatureRuleSpecRulesMatchAnyMatchFeaturesMatchExpressions | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;

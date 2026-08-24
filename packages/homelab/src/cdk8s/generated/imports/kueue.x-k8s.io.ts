@@ -2407,8 +2407,7 @@ export interface ClusterQueueV1Beta2SpecAdmissionChecksStrategyAdmissionChecks {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ClusterQueueV1Beta2SpecAdmissionChecksStrategyAdmissionChecks(
   obj:
-    | ClusterQueueV1Beta2SpecAdmissionChecksStrategyAdmissionChecks
-    | undefined,
+    ClusterQueueV1Beta2SpecAdmissionChecksStrategyAdmissionChecks | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -6174,8 +6173,7 @@ export interface ProvisioningRequestConfigV1Beta2SpecPodSetUpdatesNodeSelector {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ProvisioningRequestConfigV1Beta2SpecPodSetUpdatesNodeSelector(
   obj:
-    | ProvisioningRequestConfigV1Beta2SpecPodSetUpdatesNodeSelector
-    | undefined,
+    ProvisioningRequestConfigV1Beta2SpecPodSetUpdatesNodeSelector | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -12618,8 +12616,7 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbe
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbe(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbe
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbe | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -12896,8 +12893,7 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersResizePolicy 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersResizePolicy(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecEphemeralContainersResizePolicy
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecEphemeralContainersResizePolicy | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -13338,8 +13334,7 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbe 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbe(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbe
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbe | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -13401,8 +13396,7 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeDevices
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeDevices(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeDevices
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeDevices | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -13510,8 +13504,7 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeMounts 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeMounts(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeMounts
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeMounts | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -14235,8 +14228,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersRestartPolicyRules
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersRestartPolicyRules(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersRestartPolicyRules
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersRestartPolicyRules | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -14854,8 +14846,7 @@ export interface WorkloadSpecPodSetsTemplateSpecSecurityContextAppArmorProfile {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecSecurityContextAppArmorProfile(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecSecurityContextAppArmorProfile
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecSecurityContextAppArmorProfile | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -18197,8 +18188,7 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeHttpGet {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeHttpGet(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeHttpGet
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeHttpGet | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -18251,8 +18241,7 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeTcpSocket
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeTcpSocket(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeTcpSocket
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeTcpSocket | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -18407,8 +18396,7 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeHttpGet 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeHttpGet(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeHttpGet
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeHttpGet | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -19101,8 +19089,7 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersStartupProbeTcpSocket 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecContainersStartupProbeTcpSocket(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecContainersStartupProbeTcpSocket
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecContainersStartupProbeTcpSocket | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -19170,8 +19157,7 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersEnvValueFrom 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersEnvValueFrom(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecEphemeralContainersEnvValueFrom
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecEphemeralContainersEnvValueFrom | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -20708,8 +20694,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersEnvFromSecretRef {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersEnvFromSecretRef(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersEnvFromSecretRef
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersEnvFromSecretRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -20772,8 +20757,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePostStart
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePostStart(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePostStart
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePostStart | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -20854,8 +20838,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePreStop {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePreStop(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePreStop
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePreStop | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -20909,8 +20892,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeExec 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeExec(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeExec
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeExec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -20956,8 +20938,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -21123,8 +21104,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeExec
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeExec(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeExec
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeExec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -21170,8 +21150,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -21773,8 +21752,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeExec {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeExec(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeExec
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeExec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -21820,8 +21798,7 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeGrpc {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeGrpc(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeGrpc
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeGrpc | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -22188,8 +22165,7 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesCsiNodePublishSecretRef {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesCsiNodePublishSecretRef(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecVolumesCsiNodePublishSecretRef
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecVolumesCsiNodePublishSecretRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -23426,8 +23402,7 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromFieldRef {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromFieldRef(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromFieldRef
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromFieldRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -23495,8 +23470,7 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromFileKeyRef
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromFileKeyRef(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromFileKeyRef
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromFileKeyRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -23650,8 +23624,7 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersLifecyclePostStartExec
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLifecyclePostStartExec(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecContainersLifecyclePostStartExec
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecContainersLifecyclePostStartExec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -23855,8 +23828,7 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopExec {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopExec(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopExec
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopExec | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -23970,8 +23942,7 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopSleep 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopSleep(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopSleep
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopSleep | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -26317,8 +26288,7 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItemsFieldRef 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItemsFieldRef(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItemsFieldRef
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItemsFieldRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -26761,8 +26731,7 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesConfigMap
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesConfigMap(
   obj:
-    | WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesConfigMap
-    | undefined,
+    WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesConfigMap | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -33009,8 +32978,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecTopologySpreadConstraints
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecTopologySpreadConstraints(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecTopologySpreadConstraints
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecTopologySpreadConstraints | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -33618,8 +33586,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecAffinityPodAntiAffinity {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecAffinityPodAntiAffinity(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecAffinityPodAntiAffinity
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecAffinityPodAntiAffinity | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -33944,8 +33911,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbe {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbe(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbe
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbe | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -34160,8 +34126,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbe 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbe(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbe
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbe | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -34520,8 +34485,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersSecurityContext
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersSecurityContext(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecContainersSecurityContext
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecContainersSecurityContext | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -34732,8 +34696,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersVolumeDevices {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersVolumeDevices(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecContainersVolumeDevices
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecContainersVolumeDevices | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -35296,8 +35259,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersPorts 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersPorts(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersPorts
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersPorts | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -36293,8 +36255,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecycle {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecycle(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecycle
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecycle | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -36776,8 +36737,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersResources {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersResources(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersResources
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersResources | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -38754,8 +38714,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesGcePersistentDisk 
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesGcePersistentDisk(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesGcePersistentDisk
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesGcePersistentDisk | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -41159,8 +41118,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersResourcesClaims
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersResourcesClaims(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecContainersResourcesClaims
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecContainersResourcesClaims | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -44917,8 +44875,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItems {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItems(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItems
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItems | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -45231,8 +45188,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSources {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSources(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSources
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSources | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -45339,8 +45295,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesScaleIoSecretRef {
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesScaleIoSecretRef(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesScaleIoSecretRef
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesScaleIoSecretRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -45440,8 +45395,7 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesStorageosSecretRef
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesStorageosSecretRef(
   obj:
-    | WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesStorageosSecretRef
-    | undefined,
+    WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesStorageosSecretRef | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
