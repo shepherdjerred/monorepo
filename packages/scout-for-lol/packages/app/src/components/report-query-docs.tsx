@@ -1,28 +1,33 @@
-import {
-  REPORT_FILTERS,
-  REPORT_FUNCTIONS,
-  REPORT_GROUP_BYS,
-  REPORT_KEYWORDS,
-  REPORT_METRICS,
-  REPORT_RENDER_KINDS,
-  REPORT_RENDER_OPTIONS,
-  REPORT_SOURCES,
-  REPORT_TIME_PERIODS,
-  reportQueueValues,
-} from "@scout-for-lol/data";
+import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
+import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import {
+  SCOUTQL_SHAPE_EXAMPLE,
+  scoutQlClauseSummary,
+} from "#src/lib/scoutql-clause-summary.ts";
+import {
+  scoutQlFunctionSections,
+  scoutQlKeywordList,
+  scoutQlQueueItems,
+  scoutQlRenderKindItems,
+  scoutQlRenderOptionNames,
+  scoutQlSourceSections,
+  scoutQlTimeBoundItems,
+  type DocsDefinition,
+} from "#src/lib/report-query-docs-sections.ts";
 
-const GRAMMAR =
-  "SELECT <metric|expression [AS alias]>, … FROM <source> [WHERE <row filter> AND …] GROUP BY <field>[, <field>] [HAVING <output> <operator> <value>] (DURING <period> | ANALYZE LAST <days> DAYS | BETWEEN '<date>' AND '<date>') [BUCKET BY AUTO|DAY|WEEK|MONTH|PATCH] [COMPARE TO PREVIOUS PERIOD | BETWEEN '<date>' AND '<date>'] [IN TIME ZONE '<IANA zone>'] [ORDER BY <output|label> ASC|DESC] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]";
+// ── The in-app ScoutQL reference ─────────────────────────────────────────────
+// Presentation only: every list on this page is built in
+// `report-query-docs-sections.ts` from the language's own registries, so this
+// component holds no facts about ScoutQL that could go stale independently of
+// the parser.
 
-type DefinitionItem = { term: string; description: string };
-
-function DefinitionList(props: { items: DefinitionItem[] }) {
+function DefinitionList(props: { items: DocsDefinition[] }) {
   return (
     <dl className="space-y-1.5">
       {props.items.map((item) => (
@@ -38,14 +43,139 @@ function DefinitionList(props: { items: DefinitionItem[] }) {
   );
 }
 
-function DocsSection(props: { title: string; items: DefinitionItem[] }) {
+function DocsSection(props: {
+  title: string;
+  blurb?: string;
+  items: DocsDefinition[];
+}) {
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm">{props.title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-2">
+        {props.blurb !== undefined && (
+          <p className="text-xs text-scout-subtle">{props.blurb}</p>
+        )}
         <DefinitionList items={props.items} />
+      </CardContent>
+    </Card>
+  );
+}
+
+function TokenList(props: { title: string; blurb: string; tokens: string[] }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">{props.title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-xs text-scout-subtle">{props.blurb}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {props.tokens.map((token) => (
+            <code
+              key={token}
+              className="rounded bg-scout-hover/60 px-1.5 py-0.5 font-mono text-xs text-scout-ink"
+            >
+              {token}
+            </code>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ClauseOrderSection() {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">The shape of a query</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <ScoutQlCode queryText={SCOUTQL_SHAPE_EXAMPLE} />
+        <p className="text-xs text-scout-subtle">
+          ScoutQL is a subset of DuckDB SQL: clauses come in this order,
+          keywords are case-insensitive, strings use single quotes, and{" "}
+          <code>--</code> starts a comment. Only SELECT and FROM are required.
+        </p>
+        <dl className="space-y-1.5">
+          {scoutQlClauseSummary().map((clause) => (
+            <div
+              key={clause.clause}
+              className="grid grid-cols-[minmax(10rem,auto)_1fr] gap-3"
+            >
+              <dt className="font-mono text-xs text-scout-ink">
+                {clause.syntax}
+              </dt>
+              <dd className="text-xs text-scout-subtle">
+                {clause.required && (
+                  <span className="mr-1 font-medium text-scout-ink">
+                    Required.
+                  </span>
+                )}
+                {clause.description}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SourcesSection() {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Sources and columns</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-xs text-scout-subtle">
+          A query reads one source. Columns are the lake&apos;s own columns,
+          plus a few dimensions Scout computes.
+        </p>
+        {scoutQlSourceSections().map((source) => (
+          <details
+            key={source.id}
+            className="rounded-md border border-scout-border"
+          >
+            <summary className="cursor-pointer px-3 py-2 text-xs">
+              <span className="font-mono text-scout-ink">{source.id}</span>
+              <span className="ml-2 text-scout-subtle">
+                {source.description}
+              </span>
+            </summary>
+            <div className="space-y-2 border-t border-scout-border p-3">
+              <p className="text-xs text-scout-subtle">{source.timeNote}</p>
+              <DefinitionList items={source.columns} />
+            </div>
+          </details>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function RecipesSection() {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Recipes</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-xs text-scout-subtle">
+          The idioms worth knowing. Each one is a complete, runnable query.
+        </p>
+        {SCOUTQL_IDIOMS.map((idiom) => (
+          <section key={idiom.id} className="space-y-1.5">
+            <h4 className="text-xs font-semibold text-scout-ink">
+              {idiom.title}
+            </h4>
+            <p className="text-xs text-scout-subtle">{idiom.description}</p>
+            <ScoutQlCode queryText={idiom.query} />
+          </section>
+        ))}
       </CardContent>
     </Card>
   );
@@ -54,105 +184,38 @@ function DocsSection(props: { title: string; items: DefinitionItem[] }) {
 export function ReportQueryDocs() {
   return (
     <div className="space-y-3">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Syntax</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <pre className="overflow-auto whitespace-pre-wrap rounded-md bg-scout-hover/50 p-3 text-xs">
-            {GRAMMAR}
-          </pre>
-          <p className="mt-2 text-xs text-scout-subtle">
-            Keywords are case-insensitive. WHERE filters raw rows; HAVING
-            filters aggregates and aliases. Arithmetic supports parentheses and
-            <span className="font-mono"> + − × ÷</span>. Every query states one
-            time period through DURING or ANALYZE. Temporal clauses use saved
-            IANA timezones and ISO Monday weeks. A comparison must match the
-            length of the analysis period, and a chart plots at most 2,000
-            points — a long window needs a coarser bucket.
-          </p>
-        </CardContent>
-      </Card>
-
+      <ClauseOrderSection />
+      <SourcesSection />
+      {scoutQlFunctionSections().map((section) => (
+        <DocsSection
+          key={section.title}
+          title={section.title}
+          blurb={section.blurb}
+          items={section.items}
+        />
+      ))}
       <DocsSection
-        title="Sources (FROM)"
-        items={REPORT_SOURCES.map((source) => ({
-          term: source.id,
-          description: source.description,
-        }))}
+        title="Time bounds"
+        blurb="Time is an ordinary WHERE condition — there is no separate period clause."
+        items={scoutQlTimeBoundItems()}
       />
-
-      <DocsSection
-        title="Metrics (SELECT)"
-        items={REPORT_METRICS.map((metric) => ({
-          term: metric.id,
-          description: `${metric.label} — ${metric.description}`,
-        }))}
-      />
-
-      <DocsSection
-        title="Calculated outputs"
-        items={REPORT_FUNCTIONS.map((fn) => ({
-          term: fn.syntax,
-          description: fn.description,
-        }))}
-      />
-
-      <DocsSection
-        title="Group by"
-        items={REPORT_GROUP_BYS.map((groupBy) => ({
-          term: groupBy.id,
-          description: groupBy.description,
-        }))}
-      />
-
-      <DocsSection
-        title="Filters (WHERE)"
-        items={REPORT_FILTERS.map((filter) => ({
-          term: filter.syntax,
-          description: filter.description,
-        }))}
-      />
-
-      <DocsSection
-        title="Time period (required)"
-        items={REPORT_TIME_PERIODS.map((period) => ({
-          term: period.syntax,
-          description: period.description,
-        }))}
-      />
-
-      <DocsSection
-        title="Render kinds"
-        items={REPORT_RENDER_KINDS.map((kind) => ({
-          term: kind.id,
-          description: kind.description,
-        }))}
-      />
-
-      <DocsSection
+      <DocsSection title="Render kinds" items={scoutQlRenderKindItems()} />
+      <TokenList
         title="Render options (WITH)"
-        items={REPORT_RENDER_OPTIONS.map((option) => ({
-          term: option.syntax,
-          description: option.description,
-        }))}
+        blurb="Chart options. The editor completes each one and describes it on hover."
+        tokens={[...scoutQlRenderOptionNames()]}
       />
-
-      <DocsSection
-        title="Keywords"
-        items={REPORT_KEYWORDS.map((keyword) => ({
-          term: keyword.keyword,
-          description: keyword.description,
-        }))}
-      />
-
       <DocsSection
         title="Queue values"
-        items={reportQueueValues().map((queue) => ({
-          term: queue.id,
-          description: queue.label,
-        }))}
+        blurb="Compare against the queue column, e.g. WHERE queue IN ('solo', 'flex')."
+        items={scoutQlQueueItems()}
       />
+      <TokenList
+        title="Keywords"
+        blurb="Reserved words, from the grammar's own token definitions."
+        tokens={[...scoutQlKeywordList()]}
+      />
+      <RecipesSection />
     </div>
   );
 }

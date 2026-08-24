@@ -26,6 +26,36 @@ export type CompetitionExample = {
   build: (channelId: string) => FormState;
 };
 
+// The three starter reports, in canonically formatted ScoutQL v2. Aggregates
+// are explicit (`COUNT(*)`, `AVG(flag::INT)`), the label column comes from
+// GROUP BY rather than being selected, and the 30-day bound is an ordinary
+// WHERE conjunct — the same shape the editor, the presets and the AI author.
+// `onboarding-examples.test.ts` compiles every one of them.
+const TEAMMATE_GROUPS_QUERY = `SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM player_groups
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY group(all)
+HAVING games >= 5
+ORDER BY win_rate DESC
+LIMIT 10
+RENDER leaderboard`;
+
+const SURRENDER_QUERY = `SELECT COUNT(*) AS games, AVG(surrendered::INT) AS surrender_rate
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY player
+ORDER BY surrender_rate DESC
+LIMIT 10
+RENDER leaderboard`;
+
+const MOST_GAMES_QUERY = `SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY player
+ORDER BY games DESC
+LIMIT 10
+RENDER leaderboard`;
+
 export const REPORT_EXAMPLES: ReportExample[] = [
   {
     id: "pairings",
@@ -34,8 +64,7 @@ export const REPORT_EXAMPLES: ReportExample[] = [
       ...EMPTY_REPORT_STATE,
       title: "Best teammate groups",
       channelId,
-      queryText:
-        "select group, games, win_rate from player_groups where game_creation_at >= current_timestamp - interval '30 days' and games >= 5 group by group(all) order by win_rate desc limit 10 render leaderboard",
+      queryText: TEAMMATE_GROUPS_QUERY,
     }),
   },
   {
@@ -45,8 +74,7 @@ export const REPORT_EXAMPLES: ReportExample[] = [
       ...EMPTY_REPORT_STATE,
       title: "Highest surrender %",
       channelId,
-      queryText:
-        "select player, games, surrender_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by player order by surrender_rate desc limit 10 render leaderboard",
+      queryText: SURRENDER_QUERY,
     }),
   },
   {
@@ -56,8 +84,7 @@ export const REPORT_EXAMPLES: ReportExample[] = [
       ...EMPTY_REPORT_STATE,
       title: "Most games played",
       channelId,
-      queryText:
-        "select player, games from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by player order by games desc limit 10 render leaderboard",
+      queryText: MOST_GAMES_QUERY,
     }),
   },
 ];

@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { Check, ChevronDown, Copy, Pencil, RefreshCw } from "lucide-react";
-import { REPORT_RENDER_KINDS } from "@scout-for-lol/data";
+import { ReportOutputFormatSchema } from "@scout-for-lol/data";
+import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
 import type {
   ExploreMessage,
   ExploreTraceEntry,
@@ -467,8 +468,14 @@ function CopyButton(props: { content: string }) {
  *
  * The engine builds a visualization snapshot for every result regardless of
  * render kind, so `visualization !== null` is not the question — `RENDER
- * table` produces one too. The registry knows which kinds are charts; drawing
+ * table` produces one too. The catalog knows which kinds are charts; drawing
  * one for a table turns a two-row answer into a graph nobody asked for.
+ *
+ * `kind` is a free string in the stored snapshot schema, and shares written
+ * before the v2 cutover carry the lowercase token rather than the render
+ * format, so it is upper-cased before being recognized. An unrecognized kind
+ * is not drawn — a snapshot from a future render kind is data this build has
+ * no chart for.
  */
 function chartableSnapshot(
   snapshot: VisualizationSnapshot | null,
@@ -476,6 +483,8 @@ function chartableSnapshot(
   if (snapshot === null) {
     return null;
   }
-  const kind = REPORT_RENDER_KINDS.find((entry) => entry.id === snapshot.kind);
-  return kind?.isChart === true ? snapshot : null;
+  const format = ReportOutputFormatSchema.safeParse(
+    snapshot.kind.toUpperCase(),
+  );
+  return format.success && isChartRenderKind(format.data) ? snapshot : null;
 }

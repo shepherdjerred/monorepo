@@ -19,7 +19,7 @@ import {
 } from "@scout-for-lol/design-system/components/select";
 import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
 import { ReportScheduleFields } from "#src/components/report-schedule-fields.tsx";
-import { ReportTemporalControls } from "#src/components/report-temporal-controls.tsx";
+import { ReportTimeControls } from "#src/components/report-time-controls.tsx";
 
 // Lazy so Monaco is split out of the main bundle and only loaded with this form.
 const ReportQueryEditor = lazy(
@@ -36,9 +36,15 @@ export type ReportFormState = {
 };
 
 // A valid, ready-to-run starter query (identical to the "activity-leaders"
-// preset) so a fresh form submits without the user first writing ScoutQL.
-export const STARTER_REPORT_QUERY =
-  "select games, win_rate from match_participants group by player during last 30 days order by games desc limit 10 render leaderboard";
+// preset, which `empty-report-query.test.ts` pins) so a fresh form submits
+// without the user first writing ScoutQL.
+export const STARTER_REPORT_QUERY = `SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY player
+ORDER BY games DESC
+LIMIT 10
+RENDER leaderboard`;
 
 export const EMPTY_REPORT_STATE: ReportFormState = {
   title: "",
@@ -145,9 +151,8 @@ export function ReportFormFields(props: {
         </Select>
       </div>
 
-      <ReportTemporalControls
+      <ReportTimeControls
         queryText={state.queryText}
-        scheduleTimezone={state.scheduleTimezone}
         onChange={(queryText) => {
           setState((prev) => ({ ...prev, queryText }));
         }}

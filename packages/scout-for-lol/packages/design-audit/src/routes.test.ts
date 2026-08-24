@@ -25,7 +25,7 @@ describe("Scout design audit matrix", () => {
     expect(routes.filter((route) => route.surface === "public")).toHaveLength(
       6,
     );
-    expect(routes.filter((route) => route.surface === "docs")).toHaveLength(28);
+    expect(routes.filter((route) => route.surface === "docs")).toHaveLength(29);
     expect(routes.filter((route) => route.surface === "app")).toHaveLength(23);
   });
 

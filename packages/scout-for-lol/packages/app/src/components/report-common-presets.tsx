@@ -1,8 +1,8 @@
 import { FileText } from "lucide-react";
 import {
-  REPORT_COMMON_PRESETS,
-  type ReportCommonPresetInfo,
-} from "@scout-for-lol/data";
+  SCOUTQL_PRESETS,
+  type ScoutQlPreset,
+} from "@scout-for-lol/data/model/scoutql/presets.ts";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import { Button } from "@scout-for-lol/design-system/components/button";
 import { track } from "#src/lib/analytics.ts";
 
 export function ReportCommonPresets(props: {
-  onUsePreset: (preset: ReportCommonPresetInfo) => void;
+  onUsePreset: (preset: ScoutQlPreset) => void;
 }) {
   return (
     <Card>
@@ -36,7 +36,7 @@ export function ReportCommonPresets(props: {
                     className="h-auto justify-start whitespace-normal p-3 text-left"
                     onClick={() => {
                       track("report_preset_used", {
-                        category: preset.category ?? "Other",
+                        category: preset.category,
                       });
                       props.onUsePreset(preset);
                     }}
@@ -61,12 +61,11 @@ export function ReportCommonPresets(props: {
   );
 }
 
-function presetCategories(): [string, ReportCommonPresetInfo[]][] {
-  const categories = new Map<string, ReportCommonPresetInfo[]>();
-  for (const preset of REPORT_COMMON_PRESETS) {
-    const category = preset.category ?? "Other";
-    const existing = categories.get(category) ?? [];
-    categories.set(category, [...existing, preset]);
+function presetCategories(): [string, ScoutQlPreset[]][] {
+  const categories = new Map<string, ScoutQlPreset[]>();
+  for (const preset of SCOUTQL_PRESETS) {
+    const existing = categories.get(preset.category) ?? [];
+    categories.set(preset.category, [...existing, preset]);
   }
   return [...categories.entries()].toSorted(([left], [right]) =>
     left.localeCompare(right),
