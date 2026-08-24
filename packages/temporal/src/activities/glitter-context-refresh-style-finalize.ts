@@ -236,6 +236,13 @@ export function finalizeStyleSynthesis(input: {
   existingCard: StyleCard;
   sourceSnapshotSha256: string;
   chunkCount: number;
+  /**
+   * Messages that actually reached the card as evidence, summed from the chunks
+   * that yielded something. Not `safeMessages.length`: a chunk the model could
+   * not summarize contributes nothing, and counting it would let the card claim
+   * a month it silently omits.
+   */
+  summarizedMessages: number;
   synthesis: StyleSynthesis;
 }): StyleCardV2 {
   const allMessagesById = new Map(
@@ -308,7 +315,7 @@ export function finalizeStyleSynthesis(input: {
       },
       evidence: {
         safe_messages: input.candidate.safeMessages.length,
-        summarized_messages: input.candidate.safeMessages.length,
+        summarized_messages: input.summarizedMessages,
         chunks: input.chunkCount,
         direct_recent_messages: input.candidate.directRecentMessages.length,
         date_range: {

@@ -31,6 +31,7 @@
     "check:rehearsal": "bun run scripts/check-schedule-rehearsal.ts",
     "glitter:import-seed": "bun run scripts/import-glitter-seed.ts",
     "glitter:operate": "bun run scripts/operate-glitter-corpus.ts",
+    "glitter:refresh-local": "bun run scripts/run-glitter-context-refresh-local.ts",
     "glitter:verify-corpus": "bun run scripts/verify-glitter-corpus.ts",
     "test:ci": "bun ../../scripts/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"

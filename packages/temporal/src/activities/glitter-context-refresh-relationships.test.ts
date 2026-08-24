@@ -9,7 +9,7 @@ import { applyRelationshipProposals } from "./glitter-context-refresh-relationsh
 import {
   shouldEvaluateRelationships,
   shouldPersistRelationshipEvaluation,
-} from "./glitter-context-refresh.ts";
+} from "./glitter-context-refresh-state.ts";
 
 const people = PeopleDocumentSchema.parse({
   schemaVersion: 1,

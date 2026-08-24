@@ -17,6 +17,7 @@ import {
   buildStyleEvidenceChunks,
   type StyleEvidenceChunk,
 } from "./glitter-context-refresh-chunks.ts";
+import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
 import {
   generateGlitterObject,
   glitterObjectArtifactSchema,
@@ -53,14 +54,18 @@ import {
   type StyleSynthesis,
 } from "./glitter-context-refresh-style-schemas.ts";
 
+// Names the chunk, like the exhaustion error beside it at the same call site.
+// Without the key, a run killed by one truncating chunk says only that *some*
+// chunk hit the ceiling — identifying which one meant scanning every cached
+// generation artifact out of the corpus bucket.
+const extractionTruncationError = (chunkKey: string): string =>
+  `GPT-5.6 Luna extraction reached the completion-token limit for ${chunkKey}`;
 // gpt-5.6-sol is a reasoning model at `reasoning_effort: "medium"`, so its
 // hidden reasoning tokens share `max_completion_tokens` with the (large) style
 // synthesis output. Observed live: reasoning + output crossed the former 15k cap
 // and truncated (finish_reason=length → unparseable).
 // 28k gives comfortable headroom over the observed ~15k usage; if a call still
 // truncates, it is retried once at the ceiling below.
-const EXTRACTION_TRUNCATION_ERROR =
-  "GPT-5.6 Luna extraction reached the completion-token limit";
 const SYNTHESIS_TRUNCATION_ERROR =
   "GPT-5.6 Sol synthesis reached the completion-token limit";
 const EMPTY_CHUNK_SUMMARY: StyleChunkSummary = {
@@ -208,7 +213,7 @@ async function runChunkExtraction(input: {
           EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
         reasoningEffort: "none",
         seed,
-        truncationError: EXTRACTION_TRUNCATION_ERROR,
+        truncationError: extractionTruncationError(input.chunk.key),
         exhaustionError: `GPT-5.6 Luna did not return a parsed summary for ${input.chunk.key}`,
       });
     },
@@ -217,6 +222,22 @@ async function runChunkExtraction(input: {
     artifact,
     budget: input.budget,
   });
+}
+
+function verifiableContent(summary: StyleChunkSummary): number {
+  return summary.observations.length + summary.representativeMessages.length;
+}
+
+/**
+ * A chunk contributes its messages to the card's coverage only when it yielded
+ * usable evidence. A chunk that yielded none influenced nothing, so counting it
+ * would make the card advertise a month it silently omits.
+ */
+function summarizedMessageCount(
+  chunk: StyleEvidenceChunk,
+  summary: StyleChunkSummary,
+): number {
+  return verifiableContent(summary) === 0 ? 0 : chunk.messages.length;
 }
 
 async function summarizeChunk(input: {
@@ -259,15 +280,22 @@ async function summarizeChunk(input: {
   if (lastError === undefined) {
     throw new Error(`chunk ${input.chunk.key} produced no extraction attempts`);
   }
+  // Every attempt failed to parse — the model never returned a schema-valid
+  // summary for this chunk, so there is nothing to sanitize. Observed live:
+  // GPT-5.6 Luna degenerates into a repetition loop on a particular chunk and
+  // burns every semantic attempt, and the resulting failure artifact is cached,
+  // so each later run replays it without spending a token. Throwing here
+  // stranded the whole refresh — for every person — on one unlucky chunk,
+  // permanently. Degrade to an empty summary instead; `summarizedMessageCount`
+  // keeps that month out of the card's coverage rather than laundering the gap,
+  // and `generateStyleCard` still refuses a card with no evidence at all.
   if (attempts.length === 0) {
-    throw lastError;
+    return EMPTY_CHUNK_SUMMARY;
   }
   // The model could not produce a fully valid summary for this chunk even after
   // repairs (it deterministically cites an unverifiable in-content ID). Sanitize
   // every attempt and keep the one that retains the most verifiable evidence, so
   // an earlier attempt's valid observations are not lost to a worse final repair.
-  const verifiableContent = (summary: StyleChunkSummary): number =>
-    summary.observations.length + summary.representativeMessages.length;
   const best = attempts
     .map((attempt) => sanitizeChunkSummary(input.chunk, attempt))
     .reduce((strongest, candidate) =>
@@ -275,15 +303,6 @@ async function summarizeChunk(input: {
         ? candidate
         : strongest,
     );
-  // Fail only when *every* attempt sanitizes to nothing: a chunk that yields zero
-  // verifiable evidence from its entire month would otherwise let the card
-  // advertise full coverage (finalize still counts these messages as summarized)
-  // while silently omitting the month, so fail loudly instead of laundering the gap.
-  if (verifiableContent(best) === 0) {
-    throw new Error(
-      `chunk ${input.chunk.key} yielded no verifiable evidence after ${String(MAX_EXTRACTION_REPAIR_ATTEMPTS)} repair attempts and sanitization (last error: ${lastError.message})`,
-    );
-  }
   // Validate the sanitized result to prove it now satisfies the contract.
   validateChunkSummary(input.chunk, best);
   return best;
@@ -442,16 +461,36 @@ export async function generateStyleCard(input: {
   const chunks = buildStyleEvidenceChunks(input.candidate.safeMessages);
   const summarizedChunks: SummarizedChunk[] = [];
   for (const chunk of chunks) {
+    const summary = await summarizeChunk({
+      candidate: input.candidate,
+      chunk,
+      artifactStore: input.artifactStore,
+      budget: input.budget,
+    });
     summarizedChunks.push({
       key: chunk.key,
       month: chunk.month,
-      summary: await summarizeChunk({
-        candidate: input.candidate,
-        chunk,
-        artifactStore: input.artifactStore,
-        budget: input.budget,
-      }),
+      summary,
+      summarizedMessageCount: summarizedMessageCount(chunk, summary),
     });
+  }
+  const summarizedMessages = summarizedChunks.reduce(
+    (total, chunk) => total + chunk.summarizedMessageCount,
+    0,
+  );
+  // Chunk summaries are not the only evidence: `synthesisPrompt` also hands the
+  // model up to DIRECT_RECENT_STYLE_MESSAGES verbatim messages, and finalize
+  // validates every quoted and sampled ID against the safe corpus either way. So
+  // a person whose chunks all degrade can still get an honest, evidence-backed
+  // card — coverage simply reports that no chunk was summarized. Reject only when
+  // the model would see nothing at all, which would make the card a fabrication.
+  if (
+    summarizedMessages === 0 &&
+    input.candidate.directRecentMessages.length === 0
+  ) {
+    throw new GlitterEvidenceError(
+      `no evidence for ${input.candidate.person.id}: ${String(chunks.length)} chunks yielded nothing and there are no direct recent messages`,
+    );
   }
   let previous = await runSynthesis({
     ...input,
@@ -464,6 +503,7 @@ export async function generateStyleCard(input: {
     return finalizeStyleSynthesis({
       ...input,
       chunkCount: chunks.length,
+      summarizedMessages,
       synthesis: previous,
     });
   } catch (error: unknown) {
@@ -480,6 +520,7 @@ export async function generateStyleCard(input: {
       return finalizeStyleSynthesis({
         ...input,
         chunkCount: chunks.length,
+        summarizedMessages,
         synthesis: repaired,
       });
     } catch (error: unknown) {
@@ -487,5 +528,10 @@ export async function generateStyleCard(input: {
       previous = repaired;
     }
   }
-  throw lastError;
+  // Every bounded synthesis repair produced a card the contract rejects. That is
+  // this person's evidence, not a fault in the run.
+  throw new GlitterEvidenceError(
+    `style synthesis for ${input.candidate.person.id} failed after ${String(MAX_SYNTHESIS_REPAIR_ATTEMPTS)} repairs: ${lastError.message}`,
+    { cause: lastError },
+  );
 }

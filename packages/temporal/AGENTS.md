@@ -343,6 +343,24 @@ op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-loca
 op run --env-file=.env.audit -- bun run scripts/run-homelab-audit-local.ts
 ```
 
+**Local Glitter context refresh (no Temporal)** — see
+`scripts/run-glitter-context-refresh-local.ts`, exposed as `glitter:refresh-local`.
+It runs the real `refreshGlitterContext` activity under `MockActivityEnvironment`
+against the real corpus and the real generation-artifact cache, so it reproduces
+a production failure without waiting for a worker image to ship:
+
+```bash
+cd packages/temporal
+bun run glitter:refresh-local --dry-run=true --max-cost-usd=50 \
+  --snapshot-id=<snapshot-id> --snapshot-sha256=<snapshot-sha256>
+```
+
+Needs `GLITTER_DISCORD_GUILD_ID`, the `GLITTER_CORPUS_S3_*` credentials, and
+`OPENROUTER_API_KEY`; `--dry-run=false` also opens a PR and needs `GITHUB_APP_*`.
+Artifacts are cached by request digest rather than by run, so this re-reads
+whatever a production run already paid for instead of re-billing it — which is
+also why pinning a snapshot reuses more cache than reading the latest one.
+
 **Cluster RBAC** — the core and agent worker SAs get the cluster-wide read-only
 `temporal-worker-audit-reader` ClusterRole (see
 `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). A separate

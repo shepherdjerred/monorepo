@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { GlitterContextRefreshInputSchema } from "./glitter-context-refresh.ts";
+import { shouldFailRefreshRun } from "./glitter-context-refresh-state.ts";
 import {
   glitterContextProposalChecksum,
   glitterContextRunIdentity,
@@ -77,5 +78,23 @@ describe("Glitter context snapshot pin input", () => {
         snapshot: { snapshotSha256 },
       }),
     ).toThrow();
+  });
+});
+
+describe("Glitter refresh run outcome", () => {
+  test("ships a partial refresh but fails when nobody was refreshed", () => {
+    // One person skipped out of three is worth a PR — the other two are real
+    // work that used to be discarded when a single chunk failed.
+    expect(shouldFailRefreshRun({ candidateCount: 3, refreshedCount: 2 })).toBe(
+      false,
+    );
+    // Everyone failing means the cause is systemic, not one person's corpus.
+    expect(shouldFailRefreshRun({ candidateCount: 3, refreshedCount: 0 })).toBe(
+      true,
+    );
+    // Nobody was eligible this week: a legitimate no-op, not a failure.
+    expect(shouldFailRefreshRun({ candidateCount: 0, refreshedCount: 0 })).toBe(
+      false,
+    );
   });
 });

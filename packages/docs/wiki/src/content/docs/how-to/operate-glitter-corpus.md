@@ -82,9 +82,33 @@ daily capture; you do not trigger it.
 
 ## Note on the context refresh
 
-`glitter-context-refresh` is a separate scheduled workflow, not an operator
-action. It distills the corpus into per-person context and opens a PR that is
-always human-reviewed.
+`glitter-context-refresh` is a separate scheduled workflow rather than one of
+the operator actions above. It distills the corpus into per-person context and
+opens a PR that is always human-reviewed.
+
+One person's evidence failing no longer fails the run. A card the model cannot
+produce is listed as skipped in the result and in the PR body, and the other
+people are still refreshed; only a run where nobody was refreshed fails.
+
+To reproduce a refresh locally — against the real corpus and the real generation
+cache, without a Temporal server or a worker deploy — run the diagnostic harness.
+It stops before opening a PR unless you ask for a real run:
+
+```bash
+cd packages/temporal
+bun run glitter:refresh-local \
+  --dry-run=true \
+  --max-cost-usd=50 \
+  --snapshot-id=<snapshot-id> \
+  --snapshot-sha256=<snapshot-sha256>
+```
+
+It needs `GLITTER_DISCORD_GUILD_ID`, the `GLITTER_CORPUS_S3_*` credentials, and
+`OPENROUTER_API_KEY`; `--dry-run=false` additionally needs the `GITHUB_APP_*`
+credentials because it opens the PR. Cached generation artifacts are keyed by
+request digest rather than by run, so a local run reuses everything a production
+run already paid for. Pin `--snapshot-id`/`--snapshot-sha256` to reuse the most
+cache; omit both to read the latest verified snapshot.
 
 The weekly schedule passes a $40 uncached-cost kill switch. Operator
 invocations that omit `maxEstimatedCostUsd` still default to $10. A
