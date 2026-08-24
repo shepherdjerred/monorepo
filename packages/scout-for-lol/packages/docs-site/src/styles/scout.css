@@ -98,14 +98,6 @@
   margin-inline-start: calc(50% - 50dvw);
 }
 
-:root[data-has-sidebar] .scout-footer {
-  /* The sidebar remains sticky through the article's grid track. At the end
-     of the page, the full-bleed footer must paint over that track instead of
-     appearing underneath the sidebar. */
-  position: relative;
-  z-index: calc(var(--sl-z-index-menu) + 1);
-}
-
 html,
 body {
   overflow-x: clip;
@@ -119,6 +111,12 @@ body {
 
 @media (min-width: 50rem) {
   :root[data-has-sidebar] .scout-footer {
+    /* The sidebar remains sticky through the article's grid track. At the end
+       of the page, the full-bleed footer must paint over that track instead
+       of appearing underneath the sidebar. Keep this desktop-only so the
+       mobile menu can remain above the footer. */
+    position: relative;
+    z-index: calc(var(--sl-z-index-menu) + 1);
     margin-inline-start: calc(
       -1 * (var(--sl-content-inline-start) + var(--sl-content-pad-x))
     );
