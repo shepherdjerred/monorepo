@@ -39,6 +39,52 @@ fileprivate extension ForeignBytes {
     init(bufferPointer: UnsafeBufferPointer<UInt8>) {
         self.init(len: Int32(bufferPointer.count), data: bufferPointer.baseAddress)
     }
+
+    init(rawBufferPointer: UnsafeRawBufferPointer) {
+        self.init(
+            len: Int32(rawBufferPointer.count),
+            data: rawBufferPointer.baseAddress?.assumingMemoryBound(to: UInt8.self)
+        )
+    }
+}
+
+// Converter for `&[u8]` / `[ByRef] bytes` arguments.
+//
+// Conforms to `FfiConverter` so the compiler enforces the full converter
+// method set. Only the scope-bound `lower(_:_body:)` overload is sound —
+// zero-copy byte buffers only flow foreign -> Rust, and only in argument
+// position. The four protocol-witness methods (`lift`, `lower`, `read`,
+// `write`) `fatalError` at runtime if anyone reaches them.
+//
+// The scope-bound `lower` takes a closure because the `ForeignBytes`
+// pointer is only guaranteed valid for the duration of
+// `Data.withUnsafeBytes`. Callers must run the full FFI call inside
+// the closure body.
+fileprivate enum FfiConverterByRefBytes: FfiConverter {
+    typealias SwiftType = Data
+    typealias FfiType = ForeignBytes
+
+    static func lower<R>(_ value: Data, _ body: (ForeignBytes) throws -> R) rethrows -> R {
+        return try value.withUnsafeBytes { rawBuf in
+            try body(ForeignBytes(rawBufferPointer: rawBuf))
+        }
+    }
+
+    static func lower(_ value: Data) -> ForeignBytes {
+        fatalError("ByRef bytes cannot use the plain lower: returning ForeignBytes escapes the Data.withUnsafeBytes scope. Use the scope-bound lower(_:_body:) overload instead.")
+    }
+
+    static func lift(_ value: ForeignBytes) throws -> Data {
+        fatalError("ByRef bytes cannot be lifted: zero-copy &[u8] only flows foreign->Rust")
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Data {
+        fatalError("ByRef bytes cannot be read from a buffer: zero-copy &[u8] is only supported in argument position, not nested in records/options/etc.")
+    }
+
+    static func write(_ value: Data, into buf: inout [UInt8]) {
+        fatalError("ByRef bytes cannot be written to a buffer: zero-copy &[u8] is only supported in argument position, not nested in records/options/etc.")
+    }
 }
 
 // For every type used in the interface, we provide helper methods for conveniently
@@ -696,8 +742,9 @@ open class ClockImpl: Clock, @unchecked Sendable {
      */
 open func nowMillis() -> Int64  {
     return try!  FfiConverterInt64.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_clock_now_millis(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -707,9 +754,10 @@ open func nowMillis() -> Int64  {
      */
 open func localYmd(millis: Int64) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_clock_local_ymd(
             self.uniffiCloneHandle(),
-        FfiConverterInt64.lower(millis),$0
+        FfiConverterInt64.lower(millis),uniffiCallStatus
     )
 })
 }
@@ -1103,6 +1151,7 @@ open class FfiSyncEngine: FfiSyncEngineProtocol, @unchecked Sendable {
 public convenience init(api: TaskNotesApi?, queueStorage: QueueStorage, cacheStorage: TaskCacheStorage, clock: Clock, scheduler: RetryScheduler, random: Randomness, autoSync: Bool) {
     let handle =
         try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_constructor_ffisyncengine_new(
         FfiConverterOptionTypeTaskNotesApi.lower(api),
         FfiConverterTypeQueueStorage_lower(queueStorage),
@@ -1110,7 +1159,7 @@ public convenience init(api: TaskNotesApi?, queueStorage: QueueStorage, cacheSto
         FfiConverterTypeClock_lower(clock),
         FfiConverterTypeRetryScheduler_lower(scheduler),
         FfiConverterTypeRandomness_lower(random),
-        FfiConverterBool.lower(autoSync),$0
+        FfiConverterBool.lower(autoSync),uniffiCallStatus
     )
 }
     self.init(unsafeFromHandle: handle)
@@ -1141,8 +1190,9 @@ public convenience init(api: TaskNotesApi?, queueStorage: QueueStorage, cacheSto
      * A no-op on an unconfigured engine, and safe to call any number of times.
      */
 open func cancelAll()  {try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_cancel_all(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
 }
@@ -1155,9 +1205,10 @@ open func cancelAll()  {try! rustCall() {
      * Propagates a storage-layer failure, or reports a poisoned lock.
      */
 open func discardDeadLetter(id: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_discard_dead_letter(
             self.uniffiCloneHandle(),
-        FfiConverterString.lower(id),$0
+        FfiConverterString.lower(id),uniffiCallStatus
     )
 }
 }
@@ -1175,9 +1226,10 @@ open func discardDeadLetter(id: String)throws   {try rustCallWithError(FfiConver
      */
 open func dispatch(input: CommandInput)throws  -> Task?  {
     return try  FfiConverterOptionTypeTask.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_dispatch(
             self.uniffiCloneHandle(),
-        FfiConverterTypeCommandInput_lower(input),$0
+        FfiConverterTypeCommandInput_lower(input),uniffiCallStatus
     )
 })
 }
@@ -1191,8 +1243,9 @@ open func dispatch(input: CommandInput)throws  -> Task?  {
      */
 open func isDisposed()throws  -> Bool  {
     return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_is_disposed(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -1206,8 +1259,9 @@ open func isDisposed()throws  -> Bool  {
      */
 open func isSyncRequested()throws  -> Bool  {
     return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_is_sync_requested(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -1224,8 +1278,9 @@ open func isSyncRequested()throws  -> Bool  {
      * Reports a poisoned lock.
      */
 open func requestSync()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_request_sync(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
 }
@@ -1243,9 +1298,10 @@ open func requestSync()throws   {try rustCallWithError(FfiConverterTypeCoreError
      */
 open func resolveTaskId(id: TaskId)throws  -> TaskId  {
     return try  FfiConverterTypeTaskId_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_resolve_task_id(
             self.uniffiCloneHandle(),
-        FfiConverterTypeTaskId_lower(id),$0
+        FfiConverterTypeTaskId_lower(id),uniffiCallStatus
     )
 })
 }
@@ -1258,8 +1314,9 @@ open func resolveTaskId(id: TaskId)throws  -> TaskId  {
      * Propagates a storage-layer failure, or reports a poisoned lock.
      */
 open func restore()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_restore(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
 }
@@ -1272,9 +1329,10 @@ open func restore()throws   {try rustCallWithError(FfiConverterTypeCoreError_lif
      * Propagates a storage-layer failure, or reports a poisoned lock.
      */
 open func retryDeadLetter(id: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_retry_dead_letter(
             self.uniffiCloneHandle(),
-        FfiConverterString.lower(id),$0
+        FfiConverterString.lower(id),uniffiCallStatus
     )
 }
 }
@@ -1291,8 +1349,9 @@ open func retryDeadLetter(id: String)throws   {try rustCallWithError(FfiConverte
      * discarded — read it back from [`FfiSyncEngine::status`].
      */
 open func settle()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_settle(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
 }
@@ -1313,8 +1372,9 @@ open func settle()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift
      * Reports a poisoned lock.
      */
 open func shutdown()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_shutdown(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
 }
@@ -1329,8 +1389,9 @@ open func shutdown()throws   {try rustCallWithError(FfiConverterTypeCoreError_li
      */
 open func snapshot()throws  -> TaskStoreSnapshot  {
     return try  FfiConverterTypeTaskStoreSnapshot_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_snapshot(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -1344,8 +1405,9 @@ open func snapshot()throws  -> TaskStoreSnapshot  {
      */
 open func status()throws  -> SyncStatus  {
     return try  FfiConverterTypeSyncStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_status(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -1360,8 +1422,9 @@ open func status()throws  -> SyncStatus  {
      * has acknowledged it or it has been parked.
      */
 open func syncNow()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_sync_now(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
 }
@@ -1531,9 +1594,10 @@ open class HttpClientImpl: HttpClient, @unchecked Sendable {
      */
 open func send(request: HttpRequest)throws  -> HttpResponse  {
     return try  FfiConverterTypeHttpResponse_lift(try rustCallWithError(FfiConverterTypeTransportError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_httpclient_send(
             self.uniffiCloneHandle(),
-        FfiConverterTypeHttpRequest_lower(request),$0
+        FfiConverterTypeHttpRequest_lower(request),uniffiCallStatus
     )
 })
 }
@@ -1546,8 +1610,9 @@ open func send(request: HttpRequest)throws  -> HttpResponse  {
      * request surfaces to its caller as an ordinary [`TransportError`].
      */
 open func cancelAll()  {try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_httpclient_cancel_all(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
 }
@@ -1839,8 +1904,9 @@ open class MigrationStorageImpl: MigrationStorage, @unchecked Sendable {
      */
 open func readSchemaVersion()throws  -> UInt32  {
     return try  FfiConverterUInt32.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_migrationstorage_read_schema_version(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -1853,9 +1919,10 @@ open func readSchemaVersion()throws  -> UInt32  {
      * A storage-layer failure.
      */
 open func writeSchemaVersion(version: UInt32)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_migrationstorage_write_schema_version(
             self.uniffiCloneHandle(),
-        FfiConverterUInt32.lower(version),$0
+        FfiConverterUInt32.lower(version),uniffiCallStatus
     )
 }
 }
@@ -1869,8 +1936,9 @@ open func writeSchemaVersion(version: UInt32)throws   {try rustCallWithError(Ffi
      */
 open func readLegacyQueue()throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_migrationstorage_read_legacy_queue(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -1883,8 +1951,9 @@ open func readLegacyQueue()throws  -> String?  {
      * A storage-layer failure.
      */
 open func removeLegacyQueue()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_migrationstorage_remove_legacy_queue(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
 }
@@ -1898,8 +1967,9 @@ open func removeLegacyQueue()throws   {try rustCallWithError(FfiConverterTypeCor
      */
 open func readQueue()throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_migrationstorage_read_queue(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -1912,9 +1982,10 @@ open func readQueue()throws  -> String?  {
      * A storage-layer failure.
      */
 open func writeQueue(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_migrationstorage_write_queue(
             self.uniffiCloneHandle(),
-        FfiConverterString.lower(data),$0
+        FfiConverterString.lower(data),uniffiCallStatus
     )
 }
 }
@@ -2285,8 +2356,9 @@ open class QueueStorageImpl: QueueStorage, @unchecked Sendable {
      */
 open func readQueue()throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_queuestorage_read_queue(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -2299,9 +2371,10 @@ open func readQueue()throws  -> String?  {
      * A storage-layer failure.
      */
 open func writeQueue(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_queuestorage_write_queue(
             self.uniffiCloneHandle(),
-        FfiConverterString.lower(data),$0
+        FfiConverterString.lower(data),uniffiCallStatus
     )
 }
 }
@@ -2315,8 +2388,9 @@ open func writeQueue(data: String)throws   {try rustCallWithError(FfiConverterTy
      */
 open func readDeadLetter()throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_queuestorage_read_dead_letter(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -2329,9 +2403,10 @@ open func readDeadLetter()throws  -> String?  {
      * A storage-layer failure.
      */
 open func writeDeadLetter(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_queuestorage_write_dead_letter(
             self.uniffiCloneHandle(),
-        FfiConverterString.lower(data),$0
+        FfiConverterString.lower(data),uniffiCallStatus
     )
 }
 }
@@ -2627,8 +2702,9 @@ open class RandomnessImpl: Randomness, @unchecked Sendable {
      */
 open func nextUnitPpm() -> UInt32  {
     return try!  FfiConverterUInt32.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_randomness_next_unit_ppm(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -2857,9 +2933,10 @@ open class RetrySchedulerImpl: RetryScheduler, @unchecked Sendable {
      */
 open func arm(delayMillis: Int64) -> TimerId  {
     return try!  FfiConverterTypeTimerId_lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_retryscheduler_arm(
             self.uniffiCloneHandle(),
-        FfiConverterInt64.lower(delayMillis),$0
+        FfiConverterInt64.lower(delayMillis),uniffiCallStatus
     )
 })
 }
@@ -2868,9 +2945,10 @@ open func arm(delayMillis: Int64) -> TimerId  {
      * Cancel a previously armed timer. A no-op if it already fired.
      */
 open func cancel(timer: TimerId)  {try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_retryscheduler_cancel(
             self.uniffiCloneHandle(),
-        FfiConverterTypeTimerId_lower(timer),$0
+        FfiConverterTypeTimerId_lower(timer),uniffiCallStatus
     )
 }
 }
@@ -3219,8 +3297,9 @@ open class TaskCacheStorageImpl: TaskCacheStorage, @unchecked Sendable {
      */
 open func readTasks()throws  -> [Task]  {
     return try  FfiConverterSequenceTypeTask.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_tasks(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -3233,9 +3312,10 @@ open func readTasks()throws  -> [Task]  {
      * A storage-layer failure.
      */
 open func writeTasks(tasks: [Task])throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_tasks(
             self.uniffiCloneHandle(),
-        FfiConverterSequenceTypeTask.lower(tasks),$0
+        FfiConverterSequenceTypeTask.lower(tasks),uniffiCallStatus
     )
 }
 }
@@ -3249,8 +3329,9 @@ open func writeTasks(tasks: [Task])throws   {try rustCallWithError(FfiConverterT
      */
 open func readIdAliases()throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_id_aliases(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -3263,9 +3344,10 @@ open func readIdAliases()throws  -> String?  {
      * A storage-layer failure.
      */
 open func writeIdAliases(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_id_aliases(
             self.uniffiCloneHandle(),
-        FfiConverterString.lower(data),$0
+        FfiConverterString.lower(data),uniffiCallStatus
     )
 }
 }
@@ -3283,8 +3365,9 @@ open func writeIdAliases(data: String)throws   {try rustCallWithError(FfiConvert
      */
 open func readIdCounters()throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_id_counters(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -3304,9 +3387,10 @@ open func readIdCounters()throws  -> String?  {
      * A storage-layer failure.
      */
 open func writeIdCounters(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_id_counters(
             self.uniffiCloneHandle(),
-        FfiConverterString.lower(data),$0
+        FfiConverterString.lower(data),uniffiCallStatus
     )
 }
 }
@@ -3324,8 +3408,9 @@ open func writeIdCounters(data: String)throws   {try rustCallWithError(FfiConver
      */
 open func readCompletionRestores()throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_completion_restores(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -3343,9 +3428,10 @@ open func readCompletionRestores()throws  -> String?  {
      * A storage-layer failure.
      */
 open func writeCompletionRestores(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_completion_restores(
             self.uniffiCloneHandle(),
-        FfiConverterString.lower(data),$0
+        FfiConverterString.lower(data),uniffiCallStatus
     )
 }
 }
@@ -3359,8 +3445,9 @@ open func writeCompletionRestores(data: String)throws   {try rustCallWithError(F
      */
 open func readLastSyncTime()throws  -> Int64?  {
     return try  FfiConverterOptionInt64.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_last_sync_time(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -3373,9 +3460,10 @@ open func readLastSyncTime()throws  -> Int64?  {
      * A storage-layer failure.
      */
 open func writeLastSyncTime(millis: Int64)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_last_sync_time(
             self.uniffiCloneHandle(),
-        FfiConverterInt64.lower(millis),$0
+        FfiConverterInt64.lower(millis),uniffiCallStatus
     )
 }
 }
@@ -3894,10 +3982,11 @@ open class TaskNotesApi: TaskNotesApiProtocol, @unchecked Sendable {
 public convenience init(transport: HttpClient, baseUrl: String, requestTimeoutMillis: UInt32)throws  {
     let handle =
         try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_constructor_tasknotesapi_new(
         FfiConverterTypeHttpClient_lower(transport),
         FfiConverterString.lower(baseUrl),
-        FfiConverterUInt32.lower(requestTimeoutMillis),$0
+        FfiConverterUInt32.lower(requestTimeoutMillis),uniffiCallStatus
     )
 }
     self.init(unsafeFromHandle: handle)
@@ -3920,8 +4009,9 @@ public convenience init(transport: HttpClient, baseUrl: String, requestTimeoutMi
      */
 open func baseUrl() -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_base_url(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -3936,8 +4026,9 @@ open func baseUrl() -> String  {
      * the app is quitting mid-request.
      */
 open func cancelAll()  {try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_cancel_all(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
 }
@@ -3951,8 +4042,9 @@ open func cancelAll()  {try! rustCall() {
      */
 open func pausePomodoro()throws  -> PomodoroStatus  {
     return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pause_pomodoro(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -3966,8 +4058,9 @@ open func pausePomodoro()throws  -> PomodoroStatus  {
      */
 open func pomodoroStatus()throws  -> PomodoroStatus  {
     return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pomodoro_status(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -3981,9 +4074,10 @@ open func pomodoroStatus()throws  -> PomodoroStatus  {
      */
 open func startPomodoro(taskId: TaskId?)throws  -> PomodoroStatus  {
     return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_pomodoro(
             self.uniffiCloneHandle(),
-        FfiConverterOptionTypeTaskId.lower(taskId),$0
+        FfiConverterOptionTypeTaskId.lower(taskId),uniffiCallStatus
     )
 })
 }
@@ -3997,9 +4091,10 @@ open func startPomodoro(taskId: TaskId?)throws  -> PomodoroStatus  {
      */
 open func startTimeTracking(taskId: TaskId)throws  -> Task  {
     return try  FfiConverterTypeTask_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_time_tracking(
             self.uniffiCloneHandle(),
-        FfiConverterTypeTaskId_lower(taskId),$0
+        FfiConverterTypeTaskId_lower(taskId),uniffiCallStatus
     )
 })
 }
@@ -4013,8 +4108,9 @@ open func startTimeTracking(taskId: TaskId)throws  -> Task  {
      */
 open func stopPomodoro()throws  -> PomodoroStatus  {
     return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_pomodoro(
-            self.uniffiCloneHandle(),$0
+            self.uniffiCloneHandle(),uniffiCallStatus
     )
 })
 }
@@ -4028,9 +4124,10 @@ open func stopPomodoro()throws  -> PomodoroStatus  {
      */
 open func stopTimeTracking(taskId: TaskId)throws  -> Task  {
     return try  FfiConverterTypeTask_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_time_tracking(
             self.uniffiCloneHandle(),
-        FfiConverterTypeTaskId_lower(taskId),$0
+        FfiConverterTypeTaskId_lower(taskId),uniffiCallStatus
     )
 })
 }
@@ -4044,9 +4141,10 @@ open func stopTimeTracking(taskId: TaskId)throws  -> Task  {
      */
 open func taskTime(taskId: TaskId)throws  -> TaskTime  {
     return try  FfiConverterTypeTaskTime_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(
             self.uniffiCloneHandle(),
-        FfiConverterTypeTaskId_lower(taskId),$0
+        FfiConverterTypeTaskId_lower(taskId),uniffiCallStatus
     )
 })
 }
@@ -4060,9 +4158,10 @@ open func taskTime(taskId: TaskId)throws  -> TaskTime  {
      */
 open func timeSummary(period: String)throws  -> TimeSummary  {
     return try  FfiConverterTypeTimeSummary_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(
             self.uniffiCloneHandle(),
-        FfiConverterString.lower(period),$0
+        FfiConverterString.lower(period),uniffiCallStatus
     )
 })
 }
@@ -7771,8 +7870,7 @@ public func FfiConverterTypeWeekdayHeader_lower(_ value: WeekdayHeader) -> RustB
     return FfiConverterTypeWeekdayHeader.lower(value)
 }
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * The recorded form of one user mutation.
  *
@@ -7977,8 +8075,7 @@ public func FfiConverterTypeCommand_lower(_ value: Command) -> RustBuffer {
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * A mutation as the UI expresses it, before ids and timestamps are minted.
  *
@@ -8152,7 +8249,8 @@ public func FfiConverterTypeCommandInput_lower(_ value: CommandInput) -> RustBuf
  * `.inProgress`. That inconsistency is upstream and expected; the generated
  * target is lint-exempt, so it will not fail a build.
  */
-public enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+public 
+enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
 
     
     
@@ -8318,8 +8416,7 @@ public func FfiConverterTypeCoreError_lower(_ value: CoreError) -> RustBuffer {
     return FfiConverterTypeCoreError.lower(value)
 }
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::dates::DateGroup`].
  */
@@ -8424,8 +8521,7 @@ public func FfiConverterTypeDateGroup_lower(_ value: DateGroup) -> RustBuffer {
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::recurrence::Frequency`].
  */
@@ -8550,8 +8646,7 @@ public func FfiConverterTypeFrequency_lower(_ value: Frequency) -> RustBuffer {
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::domain::HealthState`].
  */
@@ -8626,8 +8721,7 @@ public func FfiConverterTypeHealthState_lower(_ value: HealthState) -> RustBuffe
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::net::HttpMethod`].
  */
@@ -8722,8 +8816,7 @@ public func FfiConverterTypeHttpMethod_lower(_ value: HttpMethod) -> RustBuffer 
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * A clearable whole-minutes field.
  *
@@ -8816,8 +8909,7 @@ public func FfiConverterTypeMinutesUpdate_lower(_ value: MinutesUpdate) -> RustB
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::domain::PomodoroPhase`].
  */
@@ -8892,8 +8984,7 @@ public func FfiConverterTypePomodoroPhase_lower(_ value: PomodoroPhase) -> RustB
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::domain::Priority`]. The order is also the sort order.
  */
@@ -9008,8 +9099,7 @@ public func FfiConverterTypePriority_lower(_ value: Priority) -> RustBuffer {
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::domain::RecurrenceAnchor`].
  */
@@ -9084,8 +9174,7 @@ public func FfiConverterTypeRecurrenceAnchor_lower(_ value: RecurrenceAnchor) ->
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * A clearable recurrence anchor.
  *
@@ -9179,8 +9268,7 @@ public func FfiConverterTypeRecurrenceAnchorUpdate_lower(_ value: RecurrenceAnch
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::domain::ReminderKind`].
  */
@@ -9255,8 +9343,7 @@ public func FfiConverterTypeReminderKind_lower(_ value: ReminderKind) -> RustBuf
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::domain::SortDirection`].
  */
@@ -9331,8 +9418,7 @@ public func FfiConverterTypeSortDirection_lower(_ value: SortDirection) -> RustB
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::domain::SortField`].
  *
@@ -9431,8 +9517,7 @@ public func FfiConverterTypeSortField_lower(_ value: SortField) -> RustBuffer {
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::sync::SyncState`].
  */
@@ -9537,8 +9622,7 @@ public func FfiConverterTypeSyncState_lower(_ value: SyncState) -> RustBuffer {
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::domain::TaskStatus`].
  */
@@ -9653,8 +9737,7 @@ public func FfiConverterTypeTaskStatus_lower(_ value: TaskStatus) -> RustBuffer 
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * A clearable string field.
  *
@@ -9763,7 +9846,8 @@ public func FfiConverterTypeTextUpdate_lower(_ value: TextUpdate) -> RustBuffer 
  * 429 and 5xx are transient, 404 is a delete's goal state — is the core's
  * decision, read off [`HttpResponse::status`].
  */
-public enum TransportError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+public 
+enum TransportError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
 
     
     
@@ -9890,8 +9974,7 @@ public func FfiConverterTypeTransportError_lower(_ value: TransportError) -> Rus
     return FfiConverterTypeTransportError.lower(value)
 }
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`tasknotes_core::dates::UpcomingHorizon`].
  */
@@ -9969,8 +10052,7 @@ public func FfiConverterTypeUpcomingHorizon_lower(_ value: UpcomingHorizon) -> R
 }
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * See [`chrono::Weekday`]. Monday first, matching chrono's declaration order.
  */
@@ -11170,10 +11252,6 @@ fileprivate struct FfiConverterSequenceTypeTaskId: FfiConverterRustBuffer {
 }
 
 
-/**
- * Typealias from the type name used in the UDL file to the builtin type.  This
- * is needed because the UDL type name is used in function/method signatures.
- */
 public typealias ContextName = String
 
 #if swift(>=5.8)
@@ -11214,10 +11292,6 @@ public func FfiConverterTypeContextName_lower(_ value: ContextName) -> RustBuffe
 
 
 
-/**
- * Typealias from the type name used in the UDL file to the builtin type.  This
- * is needed because the UDL type name is used in function/method signatures.
- */
 public typealias ExtraFields = String
 
 #if swift(>=5.8)
@@ -11258,10 +11332,6 @@ public func FfiConverterTypeExtraFields_lower(_ value: ExtraFields) -> RustBuffe
 
 
 
-/**
- * Typealias from the type name used in the UDL file to the builtin type.  This
- * is needed because the UDL type name is used in function/method signatures.
- */
 public typealias ProjectName = String
 
 #if swift(>=5.8)
@@ -11302,10 +11372,6 @@ public func FfiConverterTypeProjectName_lower(_ value: ProjectName) -> RustBuffe
 
 
 
-/**
- * Typealias from the type name used in the UDL file to the builtin type.  This
- * is needed because the UDL type name is used in function/method signatures.
- */
 public typealias TagName = String
 
 #if swift(>=5.8)
@@ -11346,10 +11412,6 @@ public func FfiConverterTypeTagName_lower(_ value: TagName) -> RustBuffer {
 
 
 
-/**
- * Typealias from the type name used in the UDL file to the builtin type.  This
- * is needed because the UDL type name is used in function/method signatures.
- */
 public typealias TaskId = String
 
 #if swift(>=5.8)
@@ -11390,10 +11452,6 @@ public func FfiConverterTypeTaskId_lower(_ value: TaskId) -> RustBuffer {
 
 
 
-/**
- * Typealias from the type name used in the UDL file to the builtin type.  This
- * is needed because the UDL type name is used in function/method signatures.
- */
 public typealias TaskTitle = String
 
 #if swift(>=5.8)
@@ -11434,10 +11492,6 @@ public func FfiConverterTypeTaskTitle_lower(_ value: TaskTitle) -> RustBuffer {
 
 
 
-/**
- * Typealias from the type name used in the UDL file to the builtin type.  This
- * is needed because the UDL type name is used in function/method signatures.
- */
 public typealias TimerId = UInt64
 
 #if swift(>=5.8)
@@ -11484,7 +11538,8 @@ public func FfiConverterTypeTimerId_lower(_ value: TimerId) -> UInt64 {
  */
 public func coreVersion() -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
-    uniffi_tasknotes_core_ffi_fn_func_core_version($0
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_core_version(uniffiCallStatus
     )
 })
 }
@@ -11498,8 +11553,9 @@ public func coreVersion() -> String  {
  */
 public func filterChainFromJson(json: String)throws  -> FilterChain  {
     return try  FfiConverterTypeFilterChain_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_filter_chain_from_json(
-        FfiConverterString.lower(json),$0
+        FfiConverterString.lower(json),uniffiCallStatus
     )
 })
 }
@@ -11512,8 +11568,9 @@ public func filterChainFromJson(json: String)throws  -> FilterChain  {
  */
 public func filterChainToJson(chain: FilterChain)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_filter_chain_to_json(
-        FfiConverterTypeFilterChain_lower(chain),$0
+        FfiConverterTypeFilterChain_lower(chain),uniffiCallStatus
     )
 })
 }
@@ -11527,8 +11584,9 @@ public func filterChainToJson(chain: FilterChain)throws  -> String  {
  */
 public func filterConfigFromJson(json: String)throws  -> FilterConfig  {
     return try  FfiConverterTypeFilterConfig_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_filter_config_from_json(
-        FfiConverterString.lower(json),$0
+        FfiConverterString.lower(json),uniffiCallStatus
     )
 })
 }
@@ -11543,8 +11601,9 @@ public func filterConfigFromJson(json: String)throws  -> FilterConfig  {
  */
 public func filterConfigToJson(filter: FilterConfig)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_filter_config_to_json(
-        FfiConverterTypeFilterConfig_lower(filter),$0
+        FfiConverterTypeFilterConfig_lower(filter),uniffiCallStatus
     )
 })
 }
@@ -11553,7 +11612,8 @@ public func filterConfigToJson(filter: FilterConfig)throws  -> String  {
  */
 public func priorityAll() -> [Priority]  {
     return try!  FfiConverterSequenceTypePriority.lift(try! rustCall() {
-    uniffi_tasknotes_core_ffi_fn_func_priority_all($0
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_priority_all(uniffiCallStatus
     )
 })
 }
@@ -11562,8 +11622,9 @@ public func priorityAll() -> [Priority]  {
  */
 public func priorityLabel(priority: Priority) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_priority_label(
-        FfiConverterTypePriority_lower(priority),$0
+        FfiConverterTypePriority_lower(priority),uniffiCallStatus
     )
 })
 }
@@ -11576,8 +11637,9 @@ public func priorityLabel(priority: Priority) -> String  {
  */
 public func priorityParse(raw: String)throws  -> Priority  {
     return try  FfiConverterTypePriority_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_priority_parse(
-        FfiConverterString.lower(raw),$0
+        FfiConverterString.lower(raw),uniffiCallStatus
     )
 })
 }
@@ -11586,8 +11648,9 @@ public func priorityParse(raw: String)throws  -> Priority  {
  */
 public func priorityRank(priority: Priority) -> UInt8  {
     return try!  FfiConverterUInt8.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_priority_rank(
-        FfiConverterTypePriority_lower(priority),$0
+        FfiConverterTypePriority_lower(priority),uniffiCallStatus
     )
 })
 }
@@ -11596,8 +11659,9 @@ public func priorityRank(priority: Priority) -> UInt8  {
  */
 public func priorityWireValue(priority: Priority) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_priority_wire_value(
-        FfiConverterTypePriority_lower(priority),$0
+        FfiConverterTypePriority_lower(priority),uniffiCallStatus
     )
 })
 }
@@ -11606,8 +11670,9 @@ public func priorityWireValue(priority: Priority) -> String  {
  */
 public func projectDisplayName(value: String) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_project_display_name(
-        FfiConverterString.lower(value),$0
+        FfiConverterString.lower(value),uniffiCallStatus
     )
 })
 }
@@ -11619,9 +11684,10 @@ public func projectDisplayName(value: String) -> String  {
  */
 public func projectMatches(left: String, right: String) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_project_matches(
         FfiConverterString.lower(left),
-        FfiConverterString.lower(right),$0
+        FfiConverterString.lower(right),uniffiCallStatus
     )
 })
 }
@@ -11630,8 +11696,9 @@ public func projectMatches(left: String, right: String) -> Bool  {
  */
 public func projectPath(value: String) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_project_path(
-        FfiConverterString.lower(value),$0
+        FfiConverterString.lower(value),uniffiCallStatus
     )
 })
 }
@@ -11644,8 +11711,9 @@ public func projectPath(value: String) -> String  {
  */
 public func recurrenceAnchorParse(raw: String)throws  -> RecurrenceAnchor  {
     return try  FfiConverterTypeRecurrenceAnchor_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_anchor_parse(
-        FfiConverterString.lower(raw),$0
+        FfiConverterString.lower(raw),uniffiCallStatus
     )
 })
 }
@@ -11654,8 +11722,9 @@ public func recurrenceAnchorParse(raw: String)throws  -> RecurrenceAnchor  {
  */
 public func recurrenceAnchorWireValue(anchor: RecurrenceAnchor) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_anchor_wire_value(
-        FfiConverterTypeRecurrenceAnchor_lower(anchor),$0
+        FfiConverterTypeRecurrenceAnchor_lower(anchor),uniffiCallStatus
     )
 })
 }
@@ -11670,8 +11739,9 @@ public func recurrenceAnchorWireValue(anchor: RecurrenceAnchor) -> String  {
  */
 public func sortConfigFromJson(json: String)throws  -> SortConfig  {
     return try  FfiConverterTypeSortConfig_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_sort_config_from_json(
-        FfiConverterString.lower(json),$0
+        FfiConverterString.lower(json),uniffiCallStatus
     )
 })
 }
@@ -11689,8 +11759,9 @@ public func sortConfigFromJson(json: String)throws  -> SortConfig  {
  */
 public func sortConfigToJson(sort: SortConfig)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_sort_config_to_json(
-        FfiConverterTypeSortConfig_lower(sort),$0
+        FfiConverterTypeSortConfig_lower(sort),uniffiCallStatus
     )
 })
 }
@@ -11705,8 +11776,9 @@ public func sortConfigToJson(sort: SortConfig)throws  -> String  {
  */
 public func taskFilterActiveCount(filter: FilterConfig) -> UInt32  {
     return try!  FfiConverterUInt32.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_filter_active_count(
-        FfiConverterTypeFilterConfig_lower(filter),$0
+        FfiConverterTypeFilterConfig_lower(filter),uniffiCallStatus
     )
 })
 }
@@ -11715,9 +11787,10 @@ public func taskFilterActiveCount(filter: FilterConfig) -> UInt32  {
  */
 public func taskFilterApply(tasks: [Task], filter: FilterConfig) -> [Task]  {
     return try!  FfiConverterSequenceTypeTask.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_filter_apply(
         FfiConverterSequenceTypeTask.lower(tasks),
-        FfiConverterTypeFilterConfig_lower(filter),$0
+        FfiConverterTypeFilterConfig_lower(filter),uniffiCallStatus
     )
 })
 }
@@ -11734,9 +11807,10 @@ public func taskFilterApply(tasks: [Task], filter: FilterConfig) -> [Task]  {
  */
 public func taskFilterChainApply(tasks: [Task], chain: FilterChain) -> [Task]  {
     return try!  FfiConverterSequenceTypeTask.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_filter_chain_apply(
         FfiConverterSequenceTypeTask.lower(tasks),
-        FfiConverterTypeFilterChain_lower(chain),$0
+        FfiConverterTypeFilterChain_lower(chain),uniffiCallStatus
     )
 })
 }
@@ -11749,8 +11823,9 @@ public func taskFilterChainApply(tasks: [Task], chain: FilterChain) -> [Task]  {
  */
 public func taskFilterChainIsActive(chain: FilterChain) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_filter_chain_is_active(
-        FfiConverterTypeFilterChain_lower(chain),$0
+        FfiConverterTypeFilterChain_lower(chain),uniffiCallStatus
     )
 })
 }
@@ -11759,9 +11834,10 @@ public func taskFilterChainIsActive(chain: FilterChain) -> Bool  {
  */
 public func taskFilterChainMatches(task: Task, chain: FilterChain) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_filter_chain_matches(
         FfiConverterTypeTask_lower(task),
-        FfiConverterTypeFilterChain_lower(chain),$0
+        FfiConverterTypeFilterChain_lower(chain),uniffiCallStatus
     )
 })
 }
@@ -11770,8 +11846,9 @@ public func taskFilterChainMatches(task: Task, chain: FilterChain) -> Bool  {
  */
 public func taskFilterIsActive(filter: FilterConfig) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_filter_is_active(
-        FfiConverterTypeFilterConfig_lower(filter),$0
+        FfiConverterTypeFilterConfig_lower(filter),uniffiCallStatus
     )
 })
 }
@@ -11780,9 +11857,10 @@ public func taskFilterIsActive(filter: FilterConfig) -> Bool  {
  */
 public func taskFilterMatches(task: Task, filter: FilterConfig) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_filter_matches(
         FfiConverterTypeTask_lower(task),
-        FfiConverterTypeFilterConfig_lower(filter),$0
+        FfiConverterTypeFilterConfig_lower(filter),uniffiCallStatus
     )
 })
 }
@@ -11797,8 +11875,9 @@ public func taskFilterMatches(task: Task, filter: FilterConfig) -> Bool  {
  */
 public func taskFromJson(json: String)throws  -> Task  {
     return try  FfiConverterTypeTask_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_from_json(
-        FfiConverterString.lower(json),$0
+        FfiConverterString.lower(json),uniffiCallStatus
     )
 })
 }
@@ -11822,8 +11901,9 @@ public func taskFromJson(json: String)throws  -> Task  {
  */
 public func taskIdParse(raw: String)throws  -> TaskId  {
     return try  FfiConverterTypeTaskId_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_id_parse(
-        FfiConverterString.lower(raw),$0
+        FfiConverterString.lower(raw),uniffiCallStatus
     )
 })
 }
@@ -11840,9 +11920,10 @@ public func taskIdParse(raw: String)throws  -> TaskId  {
  */
 public func taskSearchMatches(task: Task, query: String) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_search_matches(
         FfiConverterTypeTask_lower(task),
-        FfiConverterString.lower(query),$0
+        FfiConverterString.lower(query),uniffiCallStatus
     )
 })
 }
@@ -11868,10 +11949,11 @@ public func taskSearchMatches(task: Task, query: String) -> Bool  {
  */
 public func taskSortApply(tasks: [Task], sort: SortConfig, today: String? = nil)throws  -> [Task]  {
     return try  FfiConverterSequenceTypeTask.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_sort_apply(
         FfiConverterSequenceTypeTask.lower(tasks),
         FfiConverterTypeSortConfig_lower(sort),
-        FfiConverterOptionString.lower(today),$0
+        FfiConverterOptionString.lower(today),uniffiCallStatus
     )
 })
 }
@@ -11880,7 +11962,8 @@ public func taskSortApply(tasks: [Task], sort: SortConfig, today: String? = nil)
  */
 public func taskStatusAll() -> [TaskStatus]  {
     return try!  FfiConverterSequenceTypeTaskStatus.lift(try! rustCall() {
-    uniffi_tasknotes_core_ffi_fn_func_task_status_all($0
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_task_status_all(uniffiCallStatus
     )
 })
 }
@@ -11889,8 +11972,9 @@ public func taskStatusAll() -> [TaskStatus]  {
  */
 public func taskStatusIsActive(status: TaskStatus) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_status_is_active(
-        FfiConverterTypeTaskStatus_lower(status),$0
+        FfiConverterTypeTaskStatus_lower(status),uniffiCallStatus
     )
 })
 }
@@ -11899,8 +11983,9 @@ public func taskStatusIsActive(status: TaskStatus) -> Bool  {
  */
 public func taskStatusLabel(status: TaskStatus) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_status_label(
-        FfiConverterTypeTaskStatus_lower(status),$0
+        FfiConverterTypeTaskStatus_lower(status),uniffiCallStatus
     )
 })
 }
@@ -11909,8 +11994,9 @@ public func taskStatusLabel(status: TaskStatus) -> String  {
  */
 public func taskStatusNext(status: TaskStatus) -> TaskStatus  {
     return try!  FfiConverterTypeTaskStatus_lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_status_next(
-        FfiConverterTypeTaskStatus_lower(status),$0
+        FfiConverterTypeTaskStatus_lower(status),uniffiCallStatus
     )
 })
 }
@@ -11926,8 +12012,9 @@ public func taskStatusNext(status: TaskStatus) -> TaskStatus  {
  */
 public func taskStatusParse(raw: String)throws  -> TaskStatus  {
     return try  FfiConverterTypeTaskStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_status_parse(
-        FfiConverterString.lower(raw),$0
+        FfiConverterString.lower(raw),uniffiCallStatus
     )
 })
 }
@@ -11936,8 +12023,9 @@ public func taskStatusParse(raw: String)throws  -> TaskStatus  {
  */
 public func taskStatusWireValue(status: TaskStatus) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_status_wire_value(
-        FfiConverterTypeTaskStatus_lower(status),$0
+        FfiConverterTypeTaskStatus_lower(status),uniffiCallStatus
     )
 })
 }
@@ -11951,8 +12039,9 @@ public func taskStatusWireValue(status: TaskStatus) -> String  {
  */
 public func taskToJson(task: Task)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_task_to_json(
-        FfiConverterTypeTask_lower(task),$0
+        FfiConverterTypeTask_lower(task),uniffiCallStatus
     )
 })
 }
@@ -11968,8 +12057,9 @@ public func taskToJson(task: Task)throws  -> String  {
  */
 public func updateTaskRequestFromJson(json: String)throws  -> UpdateTaskRequest  {
     return try  FfiConverterTypeUpdateTaskRequest_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_update_task_request_from_json(
-        FfiConverterString.lower(json),$0
+        FfiConverterString.lower(json),uniffiCallStatus
     )
 })
 }
@@ -11985,8 +12075,9 @@ public func updateTaskRequestFromJson(json: String)throws  -> UpdateTaskRequest 
  */
 public func updateTaskRequestToJson(request: UpdateTaskRequest)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_update_task_request_to_json(
-        FfiConverterTypeUpdateTaskRequest_lower(request),$0
+        FfiConverterTypeUpdateTaskRequest_lower(request),uniffiCallStatus
     )
 })
 }
@@ -11998,7 +12089,8 @@ public func updateTaskRequestToJson(request: UpdateTaskRequest)throws  -> String
  */
 public func calendarMaxYear() -> Int32  {
     return try!  FfiConverterInt32.lift(try! rustCall() {
-    uniffi_tasknotes_core_ffi_fn_func_calendar_max_year($0
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_calendar_max_year(uniffiCallStatus
     )
 })
 }
@@ -12007,7 +12099,8 @@ public func calendarMaxYear() -> Int32  {
  */
 public func calendarMinYear() -> Int32  {
     return try!  FfiConverterInt32.lift(try! rustCall() {
-    uniffi_tasknotes_core_ffi_fn_func_calendar_min_year($0
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_calendar_min_year(uniffiCallStatus
     )
 })
 }
@@ -12023,9 +12116,10 @@ public func calendarMinYear() -> Int32  {
  */
 public func calendarMonthAdd(month: CalendarMonthRef, delta: Int32)throws  -> CalendarMonthRef  {
     return try  FfiConverterTypeCalendarMonthRef_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_calendar_month_add(
         FfiConverterTypeCalendarMonthRef_lower(month),
-        FfiConverterInt32.lower(delta),$0
+        FfiConverterInt32.lower(delta),uniffiCallStatus
     )
 })
 }
@@ -12038,8 +12132,9 @@ public func calendarMonthAdd(month: CalendarMonthRef, delta: Int32)throws  -> Ca
  */
 public func calendarMonthDayCount(month: CalendarMonthRef)throws  -> UInt8  {
     return try  FfiConverterUInt8.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_calendar_month_day_count(
-        FfiConverterTypeCalendarMonthRef_lower(month),$0
+        FfiConverterTypeCalendarMonthRef_lower(month),uniffiCallStatus
     )
 })
 }
@@ -12052,8 +12147,9 @@ public func calendarMonthDayCount(month: CalendarMonthRef)throws  -> UInt8  {
  */
 public func calendarMonthFirstDay(month: CalendarMonthRef)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_calendar_month_first_day(
-        FfiConverterTypeCalendarMonthRef_lower(month),$0
+        FfiConverterTypeCalendarMonthRef_lower(month),uniffiCallStatus
     )
 })
 }
@@ -12069,8 +12165,9 @@ public func calendarMonthFirstDay(month: CalendarMonthRef)throws  -> String  {
  */
 public func calendarMonthGrid(month: CalendarMonthRef)throws  -> [CalendarWeek]  {
     return try  FfiConverterSequenceTypeCalendarWeek.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_calendar_month_grid(
-        FfiConverterTypeCalendarMonthRef_lower(month),$0
+        FfiConverterTypeCalendarMonthRef_lower(month),uniffiCallStatus
     )
 })
 }
@@ -12084,8 +12181,9 @@ public func calendarMonthGrid(month: CalendarMonthRef)throws  -> [CalendarWeek] 
  */
 public func calendarMonthOf(date: String)throws  -> CalendarMonthRef  {
     return try  FfiConverterTypeCalendarMonthRef_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_calendar_month_of(
-        FfiConverterString.lower(date),$0
+        FfiConverterString.lower(date),uniffiCallStatus
     )
 })
 }
@@ -12102,8 +12200,9 @@ public func calendarMonthOf(date: String)throws  -> CalendarMonthRef  {
  */
 public func calendarMonthTitle(month: CalendarMonthRef)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_calendar_month_title(
-        FfiConverterTypeCalendarMonthRef_lower(month),$0
+        FfiConverterTypeCalendarMonthRef_lower(month),uniffiCallStatus
     )
 })
 }
@@ -12112,7 +12211,8 @@ public func calendarMonthTitle(month: CalendarMonthRef)throws  -> String  {
  */
 public func calendarWeekdays() -> [WeekdayHeader]  {
     return try!  FfiConverterSequenceTypeWeekdayHeader.lift(try! rustCall() {
-    uniffi_tasknotes_core_ffi_fn_func_calendar_weekdays($0
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_calendar_weekdays(uniffiCallStatus
     )
 })
 }
@@ -12136,9 +12236,10 @@ public func calendarWeekdays() -> [WeekdayHeader]  {
  */
 public func dateAddDays(from: String, days: Int32)throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_add_days(
         FfiConverterString.lower(from),
-        FfiConverterInt32.lower(days),$0
+        FfiConverterInt32.lower(days),uniffiCallStatus
     )
 })
 }
@@ -12147,7 +12248,8 @@ public func dateAddDays(from: String, days: Int32)throws  -> String?  {
  */
 public func dateDefaultUpcomingDays() -> UInt32  {
     return try!  FfiConverterUInt32.lift(try! rustCall() {
-    uniffi_tasknotes_core_ffi_fn_func_date_default_upcoming_days($0
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_date_default_upcoming_days(uniffiCallStatus
     )
 })
 }
@@ -12164,9 +12266,10 @@ public func dateDefaultUpcomingDays() -> UInt32  {
  */
 public func dateGroup(date: String, today: String)throws  -> DateGroup  {
     return try  FfiConverterTypeDateGroup_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_group(
         FfiConverterString.lower(date),
-        FfiConverterString.lower(today),$0
+        FfiConverterString.lower(today),uniffiCallStatus
     )
 })
 }
@@ -12178,8 +12281,9 @@ public func dateGroup(date: String, today: String)throws  -> DateGroup  {
  */
 public func dateGroupHeading(group: DateGroup) -> String?  {
     return try!  FfiConverterOptionString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_group_heading(
-        FfiConverterTypeDateGroup_lower(group),$0
+        FfiConverterTypeDateGroup_lower(group),uniffiCallStatus
     )
 })
 }
@@ -12207,8 +12311,9 @@ public func dateGroupHeading(group: DateGroup) -> String?  {
  */
 public func dateInstantMillis(raw: String) -> Int64?  {
     return try!  FfiConverterOptionInt64.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_instant_millis(
-        FfiConverterString.lower(raw),$0
+        FfiConverterString.lower(raw),uniffiCallStatus
     )
 })
 }
@@ -12224,9 +12329,10 @@ public func dateInstantMillis(raw: String) -> Int64?  {
  */
 public func dateIsOverdue(date: String, today: String)throws  -> Bool  {
     return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_is_overdue(
         FfiConverterString.lower(date),
-        FfiConverterString.lower(today),$0
+        FfiConverterString.lower(today),uniffiCallStatus
     )
 })
 }
@@ -12240,9 +12346,10 @@ public func dateIsOverdue(date: String, today: String)throws  -> Bool  {
  */
 public func dateIsToday(date: String, today: String)throws  -> Bool  {
     return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_is_today(
         FfiConverterString.lower(date),
-        FfiConverterString.lower(today),$0
+        FfiConverterString.lower(today),uniffiCallStatus
     )
 })
 }
@@ -12259,10 +12366,11 @@ public func dateIsToday(date: String, today: String)throws  -> Bool  {
  */
 public func dateIsUpcoming(date: String, today: String, horizon: UpcomingHorizon)throws  -> Bool  {
     return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_is_upcoming(
         FfiConverterString.lower(date),
         FfiConverterString.lower(today),
-        FfiConverterTypeUpcomingHorizon_lower(horizon),$0
+        FfiConverterTypeUpcomingHorizon_lower(horizon),uniffiCallStatus
     )
 })
 }
@@ -12277,8 +12385,9 @@ public func dateIsUpcoming(date: String, today: String, horizon: UpcomingHorizon
  */
 public func dateNextMonday(from: String)throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_next_monday(
-        FfiConverterString.lower(from),$0
+        FfiConverterString.lower(from),uniffiCallStatus
     )
 })
 }
@@ -12295,8 +12404,9 @@ public func dateNextMonday(from: String)throws  -> String?  {
  */
 public func dateNextSaturday(from: String)throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_next_saturday(
-        FfiConverterString.lower(from),$0
+        FfiConverterString.lower(from),uniffiCallStatus
     )
 })
 }
@@ -12312,9 +12422,10 @@ public func dateNextSaturday(from: String)throws  -> String?  {
  */
 public func dateNextWeekday(from: String, weekday: Weekday)throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_next_weekday(
         FfiConverterString.lower(from),
-        FfiConverterTypeWeekday_lower(weekday),$0
+        FfiConverterTypeWeekday_lower(weekday),uniffiCallStatus
     )
 })
 }
@@ -12346,9 +12457,10 @@ public func dateNextWeekday(from: String, weekday: Weekday)throws  -> String?  {
  */
 public func dateParseLocal(raw: String, viewerUtcOffsetSeconds: Int32)throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_date_parse_local(
         FfiConverterString.lower(raw),
-        FfiConverterInt32.lower(viewerUtcOffsetSeconds),$0
+        FfiConverterInt32.lower(viewerUtcOffsetSeconds),uniffiCallStatus
     )
 })
 }
@@ -12360,8 +12472,9 @@ public func dateParseLocal(raw: String, viewerUtcOffsetSeconds: Int32)throws  ->
  */
 public func elapsedFormat(seconds: UInt64) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_elapsed_format(
-        FfiConverterUInt64.lower(seconds),$0
+        FfiConverterUInt64.lower(seconds),uniffiCallStatus
     )
 })
 }
@@ -12388,9 +12501,10 @@ public func elapsedFormat(seconds: UInt64) -> String  {
  */
 public func elapsedSecondsSince(start: String, now: String)throws  -> UInt64  {
     return try  FfiConverterUInt64.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_elapsed_seconds_since(
         FfiConverterString.lower(start),
-        FfiConverterString.lower(now),$0
+        FfiConverterString.lower(now),uniffiCallStatus
     )
 })
 }
@@ -12402,7 +12516,8 @@ public func elapsedSecondsSince(start: String, now: String)throws  -> UInt64  {
  */
 public func migrationCurrentSchemaVersion() -> UInt32  {
     return try!  FfiConverterUInt32.lift(try! rustCall() {
-    uniffi_tasknotes_core_ffi_fn_func_migration_current_schema_version($0
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_migration_current_schema_version(uniffiCallStatus
     )
 })
 }
@@ -12422,10 +12537,11 @@ public func migrationCurrentSchemaVersion() -> UInt32  {
  * other mutation the user is waiting on.
  */
 public func runMigrations(storage: MigrationStorage, clock: Clock, random: Randomness)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_run_migrations(
         FfiConverterTypeMigrationStorage_lower(storage),
         FfiConverterTypeClock_lower(clock),
-        FfiConverterTypeRandomness_lower(random),$0
+        FfiConverterTypeRandomness_lower(random),uniffiCallStatus
     )
 }
 }
@@ -12437,7 +12553,8 @@ public func runMigrations(storage: MigrationStorage, clock: Clock, random: Rando
  */
 public func apiDefaultTimeoutMillis() -> UInt32  {
     return try!  FfiConverterUInt32.lift(try! rustCall() {
-    uniffi_tasknotes_core_ffi_fn_func_api_default_timeout_millis($0
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_api_default_timeout_millis(uniffiCallStatus
     )
 })
 }
@@ -12462,9 +12579,10 @@ public func apiDefaultTimeoutMillis() -> UInt32  {
  */
 public func parseTaskInput(input: String, today: String)throws  -> NlpParseResult  {
     return try  FfiConverterTypeNlpParseResult_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_parse_task_input(
         FfiConverterString.lower(input),
-        FfiConverterString.lower(today),$0
+        FfiConverterString.lower(today),uniffiCallStatus
     )
 })
 }
@@ -12498,11 +12616,12 @@ public func parseTaskInput(input: String, today: String)throws  -> NlpParseResul
  */
 public func recurrenceCompletionTargetDate(scheduled: String?, due: String?, anchor: RecurrenceAnchor?, today: String)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_completion_target_date(
         FfiConverterOptionString.lower(scheduled),
         FfiConverterOptionString.lower(due),
         FfiConverterOptionTypeRecurrenceAnchor.lower(anchor),
-        FfiConverterString.lower(today),$0
+        FfiConverterString.lower(today),uniffiCallStatus
     )
 })
 }
@@ -12546,10 +12665,11 @@ public func recurrenceCompletionTargetDate(scheduled: String?, due: String?, anc
  */
 public func recurrenceFiniteInstanceCount(text: String, scheduled: String?, dateCreated: String?)throws  -> UInt32?  {
     return try  FfiConverterOptionUInt32.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_finite_instance_count(
         FfiConverterString.lower(text),
         FfiConverterOptionString.lower(scheduled),
-        FfiConverterOptionString.lower(dateCreated),$0
+        FfiConverterOptionString.lower(dateCreated),uniffiCallStatus
     )
 })
 }
@@ -12558,10 +12678,11 @@ public func recurrenceFiniteInstanceCount(text: String, scheduled: String?, date
  */
 public func recurrenceFrequency(text: String, scheduled: String?, dateCreated: String?) -> Frequency?  {
     return try!  FfiConverterOptionTypeFrequency.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_frequency(
         FfiConverterString.lower(text),
         FfiConverterOptionString.lower(scheduled),
-        FfiConverterOptionString.lower(dateCreated),$0
+        FfiConverterOptionString.lower(dateCreated),uniffiCallStatus
     )
 })
 }
@@ -12575,10 +12696,11 @@ public func recurrenceFrequency(text: String, scheduled: String?, dateCreated: S
  */
 public func recurrenceIsExpandable(text: String, scheduled: String?, dateCreated: String?) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_is_expandable(
         FfiConverterString.lower(text),
         FfiConverterOptionString.lower(scheduled),
-        FfiConverterOptionString.lower(dateCreated),$0
+        FfiConverterOptionString.lower(dateCreated),uniffiCallStatus
     )
 })
 }
@@ -12603,6 +12725,7 @@ public func recurrenceIsExpandable(text: String, scheduled: String?, dateCreated
  */
 public func recurrenceNextUncompletedOccurrence(text: String, scheduled: String?, dateCreated: String?, today: String, anchor: RecurrenceAnchor, completeInstances: [String], skippedInstances: [String])throws  -> String?  {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_next_uncompleted_occurrence(
         FfiConverterString.lower(text),
         FfiConverterOptionString.lower(scheduled),
@@ -12610,7 +12733,7 @@ public func recurrenceNextUncompletedOccurrence(text: String, scheduled: String?
         FfiConverterString.lower(today),
         FfiConverterTypeRecurrenceAnchor_lower(anchor),
         FfiConverterSequenceString.lower(completeInstances),
-        FfiConverterSequenceString.lower(skippedInstances),$0
+        FfiConverterSequenceString.lower(skippedInstances),uniffiCallStatus
     )
 })
 }
@@ -12630,12 +12753,13 @@ public func recurrenceNextUncompletedOccurrence(text: String, scheduled: String?
  */
 public func recurrenceOccurrences(text: String, scheduled: String?, dateCreated: String?, start: String, end: String)throws  -> [String]  {
     return try  FfiConverterSequenceString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_occurrences(
         FfiConverterString.lower(text),
         FfiConverterOptionString.lower(scheduled),
         FfiConverterOptionString.lower(dateCreated),
         FfiConverterString.lower(start),
-        FfiConverterString.lower(end),$0
+        FfiConverterString.lower(end),uniffiCallStatus
     )
 })
 }
@@ -12651,11 +12775,12 @@ public func recurrenceOccurrences(text: String, scheduled: String?, dateCreated:
  */
 public func recurrenceOccursOn(text: String, scheduled: String?, dateCreated: String?, date: String)throws  -> Bool  {
     return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_occurs_on(
         FfiConverterString.lower(text),
         FfiConverterOptionString.lower(scheduled),
         FfiConverterOptionString.lower(dateCreated),
-        FfiConverterString.lower(date),$0
+        FfiConverterString.lower(date),uniffiCallStatus
     )
 })
 }
@@ -12691,10 +12816,11 @@ public func recurrenceOccursOn(text: String, scheduled: String?, dateCreated: St
  */
 public func recurrenceSummary(text: String, scheduled: String?, dateCreated: String?) -> String?  {
     return try!  FfiConverterOptionString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_tasknotes_core_ffi_fn_func_recurrence_summary(
         FfiConverterString.lower(text),
         FfiConverterOptionString.lower(scheduled),
-        FfiConverterOptionString.lower(dateCreated),$0
+        FfiConverterOptionString.lower(dateCreated),uniffiCallStatus
     )
 })
 }
@@ -12714,379 +12840,379 @@ private let initializationResult: InitializationResult = {
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_core_version() != 34405) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_core_version() != 36876) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_filter_chain_from_json() != 19415) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_filter_chain_from_json() != 38163) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_filter_chain_to_json() != 12287) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_filter_chain_to_json() != 60346) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_filter_config_from_json() != 9077) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_filter_config_from_json() != 64475) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_filter_config_to_json() != 12951) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_filter_config_to_json() != 25120) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_priority_all() != 30828) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_priority_all() != 36484) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_priority_label() != 28767) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_priority_label() != 20392) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_priority_parse() != 51954) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_priority_parse() != 31607) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_priority_rank() != 29896) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_priority_rank() != 35910) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_priority_wire_value() != 60241) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_priority_wire_value() != 30301) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_project_display_name() != 50707) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_project_display_name() != 29491) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_project_matches() != 31616) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_project_matches() != 45845) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_project_path() != 27994) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_project_path() != 32198) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_parse() != 60401) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_parse() != 39192) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_wire_value() != 51521) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_wire_value() != 64979) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_sort_config_from_json() != 3755) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_sort_config_from_json() != 11667) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_sort_config_to_json() != 22573) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_sort_config_to_json() != 33579) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_active_count() != 56001) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_active_count() != 29746) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_apply() != 25841) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_apply() != 36211) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_apply() != 38320) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_apply() != 27912) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_is_active() != 31915) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_is_active() != 6267) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_matches() != 24866) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_matches() != 22737) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_is_active() != 21417) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_is_active() != 24767) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_matches() != 11559) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_matches() != 43506) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_from_json() != 45575) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_from_json() != 11682) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_id_parse() != 33590) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_id_parse() != 19155) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_search_matches() != 25107) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_search_matches() != 20779) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_sort_apply() != 34754) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_sort_apply() != 44098) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_all() != 58249) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_all() != 59603) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_is_active() != 42590) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_is_active() != 18483) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_label() != 60755) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_label() != 14756) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_next() != 37000) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_next() != 49979) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_parse() != 15713) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_parse() != 38507) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_wire_value() != 20184) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_status_wire_value() != 55000) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_to_json() != 6949) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_to_json() != 55965) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_update_task_request_from_json() != 61758) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_update_task_request_from_json() != 36440) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_update_task_request_to_json() != 26014) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_update_task_request_to_json() != 57966) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_max_year() != 8178) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_max_year() != 62313) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_min_year() != 9294) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_min_year() != 45016) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_add() != 43736) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_add() != 3434) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_day_count() != 31922) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_day_count() != 11172) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_first_day() != 60066) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_first_day() != 15014) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_grid() != 6257) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_grid() != 40709) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_of() != 13824) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_of() != 32107) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_title() != 7413) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_month_title() != 23501) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_weekdays() != 49245) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_calendar_weekdays() != 25686) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_add_days() != 61756) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_add_days() != 32597) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_default_upcoming_days() != 37878) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_default_upcoming_days() != 35100) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_group() != 3121) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_group() != 37147) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_group_heading() != 22392) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_group_heading() != 29894) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_instant_millis() != 38175) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_instant_millis() != 1944) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_is_overdue() != 57635) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_is_overdue() != 50815) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_is_today() != 62306) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_is_today() != 41662) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_is_upcoming() != 27566) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_is_upcoming() != 37609) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_next_monday() != 37650) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_next_monday() != 7152) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_next_saturday() != 36413) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_next_saturday() != 49767) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_next_weekday() != 37797) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_next_weekday() != 22361) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_date_parse_local() != 63277) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_parse_local() != 47880) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_elapsed_format() != 36720) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_elapsed_format() != 49010) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since() != 34364) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since() != 23598) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version() != 28916) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version() != 13709) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_run_migrations() != 4864) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_run_migrations() != 15367) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_api_default_timeout_millis() != 10604) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_api_default_timeout_millis() != 58063) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_parse_task_input() != 23175) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_parse_task_input() != 63614) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date() != 7381) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date() != 846) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count() != 14740) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count() != 59178) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_frequency() != 13193) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_frequency() != 37929) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_is_expandable() != 49957) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_is_expandable() != 56592) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_next_uncompleted_occurrence() != 35131) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_next_uncompleted_occurrence() != 40205) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurrences() != 37554) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurrences() != 64435) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on() != 52626) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on() != 64285) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary() != 21932) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary() != 42582) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_cancel_all() != 23149) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_cancel_all() != 1495) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_discard_dead_letter() != 3778) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_discard_dead_letter() != 49713) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_dispatch() != 57833) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_dispatch() != 8068) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_disposed() != 829) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_disposed() != 37160) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_sync_requested() != 53643) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_sync_requested() != 16586) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_request_sync() != 32242) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_request_sync() != 32913) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_resolve_task_id() != 14154) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_resolve_task_id() != 20318) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_restore() != 54014) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_restore() != 22608) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_retry_dead_letter() != 48781) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_retry_dead_letter() != 13972) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_settle() != 39142) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_settle() != 49052) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_shutdown() != 2258) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_shutdown() != 23364) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_snapshot() != 19360) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_snapshot() != 26124) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_status() != 46356) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_status() != 40074) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now() != 15372) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now() != 53642) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_clock_now_millis() != 34337) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_clock_now_millis() != 20431) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_clock_local_ymd() != 65262) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_clock_local_ymd() != 7698) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_schema_version() != 30192) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_schema_version() != 2508) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_schema_version() != 44402) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_schema_version() != 1237) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_legacy_queue() != 30304) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_legacy_queue() != 29071) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_remove_legacy_queue() != 36742) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_remove_legacy_queue() != 20471) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_queue() != 21826) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_queue() != 56627) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_queue() != 30021) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_queue() != 40256) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_queue() != 16671) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_queue() != 21367) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_queue() != 26654) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_queue() != 11348) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_dead_letter() != 17012) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_dead_letter() != 4176) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_dead_letter() != 18473) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_dead_letter() != 59065) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_randomness_next_unit_ppm() != 49130) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_randomness_next_unit_ppm() != 1177) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_arm() != 5742) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_arm() != 24888) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_cancel() != 4065) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_cancel() != 8334) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_tasks() != 2156) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_tasks() != 64622) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_tasks() != 26425) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_tasks() != 26146) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_aliases() != 53449) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_aliases() != 23076) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_aliases() != 53591) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_aliases() != 63551) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_counters() != 21846) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_counters() != 25107) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_counters() != 26948) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_counters() != 53555) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_completion_restores() != 47169) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_completion_restores() != 46062) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_completion_restores() != 52684) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_completion_restores() != 7660) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time() != 47989) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time() != 62042) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time() != 41669) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time() != 62486) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_httpclient_send() != 45508) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_httpclient_send() != 10136) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_httpclient_cancel_all() != 38866) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_httpclient_cancel_all() != 717) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_base_url() != 25373) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_base_url() != 88) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all() != 25500) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all() != 59292) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro() != 54250) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro() != 58341) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status() != 14635) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status() != 54685) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro() != 6368) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro() != 52891) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking() != 50502) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking() != 7312) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro() != 55687) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro() != 34297) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking() != 31911) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking() != 23374) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time() != 65051) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time() != 12914) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary() != 60823) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary() != 8961) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new() != 45268) {
+    if (uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new() != 55747) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new() != 8408) {
+    if (uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new() != 55934) {
         return InitializationResult.apiChecksumMismatch
     }
 

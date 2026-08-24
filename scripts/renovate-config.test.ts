@@ -90,14 +90,16 @@ test("extracts every managed structured version-catalog field", async () => {
       packageName: "flipt/flipt",
     }),
   );
-  expect(actual).toContainEqual(
-    expect.objectContaining({
-      depName: "library/nginx",
-      datasource: "docker",
-      versioning: "docker",
-      currentValue: "1.31.2-alpine",
-    }),
-  );
+  const nginx = expected.find((entry) => entry.depName === "library/nginx");
+  if (nginx === undefined) {
+    throw new Error("Managed nginx catalog entry is missing");
+  }
+  expect(nginx).toMatchObject({
+    datasource: "docker",
+    versioning: "docker",
+  });
+  expect(nginx.currentValue).toMatch(/^\d+\.\d+\.\d+-alpine$/);
+  expect(actual).toContainEqual(nginx);
 });
 
 test("excludes all sandbox dependency files", async () => {

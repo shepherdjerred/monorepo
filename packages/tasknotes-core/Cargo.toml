@@ -10,10 +10,11 @@ license = "MIT"
 publish = false
 
 # ── Dependency pins ────────────────────────────────────────────────────────
-# `uniffi` is pinned exactly: UNIFFI_CONTRACT_VERSION is 30 across all 0.31.x,
-# but the bindings generator and the runtime must agree byte-for-byte, and
-# uniffi-bindgen-react-native pins =0.31.0. Any bump is a deliberate, verified
-# migration, never a caret range.
+# `uniffi` is pinned exactly: its metadata and contract checksums are binding
+# ABI. Swift comes from the matching first-party generator; C# uses the small,
+# pinned 0.32 retarget patch under tools/uniffi-bindgen-cs until upstream ships
+# a matching release. Any bump is a deliberate, verified migration, never a
+# caret range.
 #
 # `chrono` (not jiff) because the TypeScript parity surface is naive-date
 # arithmetic that chrono models directly.

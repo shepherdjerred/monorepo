@@ -10,7 +10,8 @@ possible Windows client are meant to share it.
 ```text
 crates/tasknotes-core/      Pure core — no FFI, no I/O, no platform APIs
 crates/tasknotes-core-ffi/  UniFFI scaffolding and nothing else
-bindings/                   Committed, generated Swift bindings (see bindings/README.md)
+bindings/                   Committed, generated Swift and C# bindings (see bindings/README.md)
+tools/uniffi-bindgen-cs/    Pinned C# generator retarget for the UniFFI ABI
 xtask/                      cargo xtask: bindings + XCFramework tooling
 ```
 

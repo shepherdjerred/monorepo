@@ -12,10 +12,9 @@ node = "24.19.0"
 rust = "1.98.0"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk
 dotnet = "10.0.302"
-# C# is a third-party UniFFI binding. Keep the generator outside Cargo.toml:
-# it is a developer/CI tool, not part of the shipped Rust dependency graph.
-# renovate: datasource=github-tags depName=NordSecurity/uniffi-bindgen-cs
-"cargo:https://github.com/NordSecurity/uniffi-bindgen-cs" = { version = "tag:v0.11.0+v0.31.0", bin = "uniffi-bindgen-cs" }
+# The C# UniFFI generator is built by tasknotes-core's xtask from its
+# source-controlled 0.32 retarget. It is not a global tool: the generated
+# bindings must match the core's exact UniFFI ABI.
 # Explicit deep-quality tools. These are scheduled/operator gates, not ordinary
 # PR-lane work, but they stay pinned with the rest of the repository toolchain.
 # renovate: datasource=crate depName=cargo-mutants
