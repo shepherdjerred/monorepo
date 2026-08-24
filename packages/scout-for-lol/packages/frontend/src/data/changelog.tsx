@@ -5,21 +5,23 @@ import {
   ChangelogSection,
   type ChangelogEntry,
 } from "./changelog-builder.tsx";
+import { newScoutChangelogEntry } from "./changelog-new-scout.ts";
 
 export function renderChangelogToHtml(content: ReactNode): string {
   return renderToStaticMarkup(content);
 }
 
 export const changelog: ChangelogEntry[] = [
+  newScoutChangelogEntry,
   buildChangelogEntry({
     date: "2026 08 18",
-    banner: "Ask Scout from Discord",
+    banner: "Scout Explore beta preview",
     sections: [
       {
         title: "Explore",
         color: "blue",
         items: [
-          "Explore-enabled servers can use /scout ask for a private, saved answer about Scout's match data",
+          "Selected beta servers can use /scout ask for a private, saved answer about Scout's match data",
           "Open the conversation in web Explore for follow-ups, or post the frozen question, answer, caveats, and chart to the channel",
         ],
       },

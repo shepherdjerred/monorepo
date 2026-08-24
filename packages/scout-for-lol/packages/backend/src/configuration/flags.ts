@@ -20,6 +20,7 @@ import {
 } from "@scout-for-lol/data";
 import { isEnabled } from "@shepherdjerred/feature-flags";
 import { isAbsent } from "@shepherdjerred/feature-flags/flag-result.ts";
+import { resolveEnvironment } from "#src/configuration.ts";
 
 // ============================================================================
 // Attribute Types
@@ -152,6 +153,30 @@ export type FlagName =
 export type PolicyFlagName = FlagName;
 
 /**
+ * Experiments that may run in beta but are never part of the production
+ * product. This policy sits above both the local registry and Flipt so an
+ * operator override cannot accidentally expose a forbidden production
+ * surface.
+ */
+const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
+  [
+    "ai_reports_enabled",
+    "ai_reports_unlimited",
+    "ai_reviews_enabled",
+    "betting_enabled",
+    "betting_player_bet_outcome_dm_enabled",
+    "betting_settlement_dm_enabled",
+    "tournament_lobbies_enabled",
+  ],
+);
+
+export function isFeatureHardDisabled(name: FlagName): boolean {
+  return (
+    resolveEnvironment() === "prod" && PRODUCTION_HARD_DISABLED_FLAGS.has(name)
+  );
+}
+
+/**
  * Central registry for all boolean flags
  */
 const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
@@ -171,12 +196,8 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   /**
    * Tournament-code custom lobbies (`/lobby`).
    *
-   * Beta-only in practice for the same reason betting is: the override is for
-   * one guild, and that guild runs the beta bot. There is deliberately no
-   * environment check — one override should be the whole answer to "is it on
-   * here?". Flipt cannot do this job: Scout's targetingKey is the constant
-   * "scout-backend", so a Flipt flag cannot answer differently for beta and
-   * prod.
+   * The local override enables the beta test guild. Production's hard-disable
+   * policy wins before this registry or Flipt is evaluated.
    */
   tournament_lobbies_enabled: {
     default: false,
@@ -197,12 +218,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   // flag later would hand out a surprise backlog. The trade is that enabling it
   // starts a guild at zero with no backfill.
   //
-  // This is a private, single-server experiment and is not intended to become a
-  // Scout-wide feature. MY_SERVER runs the beta bot, so in practice Bryan Bucks
-  // only ever appears in beta — but that is a consequence of which bot is in
-  // that guild, NOT a second gate. There is deliberately no environment check:
-  // one override is the whole answer to "is it on here?", and a second one would
-  // mean two places to look.
+  // This is a private, single-server beta experiment and is not intended to
+  // become a Scout-wide feature. Production's hard-disable policy wins before
+  // this registry or Flipt is evaluated.
   betting_enabled: {
     default: false,
     overrides: [
@@ -364,6 +382,9 @@ export function getFlag(
   name: FlagName,
   attributes: FlagAttributes = {},
 ): boolean {
+  if (isFeatureHardDisabled(name)) {
+    return false;
+  }
   const config = FLAG_REGISTRY[name];
   const override: boolean | undefined = findBestMatch(
     config.overrides,
@@ -376,6 +397,9 @@ export async function isPolicyEnabled(
   name: PolicyFlagName,
   attributes: FlagAttributes = {},
 ): Promise<boolean> {
+  if (isFeatureHardDisabled(name)) {
+    return false;
+  }
   const fallback = getFlag(name, attributes);
   const targetingKey = attributes.user ?? attributes.server ?? "scout-backend";
   const context: Record<string, string | number | boolean> = {};
@@ -449,6 +473,9 @@ function listWholeGuildOverrides(
   name: FlagName,
   accept: (value: boolean) => boolean,
 ): DiscordGuildId[] {
+  if (isFeatureHardDisabled(name)) {
+    return [];
+  }
   const config = FLAG_REGISTRY[name];
   if (config.default) {
     throw new Error(

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -8,6 +8,7 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   addFlagOverride,
   getFlag,
@@ -20,14 +21,72 @@ import {
 
 const OTHER_GUILD = DiscordGuildIdSchema.parse("2337623164146155593");
 const SOMEONE = DiscordAccountIdSchema.parse("160509172704739399");
+const originalEnvironment = Bun.env["ENVIRONMENT"];
+const PRODUCTION_DENIED_FLAGS = [
+  "ai_reports_enabled",
+  "ai_reports_unlimited",
+  "ai_reviews_enabled",
+  "betting_enabled",
+  "betting_player_bet_outcome_dm_enabled",
+  "betting_settlement_dm_enabled",
+  "tournament_lobbies_enabled",
+] as const;
+
+beforeEach(() => {
+  Bun.env["ENVIRONMENT"] = "beta";
+  resetConfigurationForTests();
+});
 
 afterEach(() => {
   // The registry is process-wide. Restoring rather than clearing keeps this
   // file from switching `debug` off for every test that runs after it.
   resetFlagOverrides("debug");
-  resetFlagOverrides("betting_enabled");
-  resetFlagOverrides("betting_settlement_dm_enabled");
-  resetFlagOverrides("betting_player_bet_outcome_dm_enabled");
+  for (const flag of PRODUCTION_DENIED_FLAGS) {
+    resetFlagOverrides(flag);
+  }
+  if (originalEnvironment === undefined) {
+    delete Bun.env["ENVIRONMENT"];
+  } else {
+    Bun.env["ENVIRONMENT"] = originalEnvironment;
+  }
+  resetConfigurationForTests();
+});
+
+describe("production hard-disable policy", () => {
+  test("wins over local overrides and guild enumeration", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+
+    for (const flag of PRODUCTION_DENIED_FLAGS) {
+      expect(getFlag(flag, { server: MY_SERVER, user: SOMEONE })).toBe(false);
+      expect(listGuildsWithFlagEnabled(flag)).toEqual([]);
+      expect(listGuildsWithFlagDeclared(flag)).toEqual([]);
+    }
+  });
+
+  test("wins over affirmative provider answers", async () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({
+        ai_reports_enabled: true,
+        ai_reports_unlimited: true,
+        ai_reviews_enabled: true,
+        betting_enabled: true,
+        betting_player_bet_outcome_dm_enabled: true,
+        betting_settlement_dm_enabled: true,
+        tournament_lobbies_enabled: true,
+      }),
+    });
+
+    for (const flag of PRODUCTION_DENIED_FLAGS) {
+      await expect(
+        isPolicyEnabled(flag, { server: MY_SERVER, user: SOMEONE }),
+      ).resolves.toBe(false);
+    }
+    await shutdownFeatureFlags();
+  });
 });
 
 describe("Bryan Bucks settlement DM flags", () => {

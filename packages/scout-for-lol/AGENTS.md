@@ -547,16 +547,16 @@ Enforced by ESLint:
 
 ### Command Structure
 
-Scout exposes seven global Discord commands: `/help`, `/setup`, `/status`,
-`/invite`, `/docs`, `/track`, and `/list`. The web dashboard is the canonical
-surface for filters, queues, channels, competitions, saved report
-configuration, roles, audit history, and Explore follow-ups. Do not recreate
-the removed management command trees.
+Production exposes eight global Discord commands: `/help`, `/setup`, `/status`,
+`/invite`, `/docs`, `/track`, `/list`, and `/scout`. Beta exposes the first
+seven globally and registers `/scout` only in `EXPLORE_GUILD_ALLOWLIST` guilds.
+The web dashboard is the canonical surface for filters, queues, channels,
+competitions, saved report configuration, roles, audit history, and Explore
+follow-ups. Do not recreate the removed management command trees.
 
-`/bb` (Bryan Bucks), `/scout`, and `/lobby` are the owner-approved
-guild-scoped exceptions, pinned by `definitions.test.ts`. `/bb` follows
-`betting_enabled`; `/scout` follows `EXPLORE_GUILD_ALLOWLIST`; `/lobby`
-follows `tournament_lobbies_enabled`. None may leak into the global picker.
+`/bb` (Bryan Bucks) and `/lobby` are beta-only guild-scoped exceptions, pinned
+by `definitions.test.ts`; production's hard-disable policy keeps them out of
+both global and guild payloads regardless of local or Flipt overrides.
 `/scout ask` starts one fresh, private, saved Explore conversation and may post
 its frozen result publicly; Discord never continues the conversation. Adding
 another command still needs the same explicit product decision.
@@ -755,17 +755,20 @@ Two sources **refuse** global scope rather than answering wrongly:
 `app/src/routes/explore.tsx`). Remaining product work is tracked in Linear as
 SJ-147.
 
-- **Access is `EXPLORE_GUILD_ALLOWLIST`**, an operator-managed list of Discord
-  server ids: sign in, and belong to one of them. An empty or unset list denies
-  everyone — it is the entire gate for this surface, so an omitted config must
-  fail closed. Every tRPC procedure re-checks it, so losing membership removes
-  access to conversations already saved.
+- **Access is stage-aware.** Beta uses `EXPLORE_GUILD_ALLOWLIST`: sign in and
+  belong to one listed server; an empty list denies everyone. Production
+  requires the signed-in user to share at least one guild with the production
+  bot. The live bot guild cache is an authorization dependency, so an unready
+  cache returns service unavailable rather than widening access. Every tRPC
+  procedure re-checks access, and only eligible shared guild ids scope alias
+  resolution.
 - **Discord Explore is one-shot and uses the same persisted turn runner.**
-  `/scout ask` is registered only in allowlisted guilds, re-checks that exact
-  guild on command and publish-button execution, creates a new user-owned
-  conversation, and renders the saved answer privately. Follow-ups happen only
-  in `/app/explore`. The Discord user upsert may refresh username/avatar but
-  must omit OAuth token fields. HTTP/SSE and Discord both call
+  Production registers `/scout ask` globally for guild installs and guild
+  contexts; beta registers it only in allowlisted guilds. Both re-check the
+  invoking guild on command and publish-button execution, create a new
+  user-owned conversation, and render the saved answer privately. Follow-ups
+  happen only in `/app/explore`. The Discord user upsert may refresh
+  username/avatar but must omit OAuth token fields. HTTP/SSE and Discord call
   `explore/run-turn.ts`, which owns quota charging, timeout, metrics, trace,
   partial salvage, agent execution, answer persistence, and generated titles.
 - **Publishing is a frozen copy, not Explore sharing.** The versioned component
@@ -840,17 +843,15 @@ A per-guild betting economy over the existing match lifecycle, in
 `backend/src/betting/` (no barrel), gated by the `betting_enabled` flag. Design
 notes: `packages/docs/archive/completed/2026-08-15_scout-bryan-bucks-betting.md`.
 
-**Scope: one server, effectively beta-only.** This is a private single-server
+**Scope: one server, beta-only.** This is a private single-server
 experiment, not a Scout-wide feature, and is not intended to become one.
 `betting_enabled` is `false` by default and overridden `true` for exactly one
-guild — the owner's — and that guild runs the beta bot, so in practice Bryan
-Bucks only ever appears in beta. That is a consequence of which bot is in that
-guild, **not** a second gate: there is deliberately no environment check, because
-one override should be the whole answer to "is it on here?".
+guild — the owner's — while the centralized production policy hard-disables
+betting before the registry or Flipt is evaluated.
 
-**`/bb` is registered per guild, not globally.** `commandDefinitions` holds the
-seven global commands; `guildScopedCommandGroups` (same file) supplies an
-enabled-guild resolver and payload for both `/bb` and `/scout`.
+**`/bb` is registered per guild, not globally.** `baseCommandDefinitions` holds
+the seven commands shared by both stages; production adds `/scout` globally,
+while `guildScopedCommandGroups` supplies beta's `/bb`, `/scout`, and `/lobby`.
 `discord/rest.ts` walks the connected client's complete guild cache and PUTs
 each guild's merged payload to `applicationGuildCommands`. A globally
 registered gated command would sit in every guild's picker and do nothing
@@ -1013,10 +1014,12 @@ cannot split the facts. The command is stateless, supplies the model an injected
 current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
 (default `gpt-5.6-luna`) through the shared OpenRouter runtime and token budget.
 
-- **The allowlist gates taking Bucks, never returning them.** `betting_enabled`
-  is checked in four places: command registration, pool creation, `placeBet`,
-  and earning. Settlement and the refund sweeps are deliberately **not** gated —
-  a guild removed from the allowlist mid-match still has stakes that were
+- **The beta allowlist gates taking Bucks, never returning them.** Production
+  hard-disables betting before local or Flipt evaluation. In beta,
+  `betting_enabled` is checked in four places: command registration, pool
+  creation, `placeBet`, and earning. Settlement and refund sweeps remain
+  available for beta stakes already taken — a guild removed from the allowlist
+  mid-match still has stakes that were
   already debited, and refusing to settle would strand real balances. So the
   flag stops new stake from being taken while in-flight pools still pay out or
   refund. `placeBet` carries the check rather than relying on the pool
@@ -1218,7 +1221,8 @@ sees them only unreliably, and Match-V5 does not carry them at all. The one
 sanctioned exception is the **Tournament API** — a game created from a
 _tournament code_ IS recorded in Match-V5 with `info.tournamentCode`
 populated. `/lobby` mints such a code so a custom game gets the whole Scout
-feature set. Beta-only, via `tournament_lobbies_enabled`.
+feature set. It is beta-only via `tournament_lobbies_enabled`, with the
+centralized production policy winning before local or Flipt overrides.
 
 Code lives in `backend/src/league/tournament/` and
 `backend/src/league/api/tournament/`.

@@ -10,18 +10,22 @@ import {
 import { listCommand } from "#src/discord/commands/list.ts";
 import { trackCommand } from "#src/discord/commands/track.ts";
 import { bbCommand } from "#src/discord/commands/bb-definition.ts";
-import { scoutCommand } from "#src/discord/commands/scout-definition.ts";
+import {
+  scoutGlobalCommand,
+  scoutGuildCommand,
+} from "#src/discord/commands/scout-definition.ts";
 import {
   isPolicyEnabled,
   listGuildsWithFlagEnabled,
 } from "#src/configuration/flags.ts";
 import { lobbyCommand } from "#src/discord/commands/lobby-definition.ts";
-import { exploreAllowlist } from "#src/explore/access.ts";
+import { exploreGuildCommandGuildIds } from "#src/explore/access.ts";
+import configuration from "#src/configuration.ts";
 
 /**
  * The commands every guild gets, registered globally.
  */
-export const commandDefinitions = [
+export const baseCommandDefinitions = [
   helpCommand,
   setupCommand,
   statusCommand,
@@ -31,9 +35,14 @@ export const commandDefinitions = [
   listCommand,
 ] as const;
 
-export const commandPayload = commandDefinitions.map((command) =>
-  command.toJSON(),
-);
+export function globalCommandPayload(): RESTPostAPIApplicationCommandsJSONBody[] {
+  const payload: RESTPostAPIApplicationCommandsJSONBody[] =
+    baseCommandDefinitions.map((command) => command.toJSON());
+  if (configuration.environment === "prod") {
+    payload.push(scoutGlobalCommand.toJSON());
+  }
+  return payload;
+}
 
 /**
  * Commands registered per guild instead of globally.
@@ -63,7 +72,10 @@ export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
       }),
     payload: [bbCommand.toJSON()],
   },
-  { enabledGuildIds: exploreAllowlist, payload: [scoutCommand.toJSON()] },
+  {
+    enabledGuildIds: exploreGuildCommandGuildIds,
+    payload: [scoutGuildCommand.toJSON()],
+  },
   {
     enabledGuildIds: () =>
       listGuildsWithFlagEnabled("tournament_lobbies_enabled"),

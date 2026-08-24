@@ -41,6 +41,7 @@ function getOptionalEnvVar(
 }
 
 const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
+export type Environment = z.infer<typeof EnvironmentSchema>;
 
 const ProductAnalyticsConfigurationSchema = z.object({
   projectToken: z.string().min(1),
@@ -53,7 +54,7 @@ export type ProductAnalyticsConfiguration = z.infer<
   typeof ProductAnalyticsConfigurationSchema
 >;
 
-export function resolveEnvironment(): z.infer<typeof EnvironmentSchema> {
+export function resolveEnvironment(): Environment {
   const raw = env.get("ENVIRONMENT").default("dev").asString();
   const parsed = EnvironmentSchema.safeParse(raw);
   if (parsed.success) return parsed.data;
@@ -63,7 +64,7 @@ export function resolveEnvironment(): z.infer<typeof EnvironmentSchema> {
 }
 
 export function parseProductAnalyticsConfiguration(
-  environment: z.infer<typeof EnvironmentSchema>,
+  environment: Environment,
   values: {
     projectToken: string | undefined;
     apiHost: string | undefined;
@@ -195,12 +196,11 @@ function computeConfiguration() {
       "BETTING_PARLAY_AI_MODEL",
       "gpt-5.6-sol",
     ),
-    exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-sol").asString(),
+    exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-luna").asString(),
     bucksAskModel: env.get("BB_ASK_MODEL").default("gpt-5.6-luna").asString(),
-    // Explore reads the whole lake, so access is an explicit allowlist of
-    // Discord servers rather than a permission on any one of them. Unset
-    // means nobody — an empty list fails closed, which is the only safe
-    // default for a surface whose gate is the allowlist itself.
+    // Beta Explore access is an explicit Discord server allowlist. Production
+    // authorizes against the bot's live connected-guild set instead. Unset
+    // still means nobody in beta.
     exploreGuildAllowlist: env
       .get("EXPLORE_GUILD_ALLOWLIST")
       .default("")

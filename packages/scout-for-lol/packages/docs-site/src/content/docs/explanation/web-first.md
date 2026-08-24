@@ -7,8 +7,9 @@ sidebar:
 
 Scout used to be configured entirely through Discord. There were command trees
 for subscriptions, players, accounts, competitions, reports, and permissions —
-dozens of subcommands. Today there are seven global commands, one allowlisted
-Explore command, and everything else lives in the browser.
+dozens of subcommands. Today production has eight focused global commands,
+including `/scout ask`, and everything else lives in the browser. Beta keeps
+that Explore command scoped to selected test servers.
 
 This page is about why, including the parts that got worse.
 
