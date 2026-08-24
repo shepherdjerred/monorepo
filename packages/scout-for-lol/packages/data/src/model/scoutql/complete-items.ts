@@ -11,6 +11,7 @@ import {
   type ReportOutputFormat,
 } from "#src/model/report.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
+import { SCOUTQL_CHART_OPTION_NAMES } from "#src/model/scoutql/render-options.ts";
 import type { ScoutQlAnalysis } from "#src/model/scoutql/analyze.ts";
 import { isChartRenderKind } from "#src/model/scoutql/analyze-render.ts";
 import {
@@ -239,34 +240,6 @@ export function renderKindItems(): ScoutQlCompletionItem[] {
  * writes EVERY name offered here into a query and asserts the analyzer accepts
  * it, so an option that drifts out of the language cannot keep being suggested.
  */
-const CHART_OPTIONS: readonly string[] = [
-  "x",
-  "y",
-  "series",
-  "size",
-  "value",
-  "title",
-  "subtitle",
-  "x_axis",
-  "y_axis",
-  "theme",
-  "palette",
-  "colors",
-  "orientation",
-  "labels",
-  "legend",
-  "sort",
-  "smooth",
-  "rolling",
-  "cumulative",
-  "stack",
-  "trend",
-  "annotations",
-  "sparkline",
-  "compare",
-  "format",
-];
-
 export function renderOptionNames(kind: ReportOutputFormat): readonly string[] {
   if (kind === "LIST") {
     return [];
@@ -277,7 +250,7 @@ export function renderOptionNames(kind: ReportOutputFormat): readonly string[] {
   if (kind === "LEADERBOARD") {
     return ["mentions"];
   }
-  return CHART_OPTIONS;
+  return SCOUTQL_CHART_OPTION_NAMES;
 }
 
 export function renderOptionItems(
