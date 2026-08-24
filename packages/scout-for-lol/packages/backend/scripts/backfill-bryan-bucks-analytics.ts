@@ -15,9 +15,14 @@ import {
   shutdownProductAnalytics,
 } from "#src/analytics/product-analytics.ts";
 import { deterministicBucksAnalyticsEventId } from "#src/analytics/bryan-bucks-backfill.ts";
+import { backfillMemberBets } from "./backfill-bryan-bucks-members.ts";
 import { createLogger } from "#src/logger.ts";
 
 const LAUNCH_BOUNDARY = new Date("2026-08-16T00:00:00.000Z");
+// Freeze this cutoff before the first beta deployment. Live member events do
+// not carry the backfill marker, so querying past this boundary would emit
+// duplicate events on every later backfill run.
+const LIVE_CAPTURE_BOUNDARY = new Date("2026-08-24T00:00:00.000Z");
 const dryRun = Bun.argv.includes("--dry-run");
 const seedOnly = Bun.argv.includes("--seed-only");
 const logger = createLogger("backfill-bryan-bucks-analytics");
@@ -33,6 +38,10 @@ function eventOptions(
   suffix?: string,
 ) {
   return { timestamp, uuid: eventUuid(kind, id, suffix) };
+}
+
+function isHistoricalTimestamp(timestamp: Date): boolean {
+  return timestamp >= LAUNCH_BOUNDARY && timestamp < LIVE_CAPTURE_BOUNDARY;
 }
 
 async function forEachAsync<T>(
@@ -90,98 +99,30 @@ async function main(): Promise<void> {
     where: { isHouse: false },
     select: { id: true, serverId: true, analyticsUserId: true },
   });
-  const accountById = new Map(accounts.map((account) => [account.id, account]));
-
-  const directBets = await prisma.bucksBet.findMany({
-    where: { bucksAccount: { isHouse: false } },
-    select: { id: true, bucksAccountId: true, createdAt: true },
-    orderBy: { createdAt: "asc" },
-  });
-  await forEachAsync(directBets, async (bet) => {
-    const account = accountById.get(bet.bucksAccountId);
-    if (account === undefined) return;
-    await capture(eventUuid("direct-bet", bet.id), () => {
-      analytics.captureBucksMember(
-        {
-          analyticsUserId: account.analyticsUserId,
-          serverId: account.serverId,
-        },
-        {
-          event: "bryan_bucks_member_activity",
-          properties: {
-            activity_kind: "outcome_bet",
-            surface: "button",
-            status: "success",
-          },
-        },
-        eventOptions("direct-bet", bet.id, bet.createdAt),
-      );
+  const accountById = new Map<
+    number,
+    { analyticsUserId: string; serverId: string }
+  >();
+  for (const account of accounts) {
+    accountById.set(account.id, {
+      analyticsUserId: account.analyticsUserId,
+      serverId: account.serverId,
     });
-  });
-
-  const parlayBets = await prisma.bucksParlayBet.findMany({
-    where: { bucksAccount: { isHouse: false } },
-    select: {
-      id: true,
-      bucksAccountId: true,
-      createdAt: true,
+  }
+  const { directBets, parlayBets, weeklyParlayBets } = await backfillMemberBets(
+    {
+      launchBoundary: LAUNCH_BOUNDARY,
+      liveCaptureBoundary: LIVE_CAPTURE_BOUNDARY,
+      accountById,
+      analytics,
+      capture,
     },
-    orderBy: { createdAt: "asc" },
-  });
-  await forEachAsync(parlayBets, async (bet) => {
-    const account = accountById.get(bet.bucksAccountId);
-    if (account === undefined) return;
-    await capture(eventUuid("parlay-bet", bet.id), () => {
-      analytics.captureBucksMember(
-        {
-          analyticsUserId: account.analyticsUserId,
-          serverId: account.serverId,
-        },
-        {
-          event: "bryan_bucks_member_activity",
-          properties: {
-            activity_kind: "parlay_bet",
-            surface: "button",
-            status: "success",
-          },
-        },
-        eventOptions("parlay-bet", bet.id, bet.createdAt),
-      );
-    });
-  });
-
-  const weeklyParlayBets = await prisma.bucksWeeklyParlayBet.findMany({
-    where: { bucksAccount: { isHouse: false } },
-    select: {
-      id: true,
-      bucksAccountId: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "asc" },
-  });
-  await forEachAsync(weeklyParlayBets, async (bet) => {
-    const account = accountById.get(bet.bucksAccountId);
-    if (account === undefined) return;
-    await capture(eventUuid("weekly-parlay-bet", bet.id), () => {
-      analytics.captureBucksMember(
-        {
-          analyticsUserId: account.analyticsUserId,
-          serverId: account.serverId,
-        },
-        {
-          event: "bryan_bucks_member_activity",
-          properties: {
-            activity_kind: "weekly_parlay_bet",
-            surface: "button",
-            status: "success",
-          },
-        },
-        eventOptions("weekly-parlay-bet", bet.id, bet.createdAt),
-      );
-    });
-  });
+  );
 
   const pools = await prisma.bucksMatchPool.findMany({
+    where: {
+      createdAt: { gte: LAUNCH_BOUNDARY, lt: LIVE_CAPTURE_BOUNDARY },
+    },
     select: {
       id: true,
       serverId: true,
@@ -201,7 +142,7 @@ async function main(): Promise<void> {
         analytics,
       });
     });
-    if (pool.matchedAt !== null) {
+    if (pool.matchedAt !== null && isHistoricalTimestamp(pool.matchedAt)) {
       const matchedAt = pool.matchedAt;
       await capture(eventUuid("pool", pool.id, "closed"), () => {
         captureBucksLifecycle({
@@ -212,7 +153,11 @@ async function main(): Promise<void> {
         });
       });
     }
-    if (pool.settledAt !== null && pool.poolState === "settled") {
+    if (
+      pool.settledAt !== null &&
+      isHistoricalTimestamp(pool.settledAt) &&
+      pool.poolState === "settled"
+    ) {
       const settledAt = pool.settledAt;
       await capture(eventUuid("pool", pool.id, "settled"), () => {
         captureBucksLifecycle({
@@ -223,7 +168,11 @@ async function main(): Promise<void> {
         });
       });
     }
-    if (pool.settledAt !== null && pool.poolState === "voided") {
+    if (
+      pool.settledAt !== null &&
+      isHistoricalTimestamp(pool.settledAt) &&
+      pool.poolState === "voided"
+    ) {
       const settledAt = pool.settledAt;
       await capture(eventUuid("pool", pool.id, "voided"), () => {
         captureBucksLifecycle({
@@ -237,6 +186,9 @@ async function main(): Promise<void> {
   });
 
   const parlayMarkets = await prisma.bucksParlayMarket.findMany({
+    where: {
+      publishedAt: { gte: LAUNCH_BOUNDARY, lt: LIVE_CAPTURE_BOUNDARY },
+    },
     select: {
       id: true,
       serverId: true,
@@ -260,7 +212,7 @@ async function main(): Promise<void> {
         analytics,
       });
     });
-    if (market.settledAt !== null) {
+    if (market.settledAt !== null && isHistoricalTimestamp(market.settledAt)) {
       const settledAt = market.settledAt;
       await capture(
         eventUuid("parlay-market", market.id, market.marketState),
@@ -285,6 +237,9 @@ async function main(): Promise<void> {
   });
 
   const weeklyMarkets = await prisma.bucksWeeklyParlayMarket.findMany({
+    where: {
+      publishedAt: { gte: LAUNCH_BOUNDARY, lt: LIVE_CAPTURE_BOUNDARY },
+    },
     select: {
       id: true,
       serverId: true,
@@ -308,7 +263,7 @@ async function main(): Promise<void> {
         analytics,
       });
     });
-    if (market.settledAt !== null) {
+    if (market.settledAt !== null && isHistoricalTimestamp(market.settledAt)) {
       const settledAt = market.settledAt;
       await capture(
         eventUuid("weekly-market", market.id, market.marketState),
@@ -333,6 +288,9 @@ async function main(): Promise<void> {
   });
 
   const ledgerEntries = await prisma.bucksLedgerEntry.findMany({
+    where: {
+      createdAt: { gte: LAUNCH_BOUNDARY, lt: LIVE_CAPTURE_BOUNDARY },
+    },
     select: {
       id: true,
       delta: true,
@@ -433,11 +391,12 @@ async function main(): Promise<void> {
     dryRun,
     seedOnly,
     launchBoundary: LAUNCH_BOUNDARY.toISOString(),
+    liveCaptureBoundary: LIVE_CAPTURE_BOUNDARY.toISOString(),
     earliestPool: earliestPool?.createdAt.toISOString() ?? null,
     accounts: accounts.length,
-    directBets: directBets.length,
-    parlayBets: parlayBets.length,
-    weeklyParlayBets: weeklyParlayBets.length,
+    directBets,
+    parlayBets,
+    weeklyParlayBets,
     pools: pools.length,
     parlayMarkets: parlayMarkets.length,
     weeklyMarkets: weeklyMarkets.length,
