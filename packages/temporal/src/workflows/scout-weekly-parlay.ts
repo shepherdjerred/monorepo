@@ -21,6 +21,16 @@ const deliveryActivities = proxyActivities<ScoutWeeklyParlayActivities>({
   },
 });
 
+const openActivities = proxyActivities<ScoutWeeklyParlayActivities>({
+  startToCloseTimeout: "5 minutes",
+  retry: {
+    maximumAttempts: 5,
+    initialInterval: "10 seconds",
+    backoffCoefficient: 2,
+    maximumInterval: "1 minute",
+  },
+});
+
 const lifecycleActivities = proxyActivities<ScoutWeeklyParlayActivities>({
   startToCloseTimeout: "30 seconds",
   retry: {
@@ -54,7 +64,9 @@ async function invokeDeliveryAction(
   action: ScoutWeeklyParlayAction,
 ): Promise<void> {
   try {
-    await deliveryActivities.invokeScoutWeeklyParlayAction(action);
+    await (action.action === "open"
+      ? openActivities.invokeScoutWeeklyParlayAction(action)
+      : deliveryActivities.invokeScoutWeeklyParlayAction(action));
   } catch (error) {
     log.warn(
       "Weekly Scout parlay delivery action exhausted retries; continuing lifecycle",

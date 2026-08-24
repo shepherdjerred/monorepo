@@ -8,6 +8,8 @@ import { createStructuredLogger } from "#observability/logging.ts";
 const log = createStructuredLogger("scout-weekly-parlay");
 const PACIFIC_TIME_ZONE = "America/Los_Angeles";
 const UPDATE_COUNT = 6;
+const OPEN_ACTION_TIMEOUT_MS = 4 * 60 * 1000;
+const STANDARD_ACTION_TIMEOUT_MS = 20 * 1000;
 
 export const ScoutWeeklyParlayActionSchema = z
   .strictObject({
@@ -210,7 +212,15 @@ export async function invokeScoutWeeklyParlayAction(
           "Idempotency-Key": scoutWeeklyParlayActionKey(action),
         },
         body: JSON.stringify(action),
-        signal: AbortSignal.timeout(20_000),
+        // Opening can deterministically replay player history and generate a
+        // priced market, so it needs more time than the bounded reminder and
+        // settlement calls. The activity timeout is sized to cover this
+        // request and still lets Temporal retry a genuinely unavailable Scout.
+        signal: AbortSignal.timeout(
+          action.action === "open"
+            ? OPEN_ACTION_TIMEOUT_MS
+            : STANDARD_ACTION_TIMEOUT_MS,
+        ),
       },
     );
     const body = await response.text();
