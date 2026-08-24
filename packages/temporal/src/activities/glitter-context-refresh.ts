@@ -1,5 +1,6 @@
 import { mkdir, rm } from "node:fs/promises";
 import { Context } from "@temporalio/activity";
+import { ApplicationFailure } from "@temporalio/common";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import {
@@ -7,8 +8,6 @@ import {
   PeopleDocumentSchema,
   RelationshipsDocumentSchema,
   StyleCardSchema,
-  type GenerationStateDocument,
-  type GenerationStateEntry,
   type StyleCard,
 } from "@shepherdjerred/glitter-context/schema";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
@@ -17,6 +16,7 @@ import {
   glitterContextRefreshRelationshipProposals,
   glitterContextRefreshRunsTotal,
 } from "#observability/metrics-glitter.ts";
+import { log } from "#observability/log.ts";
 import { parsePorcelainPaths } from "#shared/porcelain.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
 import { runCommand } from "./data-dragon-shell.ts";
@@ -48,6 +48,12 @@ import {
   isAllowedGlitterContextRefreshPath,
 } from "./glitter-context-refresh-paths.ts";
 import { selectStyleRefreshCandidates } from "./glitter-context-refresh-selection.ts";
+import {
+  shouldEvaluateRelationships,
+  shouldFailRefreshRun,
+  shouldPersistRelationshipEvaluation,
+  updateGenerationState,
+} from "./glitter-context-refresh-state.ts";
 import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import { openSeasonRefreshPr } from "./scout-season-refresh-git.ts";
 import {
@@ -59,24 +65,6 @@ const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
 const MAIN_BRANCH = "main";
 const PACKAGE_PATH = "packages/glitter-context";
-
-export function shouldEvaluateRelationships(
-  sourceSnapshotChecksum: string | null,
-  latestSnapshotChecksum: string,
-): boolean {
-  return sourceSnapshotChecksum !== latestSnapshotChecksum;
-}
-
-export function shouldPersistRelationshipEvaluation(input: {
-  evaluated: boolean;
-  refreshedPeopleCount: number;
-  relationshipProposalCount: number;
-}): boolean {
-  return (
-    input.evaluated &&
-    (input.refreshedPeopleCount > 0 || input.relationshipProposalCount > 0)
-  );
-}
 
 export const GlitterContextRefreshInputSchema = z
   .object({
@@ -97,6 +85,11 @@ export type GlitterContextRefreshResult = {
   proposalSha256: string;
   eligiblePeople: string[];
   refreshedPeople: string[];
+  /**
+   * Eligible people whose card could not be regenerated this run, with the
+   * reason. The run still refreshes everyone else and opens its PR.
+   */
+  skippedPeople: { personId: string; reason: string }[];
   relationshipProposalCount: number;
   generation: GenerationBudgetSummary;
   changedFiles: string[];
@@ -166,59 +159,6 @@ async function validateRefreshClone(repoDir: string): Promise<void> {
   await runCommand(["bun", "run", "test"], { cwd: packageDir });
   await runCommand(["bun", "run", "lint"], { cwd: packageDir });
   await runCommand(["bun", "run", "build"], { cwd: packageDir });
-}
-
-function updateGenerationState(input: {
-  state: GenerationStateDocument;
-  refreshedPeople: ReadonlySet<string>;
-  candidates: ReturnType<typeof selectStyleRefreshCandidates>;
-  snapshotSha256: string;
-  refreshedAt: string;
-  relationshipsEvaluated: boolean;
-}): GenerationStateDocument {
-  const candidateByPerson = new Map(
-    input.candidates.map((candidate) => [candidate.person.id, candidate]),
-  );
-  const refreshedEntryFor = (personId: string): GenerationStateEntry => {
-    const candidate = candidateByPerson.get(personId);
-    const lastMessage = candidate?.messages.at(-1);
-    if (candidate === undefined || lastMessage === undefined) {
-      throw new Error(`missing refreshed candidate state for ${personId}`);
-    }
-    return {
-      personId,
-      lastMessageId: lastMessage.messageId,
-      sourceSnapshotChecksum: input.snapshotSha256,
-      messageCount: candidate.totalMessageCount,
-      refreshedAt: input.refreshedAt,
-    };
-  };
-  const existingPersonIds = new Set(
-    input.state.people.map((entry) => entry.personId),
-  );
-  const updatedExisting = input.state.people.map((entry) =>
-    input.refreshedPeople.has(entry.personId)
-      ? { ...entry, ...refreshedEntryFor(entry.personId) }
-      : entry,
-  );
-  // A person can become a refresh candidate without a pre-existing state entry
-  // (new Discord ID + style card). Without appending their watermark here, every
-  // later weekly run would treat them as never-refreshed and regenerate their
-  // card from the entire corpus. Record state for those newly refreshed people.
-  const appended = [...input.refreshedPeople]
-    .filter((personId) => !existingPersonIds.has(personId))
-    .toSorted()
-    .map((personId) => refreshedEntryFor(personId));
-  return GenerationStateDocumentSchema.parse({
-    ...input.state,
-    relationshipSourceSnapshotChecksum: input.relationshipsEvaluated
-      ? input.snapshotSha256
-      : input.state.relationshipSourceSnapshotChecksum,
-    relationshipRefreshedAt: input.relationshipsEvaluated
-      ? input.refreshedAt
-      : input.state.relationshipRefreshedAt,
-    people: [...updatedExisting, ...appended],
-  });
 }
 
 export type GlitterContextRefreshActivities =
@@ -330,6 +270,7 @@ export const glitterContextRefreshActivities = {
       );
 
       const refreshedPeople = new Set<string>();
+      const skippedPeople: { personId: string; reason: string }[] = [];
       for (const candidate of candidates) {
         Context.current().heartbeat({
           phase: "style-card",
@@ -342,15 +283,50 @@ export const glitterContextRefreshActivities = {
             `missing existing style card for ${candidate.person.id}`,
           );
         }
-        const card = await generateStyleCard({
-          candidate,
-          existingCard,
-          sourceSnapshotSha256: corpus.reference.snapshotSha256,
-          artifactStore: generationArtifactStore,
-          budget: generationBudget,
-        });
-        await Bun.write(path, jsonText(card));
-        refreshedPeople.add(candidate.person.id);
+        // One person's evidence failing must not discard every other person's
+        // work. A refresh is hours long and costs real money, and a single
+        // chunk the model cannot summarize used to fail the whole activity —
+        // including cards already generated earlier in this same loop.
+        try {
+          const card = await generateStyleCard({
+            candidate,
+            existingCard,
+            sourceSnapshotSha256: corpus.reference.snapshotSha256,
+            artifactStore: generationArtifactStore,
+            budget: generationBudget,
+          });
+          await Bun.write(path, jsonText(card));
+          refreshedPeople.add(candidate.person.id);
+        } catch (error: unknown) {
+          // Every `ApplicationFailure` raised under here is a deliberate
+          // stop-the-run signal about the run rather than about this person —
+          // an exhausted budget (continuing just re-refuses for everyone left)
+          // or a billed completion that could not be persisted (retrying would
+          // re-bill it). Only ordinary evidence failures are this person's.
+          if (error instanceof ApplicationFailure) {
+            throw error;
+          }
+          const reason = z.instanceof(Error).parse(error).message;
+          log("warning", "Glitter style card skipped", {
+            personId: candidate.person.id,
+            reason,
+          });
+          skippedPeople.push({ personId: candidate.person.id, reason });
+        }
+      }
+      glitterContextRefreshPeople.set(
+        { state: "skipped" },
+        skippedPeople.length,
+      );
+      if (
+        shouldFailRefreshRun({
+          candidateCount: candidates.length,
+          refreshedCount: refreshedPeople.size,
+        })
+      ) {
+        throw new Error(
+          `every eligible person failed to refresh (${skippedPeople.map((skipped) => `${skipped.personId}: ${skipped.reason}`).join("; ")})`,
+        );
       }
 
       let updatedRelationships = relationshipsDocument;
@@ -413,6 +389,7 @@ export const glitterContextRefreshActivities = {
         proposalSha256,
         eligiblePeople: candidates.map((candidate) => candidate.person.id),
         refreshedPeople: [...refreshedPeople].toSorted(),
+        skippedPeople,
         relationshipProposalCount,
         generation: generationBudget.summary(),
         changedFiles: files,
@@ -446,6 +423,16 @@ export const glitterContextRefreshActivities = {
         "",
         `Verified snapshot: \`${corpus.reference.snapshotSha256}\``,
         `Style cards refreshed: ${String(refreshedPeople.size)}`,
+        // A reviewer has to be told which people this PR does NOT refresh;
+        // otherwise a silently skipped card looks like one with no new evidence.
+        ...(skippedPeople.length === 0
+          ? []
+          : [
+              `Style cards skipped: ${String(skippedPeople.length)}`,
+              ...skippedPeople.map(
+                (skipped) => `- \`${skipped.personId}\`: ${skipped.reason}`,
+              ),
+            ]),
         `Relationship updates proposed: ${String(relationshipProposalCount)}`,
         `Uncached generation cost: $${baseResult.generation.actualUncachedCostUsd.toFixed(4)} / $${baseResult.generation.maxUncachedCostUsd.toFixed(2)}`,
         `Generation cache: ${String(baseResult.generation.cacheHits)} hits, ${String(baseResult.generation.cacheMisses)} misses`,

@@ -162,6 +162,7 @@ describe("Glitter generated style-card schemas", () => {
       existingCard,
       sourceSnapshotSha256: "a".repeat(64),
       chunkCount: 1,
+      summarizedMessages: 30,
       synthesis,
     });
 
@@ -221,6 +222,7 @@ describe("Glitter generated style-card schemas", () => {
         existingCard,
         sourceSnapshotSha256: "a".repeat(64),
         chunkCount: 1,
+        summarizedMessages: 30,
         synthesis: invalidSynthesis,
       }),
     ).toThrow("quotes cites unknown message IDs");
@@ -241,6 +243,7 @@ describe("Glitter generated style-card schemas", () => {
         existingCard,
         sourceSnapshotSha256: "a".repeat(64),
         chunkCount: 1,
+        summarizedMessages: 30,
         synthesis: invalidSynthesis,
       }),
     ).toThrow(
@@ -378,6 +381,39 @@ function generateWithStubbedModel(responder: (call: number) => unknown) {
   });
 }
 
+// A second UTC month, so `buildStyleEvidenceChunks` produces two chunks. The
+// original messages stay first so the synthesis fixture's quote/sample IDs
+// remain inside the safe corpus.
+const secondMonthMessages = Array.from({ length: 30 }, (_, index) =>
+  CurrentMessageSchema.parse({
+    ...CurrentMessageSchema.parse(messages[0]),
+    messageId: String(52_345_678_901_234_500n + BigInt(index)),
+    content: `august message ${String(index)} with characteristic phrasing`,
+    timestamp: `2026-08-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`,
+  }),
+);
+
+function generateAcrossTwoMonths(responder: (call: number) => unknown) {
+  chunkCallCount = 0;
+  recordedSeeds = [];
+  chunkResponder = responder;
+  const budget = new GenerationBudget(100);
+  lastGenerationBudget = budget;
+  const twoMonthMessages = [...messages, ...secondMonthMessages];
+  return generateStyleCard({
+    candidate: {
+      ...candidate,
+      messages: twoMonthMessages,
+      safeMessages: twoMonthMessages,
+      totalMessageCount: twoMonthMessages.length,
+    },
+    existingCard,
+    sourceSnapshotSha256: "a".repeat(64),
+    artifactStore: memoryStore(),
+    budget,
+  });
+}
+
 describe("Glitter extraction repair loop", () => {
   test("retries a poisoned chunk with a fresh seed and succeeds", async () => {
     // Attempt 0 (seed 0) cites an unknown ID; the repair (seed 1) is clean.
@@ -407,17 +443,43 @@ describe("Glitter extraction repair loop", () => {
     expect(recordedSeeds).toEqual([0, 1, 2]);
   });
 
-  test("rejects a chunk that sanitizes to no verifiable evidence at all", async () => {
+  test("counts a sanitized chunk's messages — the chunk still yielded evidence", async () => {
+    // Sanitization dropped one observation, but the model did read and summarize
+    // this chunk, so its messages legitimately back the card.
+    const result = await generateWithStubbedModel(
+      () => partiallyBadChunkSummary,
+    );
+
+    expect(result.coverage.evidence.summarized_messages).toBe(30);
+    expect(result.coverage.evidence.safe_messages).toBe(30);
+  });
+
+  test("rejects a person whose every chunk sanitizes to no verifiable evidence", async () => {
     // Every observation cites an unknown ID and there are no representatives, so
-    // sanitization empties the chunk entirely. Returning it would let the card
-    // advertise full coverage while silently omitting the month, so the run must
-    // fail loudly instead.
+    // sanitization empties the only chunk entirely. The chunk itself degrades
+    // rather than throwing, but a card backed by nothing at all is a fabrication
+    // rather than a refresh, so the person is rejected.
     await expect(
       generateWithStubbedModel(() => badChunkSummary),
-    ).rejects.toThrow("yielded no verifiable evidence");
+    ).rejects.toThrow("no chunk for ryan yielded verifiable evidence");
 
     // Still bounded: initial attempt plus MAX_EXTRACTION_REPAIR_ATTEMPTS repairs.
     expect(recordedSeeds).toEqual([0, 1, 2]);
+  });
+
+  test("degrades one dead chunk and keeps its messages out of coverage", async () => {
+    // Two months, so two chunks. The first yields evidence; the second is
+    // deterministically unverifiable and degrades to nothing. The run must still
+    // produce a card, and coverage must count only the month that contributed —
+    // claiming all 60 would advertise a month the card silently omits.
+    const result = await generateAcrossTwoMonths((call) =>
+      call === 0 ? goodChunkSummary : badChunkSummary,
+    );
+
+    expect(result.schemaVersion).toBe(2);
+    expect(result.coverage.evidence.chunks).toBe(2);
+    expect(result.coverage.evidence.safe_messages).toBe(60);
+    expect(result.coverage.evidence.summarized_messages).toBe(30);
   });
 
   test("keeps an earlier attempt's evidence when a later repair sanitizes to nothing", async () => {

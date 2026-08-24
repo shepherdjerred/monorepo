@@ -25,6 +25,7 @@ describe("runGlitterContextRefresh", () => {
       proposalSha256: "b".repeat(64),
       eligiblePeople: ["virmel"],
       refreshedPeople: ["virmel"],
+      skippedPeople: [],
       relationshipProposalCount: 0,
       generation: {
         maxUncachedCostUsd: 50,
