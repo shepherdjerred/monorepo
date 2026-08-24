@@ -23,6 +23,7 @@ import {
 } from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 const logger = createLogger("betting-bet-button");
 
@@ -67,7 +68,7 @@ export function describeResult(
       // confirmation: without it the number above reads as a guaranteed loss
       // amount, which is not what was submitted. Everything else is in
       // `/bb rules`.
-      return `✅ **${sideLabel}** — offered up to **${result.totalStake.toString()} BB** · balance **${result.balanceAfter.toString()} BB**. Only matched BB are at risk; the rest is refunded at close.`;
+      return `✅ **${sideLabel}** — offered up to **${formatInteger(result.totalStake)} BB** · balance **${formatInteger(result.balanceAfter)} BB**. Only matched BB are at risk; the rest is refunded at close.`;
     }
     case "window_closed":
       return "⏰ Betting has closed for this game.";
@@ -98,7 +99,7 @@ export function describeResult(
 export function describeCancel(result: CancelBetResult): string {
   switch (result.kind) {
     case "cancelled":
-      return `↩️ Cancelled: **${result.stake.toString()} BB** − **${result.houseCut.toString()} BB** fee = **${result.refunded.toString()} BB** back · balance **${result.balanceAfter.toString()} BB**.`;
+      return `↩️ Cancelled: **${formatInteger(result.stake)} BB** − **${formatInteger(result.houseCut)} BB** fee = **${formatInteger(result.refunded)} BB** back · balance **${formatInteger(result.balanceAfter)} BB**.`;
     case "window_closed":
       return "⏰ Betting is closed — your bet is locked in. Final amounts are on the game message.";
     case "already_resolved":

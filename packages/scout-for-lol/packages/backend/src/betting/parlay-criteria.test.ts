@@ -15,6 +15,7 @@ import {
   thresholdsMatchProposal,
 } from "#src/betting/parlay-model-schema.ts";
 import { evaluateParlay } from "#src/betting/parlay-evaluator.ts";
+import { buildParlayShortlist } from "#src/betting/parlay-shortlist.ts";
 import { bucksTestRoster } from "#src/testing/bucks-fixtures.ts";
 
 const fixture = RawMatchSchema.parse(
@@ -22,6 +23,13 @@ const fixture = RawMatchSchema.parse(
     new URL("../../../../testdata/rift.json", import.meta.url),
   ).json(),
 );
+
+function shortlistForOne(matchId: string) {
+  return buildParlayShortlist({
+    matchId,
+    subjects: [{ key: "P1", lane: "adc", tags: ["Assassin"] }],
+  });
+}
 
 describe("parlay model schema", () => {
   test("uses an OpenAI-compatible flat model schema and normalizes it", () => {
@@ -423,7 +431,10 @@ describe("opponent ping conditions", () => {
     const subjects = ParlaySubjectsSchema.parse([
       { key: "P1", puuid: selected[0]?.puuid, alias: "one" },
     ]);
-    const result = parlayProposalSchemaFor(subjects).safeParse({
+    const result = parlayProposalSchemaFor(
+      subjects,
+      shortlistForOne("NA1_subject-pings"),
+    ).safeParse({
       version: 1,
       conditions: [
         {
@@ -551,7 +562,8 @@ describe("proposal grounding", () => {
   const subjects = ParlaySubjectsSchema.parse([
     { key: "P1", puuid: fixture.info.participants[0]?.puuid, alias: "one" },
   ]);
-  const ProposalSchema = parlayProposalSchemaFor(subjects);
+  const shortlist = shortlistForOne("NA1_proposal-grounding");
+  const ProposalSchema = parlayProposalSchemaFor(subjects, shortlist);
   const base = {
     subject: null,
     participantNumericField: null,
@@ -592,6 +604,12 @@ describe("proposal grounding", () => {
   });
 
   test("accepts an objective that does have recorded history", () => {
+    const candidate = shortlist.candidates.find(
+      (target) => target.kind === "team_objective_kills",
+    );
+    if (candidate === undefined) {
+      throw new Error("Expected an objective target in the global shortlist");
+    }
     const result = ProposalSchema.safeParse({
       version: 1,
       conditions: [
@@ -600,7 +618,7 @@ describe("proposal grounding", () => {
           ...base,
           kind: "team_objective_kills",
           team: "selected",
-          objective: "dragon",
+          objective: candidate.objective,
           operator: "gte",
         },
       ],
@@ -616,6 +634,20 @@ describe("proposal grounding", () => {
         {
           ...killsLeg,
           participantNumericField: "spell1Casts",
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects a grounded target outside the exact match shortlist", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        killsLeg,
+        {
+          ...killsLeg,
+          participantNumericField: "totalHeal",
         },
       ],
     });

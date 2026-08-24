@@ -3,6 +3,7 @@ import {
   ParlayGenerationContextSchema,
   buildParlayProposalPrompt,
 } from "#src/betting/parlay-prompt.ts";
+import { buildParlayShortlist } from "#src/betting/parlay-shortlist.ts";
 
 const context = ParlayGenerationContextSchema.parse({
   queue: "solo",
@@ -43,14 +44,21 @@ const context = ParlayGenerationContextSchema.parse({
       },
     },
   ],
+  shortlist: buildParlayShortlist({
+    matchId: "NA1_prompt",
+    subjects: [{ key: "P1", lane: "adc", tags: ["Assassin"] }],
+  }),
 });
 
 describe("parlay prompt", () => {
-  test("renders deterministically with the complete closed catalog", () => {
+  test("renders deterministically with exactly the match shortlist", () => {
     const first = buildParlayProposalPrompt(context);
     expect(buildParlayProposalPrompt(context)).toBe(first);
-    expect(first).toContain('"participantNumeric"');
-    expect(first).toContain('"gameEndedInEarlySurrender"');
+    expect(first).toContain("Allowed candidate targets (exactly 20)");
+    for (const candidate of context.shortlist.candidates) {
+      expect(first).toContain(JSON.stringify(candidate));
+    }
+    expect(first).not.toContain('"gameEndedInEarlySurrender"');
     expect(first).toContain("Every selected tracked subject");
     expect(first).toContain("every irrelevant slot to null");
     expect(first).not.toContain("puuid");

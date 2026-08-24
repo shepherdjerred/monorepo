@@ -52,6 +52,7 @@ import {
   truncateEmbedFieldValue,
 } from "#src/discord/utils/message.ts";
 import { createLogger } from "#src/logger.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 const logger = createLogger("command-bb");
 
@@ -98,15 +99,15 @@ export function buildPersonalBucksEmbed(
     if (position.marketType === "outcome") {
       const amount =
         position.matchedStake === null
-          ? `offered up to ${position.offeredStake.toString()} BB · match pending`
-          : `matched ${position.matchedStake.toString()} BB · refunded ${(position.unmatchedStake ?? 0).toString()} BB`;
+          ? `offered up to ${formatInteger(position.offeredStake)} BB · match pending`
+          : `matched ${formatInteger(position.matchedStake)} BB · refunded ${formatInteger(position.unmatchedStake ?? 0)} BB`;
       return `• **${position.gameAlias} ${position.sideLabel}** — ${amount} · ${timing}`;
     }
-    return `• **${position.subjectAlias} ${position.side}** — ${position.stake.toString()} BB · ${timing}`;
+    return `• **${position.subjectAlias} ${position.side}** — ${formatInteger(position.stake)} BB · ${timing}`;
   });
   if (view.pendingPositionCount > view.pendingPositions.length) {
     positions.push(
-      `…and ${(view.pendingPositionCount - view.pendingPositions.length).toString()} more pending position(s).`,
+      `…and ${formatInteger(view.pendingPositionCount - view.pendingPositions.length)} more pending position(s).`,
     );
   }
 
@@ -116,12 +117,12 @@ export function buildPersonalBucksEmbed(
     .addFields(
       {
         name: "Available",
-        value: `**${view.balance.toString()} BB**`,
+        value: `**${formatInteger(view.balance)} BB**`,
         inline: true,
       },
       {
         name: "Reserved / at risk",
-        value: `**${view.totalAtRisk.toString()} BB**`,
+        value: `**${formatInteger(view.totalAtRisk)} BB**`,
         inline: true,
       },
     );

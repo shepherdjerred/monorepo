@@ -1,22 +1,22 @@
 import { z } from "zod";
 import {
+  getChampionTags,
   rankToString,
   type LoadingScreenData,
   type QueueType,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
-import { promptFieldCatalog } from "#src/betting/parlay-catalog.ts";
 import type { ParlaySubject } from "#src/betting/parlay-criteria.ts";
 import {
-  groundedParticipantFields,
-  groundedTeamObjectives,
-} from "#src/betting/parlay-stat-fields.ts";
+  buildParlayShortlist,
+  ParlayShortlistSchema,
+} from "#src/betting/parlay-shortlist.ts";
 import { fetchRecentQueueGamesForPuuids } from "#src/reports/duckdb/lake-reads.ts";
 import { ReportQueryTimeoutError } from "#src/reports/duckdb/instance.ts";
 
 const logger = createLogger("betting-parlay-prompt");
 
-export const PARLAY_PROMPT_VERSION = "2";
+export const PARLAY_PROMPT_VERSION = "3";
 const HISTORY_TIMEOUT_MS = 1500;
 const HISTORY_LIMIT = 30;
 
@@ -53,6 +53,7 @@ export const ParlayGenerationContextSchema = z.strictObject({
     .max(5),
   lobby: z.array(LobbyParticipantSchema).length(10),
   history: z.array(SubjectHistorySchema).min(1).max(5),
+  shortlist: ParlayShortlistSchema,
 });
 
 export type ParlayGenerationContext = z.infer<
@@ -154,13 +155,14 @@ export async function buildParlayGenerationContext(input: {
   subjects: readonly ParlaySubject[];
 }): Promise<ParlayGenerationContext | undefined> {
   if (input.loadingScreenData.layout !== "standard") return;
+  const loadingScreenData = input.loadingScreenData;
   const selectedTeam = input.selectedTeamId === 100 ? "blue" : "red";
   const subjectByPuuid = new Map(
     input.subjects.map((subject) => [subject.puuid, subject]),
   );
   let selectedAnonymous = 0;
   let opponentAnonymous = 0;
-  const lobby = input.loadingScreenData.participants.map((participant) => {
+  const lobby = loadingScreenData.participants.map((participant) => {
     const subject =
       participant.puuid === null
         ? undefined
@@ -180,7 +182,7 @@ export async function buildParlayGenerationContext(input: {
     });
   });
   const championByPuuid = new Map(
-    input.loadingScreenData.participants.flatMap((participant) =>
+    loadingScreenData.participants.flatMap((participant) =>
       participant.puuid === null
         ? []
         : [[participant.puuid, participant.championName]],
@@ -192,11 +194,33 @@ export async function buildParlayGenerationContext(input: {
     subjects: input.subjects,
     championByPuuid,
   });
+  const shortlistSubjects = await Promise.all(
+    input.subjects.map(async (subject) => {
+      const participant = loadingScreenData.participants.find(
+        (candidate) => candidate.puuid === subject.puuid,
+      );
+      if (participant?.lane === undefined) {
+        throw new Error(`No inferred lane for parlay subject ${subject.key}`);
+      }
+      const tags = await getChampionTags(participant.championName);
+      if (tags === undefined) {
+        throw new Error(
+          `No bundled champion tags for ${participant.championName}`,
+        );
+      }
+      return { key: subject.key, lane: participant.lane, tags };
+    }),
+  );
+  const shortlist = buildParlayShortlist({
+    matchId: input.matchId,
+    subjects: shortlistSubjects,
+  });
   return ParlayGenerationContextSchema.parse({
     queue: input.queue,
     selectedSubjects: input.subjects.map((subject) => subject.key),
     lobby,
     history,
+    shortlist,
   });
 }
 
@@ -213,19 +237,23 @@ export const PARLAY_SYSTEM_PROMPT = `You create one entertaining but plausible L
 export function buildParlayProposalPrompt(
   context: ParlayGenerationContext,
 ): string {
+  const anonymousContext = {
+    queue: context.queue,
+    selectedSubjects: context.selectedSubjects,
+    lobby: context.lobby,
+    history: context.history,
+  };
   return [
     "Choose 2-6 distinct conditions for one fixed-odds parlay. Do NOT choose any numbers yet.",
     "Every selected tracked subject must appear in at least one participant condition.",
     "Do not repeat a subject/field or team/objective target, even with another operator.",
     "Pick the operator for each condition: gte for an over, lte for an under.",
     "Aim for a mix: some ordinary lines, some genuinely surprising ones.",
-    "Opponent ping conditions are about the ENEMY team and are a good source of the surprising kind.",
+    "Use only one of the exact candidate targets supplied below. A target is bound to its listed subject or team.",
     "Every condition must include every structured slot. Fill the slots used by its kind and set every irrelevant slot to null.",
     "Do not combine incompatible win booleans or first-objective true with zero objective kills.",
-    `Anonymous lobby and recent form:\n${JSON.stringify(context)}`,
-    `Complete allowed field catalog:\n${JSON.stringify(
-      promptFieldCatalog(groundedParticipantFields(), groundedTeamObjectives()),
-    )}`,
+    `Anonymous lobby and recent form:\n${JSON.stringify(anonymousContext)}`,
+    `Allowed candidate targets (exactly 20):\n${JSON.stringify(context.shortlist.candidates)}`,
   ].join("\n\n");
 }
 

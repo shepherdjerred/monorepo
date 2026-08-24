@@ -265,7 +265,7 @@ export const MATCH_NUMERIC_CATALOG = z
   .record(MatchNumericFieldSchema, NumericCatalogEntrySchema)
   .parse({
     gameDuration: {
-      label: "game duration in seconds",
+      label: "game duration",
       thresholdMin: 300,
       thresholdMax: 7200,
     },
@@ -470,27 +470,3 @@ export const OPPONENT_PING_CATALOG = z
       ]),
     ),
   );
-
-export function promptFieldCatalog(
-  participantNumericFields: readonly ParticipantNumericField[] = ParticipantNumericFieldSchema.options,
-  teamObjectives: readonly TeamObjective[] = TeamObjectiveSchema.options,
-): object {
-  return {
-    participantNumeric: Object.fromEntries(
-      participantNumericFields.map((field) => [
-        field,
-        PARTICIPANT_NUMERIC_CATALOG[field],
-      ]),
-    ),
-    participantBoolean: PARTICIPANT_BOOLEAN_CATALOG,
-    teamBoolean: TEAM_BOOLEAN_CATALOG,
-    teamObjectives: Object.fromEntries(
-      teamObjectives.map((objective) => [
-        objective,
-        TEAM_OBJECTIVE_CATALOG[objective],
-      ]),
-    ),
-    matchNumeric: MATCH_NUMERIC_CATALOG,
-    opponentPings: OPPONENT_PING_CATALOG,
-  };
-}

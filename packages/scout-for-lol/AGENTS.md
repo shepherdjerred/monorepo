@@ -922,14 +922,31 @@ tracked, linked player in a complete Classic 5v5 receives exactly one
 processed. The grant is idempotent per match and guild, and Classic ARAM
 Mayhem (`"classic aram mayhem"`) receives neither the grant nor any market.
 
-**Generation is two passes, and the model never sets the price.** GPT-5.6 Sol
-first proposes 2–6 leg _shapes_ — subject, field, operator, no numbers. Only
-then does the harness know which distributions to measure, so it fetches one
-history snapshot and hands back, per leg, the player's own distribution plus the
-lane and overall population, sliced by game duration and expressed as "the
-threshold that lands N% of the time" already oriented to that leg's operator. A
-second call fills in thresholds, targeting legs that land 40–70% individually.
-Both calls share one 60-second deadline.
+**Generation is two passes, and the model never sets the price.** Before GPT-5.6
+Sol runs, Scout creates an ordered, match-specific shortlist of exactly 20
+targets: 16 player targets distributed as evenly as possible across the tracked
+subjects, plus four game-wide targets. SHA-256 ranks every choice from a
+versioned match seed, so retries, source ordering, and parallel instances
+produce the same shortlist. A player's eligibility is the union of universal
+stats, their inferred lane pool, and Riot's bundled Data Dragon champion tags.
+The tags are deliberately coarse: a Support-tagged champion may receive a
+healing target even when that champion's current kit makes it questionable.
+Participant objective last-hits, multikills, killing sprees, true damage, and
+player `timePlayed` remain settlement-compatible but are never shortlisted.
+
+The four global targets come from team win, five grounded team-objective counts,
+and game duration. Exactly one of 16 hash buckets admits the opponent-ping
+family; when admitted, one of its 13 subtypes is selected deterministically and
+takes one global slot. The exact 20 candidates are stored in the generation
+context and are the validation boundary: model output outside that shortlist is
+rejected. GPT-5.6 Sol first proposes 2–6 leg _shapes_ — subject, field, operator,
+no numbers — and every tracked subject must appear. Only then does the harness
+know which distributions to measure, so it fetches one history snapshot and
+hands back, per leg, the player's own distribution plus the lane and overall
+population, sliced by game duration and expressed as "the threshold that lands
+N% of the time" already oriented to that leg's operator. A second call fills in
+thresholds, targeting legs that land 40–70% individually. Both calls share one
+60-second deadline.
 
 - **`thresholdsMatchProposal` is the load-bearing guard.** Pass two may change
   numbers and nothing else. A response that re-targets a field, flips an
@@ -948,11 +965,12 @@ Both calls share one 60-second deadline.
   publishing a guess. Which fields the lake can answer is
   `PARLAY_HISTORY_COLUMNS`, exhaustive over the catalog so adding a field is a
   compile error until someone decides whether it is groundable.
-- **Pings are opponent-only.** Every ping type is excluded from subject
-  conditions and available as an enemy-team total. Pings cost nothing to send,
-  and subjects do bet on their own parlays mid-game, so a leg on a subject's own
-  pings is settled by whoever holds the ticket. Nobody in the market can move
-  the enemy team's count.
+- **Pings are opponent-only and rare.** Every ping type is excluded from subject
+  conditions. The one admitted subtype is an enemy-team total in exactly one of
+  16 deterministic match buckets. Pings cost nothing to send, and subjects do
+  bet on their own parlays mid-game, so a leg on a subject's own pings is settled
+  by whoever holds the ticket. Nobody in the market can move the enemy team's
+  count.
 - **`PARLAY_EVALUATOR_VERSION` gates settlement.** `evaluateParlay` voids any
   stored definition whose recorded version differs, which refunds it. Bump it
   only when the meaning of an existing condition changes — never merely because
@@ -1098,7 +1116,7 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
     earlier tick" case; `settleParlaysForMatch` returns nothing for it
     afterwards, so omitting the pass loses the result outright.
   - `fitSections` trims in priority order — earnings, then parlay legs, then
-    parlay positions, then outcome rows — instead of throwing at Discord's
+    parlay result rows, then outcome result rows — instead of throwing at Discord's
     6000-character ceiling, which merging made reachable. The description is
     never trimmed and an over-length description still throws.
     The cost, stated plainly: the parlay result now shares a channel's fate with
@@ -1114,8 +1132,14 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   matched totals, and any aggregate house fill without exposing the synthetic
   house account. Cancellations disappear from the public digest while remaining
   in the audit tables, and mention notifications are suppressed. `/bb history`
-  remains the transaction-level audit trail, while public outcome copy retains
-  the exact gross-cut-net arithmetic.
+  remains the transaction-level audit trail. The post-game embed deliberately
+  omits sides, matching, house fill, pool totals, and gross-return arithmetic.
+  It separates `BET WINNERS`, `BET LOSERS`, `PARLAY WINNERS`, and
+  `PARLAY LOSERS`; winners show net profit, losers show the actual lost stake,
+  and winner fees appear only when nonzero. Outcome and parlay refunds are
+  aggregate summaries with no refunded-bettor rows. User-visible whole numbers
+  use fixed comma grouping, and parlay duration fields render as `MM:SS` with
+  total minutes allowed above 59.
 - **This applies to the parlay market too, and it is why there are no
   per-placement receipts.** The parlay market message is **recomputed from its
   stored definition** rather than snapshotted: legs, subjects, odds, and close

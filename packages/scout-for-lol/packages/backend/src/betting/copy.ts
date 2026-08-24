@@ -1,4 +1,5 @@
 import { BUCKS_RULES_HINT } from "#src/betting/prematch-line.ts";
+import { formatInteger } from "#src/betting/display-format.ts";
 
 /**
  * User-facing Bryan Bucks strings shared by more than one surface.
@@ -39,7 +40,7 @@ export const BUCKS_HOUSE_CANNOT_FUND =
   "🏦 The Bryan Bucks house can't fund a new wallet right now. No Bucks moved.";
 
 export function bucksInsufficient(balance: number, needed: number): string {
-  return `💸 You have **${balance.toString()} BB** but need **${needed.toString()} BB**.`;
+  return `💸 You have **${formatInteger(balance)} BB** but need **${formatInteger(needed)} BB**.`;
 }
 
 /** Appended where a reader may want the rules but the surface must not carry them. */

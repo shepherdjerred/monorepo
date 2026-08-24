@@ -47,6 +47,7 @@ import {
   buildParlayThresholdPrompt,
 } from "#src/betting/parlay-prompt.ts";
 import { createLogger } from "#src/logger.ts";
+import { buildParlayShortlist } from "#src/betting/parlay-shortlist.ts";
 
 const logger = createLogger("test-parlay-live");
 
@@ -148,6 +149,14 @@ function scenario(input: {
         input.historyAvailable ? 6 : 0,
       ),
     })),
+    shortlist: buildParlayShortlist({
+      matchId: `live-${input.queue}-${input.subjectCount.toString()}-${input.historyAvailable.toString()}`,
+      subjects: selected.map((subject) => ({
+        key: subject.key,
+        lane: "adc",
+        tags: ["Assassin"],
+      })),
+    }),
   });
   return { selected, context };
 }
@@ -276,13 +285,14 @@ for (const liveCase of cases) {
 
   // Pass one: legs only.
   const proposalResult = await call(
-    parlayProposalSchemaFor(liveCase.selected),
+    parlayProposalSchemaFor(liveCase.selected, liveCase.context.shortlist),
     buildParlayProposalPrompt(liveCase.context),
     "bryan_bucks_parlay_proposal",
   );
-  const proposal = parlayProposalSchemaFor(liveCase.selected).parse(
-    proposalResult.object,
-  );
+  const proposal = parlayProposalSchemaFor(
+    liveCase.selected,
+    liveCase.context.shortlist,
+  ).parse(proposalResult.object);
 
   const history = syntheticHistory(liveCase.selected);
   const legs = statLegsForProposal(proposal, liveCase.selected);
