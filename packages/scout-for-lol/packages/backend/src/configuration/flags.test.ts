@@ -26,6 +26,27 @@ afterEach(() => {
   // file from switching `debug` off for every test that runs after it.
   resetFlagOverrides("debug");
   resetFlagOverrides("betting_enabled");
+  resetFlagOverrides("betting_settlement_dm_enabled");
+  resetFlagOverrides("betting_player_bet_outcome_dm_enabled");
+});
+
+describe("Bryan Bucks settlement DM flags", () => {
+  test("are off by default and enabled only for the beta guild", () => {
+    expect(
+      getFlag("betting_settlement_dm_enabled", { server: OTHER_GUILD }),
+    ).toBe(false);
+    expect(
+      getFlag("betting_player_bet_outcome_dm_enabled", {
+        server: OTHER_GUILD,
+      }),
+    ).toBe(false);
+    expect(
+      getFlag("betting_settlement_dm_enabled", { server: MY_SERVER }),
+    ).toBe(true);
+    expect(
+      getFlag("betting_player_bet_outcome_dm_enabled", { server: MY_SERVER }),
+    ).toBe(true);
+  });
 });
 
 describe("listGuildsWithFlagEnabled", () => {

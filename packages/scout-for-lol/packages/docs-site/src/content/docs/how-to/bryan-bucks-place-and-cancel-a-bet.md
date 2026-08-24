@@ -72,6 +72,19 @@ game message.
 That is deliberate — telling someone with a live stake that they have no bet
 would be both wrong and alarming.
 
+## Read a settled game's private summary
+
+When the game settles, Scout sends one private summary for that game when DMs
+are enabled in your server. If you placed an outcome or parlay bet, it includes
+your receipt. If Scout tracked you in that game, it also lists other people's
+outcome bets as **for your team** or **against your team**.
+
+If you both played and bet, those details are combined into one DM. Scout does
+not send a second team-relative line for your own bet, and parlays are only
+shown in the bettor's own receipt. The public settlement recap remains
+available; if DMs are disabled or unavailable, use `/bb history` to see the
+durable ledger entry and running balance.
+
 ## Troubleshooting
 
 | Scout says                                        | What to do                                                                                 |

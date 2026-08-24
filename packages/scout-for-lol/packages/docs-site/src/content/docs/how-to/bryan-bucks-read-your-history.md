@@ -44,8 +44,8 @@ Use **Previous** and **Next** to page. The controls are bound to you; nobody
 else can drive your history. The page is also pinned to a snapshot, so a
 settlement landing mid-read cannot reshuffle rows underneath you.
 
-`/bb history` is the audit trail. When a public settlement recap and your
-memory disagree, this is the record.
+`/bb history` is the audit trail. When a private settlement DM or public recap
+is unavailable, or when your memory disagrees, this is the record.
 
 ## What is open right now
 

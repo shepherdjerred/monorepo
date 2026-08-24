@@ -186,6 +186,7 @@ export class DiscordRestClient {
     holder: string,
   ): Promise<CompletedDiscordRequest> {
     let releaseNotBeforeMs: number | undefined;
+    let releaseCompletedAtMs: number | undefined;
     let outcome: { request: CompletedDiscordRequest } | { error: unknown };
     try {
       const requestedAt = new Date().toISOString();
@@ -209,6 +210,7 @@ export class DiscordRestClient {
       }
       const completedAt = new Date().toISOString();
       const completedAtMs = Date.parse(completedAt);
+      releaseCompletedAtMs = completedAtMs;
       const metadata = rateLimitMetadata(response.headers);
       if (metadata.remaining === 0 && metadata.resetAfterSeconds !== null) {
         releaseNotBeforeMs =
@@ -238,7 +240,7 @@ export class DiscordRestClient {
     }
     const released = await this.#rateLimitCoordinator.release({
       holder,
-      completedAtMs: Date.now(),
+      completedAtMs: releaseCompletedAtMs ?? Date.now(),
       ...(releaseNotBeforeMs === undefined
         ? {}
         : { notBeforeMs: releaseNotBeforeMs }),

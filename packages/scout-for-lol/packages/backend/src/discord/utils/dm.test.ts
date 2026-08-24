@@ -61,6 +61,27 @@ describe("sendDM", () => {
     expect(row?.errorMessage).toBeNull();
   });
 
+  test("can render informational mentions without notifying recipients", async () => {
+    const send = vi.fn(() => Promise.resolve({}));
+    const client = clientWithSend(send);
+
+    const status = await sendDM({
+      client,
+      userId: recipientId,
+      message: "<@123456789012345678> placed a bet",
+      kind: "betting_player_bet_outcome",
+      guildId,
+      prisma,
+      suppressMentions: true,
+    });
+
+    expect(status).toBe("sent");
+    expect(send).toHaveBeenCalledWith({
+      content: "<@123456789012345678> placed a bet",
+      allowedMentions: { parse: [] },
+    });
+  });
+
   test("records a 'dm_disabled' audit row when the user blocks DMs (50007)", async () => {
     const dmDisabled = new DiscordAPIError(
       { code: 50_007, message: "Cannot send messages to this user" },

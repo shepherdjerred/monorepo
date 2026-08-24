@@ -7,6 +7,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   RiotTeamIdSchema,
+  type BucksMessageRefs,
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -18,6 +19,7 @@ import {
 } from "#src/betting/outcome-message.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { deliverSettlementDms } from "#src/betting/settlement-dm-delivery.ts";
 import { bettingSettlementUndeliverableTotal } from "#src/metrics/betting.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
@@ -248,6 +250,45 @@ export async function sendSettlementMessage(
   }
 }
 
+async function sendSettlementMessages(input: {
+  refs: BucksMessageRefs;
+  message: MessageCreateOptions;
+  summary: SettlementSummary;
+  includeOutcome: boolean;
+  postmatchMessageIds: ReadonlyMap<string, string>;
+  dependencies: SettlementDeliveryDependencies;
+}): Promise<void> {
+  for (const ref of input.refs) {
+    // Keep channels isolated because this committed settlement is one-shot.
+    try {
+      const postmatchMessageId = input.postmatchMessageIds.get(ref.channelId);
+      await sendSettlementMessage(
+        {
+          message: input.message,
+          matchId: input.summary.matchId,
+          channelId: ref.channelId,
+          guildId: input.summary.serverId,
+          kind: input.includeOutcome ? "outcome" : "parlay",
+          ...(postmatchMessageId === undefined ? {} : { postmatchMessageId }),
+        },
+        input.dependencies,
+      );
+    } catch (error) {
+      logger.error(
+        `❌ Could not deliver the Bryan Bucks settlement for ${input.summary.matchId} to channel ${ref.channelId}:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: {
+          source: "betting-announce",
+          matchId: input.summary.matchId,
+          channelId: ref.channelId,
+        },
+      });
+    }
+  }
+}
+
 type Announcement = {
   summary: SettlementSummary;
   /** False when the embed exists only to carry a parlay result. */
@@ -441,9 +482,10 @@ export async function announceSettlements(
           : BucksPredictionSchema.safeParse(JSON.parse(pool.predictionJson))
               .data;
 
-      const anchor = bettingAnchor(
-        BucksPoolRosterSchema.parse(JSON.parse(pool.roster)).participants,
-      );
+      const roster = BucksPoolRosterSchema.parse(
+        JSON.parse(pool.roster),
+      ).participants;
+      const anchor = bettingAnchor(roster);
       const message = buildSettlementMessage({
         summary,
         includeOutcome,
@@ -487,43 +529,40 @@ export async function announceSettlements(
           unmatchedCount: unmatchedPositions.length,
           earnings: input.earnings,
         });
-        continue;
+      } else {
+        await sendSettlementMessages({
+          refs,
+          message,
+          summary,
+          includeOutcome,
+          postmatchMessageIds: input.postmatchMessageIds,
+          dependencies: deliveryDependencies,
+        });
       }
-      for (const ref of refs) {
-        // Isolated per channel. The pool has already committed as settled and a
-        // later pass returns no summary, so this delivery is one-shot: letting
-        // a stale or no-longer-writable first ref throw would silently discard
-        // the settlement for every healthy channel behind it.
-        try {
-          const postmatchMessageId = input.postmatchMessageIds.get(
-            ref.channelId,
-          );
-          await sendSettlementMessage(
-            {
-              message,
-              matchId: summary.matchId,
-              channelId: ref.channelId,
-              guildId: summary.serverId,
-              kind: includeOutcome ? "outcome" : "parlay",
-              ...(postmatchMessageId === undefined
-                ? {}
-                : { postmatchMessageId }),
-            },
-            deliveryDependencies,
-          );
-        } catch (error) {
-          logger.error(
-            `❌ Could not deliver the Bryan Bucks settlement for ${summary.matchId} to channel ${ref.channelId}:`,
-            error,
-          );
-          Sentry.captureException(error, {
-            tags: {
-              source: "betting-announce",
-              matchId: summary.matchId,
-              channelId: ref.channelId,
-            },
-          });
-        }
+      // Public settlement delivery runs before DMs. DMs are still best-effort
+      // and independent of public-channel references, so a slow or failed DM
+      // cannot withhold the public recap and a missing ref cannot suppress the
+      // private result.
+      try {
+        await deliverSettlementDms({
+          summary,
+          includeOutcome,
+          parlay,
+          unmatchedPositions,
+          roster,
+          prismaClient,
+        });
+      } catch (error) {
+        // Settlement is already committed. DMs are audited best-effort output,
+        // so an outage in flags, roster resolution, or dispatch must never
+        // block the next guild's settlement.
+        logger.error(
+          `❌ Could not prepare Bryan Bucks DMs for ${summary.matchId}:`,
+          error,
+        );
+        Sentry.captureException(error, {
+          tags: { source: "betting-settlement-dm", matchId: summary.matchId },
+        });
       }
     } catch (error) {
       logger.error(
