@@ -10,6 +10,21 @@ const RegexManagerSchema = z.object({
 });
 
 const RenovateConfigSchema = z.object({
+  dependencyDashboardApproval: z.boolean(),
+  automerge: z.boolean(),
+  automergeStrategy: z.string().optional(),
+  platformAutomerge: z.boolean(),
+  rebaseWhen: z.string(),
+  vulnerabilityAlerts: z.object({
+    enabled: z.boolean(),
+  }),
+  osvVulnerabilityAlerts: z.boolean(),
+  env: z.record(z.string(), z.string()),
+  mode: z.string().optional(),
+  schedule: z.array(z.string()),
+  commitHourlyLimit: z.number().optional(),
+  prHourlyLimit: z.number(),
+  prConcurrentLimit: z.number(),
   customManagers: z.array(RegexManagerSchema),
   packageRules: z.array(
     z.object({
@@ -30,6 +45,32 @@ const RenovateConfigSchema = z.object({
 });
 
 const root = `${import.meta.dir}/..`;
+
+test("uses Renovate as a manually approved dependency dashboard", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+
+  expect(config).toMatchObject({
+    dependencyDashboardApproval: true,
+    automerge: false,
+    platformAutomerge: false,
+    rebaseWhen: "never",
+    vulnerabilityAlerts: {
+      enabled: false,
+    },
+    osvVulnerabilityAlerts: false,
+    schedule: ["after 3am on Sunday"],
+    prHourlyLimit: 5,
+    prConcurrentLimit: 3,
+  });
+  expect(config.automergeStrategy).toBeUndefined();
+  expect(config.mode).toBeUndefined();
+  expect(config.commitHourlyLimit).toBeUndefined();
+  expect(config.env).toEqual({
+    BUN_CONFIG_MAX_HTTP_REQUESTS: "4",
+  });
+});
 
 test("extracts every managed structured version-catalog field", async () => {
   const config = RenovateConfigSchema.parse(
@@ -152,7 +193,7 @@ test("drives Playwright upgrades from the official image source only", async () 
   expect(rule).toEqual({
     description:
       "Playwright client packages are promoted atomically with the tested ci-playwright image digest; Renovate owns only the official Dockerfile source pin.",
-    matchManagers: ["npm"],
+    matchManagers: ["bun", "npm"],
     matchPackageNames: ["playwright", "@playwright/test"],
     enabled: false,
   });
@@ -202,7 +243,7 @@ test("keeps direct TypeScript on 6 without constraining the native alias", async
   expect(rule).toEqual({
     description:
       "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
-    matchManagers: ["npm"],
+    matchManagers: ["bun", "npm"],
     matchDepNames: ["typescript"],
     allowedVersions: "<7",
   });

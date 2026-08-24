@@ -1,7 +1,16 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "automerge": true,
-  "automergeStrategy": "rebase",
+  "dependencyDashboardApproval": true,
+  "automerge": false,
+  "platformAutomerge": false,
+  "rebaseWhen": "never",
+  "vulnerabilityAlerts": {
+    "enabled": false
+  },
+  "osvVulnerabilityAlerts": false,
+  "env": {
+    "BUN_CONFIG_MAX_HTTP_REQUESTS": "4"
+  },
   "extends": ["config:recommended"],
   "homeassistant-manifest": {
     "enabled": false
@@ -147,7 +156,7 @@
     },
     {
       "description": "Playwright client packages are promoted atomically with the tested ci-playwright image digest; Renovate owns only the official Dockerfile source pin.",
-      "matchManagers": ["npm"],
+      "matchManagers": ["bun", "npm"],
       "matchPackageNames": ["playwright", "@playwright/test"],
       "enabled": false
     },
@@ -223,7 +232,7 @@
     },
     {
       "description": "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
-      "matchManagers": ["npm"],
+      "matchManagers": ["bun", "npm"],
       "matchDepNames": ["typescript"],
       "allowedVersions": "<7"
     },
