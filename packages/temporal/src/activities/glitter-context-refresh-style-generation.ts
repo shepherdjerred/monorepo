@@ -478,12 +478,18 @@ export async function generateStyleCard(input: {
     (total, chunk) => total + chunk.summarizedMessageCount,
     0,
   );
-  // Individual chunks may degrade to nothing, but a card built from no evidence
-  // at all would be a fabrication rather than a refresh. Fail this person so the
-  // caller can skip them and still refresh everyone else.
-  if (summarizedMessages === 0) {
+  // Chunk summaries are not the only evidence: `synthesisPrompt` also hands the
+  // model up to DIRECT_RECENT_STYLE_MESSAGES verbatim messages, and finalize
+  // validates every quoted and sampled ID against the safe corpus either way. So
+  // a person whose chunks all degrade can still get an honest, evidence-backed
+  // card — coverage simply reports that no chunk was summarized. Reject only when
+  // the model would see nothing at all, which would make the card a fabrication.
+  if (
+    summarizedMessages === 0 &&
+    input.candidate.directRecentMessages.length === 0
+  ) {
     throw new GlitterEvidenceError(
-      `no chunk for ${input.candidate.person.id} yielded verifiable evidence across ${String(chunks.length)} chunks`,
+      `no evidence for ${input.candidate.person.id}: ${String(chunks.length)} chunks yielded nothing and there are no direct recent messages`,
     );
   }
   let previous = await runSynthesis({

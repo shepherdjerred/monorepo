@@ -415,6 +415,21 @@ function generateAcrossTwoMonths(responder: (call: number) => unknown) {
   });
 }
 
+// Same as above but with no direct recent messages either, so the model would
+// see nothing at all.
+function generateWithoutAnyEvidence() {
+  chunkCallCount = 0;
+  recordedSeeds = [];
+  chunkResponder = () => badChunkSummary;
+  return generateStyleCard({
+    candidate: { ...candidate, directRecentMessages: [] },
+    existingCard,
+    sourceSnapshotSha256: "a".repeat(64),
+    artifactStore: memoryStore(),
+    budget: new GenerationBudget(100),
+  });
+}
+
 describe("Glitter extraction repair loop", () => {
   test("retries a poisoned chunk with a fresh seed and succeeds", async () => {
     // Attempt 0 (seed 0) cites an unknown ID; the repair (seed 1) is clean.
@@ -455,24 +470,35 @@ describe("Glitter extraction repair loop", () => {
     expect(result.coverage.evidence.safe_messages).toBe(30);
   });
 
-  test("rejects a person whose every chunk sanitizes to no verifiable evidence", async () => {
-    // Every observation cites an unknown ID and there are no representatives, so
-    // sanitization empties the only chunk entirely. The chunk itself degrades
-    // rather than throwing, but a card backed by nothing at all is a fabrication
-    // rather than a refresh, so the person is rejected.
+  test("still builds a card from direct evidence when every chunk degrades", async () => {
+    // Chunk summaries are not the only evidence the model sees: synthesis also
+    // receives the candidate's verbatim directRecentMessages, and finalize
+    // validates every quoted and sampled ID against the safe corpus regardless.
+    // So a dead chunk costs coverage, not the whole person.
+    const result = await generateWithStubbedModel(() => badChunkSummary);
+
+    expect(result.schemaVersion).toBe(2);
+    expect(result.coverage.evidence.summarized_messages).toBe(0);
+    expect(result.coverage.evidence.direct_recent_messages).toBe(30);
+    // Still bounded: initial attempt plus MAX_EXTRACTION_REPAIR_ATTEMPTS repairs.
+    expect(recordedSeeds).toEqual([0, 1, 2]);
+  });
+
+  test("rejects a person the model would see no evidence for at all", async () => {
+    // Chunks all degraded AND no direct recent messages: synthesis would be
+    // asked to write a card from nothing, which is fabrication rather than a
+    // refresh.
+    //
     // The TYPE matters as much as the message: the refresh activity skips a
     // person on `GlitterEvidenceError` and lets everything else escape to
     // Temporal's retry, so a plain Error here would make a storage blip
     // indistinguishable from unusable evidence.
-    await expect(
-      generateWithStubbedModel(() => badChunkSummary),
-    ).rejects.toThrow(GlitterEvidenceError);
-    await expect(
-      generateWithStubbedModel(() => badChunkSummary),
-    ).rejects.toThrow("no chunk for ryan yielded verifiable evidence");
-
-    // Still bounded: initial attempt plus MAX_EXTRACTION_REPAIR_ATTEMPTS repairs.
-    expect(recordedSeeds).toEqual([0, 1, 2]);
+    await expect(generateWithoutAnyEvidence()).rejects.toThrow(
+      GlitterEvidenceError,
+    );
+    await expect(generateWithoutAnyEvidence()).rejects.toThrow(
+      "no evidence for ryan",
+    );
   });
 
   test("degrades one dead chunk and keeps its messages out of coverage", async () => {
