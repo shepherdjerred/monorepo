@@ -36,6 +36,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "ajv": "^8.20.0",
     "bun-types": "1.4.0",
     "eslint": "^10.3.0",
     "typescript": "^6.0.3",

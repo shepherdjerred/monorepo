@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
+import {
+  WEEKLY_PARLAY_LIFECYCLE,
+  WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS,
+} from "@scout-for-lol/data/model/weekly-parlay.ts";
 import {
   scoutWeeklyParlayActionDurationSeconds,
   scoutWeeklyParlayActionsTotal,
@@ -14,7 +17,7 @@ const START_HOUR = WEEKLY_PARLAY_LIFECYCLE.bettingCloseHour;
 const FINAL_HOUR = WEEKLY_PARLAY_LIFECYCLE.finalHour;
 const UPDATE_HOUR = WEEKLY_PARLAY_LIFECYCLE.updateHour;
 const UPDATE_COUNT = WEEKLY_PARLAY_LIFECYCLE.updateCount;
-const OPEN_ACTION_TIMEOUT_MS = 4 * 60 * 1000;
+const OPEN_ACTION_TIMEOUT_MS = WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS;
 const STANDARD_ACTION_TIMEOUT_MS = 20 * 1000;
 
 export const ScoutWeeklyParlayActionSchema = z

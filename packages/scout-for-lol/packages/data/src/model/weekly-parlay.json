@@ -3,6 +3,7 @@
   "slot": 0,
   "openHour": 12,
   "bettingCloseHour": 0,
+  "openActionBudgetMinutes": 4,
   "finalHour": 11,
   "updateHour": 19,
   "updateCount": 6,

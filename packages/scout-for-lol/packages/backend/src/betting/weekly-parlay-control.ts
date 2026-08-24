@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import {
+  DiscordGuildIdSchema,
+  WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS,
+} from "@scout-for-lol/data";
 import {
   deliverWeeklyParlayDiscord,
   weeklyParlaySettlementActionKey,
@@ -66,7 +69,10 @@ async function reconcileOpen(
   context: ControlContext,
 ): Promise<WeeklyParlayControlResult> {
   const period = weeklyParlayPeriod(action.periodKey);
-  if (context.now >= period.bettingClosesAt) {
+  if (
+    context.now.getTime() + WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS >=
+    period.bettingClosesAt.getTime()
+  ) {
     return { status: "skipped", detail: "betting window already closed" };
   }
   const opened = await openWeeklyParlay(
