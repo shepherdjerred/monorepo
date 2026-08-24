@@ -7,7 +7,7 @@ import {
   resolveControllerSource,
 } from "@shepherdjerred/pr-fleet-controller/src/environment/controller-source.ts";
 import type { CommandRequest } from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
-import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/runtime/process-runner.ts";
+import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/exec/process-runner.ts";
 
 const temporaryDirectories: string[] = [];
 

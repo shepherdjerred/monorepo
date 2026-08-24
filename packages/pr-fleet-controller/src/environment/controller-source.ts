@@ -3,7 +3,7 @@ import { lstat, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { CommandRequest, CommandResult } from "#domain/ports.ts";
-import { runCommand } from "#runtime/process-runner.ts";
+import { runCommand } from "#exec/process-runner.ts";
 
 const GitCommitSchema = z.string().regex(/^[0-9a-f]{40}$/);
 

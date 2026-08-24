@@ -65,6 +65,11 @@ construction: it can pass in a long-lived worktree and mean nothing in CI. An
 exemption that behaves differently in those two places is worse than no
 exemption, because it reads as protection.
 
+`baseOptions()` in `packages/architecture/src/cruise.ts` records this next to
+the option it explains, and `circularRule()` in
+`packages/architecture/src/rules.ts` is where the surviving exemption is
+expressed.
+
 So boundaries hold for every edge kind, and that turns into a positive design
 rule rather than a workaround: a type that two layers both need is a shared
 type, and belongs in a module both are allowed to import. In practice a contract
@@ -120,33 +125,36 @@ does, with its own committed fixture proving it can fail. The
 derives that proof from the same definition. Deriving the rules does not derive
 the evidence.
 
+`cruiseArchitectureFixtures()` in `packages/architecture/src/cruise.ts` performs
+all three checks. A package's meta-test then asserts
+`errorCount === fixtureFiles.length`, which is what stops one fixture from
+standing in for several boundaries.
+
 ## A rule needs a shape to point at
 
-The rules are path-prefix rules: a boundary says that nothing under
-`src/<layer>/` may import anything under `src/<other>/`. That is deliberate —
-it keeps the generated patterns literal and the failure message readable — but
-it has a consequence worth stating plainly, because it decides how much work
-adopting the harness is.
+Boundaries are path-prefix rules, so a package needs directories before it can
+declare one. `sourceRules()` in `packages/architecture/src/rules.ts` builds each
+pattern from the layer's directory name. `LAYER_SEGMENT` in
+`packages/architecture/src/definition.ts` restricts that name to one kebab-case
+segment, which keeps the generated regular expression literal.
 
-A package whose `src/` is flat cannot express a single boundary. The PR fleet
-controller was the clearest case: around seventy modules in one directory, with
-the only structure being a filename prefix (`controller-*`, `worker-*`,
-`run-*`, `cli-*`). Nothing stopped the bundle writer from importing the replay
-verifier, and nothing could be written down to stop it, because there were no
-directories for a rule to name.
+The consequence decides what adopting the harness costs. A package whose source
+root is flat cannot express a single boundary, because no rule has a directory
+to name. Grouping the modules is then the real work, and the rules are the easy
+part that follows.
 
-So the boundaries were not the work; the restructure was. And the prefixes
-turned out to be an unreliable guide to it. `controller-telemetry.ts` was not
-part of the controller at all — it is a cross-cutting span recorder that
-eighteen modules depend on, so it belongs underneath them. `cli-failures.ts`
-was two pure functions that the controller's shutdown path needed just as
-much as the CLI did. Grouping by the import graph rather than by the names
-moved both of them, and only then did the layering the package had always
-claimed to have become something a rule could check.
+Two properties of that grouping are worth knowing before starting.
 
-The lesson generalises: if declaring a boundary is easy, the package already
-had the shape. If it is hard, the harness has found something worth knowing
-before it has enforced anything.
+The first is that filename prefixes are a poor guide to it. Group by the import
+graph instead. A module named for the layer above it is common, and it stays
+invisible until something forces the question.
+
+The second is that a module outside every layer directory is governed by
+nothing. It matches no `from` pattern and no `to` pattern, so it can import
+freely and be imported freely while every declared boundary still passes. A
+package-root facade is the usual instance, and it is worth checking for
+directly. `packages/pr-fleet-controller/architecture.config.ts` is a worked
+example of both properties.
 
 ## Each package is judged only on its own tree
 

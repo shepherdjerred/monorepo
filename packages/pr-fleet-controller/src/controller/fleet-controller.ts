@@ -485,3 +485,17 @@ export class FleetController implements MasterControllerTools {
     });
   }
 }
+
+/**
+ * The package's public composition entry.
+ *
+ * It lives beside the class it constructs rather than in a facade directly
+ * under `src/`. A module outside every layer directory is a module no boundary
+ * rule can name, and this one imports the controller — so as a root facade it
+ * was an ungoverned path from any layer into the master loop.
+ */
+export function createFleetController(
+  dependencies: FleetControllerDependencies,
+): FleetController {
+  return new FleetController(dependencies);
+}

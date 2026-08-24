@@ -14,7 +14,8 @@ subpath specifier. The dependencies run strictly downward:
 | Layer          | Holds                                                                        |
 | -------------- | ---------------------------------------------------------------------------- |
 | `domain/`      | Schemas, run-event contracts, `FleetStore`, ports, pure derivations, errors  |
-| `runtime/`     | Telemetry capture, correlation, subprocess execution, file sinks, state root |
+| `runtime/`     | Telemetry capture, correlation, file sinks, the state root                   |
+| `exec/`        | Subprocess execution — the only layer from which `Bun.spawn` is reachable    |
 | `bundle/`      | The run-bundle write path: recorder, artifacts, spans, OTel wiring           |
 | `replay/`      | The read path: deterministic replay, correlation verification, inspection    |
 | `workers/`     | The bounded per-PR tool surface handed to a worker                           |
@@ -25,7 +26,12 @@ subpath specifier. The dependencies run strictly downward:
 
 `replay/` deliberately depends on `bundle/` and not the reverse, and neither
 knows the controller exists — a bundle has to be readable long after the run
-that wrote it, by a process that never starts a controller.
+that wrote it, by a process that never starts a controller. `replay/` also may
+not import `exec/`, which is the narrowest way to say that a verification never
+shells out.
+
+No module sits directly under `src/`. Boundaries name directories, so a file
+outside every layer is one no rule can match, in either direction.
 
 ## Run
 

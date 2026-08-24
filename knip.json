@@ -37,7 +37,7 @@
     // and `architecture-fixtures/` is deliberately unimported.
     "packages/pr-fleet-controller": {
       "entry": [
-        "src/index.ts",
+        "src/controller/fleet-controller.ts",
         "src/cli/main.ts",
         "src/cli/inspect.ts",
         "src/cli/replay.ts",
