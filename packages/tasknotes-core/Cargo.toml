@@ -27,7 +27,7 @@ indexmap = { version = "2", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 thiserror = "2"
-uniffi = "=0.31.2"
+uniffi = "=0.32.0"
 
 # Dev-only. `rand_chacha::ChaCha8Rng` is the only RNG allowed in this
 # workspace (see clippy.toml): `StdRng` is explicitly not reproducible across
