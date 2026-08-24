@@ -40,6 +40,37 @@ describe("weekly parlay control action schema", () => {
       }),
     ).toMatchObject({ slot: 0, updateIndex: 5 });
   });
+
+  test("accepts catch-up clocks only on open actions", () => {
+    const window = {
+      kind: "catch_up",
+      openAt: "2026-08-24T19:00:00.000Z",
+      bettingClosesAt: "2026-08-25T07:00:00.000Z",
+      scoringStartsAt: "2026-08-25T07:00:00.000Z",
+      scoringEndsAt: "2026-08-30T18:00:00.000Z",
+    };
+    expect(
+      WeeklyParlayControlActionSchema.safeParse({
+        periodKey: "2026-08-24",
+        action: "open",
+        window,
+      }).success,
+    ).toBe(true);
+    expect(
+      WeeklyParlayControlActionSchema.safeParse({
+        periodKey: "2026-08-24",
+        action: "start",
+        window,
+      }).success,
+    ).toBe(false);
+    expect(
+      WeeklyParlayControlActionSchema.safeParse({
+        periodKey: "2026-08-24",
+        action: "open",
+        window: { ...window, arbitraryClock: "2026-08-26T00:00:00.000Z" },
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("weekly parlay control HTTP boundary", () => {

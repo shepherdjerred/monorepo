@@ -31,6 +31,7 @@ import {
 } from "@scout-for-lol/backend/betting/weekly-parlay-criteria.ts";
 import {
   WEEKLY_PARLAY_BETTING_CLOSE_HOUR,
+  WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS,
   WEEKLY_PARLAY_FINAL_HOUR,
   WEEKLY_PARLAY_INGESTION_GRACE_MINUTES,
   WEEKLY_PARLAY_OPEN_HOUR,
@@ -83,6 +84,12 @@ published only when replaying aligned historical weeks measures a YES rate
 between {WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS / 100}% and{" "}
 {WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS / 100}%. If no candidate clears every
 gate, Scout publishes no weekly parlay.
+
+If the standard Sunday opening is missed, an operator may start a catch-up
+market for that period. Betting remains open for at least{" "}
+{WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS} hours before scoring starts at a
+Pacific midnight. The market message shows the frozen betting and scoring
+timestamps. Games completed before betting closes do not count.
 
 ## Stakes
 

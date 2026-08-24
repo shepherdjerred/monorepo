@@ -43,12 +43,19 @@ changing model identity.
 | queue-windows              | daily 06:45                          | deterministic          | heartbeat + gated PR             |
 | image-gc                   | daily 04:00                          | deterministic          | S3 deletions                     |
 | weekly parlay lifecycle    | Sun, source-defined Pacific timeline | deterministic          | beta Scout market reconciliation |
+| weekly parlay catch-up     | operator, stable period/slot ID      | deterministic          | shortened beta Scout market      |
 
 The weekly parlay workflow uses the Pacific timeline defined by its source
 constants and reconciles each period through finalization. Its schedule remains
 initially paused until the private-beta Discord fixture cycle is approved; see
 the [workflow-family explanation](/explanation/temporal/workflow-families/#weekly-parlay-lifecycle)
 for the durability rationale.
+
+The operator-started workflow type is
+`runScoutWeeklyParlayCatchupWorkflow`. Its input is `{ periodKey, slot }`, and
+its workflow ID is `scout-weekly-parlay-catchup-<periodKey>-<slot>`. Temporal
+rejects a duplicate live ID. The workflow does not create or modify the
+recurring schedule.
 
 ## Glitter
 

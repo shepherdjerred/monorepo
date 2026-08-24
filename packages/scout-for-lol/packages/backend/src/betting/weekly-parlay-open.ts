@@ -20,8 +20,11 @@ import {
   WEEKLY_PARLAY_PROMPT_VERSION,
 } from "#src/betting/weekly-parlay-model.ts";
 import {
+  isWeeklyParlayCatchupTimeline,
   WEEKLY_PARLAY_SLOT,
+  weeklyParlayScoringShape,
   weeklyParlayPeriod,
+  type WeeklyParlayFrozenWindow,
 } from "#src/betting/weekly-parlay-period.ts";
 import { priceWeeklyParlay } from "#src/betting/weekly-parlay-pricing.ts";
 import { orderWeeklyParlayCandidates } from "#src/betting/weekly-parlay-selection.ts";
@@ -53,13 +56,70 @@ function periodsSinceFeatured(
 }
 
 function openActionIsActive(
-  period: ReturnType<typeof weeklyParlayPeriod>,
+  period: Pick<WeeklyParlayFrozenWindow, "bettingClosesAt">,
   signal: AbortSignal | undefined,
+  generationDeadline: Date | undefined,
 ): boolean {
   if (signal?.aborted === true) {
     throw signal.reason ?? new Error("Weekly parlay open was aborted.");
   }
-  return new Date() < period.bettingClosesAt;
+  return (
+    new Date() < period.bettingClosesAt &&
+    (generationDeadline === undefined ||
+      generationDeadline.getTime() < period.bettingClosesAt.getTime())
+  );
+}
+
+type OpenWeeklyParlayInput = {
+  serverId: string;
+  periodKey: string;
+  slot?: number;
+  timeline?: WeeklyParlayFrozenWindow;
+  generationDeadline?: Date;
+  signal?: AbortSignal;
+};
+
+function resolveOpenTimeline(
+  input: Pick<OpenWeeklyParlayInput, "periodKey" | "timeline">,
+): WeeklyParlayFrozenWindow {
+  if (input.timeline === undefined) {
+    return weeklyParlayPeriod(input.periodKey);
+  }
+  if (input.timeline.periodKey !== input.periodKey) {
+    throw new Error("Weekly parlay timeline period key does not match input.");
+  }
+  weeklyParlayScoringShape(input.timeline);
+  return input.timeline;
+}
+
+function assertMatchingTimeline(
+  existing: {
+    definition: {
+      openAt: Date;
+      bettingClosesAt: Date;
+      scoringStartsAt: Date;
+      scoringEndsAt: Date;
+    };
+  },
+  requested: WeeklyParlayFrozenWindow,
+): void {
+  const stored = existing.definition;
+  if (
+    stored.openAt.getTime() !== requested.openAt.getTime() ||
+    stored.bettingClosesAt.getTime() !== requested.bettingClosesAt.getTime() ||
+    stored.scoringStartsAt.getTime() !== requested.scoringStartsAt.getTime() ||
+    stored.scoringEndsAt.getTime() !== requested.scoringEndsAt.getTime()
+  ) {
+    throw new Error(
+      "Weekly parlay period and slot already exist with a conflicting timeline.",
+    );
+  }
+}
+
+function timelineKind(
+  period: WeeklyParlayFrozenWindow,
+): "standard" | "catch_up" {
+  return isWeeklyParlayCatchupTimeline(period) ? "catch_up" : "standard";
 }
 
 async function linkedMemberSubjects(
@@ -107,23 +167,30 @@ async function linkedMemberSubjects(
 }
 
 async function openWeeklyParlayInternal(
-  input: {
-    serverId: string;
-    periodKey: string;
-    slot?: number;
-    signal?: AbortSignal;
-  },
+  input: OpenWeeklyParlayInput,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<OpenWeeklyParlayResult> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
   const slot = input.slot ?? WEEKLY_PARLAY_SLOT;
+  const period = resolveOpenTimeline(input);
   const existing = await prismaClient.bucksWeeklyParlayMarket.findUnique({
     where: {
       serverId_periodKey_slot: { serverId, periodKey: input.periodKey, slot },
     },
-    select: { id: true },
+    select: {
+      id: true,
+      definition: {
+        select: {
+          openAt: true,
+          bettingClosesAt: true,
+          scoringStartsAt: true,
+          scoringEndsAt: true,
+        },
+      },
+    },
   });
   if (existing !== null) {
+    assertMatchingTimeline(existing, period);
     return { kind: "existing", marketId: existing.id };
   }
   const [bettingEnabled, weeklyEnabled] = await Promise.all([
@@ -134,7 +201,6 @@ async function openWeeklyParlayInternal(
     return { kind: "feature_disabled" };
   }
   const startedAt = Date.now();
-  const period = weeklyParlayPeriod(input.periodKey);
   const subjects = await linkedMemberSubjects(serverId, prismaClient);
   if (subjects.length === 0) {
     return { kind: "no_candidate" };
@@ -142,6 +208,10 @@ async function openWeeklyParlayInternal(
   const [histories, previousDefinitions] = await Promise.all([
     fetchWeeklyCandidateHistories({
       periodKey: input.periodKey,
+      scoringWindow: {
+        scoringStartsAt: period.scoringStartsAt,
+        scoringEndsAt: period.scoringEndsAt,
+      },
       subjects,
       ...(input.signal === undefined ? {} : { abortSignal: input.signal }),
     }),
@@ -216,7 +286,7 @@ async function openWeeklyParlayInternal(
     if (priced === undefined) {
       continue;
     }
-    if (!openActionIsActive(period, input.signal)) {
+    if (!openActionIsActive(period, input.signal, input.generationDeadline)) {
       return { kind: "too_late" };
     }
     try {
@@ -254,6 +324,8 @@ async function openWeeklyParlayInternal(
               observedRoles: [...history.observedRoles].toSorted(),
               recentEligibleGames: history.recentEligibleGames,
               fullyObservedWindows: history.fullyObservedWindows,
+              timelineKind: timelineKind(period),
+              scoringShape: weeklyParlayScoringShape(period),
             }),
             requestedModel: generated.model,
             resolvedModel: generated.resolvedModel,
@@ -289,8 +361,19 @@ async function openWeeklyParlayInternal(
               slot,
             },
           },
-          select: { id: true },
+          select: {
+            id: true,
+            definition: {
+              select: {
+                openAt: true,
+                bettingClosesAt: true,
+                scoringStartsAt: true,
+                scoringEndsAt: true,
+              },
+            },
+          },
         });
+      assertMatchingTimeline(racedMarket, period);
       return { kind: "existing", marketId: racedMarket.id };
     }
   }
@@ -298,12 +381,7 @@ async function openWeeklyParlayInternal(
 }
 
 export async function openWeeklyParlay(
-  input: {
-    serverId: string;
-    periodKey: string;
-    slot?: number;
-    signal?: AbortSignal;
-  },
+  input: OpenWeeklyParlayInput,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<OpenWeeklyParlayResult> {
   const startedAt = Date.now();

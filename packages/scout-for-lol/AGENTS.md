@@ -953,6 +953,16 @@ It calls the beta-only authenticated control endpoint with stable period/action
 keys. Keep the endpoint absent when its token is not configured; do not add an
 in-process timer. Pause the Temporal schedule for operational suspension.
 
+Missed Sunday openings use the separate, manually started
+`runScoutWeeklyParlayCatchupWorkflow`. Only its `open` action may carry a
+closed `catch_up` window. Scout validates the minimum betting duration and
+Sunday cutoff, freezes the clocks on the definition, and rejects a retry whose
+period/slot already has different clocks. Every later action derives reminder,
+progress, and settlement timing from that stored definition. Historical replay
+uses the same Pacific weekday/hour shape as the shortened live window,
+including zero-game windows. Catch-up execution never edits or replaces the
+recurring schedule.
+
 League Classic (`queueType: "classic"`, Riot queue 4310) is not a betting or
 parlay queue because this integration has no supported post-game payload. A
 tracked, linked player in a complete Classic 5v5 receives exactly one

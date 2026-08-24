@@ -9,6 +9,7 @@
     "openHour",
     "bettingCloseHour",
     "openActionBudgetMinutes",
+    "catchupMinimumBettingHours",
     "finalHour",
     "updateHour",
     "updateCount",
@@ -24,6 +25,10 @@
       "maximum": 23
     },
     "openActionBudgetMinutes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "catchupMinimumBettingHours": {
       "type": "integer",
       "minimum": 1
     },

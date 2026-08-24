@@ -27,6 +27,7 @@ import {
 } from "#src/metrics/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { isWeeklyParlayCatchupTimeline } from "#src/betting/weekly-parlay-period.ts";
 
 export type WeeklyParlayDiscordKind =
   "open" | "reminder" | "progress" | "settlement";
@@ -146,21 +147,23 @@ export function deliveryTitle(
   kind: WeeklyParlayDiscordKind,
   marketState: string,
   yesResult: boolean | null,
+  catchup = false,
 ): string {
+  const prefix = catchup ? "Catch-up weekly" : "Weekly";
   switch (kind) {
     case "open":
-      return "📅 **Weekly Bryan Bucks parlay is open**";
+      return `📅 **${prefix} Bryan Bucks parlay is open**`;
     case "reminder":
-      return "⏰ **Weekly parlay betting reminder**";
+      return `⏰ **${prefix} parlay betting reminder**`;
     case "progress":
-      return "📈 **Weekly parlay progress**";
+      return `📈 **${prefix} parlay progress**`;
     case "settlement":
       if (marketState === "voided") {
-        return "↩️ **Weekly parlay refunded**";
+        return `↩️ **${prefix} parlay refunded**`;
       }
       return yesResult === true
-        ? "✅ **Weekly parlay settled YES**"
-        : "❌ **Weekly parlay settled NO**";
+        ? `✅ **${prefix} parlay settled YES**`
+        : `❌ **${prefix} parlay settled NO**`;
   }
 }
 
@@ -171,15 +174,23 @@ function currentLegValue(
   return kind === "open" || kind === "reminder" ? undefined : current;
 }
 
-export function deliveryTimeCopy(
-  kind: WeeklyParlayDiscordKind,
-  bettingClosesAt: Date,
-  scoringEndsAt: Date,
-): string {
-  if (kind === "open" || kind === "reminder") {
-    return `Betting closes <t:${Math.floor(bettingClosesAt.getTime() / 1000).toString()}:R>. Use this message's buttons so your market is unambiguous.`;
+export function deliveryTimeCopy(input: {
+  kind: WeeklyParlayDiscordKind;
+  bettingClosesAt: Date;
+  scoringEndsAt: Date;
+  scoringStartsAt?: Date;
+  catchup?: boolean;
+}): string {
+  if (input.catchup === true) {
+    if (input.scoringStartsAt === undefined) {
+      throw new Error("Catch-up weekly parlay copy requires scoringStartsAt.");
+    }
+    return `Betting closes <t:${Math.floor(input.bettingClosesAt.getTime() / 1000).toString()}:F>. Scoring runs <t:${Math.floor(input.scoringStartsAt.getTime() / 1000).toString()}:F> through <t:${Math.floor(input.scoringEndsAt.getTime() / 1000).toString()}:F>.`;
   }
-  return `Final cutoff <t:${Math.floor(scoringEndsAt.getTime() / 1000).toString()}:F>.`;
+  if (input.kind === "open" || input.kind === "reminder") {
+    return `Betting closes <t:${Math.floor(input.bettingClosesAt.getTime() / 1000).toString()}:R>. Use this message's buttons so your market is unambiguous.`;
+  }
+  return `Final cutoff <t:${Math.floor(input.scoringEndsAt.getTime() / 1000).toString()}:F>.`;
 }
 
 export function weeklyParlayButtons(
@@ -255,6 +266,10 @@ export async function deliverWeeklyParlayDiscord(
           subjects: true,
           criteria: true,
           yesProbabilityBps: true,
+          openAt: true,
+          bettingClosesAt: true,
+          scoringStartsAt: true,
+          scoringEndsAt: true,
           contributions: { select: { snapshot: true } },
         },
       },
@@ -330,15 +345,28 @@ export async function deliverWeeklyParlayDiscord(
     ...new Set([...subjects.map((subject) => subject.discordId), ...bettorIds]),
   ];
   const totalStaked = market.bets.reduce((total, bet) => total + bet.stake, 0);
+  const catchup = isWeeklyParlayCatchupTimeline({
+    periodKey: market.periodKey,
+    openAt: market.definition.openAt,
+    bettingClosesAt: market.definition.bettingClosesAt,
+    scoringStartsAt: market.definition.scoringStartsAt,
+    scoringEndsAt: market.definition.scoringEndsAt,
+  });
   const content = [
-    deliveryTitle(input.kind, market.marketState, market.yesResult),
+    deliveryTitle(input.kind, market.marketState, market.yesResult, catchup),
     ...(isVoidedSettlement
       ? [`Reason: **${market.voidReason ?? "unknown"}**`]
       : []),
     `Period: **${market.periodKey}** · ${(market.definition.yesProbabilityBps / 100).toFixed(1)}% YES`,
     ...legs,
     `**${market.bets.length.toString()} ${countLabel(market.bets.length, "bettor")} · ${totalStaked.toString()} BB staked**`,
-    deliveryTimeCopy(input.kind, market.bettingClosesAt, market.scoringEndsAt),
+    deliveryTimeCopy({
+      kind: input.kind,
+      bettingClosesAt: market.bettingClosesAt,
+      scoringEndsAt: market.scoringEndsAt,
+      scoringStartsAt: market.definition.scoringStartsAt,
+      catchup,
+    }),
   ]
     .filter((line) => line.length > 0)
     .join("\n");

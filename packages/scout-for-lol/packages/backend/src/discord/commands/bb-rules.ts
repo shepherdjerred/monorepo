@@ -21,6 +21,7 @@ import {
 } from "#src/betting/weekly-parlay-criteria.ts";
 import {
   WEEKLY_PARLAY_BETTING_CLOSE_HOUR,
+  WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS,
   WEEKLY_PARLAY_FINAL_HOUR,
   WEEKLY_PARLAY_INGESTION_GRACE_MINUTES,
   WEEKLY_PARLAY_OPEN_HOUR,
@@ -103,7 +104,9 @@ export function buildBbRulesEmbed(): EmbedBuilder {
           `It opens Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_OPEN_HOUR)} and betting closes Monday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_BETTING_CLOSE_HOUR)} in ${WEEKLY_PARLAY_TIMEZONE}. ` +
           `Only completed ${WEEKLY_PARLAY_ELIGIBLE_QUEUES.join(", ")} games count, through Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_FINAL_HOUR)}. ` +
           `Scout waits **${WEEKLY_PARLAY_INGESTION_GRACE_MINUTES.toString()} minutes** after that cutoff for completed games to ingest. ` +
-          "Scout may settle YES early only after every leg is impossible to undo; NO always waits for final settlement. Cancelling before Monday is free.",
+          `If Sunday opening is missed, an exceptional catch-up market may open midweek with at least **${WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS.toString()} hours** to bet before the next eligible Pacific midnight. ` +
+          "Its message shows the exact betting and scoring timestamps, and games completed before betting closes never count. " +
+          "Scout may settle YES early only after every leg is impossible to undo; NO always waits for final settlement. Cancelling before betting closes is free.",
       },
       {
         name: "Voids",

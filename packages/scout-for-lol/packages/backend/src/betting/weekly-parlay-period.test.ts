@@ -4,6 +4,9 @@ import {
   WEEKLY_PARLAY_INGESTION_GRACE_MS,
   weeklyParlayFinalSettlementAt,
   weeklyParlayPeriod,
+  weeklyParlayScoringShape,
+  weeklyParlayScoringWindowForPeriod,
+  weeklyParlayTimelineFromWindow,
 } from "#src/betting/weekly-parlay-period.ts";
 
 describe("weekly parlay Pacific periods", () => {
@@ -59,5 +62,42 @@ describe("weekly parlay Pacific periods", () => {
 
   test("rejects a non-Monday period key", () => {
     expect(() => weeklyParlayPeriod("2026-08-23")).toThrow("must be a Monday");
+  });
+
+  test("derives a shortened catch-up timeline from frozen clocks", () => {
+    const timeline = weeklyParlayTimelineFromWindow({
+      periodKey: "2026-08-24",
+      openAt: new Date("2026-08-24T19:00:00.000Z"),
+      bettingClosesAt: new Date("2026-08-25T07:00:00.000Z"),
+      scoringStartsAt: new Date("2026-08-25T07:00:00.000Z"),
+      scoringEndsAt: new Date("2026-08-30T18:00:00.000Z"),
+    });
+    expect(timeline.reminderAt?.toISOString()).toBe("2026-08-25T02:00:00.000Z");
+    expect(timeline.updateAt.map((instant) => instant.toISOString())).toEqual([
+      "2026-08-26T02:00:00.000Z",
+      "2026-08-27T02:00:00.000Z",
+      "2026-08-28T02:00:00.000Z",
+      "2026-08-29T02:00:00.000Z",
+      "2026-08-30T02:00:00.000Z",
+    ]);
+  });
+
+  test("replays the same Pacific weekday and hour shape across DST", () => {
+    const shape = weeklyParlayScoringShape({
+      periodKey: "2026-10-26",
+      scoringStartsAt: new Date("2026-10-28T07:00:00.000Z"),
+      scoringEndsAt: new Date("2026-11-01T19:00:00.000Z"),
+    });
+    expect(shape).toEqual({
+      startDayOffset: 2,
+      startHour: 0,
+      endDayOffset: 6,
+      endHour: 11,
+    });
+    const replay = weeklyParlayScoringWindowForPeriod("2027-03-08", shape);
+    expect(replay.scoringStartsAt.toISOString()).toBe(
+      "2027-03-10T08:00:00.000Z",
+    );
+    expect(replay.scoringEndsAt.toISOString()).toBe("2027-03-14T18:00:00.000Z");
   });
 });
