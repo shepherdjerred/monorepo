@@ -123,11 +123,12 @@ WORKDIR /app/packages/scout-for-lol/packages/backend
 # Run from source (the backend build bundles with `--external '@duckdb/*'`,
 # but the old CI image ran source directly). Apply pending migrations before
 # start. `prisma` is a runtime dependency of the backend, so `bunx` resolves
-# it from the installed tree without a network fetch. The parser-aware report
-# audit is the data migration for explicit ScoutQL periods: the SQL migration
-# cannot safely distinguish clause keywords from quoted text. It must finish
+# it from the installed tree without a network fetch. The parser-aware ScoutQL
+# migration rewrites every stored report into v2 syntax: a SQL migration cannot
+# safely distinguish clause keywords from quoted text, and legacy syntax stops
+# running the moment this release lands, so it must finish — or fail loudly —
 # before the application accepts traffic.
-CMD ["/bin/sh", "-c", "bunx prisma migrate deploy && bun run scripts/audit-report-windows.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
+CMD ["/bin/sh", "-c", "bunx prisma migrate deploy && bun run scripts/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
 
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
