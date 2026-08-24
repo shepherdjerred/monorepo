@@ -1,6 +1,0 @@
-apiVersion: v2
-name: tracker-tracker
-description: Private tracker statistics dashboard and qBittorrent history
-type: application
-version: "$version"
-appVersion: "$appVersion"

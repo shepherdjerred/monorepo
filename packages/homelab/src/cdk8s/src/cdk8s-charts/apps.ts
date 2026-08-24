@@ -65,7 +65,6 @@ import { createServiceProbesApp } from "@shepherdjerred/homelab/cdk8s/src/resour
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/trmnl-dashboard.ts";
 import { createTurboCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/turbo-cache.ts";
 import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/buildkitd.ts";
-import { createTrackerTrackerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tracker-tracker.ts";
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/alert-dashboard.ts";
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/stash.ts";
 import { createOpenRouterBroadcastIngestApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/openrouter-broadcast-ingest.ts";
@@ -179,7 +178,6 @@ export async function createAppsChart(app: App) {
   createTrmnlDashboardApp(chart);
   createTurboCacheApp(chart);
   createBuildkitdApp(chart);
-  createTrackerTrackerApp(chart);
   createAlertDashboardApp(chart);
   createStashApp(chart);
   createOpenRouterBroadcastIngestApp(chart);

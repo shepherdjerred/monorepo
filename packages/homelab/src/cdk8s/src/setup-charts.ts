@@ -27,7 +27,6 @@ import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
 import { createTrmnlDashboardChart } from "./cdk8s-charts/trmnl-dashboard.ts";
 import { createTurboCacheChart } from "./cdk8s-charts/turbo-cache.ts";
 import { createBuildkitdChart } from "./cdk8s-charts/buildkitd.ts";
-import { createTrackerTrackerChart } from "./cdk8s-charts/tracker-tracker.ts";
 import { createAlertDashboardChart } from "./cdk8s-charts/alert-dashboard.ts";
 import { createStashChart } from "./cdk8s-charts/stash.ts";
 import { createOpenRouterBroadcastIngestChart } from "./cdk8s-charts/openrouter-broadcast-ingest.ts";
@@ -83,7 +82,6 @@ export async function setupCharts(app: App): Promise<void> {
   createTrmnlDashboardChart(app);
   createTurboCacheChart(app);
   createBuildkitdChart(app);
-  createTrackerTrackerChart(app);
   createStashChart(app);
   createOpenRouterBroadcastIngestChart(app);
 
