@@ -264,8 +264,18 @@ struct InspectorRecurrenceRow: View {
 struct InspectorDetailsSection: View {
     let detail: TaskDetail
     @Binding var source: String
-    @Binding var isEditing: Bool
+    @State private var isEditing: Bool
     let onCommit: () -> Void
+
+    init(detail: TaskDetail, source: Binding<String>, onCommit: @escaping () -> Void) {
+        self.detail = detail
+        _source = source
+        // An empty body opens in the editor and a written one opens rendered.
+        // Always opening rendered would make the first thing a user sees on an
+        // empty note a blank area with no visible way in.
+        _isEditing = State(initialValue: (detail.task.details ?? "").isEmpty)
+        self.onCommit = onCommit
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

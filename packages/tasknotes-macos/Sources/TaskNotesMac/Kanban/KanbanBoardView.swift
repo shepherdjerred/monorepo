@@ -319,7 +319,6 @@ extension KanbanBoardView {
     /// The board-only commands: moving the selected card between columns.
     private var boardActions: BoardActions {
         BoardActions(
-            hasSelection: selection != nil,
             canMove: { target(in: $0) != nil },
             move: { direction in
                 guard let selection, let column = target(in: direction) else { return }

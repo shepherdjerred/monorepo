@@ -56,7 +56,6 @@ struct TaskInspectorForm: View {
     @State private var title: EditedText
     @State private var estimate: EditedText
     @State private var details: EditedText
-    @State private var isEditingDetails: Bool
 
     @FocusState private var focus: Field?
 
@@ -87,10 +86,6 @@ struct TaskInspectorForm: View {
         _estimate = State(
             initialValue: EditedText(stored: TaskTextEdit.estimateText(of: detail.task)))
         _details = State(initialValue: EditedText(stored: detail.task.details ?? ""))
-        // An empty body opens in the editor and a written one opens rendered.
-        // The alternative — always opening rendered — makes the first thing a
-        // user sees on an empty note a blank area with no visible way in.
-        _isEditingDetails = State(initialValue: (detail.task.details ?? "").isEmpty)
     }
 
     var body: some View {
@@ -184,7 +179,6 @@ struct TaskInspectorForm: View {
                 InspectorDetailsSection(
                     detail: detail,
                     source: $details.text,
-                    isEditing: $isEditingDetails,
                     onCommit: committing(commitDetails)
                 )
             }
