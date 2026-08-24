@@ -192,6 +192,7 @@ type ImportModelDefinition<T extends Record<string, unknown>> = {
   model: string;
   idColumns: string[];
   resetIdSequence: boolean;
+  digestIgnoreColumns?: ReadonlySet<string>;
   transform: (row: SqliteRow) => T;
   createMany: (tx: ImportTx, data: T[]) => Promise<number>;
   count: (tx: ImportTx) => Promise<number>;
@@ -201,6 +202,14 @@ type ImportModelDefinition<T extends Record<string, unknown>> = {
 export function defineImportModel<T extends Record<string, unknown>>(
   definition: ImportModelDefinition<T>,
 ): ImportModelSpec {
+  const normalizeDigest = (record: Record<string, unknown>): string =>
+    normalizeForDigest(
+      Object.fromEntries(
+        Object.entries(record).filter(
+          ([key]) => !definition.digestIgnoreColumns?.has(key),
+        ),
+      ),
+    );
   return {
     model: definition.model,
     idColumns: definition.idColumns,
@@ -223,10 +232,10 @@ export function defineImportModel<T extends Record<string, unknown>>(
       return inserted;
     },
     count: definition.count,
-    digestSqliteRow: (row) => normalizeForDigest(definition.transform(row)),
+    digestSqliteRow: (row) => normalizeDigest(definition.transform(row)),
     fetchPgDigestRows: async (tx) => {
       const rows = await definition.findAll(tx);
-      return rows.map((row) => normalizeForDigest(row));
+      return rows.map((row) => normalizeDigest(row));
     },
   };
 }
