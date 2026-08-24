@@ -7,6 +7,7 @@ CI_IMAGE="${SCRIPT_DIR}/../ci-image/Dockerfile"
 CI_PLAYWRIGHT_IMAGE="${SCRIPT_DIR}/../ci-playwright/Dockerfile"
 BUN_INSTALL_WRAPPER="${SCRIPT_DIR}/bun-install.sh"
 MACOS_NATIVE_ENV="${SCRIPT_DIR}/macos-native-env.sh"
+REVIEW_GATE="${SCRIPT_DIR}/review-gate.sh"
 BUN_CACHE_GC="${SCRIPT_DIR}/../../packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite-bun-cache-gc.sh"
 MAC_CI_BOOTSTRAP="${SCRIPT_DIR}/../../packages/homelab/mac-ci/bootstrap.sh"
 
@@ -75,6 +76,11 @@ if ! rg -Fq 'flock --shared 9' "$BUN_INSTALL_WRAPPER" ||
   ! rg -Fq 'bun install "$@"' "$BUN_INSTALL_WRAPPER" ||
   ! rg -Fq ') 9>"$CACHE_LOCK_FILE"' "$BUN_INSTALL_WRAPPER"; then
   echo "bun install wrapper must hold the shared cache lock for the complete install" >&2
+  exit 1
+fi
+
+if ! rg -Fq 'BUN_INSTALL_LOCK_MODE=shared "$GATE_DIR/.buildkite/scripts/bun-install.sh"' "$REVIEW_GATE"; then
+  echo "main-sourced review gate must select shared locking for older PR pipelines" >&2
   exit 1
 fi
 

@@ -48,6 +48,7 @@ const GLOBAL_IF_CHANGED = [
   '".buildkite/scripts/upload-pipeline.sh"',
 ];
 const PATH_GATED_PR_KEYS = new Set([
+  "macos-native-dispatch",
   "quotabar-macos-pr",
   "tasknotes-native-pr",
   "playwright-e2e-pr",

@@ -795,7 +795,9 @@ Local and CI verification deliberately have different scopes:
    serial native gates on the `macos` queue after Linux `verify`: QuotaBar runs
    its complete `verify:macos` suite, while TaskNotes verifies the Swift
    bindings, macOS build/tests/analyzer, and all signed UI flows. Native jobs
-   validate the pinned host toolchain and never install or upgrade it.
+   validate the pinned host toolchain and never install or upgrade it. A
+   PR-side watchdog fails after five minutes in which no selected native job
+   can dispatch, pausing that clock while the serial host runs another job.
 
 Run `bun run verify` locally only when explicitly reproducing CI or modifying
 the verification machinery itself. There is no `pre-push` hook.

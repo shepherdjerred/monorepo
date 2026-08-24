@@ -1,5 +1,7 @@
 const nativeInfrastructurePaths = [
   ".buildkite/scripts/bun-install.sh",
+  ".buildkite/scripts/macos-native-dispatch-watch.ts",
+  ".buildkite/scripts/macos-native-dispatch-watch.test.ts",
   ".buildkite/scripts/macos-native-env.sh",
   ".buildkite/scripts/macos-native-preflight.ts",
   ".buildkite/scripts/macos-native-preflight.test.ts",

@@ -662,6 +662,58 @@ steps:
   # unlocked console user's session. They deliberately receive neither the
   # Kubernetes plugin nor the cluster-secret environment used by Linux jobs.
   # Both lanes wait for verify and serialize globally on the single Mac.
+  # The PR watchdog runs on Kubernetes and bounds queue stalls while pausing
+  # its idle clock whenever that serial Mac is actively running either lane.
+  - label: ":apple: macOS native dispatch"
+    key: macos-native-dispatch
+    timeout_in_minutes: 100
+    if: build.pull_request.id != null && !build.pull_request.repository.fork && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/scripts/buildkite-handoff.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/scripts/bun-install.sh"
+        - ".buildkite/scripts/macos-native-dispatch-watch.ts"
+        - ".buildkite/scripts/macos-native-dispatch-watch.test.ts"
+        - ".buildkite/scripts/macos-native-env.sh"
+        - ".buildkite/scripts/macos-native-preflight.ts"
+        - ".buildkite/scripts/macos-native-preflight.test.ts"
+        - ".buildkite/scripts/macos-native-selection.ts"
+        - ".buildkite/scripts/toolchain.test.sh"
+        - ".buildkite/scripts/validate-pipeline*.ts"
+        - ".mise.toml"
+        - ".xcode-version"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "packages/homelab/mac-ci/**"
+        - "packages/macos-ai-subscription-tracker/**"
+        - "packages/tasknotes-core/**"
+        - "packages/tasknotes-macos/**"
+        - "packages/tasknotes-server/**"
+        - "packages/tasknotes-types/**"
+    depends_on: verify
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun --no-install .buildkite/scripts/macos-native-dispatch-watch.ts
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: macos-native-dispatch
+
   - label: ":apple: QuotaBar macOS (PR)"
     key: quotabar-macos-pr
     timeout_in_minutes: 45
@@ -679,6 +731,8 @@ steps:
         - ".buildkite/scripts/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/bun-install.sh"
+        - ".buildkite/scripts/macos-native-dispatch-watch.ts"
+        - ".buildkite/scripts/macos-native-dispatch-watch.test.ts"
         - ".buildkite/scripts/macos-native-env.sh"
         - ".buildkite/scripts/macos-native-preflight.ts"
         - ".buildkite/scripts/macos-native-preflight.test.ts"
@@ -734,6 +788,8 @@ steps:
         - ".buildkite/scripts/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/bun-install.sh"
+        - ".buildkite/scripts/macos-native-dispatch-watch.ts"
+        - ".buildkite/scripts/macos-native-dispatch-watch.test.ts"
         - ".buildkite/scripts/macos-native-env.sh"
         - ".buildkite/scripts/macos-native-preflight.ts"
         - ".buildkite/scripts/macos-native-preflight.test.ts"
