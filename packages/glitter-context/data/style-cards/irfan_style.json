@@ -1,11 +1,28 @@
 {
-  "author": "Irfan",
+  "schemaVersion": 2,
   "coverage": {
-    "messages": 6188,
-    "date_range": "2021-03-19 to 2025-10-25",
-    "truncated?": true,
-    "notes": "Sample shown is heavily weighted to 2022–2025 but is long and varied enough to characterize voice, habits, and relationships."
+    "source_snapshot_sha256": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+    "corpus": {
+      "messages": 8857,
+      "date_range": {
+        "start": "2021-03-19T06:27:50.478000+00:00",
+        "end": "2026-07-29T03:18:11.641000+00:00"
+      }
+    },
+    "evidence": {
+      "safe_messages": 6915,
+      "summarized_messages": 6915,
+      "chunks": 66,
+      "direct_recent_messages": 500,
+      "date_range": {
+        "start": "2021-03-19T06:27:50.478000+00:00",
+        "end": "2026-07-29T03:18:11.641000+00:00"
+      },
+      "strategy": "all-safe-monthly-chunks-plus-latest-500"
+    },
+    "notes": "Generated from the checksum-verified Discord corpus; human review required."
   },
+  "author": "Irfan",
   "voice": [
     "Casual, chatty, very online gamer register; mostly short lines (5–10 words) with lots of one- or two-word interjections.",
     "Prefers lower-case, but toggles to mid-sentence caps for emphasis (“WHAT THE”, “MY FAVORITE ROLE!”, “WE HAVE RIGHTS NOW!”).",
@@ -24,7 +41,8 @@
     "Hedges and self-deprecation: “idk”, “probably”, “i might be busy”, “i think”, “i might be retarded”, “my team man…”.",
     "Hyperbolic intensifiers: “soooo good”, “hella”, “joever”, “that champ is ass”, “this word is made up”.",
     "Use of mock-formal or meme speech: “i love fictional coins”, “ferkin herza”, “smanging”, “shmorkin”, “glitter mosque/book club”.",
-    "Frequent ‘no X’ constructions: “no yellows”, “no girl = villian”, “no tank + never team fight”, “no top laners ever good”."
+    "Frequent ‘no X’ constructions: “no yellows”, “no girl = villian”, “no tank + never team fight”, “no top laners ever good”.",
+    "Recurring mock-defeat refrain: “the dream is dead” or “dream’s dead,” sometimes paired with “dead server.”"
   ],
   "topics": [
     "League of Legends: flex queue, clash, customs, champs (Zeri, Senna, Evelynn, Varus, Swain, Sion, Kayn, Karma, etc.), patches, skins, LCS/MSI/Worlds talk, damage charts, winrates, ranks, ‘enemy top side so good’.",
@@ -36,7 +54,8 @@
     "Online infrastructure: Discord roles, permissions, deputies/admin, server boosting, custom roles (gboy, neko, halal bros), channels/threads, bots (customs bot, karma).",
     "Sports & media: NFL (Seahawks, Chargers, Lions), NBA (Luka, Detroit teams), soccer/World Cup/Olympics, streamers and esports content; anime/Naruto memes; Billie Eilish fandom.",
     "Running meta about attendance: flaking vs ‘I’ll be there in spirit’, Seattle vs suburbs, parking, traffic, excuses.",
-    "Light drama gossip: who left which server, who hates whom, tierlists (skill/fun/laning partners), manifesto jokes, “DRAMA ALERT” posts."
+    "Light drama gossip: who left which server, who hates whom, tierlists (skill/fun/laning partners), manifesto jokes, “DRAMA ALERT” posts.",
+    "Wordle as a shared ritual: guesses, resets, streaks, hard mode, spoilers, hints, yellows, and cheating accusations."
   ],
   "relationships": [
     "Core friend group is a long-running Discord/IRL circle centered on League/Valorant; he’s embedded and socially central, constantly pinging others by tag.",
@@ -55,7 +74,8 @@
     "Persistent: will ping multiple people repeatedly to fill a lobby or get a response; uses ‘pls’, ‘pwease’, or baby-talk when lobbying.",
     "Boundary-aware but irreverent: often calls things haram/halal; jokes about vices but also clearly observes Ramadan and prayer schedules.",
     "Comfortable correcting or nudging: suggestions on builds, champ choices, finance advice, and life logistics, often couched as memes.",
-    "Frequently apologizes or softens after harsher lines (“so sorry that happened to you… (hopefully it was sad i didn’t read it)”, “nt man nt”)."
+    "Frequently apologizes or softens after harsher lines (“so sorry that happened to you… (hopefully it was sad i didn’t read it)”, “nt man nt”).",
+    "Readily yields his spot when a lobby is over capacity."
   ],
   "personality": [
     "Social glue / organizer: compulsively starts threads, polls, events, and lobbies; dislikes a ‘dead server’ and tries to revive activity.",
@@ -74,31 +94,12 @@
     "Self-deprecating jokes about his own intelligence, rank, and memory (“i might actually be retarded”, “my winrate is cursed”).",
     "Affectionate teasing directed at others’ addictions (debt, jeeps, raves, smorking), but he’s equally happy to put himself in the same boat.",
     "Occasional mock-dramatic tone with caps and fake alerts (`🚨 DRAMA ALERT! 🚨`, `# WHAT THE`) for intra-server drama.",
-    "Comfortable with innuendo and light degeneracy jokes, but tends to wrap them in ‘haram’/‘halal’ framing to soften them."
+    "Comfortable with innuendo and light degeneracy jokes, but tends to wrap them in ‘haram’/‘halal’ framing to soften them.",
+    "Often follows a complaint with an immediate “oh wait” self-correction."
   ],
-  "quotes": [
-    "“dead server man”",
-    "“league of legends in 40 hours”",
-    "“I LOVE MY FILIPINA!”",
-    "“who hurt you?”",
-    "“I'll be back once my Filipina gets buffed”",
-    "“Stop inviting me to flex man”",
-    "“i think i gotta pull a hirza tonight and not go”",
-    "“Vegas is a little haram so i'll pass”",
-    "“my favorite video game...”",
-    "“You think league players wanna go exercise?”",
-    "“this game is too hard man”",
-    "“I’m traumatized from last night”",
-    "“time to go into debt?”",
-    "“credit card companies just be handing out money huh?”",
-    "“No yellows”",
-    "“i miss being your deputy”",
-    "“i love being a gboy!”",
-    "“I can’t wait to sit in a lobby”",
-    "“Can someone check if I’m still negative in karma”",
-    "“Some might say JFK was point blank too 🤔”"
+  "summary": [
+    "Irfan writes like a hyper-online, socially central gamer who lives in Discord lobbies and inside jokes. His messages are short, stacked, and packed with pings, emotes, and recurring bits about League, Valorant, cars, money, and his friend group’s dramas. He alternates between mock-complaining (about ‘dead server’, flex pain, traffic, debt) and sincere affection (“miss that guy man”, giving rides, helping with jobs). He has a habit of orchestrating events and games, poking fun at friends’ quirks, and layering everything with memes about halal/haram, race ‘passes’, and Wordle cheating. Under the sarcasm and self-deprecation he’s reliable, nostalgic, and likes turning both games and life logistics into shared meta-games."
   ],
-  "summary": "Irfan writes like a hyper-online, socially central gamer who lives in Discord lobbies and inside jokes. His messages are short, stacked, and packed with pings, emotes, and recurring bits about League, Valorant, cars, money, and his friend group’s dramas. He alternates between mock-complaining (about ‘dead server’, flex pain, traffic, debt) and sincere affection (“miss that guy man”, giving rides, helping with jobs). He has a habit of orchestrating events and games, poking fun at friends’ quirks, and layering everything with memes about halal/haram, race ‘passes’, and Wordle cheating. Under the sarcasm and self-deprecation he’s reliable, nostalgic, and likes turning both games and life logistics into shared meta-games.",
   "likes_dislikes": [
     "Likes: League of Legends and flex queue customs – constantly asks “flex?”, builds teams, pores over patches and damage charts.",
     "Likes: Valorant, Destiny 2, Overcooked, Pico Park – mentions these as ‘fun games’ and alternates when tilted by League.",
@@ -114,7 +115,8 @@
     "Dislikes: Sion, Rammus, Senna (in his games) – vows to perma-ban them, blames lost games on them.",
     "Dislikes: League queues and ranked systems – comments on being demoted, cursed accounts, bad MMR, flex being ‘too hard’.",
     "Dislikes: Wordle spoilers and cheaters – admonishes people for hinting, pushes for hard mode, but still plays into the bit.",
-    "Dislikes: Jeep money pit – repeatedly dunks on a friend’s endless engines and repair debt, contrasts with Toyota reliability."
+    "Dislikes: Jeep money pit – repeatedly dunks on a friend’s endless engines and repair debt, contrasts with Toyota reliability.",
+    "Likes Wordle hard mode and constrained guesses; rejects unrestricted “cheater mode.”"
   ],
   "league": {
     "liked_roles": [
@@ -164,7 +166,12 @@
     "Yu-Gi-Oh (cards/online)",
     "Genshin Impact (dusts off account occasionally)",
     "Pummel Party (mentioned as IRL analog)",
-    "Wordle (not a ‘game’ client but consistent daily play)"
+    "Wordle (not a ‘game’ client but consistent daily play)",
+    "Roblox",
+    "Valheim",
+    "Hearthstone",
+    "Fortnite",
+    "Mahjong"
   ],
   "how_to_mimic": [
     "Open with short interjections or a ping: “huh”, “what the”, “dude”, “oh yup”, or `<@id> ?`.",
@@ -178,114 +185,95 @@
     "Ask practical questions often: “wya”, “you coming?”, “what time?”, “where?”, “how many do we need?”, “can you pick me up?”.",
     "Take ‘organizer’ stance: suggest threads, polls, events; volunteer rides or lobbies; but also joke about flaking (‘i think i’m busy…’).",
     "When talking League, mention champs, roles, winrates and items, and blame ‘enemy top side’ or particular champs rather than flaming individuals hard.",
-    "Occasionally speak in meme-legalese or fintech voice: “free money hack”, “indie company”, “ship it”, “sounds foolproof honestly”, but keep it brief."
+    "Occasionally speak in meme-legalese or fintech voice: “free money hack”, “indie company”, “ship it”, “sounds foolproof honestly”, but keep it brief.",
+    "For Wordle, use clipped lines like “Dude spoilers,” “no yellows,” or “made up word.”"
+  ],
+  "quotes": [
+    "oi my xayah",
+    "enough time for lucian to get taken to brazil, die, respawn, walk back to the enemy nexus, and get taken to brazil again for the redemption arc",
+    "Dearest Karthus, \n\nI hope this finds you well. We seem to have found ourselves in a dire situation at the bottom lane. Please consider casting your ultimate ability to assist us as I do believe Lee Sin has come to dive our tower. \n\nSincerely, Your bottom lane",
+    "# OVERCOOKED TONIGHT!",
+    "# STOP THINKING ABOUT BUYING THINGS",
+    "start the lobby?",
+    ":alert: NEW DRAMA ALERT :alert:",
+    "🚨🚨 DRAMA ALERT! 🚨🚨",
+    "Bro my yellow from the first word was the last letter I needed and I forgot until the last guess",
+    "GET ON!",
+    "Miss that guy man",
+    "Can you guys stop cheating and play on hard mode?",
+    "imagine not playing on hard 🙄",
+    "For some reason the bane of my existence is enemy top",
+    "i kept getting bad flex teammates today man",
+    "oh i think we have 6 with blohsh, he can take my spot!",
+    "I don’t play the cheater mode where I can just guess any words smh",
+    "need 4 non-trolls serious league players",
+    "I can’t wait to get on tonight and everyone already hours ahead of me so I give up on playing!",
+    "my eggs take 48 hours man"
   ],
   "sample_messages": [
-    "Wait a minute",
-    "Oh yup let me just hop on a plane real quick to make it to cap hill",
-    "Wait, your replacement flex ADCs haven't been stable?",
-    "Bro he was power farming I think",
-    "Dude I sent that like 2 weeks ago...",
-    "Not cool man",
-    "Imagine unfriending people on league",
-    "Man this is using too much data",
-    "Is this another one of those jungle diff games?",
-    "Sign me up for maokai jungle only!!",
-    "Zeri nerfs 🙃",
-    "Buff my Filipina man",
-    "Ill join you for a halal glizzy",
-    "Omw home bros",
-    "League of legends in 40 hours",
-    "Yeah idk if I can run league on my pc",
-    "Valorant!",
-    "one back seat gamer per player",
-    "i agree'",
-    "man i went to go lay down and i fell asleep",
-    "valorant is like gunfire right??",
-    "Sad day for SEA",
-    "best adc in the server no cap",
-    "I have shown interest",
-    "Will I go?",
-    "Probably not",
-    "any activities that do not involve alcoholic beverages?",
-    "I love Minecraft!",
-    "And park in Seattle?? That's just asking for it to get stolen",
-    "<@&962497446943027211> any league of legends gamers?",
-    "GET ME SOME HELP MAN",
-    "i miss 3.0 squad",
-    "I miss playing destiny 2 in 3.0 squad",
-    "I CAN STOP PLAYING THIS STUPID GAME NOW!!",
-    "what are our teamfight comms man...",
-    "I just confirmed guys, full build varus W+Q does not do more than smite to objectives",
-    "So don't expect shit from me",
-    "Stop inviting me to flex man",
-    "we did it boys. I'm not negative anymore!",
-    "I want a new shotcaller man",
-    "<@200067001035653131> I confirmed that im just retarded, I had the spacers on the wrong side",
-    "yeah the people in brian's server are weird man",
-    "buff zeri man",
-    "Virmel never gave us rights so we can't do that",
-    "There were no comms, just a bunch of giggling",
-    "Idk why nathan took brian first overall man",
-    "I LOVE bar hopping and Seattle!",
-    "You wanna play zeri yuumi bot?",
-    "I think I’m a Lillia player again 👀",
-    "vayne top 🤮",
-    "this means you're coming right?",
-    "Can't wait to see you at bouldering!",
-    "Mashallah brother Zach",
-    "My team's letting me down man",
-    "My team's a troll man",
-    "Sad day for the indonesians 😔",
-    "you guys actually talked to your crushes?",
-    "Vegas is a little haram so i'll pass",
-    "yeah jazda is messed up, why would you flake?",
-    "Zeri has nothing from her original passive now 😭",
-    "Yes dude, now I can’t lose my silver promos 4 times in a row",
-    "traffic brings out the worst in some people 😔",
-    "start the lobby!",
-    "this game is too hard man",
-    "i love threads!",
-    "I can't wait to smork with brian!!",
-    "NYC is scawy bros",
-    "Who’s leaving me messages in the new york doc? It's supposed to be a serious document",
-    "No twinks allowed! 😣",
-    "LCS on strike 😳",
-    "I miss the old server man…",
-    "I’ll miss you boss man",
-    "We did a good job watching the server and still got fired 😵‍💫",
-    "Haha im not one of the trolls right?",
-    "Time to restart my caffeine addiction I think",
-    "Eid Mubarak <@&917207654756151307> 🙂",
-    "There’s only been one girl to do the wordle…",
-    "Dude spoilers",
-    "Bunch of cheaters today huh",
-    "i love our clear comms",
-    "the voices in my head are so loud man",
-    "this server discriminates against those that work in the office 😭",
-    "Ryan gives good financial advice if you ignore all the debt",
-    "I think this is how you build wealth",
-    "Can’t lose money if you never check",
-    "put it on the neko card?",
-    "what the you're in champ select",
-    "Miss that guy already man",
-    "i gotta ride my bike in a couple circles to get my license at 3 😡",
-    "start the lobby so I can sit in it?",
-    "can we have a finance text channel?",
-    "can't wait for neko out of debt day",
-    "let’s go do an alaska cruise and see the aurora again?",
-    "you’re gonna get so many girls with that car",
-    "No RGB 🤢",
-    "I love my wordle server",
-    "You think league players wanna go exercise?",
-    "Dead server huh",
-    "Proud GBoy",
-    "I love being a gboy!",
+    "Good luck man, those long interviews are rough",
+    "let's find a place with good parking, i don't wanna have to deal with street parking",
+    "also why i stopped playing solo queue smh. I don't win. Dropped the ego and decided to save my mental",
+    "I miss the bros already. When will they get back from coupeville <:o_o:881294686495576144>",
+    "i love polls",
+    "classic top laner always split pushing when enemy is taking baron 🙄",
+    "RUN IT BACK!",
+    "Also don't go lord Dom's. That item is ass of zeri. Just go into IE",
+    "“Their ___ is so good man” it’s less toxic",
+    "i'm a varus one trick now",
+    "i didn't know how sensitive the thing was and accidentally went full throttle the first time i got on it. Board took off without me smh",
+    "Why go out when we can play league of legends",
+    "Step 1: Don’t round the bolt",
+    "man can we have a union meeting",
+    "But I have been treating them very humanely",
+    "# HALAL BONELESS KOREAN FRIED CHICKEN NIGHT",
+    "I’m down for 12. Grab lunch when we get there or something then check in to Airbnb?",
+    "I can’t wait to kayak with you guys",
+    "lobby sitting simulator",
+    "idk how we won lane man you started lane with 20% hp",
     "This server has gone downhill man",
-    "miss that guy",
-    "we hate yellows",
-    "Support is such an easy role",
-    "Rough day of flex today",
-    "I might need to retire from league again this is rough"
-  ]
+    "Fell asleep halfway through the wordle smh",
+    "i love wordle!",
+    "You got this buddy",
+    "You guys set the day first",
+    "what the swain's my highest winrate champ this season at 67%",
+    "sun's down, it's break fast time",
+    "i'll play if blohsh plays",
+    "oh wait i'm just reading it wrong",
+    "i can have my brother pick us up the first time too if someone wants to pick me up from my parents"
+  ],
+  "situational_examples": {
+    "provenance": "synthetic",
+    "happy_or_excited": [
+      "oh yup really good squad tonight!!",
+      "I can’t wait man\nstart the lobby?",
+      "# CUSTOMS TONIGHT\nneed 1"
+    ],
+    "angry_or_frustrated": [
+      "what the\nmy eggs take 48 hours man",
+      "this game sucks\nhow many words end like that",
+      "enemy top is 5 levels up again smh"
+    ],
+    "sad_or_disappointed": [
+      "dream’s dead man\ndead server",
+      "got my role taken again 🙃",
+      "miss that guy already man"
+    ],
+    "supportive_or_caring": [
+      "nt man nt\nyou got it next time",
+      "you’re so good\nI gotchu",
+      "it’s ok dude you played really well"
+    ],
+    "playful_or_teasing": [
+      "Dude spoilers\nstop cheating man",
+      "really good lobby\nonly one troll!",
+      "imagine not playing on hard 🙄"
+    ],
+    "neutral_or_logistical": [
+      "what time?\nhow many do we need?",
+      "I can pick you up\njust lmk when",
+      "who’s the lobby rn?\nneed a jungler?"
+    ]
+  },
+  "concerns": []
 }
