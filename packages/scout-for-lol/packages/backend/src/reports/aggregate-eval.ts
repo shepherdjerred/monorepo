@@ -41,7 +41,7 @@ export type AggregateEvalContext = {
 
 function unsupported(what: string): never {
   throw new Error(
-    `${what} is not supported for player_groups aggregation. Teammate-group rows are folded in JS, so only column references, literals, arithmetic, casts and the scalar functions are available.`,
+    `${what} is not supported by the JS aggregate evaluator (player_groups and rank sources fold their rows in JS, so only column references, literals, arithmetic, casts and the scalar functions are available).`,
   );
 }
 
@@ -118,6 +118,20 @@ function arithmetic(
     .exhaustive();
 }
 
+/**
+ * DuckDB's numeric-to-integer conversions — `CAST(x AS INTEGER)` and
+ * `ROUND(x, n)` alike — round half away from zero (`1.5`→2, `-1.5`→-2,
+ * `2.5`→3), confirmed against a real DuckDB instance. `Math.round` is NOT
+ * this: it rounds ties toward +Infinity, so `Math.round(-1.5)` is `-1`, one
+ * off from DuckDB's `-2`. Truncation (`Math.trunc`) is off in the other
+ * direction for every non-integer input. A folded `player_groups` row and a
+ * lake row must agree on this or `AVG(kda::INT)` reports a different number
+ * depending on which engine happened to answer the query.
+ */
+function roundHalfAwayFromZero(value: number): number {
+  return Math.sign(value) * Math.round(Math.abs(value));
+}
+
 function cast(
   to: "int" | "bigint" | "double" | "date" | "timestamp" | "varchar",
   value: LakeScalar,
@@ -126,7 +140,7 @@ function cast(
   return match(to)
     .with("int", "bigint", () => {
       const numeric = asNumber(value, "CAST");
-      return numeric === null ? null : Math.trunc(numeric);
+      return numeric === null ? null : roundHalfAwayFromZero(numeric);
     })
     .with("double", () => asNumber(value, "CAST"))
     .with("varchar", () => String(value))
@@ -175,7 +189,7 @@ function scalarCall(
         throw new Error("ROUND precision must be an integer from 0 to 10.");
       }
       const scale = 10 ** precision;
-      return Math.round(numeric * scale) / scale;
+      return roundHalfAwayFromZero(numeric * scale) / scale;
     })
     .with("floor", "ceil", "abs", (name) => {
       const numeric = asNumber(args[0] ?? null, name.toUpperCase());
@@ -354,7 +368,7 @@ export function evaluateAggregate(
       const rows = filteredRows(node.filter, ctx);
       if (node.distinct) {
         throw new Error(
-          "COUNT(DISTINCT …) is not supported on player_groups: a teammate-group row is a fold of several member rows, so the distinct values behind it are already gone.",
+          "COUNT(DISTINCT …) is not supported by the JS aggregate evaluator: player_groups rows are already-folded member rows and rank-source rows are already-folded leaderboard entries, so the distinct values behind either are gone by the time they reach this evaluator.",
         );
       }
       if (node.func === "count") {

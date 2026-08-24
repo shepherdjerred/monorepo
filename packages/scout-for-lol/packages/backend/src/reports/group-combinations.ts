@@ -240,7 +240,13 @@ export function aggregateFoldedGroups(
   return orderGroupRows(rows, input.plan).slice(0, input.limit);
 }
 
-function groupEvidence(
+/**
+ * The evidence companions (rate/ratio/sample) for one already-evaluated
+ * output, read from the same `AggregateEvalContext` its value was computed
+ * from. Shared with the rank-source JS path (rank-report.ts), which folds
+ * leaderboard entries through this evaluator the same way.
+ */
+export function groupEvidence(
   evidence: ScoutQlPlan["outputs"][number]["evidence"],
   ctx: AggregateEvalContext,
 ): PlanOutputValue["evidence"] {
@@ -302,7 +308,12 @@ function outputValue(
   return output.value;
 }
 
-function compareOutputs(
+/**
+ * NULLS-LAST comparison of two already-evaluated output values, shared with
+ * the rank-source JS path (rank-report.ts) so both JS-evaluated engines agree
+ * on ordering semantics with the SQL path.
+ */
+export function compareOutputs(
   left: number | string | null,
   right: number | string | null,
   direction: "asc" | "desc",

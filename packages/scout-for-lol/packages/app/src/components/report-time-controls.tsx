@@ -133,7 +133,28 @@ export function withPeriod(
       };
     })
     .exhaustive();
-  return { ...spec, window };
+  // Comparison needs a bounded window to take the preceding period of, so an
+  // "All history" period atomically turns it off — leaving it checked would
+  // insert `compare = previous_period` into an unbounded query, which the
+  // analyzer refuses (see `compareAvailable`).
+  return {
+    ...spec,
+    window,
+    compare: window.kind === "all-history" ? false : spec.compare,
+  };
+}
+
+/**
+ * Whether the "Compare with the previous period" control can be turned on:
+ * `compare = previous_period` needs both a bounded window and a temporal
+ * bucket to line the two periods up (analyze-render-shape.ts's
+ * `checkCompare`). Read this before rendering the checkbox `checked`/enabled,
+ * not after — an already-checked box left enabled through an incompatible
+ * period or bucket change would silently turn a valid report into invalid
+ * ScoutQL the next time the query is written out.
+ */
+export function compareAvailable(spec: ReportTimeSpec): boolean {
+  return spec.window.kind !== "all-history" && spec.bucket !== null;
 }
 
 export function withCalendarBoundary(
@@ -179,6 +200,16 @@ export function parseBucketChoice(value: string): ReportTimeBucket | null {
     return value;
   }
   throw new Error(`Unknown report time bucket "${value}".`);
+}
+
+export function withBucket(
+  spec: ReportTimeSpec,
+  bucket: ReportTimeBucket | null,
+): ReportTimeSpec {
+  // Same atomic reset as `withPeriod`: dropping to "No bucket" removes the
+  // temporal axis comparison needs, so a query with compare left on would
+  // become invalid ScoutQL the next time it is written out.
+  return { ...spec, bucket, compare: bucket === null ? false : spec.compare };
 }
 
 // ── Time zone ────────────────────────────────────────────────────────────────
@@ -306,10 +337,7 @@ export function ReportTimeControls(props: {
             className={SELECT_CLASS}
             value={spec.bucket ?? "none"}
             onChange={(event) => {
-              update({
-                ...spec,
-                bucket: parseBucketChoice(event.target.value),
-              });
+              update(withBucket(spec, parseBucketChoice(event.target.value)));
             }}
           >
             <option value="none">No bucket</option>
@@ -384,6 +412,7 @@ export function ReportTimeControls(props: {
             type="checkbox"
             className="size-5"
             checked={spec.compare}
+            disabled={!compareAvailable(spec)}
             onChange={(event) => {
               update({ ...spec, compare: event.target.checked });
             }}
@@ -391,6 +420,13 @@ export function ReportTimeControls(props: {
           <span className="font-medium">Compare with the previous period</span>
         </label>
       </div>
+
+      {!compareAvailable(spec) && (
+        <p className="text-xs text-scout-subtle">
+          Comparison needs a bounded period and a bucket (day, week, month, or
+          patch) to line the two periods up.
+        </p>
+      )}
 
       {spec.window.kind === "all-history" && (
         <p className="text-xs text-scout-subtle">

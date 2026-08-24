@@ -257,21 +257,17 @@ describe("teammate-group folding", () => {
 });
 
 describe("aggregates a teammate group cannot answer", () => {
-  test("COUNT(DISTINCT …) is refused with a reason", () => {
-    const plan = compileScoutQl(
-      "SELECT COUNT(DISTINCT queue) AS queues FROM player_groups GROUP BY group(2)",
-    );
+  test("COUNT(DISTINCT …) is refused at compile time, not at execution", () => {
+    // A teammate-group row is already a fold of several member rows by the
+    // time aggregate-eval.ts would see it, so the distinct values COUNT
+    // needs are gone — this used to compile and only fail once
+    // `aggregateFoldedGroups` actually ran it. Rejecting in the analyzer
+    // means `validate_report_query` (and thus preview/schedule) can never
+    // approve a report that is guaranteed to fail.
     expect(() =>
-      aggregateFoldedGroups({
-        plan,
-        groups: foldGroupCombinations({
-          facts: stack("NA1_1", 2),
-          size: 2,
-          gameLevelColumns: GAME_LEVEL,
-        }),
-        gameLevelColumns: GAME_LEVEL,
-        limit: 10,
-      }),
+      compileScoutQl(
+        "SELECT COUNT(DISTINCT queue) AS queues FROM player_groups GROUP BY group(2)",
+      ),
     ).toThrow(/COUNT\(DISTINCT/u);
   });
 

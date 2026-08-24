@@ -1,11 +1,13 @@
 import { describe, expect, test } from "vitest";
 import { applyReportTimeSpec } from "@scout-for-lol/data/model/scoutql/report-time-spec.ts";
 import {
+  compareAvailable,
   parseBucketChoice,
   parsePeriodChoice,
   periodChoice,
   timeControlsState,
   timezoneApplies,
+  withBucket,
   withCalendarBoundary,
   withPeriod,
   withTimezone,
@@ -137,6 +139,29 @@ describe("one facet at a time", () => {
   test("turning comparison off again restores the original text", () => {
     const on = apply(WEEKLY, (spec) => ({ ...spec, compare: true }));
     expect(apply(on, (spec) => ({ ...spec, compare: false }))).toBe(WEEKLY);
+  });
+
+  test("comparison is available exactly when the window is bounded and bucketed", () => {
+    const spec = readySpec(WEEKLY);
+    expect(compareAvailable(spec)).toBe(true);
+    expect(compareAvailable(withPeriod(spec, { kind: "all-history" }))).toBe(
+      false,
+    );
+    expect(compareAvailable(withBucket(spec, null))).toBe(false);
+  });
+
+  test("switching to all history atomically turns comparison off, not into invalid ScoutQL", () => {
+    const on = apply(WEEKLY, (spec) => ({ ...spec, compare: true }));
+    const next = apply(on, (spec) => withPeriod(spec, { kind: "all-history" }));
+    expect(readySpec(next).compare).toBe(false);
+    expect(next).not.toContain("compare = previous_period");
+  });
+
+  test("dropping the bucket atomically turns comparison off too", () => {
+    const on = apply(WEEKLY, (spec) => ({ ...spec, compare: true }));
+    const next = apply(on, (spec) => withBucket(spec, null));
+    expect(readySpec(next).compare).toBe(false);
+    expect(next).not.toContain("compare = previous_period");
   });
 
   test("the time zone moves only the bucket boundaries", () => {

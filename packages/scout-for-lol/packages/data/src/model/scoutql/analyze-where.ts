@@ -42,6 +42,17 @@ export type WhereAnalysis = {
   where: ScoutQlPredicate | undefined;
   timeWindow: ScoutQlTimeWindow;
   competitionId?: number | undefined;
+  /**
+   * True when a WHERE conjunct still touches the time column after hoisting
+   * — only the first recognized bound can ever be hoisted into `timeWindow`,
+   * so a second (e.g. a redundant lower bound, or an explicit two-sided
+   * range written as two comparisons instead of BETWEEN) stays behind in
+   * `where` unchanged. That residual is reused verbatim for a comparison
+   * baseline's substituted (chronologically earlier) range, where it can
+   * never be satisfied — `checkCompare` refuses `compare = previous_period`
+   * whenever this is true, rather than silently reporting an empty baseline.
+   */
+  residualTouchesTime: boolean;
 };
 
 export type WhereAnalysisInput = {
@@ -277,6 +288,7 @@ export function analyzeWhere(input: WhereAnalysisInput): WhereAnalysis {
   return {
     where: combineConjuncts(residual, input.refs),
     timeWindow,
+    residualTouchesTime: touchesTime,
     ...(competitionId === undefined ? {} : { competitionId }),
   };
 }

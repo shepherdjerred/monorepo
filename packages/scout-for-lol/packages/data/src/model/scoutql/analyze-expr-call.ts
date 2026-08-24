@@ -61,6 +61,19 @@ function checkCallFlags(
       message: "DISTINCT is only supported on COUNT — COUNT(DISTINCT x).",
       span: node.span,
     });
+  } else if (node.distinct && ctx.catalog?.id === "player_groups") {
+    // player_groups folds its unit (a k-subset of one game's tracked
+    // players) in JS before aggregation ever runs, so by the time COUNT
+    // reaches a row the distinct values behind it are already gone —
+    // aggregate-eval.ts's evaluator has no choice but to throw. Reject here,
+    // at compile time, so `validate_report_query` cannot approve a report
+    // that is guaranteed to fail at preview or schedule time.
+    emitDiagnostic(ctx.diagnostics, {
+      code: "distinct-unsupported",
+      message:
+        "COUNT(DISTINCT …) is not supported on player_groups: a teammate-group row is already a fold of several member rows, so the distinct values behind it are gone by the time COUNT would run.",
+      span: node.span,
+    });
   }
   if (node.all) {
     emitDiagnostic(ctx.diagnostics, {

@@ -32,6 +32,8 @@ export type ShapeContext = {
   outputs: AnalyzedOutput[];
   groupings: AnalyzedGrouping[];
   timeWindow: ScoutQlTimeWindow;
+  /** See `WhereAnalysis.residualTouchesTime`. */
+  residualTouchesTime: boolean;
   span: ScoutQlSpan;
   diagnostics: ScoutQlDiagnostic[];
 };
@@ -274,6 +276,20 @@ function checkCompare(ctx: ShapeContext): void {
       code: "render-compare-unavailable",
       message:
         "compare = previous_period needs a stated time window to take the preceding period of — add e.g. game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 90 DAY.",
+      span: ctx.span,
+    });
+  }
+  if (ctx.residualTouchesTime) {
+    // Only the first recognized time conjunct is ever hoisted into
+    // `timeWindow`; a second one (redundant lower bound, or a two-sided
+    // range spelled as two comparisons instead of BETWEEN) stays in the
+    // residual WHERE and is reused unchanged for the baseline's substituted,
+    // chronologically earlier range — where it can silently make the
+    // baseline empty rather than compare the periods it named.
+    emitDiagnostic(ctx.diagnostics, {
+      code: "render-compare-unavailable",
+      message:
+        "compare = previous_period needs the whole time window in ONE recognized bound — state it as a single relative bound (t >= CURRENT_TIMESTAMP - INTERVAL n DAY) or a single BETWEEN, not several ANDed time comparisons.",
       span: ctx.span,
     });
   }

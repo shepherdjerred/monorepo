@@ -88,7 +88,7 @@ export default defineConfig({
   fullyParallel: true,
   // Parallel browser contexts plus the backend, SPA, and two Astro servers
   // exceeded the nightly pod's memory boundary even at two workers. One worker
-  // keeps the complete 616-case matrix inside the reviewed 16 GiB limit.
+  // keeps the complete 624-case matrix inside the reviewed 16 GiB limit.
   ...(env["CI"] === "true" ? { workers: 1 } : {}),
   reporter:
     env["CI"] === "true"

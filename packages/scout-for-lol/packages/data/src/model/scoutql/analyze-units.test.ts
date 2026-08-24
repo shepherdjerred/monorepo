@@ -397,4 +397,19 @@ describe("limits", () => {
       ).limit,
     ).toBe(10);
   });
+
+  // GROUP BY patch is a chart time axis too (temporal-plan.ts's
+  // `planTemporalGrouping` treats it identically to DATE_TRUNC), so a
+  // patch-bucketed chart with no explicit LIMIT must compile the same
+  // temporal row budget — otherwise the engine's own widening in
+  // `effectiveRowLimit` has nothing left to widen.
+  test("a charted patch series also gets the temporal row budget", () => {
+    expect(
+      compileScoutQl(
+        "SELECT patch, COUNT(*) AS g FROM match_participants " +
+          "WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY " +
+          "GROUP BY patch RENDER bar_chart",
+      ).limit,
+    ).toBe(2000);
+  });
 });

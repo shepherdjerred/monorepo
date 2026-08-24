@@ -138,8 +138,18 @@ function resolveLimit(
     }
     return value;
   }
+  // Matches the engine's own definition of "temporal" (temporal-plan.ts's
+  // `planTemporalGrouping`): DATE_TRUNC bucketing, or the `patch` dimension,
+  // which buckets by patch instead of by time but is still a chart axis with
+  // as many points as there are patches in range. Omitting `patch` here would
+  // compile a smaller default LIMIT into the plan than the engine's own
+  // temporal row budget — a default `effectiveRowLimit` can only shrink
+  // afterward, never restore.
   const temporal = groupings.some(
-    (grouping) => grouping.grouping.kind === "date-trunc",
+    (grouping) =>
+      grouping.grouping.kind === "date-trunc" ||
+      (grouping.grouping.kind === "column" &&
+        grouping.grouping.column === "patch"),
   );
   return temporal && isChartRenderKind(render.kind)
     ? TEMPORAL_ROW_BUDGET
@@ -273,6 +283,7 @@ export function analyzeScoutQl(text: string): ScoutQlAnalysis {
           outputs,
           groupings,
           timeWindow: where.timeWindow,
+          residualTouchesTime: where.residualTouchesTime,
           diagnostics,
         }) ?? DEFAULT_RENDER_SPEC);
 

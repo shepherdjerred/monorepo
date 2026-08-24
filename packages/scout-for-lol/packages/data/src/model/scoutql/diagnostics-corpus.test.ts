@@ -134,6 +134,16 @@ export const NEGATIVE_CASES: NegativeCase[] = [
     code: "distinct-unsupported",
   },
   {
+    // player_groups folds its rows in JS before aggregation, so the distinct
+    // values COUNT(DISTINCT ...) would need are already gone by the time the
+    // evaluator sees a row (aggregate-eval.ts throws at execution). Reject at
+    // compile time rather than let `validate_report_query` approve a report
+    // guaranteed to fail at preview or schedule time.
+    name: "COUNT(DISTINCT) on player_groups",
+    query: `SELECT COUNT(DISTINCT queue) AS q FROM player_groups WHERE ${BOUND} GROUP BY group(2)`,
+    code: "distinct-unsupported",
+  },
+  {
     name: "casting an aggregate result",
     query: `SELECT SUM(kills)::DOUBLE AS x FROM match_participants WHERE ${BOUND} GROUP BY player`,
     code: "cast-around-aggregate",
@@ -352,6 +362,14 @@ export const NEGATIVE_CASES: NegativeCase[] = [
     name: "compare without a stated window",
     query:
       "SELECT DATE_TRUNC('week', game_creation_at) AS week, COUNT(*) AS g FROM match_participants " +
+      "GROUP BY DATE_TRUNC('week', game_creation_at) RENDER line_chart WITH (compare = previous_period)",
+    code: "render-compare-unavailable",
+  },
+  {
+    name: "compare with a second, un-hoisted time conjunct",
+    query:
+      `SELECT DATE_TRUNC('week', game_creation_at) AS week, COUNT(*) AS g FROM match_participants WHERE ${BOUND} ` +
+      "AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 7 DAY " +
       "GROUP BY DATE_TRUNC('week', game_creation_at) RENDER line_chart WITH (compare = previous_period)",
     code: "render-compare-unavailable",
   },

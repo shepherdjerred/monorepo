@@ -83,6 +83,8 @@ export type RenderAnalysisInput = {
   outputs: AnalyzedOutput[];
   groupings: AnalyzedGrouping[];
   timeWindow: ScoutQlTimeWindow;
+  /** See `WhereAnalysis.residualTouchesTime`. */
+  residualTouchesTime: boolean;
   diagnostics: ScoutQlDiagnostic[];
 };
 
@@ -471,6 +473,7 @@ export function analyzeRender(
     outputs: input.outputs,
     groupings: input.groupings,
     timeWindow: input.timeWindow,
+    residualTouchesTime: input.residualTouchesTime,
     span: input.clause.span,
     diagnostics: input.diagnostics,
   });
