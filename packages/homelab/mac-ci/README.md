@@ -81,8 +81,11 @@ The bootstrap:
   `shell="/bin/bash -e -c"` so the native steps that source
   `macos-native-env.sh` get the bash guarantee Kubernetes steps get from
   `BUILDKITE_SHELL`;
-- saves the original AC power profile and disables system/disk sleep while
-  allowing display sleep after ten minutes.
+- saves the original AC power profile and disables system, disk, and display
+  sleep;
+- disables idle screen saver activation and interactively disables password
+  lock for the dedicated CI login session, preventing unattended signing from
+  deadlocking behind a locked login keychain.
 
 Re-running it is safe. Native jobs use a per-user Bun cache and explicitly
 remove the Linux-only shared-cache and Turbo variables they inherit from the
@@ -130,12 +133,9 @@ the Buildkite environment, or a shell-history command.
 
 Keep automatic login disabled. FileVault requires a human to unlock the disk
 and log in after a cold boot, so the native agent is intentionally offline
-until that happens. While the node is online:
-
-- set Lock Screen → Start Screen Saver when inactive to **Never**;
-- set Lock Screen → Require password after screen saver begins or display is
-  turned off to **Never**;
-- leave display sleep enabled; the bootstrap keeps system and disk sleep off.
+until that happens. The bootstrap prompts for the local account password to
+set the screen saver and password lock to **Never**, and it keeps the display,
+system, and disk awake while the node is online.
 
 This unlocked session is part of the accepted native-code security boundary.
 

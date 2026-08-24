@@ -91,6 +91,15 @@ xcode-select -p
 command -v xcodegen >/dev/null
 command -v swiftlint >/dev/null
 
+echo "==> Validating the always-unlocked CI login session"
+screen_lock_status="$(sysadminctl -screenLock status 2>&1)"
+if [[ "$screen_lock_status" != *"screenLock is off"* ]]; then
+  echo "error: macOS screen lock must be off for unattended signing and UI tests" >&2
+  echo "       $screen_lock_status" >&2
+  echo "       rerun without --skip-bootstrap to configure it" >&2
+  exit 1
+fi
+
 echo "==> Checking FileVault and signing prerequisites"
 fdesetup status
 security find-identity -v -p codesigning

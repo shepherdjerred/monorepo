@@ -106,6 +106,12 @@ if ! rg -Fq 'mise exec --cd "$REPO_ROOT" -- rustup target add' "$MAC_CI_BOOTSTRA
   echo "macOS bootstrap must install both TaskNotes universal Rust targets" >&2
   exit 1
 fi
+if ! rg -Fq 'displaysleep 0' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'com.apple.screensaver idleTime -int 0' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'sysadminctl -screenLock off -password -' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS bootstrap must keep the accepted CI GUI session unlocked" >&2
+  exit 1
+fi
 
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT

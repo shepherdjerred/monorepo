@@ -18,7 +18,10 @@
 #
 # Tailscale enrollment, FileVault, Xcode installation, signing, and the GUI
 # privacy grants are documented manual steps in README.md. They require either
-# interactive authentication or a deliberate security decision.
+# interactive authentication or a deliberate security decision. This script
+# does configure the accepted always-unlocked CI session after prompting for
+# the local account password; otherwise signing and UI tests can deadlock
+# behind the lock screen after an unattended display timeout.
 
 set -euo pipefail
 
@@ -130,7 +133,7 @@ umask 022
 # (will prompt).
 #   sleep 0         never idle-sleep the system
 #   disksleep 0     never spin the disk down
-#   displaysleep 10 allow the display to sleep without locking the session
+#   displaysleep 0  keep the GUI available for signing and UI automation
 #   powernap 0      no Power Nap wake/maintenance cycles
 #   womp 1          wake on network access (magic packet)
 #   autorestart 1   power back on automatically after a power loss
@@ -149,10 +152,30 @@ if ! sudo test -f "$POWER_BACKUP_FILE"; then
   rm "$power_backup"
   echo "    Saved the previous profile to $POWER_BACKUP_FILE"
 fi
-sudo pmset -c sleep 0 disksleep 0 displaysleep 10 powernap 0 womp 1 autorestart 1
+sudo pmset -c sleep 0 disksleep 0 displaysleep 0 powernap 0 womp 1 autorestart 1
 echo "    Full profile (verify sleep=0): pmset -g custom"
 
-# --- 5. Start the agent as a login service ---------------------------------
+# --- 5. Keep the CI login session available --------------------------------
+# The native trust boundary already requires an unlocked GUI user. Disabling
+# only system sleep is insufficient: macOS can still lock the display, lock the
+# login keychain, and leave codesign waiting for a prompt that no unattended
+# job can answer. Disable both idle screen saver activation and password lock.
+# `sysadminctl` asks for the local account password without placing it in this
+# script, an environment variable, or shell history.
+echo "==> Configuring the always-unlocked CI login session"
+defaults -currentHost write com.apple.screensaver idleTime -int 0
+screen_lock_status="$(sysadminctl -screenLock status 2>&1)"
+if [[ "$screen_lock_status" != *"screenLock is off"* ]]; then
+  echo "    Enter the jerred account password when prompted."
+  sysadminctl -screenLock off -password -
+fi
+screen_lock_status="$(sysadminctl -screenLock status 2>&1)"
+if [[ "$screen_lock_status" != *"screenLock is off"* ]]; then
+  echo "error: macOS screen lock is still enabled: $screen_lock_status" >&2
+  exit 1
+fi
+
+# --- 6. Start the agent as a login service ---------------------------------
 # brew services installs a per-user LaunchAgent (runs on login). FileVault and
 # auto-login are intentionally incompatible here: after a cold boot, a human
 # unlocks the disk and logs in before the agent can reconnect. A LaunchAgent
