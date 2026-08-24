@@ -41,7 +41,8 @@
     "generate:marketing-showcase": "bun run scripts/generate-marketing-showcase.ts",
     "test:review": "bun run src/league/review/test-reviews.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts",
-    "test:parlay:live": "bun run scripts/test-parlay-live.ts"
+    "test:parlay:live": "bun run scripts/test-parlay-live.ts",
+    "test:weekly-parlay:live": "bun run scripts/test-weekly-parlay-live.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1001.0",

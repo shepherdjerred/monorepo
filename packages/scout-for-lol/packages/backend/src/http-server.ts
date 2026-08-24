@@ -23,6 +23,7 @@ import {
   statusClass,
 } from "#src/http/route-label.ts";
 import { httpRequestDuration, httpRequestsTotal } from "#src/metrics/web.ts";
+import { handleWeeklyParlayControl } from "#src/http/weekly-parlay-control.ts";
 
 const logger = createLogger("http-server");
 
@@ -297,6 +298,13 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
   // resolution) to justify promoting this to an accelerator later.
   if (url.pathname === "/api/riot/tournament-callback") {
     return handleTournamentCallback(request);
+  }
+
+  // Temporal-only weekly Bryan Bucks control surface. The handler is absent
+  // (returns null) unless its bootstrap credential is configured.
+  const weeklyParlayResponse = await handleWeeklyParlayControl(request, url);
+  if (weeklyParlayResponse !== null) {
+    return weeklyParlayResponse;
   }
 
   // Metrics endpoint for Prometheus

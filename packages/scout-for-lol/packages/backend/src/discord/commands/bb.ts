@@ -28,6 +28,10 @@ import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
 import { describeParlayResult } from "#src/betting/parlay-bet-button.ts";
 import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
+import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly-parlay-criteria.ts";
+import { placeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet.ts";
+import { describeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet-button.ts";
+import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-refresh.ts";
 import { selectParlayMarketForAlias } from "#src/betting/parlay-market-selection.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
@@ -201,8 +205,29 @@ async function replyOpen(
     },
     orderBy: { closesAt: "asc" },
   });
+  const weeklyParlays = await prisma.bucksWeeklyParlayMarket.findMany({
+    where: {
+      serverId,
+      marketState: "open",
+      bettingClosesAt: { gt: new Date() },
+    },
+    select: {
+      id: true,
+      bettingClosesAt: true,
+      definition: { select: { subjects: true } },
+      bets: {
+        where: { betOutcome: "pending" },
+        select: { stake: true },
+      },
+    },
+    orderBy: { bettingClosesAt: "asc" },
+  });
 
-  if (pools.length === 0 && parlays.length === 0) {
+  if (
+    pools.length === 0 &&
+    parlays.length === 0 &&
+    weeklyParlays.length === 0
+  ) {
     await interaction.editReply({
       content: "Nothing open right now.",
     });
@@ -217,6 +242,19 @@ async function replyOpen(
     const closesAtUnix = Math.floor(parlay.closesAt.getTime() / 1000);
     sections.push(
       `**Parlay · ${aliases.join(", ")}** · closes <t:${closesAtUnix.toString()}:R> — \`/bb parlay player:${aliases[0] ?? ""}\``,
+    );
+  }
+  for (const parlay of weeklyParlays) {
+    const aliases = WeeklyParlaySubjectsSchema.parse(
+      JSON.parse(parlay.definition.subjects),
+    ).map((subject) => subject.alias);
+    const closesAtUnix = Math.floor(parlay.bettingClosesAt.getTime() / 1000);
+    const totalStaked = parlay.bets.reduce(
+      (total, bet) => total + bet.stake,
+      0,
+    );
+    sections.push(
+      `**Weekly parlay · ${aliases.join(", ")}** · ${parlay.bets.length.toString()} bettors · ${totalStaked.toString()} BB · closes <t:${closesAtUnix.toString()}:R> — use its message buttons`,
     );
   }
   await editReplyInChunks(
@@ -240,13 +278,48 @@ async function replyParlay(
       definition: { select: { subjects: true } },
     },
   });
+  const weeklyMarkets = await prisma.bucksWeeklyParlayMarket.findMany({
+    where: {
+      serverId,
+      marketState: "open",
+      bettingClosesAt: { gt: new Date() },
+    },
+    select: { id: true, definition: { select: { subjects: true } } },
+  });
+  const normalizedAlias = requestedAlias.trim().toLocaleLowerCase();
+  const matchingWeekly = weeklyMarkets.filter((market) =>
+    WeeklyParlaySubjectsSchema.parse(
+      JSON.parse(market.definition.subjects),
+    ).some((subject) => subject.alias.toLocaleLowerCase() === normalizedAlias),
+  );
   const selection = selectParlayMarketForAlias(markets, requestedAlias);
-  if (selection.kind === "ambiguous") {
+  if (
+    selection.kind === "ambiguous" ||
+    matchingWeekly.length > 1 ||
+    (selection.kind === "selected" && matchingWeekly.length > 0)
+  ) {
     await interaction.editReply({
       content:
-        `Multiple open parlays include **${requestedAlias}** (matches: ${selection.matchIds.map((matchId) => `\`${matchId}\``).join(", ")}). ` +
-        "Use the buttons on the desired parlay message.",
+        `Multiple open parlays include **${requestedAlias}**. ` +
+        "Use the buttons on the desired message so Scout can identify the market.",
     });
+    return;
+  }
+  const weekly = matchingWeekly[0];
+  if (weekly !== undefined && selection.kind === "not_found") {
+    const parsedSide = side === "YES" ? "YES" : "NO";
+    const result = await placeWeeklyParlayBet({
+      marketId: weekly.id,
+      serverId,
+      discordId,
+      side: parsedSide,
+      stake,
+      surface: "command",
+    });
+    await interaction.editReply({ content: describeWeeklyParlayBet(result) });
+    if (result.kind === "placed") {
+      await refreshWeeklyParlayMessage(weekly.id);
+    }
     return;
   }
   if (selection.kind === "not_found") {

@@ -26,6 +26,13 @@ describe("weekly parlay candidate selection", () => {
         periodsSinceFeatured: 3,
       },
       {
+        playerId: 4,
+        linkedGuildMember: true,
+        recentEligibleGames: 8,
+        fullyObservedWindows: 20,
+        periodsSinceFeatured: 4,
+      },
+      {
         playerId: 1,
         linkedGuildMember: false,
         recentEligibleGames: 20,

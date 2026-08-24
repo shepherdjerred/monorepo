@@ -51,6 +51,16 @@ export type BucksTransitionEvent =
   | "bucks.parlay_bet.placed"
   | "bucks.parlay_bet.cancelled"
   | "bucks.parlay_bet.settled"
+  | "bucks.weekly_parlay.published"
+  | "bucks.weekly_parlay.opened"
+  | "bucks.weekly_parlay.started"
+  | "bucks.weekly_parlay.settled"
+  | "bucks.weekly_parlay.voided"
+  | "bucks.weekly_parlay_bet.placed"
+  | "bucks.weekly_parlay_bet.topped_up"
+  | "bucks.weekly_parlay_bet.cancelled"
+  | "bucks.weekly_parlay_bet.settled"
+  | "bucks.weekly_parlay.contribution_recorded"
   | "bucks.earning.awarded"
   | "bucks.peek_pass.purchased";
 
@@ -62,6 +72,9 @@ export type BucksTransitionFields = {
   marketId?: number;
   betId?: number;
   parlayBetId?: number;
+  definitionId?: number;
+  periodKey?: string;
+  slot?: number;
   bucksAccountId?: number;
   actorDiscordId?: string;
   fromState?: string;
@@ -79,6 +92,7 @@ export type BucksTransitionFields = {
   surface?: "button" | "command" | "sweep" | "postmatch" | "cron" | "prematch";
   queueType?: string;
   isHouse?: boolean;
+  contributionCount?: number;
 };
 
 export function logBucksTransition(fields: BucksTransitionFields): void {

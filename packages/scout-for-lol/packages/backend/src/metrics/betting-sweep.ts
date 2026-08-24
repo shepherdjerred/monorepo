@@ -25,26 +25,40 @@ export async function updateBettingMetrics(
     const databaseModule = await import("#src/database/index.ts");
     const prisma = prismaClient ?? databaseModule.prisma;
 
-    const [byState, oldestUnresolved, pendingStake, houseAccounts] =
-      await Promise.all([
-        prisma.bucksMatchPool.groupBy({
-          by: ["poolState"],
-          _count: { _all: true },
-        }),
-        prisma.bucksMatchPool.findFirst({
-          where: { poolState: { in: ["open", "closed"] } },
-          orderBy: { closesAt: "asc" },
-          select: { closesAt: true },
-        }),
-        prisma.bucksBet.findMany({
-          where: { betOutcome: "pending" },
-          select: { stake: true, matchedStake: true },
-        }),
-        prisma.bucksAccount.findMany({
-          where: { isHouse: true },
-          select: { balance: true },
-        }),
-      ]);
+    const [
+      byState,
+      oldestUnresolved,
+      pendingStake,
+      pendingParlayStake,
+      pendingWeeklyStake,
+      houseAccounts,
+    ] = await Promise.all([
+      prisma.bucksMatchPool.groupBy({
+        by: ["poolState"],
+        _count: { _all: true },
+      }),
+      prisma.bucksMatchPool.findFirst({
+        where: { poolState: { in: ["open", "closed"] } },
+        orderBy: { closesAt: "asc" },
+        select: { closesAt: true },
+      }),
+      prisma.bucksBet.findMany({
+        where: { betOutcome: "pending" },
+        select: { stake: true, matchedStake: true },
+      }),
+      prisma.bucksParlayBet.aggregate({
+        where: { betOutcome: "pending" },
+        _sum: { stake: true },
+      }),
+      prisma.bucksWeeklyParlayBet.aggregate({
+        where: { betOutcome: "pending" },
+        _sum: { stake: true },
+      }),
+      prisma.bucksAccount.findMany({
+        where: { isHouse: true },
+        select: { balance: true },
+      }),
+    ]);
 
     const counts = new Map(
       byState.map((row) => [row.poolState, row._count._all]),
@@ -68,7 +82,9 @@ export async function updateBettingMetrics(
       pendingStake.reduce(
         (total, bet) => total + (bet.matchedStake ?? bet.stake),
         0,
-      ),
+      ) +
+        (pendingParlayStake._sum.stake ?? 0) +
+        (pendingWeeklyStake._sum.stake ?? 0),
     );
 
     bettingHouseBalanceBucks.set(

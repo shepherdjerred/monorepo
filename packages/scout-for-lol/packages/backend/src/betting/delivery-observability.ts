@@ -34,6 +34,7 @@ export type BucksMessageSurface =
   | "parlay_preparation"
   | "parlay_market"
   | "settlement"
+  | "weekly_parlay"
   | "weekly_leaderboard";
 
 export type BucksMessageOperation = "send" | "edit";

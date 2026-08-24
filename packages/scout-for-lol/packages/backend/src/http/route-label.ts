@@ -26,6 +26,7 @@ const EXACT_ROUTES = new Set<string>([
   "/api/dev/login",
   "/api/summoner-icon",
   "/api/reports/query-agent/stream",
+  "/api/internal/weekly-parlays/actions",
 ]);
 
 /** Paths with dynamic segments, mapped to a templated label. */
