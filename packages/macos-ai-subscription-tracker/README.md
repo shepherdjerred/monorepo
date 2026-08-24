@@ -30,9 +30,11 @@ bun run install:macos
 `verify:macos` runs Swift format lint, strict SwiftLint, warnings-as-errors
 tests, the 80% `QuotaBarCore` coverage gate, a release build, app bundling,
 `plutil`, asset checks, and strict code-signature verification. The bundle is
-written to `dist/QuotaBar.app` and ad-hoc signed by default. Set
-`QUOTABAR_CODESIGN_IDENTITY` to a Developer ID Application identity when one is
-available.
+written to `dist/QuotaBar.app` and uses the installed Developer ID Application
+identity automatically when exactly one is available. Set
+`QUOTABAR_CODESIGN_IDENTITY` to an identity hash or name to select a specific
+certificate; machines without a Developer ID identity continue to use an
+ad-hoc local bundle.
 
 `install:macos` is an explicit opt-in operation. It verifies the bundle, then
 replaces the exact target `/Applications/Brim.app` and launches it. It removes

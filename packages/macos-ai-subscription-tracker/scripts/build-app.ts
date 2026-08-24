@@ -105,7 +105,7 @@ try {
   await rm(temporaryDirectory, { recursive: true, force: true });
 }
 
-const identity = Bun.env.QUOTABAR_CODESIGN_IDENTITY ?? "-";
+const identity = signingIdentity();
 run(["codesign", "--force", "--deep", "--sign", identity, appPath]);
 console.log(`Built and signed ${appPath}`);
 
@@ -117,4 +117,38 @@ function runCapture(command: string[]) {
   });
   if (result.exitCode !== 0) process.exit(result.exitCode);
   return result.stdout.toString().trim();
+}
+
+function signingIdentity(): string {
+  const configuredIdentity = Bun.env.QUOTABAR_CODESIGN_IDENTITY;
+  if (configuredIdentity !== undefined) {
+    if (configuredIdentity.trim().length === 0)
+      throw new Error("QUOTABAR_CODESIGN_IDENTITY cannot be empty.");
+    return configuredIdentity;
+  }
+
+  const identities = runCapture([
+    "security",
+    "find-identity",
+    "-v",
+    "-p",
+    "codesigning",
+  ])
+    .split("\n")
+    .flatMap((line) => {
+      const match =
+        /^\s*\d+\)\s+([0-9A-F]{40})\s+\"Developer ID Application:/.exec(line);
+      if (match === null) return [];
+      const identity = match[1];
+      return identity === undefined ? [] : [identity];
+    });
+
+  if (identities.length > 1) {
+    throw new Error(
+      "Multiple Developer ID Application identities are installed; set " +
+        "QUOTABAR_CODESIGN_IDENTITY to the intended identity hash.",
+    );
+  }
+
+  return identities[0] ?? "-";
 }
