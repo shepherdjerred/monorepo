@@ -638,10 +638,11 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-11178@sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
+      "value": "2.0.0-11253@sha256:edf75ad84ac0e6054bc89c287f5bb77f6476e1edd5ce772c45c9fae7cf0817b6",
       "notes": [
         "not managed by renovate — beta updated by version-commit-back",
-        "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f"
+        "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
+        "database contract: postgresql sha256:edf75ad84ac0e6054bc89c287f5bb77f6476e1edd5ce772c45c9fae7cf0817b6"
       ]
     },
     {
