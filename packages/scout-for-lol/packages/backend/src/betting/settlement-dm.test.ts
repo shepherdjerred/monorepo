@@ -91,6 +91,16 @@ function build(input: {
   });
 }
 
+function deliveryInput(serverSuffix: string, bets: SettlementBet[]) {
+  return {
+    summary: summary(bets, testGuildId(serverSuffix)),
+    includeOutcome: true,
+    parlay: undefined,
+    unmatchedPositions: [],
+    roster: bucksTestRoster(),
+  };
+}
+
 describe("Bryan Bucks settlement DMs", () => {
   test("sends a bettor who did not play one personal receipt", () => {
     const messages = build({
@@ -260,6 +270,7 @@ describe("Bryan Bucks settlement DMs", () => {
     const dependencies: SettlementDmDeliveryDependencies = {
       client: mockClient(),
       isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+      observeBucksDelivery: async (_input, run) => run(),
       sendDm: async () => {
         sends++;
         if (sends === 1) {
@@ -270,22 +281,42 @@ describe("Bryan Bucks settlement DMs", () => {
     };
 
     await deliverSettlementDms(
-      {
-        summary: summary(
-          [
-            bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
-            bet({ id: 2, discordId: redBettor, teamId: 200 }),
-          ],
-          testGuildId("4"),
-        ),
-        includeOutcome: true,
-        parlay: undefined,
-        unmatchedPositions: [],
-        roster: bucksTestRoster(),
-      },
+      deliveryInput("4", [
+        bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
+        bet({ id: 2, discordId: redBettor, teamId: 200 }),
+      ]),
       dependencies,
     );
 
     expect(sends).toBe(2);
+  });
+
+  test("observes settlement DMs and translates non-sent statuses into failures", async () => {
+    let observed = 0;
+    let rejected = 0;
+    const dependencies: SettlementDmDeliveryDependencies = {
+      client: mockClient(),
+      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+      observeBucksDelivery: async (_input, run) => {
+        observed++;
+        try {
+          return await run();
+        } catch (error) {
+          rejected++;
+          throw error;
+        }
+      },
+      sendDm: async () => "dm_disabled",
+    };
+
+    await deliverSettlementDms(
+      deliveryInput("5", [
+        bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
+      ]),
+      dependencies,
+    );
+
+    expect(observed).toBe(1);
+    expect(rejected).toBe(1);
   });
 });
