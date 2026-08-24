@@ -14,9 +14,9 @@ Bryan Bucks is enabled.
 | ------------- | ----------------------------------------------------- | --------------------------------- |
 | `/bb balance` | Available Bucks, Bucks at risk, and pending positions | Private                           |
 | `/bb history` | Paged transaction ledger with running balances        | Private                           |
-| `/bb open`    | Markets still taking bets, with side totals           | Private                           |
+| `/bb open`    | Match and weekly markets still taking bets            | Private                           |
 | `/bb bet`     | Place or top up an outcome bet                        | Private                           |
-| `/bb parlay`  | Place or top up a parlay bet                          | Private                           |
+| `/bb parlay`  | Place or top up a match or weekly parlay bet          | Private                           |
 | `/bb pass`    | Quote and buy a 24-hour peek pass                     | Private                           |
 | `/bb peek`    | Reveal one live game's pre-game estimate              | Private                           |
 | `/bb ask`     | One-shot analysis over this server's Bryan Bucks data | Private, publishable by the asker |
@@ -50,6 +50,11 @@ is refused with an explanation rather than guessed.
 | `side`   | yes      | `YES`, `NO`                    |
 | `amount` | yes      | Whole BB                       |
 
+If one player appears in several open parlays, the alias is intentionally
+ambiguous. Use the buttons on the specific market message you want instead of
+letting Scout guess. The same rule lets weekly parlays support several subjects
+and several concurrent markets without changing the command.
+
 ### `/bb peek`
 
 | Option | Required | Values                       |
@@ -64,9 +69,9 @@ is refused with an explanation rather than guessed.
 
 ## Buttons
 
-The pre-match message carries the outcome market's controls, and the parlay
-message carries its own. Both mutate their message rather than posting a
-receipt for each bet.
+The pre-match message carries the outcome market's controls. Match and weekly
+parlay messages carry their own controls. All three mutate their message rather
+than posting a receipt for each bet.
 
 | Message          | Buttons                                                            |
 | ---------------- | ------------------------------------------------------------------ |
@@ -89,6 +94,11 @@ Per eligible game, at most:
 | Pre-match  | The parlay market, if one could be priced                |
 | Post-match | The normal match report                                  |
 | Post-match | One settlement embed, replying to the report             |
+
+Weekly parlays are separate from this per-game sequence. Scout publishes a new
+message for the market, the betting reminder, every progress update, and the
+settlement. Updates mention featured players and current bettors but expose
+only aggregate YES/NO totals—never a person's side or stake.
 
 Bets never add messages. Placing, topping up, and cancelling all edit the
 market message in place.

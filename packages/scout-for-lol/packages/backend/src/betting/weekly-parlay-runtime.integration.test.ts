@@ -792,6 +792,8 @@ describe("weekly parlay Discord delivery", () => {
       deliverWeeklyParlayDiscord(delivery, db, sender),
     ).resolves.toBe("sent");
     expect(sent).toHaveLength(2);
+    expect(sent[0]?.content).toContain("at least **1 game**");
+    expect(sent[0]?.content).toContain("**25 bettors · 25 BB staked**");
     const mentioned = new Set(
       sent.flatMap((options) => options.allowedMentions?.users ?? []),
     );

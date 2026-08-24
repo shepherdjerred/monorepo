@@ -41,9 +41,11 @@ import type { HomelabCrdImportsRefreshResult } from "#activities/homelab-crd-imp
 import { runPokeemeraldDataRefresh as _runPokeemeraldDataRefresh } from "./dpp-pokeemerald-data-refresh.ts";
 import type { PokeemeraldDataRefreshResult } from "#activities/dpp-pokeemerald-data-refresh.ts";
 import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout-showcase-refresh.ts";
+import { runScoutWeeklyParlayWorkflow as _runScoutWeeklyParlayWorkflow } from "./scout-weekly-parlay.ts";
 import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout-queue-windows.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout-queue-windows.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout-showcase-refresh.ts";
+import type { ScoutWeeklyParlayWorkflowInput } from "./scout-weekly-parlay.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
@@ -238,6 +240,12 @@ export async function runPokeemeraldDataRefresh(): Promise<PokeemeraldDataRefres
 
 export async function runScoutShowcaseRefresh(): Promise<ScoutShowcaseRefreshResult> {
   return _runScoutShowcaseRefresh();
+}
+
+export async function runScoutWeeklyParlayWorkflow(
+  input: ScoutWeeklyParlayWorkflowInput = {},
+): Promise<void> {
+  return _runScoutWeeklyParlayWorkflow(input);
 }
 
 export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResult> {

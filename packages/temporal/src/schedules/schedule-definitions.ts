@@ -298,6 +298,27 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly marketing-showcase refresh — regenerates the committed showcase PNGs + asset index from scout-prod, opens a PR on drift (generatedAt-only churn suppressed)",
   },
   {
+    id: "scout-weekly-parlay",
+    workflowType: "runScoutWeeklyParlayWorkflow",
+    args: [{}],
+    // Sunday 12:00 PT. The workflow remains open through the following Sunday
+    // 11:00 PT and owns the reminder, start, six progress updates, and final
+    // reconciliation for one immutable period/slot.
+    cronExpression: "0 12 * * 0",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    // A delayed final reconciliation for one period must not suppress the
+    // next Sunday's distinct period execution.
+    overlap: ScheduleOverlapPolicy.ALLOW_ALL,
+    workflowExecutionTimeout: "8 days",
+    memo: "Weekly Scout Bryan Bucks parlay lifecycle from Sunday publication through final settlement",
+    initialPauseNote:
+      "Awaiting the approved Discord fixture cycle before private-beta activation",
+    requiredEnvironment: [
+      "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
+      "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+    ],
+  },
+  {
     id: "scout-queue-windows-daily",
     workflowType: "runScoutQueueWindowsWatch",
     args: [],

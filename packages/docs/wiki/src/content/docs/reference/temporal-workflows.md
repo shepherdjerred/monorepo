@@ -34,14 +34,27 @@ changing model identity.
 
 ## Scout
 
-| Workflow                   | Trigger       | Brain                  | Output                        |
-| -------------------------- | ------------- | ---------------------- | ----------------------------- |
-| data-dragon version check  | 06:00 Sun–Fri | deterministic          | heartbeat + **auto-merge PR** |
-| data-dragon weekly refresh | Sat 06:00     | deterministic          | heartbeat + **auto-merge PR** |
-| season-refresh             | Mon 07:00     | agent research + gates | heartbeat + PR                |
-| showcase-refresh           | Mon 10:00     | deterministic          | PR                            |
-| queue-windows              | daily 06:45   | deterministic          | heartbeat + gated PR          |
-| image-gc                   | daily 04:00   | deterministic          | S3 deletions                  |
+| Workflow                   | Trigger                              | Brain                  | Output                           |
+| -------------------------- | ------------------------------------ | ---------------------- | -------------------------------- |
+| data-dragon version check  | 06:00 Sun–Fri                        | deterministic          | heartbeat + **auto-merge PR**    |
+| data-dragon weekly refresh | Sat 06:00                            | deterministic          | heartbeat + **auto-merge PR**    |
+| season-refresh             | Mon 07:00                            | agent research + gates | heartbeat + PR                   |
+| showcase-refresh           | Mon 10:00                            | deterministic          | PR                               |
+| queue-windows              | daily 06:45                          | deterministic          | heartbeat + gated PR             |
+| image-gc                   | daily 04:00                          | deterministic          | S3 deletions                     |
+| weekly parlay lifecycle    | Sun, source-defined Pacific timeline | deterministic          | beta Scout market reconciliation |
+
+The weekly parlay workflow freezes one Pacific timeline from Temporal's recorded
+workflow start and carries the same period and slot through publication,
+reminder, scoring start, nightly progress, and finalization. Each activity call
+has a stable idempotency key. Exhausting retries for an intermediate call cannot
+prevent later lifecycle work. Scoring start retries until the finalization
+cutoff. The final action begins there, retries through Scout's bounded Match-V5
+ingestion window, and continues for the remainder of the workflow execution
+rather than abandoning bets after the short activity budget. Distinct weekly
+executions may overlap so a delayed prior finalization cannot suppress the next
+period. Its schedule remains initially paused until the private-beta Discord
+fixture cycle is approved.
 
 ## Glitter
 

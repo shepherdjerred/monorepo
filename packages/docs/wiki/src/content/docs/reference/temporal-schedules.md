@@ -20,7 +20,7 @@ For the list of what runs and when, see
 | Property        | Value                                                               |
 | --------------- | ------------------------------------------------------------------- |
 | Timezone        | `America/Los_Angeles`, wall-clock                                   |
-| Overlap policy  | `SKIP` everywhere — a slow run never stacks a second one            |
+| Overlap policy  | `SKIP` by default; the weekly Scout parlay uses `ALLOW_ALL`         |
 | Reconciliation  | upsert of every schedule at each worker boot                        |
 | Source of truth | the `SCHEDULES` array in code; a PR is the change process           |
 | Deletion        | explicit — add the schedule ID to the deletion list                 |
@@ -33,6 +33,12 @@ For the list of what runs and when, see
 | Paused in the Temporal UI             | preserved across restarts and reconciliation           |
 | Required environment variable missing | auto-paused at boot, with a note                       |
 | Removed from `SCHEDULES`              | remains on the server until added to the deletion list |
+
+`scout-weekly-parlay` also starts with a source-defined initial pause note. It
+must remain paused until the private-beta Discord fixture cycle is approved;
+after that, the Temporal UI's durable pause state is the operational suspension
+control. Its weekly executions may overlap: each execution owns a distinct
+period key, and a delayed prior finalization must not suppress the next market.
 
 ## Catchup windows
 

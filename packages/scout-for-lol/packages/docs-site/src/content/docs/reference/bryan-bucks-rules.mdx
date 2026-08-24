@@ -18,6 +18,27 @@ import {
   VOID_GRACE_MS,
 } from "@scout-for-lol/backend/betting/constants.ts";
 import { HOUSE_CUT_PERCENT } from "@scout-for-lol/backend/betting/house-cut.ts";
+import {
+  WEEKLY_PARLAY_ELIGIBLE_QUEUES,
+  WEEKLY_PARLAY_FEATURE_COOLDOWN_PERIODS,
+  WEEKLY_PARLAY_HISTORY_WINDOW_COUNT,
+  WEEKLY_PARLAY_MAX_LEGS,
+  WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS,
+  WEEKLY_PARLAY_MIN_HISTORY_WINDOWS,
+  WEEKLY_PARLAY_MIN_LEGS,
+  WEEKLY_PARLAY_MIN_RECENT_GAMES,
+  WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS,
+} from "@scout-for-lol/backend/betting/weekly-parlay-criteria.ts";
+import {
+  WEEKLY_PARLAY_BETTING_CLOSE_HOUR,
+  WEEKLY_PARLAY_FINAL_HOUR,
+  WEEKLY_PARLAY_INGESTION_GRACE_MINUTES,
+  WEEKLY_PARLAY_OPEN_HOUR,
+  WEEKLY_PARLAY_TIMEZONE,
+  WEEKLY_PARLAY_UPDATE_COUNT,
+  WEEKLY_PARLAY_UPDATE_HOUR,
+  weeklyParlayWallClockLabel,
+} from "@scout-for-lol/backend/betting/weekly-parlay-period.ts";
 
 Every number on this page is imported from the constant the bot runs on, so it
 cannot drift from the implementation. `/bb rules` in Discord states the same
@@ -28,10 +49,11 @@ joke catalogue.
 
 ## Windows
 
-| Market  | Open for                                                                 |
-| ------- | ------------------------------------------------------------------------ |
-| Outcome | {Math.floor(BETTING_WINDOW_MS / 60_000)} minutes from detection          |
-| Parlay  | {Math.floor(PARLAY_BETTING_WINDOW_MS / 60_000)} minutes from publication |
+| Market        | Open for                                                                                                                                                        |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Outcome       | {Math.floor(BETTING_WINDOW_MS / 60_000)} minutes from detection                                                                                                 |
+| Match parlay  | {Math.floor(PARLAY_BETTING_WINDOW_MS / 60_000)} minutes from publication                                                                                        |
+| Weekly parlay | Sunday {weeklyParlayWallClockLabel(WEEKLY_PARLAY_OPEN_HOUR)} to Monday {weeklyParlayWallClockLabel(WEEKLY_PARLAY_BETTING_CLOSE_HOUR)}, {WEEKLY_PARLAY_TIMEZONE} |
 
 The outcome window runs from when Scout _detected_ the game, not from when the
 game started, and it is clamped against the game's own start time so a late
@@ -39,6 +61,28 @@ detection cannot silently extend it.
 
 A market that never receives a result is voided and fully refunded after{" "}
 {VOID_GRACE_MS / 3_600_000} hours.
+
+## Weekly parlays
+
+A weekly parlay scores eligible completed games from Monday{" "}
+{weeklyParlayWallClockLabel(WEEKLY_PARLAY_BETTING_CLOSE_HOUR)} through Sunday{" "}
+{weeklyParlayWallClockLabel(WEEKLY_PARLAY_FINAL_HOUR)}, using a half-open window
+in {WEEKLY_PARLAY_TIMEZONE}. Scout posts {WEEKLY_PARLAY_UPDATE_COUNT} progress
+updates at {weeklyParlayWallClockLabel(WEEKLY_PARLAY_UPDATE_HOUR)} and may settle
+YES early only after every leg is permanently satisfied. NO always waits for
+final settlement, which begins {WEEKLY_PARLAY_INGESTION_GRACE_MINUTES} minutes
+after the scoring cutoff so a completed game has two worst-case polling
+intervals to ingest.
+
+Scout selects a linked active player with at least {WEEKLY_PARLAY_MIN_RECENT_GAMES}
+eligible games, at least {WEEKLY_PARLAY_MIN_HISTORY_WINDOWS} fully observed
+weekly windows among the trailing {WEEKLY_PARLAY_HISTORY_WINDOW_COUNT}, and no
+feature during the previous {WEEKLY_PARLAY_FEATURE_COOLDOWN_PERIODS} periods.
+The market has {WEEKLY_PARLAY_MIN_LEGS}–{WEEKLY_PARLAY_MAX_LEGS} legs and is
+published only when replaying aligned historical weeks measures a YES rate
+between {WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS / 100}% and{" "}
+{WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS / 100}%. If no candidate clears every
+gate, Scout publishes no weekly parlay.
 
 ## Stakes
 
@@ -86,6 +130,14 @@ Markets are published for:
 
 <ul>
   {BUCKS_EARNING_QUEUES.map((queue) => (
+    <li key={queue}>{queue}</li>
+  ))}
+</ul>
+
+Weekly parlays count only:
+
+<ul>
+  {WEEKLY_PARLAY_ELIGIBLE_QUEUES.map((queue) => (
     <li key={queue}>{queue}</li>
   ))}
 </ul>
