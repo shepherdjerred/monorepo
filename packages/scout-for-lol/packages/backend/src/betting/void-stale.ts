@@ -6,8 +6,10 @@ import {
 import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
-import type { SettlementBet, SettlementSummary } from "#src/betting/settle.ts";
-import { closeBettingPoolById, type ClosedPool } from "#src/betting/sweep.ts";
+import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementBet } from "#src/betting/settlement-types.ts";
+import { closeBettingPoolById } from "#src/betting/sweep.ts";
+import type { ClosedPool } from "#src/betting/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";

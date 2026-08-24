@@ -15,6 +15,7 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
+import { startDiscordGateway } from "#src/discord/bootstrap.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -297,6 +298,10 @@ async function main(): Promise<void> {
   if (ONLY_USER !== undefined) {
     logger.info(`[Outreach] Targeting only user: ${ONLY_USER}`);
   }
+
+  // This script is a standalone entry point, so it owns connecting the
+  // gateway: importing the client no longer logs in as a side effect.
+  await startDiscordGateway();
 
   // Wait for Discord client to be ready
   if (!client.isReady()) {

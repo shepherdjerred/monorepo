@@ -14,7 +14,7 @@ import {
 } from "@scout-for-lol/data";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
-import { databaseQueriesTotal } from "#src/metrics/index.ts";
+import { databaseQueriesTotal } from "#src/metrics/database-metrics.ts";
 
 const logger = createLogger("database");
 

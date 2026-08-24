@@ -19,7 +19,7 @@
     "test:ci": "bun ../../../../scripts/run-ci-test.ts",
     "test:fast": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --bail=3",
     "test:debug": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --sequence.shuffle",
-    "lint": "bun x eslint src",
+    "lint": "bun x eslint src && check-architecture",
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
@@ -89,6 +89,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
     "@types/node": "^26.1.1",
     "aws-sdk-client-mock": "^4.1.0",
     "bun-types": "1.4.0",

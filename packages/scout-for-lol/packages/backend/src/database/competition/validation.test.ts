@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
   CompetitionCreationSchema,
-  CompetitionDatesSchema,
   isCompetitionActive,
 } from "#src/database/competition/validation.ts";
+import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
 
 import {
   testGuildId,

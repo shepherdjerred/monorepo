@@ -8,7 +8,7 @@ import {
 import type {
   ReportQueryResult,
   ReportResultRow,
-} from "#src/reports/query-engine.ts";
+} from "#src/reports/query-types.ts";
 import {
   comparePatchLabels,
   localCalendarDate,

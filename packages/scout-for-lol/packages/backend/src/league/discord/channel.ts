@@ -14,8 +14,8 @@ import {
   isMissingChannelError,
   formatPermissionErrorForLog,
   notifyServerOwnerAboutPermissionError,
-  type DeliveryFailureKind,
 } from "#src/discord/utils/permissions.ts";
+import type { DeliveryFailureKind } from "#src/discord/utils/delivery-failure.ts";
 import { discordPermissionErrorsTotal } from "#src/metrics/index.ts";
 import { prisma } from "#src/database/index.ts";
 import {

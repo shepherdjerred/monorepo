@@ -26,7 +26,6 @@ import {
 } from "@scout-for-lol/data";
 import { CompetitionCronSchema } from "@scout-for-lol/data/model/competition-cron.ts";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
-import { CompetitionDatesSchema } from "#src/database/competition/validation.ts";
 import {
   CompetitionEditInputSchema,
   WebCompetitionDatesSchema,
@@ -55,6 +54,7 @@ import {
   validateOwnerLimit,
   validateServerLimit,
 } from "#src/database/competition/validation.ts";
+import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
 import {
   checkRateLimit,
   getTimeRemaining,

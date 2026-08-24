@@ -4,7 +4,7 @@ import {
   ReportAiModelPreviewSummarySchema,
 } from "@scout-for-lol/data";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
-import type { ReportQueryResult } from "#src/reports/query-engine.ts";
+import type { ReportQueryResult } from "#src/reports/query-types.ts";
 
 describe("reportQueryPreviewSummary", () => {
   test("projects result values onto the strict AI preview contract", () => {

@@ -9,7 +9,6 @@ import {
   RiotTeamIdSchema,
   type BucksMatchingSummary,
   type BucksPoolParticipant,
-  type RiotTeamId,
 } from "@scout-for-lol/data";
 import { HOUSE_MATCH_LIMIT } from "#src/betting/constants.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
@@ -18,27 +17,9 @@ import { matchBucksOffers } from "#src/betting/matching.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { recordClosedPool } from "#src/betting/sweep-observability.ts";
+import type { ClosedPool } from "#src/betting/sweep-types.ts";
 
 const logger = createLogger("betting-sweep");
-
-export type ClosedPosition = {
-  betId: number;
-  discordId: string;
-  teamId: RiotTeamId;
-  submittedStake: number;
-  matchedStake: number;
-  unmatchedStake: number;
-};
-
-export type ClosedPool = {
-  matchId: string;
-  serverId: string;
-  messageRefs: { channelId: string; messageId: string }[];
-  humanMatchedPerSide: number;
-  houseFill: number;
-  totalMatchedPerSide: number;
-  positions: ClosedPosition[];
-};
 
 function aliasesForTeam(
   roster: readonly BucksPoolParticipant[],

@@ -23,7 +23,7 @@ import { deliverSettlementDms } from "#src/betting/settlement-dm-delivery.ts";
 import { bettingSettlementUndeliverableTotal } from "#src/metrics/betting.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
-import type { ClosedPool } from "#src/betting/sweep.ts";
+import type { ClosedPool } from "#src/betting/sweep-types.ts";
 import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {

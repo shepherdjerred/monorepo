@@ -2,7 +2,7 @@ import type { ReportQueryPlan } from "@scout-for-lol/data";
 import type { DuckDBValue } from "@duckdb/node-api";
 import { match } from "ts-pattern";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import type { AggregateRow } from "#src/reports/query-aggregates.ts";
+import type { AggregateRow } from "#src/reports/query-types.ts";
 import {
   compileGroupFactsQuery,
   compileMatchQuery,

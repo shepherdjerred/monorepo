@@ -1237,6 +1237,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@types/node": "^26.1.1",
         "@typescript/native": "npm:typescript@7.0.2",
         "@vitest/coverage-istanbul": "4.1.10",

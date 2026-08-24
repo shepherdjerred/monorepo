@@ -12,10 +12,9 @@ import { settlementHouseCut } from "#src/betting/house-cut.ts";
 import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
 import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
 import { creditBet } from "#src/betting/settlement-ledger.ts";
-import {
-  closeBettingWindowsForMatch,
-  type ClosedPool,
-} from "#src/betting/sweep.ts";
+import type { SettlementBet } from "#src/betting/settlement-types.ts";
+import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
+import type { ClosedPool } from "#src/betting/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -28,24 +27,6 @@ import {
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-settle");
-
-export type SettlementBet = {
-  betId: number;
-  bucksAccountId: number;
-  discordId: string;
-  isHouse: boolean;
-  predictedTeamId: number;
-  submittedStake: number;
-  matchedStake: number;
-  unmatchedStake: number;
-  grossPayout: number;
-  houseCut: number;
-  payout: number;
-  winnings: number;
-  won: boolean;
-  refunded: boolean;
-  subjectPuuid: string;
-};
 
 export type SettlementSummary = {
   matchId: string;

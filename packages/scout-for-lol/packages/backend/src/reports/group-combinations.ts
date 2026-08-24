@@ -1,5 +1,5 @@
 import type { ReportGroupSize } from "@scout-for-lol/data";
-import type { AggregateRow } from "#src/reports/query-aggregates.ts";
+import type { AggregateRow } from "#src/reports/query-types.ts";
 
 /**
  * Teammate-group aggregation for the DuckDB lake path (execute.ts).
