@@ -80,6 +80,17 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
+  new OnePasswordItem(chart, "posthog-tofu-credentials", {
+    spec: {
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/yh3xvqemmr4ic2up5zluo2rkcq",
+    },
+    metadata: {
+      name: "posthog-tofu-credentials",
+      namespace: "buildkite",
+    },
+  });
+
   // Default resource requests/limits for any generated sidecar that doesn't set its
   // own resources. The known agent and checkout containers are patched explicitly
   // below; this LimitRange remains a fail-safe for new containers introduced by the
