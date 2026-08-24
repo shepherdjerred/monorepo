@@ -428,14 +428,16 @@ extension KanbanBoardView {
         guard let midnight = Self.nextMidnight() else { return }
         let seconds = midnight.timeIntervalSinceNow + 1
         guard seconds > 0 else { return }
-        switch await Result(catching: {
+        do {
             try await _Concurrency.Task.sleep(for: .seconds(seconds))
-        }) {
-        case .success: calendar = store.viewerCalendar()
-        // Cancelled, because the view went away. Nothing to do and nothing to
-        // report — this is the one place a discarded error is the whole design.
-        case .failure: return
+        } catch is CancellationError {
+            // Cancelled, because the view went away. Nothing to do and nothing to
+            // report — this is the one place a discarded error is the whole design.
+            return
+        } catch {
+            preconditionFailure("midnight timer failed unexpectedly: \(error)")
         }
+        calendar = store.viewerCalendar()
     }
 
     private static func nextMidnight() -> Date? {
