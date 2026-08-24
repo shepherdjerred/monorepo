@@ -638,14 +638,15 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-11281@sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34",
+      "value": "2.0.0-11349@sha256:15c27e4ed6b60d3f6278c2ce83a0df05a8872723269d5d7ae250f1ff9878c2fc",
       "notes": [
         "not managed by renovate — beta updated by version-commit-back",
         "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
         "database contract: postgresql sha256:edf75ad84ac0e6054bc89c287f5bb77f6476e1edd5ce772c45c9fae7cf0817b6",
         "database contract: postgresql sha256:85e51719ae707a14cc9a0615990b0b7d5fdd65b956adca1209cb53ad786b8c4c",
         "database contract: postgresql sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34",
-        "database contract: postgresql sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34"
+        "database contract: postgresql sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34",
+        "database contract: postgresql sha256:15c27e4ed6b60d3f6278c2ce83a0df05a8872723269d5d7ae250f1ff9878c2fc"
       ]
     },
     {
@@ -737,7 +738,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-11281@sha256:30ee18da2ac37b78d777f09352c9fefff119e323913824b9c598ab7669bc0d14",
+      "value": "2.0.0-11349@sha256:80938d909a215c26220fe6889f1cb740194cc68dcf73b1d5bdef45391a318b38",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful scout-evals image push."
@@ -1323,7 +1324,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-11342@sha256:c1765270316d4521dbd2a8e02846baf172c4f3c191847de78b0d027383b3d9c2",
+      "value": "2.0.0-11349@sha256:541656e87f0127172f5a575a4b0ce024ee2fed8577ec4ecb72f1dca2a1f5321b",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
