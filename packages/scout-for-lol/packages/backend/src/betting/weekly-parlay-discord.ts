@@ -35,25 +35,6 @@ export function weeklyParlaySettlementActionKey(marketId: number): string {
   return `settlement:${marketId.toString()}`;
 }
 
-export async function refreshWeeklyParlayMessage(
-  marketId: number,
-  prismaClient: ExtendedPrismaClient = prisma,
-): Promise<void> {
-  const market = await prismaClient.bucksWeeklyParlayMarket.findUniqueOrThrow({
-    where: { id: marketId },
-    select: { updatedAt: true },
-  });
-  await deliverWeeklyParlayDiscord(
-    {
-      marketId,
-      actionKey: `mutation:${marketId.toString()}:${market.updatedAt.getTime().toString()}`,
-      kind: "reminder",
-      scheduledAt: market.updatedAt,
-    },
-    prismaClient,
-  );
-}
-
 export type WeeklyParlayDiscordSender = (
   options: MessageCreateOptions,
   channelId: DiscordChannelId,
@@ -71,18 +52,59 @@ function operatorCopy(leg: WeeklyParlayLeg): string {
   }
 }
 
+export function countLabel(
+  value: number,
+  singular: string,
+  plural = `${singular}s`,
+): string {
+  return value === 1 ? singular : plural;
+}
+
+function aggregateMetricCopy(
+  metric: Extract<WeeklyParlayLeg, { kind: "aggregate" }>["metric"],
+  threshold: number,
+): string {
+  switch (metric) {
+    case "games":
+    case "wins":
+    case "kills":
+    case "deaths":
+    case "assists":
+      return countLabel(threshold, metric.slice(0, -1), metric);
+    case "distinct_champions":
+      return `distinct ${countLabel(threshold, "champion")}`;
+    case "distinct_roles":
+      return `distinct ${countLabel(threshold, "role")}`;
+    case "longest_win_streak":
+      return "wins in a row";
+    case "best_game_kills":
+      return "kills in one game";
+    case "best_game_assists":
+      return "assists in one game";
+    case "best_game_damage":
+      return "champion damage in one game";
+    case "champion_damage":
+    case "creep_score":
+    case "gold":
+    case "vision_score":
+    case "time_played":
+      return metric.replaceAll("_", " ");
+  }
+}
+
 function metricCopy(leg: WeeklyParlayLeg): string {
   switch (leg.kind) {
     case "aggregate":
+      return aggregateMetricCopy(leg.metric, leg.threshold);
     case "rate":
       return leg.metric
         .replaceAll("_x100", "")
         .replaceAll("_bps", "")
         .replaceAll("_", " ");
     case "champion_games":
-      return `${leg.winsOnly ? "wins" : "games"} on ${leg.champion}`;
+      return `${countLabel(leg.threshold, leg.winsOnly ? "win" : "game")} on ${leg.champion}`;
     case "role_games":
-      return `${leg.winsOnly ? "wins" : "games"} as ${leg.role.toLowerCase()}`;
+      return `${countLabel(leg.threshold, leg.winsOnly ? "win" : "game")} as ${leg.role.toLowerCase()}`;
   }
 }
 
@@ -98,7 +120,7 @@ function metricValue(leg: WeeklyParlayLeg, value: number): string {
   return value.toLocaleString("en-US");
 }
 
-function legLine(
+export function legLine(
   leg: WeeklyParlayLeg,
   current: number | undefined,
   subjectAlias: string,
@@ -120,7 +142,7 @@ function stableNonce(
 
 const MENTIONS_PER_MESSAGE = 20;
 
-function deliveryTitle(
+export function deliveryTitle(
   kind: WeeklyParlayDiscordKind,
   marketState: string,
   yesResult: boolean | null,
@@ -149,7 +171,7 @@ function currentLegValue(
   return kind === "open" || kind === "reminder" ? undefined : current;
 }
 
-function deliveryTimeCopy(
+export function deliveryTimeCopy(
   kind: WeeklyParlayDiscordKind,
   bettingClosesAt: Date,
   scoringEndsAt: Date,
@@ -160,7 +182,7 @@ function deliveryTimeCopy(
   return `Final cutoff <t:${Math.floor(scoringEndsAt.getTime() / 1000).toString()}:F>.`;
 }
 
-function weeklyParlayButtons(
+export function weeklyParlayButtons(
   kind: WeeklyParlayDiscordKind,
   marketId: number,
 ): ActionRowBuilder<ButtonBuilder>[] {
@@ -315,7 +337,7 @@ export async function deliverWeeklyParlayDiscord(
       : []),
     `Period: **${market.periodKey}** · ${(market.definition.yesProbabilityBps / 100).toFixed(1)}% YES`,
     ...legs,
-    `**${market.bets.length.toString()} bettors · ${totalStaked.toString()} BB staked**`,
+    `**${market.bets.length.toString()} ${countLabel(market.bets.length, "bettor")} · ${totalStaked.toString()} BB staked**`,
     deliveryTimeCopy(input.kind, market.bettingClosesAt, market.scoringEndsAt),
   ]
     .filter((line) => line.length > 0)

@@ -31,6 +31,7 @@ import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
 import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly-parlay-criteria.ts";
 import { placeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet.ts";
 import { describeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet-button.ts";
+import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-refresh.ts";
 import { selectParlayMarketForAlias } from "#src/betting/parlay-market-selection.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
@@ -316,6 +317,9 @@ async function replyParlay(
       surface: "command",
     });
     await interaction.editReply({ content: describeWeeklyParlayBet(result) });
+    if (result.kind === "placed") {
+      await refreshWeeklyParlayMessage(weekly.id);
+    }
     return;
   }
   if (selection.kind === "not_found") {

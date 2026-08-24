@@ -9,7 +9,7 @@ import {
   type PlaceWeeklyParlayBetResult,
 } from "#src/betting/weekly-parlay-bet.ts";
 import { parseWeeklyParlayCustomId } from "#src/betting/weekly-parlay-custom-id.ts";
-import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-discord.ts";
+import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-refresh.ts";
 import type { BetButtonInteraction } from "#src/betting/bet-button.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 
