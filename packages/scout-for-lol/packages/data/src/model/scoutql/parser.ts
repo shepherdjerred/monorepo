@@ -1,6 +1,7 @@
 import { CstParser, EOF } from "chevrotain";
 import {
   All,
+  KeywordLike,
   And,
   As,
   Asc,
@@ -186,10 +187,11 @@ export class ScoutQlCstParser extends CstParser {
       { ALT: () => this.CONSUME(NumberLiteral) },
       { ALT: () => this.CONSUME(StringLiteral) },
       { ALT: () => this.CONSUME(HexColor) },
-      { ALT: () => this.CONSUME(True) },
-      { ALT: () => this.CONSUME(False) },
-      // `mentions = all` — ALL is a keyword, so it needs its own alternative.
-      { ALT: () => this.CONSUME(All) },
+      // An option value that spells a keyword (`sort = desc`, `mentions = all`,
+      // `sparkline = true`) is still just a value: no keyword is structurally
+      // meaningful here. TRUE/FALSE arrive through this alternative too and the
+      // AST conversion turns them back into booleans.
+      { ALT: () => this.CONSUME(KeywordLike) },
       { ALT: () => this.CONSUME(Identifier) },
       {
         ALT: () => {
@@ -213,6 +215,7 @@ export class ScoutQlCstParser extends CstParser {
       // with Identifier, so the longer path must have priority.
       { ALT: () => this.SUBRULE(this.renderPair) },
       { ALT: () => this.CONSUME(Identifier) },
+      { ALT: () => this.CONSUME(KeywordLike) },
     ]);
   });
 
@@ -222,6 +225,7 @@ export class ScoutQlCstParser extends CstParser {
     this.OR([
       { ALT: () => this.CONSUME1(Identifier) },
       { ALT: () => this.CONSUME(StringLiteral) },
+      { ALT: () => this.CONSUME(KeywordLike) },
     ]);
   });
 

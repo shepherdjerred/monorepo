@@ -526,6 +526,40 @@ describe("properties", () => {
   });
 });
 
+describe("render option values that spell keywords", () => {
+  // `asc`/`desc`/`all`/`true` lex as keyword tokens, but inside WITH (…) no
+  // keyword is structurally meaningful — they are just values. The grammar
+  // accepts the whole keyword category there, so this is closed as a class
+  // rather than one alternative per collision.
+  const base =
+    "SELECT COUNT(*) AS games FROM match_participants GROUP BY player RENDER ";
+
+  test("sort = asc and sort = desc parse and reach the render spec", () => {
+    for (const direction of ["asc", "desc", "query"] as const) {
+      const plan = compileScoutQl(
+        `${base}bar_chart WITH (y = games, sort = ${direction})`,
+      );
+      expect(
+        "options" in plan.render ? plan.render.options.sort : undefined,
+      ).toBe(direction);
+    }
+  });
+
+  test("mentions = all still works", () => {
+    const plan = compileScoutQl(`${base}leaderboard WITH (mentions = all)`);
+    expect(
+      "options" in plan.render ? plan.render.options.mentions : undefined,
+    ).toBe("all");
+  });
+
+  test("boolean options stay booleans, not identifiers", () => {
+    const plan = compileScoutQl(`${base}table WITH (sparkline = true)`);
+    expect(
+      "options" in plan.render ? plan.render.options?.sparkline : undefined,
+    ).toBe(true);
+  });
+});
+
 describe("a predicate used as a value", () => {
   // `AVG((placement <= 2)::INT)` is valid DuckDB, so it must be valid ScoutQL.
   // It is also the only spelling that keeps a conditional rate rendering as a

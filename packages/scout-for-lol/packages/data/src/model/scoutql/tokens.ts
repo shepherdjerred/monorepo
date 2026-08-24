@@ -20,11 +20,24 @@ export const Identifier = createToken({
 const keywordTokens: TokenType[] = [];
 const keywordWords = new Map<TokenType, string>();
 
+/**
+ * Category every keyword belongs to. Inside `RENDER … WITH (…)` no keyword is
+ * structurally meaningful, so an option value that happens to spell one —
+ * `sort = desc`, `mentions = all` — is just a value. Consuming the category
+ * there accepts all of them at once, instead of bolting on one alternative per
+ * collision as the vocabulary grows.
+ */
+export const KeywordLike = createToken({
+  name: "KeywordLike",
+  pattern: Lexer.NA,
+});
+
 function keyword(name: string, word: string): TokenType {
   const token = createToken({
     name,
     pattern: new RegExp(word, "iu"),
     longer_alt: Identifier,
+    categories: [KeywordLike],
   });
   keywordTokens.push(token);
   keywordWords.set(token, word.toUpperCase());

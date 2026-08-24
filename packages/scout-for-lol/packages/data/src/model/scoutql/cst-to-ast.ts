@@ -74,14 +74,15 @@ function visitRenderValue(
   if (hexToken !== undefined) {
     return { kind: "hex-color", value: hexToken.image.toLowerCase(), span };
   }
-  if (hasChild(node, "True")) {
-    return { kind: "boolean", value: true, span };
-  }
-  if (hasChild(node, "False")) {
-    return { kind: "boolean", value: false, span };
-  }
-  if (hasChild(node, "All")) {
-    return { kind: "identifier", name: "all", span };
+  // A value that spells a keyword (`sort = desc`, `mentions = all`,
+  // `sparkline = true`) arrives under the category key; its image is the word.
+  const [keywordToken] = tokenChildren(node, "KeywordLike");
+  if (keywordToken !== undefined) {
+    const word = keywordToken.image.toLowerCase();
+    if (word === "true" || word === "false") {
+      return { kind: "boolean", value: word === "true", span };
+    }
+    return { kind: "identifier", name: word, span };
   }
   const [identifierToken] = tokenChildren(node, "Identifier");
   if (identifierToken !== undefined) {
@@ -135,6 +136,10 @@ function visitRenderListItem(
       span,
     };
   }
+  const [keywordToken] = tokenChildren(node, "KeywordLike");
+  if (keywordToken !== undefined) {
+    return { kind: "identifier", name: keywordToken.image.toLowerCase(), span };
+  }
   return { kind: "identifier", name: "", span };
 }
 
@@ -158,6 +163,20 @@ function visitRenderPair(
       value: {
         kind: "identifier",
         name: decodeScoutQlIdentifier(valueToken.image),
+        span: valueSpan,
+      },
+      span,
+    };
+  }
+  const [keywordValue] = tokenChildren(node, "KeywordLike");
+  if (keywordValue !== undefined) {
+    const valueSpan = tokenSpan(keywordValue) ?? span;
+    return {
+      kind: "pair",
+      name,
+      value: {
+        kind: "identifier",
+        name: keywordValue.image.toLowerCase(),
         span: valueSpan,
       },
       span,
