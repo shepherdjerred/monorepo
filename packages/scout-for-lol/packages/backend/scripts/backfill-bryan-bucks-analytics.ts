@@ -5,6 +5,10 @@ import {
   captureBucksEconomySnapshot,
   captureBucksLifecycle,
 } from "#src/analytics/bryan-bucks.ts";
+import {
+  aggregateBucksPendingStakes,
+  countBucksOpenMarkets,
+} from "#src/analytics/bryan-bucks-events.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   getProductAnalytics,
@@ -378,34 +382,16 @@ async function main(): Promise<void> {
         select: { serverId: true },
       }),
     ]);
-  const serverIds = new Set(allAccounts.map((account) => account.serverId));
-  const pendingByServer = new Map<string, number>();
-  for (const bet of pendingOutcome) {
-    pendingByServer.set(
-      bet.bucksAccount.serverId,
-      (pendingByServer.get(bet.bucksAccount.serverId) ?? 0) +
-        (bet.matchedStake ?? bet.stake),
-    );
-  }
-  for (const bet of pendingParlay) {
-    pendingByServer.set(
-      bet.bucksAccount.serverId,
-      (pendingByServer.get(bet.bucksAccount.serverId) ?? 0) + bet.stake,
-    );
-  }
-  for (const bet of pendingWeekly) {
-    pendingByServer.set(
-      bet.bucksAccount.serverId,
-      (pendingByServer.get(bet.bucksAccount.serverId) ?? 0) + bet.stake,
-    );
-  }
-  const openMarketsByServer = new Map<string, number>();
-  for (const pool of openPools) {
-    openMarketsByServer.set(
-      pool.serverId,
-      (openMarketsByServer.get(pool.serverId) ?? 0) + 1,
-    );
-  }
+  const serverIds = new Set([
+    ...allAccounts.map((account) => account.serverId),
+    ...openPools.map((pool) => pool.serverId),
+  ]);
+  const pendingByServer = aggregateBucksPendingStakes(
+    pendingOutcome,
+    pendingParlay,
+    pendingWeekly,
+  );
+  const openMarketsByServer = countBucksOpenMarkets(openPools);
   const snapshotDate = new Date();
   const snapshotDay = snapshotDate.toISOString().slice(0, 10);
   await forEachAsync([...serverIds], async (serverId) => {

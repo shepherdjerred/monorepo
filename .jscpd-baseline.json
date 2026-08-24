@@ -1036,10 +1036,6 @@
       "clones": 1,
       "tokens": 74
     },
-    "packages/scout-for-lol/packages/backend/src/analytics/command-usage.test.ts|packages/scout-for-lol/packages/backend/src/analytics/install-attribution.test.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
     "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlay.integration.test.ts": {
       "clones": 1,
       "tokens": 74

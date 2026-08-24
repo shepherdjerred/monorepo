@@ -16,25 +16,10 @@ import {
   tenureBucket,
 } from "#src/analytics/guild-lifecycle.ts";
 import type { ProductAnalytics } from "#src/analytics/product-analytics.ts";
+import { createAnalyticsFixture } from "#src/testing/analytics-fixture.ts";
 
 const { prisma } = createTestDatabase("guild-lifecycle-analytics-test");
 const SERVER_ID = testGuildId("780");
-
-function createAnalyticsFixture() {
-  const capture = vi.fn<ProductAnalytics["capture"]>(() => null);
-  const captureBucksMember = vi.fn<ProductAnalytics["captureBucksMember"]>(
-    () => null,
-  );
-  const captureBucksSystem = vi.fn<ProductAnalytics["captureBucksSystem"]>(
-    () => null,
-  );
-  const shutdown = vi.fn<ProductAnalytics["shutdown"]>(() => Promise.resolve());
-  return {
-    analytics: { capture, captureBucksMember, captureBucksSystem, shutdown },
-    capture,
-    shutdown,
-  };
-}
 
 async function seedInstall(options?: {
   analyticsLifecycleTracked?: boolean;

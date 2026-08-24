@@ -3,6 +3,10 @@ import {
   captureBucksEconomy,
   captureBucksEconomySnapshot,
 } from "#src/analytics/bryan-bucks.ts";
+import {
+  aggregateBucksPendingStakes,
+  countBucksOpenMarkets,
+} from "#src/analytics/bryan-bucks-events.ts";
 import { deterministicBucksAnalyticsEventId } from "#src/analytics/bryan-bucks-backfill.ts";
 import {
   getProductAnalytics,
@@ -108,27 +112,12 @@ export async function syncBucksAnalytics(options?: {
         select: { serverId: true },
       }),
     ]);
-  const pendingByServer = new Map<string, number>();
-  for (const bet of pendingOutcome) {
-    pendingByServer.set(
-      bet.bucksAccount.serverId,
-      (pendingByServer.get(bet.bucksAccount.serverId) ?? 0) +
-        (bet.matchedStake ?? bet.stake),
-    );
-  }
-  for (const bet of [...pendingParlay, ...pendingWeekly]) {
-    pendingByServer.set(
-      bet.bucksAccount.serverId,
-      (pendingByServer.get(bet.bucksAccount.serverId) ?? 0) + bet.stake,
-    );
-  }
-  const openMarketsByServer = new Map<string, number>();
-  for (const pool of openPools) {
-    openMarketsByServer.set(
-      pool.serverId,
-      (openMarketsByServer.get(pool.serverId) ?? 0) + 1,
-    );
-  }
+  const pendingByServer = aggregateBucksPendingStakes(
+    pendingOutcome,
+    pendingParlay,
+    pendingWeekly,
+  );
+  const openMarketsByServer = countBucksOpenMarkets(openPools);
   const bucket = Math.floor(now.getTime() / SNAPSHOT_INTERVAL_MS).toString();
   const pendingSnapshotEvents: Array<{
     eventId: string;

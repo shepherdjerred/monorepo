@@ -9,6 +9,9 @@ import {
   productAnalyticsFailuresTotal,
 } from "#src/metrics/product-analytics.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import type { BucksLifecycleTransition } from "#src/analytics/bryan-bucks-events.ts";
+
+export type { BucksLifecycleTransition } from "#src/analytics/bryan-bucks-events.ts";
 
 const logger = createLogger("product-analytics");
 
@@ -50,41 +53,6 @@ export type BucksMemberActivityKind =
   | "ask"
   | "navigation";
 export type BucksActivitySurface = "command" | "button";
-export type BucksLifecycleTransition =
-  | "bucks.pool.opened"
-  | "bucks.pool.closed"
-  | "bucks.pool.settled"
-  | "bucks.pool.voided"
-  | "bucks.bet.placed"
-  | "bucks.bet.topped_up"
-  | "bucks.bet.rejected"
-  | "bucks.bet.cancelled"
-  | "bucks.bet.matched"
-  | "bucks.bet.unmatched_refunded"
-  | "bucks.bet.house_filled"
-  | "bucks.bet.won"
-  | "bucks.bet.lost"
-  | "bucks.bet.refunded"
-  | "bucks.parlay.published"
-  | "bucks.parlay.opened"
-  | "bucks.parlay.closed"
-  | "bucks.parlay.settled"
-  | "bucks.parlay.voided"
-  | "bucks.parlay_bet.placed"
-  | "bucks.parlay_bet.cancelled"
-  | "bucks.parlay_bet.settled"
-  | "bucks.weekly_parlay.published"
-  | "bucks.weekly_parlay.opened"
-  | "bucks.weekly_parlay.started"
-  | "bucks.weekly_parlay.settled"
-  | "bucks.weekly_parlay.voided"
-  | "bucks.weekly_parlay_bet.placed"
-  | "bucks.weekly_parlay_bet.topped_up"
-  | "bucks.weekly_parlay_bet.cancelled"
-  | "bucks.weekly_parlay_bet.settled"
-  | "bucks.weekly_parlay.contribution_recorded"
-  | "bucks.earning.awarded"
-  | "bucks.peek_pass.purchased";
 
 export type ProductAnalyticsEventOptions = {
   timestamp?: Date | undefined;
