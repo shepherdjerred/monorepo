@@ -1,4 +1,4 @@
-public import Foundation
+import Foundation
 
 struct DynamicCodingKey: CodingKey, Hashable {
   let stringValue: String
