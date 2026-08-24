@@ -148,6 +148,7 @@ export type FlagName =
   | "betting_settlement_dm_enabled"
   | "debug"
   | "initial_match_history_import_enabled"
+  | "scout-consumer-player-profiles-enabled"
   | "tournament_lobbies_enabled";
 
 /** Flipt is authoritative when available. The registry remains a fail-closed
@@ -262,6 +263,10 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     ],
   },
   initial_match_history_import_enabled: {
+    default: false,
+    overrides: [],
+  },
+  "scout-consumer-player-profiles-enabled": {
     default: false,
     overrides: [],
   },
