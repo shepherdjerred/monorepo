@@ -6,6 +6,7 @@ import {
   workflowInfo,
 } from "@temporalio/workflow";
 import { z } from "zod";
+import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
 import type {
   ScoutWeeklyParlayAction,
   ScoutWeeklyParlayActivities,
@@ -45,7 +46,7 @@ const LIFECYCLE_RETRY_INTERVAL_MS = 5 * 60 * 1000;
 const FINALIZATION_CONTINUE_AS_NEW_AFTER_MS = 15 * 60 * 1000;
 
 const ScoutWeeklyParlayWorkflowInputSchema = z.strictObject({
-  slot: z.number().int().nonnegative().default(0),
+  slot: z.number().int().nonnegative().default(WEEKLY_PARLAY_LIFECYCLE.slot),
   phase: z.enum(["lifecycle", "finalize"]).default("lifecycle"),
   periodKey: z.iso.date().optional(),
 });
