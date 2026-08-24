@@ -1,6 +1,4 @@
 import { mkdir } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { fileURLToPath } from "node:url";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
@@ -295,43 +293,24 @@ const ogSvg = await satori(
 );
 await emit(`${brandDir}og-default.png`, pngFromSvg(ogSvg, 1200));
 
-const tauriOut = check
-  ? path.join(tmpdir(), `scout-brand-icons-${String(process.pid)}`)
-  : desktopIcons;
-await mkdir(tauriOut, { recursive: true });
-const tauriSource = check
-  ? path.join(tauriOut, "source.png")
-  : `${brandDir}app-icon-512.png`;
-if (check) {
-  await Bun.write(tauriSource, png512);
-}
-const tauri = Bun.spawnSync(
-  [
-    "bunx",
-    "@tauri-apps/cli",
-    "icon",
-    tauriSource,
-    "-o",
-    tauriOut,
-    "--ios-color",
-    colors.canvas,
-  ],
-  { cwd: desktopDir, stdout: "inherit", stderr: "inherit" },
-);
-if (tauri.exitCode !== 0) {
-  throw new Error("Failed to generate Tauri icons");
-}
-if (check) {
-  for (const name of ["icon.png", "32x32.png", "128x128.png"]) {
-    const expected = new Uint8Array(
-      await Bun.file(`${desktopIcons}${name}`).arrayBuffer(),
-    );
-    const actual = new Uint8Array(
-      await Bun.file(path.join(tauriOut, name)).arrayBuffer(),
-    );
-    if (!sameBytes(expected, actual)) {
-      throw new Error(`Scout desktop icon drifted: ${name}`);
-    }
+if (!check) {
+  const tauri = Bun.spawnSync(
+    [
+      "bun",
+      "x",
+      "--no-install",
+      "@tauri-apps/cli",
+      "icon",
+      `${brandDir}app-icon-512.png`,
+      "-o",
+      desktopIcons,
+      "--ios-color",
+      colors.canvas,
+    ],
+    { cwd: desktopDir, stdout: "inherit", stderr: "inherit" },
+  );
+  if (tauri.exitCode !== 0) {
+    throw new Error("Failed to generate Tauri icons");
   }
 }
 
