@@ -18,6 +18,7 @@
         display: block;
       }
       .link {
+        fill: none;
         stroke: #999;
         stroke-opacity: 0.55;
       }
@@ -116,7 +117,9 @@
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="./context-data.js"></script>
-    <script>
+    <script type="module">
+      import { assignParallelOffsets } from "./link-layout.js";
+
       const context = globalThis.GLITTER_CONTEXT;
       if (context === undefined) {
         throw new Error("Glitter context data did not load");
@@ -132,7 +135,27 @@
         target: relationship.targetId,
         label: relationship.label,
         bidir: relationship.direction === "undirected",
+        parallelOffset: 0,
       }));
+      assignParallelOffsets(links);
+
+      function curveGeometry(link) {
+        const source = link.source;
+        const target = link.target;
+        const dx = target.x - source.x;
+        const dy = target.y - source.y;
+        const distance = Math.hypot(dx, dy) || 1;
+        const midpointX = (source.x + target.x) / 2;
+        const midpointY = (source.y + target.y) / 2;
+        const curve = link.parallelOffset * 28;
+        const controlX = midpointX - (dy / distance) * curve;
+        const controlY = midpointY + (dx / distance) * curve;
+        return {
+          path: `M ${source.x},${source.y} Q ${controlX},${controlY} ${target.x},${target.y}`,
+          labelX: (source.x + 2 * controlX + target.x) / 4,
+          labelY: (source.y + 2 * controlY + target.y) / 4,
+        };
+      }
 
       const svg = d3.select("#chart");
       const width = window.innerWidth;
@@ -181,9 +204,9 @@
 
       const link = container
         .append("g")
-        .selectAll("line")
+        .selectAll("path")
         .data(links)
-        .join("line")
+        .join("path")
         .attr("class", (d) => "link" + (d.bidir ? " bi" : ""))
         .attr("stroke-width", 1.4)
         .attr("marker-end", (d) => (d.bidir ? null : "url(#arrow)"));
@@ -234,14 +257,10 @@
         .text((d) => d.label);
 
       sim.on("tick", () => {
-        link
-          .attr("x1", (d) => d.source.x)
-          .attr("y1", (d) => d.source.y)
-          .attr("x2", (d) => d.target.x)
-          .attr("y2", (d) => d.target.y);
+        link.attr("d", (d) => curveGeometry(d).path);
         linkLabel
-          .attr("x", (d) => (d.source.x + d.target.x) / 2)
-          .attr("y", (d) => (d.source.y + d.target.y) / 2);
+          .attr("x", (d) => curveGeometry(d).labelX)
+          .attr("y", (d) => curveGeometry(d).labelY);
         node.attr("transform", (d) => `translate(${d.x},${d.y})`);
       });
 

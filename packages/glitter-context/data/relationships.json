@@ -332,7 +332,7 @@
       "kind": "social",
       "label": "WWU",
       "direction": "undirected",
-      "status": "current",
+      "status": "historical",
       "effectiveAt": null,
       "recordedAt": "2026-07-26T00:00:00-07:00",
       "supersedesEventId": null,
@@ -1518,6 +1518,272 @@
         {
           "kind": "legacy-graph",
           "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "bryan-caitlyn-dating",
+      "sourceId": "bryan",
+      "targetId": "caitlyn",
+      "kind": "romantic",
+      "label": "Dating",
+      "direction": "undirected",
+      "status": "historical",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed prior relationship",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "bryan-caitlyn-exes",
+      "sourceId": "bryan",
+      "targetId": "caitlyn",
+      "kind": "romantic",
+      "label": "Exes",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": "bryan-caitlyn-dating",
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed breakup",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "irfan-indonesian-wife-married",
+      "sourceId": "irfan",
+      "targetId": "indonesian-wife",
+      "kind": "romantic",
+      "label": "Married",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed marriage",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "brian-vietnamese-wife-married",
+      "sourceId": "brian",
+      "targetId": "vietnamese-wife",
+      "kind": "romantic",
+      "label": "Married",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed marriage",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "danny-hannah-dating",
+      "sourceId": "danny",
+      "targetId": "hannah",
+      "kind": "romantic",
+      "label": "Dating",
+      "direction": "undirected",
+      "status": "historical",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed prior relationship",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "danny-hannah-exes",
+      "sourceId": "danny",
+      "targetId": "hannah",
+      "kind": "romantic",
+      "label": "Exes",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": "danny-hannah-dating",
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed breakup",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "nikki-edward-dating",
+      "sourceId": "nikki",
+      "targetId": "edward",
+      "kind": "romantic",
+      "label": "Dating",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed relationship",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "hirza-nicole-dating",
+      "sourceId": "hirza",
+      "targetId": "nicole",
+      "kind": "romantic",
+      "label": "Dating",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed relationship",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "olivia-teddy-dating",
+      "sourceId": "olivia",
+      "targetId": "teddy",
+      "kind": "romantic",
+      "label": "Dating",
+      "direction": "undirected",
+      "status": "historical",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed prior relationship",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "olivia-teddy-exes",
+      "sourceId": "olivia",
+      "targetId": "teddy",
+      "kind": "romantic",
+      "label": "Exes",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": "olivia-teddy-dating",
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed breakup",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "olivia-joel-dating",
+      "sourceId": "olivia",
+      "targetId": "joel",
+      "kind": "romantic",
+      "label": "Dating",
+      "direction": "undirected",
+      "status": "historical",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed prior relationship",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "olivia-joel-exes",
+      "sourceId": "olivia",
+      "targetId": "joel",
+      "kind": "romantic",
+      "label": "Exes",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": "olivia-joel-dating",
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed breakup",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "danny-group-wwu",
+      "sourceId": "danny",
+      "targetId": "group-wwu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed WWU membership",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "hannah-group-wwu",
+      "sourceId": "hannah",
+      "targetId": "group-wwu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-08-24T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed WWU membership",
           "messageIds": []
         }
       ]

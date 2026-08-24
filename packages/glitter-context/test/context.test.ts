@@ -107,6 +107,83 @@ describe("Glitter context", () => {
     expect(relationshipContextText()).toContain("Caitlyn ↔ Richard (Exes)");
   });
 
+  test("records the requested relationship updates", () => {
+    expect(getPerson("Alucard")?.id).toBe("alucard");
+    expect(getPerson("Rowel")?.id).toBe("rowel");
+    expect(getPerson("Kendrick")?.id).toBe("kendrick");
+    expect(getPerson("aznboi")?.id).toBe("aznboi");
+    expect(getPerson("Grillmaster Alyza")?.id).toBe("alyza");
+    expect(getPerson("Alyza")?.id).toBe("alyza");
+    expect(getPerson("Brian")?.id).toBe("brian");
+    expect(getPerson("Bryan")?.id).toBe("bryan");
+    expect(getPerson("Nicole")?.id).toBe("nicole");
+    expect(getPerson("Wanye")?.id).toBe("wanye");
+
+    expect(
+      getRelationshipHistory("bryan", "caitlyn").map((event) => event.label),
+    ).toEqual(["Dating", "Exes"]);
+    expect(
+      getRelationshipHistory("danny", "hannah").map((event) => event.label),
+    ).toEqual(["WWU", "Dating", "Exes"]);
+    expect(getPerson("WWU")?.kind).toBe("group");
+    expect(
+      currentRelationships.filter(
+        (event) => event.sourceId === "danny" && event.targetId === "hannah",
+      ),
+    ).toMatchObject([{ kind: "romantic", label: "Exes" }]);
+    expect(
+      currentRelationships.filter(
+        (event) =>
+          event.targetId === "group-wwu" &&
+          ["danny", "hannah"].includes(event.sourceId),
+      ),
+    ).toHaveLength(2);
+    expect(
+      currentRelationships.find(
+        (event) =>
+          event.sourceId === "irfan" && event.targetId === "indonesian-wife",
+      )?.label,
+    ).toBe("Married");
+    expect(
+      currentRelationships.find(
+        (event) =>
+          event.sourceId === "brian" && event.targetId === "vietnamese-wife",
+      )?.label,
+    ).toBe("Married");
+    expect(
+      currentRelationships.find(
+        (event) => event.sourceId === "nikki" && event.targetId === "edward",
+      )?.label,
+    ).toBe("Dating");
+    expect(
+      currentRelationships.find(
+        (event) => event.sourceId === "hirza" && event.targetId === "nicole",
+      )?.label,
+    ).toBe("Dating");
+    expect(
+      getRelationshipHistory("olivia", "teddy").map((event) => event.label),
+    ).toEqual(["Dating", "Exes"]);
+    expect(
+      getRelationshipHistory("olivia", "joel").map((event) => event.label),
+    ).toEqual(["Dating", "Exes"]);
+    expect(
+      currentRelationships.filter(
+        (event) =>
+          event.kind === "romantic" &&
+          event.label === "Dating" &&
+          (event.sourceId === "olivia" || event.targetId === "olivia"),
+      ),
+    ).toHaveLength(0);
+    expect(
+      currentRelationships.filter(
+        (event) =>
+          event.kind === "romantic" &&
+          event.label === "Exes" &&
+          (event.sourceId === "olivia" || event.targetId === "olivia"),
+      ),
+    ).toHaveLength(2);
+  });
+
   test("all relationship events reference known people", () => {
     const personIds = new Set(people.map((person) => person.id));
     for (const event of relationshipEvents) {
