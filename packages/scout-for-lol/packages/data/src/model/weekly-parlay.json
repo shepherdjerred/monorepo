@@ -1,0 +1,10 @@
+{
+  "timezone": "America/Los_Angeles",
+  "slot": 0,
+  "openHour": 12,
+  "bettingCloseHour": 0,
+  "finalHour": 11,
+  "updateHour": 19,
+  "updateCount": 6,
+  "actions": ["open", "reminder", "start", "progress", "finalize"]
+}
