@@ -870,8 +870,22 @@ model BucksLedgerEntry {
 
   createdAt DateTime @default(now())
 
+  analyticsOutbox BucksAnalyticsLedgerOutbox?
+
   @@index([bucksAccountId, createdAt])
   @@index([matchId])
+}
+
+// Created atomically with each live ledger entry. Temporal consumes the
+// committed ledger row after the transaction and sends the PostHog event.
+model BucksAnalyticsLedgerOutbox {
+  id            Int             @id @default(autoincrement())
+  ledgerEntryId Int             @unique
+  ledgerEntry   BucksLedgerEntry @relation(fields: [ledgerEntryId], references: [id], onDelete: Cascade)
+  eventId       String          @unique
+  createdAt     DateTime        @default(now())
+
+  @@index([createdAt])
 }
 
 // One user's position on one match in one guild.
