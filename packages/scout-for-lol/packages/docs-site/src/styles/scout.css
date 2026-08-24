@@ -99,9 +99,36 @@
 }
 
 :root[data-has-sidebar] .scout-footer {
-  /* Fixed docs navigation stays above the full-width footer at page end. */
+  /* The sidebar remains sticky through the article's grid track. At the end
+     of the page, the full-bleed footer must paint over that track instead of
+     appearing underneath the sidebar. */
   position: relative;
-  z-index: 0;
+  z-index: calc(var(--sl-z-index-menu) + 1);
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+/* The global footer is the last content in its Starlight panel. Do not leave
+   the panel's default bottom padding below it as a second page background. */
+.content-panel:has(> .sl-container > .scout-footer) {
+  padding-bottom: 0;
+}
+
+@media (min-width: 50rem) {
+  :root[data-has-sidebar] .scout-footer {
+    margin-inline-start: calc(
+      -1 * (var(--sl-content-inline-start) + var(--sl-content-pad-x))
+    );
+  }
+}
+
+@media (min-width: 90rem) {
+  :root[data-has-sidebar] .scout-footer {
+    margin-inline-start: calc(50% - 50dvw + var(--sl-content-pad-x));
+  }
 }
 
 @media (min-width: 50rem) {
@@ -121,6 +148,6 @@
   }
 }
 
-:root:not([data-has-sidebar]) {
+:root {
   --sl-main-pad: 0;
 }
