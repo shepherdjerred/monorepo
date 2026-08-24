@@ -569,24 +569,27 @@ describe("render option values that spell keywords", () => {
       const plan = compileScoutQl(
         `${base}bar_chart WITH (y = games, sort = ${direction})`,
       );
-      expect(
-        "options" in plan.render ? plan.render.options.sort : undefined,
-      ).toBe(direction);
+      // Narrow on `kind` — the render spec is a discriminated union, and only
+      // the chart arms carry a `sort` option at all.
+      expect(plan.render.kind).toBe("BAR_CHART");
+      if (plan.render.kind !== "BAR_CHART") return;
+      expect(plan.render.options.sort).toBe(direction);
     }
   });
 
   test("mentions = all still works", () => {
     const plan = compileScoutQl(`${base}leaderboard WITH (mentions = all)`);
-    expect(
-      "options" in plan.render ? plan.render.options.mentions : undefined,
-    ).toBe("all");
+    expect(plan.render.kind).toBe("LEADERBOARD");
+    if (plan.render.kind !== "LEADERBOARD") return;
+    expect(plan.render.options.mentions).toBe("all");
   });
 
   test("boolean options stay booleans, not identifiers", () => {
     const plan = compileScoutQl(`${base}table WITH (sparkline = true)`);
-    expect(
-      "options" in plan.render ? plan.render.options?.sparkline : undefined,
-    ).toBe(true);
+    expect(plan.render).toEqual({
+      kind: "TABLE",
+      options: { sparkline: true },
+    });
   });
 });
 
