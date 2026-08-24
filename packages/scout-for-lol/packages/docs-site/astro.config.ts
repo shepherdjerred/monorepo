@@ -91,6 +91,19 @@ export default defineConfig({
     mdx(),
   ],
   output: "static",
+  /**
+   * `reference/scoutql-metrics` was the SELECT vocabulary page back when the
+   * language had a fixed 56-metric enum. ScoutQL v2 dissolved that enum into
+   * ordinary SQL aggregates, so the page became `scoutql-functions` — but the
+   * old URL is in Discord messages, bookmarks, and the design-audit route
+   * list, so it keeps resolving.
+   *
+   * Route keys are base-relative (Astro prepends `base` itself); destinations
+   * are not, so the target carries `/docs/` explicitly.
+   */
+  redirects: {
+    "/reference/scoutql-metrics": "/docs/reference/scoutql-functions/",
+  },
   site: siteOrigin,
   trailingSlash: "always",
   vite: { plugins: [scoutAssetsPlugin()] },

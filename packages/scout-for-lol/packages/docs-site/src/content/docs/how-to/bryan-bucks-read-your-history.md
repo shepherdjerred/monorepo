@@ -2,7 +2,7 @@
 title: Read your Bryan Bucks balance and history
 description: Check what you hold, what is at risk, and where every Buck came from.
 sidebar:
-  order: 13
+  order: 14
 ---
 
 ## What you hold right now

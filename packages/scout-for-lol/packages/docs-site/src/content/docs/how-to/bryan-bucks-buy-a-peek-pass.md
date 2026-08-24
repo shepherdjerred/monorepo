@@ -2,7 +2,7 @@
 title: Buy and use a Bryan Bucks peek pass
 description: Buy 24 hours of private pre-game estimates, then reveal one for a live game.
 sidebar:
-  order: 12
+  order: 13
 ---
 
 Scout forms an estimate of who will win before every eligible game. It is never

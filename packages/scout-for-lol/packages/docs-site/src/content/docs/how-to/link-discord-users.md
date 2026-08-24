@@ -35,7 +35,13 @@ an alias.
 Mentions are a `RENDER` option, so you set them per report:
 
 ```scoutql
-render leaderboard with (mentions = 5)
+SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 7 DAY
+GROUP BY player
+ORDER BY games DESC
+LIMIT 10
+RENDER leaderboard WITH (mentions = 5)
 ```
 
 - `mentions = <n>` — ping the top `n` ranked rows.

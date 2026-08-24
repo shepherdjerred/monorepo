@@ -1,65 +1,156 @@
 ---
 title: ScoutQL
-description: The report query language — clause order, keywords, functions, limits, and worked examples.
+description: The report query language — clause order, comments, time bounds, keywords, limits, and the built-in presets.
 sidebar:
   order: 4
 ---
 
+import { Code } from "@astrojs/starlight/components";
 import DataTable from "../../../components/DataTable.astro";
-import {
-  REPORT_KEYWORDS,
-  REPORT_FUNCTIONS,
-} from "@scout-for-lol/data/model/report-query-registry.ts";
-import { REPORT_COMMON_PRESETS } from "@scout-for-lol/data/model/report-query-presets.ts";
+import { SCOUTQL_KEYWORDS } from "@scout-for-lol/data/model/scoutql/tokens.ts";
+import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/presets.ts";
 import {
   REPORT_QUERY_MAX_LENGTH,
   REPORT_DEFAULT_MAX_ROWS,
   REPORT_MAX_ROWS_LIMIT,
 } from "@scout-for-lol/data/model/report.ts";
 
-ScoutQL is the query language used by reports. It is SQL-shaped but not SQL:
-the clauses, sources, and outputs are a fixed vocabulary, and a query compiles
-to a validated plan rather than to arbitrary SQL.
+ScoutQL is the language reports and Explore are written in. It is a bounded
+subset of [DuckDB](https://duckdb.org/docs/stable/sql/introduction) SQL over
+Scout's match data, plus a trailing `RENDER` clause and four Scout-specific
+calls (`player`, `champion`, `kda`, `per_minute`).
 
-Keywords are case-insensitive.
+Where ScoutQL overlaps SQL it means exactly what DuckDB means. There are no
+conveniences layered on top: `AVG(win)` is an error in DuckDB and an error
+here, aggregates are always written out, and a name in `WITH (...)` has to be a
+name the `SELECT` produced.
 
 ## Clause order
 
-```sql
-SELECT   <output> [, <output> …]        -- 1 to 20 outputs
+```text
+SELECT   <expression> [AS <name>] [, …]     -- 1 to 20 outputs
 FROM     <source>
-[WHERE   <clause> [AND <clause> …]]
-GROUP BY <dimension> [, <dimension>]    -- 1 or 2
-[HAVING  <clause> [AND <clause> …]]
-DURING   <period>                       -- required, unless ANALYZE states one
-[ORDER BY <output|label> [ASC|DESC]]
+[WHERE   <predicate>]
+[GROUP BY ALL | <expression> [, …]]         -- up to 3
+[HAVING  <predicate>]
+[ORDER BY <key> [ASC | DESC] [, …]]         -- up to 3
 [LIMIT   <n>]
 [RENDER  <kind> [WITH (<option> = <value>, …)]]
 ```
 
-`SELECT`, `FROM`, `GROUP BY`, and a time period are required. Omitting `RENDER`
-produces a table.
+`SELECT` and `FROM` are the only required clauses. A query with no `GROUP BY`
+returns one grand-total row; a query with no `RENDER` renders as a table.
 
-## Time period
+Keywords are case-insensitive. String values are not — they are compared
+exactly, as DuckDB compares them.
 
-Every query states the period it covers. There is no default — a window nobody
-states is a window nobody checks, and an answer computed over a narrower period
-than the reader assumed looks exactly like a correct one.
+## Comments
+
+`--` comments run to the end of the line and may appear anywhere.
 
 ```scoutql
-DURING LAST 90 DAYS
-DURING BETWEEN '2026-01-01' AND '2026-01-31' IN TIME ZONE 'America/Los_Angeles'
-DURING ALL TIME
+-- Ranked solo activity, last four weeks.
+SELECT COUNT(*) AS games
+FROM match_participants
+WHERE queue = 'solo' -- ARAM and Arena excluded
+  AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 28 DAY
+GROUP BY player
+ORDER BY games DESC
 ```
 
-Calendar dates are inclusive, and are UTC days unless `IN TIME ZONE` names an
-IANA zone. An `ANALYZE` clause carries its own period, so a query that has one
-must not also have `DURING`.
+## Outputs are named, and the name is the handle
 
-For compatibility, the older WHERE form —
-`game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'`, or `observed_at`
-for `prematch_participants` — still means the same thing as
-`DURING LAST 30 DAYS`. Prefer `DURING`.
+Every computed output takes an `AS` name. That name is what `HAVING`,
+`ORDER BY`, and `WITH (...)` refer to, what a table column is headed with, and
+what a chart series is labelled with.
+
+```scoutql
+SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY player
+HAVING games >= 10
+ORDER BY win_rate DESC
+RENDER bar_chart WITH (y = win_rate)
+```
+
+## WHERE filters rows; HAVING filters groups
+
+`WHERE` is a full boolean expression over the source's columns — `AND`, `OR`,
+`NOT`, and parentheses — evaluated before rows are collapsed. `HAVING` is a
+boolean expression over the aggregates, evaluated after, and may name the
+aliases the `SELECT` defined.
+
+An aggregate in `WHERE` is rejected rather than reinterpreted, because a
+minimum-games floor written there would silently filter individual games
+instead of players.
+
+```scoutql
+SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE (queue = 'solo' OR queue = 'flex')
+  AND NOT early_surrendered
+  AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 90 DAY
+GROUP BY player
+HAVING games >= 20 AND win_rate > 0.5
+ORDER BY win_rate DESC
+```
+
+## Time bounds are ordinary WHERE conditions
+
+There is no time clause. A window is a comparison against the source's own
+timestamp column, joined into `WHERE` with `AND` like any other condition. The
+compiler recognizes the shapes below and executes them as the query's window;
+anything else is applied as a plain filter.
+
+Relative — a rolling window ending now:
+
+```scoutql
+SELECT COUNT(*) AS games
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY player
+```
+
+Calendar — whole days, in a named zone, both ends inclusive:
+
+```scoutql
+SELECT COUNT(*) AS games
+FROM match_participants
+WHERE (game_creation_at AT TIME ZONE 'America/Los_Angeles')::DATE
+  BETWEEN '2026-01-01' AND '2026-01-31'
+GROUP BY player
+```
+
+A calendar bound compares dates, not instants, so the zone has to be stated
+before the cast: "January" starts at a different moment in Los Angeles than in
+Berlin, and without `AT TIME ZONE` the days are UTC days.
+
+Each source names the column its window is measured on — see
+[Sources and columns](/docs/reference/scoutql-sources/). The rank snapshot
+sources have no timestamp column at all: a snapshot is current by construction,
+so there is nothing to bound.
+
+### Omitting the bound
+
+A query with no time condition is legal and covers **every match Scout has
+ingested**. The editor flags it as a warning (`time-window-unbounded`) without
+refusing it.
+
+Both halves of that are deliberate. Refusing would make "how many games have we
+ever played?" unaskable, and the query is measured — the whole lake is fast to
+scan. But an unbounded answer read as though it covered the last month is
+indistinguishable from a correct one, so the warning exists to make the choice
+visible rather than accidental.
+
+## Casts and strings
+
+Strings are single-quoted, and a literal quote is doubled: `'Kai''Sa'`.
+Double quotes are an error, because DuckDB reads them as identifiers and a
+query that meant a value would silently ask for a column.
+
+`::` casts, and it is required wherever DuckDB requires it — most often
+`win::INT`, since a boolean has no average until it is a number.
 
 ## Keywords
 
@@ -67,48 +158,62 @@ for `prematch_participants` — still means the same thing as
   columns={[
     {
       header: "Keyword",
-      values: REPORT_KEYWORDS.map((keyword) => keyword.keyword),
+      values: SCOUTQL_KEYWORDS,
       code: true,
     },
     {
       header: "Meaning",
-      values: REPORT_KEYWORDS.map((keyword) => keyword.description),
+      values: SCOUTQL_KEYWORDS.map((keyword) => {
+        const meaning = {
+          SELECT: "Opens the list of outputs.",
+          FROM: "Names the source to read.",
+          WHERE: "Filters rows before aggregation.",
+          GROUP: "With BY, opens the grouping list.",
+          BY: "Follows GROUP or ORDER.",
+          HAVING: "Filters groups after aggregation.",
+          ORDER: "With BY, opens the sort keys.",
+          LIMIT: "Caps the number of rows returned.",
+          RENDER: "Chooses how the result is displayed.",
+          WITH: "Opens the render option list.",
+          AS: "Names an output.",
+          AND: "Boolean conjunction.",
+          OR: "Boolean disjunction.",
+          NOT: "Boolean negation.",
+          IN: "Membership in a parenthesised list.",
+          IS: "Used as IS NULL / IS NOT NULL.",
+          NULL: "The unknown value.",
+          BETWEEN: "Inclusive range test.",
+          LIKE: "Case-sensitive pattern match (% and _).",
+          ILIKE: "Case-insensitive pattern match.",
+          ASC: "Ascending sort.",
+          DESC: "Descending sort.",
+          DISTINCT: "Counts distinct values: COUNT(DISTINCT x).",
+          FILTER: "Narrows one aggregate: FILTER (WHERE …).",
+          INTERVAL: "A duration: INTERVAL 30 DAY.",
+          CAST: "CAST(x AS INT), the long form of ::.",
+          AT: "Opens AT TIME ZONE.",
+          TIME: "Part of AT TIME ZONE.",
+          ZONE: "Part of AT TIME ZONE.",
+          ALL: "GROUP BY ALL, or mentions = all.",
+          TRUE: "Boolean literal.",
+          FALSE: "Boolean literal.",
+          CURRENT_TIMESTAMP: "Now, as a timestamp.",
+          CURRENT_DATE: "Today, as a date.",
+          CASE: "Reserved and rejected — use FILTER (WHERE …) instead.",
+        }[keyword];
+        if (meaning === undefined) {
+          throw new Error(`Undocumented ScoutQL keyword: ${keyword}`);
+        }
+        return meaning;
+      }),
     },
   ]}
 />
 
-## Functions
-
-Use these in `SELECT` to compute a value, and name the result with `AS`.
-
-<DataTable
-  columns={[
-    {
-      header: "Syntax",
-      values: REPORT_FUNCTIONS.map((fn) => fn.syntax),
-      code: true,
-    },
-    {
-      header: "Description",
-      values: REPORT_FUNCTIONS.map((fn) => fn.description),
-    },
-  ]}
-/>
-
-```scoutql
-select per_minute(damage_to_champions) as dpm, games
-from match_participants
-group by player
-having games >= 10
-during last 30 days
-order by dpm desc
-render bar_chart with (y = dpm)
-```
-
-`HAVING` filters on aggregated outputs, including aliases you define with `AS`.
-`WHERE` filters raw rows before aggregation. Filtering on `games` requires
-`HAVING` or the aggregate `games >= <n>` form, because a raw row is a single
-game.
+Function names, interval units (`DAY`, `WEEK`, `MONTH`, `YEAR`),
+`DATE_TRUNC` parts, render kinds, and render option names are **not** keywords.
+They are ordinary identifiers resolved by meaning, which is why a column called
+`day` or an output called `sort` causes no trouble.
 
 ## Limits
 
@@ -119,7 +224,8 @@ game.
       values: [
         "Query text length",
         "Outputs per SELECT",
-        "Grouping dimensions",
+        "Grouping expressions",
+        "ORDER BY keys",
         "Default row limit",
         "Maximum rows returned",
         "Chart series",
@@ -130,7 +236,8 @@ game.
       values: [
         `${REPORT_QUERY_MAX_LENGTH.toString()} characters`,
         "1–20",
-        "1–2",
+        "0–3",
+        "1–3",
         REPORT_DEFAULT_MAX_ROWS.toString(),
         REPORT_MAX_ROWS_LIMIT.toString(),
         "1–8",
@@ -139,40 +246,38 @@ game.
   ]}
 />
 
-The maximum row count is a **report setting**, not query syntax. A `LIMIT`
-larger than the maximum is capped at execution. The time period, by contrast,
-is query syntax: write it as a `DURING` clause.
+The maximum row count is a **report setting**, not query syntax: a `LIMIT`
+larger than the maximum is capped when the report runs.
 
 ## Vocabulary
 
 Each part of the language has its own page:
 
-- [Sources and dimensions](/docs/reference/scoutql-sources/) — what `FROM` and
-  `GROUP BY` accept.
-- [Metrics](/docs/reference/scoutql-metrics/) — what `SELECT` accepts.
-- [Filters](/docs/reference/scoutql-filters/) — what `WHERE` accepts.
+- [Sources and columns](/docs/reference/scoutql-sources/) — what `FROM`,
+  `GROUP BY`, and every expression may name.
+- [Functions](/docs/reference/scoutql-functions/) — what you can compute.
+- [Filters](/docs/reference/scoutql-filters/) — what `WHERE` and `HAVING`
+  accept.
 - [Render kinds and options](/docs/reference/scoutql-render/) — what `RENDER`
   and `WITH` accept.
 
-## Worked examples
+## Presets
 
-These are the presets built into the report editor.
+These are the ready-made queries in the report editor. Each one compiles
+through the same analyzer as anything you type.
 
-{REPORT_COMMON_PRESETS.map((preset) => (
+{SCOUTQL_PRESETS.map((preset) => (
 
   <div>
     <h3>{preset.title}</h3>
     <p>{preset.description}</p>
-    <pre
-      class="max-w-full overflow-x-auto"
-      data-design-audit-allow-overflow
-      tabindex="0"
-      aria-label="Scrollable query example"
-    ><code>{preset.query}</code></pre>
+    <Code code={preset.query} lang="scoutql" />
   </div>
 ))}
 
 ## Related
 
+- [Query recipes](/docs/how-to/scoutql-recipes/) — the idioms behind most
+  reports.
 - [Build your first scheduled report](/docs/tutorials/first-report/)
 - [Turn a report into a chart](/docs/how-to/chart-reports/)

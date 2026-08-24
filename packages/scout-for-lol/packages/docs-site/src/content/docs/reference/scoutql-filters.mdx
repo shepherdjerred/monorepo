@@ -1,101 +1,141 @@
 ---
 title: ScoutQL filters
-description: Every field a report can filter on in WHERE, with its syntax.
+description: The operators WHERE and HAVING accept, the player and champion references, and the time-bound forms the compiler recognizes.
 sidebar:
   order: 7
 ---
 
-import DataTable from "../../../components/DataTable.astro";
-import { REPORT_FILTERS } from "@scout-for-lol/data/model/report-query-filter-registry.ts";
+`WHERE` is a boolean expression over a source's columns, evaluated on raw rows
+before they are grouped. `HAVING` is a boolean expression over the query's
+aggregates and their aliases, evaluated after.
 
-`WHERE` clauses are joined with `AND` and applied to raw rows before
-aggregation. `HAVING` applies after aggregation, to selected outputs and
-aliases.
+Both accept the same operators. The difference is only what they can name, and
+it decides what a filter means: `WHERE kills >= 10` keeps ten-kill _games_,
+while `HAVING kills >= 10` keeps players whose total is ten.
 
 ## Operators
 
-| Operator          | Use                  |
-| ----------------- | -------------------- |
-| `=`               | equality             |
-| `IN`              | membership in a list |
-| `>` `>=` `<` `<=` | numeric comparison   |
+| Operator                  | Tests                                           |
+| ------------------------- | ----------------------------------------------- |
+| `=` `<>`                  | Equality. Strings compare exactly, case and all |
+| `>` `>=` `<` `<=`         | Ordered comparison                              |
+| `AND` `OR` `NOT` `( … )`  | Boolean composition, in that precedence         |
+| `IN (a, b, …)`            | Membership in a list                            |
+| `BETWEEN a AND b`         | Inclusive range                                 |
+| `LIKE` / `ILIKE`          | Pattern match; `%` any run, `_` one character   |
+| `IS NULL` / `IS NOT NULL` | Presence — `= NULL` is never true               |
+| `+` `-` `*` `/`           | Arithmetic inside a comparison                  |
+| `::`                      | Cast                                            |
 
-## Filter fields
-
-<DataTable
-  columns={[
-    { header: "Field", values: REPORT_FILTERS.map((f) => f.id), code: true },
-    {
-      header: "Syntax",
-      values: REPORT_FILTERS.map((f) => f.syntax),
-      code: true,
-    },
-    {
-      header: "Restricts to",
-      values: REPORT_FILTERS.map((f) => f.description),
-    },
-  ]}
-/>
-
-## Examples
-
-Ranked games only:
+A boolean column stands on its own: `WHERE win` and `WHERE NOT early_surrendered`
+need no comparison.
 
 ```scoutql
-where queue in (solo, flex)
+SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE queue IN ('solo', 'flex')
+  AND game_duration_seconds >= 900
+  AND NOT early_surrendered
+  AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY champion
+HAVING games >= 20
+ORDER BY win_rate DESC
+LIMIT 10
 ```
 
-Only games the player won, on one champion:
+Which columns each source exposes, and which of them `WHERE` may name, is in
+[Sources and columns](/docs/reference/scoutql-sources/).
+
+## Aggregate floors belong in HAVING
+
+An aggregate in `WHERE` is refused rather than reinterpreted. `WHERE games >= 10`
+has no meaning on a single row — a row _is_ one game — and quietly promoting it
+to a group filter would hide the fact that the query said something impossible.
+
+`HAVING games >= 10` is the guard that stops a 1–0 record topping a win-rate
+leaderboard, and it is the single most common omission in a report that looks
+wrong.
+
+## Naming a player
+
+`player('…')` resolves a tracked player's accounts when the report runs:
 
 ```scoutql
-where win = true and champion_id = 350
+SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE player('Bob')
+  AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 90 DAY
+GROUP BY champion
+ORDER BY games DESC
 ```
 
-Exclude very short games, which distort per-minute metrics:
+It takes the server's Scout alias in a guild report and the recorded Riot ID in
+global Explore. Because it resolves at run time it follows renames and newly
+linked accounts, which a stored name comparison cannot.
+
+The `player` dimension can also be compared directly (`player = 'Bob'`), but
+that matches the one label the row happens to carry, so prefer the call.
+
+## Naming a champion
+
+`champion('…')` takes a champion's display name and folds it to the numeric id
+the match data stores, while the query compiles:
 
 ```scoutql
-where game_duration_seconds >= 900
+SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE champion_id = champion('Kai''Sa')
+  AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 90 DAY
+GROUP BY patch
+ORDER BY patch ASC
 ```
 
-Require a minimum sample before ranking by a rate:
+A name it does not recognize fails with the closest match as a suggestion,
+before the report runs. Note the doubled quote: `'Kai''Sa'` is how a literal
+apostrophe is written.
+
+## Time bounds
+
+A window is a `WHERE` conjunct on the source's time column. The compiler
+recognizes these shapes and executes them as the query's window; anything else
+is applied as an ordinary filter, and the window stays all of history.
+
+| Form                                                          | Means                                    |
+| ------------------------------------------------------------- | ---------------------------------------- |
+| `t >= CURRENT_TIMESTAMP - INTERVAL <n> DAY`                   | A rolling window ending now              |
+| `… INTERVAL <n> WEEK` / `MONTH` / `YEAR`                      | The same, in a longer unit               |
+| `(t AT TIME ZONE '<zone>')::DATE BETWEEN '<from>' AND '<to>'` | Whole calendar days, both ends inclusive |
+| `t::DATE BETWEEN '<from>' AND '<to>'`                         | The same, in UTC days                    |
+| `t >= '<from>' AND t < '<to>'`                                | An explicit instant range                |
+| (omitted)                                                     | Every match Scout has ingested           |
+
+`t` is the source's own time column — `game_creation_at` for matches,
+`observed_at` for champion-select observations. The rank sources have none and
+accept no window.
+
+Omitting the bound is legal and warns (`time-window-unbounded`). It has to stay
+legal, or "how many games have we ever played?" would be unaskable; it warns
+because an all-history answer read as a monthly one looks exactly like a
+correct answer.
+
+## Scoping to a competition
+
+The competition sources require their competition as a top-level condition —
+they have no meaning without one, so the query will not compile if it is
+missing:
 
 ```scoutql
-select games, win_rate
-from match_participants
-where queue in (solo)
-and games >= 10
-group by player
-during all time
-order by win_rate desc
+SELECT MAX(score) AS score
+FROM competition_rank
+WHERE competition_id = 42
+GROUP BY player
+ORDER BY score DESC
+RENDER leaderboard
 ```
-
-`games >= <n>` is an aggregate floor, not a raw-row filter — it is the guard
-that stops a 1-0 record topping a win-rate leaderboard.
-
-Scope to a competition's participants. Rank sources are snapshots and therefore
-accept only `DURING ALL TIME`:
-
-```scoutql
-select score
-from competition_rank
-where competition_id = 42
-group by player
-during all time
-order by score desc
-render leaderboard
-```
-
-## Notes
-
-- Queue values are the ones listed in [Queues and
-  regions](/docs/reference/queues-and-regions/).
-- `player = "<name>"` matches the server's Scout alias in guild reports and the
-  recorded Riot ID in global Explore. Prefer `player('<name>')`, which resolves
-  aliases, renames, and linked accounts explicitly.
-- `placement` applies to Arena.
-- Values with spaces must be quoted.
 
 ## Related
 
 - [ScoutQL](/docs/reference/scoutql/)
-- [Metrics](/docs/reference/scoutql-metrics/)
+- [Sources and columns](/docs/reference/scoutql-sources/)
+- [Queues and regions](/docs/reference/queues-and-regions/) — the values
+  `queue` takes.

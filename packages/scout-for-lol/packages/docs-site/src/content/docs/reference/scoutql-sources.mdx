@@ -1,76 +1,146 @@
 ---
-title: ScoutQL sources and dimensions
-description: Every table a report can read from, and every dimension it can group by.
+title: ScoutQL sources and columns
+description: Every source a report can read from, its time column, and every column it exposes with the clauses each is valid in.
 sidebar:
   order: 5
 ---
 
 import DataTable from "../../../components/DataTable.astro";
-import {
-  REPORT_SOURCES,
-  REPORT_GROUP_BYS,
-} from "@scout-for-lol/data/model/report-query-registry.ts";
+import { scoutQlSourceCatalogs } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
 
-`FROM` chooses the table. `GROUP BY` chooses how its rows are collapsed. Not
-every dimension is valid for every source — the last table below is the
-authoritative pairing.
+export const catalogs = scoutQlSourceCatalogs();
+
+export const columnsOf = (catalog) => [...catalog.columns.values()];
+
+export const validIn = (column) =>
+  [
+    column.contexts.select ? "SELECT" : null,
+    column.contexts.where ? "WHERE" : null,
+    column.contexts.groupBy ? "GROUP BY" : null,
+  ]
+    .filter((clause) => clause !== null)
+    .join(" · ");
+
+export const columnTable = (catalog) => [
+  {
+    header: "Column",
+    values: columnsOf(catalog).map((column) => column.name),
+    code: true,
+  },
+  {
+    header: "Type",
+    values: columnsOf(catalog).map((column) => column.type),
+    code: true,
+  },
+  {
+    header: "Origin",
+    values: columnsOf(catalog).map((column) =>
+      column.virtual ? "derived" : "match data",
+    ),
+  },
+  { header: "Valid in", values: columnsOf(catalog).map(validIn) },
+  {
+    header: "Meaning",
+    values: columnsOf(catalog).map((column) => column.description),
+  },
+];
+
+`FROM` chooses the source. Its columns are the entire vocabulary available to
+the rest of the query: what `SELECT` can aggregate, what `WHERE` can test, and
+what `GROUP BY` can collapse on.
+
+Not every column is valid everywhere, and the **Valid in** column below says
+where each one may appear. A column that reads as a whole game — the queue, the
+map, whether the game was surrendered — cannot always be a per-player
+measurement, and a per-player measurement is not always a sensible grouping.
+
+Columns marked **derived** are computed by Scout rather than stored: `player`,
+`champion`, `patch`, and `outcome` exist because grouping by a raw id produces
+a leaderboard of numbers.
 
 ## Sources
 
 <DataTable
-  columns={[
-    { header: "Source", values: REPORT_SOURCES.map((s) => s.id), code: true },
-    { header: "Name", values: REPORT_SOURCES.map((s) => s.label) },
-    { header: "Contents", values: REPORT_SOURCES.map((s) => s.description) },
-  ]}
-/>
-
-`match_participants` is the default choice for almost every report: one row per
-tracked player per match.
-
-Sources whose description mentions `competition_id` require that filter — a
-query reading them without it will not compile.
-
-## Dimensions
-
-<DataTable
+  label="Sources"
   columns={[
     {
-      header: "Dimension",
-      values: REPORT_GROUP_BYS.map((g) => g.id),
+      header: "Source",
+      values: catalogs.map((catalog) => catalog.id),
       code: true,
     },
-    { header: "Column", values: REPORT_GROUP_BYS.map((g) => g.columnLabel) },
     {
-      header: "Groups rows by",
-      values: REPORT_GROUP_BYS.map((g) => g.description),
+      header: "Contents",
+      values: catalogs.map((catalog) => catalog.description),
+    },
+    {
+      header: "Time column",
+      values: catalogs.map((catalog) => catalog.timeColumn ?? "none"),
+      code: true,
+    },
+    {
+      header: "Notes",
+      values: catalogs.map(
+        (catalog) =>
+          [
+            catalog.requiresCompetitionId
+              ? "Requires a top-level competition_id = <n> condition."
+              : null,
+            catalog.groupCall ? "Groups with group(2…5 | all)." : null,
+            catalog.playerRefAllowed ? "Accepts player('…')." : null,
+          ]
+            .filter((note) => note !== null)
+            .join(" ") || "—",
+      ),
     },
   ]}
 />
 
-Notes:
+`match_participants` is the right source for almost every report: one row per
+tracked player per finished match.
 
-- `GROUP BY all` collapses everything to one row and cannot be combined with
-  another dimension. It is what `kpi_card` expects.
-- `GROUP BY group(N)` works only with the `player_groups` source, takes a size
-  of 2–5 or `all`, and cannot be combined with another dimension. Group stats
-  sum their members, and a win requires every member to have won.
-- Two dimensions are allowed for sources that support them, which is what a
-  `heatmap` needs.
+### The time column
 
-## Valid dimensions per source
+A source's time column is the one a [time
+bound](/docs/reference/scoutql/#time-bounds-are-ordinary-where-conditions)
+is measured on, and the one `DATE_TRUNC` buckets for a trend. Matches are
+timestamped when the lobby was created (`game_creation_at`); champion-select
+observations are timestamped when Scout saw them (`observed_at`).
 
-<DataTable
-  columns={[
-    { header: "Source", values: REPORT_SOURCES.map((s) => s.id), code: true },
-    {
-      header: "Accepts GROUP BY",
-      values: REPORT_SOURCES.map((s) => s.validGroupBys.join(", ")),
-    },
-  ]}
-/>
+The two rank sources have **no** time column, so they accept no window and no
+time bucket. They are snapshots of where players stand right now — there is no
+history in them to slice.
+
+{catalogs.map((catalog) => (
+
+<section>
+  <h2 id={catalog.id}>
+    <code>{catalog.id}</code>
+  </h2>
+  <p>
+    {catalog.description}{" "}
+    {catalog.timeColumn === null
+      ? "It is a snapshot and carries no timestamp column."
+      : `Time bounds and DATE_TRUNC buckets are measured on ${catalog.timeColumn}.`}
+  </p>
+  <DataTable label={`${catalog.id} columns`} columns={columnTable(catalog)} />
+</section>
+))}
+
+## Grouping
+
+`GROUP BY` accepts any column marked valid there, plus expressions over them:
+
+- `GROUP BY DATE_TRUNC('week', game_creation_at)` — a calendar bucket, which is
+  what a line or area chart plots against.
+- `GROUP BY FLOOR(game_duration_seconds / 300) * 300` — a numeric bucket, which
+  is what a histogram counts into.
+- `GROUP BY ALL` — DuckDB's shorthand for "group by every non-aggregate output".
+- `GROUP BY group(2)` … `group(5)`, `group(all)` — only on `player_groups`,
+  where the dimension is a set of tracked players who queued together.
+- No `GROUP BY` at all — one grand-total row, which is what a KPI card shows.
 
 ## Related
 
 - [ScoutQL](/docs/reference/scoutql/)
-- [Metrics](/docs/reference/scoutql-metrics/)
+- [Functions](/docs/reference/scoutql-functions/)
+- [Filters](/docs/reference/scoutql-filters/)

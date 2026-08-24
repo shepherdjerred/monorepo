@@ -2,99 +2,113 @@
   {
     "kind": "table",
     "title": "Most games played",
-    "query": "select games, win_rate, kda\nfrom match_participants\ngroup by player\nduring last 30 days\norder by games desc\nlimit 6\nrender table",
+    "query": "SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate, kda() AS kda\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY player\nORDER BY games DESC\nLIMIT 6\nRENDER table",
     "image": null,
-    "content": "**Most games played**\n```\nGames | Win rate | KDA\n--- | --- | ---\n146 | 57.5% | 4.12\n111 | 51.4% | 3.48\n90 | 54.4% | 3.91\n89 | 51.7% | 3.36\n76 | 46.1% | 2.87\n71 | 53.5% | 3.02\n```"
+    "content": "**Most games played**\n```\nPlayer | Games | Win Rate | Kda\n--- | --- | --- | ---\nFaker | 146 | 57.5% | 4.12\nCaps | 111 | 51.4% | 3.48\nChovy | 90 | 54.4% | 3.91\nRuler | 89 | 51.7% | 3.36\nKeria | 76 | 46.1% | 2.87\nZeus | 71 | 53.5% | 3.02\n```"
   },
   {
     "kind": "list",
     "title": "Most games played",
-    "query": "select games, win_rate\nfrom match_participants\ngroup by player\nduring last 30 days\norder by games desc\nlimit 6\nrender list",
+    "query": "SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY player\nORDER BY games DESC\nLIMIT 6\nRENDER list",
     "image": null,
-    "content": "**Most games played**\n- Faker: Games: 146, Win rate: 57.5%\n- Caps: Games: 111, Win rate: 51.4%\n- Chovy: Games: 90, Win rate: 54.4%\n- Ruler: Games: 89, Win rate: 51.7%\n- Keria: Games: 76, Win rate: 46.1%\n- Zeus: Games: 71, Win rate: 53.5%"
+    "content": "**Most games played**\n- Faker: Games: 146, Win Rate: 57.5%\n- Caps: Games: 111, Win Rate: 51.4%\n- Chovy: Games: 90, Win Rate: 54.4%\n- Ruler: Games: 89, Win Rate: 51.7%\n- Keria: Games: 76, Win Rate: 46.1%\n- Zeus: Games: 71, Win Rate: 53.5%"
   },
   {
     "kind": "leaderboard",
     "title": "Most games played",
-    "query": "select games, win_rate\nfrom match_participants\ngroup by player\nduring last 30 days\norder by games desc\nlimit 6\nrender leaderboard with (mentions = 0)",
+    "query": "SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY player\nORDER BY games DESC\nLIMIT 6\nRENDER leaderboard WITH (mentions = 0)",
     "image": null,
-    "content": "**Most games played**\n1. Faker — Games: 146, Win rate: 57.5%\n2. Caps — Games: 111, Win rate: 51.4%\n3. Chovy — Games: 90, Win rate: 54.4%\n4. Ruler — Games: 89, Win rate: 51.7%\n5. Keria — Games: 76, Win rate: 46.1%\n6. Zeus — Games: 71, Win rate: 53.5%"
+    "content": "**Most games played**\n1. Faker — Games: 146, Win Rate: 57.5%\n2. Caps — Games: 111, Win Rate: 51.4%\n3. Chovy — Games: 90, Win Rate: 54.4%\n4. Ruler — Games: 89, Win Rate: 51.7%\n5. Keria — Games: 76, Win Rate: 46.1%\n6. Zeus — Games: 71, Win Rate: 53.5%"
   },
   {
     "kind": "bar_chart",
     "title": "Most games played",
-    "query": "select games\nfrom match_participants\ngroup by player\nduring last 30 days\norder by games desc\nlimit 6\nrender bar_chart with (y = games)",
+    "query": "SELECT COUNT(*) AS games\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY player\nORDER BY games DESC\nLIMIT 6\nRENDER bar_chart WITH (y = games)",
     "image": "render-bar_chart.png",
     "content": null
   },
   {
     "kind": "line_chart",
     "title": "Weekly game volume",
-    "query": "select games\nfrom match_participants\ngroup by week\nduring last 30 days\norder by week asc\nrender line_chart with (y = games, x_axis = \"Week\", smooth = true)",
+    "query": "SELECT DATE_TRUNC('week', game_creation_at) AS week, COUNT(*) AS games\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY DATE_TRUNC('week', game_creation_at)\nORDER BY week ASC\nRENDER line_chart WITH (y = games, x_axis = 'Week', smooth = true)",
     "image": "render-line_chart.png",
     "content": null
   },
   {
     "kind": "area_chart",
     "title": "Weekly game volume",
-    "query": "select games\nfrom match_participants\ngroup by week\nduring last 30 days\norder by week asc\nrender area_chart with (y = games, x_axis = \"Week\", smooth = true)",
+    "query": "SELECT DATE_TRUNC('week', game_creation_at) AS week, COUNT(*) AS games\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY DATE_TRUNC('week', game_creation_at)\nORDER BY week ASC\nRENDER area_chart WITH (y = games, x_axis = 'Week', smooth = true)",
     "image": "render-area_chart.png",
     "content": null
   },
   {
     "kind": "stacked_bar",
     "title": "Weekly wins and losses",
-    "query": "select wins, losses\nfrom match_participants\ngroup by week\nduring last 30 days\norder by week asc\nrender stacked_bar with (y = (wins, losses))",
+    "query": "SELECT DATE_TRUNC('week', game_creation_at) AS week, COUNT(*) FILTER (WHERE win) AS wins, COUNT(*) FILTER (WHERE NOT win) AS losses\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY DATE_TRUNC('week', game_creation_at)\nORDER BY week ASC\nRENDER stacked_bar WITH (y = (wins, losses))",
     "image": "render-stacked_bar.png",
     "content": null
   },
   {
     "kind": "donut_chart",
     "title": "Queue mix",
-    "query": "select games\nfrom match_participants\ngroup by queue\nduring last 30 days\norder by games desc\nrender donut_chart with (y = games)",
+    "query": "SELECT COUNT(*) AS games\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY queue\nORDER BY games DESC\nRENDER donut_chart WITH (y = games)",
     "image": "render-donut_chart.png",
     "content": null
   },
   {
     "kind": "scatter_chart",
     "title": "Damage against KDA",
-    "query": "select damage_to_champions, kda, games\nfrom match_participants\ngroup by player\nduring last 30 days\nrender scatter_chart with (x = damage_to_champions, y = kda, size = games)",
+    "query": "SELECT SUM(total_damage_dealt_to_champions) AS damage, kda() AS kda, COUNT(*) AS games\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY player\nRENDER scatter_chart WITH (x = damage, y = kda, size = games)",
     "image": "render-scatter_chart.png",
     "content": null
   },
   {
     "kind": "heatmap",
     "title": "Champion win rate by position",
-    "query": "select win_rate\nfrom match_participants\ngroup by champion, team_position\nduring last 30 days\nrender heatmap with (value = win_rate, series = team_position, palette = gold)",
+    "query": "SELECT AVG(win::INT) AS win_rate\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY champion, team_position\nRENDER heatmap WITH (value = win_rate, series = team_position, palette = gold)",
     "image": "render-heatmap.png",
     "content": null
   },
   {
     "kind": "radar_chart",
     "title": "Combat profile",
-    "query": "select win_rate, kda, cs_per_minute, vision_score, damage_to_champions\nfrom match_participants\ngroup by player\nduring last 30 days\nlimit 3\nrender radar_chart with (y = (win_rate, kda, cs_per_minute, vision_score, damage_to_champions))",
+    "query": "SELECT AVG(win::INT) AS win_rate, kda() AS kda, per_minute(creep_score) AS cs_per_minute, AVG(vision_score) AS vision_score, AVG(total_damage_dealt_to_champions) AS damage\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY player\nLIMIT 3\nRENDER radar_chart WITH (y = (win_rate, kda, cs_per_minute, vision_score, damage))",
     "image": "render-radar_chart.png",
     "content": null
   },
   {
     "kind": "kpi_card",
     "title": "Server snapshot",
-    "query": "select games, win_rate, kda, avg_game_duration\nfrom match_participants\ngroup by all\nduring last 30 days\nrender kpi_card with (y = (games, win_rate, kda, avg_game_duration))",
+    "query": "SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate, kda() AS kda, AVG(game_duration_seconds) AS avg_length\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nRENDER kpi_card WITH (y = (games, win_rate, kda, avg_length))",
     "image": "render-kpi_card.png",
     "content": null
   },
   {
     "kind": "bump_chart",
     "title": "Weekly standings",
-    "query": "select games\nfrom match_participants\ngroup by player\nanalyze last 28 days\nbucket by week\nin time zone 'UTC'\norder by label asc\nrender bump_chart with (y = games)",
+    "query": "SELECT COUNT(*) AS games\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 28 DAY\nGROUP BY player, DATE_TRUNC('week', game_creation_at)\nORDER BY games DESC\nRENDER bump_chart WITH (y = games)",
     "image": "render-bump_chart.png",
     "content": null
   },
   {
     "kind": "calendar_heatmap",
     "title": "Daily activity",
-    "query": "select games\nfrom match_participants\ngroup by all\nanalyze between '2026-06-29' and '2026-07-26'\nbucket by day\nin time zone 'UTC'\nrender calendar_heatmap with (y = games, palette = gold)",
+    "query": "SELECT COUNT(*) AS games\nFROM match_participants\nWHERE (game_creation_at AT TIME ZONE 'UTC')::DATE BETWEEN '2026-06-29' AND '2026-07-26'\nGROUP BY DATE_TRUNC('day', game_creation_at)\nORDER BY games DESC\nRENDER calendar_heatmap WITH (y = games, palette = gold)",
     "image": "render-calendar_heatmap.png",
+    "content": null
+  },
+  {
+    "kind": "histogram",
+    "title": "Game length distribution",
+    "query": "SELECT FLOOR(game_duration_seconds / 300) * 300 AS bucket, COUNT(*) AS games\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY FLOOR(game_duration_seconds / 300) * 300\nORDER BY bucket ASC\nRENDER histogram WITH (x = bucket, y = games)",
+    "image": "render-histogram.png",
+    "content": null
+  },
+  {
+    "kind": "box_plot",
+    "title": "Kills per game by champion",
+    "query": "SELECT MIN(kills) AS low, QUANTILE_CONT(kills, 0.25) AS q1, MEDIAN(kills) AS med, QUANTILE_CONT(kills, 0.75) AS q3, MAX(kills) AS high\nFROM match_participants\nWHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY\nGROUP BY champion\nORDER BY med DESC\nLIMIT 6\nRENDER box_plot WITH (y = (low, q1, med, q3, high))",
+    "image": "render-box_plot.png",
     "content": null
   }
 ]

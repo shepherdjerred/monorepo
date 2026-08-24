@@ -49,7 +49,7 @@ function imageFor(fileName: string): ImageMetadata {
       <h3 id={sample.kind}>
         <code>{sample.kind}</code>
       </h3>
-      <Code code={sample.query} lang="sql" />
+      <Code code={sample.query} lang="scoutql" />
       {sample.image === null ? (
         <Code
           code={sample.content ?? ""}

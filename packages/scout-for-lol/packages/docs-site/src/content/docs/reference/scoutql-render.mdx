@@ -1,21 +1,105 @@
 ---
 title: Render kinds and options
-description: Every display kind a report can render as, and every WITH option that configures it.
+description: Every display kind a report can render as, every WITH option that configures it, and a worked sample of each.
 sidebar:
   order: 8
 ---
 
 import DataTable from "../../../components/DataTable.astro";
 import RenderSamples from "../../../components/RenderSamples.astro";
+import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
+import { SCOUTQL_CHART_OPTION_NAMES } from "@scout-for-lol/data/model/scoutql/render-options.ts";
 import {
-  REPORT_RENDER_KINDS,
-  REPORT_RENDER_OPTIONS,
-} from "@scout-for-lol/data/model/report-query-registry.ts";
+  ReportChartThemeSchema,
+  ReportChartPaletteSchema,
+  ReportChartOrientationSchema,
+  ReportChartLabelsSchema,
+  ReportChartLegendSchema,
+  ReportChartSortSchema,
+  ReportChartStackSchema,
+  ReportDisplayKindSchema,
+} from "@scout-for-lol/data/model/report.ts";
 
-export const textKinds = REPORT_RENDER_KINDS.filter((kind) => !kind.isChart);
-export const chartKinds = REPORT_RENDER_KINDS.filter((kind) => kind.isChart);
+export const textKinds = SCOUTQL_RENDER_KINDS.filter((kind) => !kind.isChart);
+export const chartKinds = SCOUTQL_RENDER_KINDS.filter((kind) => kind.isChart);
 
-The trailing `RENDER <kind> [WITH (...)]` clause decides how a report is
+export const oneOf = (schema) => `one of ${schema.options.join(", ")}`;
+
+export const OPTION_DOCS = {
+  x: ["x = <output>", "Horizontal channel; defaults to the grouping."],
+  y: ["y = <output> | (a, b, …)", "The numeric series, up to eight."],
+  series: ["series = <grouping>", "Which grouping splits into series."],
+  size: ["size = <output>", "Sizes scatter points."],
+  value: ["value = <output>", "The cell value of a heatmap."],
+  title: ["title = '…'", "Overrides the report's title on the image."],
+  subtitle: ["subtitle = '…'", "A line under the title."],
+  x_axis: ["x_axis = '…'", "Label for the horizontal axis."],
+  y_axis: ["y_axis = '…'", "Label for the vertical axis."],
+  theme: ["theme = <name>", `Chart theme: ${oneOf(ReportChartThemeSchema)}.`],
+  palette: [
+    "palette = <name>",
+    `Series colours: ${oneOf(ReportChartPaletteSchema)}.`,
+  ],
+  colors: [
+    "colors = (#rrggbb, …)",
+    "One to eight custom colours, contrast-corrected for the theme.",
+  ],
+  orientation: [
+    "orientation = <name>",
+    `Bar direction: ${oneOf(ReportChartOrientationSchema)}.`,
+  ],
+  labels: [
+    "labels = <name>",
+    `Value labels on marks: ${oneOf(ReportChartLabelsSchema)}.`,
+  ],
+  legend: [
+    "legend = <name>",
+    `Legend placement: ${oneOf(ReportChartLegendSchema)}.`,
+  ],
+  sort: [
+    "sort = <name>",
+    `Visual row order without changing the query: ${oneOf(ReportChartSortSchema)}.`,
+  ],
+  smooth: ["smooth = true", "Curves line and area segments."],
+  rolling: [
+    "rolling = <n>",
+    "Plots a rolling average over n buckets (2–52) instead of raw values.",
+  ],
+  cumulative: [
+    "cumulative = true",
+    "Accumulates a running total; only valid for additive outputs.",
+  ],
+  stack: [
+    "stack = <name>",
+    `Stacking for stacked_bar and area_chart: ${oneOf(ReportChartStackSchema)}.`,
+  ],
+  trend: ["trend = true", "Overlays a linear trend line."],
+  annotations: ["annotations = true", "Marks notable points on the series."],
+  sparkline: [
+    "sparkline = true",
+    "Attaches a small chart image to a table render.",
+  ],
+  compare: [
+    "compare = previous_period",
+    "Overlays the equally long period immediately before the window.",
+  ],
+  format: [
+    "format = (<output> = <kind>, …)",
+    `Overrides an output's inferred display kind: ${oneOf(ReportDisplayKindSchema)}.`,
+  ],
+};
+
+export const optionRows = SCOUTQL_CHART_OPTION_NAMES.map((name) => {
+  const doc = OPTION_DOCS[name];
+  if (doc === undefined) {
+    throw new Error(
+      `Undocumented ScoutQL render option "${name}" — add it to OPTION_DOCS in scoutql-render.mdx.`,
+    );
+  }
+  return { name, syntax: doc[0], description: doc[1] };
+});
+
+The trailing `RENDER <kind> [WITH (…)]` clause decides how a result is
 displayed. A query with no `RENDER` clause renders as a table.
 
 ## Text kinds
@@ -29,8 +113,11 @@ displayed. A query with no `RENDER` clause renders as a table.
   ]}
 />
 
-`leaderboard` is the only kind that `@mention`s people. It pings the top three
-ranked player rows by default; change that with the `mentions` option below.
+`leaderboard` is the only kind that `@mention`s people, and it takes its own
+option: `mentions = <n>` pings the top n ranked rows, `mentions = all` pings
+every eligible row, and `mentions = 0` pings nobody. Omitted, it pings the top
+three. Rows grouped by anything other than a player never mention anyone, even
+when a champion name happens to match an alias.
 
 ## Chart kinds
 
@@ -49,52 +136,95 @@ channel needs the **Attach Files** permission.
 ## WITH options
 
 <DataTable
+  label="Render options"
   columns={[
-    {
-      header: "Option",
-      values: REPORT_RENDER_OPTIONS.map((o) => o.id),
-      code: true,
-    },
-    {
-      header: "Syntax",
-      values: REPORT_RENDER_OPTIONS.map((o) => o.syntax),
-      code: true,
-    },
+    { header: "Option", values: optionRows.map((o) => o.name), code: true },
+    { header: "Syntax", values: optionRows.map((o) => o.syntax), code: true },
     {
       header: "Effect",
-      values: REPORT_RENDER_OPTIONS.map((o) => o.description),
+      values: optionRows.map((o) => o.description),
     },
   ]}
 />
 
-## Which options a kind needs
+Every name inside `WITH (…)` must be one of the query's own outputs or
+groupings. A name the `SELECT` does not produce is rejected when the query
+compiles rather than silently plotting nothing.
 
-| Kind                       | Typically needs                                    |
-| -------------------------- | -------------------------------------------------- |
-| `bar_chart`, `stacked_bar` | `y`, optionally `orientation`                      |
-| `line_chart`, `area_chart` | `y`, a time dimension in `GROUP BY`                |
-| `donut_chart`              | `y`, few rows                                      |
-| `scatter_chart`            | `x`, `y`, optionally `size`                        |
-| `heatmap`                  | `value`, `series`, two grouping dimensions         |
-| `radar_chart`              | `y` with three to eight series                     |
-| `kpi_card`                 | `y` (one or more), and `GROUP BY all`              |
-| `bump_chart`               | `y`, and an `ANALYZE` clause                       |
-| `calendar_heatmap`         | `y` (exactly one), `GROUP BY all`, `BUCKET BY DAY` |
-| `leaderboard`              | optionally `mentions`                              |
+## What each kind needs
 
-A name used in `WITH` must be one of the query's own outputs. Referring to a
-column the `SELECT` does not produce is the most common cause of an empty or
-malformed chart.
+| Kind                       | Requires                                                         |
+| -------------------------- | ---------------------------------------------------------------- |
+| `bar_chart`, `stacked_bar` | `y`; optionally `orientation`                                    |
+| `line_chart`, `area_chart` | `y`; a `DATE_TRUNC` grouping for a time axis                     |
+| `donut_chart`              | exactly one `y`, and few rows                                    |
+| `scatter_chart`            | one `x` and one `y`, both SELECTed; optionally `size`            |
+| `heatmap`                  | `value`, `series`, and exactly two groupings                     |
+| `radar_chart`              | three to eight `y` outputs over one grouping                     |
+| `kpi_card`                 | no `GROUP BY` — one grand-total row                              |
+| `bump_chart`               | one `y`, a `DATE_TRUNC` grouping, plus one more grouping to rank |
+| `calendar_heatmap`         | one `y` and `DATE_TRUNC('day', …)` as the only grouping          |
+| `histogram`                | one numeric bucket grouping and one count `y`                    |
+| `box_plot`                 | exactly five `y` outputs — see below                             |
+| `leaderboard`              | optionally `mentions`                                            |
+
+## Comparing against the previous period
+
+`compare = previous_period` re-runs the same aggregation over the equally long
+span immediately before the query's window and overlays it, giving every point
+a baseline, an absolute delta, and a percentage delta.
+
+It needs two things, and says so if either is missing: a stated time window to
+take the preceding period _of_, and a `DATE_TRUNC` (or `patch`) grouping to
+line the two runs up bucket by bucket.
+
+```scoutql
+SELECT DATE_TRUNC('week', game_creation_at) AS week,
+       COUNT(*) FILTER (WHERE win) AS wins,
+       COUNT(*) FILTER (WHERE NOT win) AS losses
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 90 DAY
+GROUP BY DATE_TRUNC('week', game_creation_at)
+ORDER BY week ASC
+RENDER stacked_bar WITH (y = (wins, losses), compare = previous_period)
+```
+
+`previous_period` is the only comparison in the language.
+
+## The box-plot contract
+
+A box plot takes its five numbers explicitly, and their **order in `y` is the
+encoding**: minimum, first quartile, median, third quartile, maximum.
+
+```scoutql
+SELECT MIN(kills) AS low,
+       QUANTILE_CONT(kills, 0.25) AS q1,
+       MEDIAN(kills) AS med,
+       QUANTILE_CONT(kills, 0.75) AS q3,
+       MAX(kills) AS high
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY champion
+ORDER BY med DESC
+LIMIT 6
+RENDER box_plot WITH (y = (low, q1, med, q3, high))
+```
+
+The names are yours; the positions are not. Nothing is inferred from what a
+column is called, which is the same bargain the rest of the language makes —
+`q3` could as easily be a 95th percentile, and only the query knows.
 
 ## Every kind, rendered
 
-Each sample below is produced by running the query shown through Scout's actual
-report renderer — the same function that builds what the bot posts. They are
-regenerated by `bun run generate`, so they cannot drift from the renderer.
+Each sample below is produced by compiling the query shown and running it
+through Scout's actual report renderer — the same function that builds what the
+bot posts. They are regenerated by `bun run generate`, so they cannot drift
+from the renderer.
 
 <RenderSamples />
 
 ## Related
 
 - [Turn a report into a chart](/docs/how-to/chart-reports/)
+- [Query recipes](/docs/how-to/scoutql-recipes/)
 - [ScoutQL](/docs/reference/scoutql/)

@@ -80,9 +80,11 @@ describe("ScoutQL code blocks", () => {
       "how-to/chart-reports",
       "how-to/run-competitions",
       "how-to/link-discord-users",
+      "how-to/scoutql-recipes",
       "reference/scoutql",
       "reference/scoutql-filters",
-      "reference/scoutql-metrics",
+      "reference/scoutql-functions",
+      "reference/scoutql-render",
     ];
     for (const route of routes) {
       expect(await page(route)).toContain('<pre data-language="scoutql">');

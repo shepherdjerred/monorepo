@@ -2,7 +2,7 @@
 title: Bet a Bryan Bucks parlay
 description: Read the leg list and odds, take YES or NO on a live in-play market, and cancel for free.
 sidebar:
-  order: 11
+  order: 12
 ---
 
 A parlay is a second, separate market on the same game. Scout posts it as its
