@@ -108,14 +108,17 @@ instinct is to write it that way. The problem is not the typing. It is that
 seven directories yield forty-two clauses which state one idea as forty-two
 unrelated facts, and nothing holds them symmetric: the day an eighth vendor
 arrives, someone adds it to six lists and forgets the seventh, and the gap is
-invisible because every rule that remains still passes. So the harness takes
-the idea itself — a set of siblings, none of which may depend on another — and
-generates the matrix from it. The declaration cannot be asymmetric, because
-there is nothing in it to get out of step.
+invisible because every rule that remains still passes. The
+[definition resolver](https://github.com/shepherdjerred/monorepo/blob/c7c461d8bc2251c021877b3273e1404c536e0729/packages/architecture/src/definition.ts)
+takes the idea itself — a set of siblings, none of which may depend on another
+— and generates the matrix from it. The declaration cannot be asymmetric,
+because there is nothing in it to get out of step.
 
 Each generated rule still has to earn its keep the same way a hand-written one
-does, with its own committed fixture proving it can fail. Deriving the rules
-does not derive the evidence.
+does, with its own committed fixture proving it can fail. The
+[fixture-rule generator](https://github.com/shepherdjerred/monorepo/blob/c7c461d8bc2251c021877b3273e1404c536e0729/packages/architecture/src/rules.ts)
+derives that proof from the same definition. Deriving the rules does not derive
+the evidence.
 
 ## Each package is judged only on its own tree
 
