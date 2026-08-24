@@ -160,6 +160,7 @@ function computeConfiguration() {
     // gateway and background jobs. These remain enabled by default everywhere.
     enableDiscordGateway,
     enableBackgroundJobs,
+    temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
     applicationId: getRequiredEnvVar("APPLICATION_ID"),
     discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),
@@ -285,6 +286,9 @@ const configuration: Configuration = {
   },
   get enableBackgroundJobs() {
     return getConfiguration().enableBackgroundJobs;
+  },
+  get temporalAddress() {
+    return getConfiguration().temporalAddress;
   },
   get discordToken() {
     return getConfiguration().discordToken;

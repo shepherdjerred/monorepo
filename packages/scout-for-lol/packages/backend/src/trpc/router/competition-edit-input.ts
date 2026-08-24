@@ -9,6 +9,7 @@ import {
 } from "@scout-for-lol/data";
 import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
 import type { UpdateCompetitionInput } from "#src/database/competition/queries.ts";
+import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competition-cron.ts";
 
 /**
  * Web date input. The tRPC link carries no superjson transformer, so `Date`s
@@ -34,6 +35,7 @@ export const CompetitionEditInputSchema = z.object({
   maxParticipants: z.number().int().min(2).max(100).optional(),
   dates: WebCompetitionDatesSchema.optional(),
   criteria: CompetitionCriteriaSchema.optional(),
+  analysisTimezone: ReportScheduleTimezoneSchema.optional(),
 });
 
 /**
@@ -57,5 +59,8 @@ export function buildCompetitionUpdateInput(
       ? {}
       : { dates: CompetitionDatesSchema.parse(input.dates) }),
     ...(input.criteria === undefined ? {} : { criteria: input.criteria }),
+    ...(input.analysisTimezone === undefined
+      ? {}
+      : { analysisTimezone: input.analysisTimezone }),
   };
 }

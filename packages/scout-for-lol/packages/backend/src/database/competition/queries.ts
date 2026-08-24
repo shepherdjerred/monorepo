@@ -8,6 +8,11 @@ import {
   type SeasonId,
   parseCompetition,
 } from "@scout-for-lol/data";
+import {
+  type CompetitionScheduledUpdates,
+  DEFAULT_COMPETITION_CRON,
+  DEFAULT_SCHEDULE_TIMEZONE,
+} from "@scout-for-lol/data/model/competition-cron.ts";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { match } from "ts-pattern";
 import { type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -56,8 +61,8 @@ export type CreateCompetitionInput = {
   maxParticipants: number;
   dates: CompetitionDates;
   criteria: CompetitionCriteria;
-  /** CRON expression (UTC); null/undefined defers to the dispatcher's default. */
-  updateCronExpression?: string | null;
+  analysisTimezone?: string;
+  scheduledUpdates?: CompetitionScheduledUpdates;
 };
 
 // ============================================================================
@@ -106,10 +111,15 @@ export async function createCompetition(
       criteriaType,
       criteriaConfig: JSON.stringify(criteriaConfig),
       maxParticipants: input.maxParticipants,
+      analysisTimezone: input.analysisTimezone ?? DEFAULT_SCHEDULE_TIMEZONE,
       startDate,
       endDate,
       seasonId,
-      updateCronExpression: input.updateCronExpression ?? null,
+      scheduledUpdatesEnabled: input.scheduledUpdates?.enabled ?? false,
+      updateCronExpression:
+        input.scheduledUpdates?.cronExpression ?? DEFAULT_COMPETITION_CRON,
+      scheduleTimezone:
+        input.scheduledUpdates?.timezone ?? DEFAULT_SCHEDULE_TIMEZONE,
       creatorDiscordId: input.ownerId,
       createdTime: now,
       updatedTime: now,
@@ -263,12 +273,16 @@ export async function getDueCompetitions(
 ): Promise<CompetitionWithCriteria[]> {
   const raw = await prisma.competition.findMany({
     where: {
-      isCancelled: false,
-      startProcessedAt: { not: null },
-      endProcessedAt: null,
-      OR: [
-        { nextScheduledUpdateAt: { lte: now } },
-        { nextScheduledUpdateAt: null },
+      AND: [
+        activeOnlyWhere(now),
+        { scheduledUpdatesEnabled: true },
+        { startProcessedAt: { not: null } },
+        {
+          OR: [
+            { nextScheduledUpdateAt: { lte: now } },
+            { nextScheduledUpdateAt: null },
+          ],
+        },
       ],
     },
     orderBy: {
@@ -296,6 +310,7 @@ export type UpdateCompetitionInput = {
   maxParticipants?: number;
   dates?: CompetitionDates;
   criteria?: CompetitionCriteria;
+  analysisTimezone?: string;
 };
 
 /**
@@ -326,9 +341,13 @@ export async function updateCompetition(
     seasonId?: SeasonId | null;
     criteriaType?: CompetitionCriteria["type"];
     criteriaConfig?: string;
+    analysisTimezone?: string;
     updatedTime: Date;
   } = {
     updatedTime: now,
+    ...(input.analysisTimezone === undefined
+      ? {}
+      : { analysisTimezone: input.analysisTimezone }),
   };
 
   // Add simple fields if provided

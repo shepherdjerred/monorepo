@@ -101,9 +101,12 @@ as ingest succeeds.
 
 ## Competitions sit in between
 
-Competition standings are recomputed from the same match data, on a
-fifteen-minute lifecycle check that also starts competitions, posts interim
-standings, and closes them when their window ends.
+Competition standings are recomputed from the same match data, but two clocks
+drive delivery. A fifteen-minute lifecycle check starts and closes competitions,
+including their mandatory announcements. A Temporal workflow runs every minute
+and asks each Scout environment to post interim standings only for competitions
+with an enabled, active, due schedule. Old competitions remain disabled, so
+wiring the dispatcher does not create a backlog of surprise posts.
 
 Competition status is derived from dates rather than stored, which is why fixing
 a wrong end date immediately fixes whether the competition is running — there is

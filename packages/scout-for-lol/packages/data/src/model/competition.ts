@@ -50,6 +50,8 @@ export type Competition = {
   startProcessedAt: Date | null;
   endProcessedAt: Date | null;
   updateCronExpression: string | null;
+  scheduledUpdatesEnabled: boolean;
+  scheduleTimezone: string;
   nextScheduledUpdateAt: Date | null;
   lastScheduledUpdateAt: Date | null;
   startNotifiedAt: Date | null;
@@ -408,10 +410,11 @@ export type CompetitionWithSeason = Competition & {
  */
 export type CompetitionWithCriteria = Omit<
   Competition,
-  "criteriaType" | "criteriaConfig" | "analysisTimezone"
+  "criteriaType" | "criteriaConfig" | "analysisTimezone" | "scheduleTimezone"
 > & {
   criteria: CompetitionCriteria;
   analysisTimezone: string;
+  scheduleTimezone: string;
 };
 
 /**
@@ -475,6 +478,7 @@ export function parseCompetition(
   return {
     ...rest,
     analysisTimezone: ReportScheduleTimezoneSchema.parse(raw.analysisTimezone),
+    scheduleTimezone: ReportScheduleTimezoneSchema.parse(raw.scheduleTimezone),
     startDate,
     endDate,
     criteria: result.data,

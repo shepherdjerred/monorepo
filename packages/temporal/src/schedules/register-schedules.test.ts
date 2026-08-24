@@ -170,6 +170,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // carries its own startToCloseTimeout + retry budget.
   "runScoutShowcaseRefresh",
   "runScoutQueueWindowsWatch",
+  "runScoutCompetitionUpdatesWorkflow",
   "runScoutSeasonRefreshWorkflow",
   "runScoutBryanBucksAnalyticsWorkflow",
   "runZfsMaintenanceWorkflow",
@@ -308,6 +309,19 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
         "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
         "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
       ],
+    });
+  });
+});
+
+describe("Scout competition update schedule", () => {
+  test("uses a Temporal-owned minute trigger on the core queue", () => {
+    const schedule = findScheduleById("scout-competition-updates-minute");
+    expect(schedule).toMatchObject({
+      workflowType: "runScoutCompetitionUpdatesWorkflow",
+      cronExpression: "* * * * *",
+      taskQueue: TASK_QUEUES.DEFAULT,
+      catchupWindow: "5 minutes",
+      workflowExecutionTimeout: "35 minutes",
     });
   });
 });

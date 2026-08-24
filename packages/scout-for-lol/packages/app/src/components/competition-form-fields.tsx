@@ -24,6 +24,7 @@ import {
   CompetitionCriteriaFields,
   type CriteriaState,
 } from "#src/components/competition-criteria-fields.tsx";
+import { browserTimezone } from "#src/lib/competition-time.ts";
 
 export type FormState = {
   title: string;
@@ -31,6 +32,7 @@ export type FormState = {
   channelId: string;
   visibility: CompetitionVisibility;
   maxParticipants: string;
+  analysisTimezone: string;
   dates: DatesState;
   criteria: CriteriaState;
 };
@@ -41,6 +43,7 @@ export const EMPTY_STATE: FormState = {
   channelId: "",
   visibility: "OPEN",
   maxParticipants: "50",
+  analysisTimezone: browserTimezone(),
   dates: { mode: "FIXED_DATES", startDate: "", endDate: "", seasonId: "" },
   criteria: {
     criteriaType: "MOST_GAMES_PLAYED",
@@ -169,9 +172,13 @@ export function CompetitionFormFields(props: {
 
       <CompetitionDatesFields
         value={state.dates}
+        timezone={state.analysisTimezone}
         disabled={locked}
         onChange={(dates) => {
           setState((prev) => ({ ...prev, dates }));
+        }}
+        onTimezoneChange={(analysisTimezone) => {
+          setState((prev) => ({ ...prev, analysisTimezone }));
         }}
       />
 

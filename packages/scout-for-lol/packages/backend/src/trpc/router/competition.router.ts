@@ -24,8 +24,12 @@ import {
   type CompetitionId,
   type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
-import { CompetitionCronSchema } from "@scout-for-lol/data/model/competition-cron.ts";
-import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
+import {
+  CompetitionScheduledUpdatesSchema,
+  DEFAULT_COMPETITION_CRON,
+  DEFAULT_SCHEDULE_TIMEZONE,
+  ReportScheduleTimezoneSchema,
+} from "@scout-for-lol/data/model/competition-cron.ts";
 import {
   CompetitionEditInputSchema,
   WebCompetitionDatesSchema,
@@ -48,6 +52,8 @@ import {
 import {
   addParticipant,
   bulkEnrollTrackedPlayers,
+  enrollInitialPlayers,
+  InitialEntrantsValidationError,
   removeParticipant,
 } from "#src/database/competition/participants.ts";
 import {
@@ -60,13 +66,9 @@ import {
   getTimeRemaining,
   recordCreation,
 } from "#src/database/competition/rate-limit.ts";
-import {
-  loadCachedLeaderboard,
-  loadHistoricalLeaderboardSnapshots,
-} from "#src/storage/s3-leaderboard.ts";
-import { refreshAndCacheLeaderboard } from "#src/league/competition/refresh.ts";
-import { clearCompetitionAnalysisCache } from "#src/league/competition/analysis.ts";
 import { competitionAnalysisProcedures } from "#src/trpc/router/competition-analysis-procedures.ts";
+import { competitionDeliveryProcedures } from "#src/trpc/router/competition-delivery-procedures.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const CompetitionIdInput = GuildInput.extend({
@@ -81,7 +83,15 @@ const CompetitionWriteSchema = z.object({
   maxParticipants: z.number().int().min(2).max(100).default(50),
   dates: WebCompetitionDatesSchema,
   criteria: CompetitionCriteriaSchema,
-  updateCronExpression: CompetitionCronSchema.nullable().default(null),
+  initialPlayerIds: z.array(PlayerIdSchema).max(100).default([]),
+  analysisTimezone: ReportScheduleTimezoneSchema.default(
+    DEFAULT_SCHEDULE_TIMEZONE,
+  ),
+  scheduledUpdates: CompetitionScheduledUpdatesSchema.default({
+    enabled: false,
+    cronExpression: DEFAULT_COMPETITION_CRON,
+    timezone: DEFAULT_SCHEDULE_TIMEZONE,
+  }),
 });
 
 /** Translate a domain `Error` (thrown by participant/competition mutations) into a user-facing 400. */
@@ -105,6 +115,18 @@ async function loadCompetitionOr404(
 }
 
 export const competitionRouter = router({
+  builderCapabilities: guildProcedure("competitions", "create")
+    .input(GuildInput)
+    .query(async ({ ctx, input }) => ({
+      builderV2Enabled: await isPolicyEnabled(
+        "competition_builder_v2_enabled",
+        {
+          server: input.guildId,
+          user: ctx.user.discordId,
+        },
+      ),
+    })),
+
   list: guildProcedure("competitions", "read")
     .input(
       GuildInput.extend({
@@ -215,41 +237,76 @@ export const competitionRouter = router({
       // create permission alone bypass it. Checked before insertion so a
       // denied request never leaves a competition behind.
       if (
-        input.visibility === "SERVER_WIDE" &&
+        (input.visibility === "SERVER_WIDE" ||
+          input.initialPlayerIds.length > 0) &&
         !ctx.permissions.can("competitions", "invite")
       ) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message:
-            "Server-wide competitions enroll every tracked player, which requires the invite permission.",
+            input.visibility === "SERVER_WIDE"
+              ? "Server-wide competitions require the invite permission."
+              : "Choosing initial entrants requires the invite permission.",
+        });
+      }
+
+      const customizesSchedule =
+        input.scheduledUpdates.enabled ||
+        input.scheduledUpdates.cronExpression !== DEFAULT_COMPETITION_CRON ||
+        input.scheduledUpdates.timezone !== DEFAULT_SCHEDULE_TIMEZONE;
+      if (
+        customizesSchedule &&
+        !ctx.permissions.can("competitions", "schedule")
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Configuring interim updates requires the schedule permission.",
         });
       }
 
       // Creation and SERVER_WIDE enrollment run in one transaction so an
       // enrollment failure rolls the new competition back rather than leaving a
       // partial/orphaned row the client would retry into a duplicate.
-      const competition = await prisma.$transaction(async (tx) => {
-        const created = await createCompetition(tx, {
-          serverId: input.guildId,
-          ownerId,
-          channelId: input.channelId,
-          title: input.title,
-          description: input.description,
-          visibility: input.visibility,
-          maxParticipants: input.maxParticipants,
-          dates,
-          criteria: input.criteria,
-          updateCronExpression: input.updateCronExpression,
-        });
-        if (input.visibility === "SERVER_WIDE") {
-          await bulkEnrollTrackedPlayers({
-            prisma: tx,
-            competitionId: created.id,
-            guildId: input.guildId,
+      let competition: CompetitionWithCriteria;
+      try {
+        competition = await prisma.$transaction(async (tx) => {
+          const created = await createCompetition(tx, {
+            serverId: input.guildId,
+            ownerId,
+            channelId: input.channelId,
+            title: input.title,
+            description: input.description,
+            visibility: input.visibility,
+            maxParticipants: input.maxParticipants,
+            dates,
+            criteria: input.criteria,
+            analysisTimezone: input.analysisTimezone,
+            scheduledUpdates: input.scheduledUpdates,
           });
+          if (input.visibility === "SERVER_WIDE") {
+            await bulkEnrollTrackedPlayers({
+              prisma: tx,
+              competitionId: created.id,
+              guildId: input.guildId,
+            });
+          } else {
+            await enrollInitialPlayers({
+              prisma: tx,
+              competitionId: created.id,
+              guildId: input.guildId,
+              playerIds: input.initialPlayerIds,
+              maxParticipants: input.maxParticipants,
+            });
+          }
+          return created;
+        });
+      } catch (error) {
+        if (error instanceof InitialEntrantsValidationError) {
+          asBadRequest(error);
         }
-        return created;
-      });
+        throw error;
+      }
       if (!ctx.permissions.isRoot) {
         recordCreation(input.guildId, ownerId);
       }
@@ -442,69 +499,6 @@ export const competitionRouter = router({
       );
     }),
 
-  updateSchedule: guildMutationProcedure("competitions", "schedule")
-    .input(
-      CompetitionIdInput.extend({
-        updateCronExpression: CompetitionCronSchema,
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const competition = await loadCompetitionOr404(
-        input.competitionId,
-        input.guildId,
-      );
-      const status = getCompetitionStatus(competition);
-      if (status === "CANCELLED" || status === "ENDED") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Cannot reschedule a ${status} competition.`,
-        });
-      }
-      const now = new Date();
-      return prisma.competition.update({
-        where: { id: input.competitionId },
-        data: {
-          updateCronExpression: input.updateCronExpression,
-          // Only arm the next fire once the competition has been activated;
-          // otherwise the lifecycle task computes it on start.
-          nextScheduledUpdateAt:
-            competition.startProcessedAt === null
-              ? null
-              : computeNextScheduledUpdateAt(input.updateCronExpression, now),
-          updatedTime: now,
-        },
-      });
-    }),
-
-  leaderboard: guildProcedure("competitions", "read")
-    .input(CompetitionIdInput)
-    .query(async ({ input }) => {
-      await loadCompetitionOr404(input.competitionId, input.guildId);
-      return loadCachedLeaderboard(input.competitionId);
-    }),
-
-  leaderboardHistory: guildProcedure("competitions", "read")
-    .input(CompetitionIdInput)
-    .query(async ({ input }) => {
-      await loadCompetitionOr404(input.competitionId, input.guildId);
-      return loadHistoricalLeaderboardSnapshots(input.competitionId);
-    }),
-
   ...competitionAnalysisProcedures,
-
-  refreshLeaderboard: guildMutationProcedure("competitions", "refresh")
-    .input(CompetitionIdInput)
-    .mutation(async ({ input }) => {
-      const competition = await loadCompetitionOr404(
-        input.competitionId,
-        input.guildId,
-      );
-      try {
-        const entries = await refreshAndCacheLeaderboard(competition);
-        clearCompetitionAnalysisCache();
-        return { entries };
-      } catch (error) {
-        asBadRequest(error);
-      }
-    }),
+  ...competitionDeliveryProcedures,
 });

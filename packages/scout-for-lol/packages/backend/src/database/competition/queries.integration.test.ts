@@ -12,6 +12,7 @@ import {
   getCompetitionById,
   getCompetitionsByServer,
   getCompetitionsByServerPaginated,
+  getDueCompetitions,
 } from "#src/database/competition/queries.ts";
 import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
@@ -31,6 +32,63 @@ beforeEach(async () => {
 });
 afterAll(async () => {
   await prisma.$disconnect();
+});
+
+describe("getDueCompetitions", () => {
+  test("returns only enabled, active, due competitions", async () => {
+    const now = new Date("2026-08-23T18:00:00.000Z");
+    const common: Omit<CreateCompetitionInput, "title" | "scheduledUpdates"> = {
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
+      description: "Scheduled query test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: {
+        type: "FIXED_DATES",
+        startDate: new Date("2026-08-01T00:00:00.000Z"),
+        endDate: new Date("2026-09-01T00:00:00.000Z"),
+      },
+      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+    };
+    const enabled = await createCompetition(prisma, {
+      ...common,
+      title: "Enabled",
+      scheduledUpdates: {
+        enabled: true,
+        cronExpression: "0 9 * * *",
+        timezone: "America/Los_Angeles",
+      },
+    });
+    const disabled = await createCompetition(prisma, {
+      ...common,
+      title: "Disabled",
+    });
+    const ended = await createCompetition(prisma, {
+      ...common,
+      title: "Ended",
+      dates: {
+        type: "FIXED_DATES",
+        startDate: new Date("2026-07-01T00:00:00.000Z"),
+        endDate: new Date("2026-08-01T00:00:00.000Z"),
+      },
+      scheduledUpdates: {
+        enabled: true,
+        cronExpression: "0 9 * * *",
+        timezone: "America/Los_Angeles",
+      },
+    });
+    await prisma.competition.updateMany({
+      where: { id: { in: [enabled.id, disabled.id, ended.id] } },
+      data: {
+        startProcessedAt: new Date("2026-08-01T00:00:00.000Z"),
+        nextScheduledUpdateAt: new Date("2026-08-23T17:59:00.000Z"),
+      },
+    });
+
+    const due = await getDueCompetitions(prisma, now);
+    expect(due.map((competition) => competition.id)).toEqual([enabled.id]);
+  });
 });
 
 // ============================================================================

@@ -58,6 +58,8 @@ function createTestCompetition(
       queue: "SOLO",
     },
     ...overrides,
+    scheduledUpdatesEnabled: overrides.scheduledUpdatesEnabled ?? false,
+    scheduleTimezone: overrides.scheduleTimezone ?? "UTC",
   };
 }
 

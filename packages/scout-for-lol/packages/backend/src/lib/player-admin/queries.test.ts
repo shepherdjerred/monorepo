@@ -46,6 +46,8 @@ function makeCompetition(
     season: null,
     ...overrides,
     analysisTimezone: overrides.analysisTimezone ?? "UTC",
+    scheduledUpdatesEnabled: overrides.scheduledUpdatesEnabled ?? false,
+    scheduleTimezone: overrides.scheduleTimezone ?? "UTC",
   };
 }
 

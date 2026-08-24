@@ -258,16 +258,17 @@ model Competition {
   startNotificationMessageId String?
   endNotificationMessageId   String?
 
-  // Leaderboard-post schedule (CRON expression evaluated in UTC).
-  // NULL is treated as the legacy default '0 0 * * *' (daily midnight UTC).
-  // Validated at write time to fire at most once per day.
-  updateCronExpression  String?
+  // Optional leaderboard-post schedule. Legacy competitions remain disabled;
+  // enabled schedules evaluate the CRON expression in scheduleTimezone.
+  scheduledUpdatesEnabled Boolean   @default(false)
+  updateCronExpression    String?
+  scheduleTimezone        String    @default("UTC")
   // Next time the dispatcher should post a leaderboard update for this row.
   // The dispatcher selects rows where this is <= now (or NULL, as self-heal)
   // and recomputes this field from updateCronExpression after each post.
-  nextScheduledUpdateAt DateTime?
+  nextScheduledUpdateAt   DateTime?
   // Wall-clock time of the most recent dispatched leaderboard post.
-  lastScheduledUpdateAt DateTime?
+  lastScheduledUpdateAt   DateTime?
 
   // Relations
   participants CompetitionParticipant[]

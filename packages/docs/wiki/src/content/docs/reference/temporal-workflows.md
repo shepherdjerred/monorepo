@@ -34,16 +34,17 @@ changing model identity.
 
 ## Scout
 
-| Workflow                   | Trigger                              | Brain                  | Output                           |
-| -------------------------- | ------------------------------------ | ---------------------- | -------------------------------- |
-| data-dragon version check  | 06:00 Sun–Fri                        | deterministic          | heartbeat + **auto-merge PR**    |
-| data-dragon weekly refresh | Sat 06:00                            | deterministic          | heartbeat + **auto-merge PR**    |
-| season-refresh             | Mon 07:00                            | agent research + gates | heartbeat + PR                   |
-| showcase-refresh           | Mon 10:00                            | deterministic          | PR                               |
-| queue-windows              | daily 06:45                          | deterministic          | heartbeat + gated PR             |
-| image-gc                   | daily 04:00                          | deterministic          | S3 deletions                     |
-| weekly parlay lifecycle    | Sun, source-defined Pacific timeline | deterministic          | beta Scout market reconciliation |
-| weekly parlay catch-up     | operator, stable period/slot ID      | deterministic          | shortened beta Scout market      |
+| Workflow                   | Trigger       | Brain                  | Output                        |
+| -------------------------- | ------------- | ---------------------- | ----------------------------- |
+| data-dragon version check  | 06:00 Sun–Fri | deterministic          | heartbeat + **auto-merge PR** |
+| data-dragon weekly refresh | Sat 06:00     | deterministic          | heartbeat + **auto-merge PR** |
+| season-refresh             | Mon 07:00     | agent research + gates | heartbeat + PR                |
+| showcase-refresh           | Mon 10:00     | deterministic          | PR                            |
+| queue-windows              | daily 06:45   | deterministic          | heartbeat + gated PR          |
+| image-gc                   | daily 04:00   | deterministic          | S3 deletions                  |
+| competition updates        | every minute  | deterministic          | due Discord standings         |
+| weekly parlay lifecycle    | Sun, source-defined Pacific timeline | deterministic | beta Scout market reconciliation |
+| weekly parlay catch-up     | operator, stable period/slot ID      | deterministic | shortened beta Scout market      |
 
 The weekly parlay workflow uses the Pacific timeline defined by its source
 constants and reconciles each period through finalization. Its schedule remains

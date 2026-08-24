@@ -189,6 +189,19 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily LoL limited-queue window watcher — proposes queue-windows.json edits from scout-prod match volume; auto-merge on open/reopen, plain PR on close",
   },
   {
+    id: "scout-competition-updates-minute",
+    workflowType: "runScoutCompetitionUpdatesWorkflow",
+    args: [],
+    cronExpression: "* * * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: CATCHUP_TIGHT,
+    // Each stage activity may use three 10-minute attempts. They run in
+    // parallel, so this covers the retry budget plus backoff and workflow work.
+    workflowExecutionTimeout: "35 minutes",
+    memo: "Every-minute dispatch of enabled, active, due Scout competition standings in beta and production",
+  },
+  {
     id: "zfs-maintenance-weekly",
     workflowType: "runZfsMaintenanceWorkflow",
     args: [],

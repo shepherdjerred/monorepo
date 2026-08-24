@@ -1214,6 +1214,7 @@
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
+        "@temporalio/worker": "1.22.0",
         "@trpc/server": "11",
         "ai": "^7.0.77",
         "cron": "^4.1.4",

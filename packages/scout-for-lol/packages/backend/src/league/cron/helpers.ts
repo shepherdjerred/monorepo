@@ -10,7 +10,7 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("cron-helpers");
 
-type CronJobConfig = {
+export type CronJobConfig = {
   schedule: string;
   jobName: string;
   task: () => Promise<void>;

@@ -6,6 +6,7 @@ import {
 import type { CriteriaState } from "#src/components/competition-criteria-fields.tsx";
 import type { DatesState } from "#src/components/competition-dates-fields.tsx";
 import type { FormState } from "#src/components/competition-form-fields.tsx";
+import { fixedDateRangeInTimezone } from "#src/lib/competition-time.ts";
 
 export type DatesValue =
   | { type: "FIXED_DATES"; startDate: Date; endDate: Date }
@@ -38,6 +39,7 @@ export function buildCriteria(
 
 export function buildDates(
   state: DatesState,
+  timezone: string,
 ): { ok: true; value: DatesValue } | { ok: false; message: string } {
   if (state.mode === "SEASON") {
     const parsed = SeasonIdSchema.safeParse(state.seasonId);
@@ -49,14 +51,20 @@ export function buildDates(
   if (state.startDate === "" || state.endDate === "") {
     return { ok: false, message: "Pick a start and end date." };
   }
-  return {
-    ok: true,
-    value: {
-      type: "FIXED_DATES",
-      startDate: new Date(state.startDate),
-      endDate: new Date(state.endDate),
-    },
-  };
+  try {
+    return {
+      ok: true,
+      value: {
+        type: "FIXED_DATES",
+        ...fixedDateRangeInTimezone(state.startDate, state.endDate, timezone),
+      },
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 export function validateForm(state: FormState):
@@ -75,7 +83,7 @@ export function validateForm(state: FormState):
   if (!criteria.ok) {
     return { ok: false, message: criteria.message };
   }
-  const dates = buildDates(state.dates);
+  const dates = buildDates(state.dates, state.analysisTimezone);
   if (!dates.ok) {
     return { ok: false, message: dates.message };
   }

@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@scout-for-lol/design-system/components/select";
+import { TimezoneSelect } from "#src/components/timezone-select.tsx";
 
 export type DatesState = {
   mode: "FIXED_DATES" | "SEASON";
@@ -48,8 +49,10 @@ function formatDateRange(start: Date, end: Date): string {
 
 export function CompetitionDatesFields(props: {
   value: DatesState;
+  timezone: string;
   disabled?: boolean;
   onChange: (next: DatesState) => void;
+  onTimezoneChange: (next: string) => void;
 }) {
   const { value, disabled = false, onChange } = props;
 
@@ -85,30 +88,44 @@ export function CompetitionDatesFields(props: {
       </div>
 
       {value.mode === "FIXED_DATES" ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="competition-start">Start date</Label>
-            <Input
-              id="competition-start"
-              type="date"
-              value={value.startDate}
-              disabled={disabled}
-              onChange={(event) => {
-                onChange({ ...value, startDate: event.target.value });
-              }}
-            />
+        <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="competition-start">Start date</Label>
+              <Input
+                id="competition-start"
+                type="date"
+                value={value.startDate}
+                disabled={disabled}
+                onChange={(event) => {
+                  onChange({ ...value, startDate: event.target.value });
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="competition-end">End date</Label>
+              <Input
+                id="competition-end"
+                type="date"
+                value={value.endDate}
+                disabled={disabled}
+                onChange={(event) => {
+                  onChange({ ...value, endDate: event.target.value });
+                }}
+              />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="competition-end">End date</Label>
-            <Input
-              id="competition-end"
-              type="date"
-              value={value.endDate}
-              disabled={disabled}
-              onChange={(event) => {
-                onChange({ ...value, endDate: event.target.value });
-              }}
+            <Label htmlFor="competition-timezone">Competition timezone</Label>
+            <TimezoneSelect
+              id="competition-timezone"
+              value={props.timezone}
+              onChange={props.onTimezoneChange}
             />
+            <p className="text-xs text-scout-subtle">
+              Fixed dates run from the first day at 12:00 AM through the last
+              day at 11:59 PM in this timezone.
+            </p>
           </div>
         </div>
       ) : (

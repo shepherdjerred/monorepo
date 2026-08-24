@@ -3,9 +3,14 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  PlayerIdSchema,
+  permissionKey,
+  type PlayerId,
+  type Permission,
   type CompetitionVisibility,
 } from "@scout-for-lol/data";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
+import { clearAllRateLimits } from "#src/database/competition/rate-limit.ts";
 
 // Offline tRPC harness: real router + audit writes, no Discord OAuth, no real
 // Discord backing. See src/testing/test-trpc-caller.ts.
@@ -29,8 +34,9 @@ async function seedPlayers(
   count: number,
 ) {
   const now = new Date();
+  const ids: PlayerId[] = [];
   for (let index = 0; index < count; index += 1) {
-    await testPrisma.player.create({
+    const player = await testPrisma.player.create({
       data: {
         alias: `Player ${index.toString()}`,
         serverId: guildId,
@@ -39,7 +45,9 @@ async function seedPlayers(
         updatedTime: now,
       },
     });
+    ids.push(PlayerIdSchema.parse(player.id));
   }
+  return ids;
 }
 
 function createInput(
@@ -71,6 +79,9 @@ beforeEach(async () => {
   await testPrisma.competitionParticipant.deleteMany();
   await testPrisma.competition.deleteMany();
   await testPrisma.player.deleteMany();
+  await testPrisma.serverPermission.deleteMany();
+  clearAllRateLimits();
+  trpc.setMembership("root");
 });
 
 afterAll(async () => {
@@ -119,5 +130,261 @@ describe("competition.create auto-enrollment", () => {
       where: { competitionId: competition.id },
     });
     expect(participants).toHaveLength(0);
+  });
+
+  test("persists the submitted criterion, timezone, schedule, and selected JOINED roster", async () => {
+    const guildId = nextGuildId();
+    const playerIds = await seedPlayers(guildId, 2);
+    const competition = await trpc.authedCaller().competition.create({
+      ...createInput(guildId, "OPEN"),
+      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+      initialPlayerIds: playerIds,
+      analysisTimezone: "America/Los_Angeles",
+      scheduledUpdates: {
+        enabled: true,
+        cronExpression: "0 9 * * *",
+        timezone: "America/Los_Angeles",
+      },
+    });
+    const saved = await testPrisma.competition.findUniqueOrThrow({
+      where: { id: competition.id },
+    });
+    const participants = await testPrisma.competitionParticipant.findMany({
+      where: { competitionId: competition.id },
+      orderBy: { playerId: "asc" },
+    });
+    expect(competition.criteria).toEqual({
+      type: "HIGHEST_RANK",
+      queue: "SOLO",
+    });
+    expect(saved).toMatchObject({
+      criteriaType: "HIGHEST_RANK",
+      analysisTimezone: "America/Los_Angeles",
+      scheduledUpdatesEnabled: true,
+      updateCronExpression: "0 9 * * *",
+      scheduleTimezone: "America/Los_Angeles",
+    });
+    expect(participants.map((participant) => participant.playerId)).toEqual(
+      playerIds,
+    );
+    expect(
+      participants.every((participant) => participant.status === "JOINED"),
+    ).toBe(true);
+  });
+
+  test("rejects duplicate initial players and rolls creation back", async () => {
+    const guildId = nextGuildId();
+    const [playerId] = await seedPlayers(guildId, 1);
+    expect(playerId).toBeDefined();
+    if (playerId === undefined) return;
+    await expect(
+      trpc.authedCaller().competition.create({
+        ...createInput(guildId, "OPEN"),
+        initialPlayerIds: [playerId, playerId],
+      }),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: expect.stringContaining("Initial entrants must be unique"),
+    });
+    expect(
+      await testPrisma.competition.count({ where: { serverId: guildId } }),
+    ).toBe(0);
+  });
+
+  test("rejects cross-guild initial players and rolls creation back", async () => {
+    const guildId = nextGuildId();
+    const otherGuildId = nextGuildId();
+    const [playerId] = await seedPlayers(otherGuildId, 1);
+    expect(playerId).toBeDefined();
+    if (playerId === undefined) return;
+    await expect(
+      trpc.authedCaller().competition.create({
+        ...createInput(guildId, "INVITE_ONLY"),
+        initialPlayerIds: [playerId],
+      }),
+    ).rejects.toThrow("tracked player in this server");
+    expect(
+      await testPrisma.competition.count({ where: { serverId: guildId } }),
+    ).toBe(0);
+  });
+
+  test("rejects an initial roster larger than the cap and rolls creation back", async () => {
+    const guildId = nextGuildId();
+    const playerIds = await seedPlayers(guildId, 3);
+    await expect(
+      trpc.authedCaller().competition.create({
+        ...createInput(guildId, "OPEN", 2),
+        initialPlayerIds: playerIds,
+      }),
+    ).rejects.toThrow("exceed the participant cap");
+    expect(
+      await testPrisma.competition.count({ where: { serverId: guildId } }),
+    ).toBe(0);
+  });
+
+  test("legacy create input keeps interim updates disabled in UTC", async () => {
+    const guildId = nextGuildId();
+    const competition = await trpc
+      .authedCaller()
+      .competition.create(createInput(guildId, "OPEN"));
+    const saved = await testPrisma.competition.findUniqueOrThrow({
+      where: { id: competition.id },
+    });
+    expect(saved.scheduledUpdatesEnabled).toBe(false);
+    expect(saved.scheduleTimezone).toBe("UTC");
+  });
+});
+
+async function seedPermissions(
+  guildId: ReturnType<typeof nextGuildId>,
+  permissions: readonly Permission[],
+) {
+  await testPrisma.serverPermission.createMany({
+    data: permissions.map((permission) => ({
+      serverId: guildId,
+      discordUserId: actorDiscordId,
+      permission: permissionKey(permission),
+      grantedBy: actorDiscordId,
+      grantedAt: new Date(),
+    })),
+  });
+}
+
+describe("competition.create advanced permissions", () => {
+  test("initial entrants require competitions:invite", async () => {
+    const guildId = nextGuildId();
+    const [playerId] = await seedPlayers(guildId, 1);
+    expect(playerId).toBeDefined();
+    if (playerId === undefined) return;
+    trpc.setMembership([{ guildId, asAdmin: false }]);
+    await seedPermissions(guildId, [
+      { resource: "competitions", action: "create" },
+    ]);
+    await expect(
+      trpc.authedCaller(actorDiscordId).competition.create({
+        ...createInput(guildId, "OPEN"),
+        initialPlayerIds: [playerId],
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  test("enabled scheduling requires competitions:schedule", async () => {
+    const guildId = nextGuildId();
+    trpc.setMembership([{ guildId, asAdmin: false }]);
+    await seedPermissions(guildId, [
+      { resource: "competitions", action: "create" },
+    ]);
+    await expect(
+      trpc.authedCaller(actorDiscordId).competition.create({
+        ...createInput(guildId, "OPEN"),
+        scheduledUpdates: {
+          enabled: true,
+          cronExpression: "0 9 * * *",
+          timezone: "America/Los_Angeles",
+        },
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  test("server-wide enrollment requires competitions:invite", async () => {
+    const guildId = nextGuildId();
+    trpc.setMembership([{ guildId, asAdmin: false }]);
+    await seedPermissions(guildId, [
+      { resource: "competitions", action: "create" },
+    ]);
+    await expect(
+      trpc
+        .authedCaller(actorDiscordId)
+        .competition.create(createInput(guildId, "SERVER_WIDE")),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  test("a disabled custom cadence still requires competitions:schedule", async () => {
+    const guildId = nextGuildId();
+    trpc.setMembership([{ guildId, asAdmin: false }]);
+    await seedPermissions(guildId, [
+      { resource: "competitions", action: "create" },
+    ]);
+    await expect(
+      trpc.authedCaller(actorDiscordId).competition.create({
+        ...createInput(guildId, "OPEN"),
+        scheduledUpdates: {
+          enabled: false,
+          cronExpression: "0 12 * * *",
+          timezone: "America/Los_Angeles",
+        },
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+});
+
+describe("competition.updateSchedule", () => {
+  test("enables in the saved timezone and disabling clears the next fire", async () => {
+    const guildId = nextGuildId();
+    const competition = await trpc
+      .authedCaller()
+      .competition.create(createInput(guildId, "OPEN"));
+    await testPrisma.competition.update({
+      where: { id: competition.id },
+      data: { startProcessedAt: new Date() },
+    });
+
+    const enabled = await trpc.authedCaller().competition.updateSchedule({
+      guildId,
+      competitionId: competition.id,
+      scheduledUpdates: {
+        enabled: true,
+        cronExpression: "0 9 * * *",
+        timezone: "Asia/Tokyo",
+      },
+    });
+    expect(enabled).toMatchObject({
+      scheduledUpdatesEnabled: true,
+      updateCronExpression: "0 9 * * *",
+      scheduleTimezone: "Asia/Tokyo",
+    });
+    expect(enabled.nextScheduledUpdateAt).not.toBeNull();
+    if (enabled.nextScheduledUpdateAt === null) return;
+    expect(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Tokyo",
+        hour: "numeric",
+        hourCycle: "h23",
+      }).format(enabled.nextScheduledUpdateAt),
+    ).toBe("09");
+
+    const disabled = await trpc.authedCaller().competition.updateSchedule({
+      guildId,
+      competitionId: competition.id,
+      scheduledUpdates: {
+        enabled: false,
+        cronExpression: "0 9 * * *",
+        timezone: "Asia/Tokyo",
+      },
+    });
+    expect(disabled.scheduledUpdatesEnabled).toBe(false);
+    expect(disabled.nextScheduledUpdateAt).toBeNull();
+  });
+
+  test("requires competitions:schedule for later edits", async () => {
+    const guildId = nextGuildId();
+    const competition = await trpc
+      .authedCaller()
+      .competition.create(createInput(guildId, "OPEN"));
+    trpc.setMembership([{ guildId, asAdmin: false }]);
+    await seedPermissions(guildId, [
+      { resource: "competitions", action: "create" },
+    ]);
+    await expect(
+      trpc.authedCaller(actorDiscordId).competition.updateSchedule({
+        guildId,
+        competitionId: competition.id,
+        scheduledUpdates: {
+          enabled: true,
+          cronExpression: "0 9 * * *",
+          timezone: "UTC",
+        },
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });
