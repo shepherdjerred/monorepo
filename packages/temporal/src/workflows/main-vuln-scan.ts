@@ -1,5 +1,8 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { MainVulnScanActivities } from "#activities/main-vuln-scan.ts";
+import type {
+  MainVulnScanActivities,
+  MainVulnScanResult,
+} from "#activities/main-vuln-scan.ts";
 import type { MainVulnScanAlertActivities } from "#activities/main-vuln-scan-alerts.ts";
 import type { ReportDeliveryActivities } from "#activities/report-delivery.ts";
 import {
@@ -48,17 +51,24 @@ const { publishMainVulnScanAlerts } =
  */
 export async function runMainVulnScanWorkflow(): Promise<void> {
   const startedAt = new Date().toISOString();
+  // Only a clone/scan failure produces the failure report. Wrapping the
+  // delivery and alert calls too would let an Alertmanager outage — after the
+  // scan completed and its results were already emailed — send a second
+  // report claiming the scan failed, publishing contradictory receipts for one
+  // run. A publication failure instead fails the workflow, which
+  // `temporal-failure-watch` turns into its own occurrence.
+  let result: MainVulnScanResult;
   try {
-    const result = await scanMainForVulnerabilities();
-    await deliverActivityReport(buildMainVulnScanReport(startedAt, result));
-    await publishMainVulnScanAlerts({
-      criticalCount: countCriticalVulnerabilities(result),
-      repoSha: result.repoSha,
-    });
+    result = await scanMainForVulnerabilities();
   } catch (error) {
     await deliverActivityReport(
       buildMainVulnScanFailureReport(startedAt, error),
     );
     throw error;
   }
+  await deliverActivityReport(buildMainVulnScanReport(startedAt, result));
+  await publishMainVulnScanAlerts({
+    criticalCount: countCriticalVulnerabilities(result),
+    repoSha: result.repoSha,
+  });
 }
