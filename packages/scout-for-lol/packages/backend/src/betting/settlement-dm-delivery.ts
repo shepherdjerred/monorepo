@@ -24,6 +24,16 @@ import { bettingSettlementDmsTotal } from "#src/metrics/betting.ts";
 
 const logger = createLogger("betting-settlement-dm");
 
+class SettlementDmStatusError extends Error {
+  readonly status: Exclude<DmStatus, "sent">;
+
+  constructor(status: Exclude<DmStatus, "sent">) {
+    super(`Settlement DM delivery returned ${status}.`);
+    this.name = "SettlementDmStatusError";
+    this.status = status;
+  }
+}
+
 export type SettlementDmDeliveryDependencies = {
   client: Client;
   isPolicyEnabled: typeof isPolicyEnabled;
@@ -148,7 +158,7 @@ export async function deliverSettlementDms(
             suppressMentions: true,
           });
           if (status !== "sent") {
-            throw new Error(`Settlement DM delivery returned ${status}.`);
+            throw new SettlementDmStatusError(status);
           }
           return status;
         },
@@ -159,23 +169,29 @@ export async function deliverSettlementDms(
         result: "sent",
       });
     } catch (error) {
-      // `sendDM` handles expected Discord failures, but an unexpected caller
-      // failure must still leave every remaining recipient eligible to run.
+      // `sendDM` handles expected Discord failures. The observer still needs
+      // a rejection to count those statuses, but they are not Sentry errors.
       bettingSettlementDmsTotal.inc({
         recipient:
           message.kind === "betting_settlement_receipt" ? "bettor" : "player",
         result: status ?? "failed",
       });
-      logger.error(
-        `❌ Could not deliver Bryan Bucks DM for ${input.summary.matchId} to ${message.recipientId}:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: {
-          source: "betting-settlement-dm",
-          matchId: input.summary.matchId,
-        },
-      });
+      if (error instanceof SettlementDmStatusError) {
+        logger.info(
+          `Bryan Bucks DM for ${input.summary.matchId} to ${message.recipientId} returned ${error.status}.`,
+        );
+      } else {
+        logger.error(
+          `❌ Could not deliver Bryan Bucks DM for ${input.summary.matchId} to ${message.recipientId}:`,
+          error,
+        );
+        Sentry.captureException(error, {
+          tags: {
+            source: "betting-settlement-dm",
+            matchId: input.summary.matchId,
+          },
+        });
+      }
     }
   }
 }
