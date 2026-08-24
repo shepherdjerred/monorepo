@@ -4,7 +4,8 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * The web app is a browser SPA with one clear direction: a route composes
  * components, components call hooks, and everything rests on `lib/`.
  *
- * `routes/` is the top of that tree. Nothing below it may import a route,
+ * `routes/` is the top of that tree, and `hooks/` sits below `components/`.
+ * Nothing below a layer may import it: no route may be imported from beneath,
  * because a module that does can only ever be used on that one page — and it
  * drags that page's whole component tree into any bundle that touches it.
  *
@@ -35,12 +36,14 @@ export default defineArchitecture({
       to: ["routes", "hooks"],
     },
     {
-      name: "hooks-do-not-depend-on-routes",
+      name: "hooks-do-not-depend-on-routes-or-components",
       comment:
-        "A hook that imports a route is bound to that page and cannot be reused from another. " +
-        "Take what it needs as an argument, or move the shared piece into `lib/`.",
+        "Components call hooks, so a hook that imports a component inverts the composition order " +
+        "and binds the hook to one rendering of the thing it manages; importing a route binds it " +
+        "to a single page. Take what it needs as an argument, or move the shared contract into " +
+        "`lib/` — which is where `ExploreRunsContextValue` went so this rule could be declared.",
       from: "hooks",
-      to: ["routes"],
+      to: ["routes", "components"],
     },
     {
       name: "components-do-not-depend-on-routes",
