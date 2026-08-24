@@ -663,10 +663,12 @@ steps:
   # Kubernetes plugin nor the cluster-secret environment used by Linux jobs.
   # Both lanes wait for verify and serialize globally on the single Mac.
   # The PR watchdog runs on Kubernetes and bounds queue stalls while pausing
-  # its idle clock whenever that serial Mac is actively running either lane.
+  # its idle clock whenever that serial Mac is actively running a native lane
+  # from any build. Its outer timeout covers serialized native jobs and retries;
+  # the script owns the narrow five-minute no-dispatch deadline.
   - label: ":apple: macOS native dispatch"
     key: macos-native-dispatch
-    timeout_in_minutes: 100
+    timeout_in_minutes: 360
     if: build.pull_request.id != null && !build.pull_request.repository.fork && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:

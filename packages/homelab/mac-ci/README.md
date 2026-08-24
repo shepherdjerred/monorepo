@@ -220,9 +220,10 @@ Accessibility trust, and the login keychain all require the GUI user context.
 If the Mac is powered off or waiting at FileVault login, matching hard jobs
 cannot dispatch. The PR-side dispatch watchdog fails the aggregate required
 status after five idle minutes instead of leaving it pending indefinitely. Its
-clock pauses while another native job is running on the serial queue. Wake and
-log in to the host, then retry the affected jobs; do not weaken the steps with
-`soft_fail` or move signing material into a daemon context.
+clock pauses while a native job from any build is running on the serial queue,
+and it stays active through this build's final automatic-retry attempts. Wake
+and log in to the host, then retry the affected jobs; do not weaken the steps
+with `soft_fail` or move signing material into a daemon context.
 
 To restore the power profile and remove the agent:
 
