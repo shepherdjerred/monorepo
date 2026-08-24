@@ -17,6 +17,13 @@
       "discordUserIds": []
     },
     {
+      "id": "alucard",
+      "displayName": "Alucard",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
       "id": "allison",
       "displayName": "Allison",
       "kind": "person",
@@ -25,9 +32,9 @@
     },
     {
       "id": "alyza",
-      "displayName": "Alyza",
+      "displayName": "Grillmaster Alyza",
       "kind": "person",
-      "aliases": [],
+      "aliases": ["Alyza"],
       "discordUserIds": []
     },
     {
@@ -45,11 +52,25 @@
       "discordUserIds": []
     },
     {
+      "id": "aznboi",
+      "displayName": "aznboi",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
       "id": "brian",
       "displayName": "Brian",
       "kind": "person",
       "aliases": ["blohsh", "billibillie"],
       "discordUserIds": ["202595851678384137"]
+    },
+    {
+      "id": "bryan",
+      "displayName": "Bryan",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
     },
     {
       "id": "caitlyn",
@@ -262,6 +283,13 @@
       "discordUserIds": []
     },
     {
+      "id": "group-wwu",
+      "displayName": "WWU",
+      "kind": "group",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
       "id": "hannah",
       "displayName": "Hannah",
       "kind": "person",
@@ -274,6 +302,13 @@
       "kind": "person",
       "aliases": ["yuzka"],
       "discordUserIds": ["528096854831792159"]
+    },
+    {
+      "id": "indonesian-wife",
+      "displayName": "Indonesian Wife",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
     },
     {
       "id": "irfan",
@@ -339,6 +374,13 @@
       "discordUserIds": []
     },
     {
+      "id": "kendrick",
+      "displayName": "Kendrick",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
       "id": "kevin",
       "displayName": "Kevin",
       "kind": "person",
@@ -395,6 +437,20 @@
       "discordUserIds": []
     },
     {
+      "id": "nicole",
+      "displayName": "Nicole",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "nikki",
+      "displayName": "Nikki",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
       "id": "olivia",
       "displayName": "Olivia",
       "kind": "person",
@@ -407,6 +463,13 @@
       "kind": "person",
       "aliases": [],
       "discordUserIds": ["121887985896521732"]
+    },
+    {
+      "id": "rowel",
+      "displayName": "Rowel",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
     },
     {
       "id": "ryan",
@@ -477,6 +540,20 @@
       "kind": "person",
       "aliases": [],
       "discordUserIds": ["208425244128444418"]
+    },
+    {
+      "id": "vietnamese-wife",
+      "displayName": "Vietnamese Wife",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "wanye",
+      "displayName": "Wanye",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
     },
     {
       "id": "wyatt",

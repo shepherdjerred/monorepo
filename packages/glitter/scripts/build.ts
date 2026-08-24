@@ -6,16 +6,9 @@ const packageRoot = new URL("..", import.meta.url);
 const publicRoot = new URL("public/", packageRoot);
 const distRoot = new URL("dist/", packageRoot);
 
-const graphPeople = people.filter((person) =>
-  currentRelationships.some(
-    (relationship) =>
-      relationship.sourceId === person.id ||
-      relationship.targetId === person.id,
-  ),
-);
 const contextScript = `globalThis.GLITTER_CONTEXT = Object.freeze(${JSON.stringify(
   {
-    people: graphPeople,
+    people,
     relationships: currentRelationships,
   },
 )});
@@ -28,5 +21,9 @@ await Bun.write(
 await Bun.write(
   new URL("posthog.js", distRoot),
   await Bun.file(new URL("posthog.js", publicRoot)).text(),
+);
+await Bun.write(
+  new URL("link-layout.js", distRoot),
+  await Bun.file(new URL("link-layout.js", publicRoot)).text(),
 );
 await Bun.write(new URL("context-data.js", distRoot), contextScript);
