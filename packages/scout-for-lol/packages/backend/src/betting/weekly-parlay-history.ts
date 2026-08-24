@@ -138,8 +138,8 @@ export async function fetchWeeklyCandidateHistories(input: {
       subject.accounts.map((account) => [account.puuid, subject]),
     ),
   );
-  const historyRowsBySubject = new Map<
-    string,
+  const historyRowsByPlayer = new Map<
+    number,
     { matchId: string; snapshot: WeeklyParlayContributionSnapshot }[]
   >();
   for (const row of rows) {
@@ -147,9 +147,9 @@ export async function fetchWeeklyCandidateHistories(input: {
     if (subject === undefined) {
       continue;
     }
-    const bucket = historyRowsBySubject.get(subject.key) ?? [];
+    const bucket = historyRowsByPlayer.get(subject.playerId) ?? [];
     bucket.push({ matchId: row.match_id, snapshot: snapshotFor(row, subject) });
-    historyRowsBySubject.set(subject.key, bucket);
+    historyRowsByPlayer.set(subject.playerId, bucket);
   }
   return input.subjects
     .map((subject) => {
@@ -158,7 +158,7 @@ export async function fetchWeeklyCandidateHistories(input: {
           new Date(account.trackingStartedAt).getTime(),
         ),
       );
-      const historyRows = historyRowsBySubject.get(subject.key) ?? [];
+      const historyRows = historyRowsByPlayer.get(subject.playerId) ?? [];
       const snapshots = historyRows.map((row) => row.snapshot);
       const windows = keys
         .map((key) => {

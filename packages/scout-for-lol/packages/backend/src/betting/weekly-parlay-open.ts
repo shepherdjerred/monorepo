@@ -72,13 +72,16 @@ async function linkedMemberSubjects(
     },
     orderBy: { id: "asc" },
   });
-  return players.flatMap((player, index) => {
+  return players.flatMap((player) => {
     if (player.discordId === null || !members.has(player.discordId)) {
       return [];
     }
     return [
       WeeklyParlaySubjectsSchema.element.parse({
-        key: `P${(index + 1).toString()}`,
+        // Candidate subjects are evaluated one at a time in V1. Keep the
+        // schema-valid market key as a placeholder; history is keyed by the
+        // immutable player ID until a subject is selected.
+        key: "P1",
         playerId: player.id,
         alias: player.alias,
         discordId: player.discordId,
