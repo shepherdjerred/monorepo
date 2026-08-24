@@ -3,6 +3,10 @@ import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPosition } from "#src/betting/sweep.ts";
 import { outcomeLabel, type OutcomeFraming } from "#src/betting/team.ts";
+import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+
+const MAX_SETTLEMENT_DM_LENGTH = 1900;
+const TRUNCATION_SUFFIX = "...";
 
 export type SettlementDmKind =
   "betting_settlement_receipt" | "betting_player_bet_outcome";
@@ -189,7 +193,10 @@ export function buildSettlementDmMessages(input: {
           draft.ownLines.length > 0
             ? "betting_settlement_receipt"
             : "betting_player_bet_outcome",
-        content: sections.join("\n\n"),
+        content: truncateDiscordMessage(
+          sections.join("\n\n"),
+          MAX_SETTLEMENT_DM_LENGTH - TRUNCATION_SUFFIX.length,
+        ),
       },
     ];
   });

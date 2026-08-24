@@ -243,6 +243,18 @@ describe("Bryan Bucks settlement DMs", () => {
     expect(messages[0]?.content).toContain("YES 5 BB → won 5 BB.");
   });
 
+  test("bounds a combined message to Discord's safe content limit", () => {
+    const messages = build({
+      bets: Array.from({ length: 300 }, (_, index) =>
+        bet({ id: index + 1, discordId: blueBettor, teamId: 100, won: true }),
+      ),
+    });
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.content.length).toBeLessThanOrEqual(1900);
+    expect(messages[0]?.content.endsWith("...")).toBe(true);
+  });
+
   test("continues after one DM delivery fails", async () => {
     let sends = 0;
     const dependencies: SettlementDmDeliveryDependencies = {
