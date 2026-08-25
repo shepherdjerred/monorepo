@@ -1,6 +1,7 @@
 import {
   continueAsNew,
   log,
+  patched,
   proxyActivities,
   sleep,
   workflowInfo,
@@ -14,6 +15,9 @@ import type {
   ScoutWeeklyParlayActivities,
   ScoutWeeklyParlayTimeline,
 } from "#activities/scout-weekly-parlay.ts";
+
+const EMBEDDED_SCOUT_ACTIVITY_PATCH =
+  "scout-weekly-parlay-embedded-activities-v1";
 
 const deliveryActivities = proxyActivities<ScoutWeeklyParlayActivities>({
   startToCloseTimeout: "30 seconds",
@@ -45,6 +49,50 @@ const lifecycleActivities = proxyActivities<ScoutWeeklyParlayActivities>({
   },
 });
 
+const embeddedDeliveryActivities = proxyActivities<
+  Pick<ScoutWeeklyParlayActivities, "invokeScoutWeeklyParlayAction">
+>({
+  taskQueue: "scout-beta-background",
+  startToCloseTimeout: "30 seconds",
+  retry: {
+    maximumAttempts: 5,
+    initialInterval: "10 seconds",
+    backoffCoefficient: 2,
+    maximumInterval: "1 minute",
+  },
+});
+
+const embeddedOpenActivities = proxyActivities<
+  Pick<ScoutWeeklyParlayActivities, "invokeScoutWeeklyParlayAction">
+>({
+  taskQueue: "scout-beta-background",
+  startToCloseTimeout: "5 minutes",
+  retry: {
+    maximumAttempts: 5,
+    initialInterval: "10 seconds",
+    backoffCoefficient: 2,
+    maximumInterval: "1 minute",
+  },
+});
+
+function deliveryActionActivities(
+  useEmbedded: boolean,
+): Pick<ScoutWeeklyParlayActivities, "invokeScoutWeeklyParlayAction"> {
+  return useEmbedded ? embeddedDeliveryActivities : deliveryActivities;
+}
+
+function openActionActivities(
+  useEmbedded: boolean,
+): Pick<ScoutWeeklyParlayActivities, "invokeScoutWeeklyParlayAction"> {
+  return useEmbedded ? embeddedOpenActivities : openActivities;
+}
+
+function lifecycleActionActivities(
+  useEmbedded: boolean,
+): Pick<ScoutWeeklyParlayActivities, "invokeScoutWeeklyParlayAction"> {
+  return useEmbedded ? embeddedDeliveryActivities : lifecycleActivities;
+}
+
 const LIFECYCLE_RETRY_INTERVAL_MS = 5 * 60 * 1000;
 const FINALIZATION_CONTINUE_AS_NEW_AFTER_MS = 15 * 60 * 1000;
 
@@ -75,11 +123,16 @@ async function sleepUntil(timestamp: string): Promise<void> {
 
 async function invokeDeliveryAction(
   action: ScoutWeeklyParlayAction,
+  useEmbeddedActivities: boolean,
 ): Promise<void> {
   try {
     await (action.action === "open"
-      ? openActivities.invokeScoutWeeklyParlayAction(action)
-      : deliveryActivities.invokeScoutWeeklyParlayAction(action));
+      ? openActionActivities(
+          useEmbeddedActivities,
+        ).invokeScoutWeeklyParlayAction(action)
+      : deliveryActionActivities(
+          useEmbeddedActivities,
+        ).invokeScoutWeeklyParlayAction(action));
   } catch (error) {
     log.warn(
       "Weekly Scout parlay delivery action exhausted retries; continuing lifecycle",
@@ -99,12 +152,14 @@ async function invokeDeliveryAction(
 async function reconcileStartUntilFinalization(
   action: ScoutWeeklyParlayAction,
   finalizesAt: string,
+  useEmbeddedActivities: boolean,
 ): Promise<void> {
   const deadline = new Date(finalizesAt).getTime();
   while (Date.now() < deadline) {
     try {
-      const result =
-        await lifecycleActivities.invokeScoutWeeklyParlayAction(action);
+      const result = await lifecycleActionActivities(
+        useEmbeddedActivities,
+      ).invokeScoutWeeklyParlayAction(action);
       if (result.status === "reconciled" || result.detail === "no_market") {
         return;
       }
@@ -140,12 +195,14 @@ async function reconcileStartUntilFinalization(
 async function reconcileFinalization(
   action: ScoutWeeklyParlayAction,
   mode: "standard" | "catch_up",
+  useEmbeddedActivities: boolean,
 ): Promise<void> {
   const retryUntil = Date.now() + FINALIZATION_CONTINUE_AS_NEW_AFTER_MS;
   while (Date.now() < retryUntil) {
     try {
-      const result =
-        await lifecycleActivities.invokeScoutWeeklyParlayAction(action);
+      const result = await lifecycleActionActivities(
+        useEmbeddedActivities,
+      ).invokeScoutWeeklyParlayAction(action);
       if (result.status === "reconciled" || result.detail === "no_market") {
         return;
       } else {
@@ -193,54 +250,70 @@ async function runFrozenTimeline(
   timeline: ScoutWeeklyParlayTimeline,
   slot: number,
   mode: "standard" | "catch_up",
+  useEmbeddedActivities: boolean,
 ): Promise<void> {
   const base = { periodKey: timeline.periodKey, slot };
 
   await sleepUntil(timeline.openAt);
-  await invokeDeliveryAction({
-    ...base,
-    action: "open",
-    ...(mode === "catch_up"
-      ? {
-          window: {
-            kind: "catch_up" as const,
-            openAt: timeline.openAt,
-            bettingClosesAt: timeline.startsAt,
-            scoringStartsAt: timeline.startsAt,
-            scoringEndsAt: timeline.finalizesAt,
-          },
-        }
-      : {}),
-  });
+  await invokeDeliveryAction(
+    {
+      ...base,
+      action: "open",
+      ...(mode === "catch_up"
+        ? {
+            window: {
+              kind: "catch_up" as const,
+              openAt: timeline.openAt,
+              bettingClosesAt: timeline.startsAt,
+              scoringStartsAt: timeline.startsAt,
+              scoringEndsAt: timeline.finalizesAt,
+            },
+          }
+        : {}),
+    },
+    useEmbeddedActivities,
+  );
 
   if (timeline.reminderAt !== undefined) {
     await sleepUntil(timeline.reminderAt);
-    await invokeDeliveryAction({ ...base, action: "reminder" });
+    await invokeDeliveryAction(
+      { ...base, action: "reminder" },
+      useEmbeddedActivities,
+    );
   }
 
   await sleepUntil(timeline.startsAt);
   await reconcileStartUntilFinalization(
     { ...base, action: "start" },
     timeline.finalizesAt,
+    useEmbeddedActivities,
   );
 
   for (const [updateIndex, updateAt] of timeline.updatesAt.entries()) {
     await sleepUntil(updateAt);
-    await invokeDeliveryAction({
-      ...base,
-      action: "progress",
-      updateIndex,
-    });
+    await invokeDeliveryAction(
+      {
+        ...base,
+        action: "progress",
+        updateIndex,
+      },
+      useEmbeddedActivities,
+    );
   }
 
   await sleepUntil(timeline.finalizesAt);
-  await reconcileFinalization({ ...base, action: "finalize" }, mode);
+  await reconcileFinalization(
+    { ...base, action: "finalize" },
+    mode,
+    useEmbeddedActivities,
+  );
 }
 
 export async function runScoutWeeklyParlayWorkflow(
   rawInput: ScoutWeeklyParlayWorkflowInput = {},
 ): Promise<void> {
   const input = ScoutWeeklyParlayWorkflowInputSchema.parse(rawInput);
+  const useEmbeddedActivities = patched(EMBEDDED_SCOUT_ACTIVITY_PATCH);
   if (input.phase === "finalize") {
     if (input.periodKey === undefined) {
       throw new Error("Finalization continuation requires periodKey.");
@@ -252,6 +325,7 @@ export async function runScoutWeeklyParlayWorkflow(
         action: "finalize",
       },
       "standard",
+      useEmbeddedActivities,
     );
     return;
   }
@@ -260,13 +334,19 @@ export async function runScoutWeeklyParlayWorkflow(
   const scheduledStartAt = workflowInfo().startTime.toISOString();
   const timeline =
     await deliveryActivities.resolveScoutWeeklyParlayTimeline(scheduledStartAt);
-  await runFrozenTimeline(timeline, input.slot, "standard");
+  await runFrozenTimeline(
+    timeline,
+    input.slot,
+    "standard",
+    useEmbeddedActivities,
+  );
 }
 
 export async function runScoutWeeklyParlayCatchupWorkflow(
   rawInput: ScoutWeeklyParlayCatchupWorkflowInput,
 ): Promise<void> {
   const input = ScoutWeeklyParlayCatchupWorkflowInputSchema.parse(rawInput);
+  const useEmbeddedActivities = patched(EMBEDDED_SCOUT_ACTIVITY_PATCH);
   if (input.phase === "finalize") {
     await reconcileFinalization(
       {
@@ -275,6 +355,7 @@ export async function runScoutWeeklyParlayCatchupWorkflow(
         action: "finalize",
       },
       "catch_up",
+      useEmbeddedActivities,
     );
     return;
   }
@@ -284,5 +365,10 @@ export async function runScoutWeeklyParlayCatchupWorkflow(
       workflowStartAt,
       input.periodKey,
     );
-  await runFrozenTimeline(timeline, input.slot, "catch_up");
+  await runFrozenTimeline(
+    timeline,
+    input.slot,
+    "catch_up",
+    useEmbeddedActivities,
+  );
 }
