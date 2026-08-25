@@ -11,6 +11,7 @@ import {
   requireCompletedScoutEffectResult,
 } from "#src/temporal/effect-claims.ts";
 import {
+  durableExploreQuotaRejection,
   reserveDurableExploreRun,
   reserveDurableReportAiRun,
 } from "#src/temporal/durable-quota.ts";
@@ -77,6 +78,56 @@ describe("durable interactive reservations", () => {
 
     expect(attempts.filter((result) => result === null)).toHaveLength(1);
     expect(attempts.filter((result) => result !== null)).toHaveLength(1);
+  });
+
+  test("releases spend quota when execution fails before the provider claim", async () => {
+    const ownerId = DiscordAccountIdSchema.parse("900000000000000111");
+    const now = Date.parse("2026-08-24T12:00:00.000Z");
+    for (const index of [0, 1, 2, 3, 4]) {
+      const id = globalThis.crypto.randomUUID();
+      await expect(
+        reserveDurableExploreRun({
+          id,
+          ownerId,
+          conversationId: globalThis.crypto.randomUUID(),
+          payload: "{}",
+          now,
+          database: prisma,
+        }),
+      ).resolves.toBeNull();
+      await prisma.scoutInteractiveRun.update({
+        where: { id },
+        data: { state: "FAILED", completedAt: new Date(now + index) },
+      });
+    }
+
+    await expect(
+      durableExploreQuotaRejection(ownerId, now, prisma),
+    ).resolves.toBeNull();
+  });
+
+  test("charges spend quota after the provider claim even when execution interrupts", async () => {
+    const ownerId = DiscordAccountIdSchema.parse("900000000000000112");
+    const now = Date.parse("2026-08-24T12:00:00.000Z");
+    for (const index of [0, 1, 2, 3]) {
+      await prisma.scoutInteractiveRun.create({
+        data: {
+          id: globalThis.crypto.randomUUID(),
+          kind: "explore",
+          ownerId,
+          conversationId: globalThis.crypto.randomUUID(),
+          payload: "{}",
+          state: "INTERRUPTED",
+          providerAttemptAt: new Date(now + index),
+          completedAt: new Date(now + index),
+          createdAt: new Date(now + index),
+        },
+      });
+    }
+
+    await expect(
+      durableExploreQuotaRejection(ownerId, now + 4, prisma),
+    ).resolves.toMatchObject({ retryAfterSeconds: 60 });
   });
 
   test("interrupts an ambiguous provider attempt without opening a runtime", async () => {

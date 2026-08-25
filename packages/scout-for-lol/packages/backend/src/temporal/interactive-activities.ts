@@ -2,9 +2,17 @@ import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import { z } from "zod";
 import {
-  ExploreActiveRunSchema,
+  DiscordGuildIdSchema,
+  EXPLORE_ANSWER_MAX_LENGTH,
+  EXPLORE_TIMEOUT_MS,
   ExploreRunOutcomeSchema,
   ExploreTraceEntrySchema,
+  ReportAiEditRequestSchema,
+  ReportAiStreamEventSchema,
+  type ExploreRunOutcome,
+  type ExploreStreamEvent,
+  type ExploreTraceEntry,
+  type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
 import type {
   InteractiveOutcome,
@@ -13,11 +21,18 @@ import type {
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { exploreRunManager } from "#src/explore/run-manager.ts";
 import { persistPartialAnswer } from "#src/explore/partial-answer.ts";
+import { loadExploreTranscript } from "#src/explore/store.ts";
+import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
+import { streamExploreAgent } from "#src/explore/agent.ts";
+import type { ExploreRateLimitTicket } from "#src/explore/rate-limit.ts";
+import { recordExploreTraceEvent } from "#src/explore/trace.ts";
+import { streamReportQueryAgent } from "#src/reports/ai/report-query-agent.ts";
+import { getReportAiQuotaStatus } from "#src/reports/ai/rate-limit.ts";
 import { scoutTemporalInterruptedProviderAttempts } from "#src/metrics/temporal.ts";
 import type { ScoutInteractiveRun } from "#generated/prisma/client/index.js";
 
 const ExplorePayloadSchema = z.strictObject({
-  summary: ExploreActiveRunSchema,
+  summary: z.looseObject({ runId: z.uuid() }),
   started: z.strictObject({
     conversationId: z.uuid(),
     title: z.string(),
@@ -29,6 +44,11 @@ const ExplorePayloadSchema = z.strictObject({
     createdQuestion: z.boolean(),
   }),
   guildIds: z.array(z.string()),
+});
+
+const ReportAiPayloadSchema = z.strictObject({
+  edit: ReportAiEditRequestSchema,
+  exempt: z.boolean(),
 });
 
 function mapExploreOutcome(
@@ -129,38 +149,78 @@ async function runUntilSettled<T>(input: {
   }
 }
 
+export async function executeRecoveredReportAi(
+  run: ScoutInteractiveRun,
+  abortSignal: AbortSignal,
+  database: ExtendedPrismaClient,
+): Promise<InteractiveOutcome> {
+  const payload = ReportAiPayloadSchema.parse(JSON.parse(run.payload));
+  const guildId = DiscordGuildIdSchema.parse(run.guildId);
+  const events: ReportAiStreamEvent[] = [];
+  let partial = "";
+  const emit = async (rawEvent: ReportAiStreamEvent): Promise<void> => {
+    const event = ReportAiStreamEventSchema.parse(rawEvent);
+    events.push(event);
+    if (event.type === "draft_delta") partial += event.text;
+    await database.scoutInteractiveRun.update({
+      where: { id: run.id },
+      data: {
+        partialOutput: partial.length === 0 ? null : partial,
+        trace: JSON.stringify(events),
+      },
+    });
+  };
+  const draft = await streamReportQueryAgent({
+    runId: run.id,
+    input: payload.edit,
+    abortSignal,
+    emit,
+  });
+  await emit({
+    type: "final",
+    draft,
+    formattedQueryText: draft.queryText,
+    quota: getReportAiQuotaStatus(
+      { userId: run.ownerId, guildId },
+      Date.now(),
+      { exempt: payload.exempt },
+    ).quota,
+  });
+  return {
+    status: "completed",
+    partialOutputAvailable: partial.length > 0,
+  };
+}
+
 async function runReportAiActivity(
-  runId: string,
+  run: ScoutInteractiveRun,
   database: ExtendedPrismaClient,
 ): Promise<InteractiveOutcome> {
   const { reportAiRuntime } =
     await import("#src/reports/ai/temporal-runtime.ts");
-  const runtime = reportAiRuntime(runId);
-  if (runtime === undefined) {
-    throw new Error(
-      `Report AI run ${runId} has no live execution adapter after its provider claim`,
-    );
-  }
+  const runtime = reportAiRuntime(run.id);
+  const abortController = runtime?.abortController ?? new AbortController();
   const cancellationSignal = Context.current().cancellationSignal;
   const cancel = (): void => {
-    runtime.abortController.abort(
-      "Report AI edit cancelled by its Temporal Workflow.",
-    );
+    abortController.abort("Report AI edit cancelled by its Temporal Workflow.");
   };
   cancellationSignal.addEventListener("abort", cancel, { once: true });
   if (cancellationSignal.aborted) cancel();
   try {
     return await runUntilSettled({
-      execution: runtime.execute(),
+      execution:
+        runtime === undefined
+          ? executeRecoveredReportAi(run, abortController.signal, database)
+          : runtime.execute(),
       intervalMs: 5000,
       heartbeat: async () => {
         const snapshot = await database.scoutInteractiveRun.findUniqueOrThrow({
-          where: { id: runId },
+          where: { id: run.id },
           select: { partialOutput: true, stopRequestedAt: true },
         });
         if (snapshot.stopRequestedAt !== null) cancel();
         Context.current().heartbeat({
-          runId,
+          runId: run.id,
           partialCharacters: snapshot.partialOutput?.length ?? 0,
         });
       },
@@ -170,47 +230,134 @@ async function runReportAiActivity(
   }
 }
 
+export async function executeRecoveredExplore(
+  run: ScoutInteractiveRun,
+  abortSignal: AbortSignal,
+  database: ExtendedPrismaClient,
+): Promise<ExploreRunOutcome> {
+  const payload = ExplorePayloadSchema.parse(JSON.parse(run.payload));
+  const transcript = await loadExploreTranscript(
+    database,
+    payload.started.conversationId,
+    run.ownerId,
+    payload.started.messageId,
+  );
+  if (transcript === null) {
+    throw ApplicationFailure.nonRetryable(
+      `Explore conversation ${payload.started.conversationId} no longer exists`,
+      "MissingDomainRecord",
+    );
+  }
+  const trace: ExploreTraceEntry[] = [];
+  let partial = "";
+  const ticket: ExploreRateLimitTicket = {
+    allowed: true,
+    runId: run.id,
+    claimConversation: () => true,
+    commit: () => {
+      // The database reservation is already the authoritative quota claim.
+    },
+    finish: () => {
+      // Durable cleanup releases quota when this Activity records its outcome.
+    },
+  };
+  const emit = async (event: ExploreStreamEvent): Promise<void> => {
+    if (event.type === "answer_delta") {
+      const available = EXPLORE_ANSWER_MAX_LENGTH - partial.length;
+      if (available > 0) partial += event.text.slice(0, available);
+    } else if (event.type === "final") {
+      partial = event.message.content;
+    }
+    recordExploreTraceEvent(trace, event);
+    await database.scoutInteractiveRun.update({
+      where: { id: run.id },
+      data: {
+        partialOutput: partial.length === 0 ? null : partial,
+        trace: JSON.stringify(trace),
+        ...(event.type === "final"
+          ? { resultMessageId: event.message.id }
+          : {}),
+      },
+    });
+  };
+  const result = await runPersistedExploreTurn(
+    {
+      ticket,
+      identity: { userId: run.ownerId },
+      guildIds: payload.guildIds,
+      started: payload.started,
+      history: transcript.messages,
+      abortSignal,
+      abortOutcome: () => "stopped",
+      emit,
+    },
+    {
+      client: database,
+      executeAgent: streamExploreAgent,
+      now: Date.now,
+      timeoutMs: EXPLORE_TIMEOUT_MS,
+    },
+  );
+  return result.outcome;
+}
+
 async function runExploreActivity(
-  runId: string,
+  run: ScoutInteractiveRun,
   database: ExtendedPrismaClient,
 ): Promise<InteractiveOutcome> {
   const cancellationSignal = Context.current().cancellationSignal;
+  const recoveredAbortController = new AbortController();
+  const localRuntime = exploreRunManager.snapshot(run.id) !== undefined;
   const cancel = (): void => {
-    exploreRunManager.cancelTemporal(
-      runId,
-      "Explore turn cancelled by its Temporal Workflow.",
-    );
+    if (localRuntime) {
+      exploreRunManager.cancelTemporal(
+        run.id,
+        "Explore turn cancelled by its Temporal Workflow.",
+      );
+    } else {
+      recoveredAbortController.abort(
+        "Explore turn cancelled by its Temporal Workflow.",
+      );
+    }
   };
   cancellationSignal.addEventListener("abort", cancel, { once: true });
   if (cancellationSignal.aborted) cancel();
   try {
     const outcome = await runUntilSettled({
-      execution: exploreRunManager.executeTemporal(runId),
+      execution: localRuntime
+        ? exploreRunManager.executeTemporal(run.id)
+        : executeRecoveredExplore(
+            run,
+            recoveredAbortController.signal,
+            database,
+          ),
       intervalMs: 1000,
       heartbeat: async () => {
-        const snapshot = exploreRunManager.snapshot(runId);
+        const snapshot = exploreRunManager.snapshot(run.id);
         const control = await database.scoutInteractiveRun.findUniqueOrThrow({
-          where: { id: runId },
-          select: { stopRequestedAt: true },
+          where: { id: run.id },
+          select: { partialOutput: true, stopRequestedAt: true },
         });
         if (control.stopRequestedAt !== null) cancel();
-        if (snapshot === undefined) return;
-        await database.scoutInteractiveRun.update({
-          where: { id: runId },
-          data: {
-            partialOutput: snapshot.answer,
-            trace: JSON.stringify(snapshot.trace),
-          },
-        });
+        if (snapshot !== undefined) {
+          await database.scoutInteractiveRun.update({
+            where: { id: run.id },
+            data: {
+              partialOutput: snapshot.answer,
+              trace: JSON.stringify(snapshot.trace),
+            },
+          });
+        }
         Context.current().heartbeat({
-          runId,
-          partialCharacters: snapshot.answer.length,
-          traceEntries: snapshot.trace.length,
+          runId: run.id,
+          partialCharacters:
+            snapshot?.answer.length ?? control.partialOutput?.length ?? 0,
+          traceEntries: snapshot?.trace.length ?? 0,
         });
       },
     });
     const persisted = await database.scoutInteractiveRun.findUniqueOrThrow({
-      where: { id: runId },
+      where: { id: run.id },
       select: { partialOutput: true },
     });
     return mapExploreOutcome(
@@ -256,25 +403,6 @@ export async function runScoutInteractiveActivity(
     return await ambiguousOutcome(run, database);
   }
 
-  if (run.kind === "explore") {
-    const parsedPayload = ExplorePayloadSchema.parse(JSON.parse(run.payload));
-    await exploreRunManager.rehydrateTemporalRun({
-      summary: parsedPayload.summary,
-      identity: { userId: run.ownerId },
-      guildIds: parsedPayload.guildIds,
-      started: parsedPayload.started,
-    });
-  } else {
-    const { reportAiRuntime } =
-      await import("#src/reports/ai/temporal-runtime.ts");
-    if (reportAiRuntime(run.id) === undefined) {
-      return {
-        status: "interrupted",
-        partialOutputAvailable: (run.partialOutput?.length ?? 0) > 0,
-      };
-    }
-  }
-
   const claim = await database.scoutInteractiveRun.updateMany({
     where: { id: run.id, providerAttemptAt: null, state: "PENDING" },
     data: {
@@ -290,9 +418,9 @@ export async function runScoutInteractiveActivity(
   }
 
   if (input.kind === "report-ai") {
-    return await runReportAiActivity(run.id, database);
+    return await runReportAiActivity(run, database);
   }
-  return await runExploreActivity(run.id, database);
+  return await runExploreActivity(run, database);
 }
 
 export async function persistScoutInteractiveOutcome(

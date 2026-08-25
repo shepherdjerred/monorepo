@@ -22,8 +22,10 @@ import {
   scoutReportAiRunDurationSeconds,
   scoutReportAiRunsTotal,
 } from "#src/metrics/report-ai.ts";
+import { createLogger } from "#src/logger.ts";
 
 const encoder = new TextEncoder();
+const logger = createLogger("report-ai-temporal-runtime");
 
 type ActiveReportAiRuntime = {
   abortController: AbortController;
@@ -111,6 +113,7 @@ export function createTemporalReportAiResponse(input: {
   input.request.signal.addEventListener("abort", abortFromRequest, {
     once: true,
   });
+  if (input.request.signal.aborted) abortFromRequest();
   const timeout = setTimeout(() => {
     void requestTemporalReportAiStop(input.ticket.runId);
   }, REPORT_AI_TIMEOUT_MS);
@@ -235,10 +238,21 @@ async function requestTemporalReportAiStop(runId: string): Promise<void> {
   });
   const supervisor = currentScoutTemporalSupervisor();
   if (supervisor === undefined) return;
-  await supervisor
-    .client()
-    .workflow.getHandle(
-      scoutInteractiveWorkflowId(configuration.environment, "report-ai", runId),
-    )
-    .signal(requestStopSignal);
+  try {
+    await supervisor
+      .client()
+      .workflow.getHandle(
+        scoutInteractiveWorkflowId(
+          configuration.environment,
+          "report-ai",
+          runId,
+        ),
+      )
+      .signal(requestStopSignal);
+  } catch (error) {
+    logger.warn(
+      `Persisted stop for report-AI run ${runId} before its Workflow could be signalled`,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 }

@@ -56,6 +56,7 @@ export async function reserveAndStartDurableExploreRun(input: {
       started: input.started,
       guildIds: input.guildIds,
     }),
+    database: input.database,
   });
   if (rejection !== null) return rejection;
   try {
