@@ -113,7 +113,7 @@ export function createTemporalWorkerAuditRbac(
  */
 export function createTemporalWorkerTasknotesCanaryRbac(
   chart: Chart,
-  serviceAccount: ServiceAccount,
+  serviceAccounts: readonly ServiceAccount[],
 ): void {
   // The deterministic TaskNotes canary reads AUTH_TOKEN only inside the
   // tasknotes-server process and emits the typed engine-status response. The
@@ -145,13 +145,11 @@ export function createTemporalWorkerTasknotesCanaryRbac(
         kind: "Role",
         name: "temporal-worker-tasknotes-engine-status",
       },
-      subjects: [
-        {
-          kind: "ServiceAccount",
-          name: serviceAccount.name,
-          namespace: serviceAccount.metadata.namespace ?? "temporal",
-        },
-      ],
+      subjects: serviceAccounts.map((serviceAccount) => ({
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: serviceAccount.metadata.namespace ?? "temporal",
+      })),
     },
   );
 }

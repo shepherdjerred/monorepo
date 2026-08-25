@@ -41,9 +41,7 @@ async function fetchXsrfToken(pageUrl: string): Promise<string> {
   return match[1];
 }
 
-export type GolinkSyncActivities = typeof golinkSyncActivities;
-
-export const golinkSyncActivities = {
+export const golinkClusterActivities = {
   async listTailscaleIngresses(): Promise<string[]> {
     const networkingApi = getK8sClient();
 
@@ -66,7 +64,11 @@ export const golinkSyncActivities = {
 
     return [...new Set(hostnames)].toSorted();
   },
+};
 
+export type GolinkClusterActivities = typeof golinkClusterActivities;
+
+export const golinkSyncActivities = {
   async getExistingGolinks(golinkUrl: string): Promise<GolinkEntry[]> {
     const response = await fetch(`${golinkUrl}/.export`, {
       headers: { "Sec-Golink": "1" },
@@ -160,3 +162,5 @@ export const golinkSyncActivities = {
     console.warn(`Deleted stale: go/${short}`);
   },
 };
+
+export type GolinkSyncActivities = typeof golinkSyncActivities;

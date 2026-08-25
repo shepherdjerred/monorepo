@@ -78,7 +78,7 @@ test("FreshRSS sync keeps its bounded pre-refresh schedule", () => {
   const schedule = findScheduleById("freshrss-sync-hourly");
   expect(schedule.workflowType).toBe("runFreshRssSyncWorkflow");
   expect(schedule.cronExpression).toBe("7 * * * *");
-  expect(schedule.taskQueue).toBe(TASK_QUEUES.DEFAULT);
+  expect(schedule.taskQueue).toBe(TASK_QUEUES.REPO_AUTOMATION);
   expect(schedule.catchupWindow).toBe("5 minutes");
   expect(schedule.workflowExecutionTimeout).toBe("6 minutes");
 });
@@ -309,7 +309,7 @@ describe("Scout weekly parlay schedule config", () => {
       workflowType: "runScoutWeeklyParlayWorkflow",
       args: [{}],
       cronExpression: "0 12 * * 0",
-      taskQueue: TASK_QUEUES.DEFAULT,
+      taskQueue: TASK_QUEUES.SCOUT,
       overlap: ScheduleOverlapPolicy.ALLOW_ALL,
       requiredEnvironment: [
         "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
@@ -325,7 +325,7 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
       workflowType: "runScoutBryanBucksAnalyticsWorkflow",
       args: [],
       cronExpression: "*/15 * * * *",
-      taskQueue: TASK_QUEUES.DEFAULT,
+      taskQueue: TASK_QUEUES.SCOUT,
       overlap: ScheduleOverlapPolicy.SKIP,
       workflowExecutionTimeout: "5 minutes",
       requiredEnvironment: [

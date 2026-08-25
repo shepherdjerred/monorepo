@@ -6,9 +6,7 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  type ISecret,
   Secret,
-  Service,
   ServiceAccount,
   Volume,
 } from "cdk8s-plus-31";
@@ -17,9 +15,7 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   createTemporalWorkerAuditRbac,
@@ -27,88 +23,26 @@ import {
 } from "./audit-rbac.ts";
 import { createTemporalAgentWorker } from "./agent-worker.ts";
 import { createTemporalWorkerCrdReaderRbac } from "./crd-rbac.ts";
-import { sleepWebhookEnv } from "./http-services.ts";
 import { glitterContextEnv, glitterCorpusEnv } from "./glitter-corpus-env.ts";
 import { createTemporalGlitterWorkers } from "./glitter-worker.ts";
 import { createTemporalIngressWorkers } from "./ingress-workers.ts";
+import { createTemporalLegacyWorkerMetrics } from "./legacy-worker-metrics.ts";
+import {
+  homelabAuditEnv,
+  legacyWorkerEnvironment,
+} from "./legacy-worker-env.ts";
+import { createTemporalOperationsWorkers } from "./operations-workers.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
+  createTemporalWorkerIngressReaderRbac,
   createTemporalWorkerServiceAccount,
 } from "./worker-rbac.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
 };
-
-/**
- * Build a map of `KEY: EnvValue.fromSecretValue(...)` entries for the
- * homelab-audit-daily workflow credentials. Every field is REQUIRED: if a 1P
- * field is unset the pod fails to start (CreateContainerConfigError) rather
- * than booting with a silently-missing secret. This is the fail-fast contract
- * for the whole repo — no `optional: true` on secrets. The 1P item must carry
- * every key referenced here.
- */
-function requiredSecretEnv(
-  secret: ISecret,
-  keys: readonly string[],
-): Record<string, EnvValue> {
-  const env: Record<string, EnvValue> = {};
-  for (const key of keys) {
-    env[key] = EnvValue.fromSecretValue({ secret, key });
-  }
-  return env;
-}
-
-function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
-  return {
-    // homelab-audit-daily workflow credentials. All required — a missing 1P
-    // field crash-loops the pod (fail-fast) instead of starting with a gap.
-    BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
-    BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
-    BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
-    PROMETHEUS_URL: EnvValue.fromValue(
-      "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
-    ),
-    // gcx stores its credential in a config file, written by
-    // ensureGcxContext() (src/activities/gcx-context.ts) at audit time from the
-    // GRAFANA_URL/GRAFANA_API_KEY below. Its default location is
-    // $HOME/.config/gcx/config.yaml, which resolves to /home/bun from the
-    // oven/bun base image and is writable by uid 1000. Pinning the path anyway
-    // keeps the credential's location independent of the base image, so a bun
-    // bump that changes HOME cannot silently relocate it.
-    //
-    // The file sits directly under the /tmp mount rather than in a gcx/
-    // subdirectory: /tmp is a fresh emptyDir on every pod start, so any
-    // intermediate directory would have to be created before `gcx login` runs,
-    // and nothing does that. Keeping the path one level deep means there is no
-    // directory to create. Do not reintroduce a subdirectory here without also
-    // creating it in ensureGcxContext().
-    GCX_CONFIG: EnvValue.fromValue("/tmp/gcx-config.yaml"),
-    // Suppress gcx's outbound GitHub release check and anonymous telemetry; a
-    // homelab worker should make no unsolicited egress. ensureGcxContext()
-    // spawns gcx with an allowlisted environment, so both names must stay in
-    // its GCX_INHERITED_ENV or they never reach the process they constrain.
-    GCX_NO_UPDATE_NOTIFIER: EnvValue.fromValue("1"),
-    GCX_TELEMETRY: EnvValue.fromValue("disabled"),
-    ...requiredSecretEnv(secret, [
-      "BUGSINK_TOKEN",
-      "GRAFANA_URL",
-      "GRAFANA_API_KEY",
-      "ARGOCD_SERVER",
-      "ARGOCD_AUTH_TOKEN",
-      "CLOUDFLARE_API_TOKEN",
-      "BUILDKITE_API_TOKEN",
-    ]),
-    ALERT_DASHBOARD_URL: EnvValue.fromValue(
-      "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
-    ),
-    // talosctl reads its config from $TALOSCONFIG; the secret volume below
-    // projects 1P field TALOSCONFIG_YAML to this path.
-    TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
-  };
-}
 
 export function createTemporalWorkerDeployment(
   chart: Chart,
@@ -172,6 +106,10 @@ export function createTemporalWorkerDeployment(
   });
 
   const serviceAccount = createTemporalWorkerServiceAccount(chart);
+  const infraServiceAccount = createTemporalWorkerServiceAccount(chart, {
+    constructId: "temporal-infra-worker-sa",
+    name: "temporal-infra-worker",
+  });
   const agentServiceAccount = new ServiceAccount(
     chart,
     "temporal-agent-worker-sa",
@@ -180,16 +118,33 @@ export function createTemporalWorkerDeployment(
     },
   );
 
-  createTemporalWorkerMaintenanceRbac(chart, serviceAccount);
+  createTemporalWorkerIngressReaderRbac(chart, [
+    serviceAccount,
+    infraServiceAccount,
+  ]);
+  createTemporalWorkerMaintenanceRbac(chart, [
+    serviceAccount,
+    infraServiceAccount,
+  ]);
 
   // Cluster-wide read-only RBAC for deterministic collectors and generic
   // report-only investigations. Only the core worker receives the separate
   // TaskNotes exec role; the agent worker cannot exec into any pod.
-  createTemporalWorkerAuditRbac(chart, [serviceAccount, agentServiceAccount]);
-  createTemporalWorkerTasknotesCanaryRbac(chart, serviceAccount);
+  createTemporalWorkerAuditRbac(chart, [
+    serviceAccount,
+    infraServiceAccount,
+    agentServiceAccount,
+  ]);
+  createTemporalWorkerTasknotesCanaryRbac(chart, [
+    serviceAccount,
+    infraServiceAccount,
+  ]);
 
   // Read-only CRD access for homelab-crd-imports-daily. See ./crd-rbac.ts.
-  createTemporalWorkerCrdReaderRbac(chart, serviceAccount);
+  createTemporalWorkerCrdReaderRbac(chart, [
+    serviceAccount,
+    infraServiceAccount,
+  ]);
 
   const deployment = new Deployment(chart, "temporal-worker", {
     replicas: 1,
@@ -238,177 +193,17 @@ export function createTemporalWorkerDeployment(
           limit: Cpu.millis(1500),
         },
         memory: {
-          request: Size.gibibytes(3),
+          request: Size.mebibytes(512),
           limit: Size.gibibytes(6),
         },
       },
       ...temporalWorkerHealthProbes(),
-      envVariables: {
-        TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
-        TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
-        TEMPORAL_WORKER_ROLE: EnvValue.fromValue("legacy"),
-        FRESHRSS_API_URL: EnvValue.fromValue(
-          "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",
-        ),
-        FRESHRSS_USER: EnvValue.fromValue("sjerred"),
-        FRESHRSS_CATEGORY: EnvValue.fromValue("Repo Stack"),
-        FRESHRSS_MANIFEST_PATH: EnvValue.fromValue(
-          "/etc/freshrss/desired.json",
-        ),
-        FRESHRSS_API_PASSWORD_FILE: EnvValue.fromValue(
-          "/run/secrets/freshrss/password",
-        ),
-        ENVIRONMENT: EnvValue.fromValue("production"),
-        // Keep headless Claude Agent SDK sessions from starting optional traffic or updates.
-        CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
-        DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
-        // OpenTelemetry tracing → Tempo. initializeTracing() in worker.ts
-        // gates on TELEMETRY_ENABLED.
-        TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-        OTLP_ENDPOINT: EnvValue.fromValue(
-          "http://tempo.tempo.svc.cluster.local:4318",
-        ),
-        TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-worker"),
-        // Git identity for any activity that runs `git commit`.
-        GIT_AUTHOR_NAME: EnvValue.fromValue("temporal-worker[bot]"),
-        GIT_AUTHOR_EMAIL: EnvValue.fromValue("temporal-worker@homelab.local"),
-        GIT_COMMITTER_NAME: EnvValue.fromValue("temporal-worker[bot]"),
-        GIT_COMMITTER_EMAIL: EnvValue.fromValue(
-          "temporal-worker@homelab.local",
-        ),
-        // Trust the in-cluster CA for Bun and @kubernetes/client-node TLS calls.
-        NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
-          "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-        ),
-        // Home Assistant
-        HA_URL: EnvValue.fromSecretValue({ secret, key: "HA_URL" }),
-        HA_TOKEN: EnvValue.fromSecretValue({ secret, key: "HA_TOKEN" }),
-        // S3 / SeaweedFS (for fetcher)
-        S3_BUCKET_NAME: EnvValue.fromSecretValue({
-          secret,
-          key: "S3_BUCKET_NAME",
-        }),
-        S3_ENDPOINT: EnvValue.fromSecretValue({ secret, key: "S3_ENDPOINT" }),
-        S3_KEY: EnvValue.fromValue("data/manifest.json"),
-        S3_REGION: EnvValue.fromValue("us-east-1"),
-        AWS_REGION: EnvValue.fromValue("us-east-1"),
-        AWS_DEFAULT_REGION: EnvValue.fromValue("us-east-1"),
-        S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
-        ...llmArchiveEnvVars(),
-        // The deterministic homelab audit stores typed report state and email
-        // acceptance receipts through the shared report sender. Legacy audit
-        // archive variables remain intentionally unwired for history replay.
-        AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-          secret,
-          key: "AWS_ACCESS_KEY_ID",
-        }),
-        AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "AWS_SECRET_ACCESS_KEY",
-        }),
-        ...glitterCorpusEnv(secret, starlightBotSecret),
-        // GitHub
-        GITHUB_APP_ID: EnvValue.fromSecretValue({
-          secret,
-          key: "GITHUB_APP_ID",
-        }),
-        GITHUB_APP_INSTALLATION_ID: EnvValue.fromSecretValue({
-          secret,
-          key: "GITHUB_APP_INSTALLATION_ID",
-        }),
-        GITHUB_APP_PRIVATE_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "GITHUB_APP_PRIVATE_KEY",
-        }),
-        // GitHub webhook ingest for the merge-conflict check (push +
-        // pull_request) and PR-closed Buildkite build cancellation (closed).
-        // GitHub API, clone, and commit-status operations mint short-lived
-        // installation tokens from the app credentials above.
-        GITHUB_WEBHOOK_SECRET: EnvValue.fromSecretValue({
-          secret,
-          key: "GITHUB_WEBHOOK_SECRET",
-        }),
-        // Claude Code subscription OAuth token — sole auth for every Claude
-        // Agent SDK run (homelab synthesis, generic agent-task, Scout season).
-        // All work bills against the subscription; no direct-provider
-        // inference key is wired here, so a leak cannot start direct-API
-        // billing. Ordinary inference goes through OPENROUTER_API_KEY below.
-        CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "CLAUDE_CODE_OAUTH_TOKEN",
-        }),
-        GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
-        AGENT_TASK_API_PORT: EnvValue.fromValue("9467"),
-        AGENT_TASK_API_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "AGENT_TASK_API_TOKEN",
-        }),
-        SCOUT_WEEKLY_PARLAY_CONTROL_URL: EnvValue.fromValue(
-          "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/weekly-parlays/actions",
-        ),
-        SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN: EnvValue.fromSecretValue({
-          secret: scoutWeeklyParlaySecret,
-          key: "token",
-        }),
-        ...sleepWebhookEnv(secret),
-        // Xcode Cloud webhook receiver (event-bridge/xcode-cloud-webhook.ts).
-        // The receiver only starts when XCODE_CLOUD_WEBHOOK_TOKEN is set; the
-        // token authenticates the unguessable URL path (Xcode Cloud webhooks
-        // carry no signature). On a FAILED/ERRORED iOS build it POSTs a
-        // `severity=warning` alert to Alertmanager, which the existing route
-        // forwards to the Alerts dashboard. Required — the 1P item carries
-        // XCODE_CLOUD_WEBHOOK_TOKEN.
-        XCODE_CLOUD_WEBHOOK_PORT: EnvValue.fromValue("9468"),
-        XCODE_CLOUD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "XCODE_CLOUD_WEBHOOK_TOKEN",
-        }),
-        // In-cluster Alertmanager write API. Non-sensitive; a plain literal.
-        ALERTMANAGER_URL: EnvValue.fromValue(
-          "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
-        ),
-        // Bugsink (Sentry-compatible) error tracking. Read by initSentry()
-        // in worker.ts. Required — the 1P item carries SENTRY_DSN.
-        SENTRY_DSN: EnvValue.fromSecretValue({
-          secret,
-          key: "SENTRY_DSN",
-        }),
-        // OpenRouter ordinary inference and Codex SDK agent auth are separate,
-        // service-scoped credentials. No direct provider API key is injected.
-        OPENROUTER_API_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "OPENROUTER_API_KEY",
-        }),
-        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "CODEX_ACCESS_TOKEN",
-        }),
-        // Postal email
-        POSTAL_HOST: EnvValue.fromSecretValue({ secret, key: "POSTAL_HOST" }),
-        POSTAL_HOST_HEADER: EnvValue.fromSecretValue({
-          secret,
-          key: "POSTAL_HOST_HEADER",
-        }),
-        POSTAL_API_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "POSTAL_API_KEY",
-        }),
-        RECIPIENT_EMAIL: EnvValue.fromSecretValue({
-          secret,
-          key: "RECIPIENT_EMAIL",
-        }),
-        // Sender domain must have valid SPF/DKIM for the recipient's mail
-        // server to accept delivery. The previous literal `updates@homelab.local`
-        // was non-routable and got silently dropped by external recipients.
-        // Sourced from 1Password (item `temporal-temporal-worker-1p`, key
-        // `SENDER_EMAIL`) so the address can rotate without code changes.
-        // Required — the 1P item carries SENDER_EMAIL.
-        SENDER_EMAIL: EnvValue.fromSecretValue({
-          secret,
-          key: "SENDER_EMAIL",
-        }),
-        ...homelabAuditEnv(secret),
-      },
+      envVariables: legacyWorkerEnvironment({
+        serverServiceName: props.serverServiceName,
+        secret,
+        starlightBotSecret,
+        scoutWeeklyParlaySecret,
+      }),
     }),
   );
 
@@ -555,39 +350,19 @@ export function createTemporalWorkerDeployment(
   );
   container.mount("/etc/talos", talosConfigVolume, { readOnly: true });
 
-  // Service + ServiceMonitor for the Temporal SDK's built-in Prometheus
-  // bridge on :9464.
-  new Service(chart, "temporal-worker-metrics-service", {
-    selector: deployment,
-    metadata: {
-      labels: { app: "temporal-worker-metrics" },
-    },
-    ports: [{ port: 9464, name: "metrics" }],
-  });
+  const { infraDeployment, repoDeployment, scoutDeployment } =
+    createTemporalOperationsWorkers(chart, {
+      serverServiceName: props.serverServiceName,
+      secret,
+      scoutWeeklyParlaySecret,
+      infraServiceAccount,
+      homelabAuditEnvironment: homelabAuditEnv(secret),
+      talosConfigVolume,
+      freshRssManifestVolume,
+      freshRssCredentialVolume,
+    });
 
-  createServiceMonitor(chart, {
-    name: "temporal-worker-metrics",
-    matchLabels: { app: "temporal-worker-metrics" },
-  });
-
-  // Service + ServiceMonitor for the application Prometheus registry on
-  // :9465 (started by observability/metrics.ts in the worker). Separate
-  // from the SDK bridge so app-level handles can evolve independently.
-  new Service(chart, "temporal-worker-app-metrics-service", {
-    metadata: {
-      name: "temporal-worker-app-metrics",
-      labels: { app: "temporal-worker-app-metrics" },
-    },
-    selector: deployment,
-    ports: [{ name: "app-metrics", port: 9465, targetPort: 9465 }],
-  });
-
-  createServiceMonitor(chart, {
-    name: "temporal-worker-app-metrics",
-    port: "app-metrics",
-    interval: "30s",
-    matchLabels: { app: "temporal-worker-app-metrics" },
-  });
+  createTemporalLegacyWorkerMetrics(chart);
 
   return {
     deployment,
@@ -595,6 +370,9 @@ export function createTemporalWorkerDeployment(
     gatewayDeployment,
     homeDeployment,
     reportsDeployment,
+    infraDeployment,
+    repoDeployment,
+    scoutDeployment,
     glitterCorpusDeployment: corpusDeployment,
     glitterContextDeployment: contextDeployment,
   };

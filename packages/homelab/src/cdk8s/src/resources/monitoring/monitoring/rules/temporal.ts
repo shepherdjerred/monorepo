@@ -1,6 +1,7 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
+import { buildTemporalDomainWorkerHealthRules } from "./temporal-worker-health.ts";
 
 type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
 
@@ -97,46 +98,6 @@ function buildCheckAndSkipOutcomeRules(): PrometheusRule[] {
   };
 
   return [...perWorkflow, fallback];
-}
-
-// agentTaskWorkflow timeouts are diagnosed per execution by
-// temporal-failure-watch. These queue-health rules are the independent
-// starvation signal: they tell us whether the agent-task worker is polling and
-// whether scheduled workflow tasks are waiting before any capacity change.
-function buildAgentTaskWorkerHealthRules(): PrometheusRule[] {
-  return [
-    {
-      alert: "TemporalAgentTaskWorkflowPollerUnavailable",
-      annotations: {
-        summary: "Temporal agent-task workflow poller is unavailable",
-        description: escapePrometheusTemplate(
-          "The Temporal SDK has reported no workflow-task poller for the agent-task queue for five minutes. Inspect worker pod readiness, Temporal connectivity, and the agent-task task queue before changing worker replicas or concurrency.",
-        ),
-      },
-      expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-        'absent(temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="agent-task",poller_type="workflow_task"}) or max(temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="agent-task",poller_type="workflow_task"}) < 1',
-      ),
-      for: "5m",
-      labels: {
-        severity: "warning",
-      },
-    },
-    {
-      alert: "TemporalAgentTaskWorkflowTaskScheduleToStartHigh",
-      annotations: {
-        summary: "Temporal agent-task workflow tasks are waiting",
-        description:
-          "The 95th percentile Temporal workflow-task schedule-to-start latency for agent-task has exceeded five seconds for five minutes. Inspect task-queue poll health and worker scrape availability; do not change concurrency without this evidence.",
-      },
-      expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-        'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="temporal",exported_namespace="default",task_queue="agent-task"}[5m]))) > 5',
-      ),
-      for: "5m",
-      labels: {
-        severity: "warning",
-      },
-    },
-  ];
 }
 
 // Scout Data Dragon updater failure alerts. Extracted from
@@ -427,7 +388,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             severity: "warning",
           },
         },
-        ...buildAgentTaskWorkerHealthRules(),
+        ...buildTemporalDomainWorkerHealthRules(),
         {
           alert: "TemporalReportHeartbeatStale",
           annotations: {

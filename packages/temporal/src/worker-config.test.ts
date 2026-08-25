@@ -88,6 +88,22 @@ describe("Temporal worker role contracts", () => {
     for (const serialRole of serialRoles) {
       expect(concurrency.get(serialRole)).toBe(1);
     }
+    expect(concurrency.get("legacy")).toBe(1);
+  });
+
+  it("dispatches GoLink cluster reads only through infra", () => {
+    const infra = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.role === "infra",
+    );
+    const repo = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.role === "repo",
+    );
+    expect(Object.keys(infra?.activities ?? {})).toContain(
+      "listTailscaleIngresses",
+    );
+    expect(Object.keys(repo?.activities ?? {})).not.toContain(
+      "listTailscaleIngresses",
+    );
   });
 
   it("keeps report delivery capabilities separate from agent execution", () => {

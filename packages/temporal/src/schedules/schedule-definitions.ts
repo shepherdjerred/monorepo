@@ -63,7 +63,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runScoutDataDragonVersionCheck",
     args: [],
     cronExpression: "0 6 * * 0-5",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Must exceed updateDataDragon's full retry budget so the final attempt's
     // catch always records the outcome="failed" metric before the workflow is
@@ -78,7 +78,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runScoutDataDragonWeeklyRefresh",
     args: [],
     cronExpression: "0 6 * * 6",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // See scout-data-dragon-version-check above: sized to exceed
     // updateDataDragon's full ~194m retry budget so a terminal failure is
@@ -91,7 +91,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runScoutLanePriorsWeeklyRefresh",
     args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
     cronExpression: "0 7 * * 6",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "4 hours",
     memo: "Weekly Scout lane-prior refresh and evaluation",
@@ -103,7 +103,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // 09:00 PT every Monday — staggered after scout-season-refresh (07:00)
     // so the weekly PR-opening jobs don't contend for the worker pod at once.
     cronExpression: "0 9 * * 1",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
     memo: "Weekly LLM model-catalog cross-check vs models.dev, LiteLLM, and OpenRouter (opens a PR on drift)",
@@ -113,7 +113,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runScoutSeasonRefreshWorkflow",
     args: [],
     cronExpression: "0 7 * * 1",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Two 30-minute research attempts, their 5-minute backoff, and both
     // possible three-attempt report deliveries fit inside this bound.
@@ -129,7 +129,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // despite the scout-image-gc showcase exemption — re-curate the manifest
     // (scout AGENTS.md runbook) rather than retrying.
     cronExpression: "0 10 * * 1",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "60 minutes",
     memo: "Weekly marketing-showcase refresh — regenerates the committed showcase PNGs + asset index from scout-prod, opens a PR on drift (generatedAt-only churn suppressed)",
@@ -142,7 +142,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // 11:00 PT and owns the reminder, start, six progress updates, and final
     // reconciliation for one immutable period/slot.
     cronExpression: WEEKLY_PARLAY_CRON_EXPRESSION,
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     // Preserve the full Sunday betting window when Temporal itself is down.
     catchupWindow: CATCHUP_WEEKLY_PARLAY,
     // A delayed final reconciliation for one period must not suppress the
@@ -161,7 +161,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runScoutBryanBucksAnalyticsWorkflow",
     args: [],
     cronExpression: "*/15 * * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "5 minutes",
     memo: "Every-15-minute committed Bryan Bucks ledger and economy analytics sync",
@@ -180,7 +180,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // for closes (a human confirms against patch notes), and emails
     // warnings-only runs. Steady state still sends a concise clear heartbeat.
     cronExpression: "45 6 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // The two 30-minute scan attempts plus 2-minute backoff consume 62 minutes.
     // Reserve the remaining time for a failed success-report delivery and the
@@ -206,7 +206,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runZfsMaintenanceWorkflow",
     args: [],
     cronExpression: "0 3 * * 0",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
     memo: "Weekly ZFS pool scrub + autotrim (zfspv-pool-nvme, zfspv-pool-hdd)",
@@ -238,7 +238,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runBugsinkHousekeepingWorkflow",
     args: [],
     cronExpression: "0 3 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
     memo: "Daily Bugsink database housekeeping (delete old events, vacuum)",
@@ -250,7 +250,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // 04:00 PT — after the 03:00 bugsink/zfs maintenance window so the nightly
     // destructive jobs don't contend for the worker pod at once.
     cronExpression: "0 4 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // First run sweeps ~110k objects and deletes ~38k; steady-state runs finish
     // in <1m. This workflow-level cap must fit the activity's full retry budget,
@@ -314,7 +314,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // 03:30 PT — staggered after zfs-maintenance so the audit captures a
     // stable post-backup state.
     cronExpression: "30 3 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
     memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology.",
@@ -326,7 +326,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // Every 6 hours — frequent enough to catch same-day review latency
     // patterns without hammering the GitHub API on every recent PR.
     cronExpression: "0 */6 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Must fit the activity's FULL retry budget, not one attempt: the
     // `runObserveReviewSignals` proxy allows 3 attempts at a 5m
@@ -342,7 +342,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "syncGolinks",
     args: [],
     cronExpression: "0 5 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "4 minutes",
     memo: "Sync Tailscale ingresses to golink aliases (daily 5 AM PT)",

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { getTemporalRuleGroups } from "./temporal.ts";
+import { TEMPORAL_DOMAIN_QUEUES } from "./temporal-worker-health.ts";
 
 function findFailureRule(alertName: string): string {
   const failureGroup = getTemporalRuleGroups().find(
@@ -49,7 +50,7 @@ describe("Temporal workflow outcome rules", () => {
     expect(expression).toContain('reason!~"no-one-home|not-cold"');
   });
 
-  test("alerts on agent-task poller and schedule-to-start health", () => {
+  test("alerts on every domain queue's pollers, backlog, latency, scrape, and readiness", () => {
     const failuresGroup = getTemporalRuleGroups().find(
       (group) => group.name === "temporal-workflow-failures",
     );
@@ -57,38 +58,38 @@ describe("Temporal workflow outcome rules", () => {
       throw new Error("Missing temporal-workflow-failures rule group");
     }
 
-    const pollerUnavailable = failuresGroup.rules.find(
-      (rule) => rule.alert === "TemporalAgentTaskWorkflowPollerUnavailable",
-    );
-    if (pollerUnavailable === undefined) {
-      throw new Error(
-        "Missing TemporalAgentTaskWorkflowPollerUnavailable alert",
+    const healthAlerts = [
+      "TemporalDomainWorkflowPollerUnavailable",
+      "TemporalDomainActivityPollerUnavailable",
+      "TemporalDomainQueueBacklog",
+      "TemporalDomainScheduleToStartHigh",
+      "TemporalDomainWorkerScrapeDown",
+      "TemporalDomainWorkerPodNotReady",
+    ];
+    for (const alert of healthAlerts) {
+      const rules = failuresGroup.rules.filter((rule) => rule.alert === alert);
+      expect(rules, alert).toHaveLength(TEMPORAL_DOMAIN_QUEUES.length);
+      expect(
+        rules
+          .map((rule) => rule.labels?.["task_queue"])
+          .toSorted((left, right) => (left ?? "").localeCompare(right ?? "")),
+      ).toEqual(
+        TEMPORAL_DOMAIN_QUEUES.map((definition) => definition.queue).toSorted(
+          (left, right) => left.localeCompare(right),
+        ),
       );
     }
-    expect(pollerUnavailable.expr.value).toContain(
-      "temporal_worker_num_pollers",
-    );
-    expect(pollerUnavailable.expr.value).toContain(
-      'namespace="temporal",exported_namespace="default"',
-    );
-    expect(pollerUnavailable.for).toBe("5m");
 
-    const scheduleToStartHigh = failuresGroup.rules.find(
-      (rule) =>
-        rule.alert === "TemporalAgentTaskWorkflowTaskScheduleToStartHigh",
-    );
-    if (scheduleToStartHigh === undefined) {
-      throw new Error(
-        "Missing TemporalAgentTaskWorkflowTaskScheduleToStartHigh alert",
-      );
-    }
-    expect(scheduleToStartHigh.expr.value).toContain(
-      "temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket",
-    );
-    expect(scheduleToStartHigh.expr.value).toContain(
-      'namespace="temporal",exported_namespace="default"',
-    );
-    expect(scheduleToStartHigh.for).toBe("5m");
+    const backlogExpressions = failuresGroup.rules
+      .filter((rule) => rule.alert === "TemporalDomainQueueBacklog")
+      .map((rule) => rule.expr.value);
+    expect(
+      backlogExpressions.every(
+        (expression) =>
+          typeof expression === "string" &&
+          expression.includes("approximate_backlog_count"),
+      ),
+    ).toBe(true);
 
     const workerMetricsDown = failuresGroup.rules.find(
       (rule) => rule.alert === "TemporalWorkerMetricsDown",

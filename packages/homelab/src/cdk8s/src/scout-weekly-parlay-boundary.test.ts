@@ -91,7 +91,7 @@ describe("Scout weekly parlay deployment boundary", () => {
     ).toBe(false);
   });
 
-  test("keeps staged Scout access limited to Temporal workers", () => {
+  test("allows only the Temporal Scout worker to reach Beta Scout", () => {
     const beta = scoutResources("beta");
     const policy = findResource(beta, "NetworkPolicy", "scout-ingress-netpol");
     expect(policy.spec).toEqual(
@@ -107,8 +107,7 @@ describe("Scout weekly parlay deployment boundary", () => {
                 },
                 podSelector: {
                   matchLabels: {
-                    app: "temporal-worker",
-                    component: "core-worker",
+                    component: "scout-worker",
                   },
                 },
               },
@@ -129,8 +128,7 @@ describe("Scout weekly parlay deployment boundary", () => {
       expect.objectContaining({
         podSelector: {
           matchLabels: {
-            app: "temporal-worker",
-            component: "legacy-worker",
+            component: "scout-worker",
           },
         },
         egress: [

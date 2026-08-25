@@ -10,8 +10,7 @@ export function createTemporalScoutBetaNetworkPolicy(chart: Chart): void {
     spec: {
       podSelector: {
         matchLabels: {
-          app: "temporal-worker",
-          component: "legacy-worker",
+          component: "scout-worker",
         },
       },
       policyTypes: ["Egress"],

@@ -29,8 +29,7 @@ export async function createFreshRssChart(app: App): Promise<void> {
               },
               podSelector: {
                 matchLabels: {
-                  app: "temporal-worker",
-                  component: "core-worker",
+                  component: "repo-worker",
                 },
               },
             },

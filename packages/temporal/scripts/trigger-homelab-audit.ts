@@ -61,7 +61,7 @@ async function main(): Promise<void> {
 
   const handle = await client.workflow.start("runHomelabAuditWorkflow", {
     args: [{ date: args.date }],
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.INFRA,
     workflowId,
     workflowExecutionTimeout: "60 minutes",
   });

@@ -15,7 +15,7 @@ import {
  */
 export function createTemporalWorkerCrdReaderRbac(
   chart: Chart,
-  serviceAccount: ServiceAccount,
+  serviceAccounts: readonly ServiceAccount[],
 ): void {
   new KubeClusterRole(chart, "temporal-worker-crd-reader", {
     metadata: { name: "temporal-worker-crd-reader" },
@@ -35,12 +35,10 @@ export function createTemporalWorkerCrdReaderRbac(
       kind: "ClusterRole",
       name: "temporal-worker-crd-reader",
     },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: serviceAccount.metadata.namespace ?? "temporal",
-      },
-    ],
+    subjects: serviceAccounts.map((serviceAccount) => ({
+      kind: "ServiceAccount",
+      name: serviceAccount.name,
+      namespace: serviceAccount.metadata.namespace ?? "temporal",
+    })),
   });
 }
