@@ -24,6 +24,7 @@ export type RemovedGuildCleanupSummary = {
   competitions: number;
   reports: number;
   subscriptions: number;
+  notificationPreferences: number;
   serverPermissions: number;
   accounts: number;
   players: number;
@@ -104,6 +105,10 @@ export async function cleanupRemovedGuild(
       const subscriptions = await tx.subscription.deleteMany({
         where: { serverId },
       });
+      const notificationPreferences =
+        await tx.bucksNotificationPreference.deleteMany({
+          where: { serverId },
+        });
       const serverPermissions = await tx.serverPermission.deleteMany({
         where: { serverId },
       });
@@ -117,6 +122,7 @@ export async function cleanupRemovedGuild(
         competitions: competitions.count,
         reports: reports.count,
         subscriptions: subscriptions.count,
+        notificationPreferences: notificationPreferences.count,
         serverPermissions: serverPermissions.count,
         accounts: accounts.count,
         players: players.count,

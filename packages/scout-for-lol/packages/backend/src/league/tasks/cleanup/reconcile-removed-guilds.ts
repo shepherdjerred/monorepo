@@ -81,30 +81,43 @@ export async function reconcileRemovedGuilds(
     // Distinct serverIds that still have data across the tables cleanup removes.
     // Querying the cleaned tables (not GuildInstall) means a reconciled guild
     // stops appearing here once cleaned, so the sweep converges.
-    const [players, competitions, reports, permissionErrors] =
-      await Promise.all([
-        db.player.findMany({
-          select: { serverId: true },
-          distinct: ["serverId"],
-        }),
-        db.competition.findMany({
-          select: { serverId: true },
-          distinct: ["serverId"],
-        }),
-        db.report.findMany({
-          select: { serverId: true },
-          distinct: ["serverId"],
-        }),
-        db.guildPermissionError.findMany({
-          select: { serverId: true },
-          distinct: ["serverId"],
-        }),
-      ]);
+    const [
+      players,
+      competitions,
+      reports,
+      permissionErrors,
+      notificationPreferences,
+    ] = await Promise.all([
+      db.player.findMany({
+        select: { serverId: true },
+        distinct: ["serverId"],
+      }),
+      db.competition.findMany({
+        select: { serverId: true },
+        distinct: ["serverId"],
+      }),
+      db.report.findMany({
+        select: { serverId: true },
+        distinct: ["serverId"],
+      }),
+      db.guildPermissionError.findMany({
+        select: { serverId: true },
+        distinct: ["serverId"],
+      }),
+      db.bucksNotificationPreference.findMany({
+        select: { serverId: true },
+        distinct: ["serverId"],
+      }),
+    ]);
 
     const dbServerIds = new Set(
-      [...players, ...competitions, ...reports, ...permissionErrors].map(
-        (row) => row.serverId,
-      ),
+      [
+        ...players,
+        ...competitions,
+        ...reports,
+        ...permissionErrors,
+        ...notificationPreferences,
+      ].map((row) => row.serverId),
     );
 
     const candidateServerIds = [...dbServerIds].filter(
