@@ -52,9 +52,18 @@ export function visualizationSnapshotBaseOption(
   const thinRateData = snapshot.series.some(
     (series) =>
       (snapshot.display.stack === "percent" || isRateMetric(series.metric)) &&
-      series.points.some((point) =>
-        isLowSampleGameCount(evidenceGames(point.evidence)),
-      ),
+      series.points.some((point) => {
+        const comparisonGames =
+          point.comparisonEvidence === undefined ||
+          point.comparisonEvidence === null
+            ? undefined
+            : evidenceGames(point.comparisonEvidence);
+        return (
+          isLowSampleGameCount(evidenceGames(point.evidence)) ||
+          (comparisonGames !== undefined &&
+            isLowSampleGameCount(comparisonGames))
+        );
+      }),
   );
   const subtitle = [
     options.subtitle,

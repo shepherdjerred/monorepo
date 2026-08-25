@@ -29,9 +29,8 @@ export function calendarTooltipText(
     series === undefined
       ? formatValue(value)
       : formatSeriesValue(snapshot, series, value);
-  const lines = [
-    `${label}: ${formattedValue} (Based on ${sampleSize.toString()} games)`,
-  ];
+  const gameBasis = calendarGameBasis(series, sampleSize);
+  const lines = [`${label}: ${formattedValue}${gameBasis}`];
   if (
     series !== undefined &&
     (snapshot.display.stack === "percent" ||
@@ -60,4 +59,13 @@ export function calendarTooltipText(
     );
   }
   return lines.join("<br/>");
+}
+
+function calendarGameBasis(
+  series: VisualizationSnapshot["series"][number] | undefined,
+  sampleSize: number,
+): string {
+  return series?.metric === "rank_position"
+    ? ""
+    : ` (Based on ${sampleSize.toString()} games)`;
 }

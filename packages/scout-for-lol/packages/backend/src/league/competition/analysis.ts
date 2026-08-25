@@ -482,7 +482,7 @@ function rankHistoryVisualization(
                   start: new Date(snapshot.calculatedAt).toISOString(),
                   end: new Date(snapshot.calculatedAt).toISOString(),
                   value: entry.rank,
-                  evidence: { games: 0, sampleSize: 1 },
+                  evidence: { sampleSize: 1 },
                 },
               ];
         }),

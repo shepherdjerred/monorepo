@@ -166,6 +166,45 @@ describe("Scout Discord visualizations", () => {
     });
     expect(payload.embeds?.[0]?.data.description).toBe("No results found.");
   });
+
+  test("warns when a compared rate uses a thin baseline", () => {
+    const winRateSeries = scoutTestVisualization.series.find(
+      (series) => series.metric === "win_rate",
+    );
+    if (winRateSeries === undefined) {
+      throw new Error("Scout fixture is missing its win-rate series.");
+    }
+    const point = winRateSeries.points[0];
+    if (point === undefined) {
+      throw new Error("Scout fixture is missing its first win-rate point.");
+    }
+    const snapshot = VisualizationSnapshotSchema.parse({
+      ...scoutTestVisualization,
+      kind: "KPI_CARD",
+      series: [
+        {
+          ...winRateSeries,
+          points: [
+            {
+              ...point,
+              evidence: { games: 10, sampleSize: 10 },
+              comparisonValue: 0.5,
+              absoluteDelta: 0.5,
+              percentageDelta: 1,
+              comparisonEvidence: { games: 4, sampleSize: 4 },
+            },
+          ],
+        },
+      ],
+    });
+
+    const description = visualizationToEmbed(snapshot)?.data.description;
+    expect(description).toContain("Based on 10 games");
+    expect(description).toContain("Baseline: 50.0% (Based on 4 games)");
+    expect(description).toContain(
+      "Fewer than 10 games — treat this rate as indicative only.",
+    );
+  });
 });
 
 describe("Scout Discord visualization edge cases", () => {

@@ -124,6 +124,54 @@ describe("visualizationSnapshotToOption", () => {
   });
 });
 
+describe("rank-history visualization evidence", () => {
+  test("does not invent a game basis for rank-history points", () => {
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "LINE_CHART",
+      title: "Rank history",
+      temporal: {
+        window: { kind: "relative", days: 30 },
+        bucket: "day",
+        timezone: "UTC",
+      },
+      bucket: "day",
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [
+        {
+          id: "rank:aurora",
+          label: "Aurora",
+          metric: "rank_position",
+          additive: false,
+          points: [
+            {
+              key: "2026-08-08",
+              label: "2026-08-08",
+              start: "2026-08-08T00:00:00.000Z",
+              end: "2026-08-08T23:59:59.999Z",
+              value: 1,
+              evidence: { sampleSize: 1 },
+            },
+          ],
+        },
+      ],
+      annotations: [],
+      trends: [],
+    });
+
+    expect(tooltipText(snapshot, { dataIndex: 0 })).not.toContain("Based on");
+  });
+});
+
 describe("temporal chart rendering", () => {
   test("aligns sparse trend values to global patch categories", () => {
     const snapshot = VisualizationSnapshotSchema.parse({
@@ -257,6 +305,7 @@ describe("temporal chart rendering", () => {
                 sampleSize: 10,
                 confidenceInterval: { level: 0.95, lower: 0.4, upper: 0.6 },
               },
+              comparisonEvidence: { games: 4, sampleSize: 4 },
             },
           ],
         },
@@ -267,9 +316,9 @@ describe("temporal chart rendering", () => {
 
     const tooltip = tooltipText(snapshot, { dataIndex: 0 });
     expect(tooltip).toContain("Win rate: 50.0%");
-    expect(tooltip).toContain("Baseline: 40.0%");
+    expect(tooltip).toContain("Baseline: 40.0% (Based on 4 games)");
     expect(tooltip).toContain("Δ 10.0 pp");
-    expect(tooltip).toContain("Based on 10 games");
+    expect(tooltip).toMatch(/Fewer than 10 games/);
     expect(tooltip).not.toContain("95% CI");
     expect(usesPercentageAxis(snapshot)).toBe(true);
     expect(formatSnapshotAxisValue(snapshot, 0.5)).toBe("50.0%");

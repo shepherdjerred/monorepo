@@ -234,11 +234,12 @@ export function formatNativeSeriesValue(
     return `${value}${gameBasisText}`;
   }
   const percentage = point.percentageDelta;
+  const comparisonBasis = formatComparisonGameBasis(series, point);
   return `${value}${gameBasisText} · Baseline: ${formatSeriesValue(
     snapshot,
     series,
     point.comparisonValue ?? null,
-  )} · Δ ${formatAbsoluteDelta(snapshot, series, point.absoluteDelta ?? null)} · ${
+  )}${comparisonBasis} · Δ ${formatAbsoluteDelta(snapshot, series, point.absoluteDelta ?? null)} · ${
     percentage === null || percentage === undefined
       ? "Unknown"
       : `${(percentage * 100).toFixed(1)}%`
@@ -251,13 +252,34 @@ function formatGameBasis(
   point: TemporalSeries["points"][number] | undefined,
 ): string {
   if (point === undefined) return "";
-  if (series.metric === "games") return "";
+  if (series.metric === "games" || series.metric === "rank_position") return "";
   const games = evidenceGames(point.evidence);
+  const comparisonGames =
+    point.comparisonEvidence === undefined || point.comparisonEvidence === null
+      ? undefined
+      : evidenceGames(point.comparisonEvidence);
   const caveat =
-    isRateSeries(snapshot, series) && isLowSampleGameCount(games)
+    isRateSeries(snapshot, series) &&
+    (isLowSampleGameCount(games) ||
+      (comparisonGames !== undefined && isLowSampleGameCount(comparisonGames)))
       ? " · Fewer than 10 games — treat this rate as indicative only."
       : "";
   return ` · Based on ${games.toString()} games${caveat}`;
+}
+
+function formatComparisonGameBasis(
+  series: TemporalSeries,
+  point: TemporalSeries["points"][number],
+): string {
+  if (
+    series.metric === "games" ||
+    series.metric === "rank_position" ||
+    point.comparisonEvidence === undefined ||
+    point.comparisonEvidence === null
+  ) {
+    return "";
+  }
+  return ` (Based on ${evidenceGames(point.comparisonEvidence).toString()} games)`;
 }
 
 function isRateSeries(

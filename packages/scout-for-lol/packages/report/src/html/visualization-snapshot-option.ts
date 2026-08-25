@@ -220,6 +220,10 @@ function kpiOption(
       const latest = series.points.at(-1);
       const delta = latest?.absoluteDelta;
       const percent = latest?.percentageDelta;
+      const gameBasis =
+        series.metric === "rank_position"
+          ? ""
+          : `  Based on ${evidenceGames(latest?.evidence ?? { sampleSize: 0 }).toString()} games`;
       return {
         type: "group",
         left: `${((index % columns) * (100 / columns) + 2).toFixed(1)}%`,
@@ -249,7 +253,7 @@ function kpiOption(
             left: 12,
             top: 29,
             style: {
-              text: `${formatSeriesValue(snapshot, series, latest?.value ?? null)}  Based on ${evidenceGames(latest?.evidence ?? { games: 0, sampleSize: 0 }).toString()} games`,
+              text: `${formatSeriesValue(snapshot, series, latest?.value ?? null)}${gameBasis}`,
               fill: presentation.theme.text,
               font: "bold 18px sans-serif",
             },

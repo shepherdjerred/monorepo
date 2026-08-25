@@ -77,17 +77,32 @@ export function pointTooltipText(
     );
     if (value === undefined) continue;
     const games = evidenceGames(value.evidence);
+    const comparisonGames =
+      value.comparisonEvidence === undefined ||
+      value.comparisonEvidence === null
+        ? undefined
+        : evidenceGames(value.comparisonEvidence);
+    const showGameBasis = series.metric !== "rank_position";
+    const gameBasis = showGameBasis
+      ? ` (Based on ${games.toString()} games)`
+      : "";
     lines.push(
-      `${echartsFormat.encodeHTML(series.label)}: ${formatSeriesValue(snapshot, series, value.value)} (Based on ${games.toString()} games)`,
+      `${echartsFormat.encodeHTML(series.label)}: ${formatSeriesValue(snapshot, series, value.value)}${gameBasis}`,
     );
     if (snapshot.temporal?.comparison !== undefined) {
+      const comparisonBasis =
+        showGameBasis && comparisonGames !== undefined
+          ? ` (Based on ${comparisonGames.toString()} games)`
+          : "";
       lines.push(
-        `Baseline: ${formatSeriesValue(snapshot, series, value.comparisonValue ?? null)} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, value.absoluteDelta ?? null)} · ${formatPercent(value.percentageDelta ?? null)}`,
+        `Baseline: ${formatSeriesValue(snapshot, series, value.comparisonValue ?? null)}${comparisonBasis} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, value.absoluteDelta ?? null)} · ${formatPercent(value.percentageDelta ?? null)}`,
       );
     }
     if (
       (snapshot.display.stack === "percent" || isRateMetric(series.metric)) &&
-      isLowSampleGameCount(games)
+      (isLowSampleGameCount(games) ||
+        (comparisonGames !== undefined &&
+          isLowSampleGameCount(comparisonGames)))
     ) {
       lines.push("Fewer than 10 games — treat this rate as indicative only.");
     }
