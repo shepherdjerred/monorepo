@@ -7,9 +7,9 @@
       "buildNumber": 11747
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-11765",
-      "digest": "sha256:d5ced04a4049d810cc81a64e92403487a60ca02ec75a1eafd04381cc094cf71f",
-      "buildNumber": 11765
+      "buildNumber": 11860,
+      "version": "2.0.0-11860",
+      "digest": "sha256:2f1abe5750a119978ee3855fb878b7d5f5df049a59a195625bc495a02351b3d5"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-10989",
@@ -67,9 +67,9 @@
       "buildNumber": 11747
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 11832,
       "version": "2.0.0-11832",
-      "digest": "sha256:7e21423c213b48581ff2cd5d74f8348718c0dc663858ec7a07c6c6509f0ec10a"
+      "digest": "sha256:7e21423c213b48581ff2cd5d74f8348718c0dc663858ec7a07c6c6509f0ec10a",
+      "buildNumber": 11832
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-11765",
