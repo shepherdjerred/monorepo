@@ -42,10 +42,12 @@
         { "const": "reminder" },
         { "const": "start" },
         { "const": "progress" },
-        { "const": "finalize" }
+        { "const": "finalize" },
+        { "const": "cancel" },
+        { "const": "analytics_sync" }
       ],
-      "minItems": 5,
-      "maxItems": 5,
+      "minItems": 7,
+      "maxItems": 7,
       "items": false
     }
   }

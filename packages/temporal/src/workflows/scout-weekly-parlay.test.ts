@@ -1,10 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker, type WorkerOptions } from "@temporalio/worker";
-import type {
-  ScoutWeeklyParlayAction,
-  ScoutWeeklyParlayTimeline,
-} from "#activities/scout-weekly-parlay.ts";
+import type { WeeklyParlayControlAction as ScoutWeeklyParlayAction } from "@scout-for-lol/data/model/weekly-parlay.ts";
+import type { ScoutWeeklyParlayTimeline } from "#activities/scout-weekly-parlay.ts";
 import {
   runScoutWeeklyParlayCatchupWorkflow,
   runScoutWeeklyParlayWorkflow,

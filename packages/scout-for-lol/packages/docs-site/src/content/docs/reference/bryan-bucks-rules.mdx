@@ -19,15 +19,25 @@ import {
 } from "@scout-for-lol/backend/betting/constants.ts";
 import { HOUSE_CUT_PERCENT } from "@scout-for-lol/backend/betting/house-cut.ts";
 import {
+  WEEKLY_PARLAY_CHAMPION_HISTORY_WINDOWS,
+  WEEKLY_PARLAY_CHAMPION_MIN_GAMES,
+  WEEKLY_PARLAY_CHAMPION_MIN_WINDOWS,
+  WEEKLY_PARLAY_CHAMPION_SHORTLIST_LIMIT,
   WEEKLY_PARLAY_ELIGIBLE_QUEUES,
   WEEKLY_PARLAY_FEATURE_COOLDOWN_PERIODS,
   WEEKLY_PARLAY_HISTORY_WINDOW_COUNT,
   WEEKLY_PARLAY_MAX_LEGS,
+  WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS,
+  WEEKLY_PARLAY_MAX_RECENT_YES_PROBABILITY_BPS,
   WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS,
   WEEKLY_PARLAY_MIN_HISTORY_WINDOWS,
   WEEKLY_PARLAY_MIN_LEGS,
+  WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS,
   WEEKLY_PARLAY_MIN_RECENT_GAMES,
   WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS,
+  WEEKLY_PARLAY_RECENT_QUALIFIED_WINDOWS,
+  WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES,
+  WEEKLY_PARLAY_TARGET_YES_PROBABILITY_BPS,
 } from "@scout-for-lol/backend/betting/weekly-parlay-criteria.ts";
 import {
   WEEKLY_PARLAY_BETTING_CLOSE_HOUR,
@@ -75,21 +85,53 @@ final settlement, which begins {WEEKLY_PARLAY_INGESTION_GRACE_MINUTES} minutes
 after the scoring cutoff so a completed game has two worst-case polling
 intervals to ingest.
 
+Activity is a settlement qualification, not a betting leg. Every featured
+player must complete at least {WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES} eligible
+games during the scoring window. If anyone falls short, Scout voids the whole
+market and refunds every wager. Once that qualification is met, a parlay can
+settle YES early only when every displayed leg is permanently satisfied.
+
 Scout selects a linked active player with at least {WEEKLY_PARLAY_MIN_RECENT_GAMES}
 eligible games, at least {WEEKLY_PARLAY_MIN_HISTORY_WINDOWS} fully observed
 weekly windows among the trailing {WEEKLY_PARLAY_HISTORY_WINDOW_COUNT}, and no
 feature during the previous {WEEKLY_PARLAY_FEATURE_COOLDOWN_PERIODS} periods.
 The market has {WEEKLY_PARLAY_MIN_LEGS}–{WEEKLY_PARLAY_MAX_LEGS} legs and is
-published only when replaying aligned historical weeks measures a YES rate
-between {WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS / 100}% and{" "}
-{WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS / 100}%. If no candidate clears every
-gate, Scout publishes no weekly parlay.
+generated from an interesting closed catalogue: wins, rates, win streaks,
+best-game statistics, wins on a named champion, and one-game peak kills,
+assists, champion damage, or vision score on a named champion. Every generated
+proposal includes at least one champion-specific peak. Plain game counts, time
+played, distinct counts, role counts, raw cumulative statistics, and champion
+plays without a win are not generated as betting legs.
+
+Named champions come from the trailing {WEEKLY_PARLAY_CHAMPION_HISTORY_WINDOWS}
+calendar windows. A champion needs at least {WEEKLY_PARLAY_CHAMPION_MIN_GAMES}
+games across {WEEKLY_PARLAY_CHAMPION_MIN_WINDOWS} windows; Scout ranks eligible
+champions by windows played, games played, then name, and keeps at most{" "}
+{WEEKLY_PARLAY_CHAMPION_SHORTLIST_LIMIT}.
+
+Pricing uses only historical windows in which every featured player met the{" "}
+{WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES}-game qualification. At least{" "}
+{WEEKLY_PARLAY_MIN_HISTORY_WINDOWS} qualified windows are required. Each
+displayed leg must have landed between{" "}
+{WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS / 100}% and{" "}
+{WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS / 100}% on its own. The complete parlay
+must have landed between {WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS / 100}% and{" "}
+{WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS / 100}%, with the closest result to{" "}
+{WEEKLY_PARLAY_TARGET_YES_PROBABILITY_BPS / 100}% preferred. Across the latest{" "}
+{WEEKLY_PARLAY_RECENT_QUALIFIED_WINDOWS} qualified windows, the complete parlay
+must have hit at least once but no more than{" "}
+{WEEKLY_PARLAY_MAX_RECENT_YES_PROBABILITY_BPS / 100}% of the time. If no
+candidate clears every gate, Scout publishes no weekly parlay.
 
 If the standard Sunday opening is missed, an operator may start a catch-up
 market for that period. Betting remains open for at least{" "}
 {WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS} hours before scoring starts at a
 Pacific midnight. The market message shows the frozen betting and scoring
 timestamps. Games completed before betting closes do not count.
+
+An operator may cancel an open or active weekly market. Cancellation refunds
+every pending wager, posts a bettor-mentioned refund notice, and marks the
+original market message as cancelled with its betting buttons removed.
 
 ## Stakes
 

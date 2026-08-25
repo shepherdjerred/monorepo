@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { WeeklyParlayControlActionSchema } from "#src/betting/weekly-parlay-control.ts";
+import { WeeklyParlayControlActionSchema } from "@scout-for-lol/data/model/weekly-parlay.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { handleWeeklyParlayControl } from "#src/http/weekly-parlay-control.ts";
 
@@ -39,6 +39,13 @@ describe("weekly parlay control action schema", () => {
         updateIndex: 5,
       }),
     ).toMatchObject({ slot: 0, updateIndex: 5 });
+    expect(
+      WeeklyParlayControlActionSchema.parse({
+        periodKey: "2026-08-24",
+        slot: 2,
+        action: "cancel",
+      }),
+    ).toMatchObject({ action: "cancel", slot: 2 });
   });
 
   test("accepts catch-up clocks only on open actions", () => {

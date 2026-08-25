@@ -1,11 +1,16 @@
 import {
+  WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS,
+  WEEKLY_PARLAY_MAX_RECENT_YES_PROBABILITY_BPS,
   WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS,
   WEEKLY_PARLAY_MIN_HISTORY_WINDOWS,
+  WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS,
   WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS,
+  WEEKLY_PARLAY_RECENT_QUALIFIED_WINDOWS,
+  WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES,
   WEEKLY_PARLAY_TARGET_YES_PROBABILITY_BPS,
   type WeeklyParlayContributionSnapshot,
-  type WeeklyParlayDefinitionCriteria,
-  type WeeklyParlayLeg,
+  type WeeklyParlayCurrentDefinitionCriteria,
+  type WeeklyParlayCurrentLeg,
   type WeeklyParlayLegShape,
   type WeeklyParlayProposal,
 } from "#src/betting/weekly-parlay-criteria.ts";
@@ -22,11 +27,23 @@ export type WeeklyParlayReplayWindow = {
 };
 
 export type WeeklyParlayPricing = {
-  criteria: WeeklyParlayDefinitionCriteria;
+  proposal: WeeklyParlayProposal;
+  criteria: WeeklyParlayCurrentDefinitionCriteria;
   yesProbabilityBps: number;
   yesWindows: number;
-  sampleSize: number;
-  periodKeys: string[];
+  totalWindows: number;
+  qualifiedWindows: number;
+  excludedWindows: number;
+  qualifiedPeriodKeys: string[];
+  excludedPeriodKeys: string[];
+  recentQualifiedWindows: number;
+  recentYesWindows: number;
+  recentYesProbabilityBps: number;
+  legEvidence: {
+    leg: WeeklyParlayCurrentLeg;
+    yesWindows: number;
+    probabilityBps: number;
+  }[];
 };
 
 function stableThresholdCandidates(values: readonly number[]): number[] {
@@ -51,10 +68,29 @@ function stableThresholdCandidates(values: readonly number[]): number[] {
   ];
 }
 
+function comparisonPassed(
+  value: number,
+  operator: WeeklyParlayLegShape["operator"],
+  threshold: number,
+): boolean {
+  switch (operator) {
+    case "gte":
+      return value >= threshold;
+    case "lte":
+      return value <= threshold;
+    case "eq":
+      return value === threshold;
+  }
+}
+
+function probabilityBps(hits: number, sampleSize: number): number {
+  return Math.round((hits * 10_000) / sampleSize);
+}
+
 function legWithThreshold(
   shape: WeeklyParlayLegShape,
   threshold: number,
-): WeeklyParlayLeg {
+): WeeklyParlayCurrentLeg {
   return { ...shape, threshold };
 }
 
@@ -74,27 +110,55 @@ function thresholdTieKey(thresholds: readonly number[]): string {
     .join(":");
 }
 
+function qualifiedWindow(
+  proposal: WeeklyParlayProposal,
+  window: WeeklyParlayReplayWindow,
+): boolean {
+  const subjects = new Set(proposal.legs.map((leg) => leg.subject));
+  return [...subjects].every(
+    (subject) =>
+      window.contributions.filter(
+        (contribution) => contribution.subject === subject,
+      ).length >= WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES,
+  );
+}
+
 export function priceWeeklyParlay(input: {
   proposal: WeeklyParlayProposal;
   windows: readonly WeeklyParlayReplayWindow[];
 }): WeeklyParlayPricing | undefined {
-  if (input.windows.length < WEEKLY_PARLAY_MIN_HISTORY_WINDOWS) {
+  const qualified = input.windows.filter((window) =>
+    qualifiedWindow(input.proposal, window),
+  );
+  if (qualified.length < WEEKLY_PARLAY_MIN_HISTORY_WINDOWS) {
     return;
   }
-  const candidates = input.proposal.legs.map((leg) =>
-    stableThresholdCandidates(
-      input.windows.map((window) =>
-        weeklyParlayLegValue(leg, window.contributions),
-      ),
-    ).filter(
-      (threshold) =>
-        !(
-          leg.kind === "aggregate" &&
-          leg.metric === "games" &&
-          leg.operator === "gte"
-        ) || threshold > 0,
-    ),
+  const excluded = input.windows.filter(
+    (window) => !qualifiedWindow(input.proposal, window),
   );
+  const legValues = input.proposal.legs.map((leg) =>
+    qualified.map((window) => weeklyParlayLegValue(leg, window.contributions)),
+  );
+  const candidates = input.proposal.legs.map((leg, legIndex) => {
+    const values = legValues[legIndex];
+    if (values === undefined) {
+      throw new Error("Missing weekly parlay leg history values.");
+    }
+    return stableThresholdCandidates(values).filter((threshold) => {
+      const hits = values.filter((value) =>
+        comparisonPassed(value, leg.operator, threshold),
+      ).length;
+      const probability = probabilityBps(hits, qualified.length);
+      return (
+        probability >= WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS &&
+        probability <= WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS
+      );
+    });
+  });
+  if (candidates.some((legCandidates) => legCandidates.length === 0)) {
+    return;
+  }
+  const recent = qualified.slice(-WEEKLY_PARLAY_RECENT_QUALIFIED_WINDOWS);
   const priced = thresholdCombinations(candidates).flatMap((thresholds) => {
     const legs = input.proposal.legs.map((shape, index) => {
       const threshold = thresholds[index];
@@ -103,30 +167,65 @@ export function priceWeeklyParlay(input: {
       }
       return legWithThreshold(shape, threshold);
     });
-    const criteria: WeeklyParlayDefinitionCriteria = {
+    const criteria: WeeklyParlayCurrentDefinitionCriteria = {
       version: input.proposal.version,
+      qualification: {
+        minimumGamesPerSubject: WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES,
+      },
       legs,
     };
-    const yesWindows = input.windows.filter(
-      (window) =>
-        evaluateWeeklyParlay(criteria, window.contributions).yesResult,
-    ).length;
-    const yesProbabilityBps = Math.round(
-      (yesWindows * 10_000) / input.windows.length,
+    const evaluations = qualified.map((window) =>
+      evaluateWeeklyParlay(criteria, window.contributions),
     );
+    const yesWindows = evaluations.filter(
+      (evaluation) => evaluation.yesResult,
+    ).length;
+    const yesProbabilityBps = probabilityBps(yesWindows, qualified.length);
     if (
       yesProbabilityBps < WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS ||
       yesProbabilityBps > WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS
     ) {
       return [];
     }
+    const recentYesWindows = recent.filter(
+      (window) =>
+        evaluateWeeklyParlay(criteria, window.contributions).yesResult,
+    ).length;
+    const recentYesProbabilityBps = probabilityBps(
+      recentYesWindows,
+      recent.length,
+    );
+    if (
+      recentYesWindows === 0 ||
+      recentYesProbabilityBps > WEEKLY_PARLAY_MAX_RECENT_YES_PROBABILITY_BPS
+    ) {
+      return [];
+    }
+    const legEvidence = legs.map((leg, index) => {
+      const yesWindowsForLeg = evaluations.filter(
+        (evaluation) => evaluation.legs[index]?.passed === true,
+      ).length;
+      return {
+        leg,
+        yesWindows: yesWindowsForLeg,
+        probabilityBps: probabilityBps(yesWindowsForLeg, qualified.length),
+      };
+    });
     return [
       {
+        proposal: input.proposal,
         criteria,
         yesProbabilityBps,
         yesWindows,
-        sampleSize: input.windows.length,
-        periodKeys: input.windows.map((window) => window.periodKey),
+        totalWindows: input.windows.length,
+        qualifiedWindows: qualified.length,
+        excludedWindows: excluded.length,
+        qualifiedPeriodKeys: qualified.map((window) => window.periodKey),
+        excludedPeriodKeys: excluded.map((window) => window.periodKey),
+        recentQualifiedWindows: recent.length,
+        recentYesWindows,
+        recentYesProbabilityBps,
+        legEvidence,
         targetDistance: Math.abs(
           yesProbabilityBps - WEEKLY_PARLAY_TARGET_YES_PROBABILITY_BPS,
         ),
@@ -142,11 +241,36 @@ export function priceWeeklyParlay(input: {
   if (selected === undefined) {
     return;
   }
-  return {
-    criteria: selected.criteria,
-    yesProbabilityBps: selected.yesProbabilityBps,
-    yesWindows: selected.yesWindows,
-    sampleSize: selected.sampleSize,
-    periodKeys: selected.periodKeys,
-  };
+  const {
+    targetDistance: _targetDistance,
+    tieKey: _tieKey,
+    ...result
+  } = selected;
+  return result;
+}
+
+export function priceWeeklyParlayProposals(input: {
+  proposals: readonly WeeklyParlayProposal[];
+  windows: readonly WeeklyParlayReplayWindow[];
+}): WeeklyParlayPricing | undefined {
+  return input.proposals
+    .flatMap((proposal) => {
+      const priced = priceWeeklyParlay({ proposal, windows: input.windows });
+      return priced === undefined ? [] : [priced];
+    })
+    .toSorted(
+      (left, right) =>
+        Math.abs(
+          left.yesProbabilityBps - WEEKLY_PARLAY_TARGET_YES_PROBABILITY_BPS,
+        ) -
+          Math.abs(
+            right.yesProbabilityBps - WEEKLY_PARLAY_TARGET_YES_PROBABILITY_BPS,
+          ) ||
+        JSON.stringify(left.proposal).localeCompare(
+          JSON.stringify(right.proposal),
+        ) ||
+        JSON.stringify(left.criteria).localeCompare(
+          JSON.stringify(right.criteria),
+        ),
+    )[0];
 }

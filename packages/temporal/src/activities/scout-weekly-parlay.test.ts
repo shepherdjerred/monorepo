@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
+import { WeeklyParlayControlActionSchema as ScoutWeeklyParlayActionSchema } from "@scout-for-lol/data/model/weekly-parlay.ts";
 import {
   buildScoutWeeklyParlayCatchupTimeline,
   buildScoutWeeklyParlayTimeline,
-  ScoutWeeklyParlayActionSchema,
   scoutWeeklyParlayActionKey,
 } from "./scout-weekly-parlay.ts";
 

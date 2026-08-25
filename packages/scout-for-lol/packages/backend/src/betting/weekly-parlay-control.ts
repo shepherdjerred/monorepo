@@ -1,17 +1,21 @@
-import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
-  WEEKLY_PARLAY_LIFECYCLE,
   WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS,
+  WEEKLY_PARLAY_LIFECYCLE,
   WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS,
+  WeeklyParlayControlActionSchema,
+  type WeeklyParlayControlAction,
 } from "@scout-for-lol/data/model/weekly-parlay.ts";
 import {
   deliverWeeklyParlayDiscord,
   weeklyParlaySettlementActionKey,
 } from "#src/betting/weekly-parlay-discord.ts";
+import {
+  cancelWeeklyParlayMarket,
+  type WeeklyParlayCancellationDependencies,
+} from "#src/betting/weekly-parlay-cancel.ts";
 import { openWeeklyParlay } from "#src/betting/weekly-parlay-open.ts";
 import {
-  WEEKLY_PARLAY_SLOT,
   weeklyParlayScoringShape,
   weeklyParlayScoringWindowForPeriod,
   weeklyParlayTimelineFromWindow,
@@ -24,64 +28,8 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { bettingWeeklyParlayControlActionsTotal } from "#src/metrics/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { syncBucksAnalytics } from "#src/analytics/bryan-bucks-sync.ts";
-
 export const WEEKLY_PARLAY_CONTROL_PATH =
   "/api/internal/weekly-parlays/actions";
-
-export const WeeklyParlayCatchupWindowSchema = z.strictObject({
-  kind: z.literal("catch_up"),
-  openAt: z.iso.datetime(),
-  bettingClosesAt: z.iso.datetime(),
-  scoringStartsAt: z.iso.datetime(),
-  scoringEndsAt: z.iso.datetime(),
-});
-
-export const WeeklyParlayControlActionSchema = z
-  .strictObject({
-    periodKey: z.iso.date(),
-    slot: z.number().int().nonnegative().default(WEEKLY_PARLAY_SLOT),
-    action: z.enum([
-      "open",
-      "reminder",
-      "start",
-      "progress",
-      "finalize",
-      "analytics_sync",
-    ]),
-    updateIndex: z
-      .number()
-      .int()
-      .min(0)
-      .max(WEEKLY_PARLAY_LIFECYCLE.updateCount - 1)
-      .optional(),
-    window: WeeklyParlayCatchupWindowSchema.optional(),
-  })
-  .superRefine((action, context) => {
-    if (action.action === "progress" && action.updateIndex === undefined) {
-      context.addIssue({
-        code: "custom",
-        path: ["updateIndex"],
-        message: "Progress actions require an update index.",
-      });
-    }
-    if (action.action !== "progress" && action.updateIndex !== undefined) {
-      context.addIssue({
-        code: "custom",
-        path: ["updateIndex"],
-        message: "Only progress actions accept an update index.",
-      });
-    }
-    if (action.action !== "open" && action.window !== undefined) {
-      context.addIssue({
-        code: "custom",
-        path: ["window"],
-        message: "Only open actions accept a catch-up window.",
-      });
-    }
-  });
-export type WeeklyParlayControlAction = z.infer<
-  typeof WeeklyParlayControlActionSchema
->;
 
 export type WeeklyParlayControlResult = {
   status: "reconciled" | "skipped";
@@ -97,12 +45,23 @@ type ControlContext = {
   serverId: string;
   now: Date;
   prismaClient: ExtendedPrismaClient;
+  cancellation: Omit<WeeklyParlayCancellationDependencies, "prismaClient">;
+  signal?: AbortSignal;
+};
+
+type WeeklyParlayControlOptions = {
+  serverId: string;
+  now?: Date;
+  prismaClient?: ExtendedPrismaClient;
+  deliverDiscord?: WeeklyParlayCancellationDependencies["deliverDiscord"];
+  cancelMessage?: WeeklyParlayCancellationDependencies["cancelMessage"];
   signal?: AbortSignal;
 };
 
 type PersistedMarket = {
   id: number;
   marketState: string;
+  voidReason: string | null;
   definition: {
     openAt: Date;
     bettingClosesAt: Date;
@@ -392,12 +351,7 @@ async function reconcileProgress(
 
 async function runWeeklyParlayControlActionInternal(
   input: WeeklyParlayControlAction,
-  options: {
-    serverId: string;
-    now?: Date;
-    prismaClient?: ExtendedPrismaClient;
-    signal?: AbortSignal;
-  },
+  options: WeeklyParlayControlOptions,
 ): Promise<WeeklyParlayControlResult> {
   const action = WeeklyParlayControlActionSchema.parse(input);
   const serverId = DiscordGuildIdSchema.parse(options.serverId);
@@ -407,6 +361,14 @@ async function runWeeklyParlayControlActionInternal(
     serverId,
     prismaClient,
     now,
+    cancellation: {
+      ...(options.deliverDiscord === undefined
+        ? {}
+        : { deliverDiscord: options.deliverDiscord }),
+      ...(options.cancelMessage === undefined
+        ? {}
+        : { cancelMessage: options.cancelMessage }),
+    },
     ...(options.signal === undefined ? {} : { signal: options.signal }),
   };
   if (action.action === "analytics_sync") {
@@ -430,6 +392,7 @@ async function runWeeklyParlayControlActionInternal(
     select: {
       id: true,
       marketState: true,
+      voidReason: true,
       definition: {
         select: {
           openAt: true,
@@ -442,6 +405,17 @@ async function runWeeklyParlayControlActionInternal(
   });
   if (market === null) {
     return { status: "skipped", detail: "no_market" };
+  }
+  if (action.action === "cancel") {
+    return await cancelWeeklyParlayMarket(
+      {
+        marketId: market.id,
+        marketState: market.marketState,
+        voidReason: market.voidReason,
+        now: context.now,
+      },
+      { prismaClient, ...context.cancellation },
+    );
   }
   if (action.action === "start") {
     return await reconcileStart(action, market, context);
@@ -457,12 +431,7 @@ async function runWeeklyParlayControlActionInternal(
 
 export async function runWeeklyParlayControlAction(
   input: WeeklyParlayControlAction,
-  options: {
-    serverId: string;
-    now?: Date;
-    prismaClient?: ExtendedPrismaClient;
-    signal?: AbortSignal;
-  },
+  options: WeeklyParlayControlOptions,
 ): Promise<WeeklyParlayControlResult> {
   try {
     const result = await runWeeklyParlayControlActionInternal(input, options);

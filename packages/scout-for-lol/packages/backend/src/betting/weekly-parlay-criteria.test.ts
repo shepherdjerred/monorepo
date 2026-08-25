@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  WEEKLY_PARLAY_LEGACY_SCHEMA_VERSION,
   WEEKLY_PARLAY_SCHEMA_VERSION,
   WeeklyParlayDefinitionCriteriaSchema,
   WeeklyParlayProposalSchema,
@@ -19,60 +20,93 @@ const subject = WeeklyParlaySubjectSchema.parse({
 });
 
 describe("weekly parlay closed criteria", () => {
-  test("rejects model-authored settlement logic and pings", () => {
+  test("retains version-one definition parsing", () => {
     expect(
-      WeeklyParlayProposalSchema.safeParse({
-        version: WEEKLY_PARLAY_SCHEMA_VERSION,
+      WeeklyParlayDefinitionCriteriaSchema.parse({
+        version: WEEKLY_PARLAY_LEGACY_SCHEMA_VERSION,
         legs: [
           {
             kind: "aggregate",
             subject: "P1",
             metric: "games",
             operator: "gte",
+            threshold: 3,
           },
           {
             kind: "aggregate",
             subject: "P1",
-            metric: "champion_damage",
+            metric: "distinct_champions",
             operator: "gte",
+            threshold: 2,
           },
           {
-            kind: "rate",
+            kind: "role_games",
             subject: "P1",
-            metric: "win_rate_bps",
+            role: "MIDDLE",
+            winsOnly: false,
             operator: "gte",
-            expression: "SELECT * FROM matches",
+            threshold: 1,
           },
         ],
-      }).success,
-    ).toBe(false);
+      }).version,
+    ).toBe(1);
+  });
+
+  test("accepts version-two champion peaks and rejects boring catalog entries", () => {
     expect(
-      WeeklyParlayProposalSchema.safeParse({
+      WeeklyParlayProposalSchema.parse({
         version: WEEKLY_PARLAY_SCHEMA_VERSION,
         legs: [
           {
-            kind: "aggregate",
+            kind: "champion_peak",
             subject: "P1",
-            metric: "games",
-            operator: "gte",
-          },
-          {
-            kind: "aggregate",
-            subject: "P1",
-            metric: "pings",
+            champion: "Twisted Fate",
+            metric: "kills",
             operator: "gte",
           },
           { kind: "aggregate", subject: "P1", metric: "wins", operator: "gte" },
+          {
+            kind: "rate",
+            subject: "P1",
+            metric: "average_assists_x100",
+            operator: "gte",
+          },
+        ],
+      }).version,
+    ).toBe(2);
+    expect(
+      WeeklyParlayProposalSchema.safeParse({
+        version: WEEKLY_PARLAY_SCHEMA_VERSION,
+        legs: [
+          {
+            kind: "aggregate",
+            subject: "P1",
+            metric: "games",
+            operator: "gte",
+          },
+          {
+            kind: "aggregate",
+            subject: "P1",
+            metric: "kills",
+            operator: "gte",
+          },
+          {
+            kind: "champion_games",
+            subject: "P1",
+            champion: "Ahri",
+            winsOnly: false,
+            operator: "gte",
+          },
         ],
       }).success,
     ).toBe(false);
   });
 
-  test("requires every subject and an explicit participation leg", () => {
+  test("requires a champion peak and enforces the subject shortlist", () => {
     const proposal = WeeklyParlayProposalSchema.parse({
       version: WEEKLY_PARLAY_SCHEMA_VERSION,
       legs: [
-        { kind: "aggregate", subject: "P1", metric: "kills", operator: "gte" },
+        { kind: "aggregate", subject: "P1", metric: "wins", operator: "gte" },
         {
           kind: "champion_games",
           subject: "P1",
@@ -81,10 +115,9 @@ describe("weekly parlay closed criteria", () => {
           operator: "gte",
         },
         {
-          kind: "role_games",
+          kind: "rate",
           subject: "P1",
-          role: "MIDDLE",
-          winsOnly: false,
+          metric: "win_rate_bps",
           operator: "gte",
         },
       ],
@@ -93,66 +126,34 @@ describe("weekly parlay closed criteria", () => {
       validateWeeklyParlayProposal({
         proposal,
         subjects: [subject],
-        observedChampions: new Map([["P1", new Set(["Lux"])]]),
-        observedRoles: new Map([["P1", new Set(["MIDDLE"])]]),
+        eligibleChampions: new Map([["P1", new Set(["Lux"])]]),
       }),
     ).toEqual([
-      "Subject P1 needs a visible games participation leg.",
-      "Ahri was not historically observed for P1.",
+      "Every weekly parlay proposal needs a champion_peak leg.",
+      "Ahri is not in the champion shortlist for P1.",
     ]);
   });
 
-  test("rejects duplicate targets and zero-game participation", () => {
+  test("rejects duplicate champion peak targets", () => {
     expect(
       WeeklyParlayProposalSchema.safeParse({
         version: WEEKLY_PARLAY_SCHEMA_VERSION,
         legs: [
           {
-            kind: "aggregate",
+            kind: "champion_peak",
             subject: "P1",
-            metric: "games",
-            operator: "gte",
-          },
-          {
-            kind: "aggregate",
-            subject: "P1",
-            metric: "games",
-            operator: "lte",
-          },
-          {
-            kind: "aggregate",
-            subject: "P1",
-            metric: "games",
-            operator: "eq",
-          },
-        ],
-      }).success,
-    ).toBe(false);
-    expect(
-      WeeklyParlayDefinitionCriteriaSchema.safeParse({
-        version: WEEKLY_PARLAY_SCHEMA_VERSION,
-        legs: [
-          {
-            kind: "aggregate",
-            subject: "P1",
-            metric: "games",
-            operator: "gte",
-            threshold: 0,
-          },
-          {
-            kind: "aggregate",
-            subject: "P1",
-            metric: "wins",
-            operator: "gte",
-            threshold: 1,
-          },
-          {
-            kind: "aggregate",
-            subject: "P1",
+            champion: "Ahri",
             metric: "kills",
             operator: "gte",
-            threshold: 1,
           },
+          {
+            kind: "champion_peak",
+            subject: "P1",
+            champion: "Ahri",
+            metric: "kills",
+            operator: "gte",
+          },
+          { kind: "aggregate", subject: "P1", metric: "wins", operator: "gte" },
         ],
       }).success,
     ).toBe(false);

@@ -6,9 +6,11 @@ import {
   workflowInfo,
 } from "@temporalio/workflow";
 import { z } from "zod";
-import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
+import {
+  WEEKLY_PARLAY_LIFECYCLE,
+  type WeeklyParlayControlAction as ScoutWeeklyParlayAction,
+} from "@scout-for-lol/data/model/weekly-parlay.ts";
 import type {
-  ScoutWeeklyParlayAction,
   ScoutWeeklyParlayActivities,
   ScoutWeeklyParlayTimeline,
 } from "#activities/scout-weekly-parlay.ts";

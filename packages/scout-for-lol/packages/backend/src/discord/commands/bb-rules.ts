@@ -17,7 +17,12 @@ import {
 import {
   WEEKLY_PARLAY_ELIGIBLE_QUEUES,
   WEEKLY_PARLAY_MAX_LEGS,
+  WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS,
+  WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS,
   WEEKLY_PARLAY_MIN_LEGS,
+  WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS,
+  WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS,
+  WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES,
 } from "#src/betting/weekly-parlay-criteria.ts";
 import {
   WEEKLY_PARLAY_BETTING_CLOSE_HOUR,
@@ -103,6 +108,8 @@ export function buildBbRulesEmbed(): EmbedBuilder {
           `A ${WEEKLY_PARLAY_MIN_LEGS.toString()}-${WEEKLY_PARLAY_MAX_LEGS.toString()} leg YES/NO market across one or more tracked players. ` +
           `It opens Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_OPEN_HOUR)} and betting closes Monday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_BETTING_CLOSE_HOUR)} in ${WEEKLY_PARLAY_TIMEZONE}. ` +
           `Only completed ${WEEKLY_PARLAY_ELIGIBLE_QUEUES.join(", ")} games count, through Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_FINAL_HOUR)}. ` +
+          `Activity is not a leg: every featured player must complete **${WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES.toString()} eligible games**, or everyone is refunded. ` +
+          `Every proposal includes a one-game peak on a named champion. Each leg must replay at **${(WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS / 100).toString()}-${(WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS / 100).toString()}%**, and the full parlay at **${(WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS / 100).toString()}-${(WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS / 100).toString()}%**, in qualified history. ` +
           `Scout waits **${WEEKLY_PARLAY_INGESTION_GRACE_MINUTES.toString()} minutes** after that cutoff for completed games to ingest. ` +
           `If Sunday opening is missed, an exceptional catch-up market may open midweek with at least **${WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS.toString()} hours** to bet before the next eligible Pacific midnight. ` +
           "Its message shows the exact betting and scoring timestamps, and games completed before betting closes never count. " +

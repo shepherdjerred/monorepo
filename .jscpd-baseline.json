@@ -1104,17 +1104,9 @@
       "clones": 1,
       "tokens": 70
     },
-    "packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-control.ts|packages/temporal/src/activities/scout-weekly-parlay.ts": {
-      "clones": 1,
-      "tokens": 136
-    },
     "packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-period.ts|packages/temporal/src/activities/scout-weekly-parlay.ts": {
       "clones": 3,
       "tokens": 329
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-runtime.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-runtime.integration.test.ts": {
-      "clones": 2,
-      "tokens": 159
     },
     "packages/scout-for-lol/packages/backend/src/database/competition.integration.test.ts|packages/scout-for-lol/packages/backend/src/database/competition.integration.test.ts": {
       "clones": 3,

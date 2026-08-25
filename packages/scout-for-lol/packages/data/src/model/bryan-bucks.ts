@@ -133,6 +133,8 @@ export type BucksWeeklyParlayVoidReason = z.infer<
 >;
 export const BucksWeeklyParlayVoidReasonSchema = z.enum([
   "infrastructure_failure",
+  "insufficient_activity",
+  "operator_cancelled",
   "unknown_evaluator",
   "invalid_definition",
   "missing_data",

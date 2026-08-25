@@ -1,19 +1,31 @@
-import { z } from "zod";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
+import { z } from "zod";
 
-export const WEEKLY_PARLAY_SCHEMA_VERSION = 1;
-export const WEEKLY_PARLAY_CATALOG_VERSION = "2026-08-23";
-export const WEEKLY_PARLAY_EVALUATOR_VERSION = "1";
-export const WEEKLY_PARLAY_PRICING_VERSION = "1";
+export const WEEKLY_PARLAY_LEGACY_SCHEMA_VERSION = 1;
+export const WEEKLY_PARLAY_SCHEMA_VERSION = 2;
+export const WEEKLY_PARLAY_CATALOG_VERSION = "2026-08-25";
+export const WEEKLY_PARLAY_LEGACY_EVALUATOR_VERSION = "1";
+export const WEEKLY_PARLAY_EVALUATOR_VERSION = "2";
+export const WEEKLY_PARLAY_PRICING_VERSION = "2";
 export const WEEKLY_PARLAY_MIN_LEGS = 3;
 export const WEEKLY_PARLAY_MAX_LEGS = 5;
+export const WEEKLY_PARLAY_PROPOSAL_COUNT = 5;
 export const WEEKLY_PARLAY_MIN_HISTORY_WINDOWS = 15;
 export const WEEKLY_PARLAY_HISTORY_WINDOW_COUNT = 52;
 export const WEEKLY_PARLAY_FEATURE_COOLDOWN_PERIODS = 4;
 export const WEEKLY_PARLAY_MIN_RECENT_GAMES = 3;
-export const WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS = 4000;
-export const WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS = 6000;
-export const WEEKLY_PARLAY_TARGET_YES_PROBABILITY_BPS = 5000;
+export const WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES = 3;
+export const WEEKLY_PARLAY_CHAMPION_HISTORY_WINDOWS = 8;
+export const WEEKLY_PARLAY_CHAMPION_MIN_GAMES = 3;
+export const WEEKLY_PARLAY_CHAMPION_MIN_WINDOWS = 2;
+export const WEEKLY_PARLAY_CHAMPION_SHORTLIST_LIMIT = 5;
+export const WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS = 2000;
+export const WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS = 7000;
+export const WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS = 2000;
+export const WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS = 3000;
+export const WEEKLY_PARLAY_TARGET_YES_PROBABILITY_BPS = 2500;
+export const WEEKLY_PARLAY_RECENT_QUALIFIED_WINDOWS = 8;
+export const WEEKLY_PARLAY_MAX_RECENT_YES_PROBABILITY_BPS = 5000;
 
 export const WEEKLY_PARLAY_ELIGIBLE_QUEUES = [
   "solo",
@@ -50,7 +62,7 @@ export const WeeklyParlaySubjectsSchema = z
   .max(5);
 export type WeeklyParlaySubject = z.infer<typeof WeeklyParlaySubjectSchema>;
 
-export const WeeklyParlayAggregateMetricSchema = z.enum([
+const WeeklyParlayLegacyAggregateMetricSchema = z.enum([
   "games",
   "wins",
   "kills",
@@ -68,6 +80,13 @@ export const WeeklyParlayAggregateMetricSchema = z.enum([
   "best_game_assists",
   "best_game_damage",
 ]);
+export const WeeklyParlayAggregateMetricSchema = z.enum([
+  "wins",
+  "longest_win_streak",
+  "best_game_kills",
+  "best_game_assists",
+  "best_game_damage",
+]);
 export const WeeklyParlayRateMetricSchema = z.enum([
   "win_rate_bps",
   "average_kills_x100",
@@ -77,8 +96,20 @@ export const WeeklyParlayRateMetricSchema = z.enum([
   "average_champion_damage",
   "average_vision_score_x100",
 ]);
+export const WeeklyParlayChampionPeakMetricSchema = z.enum([
+  "kills",
+  "assists",
+  "champion_damage",
+  "vision_score",
+]);
 export const WeeklyParlayNumericOperatorSchema = z.enum(["gte", "lte", "eq"]);
 
+const WeeklyParlayLegacyAggregateShapeSchema = z.strictObject({
+  kind: z.literal("aggregate"),
+  subject: WeeklyParlaySubjectKeySchema,
+  metric: WeeklyParlayLegacyAggregateMetricSchema,
+  operator: WeeklyParlayNumericOperatorSchema,
+});
 const WeeklyParlayAggregateShapeSchema = z.strictObject({
   kind: z.literal("aggregate"),
   subject: WeeklyParlaySubjectKeySchema,
@@ -91,12 +122,19 @@ const WeeklyParlayRateShapeSchema = z.strictObject({
   metric: WeeklyParlayRateMetricSchema,
   operator: WeeklyParlayNumericOperatorSchema,
 });
-const WeeklyParlayChampionShapeSchema = z.strictObject({
+const WeeklyParlayLegacyChampionShapeSchema = z.strictObject({
   kind: z.literal("champion_games"),
   subject: WeeklyParlaySubjectKeySchema,
   champion: z.string().min(1).max(50),
   winsOnly: z.boolean(),
   operator: WeeklyParlayNumericOperatorSchema,
+});
+const WeeklyParlayChampionShapeSchema = z.strictObject({
+  kind: z.literal("champion_games"),
+  subject: WeeklyParlaySubjectKeySchema,
+  champion: z.string().min(1).max(50),
+  winsOnly: z.literal(true),
+  operator: z.literal("gte"),
 });
 const WeeklyParlayRoleShapeSchema = z.strictObject({
   kind: z.literal("role_games"),
@@ -105,15 +143,34 @@ const WeeklyParlayRoleShapeSchema = z.strictObject({
   winsOnly: z.boolean(),
   operator: WeeklyParlayNumericOperatorSchema,
 });
+const WeeklyParlayChampionPeakShapeSchema = z.strictObject({
+  kind: z.literal("champion_peak"),
+  subject: WeeklyParlaySubjectKeySchema,
+  champion: z.string().min(1).max(50),
+  metric: WeeklyParlayChampionPeakMetricSchema,
+  operator: z.literal("gte"),
+});
+
+export const WeeklyParlayLegacyLegShapeSchema = z.discriminatedUnion("kind", [
+  WeeklyParlayLegacyAggregateShapeSchema,
+  WeeklyParlayRateShapeSchema,
+  WeeklyParlayLegacyChampionShapeSchema,
+  WeeklyParlayRoleShapeSchema,
+]);
 export const WeeklyParlayLegShapeSchema = z.discriminatedUnion("kind", [
   WeeklyParlayAggregateShapeSchema,
   WeeklyParlayRateShapeSchema,
   WeeklyParlayChampionShapeSchema,
-  WeeklyParlayRoleShapeSchema,
+  WeeklyParlayChampionPeakShapeSchema,
 ]);
+export type WeeklyParlayLegacyLegShape = z.infer<
+  typeof WeeklyParlayLegacyLegShapeSchema
+>;
 export type WeeklyParlayLegShape = z.infer<typeof WeeklyParlayLegShapeSchema>;
+export type WeeklyParlayAnyLegShape =
+  WeeklyParlayLegacyLegShape | WeeklyParlayLegShape;
 
-function weeklyParlayLegTargetKey(leg: WeeklyParlayLegShape): string {
+function weeklyParlayLegTargetKey(leg: WeeklyParlayAnyLegShape): string {
   switch (leg.kind) {
     case "aggregate":
     case "rate":
@@ -122,11 +179,13 @@ function weeklyParlayLegTargetKey(leg: WeeklyParlayLegShape): string {
       return `${leg.subject}:${leg.kind}:${leg.champion}:${String(leg.winsOnly)}`;
     case "role_games":
       return `${leg.subject}:${leg.kind}:${leg.role}:${String(leg.winsOnly)}`;
+    case "champion_peak":
+      return `${leg.subject}:${leg.kind}:${leg.champion}:${leg.metric}`;
   }
 }
 
 function rejectDuplicateLegTargets(
-  legs: readonly WeeklyParlayLegShape[],
+  legs: readonly WeeklyParlayAnyLegShape[],
   context: z.RefinementCtx,
 ): void {
   const seen = new Set<string>();
@@ -143,6 +202,14 @@ function rejectDuplicateLegTargets(
   }
 }
 
+export const WeeklyParlayLegacyProposalSchema = z.strictObject({
+  version: z.literal(WEEKLY_PARLAY_LEGACY_SCHEMA_VERSION),
+  legs: z
+    .array(WeeklyParlayLegacyLegShapeSchema)
+    .min(WEEKLY_PARLAY_MIN_LEGS)
+    .max(WEEKLY_PARLAY_MAX_LEGS)
+    .superRefine(rejectDuplicateLegTargets),
+});
 export const WeeklyParlayProposalSchema = z.strictObject({
   version: z.literal(WEEKLY_PARLAY_SCHEMA_VERSION),
   legs: z
@@ -153,15 +220,15 @@ export const WeeklyParlayProposalSchema = z.strictObject({
 });
 export type WeeklyParlayProposal = z.infer<typeof WeeklyParlayProposalSchema>;
 
-export const WeeklyParlayLegSchema = z
+const WeeklyParlayLegacyLegSchema = z
   .discriminatedUnion("kind", [
-    WeeklyParlayAggregateShapeSchema.extend({
+    WeeklyParlayLegacyAggregateShapeSchema.extend({
       threshold: z.number().int().nonnegative(),
     }),
     WeeklyParlayRateShapeSchema.extend({
       threshold: z.number().int().nonnegative(),
     }),
-    WeeklyParlayChampionShapeSchema.extend({
+    WeeklyParlayLegacyChampionShapeSchema.extend({
       threshold: z.number().int().nonnegative(),
     }),
     WeeklyParlayRoleShapeSchema.extend({
@@ -182,15 +249,50 @@ export const WeeklyParlayLegSchema = z
       });
     }
   });
-export type WeeklyParlayLeg = z.infer<typeof WeeklyParlayLegSchema>;
-export const WeeklyParlayDefinitionCriteriaSchema = z.strictObject({
+export const WeeklyParlayLegSchema = z.discriminatedUnion("kind", [
+  WeeklyParlayAggregateShapeSchema.extend({
+    threshold: z.number().int().nonnegative(),
+  }),
+  WeeklyParlayRateShapeSchema.extend({
+    threshold: z.number().int().nonnegative(),
+  }),
+  WeeklyParlayChampionShapeSchema.extend({
+    threshold: z.number().int().positive(),
+  }),
+  WeeklyParlayChampionPeakShapeSchema.extend({
+    threshold: z.number().int().positive(),
+  }),
+]);
+export type WeeklyParlayCurrentLeg = z.infer<typeof WeeklyParlayLegSchema>;
+export type WeeklyParlayLegacyLeg = z.infer<typeof WeeklyParlayLegacyLegSchema>;
+export type WeeklyParlayLeg = WeeklyParlayLegacyLeg | WeeklyParlayCurrentLeg;
+
+const WeeklyParlayLegacyDefinitionCriteriaSchema = z.strictObject({
+  version: z.literal(WEEKLY_PARLAY_LEGACY_SCHEMA_VERSION),
+  legs: z
+    .array(WeeklyParlayLegacyLegSchema)
+    .min(WEEKLY_PARLAY_MIN_LEGS)
+    .max(WEEKLY_PARLAY_MAX_LEGS)
+    .superRefine(rejectDuplicateLegTargets),
+});
+export const WeeklyParlayCurrentDefinitionCriteriaSchema = z.strictObject({
   version: z.literal(WEEKLY_PARLAY_SCHEMA_VERSION),
+  qualification: z.strictObject({
+    minimumGamesPerSubject: z.literal(WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES),
+  }),
   legs: z
     .array(WeeklyParlayLegSchema)
     .min(WEEKLY_PARLAY_MIN_LEGS)
     .max(WEEKLY_PARLAY_MAX_LEGS)
     .superRefine(rejectDuplicateLegTargets),
 });
+export const WeeklyParlayDefinitionCriteriaSchema = z.union([
+  WeeklyParlayLegacyDefinitionCriteriaSchema,
+  WeeklyParlayCurrentDefinitionCriteriaSchema,
+]);
+export type WeeklyParlayCurrentDefinitionCriteria = z.infer<
+  typeof WeeklyParlayCurrentDefinitionCriteriaSchema
+>;
 export type WeeklyParlayDefinitionCriteria = z.infer<
   typeof WeeklyParlayDefinitionCriteriaSchema
 >;
@@ -219,49 +321,28 @@ export type WeeklyParlayContributionSnapshot = z.infer<
 export function validateWeeklyParlayProposal(input: {
   proposal: WeeklyParlayProposal;
   subjects: readonly WeeklyParlaySubject[];
-  observedChampions: ReadonlyMap<string, ReadonlySet<string>>;
-  observedRoles: ReadonlyMap<string, ReadonlySet<string>>;
+  eligibleChampions: ReadonlyMap<string, ReadonlySet<string>>;
 }): string[] {
   const issues: string[] = [];
   const subjectKeys = new Set(input.subjects.map((subject) => subject.key));
   for (const subject of input.subjects) {
-    const subjectLegs = input.proposal.legs.filter(
-      (leg) => leg.subject === subject.key,
-    );
-    if (subjectLegs.length === 0) {
+    if (!input.proposal.legs.some((leg) => leg.subject === subject.key)) {
       issues.push(`Subject ${subject.key} has no leg.`);
     }
-    if (
-      !subjectLegs.some(
-        (leg) =>
-          leg.kind === "aggregate" &&
-          leg.metric === "games" &&
-          leg.operator === "gte",
-      )
-    ) {
-      issues.push(
-        `Subject ${subject.key} needs a visible games participation leg.`,
-      );
-    }
+  }
+  if (!input.proposal.legs.some((leg) => leg.kind === "champion_peak")) {
+    issues.push("Every weekly parlay proposal needs a champion_peak leg.");
   }
   for (const leg of input.proposal.legs) {
     if (!subjectKeys.has(leg.subject)) {
       issues.push(`Leg references unknown subject ${leg.subject}.`);
     }
     if (
-      leg.kind === "champion_games" &&
-      input.observedChampions.get(leg.subject)?.has(leg.champion) !== true
+      (leg.kind === "champion_games" || leg.kind === "champion_peak") &&
+      input.eligibleChampions.get(leg.subject)?.has(leg.champion) !== true
     ) {
       issues.push(
-        `${leg.champion} was not historically observed for ${leg.subject}.`,
-      );
-    }
-    if (
-      leg.kind === "role_games" &&
-      input.observedRoles.get(leg.subject)?.has(leg.role) !== true
-    ) {
-      issues.push(
-        `${leg.role} was not historically observed for ${leg.subject}.`,
+        `${leg.champion} is not in the champion shortlist for ${leg.subject}.`,
       );
     }
   }

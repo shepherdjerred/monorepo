@@ -975,24 +975,43 @@ polling intervals for Match-V5 ingestion; the guarded market-row write then
 serializes the last valid contribution against settlement.
 
 Weekly generation is deterministic around a closed model boundary. Candidate
-order, coverage/cooldown gates, aligned zero-game windows, threshold search, and
-joint replay pricing are code-owned. The model chooses only 3–5 catalog shapes;
-it cannot author thresholds, expressions, paths, SQL, or settlement behavior.
-Reject a candidate outside the empirical publication band and skip the week
-when none qualify—never weaken or clamp a gate.
+order, coverage/cooldown gates, aligned windows, champion shortlists,
+qualification, threshold search, and joint replay pricing are code-owned. The
+trailing-eight-window shortlist requires three games across two windows, sorts
+by windows played, games played, then champion name, and retains at most five.
+The model returns exactly five distinct 3–5-leg proposals, each containing a
+`champion_peak` leg, and cannot author thresholds, expressions, paths, SQL, or
+settlement behavior. Generation may use rates, wins, win streaks, best-game
+metrics, named-champion wins, and named-champion peak kills, assists, champion
+damage, or vision score. It must not generate plain games, time played,
+distinct counts, role games, raw cumulative statistics, or champion plays
+without a win. Reject a candidate outside the closed catalog or shortlist and
+skip the week when none qualify—never weaken or clamp a gate.
+
+Weekly pricing uses only windows where every subject completed at least three
+eligible games and persists total, qualified, and excluded evidence. Require at
+least 15 qualified windows, a 20–70% standalone hit rate for every displayed
+leg, and a 20–30% joint hit rate nearest 25%. The trailing eight qualified
+windows need at least one joint hit and at most 50% joint success.
 
 The database is authoritative for weekly-parlay subject membership. A player
 row in the target guild with a Discord ID and at least one linked Riot account
 is eligible for candidate evaluation; generation must not enumerate or fetch
 Discord guild members. Stale player membership is a database-cleanup concern.
 
-Only cumulative/count/distinct/max `gte` legs may become irreversible. Early
-settlement is YES-only and requires every leg irreversibly true; NO and every
-equality, upper-bound, rate, or average leg wait for finalization. Flag
-revocation stops creation and new stakes but, like all Bryan Bucks controls,
-must never block settlement, reserve release, voids, or refunds. Every Discord
-publication is a new nonce-guarded message, mentions deduplicated frozen
-subjects plus pending bettors, and exposes aggregate positions only.
+Version-two activity is a settlement qualification, never a displayed leg.
+Every subject needs three eligible games; insufficient final activity voids and
+refunds the market. Early settlement is YES-only and requires qualification
+plus every leg irreversibly true; NO and every equality, upper-bound, rate, or
+average leg wait for finalization. Keep version-one criteria/evaluator parsing
+and settlement compatible. Flag revocation stops creation and new stakes but,
+like all Bryan Bucks controls, must never block settlement, reserve release,
+voids, refunds, or authenticated operator cancellation. Cancellation is
+idempotent, refunds all pending bets atomically, sends the bettor-mentioned
+settlement notice, and edits the original publication to cancelled with no
+components. Every Discord publication is a new nonce-guarded message, mentions
+deduplicated frozen subjects plus pending bettors, and exposes aggregate
+positions only.
 
 The `scout-weekly-parlay` Temporal schedule is the sole recurring coordinator.
 It calls the beta-only authenticated control endpoint with stable period/action
@@ -1005,9 +1024,10 @@ closed `catch_up` window. Scout validates the minimum betting duration and
 Sunday cutoff, freezes the clocks on the definition, and rejects a retry whose
 period/slot already has different clocks. Every later action derives reminder,
 progress, and settlement timing from that stored definition. Historical replay
-uses the same Pacific weekday/hour shape as the shortened live window,
-including zero-game windows. Catch-up execution never edits or replaces the
-recurring schedule.
+uses the same Pacific weekday/hour shape as the shortened live window. Preserve
+zero-game windows in the history snapshot, then exclude all under-qualified
+windows from version-two pricing with explicit evidence. Catch-up execution
+never edits or replaces the recurring schedule.
 
 League Classic (`queueType: "classic"`, Riot queue 4310) is not a betting or
 parlay queue because this integration has no supported post-game payload. A

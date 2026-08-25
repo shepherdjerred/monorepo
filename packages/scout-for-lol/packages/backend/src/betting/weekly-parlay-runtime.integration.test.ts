@@ -35,7 +35,14 @@ import {
   weeklyParlayPeriod,
 } from "#src/betting/weekly-parlay-period.ts";
 import { settleWeeklyParlayMarket } from "#src/betting/weekly-parlay-settle.ts";
-import { WeeklyParlaySubjectSchema } from "#src/betting/weekly-parlay-criteria.ts";
+import {
+  WeeklyParlayContributionSnapshotSchema,
+  WeeklyParlaySubjectSchema,
+} from "#src/betting/weekly-parlay-criteria.ts";
+import {
+  cancelWeeklyParlayMessage,
+  type WeeklyParlayMessageEditor,
+} from "#src/betting/weekly-parlay-refresh.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
@@ -65,16 +72,16 @@ function participant() {
 const PARTICIPANT = participant();
 const PARTICIPANT_PUUID = LeaguePuuidSchema.parse(PARTICIPANT.puuid);
 const COMPLETED_AT = new Date(fixture.info.gameEndTimestamp);
-
 function subject(
   playerId: number,
   puuids: readonly string[] = [PARTICIPANT_PUUID],
+  discordId = BETTOR,
 ) {
   return WeeklyParlaySubjectSchema.parse({
     key: "P1",
     playerId,
     alias: "jerred",
-    discordId: BETTOR,
+    discordId,
     accounts: puuids.map((puuid) => ({
       puuid: LeaguePuuidSchema.parse(puuid),
       trackingStartedAt: new Date(
@@ -113,6 +120,39 @@ function hitCriteria() {
   };
 }
 
+function challengingCriteria() {
+  return {
+    version: 2,
+    qualification: { minimumGamesPerSubject: 3 },
+    legs: [
+      {
+        kind: "champion_peak",
+        subject: "P1",
+        champion: PARTICIPANT.championName,
+        metric: "kills",
+        operator: "gte",
+        threshold: PARTICIPANT.kills,
+      },
+      {
+        kind: "champion_peak",
+        subject: "P1",
+        champion: PARTICIPANT.championName,
+        metric: "assists",
+        operator: "gte",
+        threshold: PARTICIPANT.assists,
+      },
+      {
+        kind: "champion_games",
+        subject: "P1",
+        champion: PARTICIPANT.championName,
+        winsOnly: true,
+        operator: "gte",
+        threshold: 1,
+      },
+    ],
+  };
+}
+
 async function clearAll(): Promise<void> {
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksWeeklyParlayDelivery.deleteMany();
@@ -128,9 +168,12 @@ async function clearAll(): Promise<void> {
 }
 
 async function makeMarket(input?: {
-  criteria?: ReturnType<typeof hitCriteria>;
+  criteria?: unknown;
+  evaluatorVersion?: string;
+  schemaVersion?: number;
   marketState?: "publishing" | "open" | "active";
   slot?: number;
+  subjectDiscordId?: typeof BETTOR;
   timeline?: {
     openAt: Date;
     bettingClosesAt: Date;
@@ -157,7 +200,9 @@ async function makeMarket(input?: {
       bettingClosesAt,
       scoringStartsAt,
       scoringEndsAt,
-      subjects: JSON.stringify([subject(player.id)]),
+      subjects: JSON.stringify([
+        subject(player.id, [PARTICIPANT_PUUID], input?.subjectDiscordId),
+      ]),
       eligibleQueues: JSON.stringify(["solo", "flex", "ranked 5s"]),
       proposal: JSON.stringify({ version: 1, legs: [] }),
       criteria: JSON.stringify(input?.criteria ?? hitCriteria()),
@@ -166,8 +211,8 @@ async function makeMarket(input?: {
       yesProbabilityBps: 5000,
       promptVersion: "test",
       catalogVersion: "test",
-      schemaVersion: 1,
-      evaluatorVersion: "1",
+      schemaVersion: input?.schemaVersion ?? 1,
+      evaluatorVersion: input?.evaluatorVersion ?? "1",
       pricingVersion: "1",
       generationContext: "{}",
       requestedModel: "test",
@@ -201,6 +246,88 @@ function place(marketId: number, side: "YES" | "NO", stake: number) {
       now: new Date(COMPLETED_AT.getTime() - 150 * 60_000),
     },
     db,
+  );
+}
+
+function challengingSnapshot(index: number) {
+  return WeeklyParlayContributionSnapshotSchema.parse({
+    subject: "P1",
+    puuid: PARTICIPANT_PUUID,
+    queue: "solo",
+    completedAt: new Date(
+      COMPLETED_AT.getTime() + index * 60_000,
+    ).toISOString(),
+    win: true,
+    champion: PARTICIPANT.championName,
+    role: "MIDDLE",
+    kills: PARTICIPANT.kills,
+    deaths: PARTICIPANT.deaths,
+    assists: PARTICIPANT.assists,
+    championDamage: PARTICIPANT.totalDamageDealtToChampions,
+    creepScore: PARTICIPANT.totalMinionsKilled,
+    gold: PARTICIPANT.goldEarned,
+    visionScore: PARTICIPANT.visionScore,
+    timePlayed: fixture.info.gameDuration,
+  });
+}
+
+async function appendChallengingSnapshots(
+  definitionId: number,
+  count: number,
+): Promise<void> {
+  const existing = await db.bucksWeeklyParlayContribution.count({
+    where: { definitionId },
+  });
+  for (const index of Array.from(
+    { length: count },
+    (_value, item) => existing + item,
+  )) {
+    const snapshot = challengingSnapshot(index);
+    await db.bucksWeeklyParlayContribution.create({
+      data: {
+        definitionId,
+        matchId: `weekly-v2-${index.toString()}`,
+        subjectKey: snapshot.subject,
+        completedAt: new Date(snapshot.completedAt),
+        ingestedAt: COMPLETED_AT,
+        queueType: snapshot.queue,
+        snapshot: JSON.stringify(snapshot),
+      },
+    });
+  }
+}
+
+async function makeActiveChallengingMarket() {
+  const market = await makeMarket({
+    criteria: challengingCriteria(),
+    evaluatorVersion: "2",
+    schemaVersion: 2,
+    marketState: "open",
+  });
+  await place(market.id, "YES", 10);
+  await db.bucksWeeklyParlayMarket.update({
+    where: { id: market.id },
+    data: { marketState: "active" },
+  });
+  return market;
+}
+
+function runCatchupOpen(openAt: Date, now = openAt) {
+  const period = weeklyParlayPeriod(PERIOD_KEY);
+  return runWeeklyParlayControlAction(
+    {
+      periodKey: PERIOD_KEY,
+      action: "open",
+      slot: 0,
+      window: {
+        kind: "catch_up",
+        openAt: openAt.toISOString(),
+        bettingClosesAt: "2026-08-25T07:00:00.000Z",
+        scoringStartsAt: "2026-08-25T07:00:00.000Z",
+        scoringEndsAt: period.scoringEndsAt.toISOString(),
+      },
+    },
+    { serverId: SERVER_ID, now, prismaClient: db },
   );
 }
 
@@ -410,6 +537,151 @@ describe("weekly parlay ledger and settlement", () => {
   });
 });
 
+describe("weekly parlay operator cancellation", () => {
+  test("operator cancellation refunds every bettor exactly once with balanced ledger entries", async () => {
+    const featuredDiscordId = bucksTestDiscordId(703);
+    const market = await makeMarket({
+      marketState: "open",
+      subjectDiscordId: featuredDiscordId,
+    });
+    const otherBettors = [bucksTestDiscordId(701), bucksTestDiscordId(702)];
+    await db.player.createMany({
+      data: otherBettors.map((discordId, index) => ({
+        alias: `bettor-${index.toString()}`,
+        discordId,
+        serverId: SERVER_ID,
+        creatorDiscordId: BETTOR,
+        createdTime: COMPLETED_AT,
+        updatedTime: COMPLETED_AT,
+      })),
+    });
+    await db.bucksAccount.createMany({
+      data: otherBettors.map((discordId) => ({
+        serverId: SERVER_ID,
+        discordId,
+        balance: 100,
+      })),
+    });
+    for (const [index, discordId] of [BETTOR, ...otherBettors].entries()) {
+      await placeWeeklyParlayBet(
+        {
+          marketId: market.id,
+          serverId: SERVER_ID,
+          discordId,
+          side: index % 2 === 0 ? "YES" : "NO",
+          stake: 1,
+          now: new Date(COMPLETED_AT.getTime() - 150 * 60_000),
+        },
+        db,
+      );
+    }
+    const originalRefs = [
+      { channelId: "160509172704739999", messageId: "original-open" },
+    ];
+    await db.bucksWeeklyParlayMarket.update({
+      where: { id: market.id },
+      data: { messageRefs: JSON.stringify(originalRefs) },
+    });
+    await db.bucksWeeklyParlayDelivery.create({
+      data: {
+        marketId: market.id,
+        actionKey: "open",
+        kind: "open",
+        scheduledAt: market.definition.openAt,
+        attemptedAt: market.definition.openAt,
+        deliveredAt: market.definition.openAt,
+        deliveryState: "delivered",
+        messageRefs: JSON.stringify(originalRefs),
+      },
+    });
+    clearFlagOverrides("betting_enabled");
+    clearFlagOverrides("weekly_parlays_enabled");
+    addFlagOverride("betting_enabled", false, { server: SERVER_ID });
+    addFlagOverride("weekly_parlays_enabled", false, { server: SERVER_ID });
+    const sent: Parameters<WeeklyParlayDiscordSender>[0][] = [];
+    const sender: WeeklyParlayDiscordSender = async (options) => {
+      sent.push(options);
+      return { channelId: "160509172704739999", id: "refund-notice" };
+    };
+    const edits: Parameters<WeeklyParlayMessageEditor>[] = [];
+    const editor: WeeklyParlayMessageEditor = async (...parameters) => {
+      edits.push(parameters);
+    };
+    const options = {
+      serverId: SERVER_ID,
+      now: COMPLETED_AT,
+      prismaClient: db,
+      deliverDiscord: async (
+        input: Parameters<typeof deliverWeeklyParlayDiscord>[0],
+        prismaClient: Parameters<typeof deliverWeeklyParlayDiscord>[1],
+      ) => await deliverWeeklyParlayDiscord(input, prismaClient, sender),
+      cancelMessage: async (
+        marketId: number,
+        prismaClient: Parameters<typeof cancelWeeklyParlayMessage>[1],
+      ) => await cancelWeeklyParlayMessage(marketId, prismaClient, editor),
+    };
+    await expect(
+      runWeeklyParlayControlAction(
+        { periodKey: PERIOD_KEY, slot: 0, action: "cancel" },
+        options,
+      ),
+    ).resolves.toMatchObject({ status: "reconciled", detail: "cancelled" });
+    await expect(
+      runWeeklyParlayControlAction(
+        { periodKey: PERIOD_KEY, slot: 0, action: "cancel" },
+        options,
+      ),
+    ).resolves.toMatchObject({
+      status: "reconciled",
+      detail: "already_cancelled",
+    });
+    const [cancelled, bets, accounts] = await Promise.all([
+      db.bucksWeeklyParlayMarket.findUniqueOrThrow({
+        where: { id: market.id },
+      }),
+      db.bucksWeeklyParlayBet.findMany({
+        where: { marketId: market.id },
+        orderBy: { id: "asc" },
+      }),
+      db.bucksAccount.findMany({
+        where: {
+          serverId: SERVER_ID,
+          discordId: { in: [BETTOR, ...otherBettors] },
+        },
+      }),
+    ]);
+    const ledger = await db.bucksLedgerEntry.findMany({
+      where: { weeklyParlayBetId: { in: bets.map((bet) => bet.id) } },
+    });
+    expect(cancelled).toMatchObject({
+      marketState: "voided",
+      voidReason: "operator_cancelled",
+    });
+    expect(bets.every((bet) => bet.betOutcome === "refunded")).toBe(true);
+    expect(accounts.every((account) => account.balance === 100)).toBe(true);
+    expect(
+      ledger.filter((entry) => entry.kind === "weekly_parlay_refund"),
+    ).toHaveLength(3);
+    expect(
+      ledger.filter((entry) => entry.kind === "weekly_parlay_release"),
+    ).toHaveLength(3);
+    expect(ledger.reduce((total, entry) => total + entry.delta, 0)).toBe(0);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.content).toContain(`<@${featuredDiscordId}>`);
+    expect(sent[0]?.allowedMentions).toEqual({
+      users: [featuredDiscordId, BETTOR, ...otherBettors],
+    });
+    expect(sent[0]?.content).toContain("cancelled and refunded");
+    expect(sent[0]?.content).toContain("every pending wager was refunded");
+    expect(sent[0]?.components).toEqual([]);
+    expect(edits).toHaveLength(2);
+    expect(edits[0]?.[0]).toBe(originalRefs[0]?.channelId);
+    expect(edits[0]?.[1]).toBe(originalRefs[0]?.messageId);
+    expect(edits[0]?.[2].content).toContain("cancelled and refunded");
+    expect(edits[0]?.[2].components).toEqual([]);
+  });
+});
+
 describe("weekly parlay settlement", () => {
   test("never settles NO early and finalizes NO after ingestion reconciliation", async () => {
     const market = await makeMarket();
@@ -523,7 +795,67 @@ describe("weekly parlay settlement", () => {
       ),
     ).resolves.toMatchObject({ yesResult: true });
   });
+});
 
+describe("weekly parlay version-two settlement", () => {
+  test("requires three eligible games before version-two early YES", async () => {
+    const market = await makeActiveChallengingMarket();
+    await appendChallengingSnapshots(market.definitionId, 2);
+    await expect(
+      settleWeeklyParlayMarket(
+        { marketId: market.id, mode: "early_yes", now: COMPLETED_AT },
+        db,
+      ),
+    ).resolves.toBeUndefined();
+    await appendChallengingSnapshots(market.definitionId, 1);
+    await expect(
+      settleWeeklyParlayMarket(
+        { marketId: market.id, mode: "early_yes", now: COMPLETED_AT },
+        db,
+      ),
+    ).resolves.toMatchObject({ yesResult: true });
+  });
+
+  test("voids and refunds version-two markets with insufficient activity", async () => {
+    const market = await makeActiveChallengingMarket();
+    await appendChallengingSnapshots(market.definitionId, 2);
+    await expect(
+      settleWeeklyParlayMarket(
+        {
+          marketId: market.id,
+          mode: "final",
+          now: weeklyParlayFinalSettlementAt(market.scoringEndsAt),
+        },
+        db,
+      ),
+    ).resolves.toMatchObject({ voidReason: "insufficient_activity" });
+    await expect(
+      db.bucksWeeklyParlayBet.findFirstOrThrow({
+        where: { marketId: market.id },
+      }),
+    ).resolves.toMatchObject({ betOutcome: "refunded", payout: 10 });
+    const sent: Parameters<WeeklyParlayDiscordSender>[0][] = [];
+    await deliverWeeklyParlayDiscord(
+      {
+        marketId: market.id,
+        actionKey: weeklyParlaySettlementActionKey(market.id),
+        kind: "settlement",
+        scheduledAt: market.scoringEndsAt,
+      },
+      db,
+      async (options) => {
+        sent.push(options);
+        return { channelId: "160509172704739999", id: "insufficient" };
+      },
+    );
+    expect(sent[0]?.content).toContain(
+      "Fewer than three eligible games were played",
+    );
+    expect(sent[0]?.components).toEqual([]);
+  });
+});
+
+describe("weekly parlay settlement failures", () => {
   test("voids and refunds every reserved position on evaluator failure", async () => {
     const market = await makeMarket();
     await place(market.id, "YES", 10);
@@ -650,80 +982,23 @@ describe("weekly parlay contributions and control actions", () => {
 describe("weekly parlay catch-up controls", () => {
   test("rejects an open retry whose catch-up clocks conflict with the stored definition", async () => {
     await makeMarket({ marketState: "open" });
-    const period = weeklyParlayPeriod(PERIOD_KEY);
     const openAt = new Date("2026-08-24T19:00:00.000Z");
-    await expect(
-      runWeeklyParlayControlAction(
-        {
-          periodKey: PERIOD_KEY,
-          action: "open",
-          slot: 0,
-          window: {
-            kind: "catch_up",
-            openAt: openAt.toISOString(),
-            bettingClosesAt: "2026-08-25T07:00:00.000Z",
-            scoringStartsAt: "2026-08-25T07:00:00.000Z",
-            scoringEndsAt: period.scoringEndsAt.toISOString(),
-          },
-        },
-        {
-          serverId: SERVER_ID,
-          now: openAt,
-          prismaClient: db,
-        },
-      ),
-    ).rejects.toThrow("conflicting timeline");
+    await expect(runCatchupOpen(openAt)).rejects.toThrow(
+      "conflicting timeline",
+    );
   });
 
   test("rejects catch-up clocks that do not preserve the minimum betting window", async () => {
-    const period = weeklyParlayPeriod(PERIOD_KEY);
     const openAt = new Date("2026-08-25T02:30:00.000Z");
-    await expect(
-      runWeeklyParlayControlAction(
-        {
-          periodKey: PERIOD_KEY,
-          action: "open",
-          slot: 0,
-          window: {
-            kind: "catch_up",
-            openAt: openAt.toISOString(),
-            bettingClosesAt: "2026-08-25T07:00:00.000Z",
-            scoringStartsAt: "2026-08-25T07:00:00.000Z",
-            scoringEndsAt: period.scoringEndsAt.toISOString(),
-          },
-        },
-        {
-          serverId: SERVER_ID,
-          now: openAt,
-          prismaClient: db,
-        },
-      ),
-    ).rejects.toThrow("Invalid weekly parlay catch-up timeline");
+    await expect(runCatchupOpen(openAt)).rejects.toThrow(
+      "Invalid weekly parlay catch-up timeline",
+    );
   });
 
   test("rechecks the minimum betting window from the retry time", async () => {
-    const period = weeklyParlayPeriod(PERIOD_KEY);
     const openAt = new Date("2026-08-24T19:00:00.000Z");
     await expect(
-      runWeeklyParlayControlAction(
-        {
-          periodKey: PERIOD_KEY,
-          action: "open",
-          slot: 0,
-          window: {
-            kind: "catch_up",
-            openAt: openAt.toISOString(),
-            bettingClosesAt: "2026-08-25T07:00:00.000Z",
-            scoringStartsAt: "2026-08-25T07:00:00.000Z",
-            scoringEndsAt: period.scoringEndsAt.toISOString(),
-          },
-        },
-        {
-          serverId: SERVER_ID,
-          now: new Date("2026-08-25T02:00:00.000Z"),
-          prismaClient: db,
-        },
-      ),
+      runCatchupOpen(openAt, new Date("2026-08-25T02:00:00.000Z")),
     ).rejects.toThrow("Invalid weekly parlay catch-up timeline");
   });
 
@@ -994,6 +1269,55 @@ describe("weekly parlay ingestion boundaries", () => {
 describe("weekly parlay Discord delivery", () => {
   test("uses one settlement delivery key across settlement origins", () => {
     expect(weeklyParlaySettlementActionKey(42)).toBe("settlement:42");
+  });
+
+  test("renders champion criteria and activity qualification for open and progress", async () => {
+    const market = await makeMarket({
+      criteria: challengingCriteria(),
+      evaluatorVersion: "2",
+      schemaVersion: 2,
+      marketState: "publishing",
+    });
+    const sent: Parameters<WeeklyParlayDiscordSender>[0][] = [];
+    const sender: WeeklyParlayDiscordSender = async (options) => {
+      sent.push(options);
+      return {
+        channelId: "160509172704739999",
+        id: `challenging-${sent.length.toString()}`,
+      };
+    };
+    await deliverWeeklyParlayDiscord(
+      {
+        marketId: market.id,
+        actionKey: "open",
+        kind: "open",
+        scheduledAt: market.definition.openAt,
+      },
+      db,
+      sender,
+    );
+    await appendChallengingSnapshots(market.definitionId, 1);
+    await db.bucksWeeklyParlayMarket.update({
+      where: { id: market.id },
+      data: { marketState: "active" },
+    });
+    await deliverWeeklyParlayDiscord(
+      {
+        marketId: market.id,
+        actionKey: "progress:0",
+        kind: "progress",
+        scheduledAt: COMPLETED_AT,
+      },
+      db,
+      sender,
+    );
+    expect(sent[0]?.content).toContain(
+      `kills in one game as ${PARTICIPANT.championName}`,
+    );
+    expect(sent[0]?.content).toContain("3 eligible games required per player");
+    expect(sent[0]?.components).not.toEqual([]);
+    expect(sent[1]?.content).toContain("Qualification: **jerred 1/3 games**");
+    expect(sent[1]?.components).toEqual([]);
   });
 
   test("labels catch-up messages and renders their frozen betting and scoring clocks", async () => {
