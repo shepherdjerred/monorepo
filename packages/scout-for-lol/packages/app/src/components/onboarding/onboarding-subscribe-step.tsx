@@ -1,18 +1,35 @@
-import { useState } from "react";
+import { useRef } from "react";
+import { useSelector } from "@tanstack/react-form";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
   CardContent,
 } from "@scout-for-lol/design-system/components/card";
-import { SubscriptionFields } from "#src/components/subscription-fields.tsx";
 import {
-  emptySubscriptionValue,
-  useAddSubscription,
-  type SubscriptionFieldsValue,
-} from "#src/lib/use-add-subscription.ts";
+  SubscriptionFields,
+  subscriptionFormOptions,
+} from "#src/components/subscription-fields.tsx";
+import { useAddSubscription } from "#src/lib/use-add-subscription.ts";
 import type { OnboardingStepKind } from "@scout-for-lol/data";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 import { OnboardingNoChannels } from "#src/components/onboarding/onboarding-no-channels.tsx";
+import {
+  emptySubscriptionFormValue,
+  SubscriptionFormSchema,
+} from "#src/lib/form-schemas.ts";
+import {
+  focusFirstInvalid,
+  FormPendingStatus,
+  handleFormSubmit,
+  ServerFormError,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import {
+  UnsavedFormDialog,
+  useUnsavedForm,
+  useUnsavedFormTransition,
+} from "#src/hooks/use-unsaved-form.tsx";
 
 type Mode = "self" | "more";
 
@@ -29,27 +46,48 @@ export function OnboardingSubscribeStep(props: {
   onSkip: () => void;
 }) {
   const initialChannel = props.channels[0]?.id ?? "";
-  const [value, setValue] = useState<SubscriptionFieldsValue>(() =>
+  const formElement = useRef<HTMLFormElement>(null);
+  const initialValue =
     props.mode === "self"
       ? {
-          ...emptySubscriptionValue(initialChannel),
+          ...emptySubscriptionFormValue(initialChannel),
           alias: props.username,
           discordUserId: props.discordId,
         }
-      : emptySubscriptionValue(initialChannel),
-  );
+      : emptySubscriptionFormValue(initialChannel);
 
   const { submit, isPending, error } = useAddSubscription({
     guildId: props.guildId,
     onAdded: () => {
       props.onAdded();
       if (props.mode === "self") {
+        form.reset();
         props.onContinue();
       } else {
-        setValue(emptySubscriptionValue(initialChannel));
+        form.reset(emptySubscriptionFormValue(initialChannel));
       }
     },
   });
+
+  const form = useScoutForm({
+    ...subscriptionFormOptions,
+    defaultValues: initialValue,
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: SubscriptionFormSchema },
+    onSubmit: ({ value }) => {
+      submit(value);
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+  const isDirty = useSelector(form.store, (state) => state.isDirty);
+  const transition = useUnsavedFormTransition(isDirty, isPending);
+  const blocker = useUnsavedForm(
+    isDirty,
+    isPending,
+    transition.isNavigationAllowed,
+  );
 
   const step: OnboardingStepKind =
     props.mode === "self" ? "subscribe-self" : "subscribe-more";
@@ -66,7 +104,9 @@ export function OnboardingSubscribeStep(props: {
         step={step}
         title={title}
         description={description}
-        onSkip={props.onSkip}
+        onSkip={() => {
+          transition.request(props.onSkip);
+        }}
       >
         <OnboardingNoChannels onBack={props.onBack} />
       </OnboardingShell>
@@ -77,17 +117,14 @@ export function OnboardingSubscribeStep(props: {
     ...new Set(props.existingSubs.map((subscription) => subscription.alias)),
   ].toSorted((left, right) => left.localeCompare(right));
 
-  function handleSubmit(event: React.SyntheticEvent) {
-    event.preventDefault();
-    submit(value);
-  }
-
   return (
     <OnboardingShell
       step={step}
       title={title}
       description={description}
-      onSkip={props.onSkip}
+      onSkip={() => {
+        transition.request(props.onSkip);
+      }}
     >
       <div className="space-y-4">
         {props.mode === "more" && trackedAliases.length > 0 && (
@@ -107,43 +144,64 @@ export function OnboardingSubscribeStep(props: {
           </Card>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <SubscriptionFields
-            idPrefix={props.mode === "self" ? "onb-self" : "onb-more"}
-            guildId={props.guildId}
-            channels={props.channels}
-            value={value}
-            onChange={setValue}
-          />
+        <form.AppForm>
+          <form
+            ref={formElement}
+            onSubmit={(event) => {
+              handleFormSubmit(event, () => form.handleSubmit());
+            }}
+            aria-busy={isPending}
+            className="space-y-4"
+          >
+            <fieldset disabled={isPending} className="m-0 border-0 p-0">
+              <SubscriptionFields
+                form={form}
+                idPrefix={props.mode === "self" ? "onb-self" : "onb-more"}
+                guildId={props.guildId}
+                channels={props.channels}
+              />
+            </fieldset>
 
-          {error !== null && (
-            <p className="text-sm text-scout-danger">{error}</p>
-          )}
+            <ServerFormError error={error} />
 
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" type="button" onClick={props.onBack}>
-              ← Back
-            </Button>
-            <div className="flex gap-2">
+            <div className="flex items-center justify-between">
               <Button
+                variant="ghost"
                 type="button"
-                variant="outline"
-                onClick={props.onContinue}
+                onClick={() => {
+                  transition.request(props.onBack);
+                }}
               >
-                Skip
+                ← Back
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {props.mode === "self"
-                  ? isPending
-                    ? "Adding…"
-                    : "Track me"
-                  : isPending
-                    ? "Adding…"
-                    : "Add friend"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    transition.request(props.onContinue);
+                  }}
+                >
+                  Skip
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {props.mode === "self"
+                    ? isPending
+                      ? "Adding…"
+                      : "Track me"
+                    : isPending
+                      ? "Adding…"
+                      : "Add friend"}
+                </Button>
+              </div>
             </div>
-          </div>
-        </form>
+            <FormPendingStatus pending={isPending}>
+              Adding subscription…
+            </FormPendingStatus>
+          </form>
+        </form.AppForm>
+        <UnsavedFormDialog blocker={blocker} />
+        {transition.dialog}
       </div>
     </OnboardingShell>
   );

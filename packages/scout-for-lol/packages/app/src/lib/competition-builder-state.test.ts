@@ -121,7 +121,7 @@ describe("competition builder reducer and submission", () => {
 
   test("preset switching is atomic and preserves roster and delivery settings", () => {
     const initial = initialCompetitionBuilderState({
-      channelId: "channel-a",
+      channelId: "200000000000000005",
       timezone: TIMEZONE,
       now: NOW,
       scenarioId: "rank",
@@ -179,7 +179,7 @@ describe("competition builder reducer and submission", () => {
 
   test("server-wide submission ignores a manual roster", () => {
     const initial = initialCompetitionBuilderState({
-      channelId: "channel-a",
+      channelId: "200000000000000005",
       timezone: TIMEZONE,
       now: NOW,
       scenarioId: "rank",

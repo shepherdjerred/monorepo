@@ -4,8 +4,8 @@ import type { User } from "#generated/prisma/client/index.js";
 import {
   DiscordAccountIdSchema,
   type DiscordAccountId,
-  EXPLORE_TITLE_MAX_LENGTH,
   ExploreConversationIdSchema,
+  ExploreConversationTitleSchema,
   ExploreRunIdSchema,
   ExploreRunObserveRequestSchema,
   ExploreRunOutcomeResultSchema,
@@ -215,7 +215,7 @@ export const exploreRouter = router({
   rename: exploreProcedure
     .input(
       conversationInput.extend({
-        title: z.string().trim().min(1).max(EXPLORE_TITLE_MAX_LENGTH),
+        title: ExploreConversationTitleSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {

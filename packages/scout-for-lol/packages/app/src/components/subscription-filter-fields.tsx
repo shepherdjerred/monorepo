@@ -134,6 +134,7 @@ function EntryRow(props: {
  */
 export function SubscriptionFilterFields(props: {
   id?: string;
+  name: string;
   value: SubscriptionFilterSpec | null;
   onChange: (next: SubscriptionFilterSpec | null) => void;
 }) {
@@ -173,62 +174,70 @@ export function SubscriptionFilterFields(props: {
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          id={props.id}
-          type="button"
-          variant="outline"
-          className="w-full justify-between font-normal"
+    <>
+      <input
+        type="hidden"
+        name={props.name}
+        value={props.value === null ? "" : JSON.stringify(props.value)}
+      />
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            id={props.id}
+            type="button"
+            variant="outline"
+            className="w-full justify-between font-normal"
+          >
+            <span className="truncate">{summarizeFilters(props.value)}</span>
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="max-h-72 w-64 overflow-y-auto p-1"
+          align="start"
         >
-          <span className="truncate">{summarizeFilters(props.value)}</span>
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="max-h-72 w-64 overflow-y-auto p-1"
-        align="start"
-      >
-        {unavailableCount > 0 && (
-          <>
-            <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-scout-subtle hover:bg-scout-accent hover:text-scout-accent-ink">
-              <input
-                type="checkbox"
-                className="size-6 shrink-0"
-                checked={showUnavailable}
-                onChange={(event) => {
-                  setShowUnavailable(event.target.checked);
-                }}
-              />
-              Show unavailable queues ({unavailableCount})
-            </label>
-            <div className="my-1 h-px bg-border" />
-          </>
-        )}
-        <button
-          type="button"
-          className={cn(
-            "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm hover:bg-scout-accent hover:text-scout-accent-ink",
-            selected.length === 0 && "font-medium",
+          {unavailableCount > 0 && (
+            <>
+              <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-scout-subtle hover:bg-scout-accent hover:text-scout-accent-ink">
+                <input
+                  type="checkbox"
+                  name={`${props.name}-show-unavailable`}
+                  className="size-6 shrink-0"
+                  checked={showUnavailable}
+                  onChange={(event) => {
+                    setShowUnavailable(event.target.checked);
+                  }}
+                />
+                Show unavailable queues ({unavailableCount})
+              </label>
+              <div className="my-1 h-px bg-border" />
+            </>
           )}
-          onClick={() => {
-            props.onChange(null);
-          }}
-        >
-          <span>All queues</span>
-          {selected.length === 0 ? <Check className="h-4 w-4" /> : null}
-        </button>
-        <div className="my-1 h-px bg-border" />
-        {visibleEntries.map((entry) => (
-          <EntryRow
-            key={entry.key}
-            entry={entry}
-            isSelected={entryFullySelected(entry)}
-            isPartial={entryHasSelection(entry) && !entryFullySelected(entry)}
-            onToggle={toggle}
-          />
-        ))}
-      </PopoverContent>
-    </Popover>
+          <button
+            type="button"
+            className={cn(
+              "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm hover:bg-scout-accent hover:text-scout-accent-ink",
+              selected.length === 0 && "font-medium",
+            )}
+            onClick={() => {
+              props.onChange(null);
+            }}
+          >
+            <span>All queues</span>
+            {selected.length === 0 ? <Check className="h-4 w-4" /> : null}
+          </button>
+          <div className="my-1 h-px bg-border" />
+          {visibleEntries.map((entry) => (
+            <EntryRow
+              key={entry.key}
+              entry={entry}
+              isSelected={entryFullySelected(entry)}
+              isPartial={entryHasSelection(entry) && !entryFullySelected(entry)}
+              onToggle={toggle}
+            />
+          ))}
+        </PopoverContent>
+      </Popover>
+    </>
   );
 }

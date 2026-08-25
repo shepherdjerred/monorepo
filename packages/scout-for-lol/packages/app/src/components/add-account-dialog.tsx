@@ -1,23 +1,23 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { findRegion, type RegionValue } from "#src/lib/regions.ts";
-import { Label } from "@scout-for-lol/design-system/components/label";
-import { RegionSelect } from "#src/components/region-select.tsx";
+import { findRegion, REGIONS } from "#src/lib/regions.ts";
+import {
+  Field,
+  FieldError,
+  Label,
+} from "@scout-for-lol/design-system/components/input";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
+import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import {
-  DialogFormError,
-  DialogFormFooter,
-} from "#src/components/dialog-form.tsx";
+  fieldErrorMessage,
+  focusFirstInvalid,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { AddAccountFormSchema } from "#src/lib/form-schemas.ts";
 
 /** Add a Riot account to an existing player (via `player.addAccount`). */
 export function AddAccountDialog(props: {
@@ -28,9 +28,8 @@ export function AddAccountDialog(props: {
   onAdded: () => void;
 }) {
   const trpc = useTRPC();
-  const [riotId, setRiotId] = useState("");
-  const [region, setRegion] = useState<RegionValue>("AMERICA_NORTH");
   const [error, setError] = useState<string | null>(null);
+  const formElement = useRef<HTMLFormElement>(null);
   const mutation = useMutation(
     trpc.player.addAccount.mutationOptions({
       meta: analyticsMeta("player_account_added"),
@@ -42,70 +41,105 @@ export function AddAccountDialog(props: {
       },
     }),
   );
+  const form = useScoutForm({
+    defaultValues: { riotId: "", region: "AMERICA_NORTH" },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: AddAccountFormSchema },
+    onSubmit: ({ value }) => {
+      setError(null);
+      const parsed = AddAccountFormSchema.parse(value);
+      mutation.mutate({
+        guildId: props.guildId,
+        playerAlias: props.playerAlias,
+        riotId: parsed.riotId,
+        region: parsed.region,
+      });
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+
+  useEffect(() => {
+    if (props.open) form.reset({ riotId: "", region: "AMERICA_NORTH" });
+  }, [form, props.open]);
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
+      <form.AppForm>
+        <SemanticDialogForm
+          formRef={formElement}
+          title="Add account"
+          description={
+            <>Attach a Riot account to &quot;{props.playerAlias}&quot;.</>
+          }
+          pending={mutation.isPending}
+          pendingStatus="Adding account…"
+          error={error}
+          submitLabel="Add"
+          pendingLabel="Adding…"
+          onSubmit={() => form.handleSubmit()}
+          onCancel={() => {
             setError(null);
-            const parsed = RiotIdSchema.safeParse(riotId);
-            if (!parsed.success) {
-              setError("Riot ID must be in the form game_name#tag.");
-              return;
-            }
-            mutation.mutate({
-              guildId: props.guildId,
-              playerAlias: props.playerAlias,
-              riotId,
-              region,
-            });
+            form.reset({ riotId: "", region: "AMERICA_NORTH" });
+            props.onOpenChange(false);
           }}
+          fieldsetClassName="m-0 grid gap-4 border-0 p-0"
         >
-          <DialogHeader>
-            <DialogTitle>Add account</DialogTitle>
-            <DialogDescription>
-              Attach a Riot account to &quot;{props.playerAlias}&quot;.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Label htmlFor="add-account-dialog-riot">Riot ID</Label>
-            <RiotIdCombobox
-              id="add-account-dialog-riot"
-              guildId={props.guildId}
-              region={region}
-              value={riotId}
-              onValueChange={setRiotId}
-              onSelectAccount={({ region: accountRegion }) => {
-                const match = findRegion(accountRegion);
-                if (match !== null) setRegion(match);
-              }}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="add-account-dialog-region">Region</Label>
-            <RegionSelect
-              id="add-account-dialog-region"
-              value={region}
-              onValueChange={setRegion}
-            />
-          </div>
-
-          <DialogFormError error={error} />
-
-          <DialogFormFooter
-            pending={mutation.isPending}
-            submitLabel="Add"
-            pendingLabel="Adding…"
-            onCancel={() => {
-              props.onOpenChange(false);
+          <form.AppField name="riotId">
+            {(field) => {
+              const message = field.state.meta.isTouched
+                ? fieldErrorMessage(field.state.meta.errors)
+                : undefined;
+              return (
+                <Field>
+                  <Label htmlFor="add-account-dialog-riot">Riot ID</Label>
+                  <form.Subscribe selector={(state) => state.values.region}>
+                    {(region) => (
+                      <RiotIdCombobox
+                        id="add-account-dialog-riot"
+                        name={field.name}
+                        guildId={props.guildId}
+                        region={findRegion(region) ?? "AMERICA_NORTH"}
+                        value={field.state.value}
+                        onValueChange={field.handleChange}
+                        onSelectAccount={({ region: accountRegion }) => {
+                          const match = findRegion(accountRegion);
+                          if (match !== null) {
+                            form.setFieldValue("region", match);
+                          }
+                        }}
+                        required
+                        ariaInvalid={message !== undefined}
+                        {...(message === undefined
+                          ? {}
+                          : {
+                              ariaDescribedBy: "add-account-dialog-riot-error",
+                            })}
+                      />
+                    )}
+                  </form.Subscribe>
+                  {message === undefined ? null : (
+                    <FieldError id="add-account-dialog-riot-error">
+                      {message}
+                    </FieldError>
+                  )}
+                </Field>
+              );
             }}
-          />
-        </form>
-      </DialogContent>
+          </form.AppField>
+          <form.AppField name="region">
+            {(field) => (
+              <field.NativeSelectField
+                id="add-account-dialog-region"
+                label="Region"
+                options={REGIONS}
+                required
+              />
+            )}
+          </form.AppField>
+        </SemanticDialogForm>
+      </form.AppForm>
     </Dialog>
   );
 }

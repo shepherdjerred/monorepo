@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
@@ -30,10 +30,19 @@ export function DiscordMemberCombobox(props: {
   placeholder?: string;
   className?: string;
   id?: string;
+  name?: string;
+  required?: boolean;
+  ariaInvalid?: boolean;
+  ariaDescribedBy?: string;
 }) {
   const trpc = useTRPC();
   const [query, setQuery] = useState("");
   const debounced = useDebouncedValue(query);
+
+  useEffect(() => {
+    if (props.value.length === 0) setQuery("");
+  }, [props.value]);
+
   const search = useQuery(
     trpc.discord.searchMembers.queryOptions(
       { guildId: props.guildId, query: debounced.trim() },
@@ -72,6 +81,10 @@ export function DiscordMemberCombobox(props: {
       placeholder={props.placeholder ?? "Search members or paste a user ID"}
       className={props.className}
       id={props.id}
+      name={props.name}
+      required={props.required}
+      ariaInvalid={props.ariaInvalid}
+      ariaDescribedBy={props.ariaDescribedBy}
       renderItem={(member) => (
         <>
           <img

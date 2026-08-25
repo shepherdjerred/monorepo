@@ -29,6 +29,10 @@ export function ChampionCombobox(props: {
   items?: ChampionOption[] | undefined;
   disabled?: boolean | undefined;
   id?: string | undefined;
+  name?: string | undefined;
+  required?: boolean | undefined;
+  ariaInvalid?: boolean | undefined;
+  ariaDescribedBy?: string | undefined;
   placeholder?: string | undefined;
   onQueryChange?: ((query: string) => void) | undefined;
 }) {
@@ -52,6 +56,10 @@ export function ChampionCombobox(props: {
   return (
     <Combobox
       id={props.id}
+      name={props.name}
+      required={props.required}
+      ariaInvalid={props.ariaInvalid}
+      ariaDescribedBy={props.ariaDescribedBy}
       value={query}
       onValueChange={(value) => {
         setQuery(value);

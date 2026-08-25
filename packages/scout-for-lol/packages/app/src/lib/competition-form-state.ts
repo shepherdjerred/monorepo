@@ -1,20 +1,22 @@
 import {
-  CompetitionCriteriaSchema,
   CompetitionConfigurationSchema,
   SeasonIdSchema,
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
-import type { CriteriaState } from "#src/components/competition-criteria-fields.tsx";
-import type { DatesState } from "#src/components/competition-dates-fields.tsx";
 import type { FormState } from "#src/components/competition-form-fields.tsx";
 import { fixedDateRangeInTimezone } from "#src/lib/competition-time.ts";
+import {
+  CompetitionFormValueSchema,
+  type CompetitionFormValue,
+} from "#src/lib/form-schemas.ts";
 
 export type DatesValue =
   | { type: "FIXED_DATES"; startDate: Date; endDate: Date }
   | { type: "SEASON"; seasonId: ReturnType<typeof SeasonIdSchema.parse> };
 
 export function buildCriteria(
-  state: CriteriaState,
+  state: FormState["criteria"],
+  gameVariant: FormState["gameVariant"],
 ): { ok: true; value: CompetitionCriteria } | { ok: false; message: string } {
   const raw =
     state.criteriaType === "MOST_WINS_CHAMPION"
@@ -37,15 +39,21 @@ export function buildCriteria(
               aggregation: state.aggregation,
             }
           : { type: state.criteriaType, queues: state.queues };
-  const parsed = CompetitionCriteriaSchema.safeParse(raw);
+  const parsed = CompetitionConfigurationSchema.safeParse({
+    gameVariant,
+    criteria: raw,
+  });
   if (!parsed.success) {
-    return { ok: false, message: "Fill in the criteria fields correctly." };
+    return {
+      ok: false,
+      message: "Choose queues and scoring compatible with the game version.",
+    };
   }
-  return { ok: true, value: parsed.data };
+  return { ok: true, value: parsed.data.criteria };
 }
 
 export function buildDates(
-  state: DatesState,
+  state: FormState["dates"],
   timezone: string,
 ): { ok: true; value: DatesValue } | { ok: false; message: string } {
   if (state.mode === "SEASON") {
@@ -74,7 +82,7 @@ export function buildDates(
   }
 }
 
-export function validateForm(state: FormState):
+export function validateForm(state: CompetitionFormValue):
   | {
       ok: true;
       maxParticipants: number;
@@ -82,38 +90,27 @@ export function validateForm(state: FormState):
       dates: DatesValue;
     }
   | { ok: false; message: string } {
-  const maxParticipants = Number(state.maxParticipants);
-  if (!Number.isInteger(maxParticipants)) {
-    return { ok: false, message: "Max participants must be a whole number." };
-  }
-  if (maxParticipants < 2 || maxParticipants > 100) {
+  const parsed = CompetitionFormValueSchema.safeParse(state);
+  if (!parsed.success) {
     return {
       ok: false,
-      message: "Max participants must be between 2 and 100.",
+      message:
+        parsed.error.issues[0]?.message ?? "Check the competition fields.",
     };
   }
-  const criteria = buildCriteria(state.criteria);
+  const maxParticipants = Number(parsed.data.maxParticipants);
+  const criteria = buildCriteria(parsed.data.criteria, parsed.data.gameVariant);
   if (!criteria.ok) {
     return { ok: false, message: criteria.message };
   }
-  const configuration = CompetitionConfigurationSchema.safeParse({
-    gameVariant: state.gameVariant,
-    criteria: criteria.value,
-  });
-  if (!configuration.success) {
-    return {
-      ok: false,
-      message: "Choose queues and scoring compatible with the game version.",
-    };
-  }
-  const dates = buildDates(state.dates, state.analysisTimezone);
+  const dates = buildDates(parsed.data.dates, parsed.data.analysisTimezone);
   if (!dates.ok) {
     return { ok: false, message: dates.message };
   }
   return {
     ok: true,
     maxParticipants,
-    criteria: configuration.data.criteria,
+    criteria: criteria.value,
     dates: dates.value,
   };
 }

@@ -131,6 +131,11 @@ export function TimezoneSelect(props: {
   value: string;
   onChange: (tz: string) => void;
   id?: string;
+  name?: string;
+  required?: boolean;
+  ariaInvalid?: boolean;
+  ariaDescribedBy?: string;
+  onBlur?: () => void;
 }) {
   const selectedLabel = labelForValue(props.value);
   const [query, setQuery] = useState(selectedLabel);
@@ -149,6 +154,10 @@ export function TimezoneSelect(props: {
   return (
     <Combobox<Zone>
       id={props.id}
+      name={props.name}
+      required={props.required}
+      ariaInvalid={props.ariaInvalid}
+      ariaDescribedBy={props.ariaDescribedBy}
       value={query}
       onValueChange={(text) => {
         setQuery(text);
@@ -175,6 +184,7 @@ export function TimezoneSelect(props: {
         // selection instead of silently displaying a value the payload never
         // saved.
         setQuery(selectedLabel);
+        props.onBlur?.();
       }}
       items={items}
       isLoading={false}

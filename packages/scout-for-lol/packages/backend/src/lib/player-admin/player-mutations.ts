@@ -1,9 +1,12 @@
 import type { z } from "zod";
-import { DiscordAccountIdSchema, type PlayerId } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  PlayerAliasSchema,
+  type PlayerId,
+} from "@scout-for-lol/data";
 import { prisma, type Db } from "#src/database/index.ts";
 import { recordAudit } from "#src/lib/audit/index.ts";
 import {
-  AliasSchema,
   GuildIdInput,
   conflict,
   getPlayerOrThrow,
@@ -13,19 +16,19 @@ import {
 } from "#src/lib/player-admin/shared.ts";
 
 export const RenamePlayerInput = GuildIdInput.extend({
-  currentAlias: AliasSchema,
-  newAlias: AliasSchema,
+  currentAlias: PlayerAliasSchema,
+  newAlias: PlayerAliasSchema,
 });
 export const LinkDiscordInput = GuildIdInput.extend({
-  playerAlias: AliasSchema,
+  playerAlias: PlayerAliasSchema,
   discordUserId: DiscordAccountIdSchema,
 });
 export const UnlinkDiscordInput = GuildIdInput.extend({
-  playerAlias: AliasSchema,
+  playerAlias: PlayerAliasSchema,
 });
 export const MergePlayersInput = GuildIdInput.extend({
-  sourceAlias: AliasSchema,
-  targetAlias: AliasSchema,
+  sourceAlias: PlayerAliasSchema,
+  targetAlias: PlayerAliasSchema,
 });
 
 export type RenamePlayerInputData = z.infer<typeof RenamePlayerInput>;

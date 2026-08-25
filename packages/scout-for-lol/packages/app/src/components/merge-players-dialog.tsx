@@ -2,19 +2,13 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { PlayerAliasCombobox } from "#src/components/player-alias-combobox.tsx";
+import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import { Label } from "@scout-for-lol/design-system/components/label";
-import {
-  DialogFormError,
-  DialogFormFooter,
-} from "#src/components/dialog-form.tsx";
+  PlayerAliasFormField,
+  usePlayerAliasDialogForm,
+} from "#src/components/player-alias-form-field.tsx";
+import { PlayerAliasFormSchema } from "#src/lib/form-schemas.ts";
 
 /**
  * Merge the current player into another player (via `player.mergePlayers`).
@@ -29,7 +23,6 @@ export function MergePlayersDialog(props: {
   onMerged: (targetAlias: string) => void;
 }) {
   const trpc = useTRPC();
-  const [targetAlias, setTargetAlias] = useState("");
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation(
     trpc.player.mergePlayers.mutationOptions({
@@ -42,62 +35,60 @@ export function MergePlayersDialog(props: {
       },
     }),
   );
+  const schema = PlayerAliasFormSchema.refine(
+    (value) => value.alias !== props.sourceAlias,
+    { path: ["alias"], message: "Pick a different player." },
+  );
+  const { form, formElement } = usePlayerAliasDialogForm(
+    props.open,
+    schema,
+    (targetAlias) => {
+      setError(null);
+      mutation.mutate({
+        guildId: props.guildId,
+        sourceAlias: props.sourceAlias,
+        targetAlias,
+      });
+    },
+  );
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            setError(null);
-            const target = targetAlias.trim();
-            if (target.length === 0) {
-              setError("Pick a target player.");
-              return;
-            }
-            if (target === props.sourceAlias) {
-              setError("Source and target are the same player.");
-              return;
-            }
-            mutation.mutate({
-              guildId: props.guildId,
-              sourceAlias: props.sourceAlias,
-              targetAlias: target,
-            });
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Merge player</DialogTitle>
-            <DialogDescription>
+      <form.AppForm>
+        <SemanticDialogForm
+          formRef={formElement}
+          title="Merge player"
+          description={
+            <>
               Merge &quot;{props.sourceAlias}&quot; into another player. This
               moves its accounts and deletes &quot;{props.sourceAlias}&quot;.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Label htmlFor="merge-target">Merge into</Label>
-            <PlayerAliasCombobox
-              id="merge-target"
-              guildId={props.guildId}
-              value={targetAlias}
-              onChange={setTargetAlias}
-            />
-          </div>
-
-          <DialogFormError error={error} />
-
-          <DialogFormFooter
-            pending={mutation.isPending}
-            submitLabel="Merge"
-            pendingLabel="Merging…"
-            submitVariant="destructive"
-            onCancel={() => {
-              props.onOpenChange(false);
-            }}
-          />
-        </form>
-      </DialogContent>
+            </>
+          }
+          pending={mutation.isPending}
+          pendingStatus="Merging players…"
+          error={error}
+          submitLabel="Merge"
+          pendingLabel="Merging…"
+          submitVariant="destructive"
+          onSubmit={() => form.handleSubmit()}
+          onCancel={() => {
+            setError(null);
+            form.reset({ alias: "" });
+            props.onOpenChange(false);
+          }}
+        >
+          <form.AppField name="alias">
+            {(field) => (
+              <PlayerAliasFormField
+                id="merge-target"
+                label="Merge into"
+                guildId={props.guildId}
+                field={field}
+              />
+            )}
+          </form.AppField>
+        </SemanticDialogForm>
+      </form.AppForm>
     </Dialog>
   );
 }

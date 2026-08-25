@@ -21,6 +21,7 @@ export * from "./queue-window-drift.ts";
 export * from "./rank.ts";
 export * from "./report.ts";
 export * from "./explore.ts";
+export * from "./form-inputs.ts";
 export * from "./report-ai.ts";
 export * from "./report-query-champions.ts";
 export * from "./temporal-analysis.ts";

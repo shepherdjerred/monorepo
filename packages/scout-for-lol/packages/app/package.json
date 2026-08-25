@@ -23,6 +23,7 @@
     "@scout-for-lol/design-system": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
     "@sentry/react": "^10.0.0",
+    "@tanstack/react-form": "^1.33.5",
     "@tanstack/react-query": "^5.62.0",
     "@trpc/client": "^11.17.0",
     "@trpc/tanstack-react-query": "^11.17.0",

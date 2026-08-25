@@ -1,28 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { SubscriptionFilterSpec } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import { Label } from "@scout-for-lol/design-system/components/label";
-import {
-  DialogFormError,
-  DialogFormFooter,
-} from "#src/components/dialog-form.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@scout-for-lol/design-system/components/select";
+import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { Field, Label } from "@scout-for-lol/design-system/components/input";
+import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import { SubscriptionFilterFields } from "#src/components/subscription-filter-fields.tsx";
+import {
+  focusFirstInvalid,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import {
+  emptySubscriptionFiltersFormValue,
+  SubscriptionFiltersFormSchema,
+} from "#src/lib/form-schemas.ts";
 
 type Channel = { id: string; name: string };
 
@@ -47,16 +40,8 @@ export function SubscriptionFilterDialog(props: Props) {
   const trpc = useTRPC();
   const action = props.action;
   const firstChannel = props.channels[0]?.id ?? "";
-  const [filters, setFilters] = useState<SubscriptionFilterSpec | null>(null);
-  const [channelId, setChannelId] = useState(firstChannel);
+  const formElement = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (action === null) return;
-    setFilters(action.kind === "edit" ? action.initial : null);
-    setChannelId(action.kind === "edit" ? action.channelId : firstChannel);
-    setError(null);
-  }, [action, firstChannel]);
 
   const setFiltersMutation = useMutation(
     trpc.subscription.setFilters.mutationOptions({
@@ -104,35 +89,48 @@ export function SubscriptionFilterDialog(props: Props) {
     }),
   );
 
+  const form = useScoutForm({
+    defaultValues: emptySubscriptionFiltersFormValue(firstChannel),
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: SubscriptionFiltersFormSchema },
+    onSubmit: ({ value }) => {
+      if (action === null) return;
+      setError(null);
+      const parsed = SubscriptionFiltersFormSchema.parse(value);
+      if (action.kind === "bulk") {
+        setChannelFiltersMutation.mutate({
+          guildId: props.guildId,
+          channelId: parsed.channelId,
+          filters: parsed.filters,
+        });
+        return;
+      }
+      setFiltersMutation.mutate({
+        guildId: props.guildId,
+        channelId: action.channelId,
+        alias: action.alias,
+        filters: parsed.filters,
+      });
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+
+  useEffect(() => {
+    if (action === null) return;
+    form.reset({
+      filters: action.kind === "edit" ? action.initial : null,
+      channelId: action.kind === "edit" ? action.channelId : firstChannel,
+    });
+    setError(null);
+  }, [action, firstChannel, form]);
+
   if (action === null) return null;
 
   const isBulk = action.kind === "bulk";
   const pending =
     setFiltersMutation.isPending || setChannelFiltersMutation.isPending;
-
-  function handleSubmit(event: React.SyntheticEvent) {
-    event.preventDefault();
-    if (action === null) return;
-    setError(null);
-    if (action.kind === "bulk") {
-      if (channelId.length === 0) {
-        setError("Choose a channel.");
-        return;
-      }
-      setChannelFiltersMutation.mutate({
-        guildId: props.guildId,
-        channelId,
-        filters,
-      });
-      return;
-    }
-    setFiltersMutation.mutate({
-      guildId: props.guildId,
-      channelId: action.channelId,
-      alias: action.alias,
-      filters,
-    });
-  }
 
   return (
     <Dialog
@@ -141,58 +139,58 @@ export function SubscriptionFilterDialog(props: Props) {
         props.onOpenChange(open);
       }}
     >
-      <DialogContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle>
-              {isBulk ? "Set filters for a channel" : "Edit filters"}
-            </DialogTitle>
-            <DialogDescription>
-              {isBulk
-                ? "Apply these queue filters to every subscription in the chosen channel."
-                : `Choose which queues notify "${action.alias}" in this channel. Empty = all queues.`}
-            </DialogDescription>
-          </DialogHeader>
+      <form.AppForm>
+        <SemanticDialogForm
+          formRef={formElement}
+          title={isBulk ? "Set filters for a channel" : "Edit filters"}
+          description={
+            isBulk
+              ? "Apply these queue filters to every subscription in the chosen channel."
+              : `Choose which queues notify "${action.alias}" in this channel. Empty = all queues.`
+          }
+          pending={pending}
+          pendingStatus="Saving subscription filters…"
+          error={error}
+          submitLabel="Save"
+          pendingLabel="Saving..."
+          onSubmit={() => form.handleSubmit()}
+          onCancel={() => {
+            props.onOpenChange(false);
+          }}
+          fieldsetClassName="m-0 space-y-4 border-0 p-0"
+        >
+          {isBulk ? (
+            <form.AppField name="channelId">
+              {(field) => (
+                <field.NativeSelectField
+                  id="bulk-filter-channel"
+                  label="Channel"
+                  placeholder="Pick a channel"
+                  options={props.channels.map((channel) => ({
+                    value: channel.id,
+                    label: `#${channel.name}`,
+                  }))}
+                  required
+                />
+              )}
+            </form.AppField>
+          ) : null}
 
-          {isBulk && (
-            <div className="space-y-2">
-              <Label htmlFor="bulk-filter-channel">Channel</Label>
-              <Select value={channelId} onValueChange={setChannelId} required>
-                <SelectTrigger id="bulk-filter-channel">
-                  <SelectValue placeholder="Pick a channel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {props.channels.map((channel) => (
-                    <SelectItem key={channel.id} value={channel.id}>
-                      #{channel.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="filter-queues">Notify for</Label>
-            <SubscriptionFilterFields
-              id="filter-queues"
-              value={filters}
-              onChange={setFilters}
-            />
-          </div>
-
-          <DialogFormError error={error} />
-
-          <DialogFormFooter
-            pending={pending}
-            submitLabel="Save"
-            pendingLabel="Saving..."
-            onCancel={() => {
-              props.onOpenChange(false);
-            }}
-          />
-        </form>
-      </DialogContent>
+          <form.AppField name="filters">
+            {(field) => (
+              <Field>
+                <Label htmlFor="filter-queues">Notify for</Label>
+                <SubscriptionFilterFields
+                  id="filter-queues"
+                  name={field.name}
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              </Field>
+            )}
+          </form.AppField>
+        </SemanticDialogForm>
+      </form.AppForm>
     </Dialog>
   );
 }

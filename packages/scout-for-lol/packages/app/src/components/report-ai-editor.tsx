@@ -1,4 +1,4 @@
-import { useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useRef, useState } from "react";
 import { AlertCircle, Check, Square, WandSparkles } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,13 +16,20 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
-import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
 import { streamReportAiEdit } from "#src/lib/report-ai-stream.ts";
 import { type ReportFormState } from "#src/components/report-form-fields.tsx";
 import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
 import { ReportResultTable } from "#src/components/report-result-table.tsx";
+import {
+  focusFirstInvalid,
+  FormPendingStatus,
+  handleFormSubmit,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { ReportAiInstructionsFormSchema } from "#src/lib/form-schemas.ts";
 
 type ProgressItem = {
   id: string;
@@ -33,12 +40,16 @@ type ProgressItem = {
 export function ReportAiEditor(props: {
   guildId: string;
   state: ReportFormState;
-  setState: Dispatch<SetStateAction<ReportFormState>>;
+  onApplyDraft: (draft: {
+    title: string;
+    description: string;
+    queryText: string;
+  }) => void;
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const abortRef = useRef<AbortController | null>(null);
-  const [instructions, setInstructions] = useState("");
+  const formElement = useRef<HTMLFormElement>(null);
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<ProgressItem[]>([]);
   const [draftText, setDraftText] = useState("");
@@ -51,19 +62,9 @@ export function ReportAiEditor(props: {
   );
   const status = statusQuery.data;
   const disabledReason = statusDisabledReason(status);
-  const canRun =
-    status?.enabled === true &&
-    !status.activeRun &&
-    instructions.trim().length > 0 &&
-    !running;
+  const canRun = status?.enabled === true && !status.activeRun && !running;
 
-  async function startEdit() {
-    const trimmed = instructions.trim();
-    if (trimmed.length === 0) {
-      setError("Describe the report first.");
-      return;
-    }
-
+  async function startEdit(instructions: string) {
     const controller = new AbortController();
     abortRef.current = controller;
     setRunning(true);
@@ -81,7 +82,7 @@ export function ReportAiEditor(props: {
       await streamReportAiEdit({
         input: {
           guildId,
-          instructions: trimmed,
+          instructions,
           currentQueryText:
             props.state.queryText.trim().length === 0
               ? null
@@ -113,6 +114,19 @@ export function ReportAiEditor(props: {
     }
   }
 
+  const form = useScoutForm({
+    defaultValues: { instructions: "" },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: ReportAiInstructionsFormSchema },
+    onSubmit: async ({ value }) => {
+      if (!canRun) return;
+      const parsed = ReportAiInstructionsFormSchema.parse(value);
+      await startEdit(parsed.instructions);
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
   function handleStreamEvent(event: ReportAiStreamEvent) {
     switch (event.type) {
       case "started": {
@@ -171,12 +185,11 @@ export function ReportAiEditor(props: {
       return;
     }
     track("ai_edit_applied");
-    props.setState((prev) => ({
-      ...prev,
+    props.onApplyDraft({
       title: finalDraft.title,
       description: finalDraft.description ?? "",
       queryText: finalDraft.queryText,
-    }));
+    });
   }
 
   function cancelEdit() {
@@ -195,68 +208,81 @@ export function ReportAiEditor(props: {
         </div>
         <QuotaSummary status={status} />
       </CardHeader>
-      <CardContent className="space-y-3">
-        <Textarea
-          value={instructions}
-          onChange={(event) => {
-            setInstructions(event.target.value);
-          }}
-          placeholder="Report request"
-          disabled={running}
-          className="min-h-[96px]"
-        />
-
-        {disabledReason !== null && (
-          <p className="flex items-center gap-2 text-xs text-scout-subtle">
-            <AlertCircle className="size-4" />
-            {disabledReason}
-          </p>
-        )}
-
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            size="sm"
-            disabled={!canRun}
-            onClick={() => {
-              void startEdit();
+      <CardContent>
+        <form.AppForm>
+          <form
+            ref={formElement}
+            className="space-y-3"
+            aria-busy={running}
+            onSubmit={(event) => {
+              handleFormSubmit(event, () => form.handleSubmit());
             }}
           >
-            <WandSparkles />
-            Edit
-          </Button>
-          {running && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={cancelEdit}
-            >
-              <Square />
-              Stop
-            </Button>
-          )}
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={finalDraft === null}
-            onClick={applyDraft}
-          >
-            <Check />
-            Apply draft
-          </Button>
-        </div>
+            <fieldset disabled={running} className="m-0 border-0 p-0">
+              <form.AppField name="instructions">
+                {(field) => (
+                  <field.TextareaField
+                    id="report-ai-instructions"
+                    label="Describe the report you want"
+                    maxLength={4000}
+                    placeholder="Compare ranked win rate and KDA over the last 30 days"
+                    autoComplete="off"
+                    className="min-h-[96px]"
+                    required
+                  />
+                )}
+              </form.AppField>
+            </fieldset>
 
-        {progress.length > 0 && (
-          <div className="space-y-1 rounded-md border border-border p-3">
-            {progress.map((item) => (
-              <p key={item.id} className={progressClassName(item.tone)}>
-                {item.label}
+            {disabledReason !== null && (
+              <p className="flex items-center gap-2 text-xs text-scout-subtle">
+                <AlertCircle className="size-4" />
+                {disabledReason}
               </p>
-            ))}
-          </div>
-        )}
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" size="sm" disabled={!canRun}>
+                <WandSparkles />
+                Edit
+              </Button>
+              {running && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={cancelEdit}
+                >
+                  <Square />
+                  Stop
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={finalDraft === null}
+                onClick={applyDraft}
+              >
+                <Check />
+                Apply draft
+              </Button>
+            </div>
+            <FormPendingStatus pending={running}>
+              Generating report draft…
+            </FormPendingStatus>
+
+            {progress.length > 0 && (
+              <div className="space-y-1 rounded-md border border-border p-3">
+                {progress.map((item) => (
+                  <p key={item.id} className={progressClassName(item.tone)}>
+                    {item.label}
+                  </p>
+                ))}
+              </div>
+            )}
+          </form>
+        </form.AppForm>
 
         {preview !== null && (
           <div className="space-y-2">

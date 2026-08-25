@@ -55,6 +55,38 @@ dependency changes.
 
 ## Development Commands
 
+## Management app form policy
+
+Submitted data in `packages/app` uses the pre-bound TanStack Form toolkit in
+`src/components/semantic-form.tsx`; search, filters, pagination, previews, and
+other ephemeral UI state stay outside it. Start with native HTML: real
+`<form>` elements, labeled controls, fieldsets and legends, native selects,
+checkboxes, radio groups, date/time/number inputs, submit/reset buttons, and
+browser constraint attributes. Use a custom combobox or composite control only
+when native controls cannot provide the required search or interaction. Give
+every editable control a stable `name` and connect its description and error
+with `aria-describedby`.
+
+Put reusable domain constraints in `@scout-for-lol/data`; app-only editable
+shapes and pure payload mappers live in `packages/app/src/lib`. Infer form value
+types from Zod rather than maintaining parallel interfaces. Native constraint
+validation owns atomic requirements. Capture its `ValidityState` message for
+the shared inline error treatment without disabling browser validation. Zod
+owns transformed, conditional, and cross-field rules. Validate first on submit,
+then on changed fields, and parse again immediately before calling a mutation.
+
+Hydrate edit forms with `form.reset(serverValues)` after data arrives. Couple
+native reset events to TanStack reset state, disable pending groups with
+`<fieldset disabled>`, expose progress through a polite status region, and use
+`role="alert"` only for actionable submission failures. Programmatic submission
+must call `requestSubmit()` so native validation and submitter behavior run;
+never call `form.submit()`.
+
+Apply `useUnsavedForm` only to long page or onboarding flows. Reset before a
+successful navigation and suppress the guard for an intentional discard. Keep
+confirmation-only mutations as small semantic forms without unnecessary
+TanStack state.
+
 ### Root Level
 
 ```bash

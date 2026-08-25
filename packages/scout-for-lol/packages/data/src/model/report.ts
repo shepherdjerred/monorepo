@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  ReportDescriptionSchema,
+  ReportTitleSchema,
+} from "#src/model/form-inputs.ts";
+import {
   CompetitionCronSchema,
   DEFAULT_SCHEDULE_TIMEZONE,
   ReportScheduleTimezoneSchema,
@@ -358,8 +362,8 @@ export type ReportRun = {
 };
 
 export const ReportCreateInputSchema = z.object({
-  title: z.string().trim().min(1).max(100),
-  description: z.string().trim().max(500).nullable().default(null),
+  title: ReportTitleSchema,
+  description: ReportDescriptionSchema.nullable().default(null),
   // Validate the Discord channel snowflake at the boundary (17-20 digits)
   // rather than accepting any non-empty string and re-checking deeper — a
   // malformed channelId now fails as a field-level input error instead of a

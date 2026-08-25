@@ -20,6 +20,10 @@ export function PlayerAliasCombobox(props: {
   placeholder?: string;
   className?: string;
   id?: string;
+  name?: string;
+  required?: boolean;
+  ariaInvalid?: boolean;
+  ariaDescribedBy?: string;
 }) {
   const trpc = useTRPC();
   const [query, setQuery] = useState(props.value);
@@ -60,6 +64,10 @@ export function PlayerAliasCombobox(props: {
       placeholder={props.placeholder ?? "Search players"}
       className={props.className}
       id={props.id}
+      name={props.name}
+      required={props.required}
+      ariaInvalid={props.ariaInvalid}
+      ariaDescribedBy={props.ariaDescribedBy}
       renderItem={(player) => <span className="truncate">{player.alias}</span>}
     />
   );

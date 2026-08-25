@@ -1,7 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useSelector } from "@tanstack/react-form";
 import { Square } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { Textarea } from "@scout-for-lol/design-system/components/textarea";
+import {
+  focusFirstInvalid,
+  handleFormSubmit,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { ExploreQuestionFormSchema } from "#src/lib/form-schemas.ts";
 
 /**
  * Keep in step with the `max-h-[200px]` class below — Tailwind cannot
@@ -24,21 +31,24 @@ export function ExploreComposer(props: {
   onStop: () => void;
 }) {
   const { active, disabled = false, restoredDraft, onAsk, onStop } = props;
-  const [question, setQuestion] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const formElement = useRef<HTMLFormElement>(null);
   const wasActiveRef = useRef(false);
-
-  const submit = (): void => {
-    if (active || disabled) {
-      return;
-    }
-    const trimmed = question.trim();
-    if (trimmed.length === 0) {
-      return;
-    }
-    setQuestion("");
-    onAsk(trimmed);
-  };
+  const form = useScoutForm({
+    defaultValues: { question: "" },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: ExploreQuestionFormSchema },
+    onSubmit: ({ value }) => {
+      if (active || disabled) return;
+      const parsed = ExploreQuestionFormSchema.parse(value);
+      form.reset({ question: "" });
+      onAsk(parsed.question);
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+  const question = useSelector(form.store, (state) => state.values.question);
 
   // Grow the composer with its content instead of scrolling a fixed box.
   useEffect(() => {
@@ -93,58 +103,64 @@ export function ExploreComposer(props: {
     if (restoredDraft === null) {
       return;
     }
-    setQuestion((current) => (current.length === 0 ? restoredDraft : current));
-  }, [restoredDraft]);
+    form.setFieldValue("question", (current) =>
+      current.length === 0 ? restoredDraft : current,
+    );
+  }, [form, restoredDraft]);
 
   return (
-    <form
-      className="flex items-end gap-2"
-      onSubmit={(event) => {
-        event.preventDefault();
-        submit();
-      }}
-    >
-      <Textarea
-        ref={textareaRef}
-        value={question}
-        rows={1}
-        className="max-h-[200px] min-h-[42px] resize-none"
-        onChange={(event) => {
-          setQuestion(event.target.value);
+    <form.AppForm>
+      <form
+        ref={formElement}
+        className="flex items-end gap-2"
+        aria-busy={active}
+        onSubmit={(event) => {
+          handleFormSubmit(event, () => form.handleSubmit());
         }}
-        onKeyDown={(event) => {
-          // Committing an IME candidate fires Enter with isComposing set;
-          // sending then would submit half-converted text.
-          if (event.nativeEvent.isComposing) {
-            return;
-          }
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            submit();
-          }
-        }}
-        placeholder="Ask a question about match data…"
-        disabled={active || disabled}
-      />
-      {active ? (
-        <Button
-          type="button"
-          variant="outline"
-          className="gap-1.5"
-          title="Stop (Esc)"
-          onClick={onStop}
-        >
-          <Square className="size-3.5" />
-          Stop
-        </Button>
-      ) : (
-        <Button
-          type="submit"
-          disabled={disabled || question.trim().length === 0}
-        >
-          Ask
-        </Button>
-      )}
-    </form>
+      >
+        <form.AppField name="question">
+          {(field) => (
+            <field.TextareaField
+              id="explore-question"
+              label={<span className="sr-only">Question</span>}
+              fieldClassName="min-w-0 flex-1"
+              ref={textareaRef}
+              rows={1}
+              maxLength={2000}
+              className="max-h-[200px] min-h-[42px] resize-none"
+              onKeyDown={(event) => {
+                // Committing an IME candidate fires Enter with isComposing set;
+                // sending then would submit half-converted text.
+                if (event.nativeEvent.isComposing) return;
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  event.currentTarget.form?.requestSubmit();
+                }
+              }}
+              placeholder="Ask a question about match data…"
+              autoComplete="off"
+              disabled={active || disabled}
+              required
+            />
+          )}
+        </form.AppField>
+        {active ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-1.5"
+            title="Stop (Esc)"
+            onClick={onStop}
+          >
+            <Square className="size-3.5" />
+            Stop
+          </Button>
+        ) : (
+          <Button type="submit" disabled={disabled}>
+            Ask
+          </Button>
+        )}
+      </form>
+    </form.AppForm>
   );
 }

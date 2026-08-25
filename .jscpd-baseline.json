@@ -996,30 +996,6 @@
       "clones": 2,
       "tokens": 203
     },
-    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/edit-account-dialog.tsx": {
-      "clones": 1,
-      "tokens": 75
-    },
-    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/link-discord-dialog.tsx": {
-      "clones": 1,
-      "tokens": 74
-    },
-    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/merge-players-dialog.tsx": {
-      "clones": 1,
-      "tokens": 74
-    },
-    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/rename-player-dialog.tsx": {
-      "clones": 1,
-      "tokens": 76
-    },
-    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/transfer-account-dialog.tsx": {
-      "clones": 1,
-      "tokens": 76
-    },
-    "packages/scout-for-lol/packages/app/src/components/competition-form-fields.tsx|packages/scout-for-lol/packages/app/src/components/report-form-fields.tsx": {
-      "clones": 1,
-      "tokens": 84
-    },
     "packages/scout-for-lol/packages/app/src/lib/explore-run-analytics.test.ts|packages/scout-for-lol/packages/app/src/lib/explore-run-markers.test.ts": {
       "clones": 1,
       "tokens": 147

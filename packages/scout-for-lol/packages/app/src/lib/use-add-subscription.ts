@@ -1,38 +1,17 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { RiotIdSchema, type SubscriptionFilterSpec } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
-import type { RegionValue } from "#src/lib/regions.ts";
+import {
+  SubscriptionFormSchema,
+  type SubscriptionFormValue,
+} from "#src/lib/form-schemas.ts";
 
 /**
  * The editable fields for a single subscription. Shared by the
  * AddSubscriptionDialog and the onboarding wizard so the form contract
  * lives in one place.
  */
-export type SubscriptionFieldsValue = {
-  channelId: string;
-  region: RegionValue;
-  riotId: string;
-  alias: string;
-  discordUserId: string;
-  // null = notify all queues (no filter).
-  filters: SubscriptionFilterSpec | null;
-};
-
-export function emptySubscriptionValue(
-  channelId: string,
-): SubscriptionFieldsValue {
-  return {
-    channelId,
-    region: "AMERICA_NORTH",
-    riotId: "",
-    alias: "",
-    discordUserId: "",
-    filters: null,
-  };
-}
-
 /**
  * Wraps the `subscription.add` mutation and maps every result `kind` to a
  * user-facing message. Callers supply `onAdded`, which fires on a
@@ -88,34 +67,30 @@ export function useAddSubscription(opts: {
     }),
   );
 
-  function submit(value: SubscriptionFieldsValue): void {
+  function submit(value: SubscriptionFormValue): void {
     setError(null);
-    // Same schema the backend uses; reusing it keeps the contract
-    // single-sourced. The server re-parses + transforms on receipt.
-    const riotIdParse = RiotIdSchema.safeParse(value.riotId);
-    if (!riotIdParse.success) {
-      setError("Riot ID must be in the form game_name#tag");
-      return;
-    }
+    const parsed = SubscriptionFormSchema.parse(value);
     mutation.mutate({
       guildId: opts.guildId,
-      channelId: value.channelId,
-      region: value.region,
-      riotId: value.riotId,
-      alias: value.alias.trim(),
-      filters: value.filters,
-      ...(value.discordUserId.length > 0 && {
-        discordUserId: value.discordUserId,
+      channelId: parsed.channelId,
+      region: parsed.region,
+      riotId: parsed.riotId,
+      alias: parsed.alias,
+      filters: parsed.filters,
+      ...(parsed.discordUserId.length > 0 && {
+        discordUserId: parsed.discordUserId,
       }),
     });
   }
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   return {
     submit,
     isPending: mutation.isPending,
     error,
-    clearError: () => {
-      setError(null);
-    },
+    clearError,
   };
 }

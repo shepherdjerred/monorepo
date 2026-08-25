@@ -16,9 +16,11 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   ReportCreateInputSchema,
+  ReportDescriptionSchema,
   ReportIdSchema,
   ReportAiEditStatusSchema,
   ReportQueryTextSchema,
+  ReportTitleSchema,
   type DiscordGuildId,
   type ReportId,
 } from "@scout-for-lol/data";
@@ -240,8 +242,8 @@ export const reportRouter = router({
   update: guildMutationProcedure("reports", "update")
     .input(
       ReportIdInput.extend({
-        title: z.string().trim().min(1).max(100).optional(),
-        description: z.string().trim().max(500).nullable().optional(),
+        title: ReportTitleSchema.optional(),
+        description: ReportDescriptionSchema.nullable().optional(),
         channelId: DiscordChannelIdSchema.optional(),
         queryText: ReportQueryTextSchema.optional(),
         cronExpression: CompetitionCronSchema.optional(),
@@ -374,7 +376,7 @@ export const reportRouter = router({
     .input(
       GuildInput.extend({
         queryText: ReportQueryTextSchema,
-        title: z.string().trim().min(1).max(100).default("Preview"),
+        title: ReportTitleSchema.default("Preview"),
         sourceCompetitionId: z
           .number()
           .int()

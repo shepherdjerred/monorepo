@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { useTRPC } from "#src/lib/trpc.ts";
@@ -10,8 +10,6 @@ import {
   markFeedbackSubmitted,
 } from "#src/lib/feedback-storage.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
-import { Textarea } from "@scout-for-lol/design-system/components/textarea";
-import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +21,14 @@ import {
   DialogFormError,
   DialogFormFooter,
 } from "#src/components/dialog-form.tsx";
+import {
+  focusFirstInvalid,
+  FormPendingStatus,
+  handleFormSubmit,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { FeedbackFormSchema } from "#src/lib/form-schemas.ts";
 
 /** Days a user must have been signed up before we ask anything. */
 const MIN_ACCOUNT_AGE_DAYS = 7;
@@ -47,9 +53,9 @@ export function FeedbackPrompt() {
   const user = session.data?.user ?? null;
 
   const [open, setOpen] = useState(false);
-  const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [hidden, setHidden] = useState(false);
+  const formElement = useRef<HTMLFormElement>(null);
 
   const submit = useMutation(
     trpc.feedback.submit.mutationOptions({
@@ -83,6 +89,19 @@ export function FeedbackPrompt() {
       },
     }),
   );
+
+  const form = useScoutForm({
+    defaultValues: { body: "" },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: FeedbackFormSchema },
+    onSubmit: ({ value }) => {
+      setError(null);
+      submit.mutate(FeedbackFormSchema.parse(value));
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
 
   // Only ask people who have actually used Scout — i.e. created a subscription.
   // Merely being able to manage a guild where Scout is installed proves
@@ -158,37 +177,47 @@ export function FeedbackPrompt() {
             </DialogDescription>
           </DialogHeader>
           <form
+            ref={formElement}
             onSubmit={(event) => {
-              event.preventDefault();
-              setError(null);
-              submit.mutate({ body: body.trim() });
+              handleFormSubmit(event, () => form.handleSubmit());
             }}
             className="space-y-4"
+            aria-busy={submit.isPending}
           >
-            <div className="space-y-2">
-              <Label htmlFor="feedback-body">Your feedback</Label>
-              <Textarea
-                id="feedback-body"
-                value={body}
-                onChange={(event) => {
-                  setBody(event.target.value);
+            <form.AppForm>
+              <fieldset
+                disabled={submit.isPending}
+                className="m-0 border-0 p-0"
+              >
+                <form.AppField name="body">
+                  {(field) => (
+                    <field.TextareaField
+                      id="feedback-body"
+                      label="Your feedback"
+                      rows={5}
+                      maxLength={4000}
+                      placeholder="What's working, what isn't, what you wish it did…"
+                      autoComplete="off"
+                      required
+                    />
+                  )}
+                </form.AppField>
+              </fieldset>
+              <DialogFormError error={error} />
+              <FormPendingStatus pending={submit.isPending}>
+                Sending feedback…
+              </FormPendingStatus>
+              <DialogFormFooter
+                onCancel={() => {
+                  setError(null);
+                  form.reset({ body: "" });
+                  setOpen(false);
                 }}
-                rows={5}
-                maxLength={4000}
-                placeholder="What's working, what isn't, what you wish it did…"
-                required
+                pending={submit.isPending}
+                submitLabel="Send feedback"
+                pendingLabel="Sending…"
               />
-            </div>
-            <DialogFormError error={error} />
-            <DialogFormFooter
-              onCancel={() => {
-                setOpen(false);
-              }}
-              pending={submit.isPending}
-              submitLabel="Send feedback"
-              pendingLabel="Sending…"
-              submitDisabled={body.trim().length === 0}
-            />
+            </form.AppForm>
           </form>
         </DialogContent>
       </Dialog>

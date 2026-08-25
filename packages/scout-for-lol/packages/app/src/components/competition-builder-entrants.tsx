@@ -1,17 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@scout-for-lol/design-system/components/input";
 import { Label } from "@scout-for-lol/design-system/components/label";
-import { PlayerIdSchema, type PlayerId } from "@scout-for-lol/data";
+import { PlayerIdSchema } from "@scout-for-lol/data";
 import { useState } from "react";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 export function CompetitionBuilderEntrants(props: {
   guildId: string;
   visibility: "OPEN" | "INVITE_ONLY" | "SERVER_WIDE";
-  selected: PlayerId[];
+  selected: number[];
   cap: number;
   canInvite: boolean;
-  onChange: (selected: PlayerId[]) => void;
+  name: string;
+  onBlur: () => void;
+  onChange: (selected: number[]) => void;
 }) {
   const trpc = useTRPC();
   const [query, setQuery] = useState("");
@@ -48,7 +50,10 @@ export function CompetitionBuilderEntrants(props: {
         <Label htmlFor="competition-player-search">Tracked players</Label>
         <Input
           id="competition-player-search"
+          name="competition-player-search"
           type="search"
+          autoComplete="off"
+          spellCheck={false}
           placeholder="Filter tracked players"
           value={query}
           onChange={(event) => {
@@ -74,10 +79,13 @@ export function CompetitionBuilderEntrants(props: {
               className="flex cursor-pointer items-center gap-3 rounded p-2 text-sm hover:bg-scout-hover"
             >
               <input
+                name={props.name}
                 type="checkbox"
+                value={playerId.toString()}
                 className="size-5"
                 checked={checked}
                 disabled={atCap}
+                onBlur={props.onBlur}
                 onChange={(event) => {
                   props.onChange(
                     event.target.checked

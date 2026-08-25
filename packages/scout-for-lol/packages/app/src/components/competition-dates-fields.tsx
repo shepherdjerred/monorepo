@@ -2,12 +2,9 @@ import { getAllSeasons } from "@scout-for-lol/data";
 import { Input } from "@scout-for-lol/design-system/components/input";
 import { Label } from "@scout-for-lol/design-system/components/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@scout-for-lol/design-system/components/select";
+  BuilderFieldError,
+  builderErrorAttributes,
+} from "#src/components/builder-field-error.tsx";
 import { TimezoneSelect } from "#src/components/timezone-select.tsx";
 
 export type DatesState = {
@@ -51,6 +48,7 @@ export function CompetitionDatesFields(props: {
   value: DatesState;
   timezone: string;
   disabled?: boolean;
+  errors: Record<"startDate" | "endDate" | "seasonId", string | undefined>;
   onChange: (next: DatesState) => void;
   onTimezoneChange: (next: string) => void;
 }) {
@@ -67,24 +65,25 @@ export function CompetitionDatesFields(props: {
     <div className="space-y-3">
       <div className="space-y-2">
         <Label htmlFor="competition-dates-mode">Schedule</Label>
-        <Select
+        <select
+          className="scout-control"
+          id="competition-dates-mode"
+          name="dates.mode"
           value={value.mode}
           disabled={disabled}
-          onValueChange={(next) => {
+          onChange={(event) => {
             onChange({
               ...value,
-              mode: next === "SEASON" ? "SEASON" : "FIXED_DATES",
+              mode:
+                event.currentTarget.value === "SEASON"
+                  ? "SEASON"
+                  : "FIXED_DATES",
             });
           }}
         >
-          <SelectTrigger id="competition-dates-mode">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="FIXED_DATES">Fixed dates</SelectItem>
-            <SelectItem value="SEASON">League season dates</SelectItem>
-          </SelectContent>
-        </Select>
+          <option value="FIXED_DATES">Fixed dates</option>
+          <option value="SEASON">League season dates</option>
+        </select>
       </div>
 
       {value.mode === "FIXED_DATES" ? (
@@ -94,26 +93,44 @@ export function CompetitionDatesFields(props: {
               <Label htmlFor="competition-start">Start date</Label>
               <Input
                 id="competition-start"
+                name="dates.startDate"
                 type="date"
                 required
                 value={value.startDate}
                 disabled={disabled}
+                {...builderErrorAttributes(
+                  props.errors.startDate,
+                  "competition-start-error",
+                )}
                 onChange={(event) => {
                   onChange({ ...value, startDate: event.target.value });
                 }}
+              />
+              <BuilderFieldError
+                id="competition-start-error"
+                error={props.errors.startDate}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="competition-end">End date</Label>
               <Input
                 id="competition-end"
+                name="dates.endDate"
                 type="date"
                 required
                 value={value.endDate}
                 disabled={disabled}
+                {...builderErrorAttributes(
+                  props.errors.endDate,
+                  "competition-end-error",
+                )}
                 onChange={(event) => {
                   onChange({ ...value, endDate: event.target.value });
                 }}
+              />
+              <BuilderFieldError
+                id="competition-end-error"
+                error={props.errors.endDate}
               />
             </div>
           </div>
@@ -121,8 +138,10 @@ export function CompetitionDatesFields(props: {
             <Label htmlFor="competition-timezone">Competition timezone</Label>
             <TimezoneSelect
               id="competition-timezone"
+              name="analysisTimezone"
               value={props.timezone}
               onChange={props.onTimezoneChange}
+              required
             />
             <p className="text-xs text-scout-subtle">
               Fixed dates run from the first day at 12:00 AM through the last
@@ -137,29 +156,35 @@ export function CompetitionDatesFields(props: {
             The season sets only the competition dates. Game version and queue
             choices determine which matches count.
           </p>
-          <Select
+          <select
+            className="scout-control"
+            id="competition-season"
+            name="dates.seasonId"
             value={value.seasonId}
             disabled={disabled}
-            onValueChange={(next) => {
-              onChange({ ...value, seasonId: next });
+            required
+            {...builderErrorAttributes(
+              props.errors.seasonId,
+              "competition-season-error",
+            )}
+            onChange={(event) => {
+              onChange({ ...value, seasonId: event.currentTarget.value });
             }}
           >
-            <SelectTrigger id="competition-season">
-              <SelectValue placeholder="Pick a season" />
-            </SelectTrigger>
-            <SelectContent>
-              {seasonChoices.map((season) => (
-                <SelectItem key={season.id} value={season.id}>
-                  <span className="flex flex-col">
-                    <span>{season.displayName}</span>
-                    <span className="text-xs text-scout-subtle">
-                      {formatDateRange(season.startDate, season.endDate)}
-                    </span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="" disabled>
+              Pick a season
+            </option>
+            {seasonChoices.map((season) => (
+              <option key={season.id} value={season.id}>
+                {season.displayName} (
+                {formatDateRange(season.startDate, season.endDate)})
+              </option>
+            ))}
+          </select>
+          <BuilderFieldError
+            id="competition-season-error"
+            error={props.errors.seasonId}
+          />
         </div>
       )}
     </div>
