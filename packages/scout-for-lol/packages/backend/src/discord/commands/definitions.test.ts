@@ -145,6 +145,41 @@ describe("registered Discord commands", () => {
     expect(isPublicBbSubcommand("prizes")).toBe(true);
   });
 
+  test("registers private /bb notifications toggles", () => {
+    const notifications = bbCommand
+      .toJSON()
+      .options?.find((option) => option.name === "notifications");
+    if (notifications === undefined || !("options" in notifications)) {
+      throw new Error("/bb notifications should be a subcommand");
+    }
+
+    expect(notifications).toEqual(
+      expect.objectContaining({
+        name: "notifications",
+        description: "Choose which Bryan Bucks settlement DMs you receive",
+      }),
+    );
+    expect(notifications.options).toEqual([
+      expect.objectContaining({
+        name: "your_bets",
+        required: false,
+        choices: [
+          { name: "On", value: "on" },
+          { name: "Off", value: "off" },
+        ],
+      }),
+      expect.objectContaining({
+        name: "bets_on_you",
+        required: false,
+        choices: [
+          { name: "On", value: "on" },
+          { name: "Off", value: "off" },
+        ],
+      }),
+    ]);
+    expect(isPublicBbSubcommand("notifications")).toBe(false);
+  });
+
   test("does not register autocomplete options", () => {
     expect(
       baseCommandDefinitions.flatMap((command) =>

@@ -7,6 +7,8 @@ import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 
 const MAX_SETTLEMENT_DM_LENGTH = 1900;
 const TRUNCATION_SUFFIX = "...";
+export const SETTLEMENT_DM_NOTIFICATION_HINT =
+  "You can manage these DMs with `/bb notifications`.";
 
 export type SettlementDmKind =
   "betting_settlement_receipt" | "betting_player_bet_outcome";
@@ -145,19 +147,33 @@ export function buildSettlementDmMessages(input: {
   unmatchedPositions: readonly ClosedPosition[];
   framing: OutcomeFraming | undefined;
   receiptsEnabled: boolean;
+  receiptRecipientIds?: ReadonlySet<string>;
   playerBetOutcomesEnabled: boolean;
   playerRecipients: readonly TeamRecipient[];
+  hintRecipientIds?: ReadonlySet<string>;
 }): SettlementDmMessage[] {
   const drafts = new Map<string, RecipientDraft>();
   const outcomes = outcomePositions(input);
 
   if (input.receiptsEnabled) {
     for (const position of outcomes) {
+      if (
+        input.receiptRecipientIds !== undefined &&
+        !input.receiptRecipientIds.has(position.bettorId)
+      ) {
+        continue;
+      }
       draftFor(drafts, position.bettorId).ownLines.push(
         ownOutcomeLine(position, input.framing),
       );
     }
     for (const bet of input.parlay?.bets ?? []) {
+      if (
+        input.receiptRecipientIds !== undefined &&
+        !input.receiptRecipientIds.has(bet.discordId)
+      ) {
+        continue;
+      }
       draftFor(drafts, bet.discordId).ownLines.push(ownParlayLine(bet));
     }
   }
@@ -186,6 +202,12 @@ export function buildSettlementDmMessages(input: {
     if (draft.teamLines.length > 0) {
       sections.push(["**Bets on your team**", ...draft.teamLines].join("\n"));
     }
+    const hint =
+      input.hintRecipientIds?.has(recipientId) === true
+        ? `\n\n${SETTLEMENT_DM_NOTIFICATION_HINT}`
+        : "";
+    const maxSettlementContentLength =
+      MAX_SETTLEMENT_DM_LENGTH - TRUNCATION_SUFFIX.length - hint.length;
     return [
       {
         recipientId,
@@ -193,10 +215,10 @@ export function buildSettlementDmMessages(input: {
           draft.ownLines.length > 0
             ? "betting_settlement_receipt"
             : "betting_player_bet_outcome",
-        content: truncateDiscordMessage(
+        content: `${truncateDiscordMessage(
           sections.join("\n\n"),
-          MAX_SETTLEMENT_DM_LENGTH - TRUNCATION_SUFFIX.length,
-        ),
+          maxSettlementContentLength,
+        )}${hint}`,
       },
     ];
   });

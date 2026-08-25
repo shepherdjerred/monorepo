@@ -10,18 +10,19 @@ Bryan Bucks is enabled.
 
 ## Subcommands
 
-| Command       | What it does                                          | Reply                             |
-| ------------- | ----------------------------------------------------- | --------------------------------- |
-| `/bb balance` | Available Bucks, Bucks at risk, and pending positions | Private                           |
-| `/bb history` | Paged transaction ledger with running balances        | Private                           |
-| `/bb open`    | Match and weekly markets still taking bets            | Private                           |
-| `/bb bet`     | Place or top up an outcome bet                        | Private                           |
-| `/bb parlay`  | Place or top up a match or weekly parlay bet          | Private                           |
-| `/bb pass`    | Quote and buy a 24-hour peek pass                     | Private                           |
-| `/bb peek`    | Reveal one live game's pre-game estimate              | Private                           |
-| `/bb ask`     | One-shot analysis over this server's Bryan Bucks data | Private, publishable by the asker |
-| `/bb rules`   | The complete rulebook                                 | **Public**                        |
-| `/bb prizes`  | The joke prize catalogue                              | **Public**                        |
+| Command             | What it does                                          | Reply                             |
+| ------------------- | ----------------------------------------------------- | --------------------------------- |
+| `/bb balance`       | Available Bucks, Bucks at risk, and pending positions | Private                           |
+| `/bb history`       | Paged transaction ledger with running balances        | Private                           |
+| `/bb open`          | Match and weekly markets still taking bets            | Private                           |
+| `/bb bet`           | Place or top up an outcome bet                        | Private                           |
+| `/bb parlay`        | Place or top up a match or weekly parlay bet          | Private                           |
+| `/bb pass`          | Quote and buy a 24-hour peek pass                     | Private                           |
+| `/bb peek`          | Reveal one live game's pre-game estimate              | Private                           |
+| `/bb ask`           | One-shot analysis over this server's Bryan Bucks data | Private, publishable by the asker |
+| `/bb notifications` | Choose settlement DMs about your bets and bets on you | Private                           |
+| `/bb rules`         | The complete rulebook                                 | **Public**                        |
+| `/bb prizes`        | The joke prize catalogue                              | **Public**                        |
 
 Everything except `rules` and `prizes` answers only to you. Balances, positions,
 and estimates are never posted to the channel by Scout.
@@ -66,6 +67,22 @@ and several concurrent markets without changing the command.
 | Option     | Required | Values                                 |
 | ---------- | -------- | -------------------------------------- |
 | `question` | yes      | Free text, up to the documented length |
+
+### `/bb notifications`
+
+Both options are optional. With neither option, Scout reports the current
+settings. New users default to receiving both categories.
+After your first eligible settlement DM, Scout shows a one-time reminder that
+you can manage these messages with `/bb notifications`.
+
+| Option        | Required | Values      |
+| ------------- | -------- | ----------- |
+| `your_bets`   | no       | `On`, `Off` |
+| `bets_on_you` | no       | `On`, `Off` |
+
+`your_bets` controls settlement DMs for outcome and parlay bets you placed.
+`bets_on_you` controls settlement DMs about other users betting on your tracked
+player. Settings are independent and scoped to this server.
 
 ## Buttons
 
