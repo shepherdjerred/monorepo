@@ -66,6 +66,8 @@ describe("Classic report renders with committed fonts", () => {
     },
   );
 
+  // Four production renders run alongside the other raster suites in CI, so
+  // this integration case needs a budget above Vitest's unit-test default.
   test("Classic ARAM Mayhem prematch and postmatch render SVG and PNG", async () => {
     const loadingScreen = classicLoadingScreenFixture(
       5,
@@ -91,7 +93,7 @@ describe("Classic report renders with committed fonts", () => {
     ]);
     expect([...loadingPng.subarray(0, 8)]).toEqual(PNG_SIGNATURE);
     expect([...matchPng.subarray(0, 8)]).toEqual(PNG_SIGNATURE);
-  });
+  }, 30_000);
 
   test("Victory, Defeat, and Surrender produce distinct reports", async () => {
     const outcomes = ["Victory", "Defeat", "Surrender"] as const;

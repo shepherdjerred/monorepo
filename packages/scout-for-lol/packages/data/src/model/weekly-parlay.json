@@ -8,5 +8,13 @@
   "finalHour": 11,
   "updateHour": 19,
   "updateCount": 6,
-  "actions": ["open", "reminder", "start", "progress", "finalize"]
+  "actions": [
+    "open",
+    "reminder",
+    "start",
+    "progress",
+    "finalize",
+    "cancel",
+    "analytics_sync"
+  ]
 }

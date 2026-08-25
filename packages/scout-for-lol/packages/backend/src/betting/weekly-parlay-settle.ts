@@ -13,6 +13,7 @@ import {
 } from "#src/betting/ledger.ts";
 import {
   WEEKLY_PARLAY_EVALUATOR_VERSION,
+  WEEKLY_PARLAY_LEGACY_EVALUATOR_VERSION,
   WeeklyParlayContributionSnapshotSchema,
   WeeklyParlayDefinitionCriteriaSchema,
 } from "#src/betting/weekly-parlay-criteria.ts";
@@ -67,7 +68,10 @@ function decisionFor(input: {
       reason: BucksWeeklyParlayVoidReasonSchema.parse(input.voidReason),
     };
   }
-  if (input.evaluatorVersion !== WEEKLY_PARLAY_EVALUATOR_VERSION) {
+  if (
+    input.evaluatorVersion !== WEEKLY_PARLAY_LEGACY_EVALUATOR_VERSION &&
+    input.evaluatorVersion !== WEEKLY_PARLAY_EVALUATOR_VERSION
+  ) {
     return { kind: "void", reason: "unknown_evaluator" };
   }
   const parsedCriteria = parseJson(input.criteria);
@@ -78,6 +82,14 @@ function decisionFor(input: {
     parsedCriteria.value,
   );
   if (!criteria.success) {
+    return { kind: "void", reason: "invalid_definition" };
+  }
+  if (
+    (input.evaluatorVersion === WEEKLY_PARLAY_LEGACY_EVALUATOR_VERSION &&
+      criteria.data.version !== 1) ||
+    (input.evaluatorVersion === WEEKLY_PARLAY_EVALUATOR_VERSION &&
+      criteria.data.version !== 2)
+  ) {
     return { kind: "void", reason: "invalid_definition" };
   }
   const parsedSnapshots = input.snapshots.map((snapshot) =>
@@ -104,6 +116,9 @@ function decisionFor(input: {
   }
   if (input.mode === "early_yes" && !evaluation.irreversiblyYes) {
     return;
+  }
+  if (input.mode === "final" && !evaluation.qualification.passed) {
+    return { kind: "void", reason: "insufficient_activity" };
   }
   return {
     kind: "result",

@@ -250,6 +250,9 @@ describe("/bb command contract", () => {
       "Cancelling before close costs **20%** of the offer, rounded to the nearest BB",
     );
     expect(rendered).toContain("Cancelling a parlay is free");
+    expect(rendered).toContain("Activity is not a leg");
+    expect(rendered).toContain("one-game peak on a named champion");
+    expect(rendered).toContain("full parlay at **20-30%**");
   });
 
   // Gaps that existed while these facts lived only on market messages, or not

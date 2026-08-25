@@ -14,9 +14,12 @@ import {
   WeeklyParlayContributionSnapshotSchema,
   WeeklyParlayDefinitionCriteriaSchema,
   WeeklyParlaySubjectsSchema,
-  type WeeklyParlayLeg,
 } from "#src/betting/weekly-parlay-criteria.ts";
 import { evaluateWeeklyParlay } from "#src/betting/weekly-parlay-evaluator.ts";
+import {
+  weeklyParlayDeliveryContent,
+  type WeeklyParlayDiscordKind,
+} from "#src/betting/weekly-parlay-discord-copy.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -29,9 +32,6 @@ import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { isWeeklyParlayCatchupTimeline } from "#src/betting/weekly-parlay-period.ts";
 
-export type WeeklyParlayDiscordKind =
-  "open" | "reminder" | "progress" | "settlement";
-
 export function weeklyParlaySettlementActionKey(marketId: number): string {
   return `settlement:${marketId.toString()}`;
 }
@@ -42,97 +42,6 @@ export type WeeklyParlayDiscordSender = (
   serverId: DiscordGuildId,
 ) => Promise<{ channelId: string; id: string }>;
 
-function operatorCopy(leg: WeeklyParlayLeg): string {
-  switch (leg.operator) {
-    case "gte":
-      return "at least";
-    case "lte":
-      return "at most";
-    case "eq":
-      return "exactly";
-  }
-}
-
-export function countLabel(
-  value: number,
-  singular: string,
-  plural = `${singular}s`,
-): string {
-  return value === 1 ? singular : plural;
-}
-
-function aggregateMetricCopy(
-  metric: Extract<WeeklyParlayLeg, { kind: "aggregate" }>["metric"],
-  threshold: number,
-): string {
-  switch (metric) {
-    case "games":
-    case "wins":
-    case "kills":
-    case "deaths":
-    case "assists":
-      return countLabel(threshold, metric.slice(0, -1), metric);
-    case "distinct_champions":
-      return `distinct ${countLabel(threshold, "champion")}`;
-    case "distinct_roles":
-      return `distinct ${countLabel(threshold, "role")}`;
-    case "longest_win_streak":
-      return "wins in a row";
-    case "best_game_kills":
-      return "kills in one game";
-    case "best_game_assists":
-      return "assists in one game";
-    case "best_game_damage":
-      return "champion damage in one game";
-    case "champion_damage":
-    case "creep_score":
-    case "gold":
-    case "vision_score":
-    case "time_played":
-      return metric.replaceAll("_", " ");
-  }
-}
-
-function metricCopy(leg: WeeklyParlayLeg): string {
-  switch (leg.kind) {
-    case "aggregate":
-      return aggregateMetricCopy(leg.metric, leg.threshold);
-    case "rate":
-      return leg.metric
-        .replaceAll("_x100", "")
-        .replaceAll("_bps", "")
-        .replaceAll("_", " ");
-    case "champion_games":
-      return `${countLabel(leg.threshold, leg.winsOnly ? "win" : "game")} on ${leg.champion}`;
-    case "role_games":
-      return `${countLabel(leg.threshold, leg.winsOnly ? "win" : "game")} as ${leg.role.toLowerCase()}`;
-  }
-}
-
-function metricValue(leg: WeeklyParlayLeg, value: number): string {
-  if (leg.kind === "rate") {
-    if (leg.metric === "win_rate_bps") {
-      return `${(value / 100).toFixed(1)}%`;
-    }
-    if (leg.metric.endsWith("_x100")) {
-      return (value / 100).toFixed(2);
-    }
-  }
-  return value.toLocaleString("en-US");
-}
-
-export function legLine(
-  leg: WeeklyParlayLeg,
-  current: number | undefined,
-  subjectAlias: string,
-): string {
-  const progress =
-    current === undefined
-      ? ""
-      : ` — **${metricValue(leg, current)} / ${metricValue(leg, leg.threshold)}**`;
-  return `• **${subjectAlias}** ${operatorCopy(leg)} **${metricValue(leg, leg.threshold)} ${metricCopy(leg)}**${progress}`;
-}
-
 function stableNonce(
   marketId: number,
   actionKey: string,
@@ -142,56 +51,6 @@ function stableNonce(
 }
 
 const MENTIONS_PER_MESSAGE = 20;
-
-export function deliveryTitle(
-  kind: WeeklyParlayDiscordKind,
-  marketState: string,
-  yesResult: boolean | null,
-  catchup = false,
-): string {
-  const prefix = catchup ? "Catch-up weekly" : "Weekly";
-  switch (kind) {
-    case "open":
-      return `📅 **${prefix} Bryan Bucks parlay is open**`;
-    case "reminder":
-      return `⏰ **${prefix} parlay betting reminder**`;
-    case "progress":
-      return `📈 **${prefix} parlay progress**`;
-    case "settlement":
-      if (marketState === "voided") {
-        return `↩️ **${prefix} parlay refunded**`;
-      }
-      return yesResult === true
-        ? `✅ **${prefix} parlay settled YES**`
-        : `❌ **${prefix} parlay settled NO**`;
-  }
-}
-
-function currentLegValue(
-  kind: WeeklyParlayDiscordKind,
-  current: number,
-): number | undefined {
-  return kind === "open" || kind === "reminder" ? undefined : current;
-}
-
-export function deliveryTimeCopy(input: {
-  kind: WeeklyParlayDiscordKind;
-  bettingClosesAt: Date;
-  scoringEndsAt: Date;
-  scoringStartsAt?: Date;
-  catchup?: boolean;
-}): string {
-  if (input.catchup === true) {
-    if (input.scoringStartsAt === undefined) {
-      throw new Error("Catch-up weekly parlay copy requires scoringStartsAt.");
-    }
-    return `Betting closes <t:${Math.floor(input.bettingClosesAt.getTime() / 1000).toString()}:F>. Scoring runs <t:${Math.floor(input.scoringStartsAt.getTime() / 1000).toString()}:F> through <t:${Math.floor(input.scoringEndsAt.getTime() / 1000).toString()}:F>.`;
-  }
-  if (input.kind === "open" || input.kind === "reminder") {
-    return `Betting closes <t:${Math.floor(input.bettingClosesAt.getTime() / 1000).toString()}:R>. Use this message's buttons so your market is unambiguous.`;
-  }
-  return `Final cutoff <t:${Math.floor(input.scoringEndsAt.getTime() / 1000).toString()}:F>.`;
-}
 
 export function weeklyParlayButtons(
   kind: WeeklyParlayDiscordKind,
@@ -312,34 +171,32 @@ export async function deliverWeeklyParlayDiscord(
   }
   const isVoidedSettlement =
     input.kind === "settlement" && market.marketState === "voided";
-  const subjects = isVoidedSettlement
-    ? []
-    : WeeklyParlaySubjectsSchema.parse(JSON.parse(market.definition.subjects));
-  const evaluation = isVoidedSettlement
+  const includeFrozenSubjects =
+    !isVoidedSettlement || market.voidReason === "operator_cancelled";
+  const subjects = includeFrozenSubjects
+    ? WeeklyParlaySubjectsSchema.parse(JSON.parse(market.definition.subjects))
+    : [];
+  const criteria = isVoidedSettlement
     ? undefined
-    : evaluateWeeklyParlay(
-        WeeklyParlayDefinitionCriteriaSchema.parse(
-          JSON.parse(market.definition.criteria),
-        ),
-        z
-          .array(WeeklyParlayContributionSnapshotSchema)
-          .parse(
-            market.definition.contributions.map((row) =>
-              JSON.parse(row.snapshot),
-            ),
-          ),
+    : WeeklyParlayDefinitionCriteriaSchema.parse(
+        JSON.parse(market.definition.criteria),
       );
+  const evaluation =
+    criteria === undefined
+      ? undefined
+      : evaluateWeeklyParlay(
+          criteria,
+          z
+            .array(WeeklyParlayContributionSnapshotSchema)
+            .parse(
+              market.definition.contributions.map((row) =>
+                JSON.parse(row.snapshot),
+              ),
+            ),
+        );
   const aliases = new Map(
     subjects.map((subject) => [subject.key, subject.alias]),
   );
-  const legs =
-    evaluation?.legs.map((result) =>
-      legLine(
-        result.leg,
-        currentLegValue(input.kind, result.current),
-        aliases.get(result.leg.subject) ?? result.leg.subject,
-      ),
-    ) ?? [];
   const bettorIds = market.bets.map((bet) => bet.bucksAccount.discordId);
   const mentionIds = [
     ...new Set([...subjects.map((subject) => subject.discordId), ...bettorIds]),
@@ -352,24 +209,23 @@ export async function deliverWeeklyParlayDiscord(
     scoringStartsAt: market.definition.scoringStartsAt,
     scoringEndsAt: market.definition.scoringEndsAt,
   });
-  const content = [
-    deliveryTitle(input.kind, market.marketState, market.yesResult, catchup),
-    ...(isVoidedSettlement
-      ? [`Reason: **${market.voidReason ?? "unknown"}**`]
-      : []),
-    `Period: **${market.periodKey}** · ${(market.definition.yesProbabilityBps / 100).toFixed(1)}% YES`,
-    ...legs,
-    `**${market.bets.length.toString()} ${countLabel(market.bets.length, "bettor")} · ${totalStaked.toString()} BB staked**`,
-    deliveryTimeCopy({
-      kind: input.kind,
-      bettingClosesAt: market.bettingClosesAt,
-      scoringEndsAt: market.scoringEndsAt,
-      scoringStartsAt: market.definition.scoringStartsAt,
-      catchup,
-    }),
-  ]
-    .filter((line) => line.length > 0)
-    .join("\n");
+  const content = weeklyParlayDeliveryContent({
+    kind: input.kind,
+    marketState: market.marketState,
+    yesResult: market.yesResult,
+    voidReason: market.voidReason,
+    catchup,
+    periodKey: market.periodKey,
+    yesProbabilityBps: market.definition.yesProbabilityBps,
+    bettingClosesAt: market.bettingClosesAt,
+    scoringStartsAt: market.definition.scoringStartsAt,
+    scoringEndsAt: market.scoringEndsAt,
+    criteria,
+    evaluation,
+    aliases,
+    bettorCount: market.bets.length,
+    totalStaked,
+  });
   const mentionChunks = Array.from(
     {
       length: Math.max(1, Math.ceil(mentionIds.length / MENTIONS_PER_MESSAGE)),

@@ -9,9 +9,12 @@ import {
   WeeklyParlaySubjectsSchema,
   validateWeeklyParlayProposal,
 } from "#src/betting/weekly-parlay-criteria.ts";
-import { fetchWeeklyCandidateHistories } from "#src/betting/weekly-parlay-history.ts";
 import {
-  generateWeeklyParlayProposal,
+  fetchWeeklyCandidateHistories,
+  type WeeklyParlayCandidateHistory,
+} from "#src/betting/weekly-parlay-history.ts";
+import {
+  generateWeeklyParlayProposals,
   WEEKLY_PARLAY_PROMPT_VERSION,
 } from "#src/betting/weekly-parlay-model.ts";
 import {
@@ -21,7 +24,10 @@ import {
   weeklyParlayPeriod,
   type WeeklyParlayFrozenWindow,
 } from "#src/betting/weekly-parlay-period.ts";
-import { priceWeeklyParlay } from "#src/betting/weekly-parlay-pricing.ts";
+import {
+  priceWeeklyParlayProposals,
+  type WeeklyParlayPricing,
+} from "#src/betting/weekly-parlay-pricing.ts";
 import { orderWeeklyParlayCandidates } from "#src/betting/weekly-parlay-selection.ts";
 import { loadWeeklyParlaySubjects } from "#src/betting/weekly-parlay-subjects.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
@@ -117,6 +123,55 @@ function timelineKind(
   return isWeeklyParlayCatchupTimeline(period) ? "catch_up" : "standard";
 }
 
+async function generatePricedCandidate(input: {
+  periodKey: string;
+  history: WeeklyParlayCandidateHistory;
+  signal?: AbortSignal;
+}): Promise<
+  | {
+      generated: Awaited<ReturnType<typeof generateWeeklyParlayProposals>>;
+      priced: WeeklyParlayPricing;
+    }
+  | undefined
+> {
+  if (input.history.championShortlist.length === 0) {
+    return;
+  }
+  const championShortlists = new Map([
+    [input.history.subject.key, input.history.championShortlist],
+  ]);
+  const eligibleChampions = new Map([
+    [
+      input.history.subject.key,
+      new Set(
+        input.history.championShortlist.map((summary) => summary.champion),
+      ),
+    ],
+  ]);
+  const generated = await generateWeeklyParlayProposals({
+    periodKey: input.periodKey,
+    subjects: [input.history.subject],
+    championShortlists,
+    historyWindows: input.history.fullyObservedWindows,
+    ...(input.signal === undefined ? {} : { abortSignal: input.signal }),
+  });
+  const issues = generated.proposals.flatMap((proposal, index) =>
+    validateWeeklyParlayProposal({
+      proposal,
+      subjects: [input.history.subject],
+      eligibleChampions,
+    }).map((issue) => `Proposal ${String(index + 1)}: ${issue}`),
+  );
+  if (issues.length > 0) {
+    return;
+  }
+  const priced = priceWeeklyParlayProposals({
+    proposals: generated.proposals,
+    windows: input.history.windows,
+  });
+  return priced === undefined ? undefined : { generated, priced };
+}
+
 async function openWeeklyParlayInternal(
   input: OpenWeeklyParlayInput,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -206,37 +261,15 @@ async function openWeeklyParlayInternal(
     if (history === undefined) {
       throw new Error("Ordered weekly candidate lost its history snapshot.");
     }
-    const generated = await generateWeeklyParlayProposal({
+    const candidateResult = await generatePricedCandidate({
       periodKey: input.periodKey,
-      subjects: [history.subject],
-      observedChampions: new Map([
-        [history.subject.key, history.observedChampions],
-      ]),
-      observedRoles: new Map([[history.subject.key, history.observedRoles]]),
-      recentEligibleGames: new Map([
-        [history.subject.key, history.recentEligibleGames],
-      ]),
-      historyWindows: history.fullyObservedWindows,
-      ...(input.signal === undefined ? {} : { abortSignal: input.signal }),
+      history,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
-    const issues = validateWeeklyParlayProposal({
-      proposal: generated.proposal,
-      subjects: [history.subject],
-      observedChampions: new Map([
-        [history.subject.key, history.observedChampions],
-      ]),
-      observedRoles: new Map([[history.subject.key, history.observedRoles]]),
-    });
-    if (issues.length > 0) {
+    if (candidateResult === undefined) {
       continue;
     }
-    const priced = priceWeeklyParlay({
-      proposal: generated.proposal,
-      windows: history.windows,
-    });
-    if (priced === undefined) {
-      continue;
-    }
+    const { generated, priced } = candidateResult;
     if (!openActionIsActive(period, input.signal, input.generationDeadline)) {
       return { kind: "too_late" };
     }
@@ -253,14 +286,21 @@ async function openWeeklyParlayInternal(
             scoringEndsAt: period.scoringEndsAt,
             subjects: JSON.stringify([history.subject]),
             eligibleQueues: JSON.stringify(WEEKLY_PARLAY_ELIGIBLE_QUEUES),
-            proposal: JSON.stringify(generated.proposal),
+            proposal: JSON.stringify(priced.proposal),
             criteria: JSON.stringify(priced.criteria),
             historySample: JSON.stringify(history.windows),
             pricing: JSON.stringify({
               yesProbabilityBps: priced.yesProbabilityBps,
               yesWindows: priced.yesWindows,
-              sampleSize: priced.sampleSize,
-              periodKeys: priced.periodKeys,
+              totalWindows: priced.totalWindows,
+              qualifiedWindows: priced.qualifiedWindows,
+              excludedWindows: priced.excludedWindows,
+              qualifiedPeriodKeys: priced.qualifiedPeriodKeys,
+              excludedPeriodKeys: priced.excludedPeriodKeys,
+              recentQualifiedWindows: priced.recentQualifiedWindows,
+              recentYesWindows: priced.recentYesWindows,
+              recentYesProbabilityBps: priced.recentYesProbabilityBps,
+              legEvidence: priced.legEvidence,
             }),
             yesProbabilityBps: priced.yesProbabilityBps,
             promptVersion: WEEKLY_PARLAY_PROMPT_VERSION,
@@ -271,8 +311,8 @@ async function openWeeklyParlayInternal(
             generationContext: JSON.stringify({
               candidateOrder: ordered.map((entry) => entry.playerId),
               selectedPlayerId: history.subject.playerId,
-              observedChampions: [...history.observedChampions].toSorted(),
-              observedRoles: [...history.observedRoles].toSorted(),
+              championShortlist: history.championShortlist,
+              generatedProposals: generated.proposals,
               recentEligibleGames: history.recentEligibleGames,
               fullyObservedWindows: history.fullyObservedWindows,
               timelineKind: timelineKind(period),

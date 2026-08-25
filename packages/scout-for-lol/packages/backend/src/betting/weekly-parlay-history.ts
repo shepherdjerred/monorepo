@@ -2,6 +2,10 @@ import { addWeeks, formatISO, parseISO } from "date-fns";
 import { z } from "zod";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import {
+  WEEKLY_PARLAY_CHAMPION_HISTORY_WINDOWS,
+  WEEKLY_PARLAY_CHAMPION_MIN_GAMES,
+  WEEKLY_PARLAY_CHAMPION_MIN_WINDOWS,
+  WEEKLY_PARLAY_CHAMPION_SHORTLIST_LIMIT,
   WEEKLY_PARLAY_HISTORY_WINDOW_COUNT,
   WEEKLY_PARLAY_MIN_HISTORY_WINDOWS,
   WeeklyParlayContributionSnapshotSchema,
@@ -49,9 +53,81 @@ export type WeeklyParlayCandidateHistory = {
   windows: WeeklyParlayReplayWindow[];
   fullyObservedWindows: number;
   recentEligibleGames: number;
-  observedChampions: Set<string>;
-  observedRoles: Set<string>;
+  championShortlist: WeeklyParlayChampionSummary[];
 };
+
+export type WeeklyParlayChampionSummary = {
+  champion: string;
+  windowsPlayed: number;
+  gamesPlayed: number;
+  wins: number;
+  bestKills: number;
+  bestAssists: number;
+  bestChampionDamage: number;
+  bestVisionScore: number;
+};
+
+export function buildWeeklyChampionShortlist(
+  windows: readonly WeeklyParlayReplayWindow[],
+): WeeklyParlayChampionSummary[] {
+  const recentWindows = windows.slice(-WEEKLY_PARLAY_CHAMPION_HISTORY_WINDOWS);
+  const summaries = new Map<
+    string,
+    WeeklyParlayChampionSummary & { periodKeys: Set<string> }
+  >();
+  for (const window of recentWindows) {
+    for (const contribution of window.contributions) {
+      const current = summaries.get(contribution.champion) ?? {
+        champion: contribution.champion,
+        windowsPlayed: 0,
+        gamesPlayed: 0,
+        wins: 0,
+        bestKills: 0,
+        bestAssists: 0,
+        bestChampionDamage: 0,
+        bestVisionScore: 0,
+        periodKeys: new Set<string>(),
+      };
+      current.periodKeys.add(window.periodKey);
+      current.gamesPlayed += 1;
+      current.wins += contribution.win ? 1 : 0;
+      current.bestKills = Math.max(current.bestKills, contribution.kills);
+      current.bestAssists = Math.max(current.bestAssists, contribution.assists);
+      current.bestChampionDamage = Math.max(
+        current.bestChampionDamage,
+        contribution.championDamage,
+      );
+      current.bestVisionScore = Math.max(
+        current.bestVisionScore,
+        contribution.visionScore,
+      );
+      summaries.set(contribution.champion, current);
+    }
+  }
+  return [...summaries.values()]
+    .map((summary) => ({
+      champion: summary.champion,
+      windowsPlayed: summary.periodKeys.size,
+      gamesPlayed: summary.gamesPlayed,
+      wins: summary.wins,
+      bestKills: summary.bestKills,
+      bestAssists: summary.bestAssists,
+      bestChampionDamage: summary.bestChampionDamage,
+      bestVisionScore: summary.bestVisionScore,
+    }))
+    .filter(
+      (summary) =>
+        summary.gamesPlayed >= WEEKLY_PARLAY_CHAMPION_MIN_GAMES &&
+        summary.windowsPlayed >= WEEKLY_PARLAY_CHAMPION_MIN_WINDOWS,
+    )
+    .toSorted(
+      (left, right) =>
+        right.windowsPlayed - left.windowsPlayed ||
+        right.gamesPlayed - left.gamesPlayed ||
+        left.champion.localeCompare(right.champion),
+    )
+    .slice(0, WEEKLY_PARLAY_CHAMPION_SHORTLIST_LIMIT);
+}
 
 function periodKeysBefore(periodKey: string): string[] {
   const current = parseISO(periodKey);
@@ -222,9 +298,6 @@ export async function fetchWeeklyCandidateHistories(input: {
         trackingStartedAt: new Date(trackingStartedAt),
         contributions: snapshots,
       });
-      const alignedSnapshots = windows.flatMap(
-        (window) => window.contributions,
-      );
       const recentPeriod = weeklyParlayScoringWindowForPeriod(
         keys.at(-1) ?? "",
         shape,
@@ -245,12 +318,7 @@ export async function fetchWeeklyCandidateHistories(input: {
         windows,
         fullyObservedWindows: windows.length,
         recentEligibleGames: recentMatchIds.size,
-        observedChampions: new Set(
-          alignedSnapshots.map((snapshot) => snapshot.champion),
-        ),
-        observedRoles: new Set(
-          alignedSnapshots.map((snapshot) => snapshot.role),
-        ),
+        championShortlist: buildWeeklyChampionShortlist(windows),
       };
     })
     .filter(

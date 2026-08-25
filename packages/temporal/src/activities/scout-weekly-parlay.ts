@@ -3,6 +3,8 @@ import {
   WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS,
   WEEKLY_PARLAY_LIFECYCLE,
   WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS,
+  WeeklyParlayControlActionSchema as ScoutWeeklyParlayActionSchema,
+  type WeeklyParlayControlAction as ScoutWeeklyParlayAction,
 } from "@scout-for-lol/data/model/weekly-parlay.ts";
 import {
   scoutWeeklyParlayActionDurationSeconds,
@@ -20,54 +22,6 @@ const UPDATE_HOUR = WEEKLY_PARLAY_LIFECYCLE.updateHour;
 const UPDATE_COUNT = WEEKLY_PARLAY_LIFECYCLE.updateCount;
 const OPEN_ACTION_TIMEOUT_MS = WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS;
 const STANDARD_ACTION_TIMEOUT_MS = 20 * 1000;
-
-export const ScoutWeeklyParlayCatchupWindowSchema = z.strictObject({
-  kind: z.literal("catch_up"),
-  openAt: z.iso.datetime(),
-  bettingClosesAt: z.iso.datetime(),
-  scoringStartsAt: z.iso.datetime(),
-  scoringEndsAt: z.iso.datetime(),
-});
-
-export const ScoutWeeklyParlayActionSchema = z
-  .strictObject({
-    periodKey: z.iso.date(),
-    slot: z.number().int().nonnegative().default(0),
-    action: z.enum(WEEKLY_PARLAY_LIFECYCLE.actions),
-    updateIndex: z
-      .number()
-      .int()
-      .min(0)
-      .max(UPDATE_COUNT - 1)
-      .optional(),
-    window: ScoutWeeklyParlayCatchupWindowSchema.optional(),
-  })
-  .superRefine((action, context) => {
-    if (action.action === "progress" && action.updateIndex === undefined) {
-      context.addIssue({
-        code: "custom",
-        path: ["updateIndex"],
-        message: "Progress actions require an update index.",
-      });
-    }
-    if (action.action !== "progress" && action.updateIndex !== undefined) {
-      context.addIssue({
-        code: "custom",
-        path: ["updateIndex"],
-        message: "Only progress actions accept an update index.",
-      });
-    }
-    if (action.action !== "open" && action.window !== undefined) {
-      context.addIssue({
-        code: "custom",
-        path: ["window"],
-        message: "Only open actions accept a catch-up window.",
-      });
-    }
-  });
-export type ScoutWeeklyParlayAction = z.infer<
-  typeof ScoutWeeklyParlayActionSchema
->;
 
 export const ScoutWeeklyParlayTimelineSchema = z.strictObject({
   periodKey: z.iso.date(),

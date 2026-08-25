@@ -3,7 +3,7 @@ import {
   validateWeeklyParlayProposal,
   WeeklyParlaySubjectSchema,
 } from "#src/betting/weekly-parlay-criteria.ts";
-import { generateWeeklyParlayProposal } from "#src/betting/weekly-parlay-model.ts";
+import { generateWeeklyParlayProposals } from "#src/betting/weekly-parlay-model.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("test-weekly-parlay-live");
@@ -23,28 +23,33 @@ const subject = WeeklyParlaySubjectSchema.parse({
     },
   ],
 });
-const champions = new Set(["Ahri", "Jinx", "Lee Sin", "Nautilus", "Ornn"]);
-const roles = new Set([
-  "TOP",
-  "JUNGLE",
-  "MIDDLE",
-  "BOTTOM",
-  "UTILITY",
-] as const);
-const generated = await generateWeeklyParlayProposal({
+const championShortlist = ["Ahri", "Jinx", "Lee Sin", "Nautilus", "Ornn"].map(
+  (champion, index) => ({
+    champion,
+    windowsPlayed: 8 - index,
+    gamesPlayed: 12 - index,
+    wins: 6 - index,
+    bestKills: 12 - index,
+    bestAssists: 18 - index,
+    bestChampionDamage: 30_000 - index * 1000,
+    bestVisionScore: 50 - index,
+  }),
+);
+const generated = await generateWeeklyParlayProposals({
   periodKey: "2026-08-24",
   subjects: [subject],
-  observedChampions: new Map([[subject.key, champions]]),
-  observedRoles: new Map([[subject.key, roles]]),
-  recentEligibleGames: new Map([[subject.key, 6]]),
+  championShortlists: new Map([[subject.key, championShortlist]]),
   historyWindows: 30,
 });
-const issues = validateWeeklyParlayProposal({
-  proposal: generated.proposal,
-  subjects: [subject],
-  observedChampions: new Map([[subject.key, champions]]),
-  observedRoles: new Map([[subject.key, roles]]),
-});
+const issues = generated.proposals.flatMap((proposal) =>
+  validateWeeklyParlayProposal({
+    proposal,
+    subjects: [subject],
+    eligibleChampions: new Map([
+      [subject.key, new Set(championShortlist.map((entry) => entry.champion))],
+    ]),
+  }),
+);
 if (issues.length > 0) {
   throw new Error(
     `Weekly prompt failed semantic validation: ${issues.join("; ")}`,
@@ -52,5 +57,7 @@ if (issues.length > 0) {
 }
 logger.info("Weekly parlay live prompt accepted", {
   model: generated.resolvedModel ?? generated.model,
-  legs: generated.proposal.legs.length,
+  proposals: generated.proposals.length,
+  legs: generated.proposals.map((proposal) => proposal.legs.length),
 });
+process.exit(0);
