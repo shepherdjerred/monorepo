@@ -10,7 +10,7 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
 import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
 import type { PermissionNotifyStage } from "#src/database/guild-permission-errors.ts";
-import type { DeliveryFailureKind } from "#src/discord/utils/delivery-failure.ts";
+import type { DeliveryFailureKind } from "#src/database/delivery-failure.ts";
 import {
   discordPermissionErrorsTotal,
   discordOwnerNotificationsTotal,

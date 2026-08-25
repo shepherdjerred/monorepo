@@ -38,11 +38,32 @@ function circularRule(): IRegularForbiddenRuleType {
   };
 }
 
+/**
+ * A layer is its directory *and* the module of the same name beside it.
+ *
+ * Scout-for-lol has both `src/configuration/` and `src/configuration.ts`, and
+ * the root file is the bulk of the layer. Matching only `src/configuration/`
+ * left it exempt, so the layer could import anything it liked through its own
+ * front door and the rule still reported clean. `(?:/|\.)` covers the
+ * directory and every `configuration.*` module without an extension list to
+ * drift, and cannot bleed into a sibling: `^src/report(?:/|\.)` does not match
+ * `report-lake.ts`, because the next character is a dash.
+ */
+const LAYER_BOUNDARY_SUFFIX = String.raw`(?:/|\.)`;
+
+function layerAlternation(sourceRoot: string, layers: string[]): string {
+  return `^${sourceRoot}/(${layers.join("|")})${LAYER_BOUNDARY_SUFFIX}`;
+}
+
+function layerPattern(sourceRoot: string, layer: string): string {
+  return `^${sourceRoot}/${layer}${LAYER_BOUNDARY_SUFFIX}`;
+}
+
 function targetPattern(
   architecture: ResolvedArchitecture,
   boundary: LayerBoundary,
 ): string {
-  return `^${architecture.sourceRoot}/(${boundary.to.join("|")})/`;
+  return layerAlternation(architecture.sourceRoot, boundary.to);
 }
 
 function boundaryRule(
@@ -71,7 +92,7 @@ export function sourceRules(
         architecture,
         boundary,
         boundary.name,
-        `^${architecture.sourceRoot}/${boundary.from}/`,
+        layerPattern(architecture.sourceRoot, boundary.from),
       ),
     ),
   ];

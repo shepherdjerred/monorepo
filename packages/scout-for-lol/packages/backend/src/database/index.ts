@@ -44,6 +44,19 @@ export const prisma = basePrisma.$extends({
 
 export type ExtendedPrismaClient = typeof prisma;
 
+/**
+ * The transaction client that the extended Prisma client supplies to
+ * `$transaction` callbacks.
+ *
+ * This belongs with the client rather than an application helper so repository
+ * modules can accept an atomic client without depending on a feature layer.
+ */
+type TxCallback = Extract<
+  Parameters<ExtendedPrismaClient["$transaction"]>[0],
+  (arg: never) => unknown
+>;
+export type Db = Parameters<TxCallback>[0];
+
 logger.info("✅ Database client initialized");
 
 export type PlayerAccountWithState = {

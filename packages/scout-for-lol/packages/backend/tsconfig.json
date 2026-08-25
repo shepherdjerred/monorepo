@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": [
+    "architecture.config.ts",
     "src/**/*",
     "scripts/**/*",
     "test-*.ts",

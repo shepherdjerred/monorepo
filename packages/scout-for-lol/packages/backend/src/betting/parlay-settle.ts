@@ -20,8 +20,11 @@ import {
   ParlayLegResultsSchema,
   type ParlayLegResult,
 } from "#src/betting/parlay-evaluator.ts";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import {
+  prisma,
+  type Db,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
 import {
   bettingParlayBetSettlementsTotal,
   bettingParlayMarketSettlementsTotal,

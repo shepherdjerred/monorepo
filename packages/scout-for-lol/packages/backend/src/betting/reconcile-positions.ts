@@ -1,4 +1,4 @@
-import type { Db } from "#src/lib/audit/index.ts";
+import type { Db } from "#src/database/index.ts";
 import {
   BUCKS_RECONCILIATION_PAGE_SIZE,
   auditFinding,

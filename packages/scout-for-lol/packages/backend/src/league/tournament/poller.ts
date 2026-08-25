@@ -6,10 +6,8 @@ import {
   getGamesByCode,
   getLobbyEvents,
 } from "#src/league/api/tournament/client.ts";
-import {
-  supportsGamesByCode,
-  type TournamentApiMode,
-} from "#src/league/api/tournament/mode.ts";
+import { supportsGamesByCode } from "#src/league/api/tournament/mode.ts";
+import type { TournamentApiMode } from "#src/configuration/tournament-mode.ts";
 import {
   tournamentApiMode,
   tournamentMaxOpenLobbies,

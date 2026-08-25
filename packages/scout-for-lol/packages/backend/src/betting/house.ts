@@ -7,7 +7,7 @@ import {
   HOUSE_BANKROLL,
 } from "#src/betting/constants.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import type { Db } from "#src/database/index.ts";
 
 /** Fetch or create the audited synthetic account used by one guild's house. */
 export async function ensureHouseAccountInTransaction(

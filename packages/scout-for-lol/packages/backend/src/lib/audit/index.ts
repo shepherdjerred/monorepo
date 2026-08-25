@@ -4,7 +4,7 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 
 const logger = createLogger("audit");
 
@@ -35,19 +35,13 @@ export type AuditAction = z.infer<typeof AuditActionSchema>;
  * The transaction client handed to the callback of
  * `prisma.$transaction(...)` from our extended Prisma client. The
  * extension changes the internal generics enough that the stock
- * `Prisma.TransactionClient` type doesn't unify — we derive Db from the
- * actual client so lib functions accept exactly what the router and
- * Discord commands pass through.
+ * `Prisma.TransactionClient` type doesn't unify. The database module derives
+ * `Db` from the actual client so both repositories and lib functions accept
+ * exactly what their callers pass through.
  *
  * Functions that need to run mutation + audit atomically open the
  * transaction at the caller boundary and thread `tx` through.
  */
-type TxCallback = Extract<
-  Parameters<ExtendedPrismaClient["$transaction"]>[0],
-  (arg: never) => unknown
->;
-export type Db = Parameters<TxCallback>[0];
-
 export type RecordAuditInput = {
   action: AuditAction;
   actorDiscordId: string;

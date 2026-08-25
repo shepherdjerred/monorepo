@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import type { Db } from "#src/database/index.ts";
 import type {
   AddSubscriptionChannelInput,
   AddSubscriptionChannelResult,
