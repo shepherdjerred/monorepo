@@ -334,7 +334,7 @@ const commands: Record<
       // BuildKit can reuse a smoke network namespace while another image is
       // probing its worker. Reserve ephemeral ports for this invocation so a
       // concurrent Scout smoke cannot collide with the fixed service ports.
-      String.raw`ports="$(bun -e 'const listeners = [0, 0].map(() => Bun.listen({ hostname: "127.0.0.1", port: 0, socket: { data() {} } })); console.log(listeners.map((listener) => listener.port).join(" ")); for (const listener of listeners) listener.stop();')"`,
+      `ports="$(bun -e 'const listeners = [0, 0].map(() => Bun.listen({ hostname: "127.0.0.1", port: 0, socket: { data() {} } })); console.log(listeners.map((listener) => listener.port).join(" ")); for (const listener of listeners) listener.stop();')"`,
       "set -- $ports",
       'pg_port="$1"',
       'http_port="$2"',
