@@ -106,6 +106,19 @@ describe("Temporal worker role contracts", () => {
     );
   });
 
+  it("dispatches CI I/O observability only through infra", () => {
+    const infra = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.role === "infra",
+    );
+    const repo = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.role === "repo",
+    );
+    expect(Object.keys(infra?.activities ?? {})).toContain("collectCiIoImpact");
+    expect(Object.keys(repo?.activities ?? {})).not.toContain(
+      "collectCiIoImpact",
+    );
+  });
+
   it("keeps report delivery capabilities separate from agent execution", () => {
     expect(reportActivities.sendAgentTaskEmail).toBe(
       agentActivities.sendAgentTaskEmail,

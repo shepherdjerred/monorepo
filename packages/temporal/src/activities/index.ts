@@ -64,6 +64,7 @@ export const infraActivities = {
   ...homelabCrdImportsRefreshActivities,
   ...tasknotesCanaryActivities,
   ...golinkClusterActivities,
+  ...ciIoImpactActivities,
 };
 
 export const repoActivities = {
@@ -77,7 +78,6 @@ export const repoActivities = {
   ...pokeemeraldDataRefreshActivities,
   ...observeReviewSignalsActivities,
   ...protobufWatchActivities,
-  ...ciIoImpactActivities,
   ...freshrssActivities,
 };
 
