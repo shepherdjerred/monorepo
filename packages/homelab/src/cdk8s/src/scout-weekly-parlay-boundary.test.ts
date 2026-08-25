@@ -91,7 +91,7 @@ describe("Scout weekly parlay deployment boundary", () => {
     ).toBe(false);
   });
 
-  test("keeps staged Scout access limited to Temporal workers", () => {
+  test("allows the Scout and legacy Temporal workers to reach Beta Scout", () => {
     const beta = scoutResources("beta");
     const policy = findResource(beta, "NetworkPolicy", "scout-ingress-netpol");
     expect(policy.spec).toEqual(
@@ -107,8 +107,19 @@ describe("Scout weekly parlay deployment boundary", () => {
                 },
                 podSelector: {
                   matchLabels: {
-                    app: "temporal-worker",
-                    component: "core-worker",
+                    component: "scout-worker",
+                  },
+                },
+              },
+              {
+                namespaceSelector: {
+                  matchLabels: {
+                    "kubernetes.io/metadata.name": "temporal",
+                  },
+                },
+                podSelector: {
+                  matchLabels: {
+                    component: "legacy-worker",
                   },
                 },
               },
@@ -129,7 +140,36 @@ describe("Scout weekly parlay deployment boundary", () => {
       expect.objectContaining({
         podSelector: {
           matchLabels: {
-            app: "temporal-worker",
+            component: "scout-worker",
+          },
+        },
+        egress: [
+          {
+            to: [
+              {
+                namespaceSelector: {
+                  matchLabels: {
+                    "kubernetes.io/metadata.name": "scout-beta",
+                  },
+                },
+                podSelector: { matchLabels: { app: "scout-backend" } },
+              },
+            ],
+            ports: [{ port: 3000, protocol: "TCP" }],
+          },
+        ],
+      }),
+    );
+
+    const legacyEgressPolicy = findResource(
+      temporal,
+      "NetworkPolicy",
+      "temporal-legacy-worker-scout-beta-netpol",
+    );
+    expect(legacyEgressPolicy.spec).toEqual(
+      expect.objectContaining({
+        podSelector: {
+          matchLabels: {
             component: "legacy-worker",
           },
         },

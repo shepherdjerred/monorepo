@@ -2,7 +2,10 @@ import { fetcherActivities } from "./fetcher.ts";
 import { depsSummaryActivities } from "./deps-summary.ts";
 import { depsSummaryLegacyActivities } from "./deps-summary-legacy.ts";
 import { dnsAuditActivities } from "./dns-audit.ts";
-import { golinkSyncActivities } from "./golink-sync.ts";
+import {
+  golinkClusterActivities,
+  golinkSyncActivities,
+} from "./golink-sync.ts";
 import { haActivities } from "./ha.ts";
 import { homelabAuditActivities } from "./homelab-audit.ts";
 import { homelabAuditCollectorActivities } from "./homelab-audit-collectors.ts";
@@ -60,6 +63,8 @@ export const infraActivities = {
   ...veleroOrphanAuditActivities,
   ...homelabCrdImportsRefreshActivities,
   ...tasknotesCanaryActivities,
+  ...golinkClusterActivities,
+  ...ciIoImpactActivities,
 };
 
 export const repoActivities = {
@@ -73,7 +78,6 @@ export const repoActivities = {
   ...pokeemeraldDataRefreshActivities,
   ...observeReviewSignalsActivities,
   ...protobufWatchActivities,
-  ...ciIoImpactActivities,
   ...freshrssActivities,
 };
 

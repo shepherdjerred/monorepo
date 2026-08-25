@@ -64,8 +64,19 @@ export function createScoutChart(app: App, stage: Stage) {
                     },
                     podSelector: {
                       matchLabels: {
-                        app: "temporal-worker",
-                        component: "core-worker",
+                        component: "scout-worker",
+                      },
+                    },
+                  },
+                  {
+                    namespaceSelector: {
+                      matchLabels: {
+                        "kubernetes.io/metadata.name": "temporal",
+                      },
+                    },
+                    podSelector: {
+                      matchLabels: {
+                        component: "legacy-worker",
                       },
                     },
                   },

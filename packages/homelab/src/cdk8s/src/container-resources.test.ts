@@ -278,7 +278,7 @@ describe("Container resource requests backstop", () => {
       [
         "temporal-temporal-worker/temporal-worker",
         {
-          requests: { cpu: "500m", memory: "3072Mi" },
+          requests: { cpu: "500m", memory: "512Mi" },
           limits: { cpu: "1500m", memory: "6144Mi" },
         },
       ],
@@ -293,6 +293,27 @@ describe("Container resource requests backstop", () => {
       [
         "temporal-temporal-reports-worker/temporal-reports-worker",
         { requests: { cpu: "100m", memory: "512Mi" } },
+      ],
+      [
+        "temporal-temporal-infra-worker/temporal-infra-worker",
+        {
+          requests: { cpu: "500m", memory: "2048Mi" },
+          limits: { cpu: "1500m", memory: "6144Mi" },
+        },
+      ],
+      [
+        "temporal-temporal-repo-worker/temporal-repo-worker",
+        {
+          requests: { cpu: "250m", memory: "512Mi" },
+          limits: { cpu: "1500m", memory: "4096Mi" },
+        },
+      ],
+      [
+        "temporal-temporal-scout-worker/temporal-scout-worker",
+        {
+          requests: { cpu: "250m", memory: "512Mi" },
+          limits: { cpu: "1500m", memory: "4096Mi" },
+        },
       ],
       [
         "temporal-temporal-glitter-corpus-worker/temporal-glitter-corpus-worker",

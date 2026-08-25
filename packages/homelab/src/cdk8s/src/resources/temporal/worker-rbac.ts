@@ -9,11 +9,17 @@ import {
 
 export function createTemporalWorkerServiceAccount(
   chart: Chart,
+  props: { constructId?: string; name?: string } = {},
 ): ServiceAccount {
-  const serviceAccount = new ServiceAccount(chart, "temporal-worker-sa", {
-    metadata: { name: "temporal-worker" },
+  return new ServiceAccount(chart, props.constructId ?? "temporal-worker-sa", {
+    metadata: { name: props.name ?? "temporal-worker" },
   });
+}
 
+export function createTemporalWorkerIngressReaderRbac(
+  chart: Chart,
+  serviceAccounts: readonly ServiceAccount[],
+): void {
   new KubeClusterRole(chart, "temporal-worker-ingress-reader", {
     metadata: { name: "temporal-worker-ingress-reader" },
     rules: [
@@ -32,21 +38,17 @@ export function createTemporalWorkerServiceAccount(
       kind: "ClusterRole",
       name: "temporal-worker-ingress-reader",
     },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
+    subjects: serviceAccounts.map((serviceAccount) => ({
+      kind: "ServiceAccount",
+      name: serviceAccount.name,
+      namespace: serviceAccount.metadata.namespace ?? "temporal",
+    })),
   });
-
-  return serviceAccount;
 }
 
 export function createTemporalWorkerMaintenanceRbac(
   chart: Chart,
-  serviceAccount: ServiceAccount,
+  serviceAccounts: readonly ServiceAccount[],
 ) {
   // Namespace-scoped RBAC for the ZFS maintenance workflow, which lists the
   // zfs-zpool-collector pods and execs into one Running and Ready pod per node
@@ -74,13 +76,11 @@ export function createTemporalWorkerMaintenanceRbac(
       kind: "Role",
       name: "temporal-worker-zfs-exec",
     },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
+    subjects: serviceAccounts.map((serviceAccount) => ({
+      kind: "ServiceAccount",
+      name: serviceAccount.name,
+      namespace: serviceAccount.metadata.namespace ?? "temporal",
+    })),
   });
 
   // Namespace-scoped RBAC for the Bugsink housekeeping workflow, which execs
@@ -108,13 +108,11 @@ export function createTemporalWorkerMaintenanceRbac(
       kind: "Role",
       name: "temporal-worker-bugsink-exec",
     },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
+    subjects: serviceAccounts.map((serviceAccount) => ({
+      kind: "ServiceAccount",
+      name: serviceAccount.name,
+      namespace: serviceAccount.metadata.namespace ?? "temporal",
+    })),
   });
 
   // Namespace-scoped RBAC for the Velero orphan-snapshot audit workflow.
@@ -144,13 +142,11 @@ export function createTemporalWorkerMaintenanceRbac(
       kind: "Role",
       name: "temporal-worker-velero-backups-read",
     },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
+    subjects: serviceAccounts.map((serviceAccount) => ({
+      kind: "ServiceAccount",
+      name: serviceAccount.name,
+      namespace: serviceAccount.metadata.namespace ?? "temporal",
+    })),
   });
 
   new KubeRole(chart, "temporal-worker-openebs-exec", {
@@ -176,12 +172,10 @@ export function createTemporalWorkerMaintenanceRbac(
       kind: "Role",
       name: "temporal-worker-openebs-exec",
     },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
+    subjects: serviceAccounts.map((serviceAccount) => ({
+      kind: "ServiceAccount",
+      name: serviceAccount.name,
+      namespace: serviceAccount.metadata.namespace ?? "temporal",
+    })),
   });
 }

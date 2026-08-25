@@ -7,6 +7,12 @@ import {
   type QueueWorkerRole,
 } from "./worker-config.ts";
 
+const DOMAIN_WORKER_QUEUES = Object.values(TASK_QUEUES).filter(
+  (taskQueue) =>
+    taskQueue !== TASK_QUEUES.SCOUT_BETA &&
+    taskQueue !== TASK_QUEUES.SCOUT_PROD,
+);
+
 describe("Temporal worker role contracts", () => {
   it("assigns every queue to exactly one canonical role", () => {
     const ownershipCounts = new Map<string, number>();
@@ -22,9 +28,9 @@ describe("Temporal worker role contracts", () => {
         left.localeCompare(right),
       ),
     ).toEqual(
-      Object.values(TASK_QUEUES)
-        .sort((left, right) => left.localeCompare(right))
-        .map((taskQueue) => [taskQueue, 1]),
+      DOMAIN_WORKER_QUEUES.sort((left, right) => left.localeCompare(right)).map(
+        (taskQueue) => [taskQueue, 1],
+      ),
     );
   });
 
@@ -60,7 +66,7 @@ describe("Temporal worker role contracts", () => {
 
   it("runs every canonical queue and control surface locally", () => {
     const contract = getWorkerRoleContract("all");
-    expect(contract.workers).toHaveLength(Object.values(TASK_QUEUES).length);
+    expect(contract.workers).toHaveLength(DOMAIN_WORKER_QUEUES.length);
     expect(contract.runsGateway).toBe(true);
     expect(contract.validatesScheduleEnvironmentLocally).toBe(true);
     expect(contract.runsEventBridge).toBe(true);
@@ -88,6 +94,35 @@ describe("Temporal worker role contracts", () => {
     for (const serialRole of serialRoles) {
       expect(concurrency.get(serialRole)).toBe(1);
     }
+    expect(concurrency.get("legacy")).toBe(1);
+  });
+
+  it("dispatches GoLink cluster reads only through infra", () => {
+    const infra = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.role === "infra",
+    );
+    const repo = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.role === "repo",
+    );
+    expect(Object.keys(infra?.activities ?? {})).toContain(
+      "listTailscaleIngresses",
+    );
+    expect(Object.keys(repo?.activities ?? {})).not.toContain(
+      "listTailscaleIngresses",
+    );
+  });
+
+  it("dispatches CI I/O observability only through infra", () => {
+    const infra = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.role === "infra",
+    );
+    const repo = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.role === "repo",
+    );
+    expect(Object.keys(infra?.activities ?? {})).toContain("collectCiIoImpact");
+    expect(Object.keys(repo?.activities ?? {})).not.toContain(
+      "collectCiIoImpact",
+    );
   });
 
   it("keeps report delivery capabilities separate from agent execution", () => {

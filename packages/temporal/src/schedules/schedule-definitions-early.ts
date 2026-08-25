@@ -18,7 +18,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowType: "fetchSkillCappedManifest",
     args: [],
     cronExpression: "0 5 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "5 minutes",
     memo: "Fetch Better Skill Capped manifest from Firestore and upload to S3 (daily at 05:00 PT)",
@@ -28,7 +28,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runFreshRssSyncWorkflow",
     args: [],
     cronExpression: "7 * * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: "5 minutes",
     workflowExecutionTimeout: "6 minutes",
@@ -60,7 +60,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowType: "generateDependencySummary",
     args: [7],
     cronExpression: "0 9 * * 1",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three sequential 10-minute activities can each use three attempts;
     // delivery and checkpoint persistence also retry. Keep enough headroom for
@@ -73,7 +73,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runProtobufWatch",
     args: [],
     cronExpression: "0 9 * * 1",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Worst case: three 1m collection attempts, three 2m primary-delivery
     // attempts, then three 2m failure-delivery attempts, plus retry delays and
@@ -87,7 +87,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runTasknotesCanary",
     args: [],
     cronExpression: "0 9 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "20 minutes",
     memo: "Daily typed TaskNotes engine, pod, skipped-file, and accepted task-count baseline check",
@@ -97,7 +97,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runCiIoImpact",
     args: [],
     cronExpression: "0 9 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "2 hours",
     memo: "Daily deterministic schema-v4 CI I/O impact and observability report",
@@ -107,7 +107,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runDnsAudit",
     args: [],
     cronExpression: "0 6 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "5 minutes",
     memo: "Daily DNS record audit (SPF, DMARC, MX)",
@@ -121,7 +121,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     // Renovate merges land), so only a schedule can see it — no CI gate runs
     // when the cluster changes.
     cronExpression: "30 5 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "45 minutes",
     memo: "Daily cdk8s CRD-import refresh — regenerates generated/imports from the live cluster CRDs and opens a PR on drift",
@@ -135,7 +135,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     // pokeemerald or knowledge source advances (hosted Renovate cannot run
     // the generators inside its own PR).
     cronExpression: "30 4 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
     memo: "Daily pokeemerald data refresh — regenerates committed species/map tables and the pinned knowledge corpus, opens a PR on drift",
@@ -147,7 +147,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     // 06:30 PT — staggered after dns-audit-daily (06:00). Lands in inbox
     // before goodMorningEarly (07:00 weekdays / 08:00 weekends) fires.
     cronExpression: "30 6 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "50 minutes",
     memo: "Deterministic daily homelab health check with evidence-backed report delivery",

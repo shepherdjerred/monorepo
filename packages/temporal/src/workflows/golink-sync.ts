@@ -1,13 +1,24 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { GolinkSyncActivities } from "#activities/golink-sync.ts";
+import type {
+  GolinkClusterActivities,
+  GolinkSyncActivities,
+} from "#activities/golink-sync.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { GolinkEntry } from "#shared/types.ts";
 
-const {
-  listTailscaleIngresses,
-  getExistingGolinks,
-  createOrUpdateGolink,
-  deleteStaleGolink,
-} = proxyActivities<GolinkSyncActivities>({
+const { getExistingGolinks, createOrUpdateGolink, deleteStaleGolink } =
+  proxyActivities<GolinkSyncActivities>({
+    startToCloseTimeout: "1 minute",
+    retry: {
+      maximumAttempts: 5,
+      initialInterval: "1s",
+      backoffCoefficient: 2,
+      maximumInterval: "30s",
+    },
+  });
+
+const { listTailscaleIngresses } = proxyActivities<GolinkClusterActivities>({
+  taskQueue: TASK_QUEUES.INFRA,
   startToCloseTimeout: "1 minute",
   retry: {
     maximumAttempts: 5,

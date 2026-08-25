@@ -9,6 +9,7 @@ import {
   Node,
   NodeLabelQuery,
   PersistentVolumeClaim,
+  Pods,
   Probe,
   Secret,
   Service,
@@ -30,7 +31,10 @@ import {
 
 const NAMESPACE = "buildkite";
 const WORKER_NAME = "temporal-maintenance-worker";
-const WORKER_LABELS = { app: WORKER_NAME };
+const WORKER_LABELS = {
+  app: WORKER_NAME,
+  component: "maintenance-worker",
+};
 const WORKER_IMAGE =
   "ghcr.io/shepherdjerred/temporal-worker:" +
   versions["shepherdjerred/temporal-worker"];
@@ -345,33 +349,38 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
   );
   setRevisionHistoryLimit(deployment, 5);
 
+  const maintenanceSelector = Pods.select(
+    chart,
+    "temporal-maintenance-worker-selector",
+    { labels: { component: "maintenance-worker" } },
+  );
   new Service(chart, "temporal-maintenance-worker-metrics-service", {
     metadata: {
       name: "temporal-maintenance-worker-metrics",
       namespace: NAMESPACE,
-      labels: { app: "temporal-maintenance-worker-metrics" },
+      labels: { component: "maintenance-worker-metrics" },
     },
-    selector: deployment,
+    selector: maintenanceSelector,
     ports: [{ name: "metrics", port: 9464 }],
   });
   createServiceMonitor(chart, {
     name: "temporal-maintenance-worker-metrics",
     namespace: NAMESPACE,
-    matchLabels: { app: "temporal-maintenance-worker-metrics" },
+    matchLabels: { component: "maintenance-worker-metrics" },
   });
   new Service(chart, "temporal-maintenance-worker-app-metrics-service", {
     metadata: {
       name: "temporal-maintenance-worker-app-metrics",
       namespace: NAMESPACE,
-      labels: { app: "temporal-maintenance-worker-app-metrics" },
+      labels: { component: "maintenance-worker-app-metrics" },
     },
-    selector: deployment,
+    selector: maintenanceSelector,
     ports: [{ name: "app-metrics", port: 9465, targetPort: 9465 }],
   });
   createServiceMonitor(chart, {
     name: "temporal-maintenance-worker-app-metrics",
     namespace: NAMESPACE,
     port: "app-metrics",
-    matchLabels: { app: "temporal-maintenance-worker-app-metrics" },
+    matchLabels: { component: "maintenance-worker-app-metrics" },
   });
 }

@@ -60,7 +60,8 @@ const NetworkPolicySchema = z.object({
               z.object({
                 podSelector: z
                   .object({
-                    matchLabels: z.record(z.string(), z.string()),
+                    matchLabels: z.record(z.string(), z.string()).optional(),
+                    matchExpressions: z.array(z.unknown()).optional(),
                   })
                   .optional(),
               }),
@@ -198,15 +199,18 @@ describe("Temporal agent provider network boundary", () => {
       throw new Error("Temporal worker network policies were not synthesized");
     }
 
-    expect(core.spec.podSelector.matchLabels["app"]).toBe("temporal-worker");
-    expect(agent.spec.podSelector.matchLabels["app"]).toBe(
-      "temporal-agent-worker",
+    expect(core.spec.podSelector.matchLabels["component"]).toBe(
+      "legacy-worker",
+    );
+    expect(agent.spec.podSelector.matchLabels["component"]).toBe(
+      "agent-worker",
     );
     expect(
       (server.spec.ingress ?? []).some((entry) =>
         (entry.from ?? []).some(
           (source) =>
-            source.podSelector?.matchLabels["app"] === "temporal-agent-worker",
+            source.podSelector?.matchLabels?.["app"] ===
+            "temporal-agent-worker",
         ),
       ),
     ).toBe(true);

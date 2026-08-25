@@ -38,6 +38,8 @@ export const QUEUE_WORKER_DEFINITIONS: readonly QueueWorkerDefinition[] = [
     role: "legacy",
     taskQueue: TASK_QUEUES.DEFAULT,
     activities,
+    maxConcurrentActivityTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 2,
   },
   {
     role: "home",

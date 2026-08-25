@@ -29,6 +29,11 @@ export type TemporalDomainWorkerProps = {
   memoryLimit?: Size;
   automountServiceAccountToken?: boolean;
   serviceAccount?: ServiceAccount;
+  volumeMounts?: readonly {
+    path: string;
+    volume: Volume;
+    readOnly?: boolean;
+  }[];
 };
 
 export function createTemporalDomainWorker(
@@ -86,6 +91,9 @@ export function createTemporalDomainWorker(
     "/tmp",
     Volume.fromEmptyDir(chart, `${props.name}-tmp`, `${props.component}-tmp`),
   );
+  for (const mount of props.volumeMounts ?? []) {
+    container.mount(mount.path, mount.volume, { readOnly: mount.readOnly });
+  }
 
   const selector = Pods.select(chart, `${props.name}-selector`, {
     labels: { component: props.component },
