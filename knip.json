@@ -32,27 +32,14 @@
       "entry": ["bin/*.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "bin/**/*.ts", "test/**/*.ts"]
     },
-    // The controller has five executable entry points (the fleet CLI plus the
-    // inspect, replay and two watch entries the supervisor spawns by path),
-    // and `architecture-fixtures/` is deliberately unimported.
+    // The architecture fixtures are deliberately unimported production-invalid
+    // modules, so Knip needs them as explicit entries.
     "packages/pr-fleet-controller": {
-      "entry": [
-        "src/controller/fleet-controller.ts",
-        "src/cli/main.ts",
-        "src/cli/inspect.ts",
-        "src/cli/replay.ts",
-        "src/cli/watch.ts",
-        "src/cli/live-watch.ts",
-        "src/**/*.test.ts",
-        "test/**/*.ts",
-        "architecture-fixtures/**/*.ts",
-        "architecture.config.ts"
-      ],
+      "entry": ["architecture-fixtures/**/*.ts"],
       "project": [
         "src/**/*.ts",
         "test/**/*.ts",
-        "architecture-fixtures/**/*.ts",
-        "architecture.config.ts"
+        "architecture-fixtures/**/*.ts"
       ]
     },
     "packages/discord-plays-core": {
