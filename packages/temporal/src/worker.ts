@@ -1,9 +1,7 @@
 import { Client, Connection } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
 import { NativeConnection, Runtime, Worker } from "@temporalio/worker";
-import { TASK_QUEUES } from "./shared/task-queues.ts";
 import { registerSchedules } from "./schedules/register-schedules.ts";
-import { activities } from "./activities/index.ts";
 import {
   startEventBridge,
   startHttpServers,
@@ -21,15 +19,8 @@ import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus
 import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
 import { retryUntilReady, sleepUnlessClosed } from "./shared/startup-retry.ts";
-import {
-  parseWorkerRole,
-  workerRoleRunsAgent,
-  workerRoleRunsCore,
-  workerRoleRunsGlitter,
-  workerRoleRunsMaintenance,
-  type WorkerRole,
-} from "./shared/worker-role.ts";
-import { maintenanceActivities } from "./activities/maintenance.ts";
+import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
+import { getWorkerRoleContract } from "./worker-config.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -232,6 +223,7 @@ function startEventBridgeSupervisor(client: Client): EventBridgeHandle {
 
 async function main(): Promise<void> {
   const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
+  const roleContract = getWorkerRoleContract(role);
   installRuntime(role);
   initSentry();
   initializeTracing();
@@ -246,7 +238,6 @@ async function main(): Promise<void> {
     connection,
     namespace: "default",
     workflowsPath,
-    activities,
     workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
   };
 
@@ -254,97 +245,49 @@ async function main(): Promise<void> {
   let httpServers: EventBridgeHandle | undefined;
   let eventBridge: EventBridgeHandle | undefined;
 
-  if (workerRoleRunsCore(role)) {
+  for (const definition of roleContract.workers) {
     const worker = await Worker.create({
       ...commonWorkerOptions,
-      taskQueue: TASK_QUEUES.DEFAULT,
+      activities: definition.activities,
+      taskQueue: definition.taskQueue,
+      ...(definition.maxConcurrentActivityTaskExecutions === undefined
+        ? {}
+        : {
+            maxConcurrentActivityTaskExecutions:
+              definition.maxConcurrentActivityTaskExecutions,
+          }),
+      ...(definition.maxConcurrentWorkflowTaskExecutions === undefined
+        ? {}
+        : {
+            maxConcurrentWorkflowTaskExecutions:
+              definition.maxConcurrentWorkflowTaskExecutions,
+          }),
     });
     workers.push(worker);
-    jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
+    jsonLog("info", "Worker created", {
+      queueRole: definition.role,
+      taskQueue: definition.taskQueue,
+      maxConcurrentActivityTaskExecutions:
+        definition.maxConcurrentActivityTaskExecutions,
+      maxConcurrentWorkflowTaskExecutions:
+        definition.maxConcurrentWorkflowTaskExecutions,
+    });
+  }
 
+  if (roleContract.runsGateway || roleContract.runsEventBridge) {
     const clientConnection = await Connection.connect({ address });
     const client = new Client({ connection: clientConnection });
-    await registerSchedules(client);
-    jsonLog("info", "Schedules registered");
 
-    httpServers = startHttpServers(client);
-    eventBridge = startEventBridgeSupervisor(client);
-  }
+    if (roleContract.runsGateway) {
+      await registerSchedules(client);
+      jsonLog("info", "Schedules registered");
 
-  if (workerRoleRunsAgent(role)) {
-    // Report-only Claude/Codex tasks run in their own deployment and service
-    // account. Queue isolation therefore covers both head-of-line blocking and
-    // Kubernetes authorization; the agent pod has read-only audit RBAC and no
-    // namespace-scoped exec roles.
-    //
-    // Activity concurrency stays 1: each agent activity spawns a Claude/Codex
-    // provider subprocess, so overlapping independently scheduled tasks would
-    // multiply the pod's peak RSS. Serializing makes the observed single-run
-    // working set an actual bound for the deployment's memory limit (see
-    // packages/homelab/src/cdk8s/src/resources/temporal/agent-worker.ts).
-    // Agent activities set no scheduleToStartTimeout, so a queued task waits
-    // for the slot instead of failing. Workflow-task concurrency must be ≥2
-    // when sticky cache is on — Core rejects max_cached_workflows>0 with a
-    // single workflow-task poller/slot.
-    const agentTaskWorker = await Worker.create({
-      ...commonWorkerOptions,
-      taskQueue: TASK_QUEUES.AGENT_TASK,
-      maxConcurrentActivityTaskExecutions: 1,
-      maxConcurrentWorkflowTaskExecutions: 2,
-    });
-    workers.push(agentTaskWorker);
-    jsonLog("info", "Worker created", {
-      taskQueue: TASK_QUEUES.AGENT_TASK,
-      maxConcurrentActivityTaskExecutions: 1,
-      maxConcurrentWorkflowTaskExecutions: 2,
-    });
-  }
+      httpServers = startHttpServers(client);
+    }
 
-  if (workerRoleRunsGlitter(role)) {
-    // Activity concurrency stays 1 (serial long work). Workflow-task
-    // concurrency must be ≥2 when sticky cache is on — Core rejects
-    // max_cached_workflows>0 with a single workflow-task poller/slot.
-    const glitterCorpusWorker = await Worker.create({
-      ...commonWorkerOptions,
-      taskQueue: TASK_QUEUES.GLITTER_CORPUS,
-      maxConcurrentActivityTaskExecutions: 1,
-      maxConcurrentWorkflowTaskExecutions: 2,
-    });
-    workers.push(glitterCorpusWorker);
-    jsonLog("info", "Worker created", {
-      taskQueue: TASK_QUEUES.GLITTER_CORPUS,
-      maxConcurrentActivityTaskExecutions: 1,
-      maxConcurrentWorkflowTaskExecutions: 2,
-    });
-
-    const glitterContextWorker = await Worker.create({
-      ...commonWorkerOptions,
-      taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
-      maxConcurrentActivityTaskExecutions: 1,
-      maxConcurrentWorkflowTaskExecutions: 2,
-    });
-    workers.push(glitterContextWorker);
-    jsonLog("info", "Worker created", {
-      taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
-      maxConcurrentActivityTaskExecutions: 1,
-      maxConcurrentWorkflowTaskExecutions: 2,
-    });
-  }
-
-  if (workerRoleRunsMaintenance(role)) {
-    const maintenanceWorker = await Worker.create({
-      ...commonWorkerOptions,
-      activities: maintenanceActivities,
-      taskQueue: TASK_QUEUES.MAINTENANCE,
-      maxConcurrentActivityTaskExecutions: 1,
-      maxConcurrentWorkflowTaskExecutions: 2,
-    });
-    workers.push(maintenanceWorker);
-    jsonLog("info", "Worker created", {
-      taskQueue: TASK_QUEUES.MAINTENANCE,
-      maxConcurrentActivityTaskExecutions: 1,
-      maxConcurrentWorkflowTaskExecutions: 2,
-    });
+    if (roleContract.runsEventBridge) {
+      eventBridge = startEventBridgeSupervisor(client);
+    }
   }
 
   // The event-loop-backed health endpoint starts only after every worker in
@@ -359,6 +302,10 @@ async function main(): Promise<void> {
   // on `worker` covers the case where the worker drained for a non-signal
   // reason (e.g., lost server connection) before SIGTERM arrived.
   let shutdownStarted = false;
+  let finishControlLifecycle: (() => void) | undefined;
+  const controlLifecycle = new Promise<void>((resolve) => {
+    finishControlLifecycle = resolve;
+  });
   const shutdown = async (signal: string): Promise<void> => {
     if (shutdownStarted) {
       jsonLog("info", "Shutdown already in progress, ignoring signal", {
@@ -386,6 +333,7 @@ async function main(): Promise<void> {
     }
     await stopMetricsServer();
     await shutdownTracing();
+    finishControlLifecycle?.();
   };
 
   process.on("SIGTERM", () => {
@@ -396,10 +344,14 @@ async function main(): Promise<void> {
   });
 
   const workerRuns = workers.map((roleWorker) => roleWorker.run());
-  if (workerRoleRunsGlitter(role)) {
+  if (roleContract.restoresGlitterCorpusMetrics) {
     void restoreGlitterCorpusMetricsAfterWorkerStart(() => shutdownStarted);
   }
-  await Promise.all(workerRuns);
+  if (workerRuns.length === 0) {
+    await controlLifecycle;
+  } else {
+    await Promise.all(workerRuns);
+  }
 }
 
 void (async () => {

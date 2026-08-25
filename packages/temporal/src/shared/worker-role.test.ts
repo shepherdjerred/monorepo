@@ -12,12 +12,24 @@ describe("Temporal worker role", () => {
     expect(parseWorkerRole(undefined)).toBe("all");
   });
 
-  it.each(["all", "agent", "core", "glitter", "maintenance"])(
-    "accepts the %s role",
-    (role) => {
-      expect(parseWorkerRole(role)).toBe(role);
-    },
-  );
+  it.each([
+    "all",
+    "agent",
+    "control",
+    "core",
+    "glitter",
+    "glitter-context",
+    "glitter-corpus",
+    "home",
+    "infra",
+    "legacy",
+    "maintenance",
+    "repo",
+    "reports",
+    "scout",
+  ])("accepts the %s role", (role) => {
+    expect(parseWorkerRole(role)).toBe(role);
+  });
 
   it("fails fast for an unknown role", () => {
     expect(() => parseWorkerRole("unknown")).toThrow();
