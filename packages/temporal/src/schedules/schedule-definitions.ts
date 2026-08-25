@@ -259,10 +259,10 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // (05:00 +2h → 07:00), and the 06:30 trivy-db-refresh (+2h → 08:30). The
     // every-5-minute bun-cache-gc is short and skips while the slot is busy.
     cronExpression: "0 9 * * 0",
-    // The workflow orchestrates from the core queue, but its heavy git/lychee
-    // scan activity is proxied to the serial MAINTENANCE queue and delivery /
-    // Alertmanager publication back to DEFAULT — see workflows/link-rot-scan.ts.
-    taskQueue: TASK_QUEUES.DEFAULT,
+    // Start on the maintenance queue so no active schedule targets the
+    // migration-only default queue. The workflow's report and Alertmanager
+    // activities remain explicitly proxied to DEFAULT.
+    taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Must cover this workflow's own budget PLUS worst-case time queued behind
     // another maintenance activity, because the deadline runs while the scan
