@@ -1,54 +1,68 @@
-import { REPORT_METRICS } from "@scout-for-lol/data";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
+import { columnLabel, planDisplayKind } from "#src/reports/plan-columns.ts";
 import type { ReportResultRow } from "#src/reports/query-types.ts";
+
+/**
+ * Chart-side reading of result values. How a column reads is the plan's
+ * business — `plan.outputs[i].displayKind` — so a percentage is scaled to
+ * 0-100 for the axis and suffixed, and everything else is left alone.
+ */
 
 export type MetricDisplay = { label: string; percent: boolean };
 
-export function columnDisplay(column: string): MetricDisplay {
-  const metric = REPORT_METRICS.find((entry) => entry.id === column);
-  if (metric !== undefined) {
-    return { label: metric.label, percent: metric.kind === "rate" };
-  }
+export function columnDisplay(
+  plan: ScoutQlPlan,
+  column: string,
+): MetricDisplay {
   return {
-    label: column
-      .split("_")
-      .map((word) => `${word.slice(0, 1).toUpperCase()}${word.slice(1)}`)
-      .join(" "),
-    percent: column.endsWith("_rate") || column.endsWith("_percent"),
+    label: columnLabel(column),
+    percent: planDisplayKind(plan, column) === "percent",
   };
 }
 
-export function chartSeries(rows: ReportResultRow[], columns: string[]) {
+export function chartSeries(
+  plan: ScoutQlPlan,
+  rows: ReportResultRow[],
+  columns: string[],
+) {
   return columns.map((column) => ({
-    name: columnDisplay(column).label,
-    values: rows.map((row) => nullableChartNumber(row, column)),
+    name: columnDisplay(plan, column).label,
+    values: rows.map((row) => nullableChartNumber(plan, row, column)),
   }));
 }
 
 export function nullableChartNumber(
+  plan: ScoutQlPlan,
   row: ReportResultRow,
   column: string,
 ): number | null {
   const value = row.values.find((entry) => entry.column === column)?.value;
   if (value === null || value === undefined) return null;
-  if (typeof value !== "number")
-    throw new Error(`Chart column ${column} is not numeric.`);
-  return columnDisplay(column).percent ? value * 100 : value;
+  if (typeof value !== "number") {
+    throw new TypeError(`Chart column ${column} is not numeric.`);
+  }
+  return columnDisplay(plan, column).percent ? value * 100 : value;
 }
 
-export function chartNumber(row: ReportResultRow, column: string): number {
-  return nullableChartNumber(row, column) ?? 0;
+export function chartNumber(
+  plan: ScoutQlPlan,
+  row: ReportResultRow,
+  column: string,
+): number {
+  return nullableChartNumber(plan, row, column) ?? 0;
 }
 
 export function formattedChartValue(
+  plan: ScoutQlPlan,
   row: ReportResultRow,
   column: string,
 ): string {
-  const value = nullableChartNumber(row, column);
+  const value = nullableChartNumber(plan, row, column);
   if (value === null) return "—";
   const formatted = Number.isInteger(value)
     ? value.toLocaleString("en-US")
     : value.toFixed(2);
-  return `${formatted}${columnDisplay(column).percent ? "%" : ""}`;
+  return `${formatted}${columnDisplay(plan, column).percent ? "%" : ""}`;
 }
 
 export function uniqueDimensions(

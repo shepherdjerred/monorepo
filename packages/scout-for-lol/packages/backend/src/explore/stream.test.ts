@@ -277,7 +277,15 @@ describe("explore raw tool payload inspection", () => {
         output: {
           ok: false,
           message: "Invalid query.",
-          diagnostics: ["x".repeat(70_000)],
+          diagnostics: [
+            {
+              code: "parse-error",
+              severity: "error",
+              message: "x".repeat(70_000),
+              span: { start: 0, end: 1 },
+              fixes: [],
+            },
+          ],
           formattedQueryText: null,
         },
       },
@@ -313,7 +321,15 @@ describe("explore raw tool payload inspection", () => {
           output: {
             ok: false,
             message: "Invalid query.",
-            diagnostics: ["x".repeat(60_000)],
+            diagnostics: [
+              {
+                code: "parse-error",
+                severity: "error",
+                message: "x".repeat(60_000),
+                span: { start: 0, end: 1 },
+                fixes: [],
+              },
+            ],
             formattedQueryText: null,
           },
         },

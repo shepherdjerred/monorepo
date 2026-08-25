@@ -1,10 +1,10 @@
 import {
   isLowSampleGameCount,
   formatReportDisplayValue,
-  reportResultColumns,
   type ReportRenderSpec,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import { planResultColumns } from "#src/reports/plan-columns.ts";
 import {
   analyticsChartToImage,
   visualizationSnapshotToImage,
@@ -13,6 +13,7 @@ import type {
   ReportQueryResult,
   ReportResultRow,
 } from "#src/reports/query-types.ts";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 import {
   formatRankedLabel,
   resolveMentionCount,
@@ -55,7 +56,9 @@ type ChartRender = Extract<
       | "RADAR_CHART"
       | "KPI_CARD"
       | "BUMP_CHART"
-      | "CALENDAR_HEATMAP";
+      | "CALENDAR_HEATMAP"
+      | "HISTOGRAM"
+      | "BOX_PLOT";
   }
 >;
 
@@ -201,7 +204,7 @@ function formatTextReport(
 }
 
 function formatTable(result: ReportQueryResult): string {
-  const columns = reportResultColumns(result.plan, result.columns);
+  const columns = planResultColumns(result.plan, result.columns);
   const header = columns.map((column) => column.label).join(" | ");
   const separator = columns.map(() => "---").join(" | ");
   const body = result.rows
@@ -231,7 +234,7 @@ function formatValues(
   row: ReportResultRow,
   rowIndex: number,
 ): string {
-  const columns = reportResultColumns(result.plan, result.columns);
+  const columns = planResultColumns(result.plan, result.columns);
   const games = result.evidence?.[rowIndex]?.games;
   return row.values
     .map((value) => {
@@ -245,7 +248,7 @@ function formatValues(
 }
 
 function formatReportValue(
-  column: ReturnType<typeof reportResultColumns>[number],
+  column: ReturnType<typeof planResultColumns>[number],
   value: string | number | null | undefined,
   games: number | undefined,
 ): string {
@@ -266,7 +269,7 @@ function appendThinDataNote(
 }
 
 function hasThinRateRows(result: ReportQueryResult): boolean {
-  const columns = reportResultColumns(result.plan, result.columns);
+  const columns = planResultColumns(result.plan, result.columns);
   return result.rows.some((row, rowIndex) => {
     const games = result.evidence?.[rowIndex]?.games;
     return (
@@ -286,16 +289,17 @@ function renderBarChart(
   params: RenderReportOutputParams,
   render: Extract<ReportRenderSpec, { kind: "BAR_CHART" }>,
 ): RenderedReportOutput {
+  const plan = params.result.plan;
   const columns = yColumns(params, render);
   const firstColumn = requireFirst(columns);
-  const display = columnDisplay(firstColumn);
-  const rows = chartRows(params.result.rows, render, firstColumn);
+  const display = columnDisplay(plan, firstColumn);
+  const rows = chartRows(plan, params.result.rows, render, firstColumn);
   const title = render.options.title ?? params.title;
   const data = analyticsChartToImage({
     ...chartBase(render, title),
     chartType: "bar",
     categories: rows.map((row) => row.label),
-    series: chartSeries(rows, columns),
+    series: chartSeries(plan, rows, columns),
     yAxisLabel: render.options.yAxisLabel ?? display.label,
     valueSuffix: display.percent ? "%" : "",
     ...(render.options.xAxisLabel === undefined
@@ -315,16 +319,17 @@ function renderLineChart(
   params: RenderReportOutputParams,
   render: Extract<ReportRenderSpec, { kind: "LINE_CHART" }>,
 ): RenderedReportOutput {
+  const plan = params.result.plan;
   const columns = yColumns(params, render);
   const firstColumn = requireFirst(columns);
-  const display = columnDisplay(firstColumn);
-  const rows = chartRows(params.result.rows, render, firstColumn);
+  const display = columnDisplay(plan, firstColumn);
+  const rows = chartRows(plan, params.result.rows, render, firstColumn);
   const title = render.options.title ?? params.title;
   const data = analyticsChartToImage({
     ...chartBase(render, title),
     chartType: "line",
     categories: rows.map((row) => row.label),
-    series: chartSeries(rows, columns),
+    series: chartSeries(plan, rows, columns),
     yAxisLabel: render.options.yAxisLabel ?? display.label,
     valueSuffix: display.percent ? "%" : "",
     ...(render.options.xAxisLabel === undefined
@@ -390,7 +395,7 @@ function yColumns(
   const configured = render.encoding.y;
   if (Array.isArray(configured)) return configured;
   if (configured !== undefined) return [configured];
-  const first = params.result.plan.selectItems[0]?.key;
+  const first = params.result.plan.outputs[0]?.name;
   if (first === undefined)
     throw new Error("Cannot render a chart without an output column.");
   return [first];
@@ -404,6 +409,7 @@ function requireFirst(columns: string[]): string {
 }
 
 function chartRows(
+  plan: ScoutQlPlan,
   rows: ReportResultRow[],
   render: ChartRender,
   column: string,
@@ -414,6 +420,7 @@ function chartRows(
   const direction = render.options.sort === "asc" ? 1 : -1;
   return rows.toSorted(
     (left, right) =>
-      direction * (chartNumber(left, column) - chartNumber(right, column)),
+      direction *
+      (chartNumber(plan, left, column) - chartNumber(plan, right, column)),
   );
 }

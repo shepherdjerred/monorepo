@@ -1,7 +1,5 @@
-import {
-  parseAndCompile,
-  ReportAiFinalDraftWireSchema,
-} from "@scout-for-lol/data";
+import { ReportAiFinalDraftWireSchema } from "@scout-for-lol/data";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -15,7 +13,7 @@ function errorMessage(error: unknown): string {
 export const ValidatedReportAiFinalDraftSchema =
   ReportAiFinalDraftWireSchema.superRefine((draft, context) => {
     try {
-      parseAndCompile(draft.queryText);
+      compileScoutQl(draft.queryText);
     } catch (error: unknown) {
       context.addIssue({
         code: "custom",

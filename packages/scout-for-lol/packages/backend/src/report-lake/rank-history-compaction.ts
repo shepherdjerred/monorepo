@@ -3,8 +3,8 @@ import path from "node:path";
 import configuration from "#src/configuration.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import { populateCompetitionRankHistoryFromS3 } from "#src/report-lake/rebuild-sources.ts";
+import { COMPETITION_RANK_HISTORY_LAKE_COLUMNS } from "@scout-for-lol/data";
 import {
-  COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   duckDbColumnsSpec,
   duckDbEmptySelect,
 } from "#src/report-lake/schema.ts";

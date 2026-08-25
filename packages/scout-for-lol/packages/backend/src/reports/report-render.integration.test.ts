@@ -89,7 +89,9 @@ async function seedFacts(): Promise<void> {
 }
 
 const BASE_QUERY =
-  "SELECT player, games, wins, win_rate FROM match_participants WHERE queue IN ('solo') GROUP BY player DURING LAST 30 DAYS ORDER BY games DESC";
+  `SELECT COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins, AVG(win::INT) AS win_rate ` +
+  `FROM match_participants WHERE queue IN ('solo') AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY ` +
+  "GROUP BY player ORDER BY games DESC";
 
 async function render(queryText: string): Promise<RenderedReportOutput> {
   const result = await executeReportQuery({
@@ -116,7 +118,7 @@ describe("RENDER clause — text kinds", () => {
     const output = await render(`${BASE_QUERY} RENDER table`);
     expect(output.image).toBeNull();
     expect(output.content).toContain(`**${TITLE}**`);
-    expect(output.content).toContain("Player | Games | Wins | Win rate");
+    expect(output.content).toContain("Player | Games | Wins | Win Rate");
     expect(output.content).toContain(
       "Alpha | 3 | 2 (Based on 3 games) | 66.7% (Based on 3 games)",
     );
@@ -142,7 +144,7 @@ describe("RENDER clause — text kinds", () => {
     await seedFacts();
     const output = await render(BASE_QUERY);
     expect(output.image).toBeNull();
-    expect(output.content).toContain("Player | Games | Wins | Win rate");
+    expect(output.content).toContain("Player | Games | Wins | Win Rate");
   });
 });
 
@@ -394,7 +396,7 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
       ],
     });
     const output = await render(
-      "SELECT champion, games FROM match_participants GROUP BY champion DURING LAST 30 DAYS RENDER leaderboard",
+      "SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY champion RENDER leaderboard",
     );
     expect(output.content).toContain("1. Lux");
     expect(output.content).not.toContain(`<@${testAccountId("1999")}>`);
@@ -446,7 +448,8 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT group, games, wins FROM player_groups WHERE queue IN ('solo') GROUP BY group(all) DURING LAST 30 DAYS ORDER BY label ASC RENDER leaderboard",
+        `SELECT COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins FROM player_groups ` +
+        `WHERE queue IN ('solo') AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY group(all) RENDER leaderboard`,
       now,
     });
     const output = await renderReportOutput({
@@ -559,7 +562,7 @@ describe("RENDER clause — charts", () => {
   test("title option overrides the report title in the chart content", async () => {
     await seedFacts();
     const output = await render(
-      `${BASE_QUERY} RENDER bar_chart WITH (y = win_rate, title = "Win Rate Leaders")`,
+      `${BASE_QUERY} RENDER bar_chart WITH (y = win_rate, title = 'Win Rate Leaders')`,
     );
     expect(output.content).toBe("**Win Rate Leaders**");
     expect(output.image).not.toBeNull();
@@ -596,38 +599,31 @@ describe("RENDER clause — charts", () => {
   const analyticsCases = [
     {
       kind: "stacked-bar",
-      query:
-        "SELECT games, wins, losses FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER stacked_bar WITH (y = (wins, losses), palette = team, labels = value)",
+      query: `SELECT COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins, COUNT(*) FILTER (WHERE NOT win) AS losses FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player RENDER stacked_bar WITH (y = (wins, losses), palette = team, labels = value)`,
     },
     {
       kind: "area",
-      query:
-        "SELECT games, wins FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER area_chart WITH (y = (games, wins), smooth = true, theme = minimal_dark)",
+      query: `SELECT COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player RENDER area_chart WITH (y = (games, wins), smooth = true, theme = minimal_dark)`,
     },
     {
       kind: "donut",
-      query:
-        "SELECT games FROM match_participants GROUP BY outcome DURING LAST 30 DAYS RENDER donut_chart WITH (y = games, labels = percent)",
+      query: `SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY outcome RENDER donut_chart WITH (y = games, labels = percent)`,
     },
     {
       kind: "scatter",
-      query:
-        "SELECT games, wins, losses FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER scatter_chart WITH (x = games, y = wins, size = losses, palette = colorblind)",
+      query: `SELECT COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins, COUNT(*) FILTER (WHERE NOT win) AS losses FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player RENDER scatter_chart WITH (x = games, y = wins, size = losses, palette = colorblind)`,
     },
     {
       kind: "heatmap",
-      query:
-        "SELECT games FROM match_participants GROUP BY player, outcome DURING LAST 30 DAYS RENDER heatmap WITH (value = games, palette = gold, labels = value)",
+      query: `SELECT COUNT(*) AS games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player, outcome RENDER heatmap WITH (value = games, palette = gold, labels = value)`,
     },
     {
       kind: "radar",
-      query:
-        "SELECT games, wins, losses FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER radar_chart WITH (y = (games, wins, losses), legend = right)",
+      query: `SELECT COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins, COUNT(*) FILTER (WHERE NOT win) AS losses FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player RENDER radar_chart WITH (y = (games, wins, losses), legend = right)`,
     },
     {
       kind: "kpi",
-      query:
-        "SELECT games, wins, losses FROM match_participants GROUP BY all DURING LAST 30 DAYS RENDER kpi_card WITH (y = (games, wins, losses), theme = minimal_light)",
+      query: `SELECT COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins, COUNT(*) FILTER (WHERE NOT win) AS losses FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY RENDER kpi_card WITH (y = (games, wins, losses), theme = minimal_light)`,
     },
   ];
 

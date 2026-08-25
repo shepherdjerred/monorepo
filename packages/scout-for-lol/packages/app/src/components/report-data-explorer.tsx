@@ -1,11 +1,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Copy, CornerDownLeft, Plus, Trash2 } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import {
-  REPORT_FILTERS,
-  REPORT_GROUP_BYS,
-  REPORT_METRICS,
-} from "@scout-for-lol/data";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ClipboardError } from "#src/components/clipboard-error.tsx";
 import { Input } from "@scout-for-lol/design-system/components/input";
@@ -28,17 +24,6 @@ import { useTRPC } from "#src/lib/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
 import { copyToClipboard } from "#src/lib/clipboard.ts";
 
-// Explorer columns are raw lake column names; only some coincide with valid
-// ScoutQL identifiers (metrics / group-by dimensions / filter fields). Inserting
-// a non-identifier column (e.g. `match_id`) into the query produces an
-// unknown-identifier error, so the "Insert into query" action is only offered
-// for columns that are actually part of the ScoutQL vocabulary.
-const SCOUTQL_INSERTABLE_IDS: ReadonlySet<string> = new Set<string>([
-  ...REPORT_METRICS.map((metric) => metric.id),
-  ...REPORT_GROUP_BYS.map((groupBy) => groupBy.id),
-  ...REPORT_FILTERS.map((filter) => filter.id),
-]);
-
 async function copyColumnId(
   value: string,
   setCopyError: (value: boolean) => void,
@@ -49,6 +34,22 @@ async function copyColumnId(
 }
 
 type ExplorerTableId = "match_participants" | "prematch_participants";
+
+/**
+ * Which of the explorer's raw lake columns ScoutQL will actually resolve on
+ * the selected source. Inserting a column the language has no name for
+ * produces an unknown-identifier error, so the answer comes from the source
+ * catalog rather than a list kept here: a column the lake gains is offered the
+ * day the catalog has it, and internal partitioning columns never are.
+ */
+function insertableColumnIds(tableId: ExplorerTableId): ReadonlySet<string> {
+  const catalog = scoutQlSourceCatalog(tableId);
+  if (catalog === undefined) {
+    throw new Error(`No ScoutQL source catalog for "${tableId}".`);
+  }
+  return new Set(catalog.columns.keys());
+}
+
 type ExplorerOperator = "eq" | "contains" | "gte" | "lte";
 type ExplorerFilter = {
   id: string;
@@ -70,6 +71,7 @@ export function ReportDataExplorer(props: {
   const [cursor, setCursor] = useState(0);
   const [copyError, setCopyError] = useState(false);
   const pageSize = 25;
+  const insertable = insertableColumnIds(tableId);
 
   const schemaQuery = useQuery(
     trpc.report.dataExplorerSchema.queryOptions({ guildId: props.guildId }),
@@ -193,7 +195,7 @@ export function ReportDataExplorer(props: {
                     >
                       <Copy className="size-3" />
                     </button>
-                    {SCOUTQL_INSERTABLE_IDS.has(column.id) && (
+                    {insertable.has(column.id) && (
                       <button
                         type="button"
                         className="size-6 shrink-0"

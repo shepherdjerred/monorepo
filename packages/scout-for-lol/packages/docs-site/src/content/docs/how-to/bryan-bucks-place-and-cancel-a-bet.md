@@ -2,7 +2,7 @@
 title: Place, top up, and cancel a Bryan Bucks bet
 description: Use the buttons or /bb bet, add to a position while the market is open, and back out before it closes.
 sidebar:
-  order: 10
+  order: 11
 ---
 
 ## Place a bet from the pre-match message

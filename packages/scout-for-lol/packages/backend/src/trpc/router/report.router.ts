@@ -15,8 +15,6 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  parseAndCompile,
-  reportResultColumns,
   ReportCreateInputSchema,
   ReportIdSchema,
   ReportAiEditStatusSchema,
@@ -40,6 +38,8 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { canCreateAnotherUserReport } from "#src/lib/reports/authorization.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+import { planResultColumns } from "#src/reports/plan-columns.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { renderReportOutput } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
@@ -208,7 +208,7 @@ export const reportRouter = router({
         });
       }
       try {
-        parseAndCompile(input.queryText);
+        compileScoutQl(input.queryText);
       } catch (error) {
         asBadRequest(error);
       }
@@ -260,7 +260,7 @@ export const reportRouter = router({
       }
       if (input.queryText !== undefined) {
         try {
-          parseAndCompile(input.queryText);
+          compileScoutQl(input.queryText);
         } catch (error) {
           asBadRequest(error);
         }
@@ -404,7 +404,7 @@ export const reportRouter = router({
             : null;
         const image = output === null ? null : output.image;
         return {
-          columns: reportResultColumns(result.plan, result.columns),
+          columns: planResultColumns(result.plan, result.columns),
           rows: result.rows,
           rowsScanned: result.rowsScanned,
           renderKind: render.kind,

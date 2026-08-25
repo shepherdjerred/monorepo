@@ -6,19 +6,26 @@ sidebar:
 ---
 
 import DataTable from "../../../components/DataTable.astro";
-import { reportQueueValues } from "@scout-for-lol/data/model/report-query-registry.ts";
+import {
+  QueueTypeSchema,
+  queueTypeToDisplayString,
+} from "@scout-for-lol/data/model/state.ts";
 import {
   RegionSchema,
   toReadableRegion,
 } from "@scout-for-lol/data/model/league-account.ts";
 
-export const queues = reportQueueValues();
+export const queues = QueueTypeSchema.options.map((id) => ({
+  id,
+  label: queueTypeToDisplayString(id),
+}));
 export const regions = RegionSchema.options;
 
 ## Queues
 
 These values are what subscription filters allow, what `WHERE queue IN (…)`
-accepts in a report, and what `GROUP BY queue` produces.
+accepts in a report, and what `GROUP BY queue` produces. They are compared
+exactly, so write them in lower case as they appear here.
 
 <DataTable
   columns={[

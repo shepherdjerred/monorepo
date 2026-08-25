@@ -7,7 +7,7 @@ import {
   scheduledReportsActive,
   scheduledReportsDueTotal,
 } from "#src/metrics/report-runs.ts";
-import { parseAndCompile } from "@scout-for-lol/data";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { runReport, type ReportRunResult } from "#src/reports/runner.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -16,14 +16,14 @@ import { createLogger } from "#src/logger.ts";
  * opposed to a lake, Discord, or database fault.
  *
  * Decided by re-compiling the stored text rather than by matching message
- * prefixes. `parseAndCompile` throws plain Errors from a dozen validation
+ * prefixes. `compileScoutQl` throws from a dozen validation
  * sites, so any prefix list silently undercounts the moment a new one is
  * added — and undercounting is the whole failure mode this metric exists to
  * make visible.
  */
 function isReportCompileFailure(queryText: string): boolean {
   try {
-    parseAndCompile(queryText);
+    compileScoutQl(queryText);
     return false;
   } catch {
     return true;

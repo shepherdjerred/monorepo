@@ -5,19 +5,21 @@ import {
   escapeMarkdown as escapeDiscordMarkdown,
 } from "discord.js";
 import {
-  REPORT_METRICS,
   evidenceGames,
   isLowSampleGameCount,
   type ExploreMessage,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { visualizationSnapshotToImage } from "@scout-for-lol/report";
 import {
-  formatAbsoluteDelta,
+  formatSeriesAbsoluteDelta,
+  formatSeriesValue,
+  isPercentageSeries,
+  visualizationSnapshotToImage,
+} from "@scout-for-lol/report";
+import {
   formatNativeSeriesValue,
   formatPreviewValueWithEvidence,
-  formatSeriesValue,
   displayWidth,
   padDisplayWidth,
   truncateNativeCell,
@@ -198,8 +200,7 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
         (point.comparisonEvidence !== undefined &&
           point.comparisonEvidence !== null);
       const caveat =
-        REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
-          "rate" &&
+        isPercentageSeries(snapshot, series) &&
         (isLowSampleGameCount(games) ||
           (comparisonGames !== undefined &&
             isLowSampleGameCount(comparisonGames)))
@@ -219,7 +220,7 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
                 snapshot,
                 series,
                 point.comparisonValue ?? null,
-              )}${baselineBasis} · Δ ${formatAbsoluteDelta(
+              )}${baselineBasis} · Δ ${formatSeriesAbsoluteDelta(
                 snapshot,
                 series,
                 point.absoluteDelta ?? null,

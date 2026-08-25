@@ -1,7 +1,8 @@
-import type {
-  ReportQueryPlan,
-  VisualizationSnapshot,
-} from "@scout-for-lol/data";
+import type { VisualizationSnapshot } from "@scout-for-lol/data";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
+import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
+import type { TemporalContext } from "#src/reports/temporal-plan.ts";
+import type { TemporalRange } from "#src/reports/temporal-range.ts";
 
 /**
  * The report query layer's result contract.
@@ -45,16 +46,26 @@ export type ReportMentionIdentity =
 export type ReportResultRow = {
   label: string;
   dimensions: string[];
+  /**
+   * The typed grouping keys behind the label, aligned with `plan.groupings`.
+   * Charts read these rather than re-parsing the label: a numeric histogram
+   * bucket has to sort as a number, and a week bucket has to compare as a
+   * date, neither of which a display string can be trusted for.
+   */
+  keys: LakeScalar[];
   mentionIdentity: ReportMentionIdentity | null;
   values: ReportResultValue[];
 };
 
 export type ReportQueryResult = {
-  plan: ReportQueryPlan;
+  plan: ScoutQlPlan;
   columns: string[];
   rows: ReportResultRow[];
   rowsScanned: number;
-  comparisonRows?: ReportResultRow[];
+  /** The range actually executed, after competition clamping or an override. */
+  range: TemporalRange;
+  /** Set when `compare = previous_period` ran a second aggregation. */
+  temporal?: TemporalContext | undefined;
   visualization?: VisualizationSnapshot;
   evidence?: {
     label: string;
@@ -67,62 +78,4 @@ export type ReportQueryResult = {
       denominator?: number;
     }[];
   }[];
-};
-
-export type AggregateRow = {
-  label: string;
-  playerId: number | null;
-  discordId: string | null;
-  groupMembers: { playerId: number; alias: string }[] | null;
-  games: number;
-  wins: number;
-  surrenders: number;
-  kills: number;
-  deaths: number;
-  assists: number;
-  creepScore: number;
-  damageToChampions: number;
-  goldEarned: number;
-  visionScore: number;
-  damageTaken: number;
-  totalDamageDealt: number;
-  wardsPlaced: number;
-  multikills: number;
-  /** Sum of game durations (seconds), counted once per group row per game. */
-  durationSeconds: number;
-  /** Sum of time played (seconds) across group members. */
-  timePlayedSeconds: number;
-  participantRows: number;
-  earlySurrenders: number;
-  laneMinions: number;
-  neutralMinions: number;
-  goldSpent: number;
-  damageMitigated: number;
-  damageToObjectives: number;
-  damageToTurrets: number;
-  healing: number;
-  teammateHealing: number;
-  wardsKilled: number;
-  controlWardsBought: number;
-  detectorWardsPlaced: number;
-  doubleKills: number;
-  tripleKills: number;
-  quadraKills: number;
-  pentaKills: number;
-  largestMultikill: number;
-  killingSprees: number;
-  firstBloods: number;
-  championLevelTotal: number;
-  championExperienceTotal: number;
-  timeDeadSeconds: number;
-  longestLifeSeconds: number;
-  ccTimeSeconds: number;
-  turretKills: number;
-  inhibitorKills: number;
-  dragonKills: number;
-  baronKills: number;
-  arenaRows: number;
-  placementSum: number;
-  topTwoPlacements: number;
-  firstPlaceFinishes: number;
 };

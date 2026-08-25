@@ -1,121 +1,152 @@
 import { describe, expect, test } from "vitest";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+import type {
+  ScoutQlGroupSize,
+  ScoutQlPlan,
+} from "@scout-for-lol/data/model/scoutql/plan.ts";
+import { groupGameLevelColumns } from "#src/reports/duckdb/execute.ts";
 import {
-  aggregateGroupFacts,
+  aggregateFoldedGroups,
+  foldGroupCombinations,
   type GroupFactRow,
 } from "#src/reports/group-combinations.ts";
+import type { PlanAggregateRow } from "#src/reports/plan-rows.ts";
 
-function fact(overrides: Partial<GroupFactRow>): GroupFactRow {
+/**
+ * Teammate-group folding and the JS aggregation that stands in for SQL on this
+ * source. The fold's contract is the catalog's own split: game-level columns
+ * are carried, member-scoped counters are summed.
+ */
+
+const GAME_LEVEL = groupGameLevelColumns();
+
+function fact(overrides: Partial<GroupFactRow> = {}): GroupFactRow {
+  const values = new Map<string, string | number | boolean | null>([
+    ["win", true],
+    ["surrendered", false],
+    ["queue", "solo"],
+    ["game_duration_seconds", 1800],
+    ["kills", 1],
+    ["creep_score", 10],
+    ["time_played", 1800],
+  ]);
   return {
     playerId: 1,
     playerAlias: "P1",
     matchId: "NA1_1",
     teamId: 100,
     playerSubteamId: null,
-    win: true,
-    surrendered: false,
-    kills: 1,
-    deaths: 1,
-    assists: 1,
-    creepScore: 10,
-    damageToChampions: 100,
-    goldEarned: 0,
-    visionScore: 0,
-    damageTaken: 0,
-    totalDamageDealt: 0,
-    wardsPlaced: 0,
-    multikills: 0,
-    gameDurationSeconds: 1800,
-    timePlayedSeconds: 1800,
-    earlySurrendered: false,
-    laneMinions: 0,
-    neutralMinions: 0,
-    goldSpent: 0,
-    damageMitigated: 0,
-    damageToObjectives: 0,
-    damageToTurrets: 0,
-    healing: 0,
-    teammateHealing: 0,
-    wardsKilled: 0,
-    controlWardsBought: 0,
-    detectorWardsPlaced: 0,
-    doubleKills: 0,
-    tripleKills: 0,
-    quadraKills: 0,
-    pentaKills: 0,
-    largestMultikill: 0,
-    killingSprees: 0,
-    firstBlood: false,
-    championLevel: 0,
-    championExperience: 0,
-    timeDeadSeconds: 0,
-    longestLifeSeconds: 0,
-    ccTimeSeconds: 0,
-    turretKills: 0,
-    inhibitorKills: 0,
-    dragonKills: 0,
-    baronKills: 0,
-    placement: null,
+    values,
     ...overrides,
   };
+}
+
+function withValues(
+  base: GroupFactRow,
+  overrides: Record<string, string | number | boolean | null>,
+): GroupFactRow {
+  const values = new Map(base.values);
+  for (const [name, override] of Object.entries(overrides)) {
+    values.set(name, override);
+  }
+  return { ...base, values };
 }
 
 function stack(
   matchId: string,
   count: number,
-  overrides: Partial<GroupFactRow> = {},
+  overrides: Record<string, string | number | boolean | null> = {},
 ): GroupFactRow[] {
   return Array.from({ length: count }, (_, index) =>
-    fact({
-      matchId,
-      playerId: index + 1,
-      playerAlias: `P${(index + 1).toString()}`,
-      ...overrides,
-    }),
+    withValues(
+      fact({
+        matchId,
+        playerId: index + 1,
+        playerAlias: `P${(index + 1).toString()}`,
+      }),
+      overrides,
+    ),
   );
 }
 
-describe("aggregateGroupFacts", () => {
+const QUERY_OUTPUTS =
+  "COUNT(*) AS games, COUNT(*) FILTER (WHERE win) AS wins, " +
+  "COUNT(*) FILTER (WHERE surrendered) AS surrenders, SUM(kills) AS kills, " +
+  "SUM(creep_score) AS cs, SUM(time_played) AS played, " +
+  "AVG(game_duration_seconds) AS length";
+
+function aggregate(
+  facts: GroupFactRow[],
+  size: ScoutQlGroupSize,
+  tail = "",
+): PlanAggregateRow[] {
+  const plan = compileScoutQl(
+    `SELECT ${QUERY_OUTPUTS} FROM player_groups GROUP BY group(${size.toString()})${tail}`,
+  );
+  return aggregateFoldedGroups({
+    plan,
+    groups: foldGroupCombinations({
+      facts,
+      size,
+      gameLevelColumns: GAME_LEVEL,
+    }),
+    gameLevelColumns: GAME_LEVEL,
+    limit: 1000,
+  });
+}
+
+function value(row: PlanAggregateRow | undefined, name: string): unknown {
+  return row?.outputs.find((output) => output.name === name)?.value;
+}
+
+describe("teammate-group folding", () => {
   test("group(2) on a 5-stack yields all C(5,2)=10 pairs", () => {
-    const rows = aggregateGroupFacts(stack("NA1_1", 5), 2);
+    const rows = aggregate(stack("NA1_1", 5), 2);
     expect(rows).toHaveLength(10);
-    expect(rows.every((row) => row.games === 1)).toBe(true);
+    expect(rows.every((row) => value(row, "games") === 1)).toBe(true);
   });
 
-  test("group(3) on a 5-stack yields all C(5,3)=10 trios with summed stats", () => {
-    const rows = aggregateGroupFacts(stack("NA1_1", 5), 3);
+  test("group(3) on a 5-stack sums member counters and carries game facts", () => {
+    const rows = aggregate(stack("NA1_1", 5), 3);
     expect(rows).toHaveLength(10);
-    const first = rows.find((row) => row.label === "P1 + P2 + P3");
-    expect(first).toBeDefined();
-    expect(first?.kills).toBe(3);
-    expect(first?.creepScore).toBe(30);
-    // Duration counts once per group-game, not per member.
-    expect(first?.durationSeconds).toBe(1800);
-    expect(first?.timePlayedSeconds).toBe(5400);
+    const trio = rows.find((row) => row.label === "P1 + P2 + P3");
+    expect(value(trio, "kills")).toBe(3);
+    expect(value(trio, "cs")).toBe(30);
+    // Member-scoped: three members' time played.
+    expect(value(trio, "played")).toBe(5400);
+    // Game-level: one game's duration, not three.
+    expect(value(trio, "length")).toBe(1800);
   });
 
   test("group(all) on a 5-stack yields every size 2..5", () => {
-    const rows = aggregateGroupFacts(stack("NA1_1", 5), "all");
+    const rows = aggregate(stack("NA1_1", 5), "all");
     // C(5,2)+C(5,3)+C(5,4)+C(5,5) = 10+10+5+1
     expect(rows).toHaveLength(26);
     const full = rows.find((row) => row.label === "P1 + P2 + P3 + P4 + P5");
-    expect(full?.games).toBe(1);
+    expect(value(full, "games")).toBe(1);
   });
 
-  test("a group wins only when every member wins", () => {
-    const rows = aggregateGroupFacts(
+  test("group members share one team, so win and surrender are the game's", () => {
+    const rows = aggregate(
       [
-        fact({ playerId: 1, playerAlias: "P1", win: true }),
-        fact({ playerId: 2, playerAlias: "P2", win: false, surrendered: true }),
+        withValues(fact({ playerId: 1, playerAlias: "P1" }), {
+          win: false,
+          surrendered: true,
+        }),
+        withValues(fact({ playerId: 2, playerAlias: "P2" }), {
+          win: false,
+          surrendered: true,
+        }),
       ],
       2,
     );
     expect(rows).toHaveLength(1);
-    expect(rows[0]?.wins).toBe(0);
-    expect(rows[0]?.surrenders).toBe(1);
+    expect(value(rows[0], "wins")).toBe(0);
+    expect(value(rows[0], "surrenders")).toBe(1);
   });
 
   test("Arena: same team side never pairs across subteams", () => {
-    const rows = aggregateGroupFacts(
+    const rows = aggregate(
       [
         fact({ playerId: 1, playerAlias: "P1", playerSubteamId: 1 }),
         fact({ playerId: 2, playerAlias: "P2", playerSubteamId: 1 }),
@@ -131,7 +162,7 @@ describe("aggregateGroupFacts", () => {
   });
 
   test("Arena: a 3-person subteam under group(all) yields 3 pairs + 1 trio", () => {
-    const rows = aggregateGroupFacts(
+    const rows = aggregate(
       [
         fact({ playerId: 1, playerAlias: "P1", playerSubteamId: 3 }),
         fact({ playerId: 2, playerAlias: "P2", playerSubteamId: 3 }),
@@ -149,7 +180,7 @@ describe("aggregateGroupFacts", () => {
   });
 
   test("accumulates the same tuple across matches", () => {
-    const rows = aggregateGroupFacts(
+    const rows = aggregate(
       [
         ...stack("NA1_1", 2, { win: true }),
         ...stack("NA1_2", 2, { win: false }),
@@ -157,25 +188,48 @@ describe("aggregateGroupFacts", () => {
       2,
     );
     expect(rows).toHaveLength(1);
-    expect(rows[0]?.games).toBe(2);
-    expect(rows[0]?.wins).toBe(1);
+    expect(value(rows[0], "games")).toBe(2);
+    expect(value(rows[0], "wins")).toBe(1);
   });
 
   test("dedupes multi-account players within a unit (last fact wins)", () => {
-    const rows = aggregateGroupFacts(
+    const rows = aggregate(
       [
-        fact({ playerId: 1, playerAlias: "P1", kills: 1 }),
-        fact({ playerId: 1, playerAlias: "P1", kills: 9 }),
-        fact({ playerId: 2, playerAlias: "P2", kills: 5 }),
+        withValues(fact({ playerId: 1, playerAlias: "P1" }), { kills: 1 }),
+        withValues(fact({ playerId: 1, playerAlias: "P1" }), { kills: 9 }),
+        withValues(fact({ playerId: 2, playerAlias: "P2" }), { kills: 5 }),
       ],
       2,
     );
     expect(rows).toHaveLength(1);
-    expect(rows[0]?.kills).toBe(14);
+    expect(value(rows[0], "kills")).toBe(14);
   });
 
   test("requested size larger than the roster yields nothing", () => {
-    expect(aggregateGroupFacts(stack("NA1_1", 2), 4)).toHaveLength(0);
+    expect(aggregate(stack("NA1_1", 2), 4)).toHaveLength(0);
+  });
+
+  test("HAVING, ORDER BY and LIMIT run over the folded rows", () => {
+    const facts = [
+      ...stack("NA1_1", 2),
+      ...stack("NA1_2", 2),
+      ...stack("NA1_3", 3).slice(2),
+    ];
+    const plan = compileScoutQl(
+      `SELECT ${QUERY_OUTPUTS} FROM player_groups GROUP BY group(2) HAVING games >= 2 ORDER BY kills DESC`,
+    );
+    const rows = aggregateFoldedGroups({
+      plan,
+      groups: foldGroupCombinations({
+        facts,
+        size: 2,
+        gameLevelColumns: GAME_LEVEL,
+      }),
+      gameLevelColumns: GAME_LEVEL,
+      limit: 1000,
+    });
+    expect(rows.map((row) => row.label)).toEqual(["P1 + P2"]);
+    expect(value(rows[0], "games")).toBe(2);
   });
 
   test("perf sanity: 10k full 5-stack units under group(all)", () => {
@@ -194,10 +248,85 @@ describe("aggregateGroupFacts", () => {
       }
     }
     const startedAt = performance.now();
-    const rows = aggregateGroupFacts(facts, "all");
+    const rows = aggregate(facts, "all");
     const elapsedMs = performance.now() - startedAt;
     // 20 rosters × 26 combinations each.
     expect(rows).toHaveLength(520);
-    expect(elapsedMs).toBeLessThan(2000);
+    // A sanity ceiling against an algorithmic blowup (e.g. accidental
+    // quadratic combination enumeration), not a tight perf budget: shared,
+    // loaded CI runners measured up to 6.4s against a local ~0.8s, so 4000ms
+    // flaked under CI contention with no code change.
+    expect(elapsedMs).toBeLessThan(15_000);
+  });
+});
+
+describe("aggregates a teammate group cannot answer", () => {
+  test("COUNT(DISTINCT …) is refused at compile time, not at execution", () => {
+    // A teammate-group row is already a fold of several member rows by the
+    // time aggregate-eval.ts would see it, so the distinct values COUNT
+    // needs are gone — this used to compile and only fail once
+    // `aggregateFoldedGroups` actually ran it. Rejecting in the analyzer
+    // means `validate_report_query` (and thus preview/schedule) can never
+    // approve a report that is guaranteed to fail.
+    expect(() =>
+      compileScoutQl(
+        "SELECT COUNT(DISTINCT queue) AS queues FROM player_groups GROUP BY group(2)",
+      ),
+    ).toThrow(/COUNT\(DISTINCT/u);
+  });
+
+  test("a FILTER on a member-scoped counter is refused with a reason", () => {
+    const plan = compileScoutQl(
+      "SELECT COUNT(*) AS games FROM player_groups GROUP BY group(2)",
+    );
+    // The analyzer rejects this spelling outright (kills is not WHERE-able on
+    // this source), so the engine's own guard is exercised on a hand-built
+    // filter — the last line of defence if that rule ever loosens.
+    const memberScoped: ScoutQlPlan = {
+      ...plan,
+      outputs: [
+        {
+          name: "games",
+          displayKind: "count",
+          additive: true,
+          evidence: { kind: "sample" },
+          expr: {
+            kind: "count-star",
+            filter: {
+              kind: "compare",
+              op: ">",
+              left: { kind: "column", column: "kills" },
+              right: { kind: "literal", value: 0 },
+            },
+          },
+        },
+      ],
+    };
+    expect(() =>
+      aggregateFoldedGroups({
+        plan: compileScoutQl(
+          "SELECT COUNT(*) AS games FROM player_groups GROUP BY group(2)",
+        ),
+        groups: foldGroupCombinations({
+          facts: stack("NA1_1", 2),
+          size: 2,
+          gameLevelColumns: GAME_LEVEL,
+        }),
+        gameLevelColumns: GAME_LEVEL,
+        limit: 10,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      aggregateFoldedGroups({
+        plan: memberScoped,
+        groups: foldGroupCombinations({
+          facts: stack("NA1_1", 2),
+          size: 2,
+          gameLevelColumns: GAME_LEVEL,
+        }),
+        gameLevelColumns: GAME_LEVEL,
+        limit: 10,
+      }),
+    ).toThrow(/game-level columns/u);
   });
 });

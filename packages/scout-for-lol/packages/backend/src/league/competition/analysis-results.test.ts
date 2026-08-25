@@ -2,9 +2,9 @@ import { describe, expect, test } from "vitest";
 import {
   CompetitionIdSchema,
   PlayerIdSchema,
-  parseAndCompile,
   type CachedLeaderboard,
 } from "@scout-for-lol/data";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import {
   mergeCompetitionRankHistory,
   standingsFromResult,
@@ -47,19 +47,23 @@ describe("competition analysis results", () => {
 
   test("rejects standings rows without player identities", () => {
     const result: ReportQueryResult = {
-      plan: parseAndCompile(
-        "SELECT games FROM competition_match_participants GROUP BY player DURING LAST 30 DAYS",
+      plan: compileScoutQl(
+        "SELECT COUNT(*) AS games FROM competition_match_participants " +
+          "WHERE competition_id = 7 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY " +
+          "GROUP BY player",
       ),
       columns: ["label", "games"],
       rows: [
         {
           label: "Missing player",
           dimensions: ["Missing player"],
+          keys: ["Missing player"],
           mentionIdentity: null,
           values: [{ column: "games", value: 4 }],
         },
       ],
       rowsScanned: 4,
+      range: { startDate: new Date(0), endDate: new Date() },
     };
 
     expect(() => standingsFromResult(result)).toThrow(

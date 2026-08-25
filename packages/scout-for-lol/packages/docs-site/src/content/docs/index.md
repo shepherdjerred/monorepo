@@ -38,8 +38,9 @@ arrived](/docs/how-to/troubleshoot-notifications/).
 ## Look something up
 
 The [reference](/docs/reference/discord-commands/) is generated from the same
-registries Scout runs on — the [metric
-list](/docs/reference/scoutql-metrics/), [permission
+registries Scout runs on — the [source and column
+catalog](/docs/reference/scoutql-sources/), [function
+list](/docs/reference/scoutql-functions/), [permission
 catalog](/docs/reference/permissions/), and [render
 kinds](/docs/reference/scoutql-render/) are the values actually shipped in the
 build you are using, not a hand-maintained copy.

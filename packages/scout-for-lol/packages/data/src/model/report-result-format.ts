@@ -1,21 +1,14 @@
-import type { ReportQueryPlan } from "#src/model/report-query-spec.ts";
-import type {
-  ReportResultColumn,
-  ReportValueFormat,
-} from "#src/model/report-ai.ts";
-import { reportColumnLabel } from "#src/model/report-query-registry.ts";
-import { REPORT_METRICS } from "#src/model/report-query-metrics.ts";
+import type { ReportResultColumn } from "#src/model/report-ai.ts";
 
-export function reportResultColumns(
-  plan: ReportQueryPlan,
-  columns: string[],
-): ReportResultColumn[] {
-  return columns.map((column) => ({
-    key: column,
-    label: reportColumnLabel(column, plan.groupBy),
-    format: reportValueFormat(column),
-  }));
-}
+/**
+ * The header a grand-total result's dimension column carries.
+ *
+ * A ScoutQL v2 plan with no groupings still emits the hidden `label` column,
+ * and nothing dimensional went into it. The engine names that column from
+ * here, and the web app recognises an ungrouped result by comparing against
+ * the same constant rather than a literal, so the two cannot drift.
+ */
+export const UNGROUPED_LABEL_COLUMN_LABEL = "Label";
 
 export function formatReportDisplayValue(
   column: ReportResultColumn,
@@ -34,18 +27,4 @@ export function formatReportDisplayValue(
     return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
   }
   return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
-}
-
-function reportValueFormat(column: string): ReportValueFormat {
-  if (column === "label" || column === "rank") {
-    return "text";
-  }
-  const metric = REPORT_METRICS.find((entry) => entry.id === column);
-  if (metric?.kind === "rate") {
-    return "percent";
-  }
-  if (metric?.kind === "count") {
-    return "integer";
-  }
-  return "decimal";
 }

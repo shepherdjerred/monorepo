@@ -2,7 +2,7 @@
 title: Bet a Bryan Bucks parlay
 description: Read the legs and odds, choose the exact match or weekly market, take YES or NO, and cancel for free.
 sidebar:
-  order: 11
+  order: 12
 ---
 
 A parlay is a fixed-odds YES/NO market where every leg must hit for YES. Scout

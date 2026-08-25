@@ -1,22 +1,27 @@
 import { describe, expect, test } from "vitest";
-import {
-  parseAndCompile,
-  ReportAiModelPreviewSummarySchema,
-} from "@scout-for-lol/data";
+import { ReportAiModelPreviewSummarySchema } from "@scout-for-lol/data";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import type { ReportQueryResult } from "#src/reports/query-types.ts";
+
+const BOUND = "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY";
+const RANGE = {
+  startDate: new Date("2026-07-09T00:00:00.000Z"),
+  endDate: new Date("2026-08-08T00:00:00.000Z"),
+};
 
 describe("reportQueryPreviewSummary", () => {
   test("projects result values onto the strict AI preview contract", () => {
     const result: ReportQueryResult = {
-      plan: parseAndCompile(
-        "SELECT games FROM match_participants GROUP BY all DURING LAST 30 DAYS LIMIT 10 RENDER table",
+      plan: compileScoutQl(
+        `SELECT COUNT(*) AS games FROM match_participants WHERE ${BOUND} LIMIT 10 RENDER table`,
       ),
-      columns: ["games"],
+      columns: ["label", "games"],
       rows: [
         {
           label: "All",
           dimensions: [],
+          keys: [],
           mentionIdentity: null,
           values: [
             {
@@ -31,6 +36,7 @@ describe("reportQueryPreviewSummary", () => {
         },
       ],
       rowsScanned: 20,
+      range: RANGE,
       evidence: [
         {
           label: "All",
@@ -59,17 +65,19 @@ describe("reportQueryPreviewSummary", () => {
 
   test("keeps enough rows for frozen Discord visualizations", () => {
     const result: ReportQueryResult = {
-      plan: parseAndCompile(
-        "SELECT games FROM match_participants GROUP BY champion DURING LAST 30 DAYS LIMIT 25 RENDER table",
+      plan: compileScoutQl(
+        `SELECT COUNT(*) AS games FROM match_participants WHERE ${BOUND} GROUP BY champion LIMIT 25 RENDER table`,
       ),
-      columns: ["games"],
+      columns: ["label", "games"],
       rows: Array.from({ length: 13 }, (_, index) => ({
         label: `Champion ${index.toString()}`,
-        dimensions: [],
+        dimensions: [`Champion ${index.toString()}`],
+        keys: [`Champion ${index.toString()}`],
         mentionIdentity: null,
         values: [{ column: "games", value: index }],
       })),
       rowsScanned: 13,
+      range: RANGE,
     };
 
     const preview = reportQueryPreviewSummary(result);

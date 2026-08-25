@@ -1,6 +1,11 @@
 import type {
+  AccountLakeRow,
   BucksPredictionObservation,
   CachedLeaderboard,
+  CompetitionRankHistoryLakeRow,
+  MatchLakeRow,
+  PrematchLakeRow,
+  PredictionObservationLakeRow,
   RawCurrentGameInfo,
   RawMatch,
   RawParticipant,
@@ -10,13 +15,6 @@ import {
   resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
-import type {
-  AccountLakeRow,
-  CompetitionRankHistoryLakeRow,
-  MatchLakeRow,
-  PrematchLakeRow,
-  PredictionObservationLakeRow,
-} from "#src/report-lake/schema.ts";
 import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 
 /**

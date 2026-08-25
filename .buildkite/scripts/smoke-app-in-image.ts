@@ -348,8 +348,9 @@ const commands: Record<
       'if ! "$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-p ${pg_port} -c listen_addresses=127.0.0.1 -c unix_socket_directories=/tmp" start; then cat /tmp/smoke-pg.log; exit 1; fi',
       "set +e",
       // Mirror the full image CMD: migrate → legacy import (which must take
-      // its fresh-install marker path here) → report audit → boot.
-      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts --allow-fresh-install && bun run scripts/audit-report-windows.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
+      // its fresh-install marker path here) → ScoutQL v2 boot-time migration
+      // → boot.
+      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts --allow-fresh-install && bun run scripts/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
       String.raw`printf '%s\n' "$output" | grep -q "Legacy import: fresh" || { echo "importer did not take the fresh-install path"; exit 1; }`,

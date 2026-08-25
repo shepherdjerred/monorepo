@@ -1,0 +1,72 @@
+---
+title: ScoutQL recipes
+description: The dozen idioms most reports are built from — win rates, conditional aggregates, percentiles, time windows, buckets, and comparisons.
+sidebar:
+  order: 8
+---
+
+import { Code } from "@astrojs/starlight/components";
+import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
+
+Use these when you know what you want to ask and need the shape that asks it.
+Each recipe is a complete query: paste it into the report editor, change the
+column and the window, and run it.
+
+They are also the recipes Scout's own AI assistants are given, and the snippets
+the editor offers while you type — one list, so the answer you get from the
+editor and the answer you get from the assistant cannot disagree.
+
+Before you start, open the report editor (**Reports → New report** in your
+server's dashboard) so the live preview can run each one against your own
+match history. Everything below assumes `match_participants`, which is one row
+per tracked player per finished match.
+
+{SCOUTQL_IDIOMS.map((idiom) => (
+
+<section>
+  <h2 id={idiom.id}>{idiom.title}</h2>
+  <p>{idiom.description}</p>
+  <Code code={idiom.query} lang="scoutql" />
+</section>
+))}
+
+## Combining them
+
+The recipes compose. A weekly trend of one player's solo-queue win rate, with a
+minimum of five games a week, is the rolling window, the boolean average, the
+`DATE_TRUNC` bucket, and a `HAVING` floor in one query:
+
+```scoutql
+SELECT DATE_TRUNC('week', game_creation_at) AS week,
+       COUNT(*) AS games,
+       AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE player('Bob')
+  AND queue = 'solo'
+  AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 180 DAY
+GROUP BY DATE_TRUNC('week', game_creation_at)
+HAVING games >= 5
+ORDER BY week ASC
+RENDER line_chart WITH (y = win_rate, x_axis = 'Week', smooth = true)
+```
+
+## If a recipe returns nothing
+
+Work down this list before rewriting the query:
+
+1. **The window is shorter than the activity.** A 7-day window on a quiet
+   server is empty and correct. Widen it.
+2. **A `HAVING` floor is too high.** `HAVING games >= 10` removes every player
+   in a week nobody played ten games.
+3. **A queue filter excludes everything.** Queue values are listed in
+   [Queues and regions](/docs/reference/queues-and-regions/), and they are
+   compared exactly.
+4. **The source has no rows for those players.** Reports read matches Scout
+   ingested after the players were tracked — there is no backfill of history
+   from before that.
+
+## Related
+
+- [ScoutQL](/docs/reference/scoutql/) — the language itself.
+- [Functions](/docs/reference/scoutql-functions/) — everything you can compute.
+- [Turn a report into a chart](/docs/how-to/chart-reports/)

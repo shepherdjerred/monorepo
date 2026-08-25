@@ -22,7 +22,7 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { ReportRunHistory } from "#src/components/report-run-history.tsx";
 import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
-import { ReportTemporalControls } from "#src/components/report-temporal-controls.tsx";
+import { ReportTimeControls } from "#src/components/report-time-controls.tsx";
 import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
 
 type ReportRow = {
@@ -140,10 +140,7 @@ function ReportExploration(props: {
   guildId: string;
   reportId: ReportId;
   title: string;
-  report: Pick<
-    ReportRow,
-    "queryText" | "scheduleTimezone" | "sourceCompetitionId"
-  >;
+  report: Pick<ReportRow, "queryText" | "sourceCompetitionId">;
   canEdit: boolean;
 }) {
   const [queryText, setQueryText] = useState(props.report.queryText);
@@ -157,11 +154,7 @@ function ReportExploration(props: {
           These controls run an ephemeral preview. The saved report is
           unchanged.
         </p>
-        <ReportTemporalControls
-          queryText={queryText}
-          scheduleTimezone={props.report.scheduleTimezone}
-          onChange={setQueryText}
-        />
+        <ReportTimeControls queryText={queryText} onChange={setQueryText} />
         <div className="flex gap-2">
           <Button
             type="button"

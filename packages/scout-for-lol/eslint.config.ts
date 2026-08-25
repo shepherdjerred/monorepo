@@ -3,6 +3,85 @@ import {
   astroConfig,
   customRulesPlugin,
 } from "@shepherdjerred/eslint-config";
+
+/**
+ * Node built-ins the repo bans outright. Shared so the ScoutQL-legacy override
+ * below can re-state them: `no-restricted-imports` options are replaced
+ * wholesale by a later config object, never merged, so a second block that
+ * listed only its own patterns would silently unban `node:fs` for those files.
+ */
+const restrictedNodeBuiltins = [
+  {
+    name: "fs",
+    message: "Use Bun.file() / Bun.write() instead of Node fs.",
+  },
+  {
+    name: "node:fs",
+    message: "Use Bun.file() / Bun.write() instead of Node fs.",
+  },
+  {
+    name: "fs/promises",
+    message: "Use Bun.file() / Bun.write() instead of Node fs/promises.",
+  },
+  {
+    name: "child_process",
+    message: "Use Bun.spawn() / Bun.$ instead of Node child_process.",
+  },
+  {
+    name: "crypto",
+    message: "Use Bun.CryptoHasher or Web Crypto API instead of Node crypto.",
+  },
+  {
+    name: "path",
+    message: "Use Bun.pathToFileURL or import from 'node:path' if needed.",
+  },
+  {
+    name: "twisted",
+    message:
+      "twisted has been removed. Use RiotClient from #src/league/api/client/riot-client.ts or schemas from @scout-for-lol/data.",
+  },
+];
+
+const restrictedTwistedPattern = {
+  group: ["twisted*"],
+  message:
+    "twisted has been removed. Use RiotClient from #src/league/api/client/riot-client.ts or schemas from @scout-for-lol/data.",
+};
+
+/**
+ * The ScoutQL v1 language, kept alive for exactly one consumer.
+ *
+ * `data/src/model/legacy/` holds the v1 lexer/parser/compiler because the
+ * boot-time migration (`backend/scripts/migrate-scoutql-v2.ts`) verifies each
+ * rewrite along two independent routes, and route A is "legacy text → legacy
+ * plan → IR translation". Nothing else may reach it: it is deliberately absent
+ * from the `@scout-for-lol/data` barrel, and this rule is what keeps a new
+ * caller from deep-importing it back into the runtime.
+ *
+ * Sunset: delete `data/src/model/legacy/`, the bridge, and this rule one
+ * release after production logs a boot in which the migration rewrote zero
+ * rows — at that point every stored `Report.queryText` is already v2.
+ */
+const restrictedLegacyScoutQlPattern = {
+  // A regex rather than a glob: the directory is reachable as
+  // `#src/model/legacy/…`, `@scout-for-lol/data/model/legacy/…`, and plain
+  // `./legacy/…`, and a `group` glob that catches the first two silently
+  // misses the third.
+  regex: "(^|[./])legacy/",
+  message:
+    "ScoutQL v1 is retired. Use @scout-for-lol/data/model/scoutql/* instead; only backend/scripts/scoutql-legacy-bridge.ts may reach the legacy language.",
+};
+
+/**
+ * The legacy language's own modules import each other, and the migration
+ * bridge is the one sanctioned outside caller.
+ */
+const legacyScoutQlImportSites = [
+  "packages/data/src/model/legacy/**/*.ts",
+  "packages/backend/scripts/scoutql-legacy-bridge.ts",
+  "packages/backend/scripts/scoutql-legacy-bridge.test.ts",
+];
+
 const config = [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
@@ -50,53 +129,28 @@ const config = [
     },
   }),
   ...astroConfig(),
-  // Block twisted DTO imports
+  // Block twisted DTO imports, and the retired ScoutQL v1 language.
   {
     rules: {
       "no-restricted-imports": [
         "error",
         {
-          paths: [
-            {
-              name: "fs",
-              message: "Use Bun.file() / Bun.write() instead of Node fs.",
-            },
-            {
-              name: "node:fs",
-              message: "Use Bun.file() / Bun.write() instead of Node fs.",
-            },
-            {
-              name: "fs/promises",
-              message:
-                "Use Bun.file() / Bun.write() instead of Node fs/promises.",
-            },
-            {
-              name: "child_process",
-              message: "Use Bun.spawn() / Bun.$ instead of Node child_process.",
-            },
-            {
-              name: "crypto",
-              message:
-                "Use Bun.CryptoHasher or Web Crypto API instead of Node crypto.",
-            },
-            {
-              name: "path",
-              message:
-                "Use Bun.pathToFileURL or import from 'node:path' if needed.",
-            },
-            {
-              name: "twisted",
-              message:
-                "twisted has been removed. Use RiotClient from #src/league/api/client/riot-client.ts or schemas from @scout-for-lol/data.",
-            },
-          ],
-          patterns: [
-            {
-              group: ["twisted*"],
-              message:
-                "twisted has been removed. Use RiotClient from #src/league/api/client/riot-client.ts or schemas from @scout-for-lol/data.",
-            },
-          ],
+          paths: restrictedNodeBuiltins,
+          patterns: [restrictedTwistedPattern, restrictedLegacyScoutQlPattern],
+        },
+      ],
+    },
+  },
+  // The legacy language itself, plus the migration bridge that is its only
+  // sanctioned caller. Everything else above still applies.
+  {
+    files: legacyScoutQlImportSites,
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: restrictedNodeBuiltins,
+          patterns: [restrictedTwistedPattern],
         },
       ],
     },

@@ -1,5 +1,4 @@
 import {
-  REPORT_METRICS,
   evidenceGames,
   isLowSampleGameCount,
   type VisualizationSnapshot,
@@ -10,6 +9,7 @@ import {
   formatSeriesAbsoluteDelta,
   formatSeriesValue,
   formatValue,
+  isPercentageSeries,
 } from "#src/html/visualization-value-format.ts";
 
 export function calendarTooltipText(
@@ -33,11 +33,7 @@ export function calendarTooltipText(
   const lines = [`${label}: ${formattedValue}${gameBasis}`];
   if (
     series !== undefined &&
-    (snapshot.display.stack === "percent" ||
-      REPORT_METRICS.some(
-        (candidate) =>
-          candidate.id === series.metric && candidate.kind === "rate",
-      )) &&
+    isPercentageSeries(snapshot, series) &&
     isLowSampleGameCount(evidenceGames({ games: sampleSize, sampleSize }))
   ) {
     lines.push("Fewer than 10 games — treat this rate as indicative only.");

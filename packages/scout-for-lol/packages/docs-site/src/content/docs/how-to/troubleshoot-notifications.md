@@ -2,7 +2,7 @@
 title: Diagnose a missing notification
 description: Work out why a match did not post — in the order that finds the cause fastest.
 sidebar:
-  order: 9
+  order: 10
 ---
 
 Work down this list in order. Each step rules out a whole class of cause, so

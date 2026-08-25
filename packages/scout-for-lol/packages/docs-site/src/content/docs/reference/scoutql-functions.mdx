@@ -1,0 +1,129 @@
+---
+title: ScoutQL functions
+description: Every aggregate, scalar function, macro, and match reference ScoutQL accepts, with signatures and result types.
+sidebar:
+  order: 6
+---
+
+import DataTable from "../../../components/DataTable.astro";
+import { SCOUTQL_FUNCTIONS } from "@scout-for-lol/data/model/scoutql/catalog-functions.ts";
+
+export const byKind = (kind) =>
+  SCOUTQL_FUNCTIONS.filter((fn) => fn.kind === kind);
+
+export const summarize = (fn) =>
+  // The catalog's docs are Markdown — the editor renders them in a hover
+  // card. A table cell is plain text, so the emphasis marks come off rather
+  // than showing up as literal backticks.
+  (fn.docMarkdown.split("\n\n")[0] ?? "").replaceAll("`", "");
+
+export const rowsFor = (kind) =>
+  // One row per signature, because an overload is a different call — but the
+  // description belongs to the function, so it is stated once and the sibling
+  // rows leave it blank rather than repeating it three times for COUNT.
+  byKind(kind).flatMap((fn) =>
+    fn.signatures.map((signature, index) => ({
+      label: signature.label,
+      returns: index === 0 ? fn.resultType : "",
+      description: index === 0 ? summarize(fn) : "",
+    })),
+  );
+
+export const table = (kind) => [
+  {
+    header: "Signature",
+    values: rowsFor(kind).map((row) => row.label),
+    code: true,
+  },
+  { header: "Returns", values: rowsFor(kind).map((row) => row.returns) },
+  {
+    header: "Description",
+    values: rowsFor(kind).map((row) => row.description),
+  },
+];
+
+These are the names ScoutQL can call. There is no implicit aggregation: a
+column named on its own in `SELECT` is a raw value, and a number per group is
+always an aggregate you wrote.
+
+That is the trade the language makes. It costs six extra characters to say
+`COUNT(*)`, and in exchange every number in a report says what it is, derived
+statistics need no new vocabulary, and a query means the same thing here as it
+would in any SQL console.
+
+## Aggregates
+
+An aggregate collapses the rows of a group into one number.
+
+<DataTable label="Aggregates" columns={table("aggregate")} />
+
+Three things apply to all of them.
+
+**`FILTER (WHERE …)` narrows one aggregate without narrowing the query.** Wins,
+losses, and a solo-queue win rate can share a single pass over the same rows,
+which is both faster and directly comparable — three separate queries could
+each be measuring a different set of games.
+
+```scoutql
+SELECT COUNT(*) AS games,
+       COUNT(*) FILTER (WHERE win) AS wins,
+       AVG(win::INT) FILTER (WHERE queue = 'solo') AS solo_win_rate
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY player
+```
+
+**`DISTINCT` counts unique values.** `COUNT(DISTINCT champion_id)` is a
+champion pool size. It is not additive, so it cannot be accumulated across
+buckets with `cumulative`.
+
+**A rate is the average of a cast boolean.** DuckDB will not average a
+`BOOLEAN`, so `AVG(win::INT)` is required — and the cast is what turns a
+count of wins into a fraction of games.
+
+## Scalar functions
+
+A scalar function transforms a single value, inside an aggregate's argument, a
+grouping expression, or a predicate.
+
+<DataTable label="Scalar functions" columns={table("scalar")} />
+
+`FLOOR(x / width) * width` is the bucketing idiom: dividing assigns the bucket,
+multiplying restores its real starting value, so the axis reads in the column's
+own units rather than in bucket indexes.
+
+## Macros
+
+Macros stand for an expression that is easy to get subtly wrong. They expand at
+compile time into ordinary SQL, so they behave exactly like the expression they
+name — including under `FILTER (WHERE …)`.
+
+<DataTable label="Macros" columns={table("macro")} />
+
+`kda()` divides by _at least_ one death, which is why a deathless streak still
+ranks by takedowns instead of dividing by zero. `per_minute(x)` guards the same
+way against a group with no recorded playtime.
+
+## Match references
+
+These two resolve a human name to the thing the data actually stores.
+
+<DataTable label="Match references" columns={table("reference")} />
+
+`champion('…')` folds to a numeric id when the query compiles, so a misspelling
+is caught with a suggestion before the report ever runs. `player('…')` resolves
+when the report runs, so it follows renames and newly linked accounts on its
+own.
+
+## Casts
+
+`::` casts a value, and `CAST(x AS INT)` is the same thing written long. The
+casts that come up in practice are `::INT` on a boolean (to average it),
+`::DOUBLE` on an integer (to divide it without truncating), and `::DATE` on a
+timestamp (to compare whole days).
+
+## Related
+
+- [ScoutQL](/docs/reference/scoutql/)
+- [Sources and columns](/docs/reference/scoutql-sources/)
+- [Query recipes](/docs/how-to/scoutql-recipes/)

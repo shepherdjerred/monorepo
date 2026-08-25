@@ -10,7 +10,7 @@ import {
   RegionSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
-import { parseAndCompile } from "@scout-for-lol/data/model/report-query-compile.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 
@@ -25,10 +25,18 @@ const DESIGN_AUDIT_EXPLORE_CONVERSATION_ID =
 const DESIGN_AUDIT_EXPLORE_QUESTION_ID = "2c5f39cb-3fb2-52e3-994f-1127e4ddb538";
 const DESIGN_AUDIT_EXPLORE_ANSWER_ID = "3d6a4adc-4ac3-63f4-aa5b-2238f5eec649";
 const DESIGN_AUDIT_EXPLORE_SHARE_TOKEN = "a".repeat(32);
-const STARTER_QUERY =
-  "SELECT player, games, win_rate FROM match_participants GROUP BY player DURING ALL TIME ORDER BY games DESC LIMIT 10 RENDER leaderboard";
-const EXPLORE_QUERY =
-  "SELECT champion, win_rate FROM match_participants GROUP BY champion DURING ALL TIME";
+const STARTER_QUERY = `SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY player
+ORDER BY games DESC
+LIMIT 10
+RENDER leaderboard`;
+const EXPLORE_ANSWER_QUERY = `SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate
+FROM match_participants
+WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY champion
+ORDER BY win_rate DESC`;
 
 function requiredPositiveInteger(
   name: string,
@@ -74,8 +82,8 @@ export async function seedDesignAuditDatabase(
       "Design-audit fixtures require a dedicated design-audit database",
     );
   }
-  for (const query of [STARTER_QUERY, EXPLORE_QUERY]) {
-    parseAndCompile(query);
+  for (const query of [STARTER_QUERY, EXPLORE_ANSWER_QUERY]) {
+    compileScoutQl(query);
   }
   const guildId = DiscordGuildIdSchema.parse(
     Bun.env["SCOUT_DESIGN_AUDIT_GUILD_ID"] ?? DEFAULT_GUILD_ID,
@@ -164,7 +172,7 @@ export async function seedDesignAuditDatabase(
         conversationId: exploreConversationId,
         content: "Jinx, over 42 games.",
         parentId: DESIGN_AUDIT_EXPLORE_QUESTION_ID,
-        queryText: EXPLORE_QUERY,
+        queryText: EXPLORE_ANSWER_QUERY,
       },
       create: {
         id: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
@@ -172,7 +180,7 @@ export async function seedDesignAuditDatabase(
         parentId: DESIGN_AUDIT_EXPLORE_QUESTION_ID,
         role: "assistant",
         content: "Jinx, over 42 games.",
-        queryText: EXPLORE_QUERY,
+        queryText: EXPLORE_ANSWER_QUERY,
         caveats: JSON.stringify(["Small sample."]),
         followUps: JSON.stringify(["How about by patch?"]),
       },

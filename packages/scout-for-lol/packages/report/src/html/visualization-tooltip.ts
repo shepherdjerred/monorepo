@@ -2,16 +2,13 @@ import type {
   TemporalSeriesPoint,
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import {
-  REPORT_METRICS,
-  evidenceGames,
-  isLowSampleGameCount,
-} from "@scout-for-lol/data";
+import { evidenceGames, isLowSampleGameCount } from "@scout-for-lol/data";
 import { format as echartsFormat } from "echarts";
 import {
   formatPercent,
   formatSeriesAbsoluteDelta,
   formatSeriesValue,
+  isPercentageSeries,
 } from "#src/html/visualization-value-format.ts";
 
 export function scatterTooltipText(
@@ -99,7 +96,7 @@ export function pointTooltipText(
       );
     }
     if (
-      (snapshot.display.stack === "percent" || isRateMetric(series.metric)) &&
+      isPercentageSeries(snapshot, series) &&
       (isLowSampleGameCount(games) ||
         (comparisonGames !== undefined &&
           isLowSampleGameCount(comparisonGames)))
@@ -108,10 +105,4 @@ export function pointTooltipText(
     }
   }
   return lines.join("<br/>");
-}
-
-function isRateMetric(metric: string): boolean {
-  return REPORT_METRICS.some(
-    (candidate) => candidate.id === metric && candidate.kind === "rate",
-  );
 }

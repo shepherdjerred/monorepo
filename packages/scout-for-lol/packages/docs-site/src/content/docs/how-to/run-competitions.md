@@ -123,16 +123,19 @@ The built-in criteria are deliberately a short list. For anything else — damag
 vision, CS per minute, teammate groups, champion-specific splits — write a
 report instead:
 
-```sql
-select games, win_rate, kda
-from match_participants
-where queue in (solo)
-and games >= 10
-group by player
-during last 30 days
-order by kda desc
-render leaderboard
+```scoutql
+SELECT COUNT(*) AS games, AVG(win::INT) AS win_rate, kda() AS kda
+FROM match_participants
+WHERE queue = 'solo'
+  AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY
+GROUP BY player
+HAVING games >= 10
+ORDER BY kda DESC
+RENDER leaderboard
 ```
+
+`HAVING games >= 10` is the floor that stops a 1–0 record winning; it is the
+same guard the built-in "highest win rate" criteria applies for you.
 
 See [Build your first scheduled report](/docs/tutorials/first-report/).
 

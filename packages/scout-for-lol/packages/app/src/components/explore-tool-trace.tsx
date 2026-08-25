@@ -77,23 +77,36 @@ function ToolStep(props: { entry: ExploreTraceEntry; showRaw: boolean }) {
 function CuratedDetails(props: { details: ExploreTraceDetails }) {
   const details = props.details;
   if (details.kind === "reference") {
-    const counts = [
-      ["Sources", details.sources],
-      ["Metrics", details.metrics],
-      ["Functions", details.functions],
-      ["Groupings", details.groupBys],
-      ["Filters", details.filters],
-      ["Render kinds", details.renderKinds],
-      ["Render options", details.renderOptions],
-      ["Queues", details.queues],
-      ["Presets", details.presets],
-    ];
+    // Only the counts this trace actually carries. ScoutQL v2 replaced the
+    // metric/group-by/filter vocabularies with columns and functions, so a
+    // stored pre-v2 trace has the old three and a new one has the new four;
+    // listing all of them unconditionally would print permanent em-dashes for
+    // whichever era the reader is not looking at.
+    const counts: [string, number][] = (
+      [
+        ["Sources", details.sources],
+        ["Columns", details.columns],
+        ["Functions", details.functions],
+        ["Aggregates", details.aggregateFunctions],
+        ["Scalar functions", details.scalarFunctions],
+        ["Idioms", details.idioms],
+        ["Metrics", details.metrics],
+        ["Groupings", details.groupBys],
+        ["Filters", details.filters],
+        ["Render kinds", details.renderKinds],
+        ["Render options", details.renderOptions],
+        ["Queues", details.queues],
+        ["Presets", details.presets],
+      ] satisfies [string, number | null | undefined][]
+    ).flatMap(([label, value]) =>
+      value === null || value === undefined ? [] : [[label, value]],
+    );
     return (
       <dl className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-3">
         {counts.map(([label, value]) => (
           <div key={label} className="flex justify-between gap-2">
             <dt className="text-scout-subtle">{label}</dt>
-            <dd className="font-medium tabular-nums">{value ?? "—"}</dd>
+            <dd className="font-medium tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>

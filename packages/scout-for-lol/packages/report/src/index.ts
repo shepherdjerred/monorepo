@@ -39,6 +39,14 @@ export {
   setItemMissHandler,
   type ItemMissEvent,
 } from "./dataDragon/image-cache.ts";
+// The one place a snapshot series' value is turned into text. Discord's native
+// embed path renders the same snapshots as the chart images do, so it reads
+// display kinds through these rather than keeping a second opinion.
+export {
+  formatSeriesValue,
+  formatSeriesAbsoluteDelta,
+  isPercentageSeries,
+} from "./html/visualization-value-format.ts";
 export {
   getChampionInfo,
   extractRunes,

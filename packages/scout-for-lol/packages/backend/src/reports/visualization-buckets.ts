@@ -1,6 +1,5 @@
 import {
   VISUALIZATION_MAX_POINTS,
-  type ReportQueryPlan,
   type ResolvedTemporalBucket,
 } from "@scout-for-lol/data";
 import {
@@ -13,8 +12,14 @@ import {
   formatISO,
   parseISO,
 } from "date-fns";
-import { resolveTemporalRanges } from "#src/reports/temporal-range.ts";
 import { localCalendarDate } from "#src/reports/temporal-labels.ts";
+import type { TemporalRange } from "#src/reports/temporal-range.ts";
+
+export type BucketWindow = {
+  range: TemporalRange;
+  /** The zone the DATE_TRUNC grouping computed its boundaries in. */
+  timezone: string;
+};
 
 /**
  * How many buckets a window covers, by arithmetic rather than by counting.
@@ -22,26 +27,23 @@ import { localCalendarDate } from "#src/reports/temporal-labels.ts";
  * This exists so the point budget can be checked BEFORE any labels are built.
  * `visualizationBucketLabels` walks a cursor and pushes one string per bucket,
  * so asking it for a length is only safe once the window is known to be small.
- * With no cap on the analysis window, `BUCKET BY DAY` over a large enough
- * period would allocate one string per day before anything compared it to the
- * limit — a validation error turned into an out-of-memory crash that any user
- * with report-edit rights could trigger.
+ * A `GROUP BY DATE_TRUNC('day', …)` over a large enough window would otherwise
+ * allocate one string per day before anything compared it to the limit — a
+ * validation error turned into an out-of-memory crash that any user with
+ * report-edit rights could trigger.
  */
 export function projectedBucketCount(
-  plan: ReportQueryPlan,
-  generatedAt: Date,
+  window: BucketWindow,
   bucket: Exclude<ResolvedTemporalBucket, "patch">,
 ): number {
-  if (plan.analysis === undefined) return 0;
-  const range = resolveTemporalRanges(plan.analysis, generatedAt).current;
   // The same two cursors the walk starts and ends on, so the count is exact
   // rather than an estimate — only the allocation is skipped.
   const start = bucketCursor(
-    localCalendarDate(range.startDate, plan.analysis.timezone),
+    localCalendarDate(window.range.startDate, window.timezone),
     bucket,
   );
   const end = bucketCursor(
-    localCalendarDate(range.endDate, plan.analysis.timezone),
+    localCalendarDate(window.range.endDate, window.timezone),
     bucket,
   );
   const spans =
@@ -58,14 +60,14 @@ export function assertProjectedPointCount(input: {
   columnCount: number;
   seriesGroupCount: number;
   bucket: ResolvedTemporalBucket | null;
-  plan: ReportQueryPlan;
-  generatedAt: Date;
+  /** Absent when the buckets cannot be enumerated (an unbounded window). */
+  window: BucketWindow | null;
 }): void {
   const pointsPerColumn =
-    input.bucket === null || input.bucket === "patch"
+    input.bucket === null || input.bucket === "patch" || input.window === null
       ? input.rowCount
       : input.seriesGroupCount *
-        projectedBucketCount(input.plan, input.generatedAt, input.bucket);
+        projectedBucketCount(input.window, input.bucket);
   const projectedPoints = pointsPerColumn * input.columnCount;
   if (projectedPoints > VISUALIZATION_MAX_POINTS) {
     throw new Error(
@@ -75,19 +77,16 @@ export function assertProjectedPointCount(input: {
 }
 
 export function visualizationBucketLabels(
-  plan: ReportQueryPlan,
-  generatedAt: Date,
+  window: BucketWindow,
   bucket: Exclude<ResolvedTemporalBucket, "patch">,
 ): string[] {
-  if (plan.analysis === undefined) return [];
-  const range = resolveTemporalRanges(plan.analysis, generatedAt).current;
   const labels: string[] = [];
   let cursor = bucketCursor(
-    localCalendarDate(range.startDate, plan.analysis.timezone),
+    localCalendarDate(window.range.startDate, window.timezone),
     bucket,
   );
   const end = bucketCursor(
-    localCalendarDate(range.endDate, plan.analysis.timezone),
+    localCalendarDate(window.range.endDate, window.timezone),
     bucket,
   );
   while (cursor <= end) {

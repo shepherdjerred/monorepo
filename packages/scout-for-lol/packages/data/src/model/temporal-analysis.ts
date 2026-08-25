@@ -5,9 +5,21 @@ import {
   ReportChartOptionsSchema,
   ReportChartPaletteSchema,
   ReportChartThemeSchema,
+  ReportDisplayKindSchema,
 } from "#src/model/report.ts";
 
 export const VISUALIZATION_MAX_SERIES = 8;
+
+/**
+ * The total point ceiling, and the only bound on how long a window may be.
+ *
+ * A window-length cap used to live alongside these schemas, but it was not a
+ * product decision — it was the only thing standing between a daily bucket and
+ * a bucket walk that allocates one entry per bucket. That is bounded
+ * arithmetically against this constant before any label is built, so an
+ * over-large window is refused with a message about points rather than by an
+ * arbitrary day count.
+ */
 export const VISUALIZATION_MAX_POINTS = 2000;
 export const LOW_SAMPLE_GAME_THRESHOLD = 10;
 
@@ -35,9 +47,10 @@ export type ResolvedTemporalBucket = z.infer<
 >;
 
 /**
- * A rolling window of N whole days. Shared with `DURING LAST <n> DAYS`
- * (report-query-window.ts) because it is the same concept in both clauses —
- * the calendar variants differ, but this one must not drift.
+ * A rolling window of N whole days. Shared with the legacy `DURING LAST <n>
+ * DAYS` window (`legacy/report-query-window.ts`, which the boot-time migration
+ * still compiles) because it is the same concept in both clauses — the
+ * calendar variants differ, but this one must not drift.
  */
 export const RelativeTemporalWindowSchema = z
   .object({
@@ -128,23 +141,6 @@ export function temporalWindowDays(
   );
 }
 
-/**
- * No window length limit.
- *
- * The 365-day cap that used to live here was not a product decision — it was
- * the only thing standing between `BUCKET BY DAY` and a bucket walk that
- * allocates one entry per bucket. That is now bounded arithmetically by
- * `projectedBucketCount` against VISUALIZATION_MAX_POINTS, before any label is
- * built, so an over-large window is refused with a message about points rather
- * than by an arbitrary day count.
- */
-export function validateReportTemporalAnalysis(
-  spec: TemporalAnalysisSpec,
-): TemporalAnalysisSpec {
-  const parsed = TemporalAnalysisSpecSchema.parse(spec);
-  return parsed;
-}
-
 export function resolveTemporalBucket(
   requested: TemporalBucket,
   windowDays: number,
@@ -153,69 +149,6 @@ export function resolveTemporalBucket(
   if (windowDays <= 60) return "day";
   if (windowDays <= 365) return "week";
   return "month";
-}
-
-const ANALYZE_PATTERN =
-  /^(?:last\s+(?<days>\d+)\s+days?|between\s+'(?<start>\d{4}-\d{2}-\d{2})'\s+and\s+'(?<end>\d{4}-\d{2}-\d{2})')(?:\s+bucket\s+by\s+(?<bucket>auto|day|week|month|patch))?(?:\s+compare\s+to\s+(?:previous\s+period|between\s+'(?<comparisonStart>\d{4}-\d{2}-\d{2})'\s+and\s+'(?<comparisonEnd>\d{4}-\d{2}-\d{2})'))?(?:\s+in\s+time\s+zone\s+'(?<timezone>[^']+)')?$/iu;
-
-export function parseTemporalAnalysisClause(
-  value: string,
-): TemporalAnalysisSpec {
-  const match = ANALYZE_PATTERN.exec(value.trim());
-  const groups = match?.groups;
-  if (groups === undefined) {
-    throw new Error(
-      "Invalid ANALYZE clause. Expected LAST <days> DAYS or BETWEEN '<date>' AND '<date>', followed by optional BUCKET, COMPARE, and IN TIME ZONE clauses.",
-    );
-  }
-  const days = groups["days"];
-  const startDate = groups["start"];
-  const endDate = groups["end"];
-  const comparisonStart = groups["comparisonStart"];
-  const comparisonEnd = groups["comparisonEnd"];
-  const comparesToPrevious = /\bcompare\s+to\s+previous\s+period\b/iu.test(
-    value,
-  );
-  const window =
-    days === undefined
-      ? { kind: "calendar", startDate, endDate }
-      : { kind: "relative", days: Number(days) };
-  const comparison =
-    comparisonStart !== undefined && comparisonEnd !== undefined
-      ? {
-          kind: "calendar",
-          startDate: comparisonStart,
-          endDate: comparisonEnd,
-        }
-      : comparesToPrevious
-        ? { kind: "previous_period" }
-        : undefined;
-  return validateReportTemporalAnalysis(
-    TemporalAnalysisSpecSchema.parse({
-      window,
-      bucket: groups["bucket"]?.toLowerCase() ?? "auto",
-      comparison,
-      timezone: groups["timezone"] ?? "UTC",
-    }),
-  );
-}
-
-export function formatTemporalAnalysis(spec: TemporalAnalysisSpec): string[] {
-  const parsed = TemporalAnalysisSpecSchema.parse(spec);
-  const analyze =
-    parsed.window.kind === "relative"
-      ? `ANALYZE LAST ${parsed.window.days.toString()} DAYS`
-      : `ANALYZE BETWEEN '${parsed.window.startDate}' AND '${parsed.window.endDate}'`;
-  const clauses = [analyze, `BUCKET BY ${parsed.bucket.toUpperCase()}`];
-  if (parsed.comparison?.kind === "previous_period") {
-    clauses.push("COMPARE TO PREVIOUS PERIOD");
-  } else if (parsed.comparison?.kind === "calendar") {
-    clauses.push(
-      `COMPARE TO BETWEEN '${parsed.comparison.startDate}' AND '${parsed.comparison.endDate}'`,
-    );
-  }
-  clauses.push(`IN TIME ZONE '${parsed.timezone}'`);
-  return clauses;
 }
 
 export const ConfidenceIntervalSchema = z
@@ -268,6 +201,19 @@ export const TemporalSeriesSchema = z
     id: z.string().min(1),
     label: z.string().min(1),
     metric: z.string().min(1),
+    /**
+     * How this series' values format — percent, duration, count, decimal.
+     *
+     * Optional because snapshots are persisted: one stored before ScoutQL v2
+     * has no display kind, and the renderer falls back to the frozen legacy
+     * metric table for those. New snapshots always carry it, which is what
+     * makes formatting independent of what an author happened to name the
+     * output. Under v1 `metric` was a member of a closed metric enum, so the
+     * renderer could look its kind up; in v2 it is an arbitrary alias, and a
+     * rate aliased anything other than a known metric name would have
+     * rendered as a bare 0.6 rather than 60%.
+     */
+    displayKind: ReportDisplayKindSchema.optional(),
     additive: z.boolean(),
     points: z.array(TemporalSeriesPointSchema),
   })

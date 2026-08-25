@@ -3,18 +3,17 @@ import type {
   ReportChartOptions,
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import {
-  REPORT_METRICS,
-  evidenceGames,
-  isLowSampleGameCount,
-} from "@scout-for-lol/data";
+import { evidenceGames, isLowSampleGameCount } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import {
   analyticsChartColors,
   analyticsChartTheme,
   type AnalyticsChartTheme,
 } from "#src/html/analytics-chart-theme.ts";
-import { formatPercent } from "#src/html/visualization-value-format.ts";
+import {
+  formatPercent,
+  isPercentageSeries,
+} from "#src/html/visualization-value-format.ts";
 
 export type VisualizationSnapshotPresentation = {
   options: ReportChartOptions;
@@ -51,7 +50,7 @@ export function visualizationSnapshotBaseOption(
     visualizationSnapshotPresentation(snapshot);
   const thinRateData = snapshot.series.some(
     (series) =>
-      (snapshot.display.stack === "percent" || isRateMetric(series.metric)) &&
+      isPercentageSeries(snapshot, series) &&
       series.points.some((point) => {
         const comparisonGames =
           point.comparisonEvidence === undefined ||
@@ -87,12 +86,6 @@ export function visualizationSnapshotBaseOption(
       subtextStyle: { color: theme.muted, fontSize: 14 },
     },
   };
-}
-
-function isRateMetric(metric: string): boolean {
-  return REPORT_METRICS.some(
-    (candidate) => candidate.id === metric && candidate.kind === "rate",
-  );
 }
 
 export function visualizationSnapshotLegend(

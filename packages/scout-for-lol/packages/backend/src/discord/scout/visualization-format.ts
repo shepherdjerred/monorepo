@@ -2,11 +2,15 @@ import {
   evidenceGames,
   formatReportDisplayValue,
   isLowSampleGameCount,
-  REPORT_METRICS,
   type ReportAiPreviewSummary,
   type TemporalSeries,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import {
+  formatSeriesAbsoluteDelta,
+  formatSeriesValue,
+  isPercentageSeries,
+} from "@scout-for-lol/report";
 
 const MAX_NATIVE_CELL_LENGTH = 160;
 const nativeCellGraphemeSegmenter = new Intl.Segmenter(undefined, {
@@ -239,7 +243,7 @@ export function formatNativeSeriesValue(
     snapshot,
     series,
     point.comparisonValue ?? null,
-  )}${comparisonBasis} · Δ ${formatAbsoluteDelta(snapshot, series, point.absoluteDelta ?? null)} · ${
+  )}${comparisonBasis} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, point.absoluteDelta ?? null)} · ${
     percentage === null || percentage === undefined
       ? "Unknown"
       : `${(percentage * 100).toFixed(1)}%`
@@ -259,7 +263,7 @@ function formatGameBasis(
       ? undefined
       : evidenceGames(point.comparisonEvidence);
   const caveat =
-    isRateSeries(snapshot, series) &&
+    isPercentageSeries(snapshot, series) &&
     (isLowSampleGameCount(games) ||
       (comparisonGames !== undefined && isLowSampleGameCount(comparisonGames)))
       ? " · Fewer than 10 games — treat this rate as indicative only."
@@ -280,53 +284,6 @@ function formatComparisonGameBasis(
     return "";
   }
   return ` (Based on ${evidenceGames(point.comparisonEvidence).toString()} games)`;
-}
-
-function isRateSeries(
-  snapshot: VisualizationSnapshot,
-  series: TemporalSeries,
-): boolean {
-  return (
-    snapshot.display.stack === "percent" ||
-    REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
-      "rate"
-  );
-}
-
-export function formatSeriesValue(
-  snapshot: VisualizationSnapshot,
-  series: TemporalSeries,
-  value: number | null,
-): string {
-  if (value === null) {
-    return "Unknown";
-  }
-  const isRate =
-    snapshot.display.stack === "percent" ||
-    REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
-      "rate";
-  if (isRate) {
-    return `${(value * 100).toFixed(1)}%`;
-  }
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-    value,
-  );
-}
-
-export function formatAbsoluteDelta(
-  snapshot: VisualizationSnapshot,
-  series: TemporalSeries,
-  value: number | null,
-): string {
-  const isRate =
-    snapshot.display.stack === "percent" ||
-    REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
-      "rate";
-  return isRate
-    ? value === null
-      ? "Unknown"
-      : `${(value * 100).toFixed(1)} pp`
-    : formatSeriesValue(snapshot, series, value);
 }
 
 export function requireNumericRowValue(

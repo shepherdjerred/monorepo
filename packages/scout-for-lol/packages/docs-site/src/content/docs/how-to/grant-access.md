@@ -2,7 +2,7 @@
 title: Grant dashboard access without Discord admin
 description: Give someone exactly the Scout permissions they need, using a role preset or hand-picked scopes, and revoke it later.
 sidebar:
-  order: 8
+  order: 9
 ---
 
 By default, only Discord administrators and the server owner can manage Scout.

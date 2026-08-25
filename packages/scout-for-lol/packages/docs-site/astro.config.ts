@@ -17,6 +17,12 @@ const posthogHeadAttrs = {
 };
 
 /**
+ * Expressive Code options live in `ec.config.mjs`, not here: the ScoutQL
+ * highlighting plugin is a function, and Starlight's `<Code>` component
+ * re-creates the renderer from a JSON copy of this config, so a plugin
+ * configured here fails the build with "Expressive Code options that are not
+ * serializable to JSON".
+ *
  * Sidebar links are resolved through Starlight's `pathWithBase()`, which
  * prepends `base` ("/docs/") on its own. Every group below therefore uses
  * `autogenerate`, and ordering comes from each page's `sidebar.order`
@@ -109,6 +115,19 @@ export default defineConfig({
     mdx(),
   ],
   output: "static",
+  /**
+   * `reference/scoutql-metrics` was the SELECT vocabulary page back when the
+   * language had a fixed 56-metric enum. ScoutQL v2 dissolved that enum into
+   * ordinary SQL aggregates, so the page became `scoutql-functions` — but the
+   * old URL is in Discord messages, bookmarks, and the design-audit route
+   * list, so it keeps resolving.
+   *
+   * Route keys are base-relative (Astro prepends `base` itself); destinations
+   * are not, so the target carries `/docs/` explicitly.
+   */
+  redirects: {
+    "/reference/scoutql-metrics": "/docs/reference/scoutql-functions/",
+  },
   site: siteOrigin,
   trailingSlash: "always",
   vite: { plugins: [scoutAssetsPlugin()] },

@@ -1,10 +1,10 @@
 import {
   REPORT_AI_PREVIEW_MAX_ROWS,
   REPORT_VISUALIZATION_PREVIEW_MAX_ROWS,
-  reportResultColumns,
   ReportAiPreviewSummarySchema,
   type ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
+import { planResultColumns } from "#src/reports/plan-columns.ts";
 import type { ReportQueryResult } from "#src/reports/query-types.ts";
 
 function previewRow(
@@ -28,7 +28,7 @@ export function reportQueryPreviewSummary(
   result: ReportQueryResult,
 ): ReportAiPreviewSummary {
   return ReportAiPreviewSummarySchema.parse({
-    columns: reportResultColumns(result.plan, result.columns),
+    columns: planResultColumns(result.plan, result.columns),
     rows: result.rows
       .slice(0, REPORT_AI_PREVIEW_MAX_ROWS)
       .map((row, index) => previewRow(row, result.evidence, index)),

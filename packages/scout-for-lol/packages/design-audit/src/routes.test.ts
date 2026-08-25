@@ -32,18 +32,18 @@ describe("Scout design audit matrix", () => {
     expect(routes.filter((route) => route.surface === "public")).toHaveLength(
       6,
     );
-    expect(routes.filter((route) => route.surface === "docs")).toHaveLength(28);
+    expect(routes.filter((route) => route.surface === "docs")).toHaveLength(29);
     expect(routes.filter((route) => route.surface === "app")).toHaveLength(23);
     expect(routes.filter((route) => route.golden)).toHaveLength(16);
   });
 
-  test("runs exactly the intentional 616 browser cases", () => {
+  test("runs exactly the intentional 624 browser cases", () => {
     const cases = auditCases();
     const keys = cases.map(
       ({ project, route, theme }) =>
         `${project.name}/${route.name}/${theme.name}`,
     );
-    expect(cases).toHaveLength(616);
+    expect(cases).toHaveLength(624);
     expect(new Set(keys).size).toBe(cases.length);
 
     for (const project of auditProjects) {

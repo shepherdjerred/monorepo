@@ -6,6 +6,10 @@ import { evidenceGames } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import { calendarOption } from "#src/html/visualization-snapshot-calendar-option.ts";
 import {
+  boxPlotOption,
+  histogramOption,
+} from "#src/html/visualization-snapshot-distribution-option.ts";
+import {
   donutOption,
   heatmapOption,
   radarOption,
@@ -49,6 +53,12 @@ export function visualizationSnapshotToOption(
   }
   if (snapshot.kind === "RADAR_CHART") {
     return radarOption(snapshot);
+  }
+  if (snapshot.kind === "HISTOGRAM") {
+    return histogramOption(snapshot, mode);
+  }
+  if (snapshot.kind === "BOX_PLOT") {
+    return boxPlotOption(snapshot, mode);
   }
   const presentation = visualizationSnapshotPresentation(snapshot);
   const horizontal =
@@ -263,10 +273,13 @@ function kpiOption(
             left: 12,
             top: 53,
             style: {
+              // The backend writes null (not undefined) when a query has no
+              // `compare = previous_period`, so an undefined-only guard let
+              // every comparison-less KPI card render "Δ Unknown · Unknown".
               text:
-                delta === undefined
+                delta === undefined || delta === null
                   ? ""
-                  : `Δ ${formatSeriesAbsoluteDelta(snapshot, series, delta ?? null)} · ${formatPercent(percent ?? null)}`,
+                  : `Δ ${formatSeriesAbsoluteDelta(snapshot, series, delta)} · ${formatPercent(percent ?? null)}`,
               fill: presentation.theme.accent,
               font: "11px sans-serif",
             },

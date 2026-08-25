@@ -2,9 +2,10 @@
  * Column catalogs for the report data explorer.
  *
  * Every column here must exist on the corresponding lake row schema
- * (`#src/report-lake/schema.ts`) — the explorer selects them verbatim from the
- * lake parquet. Internal/PII columns (puuid, game_id, platform_id, month,
- * dedupe_key, participant_id) are deliberately not exposed.
+ * (`@scout-for-lol/data`, `model/lake-columns.ts`) — the explorer selects them
+ * verbatim from the lake parquet. Internal/PII columns (puuid, game_id,
+ * platform_id, month, dedupe_key, participant_id) are deliberately not
+ * exposed.
  *
  * `defaultVisible` marks the compact starter set the UI selects initially;
  * `group` drives the sectioned column picker.

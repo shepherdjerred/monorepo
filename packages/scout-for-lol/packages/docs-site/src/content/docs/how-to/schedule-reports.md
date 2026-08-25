@@ -69,7 +69,7 @@ Each report keeps a history of its runs, recording:
 
 A run that succeeds with zero rows means the query is valid but nothing matched
 — usually a lookback window that is too short, a queue filter that excludes
-everything, or a `games >=` floor set too high.
+everything, or a `HAVING` floor set too high.
 
 ## Pause a report
 

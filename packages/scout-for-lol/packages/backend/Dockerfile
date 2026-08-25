@@ -131,10 +131,14 @@ WORKDIR /app/packages/scout-for-lol/packages/backend
 # migrations create the (empty, on first boot) Postgres schema; the legacy
 # importer then copies /data/db.sqlite exactly once (marker-guarded,
 # fail-closed — see src/database/legacy-import/run-import.ts); the
-# parser-aware report audit runs after it because the Report rows it fixes
-# arrive with the import. `prisma` is a runtime dependency of the backend,
-# so `bun x` resolves it from the installed tree without a network fetch.
-CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/audit-report-windows.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
+# parser-aware ScoutQL migration runs after it because the Report rows it
+# rewrites arrive with the import. It rewrites every stored report into v2
+# syntax: a SQL migration cannot safely distinguish clause keywords from
+# quoted text, and legacy syntax stops running the moment this release lands,
+# so it must finish — or fail loudly — before the application accepts
+# traffic. `prisma` is a runtime dependency of the backend, so `bun x`
+# resolves it from the installed tree without a network fetch.
+CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
 
 FROM runtime AS smoke
 # The smoke boots the backend against a throwaway local Postgres (the app no

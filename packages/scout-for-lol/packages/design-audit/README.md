@@ -1,7 +1,7 @@
 # Scout design audit
 
-The design audit exercises all 57 shipped Scout public, documentation, and app
-routes through a deliberate 616-case matrix. Every route gets all four themes
+The design audit exercises all 58 shipped Scout public, documentation, and app
+routes through a deliberate 624-case matrix. Every route gets all four themes
 on Chromium desktop, classic-light responsive coverage on Chromium tablet and
 mobile, and modern-light coverage on WebKit desktop and mobile. The 16 visual
 golden routes retain the complete four-theme, four-viewport Chromium matrix.
@@ -50,7 +50,7 @@ Chromium and WebKit are the supported browser engines; Firefox is deliberately
 omitted.
 `SCOUT_DESIGN_AUDIT_MODE=nightly` selects the scheduled validation boundary but
 does not expand the browser matrix. When local servers are enabled, as they are
-in CI, nightly runs the 616 cases exactly once across 16 sequential shards so
+in CI, nightly runs the 624 cases exactly once across 16 sequential shards so
 each Playwright process stays inside the 16 GiB pod limit and the complete run
 fits the cluster's 30-minute pod-readiness budget. It uses the same deterministic
 fixture and needs no external origins or Discord credentials. An explicitly

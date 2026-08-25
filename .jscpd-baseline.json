@@ -452,10 +452,6 @@
       "clones": 1,
       "tokens": 155
     },
-    "packages/eslint-config/src/configs/base.ts|packages/scout-for-lol/eslint.config.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
     "packages/eslint-config/src/rules/no-redundant-zod-parse.ts|packages/eslint-config/src/rules/zod-schema-naming.ts": {
       "clones": 1,
       "tokens": 115
@@ -1056,6 +1052,10 @@
       "clones": 1,
       "tokens": 74
     },
+    "packages/scout-for-lol/packages/backend/scripts/scoutql-v2-rewrite-render.ts|packages/scout-for-lol/packages/data/src/model/legacy/report-query-render.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
     "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlay.integration.test.ts": {
       "clones": 1,
       "tokens": 74
@@ -1216,6 +1216,10 @@
       "clones": 1,
       "tokens": 85
     },
+    "packages/scout-for-lol/packages/backend/src/league/competition/analysis.ts|packages/scout-for-lol/packages/backend/src/league/competition/analysis.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
     "packages/scout-for-lol/packages/backend/src/league/competition/chart-builder.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/chart-builder.test.ts": {
       "clones": 1,
       "tokens": 107
@@ -1356,13 +1360,13 @@
       "clones": 1,
       "tokens": 108
     },
-    "packages/scout-for-lol/packages/backend/src/reports/duckdb/compile.ts|packages/scout-for-lol/packages/backend/src/reports/duckdb/compile.ts": {
+    "packages/scout-for-lol/packages/backend/src/reports/duckdb/compile-plan.injection.test.ts|packages/scout-for-lol/packages/backend/src/reports/duckdb/compile-plan.test.ts": {
       "clones": 1,
-      "tokens": 91
+      "tokens": 71
     },
-    "packages/scout-for-lol/packages/backend/src/reports/duckdb/execute.ts|packages/scout-for-lol/packages/backend/src/reports/duckdb/execute.ts": {
-      "clones": 1,
-      "tokens": 103
+    "packages/scout-for-lol/packages/backend/src/reports/duckdb/compile-plan.integration.test.ts|packages/scout-for-lol/packages/backend/src/reports/duckdb/compile-plan.test.ts": {
+      "clones": 2,
+      "tokens": 151
     },
     "packages/scout-for-lol/packages/backend/src/reports/identity.integration.test.ts|packages/scout-for-lol/packages/backend/src/reports/identity.integration.test.ts": {
       "clones": 1,
@@ -1370,19 +1374,11 @@
     },
     "packages/scout-for-lol/packages/backend/src/reports/output-analytics.ts|packages/scout-for-lol/packages/backend/src/reports/output.ts": {
       "clones": 4,
-      "tokens": 425
+      "tokens": 437
     },
     "packages/scout-for-lol/packages/backend/src/reports/output.ts|packages/scout-for-lol/packages/backend/src/reports/output.ts": {
       "clones": 1,
-      "tokens": 78
-    },
-    "packages/scout-for-lol/packages/backend/src/reports/query-engine.ts|packages/scout-for-lol/packages/backend/src/reports/query-engine.ts": {
-      "clones": 1,
-      "tokens": 92
-    },
-    "packages/scout-for-lol/packages/backend/src/reports/temporal-comparison.test.ts|packages/scout-for-lol/packages/backend/src/reports/temporal-comparison.test.ts": {
-      "clones": 1,
-      "tokens": 73
+      "tokens": 91
     },
     "packages/scout-for-lol/packages/backend/src/reports/temporal-labels.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-calendar-option.ts": {
       "clones": 1,
@@ -1390,7 +1386,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/reports/visualization-snapshot.test.ts|packages/scout-for-lol/packages/backend/src/reports/visualization-snapshot.test.ts": {
       "clones": 1,
-      "tokens": 74
+      "tokens": 95
     },
     "packages/scout-for-lol/packages/backend/src/showcase/manifest.ts|packages/scout-for-lol/packages/frontend/src/data/scout-showcase.ts": {
       "clones": 1,
@@ -1492,9 +1488,29 @@
       "clones": 1,
       "tokens": 76
     },
+    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-lexer.ts|packages/scout-for-lol/packages/data/src/model/scoutql/tokens.ts": {
+      "clones": 1,
+      "tokens": 124
+    },
+    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-spec.ts|packages/scout-for-lol/packages/data/src/model/scoutql/plan.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
     "packages/scout-for-lol/packages/data/src/model/loading-screen.test.ts|packages/scout-for-lol/packages/data/src/model/loading-screen.test.ts": {
       "clones": 1,
       "tokens": 84
+    },
+    "packages/scout-for-lol/packages/data/src/model/report-query-champions.ts|packages/scout-for-lol/packages/data/src/model/scoutql/catalog-functions.ts": {
+      "clones": 1,
+      "tokens": 181
+    },
+    "packages/scout-for-lol/packages/data/src/model/scoutql/corpus.test.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse-recovery.test.ts": {
+      "clones": 1,
+      "tokens": 129
+    },
+    "packages/scout-for-lol/packages/data/src/model/scoutql/cst-to-ast-expr.ts|packages/scout-for-lol/packages/data/src/model/scoutql/cst-to-ast.ts": {
+      "clones": 1,
+      "tokens": 77
     },
     "packages/scout-for-lol/packages/data/src/review/timeline-pipeline.test.ts|packages/scout-for-lol/packages/evals/src/materialization/s3-source.test.ts": {
       "clones": 1,
@@ -1539,6 +1555,14 @@
     "packages/scout-for-lol/packages/report/src/html/ranked-banner/report.tsx|packages/scout-for-lol/packages/report/src/html/ranked-square/report.tsx": {
       "clones": 1,
       "tokens": 97
+    },
+    "packages/scout-for-lol/packages/report/src/html/visualization-snapshot-distribution-option.test.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-distribution-option.test.ts": {
+      "clones": 1,
+      "tokens": 97
+    },
+    "packages/scout-for-lol/packages/report/src/html/visualization-snapshot-distribution-option.test.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-special-options.test.ts": {
+      "clones": 1,
+      "tokens": 83
     },
     "packages/scout-for-lol/packages/report/src/html/visualization-snapshot-option.test.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-option.test.ts": {
       "clones": 4,
@@ -1961,5 +1985,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-25T02:54:39.541Z"
+  "updated": "2026-08-25T05:12:17.978Z"
 }

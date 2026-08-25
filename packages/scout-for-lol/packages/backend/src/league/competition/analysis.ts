@@ -1,8 +1,6 @@
 import {
   CompetitionAnalysisPresetSchema,
-  ReportQueryPlanSchema,
   VisualizationSnapshotSchema,
-  parseAndCompile,
   rankToLeaguePoints,
   resolveTemporalBucket,
   temporalWindowDays,
@@ -10,13 +8,11 @@ import {
   type CachedLeaderboardEntry,
   type CompetitionAnalysisPreset,
   type CompetitionCriteria,
-  type CompetitionQueueType,
-  type CompetitionGameVariant,
   type CompetitionWithCriteria,
-  type ReportQueryPlan,
   type TemporalAnalysisSpec,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   competitionAnnotations,
@@ -26,6 +22,10 @@ import {
   competitionAnalysisSpec,
   resolveCompetitionAnalysisDates,
 } from "#src/league/competition/analysis-dates.ts";
+import {
+  competitionCriterionQuery,
+  temporalPresetQuery,
+} from "#src/league/competition/analysis-queries.ts";
 import { standingsFromResult } from "#src/league/competition/analysis-results.ts";
 import { executeCompiledReportQuery } from "#src/reports/query-engine.ts";
 import type { ReportQueryResult } from "#src/reports/query-types.ts";
@@ -121,7 +121,13 @@ export async function analyzeCompetition(
           now: params.now,
           rangeOverride: range,
         },
-        temporalPresetPlan(preset, analysis),
+        compileScoutQl(
+          temporalPresetQuery({
+            preset,
+            competitionId: params.competition.id,
+            analysis,
+          }),
+        ),
       );
       return {
         preset,
@@ -166,9 +172,10 @@ export async function analyzeCompetition(
             now: params.now,
             rangeOverride: range,
           },
-          parseAndCompile(
+          compileScoutQl(
             competitionCriterionQuery(
               params.competition.criteria,
+              params.competition.id,
               params.competition.gameVariant,
             ),
           ),
@@ -184,7 +191,13 @@ export async function analyzeCompetition(
             now: params.now,
             rangeOverride: range,
           },
-          temporalPresetPlan(preset, analysis),
+          compileScoutQl(
+            temporalPresetQuery({
+              preset,
+              competitionId: params.competition.id,
+              analysis,
+            }),
+          ),
         );
   return {
     preset,
@@ -224,9 +237,10 @@ async function analyzeRankPosition(input: {
             now: params.now,
             rangeOverride: range,
           },
-          parseAndCompile(
+          compileScoutQl(
             competitionCriterionQuery(
               params.competition.criteria,
+              params.competition.id,
               params.competition.gameVariant,
             ),
           ),
@@ -267,88 +281,6 @@ function requireStandingsResult(
     throw new Error("Missing selected-period competition standings.");
   }
   return result;
-}
-
-export function competitionCriterionQuery(
-  criteria: CompetitionCriteria,
-  gameVariant: CompetitionGameVariant = "MODERN",
-): string {
-  const queueCondition = competitionQueueCondition(
-    criteria.queues,
-    gameVariant,
-  );
-  if (criteria.type === "MOST_GAMES_PLAYED") {
-    return criterionScoutQl("games", [queueCondition]);
-  }
-  if (criteria.type === "MOST_WINS_PLAYER") {
-    return criterionScoutQl("wins", [queueCondition]);
-  }
-  if (criteria.type === "MOST_WINS_CHAMPION") {
-    return criterionScoutQl("wins", [
-      `champion_id = ${criteria.championId.toString()}`,
-      queueCondition,
-    ]);
-  }
-  if (criteria.type === "HIGHEST_WIN_RATE") {
-    return criterionScoutQl("win_rate", [
-      `games >= ${criteria.minGames.toString()}`,
-      queueCondition,
-    ]);
-  }
-  throw new Error(`Competition criterion ${criteria.type} uses rank history.`);
-}
-
-function criterionScoutQl(
-  metric: "games" | "wins" | "win_rate",
-  conditions: (string | null)[],
-): string {
-  const present = conditions.filter((condition) => condition !== null);
-  const where = present.length === 0 ? "" : ` WHERE ${present.join(" AND ")}`;
-  // DURING ALL TIME rather than a period, because the caller supplies the real
-  // range: competition queries execute with an explicit `rangeOverride`, which
-  // wins over the plan's own window. Saying "all time" states honestly that the
-  // query text has no opinion, instead of naming a period nothing honours.
-  return `SELECT player, ${metric} FROM competition_match_participants${where} GROUP BY player DURING ALL TIME ORDER BY ${metric} DESC LIMIT 100 RENDER bar_chart WITH (y = ${metric})`;
-}
-
-function competitionQueueCondition(
-  queues: readonly CompetitionQueueType[],
-  gameVariant: CompetitionGameVariant,
-): string {
-  if (queues.includes("ALL")) {
-    return gameVariant === "CLASSIC"
-      ? "queue IN ('classic', 'classic aram mayhem')"
-      : "queue NOT IN ('classic', 'classic aram mayhem')";
-  }
-  const values = queues.filter((queue) => queue !== "ALL");
-  return `queue IN (${values.map((value) => `'${value}'`).join(", ")})`;
-}
-
-function temporalPresetPlan(
-  preset: CompetitionAnalysisPreset,
-  analysis: TemporalAnalysisSpec,
-): ReportQueryPlan {
-  // As in criterionScoutQl, DURING ALL TIME states that the text has no
-  // opinion about the period: the temporal analysis is attached to the plan
-  // below, and the competition range is supplied at execution.
-  const query =
-    preset === "games_wins"
-      ? "SELECT games, wins FROM competition_match_participants GROUP BY all DURING ALL TIME RENDER line_chart WITH (y = (games, wins), trend = true, sparkline = true)"
-      : preset === "performance"
-        ? "SELECT win_rate, kda FROM competition_match_participants GROUP BY all DURING ALL TIME RENDER line_chart WITH (y = (win_rate, kda), rolling = 3, trend = true, sparkline = true)"
-        : "SELECT queue, games FROM competition_match_participants GROUP BY queue DURING ALL TIME RENDER area_chart WITH (y = games, stack = percent, annotations = true)";
-  const base = parseAndCompile(query);
-  const bucket = resolveTemporalBucket(
-    analysis.bucket,
-    temporalWindowDays(analysis.window),
-  );
-  return ReportQueryPlanSchema.parse({
-    ...base,
-    groupBy: base.groupBy === "all" ? bucket : base.groupBy,
-    groupBys: base.groupBy === "all" ? [bucket] : [...base.groupBys, bucket],
-    analysis,
-    limit: 2000,
-  });
 }
 
 function historyAroundRange(

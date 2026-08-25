@@ -712,14 +712,23 @@ produce mentions, even when their labels match a player alias.
   prematch, and prediction-observation JSON from **S3** (SeaweedFS); atomic
   `CURRENT`-pointer publish; the lake is disposable derived data). Manual run:
   `bun run compact:report-lake` (`--fold` for fold-only).
-- Engine: `backend/src/reports/duckdb/` — the ScoutQL `ReportQueryPlan`
-  compiles to parameterized SQL (never interpolate plan values); ordering,
-  minGames, limits, and metric derivation stay in JS (`query-aggregates.ts`).
-- **Adding a metric** = `ReportMetricSchema` enum + `REPORT_METRICS` registry
-  entry (packages/data) + `METRIC_DISPLAY` (backend output.ts) + an aggregate
-  column in `metrics-sql.ts`/`row-schema.ts`/`execute.ts` + `METRIC_VALUES`
-  derivation. No Prisma migration, no backfill — the nightly rebuild picks up
-  new lake columns from `report-lake/schema.ts`/`flatten.ts`.
+- Engine: `backend/src/reports/duckdb/` — the ScoutQL `ScoutQlPlan` compiles to
+  parameterized SQL (never interpolate plan values); aggregation, HAVING,
+  ORDER BY and LIMIT run in SQL, while group-combination folding, rank
+  sources, and Wilson intervals stay in JS.
+- **There is no metric registry.** ScoutQL v2 is explicit SQL over the lake's
+  own columns, so a new statistic is just a new lake column plus the
+  aggregate the author writes (`SUM(x)`, `AVG(x::INT)`, …). Adding a column =
+  the shared schemas in `packages/data/src/model/lake-columns.ts` plus backend
+  `report-lake/flatten.ts`. No Prisma migration, no backfill — the nightly
+  rebuild picks it up.
+- **ScoutQL v1 is retired.** Its lexer/parser/compiler survive only in
+  `packages/data/src/model/legacy/`, reachable solely through
+  `backend/scripts/scoutql-legacy-bridge.ts` (route A of the boot-time
+  migration's two-route verification) and fenced off by a
+  `no-restricted-imports` rule in `scout-for-lol/eslint.config.ts`. Delete the
+  directory, the bridge, and the rule one release after production logs a boot
+  in which the migration rewrote zero rows.
 - Ingest staging: `store.ts` appends flattened rows to
   `<lake>/matches-recent/` so games are queryable seconds after ingest.
 
@@ -1385,7 +1394,7 @@ see the "cannot be validated" list in the PR.
   development. The 67 SQLite-era migrations were squashed into one baseline
   migration (`prisma/migrations/20260820000000_postgresql_baseline/`).
 - **Legacy SQLite import** - the entrypoint chain is
-  `prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/audit-report-windows.ts --database "$DATABASE_URL" --fix && bun run src/index.ts`.
+  `prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/migrate-scoutql-v2.ts --database "$DATABASE_URL" --fix && bun run src/index.ts`.
   The boot-time importer reads the legacy `/data/db.sqlite` (still on the 24Gi
   PVC as `LEGACY_SQLITE_PATH`) exactly once, tracked by the
   `_legacy_sqlite_import` marker table with a fail-closed decision table;

@@ -5,8 +5,8 @@ import {
   MATCH_LAKE_COLUMNS,
   PREDICTION_OBSERVATION_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
-  lakeSchemaFingerprint,
-} from "#src/report-lake/schema.ts";
+} from "@scout-for-lol/data";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 
 /**
  * The fingerprint is the only mechanism that forces a full lake rebuild when a
