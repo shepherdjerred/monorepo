@@ -408,6 +408,11 @@ function havingPredicate(plan: LegacyPlan): ScoutQlHavingPredicate | undefined {
 function orderKeys(plan: LegacyPlan, dimensions: number): ScoutQlOrderKey[] {
   const direction = plan.orderDirection;
   if (plan.orderBy !== "label") {
+    if (!plan.selectItems.some((item) => item.key === plan.orderBy)) {
+      return unconvertible(
+        `ORDER BY sorted by "${plan.orderBy}", which this query does not SELECT — v2 has no implicit games-column default to fall back to.`,
+      );
+    }
     return [{ target: { kind: "output", name: plan.orderBy }, direction }];
   }
   if (dimensions !== 1) {

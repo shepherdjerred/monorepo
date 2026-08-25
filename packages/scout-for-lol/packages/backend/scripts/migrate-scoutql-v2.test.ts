@@ -170,6 +170,43 @@ describe("the captured beta/prod corpus", () => {
   }
 });
 
+describe("text valid under both grammars with different meanings", () => {
+  // Legacy `SELECT kills FROM match_participants GROUP BY all` means a
+  // grand-total SUM(kills). v2 treats the bare `kills` column as a DuckDB
+  // `GROUP BY ALL` grouping instead — a completely different report. Trusting
+  // "compiles as v2" alone would let this row skip conversion and silently
+  // start reporting per-kill-count buckets instead of a total.
+  const ambiguous =
+    "SELECT kills FROM match_participants " +
+    `WHERE ${LOOKBACK} GROUP BY all ORDER BY kills DESC`;
+
+  test("is not classified as already-v2", () => {
+    expect(isAlreadyV2(ambiguous)).toBe(false);
+  });
+
+  test("converts to the disambiguated grand-total rewrite", () => {
+    expect(convertStoredQuery(ambiguous)).toEqual({
+      kind: "converted",
+      queryText: convertLegacyQueryText(ambiguous),
+    });
+    const rewritten = convertLegacyQueryText(ambiguous);
+    expect(rewritten).toContain("SUM(kills)");
+    expect(rewritten).not.toContain("GROUP BY all");
+  });
+
+  // The legacy default of ordering by an unselected "games" column has no
+  // v2 equivalent to fall back to; that must refuse rather than crash.
+  test("refuses rather than crashing when the legacy default has no v2 target", () => {
+    const noExplicitOrder =
+      "SELECT kills FROM match_participants " +
+      `WHERE ${LOOKBACK} GROUP BY all`;
+    expect(() => isAlreadyV2(noExplicitOrder)).not.toThrow();
+    expect(isAlreadyV2(noExplicitOrder)).toBe(false);
+    const result = convertStoredQuery(noExplicitOrder);
+    expect(result.kind).toBe("unconvertible");
+  });
+});
+
 // ── One case per rewrite-table row ───────────────────────────────────────────
 
 describe("metrics become explicit aggregates keeping their legacy names", () => {

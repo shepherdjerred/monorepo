@@ -49,18 +49,52 @@ function describeDifference(
 }
 
 /**
- * Whether a stored query is already ScoutQL v2.
+ * Whether a stored query is already ScoutQL v2 — not just whether it
+ * compiles as v2.
  *
- * This is what makes the migration idempotent: the second boot after a rewrite
- * finds every row compiling and touches nothing. It catches every throw rather
- * than only ScoutQlError, because a query the analyzer cannot lower is still a
- * query that is not yet valid v2.
+ * A query can be valid under both grammars at once with different meanings:
+ * legacy `SELECT kills FROM match_participants GROUP BY all` is a grand-total
+ * `SUM(kills)`, while v2 treats the bare `kills` column as a DuckDB
+ * `GROUP BY ALL` grouping. Trusting "compiles as v2" alone would let that row
+ * skip conversion and silently change what it reports. So: if the text also
+ * parses and compiles as legacy, its translated plan must match the v2 plan
+ * exactly before this returns true. Only text that legacy cannot make sense
+ * of at all — the ordinary case for a row already rewritten by a previous
+ * boot — is trusted on the v2 compile alone.
+ *
+ * This is what makes the migration idempotent: the second boot after a
+ * rewrite finds every row compiling with no legacy interpretation (or an
+ * agreeing one) and touches nothing.
  */
 export function isAlreadyV2(queryText: string): boolean {
+  let v2Plan: ScoutQlPlan;
   try {
-    compileScoutQl(queryText);
-    return true;
+    v2Plan = compileScoutQl(queryText);
   } catch {
+    return false;
+  }
+  const legacyParsed = parseLegacyQuery(queryText);
+  const legacyParseFailed = legacyParsed.diagnostics.some(
+    (diagnostic) => diagnostic.severity === "error",
+  );
+  if (legacyParseFailed) {
+    return true;
+  }
+  let legacyPlan;
+  try {
+    legacyPlan = compileLegacyAst(legacyParsed.ast);
+  } catch {
+    // Parses as legacy but does not compile as legacy — not meaningful
+    // legacy ScoutQL, so there is no legacy interpretation to collide with.
+    return true;
+  }
+  try {
+    return Bun.deepEquals(legacyPlanToV2(legacyPlan), v2Plan, true);
+  } catch {
+    // The legacy plan is real but v2 has no faithful equivalent for it (e.g.
+    // an implicit ORDER BY on a column the query never selects) — that is
+    // exactly a genuine, un-collapsible legacy interpretation, so this text
+    // is not already-v2. Let the ordinary conversion route classify it.
     return false;
   }
 }
