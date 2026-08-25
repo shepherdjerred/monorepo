@@ -5,9 +5,8 @@ import type { DependencyCollectionResult } from "#activities/deps-summary.ts";
 import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import type { ActivityReportInput } from "#activities/report-delivery.ts";
 import { generateDependencySummary } from "./index.ts";
-import { runWithReportWorker } from "./test-support.ts";
 
-const TASK_QUEUE_PREFIX = "dependency-summary-test";
+const TASK_QUEUE = "dependency-summary-test";
 const COMMIT_SHA = "a".repeat(40);
 const HEAD_SHA = "b".repeat(40);
 
@@ -48,23 +47,11 @@ afterAll(async () => {
 
 describe("dependency summary delivery checkpoint", () => {
   test("reports missing notes as partial before advancing the checkpoint", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
     const reports: ActivityReportInput[] = [];
     const events: string[] = [];
-    const deliverActivityReport = (report: ActivityReportInput) => {
-      reports.push(report);
-      events.push(`deliver-${report.execution}`);
-      return {
-        accepted: true,
-        duplicate: false,
-        reportRunId: "dependency-summary:run-1",
-        acceptedAt: "2026-08-10T16:01:00.000Z",
-      };
-    };
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
-      taskQueue: taskQueue,
+      taskQueue: TASK_QUEUE,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
       activities: {
         collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
@@ -98,22 +85,29 @@ describe("dependency summary delivery checkpoint", () => {
           ],
         }),
         synthesizeDependencyChanges: (): undefined => undefined,
-        deliverActivityReport,
+        deliverActivityReport: (report: ActivityReportInput) => {
+          reports.push(report);
+          events.push(`deliver-${report.execution}`);
+          return {
+            accepted: true,
+            duplicate: false,
+            reportRunId: "dependency-summary:run-1",
+            acceptedAt: "2026-08-10T16:01:00.000Z",
+          };
+        },
         advanceDependencySummaryCheckpoint: (): void => {
           events.push("checkpoint");
         },
       },
     });
 
-    await runWithReportWorker(testEnvironment, worker, deliverActivityReport, {
-      reportTaskQueue,
-      runWorkflow: () =>
-        testEnvironment.client.workflow.execute(generateDependencySummary, {
-          args: [7, reportTaskQueue],
-          taskQueue: taskQueue,
-          workflowId: `dependency-summary-partial-${crypto.randomUUID()}`,
-        }),
-    });
+    await worker.runUntil(
+      testEnvironment.client.workflow.execute(generateDependencySummary, {
+        args: [7],
+        taskQueue: TASK_QUEUE,
+        workflowId: `dependency-summary-partial-${crypto.randomUUID()}`,
+      }),
+    );
 
     expect(events).toEqual(["deliver-partial", "checkpoint"]);
     expect(reports).toHaveLength(1);
@@ -125,16 +119,10 @@ describe("dependency summary delivery checkpoint", () => {
   }, 30_000);
 
   test("does not advance the checkpoint when delivery is not accepted", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
     const events: string[] = [];
-    const deliverActivityReport = (): never => {
-      events.push("deliver-failed");
-      throw new Error("Postal unavailable");
-    };
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
-      taskQueue: taskQueue,
+      taskQueue: TASK_QUEUE,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
       activities: {
         collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
@@ -151,7 +139,10 @@ describe("dependency summary delivery checkpoint", () => {
           missing: [],
         }),
         synthesizeDependencyChanges: (): undefined => undefined,
-        deliverActivityReport,
+        deliverActivityReport: (): never => {
+          events.push("deliver-failed");
+          throw new Error("Postal unavailable");
+        },
         advanceDependencySummaryCheckpoint: (): void => {
           events.push("checkpoint");
         },
@@ -160,19 +151,12 @@ describe("dependency summary delivery checkpoint", () => {
 
     let failure: unknown;
     try {
-      await runWithReportWorker(
-        testEnvironment,
-        worker,
-        deliverActivityReport,
-        {
-          reportTaskQueue,
-          runWorkflow: () =>
-            testEnvironment.client.workflow.execute(generateDependencySummary, {
-              args: [7, reportTaskQueue],
-              taskQueue: taskQueue,
-              workflowId: `dependency-summary-delivery-failure-${crypto.randomUUID()}`,
-            }),
-        },
+      await worker.runUntil(
+        testEnvironment.client.workflow.execute(generateDependencySummary, {
+          args: [7],
+          taskQueue: TASK_QUEUE,
+          workflowId: `dependency-summary-delivery-failure-${crypto.randomUUID()}`,
+        }),
       );
     } catch (error: unknown) {
       failure = error;
@@ -184,22 +168,11 @@ describe("dependency summary delivery checkpoint", () => {
   }, 30_000);
 
   test("retries checkpoint persistence without redelivering the report", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
     let deliveryCalls = 0;
     let checkpointCalls = 0;
-    const deliverActivityReport = () => {
-      deliveryCalls += 1;
-      return {
-        accepted: true,
-        duplicate: false,
-        reportRunId: "dependency-summary:run-retry",
-        acceptedAt: "2026-08-10T16:01:00.000Z",
-      };
-    };
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
-      taskQueue: taskQueue,
+      taskQueue: TASK_QUEUE,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
       activities: {
         collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
@@ -216,7 +189,15 @@ describe("dependency summary delivery checkpoint", () => {
           missing: [],
         }),
         synthesizeDependencyChanges: (): undefined => undefined,
-        deliverActivityReport,
+        deliverActivityReport: () => {
+          deliveryCalls += 1;
+          return {
+            accepted: true,
+            duplicate: false,
+            reportRunId: "dependency-summary:run-retry",
+            acceptedAt: "2026-08-10T16:01:00.000Z",
+          };
+        },
         advanceDependencySummaryCheckpoint: (): void => {
           checkpointCalls += 1;
           if (checkpointCalls < 3) {
@@ -226,15 +207,13 @@ describe("dependency summary delivery checkpoint", () => {
       },
     });
 
-    await runWithReportWorker(testEnvironment, worker, deliverActivityReport, {
-      reportTaskQueue,
-      runWorkflow: () =>
-        testEnvironment.client.workflow.execute(generateDependencySummary, {
-          args: [7, reportTaskQueue],
-          taskQueue: taskQueue,
-          workflowId: `dependency-summary-checkpoint-retry-${crypto.randomUUID()}`,
-        }),
-    });
+    await worker.runUntil(
+      testEnvironment.client.workflow.execute(generateDependencySummary, {
+        args: [7],
+        taskQueue: TASK_QUEUE,
+        workflowId: `dependency-summary-checkpoint-retry-${crypto.randomUUID()}`,
+      }),
+    );
 
     expect(deliveryCalls).toBe(1);
     expect(checkpointCalls).toBe(3);
@@ -243,25 +222,11 @@ describe("dependency summary delivery checkpoint", () => {
 
 describe("dependency summary checkpoint failure reporting", () => {
   test("reports a distinct failure after accepted delivery when checkpoint retries exhaust", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
     const reports: ActivityReportInput[] = [];
     let checkpointCalls = 0;
-    const deliverActivityReport = (report: ActivityReportInput) => {
-      reports.push(report);
-      return {
-        accepted: true,
-        duplicate: false,
-        reportRunId:
-          report.execution === "failed"
-            ? "dependency-summary:run-exhausted:failed"
-            : "dependency-summary:run-exhausted",
-        acceptedAt: "2026-08-10T16:01:00.000Z",
-      };
-    };
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
-      taskQueue: taskQueue,
+      taskQueue: TASK_QUEUE,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
       activities: {
         collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
@@ -278,7 +243,18 @@ describe("dependency summary checkpoint failure reporting", () => {
           missing: [],
         }),
         synthesizeDependencyChanges: (): undefined => undefined,
-        deliverActivityReport,
+        deliverActivityReport: (report: ActivityReportInput) => {
+          reports.push(report);
+          return {
+            accepted: true,
+            duplicate: false,
+            reportRunId:
+              report.execution === "failed"
+                ? "dependency-summary:run-exhausted:failed"
+                : "dependency-summary:run-exhausted",
+            acceptedAt: "2026-08-10T16:01:00.000Z",
+          };
+        },
         advanceDependencySummaryCheckpoint: (): never => {
           checkpointCalls += 1;
           throw new Error("persistent checkpoint storage failure");
@@ -288,19 +264,12 @@ describe("dependency summary checkpoint failure reporting", () => {
 
     let failure: unknown;
     try {
-      await runWithReportWorker(
-        testEnvironment,
-        worker,
-        deliverActivityReport,
-        {
-          reportTaskQueue,
-          runWorkflow: () =>
-            testEnvironment.client.workflow.execute(generateDependencySummary, {
-              args: [7, reportTaskQueue],
-              taskQueue: taskQueue,
-              workflowId: `dependency-summary-checkpoint-exhausted-${crypto.randomUUID()}`,
-            }),
-        },
+      await worker.runUntil(
+        testEnvironment.client.workflow.execute(generateDependencySummary, {
+          args: [7],
+          taskQueue: TASK_QUEUE,
+          workflowId: `dependency-summary-checkpoint-exhausted-${crypto.randomUUID()}`,
+        }),
       );
     } catch (error: unknown) {
       failure = error;

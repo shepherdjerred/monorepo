@@ -4,14 +4,12 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
-import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { collectProtobufWatch } = proxyActivities<ProtobufWatchActivities>({
   startToCloseTimeout: "1 minute",
   retry: { maximumAttempts: 3 },
 });
 const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: "2 minutes",
   retry: { maximumAttempts: 3 },
 });
