@@ -56,6 +56,11 @@ import {
 } from "#src/reports/data-explorer.ts";
 import { ACCOUNT_IDENTITY_COLUMN_IDS } from "#src/reports/data-explorer-columns.ts";
 import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
+import {
+  enqueueReportScheduleDeletion,
+  enqueueReportScheduleUpsert,
+  notifyReportScheduleReconciler,
+} from "#src/reports/temporal-schedules.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const ReportIdInput = GuildInput.extend({ reportId: ReportIdSchema });
@@ -215,28 +220,34 @@ export const reportRouter = router({
         asBadRequest(error);
       }
       const now = new Date();
-      return prisma.report.create({
-        data: {
-          serverId: input.guildId,
-          ownerId,
-          // Already validated by ReportCreateInputSchema's DiscordChannelIdSchema.
-          channelId: input.channelId,
-          title: input.title,
-          description: input.description,
-          queryText: input.queryText,
-          isEnabled: input.isEnabled,
-          isSystemManaged: false,
-          cronExpression: input.cronExpression,
-          scheduleTimezone: input.scheduleTimezone,
-          nextScheduledRunAt: computeNextScheduledUpdateAt(
-            input.cronExpression,
-            now,
-            input.scheduleTimezone,
-          ),
-          createdTime: now,
-          updatedTime: now,
-        },
+      const report = await prisma.$transaction(async (tx) => {
+        const created = await tx.report.create({
+          data: {
+            serverId: input.guildId,
+            ownerId,
+            // Already validated by ReportCreateInputSchema's DiscordChannelIdSchema.
+            channelId: input.channelId,
+            title: input.title,
+            description: input.description,
+            queryText: input.queryText,
+            isEnabled: input.isEnabled,
+            isSystemManaged: false,
+            cronExpression: input.cronExpression,
+            scheduleTimezone: input.scheduleTimezone,
+            nextScheduledRunAt: computeNextScheduledUpdateAt(
+              input.cronExpression,
+              now,
+              input.scheduleTimezone,
+            ),
+            createdTime: now,
+            updatedTime: now,
+          },
+        });
+        await enqueueReportScheduleUpsert(tx, created.id, created.revision);
+        return created;
       });
+      await notifyReportScheduleReconciler();
+      return report;
     }),
 
   update: guildMutationProcedure("reports", "update")
@@ -269,35 +280,43 @@ export const reportRouter = router({
       }
 
       const now = new Date();
-      return prisma.report.update({
-        where: { id: input.reportId },
-        data: {
-          ...(input.title === undefined ? {} : { title: input.title }),
-          ...(input.description === undefined
-            ? {}
-            : { description: input.description }),
-          ...(input.channelId === undefined
-            ? {}
-            : { channelId: input.channelId }),
-          ...(input.queryText === undefined
-            ? {}
-            : { queryText: input.queryText }),
-          ...(input.cronExpression === undefined &&
-          input.scheduleTimezone === undefined
-            ? {}
-            : {
-                cronExpression: input.cronExpression ?? report.cronExpression,
-                scheduleTimezone:
-                  input.scheduleTimezone ?? report.scheduleTimezone,
-                nextScheduledRunAt: computeNextScheduledUpdateAt(
-                  input.cronExpression ?? report.cronExpression,
-                  now,
-                  input.scheduleTimezone ?? report.scheduleTimezone,
-                ),
-              }),
-          updatedTime: now,
-        },
+      const nextRevision = report.revision + 1;
+      const updated = await prisma.$transaction(async (tx) => {
+        const changed = await tx.report.update({
+          where: { id: input.reportId },
+          data: {
+            ...(input.title === undefined ? {} : { title: input.title }),
+            ...(input.description === undefined
+              ? {}
+              : { description: input.description }),
+            ...(input.channelId === undefined
+              ? {}
+              : { channelId: input.channelId }),
+            ...(input.queryText === undefined
+              ? {}
+              : { queryText: input.queryText }),
+            ...(input.cronExpression === undefined &&
+            input.scheduleTimezone === undefined
+              ? {}
+              : {
+                  cronExpression: input.cronExpression ?? report.cronExpression,
+                  scheduleTimezone:
+                    input.scheduleTimezone ?? report.scheduleTimezone,
+                  nextScheduledRunAt: computeNextScheduledUpdateAt(
+                    input.cronExpression ?? report.cronExpression,
+                    now,
+                    input.scheduleTimezone ?? report.scheduleTimezone,
+                  ),
+                }),
+            revision: nextRevision,
+            updatedTime: now,
+          },
+        });
+        await enqueueReportScheduleUpsert(tx, changed.id, nextRevision);
+        return changed;
       });
+      await notifyReportScheduleReconciler();
+      return updated;
     }),
 
   setEnabled: guildMutationProcedure("reports", "update")
@@ -306,20 +325,33 @@ export const reportRouter = router({
       const report = await loadReportOr404(input.reportId, input.guildId);
       assertReportMutable(report);
       const now = new Date();
-      return prisma.report.update({
-        where: { id: input.reportId },
-        data: input.isEnabled
-          ? {
-              isEnabled: true,
-              nextScheduledRunAt: computeNextScheduledUpdateAt(
-                report.cronExpression,
-                now,
-                report.scheduleTimezone,
-              ),
-              updatedTime: now,
-            }
-          : { isEnabled: false, nextScheduledRunAt: null, updatedTime: now },
+      const nextRevision = report.revision + 1;
+      const updated = await prisma.$transaction(async (tx) => {
+        const changed = await tx.report.update({
+          where: { id: input.reportId },
+          data: input.isEnabled
+            ? {
+                isEnabled: true,
+                nextScheduledRunAt: computeNextScheduledUpdateAt(
+                  report.cronExpression,
+                  now,
+                  report.scheduleTimezone,
+                ),
+                revision: nextRevision,
+                updatedTime: now,
+              }
+            : {
+                isEnabled: false,
+                nextScheduledRunAt: null,
+                revision: nextRevision,
+                updatedTime: now,
+              },
+        });
+        await enqueueReportScheduleUpsert(tx, changed.id, nextRevision);
+        return changed;
       });
+      await notifyReportScheduleReconciler();
+      return updated;
     }),
 
   delete: guildMutationProcedure("reports", "delete")
@@ -327,7 +359,15 @@ export const reportRouter = router({
     .mutation(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
       assertReportMutable(report);
-      await prisma.report.delete({ where: { id: input.reportId } });
+      await prisma.$transaction(async (tx) => {
+        await enqueueReportScheduleDeletion(
+          tx,
+          input.reportId,
+          report.revision + 1,
+        );
+        await tx.report.delete({ where: { id: input.reportId } });
+      });
+      await notifyReportScheduleReconciler();
       return { deleted: true };
     }),
 

@@ -2,6 +2,7 @@ import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import { z } from "zod";
 import {
+  ExploreActiveRunSchema,
   ExploreRunOutcomeSchema,
   ExploreTraceEntrySchema,
 } from "@scout-for-lol/data";
@@ -16,7 +17,7 @@ import { scoutTemporalInterruptedProviderAttempts } from "#src/metrics/temporal.
 import type { ScoutInteractiveRun } from "#generated/prisma/client/index.js";
 
 const ExplorePayloadSchema = z.strictObject({
-  summary: z.looseObject({ runId: z.uuid() }),
+  summary: ExploreActiveRunSchema,
   started: z.strictObject({
     conversationId: z.uuid(),
     title: z.string(),
@@ -253,6 +254,25 @@ export async function runScoutInteractiveActivity(
   }
   if (run.providerAttemptAt !== null) {
     return await ambiguousOutcome(run, database);
+  }
+
+  if (run.kind === "explore") {
+    const parsedPayload = ExplorePayloadSchema.parse(JSON.parse(run.payload));
+    await exploreRunManager.rehydrateTemporalRun({
+      summary: parsedPayload.summary,
+      identity: { userId: run.ownerId },
+      guildIds: parsedPayload.guildIds,
+      started: parsedPayload.started,
+    });
+  } else {
+    const { reportAiRuntime } =
+      await import("#src/reports/ai/temporal-runtime.ts");
+    if (reportAiRuntime(run.id) === undefined) {
+      return {
+        status: "interrupted",
+        partialOutputAvailable: (run.partialOutput?.length ?? 0) > 0,
+      };
+    }
   }
 
   const claim = await database.scoutInteractiveRun.updateMany({

@@ -17,6 +17,7 @@ import {
   waitForExploreConversation,
   type ExploreRateLimitIdentity,
   type ExploreRateLimitRejection,
+  type ExploreRateLimitTicket,
 } from "#src/explore/rate-limit.ts";
 import {
   ExploreNotFoundError,
@@ -46,6 +47,7 @@ import type {
   ExploreAgentRunner,
   RunTermination,
   Subscriber,
+  StartedTurn,
   TerminalRun,
 } from "#src/explore/run-manager-types.ts";
 import {
@@ -209,6 +211,12 @@ export class ExploreRunManager {
             });
           }
         } catch (error) {
+          if (error instanceof DurableExploreUnavailableError) {
+            await rollbackUnstartedExploreTurn(this.#client, {
+              ...started,
+              userId: identity.userId,
+            });
+          }
           this.#runs.delete(summary.runId);
           this.#conversationRuns.delete(summary.conversationId);
           if (error instanceof DurableExploreUnavailableError) {
@@ -308,6 +316,64 @@ export class ExploreRunManager {
   cancelTemporal(runId: string, message: string): void {
     const run = this.#runs.get(runId);
     if (run !== undefined) this.#abort(run, "stop", message);
+  }
+
+  /**
+   * Rebuild the process-local execution adapter for a durable run that was
+   * accepted by Temporal immediately before this backend restarted. The
+   * durable row already owns the quota reservation, so this ticket is a
+   * no-op adapter; Temporal and Postgres remain the source of execution truth.
+   */
+  async rehydrateTemporalRun(input: {
+    summary: ExploreActiveRun;
+    identity: ExploreRateLimitIdentity;
+    guildIds: string[];
+    started: StartedTurn;
+  }): Promise<void> {
+    if (this.#runs.has(input.summary.runId)) return;
+    const existingRunId = this.#conversationRuns.get(
+      input.summary.conversationId,
+    );
+    if (existingRunId !== undefined && existingRunId !== input.summary.runId) {
+      throw new ExploreConversationBusyError(
+        "This conversation already has an answer running.",
+      );
+    }
+    const transcript = await loadExploreTranscript(
+      this.#client,
+      input.summary.conversationId,
+      input.identity.userId,
+      input.started.messageId,
+    );
+    if (transcript === null) {
+      throw new ExploreNotFoundError("Conversation not found.");
+    }
+    const ticket: ExploreRateLimitTicket = {
+      allowed: true,
+      runId: input.summary.runId,
+      claimConversation: () => true,
+      commit: () => undefined,
+      finish: () => undefined,
+    };
+    const deferred = createDeferred();
+    const run: ActiveRun = {
+      summary: input.summary,
+      identity: input.identity,
+      guildIds: input.guildIds,
+      ticket,
+      started: input.started,
+      history: transcript.messages,
+      abortController: new AbortController(),
+      subscribers: new Set(),
+      answer: "",
+      activity: "Thinking…",
+      trace: [],
+      termination: null,
+      settled: deferred.promise,
+      resolveSettled: deferred.resolve,
+    };
+    this.#runs.set(run.summary.runId, run);
+    this.#conversationRuns.set(run.summary.conversationId, run.summary.runId);
   }
 
   async executeTemporal(runId: string): Promise<ExploreRunOutcome> {

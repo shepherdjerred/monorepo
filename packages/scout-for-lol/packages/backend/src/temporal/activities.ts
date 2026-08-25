@@ -385,7 +385,13 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             });
             const { deliverScheduledReportDispatches } =
               await import("#src/reports/discord-dispatcher.ts");
-            await deliverScheduledReportDispatches(dispatches);
+            if (dispatches.length > 0) {
+              await deliverScheduledReportDispatches(dispatches);
+            } else {
+              const { deliverStoredScheduledReport } =
+                await import("#src/reports/discord-dispatcher.ts");
+              await deliverStoredScheduledReport(reportId);
+            }
           } else {
             const runId = input.runId === undefined ? NaN : Number(input.runId);
             if (!Number.isSafeInteger(runId) || runId <= 0) {

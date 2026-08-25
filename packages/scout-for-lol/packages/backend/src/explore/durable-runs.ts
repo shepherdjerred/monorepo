@@ -66,15 +66,22 @@ export async function reserveAndStartDurableExploreRun(input: {
       databaseRunId: input.summary.runId,
     });
   } catch (error) {
-    await input.database.scoutInteractiveRun.updateMany({
-      where: { id: input.summary.runId, state: "PENDING" },
-      data: {
-        state: "FAILED",
-        outcome: "failed",
-        lastError: error instanceof Error ? error.message : String(error),
-        completedAt: new Date(),
-      },
-    });
+    // A client-side start error is ambiguous: Temporal may have accepted the
+    // workflow while the response was lost. Keep the reservation PENDING so
+    // the ingestion reconciler can reattach it instead of deleting the turn
+    // or issuing a second provider request. Only a supervisor that was known
+    // to be unavailable is terminalized immediately.
+    if (error instanceof DurableExploreUnavailableError) {
+      await input.database.scoutInteractiveRun.updateMany({
+        where: { id: input.summary.runId, state: "PENDING" },
+        data: {
+          state: "FAILED",
+          outcome: "failed",
+          lastError: error.message,
+          completedAt: new Date(),
+        },
+      });
+    }
     throw error;
   }
   return null;

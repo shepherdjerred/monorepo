@@ -171,6 +171,12 @@ async function auditReportSchedules(
   const prefix = `scout-${stage}-report-`;
   for await (const summary of client.schedule.list()) {
     if (!summary.scheduleId.startsWith(prefix)) continue;
+    // Fixed Scout schedules share the report prefix only when their names are
+    // introduced by a future operator convention. Report schedules always end
+    // in the numeric database ID; leave every other owned fixed schedule to its
+    // own reconciler and orphan audit.
+    const reportSuffix = summary.scheduleId.slice(prefix.length);
+    if (!/^\d+$/.test(reportSuffix)) continue;
     const memo = ScoutScheduleOwnershipMemoSchema.safeParse(summary.memo);
     if (
       memo.success &&

@@ -11,8 +11,9 @@ import { runDueReports } from "#src/reports/scheduler.ts";
 import { syncSystemReports } from "#src/reports/system-reports.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordGuildIdSchema, ReportIdSchema } from "@scout-for-lol/data";
 import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
+import { loadReportRunImage } from "#src/storage/s3-report-run.ts";
 import type { ScheduledReportDispatch } from "#src/reports/scheduler.ts";
 import {
   claimScoutEffect,
@@ -46,6 +47,55 @@ export async function deliverScheduledReportDispatches(
     await deliverReportDispatch(dispatch, "report_scheduled");
     await new Promise((resolve) => setTimeout(resolve, POST_DELAY_MS));
   }
+}
+
+/**
+ * Resume a scheduled delivery after the execution activity returned from
+ * `runDueReports` but crashed before Discord delivery. The ReportRun archive
+ * is the durable dispatch record; effect claims make replaying a completed
+ * chunk a no-op while allowing an interrupted chunk to finish.
+ */
+export async function deliverStoredScheduledReport(
+  reportId: number,
+): Promise<boolean> {
+  const parsedReportId = ReportIdSchema.parse(reportId);
+  const report = await prisma.report.findUnique({
+    where: { id: parsedReportId },
+  });
+  if (report === null) return false;
+  const run = await prisma.reportRun.findFirst({
+    where: {
+      reportId: parsedReportId,
+      trigger: "SCHEDULED",
+      status: "SUCCESS",
+      renderedContent: { not: null },
+    },
+    orderBy: [{ startedAt: "desc" }, { id: "desc" }],
+  });
+  if (run === null || run.renderedContent === null) return false;
+  const imageBytes =
+    run.imageS3Key === null
+      ? null
+      : await loadReportRunImage(report.id, run.id);
+  await deliverReportDispatch(
+    {
+      report,
+      result: {
+        runId: run.id,
+        rowsReturned: run.rowsReturned,
+        rowsScanned: run.rowsScanned,
+        output: {
+          content: run.renderedContent,
+          image:
+            imageBytes === null
+              ? null
+              : { filename: "report.png", data: imageBytes },
+        },
+      },
+    },
+    "report_scheduled",
+  );
+  return true;
 }
 
 export async function deliverReportDispatch(

@@ -194,8 +194,8 @@ export function createTemporalReportAiResponse(input: {
         databaseRunId: input.ticket.runId,
       });
     } catch (error) {
-      await prisma.scoutInteractiveRun.updateMany({
-        where: { id: input.ticket.runId },
+      const terminalized = await prisma.scoutInteractiveRun.updateMany({
+        where: { id: input.ticket.runId, state: "PENDING" },
         data: {
           state: "FAILED",
           outcome: "failed",
@@ -203,7 +203,12 @@ export function createTemporalReportAiResponse(input: {
           completedAt: new Date(),
         },
       });
-      runtime.finish({ status: "failed", partialOutputAvailable: false });
+      // Temporal may have accepted the workflow even when this HTTP request
+      // lost its response. If the activity already claimed the row, leave the
+      // live runtime and SSE stream alone; the workflow owns finalization.
+      if (terminalized.count === 1) {
+        runtime.finish({ status: "failed", partialOutputAvailable: false });
+      }
     }
   })();
 
