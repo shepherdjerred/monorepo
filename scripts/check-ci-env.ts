@@ -153,8 +153,7 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
       "POSTHOG_TOFU_STATE_PASSPHRASE",
     ],
     reason:
-      "PRs run the posthog validate action with backend-free OpenTofu and a " +
-      "non-sensitive placeholder; the credentialed plan/apply runs only on main.",
+      "PR validation uses backend-free OpenTofu with a placeholder; main alone gets credentials.",
   },
   {
     step: "pr-dryrun",
