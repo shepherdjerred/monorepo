@@ -26,6 +26,11 @@ that contract so a provider subprocess, heavy Glitter failure, or maintenance
 subprocess cannot take down another domain or inherit its Kubernetes
 permissions.
 
+During the staged migration, the foundational contract may define future
+domain queues before their Deployments land. Keep report-producing starts on
+`default` until the reports Deployment and explicit `REPORTS` activity routing
+are introduced together in the ingress layer.
+
 ## Structure
 
 ```
