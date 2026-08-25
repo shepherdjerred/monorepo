@@ -65,6 +65,11 @@ construction: it can pass in a long-lived worktree and mean nothing in CI. An
 exemption that behaves differently in those two places is worse than no
 exemption, because it reads as protection.
 
+`baseOptions()` in `packages/architecture/src/cruise.ts` records this next to
+the option it explains, and `circularRule()` in
+`packages/architecture/src/rules.ts` is where the surviving exemption is
+expressed.
+
 So boundaries hold for every edge kind, and that turns into a positive design
 rule rather than a workaround: a type that two layers both need is a shared
 type, and belongs in a module both are allowed to import. In practice a contract
@@ -119,6 +124,37 @@ does, with its own committed fixture proving it can fail. The
 [fixture-rule generator](https://github.com/shepherdjerred/monorepo/blob/c7c461d8bc2251c021877b3273e1404c536e0729/packages/architecture/src/rules.ts)
 derives that proof from the same definition. Deriving the rules does not derive
 the evidence.
+
+`cruiseArchitectureFixtures()` in `packages/architecture/src/cruise.ts` performs
+all three checks. A package's meta-test then asserts
+`errorCount === fixtureFiles.length`, which is what stops one fixture from
+standing in for several boundaries.
+
+## A rule needs a shape to point at
+
+Boundaries are path-prefix rules, so a package needs directories before it can
+declare one. `sourceRules()` in `packages/architecture/src/rules.ts` builds each
+pattern from the layer's directory name. `LAYER_SEGMENT` in
+`packages/architecture/src/definition.ts` restricts that name to one kebab-case
+segment, which keeps the generated regular expression literal.
+
+The consequence decides what adopting the harness costs. A package whose source
+root is flat cannot express a single boundary, because no rule has a directory
+to name. Grouping the modules is then the real work, and the rules are the easy
+part that follows.
+
+Two properties of that grouping are worth knowing before starting.
+
+The first is that filename prefixes are a poor guide to it. Group by the import
+graph instead. A module named for the layer above it is common, and it stays
+invisible until something forces the question.
+
+The second is that a module outside every layer directory is governed by
+nothing. It matches no `from` pattern and no `to` pattern, so it can import
+freely and be imported freely while every declared boundary still passes. A
+package-root facade is the usual instance, and it is worth checking for
+directly. `packages/pr-fleet-controller/architecture.config.ts` is a worked
+example of both properties.
 
 ## Each package is judged only on its own tree
 

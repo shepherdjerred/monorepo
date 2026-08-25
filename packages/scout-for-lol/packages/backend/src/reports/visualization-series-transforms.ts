@@ -22,18 +22,10 @@ export function normalizePercentStack(
       const total = totals.get(point.key) ?? 0;
       const value = total === 0 ? null : (point.value ?? 0) / total;
       const normalizedEvidence = {
-        evidence: { ...point.evidence, confidenceInterval: null },
+        evidence: point.evidence,
         ...(point.comparisonEvidence === undefined
           ? {}
-          : {
-              comparisonEvidence:
-                point.comparisonEvidence === null
-                  ? null
-                  : {
-                      ...point.comparisonEvidence,
-                      confidenceInterval: null,
-                    },
-            }),
+          : { comparisonEvidence: point.comparisonEvidence }),
       };
       if (point.comparisonValue === undefined) {
         return { ...point, ...normalizedEvidence, value };

@@ -26,7 +26,7 @@ import {
   type PrState,
 } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/domain/state.ts";
-import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/runtime/process-runner.ts";
+import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/exec/process-runner.ts";
 import { createWorkerRestackTools } from "@shepherdjerred/pr-fleet-controller/src/workers/restack-tools.ts";
 import { evidence, identity } from "./fixtures.ts";
 

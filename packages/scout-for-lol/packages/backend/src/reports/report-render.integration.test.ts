@@ -119,7 +119,12 @@ describe("RENDER clause — text kinds", () => {
     expect(output.image).toBeNull();
     expect(output.content).toContain(`**${TITLE}**`);
     expect(output.content).toContain("Player | Games | Wins | Win Rate");
-    expect(output.content).toContain("Alpha | 3 | 2 | 66.7%");
+    expect(output.content).toContain(
+      "Alpha | 3 | 2 (Based on 3 games) | 66.7% (Based on 3 games)",
+    );
+    expect(output.content).toContain(
+      "Fewer than 10 games — treat this rate as indicative only.",
+    );
     expect(output.content).toContain("Alpha");
     expect(output.content).toContain("Bravo");
   });
@@ -131,6 +136,8 @@ describe("RENDER clause — text kinds", () => {
     // ORDER BY games DESC → Alpha (3) before Bravo (1).
     expect(output.content).toMatch(/1\. Alpha/);
     expect(output.content).toMatch(/2\. Bravo/);
+    expect(output.content).toContain("Based on 3 games");
+    expect(output.content).not.toContain("95% CI");
   });
 
   test("a query with no RENDER clause defaults to a TABLE render", async () => {

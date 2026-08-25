@@ -1,5 +1,6 @@
 import {
   formatReportDisplayValue,
+  isLowSampleGameCount,
   UNGROUPED_LABEL_COLUMN_LABEL,
   type ExploreMessage,
 } from "@scout-for-lol/data";
@@ -43,6 +44,12 @@ export function SingleRowResult(props: {
   if (row === undefined) {
     return null;
   }
+  const gameBasis =
+    row.games === undefined ? "" : ` (Based on ${row.games.toString()} games)`;
+  const thinRateNote =
+    row.games !== undefined && isLowSampleGameCount(row.games)
+      ? " — Fewer than 10 games — treat this rate as indicative only."
+      : "";
   // The label column describes the grouping dimension, which a single
   // ungrouped row does not have; the value columns are the answer.
   const figures = props.preview.columns.flatMap((column) => {
@@ -62,7 +69,10 @@ export function SingleRowResult(props: {
             // identifies the column, so it is what React must list on.
             key: column.key,
             label: column.label,
-            text: formatReportDisplayValue(column, value),
+            text:
+              column.key === "games"
+                ? formatReportDisplayValue(column, value)
+                : `${formatReportDisplayValue(column, value)}${gameBasis}${column.format === "percent" ? thinRateNote : ""}`,
           },
         ];
   });

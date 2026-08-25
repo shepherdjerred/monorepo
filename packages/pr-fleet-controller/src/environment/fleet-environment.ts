@@ -22,7 +22,7 @@ import type {
   FleetEnvironment,
   FleetTelemetry,
 } from "#domain/ports.ts";
-import { runRecordedCommand } from "#runtime/recorded-command.ts";
+import { runRecordedCommand } from "#exec/recorded-command.ts";
 import type {
   CheckEvidence,
   PrIdentity,

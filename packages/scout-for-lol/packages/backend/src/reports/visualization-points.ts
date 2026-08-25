@@ -173,7 +173,7 @@ export function pointFromRow(input: PointInput): TemporalSeriesPoint {
       typeof value.comparisonValue === "number" ? value.comparisonValue : null,
     absoluteDelta: value.absoluteDelta ?? null,
     percentageDelta: value.percentageDelta ?? null,
-    evidence: pointEvidence(value, columnEvidence),
+    evidence: pointEvidence(value, columnEvidence, input.evidence?.games),
     ...(context.hasComparison
       ? { comparisonEvidence: pointComparisonEvidence(value) }
       : {}),
@@ -192,14 +192,19 @@ type ColumnEvidence = NonNullable<
 function pointEvidence(
   value: ReportResultValue,
   columnEvidence: ColumnEvidence | undefined,
+  rowGames: number | undefined,
 ): TemporalSeriesPoint["evidence"] {
   return {
+    games:
+      rowGames ??
+      value.games ??
+      columnEvidence?.sampleSize ??
+      value.sampleSize ??
+      0,
     sampleSize: columnEvidence?.sampleSize ?? value.sampleSize ?? 0,
     successes: columnEvidence?.successes ?? value.successes,
     numerator: columnEvidence?.numerator ?? value.numerator,
     denominator: columnEvidence?.denominator ?? value.denominator,
-    confidenceInterval:
-      columnEvidence?.confidenceInterval ?? value.confidenceInterval ?? null,
   };
 }
 
@@ -207,11 +212,11 @@ function pointComparisonEvidence(
   value: ReportResultValue,
 ): TemporalSeriesPoint["evidence"] {
   return {
+    games: value.comparisonGames ?? value.comparisonSampleSize ?? 0,
     sampleSize: value.comparisonSampleSize ?? 0,
     successes: value.comparisonSuccesses,
     numerator: value.comparisonNumerator,
     denominator: value.comparisonDenominator,
-    confidenceInterval: value.comparisonConfidenceInterval ?? null,
   };
 }
 
@@ -305,9 +310,9 @@ export function fillMissingBuckets(input: {
       comparisonValue: additive && context.hasComparison ? 0 : null,
       absoluteDelta: additive && context.hasComparison ? 0 : null,
       percentageDelta: null,
-      evidence: { sampleSize: 0, confidenceInterval: null },
+      evidence: { games: 0, sampleSize: 0 },
       ...(context.hasComparison
-        ? { comparisonEvidence: { sampleSize: 0, confidenceInterval: null } }
+        ? { comparisonEvidence: { games: 0, sampleSize: 0 } }
         : {}),
     });
   }

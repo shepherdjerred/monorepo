@@ -1,5 +1,7 @@
 import {
+  evidenceGames,
   formatReportDisplayValue,
+  isLowSampleGameCount,
   type ReportAiPreviewSummary,
   type TemporalSeries,
   type VisualizationSnapshot,
@@ -7,6 +9,7 @@ import {
 import {
   formatSeriesAbsoluteDelta,
   formatSeriesValue,
+  isPercentageSeries,
 } from "@scout-for-lol/report";
 
 const MAX_NATIVE_CELL_LENGTH = 160;
@@ -152,7 +155,7 @@ export function formatPreviewValueWithEvidence(
   if (seriesMatch === undefined) {
     return value;
   }
-  return `${value}${formatConfidenceInterval(
+  return `${value}${formatGameBasis(
     snapshot,
     seriesMatch.item,
     seriesMatch.point,
@@ -226,43 +229,61 @@ export function formatNativeSeriesValue(
     requireNumericRowValue(row, series.id),
   );
   const point = series.points.find((item) => item.key === row.key);
-  const confidenceIntervalText = formatConfidenceInterval(
-    snapshot,
-    series,
-    point,
-  );
+  const gameBasisText = formatGameBasis(snapshot, series, point);
   if (
     point === undefined ||
     (snapshot.temporal?.comparison === undefined &&
       point.comparisonEvidence === undefined)
   ) {
-    return `${value}${confidenceIntervalText}`;
+    return `${value}${gameBasisText}`;
   }
   const percentage = point.percentageDelta;
-  return `${value}${confidenceIntervalText} · Baseline: ${formatSeriesValue(
+  const comparisonBasis = formatComparisonGameBasis(series, point);
+  return `${value}${gameBasisText} · Baseline: ${formatSeriesValue(
     snapshot,
     series,
     point.comparisonValue ?? null,
-  )} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, point.absoluteDelta ?? null)} · ${
+  )}${comparisonBasis} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, point.absoluteDelta ?? null)} · ${
     percentage === null || percentage === undefined
       ? "Unknown"
       : `${(percentage * 100).toFixed(1)}%`
   }`;
 }
 
-function formatConfidenceInterval(
+function formatGameBasis(
   snapshot: VisualizationSnapshot,
   series: TemporalSeries,
   point: TemporalSeries["points"][number] | undefined,
 ): string {
-  const confidenceInterval = point?.evidence.confidenceInterval;
-  return confidenceInterval === null || confidenceInterval === undefined
-    ? ""
-    : ` · 95% CI ${formatSeriesValue(
-        snapshot,
-        series,
-        confidenceInterval.lower,
-      )}–${formatSeriesValue(snapshot, series, confidenceInterval.upper)}`;
+  if (point === undefined) return "";
+  if (series.metric === "games" || series.metric === "rank_position") return "";
+  const games = evidenceGames(point.evidence);
+  const comparisonGames =
+    point.comparisonEvidence === undefined || point.comparisonEvidence === null
+      ? undefined
+      : evidenceGames(point.comparisonEvidence);
+  const caveat =
+    isPercentageSeries(snapshot, series) &&
+    (isLowSampleGameCount(games) ||
+      (comparisonGames !== undefined && isLowSampleGameCount(comparisonGames)))
+      ? " · Fewer than 10 games — treat this rate as indicative only."
+      : "";
+  return ` · Based on ${games.toString()} games${caveat}`;
+}
+
+function formatComparisonGameBasis(
+  series: TemporalSeries,
+  point: TemporalSeries["points"][number],
+): string {
+  if (
+    series.metric === "games" ||
+    series.metric === "rank_position" ||
+    point.comparisonEvidence === undefined ||
+    point.comparisonEvidence === null
+  ) {
+    return "";
+  }
+  return ` (Based on ${evidenceGames(point.comparisonEvidence).toString()} games)`;
 }
 
 export function requireNumericRowValue(

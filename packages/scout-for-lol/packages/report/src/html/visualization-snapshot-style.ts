@@ -3,13 +3,17 @@ import type {
   ReportChartOptions,
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import { evidenceGames, isLowSampleGameCount } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import {
   analyticsChartColors,
   analyticsChartTheme,
   type AnalyticsChartTheme,
 } from "#src/html/analytics-chart-theme.ts";
-import { formatPercent } from "#src/html/visualization-value-format.ts";
+import {
+  formatPercent,
+  isPercentageSeries,
+} from "#src/html/visualization-value-format.ts";
 
 export type VisualizationSnapshotPresentation = {
   options: ReportChartOptions;
@@ -44,6 +48,30 @@ export function visualizationSnapshotBaseOption(
 ): echarts.EChartsOption {
   const { options, theme, colors } =
     visualizationSnapshotPresentation(snapshot);
+  const thinRateData = snapshot.series.some(
+    (series) =>
+      isPercentageSeries(snapshot, series) &&
+      series.points.some((point) => {
+        const comparisonGames =
+          point.comparisonEvidence === undefined ||
+          point.comparisonEvidence === null
+            ? undefined
+            : evidenceGames(point.comparisonEvidence);
+        return (
+          isLowSampleGameCount(evidenceGames(point.evidence)) ||
+          (comparisonGames !== undefined &&
+            isLowSampleGameCount(comparisonGames))
+        );
+      }),
+  );
+  const subtitle = [
+    options.subtitle,
+    thinRateData
+      ? "Fewer than 10 games — treat this rate as indicative only."
+      : undefined,
+  ]
+    .filter((value) => value !== undefined)
+    .join(" · ");
   return {
     backgroundColor: theme.background,
     animation: false,
@@ -51,7 +79,7 @@ export function visualizationSnapshotBaseOption(
     textStyle: { color: theme.text },
     title: {
       text: snapshot.title ?? defaultTitle,
-      ...(options.subtitle === undefined ? {} : { subtext: options.subtitle }),
+      ...(subtitle.length === 0 ? {} : { subtext: subtitle }),
       left: 28,
       top: 18,
       textStyle: { color: theme.accent, fontSize: 28 },

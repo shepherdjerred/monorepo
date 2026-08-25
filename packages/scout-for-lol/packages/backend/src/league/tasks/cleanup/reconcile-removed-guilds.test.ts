@@ -41,6 +41,12 @@ async function seedGuild(
       consecutiveErrorCount: 3,
     },
   });
+  await db.bucksNotificationPreference.create({
+    data: {
+      serverId,
+      discordId: testAccountId("802"),
+    },
+  });
 }
 
 function unknownGuildError(): DiscordAPIError {
@@ -87,6 +93,7 @@ const justAfterMidnight = new Date("2026-07-02T00:05:00.000Z");
 beforeEach(async () => {
   await prisma.player.deleteMany();
   await prisma.guildPermissionError.deleteMany();
+  await prisma.bucksNotificationPreference.deleteMany();
   await prisma.guildRemovalCandidate.deleteMany();
 });
 
@@ -95,6 +102,33 @@ afterAll(async () => {
 });
 
 describe("reconcileRemovedGuilds", () => {
+  test("discovers a removed guild whose only residual data is notification preferences", async () => {
+    await prisma.bucksNotificationPreference.create({
+      data: {
+        serverId: removedGuild,
+        discordId: testAccountId("803"),
+      },
+    });
+
+    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+      now: day1,
+    });
+    expect(
+      await prisma.bucksNotificationPreference.count({
+        where: { serverId: removedGuild },
+      }),
+    ).toBe(1);
+
+    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+      now: day2,
+    });
+    expect(
+      await prisma.bucksNotificationPreference.count({
+        where: { serverId: removedGuild },
+      }),
+    ).toBe(0);
+  });
+
   test("does not clean up on the first day a guild is seen missing - only records a candidate", async () => {
     await seedGuild(prisma, removedGuild);
 
@@ -148,6 +182,11 @@ describe("reconcileRemovedGuilds", () => {
       }),
     ).toBe(0);
     expect(
+      await prisma.bucksNotificationPreference.count({
+        where: { serverId: removedGuild },
+      }),
+    ).toBe(0);
+    expect(
       await prisma.guildRemovalCandidate.count({
         where: { serverId: removedGuild },
       }),
@@ -169,6 +208,11 @@ describe("reconcileRemovedGuilds", () => {
     // Nothing removed — we couldn't trust the (empty) membership snapshot.
     expect(
       await prisma.player.count({ where: { serverId: removedGuild } }),
+    ).toBe(1);
+    expect(
+      await prisma.bucksNotificationPreference.count({
+        where: { serverId: removedGuild },
+      }),
     ).toBe(1);
   });
 

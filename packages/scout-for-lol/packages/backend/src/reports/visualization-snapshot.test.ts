@@ -66,7 +66,6 @@ function queueRow(queue: string, value: number, comparison: number) {
         absoluteDelta: value - comparison,
         percentageDelta: value / comparison - 1,
         comparisonSampleSize: comparison,
-        comparisonConfidenceInterval: null,
       }),
     ],
   });
@@ -239,6 +238,7 @@ describe("temporal visualization buckets", () => {
         evidence: [
           {
             label: bucketRow.label,
+            games: 2,
             values: [{ column: "games", sampleSize: 2 }],
           },
         ],
@@ -275,7 +275,7 @@ describe("temporal visualization buckets", () => {
           comparisonValue: 0,
           absoluteDelta: 0,
           percentageDelta: null,
-          comparisonEvidence: { sampleSize: 0, confidenceInterval: null },
+          comparisonEvidence: { sampleSize: 0, games: 0 },
         }),
       ),
     );

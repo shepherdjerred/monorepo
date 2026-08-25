@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { tmpdir } from "node:os";
-import { runRecordedCommand } from "@shepherdjerred/pr-fleet-controller/src/runtime/recorded-command.ts";
+import { runRecordedCommand } from "@shepherdjerred/pr-fleet-controller/src/exec/recorded-command.ts";
 import { runRecordedToolOperation } from "@shepherdjerred/pr-fleet-controller/src/runtime/recorded-tool.ts";
 import { runRecordedWorkerAttempt } from "@shepherdjerred/pr-fleet-controller/src/runtime/recorded-worker-attempt.ts";
 import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/runtime/telemetry.ts";

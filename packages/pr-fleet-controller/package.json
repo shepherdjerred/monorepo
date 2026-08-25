@@ -7,16 +7,18 @@
     "pr-fleet": "./src/cli/main.ts"
   },
   "exports": {
-    ".": "./src/index.ts",
+    ".": "./src/controller/fleet-controller.ts",
     "./src/*": "./src/*"
   },
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#domain/*": "./src/domain/*",
     "#runtime/*": "./src/runtime/*",
     "#bundle/*": "./src/bundle/*",
     "#replay/*": "./src/replay/*",
     "#workers/*": "./src/workers/*",
     "#environment/*": "./src/environment/*",
+    "#exec/*": "./src/exec/*",
     "#controller/*": "./src/controller/*",
     "#watch/*": "./src/watch/*",
     "#cli/*": "./src/cli/*"

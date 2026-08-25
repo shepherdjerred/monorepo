@@ -331,18 +331,21 @@ const commands: Record<
     command: [
       "set -eu",
       "cd /app/packages/scout-for-lol/packages/backend",
+      // BuildKit can reuse a smoke network namespace while another image is
+      // probing its worker. Reserve ephemeral ports for this invocation so a
+      // concurrent Scout smoke cannot collide with the fixed service ports.
+      `ports="$(bun -e 'const listeners = [0, 0].map(() => Bun.listen({ hostname: "127.0.0.1", port: 0, socket: { data() {} } })); console.log(listeners.map((listener) => listener.port).join(" ")); for (const listener of listeners) listener.stop();')"`,
+      "set -- $ports",
+      'pg_port="$1"',
+      'http_port="$2"',
+      'export DATABASE_URL="postgres://postgres@127.0.0.1:${pg_port}/postgres"',
+      'export PORT="$http_port"',
       // Throwaway Postgres inside the smoke stage (apt postgresql). Resolve
       // the installed major version through pg_config; Debian's package
       // version is independent of the runtime image's base distribution.
       'postgres_bin="$(pg_config --bindir)"',
       '"$postgres_bin/initdb" -D /tmp/smoke-pg -U postgres --auth=trust --no-locale >/dev/null',
-      // Remote BuildKit can run multiple smoke stages on one builder. Retry a
-      // bounded port range so another concurrent smoke cannot make this
-      // otherwise isolated database fail before the app starts.
-      'smoke_pg_port=""',
-      'for candidate_port in $(seq 18732 18742); do if "$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 5 -l /tmp/smoke-pg.log -o "-p $candidate_port -c listen_addresses=127.0.0.1 -c unix_socket_directories=/tmp" start; then smoke_pg_port="$candidate_port"; break; fi; done',
-      '[ -n "$smoke_pg_port" ] || { cat /tmp/smoke-pg.log; exit 1; }',
-      'export DATABASE_URL="postgres://postgres@127.0.0.1:${smoke_pg_port}/postgres"',
+      'if ! "$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-p ${pg_port} -c listen_addresses=127.0.0.1 -c unix_socket_directories=/tmp" start; then cat /tmp/smoke-pg.log; exit 1; fi',
       "set +e",
       // Mirror the full image CMD: migrate → legacy import (which must take
       // its fresh-install marker path here) → ScoutQL v2 boot-time migration
@@ -365,6 +368,8 @@ const commands: Record<
       ENABLE_DISCORD_GATEWAY: "false",
       ENABLE_BACKGROUND_JOBS: "false",
       REPORT_LAKE_DIR: "/tmp/report-lake",
+      // Keep an explicit contract port for CI migration validation; the
+      // command above overrides it with a per-invocation ephemeral port.
       PORT: "18791",
     },
   },

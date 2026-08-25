@@ -37,17 +37,26 @@ describe("reportQueryPreviewSummary", () => {
       ],
       rowsScanned: 20,
       range: RANGE,
+      evidence: [
+        {
+          label: "All",
+          games: 20,
+          values: [{ column: "games", sampleSize: 20 }],
+        },
+      ],
     };
 
     expect(reportQueryPreviewSummary(result).rows).toEqual([
       {
         label: "All",
+        games: 20,
         values: [{ column: "games", value: null }],
       },
     ]);
     expect(reportQueryPreviewSummary(result).visualizationRows).toEqual([
       {
         label: "All",
+        games: 20,
         values: [{ column: "games", value: null }],
       },
     ]);

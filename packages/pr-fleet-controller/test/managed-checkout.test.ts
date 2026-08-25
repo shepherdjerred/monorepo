@@ -10,7 +10,7 @@ import type {
   CommandRequest,
   CommandResult,
 } from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
-import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/runtime/process-runner.ts";
+import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/exec/process-runner.ts";
 
 function commandResult(
   exitCode: number,

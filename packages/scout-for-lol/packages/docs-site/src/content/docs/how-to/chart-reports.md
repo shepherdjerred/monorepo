@@ -53,6 +53,14 @@ A name inside `WITH (...)` must be one the `SELECT` produced. That is checked
 when the query compiles, so a chart no longer renders empty because `y` pointed
 at nothing — it refuses to save instead.
 
+## Read the evidence
+
+Scout reports describe matches Scout has ingested for tracked players. They do
+not describe every League match or the whole ranked ladder. Rates and derived
+values show their game basis as **Based on N games**. When fewer than 10 games
+support a rate, Scout adds: **Fewer than 10 games — treat this rate as
+indicative only.**
+
 ## Chart a trend
 
 Group by a truncated timestamp rather than a player or champion, and echo the

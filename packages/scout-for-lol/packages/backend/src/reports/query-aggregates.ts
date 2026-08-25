@@ -1,4 +1,4 @@
-import { REPORT_MAX_ROWS_LIMIT, wilsonInterval95 } from "@scout-for-lol/data";
+import { REPORT_MAX_ROWS_LIMIT } from "@scout-for-lol/data";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 import type {
   PlanAggregateRow,
@@ -25,7 +25,7 @@ import type {
  * Ordering, HAVING, LIMIT and every derived value now happen where they
  * belong — in SQL (or, for teammate groups, in the JS evaluator that stands in
  * for it). What is left here is what SQL cannot say: which row can @mention
- * somebody, and what confidence a rendered number has earned.
+ * somebody, and how many games back a rendered number.
  */
 
 /** Temporal reports plot many more rows than a table ever shows. */
@@ -66,6 +66,7 @@ export function resultFromPlanRows(input: PlanResultInput): ReportQueryResult {
     ...(input.temporal === undefined ? {} : { temporal: input.temporal }),
     evidence: input.rows.map((entry) => ({
       label: entry.row.label,
+      games: rowGames(entry.row),
       values: entry.row.outputs.map((output) => ({
         column: output.name,
         ...outputEvidence(output.evidence),
@@ -101,6 +102,7 @@ function baseResultValue(output: PlanOutputValue): ReportResultValue {
     column: output.name,
     value: output.value,
     sampleSize: evidence.sampleSize,
+    games: evidence.sampleSize,
     ...(evidence.successes === undefined
       ? {}
       : { successes: evidence.successes }),
@@ -110,7 +112,6 @@ function baseResultValue(output: PlanOutputValue): ReportResultValue {
     ...(evidence.denominator === undefined
       ? {}
       : { denominator: evidence.denominator }),
-    confidenceInterval: evidence.confidenceInterval,
   };
 }
 
@@ -143,7 +144,7 @@ function resultValue(
     absoluteDelta: deltas.absolute,
     percentageDelta: deltas.percentage,
     comparisonSampleSize: baselineEvidence?.sampleSize ?? 0,
-    comparisonConfidenceInterval: baselineEvidence?.confidenceInterval ?? null,
+    comparisonGames: baselineEvidence?.sampleSize ?? 0,
     ...(baselineEvidence?.successes === undefined
       ? {}
       : { comparisonSuccesses: baselineEvidence.successes }),
@@ -175,24 +176,21 @@ export type OutputEvidenceSummary = {
   successes?: number;
   numerator?: number;
   denominator?: number;
-  confidenceInterval: ReturnType<typeof wilsonInterval95>;
 };
 
 /**
  * What the compiler's evidence companions mean for the renderer.
  *
- * A rate earns a Wilson interval from its own successes and trials — under a
- * FILTER those are the filtered counts, which is exactly when a blanket
- * COUNT(*) denominator would be wrong. A ratio has no such interval, and its
- * denominator is its sample: `per_minute(x)` is measured over minutes played,
- * not over games.
+ * A rate's sample size is its own trials — under a FILTER those are the
+ * filtered counts, which is exactly when a blanket COUNT(*) denominator would
+ * be wrong. A ratio has no such trial count; its denominator is its sample:
+ * `per_minute(x)` is measured over minutes played, not over games.
  */
 function outputEvidence(evidence: PlanOutputEvidence): OutputEvidenceSummary {
   if (evidence.kind === "rate") {
     return {
       sampleSize: evidence.trials,
       successes: evidence.successes,
-      confidenceInterval: wilsonInterval95(evidence.successes, evidence.trials),
     };
   }
   if (evidence.kind === "ratio") {
@@ -200,10 +198,25 @@ function outputEvidence(evidence: PlanOutputEvidence): OutputEvidenceSummary {
       sampleSize: evidence.denominator,
       numerator: evidence.numerator,
       denominator: evidence.denominator,
-      confidenceInterval: null,
     };
   }
-  return { sampleSize: evidence.sampleCount, confidenceInterval: null };
+  return { sampleSize: evidence.sampleCount };
+}
+
+/**
+ * The plain-language game count behind a row.
+ *
+ * There is no single canonical "games" column in the SQL plan — each output
+ * carries its own evidence sample size, scoped to its own FILTER. An output
+ * literally named `games` (the convention every migrated and AI-authored
+ * query follows) is the row's real, unfiltered game count; failing that, the
+ * first output's sample size is the best available stand-in.
+ */
+function rowGames(row: PlanAggregateRow): number {
+  const named = row.outputs.find((output) => output.name === "games");
+  const [first] = row.outputs;
+  const source = named ?? first;
+  return source === undefined ? 0 : outputEvidence(source.evidence).sampleSize;
 }
 
 /**

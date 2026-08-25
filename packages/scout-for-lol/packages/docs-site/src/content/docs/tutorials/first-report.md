@@ -70,6 +70,11 @@ with how many were returned and how many were scanned.
 This is real data, not a sample — if a player is missing, they have not played
 in the window.
 
+The preview shows the evidence basis for each result. Rates say **Based on N
+games**. A rate supported by fewer than 10 games is marked **Fewer than 10
+games — treat this rate as indicative only.** All results describe matches
+Scout recorded, not League-wide truth.
+
 ## 4. Change what it measures
 
 Replace the two outputs with total damage dealt to champions:

@@ -59,6 +59,13 @@ is stored, then hands the newest snapshot match to the normal cursor. A game
 that finishes during the import is therefore detected once on the next live
 poll instead of being lost or replayed.
 
+## How to read report rates
+
+Explore and reports use the matches Scout has ingested for tracked players. They
+are not a measure of the entire League population. Each rate includes the
+number of games behind it, and a rate based on fewer than 10 games is labeled:
+**Fewer than 10 games — treat this rate as indicative only.**
+
 ## Delivery is decided per subscription
 
 Finding a match and delivering it are separate questions. Once a match is

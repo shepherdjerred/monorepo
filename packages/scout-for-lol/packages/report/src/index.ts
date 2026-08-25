@@ -45,6 +45,7 @@ export {
 export {
   formatSeriesValue,
   formatSeriesAbsoluteDelta,
+  isPercentageSeries,
 } from "./html/visualization-value-format.ts";
 export {
   getChampionInfo,

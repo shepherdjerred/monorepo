@@ -124,6 +124,54 @@ describe("visualizationSnapshotToOption", () => {
   });
 });
 
+describe("rank-history visualization evidence", () => {
+  test("does not invent a game basis for rank-history points", () => {
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "LINE_CHART",
+      title: "Rank history",
+      temporal: {
+        window: { kind: "relative", days: 30 },
+        bucket: "day",
+        timezone: "UTC",
+      },
+      bucket: "day",
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [
+        {
+          id: "rank:aurora",
+          label: "Aurora",
+          metric: "rank_position",
+          additive: false,
+          points: [
+            {
+              key: "2026-08-08",
+              label: "2026-08-08",
+              start: "2026-08-08T00:00:00.000Z",
+              end: "2026-08-08T23:59:59.999Z",
+              value: 1,
+              evidence: { sampleSize: 1 },
+            },
+          ],
+        },
+      ],
+      annotations: [],
+      trends: [],
+    });
+
+    expect(tooltipText(snapshot, { dataIndex: 0 })).not.toContain("Based on");
+  });
+});
+
 describe("temporal chart rendering", () => {
   test("aligns sparse trend values to global patch categories", () => {
     const snapshot = VisualizationSnapshotSchema.parse({
@@ -253,9 +301,11 @@ describe("temporal chart rendering", () => {
               absoluteDelta: 0.1,
               percentageDelta: 0.25,
               evidence: {
+                games: 10,
                 sampleSize: 10,
                 confidenceInterval: { level: 0.95, lower: 0.4, upper: 0.6 },
               },
+              comparisonEvidence: { games: 4, sampleSize: 4 },
             },
           ],
         },
@@ -266,9 +316,10 @@ describe("temporal chart rendering", () => {
 
     const tooltip = tooltipText(snapshot, { dataIndex: 0 });
     expect(tooltip).toContain("Win rate: 50.0%");
-    expect(tooltip).toContain("Baseline: 40.0%");
+    expect(tooltip).toContain("Baseline: 40.0% (Based on 4 games)");
     expect(tooltip).toContain("Δ 10.0 pp");
-    expect(tooltip).toContain("95% CI 40.0%–60.0%");
+    expect(tooltip).toMatch(/Fewer than 10 games/);
+    expect(tooltip).not.toContain("95% CI");
     expect(usesPercentageAxis(snapshot)).toBe(true);
     expect(formatSnapshotAxisValue(snapshot, 0.5)).toBe("50.0%");
   });
@@ -480,6 +531,58 @@ describe("scatter chart rendering", () => {
   });
 });
 
+test("adds a thin-data subtitle to rate charts", () => {
+  const thinOption = JSON.stringify(
+    visualizationSnapshotToOption(rateSnapshot(9), "static"),
+  );
+  const sufficientOption = JSON.stringify(
+    visualizationSnapshotToOption(rateSnapshot(10), "static"),
+  );
+  const caveat = "Fewer than 10 games — treat this rate as indicative only.";
+  expect(thinOption).toContain(caveat);
+  expect(sufficientOption).not.toContain(caveat);
+});
+
+function rateSnapshot(games: number) {
+  return VisualizationSnapshotSchema.parse({
+    version: 1,
+    generatedAt: "2026-08-08T00:00:00.000Z",
+    kind: "LINE_CHART",
+    title: "Win rate",
+    temporal: null,
+    bucket: null,
+    display: {
+      theme: null,
+      palette: null,
+      smooth: false,
+      stack: "none",
+      rollingWindow: null,
+      cumulative: false,
+      sparkline: false,
+    },
+    series: [
+      {
+        id: "win-rate",
+        label: "Win rate",
+        metric: "win_rate",
+        additive: false,
+        points: [
+          {
+            key: "win-rate",
+            label: "Win rate",
+            start: "2026-08-08T00:00:00.000Z",
+            end: "2026-08-08T23:59:59.999Z",
+            value: 0.5,
+            evidence: { games, sampleSize: games },
+          },
+        ],
+      },
+    ],
+    annotations: [],
+    trends: [],
+  });
+}
+
 function scatterPoint(label: string, value: number, xValue?: number | null) {
   return {
     key: label,
@@ -587,7 +690,7 @@ describe("calendar visualization options", () => {
     const tooltip = calendarTooltipText(snapshot, {
       data: ["2026-08-08", 0.6, 0.4, 0.2, 0.5, 10],
     });
-    expect(tooltip).toContain("0.6 (n=10)");
+    expect(tooltip).toContain("0.6 (Based on 10 games)");
     expect(tooltip).toContain("Baseline: 0.4");
     expect(tooltip).toContain("Δ 0.2");
     expect(tooltip).toContain("50.0%");

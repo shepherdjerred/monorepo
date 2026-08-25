@@ -1,4 +1,5 @@
 import {
+  isLowSampleGameCount,
   formatReportDisplayValue,
   type ReportRenderSpec,
   type VisualizationSnapshot,
@@ -165,33 +166,41 @@ function formatTextReport(
   }
 
   if (render.kind === "TABLE") {
-    return `**${title}**\n${formatTable(result)}`;
+    return appendThinDataNote(result, `**${title}**\n${formatTable(result)}`);
   }
 
   if (render.kind === "LIST") {
-    return `**${title}**\n${result.rows
-      .map((row) => `- ${row.label}: ${formatValues(result, row)}`)
-      .join("\n")}`;
+    return appendThinDataNote(
+      result,
+      `**${title}**\n${result.rows
+        .map(
+          (row, index) => `- ${row.label}: ${formatValues(result, row, index)}`,
+        )
+        .join("\n")}`,
+    );
   }
 
   const mentionCount = resolveMentionCount(
     render.options.mentions,
     result.rows.length,
   );
-  return `**${title}**\n${result.rows
-    .map(
-      (row, index) =>
-        `${(index + 1).toString()}. ${formatRankedLabel({
-          label: row.label,
-          index,
-          mentionIdentity: row.mentionIdentity,
-          ...(mentions.playerDiscordIds === undefined
-            ? {}
-            : { playerDiscordIds: mentions.playerDiscordIds }),
-          mentionCount,
-        })} — ${formatValues(result, row)}`,
-    )
-    .join("\n")}`;
+  return appendThinDataNote(
+    result,
+    `**${title}**\n${result.rows
+      .map(
+        (row, index) =>
+          `${(index + 1).toString()}. ${formatRankedLabel({
+            label: row.label,
+            index,
+            mentionIdentity: row.mentionIdentity,
+            ...(mentions.playerDiscordIds === undefined
+              ? {}
+              : { playerDiscordIds: mentions.playerDiscordIds }),
+            mentionCount,
+          })} — ${formatValues(result, row, index)}`,
+      )
+      .join("\n")}`,
+  );
 }
 
 function formatTable(result: ReportQueryResult): string {
@@ -199,7 +208,7 @@ function formatTable(result: ReportQueryResult): string {
   const header = columns.map((column) => column.label).join(" | ");
   const separator = columns.map(() => "---").join(" | ");
   const body = result.rows
-    .map((row) =>
+    .map((row, rowIndex) =>
       columns
         .map((column) => {
           if (column.key === "label") {
@@ -208,9 +217,11 @@ function formatTable(result: ReportQueryResult): string {
           const value = row.values.find(
             (entry) => entry.column === column.key,
           )?.value;
-          return value === undefined || value === null
-            ? "—"
-            : formatReportDisplayValue(column, value);
+          return formatReportValue(
+            column,
+            value,
+            result.evidence?.[rowIndex]?.games,
+          );
         })
         .join(" | "),
     )
@@ -218,19 +229,60 @@ function formatTable(result: ReportQueryResult): string {
   return `\`\`\`\n${header}\n${separator}\n${body}\n\`\`\``;
 }
 
-function formatValues(result: ReportQueryResult, row: ReportResultRow): string {
+function formatValues(
+  result: ReportQueryResult,
+  row: ReportResultRow,
+  rowIndex: number,
+): string {
   const columns = planResultColumns(result.plan, result.columns);
+  const games = result.evidence?.[rowIndex]?.games;
   return row.values
     .map((value) => {
       const column = columns.find((entry) => entry.key === value.column);
       if (column === undefined) {
         throw new Error(`Missing report column ${value.column}`);
       }
-      return value.value === null
-        ? `${column.label}: —`
-        : `${column.label}: ${formatReportDisplayValue(column, value.value)}`;
+      return `${column.label}: ${formatReportValue(column, value.value, games)}`;
     })
     .join(", ");
+}
+
+function formatReportValue(
+  column: ReturnType<typeof planResultColumns>[number],
+  value: string | number | null | undefined,
+  games: number | undefined,
+): string {
+  if (value === undefined || value === null) return "—";
+  const formatted = formatReportDisplayValue(column, value);
+  return games === undefined || column.key === "games"
+    ? formatted
+    : `${formatted} (Based on ${games.toString()} games)`;
+}
+
+function appendThinDataNote(
+  result: ReportQueryResult,
+  content: string,
+): string {
+  return hasThinRateRows(result)
+    ? `${content}\n\nFewer than 10 games — treat this rate as indicative only.`
+    : content;
+}
+
+function hasThinRateRows(result: ReportQueryResult): boolean {
+  const columns = planResultColumns(result.plan, result.columns);
+  return result.rows.some((row, rowIndex) => {
+    const games = result.evidence?.[rowIndex]?.games;
+    return (
+      games !== undefined &&
+      isLowSampleGameCount(games) &&
+      row.values.some((value) =>
+        columns.some(
+          (column) =>
+            column.key === value.column && column.format === "percent",
+        ),
+      )
+    );
+  });
 }
 
 function renderBarChart(

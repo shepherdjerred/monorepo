@@ -12,5 +12,5 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src", "test", "eslint.config.ts"]
+  "include": ["src", "test", "eslint.config.ts", "architecture.config.ts"]
 }

@@ -1,4 +1,7 @@
-import { formatReportDisplayValue } from "@scout-for-lol/data";
+import {
+  formatReportDisplayValue,
+  isLowSampleGameCount,
+} from "@scout-for-lol/data";
 import type { ExploreMessage } from "@scout-for-lol/data";
 
 /**
@@ -67,16 +70,31 @@ function previewTable(
       const value = row.values.find(
         (entry) => entry.column === column.key,
       )?.value;
-      return value === undefined || value === null
-        ? ""
-        : escapeCell(formatReportDisplayValue(column, value));
+      if (value === undefined || value === null) return "";
+      const formatted = formatReportDisplayValue(column, value);
+      return escapeCell(
+        column.key === "games" || row.games === undefined
+          ? formatted
+          : `${formatted} (Based on ${row.games.toString()} games)`,
+      );
     }),
   ]);
-  return [
+  const table = [
     `| ${headers.join(" | ")} |`,
     `| ${headers.map(() => "---").join(" | ")} |`,
     ...rows.map((cells) => `| ${cells.join(" | ")} |`),
   ];
+  if (
+    preview.rows.some(
+      (row) =>
+        row.games !== undefined &&
+        isLowSampleGameCount(row.games) &&
+        metricColumns.some((column) => column.format === "percent"),
+    )
+  ) {
+    table.push("", "Fewer than 10 games — treat this rate as indicative only.");
+  }
+  return table;
 }
 
 /** Trigger a download without leaving the page. */

@@ -3,7 +3,7 @@ import type { TemporalSeries } from "@scout-for-lol/data";
 import { normalizePercentStack } from "#src/reports/visualization-series-transforms.ts";
 
 describe("normalizePercentStack", () => {
-  test("clears confidence intervals after changing values to shares", () => {
+  test("preserves evidence when changing values to shares", () => {
     const series: TemporalSeries[] = [
       normalizedSeries("wins", 3, 2),
       normalizedSeries("losses", 1, 2),
@@ -14,8 +14,8 @@ describe("normalizePercentStack", () => {
     expect(normalized[0]?.points[0]).toMatchObject({
       value: 0.75,
       comparisonValue: 0.5,
-      evidence: { sampleSize: 4, confidenceInterval: null },
-      comparisonEvidence: { sampleSize: 4, confidenceInterval: null },
+      evidence: { sampleSize: 4 },
+      comparisonEvidence: { sampleSize: 4 },
     });
   });
 });

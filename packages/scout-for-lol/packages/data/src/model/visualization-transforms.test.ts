@@ -4,7 +4,6 @@ import {
   cumulativeSeries,
   linearTrend,
   rollingSeries,
-  wilsonInterval95,
 } from "#src/model/visualization-transforms.ts";
 import type { TemporalSeriesPoint } from "#src/model/temporal-analysis.ts";
 
@@ -15,7 +14,7 @@ function point(value: number | null, sampleSize: number): TemporalSeriesPoint {
     start: "2026-01-01T00:00:00.000Z",
     end: "2026-01-01T23:59:59.999Z",
     value,
-    evidence: { sampleSize, confidenceInterval: null },
+    evidence: { games: sampleSize, sampleSize },
   };
 }
 
@@ -29,8 +28,8 @@ function comparedPoint(
     ...point(value, sampleSize),
     comparisonValue,
     comparisonEvidence: {
+      games: comparisonSampleSize,
       sampleSize: comparisonSampleSize,
-      confidenceInterval: null,
     },
   };
 }
@@ -44,11 +43,11 @@ function comparedRatePoint(
   return {
     ...point(successes / sampleSize, sampleSize),
     comparisonValue: comparisonSuccesses / comparisonSampleSize,
-    evidence: { sampleSize, successes, confidenceInterval: null },
+    evidence: { games: sampleSize, sampleSize, successes },
     comparisonEvidence: {
+      games: comparisonSampleSize,
       sampleSize: comparisonSampleSize,
       successes: comparisonSuccesses,
-      confidenceInterval: null,
     },
   };
 }
@@ -57,7 +56,7 @@ function comparedGapPoint(): TemporalSeriesPoint {
   return {
     ...point(null, 0),
     comparisonValue: null,
-    comparisonEvidence: { sampleSize: 0, confidenceInterval: null },
+    comparisonEvidence: { games: 0, sampleSize: 0 },
   };
 }
 
@@ -77,28 +76,21 @@ function comparedRatioPoint(
         ? comparison.numerator
         : comparison.numerator / comparison.denominator,
     evidence: {
+      games: current.sampleSize,
       sampleSize: current.sampleSize,
       numerator: current.numerator,
       denominator: current.denominator,
-      confidenceInterval: null,
     },
     comparisonEvidence: {
+      games: comparison.sampleSize,
       sampleSize: comparison.sampleSize,
       numerator: comparison.numerator,
       denominator: comparison.denominator,
-      confidenceInterval: null,
     },
   };
 }
 
 describe("visualization transforms", () => {
-  test("computes Wilson 95 percent intervals for binary rates", () => {
-    const interval = wilsonInterval95(5, 10);
-    expect(interval?.lower).toBeCloseTo(0.2366, 3);
-    expect(interval?.upper).toBeCloseTo(0.7634, 3);
-    expect(wilsonInterval95(0, 0)).toBeNull();
-  });
-
   test("returns an unknown percent delta for a zero baseline", () => {
     expect(comparisonDeltas(4, 0)).toEqual({
       absolute: 4,
@@ -197,8 +189,8 @@ describe("visualization transforms", () => {
 
     expect(rolled[2]?.value).toBeNull();
     expect(rolled[2]?.evidence).toEqual({
+      games: 0,
       sampleSize: 0,
-      confidenceInterval: null,
     });
   });
 

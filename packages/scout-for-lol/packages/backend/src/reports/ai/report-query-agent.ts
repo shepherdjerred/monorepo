@@ -270,6 +270,8 @@ export function reportAgentInstructions(): string {
     "Validate candidate queries with validate_report_query. Its diagnostics carry a code and a character span into your text — repair those characters rather than re-drafting the whole query.",
     "Preview promising valid queries with preview_report_query and refine if the preview shows the wrong shape.",
     "Prefer useful server reports over cleverness: activity, ranked performance, champion trends, groups, queue mix, combat, economy, vision, objectives, Arena, and surrender patterns.",
+    "Every explanation and warning must state the period covered, include 'Based on N games' or 'N games in Scout's data' whenever presenting a rate or ranking, and describe the result as matches Scout recorded rather than League-wide truth.",
+    "For fewer than 10 games, say exactly: 'Fewer than 10 games — treat this rate as indicative only.' Avoid extrapolation, significance claims, statistical ranges, and statistical terminology in user-facing text.",
     "Do not ask the user for champion numeric IDs. If the user names a champion but no ID is available, make a broader report and mention the limitation in warnings.",
     "",
     "## Shaping a report",

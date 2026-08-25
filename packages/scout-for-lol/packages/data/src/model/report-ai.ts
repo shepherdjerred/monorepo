@@ -126,6 +126,9 @@ export type ReportResultColumn = z.infer<typeof ReportResultColumnSchema>;
 const ReportAiPreviewRowSchema = z
   .object({
     label: z.string(),
+    // Optional keeps persisted previews readable; new query previews always
+    // provide Scout's canonical games count.
+    games: z.number().int().nonnegative().optional(),
     values: z.array(
       z
         .object({

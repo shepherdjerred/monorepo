@@ -21,6 +21,11 @@ export const VISUALIZATION_MAX_SERIES = 8;
  * arbitrary day count.
  */
 export const VISUALIZATION_MAX_POINTS = 2000;
+export const LOW_SAMPLE_GAME_THRESHOLD = 10;
+
+export function isLowSampleGameCount(games: number): boolean {
+  return games < LOW_SAMPLE_GAME_THRESHOLD;
+}
 
 export const TemporalBucketSchema = z.enum([
   "auto",
@@ -157,11 +162,16 @@ export type ConfidenceInterval = z.infer<typeof ConfidenceIntervalSchema>;
 
 export const TemporalMetricEvidenceSchema = z
   .object({
+    // Optional only for compatibility with snapshots created before game
+    // counts became canonical. New evidence always includes this field.
+    games: z.number().int().nonnegative().optional(),
     sampleSize: z.number().int().nonnegative(),
     successes: z.number().int().nonnegative().optional(),
     numerator: z.number().optional(),
     denominator: z.number().nonnegative().optional(),
-    confidenceInterval: ConfidenceIntervalSchema.nullable().default(null),
+    // Legacy compatibility only. New snapshots never write this field and
+    // renderers deliberately ignore it.
+    confidenceInterval: ConfidenceIntervalSchema.nullable().optional(),
   })
   .strict();
 export type TemporalMetricEvidence = z.infer<

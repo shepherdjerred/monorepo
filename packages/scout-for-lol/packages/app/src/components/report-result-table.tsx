@@ -1,4 +1,5 @@
 import {
+  isLowSampleGameCount,
   formatReportDisplayValue,
   type ReportResultColumn,
   type VisualizationSnapshot,
@@ -16,6 +17,7 @@ import {
 // rows, whose values are nullable when a column is absent for a row.
 type PreviewRow = {
   label: string;
+  games?: number | undefined;
   values: {
     column: string;
     value: string | number | null;
@@ -27,14 +29,10 @@ type PreviewRow = {
 
 type PreviewEvidence = {
   label: string;
+  games: number;
   values: {
     column: string;
     sampleSize: number;
-    confidenceInterval?: {
-      level: 0.95;
-      lower: number;
-      upper: number;
-    } | null;
   }[];
 };
 
@@ -84,6 +82,11 @@ export function ReportResultTable(props: {
           </TableBody>
         </Table>
       </div>
+      {hasThinRateRows(props.columns, props.rows, props.evidence) && (
+        <p className="text-xs text-scout-subtle">
+          Fewer than 10 games — treat this rate as indicative only.
+        </p>
+      )}
     </div>
   );
 }
@@ -164,20 +167,10 @@ function formatCell(
   }
   const result = row.values.find((entry) => entry.column === column.key);
   if (result?.value === undefined || result.value === null) return "—";
-  const evidence = evidenceRow?.values.find(
-    (entry) => entry.column === column.key,
-  );
   const details: string[] = [];
-  if (evidence !== undefined) {
-    details.push(`n=${evidence.sampleSize.toString()}`);
-    if (
-      evidence.confidenceInterval !== null &&
-      evidence.confidenceInterval !== undefined
-    ) {
-      details.push(
-        `95% CI ${(evidence.confidenceInterval.lower * 100).toFixed(1)}–${(evidence.confidenceInterval.upper * 100).toFixed(1)}%`,
-      );
-    }
+  const games = evidenceRow?.games ?? row.games;
+  if (games !== undefined && column.key !== "games") {
+    details.push(`Based on ${games.toString()} games`);
   }
   if (result.absoluteDelta !== undefined && result.absoluteDelta !== null) {
     details.push(`Δ ${formatReportDisplayValue(column, result.absoluteDelta)}`);
@@ -191,4 +184,19 @@ function formatCell(
   }
   const suffix = details.length === 0 ? "" : ` (${details.join(" · ")})`;
   return `${formatReportDisplayValue(column, result.value)}${suffix}`;
+}
+
+function hasThinRateRows(
+  columns: ReportResultColumn[],
+  rows: PreviewRow[],
+  evidence: PreviewEvidence[] | undefined,
+): boolean {
+  return rows.some((row, rowIndex) => {
+    const games = evidence?.[rowIndex]?.games ?? row.games;
+    return (
+      games !== undefined &&
+      isLowSampleGameCount(games) &&
+      columns.some((column) => column.format === "percent")
+    );
+  });
 }

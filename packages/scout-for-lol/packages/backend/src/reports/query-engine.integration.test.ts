@@ -402,6 +402,7 @@ describe("executeReportQuery compare = previous_period", () => {
       absoluteDelta: 1,
       percentageDelta: null,
       comparisonSampleSize: 0,
+      comparisonGames: 0,
     });
     expect(
       byDay.get("2026-05-16")?.values.find((v) => v.column === "win_rate"),
