@@ -3,9 +3,18 @@ import { z } from "zod";
 export const WorkerRoleSchema = z.enum([
   "all",
   "agent",
+  "control",
   "core",
   "glitter",
+  "glitter-context",
+  "glitter-corpus",
+  "home",
+  "infra",
+  "legacy",
   "maintenance",
+  "repo",
+  "reports",
+  "scout",
 ]);
 
 export type WorkerRole = z.infer<typeof WorkerRoleSchema>;

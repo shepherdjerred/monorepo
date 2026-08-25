@@ -1,5 +1,14 @@
 export const TASK_QUEUES = {
+  /** Migration-only queue retained until every existing execution drains. */
   DEFAULT: "default",
+  /** Latency-sensitive Home Assistant workflows and activities. */
+  HOME: "home",
+  /** Shared report delivery, freshness, and failure-notification work. */
+  REPORTS: "reports",
+  /** Privileged homelab inspection and operator automation. */
+  INFRA: "infra",
+  /** Repository refreshes, CI analysis, and GitHub event automation. */
+  REPO_AUTOMATION: "repo-automation",
   /** Serial direct subprocess maintenance against the Buildkite PVCs. */
   MAINTENANCE: "maintenance",
   /** Scout beta activity worker, co-located with its database and Discord bot. */
@@ -22,3 +31,5 @@ export const TASK_QUEUES = {
    */
   GLITTER_CONTEXT: "glitter-context",
 } as const;
+
+export type TaskQueue = (typeof TASK_QUEUES)[keyof typeof TASK_QUEUES];
