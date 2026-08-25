@@ -15,7 +15,7 @@ import configuration from "#src/configuration.ts";
 import {
   TournamentApiModeSchema,
   type TournamentApiMode,
-} from "#src/league/api/tournament/mode.ts";
+} from "#src/configuration/tournament-mode.ts";
 
 const logger = createLogger("config-dynamic");
 

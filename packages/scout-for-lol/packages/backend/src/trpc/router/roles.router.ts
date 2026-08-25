@@ -26,8 +26,8 @@ import {
   guildMutationProcedure,
   guildProcedure,
 } from "#src/trpc/guild-permission.ts";
-import { prisma } from "#src/database/index.ts";
-import { type Db, recordAudit } from "#src/lib/audit/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
+import { recordAudit } from "#src/lib/audit/index.ts";
 import { resolveDiscordUsers } from "#src/lib/discord/resolve-users.ts";
 import { client as discordClient } from "#src/discord/client.ts";
 

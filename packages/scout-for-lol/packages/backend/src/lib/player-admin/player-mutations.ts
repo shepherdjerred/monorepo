@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import { DiscordAccountIdSchema, type PlayerId } from "@scout-for-lol/data";
-import { prisma } from "#src/database/index.ts";
-import { recordAudit, type Db } from "#src/lib/audit/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
+import { recordAudit } from "#src/lib/audit/index.ts";
 import {
   AliasSchema,
   GuildIdInput,

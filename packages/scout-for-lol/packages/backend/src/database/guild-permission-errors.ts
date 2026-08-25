@@ -4,7 +4,7 @@ import {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import type { DeliveryFailureKind } from "#src/discord/utils/delivery-failure.ts";
+import type { DeliveryFailureKind } from "#src/database/delivery-failure.ts";
 import { subDays } from "date-fns";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;

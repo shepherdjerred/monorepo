@@ -8,7 +8,7 @@ import {
   auditFinding,
   type BucksAuditSink,
 } from "#src/betting/reconcile-shared.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import type { Db } from "#src/database/index.ts";
 
 async function loadMatchedPools(prismaClient: Db, afterPoolId: number) {
   const pools = await prismaClient.bucksMatchPool.findMany({

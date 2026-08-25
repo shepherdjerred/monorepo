@@ -8,8 +8,7 @@ import {
   PlayerIdSchema,
 } from "@scout-for-lol/data";
 import type { CompetitionParticipant } from "#generated/prisma/client/index.js";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
 import { isCompetitionActive } from "#src/database/competition/validation.ts";
 import { match } from "ts-pattern";
 

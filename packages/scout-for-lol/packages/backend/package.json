@@ -119,6 +119,7 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#src/*": "./src/*",
     "#generated/*": "./generated/*"
   }

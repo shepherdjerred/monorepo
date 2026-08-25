@@ -22,7 +22,7 @@ import {
   registerTournament,
 } from "#src/league/api/tournament/client.ts";
 import { toTournamentRegion } from "#src/league/api/tournament/regions.ts";
-import { TournamentApiModeSchema } from "#src/league/api/tournament/mode.ts";
+import { TournamentApiModeSchema } from "#src/configuration/tournament-mode.ts";
 import { saveTournamentRegistration } from "#src/league/tournament/registration.ts";
 import { createLogger } from "#src/logger.ts";
 

@@ -1,19 +1,4 @@
-import { z } from "zod";
-
-/**
- * Which tournament API the client talks to.
- *
- * `stub` is `tournament-stub-v5`, which any development or standard League key
- * can call. It returns well-formed but non-functional data: the codes it mints
- * do not create a real in-client lobby, its lobby events are canned, and it has
- * no `games/by-code` endpoint at all. It exercises our code paths and nothing
- * about a real game.
- *
- * `live` is `tournament-v5`, which needs a production key with tournament
- * access granted.
- */
-export const TournamentApiModeSchema = z.enum(["stub", "live"]);
-export type TournamentApiMode = z.infer<typeof TournamentApiModeSchema>;
+import type { TournamentApiMode } from "#src/configuration/tournament-mode.ts";
 
 const LIVE_BASE_PATH = "lol/tournament/v5";
 const STUB_BASE_PATH = "lol/tournament-stub/v5";

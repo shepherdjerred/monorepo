@@ -18,8 +18,8 @@ import {
 import {
   tournamentBasePath,
   supportsGamesByCode,
-  type TournamentApiMode,
 } from "#src/league/api/tournament/mode.ts";
+import type { TournamentApiMode } from "#src/configuration/tournament-mode.ts";
 import { tournamentFetch } from "#src/league/api/tournament/http.ts";
 
 /**

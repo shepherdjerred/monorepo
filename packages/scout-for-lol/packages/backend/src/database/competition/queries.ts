@@ -10,8 +10,7 @@ import {
 } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { match } from "ts-pattern";
-import { type ExtendedPrismaClient } from "#src/database/index.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import { type Db, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { CompetitionDates } from "#src/database/competition/competition-dates.ts";
 import { competitionWithSeasonInclude } from "#src/database/competition/include.ts";
 

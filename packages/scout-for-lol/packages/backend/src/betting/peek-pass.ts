@@ -1,8 +1,11 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import {
+  prisma,
+  type Db,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
 import { bettingPeekPassesTotal } from "#src/metrics/betting.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
