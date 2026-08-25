@@ -182,6 +182,7 @@ model Report {
   lastRunError           String?
   createdTime            DateTime
   updatedTime            DateTime
+  revision               Int       @default(1)
 
   runs ReportRun[]
 
@@ -189,6 +190,21 @@ model Report {
   @@index([nextScheduledRunAt])
   @@index([sourceCompetitionId])
   @@index([systemSource])
+}
+
+/// Transactional projection from Postgres-owned report definitions to
+/// Temporal Schedules. reportId deliberately has no foreign key so deletion
+/// cannot erase the tombstone required to remove the Schedule.
+model ReportScheduleOutbox {
+  id          Int       @id @default(autoincrement())
+  reportId    Int
+  revision    Int
+  operation   String
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@unique([reportId, revision])
+  @@index([processedAt, createdAt])
 }
 
 model ReportRun {
@@ -1458,4 +1474,69 @@ model TournamentLobby {
   @@index([state, expiresAt])
   @@index([serverId, state])
   @@index([matchId])
+}
+
+/// Durable handoff for work created by request/gateway code before Temporal
+/// has accepted the Workflow start. Payloads are validated by the activity and
+/// never enter Workflow history.
+model ScoutTemporalWork {
+  id          String    @id
+  kind        String
+  payload     String
+  state       String    @default("queued")
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([state, createdAt])
+  @@index([kind, state])
+}
+
+/// Durable execution and recovery record for one Explore turn or report-AI
+/// edit. Provider inputs and partial output remain in Postgres, never Workflow
+/// history. A non-null providerAttemptAt is intentionally ambiguous: retries
+/// salvage instead of issuing another billable request.
+model ScoutInteractiveRun {
+  id                String    @id
+  kind              String
+  ownerId           String
+  guildId           String?
+  conversationId    String?
+  quotaExempt       Boolean   @default(false)
+  payload           String
+  state             String    @default("PENDING")
+  providerAttemptAt DateTime?
+  stopRequestedAt   DateTime?
+  partialOutput     String?
+  trace             String?
+  resultMessageId   String?
+  outcome           String?
+  lastError         String?
+  createdAt         DateTime  @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
+  updatedAt         DateTime  @updatedAt
+
+  @@index([kind, ownerId, createdAt])
+  @@index([kind, guildId, createdAt])
+  @@index([state, createdAt])
+  @@index([conversationId, state])
+}
+
+/// Durable claim for an external side effect. The key is derived from the
+/// product operation (for example report-run plus message chunk), never from a
+/// Temporal attempt, so Activity retries cannot create a second effect.
+model ScoutEffectClaim {
+  key         String    @id
+  kind        String
+  state       String    @default("CLAIMED")
+  lastError   String?
+  resultId    String?
+  claimedAt   DateTime  @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([kind, state, claimedAt])
 }
