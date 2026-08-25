@@ -9,6 +9,8 @@ export const TASK_QUEUES = {
   INFRA: "infra",
   /** Repository refreshes, CI analysis, and GitHub event automation. */
   REPO_AUTOMATION: "repo-automation",
+  /** Scout refresh and competition workflows. */
+  SCOUT: "scout",
   /** Serial direct subprocess maintenance against the Buildkite PVCs. */
   MAINTENANCE: "maintenance",
   /** Scout beta activity worker, co-located with its database and Discord bot. */
