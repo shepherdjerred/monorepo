@@ -34,8 +34,8 @@ describe("sourceRules", () => {
       name: "domain-is-pure",
       comment: "the domain must be testable without a database",
       severity: "error",
-      from: { path: "^src/domain/" },
-      to: { path: "^src/(server|client)/" },
+      from: { path: String.raw`^src/domain(?:/|\.)` },
+      to: { path: String.raw`^src/(server|client)(?:/|\.)` },
     });
   });
 });
@@ -80,7 +80,7 @@ describe("fixtureRules", () => {
     });
 
     expect(sourceRules(nested)[1]?.from).toEqual({
-      path: "^src/lib/amazon/",
+      path: String.raw`^src/lib/amazon(?:/|\.)`,
     });
     expect(fixtureRules(nested, "architecture-fixtures")[0]?.from).toEqual({
       path: "^architecture-fixtures/lib-amazon-",

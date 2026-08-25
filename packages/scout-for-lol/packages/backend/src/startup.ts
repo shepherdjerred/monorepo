@@ -44,7 +44,7 @@ export async function startBackendRuntime(): Promise<HttpServerRuntime> {
         await import("#src/report-lake/compactor.ts");
       await runReportLakeFold();
     },
-    startHttpServer: async () => await import("#src/http-server.ts"),
+    startHttpServer: async () => await import("#src/http/server.ts"),
     startDiscord: async () => {
       if (Bun.env.NODE_ENV === "test") {
         return;

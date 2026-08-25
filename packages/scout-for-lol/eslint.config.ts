@@ -102,6 +102,10 @@ const config = [
       "./tsconfig.scripts.json",
     ],
     ignores: [
+      // Deliberate layer violations, rejected by `check-architecture` rather
+      // than linted. This list overrides the shared config's defaults, which
+      // already exclude them.
+      "**/architecture-fixtures/**/*",
       "**/generated/**/*",
       "**/dist/**/*",
       "**/build/**/*",

@@ -2,7 +2,7 @@ import "dotenv/config";
 import env from "env-var";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
-import { TournamentApiModeSchema } from "#src/league/api/tournament/mode.ts";
+import { TournamentApiModeSchema } from "#src/configuration/tournament-mode.ts";
 
 const logger = createLogger("config");
 

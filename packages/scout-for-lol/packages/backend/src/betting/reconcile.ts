@@ -9,8 +9,11 @@ import {
   type BucksAuditFinding,
   type BucksAuditSink,
 } from "#src/betting/reconcile-shared.ts";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import {
+  prisma,
+  type Db,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   bettingReconciliationFindings,

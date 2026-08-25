@@ -2,7 +2,7 @@ import { type DiscordGuildId } from "@scout-for-lol/data/index.ts";
 import { getLimit } from "#src/configuration/flags.ts";
 import { LIMIT_WARNING_THRESHOLD } from "#src/configuration/subscription-limits.ts";
 import { createLogger } from "#src/logger.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import type { Db } from "#src/database/index.ts";
 import type { LimitWarning } from "#src/lib/subscription/types.ts";
 
 const logger = createLogger("subscription-limits");

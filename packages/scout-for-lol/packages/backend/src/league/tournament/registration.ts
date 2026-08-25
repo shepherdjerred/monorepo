@@ -1,5 +1,5 @@
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import type { TournamentApiMode } from "#src/league/api/tournament/mode.ts";
+import type { TournamentApiMode } from "#src/configuration/tournament-mode.ts";
 import type { TournamentRegion } from "@scout-for-lol/data/index.ts";
 
 export type TournamentRegistrationRecord = {

@@ -8,8 +8,11 @@ import type { SettlementBet } from "#src/betting/settlement-types.ts";
 import { closeBettingPoolById } from "#src/betting/sweep.ts";
 import { aliasesForTeam, subjectAlias } from "#src/betting/sweep-roster.ts";
 import type { ClosedPool } from "#src/betting/sweep-types.ts";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import type { Db } from "#src/lib/audit/index.ts";
+import {
+  prisma,
+  type Db,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-void-stale");

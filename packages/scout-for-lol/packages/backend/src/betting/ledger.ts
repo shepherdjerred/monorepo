@@ -4,7 +4,7 @@ import {
   type BucksLedgerContext,
   type BucksLedgerKind,
 } from "@scout-for-lol/data";
-import type { Db } from "#src/lib/audit/index.ts";
+import type { Db } from "#src/database/index.ts";
 import { deterministicBucksAnalyticsEventId } from "#src/analytics/bryan-bucks-backfill.ts";
 
 /**

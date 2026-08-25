@@ -1,9 +1,5 @@
-import { prisma } from "#src/database/index.ts";
-import {
-  recordAudit,
-  type Db,
-  type RecordAuditInput,
-} from "#src/lib/audit/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
+import { recordAudit, type RecordAuditInput } from "#src/lib/audit/index.ts";
 
 /**
  * Minimal shape of the tRPC web context this helper needs: the acting user

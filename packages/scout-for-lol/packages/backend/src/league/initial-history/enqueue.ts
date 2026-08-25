@@ -5,7 +5,7 @@ import {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import type { InitialMatchHistoryImport } from "#generated/prisma/client/index.js";
-import type { Db } from "#src/lib/audit/index.ts";
+import type { Db } from "#src/database/index.ts";
 
 export const INITIAL_HISTORY_REFETCH_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const StoredMatchIdsSchema = z.array(MatchIdSchema).max(20);
