@@ -454,5 +454,9 @@ export async function runParlayGeneration(
         tags: { source: "betting-parlay-generate", matchId, status },
       });
     }
+    // Temporal owns retries and durable failure state once the background
+    // family is enabled. Preserve the historical best-effort fire-and-forget
+    // behavior only for the legacy inline caller.
+    if (shouldUseTemporalBackgroundWork()) throw error;
   }
 }
