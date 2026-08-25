@@ -1134,11 +1134,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/database/competition/queries.integration.test.ts|packages/scout-for-lol/packages/backend/src/database/competition/queries.integration.test.ts": {
       "clones": 2,
-      "tokens": 193
-    },
-    "packages/scout-for-lol/packages/backend/src/database/competition/validation.test.ts|packages/scout-for-lol/packages/backend/src/database/competition/validation.test.ts": {
-      "clones": 5,
-      "tokens": 415
+      "tokens": 177
     },
     "packages/scout-for-lol/packages/backend/src/database/guild-permission-errors.test.ts|packages/scout-for-lol/packages/backend/src/database/guild-permission-errors.test.ts": {
       "clones": 1,
@@ -1206,7 +1202,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/league/competition/chart-builder.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/chart-builder.test.ts": {
       "clones": 1,
-      "tokens": 224
+      "tokens": 107
     },
     "packages/scout-for-lol/packages/backend/src/league/competition/leaderboard-ranking.ts|packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.test.ts": {
       "clones": 1,
@@ -1214,7 +1210,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.integration.test.ts": {
       "clones": 3,
-      "tokens": 551
+      "tokens": 542
     },
     "packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.test.ts": {
       "clones": 1,
@@ -1222,15 +1218,15 @@
     },
     "packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.ts|packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.ts": {
       "clones": 1,
-      "tokens": 78
+      "tokens": 73
     },
     "packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.integration.test.ts": {
       "clones": 1,
       "tokens": 117
     },
     "packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.test.ts": {
-      "clones": 15,
-      "tokens": 1483
+      "clones": 13,
+      "tokens": 1304
     },
     "packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.test.ts|packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": {
       "clones": 2,
@@ -1256,10 +1252,6 @@
       "clones": 1,
       "tokens": 91
     },
-    "packages/scout-for-lol/packages/backend/src/league/model/match.ts|packages/scout-for-lol/packages/report/src/match.ts": {
-      "clones": 1,
-      "tokens": 83
-    },
     "packages/scout-for-lol/packages/backend/src/league/review/__tests__/generator.test.ts|packages/scout-for-lol/packages/backend/src/league/review/__tests__/generator.test.ts": {
       "clones": 1,
       "tokens": 78
@@ -1284,13 +1276,9 @@
       "clones": 1,
       "tokens": 76
     },
-    "packages/scout-for-lol/packages/backend/src/league/tasks/competition/daily-update.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/competition/daily-update.integration.test.ts": {
-      "clones": 5,
-      "tokens": 387
-    },
     "packages/scout-for-lol/packages/backend/src/league/tasks/competition/lifecycle.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/competition/lifecycle.integration.test.ts": {
-      "clones": 6,
-      "tokens": 641
+      "clones": 5,
+      "tokens": 557
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts": {
       "clones": 3,
@@ -1435,10 +1423,6 @@
     "packages/scout-for-lol/packages/backend/src/trpc/auth-web.ts|packages/scout-for-lol/packages/backend/src/trpc/context.ts": {
       "clones": 1,
       "tokens": 131
-    },
-    "packages/scout-for-lol/packages/backend/src/trpc/router/competition-analysis-procedures.ts|packages/scout-for-lol/packages/backend/src/trpc/router/competition.router.ts": {
-      "clones": 1,
-      "tokens": 101
     },
     "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts": {
       "clones": 1,
@@ -1977,5 +1961,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-25T00:48:30.112Z"
+  "updated": "2026-08-25T00:58:03.673Z"
 }

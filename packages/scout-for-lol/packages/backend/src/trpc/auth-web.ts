@@ -23,7 +23,10 @@ import { prisma } from "#src/database/index.ts";
 import { CSRF_COOKIE, SESSION_COOKIE } from "#src/trpc/context.ts";
 import { webSigninTotal } from "#src/metrics/web.ts";
 import { signSession, verifySession } from "#src/trpc/jwt.ts";
-import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import configuration from "#src/configuration.ts";
 import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
@@ -208,14 +211,12 @@ export function handleDiscordStart(request: Request): Response {
  * URL server-side to keep the application ID and the required
  * permission bits out of the SPA bundle.
  *
- * `redirect_uri` points at the SPA's /app/installed landing route;
- * Discord appends `guild_id` (and `permissions`) on success, letting
- * the app deep-link straight into that guild's config. The redirect URI
- * must be registered in the Discord Developer Portal for this app or
- * Discord rejects the request with `invalid redirect_uri`.
- *
- * Unlike the login flow there is no `response_type=code` and no state
- * cookie: this is a pure bot install, not a user-token grant.
+ * The install uses Discord's advanced bot authorization flow. A bot-only
+ * authorization is callback-less and ends on Discord's "Success" page, so
+ * requesting the small `identify` scope opts into the code grant and returns
+ * to the existing registered OAuth callback. The install attribution token
+ * remains the state value; the callback exchanges and discards the temporary
+ * user token, then sends the browser to /app/installed.
  *
  * The caller MUST be authenticated: the post-install landing route
  * (/app/installed) is gated by the SPA's RequireSession, so an
@@ -277,6 +278,79 @@ export async function handleDiscordInstall(
   return new Response(null, { status: 302, headers });
 }
 
+function isInstallAttributionState(state: string | null): boolean {
+  return state !== null && /^[0-9a-f]{64}$/u.test(state);
+}
+
+/**
+ * Finish Discord's advanced bot-install code grant. The access token is only
+ * needed to complete Discord's redirecting flow; Scout already has the web
+ * session and the signed install-attribution token, so the temporary token is
+ * deliberately not persisted. The SPA consumes the state and guild hint on
+ * /app/installed and verifies the install against the session server-side.
+ */
+async function handleDiscordInstallCallback(
+  request: Request,
+): Promise<Response> {
+  const url = new URL(request.url);
+  const appOrigin = getAppOrigin();
+  const state = url.searchParams.get("state");
+  const code = url.searchParams.get("code");
+  const oauthError = url.searchParams.get("error");
+
+  if (state === null || !isInstallAttributionState(state)) {
+    return new Response("Invalid install state", { status: 400 });
+  }
+
+  const landing = new URL(`${appOrigin}/app/installed`);
+  landing.searchParams.set("state", state);
+  const guildId = DiscordGuildIdSchema.safeParse(
+    url.searchParams.get("guild_id"),
+  );
+  if (guildId.success) landing.searchParams.set("guild_id", guildId.data);
+
+  if (oauthError !== null || code === null || code.length === 0) {
+    logger.info("Discord bot install was cancelled or returned without code", {
+      error: oauthError,
+    });
+    return Response.redirect(landing.toString(), 302);
+  }
+
+  const discordClientSecret = configuration.discordClientSecret;
+  if (discordClientSecret === undefined) {
+    logger.error("DISCORD_CLIENT_SECRET not configured");
+    return new Response("Server misconfigured: OAuth disabled", {
+      status: 500,
+    });
+  }
+
+  const tokenResponse = await fetch(`${DISCORD_API_BASE}/oauth2/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: configuration.applicationId,
+      client_secret: discordClientSecret,
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: getCallbackUrl(),
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    const text = await tokenResponse.text();
+    logger.error("Discord install token exchange failed", {
+      status: tokenResponse.status,
+      text,
+    });
+    return new Response("Discord rejected the install authorization", {
+      status: 400,
+    });
+  }
+
+  DiscordTokenResponseSchema.parse(await tokenResponse.json());
+  return Response.redirect(landing.toString(), 302);
+}
+
 /**
  * Handle the Discord OAuth callback. Discord redirects the browser here
  * after the user authorizes Scout. We:
@@ -295,6 +369,10 @@ export async function handleDiscordCallback(
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const oauthError = url.searchParams.get("error");
+
+  if (isInstallAttributionState(state)) {
+    return handleDiscordInstallCallback(request);
+  }
 
   const appOrigin = getAppOrigin();
   const callbackUrl = getCallbackUrl();

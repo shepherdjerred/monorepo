@@ -18,6 +18,7 @@ import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
 
 const solo: StandardRankedQueueType = "RANKED_SOLO_5x5";
 const flex: StandardRankedQueueType = "RANKED_FLEX_SR";
+const ranked5s: StandardRankedQueueType = "RANKED_TEAM_5x5";
 
 export type RankLookupResult = Exclude<
   LoadingScreenRankState,
@@ -61,6 +62,7 @@ function ranksFromEntries(entries: readonly RawSummonerLeague[]): Ranks {
   return {
     solo: getRank(entries, solo),
     flex: getRank(entries, flex),
+    ranked5s: getRank(entries, ranked5s),
   };
 }
 
@@ -87,7 +89,7 @@ async function fetchRanksByPuuid(input: {
     : { status: "available", ranks: ranksFromEntries(entries) };
 }
 
-/** Fetch the published Solo/Duo and Flex ranks for a loading-screen player. */
+/** Fetch the published Solo/Duo, Flex, and Ranked 5s ranks for a loading-screen player. */
 export async function getRankByPuuid(
   puuid: string,
   region: Region,
@@ -114,5 +116,5 @@ export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
 
   return result.status === "available"
     ? result.ranks
-    : { solo: undefined, flex: undefined };
+    : { solo: undefined, flex: undefined, ranked5s: undefined };
 }

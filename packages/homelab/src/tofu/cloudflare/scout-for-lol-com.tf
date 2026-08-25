@@ -50,6 +50,7 @@ resource "cloudflare_dns_record" "scout_for_lol_com_dkim_wildcard" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "scout_for_lol_com" {
   zone_id = cloudflare_zone.scout_for_lol_com.id
+  status  = "active"
 }
 
 # ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────

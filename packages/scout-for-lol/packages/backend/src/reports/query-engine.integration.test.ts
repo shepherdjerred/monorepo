@@ -720,7 +720,8 @@ describe("executeReportQuery competition rank reports", () => {
       },
       criteria: {
         type: "HIGHEST_RANK",
-        queue: "SOLO",
+        aggregation: "MAX",
+        queues: ["solo"],
       },
     });
     await prisma.competitionParticipant.create({

@@ -290,17 +290,21 @@ export async function handleCompetitionStarts(
       }
 
       // Mark as processed after notification succeeds so transient Discord
-      // failures are retried. Also seed the per-competition scheduled update.
+      // failures are retried. Only V2 rows explicitly opting into interim
+      // posts receive a next fire; legacy rows stay inert.
       const cronExpression =
         competition.updateCronExpression ?? DEFAULT_COMPETITION_CRON;
       await prismaClient.competition.update({
         where: { id: competition.id },
         data: {
           startProcessedAt: now,
-          nextScheduledUpdateAt: computeNextScheduledUpdateAt(
-            cronExpression,
-            now,
-          ),
+          nextScheduledUpdateAt: competition.scheduledUpdatesEnabled
+            ? computeNextScheduledUpdateAt(
+                cronExpression,
+                now,
+                competition.scheduleTimezone,
+              )
+            : null,
         },
       });
 

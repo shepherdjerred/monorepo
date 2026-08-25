@@ -23,9 +23,13 @@ export function buildDiscordInstallUrl(state?: string): string {
   ).replace(/\/$/u, "");
   const params = new URLSearchParams({
     client_id: configuration.applicationId,
-    scope: "bot applications.commands",
+    // `bot`-only authorization is intentionally callback-less in Discord.
+    // The small `identify` scope opts into the authorization-code flow so
+    // Discord returns to Scout after the bot is installed.
+    scope: "bot applications.commands identify",
     permissions: BOT_INSTALL_PERMISSIONS,
-    redirect_uri: `${origin}/app/installed`,
+    redirect_uri: `${origin}/api/auth/discord/callback`,
+    response_type: "code",
   });
   if (state !== undefined) {
     params.set("state", state);

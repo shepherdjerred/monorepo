@@ -55,9 +55,12 @@ function createTestCompetition(
     updatedTime: new Date("2024-12-01T00:00:00Z"),
     criteria: {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     },
     ...overrides,
+    gameVariant: overrides.gameVariant ?? "MODERN",
+    scheduledUpdatesEnabled: overrides.scheduledUpdatesEnabled ?? false,
+    scheduleTimezone: overrides.scheduleTimezone ?? "UTC",
   };
 }
 
@@ -144,7 +147,7 @@ describe("generateLeaderboardEmbed", () => {
     const competition = createTestCompetition({
       criteria: {
         type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
+        queues: ["solo"],
       },
     });
 
@@ -209,14 +212,17 @@ describe("generateLeaderboardEmbed", () => {
     const competition = createTestCompetition({
       criteria: {
         type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
+        queues: ["solo"],
       },
     });
 
     const embed = generateLeaderboardEmbed(competition, []);
     const embedData = embed.toJSON();
 
-    expect(embedData.footer?.text).toContain("Most games played in Solo Queue");
+    expect(embedData.footer?.text).toContain(
+      "Most games played in Ranked Solo/Duo",
+    );
+    expect(embedData.footer?.text).toContain("Modern League");
     expect(embedData.footer?.text).toContain("Updated");
   });
 
@@ -343,7 +349,8 @@ describe("generateCompetitionDetailsEmbed", () => {
     const competition = createTestCompetition({
       criteria: {
         type: "HIGHEST_RANK",
-        queue: "FLEX",
+        aggregation: "MAX",
+        queues: ["flex"],
       },
     });
 
@@ -353,7 +360,9 @@ describe("generateCompetitionDetailsEmbed", () => {
     const criteriaField = embedData.fields?.find(
       (f) => f.name === "📊 Ranking Criteria",
     );
-    expect(criteriaField?.value).toBe("Highest rank in Flex Queue");
+    expect(criteriaField?.value).toBe(
+      "Highest rank in Ranked Flex (best selected rank)",
+    );
   });
 
   it("should include competition ID in footer", () => {
@@ -389,7 +398,8 @@ describe("formatScore", () => {
   it("should format rank for HIGHEST_RANK", () => {
     const criteria = {
       type: "HIGHEST_RANK" as const,
-      queue: "SOLO" as const,
+      queues: [...(["solo"] as const)],
+      aggregation: "MAX" as const,
     };
 
     const rank = {
@@ -408,7 +418,7 @@ describe("formatScore", () => {
   it("should format wins with record when metadata includes games", () => {
     const criteria = {
       type: "MOST_WINS_PLAYER" as const,
-      queue: "SOLO" as const,
+      queues: [...(["solo"] as const)],
     };
 
     const metadata = {
@@ -424,7 +434,7 @@ describe("formatScore", () => {
     const criteria = {
       type: "MOST_WINS_CHAMPION" as const,
       championId: ChampionIdSchema.parse(157),
-      queue: undefined,
+      queues: [...(["ALL"] as const)],
     };
 
     const metadata = {
@@ -439,7 +449,7 @@ describe("formatScore", () => {
   it("should format win rate with record when metadata available", () => {
     const criteria = {
       type: "HIGHEST_WIN_RATE" as const,
-      queue: "SOLO" as const,
+      queues: [...(["solo"] as const)],
       minGames: 10,
     };
 
@@ -455,7 +465,7 @@ describe("formatScore", () => {
   it("should handle edge case of 100% win rate with record", () => {
     const criteria = {
       type: "HIGHEST_WIN_RATE" as const,
-      queue: "SOLO" as const,
+      queues: [...(["solo"] as const)],
       minGames: 10,
     };
 
@@ -471,7 +481,7 @@ describe("formatScore", () => {
   it("should handle edge case of 0% win rate with record", () => {
     const criteria = {
       type: "HIGHEST_WIN_RATE" as const,
-      queue: "SOLO" as const,
+      queues: [...(["solo"] as const)],
       minGames: 10,
     };
 

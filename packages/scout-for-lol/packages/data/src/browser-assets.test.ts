@@ -1,33 +1,28 @@
 import { describe, expect, test } from "vitest";
-import { getGameAsset, normalizeBrowserChampionKey } from "./browser-assets.ts";
+import {
+  browserClassicChampions,
+  browserModernChampions,
+} from "#src/browser-assets.ts";
 
-describe("browser champion assets", () => {
+describe("browser champion catalogs", () => {
+  test("keeps Modern and Classic champion identities separate", () => {
+    const modernIds = new Set(
+      browserModernChampions.map((champion) => champion.id),
+    );
+    const classicIds = new Set(
+      browserClassicChampions.map((champion) => champion.id),
+    );
+
+    expect(browserModernChampions.length).toBeGreaterThan(0);
+    expect(browserClassicChampions.length).toBeGreaterThan(0);
+    expect([...modernIds].some((id) => classicIds.has(id))).toBe(false);
+  });
+
   test.each([
-    [
-      "Akali",
-      "champion:akali",
-      "champion-loading:akali_0",
-      "champion-splash:akali_0",
-    ],
-    [
-      "Jade_Akali",
-      "champion:jade_akali",
-      "champion-loading:jade_akali_0",
-      "champion-splash:jade_akali_0",
-    ],
-  ])(
-    "resolves the %s asset family from the manifest",
-    (key, portrait, loading, splash) => {
-      expect(normalizeBrowserChampionKey(key)).toBe(key);
-      expect(
-        `${getGameAsset("champion", key).kind}:${getGameAsset("champion", key).canonicalId.toLowerCase()}`,
-      ).toBe(portrait);
-      expect(
-        `${getGameAsset("champion-loading", key).kind}:${getGameAsset("champion-loading", key).canonicalId.toLowerCase()}`,
-      ).toBe(loading);
-      expect(
-        `${getGameAsset("champion-splash", key).kind}:${getGameAsset("champion-splash", key).canonicalId.toLowerCase()}`,
-      ).toBe(splash);
-    },
-  );
+    ["Modern", browserModernChampions],
+    ["Classic", browserClassicChampions],
+  ])("has no duplicate names within the %s picker", (_label, champions) => {
+    const names = champions.map((champion) => champion.name);
+    expect(new Set(names).size).toBe(names.length);
+  });
 });

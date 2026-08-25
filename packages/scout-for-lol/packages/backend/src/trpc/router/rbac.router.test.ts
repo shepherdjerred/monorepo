@@ -61,7 +61,7 @@ function competitionCreateInput() {
     },
     criteria: {
       type: "MOST_GAMES_PLAYED" as const,
-      queue: "SOLO" as const,
+      queues: [...(["solo"] as const)],
     },
   };
 }

@@ -1,14 +1,10 @@
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   CompetitionAnalysisPresetSchema,
   CompetitionIdSchema,
   DiscordGuildIdSchema,
-  type CompetitionId,
-  type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
 import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competition-cron.ts";
-import { getCompetitionById } from "#src/database/competition/queries.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   analyzeCompetition,
@@ -25,6 +21,10 @@ import {
   guildMutationProcedure,
   guildProcedure,
 } from "#src/trpc/guild-permission.ts";
+import {
+  asCompetitionBadRequest,
+  loadGuildCompetitionOr404,
+} from "#src/trpc/router/competition-router-helpers.ts";
 
 const CompetitionAnalysisInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
@@ -45,7 +45,7 @@ export const competitionAnalysisProcedures = {
   analysis: guildProcedure("competitions", "read")
     .input(CompetitionAnalysisInputSchema)
     .query(async ({ input }) => {
-      const competition = await loadCompetitionOr404(
+      const competition = await loadGuildCompetitionOr404(
         input.competitionId,
         input.guildId,
       );
@@ -94,36 +94,17 @@ export const competitionAnalysisProcedures = {
           });
         });
       } catch (error) {
-        asBadRequest(error);
+        asCompetitionBadRequest(error);
       }
     }),
 
   setAnalysisTimezone: guildMutationProcedure("competitions", "update")
     .input(CompetitionTimezoneInputSchema)
     .mutation(async ({ input }) => {
-      await loadCompetitionOr404(input.competitionId, input.guildId);
+      await loadGuildCompetitionOr404(input.competitionId, input.guildId);
       return prisma.competition.update({
         where: { id: input.competitionId },
         data: { analysisTimezone: input.timezone, updatedTime: new Date() },
       });
     }),
 };
-
-function asBadRequest(error: unknown): never {
-  const message = error instanceof Error ? error.message : String(error);
-  throw new TRPCError({ code: "BAD_REQUEST", message });
-}
-
-async function loadCompetitionOr404(
-  competitionId: CompetitionId,
-  guildId: string,
-): Promise<CompetitionWithCriteria> {
-  const competition = await getCompetitionById(prisma, competitionId);
-  if (competition?.serverId !== guildId) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Competition not found",
-    });
-  }
-  return competition;
-}

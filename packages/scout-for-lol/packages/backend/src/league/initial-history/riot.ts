@@ -127,5 +127,6 @@ export async function fetchCurrentRanks(input: {
   return {
     solo: rankOrUndefined(entries, "RANKED_SOLO_5x5"),
     flex: rankOrUndefined(entries, "RANKED_FLEX_SR"),
+    ranked5s: rankOrUndefined(entries, "RANKED_TEAM_5x5"),
   };
 }

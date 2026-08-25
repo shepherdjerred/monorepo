@@ -591,7 +591,7 @@ describe("buildLoadingScreenData for The Bandlewood", () => {
 
       const parsed = LoadingScreenDataSchema.parse(result);
       expect(parsed.queueType).toBe("classic aram mayhem");
-      expect(String(parsed.queueDisplayName)).toBe("ARAM: Mayhem Classic-ish");
+      expect(String(parsed.queueDisplayName)).toBe("Classic ARAM Mayhem");
       expect(parsed.layout).toBe("classic");
       expect(parsed.mapName).toBe("The Bandlewood");
       if (parsed.layout !== "classic") {

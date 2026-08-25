@@ -1,9 +1,9 @@
 import {
-  COMPETITION_QUEUE_TO_QUEUE_TYPES,
   resolveTemporalBucket,
   temporalWindowDays,
   type CompetitionAnalysisPreset,
   type CompetitionCriteria,
+  type CompetitionGameVariant,
   type CompetitionQueueType,
   type TemporalAnalysisSpec,
 } from "@scout-for-lol/data";
@@ -25,8 +25,12 @@ import {
 export function competitionCriterionQuery(
   criteria: CompetitionCriteria,
   competitionId: number,
+  gameVariant: CompetitionGameVariant = "MODERN",
 ): string {
-  const queueCondition = competitionQueueCondition(criteria.queue ?? "ALL");
+  const queueCondition = competitionQueueCondition(
+    criteria.queues,
+    gameVariant,
+  );
   if (criteria.type === "MOST_GAMES_PLAYED") {
     return criterionScoutQl({
       competitionId,
@@ -88,14 +92,16 @@ function criterionScoutQl(input: {
   ].join(" ");
 }
 
-function competitionQueueCondition(queue: CompetitionQueueType): string | null {
-  if (queue === "ALL") return null;
-  const values =
-    queue === "RANKED_ANY"
-      ? ["solo", "flex"]
-      : queue === "CUSTOM"
-        ? ["custom"]
-        : COMPETITION_QUEUE_TO_QUEUE_TYPES[queue];
+function competitionQueueCondition(
+  queues: readonly CompetitionQueueType[],
+  gameVariant: CompetitionGameVariant,
+): string {
+  if (queues.includes("ALL")) {
+    return gameVariant === "CLASSIC"
+      ? "queue IN ('classic', 'classic aram mayhem')"
+      : "queue NOT IN ('classic', 'classic aram mayhem')";
+  }
+  const values = queues.filter((queue) => queue !== "ALL");
   return `queue IN (${values.map((value) => `'${value}'`).join(", ")})`;
 }
 

@@ -4,6 +4,7 @@ import {
   getSnapshotSchemaForCriteria,
   type PlayerId,
   type SnapshotType,
+  rankForQueue,
 } from "@scout-for-lol/data/index.ts";
 import { fetchSnapshotData } from "#src/league/competition/leaderboard.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
@@ -86,9 +87,11 @@ export async function createSnapshot(
   // If creating a START snapshot and player is unranked, skip creating the snapshot.
   // We'll create their START snapshot later when they first become ranked.
   if (snapshotType === "START" && criteria.type === "MOST_RANK_CLIMB") {
-    const queue = criteria.queue;
     const hasRank =
-      rankData && (queue === "SOLO" ? rankData.solo : rankData.flex);
+      rankData !== undefined &&
+      criteria.queues.some(
+        (queue) => rankForQueue(rankData, queue) !== undefined,
+      );
 
     if (!hasRank) {
       logger.info(

@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, test } from "vitest";
+import { afterAll, describe, expect, test, vi } from "vitest";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
@@ -29,6 +29,7 @@ import { testAccountId } from "#src/testing/test-ids.ts";
 const TEST_APP_ORIGIN = "https://scout-for-lol.com";
 
 Bun.env["WEB_APP_ORIGIN"] = TEST_APP_ORIGIN;
+Bun.env["DISCORD_CLIENT_SECRET"] = "test-client-secret";
 // The install handler now persists an attribution token, so the database
 // singleton (initialized when auth-web.ts is first imported below) must point
 // at a migrated test DB rather than test-setup's schemaless stub URL. Env,
@@ -38,7 +39,8 @@ const testDb = createTestDatabase("auth-web-test");
 Bun.env["DATABASE_URL"] = testDb.dbUrl;
 resetConfigurationForTests();
 
-const { handleDiscordInstall } = await import("#src/trpc/auth-web.ts");
+const { handleDiscordCallback, handleDiscordInstall } =
+  await import("#src/trpc/auth-web.ts");
 const { SESSION_COOKIE } = await import("#src/trpc/context.ts");
 const { signSession } = await import("#src/trpc/jwt.ts");
 
@@ -97,13 +99,16 @@ describe("handleDiscordInstall", () => {
     expect(target.pathname).toBe("/api/oauth2/authorize");
     // The bot-install URL carries the install scopes + permission bits and
     // points the post-install redirect at the SPA's landing route.
-    expect(target.searchParams.get("scope")).toBe("bot applications.commands");
+    expect(target.searchParams.get("scope")).toBe(
+      "bot applications.commands identify",
+    );
     expect(target.searchParams.get("permissions")).not.toBeNull();
     expect(target.searchParams.get("redirect_uri")).toBe(
-      `${TEST_APP_ORIGIN}/app/installed`,
+      `${TEST_APP_ORIGIN}/api/auth/discord/callback`,
     );
-    // No response_type=code: this is a pure bot install, not a token grant.
-    expect(target.searchParams.get("response_type")).toBeNull();
+    // The identify scope opts into Discord's redirecting authorization-code
+    // flow; bot-only authorization ends on Discord's close-this-window page.
+    expect(target.searchParams.get("response_type")).toBe("code");
 
     // The `state` param is the single-use attribution token, persisted and
     // bound to the session user + originating surface (default guild_picker).
@@ -134,6 +139,41 @@ describe("handleDiscordInstall", () => {
       where: { token: state ?? "" },
     });
     expect(tokenRow?.surface).toBe("onboarding_wizard");
+  });
+
+  test("returns advanced bot installs to the installed landing page", async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json(
+        {
+          access_token: "temporary-access-token",
+          token_type: "Bearer",
+          expires_in: 604_800,
+          refresh_token: "temporary-refresh-token",
+          scope: "bot applications.commands identify",
+        },
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      const state = "a".repeat(64);
+      const response = await handleDiscordCallback(
+        installRequest(
+          undefined,
+          `${INSTALL_URL}?code=install-code&state=${state}&guild_id=${testAccountId("4242")}`,
+        ),
+      );
+
+      expect(response.status).toBe(302);
+      const location = new URL(response.headers.get("Location") ?? "");
+      expect(location.pathname).toBe("/app/installed");
+      expect(location.searchParams.get("state")).toBe(state);
+      expect(location.searchParams.get("guild_id")).toBe(testAccountId("4242"));
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

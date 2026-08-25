@@ -1,11 +1,15 @@
-import type { MostGamesPlayedCriteria, RawMatch } from "@scout-for-lol/data";
+import type {
+  CompetitionGameVariant,
+  MostGamesPlayedCriteria,
+  RawMatch,
+} from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
 } from "#src/league/competition/processors/types.ts";
 import {
   isPlayerInMatch,
-  matchesQueue,
+  matchesQueues,
 } from "#src/league/competition/processors/helpers.ts";
 
 /**
@@ -16,13 +20,14 @@ export function processMostGamesPlayed(
   matches: RawMatch[],
   participants: PlayerWithAccounts[],
   criteria: MostGamesPlayedCriteria,
+  gameVariant: CompetitionGameVariant,
 ): LeaderboardEntry[] {
   const gameCounts: Record<number, number> = {};
 
   // Count games for each player
   for (const match of matches) {
     // Filter by queue
-    if (!matchesQueue(match, criteria.queue)) {
+    if (!matchesQueues(match, criteria.queues, gameVariant)) {
       continue;
     }
 

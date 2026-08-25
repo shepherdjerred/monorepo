@@ -18,7 +18,8 @@ describe("Snapshot Data Validation", () => {
   test("should validate rank snapshot data structure for HIGHEST_RANK criteria", () => {
     const criteria: HighestRankCriteria = {
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      aggregation: "MAX",
+      queues: ["solo"],
     };
 
     const schema = getSnapshotSchemaForCriteria(criteria);
@@ -77,11 +78,13 @@ describe("Snapshot Data Validation", () => {
       expect(result.data.flex).toBeUndefined();
     }
   });
+});
 
+describe("Non-rank snapshot data validation", () => {
   test("should validate games played snapshot data structure for MOST_GAMES_PLAYED criteria", () => {
     const criteria: MostGamesPlayedCriteria = {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const schema = getSnapshotSchemaForCriteria(criteria);
@@ -132,7 +135,7 @@ describe("Snapshot Data Validation", () => {
   test("should validate wins snapshot data structure for MOST_WINS_PLAYER criteria", () => {
     const criteria: MostWinsPlayerCriteria = {
       type: "MOST_WINS_PLAYER",
-      queue: "RANKED_ANY",
+      queues: ["solo", "flex"],
     };
 
     const schema = getSnapshotSchemaForCriteria(criteria);
@@ -141,7 +144,7 @@ describe("Snapshot Data Validation", () => {
     const mockWinsData: WinsSnapshotData = {
       wins: 75,
       games: 150,
-      queue: "RANKED_ANY",
+      queues: ["solo", "flex"],
     };
 
     const result = schema.safeParse(mockWinsData);
@@ -156,7 +159,7 @@ describe("Snapshot Data Validation", () => {
       wins: 25,
       games: 40,
       championId: ChampionIdSchema.parse(157), // Yasuo
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const result = WinsSnapshotDataSchema.safeParse(mockWinsData);
@@ -171,7 +174,7 @@ describe("Snapshot Data Validation", () => {
       wins: 0,
       games: 0,
       // championId is optional, omit it since 0 is not a valid champion ID
-      queue: "SOLO",
+      queues: ["solo"],
     };
 
     const result = WinsSnapshotDataSchema.safeParse(mockWinsData);
@@ -213,33 +216,42 @@ describe("Snapshot Data Validation", () => {
 
   test("should get correct schema for each criteria type", () => {
     expect(
-      getSnapshotSchemaForCriteria({ type: "HIGHEST_RANK", queue: "SOLO" }),
+      getSnapshotSchemaForCriteria({
+        type: "HIGHEST_RANK",
+        aggregation: "MAX",
+        queues: ["solo"],
+      }),
     ).toBe(RankSnapshotDataSchema);
     expect(
-      getSnapshotSchemaForCriteria({ type: "MOST_RANK_CLIMB", queue: "FLEX" }),
+      getSnapshotSchemaForCriteria({
+        type: "MOST_RANK_CLIMB",
+        aggregation: "MAX",
+        queues: ["flex"],
+      }),
     ).toBe(RankSnapshotDataSchema);
     expect(
       getSnapshotSchemaForCriteria({
         type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
+        queues: ["solo"],
       }),
     ).toBe(GamesPlayedSnapshotDataSchema);
     expect(
       getSnapshotSchemaForCriteria({
         type: "MOST_WINS_PLAYER",
-        queue: "RANKED_ANY",
+        queues: ["solo", "flex"],
       }),
     ).toBe(WinsSnapshotDataSchema);
     expect(
       getSnapshotSchemaForCriteria({
         type: "MOST_WINS_CHAMPION",
         championId: ChampionIdSchema.parse(157),
+        queues: ["ALL"],
       }),
     ).toBe(WinsSnapshotDataSchema);
     expect(
       getSnapshotSchemaForCriteria({
         type: "HIGHEST_WIN_RATE",
-        queue: "SOLO",
+        queues: ["solo"],
         minGames: 10,
       }),
     ).toBe(WinsSnapshotDataSchema);

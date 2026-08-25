@@ -189,6 +189,9 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     OTLP_ENDPOINT: EnvValue.fromValue(
       "http://tempo.tempo.svc.cluster.local:4318",
     ),
+    TEMPORAL_ADDRESS: EnvValue.fromValue(
+      "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
+    ),
     ...llmArchiveEnvVars(),
     DISCORD_TOKEN: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(

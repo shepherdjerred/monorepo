@@ -1,4 +1,8 @@
-import type { HighestWinRateCriteria, RawMatch } from "@scout-for-lol/data";
+import type {
+  CompetitionGameVariant,
+  HighestWinRateCriteria,
+  RawMatch,
+} from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -14,6 +18,7 @@ export function processHighestWinRate(
   matches: RawMatch[],
   participants: PlayerWithAccounts[],
   criteria: HighestWinRateCriteria,
+  gameVariant: CompetitionGameVariant,
 ): LeaderboardEntry[] {
   // minGames has a default value of 10 in the schema
   const minGames = criteria.minGames;
@@ -21,7 +26,8 @@ export function processHighestWinRate(
   return createWinBasedProcessor({
     matches,
     participants,
-    queue: criteria.queue,
+    queues: criteria.queues,
+    gameVariant,
     scoreFn: (wins, games) => (games > 0 ? wins / games : 0), // Score is win rate
     metadataFn: (wins, games) => ({
       wins,

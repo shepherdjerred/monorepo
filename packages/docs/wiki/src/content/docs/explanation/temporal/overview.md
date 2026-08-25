@@ -12,11 +12,13 @@ a durable workflow.
 ```mermaid
 flowchart LR
   accTitle: Temporal worker system map
-  accDescr: The Temporal server dispatches general and agent work to the core Bun worker and Glitter corpus and context work to a separate Bun worker. Webhooks, APIs, and Home Assistant events enter through the core worker. Both workers expose independent health and metrics endpoints.
+  accDescr: The Temporal server dispatches general and agent work to the core Bun worker, Glitter work to dedicated workers, maintenance to Buildkite, and competition delivery activities to each Scout environment. Webhooks, APIs, and Home Assistant events enter through the core worker.
 
   S[Cron schedules] --> T[Temporal server]
   T --> C[Core Bun worker<br/>default + agent-task]
   T --> G[Glitter Bun worker<br/>corpus + context]
+  T --> SB[Scout beta<br/>competition activities]
+  T --> SP[Scout prod<br/>competition activities]
   W[GitHub and Xcode webhooks] --> C
   H[Home Assistant events] --> C
   A[Agent-task API] --> C
@@ -51,13 +53,16 @@ Pause state is the deliberate exception: it is runtime state, preserved across
 reconciliation, because pausing is an operational act rather than a design
 change.
 
-## Four processes, five queues
+## Six processes, seven queues
 
 The core deployment owns `default`. A dedicated report-only agent deployment
 owns `agent-task`, and a separate Glitter deployment owns `glitter-corpus` and
 `glitter-context`. A fourth, tokenless maintenance deployment in the Buildkite
 namespace owns the serial `maintenance` queue. All four run the same image and
-workflow bundle, selected by a strict process role.
+workflow bundle, selected by a strict process role. Two more processes, the Scout beta and
+production backends add activity-only workers on `scout-beta` and `scout-prod`;
+those workers keep each environment's database and Discord credentials inside
+the service that already owns them.
 
 The split is about authorization and failure isolation, not capacity. Queues
 isolate concurrency; **processes** isolate runtime failures and Kubernetes
@@ -67,9 +72,11 @@ Glitter's work is long, memory-hungry, and rate-limited against Discord —
 exactly the profile that would otherwise starve or destabilise ordinary jobs
 sharing a process.
 
-Each process serves `/healthz` from Bun's event loop only after its workers
-finish startup, and independent startup, readiness, and liveness probes restart a
-wedged role without taking down the other one. Metrics are scraped per role.
+Each dedicated Temporal process serves `/healthz` from Bun's event loop only
+after its workers finish startup. The Scout activity workers share their
+backend's existing health lifecycle. Independent startup, readiness, and
+liveness probes restart a wedged deployment without taking down the others.
+Metrics are scraped per service role.
 
 ## Batteries in the image
 
@@ -84,8 +91,9 @@ trade gets examined honestly.
 
 ## Self-contained by design
 
-No other package imports it. All integration is at runtime — it consumes
-workspace libraries, clones the monorepo to open PRs, and receives webhooks.
+No other package imports its workflow implementation. All integration is at
+runtime — it consumes workspace libraries, clones the monorepo to open PRs,
+receives webhooks, and dispatches activities over named task queues.
 
 The rest of the repo talks to it only through its surfaces, which is what lets
 it be deployed and restarted independently of everything it automates.

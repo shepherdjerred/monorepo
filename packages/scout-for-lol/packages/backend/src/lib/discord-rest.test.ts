@@ -177,7 +177,7 @@ describe("devGuildOverride", () => {
     expect(guilds).toEqual([
       {
         id: "1337623164146155593",
-        name: "Dev Guild 1337623164146155593",
+        name: "Dev Guild 1",
         icon: null,
         owner: true,
         permissions: "8",

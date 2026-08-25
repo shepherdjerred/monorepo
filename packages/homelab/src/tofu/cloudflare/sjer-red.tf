@@ -14,6 +14,26 @@ resource "cloudflare_dns_record" "sjer_red_cname_apex" {
   proxied = true
 }
 
+# PostHog's managed reverse proxy returns the target CNAME; this record is kept
+# unproxied so PostHog can validate and terminate the analytics proxy directly.
+import {
+  to = cloudflare_dns_record.sjer_red_cname_posthog
+  id = "879487f81194d63121d0b8dddd16f08f/cf96abd1cc751274baa8e16df54e2b45"
+}
+
+resource "cloudflare_dns_record" "sjer_red_cname_posthog" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 3600
+  name    = "j"
+  type    = "CNAME"
+  content = "a9373961b1c868668128.cf-prod-us-proxy.proxyhog.com"
+  proxied = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "cloudflare_dns_record" "sjer_red_cname_argocd" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -426,10 +446,11 @@ resource "cloudflare_dns_record" "sjer_red_mx_rp2" {
 # ── SRV (FastMail autodiscovery) ────────────────────────────────────────────
 
 resource "cloudflare_dns_record" "sjer_red_srv_caldavs" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_caldavs._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_caldavs._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 1
@@ -439,10 +460,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_caldavs" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_caldav" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_caldav._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_caldav._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 0
@@ -452,10 +474,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_caldav" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_carddavs" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_carddavs._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_carddavs._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 1
@@ -465,10 +488,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_carddavs" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_carddav" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_carddav._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_carddav._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 0
@@ -478,10 +502,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_carddav" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_imaps" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_imaps._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_imaps._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 1
@@ -491,10 +516,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_imaps" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_imap" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_imap._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_imap._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 0
@@ -504,10 +530,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_imap" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_minecraft" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_minecraft._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_minecraft._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 5
@@ -517,10 +544,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_minecraft" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_minecraft_shuxin" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_minecraft._tcp.shuxin"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_minecraft._tcp.shuxin"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 5
@@ -530,10 +558,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_minecraft_shuxin" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_pop3s" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_pop3s._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_pop3s._tcp"
+  type     = "SRV"
+  priority = 10
   data = {
     priority = 10
     weight   = 1
@@ -543,10 +572,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_pop3s" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_pop3" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_pop3._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_pop3._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 0
@@ -556,10 +586,11 @@ resource "cloudflare_dns_record" "sjer_red_srv_pop3" {
 }
 
 resource "cloudflare_dns_record" "sjer_red_srv_submission" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_submission._tcp"
-  type    = "SRV"
+  zone_id  = cloudflare_zone.sjer_red.id
+  ttl      = 1
+  name     = "_submission._tcp"
+  type     = "SRV"
+  priority = 0
   data = {
     priority = 0
     weight   = 1
@@ -696,6 +727,7 @@ resource "cloudflare_dns_record" "sjer_red_acme_syncthing" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "sjer_red" {
   zone_id = cloudflare_zone.sjer_red.id
+  status  = "active"
 }
 
 # ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────

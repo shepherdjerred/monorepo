@@ -258,7 +258,7 @@ export async function seedDesignAuditDatabase(
       isCancelled: false,
       visibility: "OPEN" as const,
       criteriaType: "MOST_GAMES_PLAYED" as const,
-      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      criteriaConfig: JSON.stringify({ queues: ["solo"] }),
       maxParticipants: 50,
       analysisTimezone: "UTC",
       startDate: now,

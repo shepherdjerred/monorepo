@@ -42,7 +42,7 @@ describe("getRankByPuuid", () => {
     });
   });
 
-  test("returns available ranks for published Solo and Flex entries", async () => {
+  test("returns available ranks for published Solo, Flex, and Ranked 5s entries", async () => {
     byPuuid.mockResolvedValueOnce([
       {
         queueType: "RANKED_SOLO_5x5",
@@ -59,6 +59,14 @@ describe("getRankByPuuid", () => {
         leaguePoints: 20,
         wins: 15,
         losses: 10,
+      },
+      {
+        queueType: "RANKED_TEAM_5x5",
+        tier: "DIAMOND",
+        rank: "III",
+        leaguePoints: 70,
+        wins: 12,
+        losses: 8,
       },
     ]);
 
@@ -81,6 +89,13 @@ describe("getRankByPuuid", () => {
           wins: 15,
           losses: 10,
         },
+        ranked5s: {
+          tier: "diamond",
+          division: 3,
+          lp: 70,
+          wins: 12,
+          losses: 8,
+        },
       },
     });
   });
@@ -90,7 +105,7 @@ describe("getRankByPuuid", () => {
 
     await expect(getRankByPuuid(puuid, "AMERICA_NORTH")).resolves.toEqual({
       status: "available",
-      ranks: { solo: undefined, flex: undefined },
+      ranks: { solo: undefined, flex: undefined, ranked5s: undefined },
     });
   });
 
@@ -116,6 +131,7 @@ describe("getRankByPuuid", () => {
           losses: 0,
         },
         flex: undefined,
+        ranked5s: undefined,
       },
     });
   });
@@ -145,6 +161,7 @@ describe("getRankByPuuid", () => {
     if (result.status === "available") {
       expect(result.ranks.solo?.tier).toBe("diamond");
       expect(result.ranks.flex).toBeUndefined();
+      expect(result.ranks.ranked5s).toBeUndefined();
     }
   });
 
@@ -174,6 +191,7 @@ describe("getRanks", () => {
     await expect(getRanks(player)).resolves.toEqual({
       solo: undefined,
       flex: undefined,
+      ranked5s: undefined,
     });
   });
 });

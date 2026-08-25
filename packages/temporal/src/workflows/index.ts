@@ -46,6 +46,8 @@ import {
   runScoutWeeklyParlayWorkflow as _runScoutWeeklyParlayWorkflow,
 } from "./scout-weekly-parlay.ts";
 import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout-queue-windows.ts";
+import { runScoutCompetitionUpdatesWorkflow as _runScoutCompetitionUpdatesWorkflow } from "./scout-competition-updates.ts";
+import type { ScoutCompetitionUpdateDispatchResult } from "./scout-competition-updates.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout-queue-windows.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout-showcase-refresh.ts";
 import type {
@@ -268,6 +270,13 @@ export async function runScoutBryanBucksAnalyticsWorkflow(): Promise<ScoutBryanB
 
 export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResult> {
   return _runScoutQueueWindowsWatch();
+}
+
+export async function runScoutCompetitionUpdatesWorkflow(): Promise<{
+  beta: ScoutCompetitionUpdateDispatchResult;
+  prod: ScoutCompetitionUpdateDispatchResult;
+}> {
+  return _runScoutCompetitionUpdatesWorkflow();
 }
 
 export async function runScoutSeasonRefreshWorkflow(

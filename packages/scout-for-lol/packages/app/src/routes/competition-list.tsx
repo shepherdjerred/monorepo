@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { visibilityToString } from "@scout-for-lol/data";
+import {
+  competitionGameVariantToString,
+  visibilityToString,
+} from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
@@ -115,6 +118,9 @@ export function CompetitionList() {
                     <CompetitionStatusBadge status={competition.status} />
                   </TableCell>
                   <TableCell className="text-scout-subtle">
+                    <span className="block text-scout-ink">
+                      {competitionGameVariantToString(competition.gameVariant)}
+                    </span>
                     {summarizeCriteria(competition.criteria)}
                   </TableCell>
                   <TableCell className="text-scout-subtle">

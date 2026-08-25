@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "bun run scripts/ensure-dev-postgres.ts scout_dev_3000 && bun x --no-install prisma migrate deploy && bun --watch src/index.ts",
     "start": "bun src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun --external=ffmpeg-static --external '@duckdb/*'",
+    "build": "bun build src/index.ts --outdir dist --target bun --external=ffmpeg-static --external '@duckdb/*' --external '@temporalio/*'",
     "test": "DATABASE_URL=${DATABASE_URL:-postgres://scout@127.0.0.1:${SCOUT_PG_PORT:-5471}/scout_test_unbound} bun --no-install --bun vitest --config ../../../../vitest.config.ts run --testTimeout 20000",
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
@@ -67,6 +67,7 @@
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
+    "@temporalio/worker": "1.22.0",
     "@trpc/server": "11",
     "ai": "^7.0.77",
     "cron": "^4.1.4",

@@ -74,6 +74,7 @@ const LANE_TO_STEP: Record<string, string | null> = {
   "ci-playwright": null,
   "helm-types": "pr-dryrun",
   tofu: "pr-dryrun",
+  "tofu-posthog": "tofu-posthog-plan",
   helm: "pr-dryrun",
   argocd: "pr-dryrun",
   npm: "pr-dryrun",

@@ -24,6 +24,8 @@ import {
   ClassicQueueTypeSchema,
   PlayerConfigEntrySchema,
   QueueTypeSchema,
+  RankedQueueTypeSchema,
+  rankForQueue,
 } from "@scout-for-lol/data/index.ts";
 import { strict as assert } from "node:assert";
 import { participantToArenaChampion } from "#src/league/model/champion.ts";
@@ -136,19 +138,17 @@ export function toMatch(
         before: undefined,
         after: undefined,
       };
+      const queueRank = RankedQueueTypeSchema.safeParse(queueType);
+      const currentRank = queueRank.success
+        ? rankForQueue(player.ranks, queueRank.data)
+        : undefined;
 
       const playerObject = {
         playerConfig: validatedConfig,
         rankBeforeMatch: ranks.before,
         rankAfterMatch: ranks.after,
-        wins:
-          queueType === "solo" || queueType === "flex"
-            ? (player.ranks[queueType]?.wins ?? undefined)
-            : undefined,
-        losses:
-          queueType === "solo" || queueType === "flex"
-            ? (player.ranks[queueType]?.losses ?? undefined)
-            : undefined,
+        wins: currentRank?.wins,
+        losses: currentRank?.losses,
         champion,
         outcome: getOutcome(participant),
         team: team,

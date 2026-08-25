@@ -27,7 +27,7 @@ export function OnboardingInstallStep(props: {
       step="install"
       title="Add Scout to your server"
       description="Scout watches League games and posts a match report to a Discord channel after every game. First, add the bot to a server you manage."
-      onSkip={props.onSkip}
+      {...(hasGuilds ? { onSkip: props.onSkip } : {})}
     >
       <div className="space-y-4">
         <Card>

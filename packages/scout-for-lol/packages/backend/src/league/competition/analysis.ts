@@ -176,6 +176,7 @@ export async function analyzeCompetition(
             competitionCriterionQuery(
               params.competition.criteria,
               params.competition.id,
+              params.competition.gameVariant,
             ),
           ),
         );
@@ -240,6 +241,7 @@ async function analyzeRankPosition(input: {
             competitionCriterionQuery(
               params.competition.criteria,
               params.competition.id,
+              params.competition.gameVariant,
             ),
           ),
         )

@@ -34,7 +34,7 @@ describe("stage-aware Discord links", () => {
 
     const installUrl = new URL(buildDiscordInstallUrl());
     expect(installUrl.searchParams.get("scope")).toBe(
-      "bot applications.commands",
+      "bot applications.commands identify",
     );
   });
 });

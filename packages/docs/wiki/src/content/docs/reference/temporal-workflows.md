@@ -42,6 +42,7 @@ changing model identity.
 | showcase-refresh           | Mon 10:00                            | deterministic          | PR                               |
 | queue-windows              | daily 06:45                          | deterministic          | heartbeat + gated PR             |
 | image-gc                   | daily 04:00                          | deterministic          | S3 deletions                     |
+| competition updates        | every minute                         | deterministic          | due Discord standings            |
 | weekly parlay lifecycle    | Sun, source-defined Pacific timeline | deterministic          | beta Scout market reconciliation |
 | weekly parlay catch-up     | operator, stable period/slot ID      | deterministic          | shortened beta Scout market      |
 

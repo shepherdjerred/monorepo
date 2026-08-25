@@ -5,10 +5,14 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { visibilityToString, visibilityDescription } from "@scout-for-lol/data";
+import {
+  competitionGameVariantToString,
+  visibilityToString,
+  visibilityDescription,
+} from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { formatDate, channelLabel } from "#src/lib/format.ts";
+import { channelLabel } from "#src/lib/format.ts";
 import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { useCompetitionParams } from "#src/lib/route-params.ts";
@@ -143,17 +147,35 @@ export function CompetitionDetail() {
           <CardContent className="space-y-2 text-sm">
             <div>
               <span className="text-scout-subtle">Start</span>
-              <p>{formatDate(competition.startDate)}</p>
+              <p>
+                {formatCompetitionDate(
+                  competition.startDate,
+                  competition.analysisTimezone,
+                )}
+              </p>
             </div>
             <div>
               <span className="text-scout-subtle">End</span>
-              <p>{formatDate(competition.endDate)}</p>
+              <p>
+                {formatCompetitionDate(
+                  competition.endDate,
+                  competition.analysisTimezone,
+                )}
+              </p>
+              <p className="text-xs text-scout-subtle">
+                {competition.analysisTimezone}
+              </p>
             </div>
             <div>
               <span className="text-scout-subtle">Update schedule</span>
-              <p className="font-mono text-xs">
-                {competition.updateCronExpression ?? "default"}
-              </p>
+              {competition.scheduledUpdatesEnabled ? (
+                <p className="font-mono text-xs">
+                  {competition.updateCronExpression} ·{" "}
+                  {competition.scheduleTimezone}
+                </p>
+              ) : (
+                <p>Disabled</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -163,6 +185,9 @@ export function CompetitionDetail() {
             <CardTitle>Criteria</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
+            <p className="font-medium">
+              {competitionGameVariantToString(competition.gameVariant)}
+            </p>
             <p>{summarizeCriteria(competition.criteria)}</p>
           </CardContent>
         </Card>
@@ -175,6 +200,7 @@ export function CompetitionDetail() {
         startDate={competition.startDate}
         endDate={competition.endDate}
         analysisTimezone={competition.analysisTimezone}
+        criteria={competition.criteria}
       />
 
       <CompetitionParticipantsPanel
@@ -213,4 +239,16 @@ export function CompetitionDetail() {
       </p>
     </div>
   );
+}
+
+function formatCompetitionDate(
+  value: Date | string | null,
+  timezone: string,
+): string {
+  if (value === null) return "Not set";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: timezone,
+  }).format(new Date(value));
 }

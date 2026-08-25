@@ -1,5 +1,8 @@
 import type { CompetitionWithCriteria } from "@scout-for-lol/data";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import {
+  competitionGameVariantToString,
+  getCompetitionStatus,
+} from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 import { match } from "ts-pattern";
 import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
@@ -148,7 +151,7 @@ export function generateLeaderboardEmbed(
     hour12: true,
   });
   embed.setFooter({
-    text: `${criteriaDescription} • Updated ${timestamp}`,
+    text: `${competitionGameVariantToString(competition.gameVariant)} • ${criteriaDescription} • Updated ${timestamp}`,
   });
 
   return embed;
@@ -192,6 +195,12 @@ export function generateCompetitionDetailsEmbed(
     .with("SERVER_WIDE", () => "Server-Wide")
     .otherwise(() => competition.visibility);
   embed.addFields({ name: "Visibility", value: visibilityText, inline: true });
+
+  embed.addFields({
+    name: "Game version",
+    value: competitionGameVariantToString(competition.gameVariant),
+    inline: true,
+  });
 
   embed.addFields({
     name: "Max Participants",

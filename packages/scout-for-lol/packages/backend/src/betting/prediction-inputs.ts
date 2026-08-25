@@ -62,6 +62,9 @@ function rankForQueue(
   if (queueType === "flex") {
     return ranks?.flex;
   }
+  if (queueType === "ranked 5s") {
+    return ranks?.ranked5s;
+  }
   return undefined;
 }
 

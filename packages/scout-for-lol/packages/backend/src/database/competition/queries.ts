@@ -1,5 +1,6 @@
 import {
   type CompetitionCriteria,
+  type CompetitionGameVariant,
   type CompetitionVisibility,
   type CompetitionWithCriteria,
   type DiscordAccountId,
@@ -8,11 +9,17 @@ import {
   type SeasonId,
   parseCompetition,
 } from "@scout-for-lol/data";
+import {
+  type CompetitionScheduledUpdates,
+  DEFAULT_COMPETITION_CRON,
+  DEFAULT_SCHEDULE_TIMEZONE,
+} from "@scout-for-lol/data/model/competition-cron.ts";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { match } from "ts-pattern";
 import { type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import type { CompetitionDates } from "#src/database/competition/competition-dates.ts";
+import { validateCompetitionConfiguration } from "#src/database/competition/configuration-validation.ts";
 import { competitionWithSeasonInclude } from "#src/database/competition/include.ts";
 
 // ============================================================================
@@ -52,12 +59,13 @@ export type CreateCompetitionInput = {
   channelId: DiscordChannelId;
   title: string;
   description: string;
+  gameVariant?: CompetitionGameVariant;
   visibility: CompetitionVisibility;
   maxParticipants: number;
   dates: CompetitionDates;
   criteria: CompetitionCriteria;
-  /** CRON expression (UTC); null/undefined defers to the dispatcher's default. */
-  updateCronExpression?: string | null;
+  analysisTimezone?: string;
+  scheduledUpdates?: CompetitionScheduledUpdates;
 };
 
 // ============================================================================
@@ -76,6 +84,8 @@ export async function createCompetition(
   input: CreateCompetitionInput,
 ): Promise<CompetitionWithCriteria> {
   const now = new Date();
+  const gameVariant = input.gameVariant ?? "MODERN";
+  validateCompetitionConfiguration(input.criteria, gameVariant);
 
   // Extract dates based on type
   const { startDate, endDate, seasonId } = match(input.dates)
@@ -100,16 +110,22 @@ export async function createCompetition(
       ownerId: input.ownerId,
       title: input.title,
       description: input.description,
+      gameVariant,
       channelId: input.channelId,
       isCancelled: false,
       visibility: input.visibility,
       criteriaType,
       criteriaConfig: JSON.stringify(criteriaConfig),
       maxParticipants: input.maxParticipants,
+      analysisTimezone: input.analysisTimezone ?? DEFAULT_SCHEDULE_TIMEZONE,
       startDate,
       endDate,
       seasonId,
-      updateCronExpression: input.updateCronExpression ?? null,
+      scheduledUpdatesEnabled: input.scheduledUpdates?.enabled ?? false,
+      updateCronExpression:
+        input.scheduledUpdates?.cronExpression ?? DEFAULT_COMPETITION_CRON,
+      scheduleTimezone:
+        input.scheduledUpdates?.timezone ?? DEFAULT_SCHEDULE_TIMEZONE,
       creatorDiscordId: input.ownerId,
       createdTime: now,
       updatedTime: now,
@@ -263,12 +279,16 @@ export async function getDueCompetitions(
 ): Promise<CompetitionWithCriteria[]> {
   const raw = await prisma.competition.findMany({
     where: {
-      isCancelled: false,
-      startProcessedAt: { not: null },
-      endProcessedAt: null,
-      OR: [
-        { nextScheduledUpdateAt: { lte: now } },
-        { nextScheduledUpdateAt: null },
+      AND: [
+        activeOnlyWhere(now),
+        { scheduledUpdatesEnabled: true },
+        { startProcessedAt: { not: null } },
+        {
+          OR: [
+            { nextScheduledUpdateAt: { lte: now } },
+            { nextScheduledUpdateAt: null },
+          ],
+        },
       ],
     },
     orderBy: {
@@ -291,11 +311,13 @@ export async function getDueCompetitions(
 export type UpdateCompetitionInput = {
   title?: string;
   description?: string;
+  gameVariant?: CompetitionGameVariant;
   channelId?: DiscordChannelId;
   visibility?: CompetitionVisibility;
   maxParticipants?: number;
   dates?: CompetitionDates;
   criteria?: CompetitionCriteria;
+  analysisTimezone?: string;
 };
 
 /**
@@ -318,6 +340,7 @@ export async function updateCompetition(
   const updateData: {
     title?: string;
     description?: string;
+    gameVariant?: CompetitionGameVariant;
     channelId?: DiscordChannelId;
     visibility?: CompetitionVisibility;
     maxParticipants?: number;
@@ -326,9 +349,13 @@ export async function updateCompetition(
     seasonId?: SeasonId | null;
     criteriaType?: CompetitionCriteria["type"];
     criteriaConfig?: string;
+    analysisTimezone?: string;
     updatedTime: Date;
   } = {
     updatedTime: now,
+    ...(input.analysisTimezone === undefined
+      ? {}
+      : { analysisTimezone: input.analysisTimezone }),
   };
 
   // Add simple fields if provided
@@ -337,6 +364,9 @@ export async function updateCompetition(
   }
   if (input.description !== undefined) {
     updateData.description = input.description;
+  }
+  if (input.gameVariant !== undefined) {
+    updateData.gameVariant = input.gameVariant;
   }
   if (input.channelId !== undefined) {
     updateData.channelId = input.channelId;

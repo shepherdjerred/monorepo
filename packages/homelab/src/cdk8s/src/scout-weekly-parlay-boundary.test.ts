@@ -1,38 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { App } from "cdk8s";
-import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createScoutChart } from "./cdk8s-charts/scout.ts";
-import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
-
-const ResourceSchema = z
-  .object({
-    kind: z.string(),
-    metadata: z.object({ name: z.string() }).loose(),
-    spec: z.unknown().optional(),
-  })
-  .loose();
-
-function resourcesFor(app: App): z.infer<typeof ResourceSchema>[] {
-  return parseAllDocuments(app.synthYaml()).flatMap((document) => {
-    const resource = ResourceSchema.safeParse(document.toJSON());
-    return resource.success ? [resource.data] : [];
-  });
-}
-
-function findResource(
-  resources: z.infer<typeof ResourceSchema>[],
-  kind: string,
-  name: string,
-): z.infer<typeof ResourceSchema> {
-  const resource = resources.find(
-    (candidate) => candidate.kind === kind && candidate.metadata.name === name,
-  );
-  if (resource === undefined) {
-    throw new Error(`Missing ${kind}/${name}`);
-  }
-  return resource;
-}
+import {
+  findResource,
+  scoutResources,
+  temporalResources,
+} from "./scout-test-resources.ts";
 
 const DeploymentSpecSchema = z.object({
   template: z.object({
@@ -54,12 +26,6 @@ const DeploymentSpecSchema = z.object({
   }),
 });
 
-function scoutResources(stage: "beta" | "prod") {
-  const app = new App();
-  createScoutChart(app, stage);
-  return resourcesFor(app);
-}
-
 describe("Scout weekly parlay deployment boundary", () => {
   test("shares one 1Password credential with Beta Scout and the core worker", () => {
     const beta = scoutResources("beta");
@@ -73,9 +39,7 @@ describe("Scout weekly parlay deployment boundary", () => {
       }),
     );
 
-    const app = new App();
-    createTemporalChart(app);
-    const temporal = resourcesFor(app);
+    const temporal = temporalResources();
     const temporalDeployment = DeploymentSpecSchema.parse(
       findResource(temporal, "Deployment", "temporal-temporal-worker").spec,
     );
@@ -151,9 +115,7 @@ describe("Scout weekly parlay deployment boundary", () => {
       }),
     );
 
-    const app = new App();
-    createTemporalChart(app);
-    const temporal = resourcesFor(app);
+    const temporal = temporalResources();
     const egressPolicy = findResource(
       temporal,
       "NetworkPolicy",

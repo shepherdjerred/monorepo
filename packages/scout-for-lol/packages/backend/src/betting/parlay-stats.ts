@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { QueueType } from "@scout-for-lol/data";
+import type { RankedQueueType } from "@scout-for-lol/data";
 import {
   PARLAY_HISTORY_QUEUES,
   type ParlayHistoryMatch,
@@ -249,7 +249,7 @@ function parseBucket(value: number | null): DurationBucket | undefined {
 export async function fetchPopulationFrame(options: {
   column: keyof MatchLakeRow;
   operator: ParlayOperator;
-  queueType?: Extract<QueueType, "solo" | "flex">;
+  queueType?: RankedQueueType;
   lakeDir?: string;
   timeoutMs?: number;
 }): Promise<PopulationFrame | undefined> {
@@ -351,7 +351,7 @@ export async function buildProposalStatistics(input: {
     label: string;
   }[];
   history: ReadonlyMap<string, readonly ParlayHistoryMatch[]>;
-  queueType?: Extract<QueueType, "solo" | "flex">;
+  queueType?: RankedQueueType;
   lakeDir?: string;
   timeoutMs?: number;
   deadline?: AbortSignal;

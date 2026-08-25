@@ -11,6 +11,7 @@ type TrackedKey =
   | "NODE_ENV"
   | "ENABLE_DISCORD_GATEWAY"
   | "ENABLE_BACKGROUND_JOBS"
+  | "TEMPORAL_ADDRESS"
   | "BB_ASK_MODEL"
   | "EXPLORE_MODEL";
 
@@ -20,6 +21,7 @@ function snapshotEnv(): Record<TrackedKey, string | undefined> {
     NODE_ENV: Bun.env.NODE_ENV,
     ENABLE_DISCORD_GATEWAY: Bun.env["ENABLE_DISCORD_GATEWAY"],
     ENABLE_BACKGROUND_JOBS: Bun.env["ENABLE_BACKGROUND_JOBS"],
+    TEMPORAL_ADDRESS: Bun.env["TEMPORAL_ADDRESS"],
     BB_ASK_MODEL: Bun.env["BB_ASK_MODEL"],
     EXPLORE_MODEL: Bun.env["EXPLORE_MODEL"],
   };
@@ -45,6 +47,11 @@ function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
     delete Bun.env["ENABLE_BACKGROUND_JOBS"];
   } else {
     Bun.env["ENABLE_BACKGROUND_JOBS"] = snapshot.ENABLE_BACKGROUND_JOBS;
+  }
+  if (snapshot.TEMPORAL_ADDRESS === undefined) {
+    delete Bun.env["TEMPORAL_ADDRESS"];
+  } else {
+    Bun.env["TEMPORAL_ADDRESS"] = snapshot.TEMPORAL_ADDRESS;
   }
   if (snapshot.BB_ASK_MODEL === undefined) {
     delete Bun.env["BB_ASK_MODEL"];
@@ -140,6 +147,7 @@ describe("local runtime flags", () => {
 
     expect(configuration.enableDiscordGateway).toBe(false);
     expect(configuration.enableBackgroundJobs).toBe(false);
+    expect(configuration.temporalAddress).toBeUndefined();
   });
 
   test("rejects disabled gateway or jobs outside development", () => {

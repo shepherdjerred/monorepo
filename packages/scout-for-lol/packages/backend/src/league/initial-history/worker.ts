@@ -304,11 +304,13 @@ async function processRiotPhases(
           puuid: job.puuid,
           soloRank: serializeRank(ranks.solo),
           flexRank: serializeRank(ranks.flex),
+          ranked5sRank: serializeRank(ranks.ranked5s),
           fetchedAt: now,
         },
         update: {
           soloRank: serializeRank(ranks.solo),
           flexRank: serializeRank(ranks.flex),
+          ranked5sRank: serializeRank(ranks.ranked5s),
           fetchedAt: now,
         },
       });

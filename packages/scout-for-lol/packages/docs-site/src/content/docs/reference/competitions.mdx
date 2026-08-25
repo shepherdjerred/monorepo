@@ -7,25 +7,52 @@ sidebar:
 
 import DataTable from "../../../components/DataTable.astro";
 import {
-  CompetitionQueueTypeSchema,
+  CompetitionGameVariantSchema,
   CompetitionVisibilitySchema,
   ParticipantStatusSchema,
+  queueMatchesGameVariant,
 } from "@scout-for-lol/data/model/competition.ts";
+import { QueueTypeSchema } from "@scout-for-lol/data/model/state.ts";
+import { isCompetitionQueueCurrentlyAvailable } from "@scout-for-lol/data/model/queue-availability.ts";
 
 ## Criteria
 
-| Criteria             | Ranks by                             | Queue                           |
-| -------------------- | ------------------------------------ | ------------------------------- |
-| `MOST_GAMES_PLAYED`  | Games played                         | any competition queue           |
-| `MOST_WINS_PLAYER`   | Wins                                 | any competition queue           |
-| `MOST_WINS_CHAMPION` | Wins on one champion                 | optional; all queues if omitted |
-| `HIGHEST_WIN_RATE`   | Win rate, above a minimum game count | any competition queue           |
-| `HIGHEST_RANK`       | Peak rank reached                    | `SOLO` or `FLEX` only           |
-| `MOST_RANK_CLIMB`    | LP gained across the window          | `SOLO` or `FLEX` only           |
+| Criteria             | Ranks by                             | Queues                                     |
+| -------------------- | ------------------------------------ | ------------------------------------------ |
+| `MOST_GAMES_PLAYED`  | Games played                         | one or more compatible queues              |
+| `MOST_WINS_PLAYER`   | Wins                                 | one or more compatible queues              |
+| `MOST_WINS_CHAMPION` | Wins on one catalog-valid champion   | one or more compatible queues              |
+| `HIGHEST_WIN_RATE`   | Win rate, above a minimum game count | one or more compatible queues              |
+| `HIGHEST_RANK`       | Peak or combined normalized rank     | `solo`, `flex`, and/or `ranked 5s`; Modern |
+| `MOST_RANK_CLIMB`    | Best or combined LP change           | `solo`, `flex`, and/or `ranked 5s`; Modern |
 
 `HIGHEST_WIN_RATE` takes a minimum game count, defaulting to **10**. Rank-based
-criteria are restricted to ranked queues because there is no rank to measure in
-other queues.
+criteria take `aggregation: "MAX" | "SUM"`. `MAX` uses the best selected rank
+or largest complete ladder climb. `SUM` adds normalized ladder points or
+complete per-ladder LP changes. A missing ladder is ignored; a player is omitted
+only when no selected ladder has usable data.
+
+## Game variants
+
+<DataTable
+  columns={[
+    {
+      header: "Value",
+      values: CompetitionGameVariantSchema.options,
+      code: true,
+    },
+    {
+      header: "Eligible content",
+      values: [
+        "Modern champion catalog and every non-Classic queue",
+        "League Classic and Classic ARAM Mayhem, with the Jade champion catalog",
+      ],
+    },
+  ]}
+/>
+
+Classic competitions cannot use rank criteria. Changing variants clears the
+selected champion and resets queues to `ALL`.
 
 ## Competition queues
 
@@ -33,17 +60,33 @@ other queues.
   columns={[
     {
       header: "Value",
-      values: CompetitionQueueTypeSchema.options.map((value) => value),
+      values: ["ALL", ...QueueTypeSchema.options],
       code: true,
+    },
+    {
+      header: "Variant",
+      values: ["ALL", ...QueueTypeSchema.options].map((queue) =>
+        queue === "ALL"
+          ? "Selected competition variant"
+          : queueMatchesGameVariant(queue, "CLASSIC")
+            ? "Classic"
+            : "Modern",
+      ),
+    },
+    {
+      header: "Availability",
+      values: ["ALL", ...QueueTypeSchema.options].map((queue) =>
+        isCompetitionQueueCurrentlyAvailable(queue)
+          ? "Currently live"
+          : "Limited-time; not currently live",
+      ),
     },
   ]}
 />
 
-`RANKED_ANY` covers solo and flex together; `ALL` counts every queue.
-
-These are competition-level values and are spelled differently from the
-lowercase queue values used by subscription filters and reports — see [Queues
-and regions](/docs/reference/queues-and-regions/).
+`ALL` is synthetic and mutually exclusive with concrete queues. It means all
+queues in the selected game variant. Every other value comes directly from the
+canonical lowercase `QueueTypeSchema`; `RANKED_ANY` no longer exists.
 
 ## Visibility
 
@@ -88,26 +131,51 @@ and regions](/docs/reference/queues-and-regions/).
 ## Window
 
 A competition runs on either an explicit start and end date, or a League season.
+Fixed values are interpreted in `analysisTimezone`: the start is local 00:00:00
+and the end is the final local millisecond of the selected end date. The default
+for a new builder-created competition is the browser's IANA timezone; legacy
+rows default to `UTC`.
+
 Status — upcoming, running, finished — is derived from those dates rather than
 stored, so correcting a date immediately corrects the status.
 
+## Scheduled updates
+
+| Field                     | Default for legacy rows | New builder default |
+| ------------------------- | ----------------------- | ------------------- |
+| `scheduledUpdatesEnabled` | `false`                 | `true`              |
+| `updateCronExpression`    | `0 0 * * *`             | `0 9 * * *`         |
+| `scheduleTimezone`        | `UTC`                   | Browser IANA zone   |
+
+The cron must select exactly one minute and one hour and may fire at most once
+per day. `scheduleTimezone` controls cron evaluation independently from
+`analysisTimezone`, which controls competition-day boundaries and analysis.
+Disabling updates clears `nextScheduledUpdateAt`; enabling an active competition
+computes it immediately in the saved timezone.
+
 ## Lifecycle
 
-Scout checks competitions every **15 minutes** and, from that check, announces
-starts and posts final standings when the window ends. Intermediate standings
-posts are not currently dispatched — the scheduled-update path exists but is not
-wired into the cron, so a running competition announces only its start and its
-result. Use the competition page or a scheduled report for standings in
-between.
+Scout checks competition starts and ends every **15 minutes**. A declarative
+Temporal schedule runs a separate dispatcher **every minute**; stage-local Scout
+activity workers post leaderboard updates only for enabled, active, due
+competitions. Start and final announcements remain mandatory even when
+leaderboard updates are disabled. Failed update posts still advance the next
+fire.
 
 ## Other fields
 
-| Field                | Notes                                          |
-| -------------------- | ---------------------------------------------- |
-| Title                | Required; up to 100 characters                 |
-| Description          | Required; up to 500 characters                 |
-| Announcement channel | Required; needs Send Messages and Attach Files |
-| Max participants     | Optional cap on the field                      |
+| Field                | Notes                                                              |
+| -------------------- | ------------------------------------------------------------------ |
+| Title                | Required; up to 100 characters                                     |
+| Description          | Required; up to 500 characters                                     |
+| Announcement channel | Required; needs Send Messages and Attach Files                     |
+| Max participants     | Defaults to 100 for new competitions; existing caps stay unchanged |
+| Game variant         | `MODERN` by default; `CLASSIC` isolates Classic content            |
+| Analysis timezone    | IANA zone for fixed-day and analysis boundaries                    |
+| Initial player IDs   | Unique guild-scoped tracked players; `JOINED` on create            |
+
+Initial entrants and server-wide enrollment require `competitions:invite`.
+Enabled or customized schedules require `competitions:schedule`.
 
 ## Related
 

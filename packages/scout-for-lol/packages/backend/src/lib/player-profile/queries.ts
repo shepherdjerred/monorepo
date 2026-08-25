@@ -1,9 +1,16 @@
 import { z } from "zod";
-import { RankSchema, leaguePointsDelta, type Rank } from "@scout-for-lol/data";
+import {
+  RankSchema,
+  leaguePointsDelta,
+  type DiscordGuildId,
+  type PlayerId,
+  type Rank,
+} from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import {
   PlayerLookupInput,
   getPlayerOrThrow,
+  notFound,
 } from "#src/lib/player-admin/shared.ts";
 import {
   fetchPlayerChampionPool,
@@ -48,26 +55,70 @@ export const PlayerMatchHistoryInput = PlayerLookupInput.extend({
   queue: z.string().trim().min(1).max(50).optional(),
 });
 
+type ProfileAccount = {
+  puuid: string;
+  region: string;
+  riotGameName: string | null;
+  riotTagLine: string | null;
+  riotIdUpdatedAt: Date | null;
+  lastMatchTime: Date | null;
+  lastCheckedAt: Date | null;
+};
+
+type ResolvedPlayerProfile = {
+  playerId: number;
+  alias: string;
+  puuids: string[];
+  accounts: ProfileAccount[];
+};
+
+type ResolvedGuildPlayerProfile = ResolvedPlayerProfile & {
+  discordId: string | null;
+};
+
+function profileAccount(account: ProfileAccount): ProfileAccount {
+  return {
+    puuid: account.puuid,
+    region: account.region,
+    riotGameName: account.riotGameName,
+    riotTagLine: account.riotTagLine,
+    riotIdUpdatedAt: account.riotIdUpdatedAt,
+    lastMatchTime: account.lastMatchTime,
+    lastCheckedAt: account.lastCheckedAt,
+  };
+}
+
 async function resolveGuildPuuids(input: {
   guildId: string;
   alias: string;
-}): Promise<{
-  playerId: number;
-  alias: string;
-  discordId: string | null;
-  puuids: string[];
-  accounts: { riotGameName: string | null; riotTagLine: string | null }[];
-}> {
+}): Promise<ResolvedGuildPlayerProfile> {
   const player = await getPlayerOrThrow(input);
   return {
     playerId: player.id,
     alias: player.alias,
     discordId: player.discordId,
     puuids: player.accounts.map((account) => account.puuid),
-    accounts: player.accounts.map((account) => ({
-      riotGameName: account.riotGameName,
-      riotTagLine: account.riotTagLine,
-    })),
+    accounts: player.accounts.map((account) => profileAccount(account)),
+  };
+}
+
+async function resolveConsumerPlayerPuuids(input: {
+  playerId: PlayerId;
+  guildIds: DiscordGuildId[];
+}): Promise<ResolvedPlayerProfile & { guildId: string }> {
+  const player = await prisma.player.findFirst({
+    where: { id: input.playerId, serverId: { in: input.guildIds } },
+    include: { accounts: true },
+  });
+  if (player === null) {
+    throw notFound("Player was not found");
+  }
+  return {
+    playerId: player.id,
+    alias: player.alias,
+    guildId: player.serverId,
+    puuids: player.accounts.map((account) => account.puuid),
+    accounts: player.accounts.map((account) => profileAccount(account)),
   };
 }
 
@@ -78,12 +129,14 @@ function parseRank(serialized: string | null): Rank | undefined {
 }
 
 /** Latest known rank per queue, newest game first. */
-async function latestRanks(
-  puuids: string[],
-): Promise<{ solo: Rank | undefined; flex: Rank | undefined }> {
+async function latestRanks(puuids: string[]): Promise<{
+  solo: Rank | undefined;
+  flex: Rank | undefined;
+  ranked5s: Rank | undefined;
+}> {
   const [rankHistory, current] = await Promise.all([
     Promise.all(
-      (["solo", "flex"] as const).map(async (queueType) =>
+      (["solo", "flex", "ranked 5s"] as const).map(async (queueType) =>
         prisma.matchRankHistory.findFirst({
           where: {
             puuid: { in: puuids },
@@ -105,13 +158,19 @@ async function latestRanks(
 
   function newestRank(
     live: (typeof rankHistory)[number] | undefined,
-    queueType: "solo" | "flex",
+    queueType: "solo" | "flex" | "ranked 5s",
   ): Rank | undefined {
-    const snapshot = current.find((entry) =>
-      queueType === "solo" ? entry.soloRank !== null : entry.flexRank !== null,
-    );
+    const snapshot = current.find((entry) => {
+      if (queueType === "solo") return entry.soloRank !== null;
+      if (queueType === "flex") return entry.flexRank !== null;
+      return entry.ranked5sRank !== null;
+    });
     const snapshotValue =
-      queueType === "solo" ? snapshot?.soloRank : snapshot?.flexRank;
+      queueType === "solo"
+        ? snapshot?.soloRank
+        : queueType === "flex"
+          ? snapshot?.flexRank
+          : snapshot?.ranked5sRank;
     if (
       snapshot !== undefined &&
       (live == null || snapshot.fetchedAt > live.capturedAt)
@@ -124,6 +183,7 @@ async function latestRanks(
   return {
     solo: newestRank(rankHistory[0], "solo"),
     flex: newestRank(rankHistory[1], "flex"),
+    ranked5s: newestRank(rankHistory[2], "ranked 5s"),
   };
 }
 
@@ -148,6 +208,11 @@ export type MatchHistoryEntry = {
   damageShare: number | null;
   /** LP change for this game; null unless both before and after are known. */
   leaguePointsDelta: number | null;
+  account: {
+    gameName: string | null;
+    tagLine: string | null;
+    region: string;
+  };
 };
 
 function ratio(part: number, whole: number): number | null {
@@ -162,10 +227,11 @@ function ratio(part: number, whole: number): number | null {
  */
 async function decorateHistoryRows(
   rows: LakePlayerMatchHistoryRow[],
-  puuids: string[],
+  accounts: ProfileAccount[],
 ): Promise<MatchHistoryEntry[]> {
   if (rows.length === 0) return [];
   const matchIds = rows.map((row) => row.match_id);
+  const puuids = accounts.map((account) => account.puuid);
 
   const [teamTotals, rankRows] = await Promise.all([
     fetchTeamTotalsForMatches({ matchIds }),
@@ -180,11 +246,20 @@ async function decorateHistoryRows(
       total,
     ]),
   );
-  const rankByMatch = new Map(rankRows.map((row) => [row.matchId, row]));
+  const rankByMatchAndPuuid = new Map(
+    rankRows.map((row) => [`${row.matchId}:${row.puuid}`, row]),
+  );
+  const accountByPuuid = new Map(
+    accounts.map((account) => [account.puuid, account]),
+  );
 
   return rows.map((row) => {
     const totals = totalsByKey.get(`${row.match_id}:${row.team_id.toString()}`);
-    const rankRow = rankByMatch.get(row.match_id);
+    const rankRow = rankByMatchAndPuuid.get(`${row.match_id}:${row.puuid}`);
+    const account = accountByPuuid.get(row.puuid);
+    if (account === undefined) {
+      throw new Error(`Match history returned an unrequested PUUID`);
+    }
     const before = parseRank(rankRow?.rankBefore ?? null);
     const after = parseRank(rankRow?.rankAfter ?? null);
     const minutes = row.time_played / 60;
@@ -220,24 +295,32 @@ async function decorateHistoryRows(
         before === undefined || after === undefined
           ? null
           : leaguePointsDelta(before, after),
+      account: {
+        gameName: account.riotGameName,
+        tagLine: account.riotTagLine,
+        region: account.region,
+      },
     };
   });
 }
 
-export async function getPlayerMatchHistory(
-  input: z.infer<typeof PlayerMatchHistoryInput>,
+async function matchHistoryForPlayer(
+  player: ResolvedPlayerProfile,
+  input: {
+    limit: number;
+    cursor?: MatchHistoryCursor;
+    queue?: string;
+  },
 ): Promise<{
   entries: MatchHistoryEntry[];
   nextCursor: MatchHistoryCursor | null;
 }> {
-  const { puuids } = await resolveGuildPuuids(input);
-  if (puuids.length === 0) {
+  if (player.puuids.length === 0) {
     return { entries: [], nextCursor: null };
   }
 
-  // Fetch one extra row to learn whether another page exists without a count.
   const rows = await fetchPlayerMatchHistory({
-    puuids,
+    puuids: player.puuids,
     limit: input.limit + 1,
     ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
     ...(input.queue === undefined ? {} : { queue: input.queue }),
@@ -246,12 +329,37 @@ export async function getPlayerMatchHistory(
   const last = rows.length > input.limit ? page.at(-1) : undefined;
 
   return {
-    entries: await decorateHistoryRows(page, puuids),
+    entries: await decorateHistoryRows(page, player.accounts),
     nextCursor:
       last === undefined
         ? null
         : { gameCreationMs: last.game_creation_ms, matchId: last.match_id },
   };
+}
+
+export async function getPlayerMatchHistory(
+  input: z.infer<typeof PlayerMatchHistoryInput>,
+): Promise<{
+  entries: MatchHistoryEntry[];
+  nextCursor: MatchHistoryCursor | null;
+}> {
+  const player = await resolveGuildPuuids(input);
+  return matchHistoryForPlayer(player, {
+    limit: input.limit,
+    ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
+    ...(input.queue === undefined ? {} : { queue: input.queue }),
+  });
+}
+
+export async function getConsumerPlayerMatchHistory(input: {
+  playerId: PlayerId;
+  guildIds: DiscordGuildId[];
+  limit: number;
+  cursor?: MatchHistoryCursor;
+  queue?: string;
+}) {
+  const player = await resolveConsumerPlayerPuuids(input);
+  return matchHistoryForPlayer(player, input);
 }
 
 export type ChampionPoolEntry = {
@@ -266,15 +374,30 @@ export type ChampionPoolEntry = {
   lowSample: boolean;
 };
 
-export async function getPlayerProfileSummary(
-  input: z.infer<typeof PlayerProfileInput>,
+async function accountSummaries(accounts: ProfileAccount[]) {
+  return Promise.all(
+    accounts.map(async (account) => ({
+      gameName: account.riotGameName,
+      tagLine: account.riotTagLine,
+      region: account.region,
+      riotIdUpdatedAt: account.riotIdUpdatedAt,
+      lastMatchTime: account.lastMatchTime,
+      lastCheckedAt: account.lastCheckedAt,
+      ranks: await latestRanks([account.puuid]),
+    })),
+  );
+}
+
+async function profileSummaryForPlayer(
+  player: ResolvedPlayerProfile,
+  queue: string | undefined,
 ) {
-  const player = await resolveGuildPuuids(input);
+  const accounts = await accountSummaries(player.accounts);
   if (player.puuids.length === 0) {
     return {
       alias: player.alias,
-      discordId: player.discordId,
       accountCount: 0,
+      accounts,
       riotIds: [],
       ranks: { solo: undefined, flex: undefined },
       recentForm: null,
@@ -288,26 +411,23 @@ export async function getPlayerProfileSummary(
     fetchPlayerMatchHistory({
       puuids: player.puuids,
       limit: RECENT_FORM_GAMES,
-      ...(input.queue === undefined ? {} : { queue: input.queue }),
+      ...(queue === undefined ? {} : { queue }),
     }),
     fetchPlayerChampionPool({
       puuids: player.puuids,
-      ...(input.queue === undefined ? {} : { queue: input.queue }),
+      ...(queue === undefined ? {} : { queue }),
     }),
   ]);
 
-  const recent = await decorateHistoryRows(recentRows, player.puuids);
+  const recent = await decorateHistoryRows(recentRows, player.accounts);
   const participations = recent
     .map((entry) => entry.killParticipation)
     .filter((value) => value !== null);
 
   return {
     alias: player.alias,
-    discordId: player.discordId,
-    // Surfaced so the UI can say the profile spans several accounts — the
-    // thing a public tracker cannot do, because it never knows they are one
-    // person.
     accountCount: player.puuids.length,
+    accounts,
     riotIds: player.accounts
       .filter((account) => account.riotGameName !== null)
       .map((account) => ({
@@ -347,5 +467,28 @@ export async function getPlayerProfileSummary(
       };
     }),
     minGamesForRate: MIN_GAMES_FOR_RATE,
+  };
+}
+
+export async function getPlayerProfileSummary(
+  input: z.infer<typeof PlayerProfileInput>,
+) {
+  const player = await resolveGuildPuuids(input);
+  const summary = await profileSummaryForPlayer(player, input.queue);
+  return {
+    discordId: player.discordId,
+    ...summary,
+  };
+}
+
+export async function getConsumerPlayerProfileSummary(input: {
+  playerId: PlayerId;
+  guildIds: DiscordGuildId[];
+  queue?: string;
+}) {
+  const player = await resolveConsumerPlayerPuuids(input);
+  return {
+    guildId: player.guildId,
+    ...(await profileSummaryForPlayer(player, input.queue)),
   };
 }

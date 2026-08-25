@@ -16,6 +16,7 @@
  * Run: bun run generate
  */
 import path from "node:path";
+import { CompetitionCriteriaSchema } from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
 import { renderReportOutput } from "@scout-for-lol/backend/reports/output.ts";
@@ -120,7 +121,10 @@ const { competitionChartToImage } = await import("@scout-for-lol/report");
 const { formatCriteriaDescription } =
   await import("@scout-for-lol/backend/discord/embeds/competition-format-helpers.ts");
 
-const CRITERIA = { type: "MOST_GAMES_PLAYED", queue: "ALL" } as const;
+const CRITERIA = CompetitionCriteriaSchema.parse({
+  type: "MOST_GAMES_PLAYED",
+  queues: ["ALL"],
+});
 
 const STANDINGS = [
   ["Faker", 146],

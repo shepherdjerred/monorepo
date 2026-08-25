@@ -111,6 +111,44 @@ configures an explicit local git backend on a ZFS PVC, which is backed up by
 Velero. A regression test asserts that configuration is present, because losing
 it produces a service that looks like it works.
 
+## Analytics has a different ownership boundary
+
+PostHog records behaviour. It is not the switch that decides whether behaviour
+exists. Product rollout therefore remains in Flipt, while PostHog's supported
+control-plane objects live in OpenTofu. That makes dashboards, insights,
+layouts, the project proxy, and their supported settings reviewable rather than
+personal UI state.
+
+This boundary is intentionally selective. A provider cannot represent every
+PostHog setting, so options such as IP anonymisation and retention remain
+UI-managed. Supported resources do not get that exception: a UI edit is drift
+and the next OpenTofu reconciliation restores the reviewed configuration.
+Dashboard layouts deserve special care because the provider treats each layout
+as complete, not partial. A missing tile is therefore a deletion, not an
+unmanaged detail. The [layout resource documentation](https://registry.terraform.io/providers/PostHog/posthog/latest/docs/resources/dashboard_layout)
+explains that authority model.
+
+The allowed browser origins come from the shared
+[analytics registry](https://github.com/shepherdjerred/monorepo/blob/main/config/analytics-sites.json),
+not from a hand-maintained PostHog list. This keeps the project URL policy and
+session-replay policy aligned with the sites that actually emit analytics. The
+unproxied [`j.sjer.red` CNAME](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/cloudflare/sjer-red.tf)
+is part of the same boundary: Cloudflare routes the hostname, while PostHog owns
+the ProxyHog target behind it.
+
+Analytics state is unusually sensitive because it contains the complete shape
+of the control plane. Its SeaweedFS state and plans use enforced,
+[PBKDF2-derived AES-GCM encryption](https://opentofu.org/docs/v1.12/language/state/encryption/).
+The dedicated passphrase is deliberately not recoverable from the backend. That
+trade rejects convenient emergency access in favour of keeping state useful
+only to the intended operator.
+
+Finally, configuration success is not ingestion success. A clean plan and a
+resolving CNAME show that the control plane agrees with Git. They do not show
+that a browser event arrived or that replay persisted. Live Events across every
+registered site are the acceptance boundary because they observe the product
+path that the configuration exists to support.
+
 ## Where a flag does nothing
 
 Before adding one, check where the value is read:

@@ -38,6 +38,18 @@ describe("RawSummonerLeagueSchema", () => {
     expect(result.losses).toBe(0);
   });
 
+  test("validates Ranked 5s as a distinct League-V4 ladder", () => {
+    const result = StandardSummonerLeagueSchema.safeParse({
+      queueType: "RANKED_TEAM_5x5",
+      tier: "PLATINUM",
+      rank: "II",
+      leaguePoints: 35,
+      wins: 9,
+      losses: 4,
+    });
+    expect(result.success).toBe(true);
+  });
+
   test("accepts future queue names without interpreting their fields", () => {
     const result = RawSummonerLeagueSchema.safeParse({
       queueType: "RANKED_FUTURE_MODE",

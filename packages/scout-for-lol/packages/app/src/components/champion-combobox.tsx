@@ -1,4 +1,8 @@
-import { browserChampions } from "@scout-for-lol/data/browser-assets";
+import {
+  browserClassicChampions,
+  browserModernChampions,
+} from "@scout-for-lol/data/browser-assets";
+import type { CompetitionGameVariant } from "@scout-for-lol/data";
 import { ChampionCombobox as ScoutChampionCombobox } from "@scout-for-lol/design-system/domain/champion-combobox";
 
 /**
@@ -10,21 +14,27 @@ export function ChampionCombobox(props: {
   onChange: (championId: string) => void;
   disabled?: boolean;
   id?: string;
+  gameVariant: CompetitionGameVariant;
 }) {
+  const champions =
+    props.gameVariant === "MODERN"
+      ? browserModernChampions
+      : browserClassicChampions;
   const championId = Number.parseInt(props.value, 10);
   const value = Number.isNaN(championId)
     ? undefined
-    : browserChampions.find((champion) => champion.id === championId);
+    : champions.find((champion) => champion.id === championId);
 
   return (
     <ScoutChampionCombobox
       value={value}
+      items={champions}
       onChange={(champion) => {
         props.onChange(champion.id.toString());
       }}
       onQueryChange={(query) => {
         const normalized = query.trim().toLowerCase();
-        const exact = browserChampions.find(
+        const exact = champions.find(
           (champion) => champion.name.toLowerCase() === normalized,
         );
         props.onChange(exact?.id.toString() ?? "");

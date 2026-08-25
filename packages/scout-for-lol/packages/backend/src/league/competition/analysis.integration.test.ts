@@ -48,18 +48,18 @@ describe("competition selected-period analysis", () => {
       expectedScore: number;
     }[] = [
       {
-        criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+        criteria: { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
         expectedScore: 2,
       },
       {
-        criteria: { type: "MOST_WINS_PLAYER", queue: "SOLO" },
+        criteria: { type: "MOST_WINS_PLAYER", queues: ["solo"] },
         expectedScore: 2,
       },
       {
         criteria: {
           type: "MOST_WINS_CHAMPION",
           championId: targetChampionId,
-          queue: "SOLO",
+          queues: ["solo"],
         },
         expectedScore: 2,
       },
@@ -67,7 +67,7 @@ describe("competition selected-period analysis", () => {
         criteria: {
           type: "HIGHEST_WIN_RATE",
           minGames: 1,
-          queue: "SOLO",
+          queues: ["solo"],
         },
         expectedScore: 1,
       },
@@ -86,7 +86,8 @@ describe("competition selected-period analysis", () => {
   test("uses boundary leaderboard snapshots for highest rank and rank climb", async () => {
     const highest = await runRankAnalysis({
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      aggregation: "MAX",
+      queues: ["solo"],
     });
     expect(highest.standings[0]?.playerName).toBe("Alpha");
     expect(highest.standings[0]?.score).toBe(1400);
@@ -95,7 +96,8 @@ describe("competition selected-period analysis", () => {
     await cleanup();
     const climb = await runRankAnalysis({
       type: "MOST_RANK_CLIMB",
-      queue: "SOLO",
+      aggregation: "MAX",
+      queues: ["solo"],
     });
     expect(climb.standings[0]?.playerName).toBe("Alpha");
     expect(climb.standings[0]?.score).toBe(400);
@@ -104,7 +106,7 @@ describe("competition selected-period analysis", () => {
   test("recomputes match standings for selected-period rank-position views", async () => {
     const { alpha, competition } = await setupCompetition({
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     await writeTestLake(lakeDir, {
       serverId,
@@ -144,7 +146,8 @@ describe("competition preset date bounds", () => {
   test("uses match facts for non-rank presets in rank competitions", async () => {
     const { alpha, beta, competition } = await setupCompetition({
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      aggregation: "MAX",
+      queues: ["solo"],
     });
     await writeTestLake(lakeDir, {
       serverId,
@@ -222,7 +225,7 @@ describe("competition preset date bounds", () => {
   test("clamps match-criterion presets to competition dates", async () => {
     const { alpha, competition } = await setupCompetition({
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     });
     await writeTestLake(lakeDir, {
       serverId,
@@ -287,7 +290,8 @@ describe("competition analysis behavior", () => {
   test("ignores selected dates in official mode", async () => {
     const { alpha, beta, competition } = await setupCompetition({
       type: "HIGHEST_RANK",
-      queue: "SOLO",
+      aggregation: "MAX",
+      queues: ["solo"],
     });
     const history: CachedLeaderboard[] = [
       leaderboard(competition.id, "2026-05-01T00:00:00.000Z", [
@@ -337,7 +341,7 @@ describe("competition analysis behavior", () => {
   test("generates queue-aware ScoutQL for every match criterion", () => {
     expect(
       competitionCriterionQuery(
-        { type: "MOST_GAMES_PLAYED", queue: "RANKED_ANY" },
+        { type: "MOST_GAMES_PLAYED", queues: ["solo", "flex"] },
         7,
       ),
     ).toContain("queue IN ('solo', 'flex')");
@@ -346,14 +350,16 @@ describe("competition analysis behavior", () => {
         {
           type: "MOST_WINS_CHAMPION",
           championId: targetChampionId,
-          queue: "ALL",
+          queues: ["ALL"],
         },
         7,
       ),
-    ).toContain("champion_id = 99");
+    ).toContain(
+      "champion_id = 99 AND queue NOT IN ('classic', 'classic aram mayhem') GROUP BY",
+    );
     expect(
       competitionCriterionQuery(
-        { type: "MOST_GAMES_PLAYED", queue: "DRAFT_PICK" },
+        { type: "MOST_GAMES_PLAYED", queues: ["draft pick"] },
         7,
       ),
     ).toContain("queue IN ('draft pick')");

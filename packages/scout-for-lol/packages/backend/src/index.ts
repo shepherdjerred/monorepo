@@ -86,6 +86,10 @@ await initializeDynamicConfig({
 
 const { shutdownHttpServer } = await startBackendRuntime();
 
+const { startScoutCompetitionActivityWorker } =
+  await import("#src/league/tasks/competition/temporal-worker.ts");
+const competitionActivityWorker = await startScoutCompetitionActivityWorker();
+
 logger.info("🌱 Seeding Season table from SEASONS constant");
 import { prisma } from "#src/database/index.ts";
 import { seedSeasons } from "#src/database/season-seeder.ts";
@@ -125,6 +129,7 @@ process.on("SIGTERM", () => {
   logger.info("🛑 Received SIGTERM, shutting down gracefully");
   void (async () => {
     await shutdownHttpServer();
+    await competitionActivityWorker?.shutdown();
     // Stops the config poller before analytics flushes, so a refresh cannot
     // race the exit.
     await shutdownDynamicConfig();

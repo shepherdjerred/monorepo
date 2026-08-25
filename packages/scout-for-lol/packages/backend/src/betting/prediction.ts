@@ -154,7 +154,10 @@ function qualityFor(input: {
   covered: number;
   applicable: number;
 } {
-  const ranksApply = input.queueType === "solo" || input.queueType === "flex";
+  const ranksApply =
+    input.queueType === "solo" ||
+    input.queueType === "flex" ||
+    input.queueType === "ranked 5s";
   const applicablePerPlayer = ranksApply ? 5 : 3;
   const applicable = input.features.length * applicablePerPlayer;
   const covered = input.features.reduce((total, feature) => {

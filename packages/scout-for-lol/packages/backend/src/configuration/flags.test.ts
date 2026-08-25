@@ -29,6 +29,7 @@ const PRODUCTION_DENIED_FLAGS = [
   "betting_enabled",
   "betting_player_bet_outcome_dm_enabled",
   "betting_settlement_dm_enabled",
+  "competition_builder_v2_enabled",
   "tournament_lobbies_enabled",
 ] as const;
 
@@ -128,6 +129,17 @@ describe("initial history import flag", () => {
       }),
     ).toBe(true);
     resetFlagOverrides("initial_match_history_import_enabled");
+  });
+});
+
+describe("competition builder V2 rollout", () => {
+  test("is off by default and enabled for the beta guild", () => {
+    expect(
+      getFlag("competition_builder_v2_enabled", { server: OTHER_GUILD }),
+    ).toBe(false);
+    expect(
+      getFlag("competition_builder_v2_enabled", { server: MY_SERVER }),
+    ).toBe(true);
   });
 });
 
