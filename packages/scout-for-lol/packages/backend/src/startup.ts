@@ -44,7 +44,10 @@ export async function runBackendStartup(
 }
 
 export async function startBackendRuntime(): Promise<
-  HttpServerRuntime & { readonly shutdownTemporal: () => Promise<void> }
+  HttpServerRuntime & {
+    readonly shutdownTemporal: () => Promise<void>;
+    readonly shutdownDiscord: () => Promise<void>;
+  }
 > {
   let temporalSupervisor: ScoutTemporalSupervisor | undefined;
   const httpRuntime = await runBackendStartup({
@@ -72,6 +75,9 @@ export async function startBackendRuntime(): Promise<
         stage: configuration.environment,
         activities: createScoutTemporalActivityGroups(),
       });
+      const { setScoutTemporalSupervisor } =
+        await import("#src/temporal/runtime.ts");
+      setScoutTemporalSupervisor(temporalSupervisor);
     },
     startDiscord: async () => {
       if (Bun.env.NODE_ENV === "test") {
@@ -109,7 +115,14 @@ export async function startBackendRuntime(): Promise<
   return {
     ...httpRuntime,
     shutdownTemporal: async () => {
+      const { setScoutTemporalSupervisor } =
+        await import("#src/temporal/runtime.ts");
+      setScoutTemporalSupervisor(undefined);
       await temporalSupervisor?.shutdown();
+    },
+    shutdownDiscord: async () => {
+      const { stopDiscordGateway } = await import("#src/discord/bootstrap.ts");
+      stopDiscordGateway();
     },
   };
 }

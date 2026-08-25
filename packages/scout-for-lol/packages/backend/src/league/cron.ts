@@ -95,6 +95,7 @@ export async function startCronJobs() {
       task: async () => {
         await runWeeklyBucksLeaderboard();
       },
+      isExecutionOwner: () => !temporalBackgroundEnabled(),
     });
 
     logger.info("📅 Setting up Bryan Bucks reconciliation (daily 5 AM UTC)");
@@ -103,6 +104,7 @@ export async function startCronJobs() {
       task: async () => {
         await reconcileBucksBalances();
       },
+      isExecutionOwner: () => !temporalBackgroundEnabled(),
     });
   }
 

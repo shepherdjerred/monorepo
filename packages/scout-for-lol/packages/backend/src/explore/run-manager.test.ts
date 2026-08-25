@@ -16,8 +16,8 @@ import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import {
   ExploreRunManager,
   ExploreRunUnavailableError,
-  type ExploreAgentRunner,
 } from "#src/explore/run-manager.ts";
+import type { ExploreAgentRunner } from "#src/explore/run-manager-types.ts";
 import {
   ExploreConversationBusyError,
   resetExploreRateLimitStateForTests,
@@ -355,7 +355,7 @@ describe("ExploreRunManager lifecycle", () => {
         // An unauthorized observer must never receive an event.
       }),
     ).toBeNull();
-    expect(manager.stop(summary.runId, stranger)).toBe(false);
+    expect(await manager.stop(summary.runId, stranger)).toBe(false);
     expect(manager.list(owner)).toHaveLength(1);
 
     const finished = observeUntilDone(manager, summary);
@@ -371,7 +371,7 @@ describe("ExploreRunManager lifecycle", () => {
     const firstFinished = observeUntilDone(manager, first);
     const secondFinished = observeUntilDone(manager, second);
 
-    expect(manager.stop(first.runId, owner)).toBe(true);
+    expect(await manager.stop(first.runId, owner)).toBe(true);
     expect(await firstFinished).toBe("stopped");
     expect(manager.outcome(first.runId, owner)).toBe("stopped");
     expect(manager.list(owner).map((run) => run.runId)).toEqual([second.runId]);
@@ -506,7 +506,7 @@ describe("ExploreRunManager lifecycle", () => {
     const events: ExploreStreamEvent[] = [];
     const finished = observeUntilDone(manager, summary, events);
 
-    expect(manager.stop(summary.runId, owner)).toBe(true);
+    expect(await manager.stop(summary.runId, owner)).toBe(true);
     expect(await finished).toBe("stopped");
     expect(
       events.some(

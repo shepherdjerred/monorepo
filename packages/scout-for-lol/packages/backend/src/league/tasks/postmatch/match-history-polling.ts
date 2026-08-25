@@ -55,6 +55,16 @@ import {
 } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
+import {
+  deduplicateMatchIntents,
+  type DiscoveredMatchIntent,
+  type MatchDiscovery,
+} from "#src/league/tasks/postmatch/match-intents.ts";
+import {
+  claimScoutEffect,
+  completeScoutEffect,
+  recordScoutEffectFailure,
+} from "#src/temporal/effect-claims.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -182,6 +192,7 @@ async function processMatch(
     logPrefix: "[processMatch]",
     sentryTags: { matchId },
     replyToMessageIds: await getPrematchMessageIdsForMatchIdOrEmpty(matchId),
+    effectKeyPrefix: `postmatch-discord:${matchId}`,
   });
   await recordCoreOutputsDelivered(delivery.deliveredGuildIds, "postmatch");
   // Durable so a settlement announced by a later process can still reply to
@@ -193,7 +204,7 @@ async function processMatch(
 /**
  * Process match and update all tracked players who participated
  */
-async function processMatchAndUpdatePlayers(
+export async function processMatchAndUpdatePlayers(
   options: ProcessMatchUpdateOptions,
 ): Promise<void> {
   const {
@@ -219,13 +230,26 @@ async function processMatchAndUpdatePlayers(
   // failure we RETURN before marking processed / advancing the cursor, so the
   // next poll retries. `backfill-to-s3.ts` (Riot re-fetch) is the recovery net.
   const aliases = allTrackedPlayers.map((p) => p.alias);
+  const rawMatchEffectKey = `raw-match-s3:${matchId}`;
+  let rawMatchClaimed = false;
   try {
-    await recordMatchForReportStore({
-      match: matchData,
-      source: silent ? "postmatch_silent_backfill" : "postmatch_live",
-      trackedPlayerAliases: aliases,
+    const claim = await claimScoutEffect({
+      key: rawMatchEffectKey,
+      kind: "raw-match-s3",
     });
+    if (claim === "execute") {
+      rawMatchClaimed = true;
+      await recordMatchForReportStore({
+        match: matchData,
+        source: silent ? "postmatch_silent_backfill" : "postmatch_live",
+        trackedPlayerAliases: aliases,
+      });
+      await completeScoutEffect(rawMatchEffectKey);
+    }
   } catch (error) {
+    if (rawMatchClaimed) {
+      await recordScoutEffectFailure(rawMatchEffectKey, error);
+    }
     logger.error(
       `[processMatch] ❌ Authoritative S3 ingest failed for ${matchId} — NOT advancing cursor; will retry next poll`,
       error,
@@ -233,7 +257,7 @@ async function processMatchAndUpdatePlayers(
     Sentry.captureException(error, {
       tags: { source: "report-store-ingest-gate", matchId },
     });
-    return;
+    throw error;
   }
 
   // After the S3 gate and OUTSIDE `!silent`: Bucks are owed for the game even
@@ -389,6 +413,64 @@ async function collectNewMatches(
   return playersWithMatches;
 }
 
+async function collectMatchDiscovery(): Promise<MatchDiscovery> {
+  const [allAccountsWithState, blockedPuuids] = await prisma.$transaction(
+    async (tx) =>
+      await Promise.all([
+        getAccountsWithState(tx, getActiveServerIds()),
+        getPuuidsBlockedFromLivePolling(tx),
+      ]),
+    { isolationLevel: "RepeatableRead" },
+  );
+  const accountsWithState = allAccountsWithState.filter(
+    ({ config }) => !blockedPuuids.has(config.league.leagueAccount.puuid),
+  );
+  logger.info(
+    `📊 Found ${accountsWithState.length.toString()} pollable player account(s); ${blockedPuuids.size.toString()} PUUID(s) are completing initial history import`,
+  );
+
+  const currentTime = new Date();
+  const eligiblePlayers = accountsWithState.filter(
+    ({ lastMatchTime, lastCheckedAt }) =>
+      shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
+  );
+  const sortedEligiblePlayers = eligiblePlayers.toSorted((a, b) => {
+    if (a.lastCheckedAt === undefined && b.lastCheckedAt === undefined)
+      return 0;
+    if (a.lastCheckedAt === undefined) return -1;
+    if (b.lastCheckedAt === undefined) return 1;
+    return a.lastCheckedAt.getTime() - b.lastCheckedAt.getTime();
+  });
+  const playersToCheck = sortedEligiblePlayers.slice(0, MAX_PLAYERS_PER_RUN);
+  logger.info(
+    `📊 Checking ${playersToCheck.length.toString()} / ${eligiblePlayers.length.toString()} eligible account(s) this run`,
+  );
+  const playersWithMatches = await collectNewMatches(
+    playersToCheck,
+    currentTime,
+  );
+  return {
+    intents: deduplicateMatchIntents(playersWithMatches),
+    allPlayerConfigs: accountsWithState.map((account) => account.config),
+  };
+}
+
+export async function discoverPostMatchIntents(): Promise<
+  DiscoveredMatchIntent[]
+> {
+  if (shouldSkipPollingRun()) return [];
+  isPollingInProgress = true;
+  pollingStartTime = Date.now();
+  try {
+    const discovery = await collectMatchDiscovery();
+    await setLastSuccessfulPollAt(new Date());
+    return discovery.intents;
+  } finally {
+    isPollingInProgress = false;
+    pollingStartTime = undefined;
+  }
+}
+
 /**
  * Main function to check for new matches via match history polling
  */
@@ -405,81 +487,8 @@ export async function checkMatchHistory(): Promise<void> {
   const startTime = Date.now();
 
   try {
-    // Get all tracked player accounts with their polling state
-    const [allAccountsWithState, blockedPuuids] = await prisma.$transaction(
-      async (tx) =>
-        await Promise.all([
-          getAccountsWithState(tx, getActiveServerIds()),
-          getPuuidsBlockedFromLivePolling(tx),
-        ]),
-      { isolationLevel: "RepeatableRead" },
-    );
-    const accountsWithState = allAccountsWithState.filter(
-      ({ config }) => !blockedPuuids.has(config.league.leagueAccount.puuid),
-    );
-    logger.info(
-      `📊 Found ${accountsWithState.length.toString()} pollable player account(s); ${blockedPuuids.size.toString()} PUUID(s) are completing initial history import`,
-    );
-
-    if (accountsWithState.length === 0) {
-      logger.info("⏸️  No players to check");
-      await setLastSuccessfulPollAt(new Date());
-      return;
-    }
-
-    const currentTime = new Date();
-
-    const eligiblePlayers = accountsWithState.filter(
-      ({ lastMatchTime, lastCheckedAt }) =>
-        shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
-    );
-
-    logger.info(
-      `📊 ${eligiblePlayers.length.toString()} / ${accountsWithState.length.toString()} account(s) eligible this cycle`,
-    );
-
-    // Sort by lastCheckedAt (oldest first) to prioritize players who haven't been checked recently
-    // Players never checked (undefined) come first
-    const sortedEligiblePlayers = eligiblePlayers.toSorted((a, b) => {
-      if (a.lastCheckedAt === undefined && b.lastCheckedAt === undefined) {
-        return 0;
-      }
-      if (a.lastCheckedAt === undefined) {
-        return -1;
-      }
-      if (b.lastCheckedAt === undefined) {
-        return 1;
-      }
-      return a.lastCheckedAt.getTime() - b.lastCheckedAt.getTime();
-    });
-
-    // Limit to MAX_PLAYERS_PER_RUN to prevent API rate limiting
-    const playersToCheck = sortedEligiblePlayers.slice(0, MAX_PLAYERS_PER_RUN);
-
-    if (eligiblePlayers.length > MAX_PLAYERS_PER_RUN) {
-      logger.info(
-        `⚠️  Limiting to ${MAX_PLAYERS_PER_RUN.toString()} players (${(eligiblePlayers.length - MAX_PLAYERS_PER_RUN).toString()} deferred to next run)`,
-      );
-    }
-
-    logger.info(
-      `📊 Checking ${playersToCheck.length.toString()} account(s) this run`,
-    );
-
-    if (playersToCheck.length === 0) {
-      logger.info(
-        "⏸️  No players to check this cycle (based on polling intervals)",
-      );
-      await setLastSuccessfulPollAt(new Date());
-      return;
-    }
-
-    const playersWithMatches = await collectNewMatches(
-      playersToCheck,
-      currentTime,
-    );
-
-    if (playersWithMatches.length === 0) {
+    const discovery = await collectMatchDiscovery();
+    if (discovery.intents.length === 0) {
       logger.info("✅ No new matches found for any players");
       const totalTime = Date.now() - startTime;
       logger.info(
@@ -489,51 +498,30 @@ export async function checkMatchHistory(): Promise<void> {
       return;
     }
 
-    const totalDiscord = playersWithMatches.reduce(
-      (sum, p) => sum + p.matchIds.length,
-      0,
-    );
-    const totalBackfill = playersWithMatches.reduce(
-      (sum, p) => sum + p.backfillMatchIds.length,
-      0,
-    );
+    const totalDiscord = discovery.intents.filter(
+      (intent) => intent.delivery === "live",
+    ).length;
+    const totalBackfill = discovery.intents.length - totalDiscord;
     logger.info(
-      `🎮 Processing ${totalDiscord.toString()} Discord match(es) + ${totalBackfill.toString()} backfill match(es) from ${playersWithMatches.length.toString()} player(s)`,
+      `🎮 Processing ${totalDiscord.toString()} Discord match(es) + ${totalBackfill.toString()} backfill match(es)`,
     );
-
-    // Get all player configs for match processing (we need all configs, not just the ones we checked)
-    const allPlayerConfigs = accountsWithState.map((a) => a.config);
-
-    // Process each match
-    // We need to deduplicate matches since multiple tracked players might be in the same game
     const processedMatchIds = new Set<MatchId>();
-
-    // Phase 1: Backfill matches (S3 only, oldest first)
-    for (const { player, backfillMatchIds } of playersWithMatches) {
-      for (const matchId of backfillMatchIds) {
-        await processMatchForPlayer({
-          player,
-          matchId,
-          allPlayerConfigs,
-          processedMatchIds,
-          processMatchAndUpdatePlayers,
-          silent: true,
-        });
+    for (const intent of discovery.intents) {
+      const player = discovery.allPlayerConfigs.find(
+        (candidate) =>
+          candidate.league.leagueAccount.puuid === intent.sourcePuuid,
+      );
+      if (player === undefined) {
+        throw new Error(`Discovery source ${intent.sourcePuuid} disappeared`);
       }
-    }
-
-    // Phase 2: Discord matches (full processing)
-    for (const { player, matchIds } of playersWithMatches) {
-      for (const matchId of matchIds) {
-        await processMatchForPlayer({
-          player,
-          matchId,
-          allPlayerConfigs,
-          processedMatchIds,
-          processMatchAndUpdatePlayers,
-          silent: false,
-        });
-      }
+      await processMatchForPlayer({
+        player,
+        matchId: MatchIdSchema.parse(intent.matchId),
+        allPlayerConfigs: discovery.allPlayerConfigs,
+        processedMatchIds,
+        processMatchAndUpdatePlayers,
+        silent: intent.delivery === "silent-backfill",
+      });
     }
 
     const totalTime = Date.now() - startTime;

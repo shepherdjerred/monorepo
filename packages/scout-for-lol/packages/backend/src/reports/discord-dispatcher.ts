@@ -13,6 +13,12 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
+import type { ScheduledReportDispatch } from "#src/reports/scheduler.ts";
+import {
+  claimScoutEffect,
+  completeScoutEffect,
+  recordScoutEffectFailure,
+} from "#src/temporal/effect-claims.ts";
 
 const logger = createLogger("report-discord-dispatcher");
 
@@ -22,6 +28,12 @@ export async function runScheduledReportDispatch(): Promise<void> {
   await syncSystemReports({ prisma });
   const dispatches = await runDueReports({ prisma });
 
+  await deliverScheduledReportDispatches(dispatches);
+}
+
+export async function deliverScheduledReportDispatches(
+  dispatches: Awaited<ReturnType<typeof runDueReports>>,
+): Promise<void> {
   if (dispatches.length === 0) {
     return;
   }
@@ -31,67 +43,87 @@ export async function runScheduledReportDispatch(): Promise<void> {
   );
 
   for (const dispatch of dispatches) {
-    const { id: reportId, channelId, serverId } = dispatch.report;
+    await deliverReportDispatch(dispatch, "report_scheduled");
+    await new Promise((resolve) => setTimeout(resolve, POST_DELAY_MS));
+  }
+}
 
-    // Skip guilds the bot is no longer a member of: delivery is impossible and
-    // would error every cycle. Orphaned reports are removed by the guildDelete
-    // handler / abandoned-guild sweep, but this guards the window before that.
-    if (!client.guilds.cache.has(serverId)) {
-      logger.warn(
-        `[ReportDispatch] Skipping report ${reportId.toString()} - bot is not a member of guild ${serverId}`,
-      );
-      continue;
-    }
+export async function deliverReportDispatch(
+  dispatch: ScheduledReportDispatch,
+  outputKind: "report_manual" | "report_scheduled",
+): Promise<void> {
+  const { id: reportId, channelId, serverId } = dispatch.report;
 
-    const image = dispatch.result.output.image;
-    const files =
-      image === null
-        ? []
-        : [new AttachmentBuilder(image.data, { name: image.filename })];
+  // Skip guilds the bot is no longer a member of: delivery is impossible and
+  // would error every cycle. Orphaned reports are removed by the guildDelete
+  // handler / abandoned-guild sweep, but this guards the window before that.
+  if (!client.guilds.cache.has(serverId)) {
+    logger.warn(
+      `[ReportDispatch] Skipping report ${reportId.toString()} - bot is not a member of guild ${serverId}`,
+    );
+    return;
+  }
 
-    // Isolate each delivery: one failed report must not abort the rest of the
-    // batch. Permission errors are already recorded (DB + owner notify) and other
-    // errors captured to Sentry inside `send`, so a ChannelSendError just gets a
-    // warning here; anything unexpected is reported and we move on.
-    try {
-      await deliverTrackedCoreOutput({
-        serverId: DiscordGuildIdSchema.parse(serverId),
-        outputKind: "report_scheduled",
-        async deliver() {
-          for (const [index, content] of splitMessageIntoChunks(
-            dispatch.result.output.content,
-          ).entries()) {
+  const image = dispatch.result.output.image;
+  const files =
+    image === null
+      ? []
+      : [new AttachmentBuilder(image.data, { name: image.filename })];
+
+  // Isolate each delivery: one failed report must not abort the rest of the
+  // batch. Permission errors are already recorded (DB + owner notify) and other
+  // errors captured to Sentry inside `send`, so a ChannelSendError just gets a
+  // warning here; anything unexpected is reported and we move on.
+  try {
+    await deliverTrackedCoreOutput({
+      serverId: DiscordGuildIdSchema.parse(serverId),
+      outputKind,
+      async deliver() {
+        for (const [index, content] of splitMessageIntoChunks(
+          dispatch.result.output.content,
+        ).entries()) {
+          const effectKey = `report-discord:${dispatch.result.runId.toString()}:${index.toString()}`;
+          const claim = await claimScoutEffect({
+            key: effectKey,
+            kind: "report-discord",
+          });
+          if (claim === "completed") continue;
+          try {
             await sendChannelMessage(
               {
                 content,
                 files: index === 0 ? files : [],
+                nonce: `sr:${dispatch.result.runId.toString(36)}:${index.toString(36)}`,
+                enforceNonce: true,
               },
               channelId,
               serverId,
             );
+            await completeScoutEffect(effectKey);
+          } catch (error) {
+            await recordScoutEffectFailure(effectKey, error);
+            throw error;
           }
+        }
+      },
+    });
+  } catch (error) {
+    if (error instanceof ChannelSendError) {
+      logger.warn(
+        `[ReportDispatch] Failed to deliver report ${reportId.toString()} to channel ${channelId}: ${getErrorMessage(error)}`,
+      );
+    } else {
+      logger.error(
+        `[ReportDispatch] Unexpected error delivering report ${reportId.toString()} to channel ${channelId}:`,
+        getErrorMessage(error),
+      );
+      Sentry.captureException(error, {
+        tags: {
+          source: "report-dispatch",
+          reportId: reportId.toString(),
+          serverId,
         },
       });
-    } catch (error) {
-      if (error instanceof ChannelSendError) {
-        logger.warn(
-          `[ReportDispatch] Failed to deliver report ${reportId.toString()} to channel ${channelId}: ${getErrorMessage(error)}`,
-        );
-      } else {
-        logger.error(
-          `[ReportDispatch] Unexpected error delivering report ${reportId.toString()} to channel ${channelId}:`,
-          getErrorMessage(error),
-        );
-        Sentry.captureException(error, {
-          tags: {
-            source: "report-dispatch",
-            reportId: reportId.toString(),
-            serverId,
-          },
-        });
-      }
     }
-
-    await new Promise((resolve) => setTimeout(resolve, POST_DELAY_MS));
   }
 }

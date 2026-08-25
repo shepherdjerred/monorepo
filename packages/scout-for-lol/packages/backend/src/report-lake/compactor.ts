@@ -1,4 +1,4 @@
-import { copyFile, link, mkdir, readdir, unlink } from "node:fs/promises";
+import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { prisma as defaultPrisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
@@ -11,7 +11,6 @@ import {
   type CompactionSummary as PublishedCompactionSummary,
 } from "#src/report-lake/compaction-publish.ts";
 type CompactionSummary = PublishedCompactionSummary;
-import { accountToLakeRow } from "#src/report-lake/flatten.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import configuration from "#src/configuration.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
@@ -31,7 +30,6 @@ import {
   resolveLakeDir,
 } from "#src/report-lake/paths.ts";
 import {
-  ACCOUNT_LAKE_COLUMNS,
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   CompetitionRankHistoryLakeRowSchema,
   MATCH_LAKE_COLUMNS,
@@ -51,6 +49,12 @@ import {
   type ReportLakeStagingTable,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
+import { linkTreeContents } from "#src/report-lake/link-tree.ts";
+import type {
+  CompactionOptions,
+  ReportLakeProgress,
+} from "#src/report-lake/compaction-types.ts";
 
 const logger = createLogger("report-lake-compactor");
 
@@ -58,11 +62,6 @@ const GC_KEEP_BUILDS = 2;
 // A full-history rebuild now enumerates + fetches every raw object from S3,
 // which is slower than the old local SQLite scan — give it a generous ceiling.
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
-
-export type CompactionOptions = {
-  prisma?: ExtendedPrismaClient;
-  lakeDir?: string;
-};
 
 let compactionInFlight = false;
 
@@ -79,71 +78,6 @@ async function withCompactionLock<T>(fn: () => Promise<T>): Promise<T | null> {
   }
 }
 
-/** Hardlink (fallback: copy) every file under srcDir into dstDir, recursively. */
-async function linkTreeContents(srcDir: string, dstDir: string): Promise<void> {
-  const entries = await readdir(srcDir, {
-    withFileTypes: true,
-    recursive: true,
-  });
-  for (const entry of entries) {
-    if (!entry.isFile()) {
-      continue;
-    }
-    const src = path.join(entry.parentPath, entry.name);
-    const relative = src.slice(srcDir.length + 1);
-    const dst = path.join(dstDir, relative);
-    await mkdir(path.dirname(dst), { recursive: true });
-    try {
-      await link(src, dst);
-    } catch {
-      await copyFile(src, dst);
-    }
-  }
-}
-
-async function writeAccountsParquet(
-  prisma: ExtendedPrismaClient,
-  buildDir: string,
-): Promise<number> {
-  const accounts = await prisma.account.findMany({
-    include: { player: true },
-  });
-  const tmpPath = path.join(buildDir, "accounts.ndjson.tmp");
-  const writer = new NdjsonFileWriter(tmpPath);
-  for (const account of accounts) {
-    writer.write(accountToLakeRow(account));
-  }
-  await writer.close();
-
-  const accountsDir = path.join(buildDir, "accounts");
-  await mkdir(accountsDir, { recursive: true });
-  const parquetPath = path.join(accountsDir, "accounts.parquet");
-  // The fold tier hardlinks the previous build's accounts.parquet into place
-  // first; remove the link so COPY writes a fresh inode without touching the
-  // previous build's file.
-  try {
-    await unlink(parquetPath);
-  } catch {
-    // Fresh build dir: nothing to unlink.
-  }
-  try {
-    if (accounts.length > 0) {
-      await withDuckDBConnection(
-        async (session) => {
-          await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(ACCOUNT_LAKE_COLUMNS)})) TO '${parquetPath}' (FORMAT PARQUET)`,
-            [tmpPath],
-          );
-        },
-        { timeoutMs: COMPACTION_TIMEOUT_MS },
-      );
-    }
-  } finally {
-    await unlink(tmpPath);
-  }
-  return accounts.length;
-}
-
 type StagingParseResult = {
   rowsByMonth: Map<string, object[]>;
   foldedIds: Set<string>;
@@ -154,6 +88,7 @@ type StagingParseResult = {
 async function readStagingRows(
   lakeDir: string,
   table: ReportLakeStagingTable,
+  onProgress?: (progress: ReportLakeProgress) => void,
 ): Promise<StagingParseResult> {
   const schema =
     table === "matches"
@@ -214,6 +149,13 @@ async function readStagingRows(
       rows += 1;
     }
     foldedIds.add(stem);
+    onProgress?.({
+      phase: "reading-staging",
+      table,
+      files: foldedIds.size + skipped,
+      rows,
+      skipped,
+    });
   }
   return { rowsByMonth, foldedIds, rows, skipped };
 }
@@ -272,12 +214,18 @@ export async function runReportLakeFold(
     const startedAt = Date.now();
     const prisma = options.prisma ?? defaultPrisma;
     const lakeDir = options.lakeDir ?? resolveLakeDir();
+    options.onProgress?.({ phase: "scaffolding" });
     await ensureLakeScaffold(lakeDir);
 
     const currentDir = await readCurrentBuildDir(lakeDir);
     if (currentDir === undefined) {
       logger.info("No published build yet; folding via full rebuild");
-      return await rebuildLocked(prisma, lakeDir, startedAt);
+      return await rebuildLocked(
+        prisma,
+        lakeDir,
+        startedAt,
+        options.onProgress,
+      );
     }
 
     // A fold hardlinks the published build's parquet and appends fold files
@@ -288,7 +236,12 @@ export async function runReportLakeFold(
       logger.info(
         `Lake column set changed since the published build (${publishedFingerprint ?? "unrecorded"} -> ${lakeSchemaFingerprint()}); folding via full rebuild`,
       );
-      return await rebuildLocked(prisma, lakeDir, startedAt);
+      return await rebuildLocked(
+        prisma,
+        lakeDir,
+        startedAt,
+        options.onProgress,
+      );
     }
 
     const buildId = newBuildId();
@@ -301,15 +254,25 @@ export async function runReportLakeFold(
       // A build without a manifest is unusual but not worth failing over.
     }
 
-    const stagedMatches = await readStagingRows(lakeDir, "matches");
-    const stagedPrematches = await readStagingRows(lakeDir, "prematch");
+    const stagedMatches = await readStagingRows(
+      lakeDir,
+      "matches",
+      options.onProgress,
+    );
+    const stagedPrematches = await readStagingRows(
+      lakeDir,
+      "prematch",
+      options.onProgress,
+    );
     const stagedPredictionObservations = await readStagingRows(
       lakeDir,
       "prediction_observations",
+      options.onProgress,
     );
     const stagedRankHistory = await readStagingRows(
       lakeDir,
       "competition_rank_history",
+      options.onProgress,
     );
     await writeFoldParquet(buildDir, buildId, "matches", stagedMatches);
     await writeFoldParquet(buildDir, buildId, "prematch", stagedPrematches);
@@ -326,6 +289,7 @@ export async function runReportLakeFold(
       stagedRankHistory,
     );
     const accountRows = await writeAccountsParquet(prisma, buildDir);
+    options.onProgress?.({ phase: "publishing", rows: accountRows });
 
     const summary = {
       buildId,
@@ -380,8 +344,9 @@ export async function runReportLakeRebuild(
   return await withCompactionLock(async () => {
     const prisma = options.prisma ?? defaultPrisma;
     const lakeDir = options.lakeDir ?? resolveLakeDir();
+    options.onProgress?.({ phase: "scaffolding" });
     await ensureLakeScaffold(lakeDir);
-    return await rebuildLocked(prisma, lakeDir, Date.now());
+    return await rebuildLocked(prisma, lakeDir, Date.now(), options.onProgress);
   });
 }
 
@@ -389,6 +354,7 @@ async function rebuildLocked(
   prisma: ExtendedPrismaClient,
   lakeDir: string,
   startedAt: number,
+  onProgress?: (progress: ReportLakeProgress) => void,
 ): Promise<CompactionSummary> {
   const deadlineAt = Date.now() + COMPACTION_TIMEOUT_MS;
   const deadline = AbortSignal.timeout(COMPACTION_TIMEOUT_MS);
@@ -424,6 +390,9 @@ async function rebuildLocked(
     writer: matchWriter,
     foldedIds: foldedMatchIds,
     abortSignal: deadline,
+    onProgress: (progress) => {
+      onProgress?.({ phase: "reading-s3", table: "matches", ...progress });
+    },
   });
   const skippedPrematches = await populatePrematchFromS3({
     client,
@@ -431,6 +400,9 @@ async function rebuildLocked(
     writer: prematchWriter,
     foldedIds: foldedPrematchIds,
     abortSignal: deadline,
+    onProgress: (progress) => {
+      onProgress?.({ phase: "reading-s3", table: "prematch", ...progress });
+    },
   });
   const skippedPredictionObservations =
     await populatePredictionObservationsFromS3({
@@ -439,11 +411,25 @@ async function rebuildLocked(
       writer: predictionWriter,
       foldedIds: foldedPredictionIds,
       abortSignal: deadline,
+      onProgress: (progress) => {
+        onProgress?.({
+          phase: "reading-s3",
+          table: "prediction_observations",
+          ...progress,
+        });
+      },
     });
   deadline.throwIfAborted();
   await matchWriter.close();
   await prematchWriter.close();
   await predictionWriter.close();
+  onProgress?.({
+    phase: "writing-parquet",
+    files:
+      foldedMatchIds.size + foldedPrematchIds.size + foldedPredictionIds.size,
+    rows: matchWriter.rows + prematchWriter.rows + predictionWriter.rows,
+    skipped: skippedMatches + skippedPrematches + skippedPredictionObservations,
+  });
 
   // --- NDJSON -> partitioned parquet ---
   try {
@@ -478,12 +464,20 @@ async function rebuildLocked(
 
   deadline.throwIfAborted();
   const accountRows = await writeAccountsParquet(prisma, buildDir);
+  onProgress?.({ phase: "writing-accounts", rows: accountRows });
   deadline.throwIfAborted();
   const rankHistory = await writeCompetitionRankHistoryParquet({
     buildDir,
     foldedIds: foldedRankHistoryIds,
     abortSignal: deadline,
     timeoutMs: remainingTimeoutMs(),
+  });
+  onProgress?.({
+    phase: "publishing",
+    table: "competition_rank_history",
+    files: foldedRankHistoryIds.size,
+    rows: rankHistory.rows,
+    skipped: rankHistory.skipped,
   });
   deadline.throwIfAborted();
 

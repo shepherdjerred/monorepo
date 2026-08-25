@@ -95,7 +95,7 @@ async function trackedAliases(
   return [...new Set(accounts.map((account) => account.player.alias))];
 }
 
-async function claimTrackedJobOrCompleteUntracked(
+export async function claimTrackedJobOrCompleteUntracked(
   db: ExtendedPrismaClient,
   selected: InitialMatchHistoryImport,
   now: Date,
@@ -224,7 +224,7 @@ async function ingestOneMatch(
   });
 }
 
-async function processRiotPhases(
+export async function processRiotPhases(
   db: ExtendedPrismaClient,
   selected: InitialMatchHistoryImport,
   now: Date,
@@ -335,7 +335,7 @@ async function processRiotPhases(
   }
 }
 
-async function persistFailure(
+export async function persistFailure(
   db: ExtendedPrismaClient,
   job: InitialMatchHistoryImport,
   error: unknown,
@@ -387,7 +387,9 @@ async function persistFailure(
   }
 }
 
-async function refreshQueueMetrics(db: ExtendedPrismaClient): Promise<void> {
+export async function refreshQueueMetrics(
+  db: ExtendedPrismaClient,
+): Promise<void> {
   const [counts, oldest] = await Promise.all([
     db.initialMatchHistoryImport.groupBy({
       by: ["phase"],

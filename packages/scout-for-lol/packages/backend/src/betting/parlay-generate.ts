@@ -64,6 +64,10 @@ import {
   bettingParlayTokensTotal,
 } from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  enqueueParlayGeneration,
+  shouldUseTemporalBackgroundWork,
+} from "#src/temporal/work-store.ts";
 
 const logger = createLogger("betting-parlay-generate");
 
@@ -385,7 +389,13 @@ function generationStatusForError(
 
 /** Start the caught background task only after normal prematch delivery and
  * outcome message-reference persistence have completed. */
-export function startParlayGeneration(input: StartParlayGenerationInput): void {
+export async function startParlayGeneration(
+  input: StartParlayGenerationInput,
+): Promise<void> {
+  if (shouldUseTemporalBackgroundWork()) {
+    await enqueueParlayGeneration(input);
+    return;
+  }
   void runParlayGeneration(input);
 }
 

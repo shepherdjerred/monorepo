@@ -763,5 +763,8 @@ export async function getMetrics(): Promise<string> {
   await updateUsageMetrics();
   await updateLimitMetrics();
   await updateBettingMetrics();
+  const { updateScoutTemporalDurabilityMetrics } =
+    await import("#src/metrics/temporal.ts");
+  await updateScoutTemporalDurabilityMetrics();
   return await registry.metrics();
 }

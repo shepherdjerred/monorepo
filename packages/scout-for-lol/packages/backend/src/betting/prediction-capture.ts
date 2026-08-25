@@ -11,6 +11,10 @@ import { buildPredictionObservation } from "#src/betting/prediction-inputs.ts";
 import { createLogger } from "#src/logger.ts";
 import type { ParticipantRanks } from "#src/league/tasks/prematch/loading-screen-builder.ts";
 import { ingestPredictionObservation } from "#src/report-store/store.ts";
+import {
+  enqueuePredictionObservation,
+  shouldUseTemporalBackgroundWork,
+} from "#src/temporal/work-store.ts";
 
 const logger = createLogger("betting-prediction-capture");
 
@@ -76,21 +80,24 @@ export async function capturePredictionForPrematch(
     return undefined;
   }
 
-  // Persistence is best-effort and deliberately outside the time-sensitive
-  // pool-open / Discord-delivery path. The observation is immutable and
-  // idempotent, so a late write cannot change the frozen estimate.
-  void (async () => {
-    try {
-      await dependencies.ingest(observation);
-    } catch (error) {
-      logger.error(
-        `Failed to persist prediction observation for ${matchId}:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: { source: "prediction-observation-ingest", matchId },
-      });
-    }
-  })();
+  if (shouldUseTemporalBackgroundWork()) {
+    await enqueuePredictionObservation(observation);
+  } else {
+    // Legacy ownership remains best-effort until the Temporal family flag is
+    // enabled. The immutable observation makes this write idempotent.
+    void (async () => {
+      try {
+        await dependencies.ingest(observation);
+      } catch (error) {
+        logger.error(
+          `Failed to persist prediction observation for ${matchId}:`,
+          error,
+        );
+        Sentry.captureException(error, {
+          tags: { source: "prediction-observation-ingest", matchId },
+        });
+      }
+    })();
+  }
   return observation.prediction;
 }

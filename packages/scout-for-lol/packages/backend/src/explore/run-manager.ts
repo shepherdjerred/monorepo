@@ -1,89 +1,59 @@
-import * as Sentry from "@sentry/bun";
 import {
-  EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TIMEOUT_MS,
   ExploreActiveRunSchema,
   ExploreRunSnapshotEventSchema,
   type DiscordAccountId,
   type ExploreActiveRun,
-  type ExploreMessage,
   type ExploreRunOutcome,
-  type ExploreStreamEvent,
   type ExploreTraceEntry,
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import {
-  streamExploreAgent,
-  type ExploreAgentParams,
-  type ExploreAgentResult,
-} from "#src/explore/agent.ts";
+import { streamExploreAgent } from "#src/explore/agent.ts";
 import {
   ExploreConversationBusyError,
+  getExploreQuotaStatus,
   tryStartExploreTurn,
   waitForExploreConversation,
   type ExploreRateLimitIdentity,
   type ExploreRateLimitRejection,
-  type ExploreRateLimitTicket,
 } from "#src/explore/rate-limit.ts";
 import {
-  ExploreInvalidTurnError,
   ExploreNotFoundError,
   deleteExploreConversation,
   loadExploreTranscript,
-  resolveRegenerateTarget,
-  startExploreTurn,
+  rollbackUnstartedExploreTurn,
 } from "#src/explore/store.ts";
-import { recordExploreTraceEvent } from "#src/explore/trace.ts";
-import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
-import { createLogger } from "#src/logger.ts";
+import type { ExploreInvalidTurnError } from "#src/explore/store.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
+import { temporalInteractiveEnabled } from "#src/config/dynamic.ts";
+import {
+  DurableExploreUnavailableError,
+  durableExploreOutcome,
+  listDurableExploreRuns,
+  requestDurableExploreStop,
+  reserveAndStartDurableExploreRun,
+  subscribeDurableExploreRun,
+  waitForDurableExploreRun,
+} from "#src/explore/durable-runs.ts";
+import {
+  createDeferred,
+  executeActiveExploreRun,
+  resolveTurnTarget,
+} from "#src/explore/run-manager-helpers.ts";
+import type {
+  ActiveRun,
+  ExploreAgentRunner,
+  RunTermination,
+  Subscriber,
+  TerminalRun,
+} from "#src/explore/run-manager-types.ts";
+import {
+  broadcastExploreEvent,
+  recordExploreEvent,
+} from "#src/explore/run-events.ts";
 
-const logger = createLogger("explore-run-manager");
 const TERMINAL_OUTCOME_TTL_MS = 5 * 60 * 1000;
-
-type RunTermination = "stop" | "delete" | "shutdown" | null;
-type Subscriber = (event: ExploreStreamEvent) => void;
-export type ExploreAgentRunner = (
-  params: ExploreAgentParams,
-) => Promise<ExploreAgentResult>;
-
-type StartedTurn = {
-  conversationId: string;
-  title: string;
-  messageId: string;
-  question: string;
-  expectedCurrentLeafId: string | null;
-};
-
-type ActiveRun = {
-  summary: ExploreActiveRun;
-  identity: ExploreRateLimitIdentity;
-  /**
-   * The asker's Discord servers, carried for the whole run so a `player('…')`
-   * alias resolves against the servers this person actually belongs to. It is
-   * authorization context, not a quota key, so it rides on the run rather than
-   * on `identity`, and not on the request, which is client-supplied.
-   */
-  guildIds: string[];
-  ticket: ExploreRateLimitTicket;
-  started: StartedTurn;
-  history: ExploreMessage[];
-  abortController: AbortController;
-  subscribers: Set<Subscriber>;
-  answer: string;
-  activity: string | null;
-  trace: ExploreTraceEntry[];
-  termination: RunTermination;
-  settled: Promise<null>;
-  resolveSettled: (value: null) => void;
-};
-
-type TerminalRun = {
-  userId: DiscordAccountId;
-  outcome: ExploreRunOutcome;
-  completedAt: number;
-};
 
 export class ExploreRunUnavailableError extends Error {}
 
@@ -218,7 +188,40 @@ export class ExploreRunManager {
       };
       this.#runs.set(summary.runId, run);
       this.#conversationRuns.set(summary.conversationId, summary.runId);
-      void this.#execute(run);
+      if (temporalInteractiveEnabled()) {
+        try {
+          const durableRejection = await reserveAndStartDurableExploreRun({
+            database: this.#client,
+            summary,
+            ownerId: identity.userId,
+            started,
+            guildIds,
+          });
+          if (durableRejection !== null) {
+            await rollbackUnstartedExploreTurn(this.#client, {
+              ...started,
+              userId: identity.userId,
+            });
+            throw new ExploreRunRateLimitedError({
+              allowed: false,
+              quota: getExploreQuotaStatus(identity).quota,
+              ...durableRejection,
+            });
+          }
+        } catch (error) {
+          this.#runs.delete(summary.runId);
+          this.#conversationRuns.delete(summary.conversationId);
+          if (error instanceof DurableExploreUnavailableError) {
+            throw new ExploreRunUnavailableError(
+              "Temporal is unavailable. Try again after it reconnects.",
+              { cause: error },
+            );
+          }
+          throw error;
+        }
+      } else {
+        void this.#execute(run);
+      }
       return summary;
     } catch (error) {
       ticket.finish();
@@ -234,6 +237,12 @@ export class ExploreRunManager {
       .filter((run) => run.identity.userId === userId)
       .map((run) => run.summary)
       .toSorted((left, right) => left.startedAt.localeCompare(right.startedAt));
+  }
+
+  async listDurable(userId: DiscordAccountId): Promise<ExploreActiveRun[]> {
+    const local = this.list(userId);
+    if (!temporalInteractiveEnabled()) return local;
+    return await listDurableExploreRuns(this.#client, userId, local);
   }
 
   subscribe(
@@ -260,13 +269,55 @@ export class ExploreRunManager {
     };
   }
 
-  stop(runId: string, userId: DiscordAccountId): boolean {
+  async subscribeDurable(
+    runId: string,
+    userId: DiscordAccountId,
+    subscriber: Subscriber,
+  ): Promise<(() => void) | null> {
+    const local = this.subscribe(runId, userId, subscriber);
+    if (local !== null || !temporalInteractiveEnabled()) return local;
+    return await subscribeDurableExploreRun(
+      this.#client,
+      runId,
+      userId,
+      subscriber,
+    );
+  }
+
+  async stop(runId: string, userId: DiscordAccountId): Promise<boolean> {
     const run = this.#runs.get(runId);
+    if (temporalInteractiveEnabled()) {
+      return await requestDurableExploreStop(this.#client, runId, userId);
+    }
     if (run?.identity.userId !== userId) {
       return false;
     }
     this.#abort(run, "stop", "Explore turn stopped by the asker.");
     return true;
+  }
+
+  snapshot(
+    runId: string,
+  ): { answer: string; trace: ExploreTraceEntry[] } | undefined {
+    const run = this.#runs.get(runId);
+    return run === undefined
+      ? undefined
+      : { answer: run.answer, trace: run.trace };
+  }
+
+  cancelTemporal(runId: string, message: string): void {
+    const run = this.#runs.get(runId);
+    if (run !== undefined) this.#abort(run, "stop", message);
+  }
+
+  async executeTemporal(runId: string): Promise<ExploreRunOutcome> {
+    const run = this.#runs.get(runId);
+    if (run === undefined) {
+      throw new ExploreRunUnavailableError(
+        `Explore run ${runId} is not active in this process`,
+      );
+    }
+    return await this.#execute(run);
   }
 
   outcome(runId: string, userId: DiscordAccountId): ExploreRunOutcome | null {
@@ -277,6 +328,15 @@ export class ExploreRunManager {
       return null;
     }
     return terminal.outcome;
+  }
+
+  async durableOutcome(
+    runId: string,
+    userId: DiscordAccountId,
+  ): Promise<ExploreRunOutcome | null> {
+    const local = this.outcome(runId, userId);
+    if (local !== null || !temporalInteractiveEnabled()) return local;
+    return await durableExploreOutcome(this.#client, runId, userId);
   }
 
   async deleteConversationAndWait(
@@ -300,17 +360,38 @@ export class ExploreRunManager {
       const runId = this.#conversationRuns.get(conversationId);
       const run = runId === undefined ? undefined : this.#runs.get(runId);
       if (run?.identity.userId === userId) {
-        this.#abort(
-          run,
-          "delete",
-          "Explore conversation deleted by the asker.",
-        );
-        await run.settled;
+        if (temporalInteractiveEnabled()) {
+          await this.stop(run.summary.runId, userId);
+          await this.#waitForDurableRun(run.summary.runId);
+        } else {
+          this.#abort(
+            run,
+            "delete",
+            "Explore conversation deleted by the asker.",
+          );
+          await run.settled;
+        }
       } else {
-        // Discord one-shot runs are outside the web observer registry, but
-        // they share the process-wide conversation lease. Let one finish
-        // before removing the rows it is about to persist into.
-        await waitForExploreConversation(conversationId);
+        if (temporalInteractiveEnabled()) {
+          const durableRun = await this.#client.scoutInteractiveRun.findFirst({
+            where: {
+              kind: "explore",
+              ownerId: userId,
+              conversationId,
+              state: { in: ["PENDING", "RUNNING"] },
+            },
+            select: { id: true },
+          });
+          if (durableRun !== null) {
+            await this.stop(durableRun.id, userId);
+            await this.#waitForDurableRun(durableRun.id);
+          }
+        } else {
+          // Discord one-shot runs are outside the web observer registry, but
+          // they share the process-wide conversation lease. Let one finish
+          // before removing the rows it is about to persist into.
+          await waitForExploreConversation(conversationId);
+        }
       }
       return await deleteExploreConversation(
         this.#client,
@@ -359,6 +440,17 @@ export class ExploreRunManager {
     }
   }
 
+  async #waitForDurableRun(runId: string): Promise<void> {
+    try {
+      await waitForDurableExploreRun(this.#client, runId, this.#timeoutMs);
+    } catch (error) {
+      throw new ExploreRunUnavailableError(
+        "Explore did not finish cancellation before the delete deadline.",
+        { cause: error },
+      );
+    }
+  }
+
   #abort(
     run: ActiveRun,
     reason: Exclude<RunTermination, null>,
@@ -372,81 +464,21 @@ export class ExploreRunManager {
     run.abortController.abort(message);
   }
 
-  #broadcast(run: ActiveRun, event: ExploreStreamEvent): void {
-    for (const subscriber of run.subscribers) {
-      try {
-        subscriber(event);
-      } catch {
-        // A subscriber is only an HTTP response. Losing it must not change the
-        // model run; remove the dead observer and keep the background task.
-        run.subscribers.delete(subscriber);
-      }
-    }
-  }
-
-  #record(run: ActiveRun, event: ExploreStreamEvent): void {
-    if (
-      event.type === "error" &&
-      (run.termination === "stop" || run.termination === "delete")
-    ) {
-      return;
-    }
-    if (event.type === "answer_delta") {
-      const available = EXPLORE_ANSWER_MAX_LENGTH - run.answer.length;
-      if (available <= 0) {
-        return;
-      }
-      const text = event.text.slice(0, available);
-      run.answer += text;
-      this.#broadcast(run, { type: "answer_delta", text });
-      return;
-    }
-    if (event.type === "tool_call" || event.type === "tool_result") {
-      run.activity = event.message;
-    }
-    recordExploreTraceEvent(run.trace, event);
-    this.#broadcast(run, event);
-  }
-
-  async #execute(run: ActiveRun): Promise<void> {
-    let outcome: ExploreRunOutcome = "failed";
-
+  async #execute(run: ActiveRun): Promise<ExploreRunOutcome> {
+    const outcome = await executeActiveExploreRun({
+      run,
+      client: this.#client,
+      runAgent: this.#runAgent,
+      timeoutMs: this.#timeoutMs,
+      record: (event) => {
+        recordExploreEvent(run, event);
+      },
+    });
     try {
-      const result = await runPersistedExploreTurn(
-        {
-          ticket: run.ticket,
-          identity: run.identity,
-          guildIds: run.guildIds,
-          started: run.started,
-          history: run.history,
-          abortSignal: run.abortController.signal,
-          abortOutcome: () =>
-            run.termination === "stop" || run.termination === "delete"
-              ? "stopped"
-              : "interrupted",
-          emit: (event) => {
-            this.#record(run, event);
-          },
-        },
-        {
-          client: this.#client,
-          executeAgent: this.#runAgent,
-          now: Date.now,
-          timeoutMs: this.#timeoutMs,
-        },
-      );
-      outcome = result.outcome;
-    } catch (error) {
-      logger.error(
-        "Shared Explore turn runner escaped unexpectedly",
-        errorMessage(error),
-      );
-      Sentry.captureException(error, {
-        tags: { source: "explore-background-run-manager" },
-      });
+      return outcome;
     } finally {
       this.#recordTerminalOutcome(run, outcome);
-      this.#broadcast(run, { type: "done", outcome });
+      broadcastExploreEvent(run, { type: "done", outcome });
       run.subscribers.clear();
       this.#runs.delete(run.summary.runId);
       this.#conversationRuns.delete(run.summary.conversationId);
@@ -467,47 +499,6 @@ export class ExploreRunManager {
       completedAt,
     });
   }
-}
-
-async function resolveTurnTarget(
-  client: ExtendedPrismaClient,
-  input: ExploreTurnRequest,
-  identity: ExploreRateLimitIdentity,
-  newId: string,
-): Promise<StartedTurn> {
-  if (input.question === null) {
-    if (input.conversationId === null || input.attach.kind !== "message") {
-      throw new ExploreInvalidTurnError(
-        "Answering again needs an existing question.",
-      );
-    }
-    return await resolveRegenerateTarget(client, {
-      conversationId: input.conversationId,
-      userId: identity.userId,
-      parentMessageId: input.attach.messageId,
-    });
-  }
-
-  const started = await startExploreTurn(client, {
-    conversationId: input.conversationId,
-    newId,
-    userId: identity.userId,
-    question: input.question,
-    attach: input.attach,
-  });
-  return { ...started, question: input.question };
-}
-
-function createDeferred(): {
-  promise: Promise<null>;
-  resolve: (value: null) => void;
-} {
-  const deferred = Promise.withResolvers<null>();
-  return { promise: deferred.promise, resolve: deferred.resolve };
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }
 
 export const exploreRunManager = new ExploreRunManager();

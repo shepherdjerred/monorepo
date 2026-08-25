@@ -34,7 +34,7 @@ export async function runStartupRecovery(): Promise<void> {
     downtimeDetectedTotal.inc({ severity: "offline_notification" });
     logger.info("Downtime exceeds 1 day, sending offline notification");
     try {
-      await sendOfflineNotification();
+      await sendOfflineNotification(downtime.lastPollAt ?? startupAt);
     } catch (error) {
       logger.error("Failed to send offline notification:", error);
       Sentry.captureException(error, {

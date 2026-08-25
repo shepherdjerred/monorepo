@@ -36,6 +36,25 @@ export type ScoutRealtimePollInput = z.infer<
 export const ScoutMatchIngestionInputSchema = z.object({
   stage: ScoutStageSchema,
   matchId: OpaqueIdentifierSchema,
+  sourcePuuid: OpaqueIdentifierSchema,
+  region: z.enum([
+    "BRAZIL",
+    "EU_EAST",
+    "EU_WEST",
+    "KOREA",
+    "LAT_NORTH",
+    "LAT_SOUTH",
+    "AMERICA_NORTH",
+    "OCEANIA",
+    "TURKEY",
+    "RUSSIA",
+    "JAPAN",
+    "VIETNAM",
+    "TAIWAN",
+    "SINGAPORE",
+    "PBE",
+  ]),
+  delivery: z.enum(["live", "silent-backfill"]),
 });
 export type ScoutMatchIngestionInput = z.infer<
   typeof ScoutMatchIngestionInputSchema
@@ -53,6 +72,7 @@ export const ScoutInitialHistoryInputSchema = z.object({
   stage: ScoutStageSchema,
   puuid: OpaqueIdentifierSchema,
   cursor: z.string().min(1).max(512).optional(),
+  runOnStart: z.boolean().optional(),
   pagesProcessed: z.number().int().nonnegative().default(0),
   pagesInCurrentRun: z.number().int().nonnegative().default(0),
 });
@@ -72,7 +92,10 @@ export const ScoutBackgroundJobInputSchema = z.object({
   stage: ScoutStageSchema,
   kind: z.enum([
     "competition-refresh",
+    "competition-scheduled-updates",
     "competition-validation",
+    "bucks-reconciliation",
+    "weekly-bucks-leaderboard",
     "player-pruning",
     "removed-guild-cleanup",
     "match-time-rebuild",
@@ -87,6 +110,15 @@ export type ScoutBackgroundJobInput = z.infer<
   typeof ScoutBackgroundJobInputSchema
 >;
 
+export const ScoutDetachedWorkInputSchema = z.object({
+  stage: ScoutStageSchema,
+  kind: z.enum(["prediction-ingest", "parlay-generation"]),
+  workId: OpaqueIdentifierSchema,
+});
+export type ScoutDetachedWorkInput = z.infer<
+  typeof ScoutDetachedWorkInputSchema
+>;
+
 export const ScoutReportLakeInputSchema = z.object({
   stage: ScoutStageSchema,
   kind: z.enum(["fold", "rebuild"]),
@@ -99,6 +131,7 @@ export const ScoutReportRunInputSchema = z.object({
   revision: z.number().int().nonnegative(),
   runId: OpaqueIdentifierSchema.optional(),
   source: z.enum(["schedule", "manual"]),
+  post: z.boolean().default(false),
 });
 export type ScoutReportRunInput = z.infer<typeof ScoutReportRunInputSchema>;
 
@@ -118,17 +151,64 @@ export type ScoutInteractiveRunInput = z.infer<
   typeof ScoutInteractiveRunInputSchema
 >;
 
+export const ScoutQueueClassSchema = z.enum([
+  "realtime",
+  "interactive",
+  "background",
+  "lake",
+]);
+export type ScoutQueueClass = z.infer<typeof ScoutQueueClassSchema>;
+
+export const ScoutQueueCanaryInputSchema = z.object({
+  stage: ScoutStageSchema,
+  canaryId: OpaqueIdentifierSchema,
+});
+export type ScoutQueueCanaryInput = z.infer<typeof ScoutQueueCanaryInputSchema>;
+
+export const ScoutQueueCanaryProbeInputSchema =
+  ScoutQueueCanaryInputSchema.extend({
+    queueClass: ScoutQueueClassSchema,
+  });
+export type ScoutQueueCanaryProbeInput = z.infer<
+  typeof ScoutQueueCanaryProbeInputSchema
+>;
+
+export const ScoutQueueCanaryProbeResultSchema =
+  ScoutQueueCanaryProbeInputSchema.extend({
+    taskQueue: z.string().min(1),
+  });
+export type ScoutQueueCanaryProbeResult = z.infer<
+  typeof ScoutQueueCanaryProbeResultSchema
+>;
+
 export const InitialHistoryPageResultSchema = z.object({
   nextCursor: z.string().min(1).max(512).optional(),
   persistedMatches: z.number().int().nonnegative(),
   complete: z.boolean(),
+  nextAction: z.enum(["continue", "fold-lake"]).default("continue"),
 });
 export type InitialHistoryPageResult = z.infer<
   typeof InitialHistoryPageResultSchema
 >;
 
+export const IngestionReconciliationResultSchema = z.object({
+  initialHistoryPuuids: z.array(OpaqueIdentifierSchema),
+  detachedWorks: z.array(
+    ScoutDetachedWorkInputSchema.pick({ kind: true, workId: true }),
+  ),
+  interactiveRuns: z.array(
+    ScoutInteractiveRunInputSchema.pick({
+      kind: true,
+      databaseRunId: true,
+    }),
+  ),
+});
+export type IngestionReconciliationResult = z.infer<
+  typeof IngestionReconciliationResultSchema
+>;
+
 export const PostMatchDiscoveryResultSchema = z.object({
-  matchIds: z.array(OpaqueIdentifierSchema),
+  matches: z.array(ScoutMatchIngestionInputSchema.omit({ stage: true })),
 });
 export type PostMatchDiscoveryResult = z.infer<
   typeof PostMatchDiscoveryResultSchema
@@ -148,7 +228,7 @@ export const InteractiveOutcomeSchema = z.object({
 });
 export type InteractiveOutcome = z.infer<typeof InteractiveOutcomeSchema>;
 
-export const ScoutScheduleOwnershipMemoSchema = z.object({
+export const ScoutScheduleOwnershipMemoSchema = z.strictObject({
   owner: z.literal("scout-for-lol"),
   stage: ScoutStageSchema,
   reportId: OpaqueIdentifierSchema,

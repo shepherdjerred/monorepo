@@ -1,4 +1,11 @@
 import * as Sentry from "@sentry/bun";
+import { createHash } from "node:crypto";
+import {
+  claimScoutEffect,
+  completeScoutEffectWithResult,
+  recordScoutEffectFailure,
+  requireCompletedScoutEffectResult,
+} from "#src/temporal/effect-claims.ts";
 import {
   filtersPass,
   DiscordGuildIdSchema,
@@ -47,6 +54,7 @@ export async function deliverToChannels(params: {
   logPrefix: string;
   sentryTags: Record<string, string>;
   replyToMessageIds?: ReadonlyMap<string, string>;
+  effectKeyPrefix?: string;
 }): Promise<{
   deliveredGuildIds: Set<DiscordGuildId>;
   messageIdsByChannel: Map<DiscordChannelId, string>;
@@ -54,7 +62,25 @@ export async function deliverToChannels(params: {
   const deliveredGuildIds = new Set<DiscordGuildId>();
   const messageIdsByChannel = new Map<DiscordChannelId, string>();
   for (const { channel, serverId } of params.channels) {
+    const effectKey =
+      params.effectKeyPrefix === undefined
+        ? undefined
+        : `${params.effectKeyPrefix}:${channel}`;
+    let effectClaimed = false;
     try {
+      if (effectKey !== undefined) {
+        const claim = await claimScoutEffect({
+          key: effectKey,
+          kind: "discord-channel-message",
+        });
+        if (claim === "completed") {
+          const messageId = await requireCompletedScoutEffectResult(effectKey);
+          deliveredGuildIds.add(DiscordGuildIdSchema.parse(serverId));
+          messageIdsByChannel.set(channel, messageId);
+          continue;
+        }
+        effectClaimed = true;
+      }
       const replyToMessageId = params.replyToMessageIds?.get(channel);
       const message: MessageCreateOptions =
         replyToMessageId === undefined
@@ -68,10 +94,21 @@ export async function deliverToChannels(params: {
                 failIfNotExists: false,
               },
             };
+      const nonce =
+        effectKey === undefined
+          ? undefined
+          : createHash("sha256")
+              .update(effectKey)
+              .digest("base64url")
+              .slice(0, 25);
+      const idempotentMessage: MessageCreateOptions = {
+        ...message,
+        ...(nonce === undefined ? {} : { nonce, enforceNonce: true }),
+      };
       const guildId = DiscordGuildIdSchema.parse(serverId);
       let sentMessage;
       try {
-        sentMessage = await send(message, channel, guildId);
+        sentMessage = await send(idempotentMessage, channel, guildId);
       } catch (error) {
         if (
           replyToMessageId !== undefined &&
@@ -81,14 +118,27 @@ export async function deliverToChannels(params: {
           // A reply requires Read Message History. Retry as a normal message
           // when that permission is missing; the post-match report itself is
           // still deliverable in channels where sending is allowed.
-          sentMessage = await send(params.message, channel, guildId);
+          sentMessage = await send(
+            {
+              ...params.message,
+              ...(nonce === undefined ? {} : { nonce, enforceNonce: true }),
+            },
+            channel,
+            guildId,
+          );
         } else {
           throw error;
         }
       }
+      if (effectKey !== undefined) {
+        await completeScoutEffectWithResult(effectKey, sentMessage.id);
+      }
       deliveredGuildIds.add(guildId);
       messageIdsByChannel.set(channel, sentMessage.id);
     } catch (error) {
+      if (effectKey !== undefined && effectClaimed) {
+        await recordScoutEffectFailure(effectKey, error);
+      }
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(
           `${params.logPrefix} ⚠️  Permission error for channel ${channel}: ${error.message}`,

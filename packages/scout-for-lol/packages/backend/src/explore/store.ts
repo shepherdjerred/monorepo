@@ -279,6 +279,9 @@ export async function startExploreTurn(
   title: string;
   messageId: string;
   expectedCurrentLeafId: string | null;
+  previousCurrentLeafId: string | null;
+  createdConversation: boolean;
+  createdQuestion: boolean;
 }> {
   if (input.conversationId === null) {
     const created = await prisma.exploreConversation.create({
@@ -299,6 +302,9 @@ export async function startExploreTurn(
       title: created.title,
       messageId,
       expectedCurrentLeafId: null,
+      previousCurrentLeafId: null,
+      createdConversation: true,
+      createdQuestion: true,
     };
   }
   const existing = await prisma.exploreConversation.findFirst({
@@ -369,6 +375,9 @@ export async function startExploreTurn(
     title: existing.title,
     messageId: created.id,
     expectedCurrentLeafId: created.id,
+    previousCurrentLeafId: existing.currentLeafId,
+    createdConversation: false,
+    createdQuestion: true,
   };
 }
 
@@ -392,6 +401,9 @@ export async function resolveRegenerateTarget(
   messageId: string;
   question: string;
   expectedCurrentLeafId: string | null;
+  previousCurrentLeafId: string | null;
+  createdConversation: boolean;
+  createdQuestion: boolean;
 }> {
   const existing = await prisma.exploreConversation.findFirst({
     where: { id: input.conversationId, userId: input.userId },
@@ -415,7 +427,47 @@ export async function resolveRegenerateTarget(
     messageId: parent.id,
     question: parent.content,
     expectedCurrentLeafId: existing.currentLeafId,
+    previousCurrentLeafId: existing.currentLeafId,
+    createdConversation: false,
+    createdQuestion: false,
   };
+}
+
+export async function rollbackUnstartedExploreTurn(
+  prisma: ExtendedPrismaClient,
+  input: {
+    conversationId: string;
+    messageId: string;
+    userId: DiscordAccountId;
+    previousCurrentLeafId: string | null;
+    createdConversation: boolean;
+    createdQuestion: boolean;
+  },
+): Promise<void> {
+  if (!input.createdQuestion) return;
+  if (input.createdConversation) {
+    await prisma.exploreConversation.deleteMany({
+      where: { id: input.conversationId, userId: input.userId },
+    });
+    return;
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.exploreConversation.updateMany({
+      where: {
+        id: input.conversationId,
+        userId: input.userId,
+        currentLeafId: input.messageId,
+      },
+      data: { currentLeafId: input.previousCurrentLeafId },
+    });
+    await tx.exploreMessage.deleteMany({
+      where: {
+        id: input.messageId,
+        conversationId: input.conversationId,
+        role: "user",
+      },
+    });
+  });
 }
 
 export async function appendExploreAnswer(
