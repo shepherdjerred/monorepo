@@ -34,6 +34,7 @@ export async function runScheduledReportDispatch(): Promise<void> {
 
 export async function deliverScheduledReportDispatches(
   dispatches: Awaited<ReturnType<typeof runDueReports>>,
+  options: { propagateErrors?: boolean } = {},
 ): Promise<void> {
   if (dispatches.length === 0) {
     return;
@@ -44,7 +45,7 @@ export async function deliverScheduledReportDispatches(
   );
 
   for (const dispatch of dispatches) {
-    await deliverReportDispatch(dispatch, "report_scheduled");
+    await deliverReportDispatch(dispatch, "report_scheduled", options);
     await new Promise((resolve) => setTimeout(resolve, POST_DELAY_MS));
   }
 }
@@ -94,6 +95,7 @@ export async function deliverStoredScheduledReport(
       },
     },
     "report_scheduled",
+    { propagateErrors: true },
   );
   return true;
 }
@@ -101,6 +103,7 @@ export async function deliverStoredScheduledReport(
 export async function deliverReportDispatch(
   dispatch: ScheduledReportDispatch,
   outputKind: "report_manual" | "report_scheduled",
+  options: { propagateErrors?: boolean } = {},
 ): Promise<void> {
   const { id: reportId, channelId, serverId } = dispatch.report;
 
@@ -158,6 +161,9 @@ export async function deliverReportDispatch(
       },
     });
   } catch (error) {
+    if (options.propagateErrors === true) {
+      throw error;
+    }
     if (error instanceof ChannelSendError) {
       logger.warn(
         `[ReportDispatch] Failed to deliver report ${reportId.toString()} to channel ${channelId}: ${getErrorMessage(error)}`,

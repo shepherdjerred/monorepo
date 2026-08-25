@@ -402,6 +402,7 @@ export async function startParlayGeneration(
 export async function runParlayGeneration(
   input: StartParlayGenerationInput,
   prismaClient: ExtendedPrismaClient = prisma,
+  execution: "legacy" | "temporal" = "legacy",
 ): Promise<void> {
   const startedAt = Date.now();
   const deadline = AbortSignal.timeout(PARLAY_GENERATION_DEADLINE_MS);
@@ -457,6 +458,6 @@ export async function runParlayGeneration(
     // Temporal owns retries and durable failure state once the background
     // family is enabled. Preserve the historical best-effort fire-and-forget
     // behavior only for the legacy inline caller.
-    if (shouldUseTemporalBackgroundWork()) throw error;
+    if (execution === "temporal") throw error;
   }
 }

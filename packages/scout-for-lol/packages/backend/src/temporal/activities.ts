@@ -386,7 +386,9 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             const { deliverScheduledReportDispatches } =
               await import("#src/reports/discord-dispatcher.ts");
             if (dispatches.length > 0) {
-              await deliverScheduledReportDispatches(dispatches);
+              await deliverScheduledReportDispatches(dispatches, {
+                propagateErrors: true,
+              });
             } else {
               const { deliverStoredScheduledReport } =
                 await import("#src/reports/discord-dispatcher.ts");

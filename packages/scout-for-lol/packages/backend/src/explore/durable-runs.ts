@@ -217,12 +217,19 @@ export async function requestDurableExploreStop(
   });
   const supervisor = currentScoutTemporalSupervisor();
   if (supervisor === undefined) return true;
-  await supervisor
-    .client()
-    .workflow.getHandle(
-      scoutInteractiveWorkflowId(configuration.environment, "explore", runId),
-    )
-    .signal(requestStopSignal);
+  try {
+    await supervisor
+      .client()
+      .workflow.getHandle(
+        scoutInteractiveWorkflowId(configuration.environment, "explore", runId),
+      )
+      .signal(requestStopSignal);
+  } catch (error) {
+    logger.warn(
+      "Explore stop persisted but the Temporal signal was not accepted; reconciliation will retry it",
+      { runId, error },
+    );
+  }
   return true;
 }
 

@@ -80,7 +80,7 @@ export async function enqueuePredictionObservation(
     kind: "prediction-ingest",
     payload: JSON.stringify(parsed),
   });
-  await requestStart({
+  void requestStart({
     stage: configuration.environment,
     kind: "prediction-ingest",
     workId,
@@ -134,12 +134,16 @@ export async function executeScoutTemporalWork(
       const parlayInput = ParlayWorkPayloadSchema.parse(raw);
       const { runParlayGeneration } =
         await import("#src/betting/parlay-generate.ts");
-      await runParlayGeneration({
-        gameInfo: parlayInput.gameInfo,
-        trackedPlayers: parlayInput.trackedPlayers,
-        queueType: parlayInput.queueType,
-        loadingScreenData: parlayInput.loadingScreenData,
-      });
+      await runParlayGeneration(
+        {
+          gameInfo: parlayInput.gameInfo,
+          trackedPlayers: parlayInput.trackedPlayers,
+          queueType: parlayInput.queueType,
+          loadingScreenData: parlayInput.loadingScreenData,
+        },
+        prisma,
+        "temporal",
+      );
     }
     await prisma.scoutTemporalWork.update({
       where: { id: input.workId },

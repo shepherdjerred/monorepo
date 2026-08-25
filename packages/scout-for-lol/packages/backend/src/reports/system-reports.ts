@@ -1,4 +1,8 @@
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import {
+  enqueueReportScheduleUpsert,
+  notifyReportScheduleReconciler,
+} from "#src/reports/temporal-schedules.ts";
 
 export type SystemReportSyncResult = {
   created: number;
@@ -16,17 +20,28 @@ export async function syncSystemReports(params: {
   prisma: ExtendedPrismaClient;
   now?: Date;
 }): Promise<SystemReportSyncResult> {
-  const result = await params.prisma.report.updateMany({
-    where: {
-      isSystemManaged: true,
-      systemSource: "COMPETITION",
-      isEnabled: true,
-    },
-    data: {
-      isEnabled: false,
-      updatedTime: params.now ?? new Date(),
-    },
+  const now = params.now ?? new Date();
+  const disabled = await params.prisma.$transaction(async (tx) => {
+    const staleReports = await tx.report.findMany({
+      where: {
+        isSystemManaged: true,
+        systemSource: "COMPETITION",
+        isEnabled: true,
+      },
+      select: { id: true, revision: true },
+    });
+    for (const report of staleReports) {
+      const revision = report.revision + 1;
+      await tx.report.update({
+        where: { id: report.id },
+        data: { isEnabled: false, revision, updatedTime: now },
+      });
+      await enqueueReportScheduleUpsert(tx, report.id, revision);
+    }
+    return staleReports.length;
   });
 
-  return { created: 0, updated: 0, disabled: result.count };
+  if (disabled > 0) await notifyReportScheduleReconciler();
+
+  return { created: 0, updated: 0, disabled };
 }

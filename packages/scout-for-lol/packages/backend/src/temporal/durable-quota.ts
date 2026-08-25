@@ -21,6 +21,10 @@ async function countSince(input: {
       kind: input.kind,
       quotaExempt: false,
       createdAt: { gte: input.since },
+      OR: [
+        { state: { in: ACTIVE_STATUSES } },
+        { providerAttemptAt: { not: null } },
+      ],
       ...(input.ownerId === undefined ? {} : { ownerId: input.ownerId }),
       ...(input.guildId === undefined ? {} : { guildId: input.guildId }),
     },
