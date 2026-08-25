@@ -34,7 +34,7 @@ import {
   startOperatorControlServer,
   type OperatorControlServer,
 } from "#watch/operator-control.ts";
-import { runRecordedCommand } from "#runtime/recorded-command.ts";
+import { runRecordedCommand } from "#exec/recorded-command.ts";
 import { RunRecorder } from "#bundle/run-recorder.ts";
 import {
   FleetControllerConfigSchema,

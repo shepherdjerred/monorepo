@@ -1,5 +1,5 @@
-import { commandEventCorrelation } from "./command-correlation.ts";
-import { captureTelemetryOperation } from "./telemetry.ts";
+import { commandEventCorrelation } from "#runtime/command-correlation.ts";
+import { captureTelemetryOperation } from "#runtime/telemetry.ts";
 import type {
   CommandRequest,
   CommandResult,
