@@ -1,6 +1,22 @@
 import { Worker } from "@temporalio/worker";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
 
+export function createReportCapture(reportRunId: string): {
+  reports: unknown[];
+  deliverActivityReport: (input: unknown) => {
+    accepted: true;
+    duplicate: false;
+    reportRunId: string;
+  };
+} {
+  const reports: unknown[] = [];
+  const deliverActivityReport = (input: unknown) => {
+    reports.push(input);
+    return { accepted: true, duplicate: false, reportRunId };
+  };
+  return { reports, deliverActivityReport };
+}
+
 export async function runWithReportWorker(
   testEnvironment: TestWorkflowEnvironment,
   primaryWorker: Worker,

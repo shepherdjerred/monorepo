@@ -1868,9 +1868,17 @@
       "clones": 1,
       "tokens": 91
     },
+    "packages/temporal/src/workflows/agent-task.test.ts|packages/temporal/src/workflows/agent-task.test.ts": {
+      "clones": 1,
+      "tokens": 120
+    },
+    "packages/temporal/src/workflows/data-dragon.test.ts|packages/temporal/src/workflows/data-dragon.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
     "packages/temporal/src/workflows/deps-summary.test.ts|packages/temporal/src/workflows/deps-summary.test.ts": {
       "clones": 2,
-      "tokens": 220
+      "tokens": 235
     },
     "packages/temporal/src/workflows/glitter-corpus.test.ts|packages/temporal/src/workflows/glitter-corpus.test.ts": {
       "clones": 1,
@@ -1937,5 +1945,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-25T01:43:37.189Z"
+  "updated": "2026-08-25T02:48:09.363Z"
 }

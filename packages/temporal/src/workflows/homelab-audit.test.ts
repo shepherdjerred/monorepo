@@ -4,7 +4,7 @@ import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { HomelabAuditCollection } from "#activities/homelab-audit-collectors.ts";
 import { runHomelabAuditWorkflow } from "./homelab-audit.ts";
-import { runWithReportWorker } from "./test-support.ts";
+import { createReportCapture, runWithReportWorker } from "./test-support.ts";
 
 const TASK_QUEUE_PREFIX = "homelab-audit-test";
 const OBSERVED_AT = "2026-05-09T13:30:00.000Z";
@@ -55,11 +55,7 @@ describe("runHomelabAuditWorkflow", () => {
   it("delivers one clean report after all six collectors pass", async () => {
     const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
     const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
-    const reports: unknown[] = [];
-    const deliverActivityReport = (input: unknown) => {
-      reports.push(input);
-      return { accepted: true, duplicate: false, reportRunId: "report-1" };
-    };
+    const { reports, deliverActivityReport } = createReportCapture("report-1");
     const worker = await Worker.create({
       connection: testEnv.nativeConnection,
       taskQueue: taskQueue,
@@ -93,11 +89,7 @@ describe("runHomelabAuditWorkflow", () => {
   it("delivers a failed report before rethrowing collector failure", async () => {
     const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
     const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
-    const reports: unknown[] = [];
-    const deliverActivityReport = (input: unknown) => {
-      reports.push(input);
-      return { accepted: true, duplicate: false, reportRunId: "report-2" };
-    };
+    const { reports, deliverActivityReport } = createReportCapture("report-2");
     const worker = await Worker.create({
       connection: testEnv.nativeConnection,
       taskQueue: taskQueue,

@@ -6,7 +6,7 @@ import type {
   LanePriorWorkflowInput,
 } from "#activities/lane-prior-refresh.ts";
 import { runScoutLanePriorsWeeklyRefresh } from "./index.ts";
-import { runWithReportWorker } from "./test-support.ts";
+import { createReportCapture, runWithReportWorker } from "./test-support.ts";
 
 const TASK_QUEUE_PREFIX = "scout-lane-prior-test";
 const INPUT: LanePriorWorkflowInput = {
@@ -48,11 +48,7 @@ describe("runScoutLanePriorsWeeklyRefresh", () => {
   test("publishes an independent lane-prior result and report", async () => {
     const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
     const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
-    const reports: unknown[] = [];
-    const deliverActivityReport = (input: unknown) => {
-      reports.push(input);
-      return { accepted: true, duplicate: false, reportRunId: "report-1" };
-    };
+    const { reports, deliverActivityReport } = createReportCapture("report-1");
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
       taskQueue: taskQueue,
