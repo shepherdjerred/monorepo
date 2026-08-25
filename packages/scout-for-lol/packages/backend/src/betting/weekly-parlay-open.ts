@@ -1,9 +1,5 @@
 import { differenceInCalendarWeeks } from "date-fns";
-import {
-  DiscordGuildIdSchema,
-  LeaguePuuidSchema,
-  type DiscordGuildId,
-} from "@scout-for-lol/data";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   WEEKLY_PARLAY_CATALOG_VERSION,
   WEEKLY_PARLAY_ELIGIBLE_QUEUES,
@@ -12,7 +8,6 @@ import {
   WEEKLY_PARLAY_SCHEMA_VERSION,
   WeeklyParlaySubjectsSchema,
   validateWeeklyParlayProposal,
-  type WeeklyParlaySubject,
 } from "#src/betting/weekly-parlay-criteria.ts";
 import { fetchWeeklyCandidateHistories } from "#src/betting/weekly-parlay-history.ts";
 import {
@@ -28,8 +23,8 @@ import {
 } from "#src/betting/weekly-parlay-period.ts";
 import { priceWeeklyParlay } from "#src/betting/weekly-parlay-pricing.ts";
 import { orderWeeklyParlayCandidates } from "#src/betting/weekly-parlay-selection.ts";
+import { loadWeeklyParlaySubjects } from "#src/betting/weekly-parlay-subjects.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { client } from "#src/discord/client.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import {
@@ -122,50 +117,6 @@ function timelineKind(
   return isWeeklyParlayCatchupTimeline(period) ? "catch_up" : "standard";
 }
 
-async function linkedMemberSubjects(
-  serverId: DiscordGuildId,
-  prismaClient: ExtendedPrismaClient,
-): Promise<WeeklyParlaySubject[]> {
-  const guild = client.guilds.cache.get(serverId);
-  if (guild === undefined) {
-    return [];
-  }
-  const members = await guild.members.fetch();
-  const players = await prismaClient.player.findMany({
-    where: { serverId, discordId: { not: null }, accounts: { some: {} } },
-    select: {
-      id: true,
-      alias: true,
-      discordId: true,
-      accounts: {
-        select: { puuid: true, createdTime: true },
-        orderBy: { id: "asc" },
-      },
-    },
-    orderBy: { id: "asc" },
-  });
-  return players.flatMap((player) => {
-    if (player.discordId === null || !members.has(player.discordId)) {
-      return [];
-    }
-    return [
-      WeeklyParlaySubjectsSchema.element.parse({
-        // Candidate subjects are evaluated one at a time in V1. Keep the
-        // schema-valid market key as a placeholder; history is keyed by the
-        // immutable player ID until a subject is selected.
-        key: "P1",
-        playerId: player.id,
-        alias: player.alias,
-        discordId: player.discordId,
-        accounts: player.accounts.map((account) => ({
-          puuid: LeaguePuuidSchema.parse(account.puuid),
-          trackingStartedAt: account.createdTime.toISOString(),
-        })),
-      }),
-    ];
-  });
-}
-
 async function openWeeklyParlayInternal(
   input: OpenWeeklyParlayInput,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -201,7 +152,7 @@ async function openWeeklyParlayInternal(
     return { kind: "feature_disabled" };
   }
   const startedAt = Date.now();
-  const subjects = await linkedMemberSubjects(serverId, prismaClient);
+  const subjects = await loadWeeklyParlaySubjects(serverId, prismaClient);
   if (subjects.length === 0) {
     return { kind: "no_candidate" };
   }

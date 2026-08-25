@@ -940,6 +940,11 @@ it cannot author thresholds, expressions, paths, SQL, or settlement behavior.
 Reject a candidate outside the empirical publication band and skip the week
 when none qualify—never weaken or clamp a gate.
 
+The database is authoritative for weekly-parlay subject membership. A player
+row in the target guild with a Discord ID and at least one linked Riot account
+is eligible for candidate evaluation; generation must not enumerate or fetch
+Discord guild members. Stale player membership is a database-cleanup concern.
+
 Only cumulative/count/distinct/max `gte` legs may become irreversible. Early
 settlement is YES-only and requires every leg irreversibly true; NO and every
 equality, upper-bound, rate, or average leg wait for finalization. Flag
