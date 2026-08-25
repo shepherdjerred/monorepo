@@ -28,6 +28,13 @@ default `all` role runs everything in one process for local development.
 | `glitter-context` | `glitter-context`       |                    1 |
 | `maintenance`     | `maintenance`           |                    1 |
 
+The production manifests land in layers. In the Glitter layer, the existing
+legacy core and agent Deployments remain in place while the combined Glitter
+Deployment is replaced by `temporal-glitter-corpus-worker` and
+`temporal-glitter-context-worker`. The gateway, home, reports, infra, repo, and
+Scout Deployments arrive in the later ingress and operations layers; the table
+above describes the final topology.
+
 ## Quick start
 
 Run from `packages/temporal`:
