@@ -3762,10 +3762,9 @@ resource "posthog_project_settings" "monorepo" {
 
 # __generated__ by OpenTofu from "019fe7f8-ecce-0000-adca-fe93618022c7/019fe7f8-ecd5-0000-33c2-62f36e0cec32"
 resource "posthog_organization_member" "owner" {
-  level             = "owner"
-  organization_id   = "019fe7f8-ecce-0000-adca-fe93618022c7"
-  retain_on_destroy = true
-  user_uuid         = "019fe7f8-ecd5-0000-33c2-62f36e0cec32"
+  level           = "owner"
+  organization_id = "019fe7f8-ecce-0000-adca-fe93618022c7"
+  user_uuid       = "019fe7f8-ecd5-0000-33c2-62f36e0cec32"
 
   lifecycle {
     prevent_destroy = true

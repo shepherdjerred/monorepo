@@ -33,7 +33,8 @@ import {
   requireEnv,
   optionalEnv,
 } from "../../../scripts/lib/run.ts";
-import { runMain } from "../../../scripts/lib/transient.ts";
+import { isTransientError, runMain } from "../../../scripts/lib/transient.ts";
+import { TransientError } from "../../../scripts/lib/transient-error.ts";
 
 /** homelab package root = two levels up from this script (packages/homelab). */
 function homelabRoot(): string {
@@ -224,7 +225,14 @@ async function main(): Promise<void> {
       console.log("Changes detected.");
       return;
     }
-    throw new Error(`tofu plan failed (exit ${result.exitCode.toString()})`);
+    const stderr = result.stderr.trim();
+    const message =
+      `tofu plan failed (exit ${result.exitCode.toString()})` +
+      (stderr === "" ? "" : `\n--- stderr (tail) ---\n${stderr}`);
+    if (isTransientError(stderr)) {
+      throw new TransientError(message);
+    }
+    throw new Error(message);
   }
 
   await run(
