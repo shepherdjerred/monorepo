@@ -2045,6 +2045,7 @@ steps:
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
         - ".buildkite/scripts/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/select-main-pipeline.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - "bun.lock"
