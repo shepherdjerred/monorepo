@@ -7,9 +7,9 @@
  * Bun script; every credential is a plain env var.
  *
  * Usage:
- *   bun packages/homelab/scripts/tofu-stack.ts <stack> plan|apply [--dry-run]
+ *   bun packages/homelab/scripts/tofu-stack.ts <stack> validate|plan|apply [--dry-run]
  *
- * Env (required):
+ * Env (required for plan/apply):
  *   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY   — S3 backend + provider creds
  *
  * Env (optional — each is wired to its TF var only when present; a
@@ -20,9 +20,13 @@
  *   TF_VAR_PROWLARR_API_KEY, TF_VAR_QBITTORRENT_PASSWORD,
  *   TF_VAR_PRIVATEHD_PASSWORD, TF_VAR_PRIVATEHD_PID, TF_VAR_AVISTAZ_PASSWORD,
  *   TF_VAR_AVISTAZ_PID, TF_VAR_ANIMEZ_PASSWORD, TF_VAR_ANIMEZ_PID,
+ *
+ * Env (required for plan/apply on the `posthog` stack only):
+ *   POSTHOG_CLI_API_KEY, POSTHOG_TOFU_STATE_PASSPHRASE
  */
 
-import { existsSync } from "node:fs";
+import { existsSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import {
   run,
   runAllowExit,
@@ -86,6 +90,17 @@ function buildTofuEnv(stack: string): Record<string, string> {
     env["AWS_RESPONSE_CHECKSUM_VALIDATION"] = "WHEN_REQUIRED";
   }
 
+  // The PostHog provider uses its standard POSTHOG_API_KEY name, while the
+  // repository's CLI environment deliberately uses POSTHOG_CLI_API_KEY. The
+  // encrypted backend also fails closed unless this stack's passphrase is
+  // supplied; never make either an optional cross-stack secret.
+  if (stack === "posthog") {
+    env["POSTHOG_API_KEY"] = requireEnv("POSTHOG_CLI_API_KEY");
+    env["TF_VAR_state_passphrase"] = requireEnv(
+      "POSTHOG_TOFU_STATE_PASSPHRASE",
+    );
+  }
+
   for (const [source, target] of OPTIONAL_SECRET_ENV) {
     const value = optionalEnv(source);
     if (value !== null) {
@@ -97,7 +112,8 @@ function buildTofuEnv(stack: string): Record<string, string> {
 
 function usage(): never {
   console.error(
-    "Usage: bun packages/homelab/scripts/tofu-stack.ts <stack> plan|apply " +
+    "Usage: bun packages/homelab/scripts/tofu-stack.ts <stack> " +
+      "validate|plan|apply " +
       "[--dry-run]",
   );
   process.exit(1);
@@ -116,8 +132,10 @@ async function main(): Promise<void> {
     console.error("A stack name is required.");
     usage();
   }
-  if (action !== "plan" && action !== "apply") {
-    console.error(`Action must be "plan" or "apply", got: ${String(action)}`);
+  if (action !== "validate" && action !== "plan" && action !== "apply") {
+    console.error(
+      `Action must be "validate", "plan", or "apply", got: ${String(action)}`,
+    );
     usage();
   }
 
@@ -137,8 +155,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  const env = buildTofuEnv(stack);
-
   // `tofu init` — NOTE: the old code wrapped init in a bounded retry loop to
   // survive slow provider-registry / GitHub release CDN responses. That retry
   // is intentionally OMITTED here: this runs locally under an operator who can
@@ -147,6 +163,41 @@ async function main(): Promise<void> {
   // blindly — a failed apply there can leave GitHub repo/ruleset state
   // half-written, and a naive retry could compound the drift; the operator
   // should inspect and re-run deliberately.
+  if (action === "validate") {
+    // PR validation runs untrusted branch code. It must not receive the
+    // encrypted state passphrase, provider API key, backend credentials, or
+    // any other runtime secret. The placeholder only satisfies the required
+    // encryption variable while backend-free validation checks the HCL and
+    // provider schemas without contacting PostHog.
+    const env: Record<string, string> = {
+      TF_VAR_state_passphrase: "ci-validation-only-placeholder",
+      TF_DATA_DIR: mkdtempSync(`${tmpdir()}/posthog-tofu-validation-`),
+    };
+    const pluginCacheDir = optionalEnv("TF_PLUGIN_CACHE_DIR");
+    if (pluginCacheDir !== null) {
+      env["TF_PLUGIN_CACHE_DIR"] = pluginCacheDir;
+    }
+    await run(
+      [
+        "tofu",
+        `-chdir=${STACKS_REL}/${stack}`,
+        "init",
+        "-backend=false",
+        "-reconfigure",
+        "-input=false",
+      ],
+      { cwd: root, env },
+    );
+    await run(["tofu", `-chdir=${STACKS_REL}/${stack}`, "validate"], {
+      cwd: root,
+      env,
+    });
+    console.log("Validation passed.");
+    return;
+  }
+
+  const env = buildTofuEnv(stack);
+
   await run(["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"], {
     cwd: root,
     env,

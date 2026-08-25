@@ -115,6 +115,7 @@ resource "cloudflare_dns_record" "clauderon_com_dkim_wildcard" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "clauderon_com" {
   zone_id = cloudflare_zone.clauderon_com.id
+  status  = "active"
 }
 
 # ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────

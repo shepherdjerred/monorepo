@@ -4,10 +4,11 @@ import { parse } from "yaml";
 import {
   ciSecretItemId,
   collectErrors,
-  collectSteps,
+  onePasswordItemIds,
   type RequiredEnv,
   type SecretFields,
 } from "./check-ci-env.ts";
+import { collectSteps } from "./lib/ci-env-pipeline.ts";
 import {
   assignedEnvNames,
   commandScopes,
@@ -86,6 +87,17 @@ describe("ciSecretItemId", () => {
     expect(() =>
       ciSecretItemId('new OnePasswordItem(chart, "buildkite-ci-secrets", {});'),
     ).toThrow("declares no vaults");
+  });
+
+  test("indexes each declared Kubernetes secret by its own 1Password item", () => {
+    const itemIds = onePasswordItemIds(
+      `${declaration}
+      new OnePasswordItem(chart, "posthog-tofu-credentials", {
+        spec: { itemPath: "vaults/vault-a/items/item-for-posthog" },
+      });`,
+    );
+    expect(itemIds.get("buildkite-ci-secrets")).toBe("item-for-the-ci-secret");
+    expect(itemIds.get("posthog-tofu-credentials")).toBe("item-for-posthog");
   });
 });
 
@@ -219,6 +231,11 @@ steps:
                     value: ""
                   - name: FROM_FIELD_REF
                     valueFrom: { fieldRef: { fieldPath: metadata.name } }
+                  - name: FROM_POSTHOG_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: posthog-tofu-credentials
+                        key: POSTHOG_API_KEY
 `,
       { merge: true },
     );
@@ -228,6 +245,13 @@ steps:
     expect(step?.providedNames.has("CONTAINER_EMPTY")).toBe(false);
     // An absent `value` means valueFrom, which does provide one.
     expect(step?.providedNames.has("FROM_FIELD_REF")).toBe(true);
+    // A secretKeyRef needs vault-snapshot validation; treating it as a literal
+    // value would let a typo or blank 1Password field pass CI.
+    expect(step?.providedNames.has("FROM_POSTHOG_SECRET")).toBe(false);
+    expect(step?.explicitSecretRefs?.get("FROM_POSTHOG_SECRET")).toEqual({
+      secretName: "posthog-tofu-credentials",
+      key: "POSTHOG_API_KEY",
+    });
   });
 
   test("records the CI secret, container env, and global env per step", () => {
@@ -291,6 +315,86 @@ describe("collectErrors", () => {
       steps: [step],
       secret: secretWith(["NPM_TOKEN"], ["NPM_TOKEN"]),
       requiredFor: () => required({ NPM_TOKEN: "scripts/release.ts:20" }),
+    });
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain("BLANK");
+  });
+
+  test("validates explicit secretKeyRefs against their own declared item", () => {
+    const explicitSecrets = new Map([
+      ["posthog-tofu-credentials", secretWith(["POSTHOG_API_KEY"])],
+    ]);
+    const errors = collectErrors({
+      steps: [
+        {
+          ...step,
+          explicitSecretRefs: new Map([
+            [
+              "POSTHOG_CLI_API_KEY",
+              {
+                secretName: "posthog-tofu-credentials",
+                key: "POSTHOG_API_KEY",
+              },
+            ],
+          ]),
+        },
+      ],
+      secret: secretWith([]),
+      explicitSecrets,
+      requiredFor: () => required({ POSTHOG_CLI_API_KEY: "tofu-stack.ts:80" }),
+    });
+    expect(errors).toEqual([]);
+  });
+
+  test("reports a missing explicit secretKeyRef field", () => {
+    const errors = collectErrors({
+      steps: [
+        {
+          ...step,
+          explicitSecretRefs: new Map([
+            [
+              "POSTHOG_CLI_API_KEY",
+              {
+                secretName: "posthog-tofu-credentials",
+                key: "POSTHOG_API_KEY",
+              },
+            ],
+          ]),
+        },
+      ],
+      secret: secretWith([]),
+      explicitSecrets: new Map([["posthog-tofu-credentials", secretWith([])]]),
+      requiredFor: () => required({ POSTHOG_CLI_API_KEY: "tofu-stack.ts:80" }),
+    });
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain("posthog-tofu-credentials");
+    expect(errors[0]).toContain("POSTHOG_API_KEY");
+  });
+
+  test("reports a blank explicit secretKeyRef field", () => {
+    const errors = collectErrors({
+      steps: [
+        {
+          ...step,
+          explicitSecretRefs: new Map([
+            [
+              "POSTHOG_CLI_API_KEY",
+              {
+                secretName: "posthog-tofu-credentials",
+                key: "POSTHOG_API_KEY",
+              },
+            ],
+          ]),
+        },
+      ],
+      secret: secretWith([]),
+      explicitSecrets: new Map([
+        [
+          "posthog-tofu-credentials",
+          secretWith(["POSTHOG_API_KEY"], ["POSTHOG_API_KEY"]),
+        ],
+      ]),
+      requiredFor: () => required({ POSTHOG_CLI_API_KEY: "tofu-stack.ts:80" }),
     });
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain("BLANK");

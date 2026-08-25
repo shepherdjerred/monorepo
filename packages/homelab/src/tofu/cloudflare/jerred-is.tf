@@ -50,6 +50,13 @@ resource "cloudflare_dns_record" "jerred_is_dkim_wildcard" {
 # DNSSEC (pending — .is TLD requires manual DS record at registrar)
 resource "cloudflare_zone_dnssec" "jerred_is" {
   zone_id = cloudflare_zone.jerred_is.id
+
+  # Cloudflare reports the in-progress delegation as `pending`, but the v5
+  # provider accepts only active or disabled as configuration. Retain the live
+  # value until the parent delegation completes instead of forcing either.
+  lifecycle {
+    ignore_changes = [status]
+  }
 }
 
 # ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────

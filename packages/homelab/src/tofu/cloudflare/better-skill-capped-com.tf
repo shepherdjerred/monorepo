@@ -41,6 +41,7 @@ resource "cloudflare_dns_record" "better_skill_capped_com_dkim_wildcard" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "better_skill_capped_com" {
   zone_id = cloudflare_zone.better_skill_capped_com.id
+  status  = "active"
 }
 
 # ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────

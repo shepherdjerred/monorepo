@@ -60,6 +60,7 @@ resource "cloudflare_dns_record" "glitter_boys_com_dkim_wildcard" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "glitter_boys_com" {
   zone_id = cloudflare_zone.glitter_boys_com.id
+  status  = "active"
 }
 
 # ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────

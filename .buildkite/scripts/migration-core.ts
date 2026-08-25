@@ -18,6 +18,7 @@ const FIXED_CORPUS_LANES: ReadonlySet<string> = new Set([
   "playwright",
   "resume",
   "tofu",
+  "tofu-posthog",
 ]);
 
 export class FixedCorpusConfigurationError extends Error {}
@@ -183,6 +184,7 @@ export const summarySteps = [
   "helm-push",
   "tofu-apply",
   "tofu-github",
+  "tofu-posthog",
   "argocd-sync",
   "scout-beta-release",
   "publish",
@@ -214,6 +216,7 @@ export const summaryLanes = [
   "tofu",
   "argocd",
   "helm-types",
+  "tofu-posthog",
   "npm",
   "cooklang",
   "scout-reconcile",
@@ -368,6 +371,16 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/homelab/scripts/tofu-stack.ts",
     "scripts/lib/run.ts",
     "scripts/lib/transient.ts",
+  ],
+  "tofu-posthog": [
+    ...workspacePaths,
+    "packages/homelab/src/tofu/posthog",
+    "packages/homelab/scripts/tofu-stack.ts",
+    "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts",
+    "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
+    "scripts/lib/run.ts",
+    "scripts/lib/transient.ts",
+    "config/analytics-sites.json",
   ],
   helm: [
     ...workspacePaths,
