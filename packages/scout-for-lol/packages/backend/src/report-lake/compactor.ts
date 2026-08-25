@@ -30,7 +30,6 @@ import {
   resolveLakeDir,
 } from "#src/report-lake/paths.ts";
 import {
-  COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   CompetitionRankHistoryLakeRowSchema,
   MATCH_LAKE_COLUMNS,
   MatchLakeRowSchema,
@@ -55,6 +54,10 @@ import type {
   CompactionOptions,
   ReportLakeProgress,
 } from "#src/report-lake/compaction-types.ts";
+import {
+  type StagingParseResult,
+  writeFoldParquet,
+} from "#src/report-lake/fold-parquet.ts";
 
 const logger = createLogger("report-lake-compactor");
 
@@ -77,13 +80,6 @@ async function withCompactionLock<T>(fn: () => Promise<T>): Promise<T | null> {
     compactionInFlight = false;
   }
 }
-
-type StagingParseResult = {
-  rowsByMonth: Map<string, object[]>;
-  foldedIds: Set<string>;
-  rows: number;
-  skipped: number;
-};
 
 async function readStagingRows(
   lakeDir: string,
@@ -158,46 +154,6 @@ async function readStagingRows(
     });
   }
   return { rowsByMonth, foldedIds, rows, skipped };
-}
-
-async function writeFoldParquet(
-  buildDir: string,
-  buildId: string,
-  table: ReportLakeStagingTable,
-  staged: StagingParseResult,
-): Promise<void> {
-  const columns =
-    table === "matches"
-      ? MATCH_LAKE_COLUMNS
-      : table === "prematch"
-        ? PREMATCH_LAKE_COLUMNS
-        : table === "prediction_observations"
-          ? PREDICTION_OBSERVATION_LAKE_COLUMNS
-          : COMPETITION_RANK_HISTORY_LAKE_COLUMNS;
-  for (const [month, rows] of staged.rowsByMonth) {
-    const monthDir = path.join(buildDir, table, `month=${month}`);
-    await mkdir(monthDir, { recursive: true });
-    const tmpPath = path.join(buildDir, `${table}-${month}-fold.ndjson.tmp`);
-    const writer = new NdjsonFileWriter(tmpPath);
-    for (const row of rows) {
-      writer.write(row);
-    }
-    await writer.close();
-    const parquetPath = path.join(monthDir, `fold-${buildId}.parquet`);
-    try {
-      await withDuckDBConnection(
-        async (session) => {
-          await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(columns)})) TO '${parquetPath}' (FORMAT PARQUET)`,
-            [tmpPath],
-          );
-        },
-        { timeoutMs: COMPACTION_TIMEOUT_MS },
-      );
-    } finally {
-      await unlink(tmpPath);
-    }
-  }
 }
 
 /**

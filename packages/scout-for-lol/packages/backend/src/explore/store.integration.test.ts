@@ -16,13 +16,13 @@ import {
   loadSharedExploreTranscript,
   renameExploreConversation,
   resolveRegenerateTarget,
-  rollbackUnstartedExploreTurn,
   revokeExploreShare,
   setExploreLeaf,
   shareExploreConversation,
   startExploreTurn,
   titleFromQuestion,
 } from "#src/explore/store.ts";
+import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
 import {
   applyGeneratedTitle,
   rollbackGeneratedTitle,

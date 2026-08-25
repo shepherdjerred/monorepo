@@ -22,8 +22,8 @@ import {
   ExploreNotFoundError,
   deleteExploreConversation,
   loadExploreTranscript,
-  rollbackUnstartedExploreTurn,
 } from "#src/explore/store.ts";
+import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
 import type { ExploreInvalidTurnError } from "#src/explore/store.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 import { temporalInteractiveEnabled } from "#src/config/dynamic.ts";
