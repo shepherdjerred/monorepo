@@ -8,8 +8,8 @@ import {
   repoActivities,
   reportActivities,
   scoutActivities,
+  maintenanceWorkerActivities,
 } from "./activities/index.ts";
-import { maintenanceActivities } from "./activities/maintenance.ts";
 import { TASK_QUEUES, type TaskQueue } from "./shared/task-queues.ts";
 import type { WorkerRole } from "./shared/worker-role.ts";
 
@@ -71,7 +71,14 @@ export const QUEUE_WORKER_DEFINITIONS: readonly QueueWorkerDefinition[] = [
   },
   {
     role: "scout",
-    taskQueue: TASK_QUEUES.SCOUT,
+    taskQueue: TASK_QUEUES.SCOUT_BETA,
+    activities: scoutActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 2,
+  },
+  {
+    role: "scout",
+    taskQueue: TASK_QUEUES.SCOUT_PROD,
     activities: scoutActivities,
     maxConcurrentActivityTaskExecutions: 1,
     maxConcurrentWorkflowTaskExecutions: 2,
@@ -100,7 +107,7 @@ export const QUEUE_WORKER_DEFINITIONS: readonly QueueWorkerDefinition[] = [
   {
     role: "maintenance",
     taskQueue: TASK_QUEUES.MAINTENANCE,
-    activities: maintenanceActivities,
+    activities: maintenanceWorkerActivities,
     maxConcurrentActivityTaskExecutions: 1,
     maxConcurrentWorkflowTaskExecutions: 2,
   },

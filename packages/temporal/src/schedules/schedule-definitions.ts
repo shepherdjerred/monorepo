@@ -234,6 +234,21 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Buildkite Trivy vulnerability database refresh every six hours",
   },
   {
+    id: "main-vuln-scan-weekly",
+    workflowType: "runMainVulnScanWorkflow",
+    args: [],
+    // Sun 05:00 PT — after the 03:00–04:30 maintenance window and clear of the
+    // six-hourly trivy-db-refresh slots (:30 past 0/6/12/18), so the scan reads
+    // a database refreshed at 00:30 and never queues behind the refresh writer.
+    cronExpression: "0 5 * * 0",
+    taskQueue: TASK_QUEUES.MAINTENANCE,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Three 20-minute scan attempts plus backoff, then report delivery and the
+    // Alertmanager publish with their own three-attempt budgets.
+    workflowExecutionTimeout: "2 hours",
+    memo: "Weekly Trivy HIGH/CRITICAL vulnerability scan of main (warm Buildkite Trivy DB) with report delivery; CRITICAL findings page via Alertmanager",
+  },
+  {
     id: "bugsink-housekeeping",
     workflowType: "runBugsinkHousekeepingWorkflow",
     args: [],

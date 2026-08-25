@@ -44,8 +44,17 @@ export type MaintenanceKind =
   | "buildkite-uv-cache-prune"
   | "buildkite-trivy-db-refresh";
 
+/**
+ * Label attached to every maintenance subprocess for logs and error messages.
+ * `MaintenanceKind` values also key the maintenance metrics via
+ * {@link executeMaintenance}; the extra members label activities that build
+ * their commands directly (and own their own reporting) without widening the
+ * exhaustive `buildMaintenanceCommand` switch.
+ */
+export type MaintenanceSubprocessKind = MaintenanceKind | "main-vuln-scan";
+
 export type MaintenanceCommand = {
-  kind: MaintenanceKind;
+  kind: MaintenanceSubprocessKind;
   command: readonly string[];
   cwd: string;
   env: Record<string, string>;
@@ -83,7 +92,7 @@ async function requiredSecretFile(name: string): Promise<string> {
   return value;
 }
 
-function activityHooks(): MaintenanceCommandHooks {
+export function maintenanceActivityHooks(): MaintenanceCommandHooks {
   const context = Context.current();
 
   const hooks: MaintenanceCommandHooks = {
@@ -98,7 +107,7 @@ function activityHooks(): MaintenanceCommandHooks {
   return hooks;
 }
 
-function commandEnvironment(
+export function maintenanceCommandEnvironment(
   overrides: Record<string, string>,
 ): Record<string, string> {
   const environment: Record<string, string> = {};
@@ -123,7 +132,7 @@ export async function buildMaintenanceCommand(
         kind,
         command: ["kometa", "--config", KOMETA_CONFIG_PATH, "--run"],
         cwd: MAINTENANCE_WORKDIR,
-        env: commandEnvironment({
+        env: maintenanceCommandEnvironment({
           KOMETA_PLEXTOKEN: plexToken,
           KOMETA_TMDBAPIKEY: tmdbApiKey,
           KOMETA_READ_ONLY_CONFIG: "true",
@@ -137,7 +146,7 @@ export async function buildMaintenanceCommand(
         kind,
         command: ["bash", "/buildkite/maintenance/bun-cache-gc.sh"],
         cwd: MAINTENANCE_WORKDIR,
-        env: commandEnvironment({
+        env: maintenanceCommandEnvironment({
           BUN_INSTALL_CACHE_DIR: "/buildkite/bun-cache/data",
           BUN_CACHE_LOCK_FILE: "/buildkite/bun-cache-control/.gc.lock",
           BUN_CACHE_GC_THRESHOLD_PERCENT: "60",
@@ -149,7 +158,9 @@ export async function buildMaintenanceCommand(
         kind,
         command: ["uv", "cache", "prune", "--ci"],
         cwd: MAINTENANCE_WORKDIR,
-        env: commandEnvironment({ UV_CACHE_DIR: "/buildkite/uv-cache" }),
+        env: maintenanceCommandEnvironment({
+          UV_CACHE_DIR: "/buildkite/uv-cache",
+        }),
         secretValues: [],
       };
     case "buildkite-trivy-db-refresh":
@@ -163,7 +174,7 @@ export async function buildMaintenanceCommand(
           "/buildkite/trivy-db",
         ],
         cwd: MAINTENANCE_WORKDIR,
-        env: commandEnvironment({}),
+        env: maintenanceCommandEnvironment({}),
         secretValues: [],
       };
   }
@@ -187,13 +198,47 @@ function appendOutputTail(tail: string[], line: string): void {
   }
 }
 
+/**
+ * How a subprocess stream is consumed:
+ *
+ * - `log` — every line is redacted and streamed to the worker logs, and only a
+ *   bounded tail is retained for error messages. This is the right mode for
+ *   long-running maintenance jobs whose output is operational noise.
+ * - `capture` — the redacted output is retained in full and returned to the
+ *   caller (nothing is streamed to the logs line-by-line, which would flood
+ *   Loki with a machine-readable payload). This is the mode for commands whose
+ *   stdout IS the result, e.g. a `--format json` scanner.
+ */
+type StreamMode = "log" | "capture";
+
+type StreamOutcome = {
+  tail: string;
+  /** Complete redacted output; empty string in `log` mode. */
+  captured: string;
+};
+
 async function streamMaintenanceOutput(
   stream: ReadableStream<Uint8Array>,
   streamName: "stdout" | "stderr",
   command: MaintenanceCommand,
-): Promise<string> {
+  mode: StreamMode,
+): Promise<StreamOutcome> {
   const decoder = new TextDecoder();
   const tail: string[] = [];
+  const captured: string[] = [];
+  const consumeLine = (line: string): void => {
+    const redacted = redact(line, command.secretValues);
+    appendOutputTail(tail, redacted);
+    if (mode === "capture") {
+      captured.push(redacted);
+      return;
+    }
+    log("info", "Maintenance subprocess output", {
+      maintenanceKind: command.kind,
+      stream: streamName,
+      line: redacted,
+    });
+  };
   let pending = "";
   for await (const value of stream) {
     pending += decoder.decode(value, { stream: true });
@@ -204,32 +249,32 @@ async function streamMaintenanceOutput(
     const completeLines = pending.slice(0, lastNewline).split("\n");
     pending = pending.slice(lastNewline + 1);
     for (const line of completeLines) {
-      const redacted = redact(line.replace(/\r$/, ""), command.secretValues);
-      appendOutputTail(tail, redacted);
-      log("info", "Maintenance subprocess output", {
-        maintenanceKind: command.kind,
-        stream: streamName,
-        line: redacted,
-      });
+      consumeLine(line.replace(/\r$/, ""));
     }
   }
   pending += decoder.decode();
   if (pending !== "") {
-    const redacted = redact(pending, command.secretValues);
-    appendOutputTail(tail, redacted);
-    log("info", "Maintenance subprocess output", {
-      maintenanceKind: command.kind,
-      stream: streamName,
-      line: redacted,
-    });
+    consumeLine(pending);
   }
-  return tail.join("\n");
+  return { tail: tail.join("\n"), captured: captured.join("\n") };
 }
 
-export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
-  command,
-  hooks,
-) => {
+type MaintenanceSubprocessOutcome = {
+  exitCode: number;
+  stdout: StreamOutcome;
+  stderr: StreamOutcome;
+};
+
+/**
+ * Shared subprocess core: heartbeats, process-group cancellation
+ * (SIGTERM → SIGKILL), and redacted output handling live here exactly once.
+ * Callers decide what a non-zero exit means; this function only reports it.
+ */
+async function runMaintenanceSubprocess(
+  command: MaintenanceCommand,
+  hooks: MaintenanceCommandHooks,
+  stdoutMode: StreamMode,
+): Promise<MaintenanceSubprocessOutcome> {
   const childEnv = command.env;
   const subprocess = Bun.spawn([...command.command], {
     cwd: command.cwd,
@@ -265,11 +310,11 @@ export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
     abort();
   }
 
-  let result: [string, string, number] | undefined;
+  let result: [StreamOutcome, StreamOutcome, number] | undefined;
   try {
     const completion = Promise.all([
-      streamMaintenanceOutput(subprocess.stdout, "stdout", command),
-      streamMaintenanceOutput(subprocess.stderr, "stderr", command),
+      streamMaintenanceOutput(subprocess.stdout, "stdout", command, stdoutMode),
+      streamMaintenanceOutput(subprocess.stderr, "stderr", command, "log"),
       subprocess.exited,
     ]);
     result = await completion;
@@ -286,21 +331,66 @@ export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
   }
 
   const [stdout, stderr, exitCode] = result;
-  if (exitCode !== 0) {
-    const detail = [stdout, stderr]
-      .filter((output) => output !== "")
-      .join("\n");
-    throw new Error(
-      `${command.kind} command exited ${String(exitCode)}${detail === "" ? "" : `: ${detail}`}`,
-    );
+  return { exitCode, stdout, stderr };
+}
+
+function throwOnMaintenanceExit(
+  command: MaintenanceCommand,
+  outcome: MaintenanceSubprocessOutcome,
+): void {
+  const detail = [outcome.stdout.tail, outcome.stderr.tail]
+    .filter((output) => output !== "")
+    .join("\n");
+  throw new Error(
+    `${command.kind} command exited ${String(outcome.exitCode)}${detail === "" ? "" : `: ${detail}`}`,
+  );
+}
+
+export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
+  command,
+  hooks,
+) => {
+  const outcome = await runMaintenanceSubprocess(command, hooks, "log");
+  if (outcome.exitCode !== 0) {
+    throwOnMaintenanceExit(command, outcome);
   }
-  return exitCode;
+  return outcome.exitCode;
 };
+
+export type MaintenanceCaptureResult = {
+  exitCode: number;
+  /** Complete redacted stdout — the command's machine-readable result. */
+  stdout: string;
+};
+
+/**
+ * Variant of {@link spawnMaintenanceCommand} for commands whose stdout is the
+ * result (e.g. `--format json` scanners): stdout is captured in full and
+ * returned instead of being streamed to the logs, while stderr keeps the
+ * ordinary log-and-tail behavior. Heartbeats, cancellation, and redaction are
+ * the same shared implementation — do not fork this into a bare `Bun.spawn`.
+ *
+ * `acceptedExitCodes` exists for scanners that reserve a non-zero exit for
+ * "findings present" (e.g. lychee exits 2 when links are broken); every other
+ * exit still fails fast with the bounded output tails.
+ */
+export async function spawnMaintenanceCommandCapturingStdout(
+  command: MaintenanceCommand,
+  hooks: MaintenanceCommandHooks,
+  options: { acceptedExitCodes?: readonly number[] } = {},
+): Promise<MaintenanceCaptureResult> {
+  const acceptedExitCodes = options.acceptedExitCodes ?? [0];
+  const outcome = await runMaintenanceSubprocess(command, hooks, "capture");
+  if (!acceptedExitCodes.includes(outcome.exitCode)) {
+    throwOnMaintenanceExit(command, outcome);
+  }
+  return { exitCode: outcome.exitCode, stdout: outcome.stdout.captured };
+}
 
 export async function executeMaintenance(
   kind: MaintenanceKind,
   runner: MaintenanceCommandRunner = spawnMaintenanceCommand,
-  hooks: MaintenanceCommandHooks = activityHooks(),
+  hooks: MaintenanceCommandHooks = maintenanceActivityHooks(),
 ): Promise<void> {
   const command = await buildMaintenanceCommand(kind);
   try {

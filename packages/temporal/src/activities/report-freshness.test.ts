@@ -235,3 +235,58 @@ describe("freshnessDeploymentState", () => {
     });
   });
 });
+
+describe("newly rolled-out schedule activation", () => {
+  // A brand-new weekly schedule has no receipt and no prior action on its
+  // first deployment. `evaluateFreshness` then bounds the pending window at
+  // receiptRequiredAfter + cadence + grace, so an activation inherited from an
+  // older worker is already expired and the 15-minute monitor reports
+  // `missing` — paging TemporalReportHeartbeatStale for a full cadence before
+  // the schedule has had any chance to run.
+  const scannerRegistration = {
+    scheduleId: "main-vuln-scan-weekly",
+    reportType: "main-vuln-scan",
+    cadenceHours: 168,
+    graceHours: 6,
+    receiptRequiredAfter: "2026-09-01T00:00:00.000Z",
+  };
+
+  function statusAtRollout(receiptRequiredAfter: string, now: string) {
+    return evaluateFreshness({
+      registration: { ...scannerRegistration, receiptRequiredAfter },
+      now: new Date(now),
+      acceptedAt: undefined,
+      lastActionTakenAt: undefined,
+      deployed: true,
+      paused: false,
+    }).status;
+  }
+
+  test("stays pending from rollout until the first run can deliver", () => {
+    // Rollout day, and the first Sunday 05:00 PT run (2026-09-06T12:00Z).
+    expect(
+      statusAtRollout("2026-09-01T00:00:00.000Z", "2026-09-01T00:05:00.000Z"),
+    ).toBe("pending");
+    expect(
+      statusAtRollout("2026-09-01T00:00:00.000Z", "2026-09-06T12:00:00.000Z"),
+    ).toBe("pending");
+  });
+
+  test("reports missing only after a full cadence plus grace elapsed", () => {
+    // 168h + 6h after activation = 2026-09-08T06:00Z.
+    expect(
+      statusAtRollout("2026-09-01T00:00:00.000Z", "2026-09-08T05:59:00.000Z"),
+    ).toBe("pending");
+    expect(
+      statusAtRollout("2026-09-01T00:00:00.000Z", "2026-09-08T06:01:00.000Z"),
+    ).toBe("missing");
+  });
+
+  test("an inherited stale activation would page before the first run", () => {
+    // The defect this guards: the original worker activation makes the very
+    // first freshness evaluation report `missing` on rollout day.
+    expect(
+      statusAtRollout("2026-08-11T23:52:18.000Z", "2026-09-01T00:05:00.000Z"),
+    ).toBe("missing");
+  });
+});

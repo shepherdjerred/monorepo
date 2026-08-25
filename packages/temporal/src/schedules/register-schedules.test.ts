@@ -31,6 +31,7 @@ describe("direct maintenance schedules", () => {
     ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
     ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
+    ["main-vuln-scan-weekly", "runMainVulnScanWorkflow", "2 hours"],
   ] as const;
 
   it.each(definitions)(
@@ -165,6 +166,10 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
   "runTurboCacheCleanWorkflow",
+  // Awaits one scan activity (clone + trivy fs) then report delivery and the
+  // Alertmanager publish. No workflow-level sleeps; each activity carries its
+  // own startToCloseTimeout + retry budget.
+  "runMainVulnScanWorkflow",
   "monitorReportFreshness",
   "generateDependencySummary",
   "runProtobufWatch",

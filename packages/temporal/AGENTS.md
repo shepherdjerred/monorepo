@@ -62,6 +62,18 @@ Buildkite PVCs and has no Kubernetes API token or Job RBAC; Kometa reaches Plex
 over the cluster network with credentials projected from namespace-local
 OnePassword resources.
 
+`main-vuln-scan-weekly` (`runMainVulnScanWorkflow`) also runs on the
+maintenance queue: it shallow-clones public `main` and runs
+`trivy fs --skip-db-update` against the warm `/buildkite/trivy-db` PVC that
+`buildkite-trivy-db-refresh` keeps fresh (the single activity slot means the
+scan can never race the DB refresh writer). Only the scan activity lives on
+this queue — the workflow proxies `deliverActivityReport` and the Alertmanager
+publish to `TASK_QUEUES.DEFAULT`, so Postal/S3/`ALERTMANAGER_URL` credentials
+never reach the maintenance pod. Policy: the report email is delivered on
+every run; Alertmanager receives one fire/resolve occurrence
+(`MainVulnScanCritical`) that fires only while ≥1 CRITICAL finding exists and
+resolves on the next clean run (`src/shared/main-vuln-scan-alert.ts`).
+
 ## Schedules (`src/schedules/register-schedules.ts`, `src/schedules/schedule-definitions.ts`)
 
 The declarative `SCHEDULES` array plus its supporting types/data (`ScheduleDefinition`,
@@ -214,7 +226,7 @@ Workflow:
 - `XCODE_CLOUD_WEBHOOK_TOKEN` — unguessable token embedded in the Xcode Cloud webhook URL path (`/hook/<token>`). Xcode Cloud webhooks carry no signature/auth header, so the URL path IS the credential. **Required** to start the receiver; when unset the server is skipped.
 - `XCODE_CLOUD_WEBHOOK_PORT` — port for the Xcode Cloud webhook receiver (default `9468`).
 - `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
-- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by three features: the Xcode Cloud webhook receiver (when enabled), the `temporal-failure-watch` schedule (see below), and `llm-catalog-refresh-weekly`, which publishes its withheld state on every run (firing when the cross-check withholds edits, resolving when it withholds none) — all POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
+- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by four features: the Xcode Cloud webhook receiver (when enabled), the `temporal-failure-watch` schedule (see below), `llm-catalog-refresh-weekly`, which publishes its withheld state on every run (firing when the cross-check withholds edits, resolving when it withholds none), and `main-vuln-scan-weekly`, which publishes its CRITICAL-finding state on every run (firing while ≥1 CRITICAL vulnerability exists, resolving on a clean run) — all POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
 - `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `87090` = 24h lookback plus the full 6.5m activity retry budget and a 5m delivery margin).
 
 ## Scout weekly parlay lifecycle
