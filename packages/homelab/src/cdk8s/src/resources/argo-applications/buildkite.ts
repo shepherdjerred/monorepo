@@ -65,6 +65,10 @@ const BUILDKITE_CREDENTIAL_ITEMS = [
     itemId: "qtyxi2cqocze43ekdgb72uvtr4",
   },
   {
+    secretName: "buildkite-analytics-credentials",
+    itemId: "c5enc4onifzi63ig7qouhvgyaq",
+  },
+  {
     secretName: "buildkite-turbo-cache-credentials",
     itemId: "mzvcz4pqqbda75ufu7l5myd4ey",
   },
