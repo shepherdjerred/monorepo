@@ -7,6 +7,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const RETRY = {
   maximumAttempts: 3,
@@ -30,11 +31,6 @@ const { advanceDependencySummaryCheckpoint } =
     startToCloseTimeout: "1 minute",
     retry: RETRY,
   });
-
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  startToCloseTimeout: "2 minutes",
-  retry: RETRY,
-});
 
 // Legacy proxies exist solely to reproduce the pre-rewrite command sequence for
 // an execution still open across the rollout. Their timeouts must stay exactly
@@ -130,7 +126,15 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
   };
 }
 
-export async function generateDependencySummary(daysBack = 7): Promise<void> {
+export async function generateDependencySummary(
+  daysBack = 7,
+  reportTaskQueue: string = TASK_QUEUES.REPORTS,
+): Promise<void> {
+  const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+    taskQueue: reportTaskQueue,
+    startToCloseTimeout: "2 minutes",
+    retry: RETRY,
+  });
   if (!patched("deps-summary-evidence-v1")) {
     return runLegacyDependencySummary(daysBack);
   }
