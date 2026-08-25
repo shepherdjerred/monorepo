@@ -67,11 +67,14 @@ export function validateHomelabReleaseAdmission(
   }
   for (const step of [
     "helm-push",
-    "tofu-apply",
-    "tofu-github",
+    "tofu-apply-seaweedfs",
+    "tofu-apply-tailscale",
+    "tofu-apply-buildkite",
+    "tofu-apply-arr",
+    "tofu-apply-github",
     "tofu-posthog",
     "argocd-sync",
-    "tofu-cloudflare",
+    "tofu-apply-cloudflare",
   ]) {
     const block = stepBlocks.get(step);
     for (const required of [
@@ -275,8 +278,10 @@ async function validateSelectorAndUpload(): Promise<void> {
   for (const required of [
     'image: "${CI_BASE_IMAGE}"',
     "imagePullPolicy: IfNotPresent",
-    "envFrom:",
-    "buildkite-ci-secrets",
+    "serviceAccountName: buildkite-job",
+    "automountServiceAccountToken: false",
+    "name: BUILDKITE_READ_TOKEN",
+    "name: buildkite-api-credentials",
     "name: buildkite-git-mirrors",
     "mountPath: /buildkite/git-mirrors",
   ]) {
@@ -355,12 +360,7 @@ async function validateSelectorAndUpload(): Promise<void> {
   // bootstrap pod (their values would be baked into the uploaded pipeline),
   // and the CI image cannot be pinned there (its digest is computed by the
   // upload step itself).
-  for (const forbidden of [
-    "envFrom",
-    "secretRef",
-    "buildkite-ci-secrets",
-    "image:",
-  ]) {
+  for (const forbidden of ["envFrom", "secretRef", "image:"]) {
     if (tofuPipeline.includes(forbidden)) {
       fail(`bootstrap pipeline must not contain ${forbidden}`);
     }

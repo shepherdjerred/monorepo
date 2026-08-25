@@ -37,7 +37,11 @@
     {
       "key": "scout-prod",
       "hostname": "scout-for-lol.com",
-      "sessionReplay": true
+      "sessionReplay": true,
+      "marketing": {
+        "pinterestTagId": "2612722784413",
+        "redditPixelId": "a2_i1gu5k2bzybd"
+      }
     },
     {
       "key": "scout-beta",

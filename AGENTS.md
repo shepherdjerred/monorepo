@@ -798,18 +798,23 @@ the verification machinery itself. There is no `pre-push` hook.
 ### CI credentials — `check-ci-env`
 
 `scripts/check-ci-env.ts` (the `//#check-ci-env` turbo task, in `bun run
-verify`) asserts every env var a Buildkite step's scripts `requireEnv` is
-actually provided to that step. It reads the committed vault snapshot, so it
-needs no 1Password access.
+verify`) checks every Buildkite command step against
+`.buildkite/secret-grants.json`. Each grant names exactly one environment
+variable and one `{secret, key}` source. The check also asserts that every
+statically visible `requireEnv` requirement is provided to that step and that
+no undeclared credential is injected. It reads the committed vault snapshot,
+so it needs no 1Password access.
 
-The gap it closes: steps take `buildkite-ci-secrets` through `envFrom`, which
-`check-1password-items` cannot see — a script requiring a field the item does
-not carry passed every gate and only failed on `main` after merge. When it
-fires, either add the field to the item **and refresh the vault snapshot**, set
-it in the step's `env`, or assign it in the step's command. Requirements the
-analysis cannot read statically (a non-literal `requireEnv`, or one gated
-behind a flag the step passes) go in the two exception tables at the top of the
-script, each with its reason.
+Buildkite command pods use the tokenless `buildkite-job` service account and
+may receive credentials only on `container-0` through explicit
+`secretKeyRef`s. `envFrom`, optional Secret references, credential injection
+into agent/checkout/sidecar containers, unknown or blank grant fields, and
+missing or extra grants all fail verification. When adding a credential, add
+the semantic field to its issuer or rotation-unit 1Password item, refresh the
+vault snapshot, add the exact step grant, and update the matching pipeline
+`secretKeyRef`. Requirements the analysis cannot read statically (a
+non-literal `requireEnv`, or one gated behind a flag the step passes) go in the
+two exception tables at the top of the script, each with its reason.
 
 ### Blocked review gate — `review-findings`
 

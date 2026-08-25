@@ -1,19 +1,12 @@
 #!/usr/bin/env bun
 /**
- * Assert every environment variable a Buildkite step's scripts REQUIRE is
- * actually provided to that step.
+ * Enforce the Buildkite credential contract end to end.
  *
- * The gap this closes: `buildkite-ci-secrets` reaches a step through
- * `envFrom: [{ secretRef }]`, which injects whatever keys the 1Password
- * operator synced. The cdk8s linter (`check-1password-items.ts`) only sees
- * `secretKeyRef` and volume `items[].key`, so it cannot see a single key the
- * pipeline consumes — exactly one key of that item is under its coverage today.
- * A script calling `requireEnv("RELEASE_PROVIDER_TOKEN")` against an item with
- * no such field would therefore pass every gate and fail only on `main` after
- * merge, in the release step.
- *
- * The check is offline: it reads the committed vault snapshot (sha256 hashes,
- * no values) and tests membership by hashing the name the script asks for.
+ * Every command step must use the unprivileged service account, disable its
+ * Kubernetes API token, and receive exactly the secretKeyRef grants declared
+ * in `.buildkite/secret-grants.json`. The check also proves each granted key is
+ * present and non-blank in the committed hashed 1Password snapshot, then
+ * verifies that every statically reachable `requireEnv` is satisfied.
  *
  * Scope, deliberately narrow: only `requireEnv` imported from
  * `scripts/lib/run.ts` counts. Five unrelated `requireEnv`-shaped helpers exist
@@ -35,14 +28,25 @@ import path from "node:path";
 import { parse } from "yaml";
 import { Project, SyntaxKind, type SourceFile } from "ts-morph";
 import { z } from "zod";
+import { collectSteps, type PipelineStep } from "./lib/ci-env-pipeline.ts";
 import {
-  CI_SECRET_NAME,
-  collectSteps,
-  type PipelineStep,
-} from "./lib/ci-env-pipeline.ts";
+  collectSteps as collectGrantSteps,
+  compareStepGrants,
+} from "./lib/ci-secret-grant-pipeline.ts";
+import {
+  declaredSecretItems,
+  parseSecretGrantManifest,
+  parseVaultSnapshot,
+  validateGrantCatalog,
+  type SecretGrantManifest,
+  type VaultSnapshot,
+} from "./lib/ci-secret-grant-schema.ts";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dir, "..");
-const PIPELINE_PATH = path.join(REPOSITORY_ROOT, ".buildkite", "pipeline.yml");
+const MANIFEST_PATH = path.join(
+  REPOSITORY_ROOT,
+  ".buildkite/secret-grants.json",
+);
 const SNAPSHOT_PATH = path.join(
   REPOSITORY_ROOT,
   "packages",
@@ -158,11 +162,15 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
   {
     step: "pr-dryrun",
     script: "scripts/deploy-site.ts",
-    names: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+    names: [
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "CLOUDFLARE_ACCOUNT_ID",
+    ],
     reason:
-      "The step runs deploy-site.ts with --dry-run, and both requireEnv calls " +
-      "sit behind `if (!dryRun && !haveCreds)`. The live `sites` step exports " +
-      "both names from the SEAWEEDFS_* secret keys and is checked normally.",
+      "The step runs deploy-site.ts with --dry-run, which does not create the " +
+      "R2 client or require its AWS and Cloudflare configuration. The live " +
+      "sites step receives those credentials and is checked normally.",
   },
   {
     step: "pr-dryrun",
@@ -187,76 +195,34 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
   {
     step: "pr-dryrun",
     script: "scripts/release.ts",
-    names: ["CODEX_HOME"],
+    names: [
+      "CODEX_HOME",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+    ],
     reason:
-      "The step runs release.ts with --dry-run, which returns before the " +
-      "main-only Codex auth-volume preflight. The release-please step mounts " +
-      "and supplies CODEX_HOME and is checked normally.",
+      "The step runs release.ts with --dry-run, which returns before provider " +
+      "selection, GitHub App authentication, and the Codex auth-volume " +
+      "preflight. The release-please step supplies them and is checked normally.",
+  },
+  {
+    step: "pr-dryrun",
+    script: "scripts/update-versions.ts",
+    names: [
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+    ],
+    reason:
+      "The step passes --dry-run, so update-versions validates candidates " +
+      "without authenticating as the GitHub App or writing a commit.",
   },
 ];
 
-const SnapshotItemSchema = z.object({
-  ref: z.string(),
-  title: z.string(),
-  fields: z.array(z.string()),
-  blankFields: z.array(z.string()),
-});
-const SnapshotSchema = z.object({
-  vaultId: z.string(),
-  generatedAt: z.string(),
-  items: z.array(SnapshotItemSchema),
-});
-
 export function hash(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
-}
-
-/**
- * The 1Password item id backing `buildkite-ci-secrets`, read from the cdk8s
- * `OnePasswordItem` that declares it. Throws rather than guessing: an
- * unreadable declaration means this check would otherwise validate against
- * the wrong item and report a clean run.
- */
-export function onePasswordItemIds(
-  declarationSource: string,
-): Map<string, string> {
-  const declarations = declarationSource.split("new OnePasswordItem(chart,");
-  const ids = new Map<string, string>();
-  for (const declaration of declarations.slice(1)) {
-    const name = /^\s*"([^"]+)"/u.exec(declaration)?.[1];
-    if (name === undefined) continue;
-    const nextDeclaration = declaration.indexOf("new OnePasswordItem(chart,");
-    const body =
-      nextDeclaration === -1
-        ? declaration
-        : declaration.slice(0, nextDeclaration);
-    const itemId = /vaults\/[\w-]+\/items\/([\w-]+)/u.exec(body)?.[1];
-    if (itemId === undefined) continue;
-    if (ids.has(name)) {
-      throw new Error(
-        `multiple OnePasswordItem declarations are named "${name}"`,
-      );
-    }
-    ids.set(name, itemId);
-  }
-  return ids;
-}
-
-/** The item id backing the shared `buildkite-ci-secrets` Secret. */
-export function ciSecretItemId(declarationSource: string): string {
-  const anchor = declarationSource.indexOf(`"${CI_SECRET_NAME}"`);
-  if (anchor === -1) {
-    throw new Error(
-      `no OnePasswordItem named "${CI_SECRET_NAME}" in the cdk8s declaration`,
-    );
-  }
-  const id = onePasswordItemIds(declarationSource).get(CI_SECRET_NAME);
-  if (id === undefined) {
-    throw new Error(
-      `the "${CI_SECRET_NAME}" OnePasswordItem declares no vaults/…/items/… itemPath`,
-    );
-  }
-  return id;
 }
 
 export type RequiredEnv = {
@@ -367,7 +333,6 @@ function unmetRequirement(
     name: string;
     site: string;
   },
-  secret: SecretFields,
   explicitSecrets: ReadonlyMap<string, SecretFields>,
 ): string | null {
   const { step, entry, name, site } = requirement;
@@ -398,17 +363,9 @@ function unmetRequirement(
     }
     return null;
   }
-  if (step.usesCiSecret && secret.hasField(name)) {
-    if (!secret.isBlank(name)) return null;
-    return (
-      `${prefix}, but that field is BLANK on the ${CI_SECRET_NAME} 1Password item. ` +
-      `The operator skips empty fields, so the variable would be missing at runtime.`
-    );
-  }
   return (
-    `${prefix}, but the step does not provide it. Add the field to the ${CI_SECRET_NAME} ` +
-    `1Password item and refresh the vault snapshot, set it in the step's env, or assign ` +
-    `it in the step's command.`
+    `${prefix}, but the step does not provide it through explicit env, a ` +
+    `validated secretKeyRef, or a command assignment.`
   );
 }
 
@@ -418,7 +375,6 @@ function errorsForInvocation(
     entry: string;
     required: RequiredEnv;
   },
-  secret: SecretFields,
   explicitSecrets: ReadonlyMap<string, SecretFields>,
   exceptionsByFile: ReadonlyMap<string, DynamicCallException>,
 ): string[] {
@@ -449,7 +405,6 @@ function errorsForInvocation(
     if (excepted.has(name)) continue;
     const unmet = unmetRequirement(
       { step, entry, name, site },
-      secret,
       explicitSecrets,
     );
     if (unmet !== null) errors.push(unmet);
@@ -459,7 +414,6 @@ function errorsForInvocation(
 
 export function collectErrors(input: {
   steps: readonly PipelineStep[];
-  secret: SecretFields;
   /** Secrets addressed through explicit Kubernetes secretKeyRefs. */
   explicitSecrets?: ReadonlyMap<string, SecretFields>;
   requiredFor: (entry: string) => RequiredEnv;
@@ -478,7 +432,6 @@ export function collectErrors(input: {
       errors.push(
         ...errorsForInvocation(
           { step, entry, required: input.requiredFor(entry) },
-          input.secret,
           input.explicitSecrets ?? new Map(),
           exceptionsByFile,
         ),
@@ -493,64 +446,63 @@ function fail(message: string, code: number): never {
   process.exit(code);
 }
 
-async function main(): Promise<void> {
-  let steps: PipelineStep[];
-  let secret: SecretFields;
-  let explicitSecrets: Map<string, SecretFields>;
-  try {
-    const pipeline: unknown = parse(await Bun.file(PIPELINE_PATH).text(), {
-      merge: true,
-    });
-    const globalEnv = z
-      .object({ env: z.record(z.string(), z.unknown()).optional() })
-      .loose()
-      .parse(pipeline);
-    steps = collectSteps(pipeline, Object.keys(globalEnv.env ?? {}));
-  } catch (error: unknown) {
-    fail(
-      `check-ci-env: could not read ${path.relative(REPOSITORY_ROOT, PIPELINE_PATH)}: ${String(error)}`,
-      2,
-    );
-  }
-  try {
-    const snapshot = SnapshotSchema.parse(await Bun.file(SNAPSHOT_PATH).json());
-    const declarations = await Bun.file(CI_SECRET_DECLARATION).text();
-    const itemIds = onePasswordItemIds(declarations);
-    const itemId = ciSecretItemId(declarations);
-    const item = snapshot.items.find((entry) => entry.ref === hash(itemId));
-    if (item === undefined) {
-      fail(
-        `check-ci-env: the ${CI_SECRET_NAME} item is absent from the vault snapshot. Refresh it with ` +
-          `packages/homelab/src/cdk8s/scripts/snapshot-1password-vault.ts.`,
-        2,
-      );
-    }
-    const fields = new Set(item.fields);
-    const blanks = new Set(item.blankFields);
-    secret = {
-      hasField: (name: string) => fields.has(hash(name)),
-      isBlank: (name: string) => blanks.has(hash(name)),
-    };
-    explicitSecrets = new Map();
-    for (const [secretName, declaredItemId] of itemIds) {
-      const declaredItem = snapshot.items.find(
-        (entry) => entry.ref === hash(declaredItemId),
-      );
-      if (declaredItem === undefined) continue;
-      const declaredFields = new Set(declaredItem.fields);
-      const declaredBlanks = new Set(declaredItem.blankFields);
-      explicitSecrets.set(secretName, {
-        hasField: (name: string) => declaredFields.has(hash(name)),
-        isBlank: (name: string) => declaredBlanks.has(hash(name)),
-      });
-    }
-  } catch (error: unknown) {
-    fail(
-      `check-ci-env: could not read the vault snapshot: ${String(error)}`,
-      2,
-    );
-  }
+function secretFields(
+  snapshot: VaultSnapshot,
+  itemId: string,
+): SecretFields | undefined {
+  const item = snapshot.items.find((entry) => entry.ref === hash(itemId));
+  if (item === undefined) return undefined;
+  const fields = new Set(item.fields);
+  const blanks = new Set(item.blankFields);
+  return {
+    hasField: (name: string) => fields.has(hash(name)),
+    isBlank: (name: string) => blanks.has(hash(name)),
+  };
+}
 
+async function readPipeline(pipelinePath: string): Promise<unknown> {
+  try {
+    return parse(
+      await Bun.file(path.join(REPOSITORY_ROOT, pipelinePath)).text(),
+      { merge: true, maxAliasCount: -1 },
+    );
+  } catch (error: unknown) {
+    fail(`check-ci-env: could not read ${pipelinePath}: ${String(error)}`, 2);
+  }
+}
+
+async function readCredentialInputs(): Promise<{
+  manifest: SecretGrantManifest;
+  snapshot: VaultSnapshot;
+  declarations: string;
+}> {
+  try {
+    return {
+      manifest: parseSecretGrantManifest(await Bun.file(MANIFEST_PATH).json()),
+      snapshot: parseVaultSnapshot(await Bun.file(SNAPSHOT_PATH).json()),
+      declarations: await Bun.file(CI_SECRET_DECLARATION).text(),
+    };
+  } catch (error: unknown) {
+    fail(
+      `check-ci-env: invalid grant manifest, vault snapshot, or cdk8s declaration: ${String(error)}`,
+      2,
+    );
+  }
+}
+
+async function main(): Promise<void> {
+  const { manifest, snapshot, declarations } = await readCredentialInputs();
+  const errors = validateGrantCatalog({
+    manifest,
+    snapshot,
+    declarationSource: declarations,
+  });
+  const declaredItems = declaredSecretItems(declarations);
+  const explicitSecrets = new Map<string, SecretFields>();
+  for (const [secretName, itemId] of declaredItems) {
+    const fields = secretFields(snapshot, itemId);
+    if (fields !== undefined) explicitSecrets.set(secretName, fields);
+  }
   const project = new Project({
     skipAddingFilesFromTsConfig: true,
     skipFileDependencyResolution: true,
@@ -565,22 +517,51 @@ async function main(): Promise<void> {
     return computed;
   };
 
-  const errors = collectErrors({
-    steps,
-    secret,
-    explicitSecrets,
-    requiredFor,
-  });
+  const requirementSteps: PipelineStep[] = [];
+  let grantStepCount = 0;
+  let grantCount = 0;
+  for (const [pipelinePath, expected] of Object.entries(manifest.pipelines)) {
+    const pipeline = await readPipeline(pipelinePath);
+    const globalEnv = z
+      .object({ env: z.record(z.string(), z.unknown()).optional() })
+      .loose()
+      .parse(pipeline);
+    const globalEnvNames = Object.keys(globalEnv.env ?? {});
+    const grantSteps = collectGrantSteps(pipeline, globalEnvNames);
+    errors.push(
+      ...grantSteps.errors.map((error) => `${pipelinePath}: ${error}`),
+      ...compareStepGrants(grantSteps.steps, expected).map(
+        (error) => `${pipelinePath}: ${error}`,
+      ),
+    );
+    grantStepCount += grantSteps.steps.length;
+    grantCount += grantSteps.steps.reduce(
+      (total, step) => total + step.grants.length,
+      0,
+    );
+    requirementSteps.push(...collectSteps(pipeline, globalEnvNames));
+  }
+  errors.push(
+    ...collectErrors({
+      steps: requirementSteps,
+      explicitSecrets,
+      requiredFor,
+    }),
+  );
   if (errors.length > 0) {
-    for (const error of errors) console.error(`✗ ${error}`);
+    const uniqueErrors = [...new Set(errors)].toSorted();
+    for (const error of uniqueErrors) console.error(`✗ ${error}`);
     fail(
-      `check-ci-env: ${String(errors.length)} unmet CI environment requirement(s).`,
+      `check-ci-env: ${String(uniqueErrors.length)} credential contract violation(s).`,
       1,
     );
   }
-  const checked = steps.reduce((total, step) => total + step.scripts.length, 0);
+  const checked = requirementSteps.reduce(
+    (total, step) => total + step.scripts.length,
+    0,
+  );
   console.log(
-    `check-ci-env: OK — ${String(steps.length)} pipeline step(s), ${String(checked)} script invocation(s) verified against the ${CI_SECRET_NAME} snapshot.`,
+    `check-ci-env: OK — ${String(grantStepCount)} steps, ${String(grantCount)} exact grants, and ${String(checked)} script invocations verified.`,
   );
 }
 

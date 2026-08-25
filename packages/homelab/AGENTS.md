@@ -323,8 +323,8 @@ the value in a `.tfvars` file, a shell history argument, or repository content.
 `tofu-stack.ts posthog` requires both `POSTHOG_CLI_API_KEY` and
 `POSTHOG_TOFU_STATE_PASSPHRASE`, then maps them to the provider's
 `POSTHOG_API_KEY` and the encryption variable. Buildkite injects those values
-only through explicit keys of `buildkite/posthog-tofu-credentials`; do not add
-them to `buildkite-ci-secrets` or another shared pod template.
+only through explicit grants from `buildkite/posthog-tofu-credentials`; do not
+add them to another credential family or a shared pod template.
 
 After import, OpenTofu is authoritative for supported dashboards, layouts,
 insights, cohort, source, proxy, owner membership, project, and project

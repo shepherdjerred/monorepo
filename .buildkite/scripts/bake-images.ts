@@ -93,7 +93,7 @@ export async function lastSuccessfulImageReleaseCommit(
   executor: CommandExecutor = execute,
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Promise<string | undefined> {
-  const token = environment["BUILDKITE_API_TOKEN"];
+  const token = environment["BUILDKITE_READ_TOKEN"];
   if (token === undefined) return undefined;
   const response = await fetcher(
     "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds?branch=main&per_page=20&include_retried_jobs=true",

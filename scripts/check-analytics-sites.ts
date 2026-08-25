@@ -1,21 +1,7 @@
-import { z } from "zod";
+import { parseAnalyticsRegistry } from "./lib/scout-analytics-config.ts";
 
 const root = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const registryPath = `${root}/config/analytics-sites.json`;
-
-const RegistrySchema = z.object({
-  provider: z.literal("posthog"),
-  projectToken: z.string().regex(/^phc_[A-Za-z0-9]+$/),
-  apiHost: z.literal("https://us.i.posthog.com"),
-  assetHost: z.literal("https://us-assets.i.posthog.com"),
-  sites: z.array(
-    z.object({
-      key: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-      hostname: z.string().min(1),
-      sessionReplay: z.boolean(),
-    }),
-  ),
-});
 
 // `masksAllText` marks the sites that render a signed-in Discord identity as
 // ordinary DOM text. `maskAllInputs` only masks form values, so replay on those
@@ -124,7 +110,7 @@ const AUTOCAPTURE_MASKING = [
   "mask_all_element_attributes: true",
 ] as const;
 
-const registry = RegistrySchema.parse(
+const registry = parseAnalyticsRegistry(
   JSON.parse(await Bun.file(registryPath).text()) as unknown,
 );
 

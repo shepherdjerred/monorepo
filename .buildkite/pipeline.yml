@@ -21,24 +21,236 @@ common:
         # The checkout writes the tracked tree into the memory-backed workspace.
         requests: { cpu: "50m", memory: "1Gi" }
         limits: { cpu: "400m", memory: "2Gi" }
+  # Credential entries are anchored individually so each step's command
+  # container can declare its exact grant set. The checkout, agent, init, and
+  # sidecar containers never reference these anchors.
+  - grant_github_download: &grant_github_download
+      name: GITHUB_DOWNLOAD_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-github-credentials
+          key: GITHUB_DOWNLOAD_TOKEN
+  - grant_github_review: &grant_github_review
+      name: GITHUB_REVIEW_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-github-credentials
+          key: GITHUB_REVIEW_TOKEN
+  - grant_github_packages: &grant_github_packages
+      name: GITHUB_PACKAGES_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-github-credentials
+          key: GITHUB_PACKAGES_TOKEN
+  - grant_github_app_id: &grant_github_app_id
+      name: GITHUB_APP_ID
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-github-credentials
+          key: GITHUB_APP_ID
+  - grant_github_app_installation_id: &grant_github_app_installation_id
+      name: GITHUB_APP_INSTALLATION_ID
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-github-credentials
+          key: GITHUB_APP_INSTALLATION_ID
+  - grant_github_app_private_key: &grant_github_app_private_key
+      name: GITHUB_APP_PRIVATE_KEY
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-github-credentials
+          key: GITHUB_APP_PRIVATE_KEY
+  - grant_tofu_github: &grant_tofu_github
+      name: TOFU_GITHUB_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-github-credentials
+          key: TOFU_GITHUB_TOKEN
+  - grant_buildkite_read: &grant_buildkite_read
+      name: BUILDKITE_READ_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-api-credentials
+          key: BUILDKITE_READ_TOKEN
+  - grant_buildkite_admin: &grant_buildkite_admin
+      name: BUILDKITE_ADMIN_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-api-credentials
+          key: BUILDKITE_ADMIN_TOKEN
+  - grant_buildkite_analytics: &grant_buildkite_analytics
+      name: BUILDKITE_ANALYTICS_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-analytics-credentials
+          key: BUILDKITE_ANALYTICS_TOKEN
+  - grant_turbo: &grant_turbo
+      name: TURBO_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-turbo-cache-credentials
+          key: TURBO_TOKEN
+  - grant_npm: &grant_npm
+      name: NPM_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-npm-credentials
+          key: NPM_TOKEN
+  - grant_claude: &grant_claude
+      name: CLAUDE_CODE_OAUTH_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-claude-credentials
+          key: CLAUDE_CODE_OAUTH_TOKEN
+  - grant_chartmuseum_username: &grant_chartmuseum_username
+      name: CHARTMUSEUM_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-chartmuseum-credentials
+          key: CHARTMUSEUM_USERNAME
+  - grant_chartmuseum_password: &grant_chartmuseum_password
+      name: CHARTMUSEUM_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-chartmuseum-credentials
+          key: CHARTMUSEUM_PASSWORD
+  - grant_argocd: &grant_argocd
+      name: ARGOCD_AUTH_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-argocd-credentials
+          key: ARGOCD_AUTH_TOKEN
+  - grant_seaweedfs_state_access: &grant_seaweedfs_state_access
+      name: SEAWEEDFS_STATE_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-seaweedfs-credentials
+          key: SEAWEEDFS_STATE_ACCESS_KEY_ID
+  - grant_seaweedfs_state_secret: &grant_seaweedfs_state_secret
+      name: SEAWEEDFS_STATE_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-seaweedfs-credentials
+          key: SEAWEEDFS_STATE_SECRET_ACCESS_KEY
+  - grant_seaweedfs_deploy_access: &grant_seaweedfs_deploy_access
+      name: SEAWEEDFS_DEPLOY_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-seaweedfs-credentials
+          key: SEAWEEDFS_DEPLOY_ACCESS_KEY_ID
+  - grant_seaweedfs_deploy_secret: &grant_seaweedfs_deploy_secret
+      name: SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-seaweedfs-credentials
+          key: SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY
+  - grant_cloudflare_account: &grant_cloudflare_account
+      name: CLOUDFLARE_ACCOUNT_ID
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-cloudflare-credentials
+          key: CLOUDFLARE_ACCOUNT_ID
+  - grant_cloudflare_token: &grant_cloudflare_token
+      name: CLOUDFLARE_API_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-cloudflare-credentials
+          key: CLOUDFLARE_API_TOKEN
+  - grant_tailscale_client_id: &grant_tailscale_client_id
+      name: TAILSCALE_OAUTH_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-tailscale-credentials
+          key: TAILSCALE_OAUTH_CLIENT_ID
+  - grant_tailscale_client_secret: &grant_tailscale_client_secret
+      name: TAILSCALE_OAUTH_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-tailscale-credentials
+          key: TAILSCALE_OAUTH_CLIENT_SECRET
+  - grant_arr_radarr: &grant_arr_radarr
+      name: RADARR_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: RADARR_API_KEY
+  - grant_arr_sonarr: &grant_arr_sonarr
+      name: SONARR_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: SONARR_API_KEY
+  - grant_arr_prowlarr: &grant_arr_prowlarr
+      name: PROWLARR_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: PROWLARR_API_KEY
+  - grant_arr_qbittorrent: &grant_arr_qbittorrent
+      name: QBITTORRENT_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: QBITTORRENT_PASSWORD
+  - grant_arr_privatehd_password: &grant_arr_privatehd_password
+      name: PRIVATEHD_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: PRIVATEHD_PASSWORD
+  - grant_arr_privatehd_pid: &grant_arr_privatehd_pid
+      name: PRIVATEHD_PID
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: PRIVATEHD_PID
+  - grant_arr_avistaz_password: &grant_arr_avistaz_password
+      name: AVISTAZ_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: AVISTAZ_PASSWORD
+  - grant_arr_avistaz_pid: &grant_arr_avistaz_pid
+      name: AVISTAZ_PID
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: AVISTAZ_PID
+  - grant_arr_animez_password: &grant_arr_animez_password
+      name: ANIMEZ_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: ANIMEZ_PASSWORD
+  - grant_arr_animez_pid: &grant_arr_animez_pid
+      name: ANIMEZ_PID
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-arr-credentials
+          key: ANIMEZ_PID
   - pod: &pod
       kubernetes: &pod_kubernetes
         checkout:
           # Full clone: turbo --affected needs the merge-base with main.
           cloneFlags: "--no-tags"
-        podSpecPatch:
-          serviceAccountName: buildkite-agent-stack-k8s-controller
+        podSpecPatch: &pod_pod_spec
+          serviceAccountName: buildkite-job
+          automountServiceAccountToken: false
           containers:
             - *checkout_container
-            - name: container-0
+            - &pod_container
+              name: container-0
               image: "${CI_BASE_IMAGE}"
               # upload-pipeline.sh expands the validated committed digest.
               imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
               env:
                 # kubernetes-bootstrap runs step commands via /bin/sh by
                 # default — dash on the debian ci-base, which rejects
                 # toolchain.sh's `set -o pipefail` (build 5651).
-                - name: BUILDKITE_SHELL
+                - &env_buildkite_shell
+                  name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
                 # Requests sized to measured p90 usage plus the post-checkout
@@ -60,8 +272,6 @@ common:
                 - name: buildkite-git-mirrors
                   mountPath: /buildkite/git-mirrors
                   readOnly: true
-              envFrom:
-                - secretRef: { name: buildkite-ci-secrets }
   - pod_buildkit: &pod_buildkit
       # Image solves use the remote BuildKit service. This remains a separate
       # anchor because it has a larger memory limit than ordinary CI steps, but
@@ -70,12 +280,16 @@ common:
         checkout:
           cloneFlags: "--no-tags"
         podSpecPatch: &pod_buildkit_pod_spec
-          serviceAccountName: buildkite-agent-stack-k8s-controller
+          serviceAccountName: buildkite-job
+          automountServiceAccountToken: false
           containers:
             - *checkout_container
-            - name: container-0
+            - &pod_buildkit_container
+              name: container-0
               image: "${CI_BASE_IMAGE}"
               imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
               env:
                 # Same dash-vs-bash guard as the base pod above (build 5651).
                 - name: BUILDKITE_SHELL
@@ -94,8 +308,6 @@ common:
                 - name: buildkite-git-mirrors
                   mountPath: /buildkite/git-mirrors
                   readOnly: true
-              envFrom:
-                - secretRef: { name: buildkite-ci-secrets }
   # Verify's pod uses the larger memory request needed by its full install.
   # Build 8944 measured 9.42Gi of tmpfs plus 11.59Gi of anonymous memory while
   # six cold tasks overlapped and hit the old 20Gi limit. Four-way graph
@@ -107,13 +319,17 @@ common:
       kubernetes: &pod_verify_kubernetes
         checkout:
           cloneFlags: "--no-tags"
-        podSpecPatch:
-          serviceAccountName: buildkite-agent-stack-k8s-controller
+        podSpecPatch: &pod_verify_pod_spec
+          serviceAccountName: buildkite-job
+          automountServiceAccountToken: false
           containers:
             - *checkout_container
-            - name: container-0
+            - &pod_verify_container
+              name: container-0
               image: "${CI_BASE_IMAGE}"
               imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
               env:
                 # Same dash-vs-bash guard as the base pod above (build 5651).
                 - name: BUILDKITE_SHELL
@@ -126,8 +342,6 @@ common:
                 - name: buildkite-git-mirrors
                   mountPath: /buildkite/git-mirrors
                   readOnly: true
-              envFrom:
-                - secretRef: { name: buildkite-ci-secrets }
   # Light steps: thin deploy/publish/annotate scripts whose work is seconds
   # even on a cold cache. Small REQUESTS so the scheduler places them
   # alongside the long images job (build 5644: light steps sat runnable
@@ -138,13 +352,17 @@ common:
       kubernetes: &pod_light_kubernetes
         checkout:
           cloneFlags: "--no-tags"
-        podSpecPatch:
-          serviceAccountName: buildkite-agent-stack-k8s-controller
+        podSpecPatch: &pod_light_pod_spec
+          serviceAccountName: buildkite-job
+          automountServiceAccountToken: false
           containers:
             - *checkout_container
-            - name: container-0
+            - &pod_light_container
+              name: container-0
               image: "${CI_BASE_IMAGE}"
               imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
               env:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
@@ -163,8 +381,6 @@ common:
                 - name: buildkite-git-mirrors
                   mountPath: /buildkite/git-mirrors
                   readOnly: true
-              envFrom:
-                - secretRef: { name: buildkite-ci-secrets }
   # The Codex fallback authenticates with its refreshable ChatGPT auth bundle,
   # never an extracted access token. This private claim is absent from the
   # default agent-stack pod volumes and appears only in this main-only lane.
@@ -172,17 +388,21 @@ common:
       kubernetes: &pod_release_codex_auth_kubernetes
         checkout:
           cloneFlags: "--no-tags"
-        podSpecPatch:
-          serviceAccountName: buildkite-agent-stack-k8s-controller
+        podSpecPatch: &pod_release_codex_auth_pod_spec
+          serviceAccountName: buildkite-job
+          automountServiceAccountToken: false
           volumes:
             - name: buildkite-codex-auth
               persistentVolumeClaim:
                 claimName: buildkite-codex-auth
           containers:
             - *checkout_container
-            - name: container-0
+            - &pod_release_codex_auth_container
+              name: container-0
               image: "${CI_BASE_IMAGE}"
               imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
               env:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
@@ -198,8 +418,6 @@ common:
                   readOnly: true
                 - name: buildkite-codex-auth
                   mountPath: /buildkite/codex-auth
-              envFrom:
-                - secretRef: { name: buildkite-ci-secrets }
   # OpenTofu's provider cache is shared across the selected CI jobs on Liskov.
   # Those commands use `flock` around Terraform itself: OpenTofu explicitly
   # does not guarantee concurrent writes to TF_PLUGIN_CACHE_DIR are safe.
@@ -207,17 +425,21 @@ common:
       kubernetes: &pod_tofu_kubernetes
         checkout:
           cloneFlags: "--no-tags"
-        podSpecPatch:
-          serviceAccountName: buildkite-agent-stack-k8s-controller
+        podSpecPatch: &pod_tofu_pod_spec
+          serviceAccountName: buildkite-job
+          automountServiceAccountToken: false
           volumes:
             - name: buildkite-tofu-plugin-cache
               persistentVolumeClaim:
                 claimName: buildkite-tofu-plugin-cache
           containers:
             - *checkout_container
-            - name: container-0
+            - &pod_tofu_container
+              name: container-0
               image: "${CI_BASE_IMAGE}"
               imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
               env:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
@@ -231,8 +453,6 @@ common:
                   readOnly: true
                 - name: buildkite-tofu-plugin-cache
                   mountPath: /buildkite/tofu-plugin-cache
-              envFrom:
-                - secretRef: { name: buildkite-ci-secrets }
   # Untrusted PR validation must not receive PostHog credentials or the shared
   # CI secret. It only runs backend-free OpenTofu validation with a
   # non-sensitive encryption placeholder.
@@ -241,7 +461,8 @@ common:
         checkout:
           cloneFlags: "--no-tags"
         podSpecPatch:
-          serviceAccountName: buildkite-agent-stack-k8s-controller
+          serviceAccountName: buildkite-job
+          automountServiceAccountToken: false
           volumes:
             - name: buildkite-tofu-plugin-cache
               persistentVolumeClaim:
@@ -251,9 +472,12 @@ common:
             - name: container-0
               image: "${CI_BASE_IMAGE}"
               imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
               env:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
+                - *grant_github_download
               resources:
                 requests:
                   { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
@@ -271,7 +495,8 @@ common:
         checkout:
           cloneFlags: "--no-tags"
         podSpecPatch:
-          serviceAccountName: buildkite-agent-stack-k8s-controller
+          serviceAccountName: buildkite-job
+          automountServiceAccountToken: false
           volumes:
             - name: buildkite-tofu-plugin-cache
               persistentVolumeClaim:
@@ -281,19 +506,22 @@ common:
             - name: container-0
               image: "${CI_BASE_IMAGE}"
               imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
               env:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
-                - name: SEAWEEDFS_ACCESS_KEY_ID
+                - *grant_github_download
+                - name: SEAWEEDFS_STATE_ACCESS_KEY_ID
                   valueFrom:
                     secretKeyRef:
-                      name: buildkite-ci-secrets
-                      key: SEAWEEDFS_ACCESS_KEY_ID
-                - name: SEAWEEDFS_SECRET_ACCESS_KEY
+                      name: buildkite-seaweedfs-credentials
+                      key: SEAWEEDFS_STATE_ACCESS_KEY_ID
+                - name: SEAWEEDFS_STATE_SECRET_ACCESS_KEY
                   valueFrom:
                     secretKeyRef:
-                      name: buildkite-ci-secrets
-                      key: SEAWEEDFS_SECRET_ACCESS_KEY
+                      name: buildkite-seaweedfs-credentials
+                      key: SEAWEEDFS_STATE_SECRET_ACCESS_KEY
                 - name: POSTHOG_CLI_API_KEY
                   valueFrom:
                     secretKeyRef:
@@ -316,19 +544,19 @@ common:
                   mountPath: /buildkite/tofu-plugin-cache
   # The combined PR deploy rehearsal needs the OpenTofu provider cache but its
   # measured command-container working set is higher than the light Tofu lanes.
+  # The combined PR deploy rehearsal has a larger measured command-container
+  # working set than the light lanes.
   - pod_pr_dryrun: &pod_pr_dryrun
       kubernetes: &pod_pr_dryrun_kubernetes
         checkout:
           cloneFlags: "--no-tags"
-        podSpecPatch:
-          serviceAccountName: buildkite-agent-stack-k8s-controller
-          volumes:
-            - name: buildkite-tofu-plugin-cache
-              persistentVolumeClaim:
-                claimName: buildkite-tofu-plugin-cache
+        podSpecPatch: &pod_pr_dryrun_pod_spec
+          serviceAccountName: buildkite-job
+          automountServiceAccountToken: false
           containers:
             - *checkout_container
-            - name: container-0
+            - &pod_pr_dryrun_container
+              name: container-0
               image: "${CI_BASE_IMAGE}"
               imagePullPolicy: IfNotPresent
               securityContext:
@@ -344,10 +572,6 @@ common:
                 - name: buildkite-git-mirrors
                   mountPath: /buildkite/git-mirrors
                   readOnly: true
-                - name: buildkite-tofu-plugin-cache
-                  mountPath: /buildkite/tofu-plugin-cache
-              envFrom:
-                - secretRef: { name: buildkite-ci-secrets }
   - retry: &retry
       automatic:
         # Transient infra failures only; logical failures (1, 3) never retry.
@@ -373,10 +597,8 @@ env:
   TURBO_TELEMETRY_DISABLED: "1"
   # Remote cache (ducktors/turborepo-remote-cache on its local ZFS PVC). CI pods run
   # in-cluster, so they hit the Service directly instead of the Tailscale
-  # ingress developer machines use. TURBO_TOKEN comes from the
-  # buildkite-ci-secrets envFrom; turbo leaves remote caching disabled until
-  # all three of API/TEAM/TOKEN are present, so a missing token degrades to
-  # local-cache-only rather than failing the build.
+  # ingress developer machines use. Steps that run Turbo receive TURBO_TOKEN
+  # through an explicit grant on their command container.
   TURBO_API: "http://turbo-cache-turbo-cache-service.turbo-cache.svc.cluster.local:3000"
   TURBO_TEAM: "monorepo"
 
@@ -458,6 +680,16 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: verify
+          podSpecPatch:
+            <<: *pod_verify_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_verify_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_turbo
+                  - *grant_buildkite_analytics
 
   - label: ":sqlite: alert ledger integration"
     key: alert-dashboard-sqlite
@@ -488,7 +720,8 @@ steps:
             labels:
               ci.sjer.red/step-key: alert-dashboard-sqlite
           podSpecPatch:
-            serviceAccountName: buildkite-agent-stack-k8s-controller
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - *checkout_container
               - name: container-0
@@ -497,8 +730,8 @@ steps:
                 securityContext:
                   allowPrivilegeEscalation: false
                 env:
-                  - name: BUILDKITE_SHELL
-                    value: "/bin/bash -e -c"
+                  - *env_buildkite_shell
+                  - *grant_github_download
                 resources:
                   requests:
                     { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
@@ -586,12 +819,19 @@ steps:
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
-            serviceAccountName: buildkite-agent-stack-k8s-controller
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - *checkout_container
               - name: container-0
                 image: "${CI_PLAYWRIGHT_IMAGE}"
                 imagePullPolicy: IfNotPresent
+                securityContext:
+                  allowPrivilegeEscalation: false
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_buildkite_analytics
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
                   # design-audit's build/lint/test and its own test:e2e run in this
@@ -608,8 +848,6 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
-                envFrom:
-                  - secretRef: { name: buildkite-ci-secrets }
 
   - label: ":performing_arts: browser E2E — sites + Scout catalog/evals (main)"
     key: playwright-e2e-main
@@ -661,12 +899,19 @@ steps:
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
-            serviceAccountName: buildkite-agent-stack-k8s-controller
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - *checkout_container
               - name: container-0
                 image: "${CI_PLAYWRIGHT_IMAGE}"
                 imagePullPolicy: IfNotPresent
+                securityContext:
+                  allowPrivilegeEscalation: false
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_buildkite_analytics
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
                   # design-audit's build/lint/test and its own test:e2e run in this
@@ -681,8 +926,6 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
-                envFrom:
-                  - secretRef: { name: buildkite-ci-secrets }
 
   - label: ":scroll: resume build (PR)"
     key: resume-build-pr
@@ -720,12 +963,15 @@ steps:
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
-            serviceAccountName: buildkite-agent-stack-k8s-controller
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=texlive/texlive
                 image: "texlive/texlive:TL2024-historic"
+                securityContext:
+                  allowPrivilegeEscalation: false
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "1", memory: "2Gi" }
@@ -736,8 +982,6 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
-                envFrom:
-                  - secretRef: { name: buildkite-ci-secrets }
 
   - label: ":scroll: resume build (main)"
     key: resume-build-main
@@ -759,12 +1003,15 @@ steps:
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
-            serviceAccountName: buildkite-agent-stack-k8s-controller
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=texlive/texlive
                 image: "texlive/texlive:TL2024-historic"
+                securityContext:
+                  allowPrivilegeEscalation: false
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "1", memory: "2Gi" }
@@ -773,8 +1020,6 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
-                envFrom:
-                  - secretRef: { name: buildkite-ci-secrets }
 
   - label: ":test_tube: llm-observability E2E — Tempo + MinIO (PR)"
     key: docker-e2e-pr
@@ -810,6 +1055,12 @@ steps:
           <<: *pod_buildkit_kubernetes
           podSpecPatch:
             <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
             initContainers:
               # The live ConfigMap is reconciled only after this PR merges.
               # Render its Tempo 3-compatible subset first, so this PR's new
@@ -891,6 +1142,12 @@ steps:
           <<: *pod_buildkit_kubernetes
           podSpecPatch:
             <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
             initContainers:
               # The live ConfigMap is reconciled only after this PR merges.
               # Render its Tempo 3-compatible subset first, so this PR's new
@@ -1034,6 +1291,8 @@ steps:
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - *checkout_container
               # The shell is taken from the AGENT container's registration
@@ -1200,6 +1459,8 @@ steps:
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - *checkout_container
               # The shell is taken from the AGENT container's registration
@@ -1246,15 +1507,24 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: codex-review-gate
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_review
 
   # ── PR-only dry-run lane: ONE pod validates every deploy path, no side
-  # effects (the old pipeline's --dryrun plumbing). Replaces five micro-steps
-  # (tofu-plan, sites-pr, helm-pr, release-pr, helm-types-drift-check), each
-  # of which paid pod + checkout + install overhead for seconds of real work.
+  # effects (the old pipeline's --dryrun plumbing). OpenTofu plans run as
+  # separate per-stack jobs below because each provider has a different
+  # credential boundary.
   # Sections use ci-changed.ts against the PR merge-base
   # (CI_CHANGED_BASE override), so the two sections that do real work — the
-  # tofu plans and the helm-types drift regen — still only run when their
-  # inputs changed; the deploy rehearsals are print-only and always run.
+  # helm-types drift regen still runs only when its inputs changed; the deploy
+  # rehearsals are print-only and always run.
   - label: ":microscope: pr dry-run (deploy paths + drift)"
     key: pr-dryrun
     timeout_in_minutes: 30
@@ -1294,8 +1564,6 @@ steps:
         - "scripts/deploy-site.ts"
         - "scripts/scout-site-release.ts"
         - "scripts/lib/**"
-        - "packages/homelab/src/tofu/**"
-        - "packages/homelab/scripts/tofu-stack.ts"
         - "packages/homelab/scripts/helm-release-core.ts"
         - "packages/homelab/scripts/helm-push.ts"
         - "packages/homelab/scripts/argocd.ts"
@@ -1341,23 +1609,6 @@ steps:
       if bun --no-install .buildkite/scripts/ci-changed.ts helm-types; then
         bun --no-install run --cwd packages/homelab/src/cdk8s generate-helm-types --check
       fi
-      # Tofu plans — the only expensive section; gated on tofu inputs. The
-      # SeaweedFS creds (tofu's S3 state backend) are confined to a subshell so
-      # they DON'T leak into the deploy-site/scout dry-run rehearsals below:
-      # with creds present, deploy-site's --dry-run runs a real
-      # `aws s3 sync --dryrun` against a dist/ that was never built (the build
-      # is stubbed in dry-run), which fails "path does not exist". These lanes
-      # used to be separate pods; merging them into one made the leak possible.
-      if bun --no-install .buildkite/scripts/ci-changed.ts tofu; then
-        (
-          export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-          export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
-          flock -x 9
-          for stack in seaweedfs tailscale buildkite arr github cloudflare; do
-            bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
-          done
-        ) 9>/buildkite/tofu-plugin-cache/.lock
-      fi
       # Print-only rehearsals (seconds each): sites catalog, the versioned
       # scout release path, helm chart push, and release-please.
       for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red wiki better-skill-capped glitter; do
@@ -1389,6 +1640,231 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: pr-dryrun
+          podSpecPatch:
+            <<: *pod_pr_dryrun_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_pr_dryrun_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+
+  # OpenTofu plans are isolated by stack so a provider credential is never
+  # present while another provider's configuration is evaluated. The chain
+  # preserves the previous deterministic stack order and serializes writes to
+  # the shared provider cache.
+  - label: ":terraform: OpenTofu plan — SeaweedFS"
+    key: tofu-plan-seaweedfs
+    timeout_in_minutes: 30
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed: &tofu_plan_if_changed
+      include:
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/scripts/buildkite-handoff.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/secret-grants.json"
+        - ".buildkite/secret-grants.schema.json"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/homelab/scripts/tofu-stack.ts"
+        - "packages/homelab/src/tofu/**"
+        - "scripts/lib/run.ts"
+        - "scripts/lib/transient.ts"
+    depends_on: verify
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts seaweedfs plan
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-plan-seaweedfs
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
+
+  - label: ":terraform: OpenTofu plan — Tailscale"
+    key: tofu-plan-tailscale
+    timeout_in_minutes: 30
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed: *tofu_plan_if_changed
+    depends_on: tofu-plan-seaweedfs
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts tailscale plan
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-plan-tailscale
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_tailscale_client_id
+                  - *grant_tailscale_client_secret
+
+  - label: ":terraform: OpenTofu plan — Buildkite"
+    key: tofu-plan-buildkite
+    timeout_in_minutes: 30
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed: *tofu_plan_if_changed
+    depends_on: tofu-plan-tailscale
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts buildkite plan
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-plan-buildkite
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_buildkite_admin
+
+  - label: ":terraform: OpenTofu plan — ARR"
+    key: tofu-plan-arr
+    timeout_in_minutes: 30
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed: *tofu_plan_if_changed
+    depends_on: tofu-plan-buildkite
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts arr plan
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-plan-arr
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_arr_radarr
+                  - *grant_arr_sonarr
+                  - *grant_arr_prowlarr
+                  - *grant_arr_qbittorrent
+                  - *grant_arr_privatehd_password
+                  - *grant_arr_privatehd_pid
+                  - *grant_arr_avistaz_password
+                  - *grant_arr_avistaz_pid
+                  - *grant_arr_animez_password
+                  - *grant_arr_animez_pid
+
+  - label: ":terraform: OpenTofu plan — GitHub"
+    key: tofu-plan-github
+    timeout_in_minutes: 30
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed: *tofu_plan_if_changed
+    depends_on: tofu-plan-arr
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts github plan
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-plan-github
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_tofu_github
+
+  - label: ":terraform: OpenTofu plan — Cloudflare"
+    key: tofu-plan-cloudflare
+    timeout_in_minutes: 30
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed: *tofu_plan_if_changed
+    depends_on: tofu-plan-github
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare plan
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-plan-cloudflare
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_cloudflare_account
+                  - *grant_cloudflare_token
 
   # PostHog requires its own credential boundary, so it cannot join the shared
   # PR dry-run pod. The generic Tofu plan above continues to cover Cloudflare.
@@ -1530,6 +2006,15 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: images-pr
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
 
   # ── Main-only: images (parallel bake + smoke + push) ─────────────────────
   - label: ":docker: images — build, smoke, push"
@@ -1578,6 +2063,16 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: images
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
+                  - *grant_buildkite_read
 
   # ── Main-only: static sites ───────────────────────────────────────────────
   - label: ":rocket: deploy sites"
@@ -1585,9 +2080,10 @@ steps:
     timeout_in_minutes: 30
     if: build.branch == pipeline.default_branch
     # Static-site buckets are owned by the SeaweedFS tofu stack. Waiting for
-    # tofu-apply is a no-op when infra is unchanged, and guarantees a new
+    # tofu-apply-seaweedfs is a no-op when infra is unchanged, and guarantees a new
     # bucket exists before its first deployment sync.
-    depends_on: [verify, playwright-e2e-main, resume-build-main, tofu-apply]
+    depends_on:
+      [verify, playwright-e2e-main, resume-build-main, tofu-apply-seaweedfs]
     cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/site-deploys
@@ -1648,9 +2144,9 @@ steps:
       if [ "$${#filters[@]}" -gt 0 ]; then
         .buildkite/scripts/bun-install.sh --frozen-lockfile "$${filters[@]}"
       fi
-      # Site syncs push to SeaweedFS S3 — same credential mapping as the
-      # tofu steps (the secret exposes SEAWEEDFS_*, the AWS CLI wants AWS_*).
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      # Site syncs use the deployment identity; state backends use a separate
+      # identity in the OpenTofu lanes.
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
       if $$site_sjer; then
         buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step playwright-e2e-main
         buildkite-agent artifact download "packages/sjer.red/dist/*" . --step playwright-e2e-main
@@ -1677,6 +2173,17 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: sites
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
+                  - *grant_cloudflare_account
 
   # ── Main-only: npm publishes ──────────────────────────────────────────────
   # Two lanes, matching the old pipeline's npm-publish-all-prod/-dev pair:
@@ -1728,6 +2235,18 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: publish
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_npm
+                  - *grant_github_app_id
+                  - *grant_github_app_installation_id
+                  - *grant_github_app_private_key
 
   # ── Main-only: homelab release track ─────────────────────────────────────
   # Admit only the commit that is main when this release starts. A later main
@@ -1795,9 +2314,20 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: helm-push
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_argocd
+                  - *grant_chartmuseum_username
+                  - *grant_chartmuseum_password
 
-  - label: ":terraform: OpenTofu apply — infra state stacks"
-    key: tofu-apply
+  - label: ":terraform: OpenTofu apply — SeaweedFS"
+    key: tofu-apply-seaweedfs
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: [homelab-release-admission, helm-push]
@@ -1811,24 +2341,152 @@ steps:
       fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      (
-        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-        export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
-        flock -x 9
-        for stack in seaweedfs tailscale buildkite arr; do
-          bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" apply
-        done
-      ) 9>/buildkite/tofu-plugin-cache/.lock
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts seaweedfs apply
     retry: *retry
     plugins:
       - kubernetes:
           <<: *pod_tofu_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: tofu-apply
+              ci.sjer.red/step-key: tofu-apply-seaweedfs
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
 
-  - label: ":terraform: OpenTofu apply — GitHub state"
-    key: tofu-github
+  - label: ":terraform: OpenTofu apply — Tailscale"
+    key: tofu-apply-tailscale
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: tofu-apply-seaweedfs
+    cancel_on_build_failing: true
+    command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts tailscale apply
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-apply-tailscale
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_tailscale_client_id
+                  - *grant_tailscale_client_secret
+
+  - label: ":terraform: OpenTofu apply — Buildkite"
+    key: tofu-apply-buildkite
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: tofu-apply-tailscale
+    cancel_on_build_failing: true
+    command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts buildkite apply
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-apply-buildkite
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_buildkite_admin
+
+  - label: ":terraform: OpenTofu apply — ARR"
+    key: tofu-apply-arr
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: tofu-apply-buildkite
+    cancel_on_build_failing: true
+    command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts arr apply
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-apply-arr
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_arr_radarr
+                  - *grant_arr_sonarr
+                  - *grant_arr_prowlarr
+                  - *grant_arr_qbittorrent
+                  - *grant_arr_privatehd_password
+                  - *grant_arr_privatehd_pid
+                  - *grant_arr_avistaz_password
+                  - *grant_arr_avistaz_pid
+                  - *grant_arr_animez_password
+                  - *grant_arr_animez_pid
+
+  - label: ":terraform: OpenTofu apply — GitHub"
+    key: tofu-apply-github
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: homelab-release-admission
@@ -1847,7 +2505,6 @@ steps:
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       (
-        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
         flock -x 9
         bun --no-install packages/homelab/scripts/tofu-stack.ts github apply
@@ -1857,7 +2514,18 @@ steps:
           <<: *pod_tofu_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: tofu-github
+              ci.sjer.red/step-key: tofu-apply-github
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_tofu_github
 
   - label: ":terraform: OpenTofu apply — PostHog control plane"
     key: tofu-posthog
@@ -1878,7 +2546,6 @@ steps:
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       (
-        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
         flock -x 9
         bun --no-install packages/homelab/scripts/tofu-stack.ts posthog plan
@@ -1896,7 +2563,7 @@ steps:
     key: argocd-sync
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
-    depends_on: [homelab-release-admission, images, helm-push, tofu-apply]
+    depends_on: [homelab-release-admission, images, helm-push, tofu-apply-arr]
     concurrency: 1
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
@@ -1932,6 +2599,15 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: argocd-sync
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_argocd
 
   # Build each Scout flavor exactly once, bind both immutable archives to the
   # exact backend digest that Argo just made healthy, then deploy beta from
@@ -1967,7 +2643,7 @@ steps:
       bun --no-install run --cwd packages/llm-models build
       bun --no-install run --cwd packages/astro-opengraph-images build
       bun --no-install run --cwd packages/glitter-context build
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
       if [ -n "$$scout_candidate" ]; then
         scout_backend=$$(bun --no-install scripts/scout-site-release.ts resolve-backend-digest --candidate-digest "$$scout_candidate")
       else
@@ -1988,6 +2664,16 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: scout-beta-release
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
 
   # Mint a promotable tag only after the exact beta release is deployed and
   # verified. The immutable state binds tag, backend digest, both site archives,
@@ -2002,8 +2688,8 @@ steps:
       if [ -z "$$scout_state" ]; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      printf '%s' "$$GH_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
+      printf '%s' "$$GITHUB_PACKAGES_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
       bun --no-install scripts/scout-site-release.ts tag-release --state "$$scout_state"
     retry: *retry
     plugins:
@@ -2012,6 +2698,17 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: scout-tag-release
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
 
   # Reconcile the prod scout site to its versions.ts pin. Usually a no-op
   # (bucket marker == pin); after a promotion merge it syncs the archived
@@ -2031,7 +2728,7 @@ steps:
       if ! bun --no-install .buildkite/scripts/ci-changed.ts scout-reconcile; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
       prod_pin=$$(bun --no-install scripts/scout-site-release.ts resolve-prod-pin)
       bun --no-install scripts/scout-site-release.ts reconcile-prod-pin --prod-pin "$$prod_pin"
     retry: *retry
@@ -2041,9 +2738,19 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: scout-prod-reconcile
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
 
   - label: ":terraform: OpenTofu apply — Cloudflare after tunnel gate"
-    key: tofu-cloudflare
+    key: tofu-apply-cloudflare
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: [homelab-release-admission, argocd-sync]
@@ -2068,7 +2775,6 @@ steps:
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun --no-install packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
       (
-        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
         flock -x 9
         bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare apply
@@ -2081,7 +2787,20 @@ steps:
           <<: *pod_tofu_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: tofu-cloudflare
+              ci.sjer.red/step-key: tofu-apply-cloudflare
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_argocd
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_cloudflare_account
+                  - *grant_cloudflare_token
 
   # ── Main-only: release automation ─────────────────────────────────────────
   # Gates on verify only: release-please consumes no image or site artifact
@@ -2109,6 +2828,20 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: release-please
+          podSpecPatch:
+            <<: *pod_release_codex_auth_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_release_codex_auth_container
+                env:
+                  - *env_buildkite_shell
+                  - name: CODEX_HOME
+                    value: /buildkite/codex-auth
+                  - *grant_github_download
+                  - *grant_github_app_id
+                  - *grant_github_app_installation_id
+                  - *grant_github_app_private_key
+                  - *grant_claude
 
   # Version commit-back: rewrites versions.ts tag@digest pins from the digests
   # the images step recorded in build meta-data, and opens the auto-merge bump
@@ -2137,6 +2870,17 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: version-commit-back
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_app_id
+                  - *grant_github_app_installation_id
+                  - *grant_github_app_private_key
 
   # ── Toolchain image candidates ────────────────────────────────────────────
   # Candidate builds are independent. Each generated PR updates one committed
@@ -2162,6 +2906,18 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: ci-base-refresh
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
+                  - *grant_github_app_id
+                  - *grant_github_app_installation_id
+                  - *grant_github_app_private_key
 
   - label: ":performing_arts: ci-playwright candidate"
     key: ci-playwright-refresh
@@ -2184,6 +2940,18 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: ci-playwright-refresh
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
+                  - *grant_github_app_id
+                  - *grant_github_app_installation_id
+                  - *grant_github_app_private_key
 
   # ── Main-only: build summary annotation (runs even when deploys fail) ─────
   - label: ":memo: build summary"
@@ -2199,15 +2967,18 @@ steps:
       - sites
       - homelab-release-admission
       - helm-push
-      - tofu-apply
-      - tofu-github
+      - tofu-apply-seaweedfs
+      - tofu-apply-tailscale
+      - tofu-apply-buildkite
+      - tofu-apply-arr
+      - tofu-apply-github
       - tofu-posthog
       - argocd-sync
       - scout-beta-release
       - publish
       - scout-tag-release
       - scout-prod-reconcile
-      - tofu-cloudflare
+      - tofu-apply-cloudflare
       - release-please
       - version-commit-back
       - ci-base-refresh

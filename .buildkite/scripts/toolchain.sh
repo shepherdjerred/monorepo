@@ -20,12 +20,16 @@ if [ "$(id -u)" -eq 0 ]; then
 fi
 export PATH="/opt/mise/shims:$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 # mise resolves tool versions via api.github.com; unauthenticated calls share
-# the cluster egress IP's 60/hr limit, which CI exhausts immediately. mise
-# reads the token from GITHUB_TOKEN (its contract — exempted in
-# check-env-var-names.ts); the pod secret provides GH_TOKEN.
-if [ -n "${GH_TOKEN:-}" ]; then
-  export GITHUB_TOKEN="$GH_TOKEN"
-fi
+# the cluster egress IP's 60/hr limit, which CI exhausts immediately. Scope the
+# download-only identity to mise itself instead of exporting a general GitHub
+# token to every command the step runs.
+mise_ci() {
+  if [ -n "${GITHUB_DOWNLOAD_TOKEN:-}" ]; then
+    GITHUB_TOKEN="$GITHUB_DOWNLOAD_TOKEN" mise "$@"
+  else
+    mise "$@"
+  fi
+}
 mise trust .mise.toml
 
 expose_postgres_tools() {
@@ -48,29 +52,29 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
   runtime)
     # SQLite-only lanes need Bun but must not resolve unrelated tools such as
     # the PostgreSQL binaries, which can exhaust the shared GitHub API quota.
-    mise install --yes bun
-    mise reshim
+    mise_ci install --yes bun
+    mise_ci reshim
     ;;
   postgres)
     # The Playwright image intentionally carries only browsers and Bun. The
     # design-audit lane needs the same pinned Postgres binaries as backend
     # tests, but not the complete CI toolchain (which includes Rust/Cargo
     # tools that cannot build in that image).
-    mise install --yes 'ubi:theseus-rs/postgresql-binaries'
-    mise reshim
+    mise_ci install --yes 'ubi:theseus-rs/postgresql-binaries'
+    mise_ci reshim
     expose_postgres_tools
     ;;
   full)
-    mise install --yes
+    mise_ci install --yes
     expose_postgres_tools
     # Runtime installs can add a tool without creating its executable shim on a
     # stale ci-base image. Rebuild shims so commands such as gh are reachable
     # through the PATH exported above (release build 6529).
-    mise reshim
+    mise_ci reshim
     # Codex executes tool calls through a login shell, whose /etc/profile can
     # replace PATH and hide mise shims (release build 6549). Expose the real
     # mise-managed binary on the login shell's stable system path.
-    GH_EXECUTABLE=$(mise which gh)
+    GH_EXECUTABLE=$(mise_ci which gh)
     ln -sf "$GH_EXECUTABLE" /usr/local/bin/gh
 
     # System tools the tasks shell out to that mise doesn't manage. Baked into

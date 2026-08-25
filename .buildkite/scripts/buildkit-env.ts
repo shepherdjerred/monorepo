@@ -1,7 +1,7 @@
 import { registryLoginCommand } from "./build-ci-image-core.ts";
 
 if (import.meta.main) {
-  const token = Bun.env["GH_TOKEN"];
+  const token = Bun.env["GITHUB_PACKAGES_TOKEN"];
   const command = registryLoginCommand(token);
   if (command !== undefined && token !== undefined) {
     const login = Bun.spawn(command, {

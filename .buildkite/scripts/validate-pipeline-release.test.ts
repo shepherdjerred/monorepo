@@ -106,14 +106,17 @@ if [ "$$release_admission" != "admitted" ]; then exit 1; fi
     return new Map([
       ["homelab-release-admission", admittedStep],
       ["helm-push", mutatingStep],
-      ["tofu-apply", mutatingStep],
-      ["tofu-github", mutatingStep],
+      ["tofu-apply-seaweedfs", mutatingStep],
+      ["tofu-apply-tailscale", mutatingStep],
+      ["tofu-apply-buildkite", mutatingStep],
+      ["tofu-apply-arr", mutatingStep],
+      ["tofu-apply-github", mutatingStep],
       ["tofu-posthog", mutatingStep],
       [
         "argocd-sync",
         `${mutatingStep}\nbuildkite-agent artifact upload "homelab-release-result.json"`,
       ],
-      ["tofu-cloudflare", mutatingStep],
+      ["tofu-apply-cloudflare", mutatingStep],
     ]);
   }
 
@@ -123,9 +126,9 @@ if [ "$$release_admission" != "admitted" ]; then exit 1; fi
 
   test("rejects a mutable lane that can bypass admission", () => {
     const steps = releaseSteps();
-    steps.set("tofu-cloudflare", "depends_on: argocd-sync");
+    steps.set("tofu-apply-cloudflare", "depends_on: argocd-sync");
     expect(() => validateHomelabReleaseAdmission(steps)).toThrow(
-      "tofu-cloudflare is missing homelab release admission invariant",
+      "tofu-apply-cloudflare is missing homelab release admission invariant",
     );
   });
 });

@@ -102,10 +102,3 @@ variable "animez_pid" {
     error_message = "animez_pid must be non-empty (set ANIMEZ_PID / TF_VAR_animez_pid)."
   }
 }
-
-variable "cloudflare_account_id" {
-  description = "Cloudflare account ID (passed to every stack, unused by *arr resources)"
-  type        = string
-  sensitive   = true
-  default     = ""
-}

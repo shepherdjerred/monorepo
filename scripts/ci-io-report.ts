@@ -230,8 +230,8 @@ async function main(): Promise<void> {
     "Buildkite pipeline",
   );
   const buildkiteToken = requiredString(
-    Bun.env["BUILDKITE_API_TOKEN"],
-    "BUILDKITE_API_TOKEN",
+    Bun.env["BUILDKITE_READ_TOKEN"],
+    "BUILDKITE_READ_TOKEN",
   );
   const prometheusUrl = requiredString(
     options.prometheusUrl ?? Bun.env["PROMETHEUS_URL"],

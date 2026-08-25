@@ -78,4 +78,6 @@ if [[ "${REVIEW_PROVIDER:-codex}" == "codex" ]] && \
   git apply "$BOOTSTRAP_PATCH"
 fi
 
-REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" bun --no-install "$WAIT_SCRIPT"
+GH_TOKEN="$GITHUB_REVIEW_TOKEN" \
+  REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" \
+  bun --no-install "$WAIT_SCRIPT"

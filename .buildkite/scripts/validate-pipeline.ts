@@ -158,8 +158,8 @@ requireIncludes(
 );
 requireIncludes(
   sitesStep,
-  "tofu-apply",
-  "sites must wait for tofu-apply to provision static-site buckets",
+  "tofu-apply-seaweedfs",
+  "sites must wait for tofu-apply-seaweedfs to provision static-site buckets",
 );
 
 validatePlaywrightLanes(stepBlocks);
@@ -183,10 +183,9 @@ for (const [key, lane, candidate] of [
   }
 }
 
-// The merged PR dry-run lane owns the helm-types drift gate, the tofu plans,
-// and the print-only deploy rehearsals. Its install must stay the exact
-// union of the sections' tool closures, and the two real-work sections must
-// stay internally gated on their ci-changed lanes.
+// The merged PR dry-run lane owns the helm-types drift gate and print-only
+// deploy rehearsals. OpenTofu plans are separate per-stack jobs so each can
+// receive only its own provider identity.
 const prDryrun = stepBlocks.get("pr-dryrun");
 const prDryrunInstall =
   ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter homelab --filter '@homelab/cdk8s'";
@@ -198,7 +197,6 @@ for (const required of [
   '- "packages/homelab/src/helm-types/**"',
   "generate-helm-types --check",
   "ci-changed.ts helm-types",
-  "ci-changed.ts tofu",
   "scripts/deploy-site.ts",
   "scripts/scout-site-release.ts",
   "helm-push.ts",

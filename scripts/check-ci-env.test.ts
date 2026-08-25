@@ -2,9 +2,7 @@ import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 
 import {
-  ciSecretItemId,
   collectErrors,
-  onePasswordItemIds,
   type RequiredEnv,
   type SecretFields,
 } from "./check-ci-env.ts";
@@ -63,41 +61,6 @@ describe("assignedEnvNames", () => {
 
   test("ignores shell expansions of a name", () => {
     expect(assignedEnvNames('echo "$$GH_TOKEN"').size).toBe(0);
-  });
-});
-
-describe("ciSecretItemId", () => {
-  const declaration = `
-  new OnePasswordItem(chart, "buildkite-agent-token", {
-    spec: { itemPath: "vaults/vault-a/items/item-for-the-agent-token" },
-  });
-  new OnePasswordItem(chart, "buildkite-ci-secrets", {
-    spec: { itemPath: "vaults/vault-a/items/item-for-the-ci-secret" },
-  });`;
-
-  test("reads the id of the CI secret's item, not a neighbouring one", () => {
-    expect(ciSecretItemId(declaration)).toBe("item-for-the-ci-secret");
-  });
-
-  test("throws rather than guessing when the declaration moves", () => {
-    // Silently falling back would validate the wrong item and report success.
-    expect(() => ciSecretItemId("// no OnePasswordItem here")).toThrow(
-      "no OnePasswordItem named",
-    );
-    expect(() =>
-      ciSecretItemId('new OnePasswordItem(chart, "buildkite-ci-secrets", {});'),
-    ).toThrow("declares no vaults");
-  });
-
-  test("indexes each declared Kubernetes secret by its own 1Password item", () => {
-    const itemIds = onePasswordItemIds(
-      `${declaration}
-      new OnePasswordItem(chart, "posthog-tofu-credentials", {
-        spec: { itemPath: "vaults/vault-a/items/item-for-posthog" },
-      });`,
-    );
-    expect(itemIds.get("buildkite-ci-secrets")).toBe("item-for-the-ci-secret");
-    expect(itemIds.get("posthog-tofu-credentials")).toBe("item-for-posthog");
   });
 });
 
@@ -187,7 +150,7 @@ describe("collectSteps", () => {
 env:
   TURBO_TEAM: monorepo
 steps:
-  - key: with-secret
+  - key: with-env
     command: bun scripts/release.ts
     plugins:
       - kubernetes:
@@ -197,8 +160,6 @@ steps:
                 env:
                   - name: BUILDKITE_SHELL
                     value: /bin/bash -e -c
-                envFrom:
-                  - secretRef: { name: buildkite-ci-secrets }
   - key: no-secret
     command: bun scripts/publish-npm.ts
     plugins:
@@ -254,16 +215,12 @@ steps:
     });
   });
 
-  test("records the CI secret, container env, and global env per step", () => {
+  test("records container env and global env per step", () => {
     const steps = collectSteps(pipeline, ["TURBO_TEAM"]);
-    const withSecret = steps.find((step) => step.key === "with-secret");
-    expect(withSecret?.usesCiSecret).toBe(true);
-    expect(withSecret?.providedNames.has("BUILDKITE_SHELL")).toBe(true);
-    expect(withSecret?.providedNames.has("TURBO_TEAM")).toBe(true);
-    expect(withSecret?.scripts).toEqual(["scripts/release.ts"]);
-    expect(steps.find((step) => step.key === "no-secret")?.usesCiSecret).toBe(
-      false,
-    );
+    const withEnv = steps.find((step) => step.key === "with-env");
+    expect(withEnv?.providedNames.has("BUILDKITE_SHELL")).toBe(true);
+    expect(withEnv?.providedNames.has("TURBO_TEAM")).toBe(true);
+    expect(withEnv?.scripts).toEqual(["scripts/release.ts"]);
   });
 });
 
@@ -271,24 +228,12 @@ describe("collectErrors", () => {
   const step = {
     key: "release-please",
     providedNames: new Set(["EXPORTED_NAME"]),
-    usesCiSecret: true,
     scripts: ["scripts/release.ts"],
   };
-
-  test("passes a name the secret carries", () => {
-    const errors = collectErrors({
-      steps: [step],
-      secret: secretWith(["CLAUDE_CODE_OAUTH_TOKEN"]),
-      requiredFor: () =>
-        required({ CLAUDE_CODE_OAUTH_TOKEN: "scripts/release.ts:62" }),
-    });
-    expect(errors).toEqual([]);
-  });
 
   test("passes a name the step's command assigns", () => {
     const errors = collectErrors({
       steps: [step],
-      secret: secretWith([]),
       requiredFor: () => required({ EXPORTED_NAME: "scripts/release.ts:10" }),
     });
     expect(errors).toEqual([]);
@@ -297,7 +242,6 @@ describe("collectErrors", () => {
   test("reports a name nothing provides, naming step, script, and site", () => {
     const errors = collectErrors({
       steps: [step],
-      secret: secretWith([]),
       requiredFor: () =>
         required({ CODEX_ACCESS_TOKEN: "scripts/release.ts:63" }),
     });
@@ -306,18 +250,6 @@ describe("collectErrors", () => {
     expect(errors[0]).toContain("scripts/release.ts");
     expect(errors[0]).toContain("CODEX_ACCESS_TOKEN");
     expect(errors[0]).toContain("scripts/release.ts:63");
-  });
-
-  test("reports a field the secret carries but leaves blank", () => {
-    // The operator skips empty fields, so a blank field is as absent at
-    // runtime as a missing one — and far more confusing.
-    const errors = collectErrors({
-      steps: [step],
-      secret: secretWith(["NPM_TOKEN"], ["NPM_TOKEN"]),
-      requiredFor: () => required({ NPM_TOKEN: "scripts/release.ts:20" }),
-    });
-    expect(errors).toHaveLength(1);
-    expect(errors[0]).toContain("BLANK");
   });
 
   test("validates explicit secretKeyRefs against their own declared item", () => {
@@ -339,7 +271,6 @@ describe("collectErrors", () => {
           ]),
         },
       ],
-      secret: secretWith([]),
       explicitSecrets,
       requiredFor: () => required({ POSTHOG_CLI_API_KEY: "tofu-stack.ts:80" }),
     });
@@ -362,7 +293,6 @@ describe("collectErrors", () => {
           ]),
         },
       ],
-      secret: secretWith([]),
       explicitSecrets: new Map([["posthog-tofu-credentials", secretWith([])]]),
       requiredFor: () => required({ POSTHOG_CLI_API_KEY: "tofu-stack.ts:80" }),
     });
@@ -387,7 +317,6 @@ describe("collectErrors", () => {
           ]),
         },
       ],
-      secret: secretWith([]),
       explicitSecrets: new Map([
         [
           "posthog-tofu-credentials",
@@ -403,7 +332,6 @@ describe("collectErrors", () => {
   test("ignores names the Buildkite agent injects", () => {
     const errors = collectErrors({
       steps: [step],
-      secret: secretWith([]),
       requiredFor: () => required({ BUILDKITE_COMMIT: "scripts/release.ts:5" }),
     });
     expect(errors).toEqual([]);
@@ -412,7 +340,6 @@ describe("collectErrors", () => {
   test("reports a requireEnv whose argument is not a literal", () => {
     const errors = collectErrors({
       steps: [step],
-      secret: secretWith([]),
       requiredFor: () => required({}, ["scripts/release.ts:220"]),
     });
     expect(errors).toHaveLength(1);
@@ -432,7 +359,6 @@ describe("collectErrors", () => {
     ];
     const releaseErrors = collectErrors({
       steps: [step],
-      secret: secretWith([]),
       requiredFor: () => required({}),
       dynamicCallExceptions: exceptions,
     });
@@ -441,7 +367,6 @@ describe("collectErrors", () => {
     // …and the excepted script itself still has its declared names checked.
     const deployErrors = collectErrors({
       steps: [{ ...step, scripts: ["scripts/deploy-site.ts"] }],
-      secret: secretWith([]),
       requiredFor: () => required({}),
       dynamicCallExceptions: exceptions,
     });
@@ -455,7 +380,6 @@ describe("collectErrors", () => {
     const deployStep = { ...step, scripts: ["scripts/deploy-site.ts"] };
     const errors = collectErrors({
       steps: [deployStep],
-      secret: secretWith([]),
       requiredFor: () => required({}, ["scripts/deploy-site.ts:220"]),
     });
     expect(errors).toEqual([]);

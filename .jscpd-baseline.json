@@ -1948,10 +1948,6 @@
       "clones": 2,
       "tokens": 166
     },
-    "scripts/check-analytics-sites.ts|scripts/scout-site-release.ts": {
-      "clones": 1,
-      "tokens": 98
-    },
     "scripts/lib/ci-io-fixed-corpus.test.ts|scripts/lib/ci-io-fixed-corpus.test.ts": {
       "clones": 2,
       "tokens": 156

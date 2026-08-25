@@ -22,7 +22,16 @@
         "properties": {
           "key": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
           "hostname": { "type": "string", "minLength": 1 },
-          "sessionReplay": { "type": "boolean" }
+          "sessionReplay": { "type": "boolean" },
+          "marketing": {
+            "type": "object",
+            "required": ["pinterestTagId", "redditPixelId"],
+            "additionalProperties": false,
+            "properties": {
+              "pinterestTagId": { "type": "string", "minLength": 1 },
+              "redditPixelId": { "type": "string", "minLength": 1 }
+            }
+          }
         }
       }
     }

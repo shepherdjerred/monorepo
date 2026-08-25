@@ -15,6 +15,7 @@ import type {
   StepIoReport,
   WindowIoReport,
 } from "./ci-io-report-model.ts";
+import { fixedCorpusLaneDefinition } from "./ci-io-report-model.ts";
 import { compareWindows } from "./ci-io-statistics.ts";
 
 const WINDOW: TimeWindow = {
@@ -57,7 +58,12 @@ const MAIN_FIXED_CORPUS_STEP_KEYS = [
   "resume-build-main",
   "docker-e2e-main",
   "images",
-  "tofu-apply",
+  "tofu-apply-seaweedfs",
+  "tofu-apply-tailscale",
+  "tofu-apply-buildkite",
+  "tofu-apply-arr",
+  "tofu-apply-github",
+  "tofu-apply-cloudflare",
 ] as const;
 
 const PR_FIXED_CORPUS_STEP_KEYS = [
@@ -66,7 +72,12 @@ const PR_FIXED_CORPUS_STEP_KEYS = [
   "resume-build-pr",
   "docker-e2e-pr",
   "images-pr",
-  "tofu-plan",
+  "tofu-plan-seaweedfs",
+  "tofu-plan-tailscale",
+  "tofu-plan-buildkite",
+  "tofu-plan-arr",
+  "tofu-plan-github",
+  "tofu-plan-cloudflare",
 ] as const;
 
 const LEGACY_FIXED_CORPUS_STEP_KEYS = [
@@ -82,7 +93,32 @@ function gateWindow(
   step: StepIoReport,
   stepKeys: readonly string[] = MAIN_FIXED_CORPUS_STEP_KEYS,
 ): WindowIoReport {
-  const steps = stepKeys.map((stepKey) => ({ ...step, stepKey }));
+  const physicalCounts = new Map<string, number>();
+  for (const stepKey of stepKeys) {
+    const logical = fixedCorpusLaneDefinition(stepKey)?.[0] ?? stepKey;
+    physicalCounts.set(logical, (physicalCounts.get(logical) ?? 0) + 1);
+  }
+  const steps = stepKeys.map((stepKey) => {
+    const logical = fixedCorpusLaneDefinition(stepKey)?.[0] ?? stepKey;
+    const divisor = physicalCounts.get(logical) ?? 1;
+    return {
+      ...step,
+      stepKey,
+      totalWriteBytes: step.totalWriteBytes / divisor,
+      medianWriteBytes:
+        step.medianWriteBytes === null ? null : step.medianWriteBytes / divisor,
+      p95WriteBytes:
+        step.p95WriteBytes === null ? null : step.p95WriteBytes / divisor,
+      medianDurationSeconds:
+        step.medianDurationSeconds === null
+          ? null
+          : step.medianDurationSeconds / divisor,
+      p95DurationSeconds:
+        step.p95DurationSeconds === null
+          ? null
+          : step.p95DurationSeconds / divisor,
+    };
+  });
   const jobCount = steps.reduce(
     (total, current) => total + current.jobCount,
     0,
@@ -455,9 +491,13 @@ describe("fixed-corpus impact gate", () => {
     );
     const gate = compareWindows(baseline, candidate).fixedCorpusGate;
     expect(gate.status).toBe("inconclusive");
-    expect(gate.reasons).toContain(
-      "baseline fixed-corpus window mixes pipeline schemas for logical lanes: main / sjer.red",
-    );
+    expect(
+      gate.reasons.some((reason) =>
+        reason.startsWith(
+          "baseline fixed-corpus window mixes legacy and current physical pipeline schemas:",
+        ),
+      ),
+    ).toBe(true);
   });
 });
 
@@ -636,7 +676,7 @@ describe("fixed-corpus conservative proof", () => {
     );
     const candidate = gateWindow(
       stepFixture({ writes: 40, duration: 111, network: 100 }),
-      MAIN_FIXED_CORPUS_STEP_KEYS.slice(0, -1),
+      MAIN_FIXED_CORPUS_STEP_KEYS.slice(0, -6),
     );
 
     const gate = compareWindows(baseline, candidate).fixedCorpusGate;
@@ -708,7 +748,7 @@ describe("fixed-corpus threshold guards", () => {
       gate.reasons.filter((reason) =>
         reason.startsWith("p95 duration regression exceeds 10% for lane"),
       ),
-    ).toHaveLength(MAIN_FIXED_CORPUS_STEP_KEYS.length);
+    ).toHaveLength(6);
   });
 
   test("makes failed, canceled, or unstarted required jobs inconclusive", () => {

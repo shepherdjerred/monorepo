@@ -3,10 +3,3 @@ variable "buildkite_api_token" {
   type        = string
   sensitive   = true
 }
-
-variable "cloudflare_account_id" {
-  description = "Cloudflare account ID (passed to every stack, unused by Buildkite resources)"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
