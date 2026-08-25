@@ -15,8 +15,11 @@ import {
   ReportIdSchema,
   ReportRunIdSchema,
 } from "@scout-for-lol/data";
-import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
-import type { ScheduledReportDispatch } from "#src/reports/scheduler.ts";
+import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
+import type {
+  runDueReports,
+  ScheduledReportDispatch,
+} from "#src/reports/scheduler.ts";
 import {
   claimScoutEffect,
   completeScoutEffect,
@@ -151,38 +154,44 @@ export async function deliverReportDispatch(
   // errors captured to Sentry inside `send`, so a ChannelSendError just gets a
   // warning here; anything unexpected is reported and we move on.
   try {
-    await deliverTrackedCoreOutput({
-      serverId: DiscordGuildIdSchema.parse(serverId),
-      outputKind,
-      async deliver() {
-        for (const [index, content] of splitMessageIntoChunks(
-          dispatch.result.output.content,
-        ).entries()) {
-          const effectKey = `report-discord:${dispatch.result.runId.toString()}:${index.toString()}`;
-          const claim = await claimScoutEffect({
-            key: effectKey,
-            kind: "report-discord",
-          });
-          if (claim === "completed") continue;
-          try {
-            await sendChannelMessage(
-              {
-                content,
-                files: index === 0 ? files : [],
-                nonce: `sr:${dispatch.result.runId.toString(36)}:${index.toString(36)}`,
-                enforceNonce: true,
-              },
-              channelId,
-              serverId,
-            );
-            await completeScoutEffect(effectKey);
-          } catch (error) {
-            await recordScoutEffectFailure(effectKey, error);
-            throw error;
-          }
-        }
-      },
+    for (const [index, content] of splitMessageIntoChunks(
+      dispatch.result.output.content,
+    ).entries()) {
+      const effectKey = `report-discord:${dispatch.result.runId.toString()}:${index.toString()}`;
+      const claim = await claimScoutEffect({
+        key: effectKey,
+        kind: "report-discord",
+      });
+      if (claim === "completed") continue;
+      try {
+        await sendChannelMessage(
+          {
+            content,
+            files: index === 0 ? files : [],
+            nonce: `sr:${dispatch.result.runId.toString(36)}:${index.toString(36)}`,
+            enforceNonce: true,
+          },
+          channelId,
+          serverId,
+        );
+        await completeScoutEffect(effectKey);
+      } catch (error) {
+        await recordScoutEffectFailure(effectKey, error);
+        throw error;
+      }
+    }
+    const analyticsEffectKey = `report-analytics:${dispatch.result.runId.toString()}`;
+    const analyticsClaim = await claimScoutEffect({
+      key: analyticsEffectKey,
+      kind: "report-analytics",
     });
+    if (analyticsClaim === "execute") {
+      await recordCoreOutputDelivered(
+        DiscordGuildIdSchema.parse(serverId),
+        outputKind,
+      );
+      await completeScoutEffect(analyticsEffectKey);
+    }
   } catch (error) {
     if (error instanceof ChannelSendError) {
       logger.warn(
