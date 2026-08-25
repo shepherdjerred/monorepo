@@ -93,6 +93,7 @@ function buildScheduleConfiguration(schedule: ScheduleDefinition) {
       workflowType: schedule.workflowType,
       args: schedule.args,
       taskQueue: schedule.taskQueue,
+      memo: { description: schedule.memo },
       ...(schedule.workflowExecutionTimeout === undefined
         ? {}
         : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
