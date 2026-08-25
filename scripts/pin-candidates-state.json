@@ -47,9 +47,9 @@
       "buildNumber": 11765
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "version": "2.0.0-11765",
-      "digest": "sha256:48b0690488d8888e113babeffe5b59c734179db6c75ddee3f7026b20b42657d1",
-      "buildNumber": 11765
+      "buildNumber": 11829,
+      "version": "2.0.0-11829",
+      "digest": "sha256:ef2ca2f9186a074fcde5d15654b7c068269b540c338cb832379061a4faaefffd"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-11765",
@@ -67,9 +67,9 @@
       "buildNumber": 11747
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 11798,
       "version": "2.0.0-11798",
-      "digest": "sha256:e1f5a57a489cba5564dad440a67c74e43c528a95931c3fbb7fc03427a56437fb"
+      "digest": "sha256:e1f5a57a489cba5564dad440a67c74e43c528a95931c3fbb7fc03427a56437fb",
+      "buildNumber": 11798
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-11765",
