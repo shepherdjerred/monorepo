@@ -9,6 +9,7 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { prepareDefinition } from "@shepherdjerred/config/definition.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 
 /**
@@ -149,6 +150,10 @@ const DEFINITION = {
     names: { flag: "streambot-playlist-limit", env: "PLAYLIST_LIMIT" },
   },
 } as const;
+
+export const DYNAMIC_FLAG_NAMES = Object.entries(DEFINITION).map(
+  ([key, definition]) => prepareDefinition(key, definition).names.flag,
+);
 
 const REFRESH_INTERVAL_MS = 60_000;
 

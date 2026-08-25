@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["version", "namespace", "environment", "flags", "exemptions"],
+  "properties": {
+    "version": { "const": 1 },
+    "namespace": { "type": "string", "minLength": 1 },
+    "environment": { "type": "string", "minLength": 1 },
+    "flags": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "owner",
+          "source",
+          "purpose",
+          "type",
+          "default",
+          "rollouts"
+        ],
+        "properties": {
+          "key": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 },
+          "type": { "enum": ["boolean", "variant"] },
+          "default": {},
+          "rollouts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["segmentKey", "property", "value", "result"],
+              "properties": {
+                "segmentKey": { "type": "string", "minLength": 1 },
+                "property": { "type": "string", "minLength": 1 },
+                "value": { "type": "string", "minLength": 1 },
+                "result": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "exemptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "controls", "reason"],
+        "properties": {
+          "category": { "type": "string", "minLength": 1 },
+          "controls": { "type": "array", "items": { "type": "string" } },
+          "reason": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

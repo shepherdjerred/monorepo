@@ -8,6 +8,7 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
+import { managedFlagInventory } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   addFlagOverride,
@@ -16,6 +17,7 @@ import {
   listGuildsWithFlagDeclared,
   listGuildsWithFlagEnabled,
   MY_SERVER,
+  POLICY_FLAG_NAMES,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 
@@ -55,6 +57,16 @@ afterEach(() => {
 });
 
 describe("production hard-disable policy", () => {
+  test("covers exactly the Scout policy entries in the managed inventory", () => {
+    const expected = managedFlagInventory.flags
+      .filter(
+        (flag) => flag.owner === "scout" && flag.source === "scout-policy",
+      )
+      .map((flag) => flag.key)
+      .sort();
+    expect([...POLICY_FLAG_NAMES].sort()).toEqual(expected);
+  });
+
   test("wins over local overrides and guild enumeration", () => {
     Bun.env["ENVIRONMENT"] = "prod";
     resetConfigurationForTests();

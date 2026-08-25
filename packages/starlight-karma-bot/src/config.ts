@@ -8,6 +8,7 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { prepareDefinition } from "@shepherdjerred/config/definition.ts";
 import type { ConfigSource } from "@shepherdjerred/config/source.ts";
 import { featureFlagMetrics } from "#src/metrics.ts";
 
@@ -46,6 +47,10 @@ const DEFINITION = {
     targeted: true,
   },
 } as const;
+
+export const DYNAMIC_FLAG_NAMES = Object.entries(DEFINITION).map(
+  ([key, definition]) => prepareDefinition(key, definition).names.flag,
+);
 
 let resolver: ReturnType<typeof buildResolver> | undefined;
 

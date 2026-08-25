@@ -1,0 +1,598 @@
+{
+  "version": 1,
+  "namespace": "default",
+  "environment": "default",
+  "flags": [
+    {
+      "key": "ai_reports_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable Scout AI report generation.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "property": "server",
+          "value": "1337623164146155593",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "ai_reports_unlimited",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Grant the beta user unlimited AI reports.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-user-160509172704739328",
+          "property": "user",
+          "value": "160509172704739328",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "ai_reviews_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable Scout post-match AI reviews.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "property": "server",
+          "value": "1337623164146155593",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "betting_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable the Scout Bryan Bucks betting economy.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "property": "server",
+          "value": "1337623164146155593",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "betting_player_bet_outcome_dm_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Send players a direct message with their bet outcome.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "property": "server",
+          "value": "1337623164146155593",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "betting_settlement_dm_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Send betting settlement direct messages.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "property": "server",
+          "value": "1337623164146155593",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "competition_builder_v2_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable Scout competition builder version two.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "property": "server",
+          "value": "1337623164146155593",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "debug",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable Scout debug surfaces for the beta operator.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-user-160509172704739328",
+          "property": "user",
+          "value": "160509172704739328",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "initial_match_history_import_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable the initial Scout match-history import.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": []
+    },
+    {
+      "key": "scout-consumer-player-profiles-enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable Scout consumer player profiles.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": []
+    },
+    {
+      "key": "tournament_lobbies_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable Scout tournament lobbies.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "property": "server",
+          "value": "1337623164146155593",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "weekly_parlays_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable Scout weekly parlays.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "property": "server",
+          "value": "1337623164146155593",
+          "result": true
+        }
+      ]
+    },
+    {
+      "key": "scout-betting-parlay-ai-model",
+      "owner": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Select the Scout parlay AI model.",
+      "type": "variant",
+      "default": "gpt-5.6-sol",
+      "rollouts": []
+    },
+    {
+      "key": "scout-bucks-ask-model",
+      "owner": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Select the Scout Bryan Bucks ask model.",
+      "type": "variant",
+      "default": "gpt-5.6-luna",
+      "rollouts": []
+    },
+    {
+      "key": "scout-explore-model",
+      "owner": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Select the Scout Explore AI model.",
+      "type": "variant",
+      "default": "gpt-5.6-sol",
+      "rollouts": []
+    },
+    {
+      "key": "scout-report-ai-model",
+      "owner": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Select the Scout report AI model.",
+      "type": "variant",
+      "default": "gpt-5.6-sol",
+      "rollouts": []
+    },
+    {
+      "key": "scout-tournament-api-mode",
+      "owner": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Select the Scout tournament API mode.",
+      "type": "variant",
+      "default": "stub",
+      "rollouts": []
+    },
+    {
+      "key": "scout-tournament-max-open-lobbies",
+      "owner": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Bound the number of concurrently open Scout tournament lobbies.",
+      "type": "variant",
+      "default": "10",
+      "rollouts": []
+    },
+    {
+      "key": "explore-guild-allowlist",
+      "owner": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Select the Scout guilds allowed to use Explore.",
+      "type": "variant",
+      "default": "1337623164146155593",
+      "rollouts": []
+    },
+    {
+      "key": "llm-daily-token-budget",
+      "owner": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Bound Scout daily LLM token usage.",
+      "type": "variant",
+      "default": "20000000",
+      "rollouts": []
+    },
+    {
+      "key": "llm-hourly-token-budget",
+      "owner": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Bound Scout hourly LLM token usage.",
+      "type": "variant",
+      "default": "2000000",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-activity-tracking-enabled",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Enable Birmel activity tracking and role aggregation.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    },
+    {
+      "key": "birmel-agent-max-steps",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Bound Birmel agent steps.",
+      "type": "variant",
+      "default": "8",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-agent-response-timeout-ms",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Bound Birmel agent response time.",
+      "type": "variant",
+      "default": "120000",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-agent-router-timeout-ms",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Bound Birmel agent router time.",
+      "type": "variant",
+      "default": "30000",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-birthdays-enabled",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Enable Birmel birthday announcements and roles.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    },
+    {
+      "key": "birmel-daily-posts-enabled",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Enable Birmel daily posts.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    },
+    {
+      "key": "birmel-elections-enabled",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Enable Birmel elections.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    },
+    {
+      "key": "birmel-llm-classifier-model",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Select the Birmel classifier model.",
+      "type": "variant",
+      "default": "gpt-5.4-nano",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-llm-embedding-model",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Select the Birmel embedding model.",
+      "type": "variant",
+      "default": "text-embedding-3-small",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-llm-max-output-tokens",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Bound Birmel LLM output tokens.",
+      "type": "variant",
+      "default": "4096",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-llm-memory-model",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Select the Birmel memory model.",
+      "type": "variant",
+      "default": "gpt-5.4-nano",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-llm-model",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Select the Birmel primary LLM model.",
+      "type": "variant",
+      "default": "gpt-5.6-sol",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-llm-reasoning-effort",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Select Birmel reasoning effort.",
+      "type": "variant",
+      "default": "medium",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-persona-enabled",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Enable Birmel persona projection.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    },
+    {
+      "key": "birmel-persona-style-model",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Select the Birmel persona style model.",
+      "type": "variant",
+      "default": "gpt-5.4-nano",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-responder-enabled",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Enable the Birmel conversational responder.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    },
+    {
+      "key": "birmel-responder-engagement-window-ms",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Bound the Birmel responder engagement window.",
+      "type": "variant",
+      "default": "180000",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-responder-transcript-max-messages",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Bound Birmel responder transcript messages.",
+      "type": "variant",
+      "default": "50",
+      "rollouts": []
+    },
+    {
+      "key": "birmel-responder-transcript-window-ms",
+      "owner": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Bound the Birmel responder transcript window.",
+      "type": "variant",
+      "default": "3600000",
+      "rollouts": []
+    },
+    {
+      "key": "karma-admin-user-id",
+      "owner": "starlight-karma-bot",
+      "source": "karma-dynamic",
+      "purpose": "Select the Karma administrator user.",
+      "type": "variant",
+      "default": "160509172704739328",
+      "rollouts": []
+    },
+    {
+      "key": "karma-emoji",
+      "owner": "starlight-karma-bot",
+      "source": "karma-dynamic",
+      "purpose": "Select the emoji that awards karma.",
+      "type": "variant",
+      "default": "⭐",
+      "rollouts": []
+    },
+    {
+      "key": "player-card-enabled",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Enable Streambot player cards.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    },
+    {
+      "key": "streambot-idle-timeout-seconds",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Bound Streambot idle timeout.",
+      "type": "variant",
+      "default": "300",
+      "rollouts": []
+    },
+    {
+      "key": "streambot-player-card-repost-after-messages",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Set Streambot player-card repost interval.",
+      "type": "variant",
+      "default": "5",
+      "rollouts": []
+    },
+    {
+      "key": "streambot-player-card-tick-ms",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Set Streambot player-card refresh interval.",
+      "type": "variant",
+      "default": "10000",
+      "rollouts": []
+    },
+    {
+      "key": "streambot-playlist-limit",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Bound the Streambot playlist.",
+      "type": "variant",
+      "default": "100",
+      "rollouts": []
+    },
+    {
+      "key": "streambot-reconnect-delay-seconds",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Set Streambot reconnect delay.",
+      "type": "variant",
+      "default": "5",
+      "rollouts": []
+    },
+    {
+      "key": "streambot-reconnect-enabled",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Enable Streambot reconnects after transient voice disconnects.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    },
+    {
+      "key": "streambot-reconnect-max-attempts",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Bound Streambot reconnect attempts.",
+      "type": "variant",
+      "default": "3",
+      "rollouts": []
+    },
+    {
+      "key": "streambot-subtitle-languages",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Select Streambot subtitle languages.",
+      "type": "variant",
+      "default": "en",
+      "rollouts": []
+    },
+    {
+      "key": "streambot-subtitles-include-auto-generated",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Use auto-generated captions when human subtitles are unavailable.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    },
+    {
+      "key": "subtitles-enabled",
+      "owner": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Enable Streambot subtitles.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": []
+    }
+  ],
+  "exemptions": [
+    {
+      "category": "capability-security",
+      "controls": [
+        "Birmel editor",
+        "Birmel shell",
+        "Birmel browser",
+        "Birmel scheduler",
+        "Streambot voice capture"
+      ],
+      "reason": "These controls grant capabilities or persist human audio. Flipt has no authentication, so moving them would widen authorization without a lifecycle redesign."
+    },
+    {
+      "category": "boot-wired",
+      "controls": [
+        "Streambot voice assistant",
+        "Mario Kart driver feed",
+        "Alert Dashboard email"
+      ],
+      "reason": "These controls select startup wiring or fatal asset and credential paths. Runtime evaluation cannot safely replace their boot lifecycle."
+    },
+    {
+      "category": "observability",
+      "controls": ["telemetry", "Sentry", "LLM archive"],
+      "reason": "Observability initialization is boot-scoped and must not disappear behind an unauthenticated runtime toggle."
+    },
+    {
+      "category": "ci-automation",
+      "controls": [
+        "Temporal merge-conflict kill switch",
+        "Temporal merge-conflict dry run"
+      ],
+      "reason": "CI and automation deciders must remain explicit environment or workflow controls, not remotely mutable product flags."
+    },
+    {
+      "category": "bootstrap",
+      "controls": [
+        "FEATURE_FLAGS_MODE",
+        "FLIPT_URL",
+        "equivalent startup configuration"
+      ],
+      "reason": "The service needs these values before a flag provider can initialize, so they cannot be sourced from Flipt."
+    }
+  ]
+}
