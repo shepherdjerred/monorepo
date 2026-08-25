@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   EXPLORE_TITLE_MAX_LENGTH,
   type ExploreConversation,
@@ -9,9 +9,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@scout-for-lol/design-system/components/dialog";
-import { Input } from "@scout-for-lol/design-system/components/input";
-import { Label } from "@scout-for-lol/design-system/components/label";
 import { DialogFormFooter } from "#src/components/dialog-form.tsx";
+import {
+  focusFirstInvalid,
+  FormPendingStatus,
+  handleFormSubmit,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { ExploreConversationTitleFormSchema } from "#src/lib/form-schemas.ts";
 
 /**
  * Rename a conversation.
@@ -26,14 +32,25 @@ export function RenameConversationDialog(props: {
   onRename: (conversation: ExploreConversation, title: string) => void;
 }) {
   const { conversation } = props;
-  const [title, setTitle] = useState("");
+  const formElement = useRef<HTMLFormElement>(null);
+  const form = useScoutForm({
+    defaultValues: { title: "" },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: ExploreConversationTitleFormSchema },
+    onSubmit: ({ value }) => {
+      if (conversation === null) return;
+      const parsed = ExploreConversationTitleFormSchema.parse(value);
+      props.onRename(conversation, parsed.title);
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
 
   // Seed the field each time a different conversation is opened.
   useEffect(() => {
-    setTitle(conversation?.title ?? "");
-  }, [conversation]);
-
-  const trimmed = title.trim();
+    form.reset({ title: conversation?.title ?? "" });
+  }, [conversation, form]);
 
   return (
     <Dialog
@@ -45,36 +62,47 @@ export function RenameConversationDialog(props: {
       }}
     >
       <DialogContent>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (conversation !== null && trimmed.length > 0) {
-              props.onRename(conversation, trimmed);
-            }
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Rename conversation</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 py-4">
-            <Label htmlFor="explore-conversation-title">Title</Label>
-            <Input
-              id="explore-conversation-title"
-              value={title}
-              maxLength={EXPLORE_TITLE_MAX_LENGTH}
-              onChange={(event) => {
-                setTitle(event.target.value);
+        <form.AppForm>
+          <form
+            ref={formElement}
+            aria-busy={props.pending ?? false}
+            onSubmit={(event) => {
+              handleFormSubmit(event, () => form.handleSubmit());
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>Rename conversation</DialogTitle>
+            </DialogHeader>
+            <fieldset
+              disabled={props.pending ?? false}
+              className="m-0 border-0 p-0 py-4"
+            >
+              <form.AppField name="title">
+                {(field) => (
+                  <field.TextField
+                    id="explore-conversation-title"
+                    label="Title"
+                    autoComplete="off"
+                    maxLength={EXPLORE_TITLE_MAX_LENGTH}
+                    required
+                  />
+                )}
+              </form.AppField>
+            </fieldset>
+            <FormPendingStatus pending={props.pending ?? false}>
+              Renaming conversation…
+            </FormPendingStatus>
+            <DialogFormFooter
+              pending={props.pending ?? false}
+              submitLabel="Rename"
+              pendingLabel="Renaming…"
+              onCancel={() => {
+                form.reset({ title: conversation?.title ?? "" });
+                props.onClose();
               }}
             />
-          </div>
-          <DialogFormFooter
-            pending={props.pending ?? false}
-            submitLabel="Rename"
-            pendingLabel="Renaming…"
-            submitDisabled={trimmed.length === 0}
-            onCancel={props.onClose}
-          />
-        </form>
+          </form>
+        </form.AppForm>
       </DialogContent>
     </Dialog>
   );

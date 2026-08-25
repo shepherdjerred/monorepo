@@ -1,26 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSelector } from "@tanstack/react-form";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CompetitionIdSchema,
   type CompetitionCriteria,
-  type CompetitionVisibility,
   type CompetitionGameVariant,
+  type CompetitionVisibility,
 } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
-import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import type { CriteriaState } from "#src/components/competition-criteria-fields.tsx";
+import { FormActions } from "@scout-for-lol/design-system/components/input";
+import { CompetitionBuilderV2 } from "#src/components/competition-builder-v2.tsx";
 import {
   CompetitionFormFields,
   EMPTY_STATE,
+  competitionFormOptions,
   type FormState,
 } from "#src/components/competition-form-fields.tsx";
 import { CompetitionPresets } from "#src/components/competition-presets.tsx";
-import type { CompetitionExample } from "#src/lib/onboarding-examples.ts";
+import {
+  focusFirstInvalid,
+  FormPendingStatus,
+  handleFormReset,
+  handleFormSubmit,
+  ServerFormError,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import {
+  UnsavedFormDialog,
+  useUnsavedForm,
+} from "#src/hooks/use-unsaved-form.tsx";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { validateForm } from "#src/lib/competition-form-state.ts";
 import { calendarDateInTimezone } from "#src/lib/competition-time.ts";
-import { CompetitionBuilderV2 } from "#src/components/competition-builder-v2.tsx";
+import { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
+import type { CompetitionExample } from "#src/lib/onboarding-examples.ts";
+import { useTRPC } from "#src/lib/trpc.ts";
 
 export function CompetitionForm() {
   const { guildId, competitionId: idParam } = useParams();
@@ -28,6 +44,8 @@ export function CompetitionForm() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const safeGuildId = guildId ?? "";
+  const formElement = useRef<HTMLFormElement>(null);
+  const allowNavigation = useRef(false);
 
   const idResult =
     idParam === undefined
@@ -37,7 +55,6 @@ export function CompetitionForm() {
   const competitionId =
     idResult?.success === true ? idResult.data : CompetitionIdSchema.parse(1);
 
-  const [state, setState] = useState<FormState>(EMPTY_STATE);
   const [prefilled, setPrefilled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,19 +73,11 @@ export function CompetitionForm() {
   const existing = existingQuery.data;
   const isDraft = !isEdit || existing?.status === "DRAFT";
 
-  useEffect(() => {
-    if (existing === undefined || prefilled) return;
-    setState(existingToFormState(existing));
-    setPrefilled(true);
-  }, [existing, prefilled]);
-
   const createMutation = useMutation(
     trpc.competition.create.mutationOptions({
       meta: analyticsMeta("competition_created"),
       onSuccess: (created) => {
-        // The competitions list carries a long staleTime; invalidate it before
-        // navigating so the new competition isn't missing from the list for up
-        // to STALE_TIME_SLOW_LIST.
+        allowNavigation.current = true;
         void queryClient.invalidateQueries({
           queryKey: trpc.competition.list.pathKey(),
         });
@@ -85,6 +94,7 @@ export function CompetitionForm() {
     trpc.competition.edit.mutationOptions({
       meta: analyticsMeta("competition_edited"),
       onSuccess: () => {
+        allowNavigation.current = true;
         void queryClient.invalidateQueries({
           queryKey: trpc.competition.list.pathKey(),
         });
@@ -98,6 +108,60 @@ export function CompetitionForm() {
     }),
   );
 
+  const pending = createMutation.isPending || editMutation.isPending;
+  const form = useScoutForm({
+    ...competitionFormOptions,
+    defaultValues: EMPTY_STATE,
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: CompetitionFormValueSchema },
+    onSubmit: ({ value }) => {
+      setError(null);
+      const parsed = CompetitionFormValueSchema.parse(value);
+      const validated = validateForm(parsed);
+      if (!validated.ok) throw new Error(validated.message);
+      const { maxParticipants, criteria, dates } = validated;
+      if (isEdit) {
+        editMutation.mutate({
+          guildId: safeGuildId,
+          competitionId,
+          title: parsed.title,
+          description: parsed.description,
+          channelId: parsed.channelId,
+          visibility: parsed.visibility,
+          maxParticipants,
+          analysisTimezone: parsed.analysisTimezone,
+          ...(isDraft
+            ? { dates, criteria, gameVariant: parsed.gameVariant }
+            : {}),
+        });
+        return;
+      }
+      createMutation.mutate({
+        guildId: safeGuildId,
+        channelId: parsed.channelId,
+        title: parsed.title,
+        description: parsed.description,
+        visibility: parsed.visibility,
+        maxParticipants,
+        gameVariant: parsed.gameVariant,
+        dates,
+        criteria,
+        analysisTimezone: parsed.analysisTimezone,
+      });
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+  const isDirty = useSelector(form.store, (state) => state.isDirty);
+  const blocker = useUnsavedForm(isDirty && !allowNavigation.current, pending);
+
+  useEffect(() => {
+    if (existing === undefined || prefilled) return;
+    form.reset(existingToFormState(existing));
+    setPrefilled(true);
+  }, [existing, form, prefilled]);
+
   if (guildId === undefined || (isEdit && !idResult.success)) {
     return (
       <p className="text-sm text-scout-danger">Invalid competition route.</p>
@@ -105,56 +169,70 @@ export function CompetitionForm() {
   }
 
   function handleUsePreset(example: CompetitionExample) {
-    setState((prev) => {
-      const chosenChannelId = prev.channelId;
-      const channelId =
-        chosenChannelId === ""
-          ? (channelsQuery.data?.[0]?.id ?? "")
-          : chosenChannelId;
-      const built = example.build(channelId);
-      // Preserve a channel the user already picked before applying the preset.
-      return chosenChannelId === ""
-        ? built
-        : { ...built, channelId: chosenChannelId };
-    });
+    const previous = form.state.values;
+    const chosenChannelId = previous.channelId;
+    const channelId =
+      chosenChannelId === ""
+        ? (channelsQuery.data?.[0]?.id ?? "")
+        : chosenChannelId;
+    const built = example.build(channelId);
+    const next =
+      chosenChannelId === "" ? built : { ...built, channelId: chosenChannelId };
+    form.setFieldValue("title", next.title);
+    form.setFieldValue("description", next.description);
+    form.setFieldValue("channelId", next.channelId);
+    form.setFieldValue("visibility", next.visibility);
+    form.setFieldValue("maxParticipants", next.maxParticipants);
+    form.setFieldValue("gameVariant", next.gameVariant);
+    form.setFieldValue("analysisTimezone", next.analysisTimezone);
+    form.setFieldValue("dates", next.dates);
+    form.setFieldValue("criteria", next.criteria);
   }
 
-  function handleSubmit(event: React.SyntheticEvent) {
-    event.preventDefault();
-    setError(null);
-    const validated = validateForm(state);
-    if (!validated.ok) {
-      setError(validated.message);
-      return;
-    }
-    const { maxParticipants, criteria, dates } = validated;
-    if (isEdit) {
-      editMutation.mutate({
-        guildId: safeGuildId,
-        competitionId,
-        title: state.title,
-        description: state.description,
-        channelId: state.channelId,
-        visibility: state.visibility,
-        maxParticipants,
-        analysisTimezone: state.analysisTimezone,
-        ...(isDraft ? { dates, criteria, gameVariant: state.gameVariant } : {}),
-      });
-      return;
-    }
-    createMutation.mutate({
-      guildId: safeGuildId,
-      channelId: state.channelId,
-      title: state.title,
-      description: state.description,
-      visibility: state.visibility,
-      maxParticipants,
-      gameVariant: state.gameVariant,
-      dates,
-      criteria,
-      analysisTimezone: state.analysisTimezone,
-    });
-  }
+  const legacyForm = (
+    <>
+      <form.AppForm>
+        <form
+          ref={formElement}
+          className="space-y-5"
+          aria-busy={pending}
+          onSubmit={(event) => {
+            handleFormSubmit(event, () => form.handleSubmit());
+          }}
+          onReset={(event) => {
+            handleFormReset(event, () => {
+              form.reset();
+            });
+            setError(null);
+          }}
+        >
+          <fieldset disabled={pending} className="m-0 border-0 p-0">
+            <CompetitionFormFields
+              form={form}
+              locked={isEdit && !isDraft}
+              channels={channelsQuery.data}
+            />
+          </fieldset>
+          <ServerFormError error={error} />
+          <FormActions>
+            <Button asChild variant="outline">
+              <Link to={`/g/${guildId}/competitions`}>Cancel</Link>
+            </Button>
+            <Button type="reset" variant="ghost" disabled={pending}>
+              Reset
+            </Button>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Saving…" : isEdit ? "Save changes" : "Create"}
+            </Button>
+          </FormActions>
+          <FormPendingStatus pending={pending}>
+            Saving competition…
+          </FormPendingStatus>
+        </form>
+      </form.AppForm>
+      <UnsavedFormDialog blocker={blocker} />
+    </>
+  );
 
   if (!isEdit) {
     return (
@@ -165,6 +243,7 @@ export function CompetitionForm() {
         channelsError={channelsQuery.error?.message ?? null}
         onUsePreset={handleUsePreset}
         onCreated={(createdId) => {
+          allowNavigation.current = true;
           void queryClient.invalidateQueries({
             queryKey: trpc.competition.list.pathKey(),
           });
@@ -172,19 +251,7 @@ export function CompetitionForm() {
             `/g/${safeGuildId}/competitions/${createdId.toString()}`,
           );
         }}
-        legacyForm={
-          <CompetitionFormFields
-            guildId={guildId}
-            isEdit={false}
-            locked={false}
-            pending={createMutation.isPending}
-            error={error}
-            state={state}
-            setState={setState}
-            channels={channelsQuery.data}
-            onSubmit={handleSubmit}
-          />
-        }
+        legacyForm={legacyForm}
       />
     );
   }
@@ -199,17 +266,7 @@ export function CompetitionForm() {
           <Link to={`/g/${guildId}/competitions`}>Back</Link>
         </Button>
       </div>
-      <CompetitionFormFields
-        guildId={guildId}
-        isEdit
-        locked={!isDraft}
-        pending={editMutation.isPending}
-        error={error}
-        state={state}
-        setState={setState}
-        channels={channelsQuery.data}
-        onSubmit={handleSubmit}
-      />
+      {legacyForm}
     </div>
   );
 }
@@ -315,7 +372,7 @@ function existingToFormState(existing: {
   };
 }
 
-function criteriaToState(criteria: CompetitionCriteria): CriteriaState {
+function criteriaToState(criteria: CompetitionCriteria): FormState["criteria"] {
   return {
     criteriaType: criteria.type,
     queues: criteria.queues,

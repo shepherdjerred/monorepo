@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
   DiscordGuildIdSchema,
+  PlayerAliasSchema,
   RegionSchema,
   RiotIdSchema,
 } from "@scout-for-lol/data";
@@ -9,8 +10,9 @@ import { Prisma, type User } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
 
 export const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
-export const AliasSchema = z.string().trim().min(1).max(100);
-export const PlayerLookupInput = GuildIdInput.extend({ alias: AliasSchema });
+export const PlayerLookupInput = GuildIdInput.extend({
+  alias: PlayerAliasSchema,
+});
 export const RiotAccountInput = GuildIdInput.extend({
   riotId: RiotIdSchema,
   region: RegionSchema,

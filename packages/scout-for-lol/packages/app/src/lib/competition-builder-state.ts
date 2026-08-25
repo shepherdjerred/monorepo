@@ -7,24 +7,19 @@ import {
   CompetitionScheduledUpdatesSchema,
   DEFAULT_V2_COMPETITION_CRON,
 } from "@scout-for-lol/data/model/competition-cron.ts";
-import {
-  EMPTY_STATE,
-  type FormState,
-} from "#src/components/competition-form-fields.tsx";
+import { EMPTY_STATE } from "#src/components/competition-form-fields.tsx";
 import {
   buildCompetitionScenarios,
   type CompetitionScenario,
 } from "#src/lib/competition-scenarios.ts";
 import { validateForm } from "#src/lib/competition-form-state.ts";
 import type { DatesValue } from "#src/lib/competition-form-state.ts";
+import {
+  CompetitionBuilderFormValueSchema,
+  type CompetitionBuilderFormValue,
+} from "#src/lib/form-schemas.ts";
 
-export type CompetitionBuilderState = FormState & {
-  initialPlayerIds: PlayerId[];
-  scheduledUpdates: {
-    enabled: boolean;
-    cronExpression: string;
-    timezone: string;
-  };
+export type CompetitionBuilderState = CompetitionBuilderFormValue & {
   starter: { id: string; label: string } | null;
   customized: boolean;
 };
@@ -85,28 +80,44 @@ export function initialCompetitionBuilderState(options: {
     : competitionBuilderReducer(base, { type: "apply-scenario", scenario });
 }
 
-export function buildCompetitionSubmission(state: CompetitionBuilderState):
+export function editableCompetitionBuilderValue(
+  state: CompetitionBuilderState,
+): CompetitionBuilderFormValue {
+  const { starter: _starter, customized: _customized, ...value } = state;
+  return value;
+}
+
+export function buildCompetitionSubmission(state: CompetitionBuilderFormValue):
   | {
       ok: true;
       value: {
         channelId: string;
         title: string;
         description: string;
-        visibility: CompetitionBuilderState["visibility"];
-        gameVariant: CompetitionBuilderState["gameVariant"];
+        visibility: CompetitionBuilderFormValue["visibility"];
+        gameVariant: CompetitionBuilderFormValue["gameVariant"];
         maxParticipants: number;
         dates: DatesValue;
         criteria: CompetitionCriteria;
         initialPlayerIds: PlayerId[];
         analysisTimezone: string;
-        scheduledUpdates: CompetitionBuilderState["scheduledUpdates"];
+        scheduledUpdates: CompetitionBuilderFormValue["scheduledUpdates"];
       };
     }
   | { ok: false; message: string } {
-  const validated = validateForm(state);
+  const result = CompetitionBuilderFormValueSchema.safeParse(state);
+  if (!result.success) {
+    return {
+      ok: false,
+      message:
+        result.error.issues[0]?.message ?? "Check the competition details.",
+    };
+  }
+  const parsed = result.data;
+  const validated = validateForm(parsed);
   if (!validated.ok) return validated;
   const schedule = CompetitionScheduledUpdatesSchema.safeParse(
-    state.scheduledUpdates,
+    parsed.scheduledUpdates,
   );
   if (!schedule.success) {
     return {
@@ -118,17 +129,17 @@ export function buildCompetitionSubmission(state: CompetitionBuilderState):
   return {
     ok: true,
     value: {
-      channelId: state.channelId,
-      title: state.title,
-      description: state.description,
-      visibility: state.visibility,
-      gameVariant: state.gameVariant,
+      channelId: parsed.channelId,
+      title: parsed.title,
+      description: parsed.description,
+      visibility: parsed.visibility,
+      gameVariant: parsed.gameVariant,
       maxParticipants: validated.maxParticipants,
       dates: validated.dates,
       criteria: validated.criteria,
       initialPlayerIds:
-        state.visibility === "SERVER_WIDE" ? [] : state.initialPlayerIds,
-      analysisTimezone: state.analysisTimezone,
+        parsed.visibility === "SERVER_WIDE" ? [] : parsed.initialPlayerIds,
+      analysisTimezone: parsed.analysisTimezone,
       scheduledUpdates: schedule.data,
     },
   };

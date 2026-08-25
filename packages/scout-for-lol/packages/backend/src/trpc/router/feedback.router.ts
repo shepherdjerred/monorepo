@@ -9,7 +9,7 @@
  */
 
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordGuildIdSchema, FeedbackBodySchema } from "@scout-for-lol/data";
 import { router, webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 import { prisma } from "#src/database/index.ts";
 import { feedbackSubmittedTotal } from "#src/metrics/web.ts";
@@ -58,7 +58,7 @@ export const feedbackRouter = router({
     .input(
       z.object({
         // Bounded so a single submission can't be used to write unbounded data.
-        body: z.string().trim().min(1).max(4000),
+        body: FeedbackBodySchema,
         rating: z.number().int().min(1).max(5).optional(),
         serverId: DiscordGuildIdSchema.optional(),
       }),

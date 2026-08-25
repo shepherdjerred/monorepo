@@ -3,21 +3,22 @@ import {
   visibilityDescription,
   visibilityToString,
 } from "@scout-for-lol/data";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input, Textarea } from "@scout-for-lol/design-system/components/input";
 import { Label } from "@scout-for-lol/design-system/components/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@scout-for-lol/design-system/components/select";
+  BuilderFieldError,
+  builderErrorAttributes,
+} from "#src/components/builder-field-error.tsx";
 import type { CompetitionBuilderState } from "#src/lib/competition-builder-state.ts";
 
 export function CompetitionBuilderBasics(props: {
   state: CompetitionBuilderState;
   channels: { id: string; name: string }[];
   onChange: (changes: Partial<CompetitionBuilderState>) => void;
+  errors: Record<
+    "title" | "description" | "channelId" | "maxParticipants" | "visibility",
+    string | undefined
+  >;
 }) {
   return (
     <div className="space-y-4">
@@ -25,80 +26,132 @@ export function CompetitionBuilderBasics(props: {
         <Label htmlFor="competition-title">Title</Label>
         <Input
           id="competition-title"
+          name="title"
+          autoComplete="off"
+          maxLength={100}
           value={props.state.title}
+          {...builderErrorAttributes(
+            props.errors.title,
+            "competition-title-error",
+          )}
           onChange={(event) => {
             props.onChange({ title: event.target.value });
           }}
           required
         />
+        <BuilderFieldError
+          id="competition-title-error"
+          error={props.errors.title}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="competition-description">Description</Label>
-        <Input
+        <Textarea
           id="competition-description"
+          name="description"
+          autoComplete="off"
+          maxLength={500}
           value={props.state.description}
+          {...builderErrorAttributes(
+            props.errors.description,
+            "competition-description-error",
+          )}
           onChange={(event) => {
             props.onChange({ description: event.target.value });
           }}
           required
         />
+        <BuilderFieldError
+          id="competition-description-error"
+          error={props.errors.description}
+        />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="competition-channel">Discord channel</Label>
-          <Select
+          <select
+            className="scout-control"
+            id="competition-channel"
+            name="channelId"
             value={props.state.channelId}
-            onValueChange={(channelId) => {
-              props.onChange({ channelId });
+            required
+            {...builderErrorAttributes(
+              props.errors.channelId,
+              "competition-channel-error",
+            )}
+            onChange={(event) => {
+              props.onChange({ channelId: event.currentTarget.value });
             }}
           >
-            <SelectTrigger id="competition-channel">
-              <SelectValue placeholder="Pick a channel" />
-            </SelectTrigger>
-            <SelectContent>
-              {props.channels.map((channel) => (
-                <SelectItem key={channel.id} value={channel.id}>
-                  #{channel.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="" disabled>
+              Pick a channel
+            </option>
+            {props.channels.map((channel) => (
+              <option key={channel.id} value={channel.id}>
+                #{channel.name}
+              </option>
+            ))}
+          </select>
+          <BuilderFieldError
+            id="competition-channel-error"
+            error={props.errors.channelId}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="competition-cap">Participant cap</Label>
           <Input
             id="competition-cap"
+            name="maxParticipants"
             type="number"
+            inputMode="numeric"
             min={2}
             max={100}
+            step={1}
+            required
             value={props.state.maxParticipants}
+            {...builderErrorAttributes(
+              props.errors.maxParticipants,
+              "competition-cap-error",
+            )}
             onChange={(event) => {
               props.onChange({ maxParticipants: event.target.value });
             }}
+          />
+          <BuilderFieldError
+            id="competition-cap-error"
+            error={props.errors.maxParticipants}
           />
         </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="competition-visibility">Who participates</Label>
-        <Select
+        <select
+          className="scout-control"
+          id="competition-visibility"
+          name="visibility"
           value={props.state.visibility}
-          onValueChange={(value) => {
+          required
+          {...builderErrorAttributes(
+            props.errors.visibility,
+            "competition-visibility-error",
+          )}
+          onChange={(event) => {
+            const value = event.currentTarget.value;
             const parsed = CompetitionVisibilitySchema.safeParse(value);
             if (parsed.success) props.onChange({ visibility: parsed.data });
           }}
         >
-          <SelectTrigger id="competition-visibility">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {CompetitionVisibilitySchema.options.map((visibility) => (
-              <SelectItem key={visibility} value={visibility}>
-                {visibilityToString(visibility)} —{" "}
-                {visibilityDescription(visibility)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {CompetitionVisibilitySchema.options.map((visibility) => (
+            <option key={visibility} value={visibility}>
+              {visibilityToString(visibility)} —{" "}
+              {visibilityDescription(visibility)}
+            </option>
+          ))}
+        </select>
+        <BuilderFieldError
+          id="competition-visibility-error"
+          error={props.errors.visibility}
+        />
       </div>
     </div>
   );

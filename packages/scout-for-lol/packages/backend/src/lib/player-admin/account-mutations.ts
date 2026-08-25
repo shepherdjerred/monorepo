@@ -4,6 +4,7 @@ import {
   DiscordAccountIdSchema,
   type LeaguePuuid,
   LeaguePuuidSchema,
+  PlayerAliasSchema,
   type PlayerConfigEntry,
   RegionSchema,
 } from "@scout-for-lol/data";
@@ -15,7 +16,6 @@ import { getRiotIdByPuuid } from "#src/lib/riot/account-riot-id.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { enqueueInitialMatchHistoryImport } from "#src/league/initial-history/enqueue.ts";
 import {
-  AliasSchema,
   conflict,
   GuildIdInput,
   getPlayerOrThrow,
@@ -26,14 +26,14 @@ import {
 } from "#src/lib/player-admin/shared.ts";
 
 export const AddAccountInput = RiotAccountInput.extend({
-  playerAlias: AliasSchema,
+  playerAlias: PlayerAliasSchema,
 });
 export const TransferAccountInput = RiotAccountInput.extend({
-  toPlayerAlias: AliasSchema,
+  toPlayerAlias: PlayerAliasSchema,
 });
 export const UpdateAccountInput = GuildIdInput.extend({
   accountId: z.number().int().min(1),
-  alias: AliasSchema.optional(),
+  alias: PlayerAliasSchema.optional(),
   region: RegionSchema.optional(),
 });
 export type AddAccountInputData = z.infer<typeof AddAccountInput>;

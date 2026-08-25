@@ -1,26 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
+import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import { Label } from "@scout-for-lol/design-system/components/label";
-import {
-  DialogFormError,
-  DialogFormFooter,
-} from "#src/components/dialog-form.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@scout-for-lol/design-system/components/select";
+  focusFirstInvalid,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { SubscriptionChannelFormSchema } from "#src/lib/form-schemas.ts";
 
 type Channel = { id: string; name: string };
 
@@ -44,20 +33,9 @@ function channelLabel(channels: Channel[], channelId: string): string {
 export function SubscriptionChannelDialog(props: Props) {
   const trpc = useTRPC();
   const firstChannel = props.channels[0]?.id ?? "";
-  const [channelId, setChannelId] = useState(firstChannel);
+  const formElement = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const action = props.action;
-
-  useEffect(() => {
-    if (action === null) return;
-    const fallback =
-      action.kind === "move"
-        ? props.channels.find((channel) => channel.id !== action.fromChannelId)
-            ?.id
-        : firstChannel;
-    setChannelId(fallback ?? "");
-    setError(null);
-  }, [action, firstChannel, props.channels]);
 
   const addChannelMutation = useMutation(
     trpc.subscription.addChannel.mutationOptions({
@@ -119,34 +97,49 @@ export function SubscriptionChannelDialog(props: Props) {
     }),
   );
 
+  const form = useScoutForm({
+    defaultValues: { channelId: firstChannel },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: SubscriptionChannelFormSchema },
+    onSubmit: ({ value }) => {
+      if (action === null) return;
+      setError(null);
+      const parsed = SubscriptionChannelFormSchema.parse(value);
+      if (action.kind === "add-channel") {
+        addChannelMutation.mutate({
+          guildId: props.guildId,
+          alias: action.alias,
+          channelId: parsed.channelId,
+        });
+        return;
+      }
+      moveMutation.mutate({
+        guildId: props.guildId,
+        alias: action.alias,
+        fromChannelId: action.fromChannelId,
+        toChannelId: parsed.channelId,
+      });
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+
+  useEffect(() => {
+    if (action === null) return;
+    const fallback =
+      action.kind === "move"
+        ? props.channels.find((channel) => channel.id !== action.fromChannelId)
+            ?.id
+        : firstChannel;
+    form.reset({ channelId: fallback ?? "" });
+    setError(null);
+  }, [action, firstChannel, form, props.channels]);
+
   if (action === null) return null;
 
   const isMove = action.kind === "move";
   const pending = addChannelMutation.isPending || moveMutation.isPending;
-
-  function handleSubmit(event: React.SyntheticEvent) {
-    event.preventDefault();
-    if (action === null) return;
-    setError(null);
-    if (channelId.length === 0) {
-      setError("Choose a channel.");
-      return;
-    }
-    if (action.kind === "add-channel") {
-      addChannelMutation.mutate({
-        guildId: props.guildId,
-        alias: action.alias,
-        channelId,
-      });
-      return;
-    }
-    moveMutation.mutate({
-      guildId: props.guildId,
-      alias: action.alias,
-      fromChannelId: action.fromChannelId,
-      toChannelId: channelId,
-    });
-  }
 
   return (
     <Dialog
@@ -155,49 +148,41 @@ export function SubscriptionChannelDialog(props: Props) {
         props.onOpenChange(open);
       }}
     >
-      <DialogContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle>
-              {isMove ? "Move subscription" : "Add channel"}
-            </DialogTitle>
-            <DialogDescription>
-              {isMove
-                ? `Move "${action.alias}" from ${channelLabel(props.channels, action.fromChannelId)}.`
-                : `Subscribe "${action.alias}" in another channel.`}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Label htmlFor="subscription-channel-target">
-              {isMove ? "Destination channel" : "Channel"}
-            </Label>
-            <Select value={channelId} onValueChange={setChannelId} required>
-              <SelectTrigger id="subscription-channel-target">
-                <SelectValue placeholder="Pick a channel" />
-              </SelectTrigger>
-              <SelectContent>
-                {props.channels.map((channel) => (
-                  <SelectItem key={channel.id} value={channel.id}>
-                    #{channel.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <DialogFormError error={error} />
-
-          <DialogFormFooter
-            pending={pending}
-            submitLabel="Save"
-            pendingLabel="Saving..."
-            onCancel={() => {
-              props.onOpenChange(false);
-            }}
-          />
-        </form>
-      </DialogContent>
+      <form.AppForm>
+        <SemanticDialogForm
+          formRef={formElement}
+          title={isMove ? "Move subscription" : "Add channel"}
+          description={
+            isMove
+              ? `Move "${action.alias}" from ${channelLabel(props.channels, action.fromChannelId)}.`
+              : `Subscribe "${action.alias}" in another channel.`
+          }
+          pending={pending}
+          pendingStatus="Saving subscription channel…"
+          error={error}
+          submitLabel="Save"
+          pendingLabel="Saving..."
+          onSubmit={() => form.handleSubmit()}
+          onCancel={() => {
+            props.onOpenChange(false);
+          }}
+        >
+          <form.AppField name="channelId">
+            {(field) => (
+              <field.NativeSelectField
+                id="subscription-channel-target"
+                label={isMove ? "Destination channel" : "Channel"}
+                placeholder="Pick a channel"
+                options={props.channels.map((channel) => ({
+                  value: channel.id,
+                  label: `#${channel.name}`,
+                }))}
+                required
+              />
+            )}
+          </form.AppField>
+        </SemanticDialogForm>
+      </form.AppForm>
     </Dialog>
   );
 }

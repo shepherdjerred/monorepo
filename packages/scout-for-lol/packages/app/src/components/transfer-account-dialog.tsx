@@ -3,19 +3,13 @@ import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import type { RegionValue } from "#src/lib/regions.ts";
-import { PlayerAliasCombobox } from "#src/components/player-alias-combobox.tsx";
+import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import { Label } from "@scout-for-lol/design-system/components/label";
-import {
-  DialogFormError,
-  DialogFormFooter,
-} from "#src/components/dialog-form.tsx";
+  PlayerAliasFormField,
+  usePlayerAliasDialogForm,
+} from "#src/components/player-alias-form-field.tsx";
+import { PlayerAliasFormSchema } from "#src/lib/form-schemas.ts";
 
 /**
  * Transfer an account to another player (via `player.transferAccount`). The
@@ -30,7 +24,6 @@ export function TransferAccountDialog(props: {
   onTransferred: (toPlayerAlias: string) => void;
 }) {
   const trpc = useTRPC();
-  const [toPlayerAlias, setToPlayerAlias] = useState("");
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation(
     trpc.player.transferAccount.mutationOptions({
@@ -43,57 +36,51 @@ export function TransferAccountDialog(props: {
       },
     }),
   );
+  const { form, formElement } = usePlayerAliasDialogForm(
+    props.open,
+    PlayerAliasFormSchema,
+    (toPlayerAlias) => {
+      setError(null);
+      mutation.mutate({
+        guildId: props.guildId,
+        riotId: props.account.riotId,
+        region: props.account.region,
+        toPlayerAlias,
+      });
+    },
+  );
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
+      <form.AppForm>
+        <SemanticDialogForm
+          formRef={formElement}
+          title="Transfer account"
+          description={<>Move {props.account.riotId} to another player.</>}
+          pending={mutation.isPending}
+          pendingStatus="Transferring account…"
+          error={error}
+          submitLabel="Transfer"
+          pendingLabel="Transferring…"
+          onSubmit={() => form.handleSubmit()}
+          onCancel={() => {
             setError(null);
-            const target = toPlayerAlias.trim();
-            if (target.length === 0) {
-              setError("Pick a target player.");
-              return;
-            }
-            mutation.mutate({
-              guildId: props.guildId,
-              riotId: props.account.riotId,
-              region: props.account.region,
-              toPlayerAlias: target,
-            });
+            form.reset({ alias: "" });
+            props.onOpenChange(false);
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Transfer account</DialogTitle>
-            <DialogDescription>
-              Move {props.account.riotId} to another player.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Label htmlFor="transfer-target">Transfer to</Label>
-            <PlayerAliasCombobox
-              id="transfer-target"
-              guildId={props.guildId}
-              value={toPlayerAlias}
-              onChange={setToPlayerAlias}
-            />
-          </div>
-
-          <DialogFormError error={error} />
-
-          <DialogFormFooter
-            pending={mutation.isPending}
-            submitLabel="Transfer"
-            pendingLabel="Transferring…"
-            onCancel={() => {
-              props.onOpenChange(false);
-            }}
-          />
-        </form>
-      </DialogContent>
+          <form.AppField name="alias">
+            {(field) => (
+              <PlayerAliasFormField
+                id="transfer-target"
+                label="Transfer to"
+                guildId={props.guildId}
+                field={field}
+              />
+            )}
+          </form.AppField>
+        </SemanticDialogForm>
+      </form.AppForm>
     </Dialog>
   );
 }

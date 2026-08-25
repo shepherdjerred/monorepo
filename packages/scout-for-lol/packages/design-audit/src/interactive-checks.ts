@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { assertSemanticForms } from "#src/semantic-form-checks.ts";
 
 /**
  * `role="dialog"` covers two different widgets, and only one of them is modal.
@@ -76,6 +77,7 @@ export async function assertInteractiveStates(page: Page): Promise<void> {
     const radixDialog = page.locator('[role="dialog"][data-state="open"]');
     const openedRadixDialog = (await radixDialog.count()) > 0;
     await assertVisibleDialogs(page);
+    await assertSemanticForms(page);
     await page.keyboard.press("Escape");
     await expect(page.locator('[role="dialog"]:visible')).toHaveCount(0);
     if (openedRadixDialog) {

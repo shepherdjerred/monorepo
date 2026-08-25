@@ -1,161 +1,217 @@
 import { useState } from "react";
-import type { SubscriptionFieldsValue } from "#src/lib/use-add-subscription.ts";
-import { RegionSelect } from "#src/components/region-select.tsx";
+import { formOptions } from "@tanstack/react-form";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  Label,
+  FormSection,
+} from "@scout-for-lol/design-system/components/input";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import { SubscriptionFilterFields } from "#src/components/subscription-filter-fields.tsx";
-import { Input } from "@scout-for-lol/design-system/components/input";
-import { Label } from "@scout-for-lol/design-system/components/label";
-import { findRegion, regionLabel } from "#src/lib/regions.ts";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@scout-for-lol/design-system/components/select";
+  fieldErrorMessage,
+  withScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { emptySubscriptionFormValue } from "#src/lib/form-schemas.ts";
+import { findRegion, REGIONS, regionLabel } from "#src/lib/regions.ts";
 
-/**
- * Presentational subscription form fields (channel / region / Riot ID /
- * alias / optional Discord user). Holds no state — the parent owns the
- * value so it can prefill (e.g. the onboarding "track yourself" step).
- * `idPrefix` keeps label htmlFor ids unique across multiple instances.
- *
- * The Riot ID and Discord user inputs are typeahead comboboxes backed by
- * `riot.searchSummoners` / `resolveRiotId` and `discord.searchMembers`, which
- * need the guild context, so `guildId` is required.
- */
-export function SubscriptionFields(props: {
+export const subscriptionFormOptions = formOptions({
+  defaultValues: emptySubscriptionFormValue(""),
+});
+
+type SubscriptionFieldsProps = {
   idPrefix: string;
   guildId: string;
   channels: { id: string; name: string }[];
-  value: SubscriptionFieldsValue;
-  onChange: (next: SubscriptionFieldsValue) => void;
-}) {
-  const { idPrefix, guildId, value, onChange } = props;
-  // Selecting a suggestion adopts that account's region, which is correct (the
-  // account really does live there) but used to happen silently — a user who
-  // deliberately picked EUW could be moved to NA by clicking a same-name
-  // suggestion and never know. Applying it and saying so keeps both properties.
-  const [regionNotice, setRegionNotice] = useState<string | null>(null);
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-channel`}>Channel</Label>
-        <Select
-          value={value.channelId}
-          onValueChange={(next) => {
-            onChange({ ...value, channelId: next });
-          }}
-          required
+};
+
+const DEFAULT_SUBSCRIPTION_FIELDS_PROPS: SubscriptionFieldsProps = {
+  idPrefix: "subscription",
+  guildId: "",
+  channels: [],
+};
+
+export const SubscriptionFields = withScoutForm({
+  ...subscriptionFormOptions,
+  props: DEFAULT_SUBSCRIPTION_FIELDS_PROPS,
+  render: function SubscriptionFieldsContent(props) {
+    const { form, idPrefix, guildId } = props;
+    const [regionNotice, setRegionNotice] = useState<string | null>(null);
+
+    return (
+      <div className="space-y-5">
+        <FormSection
+          legend="Destination"
+          description="Choose the Discord channel that receives match reports."
         >
-          <SelectTrigger id={`${idPrefix}-channel`}>
-            <SelectValue placeholder="Pick a channel" />
-          </SelectTrigger>
-          <SelectContent>
-            {props.channels.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                #{c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          <form.AppField name="channelId">
+            {(field) => (
+              <field.NativeSelectField
+                id={`${idPrefix}-channel`}
+                label="Channel"
+                placeholder="Pick a channel"
+                options={props.channels.map((channel) => ({
+                  value: channel.id,
+                  label: `#${channel.name}`,
+                }))}
+                required
+              />
+            )}
+          </form.AppField>
+        </FormSection>
 
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-region`}>Region</Label>
-        <RegionSelect
-          id={`${idPrefix}-region`}
-          value={value.region}
-          onValueChange={(region) => {
-            setRegionNotice(null);
-            onChange({ ...value, region });
-          }}
-        />
-        {regionNotice !== null && (
-          <p className="text-xs text-scout-subtle" role="status">
-            {regionNotice}
-          </p>
-        )}
-      </div>
+        <FormSection
+          legend="Player identity"
+          description="Identify the League account and how it appears in Scout."
+        >
+          <form.AppField name="region">
+            {(field) => (
+              <field.NativeSelectField
+                id={`${idPrefix}-region`}
+                label="Region"
+                options={REGIONS}
+                required
+              />
+            )}
+          </form.AppField>
+          {regionNotice === null ? null : (
+            <p className="text-xs text-scout-subtle" role="status">
+              {regionNotice}
+            </p>
+          )}
 
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-riot-id`}>
-          Riot ID <span className="text-scout-subtle">(name#TAG)</span>
-        </Label>
-        <RiotIdCombobox
-          id={`${idPrefix}-riot-id`}
-          guildId={guildId}
-          region={value.region}
-          value={value.riotId}
-          onValueChange={(riotId) => {
-            setRegionNotice(null);
-            onChange({ ...value, riotId });
-          }}
-          onSelectAccount={({ riotId, region: accountRegion }) => {
-            // Fires right after onValueChange(riotId); rebuild from the
-            // selected Riot ID so the region update doesn't clobber it.
-            const match = findRegion(accountRegion);
-            const changed = match !== null && match !== value.region;
-            setRegionNotice(
-              changed
-                ? `Region set to ${regionLabel(match)} — that's where ${riotId} plays. Change it above if that's not the account you meant.`
-                : null,
-            );
-            onChange({
-              ...value,
-              riotId,
-              ...(match !== null && { region: match }),
-            });
-          }}
-          placeholder="Search a name or type name#TAG"
-        />
-      </div>
+          <form.AppField name="riotId">
+            {(field) => {
+              const error = field.state.meta.isTouched
+                ? fieldErrorMessage(field.state.meta.errors)
+                : undefined;
+              const errorId = `${idPrefix}-riot-id-error`;
+              return (
+                <Field>
+                  <Label htmlFor={`${idPrefix}-riot-id`}>
+                    Riot ID{" "}
+                    <span className="text-scout-subtle">(name#TAG)</span>
+                  </Label>
+                  <form.Subscribe selector={(state) => state.values.region}>
+                    {(region) => (
+                      <RiotIdCombobox
+                        id={`${idPrefix}-riot-id`}
+                        name={field.name}
+                        guildId={guildId}
+                        region={region}
+                        value={field.state.value}
+                        onValueChange={(riotId) => {
+                          setRegionNotice(null);
+                          field.handleChange(riotId);
+                        }}
+                        onSelectAccount={({
+                          riotId,
+                          region: accountRegion,
+                        }) => {
+                          const match = findRegion(accountRegion);
+                          const changed = match !== null && match !== region;
+                          setRegionNotice(
+                            changed
+                              ? `Region set to ${regionLabel(match)} — that's where ${riotId} plays. Change it above if that's not the account you meant.`
+                              : null,
+                          );
+                          field.handleChange(riotId);
+                          if (match !== null)
+                            form.setFieldValue("region", match);
+                        }}
+                        placeholder="Search a name or type name#TAG"
+                        required
+                        {...(error === undefined
+                          ? {}
+                          : {
+                              ariaInvalid: true,
+                              ariaDescribedBy: errorId,
+                            })}
+                      />
+                    )}
+                  </form.Subscribe>
+                  {error === undefined ? null : (
+                    <FieldError id={errorId}>{error}</FieldError>
+                  )}
+                </Field>
+              );
+            }}
+          </form.AppField>
 
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-alias`}>Player name</Label>
-        <Input
-          id={`${idPrefix}-alias`}
-          value={value.alias}
-          onChange={(e) => {
-            onChange({ ...value, alias: e.target.value });
-          }}
-          placeholder="How this person shows up in Scout"
-          required
-        />
-      </div>
+          <form.AppField name="alias">
+            {(field) => (
+              <field.TextField
+                id={`${idPrefix}-alias`}
+                label="Player name"
+                description="How this person appears in Scout."
+                placeholder="Player name"
+                autoComplete="off"
+                maxLength={100}
+                required
+              />
+            )}
+          </form.AppField>
 
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-discord`}>
-          Discord user <span className="text-scout-subtle">(optional)</span>
-        </Label>
-        <DiscordMemberCombobox
-          id={`${idPrefix}-discord`}
-          guildId={guildId}
-          value={value.discordUserId}
-          onChange={(discordUserId) => {
-            onChange({ ...value, discordUserId });
-          }}
-        />
-        <p className="text-xs text-scout-subtle">
-          Links a <em>new</em> player to this Discord user. Existing players
-          keep their current link — manage it from the player page.
-        </p>
-      </div>
+          <form.AppField name="discordUserId">
+            {(field) => {
+              const error = field.state.meta.isTouched
+                ? fieldErrorMessage(field.state.meta.errors)
+                : undefined;
+              const descriptionId = `${idPrefix}-discord-description`;
+              const errorId = `${idPrefix}-discord-error`;
+              return (
+                <Field>
+                  <Label htmlFor={`${idPrefix}-discord`}>
+                    Discord user{" "}
+                    <span className="text-scout-subtle">(optional)</span>
+                  </Label>
+                  <DiscordMemberCombobox
+                    id={`${idPrefix}-discord`}
+                    name={field.name}
+                    guildId={guildId}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    ariaDescribedBy={
+                      error === undefined
+                        ? descriptionId
+                        : `${descriptionId} ${errorId}`
+                    }
+                    {...(error === undefined ? {} : { ariaInvalid: true })}
+                  />
+                  <FieldDescription id={descriptionId}>
+                    Links a new player to this Discord user. Existing players
+                    keep their current link.
+                  </FieldDescription>
+                  {error === undefined ? null : (
+                    <FieldError id={errorId}>{error}</FieldError>
+                  )}
+                </Field>
+              );
+            }}
+          </form.AppField>
+        </FormSection>
 
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-queues`}>
-          Notify for{" "}
-          <span className="text-scout-subtle">(all queues if empty)</span>
-        </Label>
-        <SubscriptionFilterFields
-          id={`${idPrefix}-queues`}
-          value={value.filters}
-          onChange={(filters) => {
-            onChange({ ...value, filters });
-          }}
-        />
+        <FormSection
+          legend="Filters"
+          description="Limit notifications by queue, or leave empty for every queue."
+        >
+          <form.AppField name="filters">
+            {(field) => (
+              <Field>
+                <Label htmlFor={`${idPrefix}-queues`}>Notify for</Label>
+                <SubscriptionFilterFields
+                  id={`${idPrefix}-queues`}
+                  name={field.name}
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              </Field>
+            )}
+          </form.AppField>
+        </FormSection>
       </div>
-    </div>
-  );
-}
+    );
+  },
+});

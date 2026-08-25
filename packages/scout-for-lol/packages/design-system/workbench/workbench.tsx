@@ -30,6 +30,9 @@ import {
 import {
   Field,
   FieldDescription,
+  FieldError,
+  FormActions,
+  FormSection,
   Input,
   Label,
   Textarea,
@@ -153,6 +156,91 @@ export function Workbench() {
                   <CardFooter>
                     <Button size="sm">Save</Button>
                   </CardFooter>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Semantic form states</CardTitle>
+                    <CardDescription>
+                      Native constraints and application errors share one
+                      presentation.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form aria-label="Semantic form states" aria-busy="true">
+                      <FormSection
+                        legend="Report basics"
+                        description="Controls keep their native browser behavior."
+                      >
+                        <Field>
+                          <Label htmlFor="form-pristine">Pristine</Label>
+                          <Input
+                            id="form-pristine"
+                            name="title"
+                            placeholder="Weekly ranked report"
+                            maxLength={100}
+                            required
+                          />
+                        </Field>
+                        <Field>
+                          <Label htmlFor="form-native-invalid">
+                            Native-invalid example
+                          </Label>
+                          <Input
+                            id="form-native-invalid"
+                            name="email"
+                            type="email"
+                            defaultValue="not-an-email"
+                            aria-describedby="form-native-invalid-description"
+                            required
+                          />
+                          <FieldDescription id="form-native-invalid-description">
+                            The browser owns type and required validation.
+                          </FieldDescription>
+                        </Field>
+                        <Field>
+                          <Label htmlFor="form-zod-invalid">
+                            Zod-invalid example
+                          </Label>
+                          <Input
+                            id="form-zod-invalid"
+                            name="alias"
+                            defaultValue="?"
+                            aria-invalid="true"
+                            aria-describedby="form-zod-invalid-error"
+                          />
+                          <FieldError id="form-zod-invalid-error">
+                            Choose a known player alias.
+                          </FieldError>
+                        </Field>
+                        <fieldset disabled className="m-0 border-0 p-0">
+                          <Field>
+                            <Label htmlFor="form-disabled">
+                              Disabled group
+                            </Label>
+                            <Input
+                              id="form-disabled"
+                              name="disabled-value"
+                              defaultValue="Unavailable while saving"
+                            />
+                          </Field>
+                        </fieldset>
+                      </FormSection>
+                      <p role="alert" className="scout-field__error">
+                        The server could not save this example.
+                      </p>
+                      <p role="status" className="scout-muted">
+                        Saving changes…
+                      </p>
+                      <FormActions>
+                        <Button type="reset" variant="outline">
+                          Reset
+                        </Button>
+                        <Button type="submit" disabled>
+                          Saving…
+                        </Button>
+                      </FormActions>
+                    </form>
+                  </CardContent>
                 </Card>
                 <Card>
                   <CardHeader>

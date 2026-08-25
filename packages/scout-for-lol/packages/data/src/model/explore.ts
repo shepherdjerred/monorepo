@@ -30,6 +30,15 @@ export const EXPLORE_TIMEOUT_MS = 180_000;
 export const EXPLORE_MAX_HISTORY_TURNS = 8;
 export const EXPLORE_TITLE_MAX_LENGTH = 120;
 
+export const ExploreConversationTitleSchema = z
+  .string()
+  .trim()
+  .min(1, "Enter a conversation title.")
+  .max(
+    EXPLORE_TITLE_MAX_LENGTH,
+    `Conversation titles must be ${EXPLORE_TITLE_MAX_LENGTH.toString()} characters or fewer.`,
+  );
+
 /** Caveat written onto a turn the asker deliberately stopped. */
 export const EXPLORE_STOPPED_CAVEAT =
   "This answer was stopped before it finished.";
@@ -355,7 +364,7 @@ export type ExploreMessage = z.infer<typeof ExploreMessageSchema>;
 export const ExploreConversationSchema = z
   .object({
     id: ExploreConversationIdSchema,
-    title: z.string().trim().min(1).max(EXPLORE_TITLE_MAX_LENGTH),
+    title: ExploreConversationTitleSchema,
     shareToken: ExploreShareTokenSchema.nullable().default(null),
     /** The leaf a share link is pinned to, if the conversation is shared. */
     sharedLeafId: z.uuid().nullable().default(null),
@@ -515,7 +524,7 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
     .object({
       type: z.literal("final"),
       message: ExploreMessageSchema,
-      title: z.string().trim().min(1).max(EXPLORE_TITLE_MAX_LENGTH),
+      title: ExploreConversationTitleSchema,
       quota: z.array(ExploreQuotaSnapshotSchema),
     })
     .strict(),

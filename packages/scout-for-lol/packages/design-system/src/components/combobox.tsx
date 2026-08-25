@@ -23,6 +23,10 @@ export type ComboboxProps<T> = {
   className?: string | undefined;
   id?: string | undefined;
   maxLength?: number | undefined;
+  name?: string | undefined;
+  required?: boolean | undefined;
+  ariaInvalid?: boolean | undefined;
+  ariaDescribedBy?: string | undefined;
   openOnEmptyQuery?: boolean | undefined;
   onBlur?: (() => void) | undefined;
 };
@@ -83,11 +87,15 @@ export function Combobox<T>(props: ComboboxProps<T>) {
         <Input
           id={props.id}
           maxLength={props.maxLength}
+          name={props.name}
           value={props.value}
           disabled={props.disabled}
+          required={props.required}
           placeholder={props.placeholder}
           role="combobox"
           aria-expanded={showPopover}
+          aria-invalid={props.ariaInvalid}
+          aria-describedby={props.ariaDescribedBy}
           aria-controls={listId}
           aria-activedescendant={
             activeItem === undefined ? undefined : optionId(activeItem)

@@ -1,22 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { findRegion, type RegionValue } from "#src/lib/regions.ts";
+import { findRegion, REGIONS } from "#src/lib/regions.ts";
+import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import { Input } from "@scout-for-lol/design-system/components/input";
-import { Label } from "@scout-for-lol/design-system/components/label";
-import { RegionSelect } from "#src/components/region-select.tsx";
-import {
-  DialogFormError,
-  DialogFormFooter,
-} from "#src/components/dialog-form.tsx";
+  focusFirstInvalid,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { EditAccountFormSchema } from "#src/lib/form-schemas.ts";
 
 /**
  * Edit an existing account's alias and region in place (via
@@ -31,11 +25,8 @@ export function EditAccountDialog(props: {
   onSaved: () => void;
 }) {
   const trpc = useTRPC();
-  const [alias, setAlias] = useState(props.account.alias);
-  const [region, setRegion] = useState<RegionValue>(
-    findRegion(props.account.region) ?? "AMERICA_NORTH",
-  );
   const [error, setError] = useState<string | null>(null);
+  const formElement = useRef<HTMLFormElement>(null);
   const mutation = useMutation(
     trpc.player.updateAccount.mutationOptions({
       meta: analyticsMeta("player_account_edited"),
@@ -47,67 +38,83 @@ export function EditAccountDialog(props: {
       },
     }),
   );
+  const form = useScoutForm({
+    defaultValues: {
+      alias: props.account.alias,
+      region: findRegion(props.account.region) ?? "AMERICA_NORTH",
+    },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: EditAccountFormSchema },
+    onSubmit: ({ value }) => {
+      setError(null);
+      const parsed = EditAccountFormSchema.parse(value);
+      mutation.mutate({
+        guildId: props.guildId,
+        accountId: props.account.id,
+        alias: parsed.alias,
+        region: parsed.region,
+      });
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+
+  useEffect(() => {
+    if (props.open) {
+      form.reset({
+        alias: props.account.alias,
+        region: findRegion(props.account.region) ?? "AMERICA_NORTH",
+      });
+    }
+  }, [form, props.account.alias, props.account.region, props.open]);
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
+      <form.AppForm>
+        <SemanticDialogForm
+          formRef={formElement}
+          title="Edit account"
+          description="Update the account's alias and region."
+          pending={mutation.isPending}
+          pendingStatus="Saving account…"
+          error={error}
+          submitLabel="Save"
+          pendingLabel="Saving…"
+          onSubmit={() => form.handleSubmit()}
+          onCancel={() => {
             setError(null);
-            const trimmed = alias.trim();
-            if (trimmed.length === 0) {
-              setError("Alias is required.");
-              return;
-            }
-            mutation.mutate({
-              guildId: props.guildId,
-              accountId: props.account.id,
-              alias: trimmed,
-              region,
+            form.reset({
+              alias: props.account.alias,
+              region: findRegion(props.account.region) ?? "AMERICA_NORTH",
             });
+            props.onOpenChange(false);
           }}
+          fieldsetClassName="m-0 grid gap-4 border-0 p-0"
         >
-          <DialogHeader>
-            <DialogTitle>Edit account</DialogTitle>
-            <DialogDescription>
-              Update the account&apos;s alias and region.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-account-alias">Alias</Label>
-            <Input
-              id="edit-account-alias"
-              value={alias}
-              onChange={(event) => {
-                setAlias(event.target.value);
-              }}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-account-region">Region</Label>
-            <RegionSelect
-              id="edit-account-region"
-              value={region}
-              onValueChange={setRegion}
-            />
-          </div>
-
-          <DialogFormError error={error} />
-
-          <DialogFormFooter
-            pending={mutation.isPending}
-            submitLabel="Save"
-            pendingLabel="Saving…"
-            onCancel={() => {
-              props.onOpenChange(false);
-            }}
-          />
-        </form>
-      </DialogContent>
+          <form.AppField name="alias">
+            {(field) => (
+              <field.TextField
+                id="edit-account-alias"
+                label="Player name"
+                autoComplete="off"
+                maxLength={100}
+                required
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="region">
+            {(field) => (
+              <field.NativeSelectField
+                id="edit-account-region"
+                label="Region"
+                options={REGIONS}
+                required
+              />
+            )}
+          </form.AppField>
+        </SemanticDialogForm>
+      </form.AppForm>
     </Dialog>
   );
 }

@@ -1,8 +1,10 @@
 import * as LabelPrimitive from "@radix-ui/react-label";
 import {
   forwardRef,
+  type FieldsetHTMLAttributes,
   type HTMLAttributes,
   type InputHTMLAttributes,
+  type ReactNode,
   type TextareaHTMLAttributes,
 } from "react";
 import { cn } from "#src/lib/cn.ts";
@@ -42,6 +44,34 @@ Textarea.displayName = "Textarea";
 export function Field({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("scout-field", className)} {...props} />;
 }
+
+export function FormSection(
+  props: FieldsetHTMLAttributes<HTMLFieldSetElement> & {
+    legend: ReactNode;
+    description?: ReactNode;
+  },
+) {
+  const { className, legend, description, children, ...fieldsetProps } = props;
+  return (
+    <fieldset
+      className={cn("scout-form-section", className)}
+      {...fieldsetProps}
+    >
+      <legend className="scout-form-section__legend">{legend}</legend>
+      {description === undefined ? null : (
+        <p className="scout-form-section__description">{description}</p>
+      )}
+      <div className="scout-form-section__content">{children}</div>
+    </fieldset>
+  );
+}
+
+export function FormActions({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("scout-form-actions", className)} {...props} />;
+}
 export function FieldDescription({
   className,
   ...props
@@ -54,7 +84,7 @@ export function FieldError({
 }: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      role="alert"
+      aria-live="polite"
       className={cn("scout-field__error", className)}
       {...props}
     />

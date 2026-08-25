@@ -12,6 +12,9 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
+  CompetitionDescriptionSchema,
+  CompetitionMaxParticipantsSchema,
+  CompetitionTitleSchema,
   CompetitionCriteriaSchema,
   CompetitionGameVariantSchema,
   CompetitionIdSchema,
@@ -82,10 +85,10 @@ const CompetitionIdInput = GuildInput.extend({
 
 const CompetitionWriteSchema = z.object({
   channelId: DiscordChannelIdSchema,
-  title: z.string().trim().min(1).max(100),
-  description: z.string().trim().min(1).max(500),
+  title: CompetitionTitleSchema,
+  description: CompetitionDescriptionSchema,
   visibility: CompetitionVisibilitySchema,
-  maxParticipants: z.number().int().min(2).max(100).default(100),
+  maxParticipants: CompetitionMaxParticipantsSchema.default(100),
   gameVariant: CompetitionGameVariantSchema.default("MODERN"),
   dates: WebCompetitionDatesSchema,
   criteria: CompetitionCriteriaSchema,

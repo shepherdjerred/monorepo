@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type CompetitionId,
@@ -19,7 +19,12 @@ import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ChartImage } from "#src/components/chart-image.tsx";
 import { Section } from "#src/components/section.tsx";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import {
+  Field,
+  FormActions,
+  Input,
+  Label,
+} from "@scout-for-lol/design-system/components/input";
 import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 import {
   Table,
@@ -29,6 +34,15 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
+import {
+  focusFirstInvalid,
+  FormPendingStatus,
+  handleFormSubmit,
+  ServerFormError,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { CompetitionAnalysisTimezoneFormSchema } from "#src/lib/form-schemas.ts";
 
 function formatScore(score: unknown): string {
   const rankResult = RankSchema.safeParse(score);
@@ -88,7 +102,6 @@ export function CompetitionLeaderboardPanel(props: {
   const [endDate, setEndDate] = useState(
     competitionAnalysisDateInput(props.endDate, props.analysisTimezone),
   );
-  const [timezone, setTimezone] = useState(props.analysisTimezone);
 
   const leaderboardKey = trpc.competition.leaderboard.queryKey({
     guildId,
@@ -157,15 +170,15 @@ export function CompetitionLeaderboardPanel(props: {
           preset={preset}
           startDate={startDate}
           endDate={endDate}
-          timezone={timezone}
+          timezone={props.analysisTimezone}
           canSaveTimezone={perms.can("competitions", "update")}
           isSavingTimezone={timezoneMutation.isPending}
+          timezoneError={timezoneMutation.error?.message ?? null}
           onModeChange={setMode}
           onPresetChange={setPreset}
           onStartDateChange={setStartDate}
           onEndDateChange={setEndDate}
-          onTimezoneChange={setTimezone}
-          onSaveTimezone={() => {
+          onSaveTimezone={(timezone) => {
             timezoneMutation.mutate({ guildId, competitionId, timezone });
           }}
         />
@@ -207,92 +220,148 @@ function AnalysisControls(props: {
   timezone: string;
   canSaveTimezone: boolean;
   isSavingTimezone: boolean;
+  timezoneError: string | null;
   onModeChange: (mode: "official" | "selected_period") => void;
   onPresetChange: (preset: CompetitionAnalysisPreset) => void;
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
-  onTimezoneChange: (value: string) => void;
-  onSaveTimezone: () => void;
+  onSaveTimezone: (timezone: string) => void;
 }) {
+  const formElement = useRef<HTMLFormElement>(null);
+  const form = useScoutForm({
+    defaultValues: { timezone: props.timezone },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: CompetitionAnalysisTimezoneFormSchema },
+    onSubmit: ({ value }) => {
+      props.onSaveTimezone(
+        CompetitionAnalysisTimezoneFormSchema.parse(value).timezone,
+      );
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+
+  useEffect(() => {
+    form.reset({ timezone: props.timezone });
+  }, [form, props.timezone]);
+
   return (
-    <>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant={props.mode === "official" ? "default" : "outline"}
-          onClick={() => {
-            props.onModeChange("official");
-          }}
-        >
-          Official
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={props.mode === "selected_period" ? "default" : "outline"}
-          onClick={() => {
-            props.onModeChange("selected_period");
-          }}
-        >
-          Selected period
-        </Button>
-        <select
-          aria-label="Competition analysis preset"
-          className="h-9 rounded-md border border-scout-border bg-scout-canvas px-2 text-sm"
-          value={props.preset}
-          onChange={(event) => {
-            props.onPresetChange(parsePreset(event.target.value));
-          }}
-        >
-          <option value="criterion_score">Criterion score</option>
-          <option value="rank_position">Rank position</option>
-          <option value="games_wins">Games and wins</option>
-          <option value="performance">Win rate and KDA</option>
-          <option value="champion_queue_composition">Queue composition</option>
-        </select>
-      </div>
-      {props.mode === "selected_period" && (
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Input
-            type="date"
-            aria-label="Competition analysis start date"
-            value={props.startDate}
+    <form.AppForm>
+      <form
+        ref={formElement}
+        className="space-y-3"
+        aria-busy={props.isSavingTimezone}
+        onSubmit={(event) => {
+          handleFormSubmit(event, () => form.handleSubmit());
+        }}
+      >
+        <fieldset className="flex flex-wrap gap-3 border-0 p-0">
+          <legend className="mb-2 w-full text-sm font-medium">
+            Analysis period
+          </legend>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="analysis-mode"
+              value="official"
+              checked={props.mode === "official"}
+              onChange={() => {
+                props.onModeChange("official");
+              }}
+            />
+            Official
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="analysis-mode"
+              value="selected_period"
+              checked={props.mode === "selected_period"}
+              onChange={() => {
+                props.onModeChange("selected_period");
+              }}
+            />
+            Selected period
+          </label>
+        </fieldset>
+        <Field>
+          <Label htmlFor="competition-analysis-preset">Visualization</Label>
+          <select
+            id="competition-analysis-preset"
+            name="analysis-preset"
+            className="scout-control"
+            value={props.preset}
             onChange={(event) => {
-              props.onStartDateChange(event.target.value);
+              props.onPresetChange(parsePreset(event.target.value));
             }}
-          />
-          <Input
-            type="date"
-            aria-label="Competition analysis end date"
-            value={props.endDate}
-            onChange={(event) => {
-              props.onEndDateChange(event.target.value);
-            }}
-          />
-        </div>
-      )}
-      <div className="flex gap-2">
-        <Input
-          aria-label="Competition analysis timezone"
-          value={props.timezone}
-          onChange={(event) => {
-            props.onTimezoneChange(event.target.value);
-          }}
-        />
-        {props.canSaveTimezone && (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={props.isSavingTimezone}
-            onClick={props.onSaveTimezone}
           >
-            Save timezone
-          </Button>
+            <option value="criterion_score">Criterion score</option>
+            <option value="rank_position">Rank position</option>
+            <option value="games_wins">Games and wins</option>
+            <option value="performance">Win rate and KDA</option>
+            <option value="champion_queue_composition">
+              Queue composition
+            </option>
+          </select>
+        </Field>
+        {props.mode === "selected_period" && (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Field>
+              <Label htmlFor="competition-analysis-start">Start date</Label>
+              <Input
+                id="competition-analysis-start"
+                name="analysis-start-date"
+                type="date"
+                value={props.startDate}
+                onChange={(event) => {
+                  props.onStartDateChange(event.target.value);
+                }}
+              />
+            </Field>
+            <Field>
+              <Label htmlFor="competition-analysis-end">End date</Label>
+              <Input
+                id="competition-analysis-end"
+                name="analysis-end-date"
+                type="date"
+                value={props.endDate}
+                onChange={(event) => {
+                  props.onEndDateChange(event.target.value);
+                }}
+              />
+            </Field>
+          </div>
         )}
-      </div>
-    </>
+        <FormActions>
+          <form.AppField name="timezone">
+            {(field) => (
+              <field.TextField
+                id="competition-analysis-timezone"
+                label="Analysis timezone"
+                autoComplete="off"
+                readOnly={!props.canSaveTimezone}
+                required
+              />
+            )}
+          </form.AppField>
+          {props.canSaveTimezone && (
+            <Button
+              type="submit"
+              size="sm"
+              variant="outline"
+              disabled={props.isSavingTimezone}
+            >
+              {props.isSavingTimezone ? "Saving…" : "Save timezone"}
+            </Button>
+          )}
+        </FormActions>
+        <FormPendingStatus pending={props.isSavingTimezone}>
+          Saving analysis timezone…
+        </FormPendingStatus>
+        <ServerFormError error={props.timezoneError} />
+      </form>
+    </form.AppForm>
   );
 }
 

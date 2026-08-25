@@ -1,20 +1,15 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
+import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import { Input } from "@scout-for-lol/design-system/components/input";
-import { Label } from "@scout-for-lol/design-system/components/label";
-import {
-  DialogFormError,
-  DialogFormFooter,
-} from "#src/components/dialog-form.tsx";
+  focusFirstInvalid,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { PlayerAliasFormSchema } from "#src/lib/form-schemas.ts";
 
 export function RenamePlayerDialog(props: {
   guildId: string;
@@ -24,8 +19,8 @@ export function RenamePlayerDialog(props: {
   onRenamed: (newAlias: string) => void;
 }) {
   const trpc = useTRPC();
-  const [newAlias, setNewAlias] = useState(props.currentAlias);
   const [error, setError] = useState<string | null>(null);
+  const formElement = useRef<HTMLFormElement>(null);
   const mutation = useMutation(
     trpc.player.renamePlayer.mutationOptions({
       meta: analyticsMeta("player_renamed"),
@@ -38,56 +33,60 @@ export function RenamePlayerDialog(props: {
     }),
   );
 
+  const form = useScoutForm({
+    defaultValues: { alias: props.currentAlias },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: PlayerAliasFormSchema },
+    onSubmit: ({ value }) => {
+      setError(null);
+      const parsed = PlayerAliasFormSchema.parse(value);
+      mutation.mutate({
+        guildId: props.guildId,
+        currentAlias: props.currentAlias,
+        newAlias: parsed.alias,
+      });
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+
+  useEffect(() => {
+    if (props.open) form.reset({ alias: props.currentAlias });
+  }, [form, props.currentAlias, props.open]);
+
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
+      <form.AppForm>
+        <SemanticDialogForm
+          formRef={formElement}
+          title="Rename player"
+          description={<>Rename &quot;{props.currentAlias}&quot;.</>}
+          pending={mutation.isPending}
+          pendingStatus="Renaming player…"
+          error={error}
+          submitLabel="Rename"
+          pendingLabel="Renaming…"
+          onSubmit={() => form.handleSubmit()}
+          onCancel={() => {
             setError(null);
-            const trimmed = newAlias.trim();
-            if (trimmed.length === 0) {
-              setError("New alias is required.");
-              return;
-            }
-            mutation.mutate({
-              guildId: props.guildId,
-              currentAlias: props.currentAlias,
-              newAlias: trimmed,
-            });
+            form.reset({ alias: props.currentAlias });
+            props.onOpenChange(false);
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Rename player</DialogTitle>
-            <DialogDescription>
-              Rename &quot;{props.currentAlias}&quot;.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Label htmlFor="rename-player-new">New alias</Label>
-            <Input
-              id="rename-player-new"
-              value={newAlias}
-              onChange={(event) => {
-                setNewAlias(event.target.value);
-              }}
-            />
-          </div>
-
-          <DialogFormError error={error} />
-
-          <DialogFormFooter
-            pending={mutation.isPending}
-            submitLabel="Rename"
-            pendingLabel="Renaming…"
-            onCancel={() => {
-              props.onOpenChange(false);
-            }}
-          />
-        </form>
-      </DialogContent>
+          <form.AppField name="alias">
+            {(field) => (
+              <field.TextField
+                id="rename-player-new"
+                label="New player name"
+                autoComplete="off"
+                maxLength={100}
+                required
+              />
+            )}
+          </form.AppField>
+        </SemanticDialogForm>
+      </form.AppForm>
     </Dialog>
   );
 }

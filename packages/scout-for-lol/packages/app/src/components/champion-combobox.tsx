@@ -15,6 +15,10 @@ export function ChampionCombobox(props: {
   disabled?: boolean;
   id?: string;
   gameVariant: CompetitionGameVariant;
+  name?: string;
+  required?: boolean;
+  ariaInvalid?: boolean;
+  ariaDescribedBy?: string;
 }) {
   const champions =
     props.gameVariant === "MODERN"
@@ -41,6 +45,10 @@ export function ChampionCombobox(props: {
       }}
       disabled={props.disabled}
       id={props.id}
+      name={props.name}
+      required={props.required}
+      ariaInvalid={props.ariaInvalid}
+      ariaDescribedBy={props.ariaDescribedBy}
     />
   );
 }

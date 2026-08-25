@@ -38,6 +38,10 @@ export function RiotIdCombobox(props: {
   placeholder?: string;
   className?: string;
   id?: string;
+  name?: string;
+  required?: boolean;
+  ariaInvalid?: boolean;
+  ariaDescribedBy?: string;
 }) {
   const trpc = useTRPC();
   const debounced = useDebouncedValue(props.value);
@@ -111,6 +115,10 @@ export function RiotIdCombobox(props: {
       placeholder={props.placeholder ?? "name#TAG"}
       className={props.className}
       id={props.id}
+      name={props.name}
+      required={props.required}
+      ariaInvalid={props.ariaInvalid}
+      ariaDescribedBy={props.ariaDescribedBy}
       renderItem={(item) =>
         item.kind === "resolved" ? (
           <span className="flex w-full items-center gap-2">

@@ -5,15 +5,15 @@ import {
   CronPresets,
   ReportScheduleTimezoneSchema,
 } from "@scout-for-lol/data/model/competition-cron.ts";
-import { Input } from "@scout-for-lol/design-system/components/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@scout-for-lol/design-system/components/select";
+  Field,
+  FieldDescription,
+  FieldError,
+  Input,
+  Label,
+} from "@scout-for-lol/design-system/components/input";
 import { TimezoneSelect } from "#src/components/timezone-select.tsx";
+import { fieldErrorMessage } from "#src/components/semantic-form.tsx";
 
 const CUSTOM_SCHEDULE = "custom";
 
@@ -42,19 +42,48 @@ function scheduleRunTitle(date: Date, timezone: string): string {
   return `${inScheduleTz} (schedule time)`;
 }
 
+type ScheduleField = {
+  name: string;
+  value: string;
+  error: string | undefined;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+};
+
+type FormStringField = {
+  name: string;
+  state: {
+    value: string;
+    meta: { isTouched: boolean; errors: unknown[] };
+  };
+  handleChange: (value: string) => void;
+  handleBlur: () => void;
+};
+
+export function scheduleField(field: FormStringField): ScheduleField {
+  return {
+    name: field.name,
+    value: field.state.value,
+    error: field.state.meta.isTouched
+      ? fieldErrorMessage(field.state.meta.errors)
+      : undefined,
+    onChange: field.handleChange,
+    onBlur: field.handleBlur,
+  };
+}
+
 export function ReportScheduleFields(props: {
-  cronExpression: string;
-  scheduleTimezone: string;
-  onCronChange: (value: string) => void;
-  onTimezoneChange: (value: string) => void;
+  cron: ScheduleField;
+  timezone: ScheduleField;
 }) {
   const matchingPreset = CronPresets.find(
-    (entry) => entry.value === props.cronExpression,
+    (entry) => entry.value === props.cron.value,
   )?.value;
   const [customSelected, setCustomSelected] = useState(
     () => matchingPreset === undefined,
   );
   const cronInputRef = useRef<HTMLInputElement>(null);
+  const presetSelectRef = useRef<HTMLSelectElement>(null);
   const pendingCronFocus = useRef(false);
 
   useEffect(() => {
@@ -64,83 +93,137 @@ export function ReportScheduleFields(props: {
     }
   }, [customSelected]);
 
+  useEffect(() => {
+    const form = presetSelectRef.current?.form;
+    if (form === undefined || form === null) return;
+    const resetDisclosure = () => {
+      setCustomSelected(false);
+      pendingCronFocus.current = false;
+    };
+    form.addEventListener("reset", resetDisclosure);
+    return () => {
+      form.removeEventListener("reset", resetDisclosure);
+    };
+  }, []);
+
   // Derived, not just state: a report hydrated with a custom cron (edit page)
   // must show the cron input even though the user never clicked "Custom cron".
   const isCustom = customSelected || matchingPreset === undefined;
   const selectValue = isCustom ? CUSTOM_SCHEDULE : matchingPreset;
 
   const upcoming = useMemo(
-    () => schedulePreview(props.cronExpression, props.scheduleTimezone),
-    [props.cronExpression, props.scheduleTimezone],
+    () => schedulePreview(props.cron.value, props.timezone.value),
+    [props.cron.value, props.timezone.value],
   );
 
   return (
     <div className="space-y-3">
-      <p className="scout-label">Schedule</p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Select
-          value={selectValue}
-          onValueChange={(value) => {
-            if (value === CUSTOM_SCHEDULE) {
-              pendingCronFocus.current = true;
-              setCustomSelected(true);
-              return;
-            }
-            setCustomSelected(false);
-            props.onCronChange(value);
-          }}
-        >
-          <SelectTrigger aria-label="Schedule preset">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+        <Field>
+          <Label htmlFor="report-schedule-preset">Schedule preset</Label>
+          <select
+            ref={presetSelectRef}
+            id="report-schedule-preset"
+            name="schedule-preset"
+            className="scout-control"
+            value={selectValue}
+            onChange={(event) => {
+              const value = event.currentTarget.value;
+              if (value === CUSTOM_SCHEDULE) {
+                pendingCronFocus.current = true;
+                setCustomSelected(true);
+                return;
+              }
+              setCustomSelected(false);
+              props.cron.onChange(value);
+            }}
+          >
             {CronPresets.map((entry) => (
-              <SelectItem key={entry.value} value={entry.value}>
+              <option key={entry.value} value={entry.value}>
                 {entry.label}
-              </SelectItem>
+              </option>
             ))}
-            <SelectItem value={CUSTOM_SCHEDULE}>Custom cron</SelectItem>
-          </SelectContent>
-        </Select>
-        <TimezoneSelect
-          id="report-schedule-timezone"
-          value={props.scheduleTimezone}
-          onChange={props.onTimezoneChange}
-        />
+            <option value={CUSTOM_SCHEDULE}>Custom cron</option>
+          </select>
+        </Field>
+        <Field>
+          <Label htmlFor="report-schedule-timezone">Timezone</Label>
+          <TimezoneSelect
+            id="report-schedule-timezone"
+            name={props.timezone.name}
+            value={props.timezone.value}
+            onChange={props.timezone.onChange}
+            required
+            ariaInvalid={props.timezone.error !== undefined}
+            {...(props.timezone.onBlur === undefined
+              ? {}
+              : { onBlur: props.timezone.onBlur })}
+            {...(props.timezone.error === undefined
+              ? {}
+              : { ariaDescribedBy: "report-schedule-timezone-error" })}
+          />
+          {props.timezone.error === undefined ? null : (
+            <FieldError id="report-schedule-timezone-error">
+              {props.timezone.error}
+            </FieldError>
+          )}
+        </Field>
       </div>
       {isCustom && (
-        <div className="space-y-1">
+        <Field>
+          <Label htmlFor="report-schedule-cron">Cron expression</Label>
           <Input
             ref={cronInputRef}
-            aria-label="Cron expression"
+            id="report-schedule-cron"
+            name={props.cron.name}
             className="font-mono"
-            value={props.cronExpression}
+            value={props.cron.value}
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+            aria-invalid={props.cron.error === undefined ? undefined : true}
+            aria-describedby={
+              props.cron.error === undefined
+                ? "report-schedule-cron-description"
+                : "report-schedule-cron-description report-schedule-cron-error"
+            }
             onChange={(event) => {
-              props.onCronChange(event.target.value);
+              props.cron.onChange(event.currentTarget.value);
             }}
+            onBlur={props.cron.onBlur}
           />
-          <p className="text-xs text-scout-subtle">
+          <FieldDescription id="report-schedule-cron-description">
             Runs at most once per day — exactly one minute and one hour (e.g.{" "}
             <code>30 18 * * 1</code>).
-          </p>
-        </div>
+          </FieldDescription>
+          {props.cron.error === undefined ? null : (
+            <FieldError id="report-schedule-cron-error">
+              {props.cron.error}
+            </FieldError>
+          )}
+        </Field>
       )}
       {upcoming.ok ? (
-        <div className="space-y-1">
+        <output
+          className="block space-y-1"
+          htmlFor="report-schedule-cron report-schedule-timezone"
+        >
           <p className="text-xs font-medium text-scout-subtle">Next 3 runs</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-scout-subtle">
             {upcoming.dates.map((date) => (
-              <span
+              <time
                 key={date.toISOString()}
-                title={scheduleRunTitle(date, props.scheduleTimezone)}
+                dateTime={date.toISOString()}
+                title={scheduleRunTitle(date, props.timezone.value)}
               >
                 {LOCAL_RUN_FORMAT.format(date)}
-              </span>
+              </time>
             ))}
           </div>
-        </div>
+        </output>
       ) : (
-        <p className="text-xs text-scout-danger">{upcoming.message}</p>
+        <FieldError>{upcoming.message}</FieldError>
       )}
     </div>
   );

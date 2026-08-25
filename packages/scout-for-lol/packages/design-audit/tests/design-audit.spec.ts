@@ -5,6 +5,7 @@ import { themes } from "#src/constants.ts";
 import { assertInteractiveStates } from "#src/interactive-checks.ts";
 import { assertKeyboardFocus } from "#src/keyboard-checks.ts";
 import { auditCaseTags } from "#src/matrix.ts";
+import { assertSemanticForms } from "#src/semantic-form-checks.ts";
 import {
   assertLayoutHealth,
   assertRenderedContrast,
@@ -131,6 +132,9 @@ for (const theme of themes) {
           browserName === "webkit" ? "Alt+Tab" : "Tab",
         );
         await assertInteractiveStates(page);
+        if (route.surface === "app") {
+          await assertSemanticForms(page);
+        }
         const accessibility = await new AxeBuilder({ page })
           .exclude("astro-dev-toolbar")
           .exclude(".iPadShowKeyboard")

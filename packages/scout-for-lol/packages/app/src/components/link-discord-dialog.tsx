@@ -1,20 +1,22 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
+import { Dialog } from "@scout-for-lol/design-system/components/dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import { Label } from "@scout-for-lol/design-system/components/label";
+  Field,
+  FieldError,
+  Label,
+} from "@scout-for-lol/design-system/components/input";
+import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
-  DialogFormError,
-  DialogFormFooter,
-} from "#src/components/dialog-form.tsx";
+  fieldErrorMessage,
+  focusFirstInvalid,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { DiscordUserFormSchema } from "#src/lib/form-schemas.ts";
 
 /** Link a Discord user to a player (via `player.linkDiscord`). */
 export function LinkDiscordDialog(props: {
@@ -25,8 +27,8 @@ export function LinkDiscordDialog(props: {
   onLinked: () => void;
 }) {
   const trpc = useTRPC();
-  const [discordUserId, setDiscordUserId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const formElement = useRef<HTMLFormElement>(null);
   const mutation = useMutation(
     trpc.player.linkDiscord.mutationOptions({
       meta: analyticsMeta("player_discord_linked"),
@@ -38,56 +40,82 @@ export function LinkDiscordDialog(props: {
       },
     }),
   );
+  const form = useScoutForm({
+    defaultValues: { discordUserId: "" },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: DiscordUserFormSchema },
+    onSubmit: ({ value }) => {
+      setError(null);
+      const parsed = DiscordUserFormSchema.parse(value);
+      mutation.mutate({
+        guildId: props.guildId,
+        playerAlias: props.playerAlias,
+        discordUserId: parsed.discordUserId,
+      });
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
+
+  useEffect(() => {
+    if (props.open) form.reset({ discordUserId: "" });
+  }, [form, props.open]);
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
+      <form.AppForm>
+        <SemanticDialogForm
+          formRef={formElement}
+          title="Link Discord user"
+          description={
+            <>Link a Discord user to &quot;{props.playerAlias}&quot;.</>
+          }
+          pending={mutation.isPending}
+          pendingStatus="Linking Discord user…"
+          error={error}
+          submitLabel="Link"
+          pendingLabel="Linking…"
+          onSubmit={() => form.handleSubmit()}
+          onCancel={() => {
             setError(null);
-            if (discordUserId.length === 0) {
-              setError("Pick a Discord user.");
-              return;
-            }
-            mutation.mutate({
-              guildId: props.guildId,
-              playerAlias: props.playerAlias,
-              discordUserId,
-            });
+            form.reset({ discordUserId: "" });
+            props.onOpenChange(false);
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Link Discord user</DialogTitle>
-            <DialogDescription>
-              Link a Discord user to &quot;{props.playerAlias}&quot;.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Label htmlFor="link-discord-dialog-user">Discord user</Label>
-            <DiscordMemberCombobox
-              id="link-discord-dialog-user"
-              guildId={props.guildId}
-              value={discordUserId}
-              onChange={setDiscordUserId}
-            />
-          </div>
-
-          <DialogFormError error={error} />
-
-          <DialogFormFooter
-            pending={mutation.isPending}
-            submitLabel="Link"
-            pendingLabel="Linking…"
-            submitDisabled={discordUserId.length === 0}
-            onCancel={() => {
-              props.onOpenChange(false);
+          <form.AppField name="discordUserId">
+            {(field) => {
+              const message = field.state.meta.isTouched
+                ? fieldErrorMessage(field.state.meta.errors)
+                : undefined;
+              return (
+                <Field>
+                  <Label htmlFor="link-discord-dialog-user">Discord user</Label>
+                  <DiscordMemberCombobox
+                    id="link-discord-dialog-user"
+                    name={field.name}
+                    guildId={props.guildId}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    required
+                    ariaInvalid={message !== undefined}
+                    {...(message === undefined
+                      ? {}
+                      : {
+                          ariaDescribedBy: "link-discord-dialog-user-error",
+                        })}
+                  />
+                  {message === undefined ? null : (
+                    <FieldError id="link-discord-dialog-user-error">
+                      {message}
+                    </FieldError>
+                  )}
+                </Field>
+              );
             }}
-          />
-        </form>
-      </DialogContent>
+          </form.AppField>
+        </SemanticDialogForm>
+      </form.AppForm>
     </Dialog>
   );
 }
