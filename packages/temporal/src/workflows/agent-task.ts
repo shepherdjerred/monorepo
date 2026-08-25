@@ -81,8 +81,8 @@ const legacyEmailActivities = proxyActivities<AgentTaskActivities>({
   retry: RETRY,
 });
 
-const coreEmailActivities = proxyActivities<AgentTaskActivities>({
-  taskQueue: TASK_QUEUES.DEFAULT,
+const reportEmailActivities = proxyActivities<AgentTaskActivities>({
+  taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
   retry: RETRY,
 });
@@ -143,7 +143,7 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
     "agent-task-post-delivery-failure-report",
   );
   const emailActivities = coreEmailDelivery
-    ? coreEmailActivities
+    ? reportEmailActivities
     : legacyEmailActivities;
   await waitUntilRunAt(input.runAt);
   const startedAt = new Date().toISOString();

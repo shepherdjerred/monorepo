@@ -87,7 +87,7 @@ async function startSleepWorkflow(
 ): Promise<void> {
   const input: SleepAutomationInput = { durationMinutes };
   await client.workflow.start(workflowType, {
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     workflowId,
     workflowIdConflictPolicy: WorkflowIdConflictPolicy.TERMINATE_EXISTING,
     workflowExecutionTimeout: sleepWorkflowTimeout(durationMinutes),

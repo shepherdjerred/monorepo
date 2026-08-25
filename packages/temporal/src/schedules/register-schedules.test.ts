@@ -45,6 +45,29 @@ describe("direct maintenance schedules", () => {
   );
 });
 
+describe("domain schedule routing", () => {
+  it.each([
+    "vacuum-9am",
+    "vacuum-12pm",
+    "vacuum-5pm",
+    "good-morning-weekday-preheat",
+    "good-morning-weekday-wake",
+    "good-morning-weekday-up",
+    "good-morning-weekend-preheat",
+    "good-morning-weekend-wake",
+    "good-morning-weekend-up",
+  ])("routes %s to the home queue", (id) => {
+    expect(findScheduleById(id).taskQueue).toBe(TASK_QUEUES.HOME);
+  });
+
+  it.each(["report-freshness-monitor", "temporal-failure-watch"])(
+    "routes %s to the reports queue",
+    (id) => {
+      expect(findScheduleById(id).taskQueue).toBe(TASK_QUEUES.REPORTS);
+    },
+  );
+});
+
 test("dependency summary timeout covers every retried report phase", () => {
   expect(findScheduleById("deps-summary-weekly").workflowExecutionTimeout).toBe(
     "3 hours",
@@ -364,6 +387,14 @@ describe("Glitter corpus schedule", () => {
     expect(buildScheduleState(schedule, configured)).toEqual({
       paused: true,
       note: "Paused automatically until required Glitter corpus credentials are configured: GLITTER_DISCORD_DENYLIST_CHANNEL_IDS",
+    });
+  });
+
+  test("lets the gateway preserve remote-worker approval state without credentials", () => {
+    const schedule = findScheduleById("glitter-corpus-daily");
+    expect(buildScheduleState(schedule, {}, undefined, false)).toEqual({
+      paused: true,
+      note: "Awaiting operator approval of first complete snapshot",
     });
   });
 

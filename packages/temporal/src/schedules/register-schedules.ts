@@ -93,8 +93,12 @@ function buildScheduleConfiguration(schedule: ScheduleDefinition) {
   };
 }
 
-export async function registerSchedules(client: Client): Promise<void> {
+export async function registerSchedules(
+  client: Client,
+  options: { validateLocalEnvironment?: boolean } = {},
+): Promise<void> {
   const scheduleClient = client.schedule;
+  const validateLocalEnvironment = options.validateLocalEnvironment ?? true;
 
   for (const scheduleId of DELETED_SCHEDULE_IDS) {
     try {
@@ -114,7 +118,12 @@ export async function registerSchedules(client: Client): Promise<void> {
       await handle.update((prev) => ({
         ...prev,
         ...buildScheduleConfiguration(schedule),
-        state: buildScheduleState(schedule, Bun.env, prev.state),
+        state: buildScheduleState(
+          schedule,
+          Bun.env,
+          prev.state,
+          validateLocalEnvironment,
+        ),
       }));
 
       console.warn(`Updated schedule: ${schedule.id}`);
@@ -127,7 +136,12 @@ export async function registerSchedules(client: Client): Promise<void> {
         scheduleId: schedule.id,
         ...buildScheduleConfiguration(schedule),
         memo: { description: schedule.memo },
-        state: buildScheduleState(schedule, Bun.env),
+        state: buildScheduleState(
+          schedule,
+          Bun.env,
+          undefined,
+          validateLocalEnvironment,
+        ),
       });
 
       console.warn(`Created schedule: ${schedule.id}`);

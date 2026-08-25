@@ -43,6 +43,7 @@ describe("Temporal worker role contracts", () => {
   it("keeps gateway and event-bridge ownership explicit", () => {
     expect(getWorkerRoleContract("control")).toMatchObject({
       runsGateway: true,
+      validatesScheduleEnvironmentLocally: false,
       runsEventBridge: false,
       workers: [],
     });
@@ -60,6 +61,7 @@ describe("Temporal worker role contracts", () => {
     const contract = getWorkerRoleContract("all");
     expect(contract.workers).toHaveLength(Object.values(TASK_QUEUES).length);
     expect(contract.runsGateway).toBe(true);
+    expect(contract.validatesScheduleEnvironmentLocally).toBe(true);
     expect(contract.runsEventBridge).toBe(true);
     expect(contract.restoresGlitterCorpusMetrics).toBe(true);
   });

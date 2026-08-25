@@ -58,7 +58,12 @@ const DeploymentSchema = z.object({
             ports: z.array(z.object({ containerPort: z.number() })),
             readinessProbe: HttpProbeSchema,
             resources: z.object({
-              limits: z.object({ cpu: z.string(), memory: z.string() }),
+              limits: z
+                .object({
+                  cpu: z.string().optional(),
+                  memory: z.string().optional(),
+                })
+                .optional(),
               requests: z.object({ cpu: z.string(), memory: z.string() }),
             }),
             startupProbe: HttpProbeSchema,
@@ -166,6 +171,15 @@ describe("temporal homelab audit tooling worker topology", () => {
   it("isolates core, agent, and both Glitter queues behind event-loop health probes", async () => {
     const deployments = parseDeployments(await synthesizeApp());
     const core = requireDeployment(deployments, "temporal-temporal-worker");
+    const gateway = requireDeployment(deployments, "temporal-temporal-gateway");
+    const home = requireDeployment(
+      deployments,
+      "temporal-temporal-home-worker",
+    );
+    const reports = requireDeployment(
+      deployments,
+      "temporal-temporal-reports-worker",
+    );
     const agent = requireDeployment(
       deployments,
       "temporal-temporal-agent-worker",
@@ -179,8 +193,11 @@ describe("temporal homelab audit tooling worker topology", () => {
       "temporal-temporal-glitter-context-worker",
     );
 
-    expect(envValue(core, "TEMPORAL_WORKER_ROLE")).toBe("core");
-    expect(envValue(core, "SLEEP_WEBHOOK_PORT")).toBe("9469");
+    expect(envValue(core, "TEMPORAL_WORKER_ROLE")).toBe("legacy");
+    expect(envValue(gateway, "TEMPORAL_WORKER_ROLE")).toBe("control");
+    expect(envValue(gateway, "SLEEP_WEBHOOK_PORT")).toBe("9469");
+    expect(envValue(home, "TEMPORAL_WORKER_ROLE")).toBe("home");
+    expect(envValue(reports, "TEMPORAL_WORKER_ROLE")).toBe("reports");
     expect(envValue(agent, "TEMPORAL_WORKER_ROLE")).toBe("agent");
     expect(envValue(glitterCorpus, "TEMPORAL_WORKER_ROLE")).toBe(
       "glitter-corpus",
@@ -190,6 +207,9 @@ describe("temporal homelab audit tooling worker topology", () => {
     );
 
     const coreContainer = core.spec.template.spec.containers[0];
+    const gatewayContainer = gateway.spec.template.spec.containers[0];
+    const homeContainer = home.spec.template.spec.containers[0];
+    const reportsContainer = reports.spec.template.spec.containers[0];
     const agentContainer = agent.spec.template.spec.containers[0];
     const glitterCorpusContainer =
       glitterCorpus.spec.template.spec.containers[0];
@@ -197,6 +217,9 @@ describe("temporal homelab audit tooling worker topology", () => {
       glitterContext.spec.template.spec.containers[0];
     if (
       coreContainer === undefined ||
+      gatewayContainer === undefined ||
+      homeContainer === undefined ||
+      reportsContainer === undefined ||
       agentContainer === undefined ||
       glitterCorpusContainer === undefined ||
       glitterContextContainer === undefined
@@ -208,6 +231,15 @@ describe("temporal homelab audit tooling worker topology", () => {
       coreContainer.startupProbe,
       coreContainer.livenessProbe,
       coreContainer.readinessProbe,
+      gatewayContainer.startupProbe,
+      gatewayContainer.livenessProbe,
+      gatewayContainer.readinessProbe,
+      homeContainer.startupProbe,
+      homeContainer.livenessProbe,
+      homeContainer.readinessProbe,
+      reportsContainer.startupProbe,
+      reportsContainer.livenessProbe,
+      reportsContainer.readinessProbe,
       agentContainer.startupProbe,
       agentContainer.livenessProbe,
       agentContainer.readinessProbe,
@@ -222,7 +254,16 @@ describe("temporal homelab audit tooling worker topology", () => {
     }
 
     expect(coreContainer.ports.map((port) => port.containerPort)).toEqual([
+      9464, 9465,
+    ]);
+    expect(gatewayContainer.ports.map((port) => port.containerPort)).toEqual([
       9464, 9465, 9466, 9467, 9468, 9469,
+    ]);
+    expect(homeContainer.ports.map((port) => port.containerPort)).toEqual([
+      9464, 9465,
+    ]);
+    expect(reportsContainer.ports.map((port) => port.containerPort)).toEqual([
+      9464, 9465,
     ]);
     expect(agentContainer.ports.map((port) => port.containerPort)).toEqual([
       9464, 9465,
@@ -241,7 +282,9 @@ describe("temporal homelab audit tooling worker topology", () => {
     expect(yaml).toContain("https://temporal-sleep.sjer.red/healthz");
     expect(yaml).toContain("name: SLEEP_WEBHOOK_TOKEN");
   });
+});
 
+describe("Temporal domain worker isolation", () => {
   it("gives each Glitter worker exact resources, credentials, and token isolation", async () => {
     const deployments = parseDeployments(await synthesizeApp());
     const corpus = requireDeployment(
@@ -302,6 +345,85 @@ describe("temporal homelab audit tooling worker topology", () => {
     ]) {
       expect(contextEnv).toContain(required);
       expect(corpusEnv).not.toContain(required);
+    }
+  });
+
+  it("isolates gateway, home, and reports identities and credentials", async () => {
+    const deployments = parseDeployments(await synthesizeApp());
+    const gateway = requireDeployment(deployments, "temporal-temporal-gateway");
+    const home = requireDeployment(
+      deployments,
+      "temporal-temporal-home-worker",
+    );
+    const reports = requireDeployment(
+      deployments,
+      "temporal-temporal-reports-worker",
+    );
+    const definitions = [
+      {
+        deployment: gateway,
+        component: "gateway",
+        serviceAccountName: "temporal-gateway",
+        resources: { requests: { cpu: "100m", memory: "256Mi" } },
+      },
+      {
+        deployment: home,
+        component: "home-worker",
+        serviceAccountName: "temporal-home-worker",
+        resources: { requests: { cpu: "100m", memory: "512Mi" } },
+      },
+      {
+        deployment: reports,
+        component: "reports-worker",
+        serviceAccountName: "temporal-reports-worker",
+        resources: { requests: { cpu: "100m", memory: "512Mi" } },
+      },
+    ];
+    for (const definition of definitions) {
+      expect(definition.deployment.spec).toMatchObject({
+        replicas: 1,
+        strategy: { type: "Recreate" },
+      });
+      expect(definition.deployment.spec.template.spec).toMatchObject({
+        automountServiceAccountToken: false,
+        serviceAccountName: definition.serviceAccountName,
+      });
+      expect(
+        definition.deployment.spec.template.metadata.labels["component"],
+      ).toBe(definition.component);
+      expect(
+        definition.deployment.spec.template.spec.containers[0]?.resources,
+      ).toEqual(definition.resources);
+    }
+
+    const gatewayEnv = envNames(gateway);
+    const homeEnv = envNames(home);
+    const reportsEnv = envNames(reports);
+    for (const required of [
+      "GITHUB_WEBHOOK_SECRET",
+      "AGENT_TASK_API_TOKEN",
+      "SLEEP_WEBHOOK_TOKEN",
+      "XCODE_CLOUD_WEBHOOK_TOKEN",
+    ]) {
+      expect(gatewayEnv).toContain(required);
+      expect(homeEnv).not.toContain(required);
+      expect(reportsEnv).not.toContain(required);
+    }
+    for (const required of ["HA_URL", "HA_TOKEN"]) {
+      expect(homeEnv).toContain(required);
+      expect(gatewayEnv).not.toContain(required);
+      expect(reportsEnv).not.toContain(required);
+    }
+    for (const required of [
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "POSTAL_API_KEY",
+      "RECIPIENT_EMAIL",
+      "SENDER_EMAIL",
+    ]) {
+      expect(reportsEnv).toContain(required);
+      expect(gatewayEnv).not.toContain(required);
+      expect(homeEnv).not.toContain(required);
     }
   });
 

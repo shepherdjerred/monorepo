@@ -144,48 +144,53 @@ describe("agent task post-report failure delivery", () => {
     const events: string[] = [];
     const failureReports: SendAgentTaskFailureReportInput[] = [];
     let followUpAttempts = 0;
+    const activities = {
+      prepareAgentTaskWorkdir: () => ({ workdir: "/tmp/agent-task-test" }),
+      runAgentTask: () => RESULT,
+      investigateAgentTask: () => RESULT,
+      finalizeAgentTask: () => RESULT,
+      sendAgentTaskEmail: () => {
+        events.push("success-report");
+        return {
+          subject: "[OK] Agent Task: Inspect production evidence",
+          messageId: "success-message",
+          recipientId: 1,
+          reportRunId: "agent-task:run-1",
+          receiptKey: "reports/receipts/agent-task/run-1.json",
+        };
+      },
+      scheduleAgentTaskFollowUp: (): never => {
+        followUpAttempts += 1;
+        events.push("follow-up-failed");
+        throw new Error("follow-up schedule unavailable");
+      },
+      sendAgentTaskFailureReport: (input: SendAgentTaskFailureReportInput) => {
+        failureReports.push(input);
+        events.push("failure-report");
+        return {
+          subject: "[FAILED] Agent Task: Inspect production evidence",
+          messageId: "failure-message",
+          recipientId: 1,
+          reportRunId: "agent-task:run-1:failed",
+          receiptKey: "reports/receipts/agent-task/run-1-failed.json",
+        };
+      },
+      cleanupAgentTaskWorkdir: () => {
+        events.push("cleanup");
+      },
+    };
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
       taskQueue: TASK_QUEUES.DEFAULT,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        prepareAgentTaskWorkdir: () => ({ workdir: "/tmp/agent-task-test" }),
-        runAgentTask: () => RESULT,
-        investigateAgentTask: () => RESULT,
-        finalizeAgentTask: () => RESULT,
-        sendAgentTaskEmail: () => {
-          events.push("success-report");
-          return {
-            subject: "[OK] Agent Task: Inspect production evidence",
-            messageId: "success-message",
-            recipientId: 1,
-            reportRunId: "agent-task:run-1",
-            receiptKey: "reports/receipts/agent-task/run-1.json",
-          };
-        },
-        scheduleAgentTaskFollowUp: (): never => {
-          followUpAttempts += 1;
-          events.push("follow-up-failed");
-          throw new Error("follow-up schedule unavailable");
-        },
-        sendAgentTaskFailureReport: (
-          input: SendAgentTaskFailureReportInput,
-        ) => {
-          failureReports.push(input);
-          events.push("failure-report");
-          return {
-            subject: "[FAILED] Agent Task: Inspect production evidence",
-            messageId: "failure-message",
-            recipientId: 1,
-            reportRunId: "agent-task:run-1:failed",
-            receiptKey: "reports/receipts/agent-task/run-1-failed.json",
-          };
-        },
-        cleanupAgentTaskWorkdir: () => {
-          events.push("cleanup");
-        },
-      },
+      activities,
     });
+    const reportWorker = await Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: TASK_QUEUES.REPORTS,
+      activities,
+    });
+    const reportWorkerRun = reportWorker.run();
 
     let failure: unknown;
     try {
@@ -198,6 +203,9 @@ describe("agent task post-report failure delivery", () => {
       );
     } catch (error: unknown) {
       failure = error;
+    } finally {
+      reportWorker.shutdown();
+      await reportWorkerRun;
     }
 
     expect(failure).toBeInstanceOf(Error);
@@ -221,48 +229,53 @@ describe("agent task post-report failure delivery", () => {
     const events: string[] = [];
     const failureReports: SendAgentTaskFailureReportInput[] = [];
     let cleanupAttempts = 0;
+    const activities = {
+      prepareAgentTaskWorkdir: () => ({ workdir: "/tmp/agent-task-test" }),
+      runAgentTask: () => RESULT_WITHOUT_FOLLOW_UP,
+      investigateAgentTask: () => RESULT_WITHOUT_FOLLOW_UP,
+      finalizeAgentTask: () => RESULT_WITHOUT_FOLLOW_UP,
+      sendAgentTaskEmail: () => {
+        events.push("success-report");
+        return {
+          subject: "[OK] Agent Task: Inspect production evidence",
+          messageId: "success-message",
+          recipientId: 1,
+          reportRunId: "agent-task:run-2",
+          receiptKey: "reports/receipts/agent-task/run-2.json",
+        };
+      },
+      scheduleAgentTaskFollowUp: (): never => {
+        throw new Error("unexpected follow-up dispatch");
+      },
+      sendAgentTaskFailureReport: (input: SendAgentTaskFailureReportInput) => {
+        failureReports.push(input);
+        events.push("failure-report");
+        return {
+          subject: "[FAILED] Agent Task: Inspect production evidence",
+          messageId: "failure-message",
+          recipientId: 1,
+          reportRunId: "agent-task:run-2:failed",
+          receiptKey: "reports/receipts/agent-task/run-2-failed.json",
+        };
+      },
+      cleanupAgentTaskWorkdir: (): never => {
+        cleanupAttempts += 1;
+        events.push("cleanup-failed");
+        throw new Error("workdir cleanup unavailable");
+      },
+    };
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
       taskQueue: TASK_QUEUES.DEFAULT,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        prepareAgentTaskWorkdir: () => ({ workdir: "/tmp/agent-task-test" }),
-        runAgentTask: () => RESULT_WITHOUT_FOLLOW_UP,
-        investigateAgentTask: () => RESULT_WITHOUT_FOLLOW_UP,
-        finalizeAgentTask: () => RESULT_WITHOUT_FOLLOW_UP,
-        sendAgentTaskEmail: () => {
-          events.push("success-report");
-          return {
-            subject: "[OK] Agent Task: Inspect production evidence",
-            messageId: "success-message",
-            recipientId: 1,
-            reportRunId: "agent-task:run-2",
-            receiptKey: "reports/receipts/agent-task/run-2.json",
-          };
-        },
-        scheduleAgentTaskFollowUp: (): never => {
-          throw new Error("unexpected follow-up dispatch");
-        },
-        sendAgentTaskFailureReport: (
-          input: SendAgentTaskFailureReportInput,
-        ) => {
-          failureReports.push(input);
-          events.push("failure-report");
-          return {
-            subject: "[FAILED] Agent Task: Inspect production evidence",
-            messageId: "failure-message",
-            recipientId: 1,
-            reportRunId: "agent-task:run-2:failed",
-            receiptKey: "reports/receipts/agent-task/run-2-failed.json",
-          };
-        },
-        cleanupAgentTaskWorkdir: (): never => {
-          cleanupAttempts += 1;
-          events.push("cleanup-failed");
-          throw new Error("workdir cleanup unavailable");
-        },
-      },
+      activities,
     });
+    const reportWorker = await Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: TASK_QUEUES.REPORTS,
+      activities,
+    });
+    const reportWorkerRun = reportWorker.run();
 
     let failure: unknown;
     try {
@@ -275,6 +288,9 @@ describe("agent task post-report failure delivery", () => {
       );
     } catch (error: unknown) {
       failure = error;
+    } finally {
+      reportWorker.shutdown();
+      await reportWorkerRun;
     }
 
     expect(failure).toBeInstanceOf(Error);

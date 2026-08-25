@@ -1,11 +1,11 @@
 import type { Chart } from "cdk8s";
-import type { Deployment, ISecret } from "cdk8s-plus-31";
+import type { IPodSelector, ISecret } from "cdk8s-plus-31";
 import { EnvValue, Service } from "cdk8s-plus-31";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
 export function createTemporalWorkerGithubWebhookService(
   chart: Chart,
-  deployment: Deployment,
+  selector: IPodSelector,
 ) {
   // Service + Cloudflare Tunnel binding for the GitHub webhook receiver
   // (Hono server on :9466). Public URL: https://pr-bot.sjer.red — register
@@ -18,7 +18,7 @@ export function createTemporalWorkerGithubWebhookService(
         name: "temporal-worker-gh-webhook",
         labels: { app: "temporal-worker-gh-webhook" },
       },
-      selector: deployment,
+      selector,
       ports: [{ name: "gh-webhook", port: 9466, targetPort: 9466 }],
     },
   );
@@ -41,7 +41,7 @@ export function createTemporalWorkerGithubWebhookService(
 
 export function createAgentTaskApiService(
   chart: Chart,
-  deployment: Deployment,
+  selector: IPodSelector,
 ) {
   const agentTaskService = new Service(
     chart,
@@ -51,7 +51,7 @@ export function createAgentTaskApiService(
         name: "temporal-worker-agent-tasks",
         labels: { app: "temporal-worker-agent-tasks" },
       },
-      selector: deployment,
+      selector,
       ports: [{ name: "agent-tasks", port: 9467, targetPort: 9467 }],
     },
   );
@@ -71,7 +71,7 @@ export function createAgentTaskApiService(
 
 export function createSleepWebhookService(
   chart: Chart,
-  deployment: Deployment,
+  selector: IPodSelector,
 ) {
   const sleepWebhookService = new Service(
     chart,
@@ -81,7 +81,7 @@ export function createSleepWebhookService(
         name: "temporal-worker-sleep-webhook",
         labels: { app: "temporal-worker-sleep-webhook" },
       },
-      selector: deployment,
+      selector,
       ports: [{ name: "sleep-webhook", port: 9469, targetPort: 9469 }],
     },
   );
@@ -112,7 +112,7 @@ export function sleepWebhookEnv(secret: ISecret): Record<string, EnvValue> {
 
 export function createXcodeCloudWebhookService(
   chart: Chart,
-  deployment: Deployment,
+  selector: IPodSelector,
 ) {
   // Service + Cloudflare Tunnel binding for the Xcode Cloud webhook receiver
   // (Hono server on :9468). Public URL: https://xcode-cloud-webhook.sjer.red —
@@ -127,7 +127,7 @@ export function createXcodeCloudWebhookService(
         name: "temporal-worker-xcode-cloud-webhook",
         labels: { app: "temporal-worker-xcode-cloud-webhook" },
       },
-      selector: deployment,
+      selector,
       ports: [{ name: "xc-webhook", port: 9468, targetPort: 9468 }],
     },
   );

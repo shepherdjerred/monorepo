@@ -283,6 +283,18 @@ describe("Container resource requests backstop", () => {
         },
       ],
       [
+        "temporal-temporal-gateway/temporal-gateway",
+        { requests: { cpu: "100m", memory: "256Mi" } },
+      ],
+      [
+        "temporal-temporal-home-worker/temporal-home-worker",
+        { requests: { cpu: "100m", memory: "512Mi" } },
+      ],
+      [
+        "temporal-temporal-reports-worker/temporal-reports-worker",
+        { requests: { cpu: "100m", memory: "512Mi" } },
+      ],
+      [
         "temporal-temporal-glitter-corpus-worker/temporal-glitter-corpus-worker",
         {
           requests: { cpu: "250m", memory: "512Mi" },

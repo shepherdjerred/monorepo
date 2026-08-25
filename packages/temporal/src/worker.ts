@@ -279,7 +279,10 @@ async function main(): Promise<void> {
     const client = new Client({ connection: clientConnection });
 
     if (roleContract.runsGateway) {
-      await registerSchedules(client);
+      await registerSchedules(client, {
+        validateLocalEnvironment:
+          roleContract.validatesScheduleEnvironmentLocally,
+      });
       jsonLog("info", "Schedules registered");
 
       httpServers = startHttpServers(client);

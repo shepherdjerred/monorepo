@@ -11,16 +11,21 @@ export function buildScheduleState(
   schedule: ScheduleStateDefinition,
   env: Readonly<Record<string, string | undefined>>,
   previous?: { paused: boolean; note?: string },
+  validateEnvironment = true,
 ): { paused: boolean; note?: string } {
-  const missing = (schedule.requiredEnvironment ?? []).filter((name) => {
-    const value = env[name];
-    return value === undefined || value === "";
-  });
-  missing.push(
-    ...(schedule.requiredPresentEnvironment ?? []).filter(
-      (name) => env[name] === undefined,
-    ),
-  );
+  const missing = validateEnvironment
+    ? (schedule.requiredEnvironment ?? []).filter((name) => {
+        const value = env[name];
+        return value === undefined || value === "";
+      })
+    : [];
+  if (validateEnvironment) {
+    missing.push(
+      ...(schedule.requiredPresentEnvironment ?? []).filter(
+        (name) => env[name] === undefined,
+      ),
+    );
+  }
   if (missing.length > 0) {
     return {
       paused: true,

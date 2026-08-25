@@ -30,8 +30,8 @@ import { createTemporalWorkerCrdReaderRbac } from "./crd-rbac.ts";
 import { sleepWebhookEnv } from "./http-services.ts";
 import { glitterContextEnv, glitterCorpusEnv } from "./glitter-corpus-env.ts";
 import { createTemporalGlitterWorkers } from "./glitter-worker.ts";
+import { createTemporalIngressWorkers } from "./ingress-workers.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
-import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
 import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
@@ -202,7 +202,7 @@ export function createTemporalWorkerDeployment(
     podMetadata: {
       labels: {
         app: "temporal-worker",
-        component: "core-worker",
+        component: "legacy-worker",
       },
     },
   });
@@ -217,21 +217,9 @@ export function createTemporalWorkerDeployment(
       //        activity_task_fail, etc. — see installRuntime in worker.ts)
       // :9465 = application Prometheus registry (pr_*, default Bun process
       //        metrics — see observability/metrics.ts)
-      // :9466 = GitHub webhook receiver (Hono server in event-bridge/
-      //        github-webhook.ts) — exposed via Cloudflare Tunnel for PR
-      //        review/summary events.
-      // :9467 = authenticated agent-task scheduling API.
-      // :9468 = Xcode Cloud webhook receiver (Hono server in event-bridge/
-      //        xcode-cloud-webhook.ts) — exposed via Cloudflare Tunnel; POSTs
-      //        iOS build failures into Alertmanager.
-      // :9469 = authenticated iOS sleep automation webhook.
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },
-        { number: 9466, name: "gh-webhook" },
-        { number: 9467, name: "agent-tasks" },
-        { number: 9468, name: "xc-webhook" },
-        { number: 9469, name: "sleep-webhook" },
       ],
       securityContext: {
         user: UID,
@@ -258,7 +246,7 @@ export function createTemporalWorkerDeployment(
       envVariables: {
         TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
-        TEMPORAL_WORKER_ROLE: EnvValue.fromValue("core"),
+        TEMPORAL_WORKER_ROLE: EnvValue.fromValue("legacy"),
         FRESHRSS_API_URL: EnvValue.fromValue(
           "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",
         ),
@@ -488,6 +476,12 @@ export function createTemporalWorkerDeployment(
     },
   });
 
+  const { gatewayDeployment, homeDeployment, reportsDeployment } =
+    createTemporalIngressWorkers(chart, {
+      serverServiceName: props.serverServiceName,
+      secret,
+    });
+
   const glitterCommonEnv = {
     TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
@@ -595,11 +589,12 @@ export function createTemporalWorkerDeployment(
     matchLabels: { app: "temporal-worker-app-metrics" },
   });
 
-  createTemporalWorkerHttpServices(chart, deployment);
-
   return {
     deployment,
     agentDeployment,
+    gatewayDeployment,
+    homeDeployment,
+    reportsDeployment,
     glitterCorpusDeployment: corpusDeployment,
     glitterContextDeployment: contextDeployment,
   };
