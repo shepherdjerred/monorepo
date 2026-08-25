@@ -9,11 +9,6 @@
       "count": 1
     }
   },
-  ".buildkite/scripts/ci-lane-coverage.test.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   ".buildkite/scripts/docker-source-label.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 4

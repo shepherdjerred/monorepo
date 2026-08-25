@@ -4,7 +4,167 @@
       "count": 1
     }
   },
+  "scripts/argocd.ts": {
+    "@typescript-eslint/no-base-to-string": {
+      "count": 1
+    },
+    "@typescript-eslint/no-deprecated": {
+      "count": 5
+    },
+    "@typescript-eslint/no-shadow": {
+      "count": 4
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-template-expression": {
+      "count": 1
+    },
+    "@typescript-eslint/prefer-nullish-coalescing": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    },
+    "@typescript-eslint/switch-exhaustiveness-check": {
+      "count": 1
+    },
+    "complexity": {
+      "count": 6
+    },
+    "custom-rules/no-parent-imports": {
+      "count": 5
+    },
+    "custom-rules/no-type-guards": {
+      "count": 1
+    },
+    "custom-rules/prefer-zod-validation": {
+      "count": 1
+    },
+    "import/no-relative-packages": {
+      "count": 5
+    },
+    "max-depth": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 11
+    },
+    "sonarjs/cognitive-complexity": {
+      "count": 7
+    },
+    "unicorn/no-array-callback-reference": {
+      "count": 1
+    },
+    "unicorn/no-await-expression-member": {
+      "count": 10
+    },
+    "unicorn/prefer-simple-condition-first": {
+      "count": 8
+    },
+    "unicorn/prefer-type-error": {
+      "count": 1
+    }
+  },
   "scripts/helm-release-core.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/cdk8s/scripts/generate-helm-types.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/cdk8s/src/argocd-helm-render.test.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/cdk8s/src/argocd-release-reconciliation.test.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/cdk8s/src/argocd-root-finalization.test.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/cdk8s/src/backup-policy/pvc-backup-policy.test.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/cdk8s/src/github-tag-archive.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/cdk8s/src/helm-template.test.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/cdk8s/src/misc/minecraft-config.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/cdk8s/src/misc/typed-helm-parameters.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/helm-types/src/code-generator.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/helm-types/src/comment-parser.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/helm-types/src/config.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/helm-types/src/interface-generator.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/helm-types/src/type-converter.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/helm-types/src/type-inference.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/helm-types/src/yaml-comment-filters.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/helm-types/src/yaml-comment-regex-parser.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/helm-types/src/yaml-comments.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/helm-types/src/yaml-preprocess.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

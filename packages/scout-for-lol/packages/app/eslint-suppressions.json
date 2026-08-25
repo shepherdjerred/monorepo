@@ -3,5 +3,10 @@
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
+  },
+  "src/lib/form-schemas.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
   }
 }

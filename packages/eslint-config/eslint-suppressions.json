@@ -31,7 +31,7 @@
   },
   "src/rules/shared/tool-runner.ts": {
     "sonarjs/cognitive-complexity": {
-      "count": 2
+      "count": 1
     }
   }
 }

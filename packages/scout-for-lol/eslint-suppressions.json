@@ -1,4 +1,604 @@
 {
+  "packages/app/src/hooks/use-explore-run-observer.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/app/src/lib/form-schemas.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/backfill-overdue-season-comps.ts": {
+    "@typescript-eslint/prefer-optional-chain": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/check-orphan-seasonids.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 8
+    }
+  },
+  "packages/backend/scripts/cleanup-iron-iv-entries.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 7
+    },
+    "unicorn/no-useless-undefined": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/convert-common-denominator-reports.ts": {
+    "unicorn/no-negated-condition": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/discover-marketing-showcase.ts": {
+    "custom-rules/prefer-async-await": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "unicorn/no-await-expression-member": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/ensure-dev-postgres.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/evaluate-lane-priors.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/evaluate-predictions.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/generate-lane-priors.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/inspect-pipeline-trace.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    },
+    "@typescript-eslint/prefer-optional-chain": {
+      "count": 1
+    },
+    "custom-rules/prefer-structured-logging": {
+      "count": 25
+    },
+    "regexp/no-useless-lazy": {
+      "count": 1
+    },
+    "unicorn/consistent-existence-index-check": {
+      "count": 3
+    },
+    "unicorn/no-negated-condition": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/lane-prior-cli.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/migrate-scoutql-v2.test.ts": {
+    "unicorn/no-await-expression-member": {
+      "count": 3
+    }
+  },
+  "packages/backend/scripts/outreach.ts": {
+    "@typescript-eslint/array-type": {
+      "count": 1
+    },
+    "@typescript-eslint/no-confusing-void-expression": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-template-expression": {
+      "count": 1
+    },
+    "complexity": {
+      "count": 1
+    },
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    },
+    "unicorn/no-await-expression-member": {
+      "count": 1
+    },
+    "unicorn/no-negated-condition": {
+      "count": 2
+    },
+    "unicorn/prefer-simple-condition-first": {
+      "count": 1
+    },
+    "unicorn/prefer-string-slice": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/scoutql-v2-rewrite-render.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/seed-design-audit.ts": {
+    "custom-rules/no-parent-imports": {
+      "count": 1
+    }
+  },
+  "packages/backend/scripts/smoke.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 2
+    }
+  },
+  "packages/backend/scripts/update-queue-windows.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    },
+    "custom-rules/no-parent-imports": {
+      "count": 1
+    },
+    "custom-rules/prefer-structured-logging": {
+      "count": 6
+    },
+    "import/no-relative-packages": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/announce.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/ask-publish.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/classic-prematch-earnings.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/earnings-retry.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/earnings.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "packages/backend/src/betting/matching.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/parlay-evaluator.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/parlay-history.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/parlay-model-schema.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/parlay-place-bet.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/parlay-pricing.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/parlay-publish.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/parlay-settle.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "packages/backend/src/betting/parlay-stats.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "packages/backend/src/betting/settle.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/settlement-dm-delivery.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/settlement-dm.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/sweep-observability.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/sweep.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/weekly-parlay-contribution.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/weekly-parlay-open.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/betting/weekly-parlay-settle.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/database/legacy-import/run-import.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/discord/interactions.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/discord/scout/visualization-format.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/discord/utils/dm.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/explore/run-turn.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/http/server.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/api/riot-call.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/competition/processors/generic-win-counter.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/discord/channel.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/initial-history/enqueue.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/review/test-reviews.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/tasks/cleanup/reconcile-removed-guilds.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/tasks/cleanup/validate-data.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/tasks/notification-filters.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/tasks/pairing/calculate-pairings.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "packages/backend/src/league/tasks/postmatch/index.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/tasks/prematch/active-game-detection.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/tasks/prematch/loading-screen-builder.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/league/tasks/prematch/prematch-notification.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/lib/subscription/limits.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/report-lake/compactor.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/report-lake/rebuild-sources.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/reports/duckdb/compile-plan.injection.test.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/reports/identity.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/storage/s3-query.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "packages/backend/src/testing/postgres-server.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/trpc/context.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/trpc/image-routes.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/trpc/router/competition.router.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/scripts/generate-asset-manifest.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    },
+    "custom-rules/zod-schema-naming": {
+      "count": 1
+    },
+    "unicorn/import-style": {
+      "count": 1
+    }
+  },
+  "packages/data/scripts/patch-analysis.ts": {
+    "custom-rules/zod-schema-naming": {
+      "count": 1
+    }
+  },
+  "packages/data/scripts/riot-patch.ts": {
+    "preserve-caught-error": {
+      "count": 1
+    }
+  },
+  "packages/data/scripts/update-changelog.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    },
+    "unicorn/prefer-string-raw": {
+      "count": 2
+    }
+  },
+  "packages/data/scripts/update-changelog.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "packages/data/scripts/update-data-dragon.test.ts": {
+    "unicorn/numeric-separators-style": {
+      "count": 3
+    }
+  },
+  "packages/data/scripts/update-data-dragon.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    },
+    "unicorn/no-useless-undefined": {
+      "count": 1
+    },
+    "unicorn/numeric-separators-style": {
+      "count": 2
+    },
+    "unicorn/prefer-simple-condition-first": {
+      "count": 1
+    }
+  },
+  "packages/data/src/lane-priors/eval.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/model/legacy/report-query-expression.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/model/legacy/report-query-parser.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/model/legacy/report-query-render-validation.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/model/legacy/report-query-render.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/model/queue-window-drift.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "packages/data/src/model/scoutql/analyze-display.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/model/scoutql/analyze-lower-aggregate.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/model/scoutql/ast.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/model/scoutql/cst-to-ast-expr.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/model/scoutql/plan.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/data/src/review/generator-helpers.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/design-audit/playwright.config.ts": {
+    "unicorn/prefer-simple-condition-first": {
+      "count": 1
+    }
+  },
+  "packages/design-audit/src/page-checks.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/design-audit/src/static-token-check.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/design-system/scripts/outline-font.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/evals/src/materialization/materialize-case.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/frontend/src/components/review-tool/match-reviewer-info.tsx": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/frontend/src/components/review-tool/rank-config-panel.tsx": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/frontend/src/components/review-tool/use-match-browser.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/frontend/src/lib/review-tool/s3.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/report/scripts/verify-visual-contract.ts": {
+    "@typescript-eslint/prefer-regexp-exec": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 3
+    },
+    "regexp/no-contradiction-with-assertion": {
+      "count": 1
+    },
+    "unicorn/import-style": {
+      "count": 1
+    }
+  },
+  "packages/report/src/html/visualization-calendar-tooltip.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/report/src/html/visualization-snapshot-option.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/report/src/html/visualization-tooltip.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
   "scripts/audit-unsafe-code.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

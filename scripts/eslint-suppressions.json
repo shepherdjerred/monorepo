@@ -54,9 +54,24 @@
       "count": 1
     }
   },
+  "jscpd-check.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
   "lib/ci-env-command.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
+    }
+  },
+  "lib/ci-env-pipeline.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "lib/ci-secret-grant-pipeline.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
     }
   },
   "lib/npm-release-eligibility.ts": {
