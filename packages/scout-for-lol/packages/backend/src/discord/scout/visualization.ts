@@ -5,6 +5,8 @@ import {
   escapeMarkdown as escapeDiscordMarkdown,
 } from "discord.js";
 import {
+  REPORT_METRICS,
+  isLowSampleGameCount,
   type ExploreMessage,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
@@ -180,15 +182,20 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
     .map((series) => {
       const point = series.points.at(-1);
       if (point === undefined) {
-        return `**${escapeMarkdown(truncateNativeCell(series.label))}**\nUnknown n=0`;
+        return `**${escapeMarkdown(truncateNativeCell(series.label))}**\nUnknown (Based on 0 games)`;
       }
       const value = formatSeriesValue(snapshot, series, point.value);
-      const sampleSize = point.evidence.sampleSize;
+      const games = point.evidence.games ?? point.evidence.sampleSize;
       const comparison =
         snapshot.temporal?.comparison !== undefined ||
         point.comparisonEvidence !== undefined;
+      const caveat =
+        REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
+          "rate" && isLowSampleGameCount(games)
+          ? " · Fewer than 10 games — treat this rate as indicative only."
+          : "";
       const details = comparison
-        ? `n=${sampleSize.toString()} · Baseline: ${formatSeriesValue(
+        ? `Based on ${games.toString()} games${caveat} · Baseline: ${formatSeriesValue(
             snapshot,
             series,
             point.comparisonValue ?? null,
@@ -202,7 +209,7 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
               ? "Unknown"
               : `${(point.percentageDelta * 100).toFixed(1)}%`
           }`
-        : `n=${sampleSize.toString()}`;
+        : `Based on ${games.toString()} games${caveat}`;
       return `**${escapeMarkdown(truncateNativeCell(series.label))}**\n${value} ${details}`;
     })
     .join("\n\n");

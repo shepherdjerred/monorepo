@@ -51,6 +51,14 @@ A chart that renders empty or wrong is nearly always a `y` bound to something
 the query does not actually output — check that the name in `WITH` appears in
 the `SELECT`.
 
+## Read the evidence
+
+Scout reports describe matches Scout has ingested for tracked players. They do
+not describe every League match or the whole ranked ladder. Rates and derived
+values show their game basis as **Based on N games**. When fewer than 10 games
+support a rate, Scout adds: **Fewer than 10 games — treat this rate as
+indicative only.**
+
 ## Chart a trend
 
 Group by a time dimension rather than a player or champion:

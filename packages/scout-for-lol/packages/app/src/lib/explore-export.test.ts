@@ -36,6 +36,7 @@ const PREVIEW = {
   rows: [
     {
       label: "Faker",
+      games: 12,
       values: [
         { column: "games", value: 12 },
         { column: "win_rate", value: 0.5833 },
@@ -58,7 +59,29 @@ describe("conversationToMarkdown", () => {
   test("formats metric values through the display formatter", () => {
     const markdown = conversationToMarkdown("Wins", answerWithPreview(PREVIEW));
     expect(markdown).toContain("58.3%");
+    expect(markdown).toContain("(Based on 12 games)");
     expect(markdown).not.toContain("0.5833");
+  });
+
+  test("adds one plain-language note for thin rate rows", () => {
+    const preview = {
+      ...PREVIEW,
+      rows: [
+        {
+          label: "Faker",
+          games: 4,
+          values: [
+            { column: "games", value: 4 },
+            { column: "win_rate", value: 0.75 },
+          ],
+        },
+      ],
+    };
+    const markdown = conversationToMarkdown("Wins", answerWithPreview(preview));
+    expect(markdown).toContain(
+      "Fewer than 10 games — treat this rate as indicative only.",
+    );
+    expect(markdown.match(/Fewer than 10 games/g)).toHaveLength(1);
   });
 
   test("escapes pipes and flattens newlines in cells and headers", () => {

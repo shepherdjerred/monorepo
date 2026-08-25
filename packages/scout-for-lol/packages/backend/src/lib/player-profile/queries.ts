@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  LOW_SAMPLE_GAME_THRESHOLD,
   RankSchema,
   leaguePointsDelta,
   type DiscordGuildId,
@@ -35,7 +36,7 @@ import {
  * printing a confident number. Matches the pairing job's existing threshold
  * (`league/tasks/pairing/weekly-update.ts`).
  */
-export const MIN_GAMES_FOR_RATE = 10;
+const MIN_GAMES_FOR_RATE = LOW_SAMPLE_GAME_THRESHOLD;
 
 /** Games summarised for "recent form"; also the default history page size. */
 const RECENT_FORM_GAMES = 20;

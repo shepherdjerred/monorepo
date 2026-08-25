@@ -110,6 +110,8 @@ async function renderFixture(
   expect(JSON.stringify(interactiveOption.xAxis)).toBe(
     JSON.stringify(staticOption.xAxis),
   );
+  expect(JSON.stringify(interactiveOption)).not.toContain("95% CI");
+  expect(JSON.stringify(interactiveOption)).not.toContain("confidenceInterval");
   expect(JSON.stringify(interactiveOption.yAxis)).toBe(
     JSON.stringify(staticOption.yAxis),
   );

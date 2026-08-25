@@ -1,4 +1,4 @@
-import type { VisualizationSnapshot } from "@scout-for-lol/data";
+import { evidenceGames, type VisualizationSnapshot } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import { calendarTooltipText } from "#src/html/visualization-calendar-tooltip.ts";
 import {
@@ -60,7 +60,7 @@ export function calendarOption(
                   point.comparisonValue ?? null,
                   point.absoluteDelta ?? null,
                   point.percentageDelta ?? null,
-                  point.evidence.sampleSize,
+                  evidenceGames(point.evidence),
                 ],
               ],
         ),

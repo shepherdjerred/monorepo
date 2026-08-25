@@ -25,6 +25,7 @@ describe("attachTemporalComparison", () => {
       comparisonRows,
       comparisonEvidence: comparisonRows.map((baselineRow) => ({
         label: baselineRow.label,
+        games: 1,
         values: [{ column: "games", sampleSize: 1 }],
       })),
       plan,
@@ -55,6 +56,7 @@ describe("attachTemporalComparison", () => {
       comparisonEvidence: [
         {
           label: baseline.label,
+          games: 5,
           values: [{ column: "games", sampleSize: 5 }],
         },
       ],
@@ -100,6 +102,7 @@ describe("attachTemporalComparison", () => {
       comparisonRows,
       comparisonEvidence: comparisonRows.map((baselineRow) => ({
         label: baselineRow.label,
+        games: 1,
         values: [{ column: "games", sampleSize: 1 }],
       })),
       plan,

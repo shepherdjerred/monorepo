@@ -87,7 +87,9 @@ describe("Scout Discord visualizations", () => {
       }),
     });
     const listJson = JSON.stringify(list.embeds);
-    expect(listJson).toContain("- Aurora: Games: 8, Win rate: 100.0%");
+    expect(listJson).toContain(
+      "- Aurora: Games: 8, Win rate: 100.0% · Based on 8 games · Fewer than 10 games — treat this rate as indicative only.",
+    );
     expect(listJson).not.toContain("| Games |");
 
     const leaderboardJson = JSON.stringify(board.embeds);
@@ -146,7 +148,7 @@ describe("Scout Discord visualizations", () => {
     });
     const comparisonDescription =
       visualizationToEmbed(comparisonKpi)?.data.description;
-    expect(comparisonDescription).toContain("n=56");
+    expect(comparisonDescription).toContain("Based on 56 games");
     expect(comparisonDescription).toContain("Baseline: 42");
     expect(comparisonDescription).toContain("Δ 14");
     expect(comparisonDescription).toContain("33.3%");
@@ -325,8 +327,10 @@ describe("Scout Discord visualization bounds", () => {
     });
     const sparseDescription =
       visualizationToEmbed(sparseSnapshot)?.data.description;
-    expect(sparseDescription).toContain("Aurora    8          Unknown");
-    expect(sparseDescription).toContain("Jhin      Unknown    28.6%");
+    expect(sparseDescription).toContain("Aurora    8");
+    expect(sparseDescription).toContain(
+      "Jhin      Unknown    28.6% · Based on 8 games · Fewer than 10 games — treat this rate as indicative only.",
+    );
 
     const incompletePreview = ReportAiPreviewSummarySchema.parse({
       ...preview,
@@ -486,7 +490,7 @@ test("renders transformed snapshot values instead of raw preview values", () => 
   expect(description).not.toContain("7");
 });
 
-test("preserves confidence intervals in native temporal rows", () => {
+test("renders plain-language game evidence in native temporal rows", () => {
   const snapshot = VisualizationSnapshotSchema.parse({
     ...scoutTestVisualization,
     temporal: {
@@ -520,14 +524,16 @@ test("preserves confidence intervals in native temporal rows", () => {
   });
 
   expect(visualizationToEmbed(snapshot)?.data.description).toContain(
-    "95% CI 75.0%–100.0%",
+    "Based on 8 games · Fewer than 10 games — treat this rate as indicative only.",
   );
   expect(
     visualizationToEmbed(
       VisualizationSnapshotSchema.parse({ ...snapshot, temporal: null }),
       preview,
     )?.data.description,
-  ).toContain("95% CI 75.0%–100.0%");
+  ).toContain(
+    "Based on 8 games · Fewer than 10 games — treat this rate as indicative only.",
+  );
 });
 
 test("preserves evidence when a series dimension contains the display separator", () => {
@@ -564,7 +570,9 @@ test("preserves evidence when a series dimension contains the display separator"
 
   expect(
     visualizationToEmbed(snapshot, aliasedPreview)?.data.description,
-  ).toContain("95% CI 75.0%–100.0%");
+  ).toContain(
+    "Based on 8 games · Fewer than 10 games — treat this rate as indicative only.",
+  );
 });
 
 test("counts emoji-presentation graphemes at their rendered width", () => {
@@ -640,7 +648,7 @@ test("chooses the most specific matching series for preview evidence", () => {
   };
 
   expect(formatPreviewValueWithEvidence(snapshot, column, row)).toContain(
-    "95% CI 90.0%–100.0%",
+    "Based on 8 games · Fewer than 10 games — treat this rate as indicative only.",
   );
   const cappedSnapshot = VisualizationSnapshotSchema.parse({
     ...snapshot,
@@ -710,7 +718,9 @@ test("matches All-series evidence by exact row identity", () => {
       label: "Foo • Bar",
       values: new Map([["win_rate", 1]]),
     }),
-  ).toContain("95% CI 90.0%–100.0%");
+  ).toContain(
+    "Based on 8 games · Fewer than 10 games — treat this rate as indicative only.",
+  );
 });
 
 test("keeps native values visible when labels exceed the description budget", () => {

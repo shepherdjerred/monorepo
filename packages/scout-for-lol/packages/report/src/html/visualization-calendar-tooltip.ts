@@ -1,4 +1,9 @@
-import type { VisualizationSnapshot } from "@scout-for-lol/data";
+import {
+  REPORT_METRICS,
+  evidenceGames,
+  isLowSampleGameCount,
+  type VisualizationSnapshot,
+} from "@scout-for-lol/data";
 import { format as echartsFormat } from "echarts";
 import {
   formatPercent,
@@ -24,7 +29,20 @@ export function calendarTooltipText(
     series === undefined
       ? formatValue(value)
       : formatSeriesValue(snapshot, series, value);
-  const lines = [`${label}: ${formattedValue} (n=${sampleSize.toString()})`];
+  const lines = [
+    `${label}: ${formattedValue} (Based on ${sampleSize.toString()} games)`,
+  ];
+  if (
+    series !== undefined &&
+    (snapshot.display.stack === "percent" ||
+      REPORT_METRICS.some(
+        (candidate) =>
+          candidate.id === series.metric && candidate.kind === "rate",
+      )) &&
+    isLowSampleGameCount(evidenceGames({ games: sampleSize, sampleSize }))
+  ) {
+    lines.push("Fewer than 10 games — treat this rate as indicative only.");
+  }
   if (snapshot.temporal?.comparison !== undefined) {
     const comparison = typeof data[2] === "number" ? data[2] : null;
     const absolute = typeof data[3] === "number" ? data[3] : null;

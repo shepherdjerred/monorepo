@@ -311,7 +311,7 @@ describe("executeReportQuery temporal comparisons", () => {
         absoluteDelta: 1,
         percentageDelta: null,
         comparisonSampleSize: 0,
-        comparisonConfidenceInterval: null,
+        comparisonGames: 0,
       },
       {
         column: "win_rate",
@@ -320,7 +320,7 @@ describe("executeReportQuery temporal comparisons", () => {
         absoluteDelta: null,
         percentageDelta: null,
         comparisonSampleSize: 0,
-        comparisonConfidenceInterval: null,
+        comparisonGames: 0,
       },
     ]);
     expect(result.rows[1]?.dimensions.at(-1)).toBe("2026-05-17");
@@ -350,7 +350,7 @@ describe("executeReportQuery temporal comparisons", () => {
     expect(result.visualization?.series[0]?.points[0]?.value).toBeNull();
     expect(result.visualization?.series[0]?.points[1]).toMatchObject({
       value: 3,
-      evidence: { sampleSize: 2, numerator: 15, denominator: 5 },
+      evidence: { games: 2, sampleSize: 2, numerator: 15, denominator: 5 },
     });
   });
 
@@ -389,7 +389,7 @@ describe("executeReportQuery temporal comparisons", () => {
 
     expect(result.visualization?.series[0]?.points[1]).toMatchObject({
       value: 20 / 11,
-      evidence: { sampleSize: 2, numerator: 20, denominator: 11 },
+      evidence: { games: 2, sampleSize: 2, numerator: 20, denominator: 11 },
     });
   });
 
@@ -430,7 +430,7 @@ describe("executeReportQuery temporal comparisons", () => {
 
     expect(result.visualization?.series[0]?.points[1]).toMatchObject({
       value: 20 / 70,
-      evidence: { sampleSize: 2, numerator: 20, denominator: 70 },
+      evidence: { games: 2, sampleSize: 2, numerator: 20, denominator: 70 },
     });
   });
 
@@ -452,7 +452,7 @@ describe("executeReportQuery temporal comparisons", () => {
 
     expect(result.visualization?.series[0]?.points[0]).toMatchObject({
       value: -3,
-      evidence: { sampleSize: 1, numerator: -3, denominator: 1 },
+      evidence: { games: 1, sampleSize: 1, numerator: -3, denominator: 1 },
     });
   });
 });

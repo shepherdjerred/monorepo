@@ -3,6 +3,11 @@ import type {
   ReportChartOptions,
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import {
+  REPORT_METRICS,
+  evidenceGames,
+  isLowSampleGameCount,
+} from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import {
   analyticsChartColors,
@@ -44,6 +49,21 @@ export function visualizationSnapshotBaseOption(
 ): echarts.EChartsOption {
   const { options, theme, colors } =
     visualizationSnapshotPresentation(snapshot);
+  const thinRateData = snapshot.series.some(
+    (series) =>
+      (snapshot.display.stack === "percent" || isRateMetric(series.metric)) &&
+      series.points.some((point) =>
+        isLowSampleGameCount(evidenceGames(point.evidence)),
+      ),
+  );
+  const subtitle = [
+    options.subtitle,
+    thinRateData
+      ? "Fewer than 10 games — treat this rate as indicative only."
+      : undefined,
+  ]
+    .filter((value) => value !== undefined)
+    .join(" · ");
   return {
     backgroundColor: theme.background,
     animation: false,
@@ -51,13 +71,19 @@ export function visualizationSnapshotBaseOption(
     textStyle: { color: theme.text },
     title: {
       text: snapshot.title ?? defaultTitle,
-      ...(options.subtitle === undefined ? {} : { subtext: options.subtitle }),
+      ...(subtitle.length === 0 ? {} : { subtext: subtitle }),
       left: 28,
       top: 18,
       textStyle: { color: theme.accent, fontSize: 28 },
       subtextStyle: { color: theme.muted, fontSize: 14 },
     },
   };
+}
+
+function isRateMetric(metric: string): boolean {
+  return REPORT_METRICS.some(
+    (candidate) => candidate.id === metric && candidate.kind === "rate",
+  );
 }
 
 export function visualizationSnapshotLegend(

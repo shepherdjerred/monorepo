@@ -20,18 +20,20 @@ describe("ReportResultTable", () => {
         evidence={[
           {
             label: "Shared",
+            games: 10,
             values: [{ column: "wins", sampleSize: 10 }],
           },
           {
             label: "Shared",
+            games: 20,
             values: [{ column: "wins", sampleSize: 20 }],
           },
         ]}
       />,
     );
 
-    expect(markup).toContain("1 (n=10)");
-    expect(markup).toContain("2 (n=20)");
+    expect(markup).toContain("1 (Based on 10 games)");
+    expect(markup).toContain("2 (Based on 20 games)");
   });
 
   test("preserves missing buckets as gaps in sparklines", () => {
@@ -39,5 +41,27 @@ describe("ReportResultTable", () => {
       "0.0,26.0 0.0,26.0",
       "120.0,2.0 120.0,2.0",
     ]);
+  });
+
+  test("annotates thin rate results once at table level", () => {
+    const markup = renderToStaticMarkup(
+      <ReportResultTable
+        columns={[{ key: "win_rate", label: "Win rate", format: "percent" }]}
+        rows={[{ label: "Aurora", values: [{ column: "win_rate", value: 1 }] }]}
+        evidence={[
+          {
+            label: "Aurora",
+            games: 4,
+            values: [{ column: "win_rate", sampleSize: 4 }],
+          },
+        ]}
+      />,
+    );
+
+    expect(markup).toContain("Based on 4 games");
+    expect(markup).toContain(
+      "Fewer than 10 games — treat this rate as indicative only.",
+    );
+    expect(markup.match(/Fewer than 10 games/g)).toHaveLength(1);
   });
 });

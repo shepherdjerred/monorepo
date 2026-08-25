@@ -318,7 +318,11 @@ function pointFromRow(context: PointBuildContext): TemporalSeriesPoint {
   const metricEvidence = evidence?.values.find(
     (candidate) => candidate.column === column,
   );
-  const currentEvidence = pointMetricEvidence(value, metricEvidence);
+  const currentEvidence = pointMetricEvidence(
+    value,
+    metricEvidence,
+    evidence?.games,
+  );
   const comparisonEvidence = pointComparisonEvidence(value, plan);
   return {
     key: label,
@@ -342,14 +346,15 @@ function pointMetricEvidence(
   evidence:
     | NonNullable<ReportQueryResult["evidence"]>[number]["values"][number]
     | undefined,
+  games: number | undefined,
 ) {
   return {
+    games:
+      games ?? value.games ?? evidence?.sampleSize ?? value.sampleSize ?? 0,
     sampleSize: evidence?.sampleSize ?? value.sampleSize ?? 0,
     successes: evidence?.successes ?? value.successes,
     numerator: evidence?.numerator ?? value.numerator,
     denominator: evidence?.denominator ?? value.denominator,
-    confidenceInterval:
-      evidence?.confidenceInterval ?? value.confidenceInterval ?? null,
   };
 }
 
@@ -359,11 +364,11 @@ function pointComparisonEvidence(
 ) {
   if (plan.analysis?.comparison === undefined) return null;
   return {
+    games: value.comparisonGames ?? 0,
     sampleSize: value.comparisonSampleSize ?? 0,
     successes: value.comparisonSuccesses,
     numerator: value.comparisonNumerator,
     denominator: value.comparisonDenominator,
-    confidenceInterval: value.comparisonConfidenceInterval ?? null,
   };
 }
 
@@ -467,12 +472,12 @@ function fillMissingBuckets({
         comparisonValue: additive && hasComparison ? 0 : null,
         absoluteDelta: additive && hasComparison ? 0 : null,
         percentageDelta: null,
-        evidence: { sampleSize: 0, confidenceInterval: null },
+        evidence: { games: 0, sampleSize: 0 },
         ...(hasComparison
           ? {
               comparisonEvidence: {
+                games: 0,
                 sampleSize: 0,
-                confidenceInterval: null,
               },
             }
           : {}),
