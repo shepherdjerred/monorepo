@@ -11,6 +11,7 @@
     "./activities": "./src/activities.ts",
     "./contracts": "./src/contracts.ts",
     "./identifiers": "./src/identifiers.ts",
+    "./signals": "./src/signals.ts",
     "./workflows": "./src/workflows/index.ts"
   },
   "scripts": {

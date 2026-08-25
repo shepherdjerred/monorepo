@@ -26,12 +26,30 @@ import {
   reconcileBucksBalances,
 } from "#src/betting/reconcile.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import {
+  temporalBackgroundEnabled,
+  temporalRealtimeEnabled,
+  temporalReportsEnabled,
+} from "#src/config/dynamic.ts";
 
 const logger = createLogger("league-cron");
 
+async function runLegacyStartupRecovery(): Promise<void> {
+  try {
+    await runStartupRecovery();
+  } catch (error) {
+    logger.error(
+      "Startup recovery failed after cron ownership was initialized",
+      error,
+    );
+  }
+}
+
 export async function startCronJobs() {
-  logger.info("⏰ Running startup recovery before cron initialization");
-  await runStartupRecovery();
+  if (!temporalBackgroundEnabled()) {
+    logger.info("⏰ Starting legacy recovery alongside cron initialization");
+    void runLegacyStartupRecovery();
+  }
 
   logger.info("⏰ Initializing cron job scheduler");
 
@@ -44,6 +62,7 @@ export async function startCronJobs() {
     logMessage: "🔍 Running pre-match active game check",
     timezone: "America/Los_Angeles",
     runOnInit: true,
+    isExecutionOwner: () => !temporalRealtimeEnabled(),
   });
 
   // Tournament lobbies get their own tick rather than riding checkPreMatch,
@@ -61,6 +80,7 @@ export async function startCronJobs() {
       logMessage: "🏟️ Polling tournament lobby events",
       timezone: "UTC",
       runOnInit: false,
+      isExecutionOwner: () => !temporalRealtimeEnabled(),
     });
   }
 
@@ -95,6 +115,7 @@ export async function startCronJobs() {
     logMessage: "🔍 Running post-match check task",
     timezone: "America/Los_Angeles",
     runOnInit: true,
+    isExecutionOwner: () => !temporalRealtimeEnabled(),
   });
 
   // check competition lifecycle every 15 minutes
@@ -107,6 +128,7 @@ export async function startCronJobs() {
     timezone: "America/Los_Angeles",
     runOnInit: false, // Don't run on init - prevents startup notifications
     logTrigger: "Checking for competitions to start/end",
+    isExecutionOwner: () => !temporalBackgroundEnabled(),
   });
 
   // validate data (cleanup orphaned guilds/channels) every hour
@@ -118,6 +140,7 @@ export async function startCronJobs() {
     logMessage: "🔍 Running data validation",
     timezone: "America/Los_Angeles",
     runOnInit: true,
+    isExecutionOwner: () => !temporalBackgroundEnabled(),
   });
 
   logger.info("📅 Setting up scheduled report dispatch (every minute)");
@@ -129,6 +152,7 @@ export async function startCronJobs() {
     timezone: "UTC",
     runOnInit: false,
     logTrigger: "Posting due generic reports and advancing next-fire",
+    isExecutionOwner: () => !temporalReportsEnabled(),
   });
 
   // fold freshly-ingested staging rows into the report lake every 15 minutes,
@@ -143,6 +167,7 @@ export async function startCronJobs() {
     logMessage: "🗜️ Folding staged rows into the report lake",
     timezone: "UTC",
     runOnInit: true,
+    isExecutionOwner: () => !temporalReportsEnabled(),
   });
 
   // full lake rebuild nightly at 2 AM UTC: consolidates fold fragments,
@@ -158,6 +183,7 @@ export async function startCronJobs() {
     logMessage: "🏗️ Rebuilding the report lake from stored raw JSON",
     timezone: "UTC",
     runOnInit: false,
+    isExecutionOwner: () => !temporalReportsEnabled(),
   });
 
   // prune orphaned players daily at 3 AM UTC
@@ -169,8 +195,8 @@ export async function startCronJobs() {
     logMessage: "🧹 Running player pruning task",
     timezone: "UTC",
     runOnInit: true,
+    isExecutionOwner: () => !temporalBackgroundEnabled(),
   });
-
   // reconcile guilds the bot was removed from (e.g. while offline) daily at 4 AM
   // UTC (after player pruning). The bot never leaves on its own.
   logger.info("📅 Setting up removed-guild reconciliation job (4 AM UTC)");
@@ -181,6 +207,7 @@ export async function startCronJobs() {
     logMessage: "🧹 Reconciling removed guilds",
     timezone: "UTC",
     runOnInit: true,
+    isExecutionOwner: () => !temporalBackgroundEnabled(),
   });
 
   // refresh match times every 6 hours (runs on startup + periodically)
@@ -193,6 +220,7 @@ export async function startCronJobs() {
     logMessage: "🔄 Refreshing match times for stale accounts",
     timezone: "UTC",
     runOnInit: true, // Run on startup to fix any stale data
+    isExecutionOwner: () => !temporalBackgroundEnabled(),
   });
 
   // run outreach checks daily at 10 AM UTC
@@ -204,6 +232,7 @@ export async function startCronJobs() {
     logMessage: "📬 Running outreach check",
     timezone: "UTC",
     runOnInit: false,
+    isExecutionOwner: () => !temporalBackgroundEnabled(),
   });
 
   // Recomputed from the audit log rather than incremented in-line, so a missed
@@ -218,6 +247,7 @@ export async function startCronJobs() {
     logMessage: "📈 Recomputing outreach conversion metrics",
     timezone: "UTC",
     runOnInit: true,
+    isExecutionOwner: () => !temporalBackgroundEnabled(),
   });
 
   logger.info("✅ Cron jobs initialized successfully");

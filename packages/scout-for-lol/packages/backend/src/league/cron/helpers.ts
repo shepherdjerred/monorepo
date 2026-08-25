@@ -18,6 +18,7 @@ export type CronJobConfig = {
   timezone?: string;
   runOnInit?: boolean;
   logTrigger?: string;
+  isExecutionOwner?: () => boolean;
 };
 
 /**
@@ -32,11 +33,16 @@ export function createCronJob(config: CronJobConfig): CronJob {
     timezone = "America/Los_Angeles",
     runOnInit = true,
     logTrigger,
+    isExecutionOwner = () => true,
   } = config;
 
   return new CronJob(
     schedule,
     logErrors(async () => {
+      if (!isExecutionOwner()) {
+        logger.info(`⏭️  ${jobName} is owned by Temporal`);
+        return;
+      }
       const startTime = Date.now();
       logger.info(logMessage);
 

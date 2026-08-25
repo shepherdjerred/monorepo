@@ -1,5 +1,6 @@
 import { validateChampionAssets } from "#src/league/data-dragon/validate-assets.ts";
 import configuration from "#src/configuration.ts";
+import { temporalBackgroundEnabled } from "#src/config/dynamic.ts";
 import { createLogger } from "#src/logger.ts";
 import type { ScoutTemporalSupervisor } from "#src/temporal/supervisor.ts";
 
@@ -84,9 +85,24 @@ export async function startBackendRuntime(): Promise<
       }
       await import("@scout-for-lol/backend/discord/index.ts");
     },
-    startTemporalDiscordWorkers: () => {
+    startTemporalDiscordWorkers: async () => {
       if (configuration.enableDiscordGateway) {
         temporalSupervisor?.enableDiscordWorkers();
+        if (temporalSupervisor !== undefined && temporalBackgroundEnabled()) {
+          try {
+            const { triggerScoutIngestionReconciliationSchedule } =
+              await import("#src/temporal/starts.ts");
+            await triggerScoutIngestionReconciliationSchedule(
+              temporalSupervisor.client(),
+              configuration.environment,
+            );
+          } catch (error: unknown) {
+            logger.warn(
+              "Temporal gateway-ready reconciliation signal was not accepted; the fixed reconciliation Schedule will retry",
+              { error },
+            );
+          }
+        }
       }
     },
   });

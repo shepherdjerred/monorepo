@@ -45,21 +45,19 @@ export async function runStartupRecovery(): Promise<void> {
 
   if (downtime.shouldBackfill && downtime.lastPollAt !== undefined) {
     const backfillStart = downtime.lastPollAt;
-    logger.info("Starting background S3 backfill for missed matches");
-    // Fire-and-forget: backfill runs in the background while normal polling starts
-    void (async () => {
-      try {
-        const result = await backfillMatchesToS3(backfillStart, startupAt);
-        logger.info(
-          `Backfill completed: ${result.totalMatchesSaved.toString()} matches saved to S3`,
-        );
-      } catch (error) {
-        logger.error("Backfill failed:", error);
-        Sentry.captureException(error, {
-          tags: { source: "startup-recovery-backfill" },
-        });
-      }
-    })();
+    logger.info("Starting S3 backfill for missed matches");
+    try {
+      const result = await backfillMatchesToS3(backfillStart, startupAt);
+      logger.info(
+        `Backfill completed: ${result.totalMatchesSaved.toString()} matches saved to S3`,
+      );
+    } catch (error) {
+      logger.error("Backfill failed:", error);
+      Sentry.captureException(error, {
+        tags: { source: "startup-recovery-backfill" },
+      });
+      throw error;
+    }
   }
 
   logger.info("Startup recovery check complete");
