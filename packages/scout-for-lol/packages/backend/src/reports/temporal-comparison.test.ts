@@ -23,11 +23,7 @@ describe("attachTemporalComparison", () => {
     const result = attachTemporalComparison({
       currentRows,
       comparisonRows,
-      comparisonEvidence: comparisonRows.map((baselineRow) => ({
-        label: baselineRow.label,
-        games: 1,
-        values: [{ column: "games", sampleSize: 1 }],
-      })),
+      comparisonEvidence: comparisonEvidence(comparisonRows, 1),
       plan,
       ranges: {
         current: {
@@ -100,11 +96,7 @@ describe("attachTemporalComparison", () => {
     const result = attachTemporalComparison({
       currentRows,
       comparisonRows,
-      comparisonEvidence: comparisonRows.map((baselineRow) => ({
-        label: baselineRow.label,
-        games: 1,
-        values: [{ column: "games", sampleSize: 1 }],
-      })),
+      comparisonEvidence: comparisonEvidence(comparisonRows, 1),
       plan,
       ranges: {
         current: {
@@ -142,4 +134,12 @@ function groupedRow(
     mentionIdentity: null,
     values: [{ column: "games", value: games }],
   };
+}
+
+function comparisonEvidence(rows: ReportResultRow[], games: number) {
+  return rows.map((baselineRow) => ({
+    label: baselineRow.label,
+    games,
+    values: [{ column: "games", sampleSize: games }],
+  }));
 }

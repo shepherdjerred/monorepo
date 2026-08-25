@@ -1362,7 +1362,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/reports/temporal-comparison.test.ts|packages/scout-for-lol/packages/backend/src/reports/temporal-comparison.test.ts": {
       "clones": 1,
-      "tokens": 100
+      "tokens": 73
     },
     "packages/scout-for-lol/packages/backend/src/reports/temporal-labels.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-calendar-option.ts": {
       "clones": 1,
