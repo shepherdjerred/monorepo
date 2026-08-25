@@ -5,7 +5,7 @@ const config = [
   { ignores: ["packages/**", "dist/**"] },
   ...recommended({ tsconfigRootDir: import.meta.dirname }),
   {
-    files: ["src/synchronous-file-sink.ts"],
+    files: ["src/runtime/synchronous-file-sink.ts"],
     rules: {
       // Bun.FileSink may enter asynchronous backpressure. Audit events require
       // a synchronous write/fsync boundary so capture failure is atomic.

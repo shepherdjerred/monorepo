@@ -3,7 +3,7 @@ import { trace } from "@opentelemetry/api";
 import {
   correlatedTraceContext,
   withCorrelatedTrace,
-} from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/runtime/telemetry.ts";
 
 const TRACE_ID = "1234567890abcdef1234567890abcdef";
 const SPAN_ID = "abcdef1234567890";

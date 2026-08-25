@@ -5,7 +5,7 @@ import {
   RunSummarySchema,
   type RunManifest,
   type RunSummary,
-} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
 
 const MetaSchema = z.object({
   manifest: RunManifestSchema,

@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
-import { FleetController } from "@shepherdjerred/pr-fleet-controller/src/controller.ts";
-import { ControllerStopError } from "@shepherdjerred/pr-fleet-controller/src/controller-stop-error.ts";
-import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
-import { PrHeadChangedDuringRefreshError } from "@shepherdjerred/pr-fleet-controller/src/controller-evidence-refresh.ts";
-import { currentCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
+import { FleetController } from "@shepherdjerred/pr-fleet-controller/src/controller/fleet-controller.ts";
+import { ControllerStopError } from "@shepherdjerred/pr-fleet-controller/src/domain/errors.ts";
+import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/runtime/telemetry.ts";
+import { PrHeadChangedDuringRefreshError } from "@shepherdjerred/pr-fleet-controller/src/domain/errors.ts";
+import { currentCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/runtime/command-correlation.ts";
 import type {
   CommandRequest,
   CommandResult,
@@ -12,11 +12,11 @@ import type {
   FleetScheduler,
   FleetTelemetry,
   WorkerRunner,
-} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
 import type {
   RunEventCorrelation,
   RunEventKind,
-} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
 import type {
   FleetSnapshot,
   PrIdentity,
@@ -24,9 +24,9 @@ import type {
   ReadinessEvidence,
   WorktreeContext,
   WorkerResult,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { OperatorInputRequestSchema } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { OperatorInputRequestSchema } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/domain/state.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 function cleanWorktreeContext(pr: PrIdentity): WorktreeContext {

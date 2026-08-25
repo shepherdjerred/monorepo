@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   classifyFleetFailure,
   validateProgressEvent,
-} from "@shepherdjerred/pr-fleet-controller/src/progress-events.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/runtime/progress-events.ts";
 
 describe("fleet progress events", () => {
   test("classifies recurring worker failures into bounded reasons", () => {

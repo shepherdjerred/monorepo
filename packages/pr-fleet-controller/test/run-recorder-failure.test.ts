@@ -5,9 +5,9 @@ import path from "node:path";
 import {
   loadRunBundle,
   replayRunBundle,
-} from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
-import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
-import { writeFileSinkSynchronously } from "@shepherdjerred/pr-fleet-controller/src/synchronous-file-sink.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/replay/run-inspection.ts";
+import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/bundle/run-recorder.ts";
+import { writeFileSinkSynchronously } from "@shepherdjerred/pr-fleet-controller/src/runtime/synchronous-file-sink.ts";
 
 let stateDirectory: string | undefined;
 const snapshot = {

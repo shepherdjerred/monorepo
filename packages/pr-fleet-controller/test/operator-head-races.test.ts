@@ -1,17 +1,15 @@
 import { expect, test } from "vitest";
-import {
-  deferPrAfterHeadChange,
-  PrHeadChangedDuringRefreshError,
-} from "@shepherdjerred/pr-fleet-controller/src/controller-evidence-refresh.ts";
-import { acceptOperatorAnswer } from "@shepherdjerred/pr-fleet-controller/src/controller-operator-questions.ts";
-import { ControllerTelemetry } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
-import type { FleetObserver } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import { deferPrAfterHeadChange } from "@shepherdjerred/pr-fleet-controller/src/controller/evidence-refresh.ts";
+import { PrHeadChangedDuringRefreshError } from "@shepherdjerred/pr-fleet-controller/src/domain/errors.ts";
+import { acceptOperatorAnswer } from "@shepherdjerred/pr-fleet-controller/src/controller/operator-questions.ts";
+import { ControllerTelemetry } from "@shepherdjerred/pr-fleet-controller/src/runtime/telemetry.ts";
+import type { FleetObserver } from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
 import {
   OperatorInputRequestSchema,
   PrStateSchema,
   type WorkerResult,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/domain/state.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 const observer: FleetObserver = {

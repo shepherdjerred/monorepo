@@ -3,7 +3,7 @@ import {
   classify,
   computeStackIds,
   mapBounded,
-} from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/fleet-logic.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 describe("readiness classification", () => {

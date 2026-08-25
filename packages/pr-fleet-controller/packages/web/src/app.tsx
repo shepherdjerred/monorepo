@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from "react";
-import type { PrState } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import type { PrState } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import { Header } from "./components/header.tsx";
 import { PrList, type PrEntry } from "./components/pr-list.tsx";
 import { FleetDetail, PrDetail } from "./components/pr-detail.tsx";

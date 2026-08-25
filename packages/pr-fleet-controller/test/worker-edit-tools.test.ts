@@ -14,7 +14,7 @@ import {
   applyStrReplace,
   containedPath,
   writeWorktreeFile,
-} from "@shepherdjerred/pr-fleet-controller/src/worker-file-edits.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/workers/file-edits.ts";
 
 let worktree: string;
 

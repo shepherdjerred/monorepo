@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { startWorkerObservation } from "@shepherdjerred/pr-fleet-controller/src/controller-worker-observer.ts";
-import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
+import { startWorkerObservation } from "@shepherdjerred/pr-fleet-controller/src/controller/worker-observer.ts";
+import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/runtime/telemetry.ts";
 
 test("worker capture failures bypass operational failure settlement", async () => {
   const captureError = new TelemetryCaptureError(

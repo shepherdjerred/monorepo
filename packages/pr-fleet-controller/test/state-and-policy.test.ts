@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
-import { busyStackIds } from "@shepherdjerred/pr-fleet-controller/src/controller-dispatch.ts";
-import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
+import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/domain/fleet-logic.ts";
+import { busyStackIds } from "@shepherdjerred/pr-fleet-controller/src/controller/dispatch.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/domain/state.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 function state(number: number, stackId = `pr-${String(number)}`) {

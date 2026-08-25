@@ -912,13 +912,13 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/pr-fleet-controller/src/controller-telemetry.ts|packages/pr-fleet-controller/src/controller-telemetry.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
-    "packages/pr-fleet-controller/src/replay-correlation.ts|packages/pr-fleet-controller/src/run-inspection.ts": {
+    "packages/pr-fleet-controller/src/replay/replay-correlation.ts|packages/pr-fleet-controller/src/replay/run-inspection.ts": {
       "clones": 1,
       "tokens": 81
+    },
+    "packages/pr-fleet-controller/src/runtime/telemetry.ts|packages/pr-fleet-controller/src/runtime/telemetry.ts": {
+      "clones": 1,
+      "tokens": 73
     },
     "packages/pr-fleet-controller/test/controller-worker-settlement.test.ts|packages/pr-fleet-controller/test/controller.test.ts": {
       "clones": 1,
@@ -966,7 +966,7 @@
     },
     "packages/pr-fleet-controller/test/run-bundle.test.ts|packages/pr-fleet-controller/test/run-bundle.test.ts": {
       "clones": 3,
-      "tokens": 281
+      "tokens": 283
     },
     "packages/pr-fleet-controller/test/run-recorder-failure.test.ts|packages/pr-fleet-controller/test/run-recorder-failure.test.ts": {
       "clones": 2,
@@ -1961,5 +1961,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-25T00:58:03.673Z"
+  "updated": "2026-08-25T02:04:27.522Z"
 }

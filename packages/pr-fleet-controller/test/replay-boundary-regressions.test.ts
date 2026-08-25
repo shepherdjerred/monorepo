@@ -5,12 +5,12 @@ import path from "node:path";
 import {
   loadRunBundle,
   replayRunBundle,
-} from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
-import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/replay/run-inspection.ts";
+import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/bundle/run-recorder.ts";
 import {
   PrStateSchema,
   type FleetSnapshot,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 const snapshot: FleetSnapshot = {

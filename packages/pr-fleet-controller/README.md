@@ -6,6 +6,27 @@ one foreground Bun process on macOS, uses one selected catalog model for both th
 conversational master and all per-PR workers, and reconstructs live state on
 every invocation.
 
+## Source layout
+
+`src/` is split into layers, each imported through its own `#<layer>/*`
+subpath specifier. The dependencies run strictly downward:
+
+| Layer          | Holds                                                                        |
+| -------------- | ---------------------------------------------------------------------------- |
+| `domain/`      | Schemas, run-event contracts, `FleetStore`, ports, pure derivations, errors  |
+| `runtime/`     | Telemetry capture, correlation, subprocess execution, file sinks, state root |
+| `bundle/`      | The run-bundle write path: recorder, artifacts, spans, OTel wiring           |
+| `replay/`      | The read path: deterministic replay, correlation verification, inspection    |
+| `workers/`     | The bounded per-PR tool surface handed to a worker                           |
+| `environment/` | Adapters for the outside world: git, GitHub, worktrees, the managed clone    |
+| `controller/`  | The master loop — dispatch, reconciliation, questions, settlement, shutdown  |
+| `watch/`       | Dashboard transport: the tailing HTTP server and the operator control socket |
+| `cli/`         | Entry points and terminal UX; the only layer allowed to reach everywhere     |
+
+`replay/` deliberately depends on `bundle/` and not the reverse, and neither
+knows the controller exists — a bundle has to be readable long after the run
+that wrote it, by a process that never starts a controller.
+
 ## Run
 
 Configure `OPENROUTER_API_KEY`, then:

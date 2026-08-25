@@ -7,8 +7,8 @@ import {
   reviewFindings,
   reviewFindingsFromThreads,
   type RawCheck,
-} from "@shepherdjerred/pr-fleet-controller/src/evidence-parsers.ts";
-import { WorkerResultSchema } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/evidence-parsers.ts";
+import { WorkerResultSchema } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 
 describe("external evidence parsing", () => {
   test("keeps only badged provider threads as blocking findings", () => {

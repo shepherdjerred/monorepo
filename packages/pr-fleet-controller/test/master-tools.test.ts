@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { currentCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
-import { runRecordedMasterTool } from "@shepherdjerred/pr-fleet-controller/src/master-tools.ts";
-import type { FleetTelemetry } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import { currentCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/runtime/command-correlation.ts";
+import { runRecordedMasterTool } from "@shepherdjerred/pr-fleet-controller/src/controller/master-tools.ts";
+import type { FleetTelemetry } from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
 import type {
   RunEventCorrelation,
   RunEventKind,
-} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
 
 type CapturedEvent = {
   kind: RunEventKind;
