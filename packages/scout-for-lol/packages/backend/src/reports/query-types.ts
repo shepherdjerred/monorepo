@@ -19,23 +19,15 @@ export type ReportResultValue = {
   absoluteDelta?: number | null;
   percentageDelta?: number | null;
   comparisonSampleSize?: number;
+  comparisonGames?: number;
   comparisonSuccesses?: number;
   comparisonNumerator?: number;
   comparisonDenominator?: number;
-  comparisonConfidenceInterval?: {
-    level: 0.95;
-    lower: number;
-    upper: number;
-  } | null;
   sampleSize?: number;
+  games?: number;
   successes?: number;
   numerator?: number;
   denominator?: number;
-  confidenceInterval?: {
-    level: 0.95;
-    lower: number;
-    upper: number;
-  } | null;
 };
 
 export type ReportMentionIdentity =
@@ -66,17 +58,13 @@ export type ReportQueryResult = {
   visualization?: VisualizationSnapshot;
   evidence?: {
     label: string;
+    games: number;
     values: {
       column: string;
       sampleSize: number;
       successes?: number;
       numerator?: number;
       denominator?: number;
-      confidenceInterval?: {
-        level: 0.95;
-        lower: number;
-        upper: number;
-      } | null;
     }[];
   }[];
 };

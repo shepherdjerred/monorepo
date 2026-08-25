@@ -142,6 +142,7 @@ describe("temporal visualization buckets", () => {
         evidence: [
           {
             label: row.label,
+            games: 2,
             values: [{ column: "games", sampleSize: 2 }],
           },
         ],
@@ -178,7 +179,7 @@ describe("temporal visualization buckets", () => {
           percentageDelta: null,
           comparisonEvidence: {
             sampleSize: 0,
-            confidenceInterval: null,
+            games: 0,
           },
         }),
       ),
@@ -353,7 +354,7 @@ function comparisonRow(
         absoluteDelta: games - comparisonGames,
         percentageDelta: games / comparisonGames - 1,
         comparisonSampleSize: comparisonGames,
-        comparisonConfidenceInterval: null,
+        comparisonGames: comparisonGames,
       },
     ],
   };

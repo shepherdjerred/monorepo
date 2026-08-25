@@ -5,6 +5,9 @@ import {
   escapeMarkdown as escapeDiscordMarkdown,
 } from "discord.js";
 import {
+  REPORT_METRICS,
+  evidenceGames,
+  isLowSampleGameCount,
   type ExploreMessage,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
@@ -180,29 +183,55 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
     .map((series) => {
       const point = series.points.at(-1);
       if (point === undefined) {
-        return `**${escapeMarkdown(truncateNativeCell(series.label))}**\nUnknown n=0`;
+        return `**${escapeMarkdown(truncateNativeCell(series.label))}**\nUnknown`;
       }
       const value = formatSeriesValue(snapshot, series, point.value);
-      const sampleSize = point.evidence.sampleSize;
+      const showGameBasis = series.metric !== "rank_position";
+      const games = evidenceGames(point.evidence);
+      const comparisonGames =
+        point.comparisonEvidence === undefined ||
+        point.comparisonEvidence === null
+          ? undefined
+          : evidenceGames(point.comparisonEvidence);
       const comparison =
         snapshot.temporal?.comparison !== undefined ||
-        point.comparisonEvidence !== undefined;
-      const details = comparison
-        ? `n=${sampleSize.toString()} · Baseline: ${formatSeriesValue(
-            snapshot,
-            series,
-            point.comparisonValue ?? null,
-          )} · Δ ${formatAbsoluteDelta(
-            snapshot,
-            series,
-            point.absoluteDelta ?? null,
-          )} · ${
-            point.percentageDelta === null ||
-            point.percentageDelta === undefined
-              ? "Unknown"
-              : `${(point.percentageDelta * 100).toFixed(1)}%`
-          }`
-        : `n=${sampleSize.toString()}`;
+        (point.comparisonEvidence !== undefined &&
+          point.comparisonEvidence !== null);
+      const caveat =
+        REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
+          "rate" &&
+        (isLowSampleGameCount(games) ||
+          (comparisonGames !== undefined &&
+            isLowSampleGameCount(comparisonGames)))
+          ? " · Fewer than 10 games — treat this rate as indicative only."
+          : "";
+      const baselineBasis =
+        showGameBasis && comparisonGames !== undefined
+          ? ` (Based on ${comparisonGames.toString()} games)`
+          : "";
+      const details = [
+        ...(showGameBasis
+          ? [`Based on ${games.toString()} games${caveat}`]
+          : []),
+        ...(comparison
+          ? [
+              `Baseline: ${formatSeriesValue(
+                snapshot,
+                series,
+                point.comparisonValue ?? null,
+              )}${baselineBasis} · Δ ${formatAbsoluteDelta(
+                snapshot,
+                series,
+                point.absoluteDelta ?? null,
+              )} · ${
+                point.percentageDelta === null ||
+                point.percentageDelta === undefined
+                  ? "Unknown"
+                  : `${(point.percentageDelta * 100).toFixed(1)}%`
+              }`,
+            ]
+          : []),
+      ].join(" · ");
       return `**${escapeMarkdown(truncateNativeCell(series.label))}**\n${value} ${details}`;
     })
     .join("\n\n");

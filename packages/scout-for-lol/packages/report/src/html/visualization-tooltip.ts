@@ -2,6 +2,11 @@ import type {
   TemporalSeriesPoint,
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import {
+  REPORT_METRICS,
+  evidenceGames,
+  isLowSampleGameCount,
+} from "@scout-for-lol/data";
 import { format as echartsFormat } from "echarts";
 import {
   formatPercent,
@@ -71,19 +76,42 @@ export function pointTooltipText(
       (candidate) => candidate.label === point.label,
     );
     if (value === undefined) continue;
+    const games = evidenceGames(value.evidence);
+    const comparisonGames =
+      value.comparisonEvidence === undefined ||
+      value.comparisonEvidence === null
+        ? undefined
+        : evidenceGames(value.comparisonEvidence);
+    const showGameBasis = series.metric !== "rank_position";
+    const gameBasis = showGameBasis
+      ? ` (Based on ${games.toString()} games)`
+      : "";
     lines.push(
-      `${echartsFormat.encodeHTML(series.label)}: ${formatSeriesValue(snapshot, series, value.value)} (n=${value.evidence.sampleSize.toString()})`,
+      `${echartsFormat.encodeHTML(series.label)}: ${formatSeriesValue(snapshot, series, value.value)}${gameBasis}`,
     );
     if (snapshot.temporal?.comparison !== undefined) {
+      const comparisonBasis =
+        showGameBasis && comparisonGames !== undefined
+          ? ` (Based on ${comparisonGames.toString()} games)`
+          : "";
       lines.push(
-        `Baseline: ${formatSeriesValue(snapshot, series, value.comparisonValue ?? null)} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, value.absoluteDelta ?? null)} · ${formatPercent(value.percentageDelta ?? null)}`,
+        `Baseline: ${formatSeriesValue(snapshot, series, value.comparisonValue ?? null)}${comparisonBasis} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, value.absoluteDelta ?? null)} · ${formatPercent(value.percentageDelta ?? null)}`,
       );
     }
-    if (value.evidence.confidenceInterval !== null) {
-      lines.push(
-        `95% CI ${formatSeriesValue(snapshot, series, value.evidence.confidenceInterval.lower)}–${formatSeriesValue(snapshot, series, value.evidence.confidenceInterval.upper)}`,
-      );
+    if (
+      (snapshot.display.stack === "percent" || isRateMetric(series.metric)) &&
+      (isLowSampleGameCount(games) ||
+        (comparisonGames !== undefined &&
+          isLowSampleGameCount(comparisonGames)))
+    ) {
+      lines.push("Fewer than 10 games — treat this rate as indicative only.");
     }
   }
   return lines.join("<br/>");
+}
+
+function isRateMetric(metric: string): boolean {
+  return REPORT_METRICS.some(
+    (candidate) => candidate.id === metric && candidate.kind === "rate",
+  );
 }

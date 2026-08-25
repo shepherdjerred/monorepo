@@ -3,7 +3,6 @@ import {
   REPORT_METRICS,
   collectExpressionMetrics,
   isAdditiveReportExpression,
-  wilsonInterval95,
 } from "@scout-for-lol/data";
 import type {
   ReportExpression,
@@ -44,6 +43,7 @@ export function rowsFromAggregates(
     rowsScanned,
     evidence: selectedRows.map((row) => ({
       label: row.label,
+      games: row.games,
       values: plan.selectItems.map((item) => ({
         column: item.key,
         ...metricEvidence(row, item.expression),
@@ -106,7 +106,6 @@ function metricEvidence(
   successes?: number;
   numerator?: number;
   denominator?: number;
-  confidenceInterval?: ReturnType<typeof wilsonInterval95>;
 } {
   const metrics = collectExpressionMetrics(expression);
   const metric = metrics.length === 1 ? metrics[0] : undefined;
@@ -141,7 +140,6 @@ function metricEvidence(
     return {
       sampleSize,
       successes,
-      confidenceInterval: wilsonInterval95(successes, sampleSize),
     };
   }
   const ratio =

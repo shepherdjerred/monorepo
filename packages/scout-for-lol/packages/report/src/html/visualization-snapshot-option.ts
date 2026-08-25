@@ -2,6 +2,7 @@ import type {
   TemporalSeriesPoint,
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import { evidenceGames } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import { calendarOption } from "#src/html/visualization-snapshot-calendar-option.ts";
 import {
@@ -89,7 +90,7 @@ export function visualizationSnapshotToOption(
     ),
     ...evidenceOverlaySeries(snapshot, categories),
     ...snapshot.trends.map((trend): echarts.SeriesOption => ({
-      name: `${trend.seriesId} trend (slope ${trend.slope.toFixed(3)}, R² ${trend.rSquared.toFixed(2)})`,
+      name: `${trend.seriesId} Trend`,
       type: "line",
       data: alignedTrendValues(snapshot, trend, categories),
       symbol: "none",
@@ -198,26 +199,7 @@ function evidenceOverlaySeries(
           symbol: "none",
           lineStyle: { type: "dotted", width: 2, opacity: 0.65 },
         }));
-  return [
-    ...comparison,
-    ...snapshot.series.flatMap((item) =>
-      item.points.some((point) => point.evidence.confidenceInterval !== null)
-        ? (["lower", "upper"] as const).map((bound): echarts.SeriesOption => ({
-            name: `${item.label} 95% CI ${bound}`,
-            type: "line",
-            data: categories.map((category) => {
-              const interval = item.points.find(
-                (point) => point.label === category,
-              )?.evidence.confidenceInterval;
-              return interval?.[bound] ?? null;
-            }),
-            symbol: "none",
-            lineStyle: { type: "dashed", width: 1, opacity: 0.35 },
-            tooltip: { show: false },
-          }))
-        : [],
-    ),
-  ];
+  return comparison;
 }
 
 function kpiOption(
@@ -238,6 +220,10 @@ function kpiOption(
       const latest = series.points.at(-1);
       const delta = latest?.absoluteDelta;
       const percent = latest?.percentageDelta;
+      const gameBasis =
+        series.metric === "rank_position"
+          ? ""
+          : `  Based on ${evidenceGames(latest?.evidence ?? { sampleSize: 0 }).toString()} games`;
       return {
         type: "group",
         left: `${((index % columns) * (100 / columns) + 2).toFixed(1)}%`,
@@ -267,7 +253,7 @@ function kpiOption(
             left: 12,
             top: 29,
             style: {
-              text: `${formatSeriesValue(snapshot, series, latest?.value ?? null)}  n=${(latest?.evidence.sampleSize ?? 0).toString()}`,
+              text: `${formatSeriesValue(snapshot, series, latest?.value ?? null)}${gameBasis}`,
               fill: presentation.theme.text,
               font: "bold 18px sans-serif",
             },

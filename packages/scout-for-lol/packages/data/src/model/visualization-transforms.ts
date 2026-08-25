@@ -1,35 +1,13 @@
 import type {
-  ConfidenceInterval,
   TemporalMetricEvidence,
   TemporalSeriesPoint,
   VisualizationTrend,
 } from "#src/model/temporal-analysis.ts";
 
-export function wilsonInterval95(
-  successes: number,
-  sampleSize: number,
-): ConfidenceInterval | null {
-  if (sampleSize === 0) return null;
-  if (successes < 0 || successes > sampleSize) {
-    throw new Error(
-      "Wilson interval successes must be between zero and the sample size.",
-    );
-  }
-  const z = 1.959963984540054;
-  const proportion = successes / sampleSize;
-  const denominator = 1 + (z * z) / sampleSize;
-  const center = (proportion + (z * z) / (2 * sampleSize)) / denominator;
-  const margin =
-    (z / denominator) *
-    Math.sqrt(
-      (proportion * (1 - proportion)) / sampleSize +
-        (z * z) / (4 * sampleSize * sampleSize),
-    );
-  return {
-    level: 0.95,
-    lower: Math.max(0, center - margin),
-    upper: Math.min(1, center + margin),
-  };
+export function evidenceGames(evidence: TemporalMetricEvidence): number {
+  // Historical snapshots predate canonical game counts. Their metric sample
+  // size is the only available basis and preserves the old display meaning.
+  return evidence.games ?? evidence.sampleSize;
 }
 
 export function comparisonDeltas(
@@ -89,7 +67,7 @@ export function cumulativeSeries(
     evidence.push(point.evidence);
     const current = {
       value: total,
-      evidence: combineEvidence(evidence, false),
+      evidence: combineEvidence(evidence),
     };
     if (!hasComparison) return applyMeasures(point, current, null);
     comparisonTotal += point.comparisonValue ?? 0;
@@ -98,7 +76,7 @@ export function cumulativeSeries(
     );
     return applyMeasures(point, current, {
       value: comparisonTotal,
-      evidence: combineEvidence(comparisonEvidence, false),
+      evidence: combineEvidence(comparisonEvidence),
     });
   });
 }
@@ -130,7 +108,7 @@ function rollingMeasure(
     sample.value === null ? [] : [sample.value],
   );
   const evidence = samples.map((sample) => sample.evidence);
-  const combinedEvidence = combineEvidence(evidence, kind === "rate");
+  const combinedEvidence = combineEvidence(evidence);
   if (kind === "additive") {
     return {
       value:
@@ -174,8 +152,11 @@ function rollingMeasure(
 
 function combineEvidence(
   evidence: TemporalMetricEvidence[],
-  confidence: boolean,
 ): TemporalMetricEvidence {
+  const games = evidence.reduce(
+    (total, item) => total + evidenceGames(item),
+    0,
+  );
   const sampleSize = evidence.reduce(
     (total, item) => total + item.sampleSize,
     0,
@@ -197,26 +178,24 @@ function combineEvidence(
       }
     : {};
   if (!hasSuccesses) {
-    return { sampleSize, ...ratio, confidenceInterval: null };
+    return { games, sampleSize, ...ratio };
   }
   const successes = evidence.reduce(
     (total, item) => total + (item.successes ?? 0),
     0,
   );
   return {
+    games,
     sampleSize,
     successes,
     ...ratio,
-    confidenceInterval: confidence
-      ? wilsonInterval95(successes, sampleSize)
-      : null,
   };
 }
 
 function emptyMeasure(): Measure {
   return {
     value: null,
-    evidence: { sampleSize: 0, confidenceInterval: null },
+    evidence: { games: 0, sampleSize: 0 },
   };
 }
 

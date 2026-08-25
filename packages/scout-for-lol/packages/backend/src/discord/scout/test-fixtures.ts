@@ -17,7 +17,7 @@ function point(label: string, value: number, sampleSize = 8) {
     start: "2026-01-01T00:00:00.000Z",
     end: "2026-01-02T00:00:00.000Z",
     value,
-    evidence: { sampleSize, confidenceInterval: null },
+    evidence: { games: sampleSize, sampleSize },
   };
 }
 

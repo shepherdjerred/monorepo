@@ -129,6 +129,10 @@ export function attachTemporalComparison({
                   ?.values.find(
                     (candidate) => candidate.column === value.column,
                   );
+          const baselineEvidence =
+            baseline === undefined
+              ? undefined
+              : comparisonEvidenceByRow.get(baseline);
           const baselineValue =
             matchedBaseline === undefined
               ? isAdditiveOutput(plan, value.column)
@@ -146,8 +150,7 @@ export function attachTemporalComparison({
             absoluteDelta: deltas.absolute,
             percentageDelta: deltas.percentage,
             comparisonSampleSize: matchedBaselineEvidence?.sampleSize ?? 0,
-            comparisonConfidenceInterval:
-              matchedBaselineEvidence?.confidenceInterval ?? null,
+            comparisonGames: baselineEvidence?.games ?? 0,
             ...(matchedBaselineEvidence?.successes === undefined
               ? {}
               : { comparisonSuccesses: matchedBaselineEvidence.successes }),
