@@ -241,9 +241,12 @@ export function devGuildOverride(input: {
   // Owner + ADMINISTRATOR so the guild picker and `assertGuildAdmin` behave as
   // they would for a server you actually run; a member-only stand-in would
   // block every management screen this exists to let you reach.
-  return ids.map((id) => ({
+  return ids.map((id, index) => ({
     id,
-    name: `Dev Guild ${id}`,
+    // Keep local screenshots representative without reflecting the Discord
+    // snowflake back into consumer-facing UI. The id remains authoritative
+    // for access checks; the ordinal only distinguishes multiple fixtures.
+    name: `Dev Guild ${(index + 1).toString()}`,
     icon: null,
     owner: true,
     permissions: ADMINISTRATOR_BIT.toString(),

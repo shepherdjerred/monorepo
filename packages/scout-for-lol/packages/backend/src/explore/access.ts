@@ -6,7 +6,11 @@ import {
   exploreGuildAllowlist,
   isDynamicConfigReady,
 } from "#src/config/dynamic.ts";
-import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
+import {
+  eligibleConsumerGuildIds,
+  resolveConsumerAccess,
+  resolveConsumerGuildAccess,
+} from "#src/consumer/access.ts";
 
 /**
  * Access control for explore.
@@ -52,14 +56,10 @@ export function eligibleExploreGuildIds(
   allowedGuildIds: Iterable<string>,
   userGuildIds: string[],
 ): string[] {
-  const allowed = new Set(allowedGuildIds);
-  return userGuildIds.filter((guildId) => allowed.has(guildId));
+  return eligibleConsumerGuildIds(allowedGuildIds, userGuildIds);
 }
 
-export type ExploreAccessResult =
-  | { kind: "allowed"; guildIds: string[] }
-  | { kind: "forbidden" }
-  | { kind: "unavailable" };
+export type ExploreAccessResult = ReturnType<typeof resolveConsumerAccess>;
 
 export function resolveExploreAccess(
   environment: Environment,
@@ -67,19 +67,12 @@ export function resolveExploreAccess(
   userGuildIds: string[],
   connectedGuildIds: Iterable<string> | undefined,
 ): ExploreAccessResult {
-  let allowedGuildIds: Iterable<string>;
-  if (environment === "prod") {
-    if (connectedGuildIds === undefined) {
-      return { kind: "unavailable" };
-    }
-    allowedGuildIds = connectedGuildIds;
-  } else {
-    allowedGuildIds = allowlist;
-  }
-  const guildIds = eligibleExploreGuildIds(allowedGuildIds, userGuildIds);
-  return guildIds.length === 0
-    ? { kind: "forbidden" }
-    : { kind: "allowed", guildIds };
+  return resolveConsumerAccess(
+    environment,
+    allowlist,
+    userGuildIds,
+    connectedGuildIds,
+  );
 }
 
 /**
@@ -122,20 +115,7 @@ export async function assertExploreAccess(user: User): Promise<string[]> {
     });
   }
 
-  const guilds = await fetchUserGuildsForRequest(user);
-  const guildIds = guilds.map((guild) => guild.id);
-  let connectedGuildIds: Iterable<string> | undefined;
-  if (production) {
-    const { getConnectedServerIds } =
-      await import("#src/discord/utils/guild-membership.ts");
-    connectedGuildIds = getConnectedServerIds();
-  }
-  const access = resolveExploreAccess(
-    configuration.environment,
-    allowlist,
-    guildIds,
-    connectedGuildIds,
-  );
+  const access = await resolveConsumerGuildAccess(user, allowlist);
   if (access.kind === "unavailable") {
     throw new TRPCError({
       code: "SERVICE_UNAVAILABLE",
@@ -150,5 +130,5 @@ export async function assertExploreAccess(user: User): Promise<string[]> {
         : "Explore is currently limited to a few servers.",
     });
   }
-  return access.guildIds;
+  return access.guilds.map((guild) => guild.id);
 }
