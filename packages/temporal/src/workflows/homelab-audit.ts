@@ -9,7 +9,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
-import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const RETRY = {
   maximumAttempts: 3,
@@ -108,10 +108,10 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 
 export async function runHomelabAuditWorkflow(
   input: RunHomelabAuditWorkflowInput = {},
-  reportTaskQueue: string = TASK_QUEUES.REPORTS,
+  reportTaskQueue?: string,
 ): Promise<void> {
   const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-    taskQueue: reportTaskQueue,
+    taskQueue: reportActivityTaskQueue(reportTaskQueue),
     startToCloseTimeout: "2 minutes",
     retry: RETRY,
   });

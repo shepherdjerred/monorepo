@@ -7,18 +7,12 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
-import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const activities = proxyActivities<TasknotesCanaryActivities>({
   startToCloseTimeout: "2 minutes",
   retry: { maximumAttempts: 3 },
 });
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  taskQueue: TASK_QUEUES.REPORTS,
-  startToCloseTimeout: "2 minutes",
-  retry: { maximumAttempts: 3 },
-});
-
 function taskCountDrop(result: TasknotesCanaryResult): number | undefined {
   if (result.baseline === undefined || result.baseline.tasks === 0) {
     return undefined;
@@ -193,6 +187,11 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 }
 
 export async function runTasknotesCanary(): Promise<void> {
+  const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+    taskQueue: reportActivityTaskQueue(),
+    startToCloseTimeout: "2 minutes",
+    retry: { maximumAttempts: 3 },
+  });
   const startedAt = new Date().toISOString();
   try {
     const result = await activities.collectTasknotesCanary();
