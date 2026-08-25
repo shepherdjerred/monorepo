@@ -31,6 +31,10 @@ import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
 import { weatherActivities } from "./weather.ts";
 import { workflowFailureWatchActivities } from "./workflow-failure-watch-activity.ts";
 import { maintenanceActivities } from "./maintenance.ts";
+import { mainVulnScanActivities } from "./main-vuln-scan.ts";
+import { mainVulnScanAlertActivities } from "./main-vuln-scan-alerts.ts";
+import { linkRotScanActivities } from "./link-rot-scan.ts";
+import { linkRotScanAlertActivities } from "./link-rot-scan-alerts.ts";
 import { reportDeliveryActivities } from "./report-delivery.ts";
 import { protobufWatchActivities } from "./protobuf-watch.ts";
 import { tasknotesCanaryActivities } from "./tasknotes-canary.ts";
@@ -38,6 +42,7 @@ import { reportFreshnessActivities } from "./report-freshness.ts";
 import { ciIoImpactActivities } from "./ci-io-impact.ts";
 import { freshrssActivities } from "./freshrss.ts";
 import { scoutWeeklyParlayActivities } from "./scout-weekly-parlay.ts";
+import { scoutBryanBucksActivities } from "./scout-bryan-bucks.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -51,6 +56,8 @@ export const reportActivities = {
   ...workflowFailureWatchActivities,
   sendAgentTaskEmail: agentTaskActivities.sendAgentTaskEmail,
   sendAgentTaskFailureReport: agentTaskActivities.sendAgentTaskFailureReport,
+  ...mainVulnScanAlertActivities,
+  ...linkRotScanAlertActivities,
 };
 
 export const infraActivities = {
@@ -88,6 +95,7 @@ export const scoutActivities = {
   ...scoutShowcaseRefreshActivities,
   ...scoutQueueWindowsActivities,
   ...scoutWeeklyParlayActivities,
+  ...scoutBryanBucksActivities,
 };
 
 export const agentActivities = {
@@ -100,6 +108,12 @@ export const glitterCorpusWorkerActivities = {
 
 export const glitterContextWorkerActivities = {
   ...glitterContextRefreshActivities,
+};
+
+export const maintenanceWorkerActivities = {
+  ...maintenanceActivities,
+  ...mainVulnScanActivities,
+  ...linkRotScanActivities,
 };
 
 /**
@@ -115,5 +129,5 @@ export const activities = {
   ...agentActivities,
   ...glitterCorpusWorkerActivities,
   ...glitterContextWorkerActivities,
-  ...maintenanceActivities,
+  ...maintenanceWorkerActivities,
 };
