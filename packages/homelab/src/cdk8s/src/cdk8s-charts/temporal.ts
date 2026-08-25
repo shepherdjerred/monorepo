@@ -446,7 +446,7 @@ export function createTemporalChart(app: App) {
       podSelector: {
         matchLabels: {
           app: "temporal-worker",
-          component: "core-worker",
+          component: "legacy-worker",
         },
       },
       policyTypes: ["Egress"],

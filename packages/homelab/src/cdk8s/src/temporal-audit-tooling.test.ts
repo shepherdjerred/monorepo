@@ -42,8 +42,12 @@ const DeploymentSchema = z.object({
   kind: z.literal("Deployment"),
   metadata: z.object({ name: z.string() }),
   spec: z.object({
+    replicas: z.number(),
+    strategy: z.object({ type: z.string() }),
     template: z.object({
+      metadata: z.object({ labels: z.record(z.string(), z.string()) }),
       spec: z.object({
+        automountServiceAccountToken: z.boolean(),
         containers: z.array(
           z.object({
             env: z.array(
@@ -53,9 +57,19 @@ const DeploymentSchema = z.object({
             name: z.string(),
             ports: z.array(z.object({ containerPort: z.number() })),
             readinessProbe: HttpProbeSchema,
+            resources: z.object({
+              limits: z
+                .object({
+                  cpu: z.string().optional(),
+                  memory: z.string().optional(),
+                })
+                .optional(),
+              requests: z.object({ cpu: z.string(), memory: z.string() }),
+            }),
             startupProbe: HttpProbeSchema,
           }),
         ),
+        serviceAccountName: z.string(),
       }),
     }),
   }),
@@ -154,30 +168,61 @@ describe("temporal homelab audit tooling configuration", () => {
 });
 
 describe("temporal homelab audit tooling worker topology", () => {
-  it("isolates core, agent, and Glitter queues behind event-loop health probes", async () => {
+  it("isolates core, agent, and both Glitter queues behind event-loop health probes", async () => {
     const deployments = parseDeployments(await synthesizeApp());
     const core = requireDeployment(deployments, "temporal-temporal-worker");
+    const gateway = requireDeployment(deployments, "temporal-temporal-gateway");
+    const home = requireDeployment(
+      deployments,
+      "temporal-temporal-home-worker",
+    );
+    const reports = requireDeployment(
+      deployments,
+      "temporal-temporal-reports-worker",
+    );
     const agent = requireDeployment(
       deployments,
       "temporal-temporal-agent-worker",
     );
-    const glitter = requireDeployment(
+    const glitterCorpus = requireDeployment(
       deployments,
-      "temporal-temporal-glitter-worker",
+      "temporal-temporal-glitter-corpus-worker",
+    );
+    const glitterContext = requireDeployment(
+      deployments,
+      "temporal-temporal-glitter-context-worker",
     );
 
-    expect(envValue(core, "TEMPORAL_WORKER_ROLE")).toBe("core");
-    expect(envValue(core, "SLEEP_WEBHOOK_PORT")).toBe("9469");
+    expect(envValue(core, "TEMPORAL_WORKER_ROLE")).toBe("legacy");
+    expect(envValue(gateway, "TEMPORAL_WORKER_ROLE")).toBe("control");
+    expect(envValue(gateway, "SLEEP_WEBHOOK_PORT")).toBe("9469");
+    expect(envValue(home, "TEMPORAL_WORKER_ROLE")).toBe("home");
+    expect(envValue(reports, "TEMPORAL_WORKER_ROLE")).toBe("reports");
     expect(envValue(agent, "TEMPORAL_WORKER_ROLE")).toBe("agent");
-    expect(envValue(glitter, "TEMPORAL_WORKER_ROLE")).toBe("glitter");
+    expect(envValue(glitterCorpus, "TEMPORAL_WORKER_ROLE")).toBe(
+      "glitter-corpus",
+    );
+    expect(envValue(glitterContext, "TEMPORAL_WORKER_ROLE")).toBe(
+      "glitter-context",
+    );
 
     const coreContainer = core.spec.template.spec.containers[0];
+    const gatewayContainer = gateway.spec.template.spec.containers[0];
+    const homeContainer = home.spec.template.spec.containers[0];
+    const reportsContainer = reports.spec.template.spec.containers[0];
     const agentContainer = agent.spec.template.spec.containers[0];
-    const glitterContainer = glitter.spec.template.spec.containers[0];
+    const glitterCorpusContainer =
+      glitterCorpus.spec.template.spec.containers[0];
+    const glitterContextContainer =
+      glitterContext.spec.template.spec.containers[0];
     if (
       coreContainer === undefined ||
+      gatewayContainer === undefined ||
+      homeContainer === undefined ||
+      reportsContainer === undefined ||
       agentContainer === undefined ||
-      glitterContainer === undefined
+      glitterCorpusContainer === undefined ||
+      glitterContextContainer === undefined
     ) {
       throw new Error("Temporal worker Deployments require one container");
     }
@@ -186,30 +231,200 @@ describe("temporal homelab audit tooling worker topology", () => {
       coreContainer.startupProbe,
       coreContainer.livenessProbe,
       coreContainer.readinessProbe,
+      gatewayContainer.startupProbe,
+      gatewayContainer.livenessProbe,
+      gatewayContainer.readinessProbe,
+      homeContainer.startupProbe,
+      homeContainer.livenessProbe,
+      homeContainer.readinessProbe,
+      reportsContainer.startupProbe,
+      reportsContainer.livenessProbe,
+      reportsContainer.readinessProbe,
       agentContainer.startupProbe,
       agentContainer.livenessProbe,
       agentContainer.readinessProbe,
-      glitterContainer.startupProbe,
-      glitterContainer.livenessProbe,
-      glitterContainer.readinessProbe,
+      glitterCorpusContainer.startupProbe,
+      glitterCorpusContainer.livenessProbe,
+      glitterCorpusContainer.readinessProbe,
+      glitterContextContainer.startupProbe,
+      glitterContextContainer.livenessProbe,
+      glitterContextContainer.readinessProbe,
     ]) {
       expect(probe.httpGet).toEqual({ path: "/healthz", port: 9465 });
     }
 
     expect(coreContainer.ports.map((port) => port.containerPort)).toEqual([
+      9464, 9465,
+    ]);
+    expect(gatewayContainer.ports.map((port) => port.containerPort)).toEqual([
       9464, 9465, 9466, 9467, 9468, 9469,
+    ]);
+    expect(homeContainer.ports.map((port) => port.containerPort)).toEqual([
+      9464, 9465,
+    ]);
+    expect(reportsContainer.ports.map((port) => port.containerPort)).toEqual([
+      9464, 9465,
     ]);
     expect(agentContainer.ports.map((port) => port.containerPort)).toEqual([
       9464, 9465,
     ]);
-    expect(glitterContainer.ports.map((port) => port.containerPort)).toEqual([
-      9464, 9465,
-    ]);
+    for (const glitterContainer of [
+      glitterCorpusContainer,
+      glitterContextContainer,
+    ]) {
+      expect(glitterContainer.ports.map((port) => port.containerPort)).toEqual([
+        9464, 9465,
+      ]);
+    }
 
     const yaml = await synthesizeApp();
     expect(yaml).toContain("name: temporal-worker-sleep-webhook");
     expect(yaml).toContain("https://temporal-sleep.sjer.red/healthz");
     expect(yaml).toContain("name: SLEEP_WEBHOOK_TOKEN");
+  });
+});
+
+describe("Temporal domain worker isolation", () => {
+  it("gives each Glitter worker exact resources, credentials, and token isolation", async () => {
+    const deployments = parseDeployments(await synthesizeApp());
+    const corpus = requireDeployment(
+      deployments,
+      "temporal-temporal-glitter-corpus-worker",
+    );
+    const context = requireDeployment(
+      deployments,
+      "temporal-temporal-glitter-context-worker",
+    );
+
+    expect(corpus.spec).toMatchObject({
+      replicas: 1,
+      strategy: { type: "Recreate" },
+    });
+    expect(context.spec).toMatchObject({
+      replicas: 1,
+      strategy: { type: "Recreate" },
+    });
+    expect(corpus.spec.template.spec).toMatchObject({
+      automountServiceAccountToken: false,
+      serviceAccountName: "temporal-glitter-corpus-worker",
+    });
+    expect(context.spec.template.spec).toMatchObject({
+      automountServiceAccountToken: false,
+      serviceAccountName: "temporal-glitter-context-worker",
+    });
+    expect(corpus.spec.template.metadata.labels["component"]).toBe(
+      "glitter-corpus-worker",
+    );
+    expect(context.spec.template.metadata.labels["component"]).toBe(
+      "glitter-context-worker",
+    );
+    expect(corpus.spec.template.spec.containers[0]?.resources).toEqual({
+      limits: { cpu: "1", memory: "3072Mi" },
+      requests: { cpu: "250m", memory: "512Mi" },
+    });
+    expect(context.spec.template.spec.containers[0]?.resources).toEqual({
+      limits: { cpu: "2", memory: "6144Mi" },
+      requests: { cpu: "750m", memory: "2560Mi" },
+    });
+
+    const corpusEnv = envNames(corpus);
+    const contextEnv = envNames(context);
+    for (const required of [
+      "GLITTER_DISCORD_TOKEN",
+      "GLITTER_DISCORD_GUILD_SLUG",
+      "GLITTER_DISCORD_DENYLIST_CHANNEL_IDS",
+    ]) {
+      expect(corpusEnv).toContain(required);
+      expect(contextEnv).not.toContain(required);
+    }
+    for (const required of [
+      "OPENROUTER_API_KEY",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+    ]) {
+      expect(contextEnv).toContain(required);
+      expect(corpusEnv).not.toContain(required);
+    }
+  });
+
+  it("isolates gateway, home, and reports identities and credentials", async () => {
+    const deployments = parseDeployments(await synthesizeApp());
+    const gateway = requireDeployment(deployments, "temporal-temporal-gateway");
+    const home = requireDeployment(
+      deployments,
+      "temporal-temporal-home-worker",
+    );
+    const reports = requireDeployment(
+      deployments,
+      "temporal-temporal-reports-worker",
+    );
+    const definitions = [
+      {
+        deployment: gateway,
+        component: "gateway",
+        serviceAccountName: "temporal-gateway",
+        resources: { requests: { cpu: "100m", memory: "256Mi" } },
+      },
+      {
+        deployment: home,
+        component: "home-worker",
+        serviceAccountName: "temporal-home-worker",
+        resources: { requests: { cpu: "100m", memory: "512Mi" } },
+      },
+      {
+        deployment: reports,
+        component: "reports-worker",
+        serviceAccountName: "temporal-reports-worker",
+        resources: { requests: { cpu: "100m", memory: "512Mi" } },
+      },
+    ];
+    for (const definition of definitions) {
+      expect(definition.deployment.spec).toMatchObject({
+        replicas: 1,
+        strategy: { type: "Recreate" },
+      });
+      expect(definition.deployment.spec.template.spec).toMatchObject({
+        automountServiceAccountToken: false,
+        serviceAccountName: definition.serviceAccountName,
+      });
+      expect(
+        definition.deployment.spec.template.metadata.labels["component"],
+      ).toBe(definition.component);
+      expect(
+        definition.deployment.spec.template.spec.containers[0]?.resources,
+      ).toEqual(definition.resources);
+    }
+
+    const gatewayEnv = envNames(gateway);
+    const homeEnv = envNames(home);
+    const reportsEnv = envNames(reports);
+    for (const required of [
+      "GITHUB_WEBHOOK_SECRET",
+      "AGENT_TASK_API_TOKEN",
+      "SLEEP_WEBHOOK_TOKEN",
+      "XCODE_CLOUD_WEBHOOK_TOKEN",
+    ]) {
+      expect(gatewayEnv).toContain(required);
+      expect(homeEnv).not.toContain(required);
+      expect(reportsEnv).not.toContain(required);
+    }
+    for (const required of ["HA_URL", "HA_TOKEN"]) {
+      expect(homeEnv).toContain(required);
+      expect(gatewayEnv).not.toContain(required);
+      expect(reportsEnv).not.toContain(required);
+    }
+    for (const required of [
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "POSTAL_API_KEY",
+      "RECIPIENT_EMAIL",
+      "SENDER_EMAIL",
+    ]) {
+      expect(reportsEnv).toContain(required);
+      expect(gatewayEnv).not.toContain(required);
+      expect(homeEnv).not.toContain(required);
+    }
   });
 
   it("enables Temporal worker observability dynamic config with v1.29 key casing", async () => {

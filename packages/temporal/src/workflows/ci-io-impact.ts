@@ -7,16 +7,12 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const { collectCiIoImpact } = proxyActivities<CiIoImpactActivities>({
   startToCloseTimeout: "45 minutes",
   retry: { maximumAttempts: 2 },
 });
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  startToCloseTimeout: "2 minutes",
-  retry: { maximumAttempts: 3 },
-});
-
 type CiIoEvaluation = {
   pending: boolean;
   pendingReason: string | undefined;
@@ -327,6 +323,11 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 }
 
 export async function runCiIoImpact(): Promise<void> {
+  const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+    taskQueue: reportActivityTaskQueue(),
+    startToCloseTimeout: "2 minutes",
+    retry: { maximumAttempts: 3 },
+  });
   const startedAt = new Date().toISOString();
   try {
     await deliverActivityReport(

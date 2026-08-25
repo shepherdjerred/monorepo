@@ -5,8 +5,9 @@ import {
   Deployment,
   DeploymentStrategy,
   type EnvValue,
+  Pods,
   Service,
-  type ServiceAccount,
+  ServiceAccount,
   Volume,
 } from "cdk8s-plus-31";
 import {
@@ -17,27 +18,35 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/ser
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 
-type CreateTemporalGlitterWorkerProps = {
-  serviceAccount: ServiceAccount;
+type GlitterWorkerDefinition = {
+  name: "temporal-glitter-context-worker" | "temporal-glitter-corpus-worker";
+  component: "glitter-context-worker" | "glitter-corpus-worker";
   envVariables: Record<string, EnvValue>;
+  cpuRequest: Cpu;
+  cpuLimit: Cpu;
+  memoryRequest: Size;
+  memoryLimit: Size;
 };
 
-export function createTemporalGlitterWorker(
+function createGlitterWorker(
   chart: Chart,
-  props: CreateTemporalGlitterWorkerProps,
+  definition: GlitterWorkerDefinition,
 ): Deployment {
-  const deployment = new Deployment(chart, "temporal-glitter-worker", {
+  const serviceAccount = new ServiceAccount(
+    chart,
+    `${definition.name}-service-account`,
+    { metadata: { name: definition.name } },
+  );
+  const deployment = new Deployment(chart, definition.name, {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
-    serviceAccount: props.serviceAccount,
-    automountServiceAccountToken: true,
-    securityContext: {
-      fsGroup: 1000,
-    },
+    serviceAccount,
+    automountServiceAccountToken: false,
+    securityContext: { fsGroup: 1000 },
     podMetadata: {
       labels: {
         app: "temporal-worker",
-        component: "glitter-worker",
+        component: definition.component,
       },
     },
   });
@@ -46,7 +55,7 @@ export function createTemporalGlitterWorker(
 
   const container = deployment.addContainer(
     withCommonProps({
-      name: "temporal-glitter-worker",
+      name: definition.name,
       image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
       ports: [
         { number: 9464, name: "metrics" },
@@ -59,54 +68,87 @@ export function createTemporalGlitterWorker(
       },
       resources: {
         cpu: {
-          request: Cpu.units(1),
-          limit: Cpu.units(2),
+          request: definition.cpuRequest,
+          limit: definition.cpuLimit,
         },
         memory: {
-          request: Size.gibibytes(3),
-          limit: Size.gibibytes(6),
+          request: definition.memoryRequest,
+          limit: definition.memoryLimit,
         },
       },
       ...temporalWorkerHealthProbes(),
-      envVariables: props.envVariables,
+      envVariables: definition.envVariables,
     }),
   );
 
   const tmpVolume = Volume.fromEmptyDir(
     chart,
-    "temporal-glitter-worker-tmp",
-    "glitter-tmp",
+    `${definition.name}-tmp`,
+    `${definition.component}-tmp`,
   );
   container.mount("/tmp", tmpVolume);
 
-  new Service(chart, "temporal-glitter-worker-metrics-service", {
-    selector: deployment,
-    metadata: {
-      labels: { app: "temporal-glitter-worker-metrics" },
-    },
+  const selector = Pods.select(chart, `${definition.name}-selector`, {
+    labels: { component: definition.component },
+  });
+  const sdkMetricsComponent = `${definition.component}-sdk-metrics`;
+  new Service(chart, `${definition.name}-metrics-service`, {
+    selector,
+    metadata: { labels: { component: sdkMetricsComponent } },
     ports: [{ port: 9464, name: "metrics" }],
   });
-
   createServiceMonitor(chart, {
-    name: "temporal-glitter-worker-metrics",
-    matchLabels: { app: "temporal-glitter-worker-metrics" },
+    name: `${definition.name}-metrics`,
+    matchLabels: { component: sdkMetricsComponent },
   });
 
-  new Service(chart, "temporal-glitter-worker-app-metrics-service", {
+  const appMetricsComponent = `${definition.component}-app-metrics`;
+  new Service(chart, `${definition.name}-app-metrics-service`, {
     metadata: {
-      name: "temporal-glitter-worker-app-metrics",
-      labels: { app: "temporal-glitter-worker-app-metrics" },
+      name: `${definition.name}-app-metrics`,
+      labels: { component: appMetricsComponent },
     },
-    selector: deployment,
+    selector,
     ports: [{ name: "app-metrics", port: 9465, targetPort: 9465 }],
   });
-
   createServiceMonitor(chart, {
-    name: "temporal-glitter-worker-app-metrics",
+    name: `${definition.name}-app-metrics`,
     port: "app-metrics",
     interval: "30s",
-    matchLabels: { app: "temporal-glitter-worker-app-metrics" },
+    matchLabels: { component: appMetricsComponent },
   });
 
   return deployment;
+}
+
+export function createTemporalGlitterWorkers(
+  chart: Chart,
+  props: {
+    corpusEnvVariables: Record<string, EnvValue>;
+    contextEnvVariables: Record<string, EnvValue>;
+  },
+): {
+  corpusDeployment: Deployment;
+  contextDeployment: Deployment;
+} {
+  return {
+    corpusDeployment: createGlitterWorker(chart, {
+      name: "temporal-glitter-corpus-worker",
+      component: "glitter-corpus-worker",
+      envVariables: props.corpusEnvVariables,
+      cpuRequest: Cpu.millis(250),
+      cpuLimit: Cpu.units(1),
+      memoryRequest: Size.mebibytes(512),
+      memoryLimit: Size.gibibytes(3),
+    }),
+    contextDeployment: createGlitterWorker(chart, {
+      name: "temporal-glitter-context-worker",
+      component: "glitter-context-worker",
+      envVariables: props.contextEnvVariables,
+      cpuRequest: Cpu.millis(750),
+      cpuLimit: Cpu.units(2),
+      memoryRequest: Size.mebibytes(2560),
+      memoryLimit: Size.gibibytes(6),
+    }),
+  };
 }

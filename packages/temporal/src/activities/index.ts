@@ -37,43 +37,81 @@ import { freshrssActivities } from "./freshrss.ts";
 import { scoutWeeklyParlayActivities } from "./scout-weekly-parlay.ts";
 import { scoutBryanBucksActivities } from "./scout-bryan-bucks.ts";
 
-export const activities = {
+export const homeActivities = {
+  ...haActivities,
+  ...weatherActivities,
+  ...outcomeActivities,
+};
+
+export const reportActivities = {
+  ...reportDeliveryActivities,
+  ...reportFreshnessActivities,
+  ...workflowFailureWatchActivities,
+  sendAgentTaskEmail: agentTaskActivities.sendAgentTaskEmail,
+  sendAgentTaskFailureReport: agentTaskActivities.sendAgentTaskFailureReport,
+};
+
+export const infraActivities = {
+  ...dnsAuditActivities,
+  ...homelabAuditActivities,
+  ...homelabAuditCollectorActivities,
+  ...zfsMaintenanceActivities,
+  ...bugsinkHousekeepingActivities,
+  ...veleroOrphanAuditActivities,
+  ...homelabCrdImportsRefreshActivities,
+  ...tasknotesCanaryActivities,
+};
+
+export const repoActivities = {
   ...fetcherActivities,
   ...depsSummaryActivities,
   ...depsSummaryLegacyActivities,
-  ...dnsAuditActivities,
   ...golinkSyncActivities,
-  ...haActivities,
-  ...homelabAuditActivities,
-  ...homelabAuditCollectorActivities,
-  ...agentTaskActivities,
-  ...zfsMaintenanceActivities,
-  ...bugsinkHousekeepingActivities,
-  ...dataDragonActivities,
-  ...lanePriorActivities,
-  ...scoutSeasonRefreshActivities,
-  ...veleroOrphanAuditActivities,
-  ...outcomeActivities,
   ...cancelBuildkiteBuildsActivities,
   ...checkPrMergeConflictsActivities,
   ...llmCatalogRefreshActivities,
-  ...scoutImageGcActivities,
-  ...homelabCrdImportsRefreshActivities,
   ...pokeemeraldDataRefreshActivities,
-  ...scoutShowcaseRefreshActivities,
-  ...scoutQueueWindowsActivities,
   ...observeReviewSignalsActivities,
-  ...glitterCorpusActivities,
-  ...glitterContextRefreshActivities,
-  ...weatherActivities,
-  ...workflowFailureWatchActivities,
-  ...maintenanceActivities,
-  ...reportDeliveryActivities,
   ...protobufWatchActivities,
-  ...tasknotesCanaryActivities,
-  ...reportFreshnessActivities,
   ...ciIoImpactActivities,
   ...freshrssActivities,
+};
+
+export const scoutActivities = {
+  ...dataDragonActivities,
+  ...lanePriorActivities,
+  ...scoutSeasonRefreshActivities,
+  ...scoutImageGcActivities,
+  ...scoutShowcaseRefreshActivities,
+  ...scoutQueueWindowsActivities,
   ...scoutWeeklyParlayActivities,
   ...scoutBryanBucksActivities,
+};
+
+export const agentActivities = {
+  ...agentTaskActivities,
+};
+
+export const glitterCorpusWorkerActivities = {
+  ...glitterCorpusActivities,
+};
+
+export const glitterContextWorkerActivities = {
+  ...glitterContextRefreshActivities,
+};
+
+/**
+ * Transitional union used only by the legacy `default` queue. New domain
+ * workers receive one of the capability-scoped registries above.
+ */
+export const activities = {
+  ...homeActivities,
+  ...reportActivities,
+  ...infraActivities,
+  ...repoActivities,
+  ...scoutActivities,
+  ...agentActivities,
+  ...glitterCorpusWorkerActivities,
+  ...glitterContextWorkerActivities,
+  ...maintenanceActivities,
 };

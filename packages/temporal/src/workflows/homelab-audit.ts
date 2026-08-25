@@ -9,6 +9,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const RETRY = {
   maximumAttempts: 3,
@@ -44,11 +45,6 @@ const { collectHomelabAuditEvidence } =
     startToCloseTimeout: "8 minutes",
     retry: RETRY,
   });
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  startToCloseTimeout: "2 minutes",
-  retry: RETRY,
-});
-
 export type RunHomelabAuditWorkflowInput = {
   date?: string;
 };
@@ -112,7 +108,13 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 
 export async function runHomelabAuditWorkflow(
   input: RunHomelabAuditWorkflowInput = {},
+  reportTaskQueue?: string,
 ): Promise<void> {
+  const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+    taskQueue: reportActivityTaskQueue(reportTaskQueue),
+    startToCloseTimeout: "2 minutes",
+    retry: RETRY,
+  });
   if (!patched("homelab-audit-deterministic-v1")) {
     return runLegacyHomelabAudit(input);
   }

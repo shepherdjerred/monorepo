@@ -8,6 +8,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const { runScoutSeasonRefresh } = proxyActivities<ScoutSeasonRefreshActivities>(
   {
@@ -21,11 +22,6 @@ const { runScoutSeasonRefresh } = proxyActivities<ScoutSeasonRefreshActivities>(
     },
   },
 );
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  startToCloseTimeout: "2 minutes",
-  retry: { maximumAttempts: 3 },
-});
-
 type SeasonReportState = {
   proposalComplete: boolean;
   complete: boolean;
@@ -259,6 +255,11 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 export async function runScoutSeasonRefreshWorkflow(
   input: ScoutSeasonRefreshInput = {},
 ): Promise<ScoutSeasonRefreshResult> {
+  const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+    taskQueue: reportActivityTaskQueue(),
+    startToCloseTimeout: "2 minutes",
+    retry: { maximumAttempts: 3 },
+  });
   const startedAt = new Date().toISOString();
   try {
     const result = await runScoutSeasonRefresh(input);

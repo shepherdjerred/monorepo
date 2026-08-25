@@ -94,7 +94,7 @@ describe("sleep webhook", () => {
     expect(start.mock.calls[0]).toEqual([
       "sleepMusic",
       {
-        taskQueue: "default",
+        taskQueue: "home",
         workflowId: "sleep-music",
         workflowIdConflictPolicy: WorkflowIdConflictPolicy.TERMINATE_EXISTING,
         workflowExecutionTimeout: 12_600_000,

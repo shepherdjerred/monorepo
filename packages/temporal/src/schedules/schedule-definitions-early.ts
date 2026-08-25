@@ -8,7 +8,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowType: "monitorReportFreshness",
     args: [],
     cronExpression: "*/15 * * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPORTS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "20 minutes",
     memo: "Every-15-minute accepted report heartbeat freshness monitor",

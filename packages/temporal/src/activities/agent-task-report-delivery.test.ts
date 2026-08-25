@@ -226,17 +226,17 @@ describe("agent task report delivery delegation", () => {
     expect(report.limitations[0]).toContain("workdir may remain");
   });
 
-  test("targets the credentialed core queue with a stable workflow identity", () => {
+  test("targets the credentialed reports queue with a stable workflow identity", () => {
     expect(agentTaskReportDeliveryWorkflowOptions(REPORT)).toEqual({
       args: [REPORT],
-      taskQueue: TASK_QUEUES.DEFAULT,
+      taskQueue: TASK_QUEUES.REPORTS,
       workflowId: `report-delivery:${REPORT.reportRunId}`,
       workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
       workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
     });
   });
 
-  test("returns the validated core delivery result", async () => {
+  test("returns the validated reports delivery result", async () => {
     const observed: unknown[] = [];
     const result = await deliverAgentTaskReportWithDependencies(REPORT, {
       execute: async (options) => {

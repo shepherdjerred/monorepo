@@ -6,8 +6,9 @@ import type {
   LanePriorWorkflowInput,
 } from "#activities/lane-prior-refresh.ts";
 import { runScoutLanePriorsWeeklyRefresh } from "./index.ts";
+import { createReportCapture, runWithReportWorker } from "./test-support.ts";
 
-const TASK_QUEUE = "scout-lane-prior-test";
+const TASK_QUEUE_PREFIX = "scout-lane-prior-test";
 const INPUT: LanePriorWorkflowInput = {
   lanePriors: {
     bucket: "scout-test",
@@ -45,26 +46,35 @@ afterAll(async () => {
 
 describe("runScoutLanePriorsWeeklyRefresh", () => {
   test("publishes an independent lane-prior result and report", async () => {
-    const reports: unknown[] = [];
+    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
+    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
+    const { reports, deliverActivityReport } = createReportCapture("report-1");
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUE,
+      taskQueue: taskQueue,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
       activities: {
         updateLanePriors: (_input: LanePriorWorkflowInput) => RESULT,
-        deliverActivityReport: (input: unknown) => {
-          reports.push(input);
-          return { accepted: true, duplicate: false, reportRunId: "report-1" };
-        },
+        deliverActivityReport,
       },
     });
 
-    const result = await worker.runUntil(
-      testEnvironment.client.workflow.execute(runScoutLanePriorsWeeklyRefresh, {
-        args: [INPUT],
-        taskQueue: TASK_QUEUE,
-        workflowId: `scout-lane-prior-${crypto.randomUUID()}`,
-      }),
+    const result = await runWithReportWorker(
+      testEnvironment,
+      worker,
+      deliverActivityReport,
+      {
+        reportTaskQueue,
+        runWorkflow: () =>
+          testEnvironment.client.workflow.execute(
+            runScoutLanePriorsWeeklyRefresh,
+            {
+              args: [INPUT, reportTaskQueue],
+              taskQueue: taskQueue,
+              workflowId: `scout-lane-prior-${crypto.randomUUID()}`,
+            },
+          ),
+      },
     );
 
     expect(result).toEqual(RESULT);

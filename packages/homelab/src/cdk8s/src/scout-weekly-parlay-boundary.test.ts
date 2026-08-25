@@ -57,15 +57,19 @@ describe("Scout weekly parlay deployment boundary", () => {
       ]),
     );
 
-    const glitterDeployment = DeploymentSpecSchema.parse(
-      findResource(temporal, "Deployment", "temporal-temporal-glitter-worker")
-        .spec,
-    );
-    expect(
-      glitterDeployment.template.spec.containers[0]?.env.some(
-        (entry) => entry.name === "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
-      ),
-    ).toBe(false);
+    for (const deploymentName of [
+      "temporal-temporal-glitter-corpus-worker",
+      "temporal-temporal-glitter-context-worker",
+    ]) {
+      const glitterDeployment = DeploymentSpecSchema.parse(
+        findResource(temporal, "Deployment", deploymentName).spec,
+      );
+      expect(
+        glitterDeployment.template.spec.containers[0]?.env.some(
+          (entry) => entry.name === "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+        ),
+      ).toBe(false);
+    }
   });
 
   test("keeps the private control endpoint absent from production Scout", () => {
@@ -87,7 +91,7 @@ describe("Scout weekly parlay deployment boundary", () => {
     ).toBe(false);
   });
 
-  test("allows only the Temporal core worker to reach Beta Scout", () => {
+  test("keeps staged Scout access limited to Temporal workers", () => {
     const beta = scoutResources("beta");
     const policy = findResource(beta, "NetworkPolicy", "scout-ingress-netpol");
     expect(policy.spec).toEqual(
@@ -126,7 +130,7 @@ describe("Scout weekly parlay deployment boundary", () => {
         podSelector: {
           matchLabels: {
             app: "temporal-worker",
-            component: "core-worker",
+            component: "legacy-worker",
           },
         },
         egress: [

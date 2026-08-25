@@ -57,7 +57,7 @@ describe("Temporal FreshRSS integration", () => {
     expect(spec.itemPath).toMatch(/\/items\/freshrss-sync$/u);
   });
 
-  test("configures the core worker and scoped FreshRSS network access", () => {
+  test("configures the legacy worker and scoped FreshRSS network access", () => {
     const synthesized = resources();
     const deployment = findResource(
       synthesized,
@@ -101,11 +101,11 @@ describe("Temporal FreshRSS integration", () => {
       .parse(deployment.spec);
     const container = deploymentSpec.template.spec.containers[0];
     if (container === undefined) {
-      throw new Error("Temporal core worker container is missing");
+      throw new Error("Temporal legacy worker container is missing");
     }
     expect(deploymentSpec.template.metadata.labels).toMatchObject({
       app: "temporal-worker",
-      component: "core-worker",
+      component: "legacy-worker",
     });
     expect(container.env).toContainEqual({
       name: "FRESHRSS_API_PASSWORD_FILE",
@@ -153,7 +153,7 @@ describe("Temporal FreshRSS integration", () => {
       .parse(policy.spec);
     expect(policySpec.podSelector.matchLabels).toEqual({
       app: "temporal-worker",
-      component: "core-worker",
+      component: "legacy-worker",
     });
     expect(policySpec.egress).toContainEqual({
       ports: [{ port: 80, protocol: "TCP" }],

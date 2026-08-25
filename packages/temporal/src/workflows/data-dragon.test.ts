@@ -8,8 +8,9 @@ import type {
   DataDragonVersionState,
 } from "#shared/data-dragon-types.ts";
 import { runScoutDataDragonWeeklyRefresh } from "./index.ts";
+import { runWithReportWorker } from "./test-support.ts";
 
-const TASK_QUEUE = "scout-data-dragon-test";
+const TASK_QUEUE_PREFIX = "scout-data-dragon-test";
 
 const VERSION_STATE: DataDragonVersionState = {
   currentVersion: "16.15.0",
@@ -39,9 +40,15 @@ async function runWithFailingUpdate(updateError: Error): Promise<{
 }> {
   const recorded: RecordFailureInput[] = [];
   const reports: unknown[] = [];
+  const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
+  const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
+  const deliverActivityReport = (input: unknown) => {
+    reports.push(input);
+    return { accepted: true, duplicate: false, reportRunId: "report-1" };
+  };
   const worker = await Worker.create({
     connection: testEnvironment.nativeConnection,
-    taskQueue: TASK_QUEUE,
+    taskQueue: taskQueue,
     workflowsPath: new URL("index.ts", import.meta.url).pathname,
     activities: {
       getDataDragonVersionState: (): DataDragonVersionState => VERSION_STATE,
@@ -51,22 +58,24 @@ async function runWithFailingUpdate(updateError: Error): Promise<{
       recordDataDragonFailure: (input: RecordFailureInput): void => {
         recorded.push(input);
       },
-      deliverActivityReport: (input: unknown) => {
-        reports.push(input);
-        return { accepted: true, duplicate: false, reportRunId: "report-1" };
-      },
+      deliverActivityReport,
     },
   });
 
   let failure: unknown;
   try {
-    await worker.runUntil(
-      testEnvironment.client.workflow.execute(runScoutDataDragonWeeklyRefresh, {
-        args: [],
-        taskQueue: TASK_QUEUE,
-        workflowId: `scout-data-dragon-failure-${crypto.randomUUID()}`,
-      }),
-    );
+    await runWithReportWorker(testEnvironment, worker, deliverActivityReport, {
+      reportTaskQueue,
+      runWorkflow: () =>
+        testEnvironment.client.workflow.execute(
+          runScoutDataDragonWeeklyRefresh,
+          {
+            args: [reportTaskQueue],
+            taskQueue: taskQueue,
+            workflowId: `scout-data-dragon-failure-${crypto.randomUUID()}`,
+          },
+        ),
+    });
   } catch (error: unknown) {
     failure = error;
   }
@@ -104,9 +113,14 @@ describe("runScoutDataDragonWeeklyRefresh terminal-failure recording", () => {
 
   test("does not record an updater failure when only report delivery fails", async () => {
     const recorded: RecordFailureInput[] = [];
+    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
+    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
+    const deliverActivityReport = (_input: unknown): never => {
+      throw new Error("report delivery unavailable");
+    };
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUE,
+      taskQueue: taskQueue,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
       activities: {
         getDataDragonVersionState: (): DataDragonVersionState => VERSION_STATE,
@@ -124,23 +138,28 @@ describe("runScoutDataDragonWeeklyRefresh terminal-failure recording", () => {
         recordDataDragonFailure: (input: RecordFailureInput): void => {
           recorded.push(input);
         },
-        deliverActivityReport: (_input: unknown): never => {
-          throw new Error("report delivery unavailable");
-        },
+        deliverActivityReport,
       },
     });
 
     let failure: unknown;
     try {
-      await worker.runUntil(
-        testEnvironment.client.workflow.execute(
-          runScoutDataDragonWeeklyRefresh,
-          {
-            args: [],
-            taskQueue: TASK_QUEUE,
-            workflowId: `scout-data-dragon-delivery-${crypto.randomUUID()}`,
-          },
-        ),
+      await runWithReportWorker(
+        testEnvironment,
+        worker,
+        deliverActivityReport,
+        {
+          reportTaskQueue,
+          runWorkflow: () =>
+            testEnvironment.client.workflow.execute(
+              runScoutDataDragonWeeklyRefresh,
+              {
+                args: [reportTaskQueue],
+                taskQueue: taskQueue,
+                workflowId: `scout-data-dragon-delivery-${crypto.randomUUID()}`,
+              },
+            ),
+        },
       );
     } catch (error: unknown) {
       failure = error;
