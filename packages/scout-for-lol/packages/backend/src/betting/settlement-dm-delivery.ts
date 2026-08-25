@@ -17,6 +17,10 @@ import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPosition } from "#src/betting/sweep-types.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import {
+  getBucksNotificationPreferencesForUsers,
+  markBucksSettlementDmHintShown,
+} from "#src/betting/notification-preferences.ts";
 import { client } from "#src/discord/client.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
 import { createLogger } from "#src/logger.ts";
@@ -37,6 +41,8 @@ class SettlementDmStatusError extends Error {
 export type SettlementDmDeliveryDependencies = {
   client: Client;
   isPolicyEnabled: typeof isPolicyEnabled;
+  getNotificationPreferencesForUsers: typeof getBucksNotificationPreferencesForUsers;
+  markNotificationHintShown: typeof markBucksSettlementDmHintShown;
   sendDm: typeof sendDM;
   observeBucksDelivery: typeof observeBucksDelivery;
 };
@@ -45,6 +51,8 @@ const defaultSettlementDmDeliveryDependencies: SettlementDmDeliveryDependencies 
   {
     client,
     isPolicyEnabled,
+    getNotificationPreferencesForUsers: getBucksNotificationPreferencesForUsers,
+    markNotificationHintShown: markBucksSettlementDmHintShown,
     sendDm: sendDM,
     observeBucksDelivery,
   };
@@ -126,6 +134,38 @@ export async function deliverSettlementDms(
         prismaClient,
       })
     : [];
+  const preferenceRecipientIds = [
+    ...input.summary.bets.map((bet) => bet.discordId),
+    ...(input.parlay?.bets.map((bet) => bet.discordId) ?? []),
+    ...input.unmatchedPositions.map((position) => position.discordId),
+    ...playerRecipients.map((recipient) => recipient.discordId),
+  ];
+  const preferences = await dependencies.getNotificationPreferencesForUsers(
+    { serverId: guildId, discordIds: [...new Set(preferenceRecipientIds)] },
+    prismaClient,
+  );
+  const preferenceFor = (discordId: string) =>
+    preferences.get(discordId) ?? {
+      ownBetSettlementDms: true,
+      betsOnPlayerSettlementDms: true,
+      settlementDmHintShownAt: null,
+    };
+  const receiptRecipientIds = new Set(
+    preferenceRecipientIds.filter(
+      (discordId) => preferenceFor(discordId).ownBetSettlementDms,
+    ),
+  );
+  const enabledPlayerRecipients = playerRecipients.filter(
+    (recipient) => preferenceFor(recipient.discordId).betsOnPlayerSettlementDms,
+  );
+  const hintRecipientIds = new Set(
+    [
+      ...receiptRecipientIds,
+      ...enabledPlayerRecipients.map((recipient) => recipient.discordId),
+    ].filter(
+      (discordId) => preferenceFor(discordId).settlementDmHintShownAt === null,
+    ),
+  );
   const anchor = bettingAnchor(input.roster);
   const messages = buildSettlementDmMessages({
     summary: input.summary,
@@ -134,8 +174,10 @@ export async function deliverSettlementDms(
     unmatchedPositions: input.unmatchedPositions,
     framing: anchor === undefined ? undefined : subjectFraming(anchor),
     receiptsEnabled,
+    receiptRecipientIds,
     playerBetOutcomesEnabled,
-    playerRecipients,
+    playerRecipients: enabledPlayerRecipients,
+    hintRecipientIds,
   });
   for (const message of messages) {
     let status: DmStatus | undefined;
@@ -168,6 +210,25 @@ export async function deliverSettlementDms(
           message.kind === "betting_settlement_receipt" ? "bettor" : "player",
         result: "sent",
       });
+      if (hintRecipientIds.has(message.recipientId)) {
+        try {
+          await dependencies.markNotificationHintShown(
+            { serverId: guildId, discordId: message.recipientId },
+            prismaClient,
+          );
+        } catch (error) {
+          logger.error(
+            `❌ Could not record Bryan Bucks notification hint for ${message.recipientId}:`,
+            error,
+          );
+          Sentry.captureException(error, {
+            tags: {
+              source: "betting-settlement-dm-hint",
+              matchId: input.summary.matchId,
+            },
+          });
+        }
+      }
     } catch (error) {
       // `sendDM` handles expected Discord failures. The observer still needs
       // a rejection to count those statuses, but they are not Sentry errors.

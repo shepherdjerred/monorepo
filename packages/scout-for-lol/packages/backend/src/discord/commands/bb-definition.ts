@@ -39,6 +39,29 @@ export const bbCommand = addBbPeekSubcommands(
     )
     .addSubcommand((sub) =>
       sub
+        .setName("notifications")
+        .setDescription("Choose which Bryan Bucks settlement DMs you receive")
+        .addStringOption((option) =>
+          option
+            .setName("your_bets")
+            .setDescription("DMs about bets you placed")
+            .addChoices(
+              { name: "On", value: "on" },
+              { name: "Off", value: "off" },
+            ),
+        )
+        .addStringOption((option) =>
+          option
+            .setName("bets_on_you")
+            .setDescription("DMs about bets other users placed on you")
+            .addChoices(
+              { name: "On", value: "on" },
+              { name: "Off", value: "off" },
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName("bet")
         .setDescription("Bet on a tracked player's game")
         .addStringOption((option) =>

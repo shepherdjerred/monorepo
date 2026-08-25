@@ -77,6 +77,8 @@ function build(input: {
   playerRecipients?: TeamRecipient[];
   unmatchedPositions?: ClosedPosition[];
   parlay?: ParlaySettlementSummary;
+  receiptRecipientIds?: ReadonlySet<string>;
+  hintRecipientIds?: ReadonlySet<string>;
   playerBetOutcomesEnabled?: boolean;
   voidReason?: SettlementSummary["voidReason"];
 }) {
@@ -87,8 +89,14 @@ function build(input: {
     unmatchedPositions: input.unmatchedPositions ?? [],
     framing,
     receiptsEnabled: true,
+    ...(input.receiptRecipientIds === undefined
+      ? {}
+      : { receiptRecipientIds: input.receiptRecipientIds }),
     playerBetOutcomesEnabled: input.playerBetOutcomesEnabled ?? false,
     playerRecipients: input.playerRecipients ?? [],
+    ...(input.hintRecipientIds === undefined
+      ? {}
+      : { hintRecipientIds: input.hintRecipientIds }),
   });
 }
 
@@ -118,7 +126,6 @@ describe("Bryan Bucks settlement DMs", () => {
     expect(messages[0]?.content).toContain("Blue 10 BB → won 10 BB.");
     expect(messages[0]?.content).not.toContain("Bets on your team");
   });
-
   test("sends a player team-relative results for other human bettors", () => {
     const messages = build({
       bets: [bet({ id: 1, discordId: blueBettor, teamId: 100, won: true })],
@@ -140,7 +147,6 @@ describe("Bryan Bucks settlement DMs", () => {
       `<@${blueBettor}> bet against your team and won 10 BB.`,
     );
   });
-
   test("does not create a team notice for an unlinked tracked player", () => {
     const messages = build({
       bets: [bet({ id: 1, discordId: blueBettor, teamId: 100, won: true })],
@@ -152,7 +158,6 @@ describe("Bryan Bucks settlement DMs", () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.recipientId).toBe(blueBettor);
   });
-
   test("combines a playing bettor's receipt and other bettors' lines once", () => {
     const messages = build({
       bets: [
@@ -266,38 +271,16 @@ describe("Bryan Bucks settlement DMs", () => {
     expect(messages[0]?.content.endsWith("...")).toBe(true);
   });
 
-  test("continues after one DM delivery fails", async () => {
-    let sends = 0;
-    const dependencies: SettlementDmDeliveryDependencies = {
-      client: mockClient(),
-      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
-      observeBucksDelivery: async (_input, run) => run(),
-      sendDm: async () => {
-        sends++;
-        if (sends === 1) {
-          throw new Error("first DM failed");
-        }
-        return "sent";
-      },
-    };
-
-    await deliverSettlementDms(
-      deliveryInput("4", [
-        bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
-        bet({ id: 2, discordId: redBettor, teamId: 200 }),
-      ]),
-      dependencies,
-    );
-
-    expect(sends).toBe(2);
-  });
-
   test("observes settlement DMs and translates non-sent statuses into failures", async () => {
     let observed = 0;
     let rejected = 0;
     const dependencies: SettlementDmDeliveryDependencies = {
       client: mockClient(),
       isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+      getNotificationPreferencesForUsers: async () => new Map(),
+      markNotificationHintShown: async () => {
+        await Promise.resolve();
+      },
       observeBucksDelivery: async (_input, run) => {
         observed++;
         try {
@@ -319,5 +302,207 @@ describe("Bryan Bucks settlement DMs", () => {
 
     expect(observed).toBe(1);
     expect(rejected).toBe(1);
+  });
+});
+
+describe("Bryan Bucks settlement DM delivery failures", () => {
+  test("continues after one DM delivery fails", async () => {
+    let sends = 0;
+    const dependencies: SettlementDmDeliveryDependencies = {
+      client: mockClient(),
+      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+      getNotificationPreferencesForUsers: async () => new Map(),
+      markNotificationHintShown: async () => {
+        await Promise.resolve();
+      },
+      observeBucksDelivery: async (_input, run) => run(),
+      sendDm: async () => {
+        sends++;
+        if (sends === 1) {
+          throw new Error("first DM failed");
+        }
+        return "sent";
+      },
+    };
+
+    await deliverSettlementDms(
+      deliveryInput("4", [
+        bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
+        bet({ id: 2, discordId: redBettor, teamId: 200 }),
+      ]),
+      dependencies,
+    );
+
+    expect(sends).toBe(2);
+  });
+});
+
+describe("Bryan Bucks settlement DM notification hint", () => {
+  test("shows the hint once and records it after successful delivery", async () => {
+    let hintShownAt: Date | null = null;
+    let markCount = 0;
+    const sentMessages: string[] = [];
+    const dependencies: SettlementDmDeliveryDependencies = {
+      client: mockClient(),
+      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+      getNotificationPreferencesForUsers: async () =>
+        new Map([
+          [
+            blueBettor,
+            {
+              ownBetSettlementDms: true,
+              betsOnPlayerSettlementDms: true,
+              settlementDmHintShownAt: hintShownAt,
+            },
+          ],
+        ]),
+      markNotificationHintShown: async () => {
+        markCount++;
+        hintShownAt = new Date();
+      },
+      observeBucksDelivery: async (_input, run) => run(),
+      sendDm: async ({ message }) => {
+        sentMessages.push(message);
+        return "sent";
+      },
+    };
+
+    await deliverSettlementDms(
+      deliveryInput("6", [
+        bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
+      ]),
+      dependencies,
+    );
+    await deliverSettlementDms(
+      deliveryInput("6", [
+        bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
+      ]),
+      dependencies,
+    );
+
+    expect(sentMessages).toHaveLength(2);
+    expect(sentMessages[0]).toContain(
+      "You can manage these DMs with `/bb notifications`.",
+    );
+    expect(sentMessages[1]).not.toContain(
+      "You can manage these DMs with `/bb notifications`.",
+    );
+    expect(markCount).toBe(1);
+  });
+
+  test("does not record the hint when DM delivery fails", async () => {
+    let markCount = 0;
+    const dependencies: SettlementDmDeliveryDependencies = {
+      client: mockClient(),
+      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+      getNotificationPreferencesForUsers: async () =>
+        new Map([
+          [
+            blueBettor,
+            {
+              ownBetSettlementDms: true,
+              betsOnPlayerSettlementDms: true,
+              settlementDmHintShownAt: null,
+            },
+          ],
+        ]),
+      markNotificationHintShown: async () => {
+        markCount++;
+      },
+      observeBucksDelivery: async (_input, run) => run(),
+      sendDm: async () => "dm_disabled",
+    };
+
+    await deliverSettlementDms(
+      deliveryInput("7", [
+        bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
+      ]),
+      dependencies,
+    );
+
+    expect(markCount).toBe(0);
+  });
+});
+
+describe("Bryan Bucks settlement DM preferences", () => {
+  test("appends the notification hint to an eligible settlement DM", () => {
+    const messages = build({
+      bets: [bet({ id: 1, discordId: blueBettor, teamId: 100, won: true })],
+      hintRecipientIds: new Set([blueBettor]),
+    });
+
+    expect(messages[0]?.content).toContain(
+      "You can manage these DMs with `/bb notifications`.",
+    );
+  });
+
+  test("reserves space so a truncated settlement keeps the hint", () => {
+    const messages = build({
+      bets: Array.from({ length: 300 }, (_, index) =>
+        bet({ id: index + 1, discordId: blueBettor, teamId: 100, won: true }),
+      ),
+      hintRecipientIds: new Set([blueBettor]),
+    });
+
+    expect(messages[0]?.content.length).toBeLessThanOrEqual(1900);
+    expect(
+      messages[0]?.content.endsWith(
+        "You can manage these DMs with `/bb notifications`.",
+      ),
+    ).toBe(true);
+  });
+
+  test("applies own-bet and bets-on-player preferences independently", () => {
+    const messages = buildSettlementDmMessages({
+      summary: summary(
+        [
+          bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
+          bet({ id: 2, discordId: redBettor, teamId: 200 }),
+        ],
+        "server-1",
+      ),
+      includeOutcome: true,
+      parlay: undefined,
+      unmatchedPositions: [],
+      framing,
+      receiptsEnabled: true,
+      receiptRecipientIds: new Set([redBettor]),
+      playerBetOutcomesEnabled: true,
+      playerRecipients: [{ discordId: bluePlayer, teamId: 100 }],
+      hintRecipientIds: new Set([redBettor, bluePlayer]),
+    });
+
+    expect(messages.map((message) => message.recipientId)).toEqual([
+      redBettor,
+      bluePlayer,
+    ]);
+    expect(messages.find((message) => message.recipientId === blueBettor)).toBe(
+      undefined,
+    );
+    expect(
+      messages.find((message) => message.recipientId === bluePlayer)?.content,
+    ).toContain(`<@${blueBettor}> bet for your team and won 10 BB.`);
+    expect(
+      messages.find((message) => message.recipientId === bluePlayer)?.content,
+    ).toContain("You can manage these DMs with `/bb notifications`.");
+  });
+
+  test("does not build a DM when both categories are disabled", () => {
+    const messages = buildSettlementDmMessages({
+      summary: summary(
+        [bet({ id: 1, discordId: blueBettor, teamId: 100, won: true })],
+        "server-1",
+      ),
+      includeOutcome: true,
+      parlay: undefined,
+      unmatchedPositions: [],
+      framing,
+      receiptsEnabled: true,
+      receiptRecipientIds: new Set(),
+      playerBetOutcomesEnabled: true,
+      playerRecipients: [],
+    });
+
+    expect(messages).toEqual([]);
   });
 });

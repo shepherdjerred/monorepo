@@ -52,6 +52,10 @@ import {
 import { buildBbRulesEmbed as createBbRulesEmbed } from "#src/discord/commands/bb-rules.ts";
 import { replyBbPeekCommand } from "#src/discord/commands/bb-peek.ts";
 import {
+  replyBbNotifications,
+  type BbNotificationCommandDependencies,
+} from "#src/discord/commands/bb-notifications.ts";
+import {
   splitMessageIntoChunks,
   truncateEmbedFieldValue,
 } from "#src/discord/utils/message.ts";
@@ -59,7 +63,6 @@ import { createLogger } from "#src/logger.ts";
 import { formatInteger } from "#src/betting/display-format.ts";
 
 const logger = createLogger("command-bb");
-
 export function buildBbRulesEmbed(): EmbedBuilder {
   return createBbRulesEmbed();
 }
@@ -86,6 +89,11 @@ export function buildBbRulesEmbed(): EmbedBuilder {
  */
 
 const BUCKS_COLOR = 0x2e_cc_71;
+
+type BbCommandDependencies = {
+  runAskAgent?: BucksAskAgentRunner;
+  isPolicyEnabled?: typeof isPolicyEnabled;
+} & BbNotificationCommandDependencies;
 
 export function isPublicBbSubcommand(subcommand: string): boolean {
   return subcommand === "rules" || subcommand === "prizes";
@@ -425,7 +433,7 @@ async function replyBet(
 
 export async function executeBb(
   interaction: BbCommandInteraction,
-  dependencies: { runAskAgent?: BucksAskAgentRunner } = {},
+  dependencies: BbCommandDependencies = {},
 ): Promise<void> {
   const subcommand = interaction.options.getSubcommand();
 
@@ -439,7 +447,12 @@ export async function executeBb(
     }
 
     const serverId = DiscordGuildIdSchema.parse(interaction.guildId);
-    if (!(await isPolicyEnabled("betting_enabled", { server: serverId }))) {
+    if (
+      !(await (dependencies.isPolicyEnabled ?? isPolicyEnabled)(
+        "betting_enabled",
+        { server: serverId },
+      ))
+    ) {
       // Reachable only if the flag was turned off after registration, since
       // the command is not registered anywhere the flag is off.
       await interaction.reply({
@@ -453,7 +466,6 @@ export async function executeBb(
     // can be explicitly published by its asker.
     const ephemeral = !isPublicBbSubcommand(subcommand);
     await interaction.deferReply({ ephemeral });
-
     const discordId = DiscordAccountIdSchema.parse(interaction.user.id);
 
     switch (subcommand) {
@@ -480,6 +492,14 @@ export async function executeBb(
           dependencies.runAskAgent === undefined
             ? {}
             : { runAgent: dependencies.runAskAgent },
+        );
+        break;
+      case "notifications":
+        await replyBbNotifications(
+          interaction,
+          serverId,
+          discordId,
+          dependencies,
         );
         break;
       case "bet":

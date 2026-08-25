@@ -812,6 +812,22 @@ model BucksAccount {
   @@index([serverId, balance])
 }
 
+// Per-user Bryan Bucks settlement DM preferences. Missing rows intentionally
+// resolve to both settings enabled so adding this table preserves the existing
+// beta behavior for users who have not visited `/bb notifications` yet.
+model BucksNotificationPreference {
+  id                        Int      @id @default(autoincrement())
+  serverId                  String
+  discordId                 String
+  ownBetSettlementDms       Boolean  @default(true)
+  betsOnPlayerSettlementDms Boolean  @default(true)
+  settlementDmHintShownAt   DateTime?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@unique([serverId, discordId])
+}
+
 // Durable reservation for a Bryan Bucks PostHog event. PostHog's event UUID is
 // deterministic for replay, while this beta database is the idempotency
 // boundary for both the historical backfill and the post-commit live sync.

@@ -112,6 +112,14 @@ async function seedGuild(
     },
   });
 
+  await db.bucksNotificationPreference.create({
+    data: {
+      serverId,
+      discordId: owner,
+      ownBetSettlementDms: false,
+    },
+  });
+
   await recordPermissionError(db, {
     serverId,
     channelId,
@@ -131,6 +139,9 @@ async function countGuild(
     subscriptions: await db.subscription.count({ where: { serverId } }),
     competitions: await db.competition.count({ where: { serverId } }),
     reports: await db.report.count({ where: { serverId } }),
+    notificationPreferences: await db.bucksNotificationPreference.count({
+      where: { serverId },
+    }),
     serverPermissions: await db.serverPermission.count({ where: { serverId } }),
     permissionErrors: await db.guildPermissionError.count({
       where: { serverId },
@@ -153,6 +164,7 @@ beforeEach(async () => {
   await prisma.player.deleteMany();
   await prisma.serverPermission.deleteMany();
   await prisma.guildPermissionError.deleteMany();
+  await prisma.bucksNotificationPreference.deleteMany();
 });
 
 afterAll(async () => {
@@ -171,6 +183,7 @@ describe("cleanupRemovedGuild", () => {
       competitions: 1,
       reports: 1,
       subscriptions: 1,
+      notificationPreferences: 1,
       serverPermissions: 1,
       accounts: 1,
       players: 1,
@@ -185,6 +198,7 @@ describe("cleanupRemovedGuild", () => {
       subscriptions: 0,
       competitions: 0,
       reports: 0,
+      notificationPreferences: 0,
       serverPermissions: 0,
       permissionErrors: 0,
     });
@@ -200,6 +214,7 @@ describe("cleanupRemovedGuild", () => {
       subscriptions: 1,
       competitions: 1,
       reports: 1,
+      notificationPreferences: 1,
       serverPermissions: 1,
       permissionErrors: 1,
     });
@@ -211,6 +226,7 @@ describe("cleanupRemovedGuild", () => {
       competitions: 0,
       reports: 0,
       subscriptions: 0,
+      notificationPreferences: 0,
       serverPermissions: 0,
       accounts: 0,
       players: 0,
