@@ -28,8 +28,8 @@ import {
 import { createTemporalAgentWorker } from "./agent-worker.ts";
 import { createTemporalWorkerCrdReaderRbac } from "./crd-rbac.ts";
 import { sleepWebhookEnv } from "./http-services.ts";
-import { glitterCorpusEnv } from "./glitter-corpus-env.ts";
-import { createTemporalGlitterWorker } from "./glitter-worker.ts";
+import { glitterContextEnv, glitterCorpusEnv } from "./glitter-corpus-env.ts";
+import { createTemporalGlitterWorkers } from "./glitter-worker.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
 import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss-config.ts";
@@ -488,21 +488,59 @@ export function createTemporalWorkerDeployment(
     },
   });
 
-  // Glitter's corpus and context-refresh queues perform the heaviest Bun-side
-  // work. Keep them in a separate process and pod so a runtime wedge or
-  // resource spike cannot stop schedules, webhooks, or the general queues.
-  const glitterDeployment = createTemporalGlitterWorker(chart, {
-    serviceAccount,
-    envVariables: {
-      ...Object.fromEntries(
-        Object.entries(container.env.variables).filter(
-          ([name]) => name !== "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+  const glitterCommonEnv = {
+    TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+    TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+    ENVIRONMENT: EnvValue.fromValue("production"),
+    TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+    OTLP_ENDPOINT: EnvValue.fromValue(
+      "http://tempo.tempo.svc.cluster.local:4318",
+    ),
+    SENTRY_DSN: EnvValue.fromSecretValue({ secret, key: "SENTRY_DSN" }),
+  };
+  const { corpusDeployment, contextDeployment } = createTemporalGlitterWorkers(
+    chart,
+    {
+      corpusEnvVariables: {
+        ...glitterCommonEnv,
+        TEMPORAL_WORKER_ROLE: EnvValue.fromValue("glitter-corpus"),
+        TELEMETRY_SERVICE_NAME: EnvValue.fromValue(
+          "temporal-glitter-corpus-worker",
         ),
-      ),
-      TEMPORAL_WORKER_ROLE: EnvValue.fromValue("glitter"),
-      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-glitter-worker"),
+        ...glitterCorpusEnv(secret, starlightBotSecret),
+      },
+      contextEnvVariables: {
+        ...glitterCommonEnv,
+        TEMPORAL_WORKER_ROLE: EnvValue.fromValue("glitter-context"),
+        TELEMETRY_SERVICE_NAME: EnvValue.fromValue(
+          "temporal-glitter-context-worker",
+        ),
+        OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+          secret,
+          key: "OPENROUTER_API_KEY",
+        }),
+        GITHUB_APP_ID: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_APP_ID",
+        }),
+        GITHUB_APP_INSTALLATION_ID: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_APP_INSTALLATION_ID",
+        }),
+        GITHUB_APP_PRIVATE_KEY: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_APP_PRIVATE_KEY",
+        }),
+        GIT_AUTHOR_NAME: EnvValue.fromValue("temporal-worker[bot]"),
+        GIT_AUTHOR_EMAIL: EnvValue.fromValue("temporal-worker@homelab.local"),
+        GIT_COMMITTER_NAME: EnvValue.fromValue("temporal-worker[bot]"),
+        GIT_COMMITTER_EMAIL: EnvValue.fromValue(
+          "temporal-worker@homelab.local",
+        ),
+        ...glitterContextEnv(secret),
+      },
     },
-  });
+  );
 
   // Project the talosconfig YAML from 1Password into a file at
   // /etc/talos/config. The homelab-audit-daily workflow's §1 commands
@@ -559,5 +597,10 @@ export function createTemporalWorkerDeployment(
 
   createTemporalWorkerHttpServices(chart, deployment);
 
-  return { deployment, agentDeployment, glitterDeployment };
+  return {
+    deployment,
+    agentDeployment,
+    glitterCorpusDeployment: corpusDeployment,
+    glitterContextDeployment: contextDeployment,
+  };
 }
