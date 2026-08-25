@@ -27,6 +27,8 @@ import {
   scoutReportAiRunDurationSeconds,
   scoutReportAiRunsTotal,
 } from "#src/metrics/report-ai.ts";
+import { temporalInteractiveEnabled } from "#src/config/dynamic.ts";
+import { createTemporalReportAiResponse } from "#src/reports/ai/temporal-runtime.ts";
 
 const STREAM_PATH = "/api/reports/query-agent/stream";
 const encoder = new TextEncoder();
@@ -90,6 +92,36 @@ export async function handleReportAiRoute(
     return jsonError(ticket.reason, 429, corsHeaders, {
       quota: ticket.quota,
       retryAfterSeconds: ticket.retryAfterSeconds,
+    });
+  }
+
+  if (temporalInteractiveEnabled()) {
+    const { reserveDurableReportAiRun } =
+      await import("#src/temporal/durable-quota.ts");
+    const durableRejection = await reserveDurableReportAiRun({
+      id: ticket.runId,
+      identity: authResult.identity,
+      exempt: status.exempt,
+      payload: JSON.stringify({
+        edit: parsedBody.input,
+        exempt: status.exempt,
+      }),
+    });
+    if (durableRejection !== null) {
+      ticket.finish();
+      scoutReportAiRunsTotal.inc({ status: "rate_limited" });
+      return jsonError(durableRejection.reason, 429, corsHeaders, {
+        quota: status.quota,
+        retryAfterSeconds: durableRejection.retryAfterSeconds,
+      });
+    }
+    return createTemporalReportAiResponse({
+      request,
+      edit: parsedBody.input,
+      identity: authResult.identity,
+      ticket,
+      exempt: status.exempt,
+      corsHeaders,
     });
   }
 
