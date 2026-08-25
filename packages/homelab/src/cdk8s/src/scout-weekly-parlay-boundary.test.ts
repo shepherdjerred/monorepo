@@ -91,7 +91,7 @@ describe("Scout weekly parlay deployment boundary", () => {
     ).toBe(false);
   });
 
-  test("allows only the Temporal Scout worker to reach Beta Scout", () => {
+  test("allows the Scout and legacy Temporal workers to reach Beta Scout", () => {
     const beta = scoutResources("beta");
     const policy = findResource(beta, "NetworkPolicy", "scout-ingress-netpol");
     expect(policy.spec).toEqual(
@@ -108,6 +108,18 @@ describe("Scout weekly parlay deployment boundary", () => {
                 podSelector: {
                   matchLabels: {
                     component: "scout-worker",
+                  },
+                },
+              },
+              {
+                namespaceSelector: {
+                  matchLabels: {
+                    "kubernetes.io/metadata.name": "temporal",
+                  },
+                },
+                podSelector: {
+                  matchLabels: {
+                    component: "legacy-worker",
                   },
                 },
               },
@@ -129,6 +141,36 @@ describe("Scout weekly parlay deployment boundary", () => {
         podSelector: {
           matchLabels: {
             component: "scout-worker",
+          },
+        },
+        egress: [
+          {
+            to: [
+              {
+                namespaceSelector: {
+                  matchLabels: {
+                    "kubernetes.io/metadata.name": "scout-beta",
+                  },
+                },
+                podSelector: { matchLabels: { app: "scout-backend" } },
+              },
+            ],
+            ports: [{ port: 3000, protocol: "TCP" }],
+          },
+        ],
+      }),
+    );
+
+    const legacyEgressPolicy = findResource(
+      temporal,
+      "NetworkPolicy",
+      "temporal-legacy-worker-scout-beta-netpol",
+    );
+    expect(legacyEgressPolicy.spec).toEqual(
+      expect.objectContaining({
+        podSelector: {
+          matchLabels: {
+            component: "legacy-worker",
           },
         },
         egress: [
