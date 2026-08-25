@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.6.0...helm-types-v1.7.0) (2026-08-25)
+
+
+### Features
+
+* **eslint-config:** cognitive-complexity rule with ratcheted baseline ([#2406](https://github.com/shepherdjerred/monorepo/issues/2406)) ([65e90ed](https://github.com/shepherdjerred/monorepo/commit/65e90ed45a14e0ce2701e2f18a51212539744281))
+
+
+### Bug Fixes
+
+* **ci:** remove redundant raw template tags ([#2081](https://github.com/shepherdjerred/monorepo/issues/2081)) ([cbc7399](https://github.com/shepherdjerred/monorepo/commit/cbc739935d83b310d35ee2fa4b831ef0f41012b4))
+* **root:** use replaceAll for the argocd-sync regex substitution ([#2125](https://github.com/shepherdjerred/monorepo/issues/2125)) ([253d826](https://github.com/shepherdjerred/monorepo/commit/253d82643bc98506c73cf233407c66c20b54b46c))
+
 ## [1.6.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.5.0...helm-types-v1.6.0) (2026-08-03)
 
 

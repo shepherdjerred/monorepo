@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.19.0...astro-opengraph-images-v1.20.0) (2026-08-25)
+
+
+### Features
+
+* **root:** make npm releases consumer-driven ([#2333](https://github.com/shepherdjerred/monorepo/issues/2333)) ([3dd65f4](https://github.com/shepherdjerred/monorepo/commit/3dd65f47c287056c61edde228fb944d8fd83cc3d))
+* **root:** replace the global jscpd threshold with a baseline ratchet ([#2409](https://github.com/shepherdjerred/monorepo/issues/2409)) ([c03da78](https://github.com/shepherdjerred/monorepo/commit/c03da78682edc8a9b2163ca2a8836f8174c0d243))
+
 ## [1.19.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.18.0...astro-opengraph-images-v1.19.0) (2026-08-23)
 
 
