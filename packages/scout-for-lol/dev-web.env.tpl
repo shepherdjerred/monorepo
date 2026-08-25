@@ -34,9 +34,16 @@ JWT_SIGNING_SECRET=local-dev-only-jwt-signing-secret-not-for-any-deployed-env
 
 # ── Where the SPA lives (browser-visible origin) ──────────────────────
 # The default Vite dev server runs at :5180 and proxies /trpc + /api to the
-# backend. scripts/dev-web.ts overrides this for --web-port; it MUST match the
-# redirect URI registered on the BETA Discord app when testing OAuth.
+# backend. scripts/dev-web.ts overrides this for --web-port.
 WEB_APP_ORIGIN=http://localhost:5180
+
+# Local web boots use a signed dev session and a representative consumer
+# preview by default. Set SCOUT_DEV_AUTH_MODE=oauth when testing the real
+# Discord round-trip; every selected local port must then be registered as an
+# exact callback URI on the BETA Discord app.
+SCOUT_DEV_AUTH_MODE=dev-login
+SCOUT_DEV_CONSUMER_PREVIEW=true
+SCOUT_DEV_CONSUMER_GUILD_ID=1337623164146155593
 
 # ── AI (report editor + explore) ──────────────────────────────────────
 # Every model call now goes through OpenRouter, so without this the backend
@@ -46,12 +53,9 @@ WEB_APP_ORIGIN=http://localhost:5180
 OPENROUTER_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENROUTER_API_KEY
 BETTING_PARLAY_AI_MODEL=gpt-5.6-sol
 
-# Explore is gated on membership of an allowlisted Discord server, and an empty
-# list denies everyone. Left unset here because the right value is whichever
-# server you test in — export it for the session instead. A dev-login session
-# has no Discord OAuth token, so pair it with DEV_USER_GUILDS (dev-only, see
-# AGENTS.md) or the membership lookup fails and Explore refuses to load:
-#   DEV_USER_GUILDS=<id> EXPLORE_GUILD_ALLOWLIST=<id> bun run dev:web
+# dev:web derives DEV_USER_GUILDS and EXPLORE_GUILD_ALLOWLIST from the local
+# consumer guild above. Set SCOUT_DEV_CONSUMER_PREVIEW=false and provide those
+# variables explicitly when testing denied/unavailable states.
 
 # ── Riot / DB / storage ───────────────────────────────────────────────
 RIOT_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/RIOT_API_KEY

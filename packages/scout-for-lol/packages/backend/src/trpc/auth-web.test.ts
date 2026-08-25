@@ -39,7 +39,7 @@ const testDb = createTestDatabase("auth-web-test");
 Bun.env["DATABASE_URL"] = testDb.dbUrl;
 resetConfigurationForTests();
 
-const { handleDiscordCallback, handleDiscordInstall } =
+const { handleDiscordCallback, handleDiscordInstall, handleDiscordStart } =
   await import("#src/trpc/auth-web.ts");
 const { SESSION_COOKIE } = await import("#src/trpc/context.ts");
 const { signSession } = await import("#src/trpc/jwt.ts");
@@ -55,6 +55,32 @@ function installRequest(
     headers.set("Cookie", cookieHeader);
   }
   return new Request(url, { method: "GET", headers });
+}
+
+function withDevAuthMode(
+  mode: "dev-login" | "oauth",
+  callback: () => void,
+): void {
+  const originalEnvironment = Bun.env["ENVIRONMENT"];
+  const originalEnableDevLogin = Bun.env["ENABLE_DEV_LOGIN"];
+  const originalDevAuthMode = Bun.env["DEV_AUTH_MODE"];
+  Bun.env["ENVIRONMENT"] = "dev";
+  Bun.env["ENABLE_DEV_LOGIN"] = "true";
+  Bun.env["DEV_AUTH_MODE"] = mode;
+  resetConfigurationForTests();
+
+  try {
+    callback();
+  } finally {
+    if (originalEnvironment === undefined) delete Bun.env["ENVIRONMENT"];
+    else Bun.env["ENVIRONMENT"] = originalEnvironment;
+    if (originalEnableDevLogin === undefined)
+      delete Bun.env["ENABLE_DEV_LOGIN"];
+    else Bun.env["ENABLE_DEV_LOGIN"] = originalEnableDevLogin;
+    if (originalDevAuthMode === undefined) delete Bun.env["DEV_AUTH_MODE"];
+    else Bun.env["DEV_AUTH_MODE"] = originalDevAuthMode;
+    resetConfigurationForTests();
+  }
 }
 
 async function expectRecordedSurface(
@@ -184,6 +210,54 @@ describe("handleDiscordInstall", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("handleDiscordStart", () => {
+  test("uses the local signed session when dev-login mode is enabled", () => {
+    withDevAuthMode("dev-login", () => {
+      const response = handleDiscordStart(
+        new Request(
+          `${TEST_APP_ORIGIN}/api/auth/discord/start?returnTo=/app/players`,
+        ),
+      );
+
+      expect(response.status).toBe(302);
+      const target = new URL(response.headers.get("Location") ?? "");
+      expect(target.origin).toBe(TEST_APP_ORIGIN);
+      expect(target.pathname).toBe("/api/dev/login");
+      expect(target.searchParams.get("returnTo")).toBe("/app/players");
+    });
+  });
+
+  test("rejects an external return path in local dev-login mode", () => {
+    withDevAuthMode("dev-login", () => {
+      const response = handleDiscordStart(
+        new Request(
+          `${TEST_APP_ORIGIN}/api/auth/discord/start?returnTo=https%3A%2F%2Fevil.example%2F`,
+        ),
+      );
+
+      expect(response.status).toBe(302);
+      const target = new URL(response.headers.get("Location") ?? "");
+      expect(target.pathname).toBe("/api/dev/login");
+      expect(target.searchParams.get("returnTo")).toBe("/app/");
+    });
+  });
+
+  test("keeps the Discord OAuth flow when local OAuth is selected", () => {
+    withDevAuthMode("oauth", () => {
+      const response = handleDiscordStart(
+        new Request(`${TEST_APP_ORIGIN}/api/auth/discord/start`),
+      );
+
+      expect(response.status).toBe(302);
+      const target = new URL(response.headers.get("Location") ?? "");
+      expect(target.host).toBe("discord.com");
+      expect(target.searchParams.get("redirect_uri")).toBe(
+        `${TEST_APP_ORIGIN}/api/auth/discord/callback`,
+      );
+    });
   });
 });
 

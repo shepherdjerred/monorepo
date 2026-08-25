@@ -17,7 +17,7 @@ import {
   generateCsrfToken,
   getAppOrigin,
   safeReturnTo,
-} from "#src/trpc/auth-web.ts";
+} from "#src/trpc/auth-web-helpers.ts";
 import { CSRF_COOKIE, SESSION_COOKIE } from "#src/trpc/context.ts";
 import { signSession } from "#src/trpc/jwt.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
