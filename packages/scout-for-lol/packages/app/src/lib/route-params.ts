@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   CompetitionIdSchema,
   ExploreConversationIdSchema,
+  PlayerIdSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
 
@@ -19,6 +20,10 @@ export const GuildParamsSchema = z.object({ guildId: z.string().min(1) });
 export const PlayerParamsSchema = z.object({
   guildId: z.string().min(1),
   alias: z.string().min(1),
+});
+
+export const ConsumerPlayerParamsSchema = z.object({
+  playerId: z.coerce.number().pipe(PlayerIdSchema),
 });
 
 export const CompetitionParamsSchema = z.object({
@@ -65,6 +70,12 @@ export function useGuildParams(): z.infer<typeof GuildParamsSchema> {
 
 export function usePlayerParams(): z.infer<typeof PlayerParamsSchema> {
   return parseRouteParams(PlayerParamsSchema, useParams());
+}
+
+export function useConsumerPlayerParams(): z.infer<
+  typeof ConsumerPlayerParamsSchema
+> {
+  return parseRouteParams(ConsumerPlayerParamsSchema, useParams());
 }
 
 export function useCompetitionParams(): z.infer<

@@ -1,6 +1,7 @@
 import { createBrowserRouter, redirect, type RouteObject } from "react-router";
 import { Login } from "#src/routes/login.tsx";
 import { GuildPicker } from "#src/routes/guild-picker.tsx";
+import { ManageServers } from "#src/routes/manage-servers.tsx";
 import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
 import { GuildAudit } from "#src/routes/guild-audit.tsx";
 import { GuildAccess } from "#src/routes/guild-access.tsx";
@@ -21,6 +22,9 @@ import { ReportForm } from "#src/routes/report-form.tsx";
 import { ReportHelp } from "#src/routes/report-help.tsx";
 import { Explore } from "#src/routes/explore.tsx";
 import { ExploreShared } from "#src/routes/explore-shared.tsx";
+import { ConsumerPlayerSearch } from "#src/routes/consumer-player-search.tsx";
+import { ConsumerPlayerProfile } from "#src/routes/consumer-player-profile.tsx";
+import { ConsumerWorkspace } from "#src/routes/consumer-workspace.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
@@ -32,6 +36,8 @@ import {
   auditLoader,
   competitionDetailLoader,
   competitionsLoader,
+  consumerPlayerLoader,
+  consumerPlayersLoader,
   exploreLoader,
   guildLoader,
   playerDetailLoader,
@@ -178,15 +184,30 @@ export const routes: RouteObject[] = [
         errorElement: <RouteErrorPanel />,
         children: [
           { index: true, element: <GuildPicker /> },
-          // One route with an optional segment, not two siblings: navigating
-          // `/explore` → `/explore/:id` when the stream's `started` event
-          // mints a conversation must not remount Explore mid-turn.
           {
-            path: "explore/:conversationId?",
-            element: <Explore />,
-            loader: exploreLoader,
-            errorElement: <RouteErrorPanel />,
+            element: <ConsumerWorkspace />,
+            children: [
+              {
+                path: "explore/:conversationId?",
+                element: <Explore />,
+                loader: exploreLoader,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "players",
+                element: <ConsumerPlayerSearch />,
+                loader: consumerPlayersLoader,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "players/:playerId",
+                element: <ConsumerPlayerProfile />,
+                loader: consumerPlayerLoader,
+                errorElement: <RouteErrorPanel />,
+              },
+            ],
           },
+          { path: "manage", element: <ManageServers /> },
           { path: "welcome", element: <OnboardingWizard /> },
           { path: "installed", element: <InstallLanding /> },
           {
