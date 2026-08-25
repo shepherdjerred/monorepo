@@ -2,19 +2,19 @@ import { describe, expect, test } from "vitest";
 import {
   coerceWorkerResult,
   FleetMaster,
-} from "@shepherdjerred/pr-fleet-controller/src/agents.ts";
-import { resolveFleetModel } from "@shepherdjerred/pr-fleet-controller/src/model-resolution.ts";
-import type { WorkerResult } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import type { MasterControllerTools } from "@shepherdjerred/pr-fleet-controller/src/master-tools.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/controller/agents.ts";
+import { resolveFleetModel } from "@shepherdjerred/pr-fleet-controller/src/domain/model-resolution.ts";
+import type { WorkerResult } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import type { MasterControllerTools } from "@shepherdjerred/pr-fleet-controller/src/controller/master-tools.ts";
 import type {
   FleetObserver,
   FleetTelemetry,
-} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
 import type {
   RunEventCorrelation,
   RunEventKind,
-} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
-import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
+import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 
 const snapshot: FleetSnapshot = {
   open: 0,

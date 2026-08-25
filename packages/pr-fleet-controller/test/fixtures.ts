@@ -3,7 +3,7 @@ import {
   ReadinessEvidenceSchema,
   type PrIdentity,
   type ReadinessEvidence,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 
 export function identity(
   number: number,

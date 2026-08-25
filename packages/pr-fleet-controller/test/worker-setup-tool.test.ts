@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { SETUP_COMMANDS } from "@shepherdjerred/pr-fleet-controller/src/worker-setup-tool.ts";
+import { SETUP_COMMANDS } from "@shepherdjerred/pr-fleet-controller/src/workers/setup-tool.ts";
 
 describe("worktree setup", () => {
   test("keeps setup serial and deterministic", () => {

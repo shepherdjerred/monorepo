@@ -2,15 +2,15 @@ import { z } from "zod";
 import {
   RecordedRunEventSchema,
   type RecordedRunEvent,
-} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
 import {
   FleetSnapshotSchema,
   type FleetSnapshot,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import {
   FleetFailureClassSchema,
   ProgressPayloadSchemas,
-} from "@shepherdjerred/pr-fleet-controller/src/progress-events.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/runtime/progress-events.ts";
 import { applySpanLine as applySpanLineFromSpans } from "./span-fold.ts";
 
 export type SpanRecord = {

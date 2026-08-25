@@ -1,23 +1,23 @@
 import { expect, test } from "vitest";
-import { ControllerTelemetry } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
-import { settleWorkerFailure } from "@shepherdjerred/pr-fleet-controller/src/controller-worker-settlement.ts";
-import { WorktreeHeadChangedError } from "@shepherdjerred/pr-fleet-controller/src/inherited-wip.ts";
+import { ControllerTelemetry } from "@shepherdjerred/pr-fleet-controller/src/runtime/telemetry.ts";
+import { settleWorkerFailure } from "@shepherdjerred/pr-fleet-controller/src/controller/worker-settlement.ts";
+import { WorktreeHeadChangedError } from "@shepherdjerred/pr-fleet-controller/src/workers/inherited-wip.ts";
 import type {
   FleetObserver,
   FleetTelemetry,
-} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
 import type {
   RunEventCorrelation,
   RunEventKind,
-} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
 import {
   OperatorInputRequestSchema,
   PrStateSchema,
   type FleetSnapshot,
   type WorkerResult,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
-import { abortWorkerForOperatorInput } from "@shepherdjerred/pr-fleet-controller/src/worker-wip-tools.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/domain/state.ts";
+import { abortWorkerForOperatorInput } from "@shepherdjerred/pr-fleet-controller/src/workers/wip-tools.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 class TestTelemetry implements FleetTelemetry {

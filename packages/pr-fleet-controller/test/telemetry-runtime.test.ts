@@ -3,9 +3,9 @@ import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { trace } from "@opentelemetry/api";
-import { loadRunBundle } from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
-import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
-import { createFleetTelemetryRuntime } from "@shepherdjerred/pr-fleet-controller/src/telemetry-runtime.ts";
+import { loadRunBundle } from "@shepherdjerred/pr-fleet-controller/src/replay/run-inspection.ts";
+import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/bundle/run-recorder.ts";
+import { createFleetTelemetryRuntime } from "@shepherdjerred/pr-fleet-controller/src/bundle/telemetry-runtime.ts";
 import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 
 let stateDirectory: string | undefined;

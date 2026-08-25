@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "vitest";
-import { resolveFleetModel } from "@shepherdjerred/pr-fleet-controller/src/model-resolution.ts";
+import { resolveFleetModel } from "@shepherdjerred/pr-fleet-controller/src/domain/model-resolution.ts";
 
 const originalOpenRouterApiKey = Bun.env["OPENROUTER_API_KEY"];
 

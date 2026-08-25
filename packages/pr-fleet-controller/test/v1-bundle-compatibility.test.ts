@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   loadRunBundle,
   replayRunBundle,
-} from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/replay/run-inspection.ts";
 
 test("replays the immutable schema-v1 bundle fixture", async () => {
   const fixture = path.join(import.meta.dir, "fixtures", "run-bundle-v1");

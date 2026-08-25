@@ -1,0 +1,220 @@
+import { tool as defineTool } from "ai";
+import path from "node:path";
+import { z } from "zod";
+import { workerCommandEnvironment } from "#runtime/command-environment.ts";
+import {
+  invalidateInheritedWipInspection,
+  requireCurrentInheritedWipInspection,
+} from "./inherited-wip.ts";
+import type { FleetEnvironment } from "#domain/ports.ts";
+import {
+  classifyFleetFailure,
+  type ProgressEventKind,
+} from "#runtime/progress-events.ts";
+import type { PrState } from "#domain/schemas.ts";
+import type { FleetStore } from "#domain/state.ts";
+
+export const SETUP_COMMANDS = [
+  { executable: "mise", args: ["install", "--dry-run-code"] },
+  { executable: "bun", args: ["install", "--frozen-lockfile"] },
+  {
+    executable: "bunx",
+    args: ["turbo", "run", "generate", "--env-mode=loose"],
+  },
+] satisfies { executable: string; args: string[] }[];
+
+const MAX_SETUP_COMMAND_OUTPUT_BYTES = 100_000;
+
+type ReleasedLease = {
+  kind: "setup" | "heavy" | "stack-write";
+  durationMs: number;
+};
+
+function releaseSetupLeases(
+  store: FleetStore,
+  pr: PrState,
+  kinds: readonly ReleasedLease["kind"][],
+): ReleasedLease[] {
+  const released: ReleasedLease[] = [];
+  for (const kind of kinds) {
+    const durationMs = store.releaseLease(pr.identity.number, kind, pr.stackId);
+    if (durationMs !== null) {
+      released.push({ kind, durationMs });
+    }
+  }
+  return released;
+}
+
+function recordReleasedLeases(
+  recordProgress: CreateSetupWorktreeToolOptions["recordProgress"],
+  released: readonly ReleasedLease[],
+): void {
+  for (const lease of released) {
+    recordProgress("lease.released", lease);
+  }
+}
+
+type CreateSetupWorktreeToolOptions = {
+  pr: PrState;
+  store: FleetStore;
+  environment: FleetEnvironment;
+  worktree: string;
+  signal: AbortSignal;
+  assertNotWaitingForAnswer: () => void;
+  record: <T>(
+    tool: string,
+    input: unknown,
+    run: () => Promise<T>,
+  ) => Promise<T>;
+  recordProgress: (
+    kind: ProgressEventKind,
+    payload: Record<string, unknown>,
+  ) => void;
+};
+
+export function createSetupWorktreeTool(
+  options: CreateSetupWorktreeToolOptions,
+) {
+  const {
+    pr,
+    store,
+    environment,
+    worktree,
+    signal,
+    assertNotWaitingForAnswer,
+    record,
+    recordProgress,
+  } = options;
+  return defineTool({
+    description:
+      "Trust the assigned repository Mise configuration, then run dependency installation and code generation serially in the assigned worktree.",
+    inputSchema: z.object({}),
+    outputSchema: z.object({ commands: z.array(z.string()) }),
+    execute: (input) =>
+      record("setup_worktree", input, async () => {
+        assertNotWaitingForAnswer();
+        const headSha = pr.identity.headSha;
+        if (store.setupWorktrees.get(worktree) === headSha) {
+          return { commands: ["already complete"] };
+        }
+        const stackWriteLease = store.requestLeaseDecision(pr, "stack-write");
+        if (!stackWriteLease.granted) {
+          recordProgress("lease.denied", {
+            kind: "stack-write",
+            reason: stackWriteLease.reason,
+          });
+          throw new Error("Stack write lease is not available for setup");
+        }
+        try {
+          recordProgress("lease.granted", { kind: "stack-write" });
+        } catch (error) {
+          recordReleasedLeases(
+            recordProgress,
+            releaseSetupLeases(store, pr, ["stack-write"]),
+          );
+          throw error;
+        }
+        const setupLease = store.requestLeaseDecision(pr, "setup");
+        if (!setupLease.granted) {
+          const released = releaseSetupLeases(store, pr, ["stack-write"]);
+          recordProgress("lease.denied", {
+            kind: "setup",
+            reason: setupLease.reason,
+          });
+          recordReleasedLeases(recordProgress, released);
+          throw new Error("Setup lease is not available");
+        }
+        try {
+          recordProgress("lease.granted", { kind: "setup" });
+        } catch (error) {
+          recordReleasedLeases(
+            recordProgress,
+            releaseSetupLeases(store, pr, ["setup", "stack-write"]),
+          );
+          throw error;
+        }
+        const heavyLease = store.requestLeaseDecision(pr, "heavy");
+        if (!heavyLease.granted) {
+          const released = releaseSetupLeases(store, pr, [
+            "stack-write",
+            "setup",
+          ]);
+          recordProgress("lease.denied", {
+            kind: "heavy",
+            reason: heavyLease.reason,
+          });
+          recordReleasedLeases(recordProgress, released);
+          throw new Error("Heavy lease is not available for generation");
+        }
+        try {
+          recordProgress("lease.granted", { kind: "heavy" });
+        } catch (error) {
+          recordReleasedLeases(
+            recordProgress,
+            releaseSetupLeases(store, pr, ["heavy", "stack-write", "setup"]),
+          );
+          throw error;
+        }
+        const completed: string[] = [];
+        try {
+          recordProgress("setup.started", { headSha });
+          await requireCurrentInheritedWipInspection({
+            store,
+            pr,
+            environment,
+            worktree,
+            signal,
+          });
+          invalidateInheritedWipInspection({ store, pr });
+          for (const command of SETUP_COMMANDS) {
+            const result = await environment.runLocalCommand({
+              executable: command.executable,
+              args: command.args,
+              cwd: worktree,
+              timeoutMs: 900_000,
+              signal,
+              env: {
+                ...workerCommandEnvironment(),
+                MISE_TRUSTED_CONFIG_PATHS: path.join(worktree, ".mise.toml"),
+              },
+              sensitiveOutput: true,
+              maxOutputBytes: MAX_SETUP_COMMAND_OUTPUT_BYTES,
+            });
+            if (result.exitCode !== 0) {
+              const detail =
+                result.stderr.trim() ||
+                result.stdout.trim() ||
+                "no diagnostic output";
+              throw new Error(`${command.executable} failed: ${detail}`);
+            }
+            completed.push([command.executable, ...command.args].join(" "));
+          }
+          store.setupWorktrees.set(worktree, headSha);
+          for (const [number, state] of store.prs) {
+            if (
+              state.worktree === worktree &&
+              state.identity.headSha === headSha
+            ) {
+              store.prs.set(number, { ...state, setupComplete: true });
+            }
+          }
+          recordProgress("setup.completed", {
+            headSha,
+            commandCount: completed.length,
+          });
+          return { commands: completed };
+        } catch (error) {
+          recordProgress("setup.failed", {
+            headSha,
+            failureClass: classifyFleetFailure(error),
+          });
+          throw error;
+        } finally {
+          recordReleasedLeases(
+            recordProgress,
+            releaseSetupLeases(store, pr, ["stack-write", "heavy", "setup"]),
+          );
+        }
+      }),
+  });
+}

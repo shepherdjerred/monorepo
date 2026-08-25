@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest";
 import { tmpdir } from "node:os";
-import { runRecordedCommand } from "@shepherdjerred/pr-fleet-controller/src/recorded-command.ts";
-import { runRecordedToolOperation } from "@shepherdjerred/pr-fleet-controller/src/recorded-tool.ts";
-import { runRecordedWorkerAttempt } from "@shepherdjerred/pr-fleet-controller/src/recorded-worker-attempt.ts";
-import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
-import type { FleetTelemetry } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import { runRecordedCommand } from "@shepherdjerred/pr-fleet-controller/src/runtime/recorded-command.ts";
+import { runRecordedToolOperation } from "@shepherdjerred/pr-fleet-controller/src/runtime/recorded-tool.ts";
+import { runRecordedWorkerAttempt } from "@shepherdjerred/pr-fleet-controller/src/runtime/recorded-worker-attempt.ts";
+import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/runtime/telemetry.ts";
+import type { FleetTelemetry } from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
 import type {
   RunEventCorrelation,
   RunEventKind,
-} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
 
 class TerminalFailingTelemetry implements FleetTelemetry {
   readonly runId = "terminal-failure-test";

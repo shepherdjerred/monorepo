@@ -5,9 +5,9 @@ import path from "node:path";
 import {
   assertStateRootOutsideControllerRepository,
   resolveControllerSource,
-} from "@shepherdjerred/pr-fleet-controller/src/controller-metadata.ts";
-import type { CommandRequest } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
-import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/process-runner.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/environment/controller-source.ts";
+import type { CommandRequest } from "@shepherdjerred/pr-fleet-controller/src/domain/ports.ts";
+import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/runtime/process-runner.ts";
 
 const temporaryDirectories: string[] = [];
 

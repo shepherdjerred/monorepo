@@ -1,4 +1,4 @@
-import type { RecordedRunEvent } from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+import type { RecordedRunEvent } from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
 import type { SpanRecord, TimelineItem } from "#lib/fold";
 
 type Category =

@@ -3,13 +3,13 @@ import {
   OperatorInputRequestSchema,
   PrStateSchema,
   WorkerResultSchema,
-} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
-import { ConventionalCommitMessageSchema } from "@shepherdjerred/pr-fleet-controller/src/tools.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/domain/state.ts";
+import { ConventionalCommitMessageSchema } from "@shepherdjerred/pr-fleet-controller/src/workers/tools.ts";
 import {
   boundedInheritedCommitEvidence,
   requireCompleteInheritedCommitInspection,
-} from "@shepherdjerred/pr-fleet-controller/src/worker-wip-tools.ts";
+} from "@shepherdjerred/pr-fleet-controller/src/workers/wip-tools.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 function requestWithRecommendations(recommendations: boolean[]) {
