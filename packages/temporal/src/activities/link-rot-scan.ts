@@ -1,16 +1,13 @@
-import { mkdir, rm } from "node:fs/promises";
 import { z } from "zod/v4";
 import {
   maintenanceActivityHooks,
-  maintenanceCommandEnvironment,
-  spawnMaintenanceCommand,
   spawnMaintenanceCommandCapturingStdout,
-  type MaintenanceCommand,
   type MaintenanceCommandHooks,
 } from "./maintenance.ts";
-
-const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
-const MAIN_BRANCH = "main";
+import {
+  mainRepositoryScanCommand,
+  withMainRepositoryScan,
+} from "./main-repository-scan.ts";
 const EXCERPT_LIMIT = 2000;
 /** lychee reserves exit 2 for "broken links found" — a finding, not a crash. */
 const LYCHEE_FINDINGS_EXIT_CODE = 2;
@@ -110,19 +107,6 @@ export function buildLinkRotExcerpt(parsed: ParsedLycheeReport): string {
   return [summary, ...lines].join("\n").slice(0, EXCERPT_LIMIT);
 }
 
-function scanCommand(
-  command: readonly string[],
-  cwd: string,
-): MaintenanceCommand {
-  return {
-    kind: "link-rot-scan",
-    command,
-    cwd,
-    env: maintenanceCommandEnvironment({}),
-    secretValues: [],
-  };
-}
-
 // Runs from the clone root, so the clone's own lychee.toml and .lycheeignore
 // apply — configuration is versioned with the markdown it governs.
 const LYCHEE_SCAN_COMMAND = [
@@ -144,54 +128,30 @@ const LYCHEE_SCAN_COMMAND = [
 async function scanMainForLinkRot(
   hooks: MaintenanceCommandHooks = maintenanceActivityHooks(),
 ): Promise<LinkRotScanResult> {
-  // Per-attempt scratch directory so a retry never trips over a previous
-  // attempt's half-cleaned clone. Never derive anything durable from it.
-  const tempDir = `/tmp/link-rot-scan-${crypto.randomUUID()}`;
-  const repoDir = `${tempDir}/monorepo`;
-  await mkdir(tempDir, { recursive: true });
-  try {
-    await spawnMaintenanceCommand(
-      scanCommand(
-        [
-          "git",
-          "clone",
-          "--depth",
-          "1",
-          "--branch",
-          MAIN_BRANCH,
-          "--single-branch",
-          REPO_URL,
+  return withMainRepositoryScan(
+    "link-rot-scan",
+    hooks,
+    async ({ repoDir, repoSha }) => {
+      const scan = await spawnMaintenanceCommandCapturingStdout(
+        mainRepositoryScanCommand(
+          "link-rot-scan",
+          LYCHEE_SCAN_COMMAND,
           repoDir,
-        ],
-        tempDir,
-      ),
-      hooks,
-    );
-    const revParse = await spawnMaintenanceCommandCapturingStdout(
-      scanCommand(["git", "rev-parse", "HEAD"], repoDir),
-      hooks,
-    );
-    const repoSha = revParse.stdout.trim();
-    if (repoSha === "") {
-      throw new Error("git rev-parse HEAD returned no commit for the clone");
-    }
-    const scan = await spawnMaintenanceCommandCapturingStdout(
-      scanCommand(LYCHEE_SCAN_COMMAND, repoDir),
-      hooks,
-      { acceptedExitCodes: [0, LYCHEE_FINDINGS_EXIT_CODE] },
-    );
-    const parsed = parseLycheeReport(scan.stdout);
-    return {
-      observedAt: new Date().toISOString(),
-      repoSha,
-      command: LYCHEE_SCAN_COMMAND.join(" "),
-      exitCode: scan.exitCode,
-      ...parsed,
-      excerpt: buildLinkRotExcerpt(parsed),
-    };
-  } finally {
-    await rm(tempDir, { recursive: true, force: true });
-  }
+        ),
+        hooks,
+        { acceptedExitCodes: [0, LYCHEE_FINDINGS_EXIT_CODE] },
+      );
+      const parsed = parseLycheeReport(scan.stdout);
+      return {
+        observedAt: new Date().toISOString(),
+        repoSha,
+        command: LYCHEE_SCAN_COMMAND.join(" "),
+        exitCode: scan.exitCode,
+        ...parsed,
+        excerpt: buildLinkRotExcerpt(parsed),
+      };
+    },
+  );
 }
 
 export const linkRotScanActivities = {
