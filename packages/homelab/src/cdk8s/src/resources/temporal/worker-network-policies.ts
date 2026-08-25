@@ -1,0 +1,198 @@
+import type { Chart } from "cdk8s";
+import {
+  IntOrString,
+  KubeNetworkPolicy,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { createTemporalScoutBetaNetworkPolicy } from "./scout-beta-network.ts";
+
+export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
+  new KubeNetworkPolicy(chart, "temporal-worker-netpol", {
+    metadata: { name: "temporal-worker-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "legacy-worker" } },
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "prometheus",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(9464), protocol: "TCP" }],
+        },
+      ],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {},
+              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+            },
+          ],
+          ports: [
+            { port: IntOrString.fromNumber(53), protocol: "UDP" },
+            { port: IntOrString.fromNumber(53), protocol: "TCP" },
+          ],
+        },
+        {
+          to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
+        { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
+        { ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }] },
+        { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
+      ],
+    },
+  });
+
+  for (const component of [
+    "gateway",
+    "home-worker",
+    "reports-worker",
+    "infra-worker",
+    "repo-worker",
+    "scout-worker",
+    "glitter-corpus-worker",
+    "glitter-context-worker",
+  ]) {
+    new KubeNetworkPolicy(chart, `${component}-network-policy`, {
+      metadata: { name: `temporal-${component}-netpol` },
+      spec: {
+        podSelector: { matchLabels: { component } },
+        policyTypes: ["Ingress", "Egress"],
+        ingress: [
+          {
+            from: [
+              {
+                namespaceSelector: {
+                  matchLabels: {
+                    "kubernetes.io/metadata.name": "prometheus",
+                  },
+                },
+              },
+            ],
+            ports: [
+              { port: IntOrString.fromNumber(9464), protocol: "TCP" },
+              { port: IntOrString.fromNumber(9465), protocol: "TCP" },
+            ],
+          },
+        ],
+        egress: [
+          {
+            to: [
+              {
+                namespaceSelector: {},
+                podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+              },
+            ],
+            ports: [
+              { port: IntOrString.fromNumber(53), protocol: "UDP" },
+              { port: IntOrString.fromNumber(53), protocol: "TCP" },
+            ],
+          },
+          {
+            to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
+            ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          },
+          { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
+          { ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }] },
+        ],
+      },
+    });
+  }
+
+  new KubeNetworkPolicy(chart, "temporal-gateway-ingress-netpol", {
+    metadata: { name: "temporal-gateway-ingress-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "gateway" } },
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
+                },
+              },
+            },
+          ],
+          ports: [
+            { port: IntOrString.fromNumber(9466), protocol: "TCP" },
+            { port: IntOrString.fromNumber(9467), protocol: "TCP" },
+            { port: IntOrString.fromNumber(9468), protocol: "TCP" },
+            { port: IntOrString.fromNumber(9469), protocol: "TCP" },
+          ],
+        },
+      ],
+      egress: [
+        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-reports-internal-netpol", {
+    metadata: { name: "temporal-reports-internal-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "reports-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        { ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }] },
+        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-repo-alertmanager-netpol", {
+    metadata: { name: "temporal-repo-alertmanager-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "repo-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-infra-api-netpol", {
+    metadata: { name: "temporal-infra-api-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "infra-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
+        { ports: [{ port: IntOrString.fromNumber(9090), protocol: "TCP" }] },
+        { ports: [{ port: IntOrString.fromNumber(7341), protocol: "TCP" }] },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-worker-freshrss-netpol", {
+    metadata: { name: "temporal-worker-freshrss-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "repo-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "freshrss",
+                },
+              },
+              podSelector: { matchLabels: { app: "freshrss" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+
+  createTemporalScoutBetaNetworkPolicy(chart);
+}

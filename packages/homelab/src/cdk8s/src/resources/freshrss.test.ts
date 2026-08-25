@@ -169,8 +169,7 @@ describe("FreshRSS chart", () => {
           },
           podSelector: {
             matchLabels: {
-              app: "temporal-worker",
-              component: "core-worker",
+              component: "repo-worker",
             },
           },
         },

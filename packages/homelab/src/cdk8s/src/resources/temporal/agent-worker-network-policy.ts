@@ -14,7 +14,7 @@ export function createTemporalAgentWorkerNetworkPolicy(chart: Chart): void {
     metadata: { name: "temporal-agent-worker-netpol" },
     spec: {
       podSelector: {
-        matchLabels: { app: "temporal-agent-worker" },
+        matchLabels: { component: "agent-worker" },
       },
       policyTypes: ["Ingress", "Egress"],
       ingress: [

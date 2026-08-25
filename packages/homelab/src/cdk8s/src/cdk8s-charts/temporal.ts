@@ -14,7 +14,7 @@ import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker.ts";
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker-network-policy.ts";
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker.ts";
-import { createTemporalScoutBetaNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/scout-beta-network.ts";
+import { createTemporalWorkerNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-network-policies.ts";
 
 function scoutCompetitionActivityIngress(): NetworkPolicyIngressRule {
   return {
@@ -114,7 +114,23 @@ export function createTemporalChart(app: App) {
           from: [
             {
               podSelector: {
-                matchLabels: { app: "temporal-worker" },
+                matchExpressions: [
+                  {
+                    key: "component",
+                    operator: "In",
+                    values: [
+                      "gateway",
+                      "home-worker",
+                      "reports-worker",
+                      "infra-worker",
+                      "repo-worker",
+                      "scout-worker",
+                      "glitter-corpus-worker",
+                      "glitter-context-worker",
+                      "legacy-worker",
+                    ],
+                  },
+                ],
               },
             },
           ],
@@ -337,136 +353,5 @@ export function createTemporalChart(app: App) {
     },
   });
 
-  // NetworkPolicy for Temporal Worker
-  // Worker needs broad egress: Temporal server, HA, GitHub, OpenAI, Postal, S3, golink
-  new KubeNetworkPolicy(chart, "temporal-worker-netpol", {
-    metadata: { name: "temporal-worker-netpol" },
-    spec: {
-      podSelector: {
-        matchLabels: { app: "temporal-worker" },
-      },
-      policyTypes: ["Ingress", "Egress"],
-      ingress: [
-        {
-          // Allow Prometheus scraping worker SDK metrics
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "prometheus",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(9464), protocol: "TCP" }],
-        },
-        {
-          // Allow cloudflared to reach the authenticated sleep webhook.
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(9469), protocol: "TCP" }],
-        },
-        {
-          // Allow the blackbox exporter to probe the webhook health endpoint.
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "prometheus",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(9469), protocol: "TCP" }],
-        },
-      ],
-      egress: [
-        // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        // Temporal Server gRPC
-        {
-          to: [
-            {
-              podSelector: {
-                matchLabels: { app: "temporal-server" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
-        },
-        // External HTTPS (HA, GitHub, OpenAI, Postal, S3, golink, Firestore)
-        {
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
-        // Postal internal (HTTP within cluster)
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "postal",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
-        },
-        // K8s API (for golink-sync ingress listing)
-        {
-          ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }],
-        },
-      ],
-    },
-  });
-
-  // FreshRSS Repo Stack reconciliation is limited to the core worker. Keep
-  // it separate from the shared worker policy because the agent and Glitter
-  // workers intentionally reuse the temporal-worker app label.
-  new KubeNetworkPolicy(chart, "temporal-worker-freshrss-netpol", {
-    metadata: { name: "temporal-worker-freshrss-netpol" },
-    spec: {
-      podSelector: {
-        matchLabels: {
-          app: "temporal-worker",
-          component: "legacy-worker",
-        },
-      },
-      policyTypes: ["Egress"],
-      egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "freshrss",
-                },
-              },
-              podSelector: { matchLabels: { app: "freshrss" } },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
-        },
-      ],
-    },
-  });
-
-  createTemporalScoutBetaNetworkPolicy(chart);
+  createTemporalWorkerNetworkPolicies(chart);
 }

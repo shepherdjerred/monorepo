@@ -36,7 +36,7 @@ async function startConflictCheck(
   // (Combining reuse=ALLOW_DUPLICATE with conflict=TERMINATE_EXISTING is the
   // current Temporal API for what used to be TERMINATE_IF_RUNNING.)
   await client.workflow.start("checkPrMergeConflictsWorkflow", {
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     workflowId: workflowIdFor(input),
     workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
     workflowIdConflictPolicy: WorkflowIdConflictPolicy.TERMINATE_EXISTING,

@@ -6,6 +6,7 @@ import {
   Deployment,
   DeploymentStrategy,
   type EnvValue,
+  Pods,
   Service,
   type ServiceAccount,
   Volume,
@@ -185,25 +186,28 @@ ip6tables -L OUTPUT -n`,
   );
   container.mount("/tmp", tmpVolume);
 
+  const agentSelector = Pods.select(chart, "temporal-agent-worker-selector", {
+    labels: { component: "agent-worker" },
+  });
   new Service(chart, "temporal-agent-worker-metrics-service", {
-    selector: deployment,
+    selector: agentSelector,
     metadata: {
-      labels: { app: "temporal-agent-worker-metrics" },
+      labels: { component: "agent-worker-metrics" },
     },
     ports: [{ port: 9464, name: "metrics" }],
   });
 
   createServiceMonitor(chart, {
     name: "temporal-agent-worker-metrics",
-    matchLabels: { app: "temporal-agent-worker-metrics" },
+    matchLabels: { component: "agent-worker-metrics" },
   });
 
   new Service(chart, "temporal-agent-worker-app-metrics-service", {
     metadata: {
       name: "temporal-agent-worker-app-metrics",
-      labels: { app: "temporal-agent-worker-app-metrics" },
+      labels: { component: "agent-worker-app-metrics" },
     },
-    selector: deployment,
+    selector: agentSelector,
     ports: [{ name: "app-metrics", port: 9465, targetPort: 9465 }],
   });
 
@@ -211,7 +215,7 @@ ip6tables -L OUTPUT -n`,
     name: "temporal-agent-worker-app-metrics",
     port: "app-metrics",
     interval: "30s",
-    matchLabels: { app: "temporal-agent-worker-app-metrics" },
+    matchLabels: { component: "agent-worker-app-metrics" },
   });
 
   return deployment;

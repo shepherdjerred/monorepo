@@ -426,6 +426,78 @@ describe("Temporal domain worker isolation", () => {
       expect(homeEnv).not.toContain(required);
     }
   });
+});
+
+describe("Temporal operations worker isolation", () => {
+  it("isolates infra, repo, and Scout identities, resources, and credentials", async () => {
+    const deployments = parseDeployments(await synthesizeApp());
+    const infra = requireDeployment(
+      deployments,
+      "temporal-temporal-infra-worker",
+    );
+    const repo = requireDeployment(
+      deployments,
+      "temporal-temporal-repo-worker",
+    );
+    const scout = requireDeployment(
+      deployments,
+      "temporal-temporal-scout-worker",
+    );
+
+    expect(infra.spec.template.spec).toMatchObject({
+      automountServiceAccountToken: true,
+      serviceAccountName: "temporal-infra-worker",
+    });
+    expect(repo.spec.template.spec).toMatchObject({
+      automountServiceAccountToken: false,
+      serviceAccountName: "temporal-repo-worker",
+    });
+    expect(scout.spec.template.spec).toMatchObject({
+      automountServiceAccountToken: false,
+      serviceAccountName: "temporal-scout-worker",
+    });
+    expect(infra.spec.template.spec.containers[0]?.resources).toEqual({
+      limits: { cpu: "1500m", memory: "6144Mi" },
+      requests: { cpu: "500m", memory: "2048Mi" },
+    });
+    expect(repo.spec.template.spec.containers[0]?.resources).toEqual({
+      limits: { cpu: "1500m", memory: "4096Mi" },
+      requests: { cpu: "250m", memory: "512Mi" },
+    });
+    expect(scout.spec.template.spec.containers[0]?.resources).toEqual({
+      limits: { cpu: "1500m", memory: "4096Mi" },
+      requests: { cpu: "250m", memory: "512Mi" },
+    });
+
+    const infraEnv = envNames(infra);
+    const repoEnv = envNames(repo);
+    const scoutEnv = envNames(scout);
+    for (const required of [
+      "TALOSCONFIG",
+      "GRAFANA_API_KEY",
+      "ARGOCD_AUTH_TOKEN",
+    ]) {
+      expect(infraEnv).toContain(required);
+      expect(repoEnv).not.toContain(required);
+      expect(scoutEnv).not.toContain(required);
+    }
+    for (const required of [
+      "FRESHRSS_API_PASSWORD_FILE",
+      "BUILDKITE_API_TOKEN",
+      "OPENROUTER_API_KEY",
+    ]) {
+      expect(repoEnv).toContain(required);
+      expect(scoutEnv).not.toContain(required);
+    }
+    for (const required of [
+      "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
+      "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+    ]) {
+      expect(scoutEnv).toContain(required);
+      expect(repoEnv).not.toContain(required);
+      expect(infraEnv).not.toContain(required);
+    }
+  });
 
   it("enables Temporal worker observability dynamic config with v1.29 key casing", async () => {
     const resources = parseResources(await synthesizeApp());
@@ -502,6 +574,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
     );
     expect(auditBinding?.subjects?.map((subject) => subject.name)).toEqual([
       "temporal-worker",
+      "temporal-infra-worker",
       "temporal-agent-worker",
     ]);
   });
