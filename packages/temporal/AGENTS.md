@@ -16,15 +16,15 @@ files sequentially: each file owns a native time-skipping server and authentic
 Node worker threads, and concurrent environments exhaust the bounded CI agent.
 `bun run test` runs both phases through the stable package interface.
 
-Production uses the same Bun image in four Kubernetes Deployments selected by
-`TEMPORAL_WORKER_ROLE`: `core` owns the `default` queue plus schedules and
-HTTP/event surfaces; `agent` owns the `agent-task` queue under a read-only
-service account with no pod-exec roles; `glitter` owns `glitter-corpus` and
-`glitter-context`; `maintenance` owns the serial `maintenance` queue. The
-default `all` role preserves the single-process local development behavior.
-Keep new queue ownership explicit in `worker.ts` so a provider subprocess,
-heavy Glitter failure, or maintenance subprocess cannot take down core
-automation or inherit another role's Kubernetes permissions.
+Production uses the same Bun image in ten single-replica Kubernetes
+Deployments selected by `TEMPORAL_WORKER_ROLE`. `control` owns schedule
+reconciliation and public HTTP/event surfaces without a task queue; the
+domain roles own their queues and activity registries in the typed contract in
+`src/worker-config.ts`. The default `all` role preserves the single-process
+local development behavior. Keep new queue ownership and capabilities in
+that contract so a provider subprocess, heavy Glitter failure, or maintenance
+subprocess cannot take down another domain or inherit its Kubernetes
+permissions.
 
 ## Structure
 

@@ -142,8 +142,11 @@ export async function runFreshRssSyncWorkflow(): Promise<void> {
   return _runFreshRssSyncWorkflow();
 }
 
-export async function generateDependencySummary(daysBack = 7): Promise<void> {
-  return _generateDependencySummary(daysBack);
+export async function generateDependencySummary(
+  daysBack = 7,
+  reportTaskQueue?: string,
+): Promise<void> {
+  return _generateDependencySummary(daysBack, reportTaskQueue);
 }
 
 export async function runDnsAudit(): Promise<void> {
@@ -216,22 +219,23 @@ export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   return _runVeleroOrphanAuditWorkflow();
 }
 
-export async function runScoutDataDragonVersionCheck(): Promise<
-  DataDragonUpdateResult | undefined
-> {
-  return _runScoutDataDragonUpdate("version-check");
+export async function runScoutDataDragonVersionCheck(
+  reportTaskQueue?: string,
+): Promise<DataDragonUpdateResult | undefined> {
+  return _runScoutDataDragonUpdate("version-check", reportTaskQueue);
 }
 
-export async function runScoutDataDragonWeeklyRefresh(): Promise<
-  DataDragonUpdateResult | undefined
-> {
-  return _runScoutDataDragonUpdate("weekly-refresh");
+export async function runScoutDataDragonWeeklyRefresh(
+  reportTaskQueue?: string,
+): Promise<DataDragonUpdateResult | undefined> {
+  return _runScoutDataDragonUpdate("weekly-refresh", reportTaskQueue);
 }
 
 export async function runScoutLanePriorsWeeklyRefresh(
   input: LanePriorWorkflowInput,
+  reportTaskQueue?: string,
 ): Promise<LanePriorRefreshResult> {
-  return _runScoutLanePriorsWeeklyRefresh(input);
+  return _runScoutLanePriorsWeeklyRefresh(input, reportTaskQueue);
 }
 
 export async function runLlmCatalogRefresh(): Promise<LlmCatalogRefreshResult> {
@@ -278,8 +282,9 @@ export async function runScoutSeasonRefreshWorkflow(
 
 export async function runHomelabAuditWorkflow(
   input: RunHomelabAuditWorkflowInput = {},
+  reportTaskQueue?: string,
 ): Promise<void> {
-  return _runHomelabAuditWorkflow(input);
+  return _runHomelabAuditWorkflow(input, reportTaskQueue);
 }
 
 export async function runProtobufWatch(): Promise<void> {

@@ -7,12 +7,14 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { collectCiIoImpact } = proxyActivities<CiIoImpactActivities>({
   startToCloseTimeout: "45 minutes",
   retry: { maximumAttempts: 2 },
 });
 const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+  taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: "2 minutes",
   retry: { maximumAttempts: 3 },
 });
