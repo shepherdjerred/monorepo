@@ -15,6 +15,35 @@ import {
 } from "@scout-for-lol/temporal";
 
 const TemporalTlsSchema = z.enum(["true", "false"]).optional();
+const CANARY_TIMEOUT_MS = 60_000;
+
+class CanaryTimeoutError extends Error {
+  constructor() {
+    super(
+      `Scout Temporal queue canary did not complete within ${CANARY_TIMEOUT_MS.toString()}ms`,
+    );
+    this.name = "CanaryTimeoutError";
+  }
+}
+
+async function resultWithTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(new CanaryTimeoutError());
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
 
 const { values } = parseArgs({
   args: process.argv.slice(2),
@@ -50,10 +79,19 @@ try {
     taskQueue: scoutTaskQueues(options.stage).workflow,
     args: [{ stage: options.stage, canaryId }],
   });
+  let rawResults: unknown;
+  try {
+    rawResults = await resultWithTimeout(handle.result(), CANARY_TIMEOUT_MS);
+  } catch (error: unknown) {
+    if (error instanceof CanaryTimeoutError) {
+      await handle.cancel();
+    }
+    throw error;
+  }
   const results = z
     .array(ScoutQueueCanaryProbeResultSchema)
     .length(4)
-    .parse(await handle.result());
+    .parse(rawResults);
   console.log(
     JSON.stringify(
       {
