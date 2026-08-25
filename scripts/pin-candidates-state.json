@@ -2,14 +2,14 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/alert-dashboard": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:f4568ab6554a4a1a0db7e0e90f095622aa69a6d3de6974eda5aef19667c5f371"
+      "digest": "sha256:f4568ab6554a4a1a0db7e0e90f095622aa69a6d3de6974eda5aef19667c5f371",
+      "buildNumber": 11866
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:e2f112cef1cad091c96f01006dbda46236e943fc5be3c0e94045c6279251b6ac"
+      "digest": "sha256:e2f112cef1cad091c96f01006dbda46236e943fc5be3c0e94045c6279251b6ac",
+      "buildNumber": 11866
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-10989",
@@ -17,14 +17,14 @@
       "buildNumber": 10989
     },
     "shepherdjerred/discord-plays-mario-kart": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:8fc381b17b140d1c4c7c5250eee054790e5c6a6e74a488fd8f6e89495b7f67ee"
+      "digest": "sha256:8fc381b17b140d1c4c7c5250eee054790e5c6a6e74a488fd8f6e89495b7f67ee",
+      "buildNumber": 11866
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:8f2aee247aaf92eb29ba29d640d53456bd249f276c4691eff7f69eae43836826"
+      "digest": "sha256:8f2aee247aaf92eb29ba29d640d53456bd249f276c4691eff7f69eae43836826",
+      "buildNumber": 11866
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-10760",
@@ -32,9 +32,9 @@
       "buildNumber": 10760
     },
     "shepherdjerred/openrouter-broadcast-ingest": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:f588920c295a3637412657be2e062c9eb16563fd84e5a3002e128831a91d6d40"
+      "digest": "sha256:f588920c295a3637412657be2e062c9eb16563fd84e5a3002e128831a91d6d40",
+      "buildNumber": 11866
     },
     "shepherdjerred/redlib": {
       "version": "2.0.0-10760",
@@ -42,39 +42,39 @@
       "buildNumber": 10760
     },
     "shepherdjerred/scout-evals": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:39f81bbbce8a2b5c12add42730dd555038736867076dbb72ef80360d198831d2"
+      "digest": "sha256:39f81bbbce8a2b5c12add42730dd555038736867076dbb72ef80360d198831d2",
+      "buildNumber": 11866
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:a9441393f7815c115974711c87adf52fbcaf71d5ce5551e5f6fd1b9fb58834bb"
+      "digest": "sha256:a9441393f7815c115974711c87adf52fbcaf71d5ce5551e5f6fd1b9fb58834bb",
+      "buildNumber": 11866
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:906e8ce0e7a6ff6dffd3657dea31d95eab5843e141651016107c4d0af46da856"
+      "digest": "sha256:906e8ce0e7a6ff6dffd3657dea31d95eab5843e141651016107c4d0af46da856",
+      "buildNumber": 11866
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:4b8e0c6dd9f472d437d072f25325a4642746d66f038fe3a5973c8228683ad21a"
+      "digest": "sha256:4b8e0c6dd9f472d437d072f25325a4642746d66f038fe3a5973c8228683ad21a",
+      "buildNumber": 11866
     },
     "shepherdjerred/tasknotes-server": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:49b4ce9c91e2ff88c62febe47f303862b72b52d0ac4e3a612fdde7b93992cc83"
+      "digest": "sha256:49b4ce9c91e2ff88c62febe47f303862b72b52d0ac4e3a612fdde7b93992cc83",
+      "buildNumber": 11866
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 11867,
-      "version": "2.0.0-11867",
-      "digest": "sha256:f134de2ce930716053100ee659e376ca30072f6338fc19629f84d047cc962b82"
+      "buildNumber": 11883,
+      "version": "2.0.0-11883",
+      "digest": "sha256:2150f11457ec72179182e153e34c181700c1b94ea95958bf31fc24f2b86d559e"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "buildNumber": 11866,
       "version": "2.0.0-11866",
-      "digest": "sha256:91bdb0d454801c7cb94b18ee4d4c6497e5023d209e191e2cd83fc9248c573b03"
+      "digest": "sha256:91bdb0d454801c7cb94b18ee4d4c6497e5023d209e191e2cd83fc9248c573b03",
+      "buildNumber": 11866
     }
   }
 }
