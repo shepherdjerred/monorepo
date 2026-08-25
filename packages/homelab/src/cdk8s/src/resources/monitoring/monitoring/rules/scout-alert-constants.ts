@@ -1,0 +1,7 @@
+export const SCOUT_TRPC_NON_FAULT_CODES = [
+  "OK",
+  "UNAUTHORIZED",
+  "FORBIDDEN",
+  "NOT_FOUND",
+  "BAD_REQUEST",
+];

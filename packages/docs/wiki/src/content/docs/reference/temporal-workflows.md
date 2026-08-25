@@ -45,6 +45,13 @@ changing model identity.
 | competition updates        | every minute                         | deterministic          | due Discord standings            |
 | weekly parlay lifecycle    | Sun, source-defined Pacific timeline | deterministic          | beta Scout market reconciliation |
 | weekly parlay catch-up     | operator, stable period/slot ID      | deterministic          | shortened beta Scout market      |
+| realtime and post-match    | fixed Schedules                      | deterministic          | match child Workflows            |
+| initial history            | reconciliation                       | deterministic          | paged S3/lake ingestion          |
+| report Schedule reconcile  | Signal + every minute                | deterministic          | per-report Schedules             |
+| report run                 | report Schedule or manual request    | deterministic          | persisted and Discord output     |
+| Explore turn               | one user turn                        | LLM with durable guard | persisted answer and SSE         |
+| report-AI edit             | one user edit                        | LLM with durable guard | persisted report revision        |
+| queue canary               | operator before/after rollout        | deterministic          | four queue-routing results       |
 
 The weekly parlay workflow uses the Pacific timeline defined by its source
 constants and reconciles each period through finalization. Its schedule remains
@@ -128,5 +135,6 @@ send. Models cannot select the status or subject.
 ## Related
 
 - [Schedule reference](/reference/temporal-schedules/) — cron mechanics
+- [Roll out Scout's Temporal workers](/how-to/roll-out-scout-temporal/) — cutover and soak procedure
 - [Agent task input](/reference/agent-task-input/) — the task schema
 - [Why Temporal](/explanation/temporal/overview/) — what the fleet is for

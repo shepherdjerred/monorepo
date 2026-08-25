@@ -98,15 +98,22 @@ export async function handleReportAiRoute(
   if (temporalInteractiveEnabled()) {
     const { reserveDurableReportAiRun } =
       await import("#src/temporal/durable-quota.ts");
-    const durableRejection = await reserveDurableReportAiRun({
-      id: ticket.runId,
-      identity: authResult.identity,
-      exempt: status.exempt,
-      payload: JSON.stringify({
-        edit: parsedBody.input,
-        exempt: status.exempt,
-      }),
-    });
+    const durableRejection = await (async () => {
+      try {
+        return await reserveDurableReportAiRun({
+          id: ticket.runId,
+          identity: authResult.identity,
+          exempt: status.exempt,
+          payload: JSON.stringify({
+            edit: parsedBody.input,
+            exempt: status.exempt,
+          }),
+        });
+      } catch (error) {
+        ticket.finish();
+        throw error;
+      }
+    })();
     if (durableRejection !== null) {
       ticket.finish();
       scoutReportAiRunsTotal.inc({ status: "rate_limited" });

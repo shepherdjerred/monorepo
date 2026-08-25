@@ -22,6 +22,8 @@
     "test": "bun run scripts/ensure-ha-schema.ts && bun run test:bun && bun run test:workflows",
     "test:bun": "bun --no-install --bun vitest --config ../../vitest.config.ts run src/activities src/event-bridge src/observability src/schedules src/shared src/lib src/workflows/agent-task.test.ts",
     "test:workflows": "bun scripts/test-workflows.ts",
+    "replay:scout-histories": "bun scripts/replay-scout-histories.ts",
+    "replay:scout-histories:node": "node --experimental-strip-types scripts/replay-scout-histories-node.ts",
     "test:integration": "bun run scripts/ensure-ha-schema.ts && bun --no-install --bun vitest --config ../../vitest.config.ts run src/integration.test.ts",
     "generate:live": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/temporal-worker:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t temporal-worker:dev -f Dockerfile ../..",

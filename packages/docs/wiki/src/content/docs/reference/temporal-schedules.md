@@ -17,15 +17,15 @@ For the list of what runs and when, see
 
 ## Schedule properties
 
-| Property        | Value                                                                |
-| --------------- | -------------------------------------------------------------------- |
-| Timing          | Cron with an IANA timezone, or a fixed interval with optional offset |
-| Timezone        | Declared per cron schedule; interval schedules do not use a timezone |
-| Overlap policy  | `SKIP` by default; the weekly Scout parlay uses `ALLOW_ALL`          |
-| Reconciliation  | upsert of every schedule at each worker boot                         |
-| Source of truth | the `SCHEDULES` array in code; a PR is the change process            |
-| Deletion        | explicit — add the schedule ID to the deletion list                  |
-| Orphan drift    | a metric is exported for any server schedule code no longer defines  |
+| Property        | Value                                                                 |
+| --------------- | --------------------------------------------------------------------- |
+| Timing          | Cron with an IANA timezone, or a fixed interval with optional offset  |
+| Timezone        | Declared per cron schedule; interval schedules do not use a timezone  |
+| Overlap policy  | `SKIP` by default; reports use `BUFFER_ONE`; weekly parlay allows all |
+| Reconciliation  | upsert of every schedule at each worker boot                          |
+| Source of truth | the `SCHEDULES` array in code; a PR is the change process             |
+| Deletion        | explicit — add the schedule ID to the deletion list                   |
+| Orphan drift    | a metric is exported for any server schedule code no longer defines   |
 
 ## Pause behaviour
 
@@ -48,6 +48,16 @@ period key, and a delayed prior finalization must not suppress the next market.
 | Most schedules and Scout maintenance | 1 hour         |
 | Time-of-day home automation          | 5 minutes      |
 | Scout latest-state polling           | 5 minutes      |
+| Scout user reports                   | 1 hour         |
+
+Scout's fixed schedules live in the central array. Enabled product reports are
+the deliberate exception: each report owns a dynamic
+`scout-<stage>-report-<reportId>` Schedule, identified by an exact ownership
+memo. Postgres owns the cron, timezone, enabled state, and revision. The report
+outbox reconciler owns creation, closed-world updates, and tombstone deletion.
+Central orphan detection exempts only an ID whose strict memo matches that ID;
+lookalike or mismatched schedules still alert and are never deleted
+automatically.
 
 Home automation is deliberately tight: a 09:00 vacuum run should not fire at
 noon after an outage.
