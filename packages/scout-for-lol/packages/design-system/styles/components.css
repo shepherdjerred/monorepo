@@ -665,6 +665,9 @@ button.scout-control > span:first-child {
   align-items: center;
   gap: 0.35rem;
 }
+.scout-navbar__member-links {
+  display: contents;
+}
 .scout-navbar a:not(.scout-button) {
   color: inherit;
   text-decoration: none;
@@ -945,7 +948,8 @@ button.scout-control > span:first-child {
 }
 
 @media (max-width: 60rem) {
-  .scout-navbar__links {
+  .scout-navbar__links,
+  .scout-navbar__member-links {
     display: none;
   }
   .scout-mobile-nav {

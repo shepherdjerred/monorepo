@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import {
   CompetitionIdSchema,
   ExploreConversationIdSchema,
+  PlayerIdSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
 import { queryClient } from "#src/lib/query-client.ts";
@@ -44,6 +45,32 @@ export function requireSessionLoader(): null {
     queryClient.query(
       trpcOptions.guild.listManageable.queryOptions(undefined, {
         staleTime: STALE_TIME_SLOW_LIST,
+      }),
+    ),
+  );
+  void preloadQuery(
+    queryClient.query(trpcOptions.explore.status.queryOptions()),
+  );
+  void preloadQuery(
+    queryClient.query(trpcOptions.consumerPlayer.status.queryOptions()),
+  );
+  return null;
+}
+
+export function consumerPlayersLoader(): null {
+  void preloadQuery(
+    queryClient.query(trpcOptions.consumerPlayer.status.queryOptions()),
+  );
+  return null;
+}
+
+export function consumerPlayerLoader({ params }: LoaderFunctionArgs): null {
+  const parsed = PlayerIdSchema.safeParse(Number(params["playerId"]));
+  if (!parsed.success) return null;
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.consumerPlayer.status.queryOptions(undefined, {
+        staleTime: 0,
       }),
     ),
   );

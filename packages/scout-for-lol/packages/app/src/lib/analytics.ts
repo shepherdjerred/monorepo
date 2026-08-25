@@ -437,8 +437,9 @@ export function stopAnalyticsCapture(): void {
  */
 export function normalizePath(pathname: string): string {
   const normalized = pathname
+    .replace(/^\/players\/[^/]+/, "/players/:playerId")
     .replace(/^\/g\/[^/]+/, "/g/:guildId")
-    .replace(/\/players\/[^/]+/, "/players/:alias")
+    .replace(/^\/g\/:guildId\/players\/[^/]+/, "/g/:guildId/players/:alias")
     .replace(
       /\/competitions\/(?!new(?:\/|$))[^/]+/,
       "/competitions/:competitionId",
@@ -453,7 +454,7 @@ export function normalizePath(pathname: string): string {
     .replace(/^\/explore\/s\/[^/]+/, "/explore/s/:shareToken")
     .replace(/^\/explore\/(?!s(?:\/|$))[^/]+/, "/explore/:conversationId");
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/players(?:\/:playerId)?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 
