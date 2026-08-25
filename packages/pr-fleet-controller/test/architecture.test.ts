@@ -1,27 +1,19 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
-import {
-  cruiseArchitectureFixtures,
-  expectedFixtureRuleNames,
-} from "@shepherdjerred/architecture";
+import { assertArchitectureFixtures } from "@shepherdjerred/architecture";
+import { describe, expect, it, test } from "vitest";
 import architecture from "#architecture";
 
 const packageRoot = import.meta.dir.replace(/\/test$/u, "");
 
-describe("dependency-cruiser layer boundaries", () => {
-  it("rejects a committed negative fixture for every declared boundary", async () => {
-    const result = await cruiseArchitectureFixtures({
-      packageRoot,
-      definition: architecture,
-    });
-
-    expect(result.violatedRuleNames).toEqual(
-      expectedFixtureRuleNames(architecture),
-    );
-    expect(result.errorCount).toBe(result.fixtureFiles.length);
+test("architecture fixtures prove every pr-fleet-controller boundary", async () => {
+  await assertArchitectureFixtures({
+    packageRoot,
+    definition: architecture,
   });
+});
 
+describe("dependency-cruiser layer boundaries", () => {
   it("leaves no module outside a layer directory", async () => {
     // Boundaries name directories, so a module sitting directly under `src/`
     // is one no rule can match — from or to. The package used to export a
