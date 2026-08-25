@@ -1,4 +1,7 @@
-import { proxyActivities } from "@temporalio/workflow";
+import {
+  ActivityCancellationType,
+  proxyActivities,
+} from "@temporalio/workflow";
 import type { ScoutTemporalActivities } from "#src/activities.ts";
 import type { ScoutStage } from "#src/contracts.ts";
 import { scoutTaskQueues } from "#src/identifiers.ts";
@@ -49,6 +52,7 @@ export function interactiveActivities(stage: ScoutStage) {
     startToCloseTimeout: "30 minutes",
     scheduleToCloseTimeout: "35 minutes",
     heartbeatTimeout: "10 seconds",
+    cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
     retry: {
       maximumAttempts: 2,
       initialInterval: "5 seconds",
