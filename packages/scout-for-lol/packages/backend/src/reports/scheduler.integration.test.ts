@@ -1,5 +1,10 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { runDueReports } from "#src/reports/scheduler.ts";
+import {
+  runDueReports,
+  runScheduledReportOccurrence,
+} from "#src/reports/scheduler.ts";
+import { deliverPendingReportDispatches } from "#src/reports/discord-dispatcher.ts";
+import { runScoutReportActivity } from "#src/temporal/report-activity.ts";
 import { scoutScheduledReportLastSuccessTimestamp } from "#src/metrics/report-runs.ts";
 import {
   createTestDatabase,
@@ -190,6 +195,200 @@ describe("runDueReports", () => {
     expect(
       await prisma.reportRun.count({ where: { reportId: report.id } }),
     ).toBe(2);
+  });
+});
+
+test("keeps an undeliverable intent pending and isolates backlog repair", async () => {
+  const now = new Date("2026-08-24T12:00:00.000Z");
+  const report = await prisma.report.create({
+    data: {
+      ...REPORT_DEFAULTS,
+      title: "Durable delivery",
+      nextScheduledRunAt: new Date(now.getTime() + 60_000),
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+  const run = await prisma.reportRun.create({
+    data: {
+      reportId: report.id,
+      serverId: report.serverId,
+      trigger: "SCHEDULED",
+      status: "SUCCESS",
+      startedAt: now,
+      completedAt: now,
+      renderedContent: "**Durable delivery**",
+      deliveryState: "PENDING",
+    },
+  });
+
+  await expect(
+    deliverPendingReportDispatches(
+      { reportId: report.id, trigger: "SCHEDULED" },
+      prisma,
+    ),
+  ).rejects.toThrow("bot is not a member");
+  const pending = await prisma.reportRun.findUniqueOrThrow({
+    where: { id: run.id },
+  });
+  expect(pending.deliveryState).toBe("PENDING");
+  expect(pending.deliveredAt).toBeNull();
+  expect(pending.deliveryError).toContain("bot is not a member");
+
+  await expect(
+    deliverPendingReportDispatches(
+      {
+        reportId: report.id,
+        trigger: "SCHEDULED",
+        failureMode: "isolate",
+      },
+      prisma,
+    ),
+  ).resolves.toBeUndefined();
+  expect(
+    await prisma.reportRun.count({
+      where: { id: run.id, deliveryState: "DELIVERED" },
+    }),
+  ).toBe(0);
+});
+
+test("retries a claimed Temporal occurrence without creating a second run", async () => {
+  const now = new Date("2026-08-24T12:00:00.000Z");
+  const report = await prisma.report.create({
+    data: {
+      ...REPORT_DEFAULTS,
+      title: "Crash-safe occurrence",
+      queryText: "this is not ScoutQL",
+      nextScheduledRunAt: new Date(now.getTime() - 60_000),
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+
+  await expect(
+    runScheduledReportOccurrence({
+      prisma,
+      report,
+      workflowRunId: "temporal-workflow-run-1",
+      now,
+    }),
+  ).rejects.toThrow();
+  const afterFirst = await prisma.report.findUniqueOrThrow({
+    where: { id: report.id },
+  });
+  const firstRun = await prisma.reportRun.findUniqueOrThrow({
+    where: { temporalWorkflowRunId: "temporal-workflow-run-1" },
+  });
+  expect(firstRun.status).toBe("FAILED");
+
+  await expect(
+    runScheduledReportOccurrence({
+      prisma,
+      report: afterFirst,
+      workflowRunId: "temporal-workflow-run-1",
+      now: new Date(now.getTime() + 30_000),
+    }),
+  ).rejects.toThrow();
+  expect(await prisma.reportRun.count({ where: { reportId: report.id } })).toBe(
+    1,
+  );
+  const retriedRun = await prisma.reportRun.findUniqueOrThrow({
+    where: { temporalWorkflowRunId: "temporal-workflow-run-1" },
+  });
+  expect(retriedRun.id).toBe(firstRun.id);
+  expect(retriedRun.status).toBe("FAILED");
+  const afterRetry = await prisma.report.findUniqueOrThrow({
+    where: { id: report.id },
+  });
+  expect(afterRetry.nextScheduledRunAt?.getTime()).toBe(
+    afterFirst.nextScheduledRunAt?.getTime(),
+  );
+});
+
+test("disabled reports can still be run manually", async () => {
+  const now = new Date("2026-08-24T12:00:00.000Z");
+  const report = await prisma.report.create({
+    data: {
+      ...REPORT_DEFAULTS,
+      title: "Disabled manual report",
+      queryText: "this is not ScoutQL",
+      isEnabled: false,
+      nextScheduledRunAt: null,
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+  const run = await prisma.reportRun.create({
+    data: {
+      reportId: report.id,
+      serverId: report.serverId,
+      trigger: "MANUAL",
+      status: "RUNNING",
+      startedAt: now,
+      querySnapshot: report.queryText,
+    },
+  });
+
+  await expect(
+    runScoutReportActivity(
+      {
+        stage: "dev",
+        reportId: report.id.toString(),
+        revision: report.revision,
+        runId: run.id.toString(),
+        source: "manual",
+        post: false,
+        workflowRunId: "disabled-manual-run",
+      },
+      prisma,
+    ),
+  ).rejects.toThrow();
+  await expect(
+    prisma.reportRun.findUniqueOrThrow({ where: { id: run.id } }),
+  ).resolves.toMatchObject({ status: "FAILED" });
+});
+
+test("marks a pre-created manual run failed when its report revision is stale", async () => {
+  const now = new Date("2026-08-24T12:00:00.000Z");
+  const report = await prisma.report.create({
+    data: {
+      ...REPORT_DEFAULTS,
+      title: "Stale manual run",
+      nextScheduledRunAt: null,
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+  const run = await prisma.reportRun.create({
+    data: {
+      reportId: report.id,
+      serverId: report.serverId,
+      trigger: "MANUAL",
+      status: "RUNNING",
+      startedAt: now,
+      querySnapshot: report.queryText,
+    },
+  });
+
+  await runScoutReportActivity(
+    {
+      stage: "dev",
+      reportId: report.id.toString(),
+      revision: report.revision + 1,
+      runId: run.id.toString(),
+      source: "manual",
+      post: false,
+      workflowRunId: "stale-manual-run",
+    },
+    prisma,
+  );
+
+  await expect(
+    prisma.reportRun.findUniqueOrThrow({ where: { id: run.id } }),
+  ).resolves.toMatchObject({
+    status: "FAILED",
+    errorMessage:
+      "Report definition changed, was disabled, or was deleted before execution.",
   });
 });
 

@@ -15,7 +15,7 @@ import type {
   ScoutQueueCanaryProbeResult,
   ScoutRealtimePollInput,
   ScoutReportLakeInput,
-  ScoutReportRunInput,
+  ScoutReportActivityInput,
   ScoutReportScheduleReconcilerInput,
 } from "./contracts.ts";
 
@@ -44,7 +44,7 @@ export type ScoutTemporalActivities = {
   drainReportScheduleOutbox: (
     input: ScoutReportScheduleReconcilerInput,
   ) => Promise<ReportScheduleDrainResult>;
-  runReport: (input: ScoutReportRunInput) => Promise<void>;
+  runReport: (input: ScoutReportActivityInput) => Promise<void>;
   runInteractive: (
     input: ScoutInteractiveRunInput,
   ) => Promise<InteractiveOutcome>;

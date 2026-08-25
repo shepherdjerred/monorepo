@@ -658,7 +658,13 @@ describe("RENDER clause — full runner pipeline", () => {
       },
     });
 
-    const result = await runReport({ prisma, report, trigger: "MANUAL", now });
+    const result = await runReport({
+      prisma,
+      report,
+      trigger: "MANUAL",
+      now,
+      deliveryRequested: true,
+    });
     expect(result.rowsReturned).toBe(2);
     expect(result.output.image).not.toBeNull();
     expect(result.output.content).toBe("**Solo Win Rate**");
@@ -667,6 +673,9 @@ describe("RENDER clause — full runner pipeline", () => {
       where: { reportId: report.id },
     });
     expect(run.status).toBe("SUCCESS");
+    expect(run.deliveryState).toBe("PENDING");
+    expect(run.deliveryError).toBeNull();
+    expect(run.deliveredAt).toBeNull();
     expect(run.rowsReturned).toBe(2);
     expect(run.querySnapshot).toBe(report.queryText);
     if (run.visualizationS3Key === null) {

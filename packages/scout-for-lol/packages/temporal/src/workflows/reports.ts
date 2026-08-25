@@ -23,7 +23,10 @@ export async function scoutReportRunWorkflow(
   rawInput: ScoutReportRunInput,
 ): Promise<ScoutWorkflowStatus> {
   const input = ScoutReportRunInputSchema.parse(rawInput);
-  await backgroundActivities(input.stage).runReport(input);
+  await backgroundActivities(input.stage).runReport({
+    ...input,
+    workflowRunId: workflowInfo().runId,
+  });
   return "completed";
 }
 

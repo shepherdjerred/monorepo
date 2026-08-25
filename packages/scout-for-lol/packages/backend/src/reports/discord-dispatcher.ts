@@ -17,13 +17,14 @@ import {
   ReportRunIdSchema,
 } from "@scout-for-lol/data";
 import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
-import { loadReportRunImage } from "#src/storage/s3-report-run.ts";
 import type { ScheduledReportDispatch } from "#src/reports/scheduler.ts";
 import {
   claimScoutEffect,
   completeScoutEffect,
   recordScoutEffectFailure,
 } from "#src/temporal/effect-claims.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { loadReportRunImage } from "#src/storage/s3-report-run.ts";
 
 const logger = createLogger("report-discord-dispatcher");
 
@@ -38,7 +39,6 @@ export async function runScheduledReportDispatch(): Promise<void> {
 
 export async function deliverScheduledReportDispatches(
   dispatches: Awaited<ReturnType<typeof runDueReports>>,
-  options: { propagateErrors?: boolean } = {},
 ): Promise<void> {
   if (dispatches.length === 0) {
     return;
@@ -49,16 +49,15 @@ export async function deliverScheduledReportDispatches(
   );
 
   for (const dispatch of dispatches) {
-    await deliverReportDispatch(dispatch, "report_scheduled", options);
+    await deliverReportDispatch(dispatch, "report_scheduled");
     await new Promise((resolve) => setTimeout(resolve, POST_DELAY_MS));
   }
 }
 
 /**
- * Resume a scheduled delivery after the execution activity returned from
- * `runDueReports` but crashed before Discord delivery. The ReportRun archive
- * is the durable dispatch record; effect claims make replaying a completed
- * chunk a no-op while allowing an interrupted chunk to finish.
+ * Resume a scheduled delivery after report execution completed but Discord
+ * delivery was interrupted. The ReportRun archive is the durable dispatch
+ * record; effect claims make replaying a completed chunk a no-op.
  */
 export async function deliverStoredScheduledReport(
   reportId: number,
@@ -105,7 +104,7 @@ export async function deliverStoredScheduledReport(
       },
     },
     "report_scheduled",
-    { propagateErrors: true },
+    "propagate",
   );
   return true;
 }
@@ -113,7 +112,7 @@ export async function deliverStoredScheduledReport(
 export async function deliverReportDispatch(
   dispatch: ScheduledReportDispatch,
   outputKind: "report_manual" | "report_scheduled",
-  options: { propagateErrors?: boolean } = {},
+  failureMode: "isolate" | "propagate" = "isolate",
 ): Promise<void> {
   const { id: reportId, channelId, serverId } = dispatch.report;
 
@@ -121,9 +120,11 @@ export async function deliverReportDispatch(
   // would error every cycle. Orphaned reports are removed by the guildDelete
   // handler / abandoned-guild sweep, but this guards the window before that.
   if (!client.guilds.cache.has(serverId)) {
-    logger.warn(
-      `[ReportDispatch] Skipping report ${reportId.toString()} - bot is not a member of guild ${serverId}`,
+    const error = new Error(
+      `Cannot deliver report ${reportId.toString()} because the bot is not a member of guild ${serverId}`,
     );
+    logger.warn(`[ReportDispatch] ${error.message}`);
+    if (failureMode === "propagate") throw error;
     return;
   }
 
@@ -171,9 +172,6 @@ export async function deliverReportDispatch(
       },
     });
   } catch (error) {
-    if (options.propagateErrors === true) {
-      throw error;
-    }
     if (error instanceof ChannelSendError) {
       logger.warn(
         `[ReportDispatch] Failed to deliver report ${reportId.toString()} to channel ${channelId}: ${getErrorMessage(error)}`,
@@ -190,6 +188,92 @@ export async function deliverReportDispatch(
           serverId,
         },
       });
+    }
+    if (failureMode === "propagate") throw error;
+  }
+}
+
+export async function deliverPendingReportDispatches(
+  input: {
+    reportId: number;
+    trigger: "MANUAL" | "SCHEDULED";
+    runId?: number;
+    failureMode?: "isolate" | "propagate";
+  },
+  database: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  const reportId = ReportIdSchema.parse(input.reportId);
+  const runId =
+    input.runId === undefined
+      ? undefined
+      : ReportRunIdSchema.parse(input.runId);
+  const report = await database.report.findUniqueOrThrow({
+    where: { id: reportId },
+  });
+  const runs = await database.reportRun.findMany({
+    where: {
+      reportId,
+      trigger: input.trigger,
+      status: "SUCCESS",
+      deliveryState: "PENDING",
+      ...(runId === undefined ? {} : { id: runId }),
+    },
+    orderBy: { id: "asc" },
+  });
+  for (const run of runs) {
+    if (run.renderedContent === null) {
+      throw new Error(
+        `Successful report run ${run.id.toString()} has no persisted rendered content`,
+      );
+    }
+    const imageBytes =
+      run.imageS3Key === null
+        ? null
+        : await loadReportRunImage(run.reportId, run.id);
+    if (imageBytes === null && run.imageS3Key !== null) {
+      throw new Error(
+        `Report run ${run.id.toString()} has a persisted image key but its image cannot be loaded`,
+      );
+    }
+    try {
+      await deliverReportDispatch(
+        {
+          report,
+          result: {
+            runId: run.id,
+            output: {
+              content: run.renderedContent,
+              image:
+                imageBytes === null
+                  ? null
+                  : {
+                      filename: `report-${run.id.toString()}.png`,
+                      data: imageBytes,
+                    },
+            },
+            rowsReturned: run.rowsReturned,
+            rowsScanned: run.rowsScanned,
+          },
+        },
+        input.trigger === "SCHEDULED" ? "report_scheduled" : "report_manual",
+        "propagate",
+      );
+      await database.reportRun.updateMany({
+        where: { id: run.id, deliveryState: "PENDING" },
+        data: {
+          deliveryState: "DELIVERED",
+          deliveryError: null,
+          deliveredAt: new Date(),
+        },
+      });
+    } catch (error) {
+      await database.reportRun.updateMany({
+        where: { id: run.id, deliveryState: "PENDING" },
+        data: {
+          deliveryError: error instanceof Error ? error.message : String(error),
+        },
+      });
+      if (input.failureMode !== "isolate") throw error;
     }
   }
 }

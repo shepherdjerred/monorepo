@@ -1,6 +1,5 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
-import { ReportIdSchema, ReportRunIdSchema } from "@scout-for-lol/data";
 import { client } from "#src/discord/client.ts";
 import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
@@ -383,6 +382,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
       await heartbeatWhile(
         { reportId: input.reportId, phase: "running" },
         async () => {
+<<<<<<< HEAD
           const reportId = Number(input.reportId);
           if (!Number.isSafeInteger(reportId) || reportId <= 0) {
             throw ApplicationFailure.nonRetryable(
@@ -429,8 +429,129 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await runManualReportActivity(input, reportId);
           }
           Context.current().heartbeat({ reportId, phase: "complete" });
+||||||| parent of 9a9933bb0 (feat(scout-for-lol): make Temporal authoritative for reports)
+          const reportId = Number(input.reportId);
+          if (!Number.isSafeInteger(reportId) || reportId <= 0) {
+            throw ApplicationFailure.nonRetryable(
+              `Invalid report ID ${input.reportId}`,
+              "InvalidReportId",
+            );
+          }
+          const { prisma } = await import("#src/database/index.ts");
+          const report = await prisma.report.findUnique({
+            where: { id: reportId },
+            select: { revision: true, isEnabled: true },
+          });
+          if (
+            report === null ||
+            (input.source === "schedule" && !report.isEnabled) ||
+            report.revision !== input.revision
+          ) {
+            if (input.source === "manual") {
+              const staleRunId = ReportRunIdSchema.safeParse(
+                input.runId === undefined ? NaN : Number(input.runId),
+              );
+              if (!staleRunId.success) {
+                throw ApplicationFailure.nonRetryable(
+                  "Manual report execution requires a valid run ID",
+                  "InvalidReportRunId",
+                );
+              }
+              await prisma.reportRun.updateMany({
+                where: { id: staleRunId.data, status: "RUNNING" },
+                data: {
+                  status: "FAILED",
+                  completedAt: new Date(),
+                  errorMessage:
+                    "Report definition changed or was deleted before execution.",
+                },
+              });
+            }
+            return;
+          }
+          Context.current().heartbeat({ reportId, phase: "running" });
+          if (input.source === "schedule") {
+            const executionStartedAt = new Date();
+            const { runDueReports } = await import("#src/reports/scheduler.ts");
+            const dispatches = await runDueReports({
+              prisma,
+              reportId,
+              limit: 1,
+              now: executionStartedAt,
+            });
+            const { deliverScheduledReportDispatches } =
+              await import("#src/reports/discord-dispatcher.ts");
+            if (dispatches.length > 0) {
+              await deliverScheduledReportDispatches(dispatches, {
+                propagateErrors: true,
+              });
+            } else {
+              const parsedReportId = ReportIdSchema.parse(reportId);
+              const generatedRun = await prisma.reportRun.findFirst({
+                where: {
+                  reportId: parsedReportId,
+                  trigger: "SCHEDULED",
+                  status: "SUCCESS",
+                  startedAt: { gte: executionStartedAt },
+                },
+                orderBy: [{ startedAt: "desc" }, { id: "desc" }],
+                select: { id: true },
+              });
+              if (generatedRun !== null) {
+                const { deliverStoredScheduledReport } =
+                  await import("#src/reports/discord-dispatcher.ts");
+                await deliverStoredScheduledReport(reportId, generatedRun.id);
+              }
+            }
+          } else {
+            const runId = input.runId === undefined ? NaN : Number(input.runId);
+            if (!Number.isSafeInteger(runId) || runId <= 0) {
+              throw ApplicationFailure.nonRetryable(
+                "Manual report execution requires a valid run ID",
+                "InvalidReportRunId",
+              );
+            }
+            const fullReport = await prisma.report.findUniqueOrThrow({
+              where: { id: reportId },
+            });
+            const { runReport } = await import("#src/reports/runner.ts");
+            const result = await runReport({
+              prisma,
+              report: fullReport,
+              trigger: "MANUAL",
+              runId,
+            }).catch(async (error: unknown) => {
+              const { InvalidSavedQueryError } =
+                await import("#src/reports/query-engine.ts");
+              if (error instanceof InvalidSavedQueryError) {
+                throw ApplicationFailure.nonRetryable(
+                  error.message,
+                  "InvalidSavedQuery",
+                );
+              }
+              throw error;
+            });
+            if (input.post) {
+              const { deliverReportDispatch } =
+                await import("#src/reports/discord-dispatcher.ts");
+              await deliverReportDispatch(
+                { report: fullReport, result },
+                "report_manual",
+              );
+            }
+          }
+          Context.current().heartbeat({ reportId, phase: "complete" });
+=======
+          const { runScoutReportActivity } =
+            await import("#src/temporal/report-activity.ts");
+          await runScoutReportActivity(input);
+>>>>>>> 9a9933bb0 (feat(scout-for-lol): make Temporal authoritative for reports)
         },
       );
+      Context.current().heartbeat({
+        reportId: input.reportId,
+        phase: "complete",
+      });
     },
   };
 }

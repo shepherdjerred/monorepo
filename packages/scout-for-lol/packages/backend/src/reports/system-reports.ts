@@ -20,28 +20,32 @@ export async function syncSystemReports(params: {
   prisma: ExtendedPrismaClient;
   now?: Date;
 }): Promise<SystemReportSyncResult> {
-  const now = params.now ?? new Date();
-  const disabled = await params.prisma.$transaction(async (tx) => {
-    const staleReports = await tx.report.findMany({
-      where: {
-        isSystemManaged: true,
-        systemSource: "COMPETITION",
-        isEnabled: true,
-      },
-      select: { id: true, revision: true },
-    });
-    for (const report of staleReports) {
-      const revision = report.revision + 1;
-      await tx.report.update({
-        where: { id: report.id },
-        data: { isEnabled: false, revision, updatedTime: now },
-      });
-      await enqueueReportScheduleUpsert(tx, report.id, revision);
-    }
-    return staleReports.length;
+  const staleReports = await params.prisma.report.findMany({
+    where: {
+      isSystemManaged: true,
+      systemSource: "COMPETITION",
+      isEnabled: true,
+    },
+    select: { id: true },
   });
+  const now = params.now ?? new Date();
+  for (const stale of staleReports) {
+    await params.prisma.$transaction(async (tx) => {
+      const report = await tx.report.update({
+        where: { id: stale.id },
+        data: {
+          isEnabled: false,
+          nextScheduledRunAt: null,
+          revision: { increment: 1 },
+          updatedTime: now,
+        },
+      });
+      await enqueueReportScheduleUpsert(tx, report.id, report.revision);
+    });
+  }
+  if (staleReports.length > 0) {
+    await notifyReportScheduleReconciler();
+  }
 
-  if (disabled > 0) await notifyReportScheduleReconciler();
-
-  return { created: 0, updated: 0, disabled };
+  return { created: 0, updated: 0, disabled: staleReports.length };
 }
