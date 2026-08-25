@@ -162,7 +162,7 @@ export const exploreRouter = router({
     .input(z.object({ runId: ExploreRunIdSchema }).strict())
     .mutation(async ({ ctx, input }) => {
       const userId = await requireExploreUser(ctx.user);
-      if (!exploreRunManager.stop(input.runId, userId)) {
+      if (!(await exploreRunManager.stop(input.runId, userId))) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Run not found." });
       }
       return { ok: true };
