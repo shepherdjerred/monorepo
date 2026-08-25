@@ -47,6 +47,8 @@ export const reportActivities = {
   ...reportDeliveryActivities,
   ...reportFreshnessActivities,
   ...workflowFailureWatchActivities,
+  sendAgentTaskEmail: agentTaskActivities.sendAgentTaskEmail,
+  sendAgentTaskFailureReport: agentTaskActivities.sendAgentTaskFailureReport,
 };
 
 export const infraActivities = {

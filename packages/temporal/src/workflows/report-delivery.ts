@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   ReportDeliveryActivities,
   ReportDeliveryResult,
@@ -9,6 +9,14 @@ import {
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
 } from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+
+const legacyReportDeliveryActivities = proxyActivities<
+  Pick<ReportDeliveryActivities, "deliverReport">
+>({
+  taskQueue: TASK_QUEUES.DEFAULT,
+  startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+  retry: REPORT_DELIVERY_ACTIVITY_RETRY,
+});
 
 const reportDeliveryActivities = proxyActivities<
   Pick<ReportDeliveryActivities, "deliverReport">
@@ -28,5 +36,8 @@ const reportDeliveryActivities = proxyActivities<
 export async function deliverReportWorkflow(
   report: ReportEnvelopeV1,
 ): Promise<ReportDeliveryResult> {
-  return reportDeliveryActivities.deliverReport(report);
+  const useReportsQueue = patched("report-delivery-reports-queue-v1");
+  return (
+    useReportsQueue ? reportDeliveryActivities : legacyReportDeliveryActivities
+  ).deliverReport(report);
 }
