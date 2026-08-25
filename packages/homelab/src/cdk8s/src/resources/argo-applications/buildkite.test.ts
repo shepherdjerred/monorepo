@@ -108,6 +108,44 @@ const PostHogTofuCredentialsSchema = z
   })
   .loose();
 
+const CredentialItemSchema = z
+  .object({
+    apiVersion: z.literal("onepassword.com/v1"),
+    kind: z.literal("OnePasswordItem"),
+    metadata: z.object({
+      name: z.string(),
+      namespace: z.literal("buildkite"),
+    }),
+    spec: z.object({ itemPath: z.string() }),
+  })
+  .loose();
+
+const JobServiceAccountSchema = z
+  .object({
+    apiVersion: z.literal("v1"),
+    kind: z.literal("ServiceAccount"),
+    metadata: z.object({
+      name: z.literal("buildkite-job"),
+      namespace: z.literal("buildkite"),
+    }),
+    automountServiceAccountToken: z.literal(false),
+  })
+  .loose();
+
+const EXPECTED_CREDENTIAL_SECRET_NAMES = [
+  "buildkite-github-credentials",
+  "buildkite-api-credentials",
+  "buildkite-turbo-cache-credentials",
+  "buildkite-npm-credentials",
+  "buildkite-claude-credentials",
+  "buildkite-chartmuseum-credentials",
+  "buildkite-argocd-credentials",
+  "buildkite-seaweedfs-credentials",
+  "buildkite-cloudflare-credentials",
+  "buildkite-tailscale-credentials",
+  "buildkite-arr-credentials",
+];
+
 function synthBuildkiteResources() {
   const chart = Testing.chart();
   createBuildkiteApp(chart);
@@ -234,6 +272,37 @@ it("syncs the dedicated PostHog OpenTofu credentials", () => {
   expect(
     resources.some(
       (manifest) => PostHogTofuCredentialsSchema.safeParse(manifest).success,
+    ),
+  ).toBe(true);
+});
+
+it("syncs one Buildkite Secret per credential rotation boundary", () => {
+  const { resources } = synthBuildkiteResources();
+  const items = resources.flatMap((manifest) => {
+    const result = CredentialItemSchema.safeParse(manifest);
+    return result.success &&
+      EXPECTED_CREDENTIAL_SECRET_NAMES.includes(result.data.metadata.name)
+      ? [result.data]
+      : [];
+  });
+
+  expect(items).toHaveLength(EXPECTED_CREDENTIAL_SECRET_NAMES.length);
+  expect(items.map((item) => item.metadata.name).sort()).toEqual(
+    EXPECTED_CREDENTIAL_SECRET_NAMES.toSorted(),
+  );
+  for (const item of items) {
+    expect(item.metadata.namespace).toBe("buildkite");
+    expect(item.spec.itemPath).toMatch(
+      /^vaults\/v64ocnykdqju4ui6j6pua56xw4\/items\/[a-z0-9]{26}$/,
+    );
+  }
+});
+
+it("provisions a tokenless service account for Buildkite jobs", () => {
+  const { resources } = synthBuildkiteResources();
+  expect(
+    resources.some(
+      (manifest) => JobServiceAccountSchema.safeParse(manifest).success,
     ),
   ).toBe(true);
 });
@@ -403,7 +472,7 @@ describe("Buildkite application", () => {
         }),
         expect.objectContaining({
           secret: expect.objectContaining({
-            secretName: "buildkite-ci-secrets",
+            secretName: "buildkite-turbo-cache-credentials",
           }),
         }),
       ]),

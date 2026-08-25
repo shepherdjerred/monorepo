@@ -7,6 +7,7 @@ import {
   KubeLimitRange,
   KubeConfigMap,
   KubePersistentVolumeClaim,
+  KubeServiceAccount,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
@@ -16,6 +17,7 @@ import {
   CI_NODE_TOLERATION,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/buildkite.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   BUN_CACHE_MOUNT_PATH,
   createBuildkiteBunCache,
@@ -53,10 +55,75 @@ sleep 20
   });
 }
 
+const BUILDKITE_CREDENTIAL_ITEMS = [
+  {
+    secretName: "buildkite-github-credentials",
+    itemId: "34gzcrhwdm34lpadyly3rcsu44",
+  },
+  {
+    secretName: "buildkite-api-credentials",
+    itemId: "qtyxi2cqocze43ekdgb72uvtr4",
+  },
+  {
+    secretName: "buildkite-turbo-cache-credentials",
+    itemId: "mzvcz4pqqbda75ufu7l5myd4ey",
+  },
+  {
+    secretName: "buildkite-npm-credentials",
+    itemId: "4fmd5otmvwcpsrxjaptrloppvu",
+  },
+  {
+    secretName: "buildkite-claude-credentials",
+    itemId: "2r6nqphyvaegtnbjgcg4avff3m",
+  },
+  {
+    secretName: "buildkite-chartmuseum-credentials",
+    itemId: "cnutkdwa7uka5hk3wx5gimyfom",
+  },
+  {
+    secretName: "buildkite-argocd-credentials",
+    itemId: "xyytntqvtchctebb3ugoiub7u4",
+  },
+  {
+    secretName: "buildkite-seaweedfs-credentials",
+    itemId: "eyfsbfkxojth6ymr65l47yyfxy",
+  },
+  {
+    secretName: "buildkite-cloudflare-credentials",
+    itemId: "djl2blalora2unjogqnsadlokq",
+  },
+  {
+    secretName: "buildkite-tailscale-credentials",
+    itemId: "eoqdhvwgu7rjfqe6dknexihitu",
+  },
+  {
+    secretName: "buildkite-arr-credentials",
+    itemId: "vkzv5jm2euzb7727x6uxdpwu5y",
+  },
+] as const;
+
+function createBuildkiteCredentialBoundaries(chart: Chart): void {
+  for (const { secretName, itemId } of BUILDKITE_CREDENTIAL_ITEMS) {
+    new OnePasswordItem(chart, secretName, {
+      spec: { itemPath: vaultItemPath(itemId) },
+      metadata: { name: secretName, namespace: "buildkite" },
+    });
+  }
+
+  // The agent-stack controller keeps its own service account and RBAC. Step
+  // pods switch to this tokenless identity only after every dedicated Secret
+  // has reconciled, so provisioning this boundary does not alter running CI.
+  new KubeServiceAccount(chart, "buildkite-job", {
+    metadata: { name: "buildkite-job", namespace: "buildkite" },
+    automountServiceAccountToken: false,
+  });
+}
+
 export function createBuildkiteApp(chart: Chart) {
   createBuildkiteNamespace(chart);
   createBuildkiteBunCache(chart);
   createBuildkiteMaintenanceWorker(chart);
+  createBuildkiteCredentialBoundaries(chart);
 
   new OnePasswordItem(chart, "buildkite-agent-token", {
     spec: {

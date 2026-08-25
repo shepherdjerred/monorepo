@@ -129,7 +129,7 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
   const turboCacheSecret = Secret.fromSecretName(
     chart,
     "temporal-maintenance-turbo-cache-secret",
-    "buildkite-ci-secrets",
+    "buildkite-turbo-cache-credentials",
   );
   const deployment = new Deployment(chart, WORKER_NAME, {
     replicas: 1,
