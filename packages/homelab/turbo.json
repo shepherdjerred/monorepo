@@ -18,9 +18,10 @@
         "!src/cdk8s/dist/**"
       ]
     },
-    // tflint (bundled terraform ruleset, offline) over every src/tofu stack.
+    // tflint (bundled terraform ruleset, repo-owned empty config, offline)
+    // over every src/tofu stack.
     "lint:tofu": {
-      "inputs": ["src/tofu/**", "scripts/lint-tofu.ts"]
+      "inputs": ["src/tofu/**", "scripts/lint-tofu.ts", ".tflint.hcl"]
     }
   }
 }
