@@ -1394,7 +1394,7 @@ see the "cannot be validated" list in the PR.
   development. The 67 SQLite-era migrations were squashed into one baseline
   migration (`prisma/migrations/20260820000000_postgresql_baseline/`).
 - **Legacy SQLite import** - the entrypoint chain is
-  `prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/audit-report-windows.ts --database "$DATABASE_URL" --fix && bun run src/index.ts`.
+  `prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/migrate-scoutql-v2.ts --database "$DATABASE_URL" --fix && bun run src/index.ts`.
   The boot-time importer reads the legacy `/data/db.sqlite` (still on the 24Gi
   PVC as `LEGACY_SQLITE_PATH`) exactly once, tracked by the
   `_legacy_sqlite_import` marker table with a fail-closed decision table;
