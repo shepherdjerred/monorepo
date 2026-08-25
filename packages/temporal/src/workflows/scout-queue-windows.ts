@@ -8,7 +8,6 @@ import type {
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
 import { SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS } from "#shared/scout-queue-windows-lookback.ts";
-import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshScoutQueueWindows } =
   proxyActivities<ScoutQueueWindowsActivities>({
@@ -28,7 +27,6 @@ const { refreshScoutQueueWindows } =
   });
 
 const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: "2 minutes",
   retry: { maximumAttempts: 3 },
 });
