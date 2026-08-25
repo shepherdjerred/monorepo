@@ -252,7 +252,11 @@ describe("teammate-group folding", () => {
     const elapsedMs = performance.now() - startedAt;
     // 20 rosters × 26 combinations each.
     expect(rows).toHaveLength(520);
-    expect(elapsedMs).toBeLessThan(4000);
+    // A sanity ceiling against an algorithmic blowup (e.g. accidental
+    // quadratic combination enumeration), not a tight perf budget: shared,
+    // loaded CI runners measured up to 6.4s against a local ~0.8s, so 4000ms
+    // flaked under CI contention with no code change.
+    expect(elapsedMs).toBeLessThan(15_000);
   });
 });
 
