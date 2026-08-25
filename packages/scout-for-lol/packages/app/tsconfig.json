@@ -7,6 +7,6 @@
     "jsxImportSource": "react",
     "noEmit": true
   },
-  "include": ["src/**/*", "vite.config.ts"],
+  "include": ["architecture.config.ts", "src/**/*", "vite.config.ts"],
   "exclude": ["node_modules", "dist"]
 }
