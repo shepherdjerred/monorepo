@@ -7,11 +7,26 @@ generic report-only agent tasks (Claude/Codex subprocesses) including the daily
 homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 (GitHub merge-conflict check and build cancel, Xcode Cloud, iOS sleep).
 
-Production runs one image as three Kubernetes Deployments selected by
-`TEMPORAL_WORKER_ROLE`: `core` (the `default` and `agent-task` queues plus
-schedules and HTTP/event surfaces), `glitter` (the `glitter-corpus` and
-`glitter-context` queues), and `maintenance` (the serial `maintenance` queue).
-The default `all` role runs everything in one process for local development.
+Production runs one image in ten single-replica Kubernetes Deployments. The
+`control` role owns schedule reconciliation and public HTTP/event surfaces
+without a task queue. `home`, `reports`, `infra`, `repo`, `scout`, `agent`,
+`glitter-corpus`, `glitter-context`, and `maintenance` each own one queue with
+their own activity registry, credentials, service account, and concurrency
+budget. The retired `default` queue has no production owner or start site. The
+default `all` role runs everything in one process for local development.
+
+| Role              | Queue or surface        | Activity concurrency |
+| ----------------- | ----------------------- | -------------------: |
+| `control`         | schedules and HTTP APIs |                 none |
+| `home`            | `home`                  |                    4 |
+| `reports`         | `reports`               |                    4 |
+| `infra`           | `infra`                 |                    1 |
+| `repo`            | `repo-automation`       |                    1 |
+| `scout`           | `scout`                 |                    1 |
+| `agent`           | `agent-task`            |                    1 |
+| `glitter-corpus`  | `glitter-corpus`        |                    1 |
+| `glitter-context` | `glitter-context`       |                    1 |
+| `maintenance`     | `maintenance`           |                    1 |
 
 ## Quick start
 

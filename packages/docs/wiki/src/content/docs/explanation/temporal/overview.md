@@ -1,6 +1,6 @@
 ---
 title: Why Temporal
-description: What durability buys for household automation and repo upkeep, and why the fleet runs as two processes rather than one.
+description: What durability buys for household automation and repo upkeep, and why each workload domain has its own worker.
 sidebar:
   order: 1
 ---
@@ -12,20 +12,22 @@ a durable workflow.
 ```mermaid
 flowchart LR
   accTitle: Temporal worker system map
-  accDescr: The Temporal server dispatches general and agent work to the core Bun worker, Glitter work to dedicated workers, maintenance to Buildkite, and competition delivery activities to each Scout environment. Webhooks, APIs, and Home Assistant events enter through the core worker.
+  accDescr: A tokenless gateway reconciles schedules and receives public requests. Temporal dispatches each workflow and activity to one of nine domain queues. Home Assistant events enter through the home worker. Every domain has independent health and metrics endpoints.
 
-  S[Cron schedules] --> T[Temporal server]
-  T --> C[Core Bun worker<br/>default + agent-task]
-  T --> G[Glitter Bun worker<br/>corpus + context]
-  T --> SB[Scout beta<br/>competition activities]
-  T --> SP[Scout prod<br/>competition activities]
-  W[GitHub and Xcode webhooks] --> C
-  H[Home Assistant events] --> C
-  A[Agent-task API] --> C
-  C --> O[PRs, reports, HA actions]
-  G --> D[Discord corpus and context PRs]
-  C --> M[Health and metrics]
-  G --> M
+  S[Schedule definitions] --> G[Gateway<br/>control role]
+  W[Public webhooks and APIs] --> G
+  G --> T[Temporal server]
+  E[Home Assistant events] --> H[Home worker]
+  H --> T
+  T --> H
+  T --> R[Reports worker]
+  T --> I[Infra worker]
+  T --> P[Repo worker]
+  T --> C[Scout worker]
+  T --> A[Agent worker]
+  T --> D[Glitter corpus worker]
+  T --> X[Glitter context worker]
+  T --> M[Maintenance worker]
 ```
 
 ## Durability is the point
@@ -53,30 +55,26 @@ Pause state is the deliberate exception: it is runtime state, preserved across
 reconciliation, because pausing is an operational act rather than a design
 change.
 
-## Six processes, seven queues
+## Ten processes, nine queues
 
-The core deployment owns `default`. A dedicated report-only agent deployment
-owns `agent-task`, and a separate Glitter deployment owns `glitter-corpus` and
-`glitter-context`. A fourth, tokenless maintenance deployment in the Buildkite
-namespace owns the serial `maintenance` queue. All four run the same image and
-workflow bundle, selected by a strict process role. Two more processes, the Scout beta and
-production backends add activity-only workers on `scout-beta` and `scout-prod`;
-those workers keep each environment's database and Discord credentials inside
-the service that already owns them.
+The gateway is a control process: it reconciles schedules and serves the public
+HTTP surfaces but does not poll a task queue or receive a Kubernetes token.
+Nine workers own `home`, `reports`, `infra`, `repo-automation`, `scout`,
+`agent-task`, `glitter-corpus`, `glitter-context`, and `maintenance`. All ten
+run the same image and deterministic workflow bundle, selected by a strict
+process role. The old `default` queue has no worker or start site.
 
 The split is about authorization and failure isolation, not capacity. Queues
-isolate concurrency; **processes** isolate runtime failures and Kubernetes
-identities. The agent service account can collect read-only cluster evidence but
-has none of the pod-exec roles used by deterministic canaries and maintenance.
-Glitter's work is long, memory-hungry, and rate-limited against Discord —
-exactly the profile that would otherwise starve or destabilise ordinary jobs
-sharing a process.
+isolate concurrency; **processes** isolate runtime failures, credentials, and
+Kubernetes identities. Home and reports can each run four activities. Infra,
+repo, Scout, agent, both Glitter domains, and maintenance remain serial.
 
-Each dedicated Temporal process serves `/healthz` from Bun's event loop only
-after its workers finish startup. The Scout activity workers share their
-backend's existing health lifecycle. Independent startup, readiness, and
-liveness probes restart a wedged deployment without taking down the others.
-Metrics are scraped per service role.
+Only infra receives the broad audit and pod-exec roles. Gateway, home, reports,
+repo, Scout, and both Glitter workers disable service-account token mounting.
+Each Deployment receives an allowlisted environment. Network policies, Services,
+and ServiceMonitors select the unique `component` label rather than the shared
+image label. Each process serves `/healthz` after startup, with independent
+probes and per-queue metrics.
 
 ## Batteries in the image
 
