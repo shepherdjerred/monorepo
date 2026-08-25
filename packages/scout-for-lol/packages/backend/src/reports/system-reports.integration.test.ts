@@ -79,7 +79,18 @@ describe("syncSystemReports", () => {
 
     expect(
       await prisma.report.findUniqueOrThrow({ where: { id: legacy.id } }),
-    ).toMatchObject({ isEnabled: false, updatedTime: now });
+    ).toMatchObject({
+      isEnabled: false,
+      nextScheduledRunAt: null,
+      revision: legacy.revision + 1,
+      updatedTime: now,
+    });
+    expect(
+      await prisma.reportScheduleOutbox.findFirstOrThrow({
+        where: { reportId: legacy.id },
+        select: { operation: true, revision: true },
+      }),
+    ).toEqual({ operation: "UPSERT", revision: legacy.revision + 1 });
     expect(
       await prisma.report.findUniqueOrThrow({ where: { id: userReport.id } }),
     ).toMatchObject({ isEnabled: true });
@@ -87,6 +98,7 @@ describe("syncSystemReports", () => {
 });
 
 async function cleanup(): Promise<void> {
+  await deleteIfExists(() => prisma.reportScheduleOutbox.deleteMany());
   await deleteIfExists(() => prisma.reportRun.deleteMany());
   await deleteIfExists(() => prisma.report.deleteMany());
 }

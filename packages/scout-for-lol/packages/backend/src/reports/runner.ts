@@ -47,6 +47,7 @@ type RunReportParams = {
   trigger: ReportRunTrigger;
   now?: Date;
   runId?: number;
+  deliveryRequested?: boolean;
 };
 
 export async function runReport(
@@ -150,6 +151,10 @@ export async function runReport(
         imageByteSize: output.image?.data.length ?? null,
         visualizationS3Key: visualizationArtifact?.key ?? null,
         visualizationByteSize: visualizationArtifact?.size ?? null,
+        deliveryState:
+          params.deliveryRequested === true ? "PENDING" : "NOT_REQUESTED",
+        deliveryError: null,
+        deliveredAt: null,
       },
     });
     await params.prisma.report.update({

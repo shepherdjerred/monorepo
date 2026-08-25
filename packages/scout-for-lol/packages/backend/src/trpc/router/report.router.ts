@@ -56,11 +56,13 @@ import {
 } from "#src/reports/data-explorer.ts";
 import { ACCOUNT_IDENTITY_COLUMN_IDS } from "#src/reports/data-explorer-columns.ts";
 import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
+import { temporalReportsEnabled } from "#src/config/dynamic.ts";
 import {
   enqueueReportScheduleDeletion,
   enqueueReportScheduleUpsert,
   notifyReportScheduleReconciler,
 } from "#src/reports/temporal-schedules.ts";
+import { runManualReportWithTemporal } from "#src/reports/manual-temporal-run.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const ReportIdInput = GuildInput.extend({ reportId: ReportIdSchema });
@@ -280,9 +282,8 @@ export const reportRouter = router({
       }
 
       const now = new Date();
-      const nextRevision = report.revision + 1;
       const updated = await prisma.$transaction(async (tx) => {
-        const changed = await tx.report.update({
+        const next = await tx.report.update({
           where: { id: input.reportId },
           data: {
             ...(input.title === undefined ? {} : { title: input.title }),
@@ -308,12 +309,12 @@ export const reportRouter = router({
                     input.scheduleTimezone ?? report.scheduleTimezone,
                   ),
                 }),
-            revision: nextRevision,
+            revision: { increment: 1 },
             updatedTime: now,
           },
         });
-        await enqueueReportScheduleUpsert(tx, changed.id, nextRevision);
-        return changed;
+        await enqueueReportScheduleUpsert(tx, next.id, next.revision);
+        return next;
       });
       await notifyReportScheduleReconciler();
       return updated;
@@ -325,9 +326,8 @@ export const reportRouter = router({
       const report = await loadReportOr404(input.reportId, input.guildId);
       assertReportMutable(report);
       const now = new Date();
-      const nextRevision = report.revision + 1;
       const updated = await prisma.$transaction(async (tx) => {
-        const changed = await tx.report.update({
+        const next = await tx.report.update({
           where: { id: input.reportId },
           data: input.isEnabled
             ? {
@@ -337,18 +337,18 @@ export const reportRouter = router({
                   now,
                   report.scheduleTimezone,
                 ),
-                revision: nextRevision,
+                revision: { increment: 1 },
                 updatedTime: now,
               }
             : {
                 isEnabled: false,
                 nextScheduledRunAt: null,
-                revision: nextRevision,
+                revision: { increment: 1 },
                 updatedTime: now,
               },
         });
-        await enqueueReportScheduleUpsert(tx, changed.id, nextRevision);
-        return changed;
+        await enqueueReportScheduleUpsert(tx, next.id, next.revision);
+        return next;
       });
       await notifyReportScheduleReconciler();
       return updated;
@@ -360,12 +360,15 @@ export const reportRouter = router({
       const report = await loadReportOr404(input.reportId, input.guildId);
       assertReportMutable(report);
       await prisma.$transaction(async (tx) => {
-        await enqueueReportScheduleDeletion(
-          tx,
-          input.reportId,
-          report.revision + 1,
-        );
-        await tx.report.delete({ where: { id: input.reportId } });
+        const deleting = await tx.report.update({
+          where: { id: input.reportId },
+          data: { revision: { increment: 1 } },
+          select: { id: true, revision: true },
+        });
+        await enqueueReportScheduleDeletion(tx, deleting.id, deleting.revision);
+        await tx.report.delete({
+          where: { id: deleting.id, revision: deleting.revision },
+        });
       });
       await notifyReportScheduleReconciler();
       return { deleted: true };
@@ -375,6 +378,13 @@ export const reportRouter = router({
     .input(ReportIdInput.extend({ post: z.boolean().default(true) }))
     .mutation(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
+      if (temporalReportsEnabled()) {
+        try {
+          return await runManualReportWithTemporal(report, input.post);
+        } catch (error) {
+          asBadRequest(error);
+        }
+      }
       let result;
       try {
         result = await runReport({ prisma, report, trigger: "MANUAL" });

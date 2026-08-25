@@ -135,6 +135,13 @@ export const ScoutReportRunInputSchema = z.object({
 });
 export type ScoutReportRunInput = z.infer<typeof ScoutReportRunInputSchema>;
 
+export const ScoutReportActivityInputSchema = ScoutReportRunInputSchema.extend({
+  workflowRunId: OpaqueIdentifierSchema,
+});
+export type ScoutReportActivityInput = z.infer<
+  typeof ScoutReportActivityInputSchema
+>;
+
 export const ScoutReportScheduleReconcilerInputSchema = z.object({
   stage: ScoutStageSchema,
 });
