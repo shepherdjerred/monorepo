@@ -4,8 +4,9 @@ import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { HomelabAuditCollection } from "#activities/homelab-audit-collectors.ts";
 import { runHomelabAuditWorkflow } from "./homelab-audit.ts";
+import { runWithReportWorker } from "./test-support.ts";
 
-const TASK_QUEUE = "homelab-audit-test";
+const TASK_QUEUE_PREFIX = "homelab-audit-test";
 const OBSERVED_AT = "2026-05-09T13:30:00.000Z";
 
 let testEnv: TestWorkflowEnvironment;
@@ -52,28 +53,33 @@ function collection(): HomelabAuditCollection {
 
 describe("runHomelabAuditWorkflow", () => {
   it("delivers one clean report after all six collectors pass", async () => {
+    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
+    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
     const reports: unknown[] = [];
+    const deliverActivityReport = (input: unknown) => {
+      reports.push(input);
+      return { accepted: true, duplicate: false, reportRunId: "report-1" };
+    };
     const worker = await Worker.create({
       connection: testEnv.nativeConnection,
-      taskQueue: TASK_QUEUE,
+      taskQueue: taskQueue,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
       activities: {
         collectHomelabAuditEvidence: async () => collection(),
         synthesizeHomelabAuditEvidence: async () => "All checks completed.",
-        deliverActivityReport: (input: unknown) => {
-          reports.push(input);
-          return { accepted: true, duplicate: false, reportRunId: "report-1" };
-        },
+        deliverActivityReport,
       },
     });
 
-    await worker.runUntil(
-      testEnv.client.workflow.execute(runHomelabAuditWorkflow, {
-        args: [{ date: "2026-05-09" }],
-        taskQueue: TASK_QUEUE,
-        workflowId: `test-homelab-clean-${crypto.randomUUID()}`,
-      }),
-    );
+    await runWithReportWorker(testEnv, worker, deliverActivityReport, {
+      reportTaskQueue,
+      runWorkflow: () =>
+        testEnv.client.workflow.execute(runHomelabAuditWorkflow, {
+          args: [{ date: "2026-05-09" }, reportTaskQueue],
+          taskQueue: taskQueue,
+          workflowId: `test-homelab-clean-${crypto.randomUUID()}`,
+        }),
+    });
 
     expect(reports).toHaveLength(1);
     expect(reports[0]).toMatchObject({
@@ -85,31 +91,36 @@ describe("runHomelabAuditWorkflow", () => {
   }, 30_000);
 
   it("delivers a failed report before rethrowing collector failure", async () => {
+    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
+    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
     const reports: unknown[] = [];
+    const deliverActivityReport = (input: unknown) => {
+      reports.push(input);
+      return { accepted: true, duplicate: false, reportRunId: "report-2" };
+    };
     const worker = await Worker.create({
       connection: testEnv.nativeConnection,
-      taskQueue: TASK_QUEUE,
+      taskQueue: taskQueue,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
       activities: {
         collectHomelabAuditEvidence: () => {
           throw new Error("collector unavailable");
         },
-        deliverActivityReport: (input: unknown) => {
-          reports.push(input);
-          return { accepted: true, duplicate: false, reportRunId: "report-2" };
-        },
+        deliverActivityReport,
       },
     });
 
     let failure: unknown;
     try {
-      await worker.runUntil(
-        testEnv.client.workflow.execute(runHomelabAuditWorkflow, {
-          args: [],
-          taskQueue: TASK_QUEUE,
-          workflowId: `test-homelab-failed-${crypto.randomUUID()}`,
-        }),
-      );
+      await runWithReportWorker(testEnv, worker, deliverActivityReport, {
+        reportTaskQueue,
+        runWorkflow: () =>
+          testEnv.client.workflow.execute(runHomelabAuditWorkflow, {
+            args: [{}, reportTaskQueue],
+            taskQueue: taskQueue,
+            workflowId: `test-homelab-failed-${crypto.randomUUID()}`,
+          }),
+      });
     } catch (error: unknown) {
       failure = error;
     }

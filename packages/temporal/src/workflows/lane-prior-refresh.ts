@@ -8,6 +8,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { updateLanePriors } = proxyActivities<LanePriorActivities>({
   startToCloseTimeout: "90 minutes",
@@ -18,11 +19,6 @@ const { updateLanePriors } = proxyActivities<LanePriorActivities>({
     backoffCoefficient: 2,
     maximumInterval: "15 minutes",
   },
-});
-
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  startToCloseTimeout: "2 minutes",
-  retry: { maximumAttempts: 3 },
 });
 
 function evaluation(result: LanePriorRefreshResult): {
@@ -203,7 +199,13 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 
 export async function runScoutLanePriorsWeeklyRefresh(
   input: LanePriorWorkflowInput,
+  reportTaskQueue: string = TASK_QUEUES.REPORTS,
 ): Promise<LanePriorRefreshResult> {
+  const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+    taskQueue: reportTaskQueue,
+    startToCloseTimeout: "2 minutes",
+    retry: { maximumAttempts: 3 },
+  });
   const startedAt = new Date().toISOString();
   try {
     const result = await updateLanePriors(input);

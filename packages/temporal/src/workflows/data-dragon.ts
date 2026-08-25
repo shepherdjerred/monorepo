@@ -13,6 +13,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const {
   getDataDragonVersionState,
@@ -37,11 +38,6 @@ const { updateDataDragon } = proxyActivities<DataDragonActivities>({
     backoffCoefficient: 2,
     maximumInterval: "15 minutes",
   },
-});
-
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  startToCloseTimeout: "2 minutes",
-  retry: { maximumAttempts: 3 },
 });
 
 function stateEvidence(
@@ -304,7 +300,13 @@ function failureReport(
 
 export async function runScoutDataDragonUpdate(
   mode: DataDragonUpdateMode,
+  reportTaskQueue: string = TASK_QUEUES.REPORTS,
 ): Promise<DataDragonUpdateResult | undefined> {
+  const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+    taskQueue: reportTaskQueue,
+    startToCloseTimeout: "2 minutes",
+    retry: { maximumAttempts: 3 },
+  });
   const startedAt = new Date().toISOString();
   let state: DataDragonVersionState | undefined;
   let result: DataDragonUpdateResult | undefined;
