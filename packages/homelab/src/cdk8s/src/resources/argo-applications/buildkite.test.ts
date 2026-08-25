@@ -135,6 +135,7 @@ const JobServiceAccountSchema = z
 const EXPECTED_CREDENTIAL_SECRET_NAMES = [
   "buildkite-github-credentials",
   "buildkite-api-credentials",
+  "buildkite-analytics-credentials",
   "buildkite-turbo-cache-credentials",
   "buildkite-npm-credentials",
   "buildkite-claude-credentials",
