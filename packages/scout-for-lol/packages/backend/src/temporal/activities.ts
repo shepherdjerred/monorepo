@@ -1,48 +1,11 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
+import { ReportRunIdSchema } from "@scout-for-lol/data";
 import { client } from "#src/discord/client.ts";
 import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import { MY_SERVER } from "#src/configuration/flags.ts";
-import type {
-  ScoutQueueCanaryProbeInput,
-  ScoutQueueCanaryProbeResult,
-} from "@scout-for-lol/temporal/contracts";
-
-function unavailable(activity: string): never {
-  throw ApplicationFailure.nonRetryable(
-    `Scout Temporal activity ${activity} has no enabled workload owner`,
-    "DisabledWorkload",
-  );
-}
-
-function probeQueue(
-  input: ScoutQueueCanaryProbeInput,
-): Promise<ScoutQueueCanaryProbeResult> {
-  const taskQueue = Context.current().info.taskQueue;
-  Context.current().heartbeat({
-    canaryId: input.canaryId,
-    queueClass: input.queueClass,
-    taskQueue,
-  });
-  return Promise.resolve({ ...input, taskQueue });
-}
-
-async function heartbeatWhile<T>(
-  details: Record<string, unknown>,
-  action: () => Promise<T>,
-): Promise<T> {
-  const context = Context.current();
-  context.heartbeat(details);
-  const timer = setInterval(() => {
-    context.heartbeat(details);
-  }, 10_000);
-  try {
-    return await action();
-  } finally {
-    clearInterval(timer);
-  }
-}
+import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
 
 function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
   return {
@@ -387,9 +350,29 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           });
           if (
             report === null ||
-            !report.isEnabled ||
+            (input.source === "schedule" && !report.isEnabled) ||
             report.revision !== input.revision
           ) {
+            if (input.source === "manual") {
+              const staleRunId = ReportRunIdSchema.safeParse(
+                input.runId === undefined ? NaN : Number(input.runId),
+              );
+              if (!staleRunId.success) {
+                throw ApplicationFailure.nonRetryable(
+                  "Manual report execution requires a valid run ID",
+                  "InvalidReportRunId",
+                );
+              }
+              await prisma.reportRun.updateMany({
+                where: { id: staleRunId.data, status: "RUNNING" },
+                data: {
+                  status: "FAILED",
+                  completedAt: new Date(),
+                  errorMessage:
+                    "Report definition changed or was deleted before execution.",
+                },
+              });
+            }
             return;
           }
           Context.current().heartbeat({ reportId, phase: "running" });

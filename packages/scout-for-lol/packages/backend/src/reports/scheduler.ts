@@ -1,4 +1,4 @@
-import type { Report } from "@scout-for-lol/data";
+import { ReportIdSchema, type Report } from "@scout-for-lol/data";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
 import * as Sentry from "@sentry/bun";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
@@ -41,15 +41,18 @@ type RunDueReportsParams = {
   prisma: ExtendedPrismaClient;
   now?: Date;
   limit?: number;
+  reportId?: number;
 };
 
 export async function getDueReports(
   prisma: ExtendedPrismaClient,
   now: Date,
   limit: number,
+  reportId?: number,
 ): Promise<Report[]> {
   return await prisma.report.findMany({
     where: {
+      ...(reportId === undefined ? {} : { id: ReportIdSchema.parse(reportId) }),
       isEnabled: true,
       OR: [{ nextScheduledRunAt: null }, { nextScheduledRunAt: { lte: now } }],
     },
@@ -67,7 +70,12 @@ export async function runDueReports(
     where: { isEnabled: true },
   });
   scheduledReportsActive.set(activeReports);
-  const reports = await getDueReports(params.prisma, now, limit);
+  const reports = await getDueReports(
+    params.prisma,
+    now,
+    limit,
+    params.reportId,
+  );
   scheduledReportsDueTotal.inc(reports.length);
   if (reports.length > 0) {
     logger.info(
