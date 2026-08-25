@@ -264,9 +264,8 @@ common:
                   readOnly: true
                 - name: buildkite-tofu-plugin-cache
                   mountPath: /buildkite/tofu-plugin-cache
-  # Main-only PostHog apply runs trusted code after release admission. Keep
-  # both explicit PostHog fields here so a future field on the item cannot
-  # leak into the process, and keep this anchor separate from PR validation.
+  # Main-only PostHog plan/apply runs trusted code after release admission.
+  # Keep every credential explicit so unrelated fields cannot enter the pod.
   - pod_posthog_tofu_apply: &pod_posthog_tofu_apply
       kubernetes: &pod_posthog_tofu_apply_kubernetes
         checkout:
@@ -285,6 +284,16 @@ common:
               env:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
+                - name: SEAWEEDFS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: buildkite-ci-secrets
+                      key: SEAWEEDFS_ACCESS_KEY_ID
+                - name: SEAWEEDFS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: buildkite-ci-secrets
+                      key: SEAWEEDFS_SECRET_ACCESS_KEY
                 - name: POSTHOG_CLI_API_KEY
                   valueFrom:
                     secretKeyRef:
@@ -305,8 +314,6 @@ common:
                   readOnly: true
                 - name: buildkite-tofu-plugin-cache
                   mountPath: /buildkite/tofu-plugin-cache
-              envFrom:
-                - secretRef: { name: buildkite-ci-secrets }
   # The combined PR deploy rehearsal needs the OpenTofu provider cache but its
   # measured command-container working set is higher than the light Tofu lanes.
   - pod_pr_dryrun: &pod_pr_dryrun
@@ -1861,6 +1868,7 @@ steps:
         export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
         flock -x 9
+        bun --no-install packages/homelab/scripts/tofu-stack.ts posthog plan
         bun --no-install packages/homelab/scripts/tofu-stack.ts posthog apply
       ) 9>/buildkite/tofu-plugin-cache/.lock
     retry: *retry
