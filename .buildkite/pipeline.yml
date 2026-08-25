@@ -233,11 +233,42 @@ common:
                   mountPath: /buildkite/tofu-plugin-cache
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
-  # PostHog state credentials have a narrower boundary than the shared CI
-  # secret: only this pod maps the API key and state passphrase, and each key
-  # is explicit so a future field on the item cannot leak into the container.
+  # Untrusted PR validation must not receive PostHog credentials or the shared
+  # CI secret. It only runs backend-free OpenTofu validation with a
+  # non-sensitive encryption placeholder.
   - pod_posthog_tofu: &pod_posthog_tofu
       kubernetes: &pod_posthog_tofu_kubernetes
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          volumes:
+            - name: buildkite-tofu-plugin-cache
+              persistentVolumeClaim:
+                claimName: buildkite-tofu-plugin-cache
+          containers:
+            - *checkout_container
+            - name: container-0
+              image: "${CI_BASE_IMAGE}"
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
+              resources:
+                requests:
+                  { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
+                limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
+              volumeMounts:
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
+                - name: buildkite-tofu-plugin-cache
+                  mountPath: /buildkite/tofu-plugin-cache
+  # Main-only PostHog apply runs trusted code after release admission. Keep
+  # both explicit PostHog fields here so a future field on the item cannot
+  # leak into the process, and keep this anchor separate from PR validation.
+  - pod_posthog_tofu_apply: &pod_posthog_tofu_apply
+      kubernetes: &pod_posthog_tofu_apply_kubernetes
         checkout:
           cloneFlags: "--no-tags"
         podSpecPatch:
@@ -1380,10 +1411,9 @@ steps:
       export CI_CHANGED_BASE
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-posthog; then exit 0; fi
       (
-        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
         flock -x 9
-        bun --no-install packages/homelab/scripts/tofu-stack.ts posthog plan
+        bun --no-install packages/homelab/scripts/tofu-stack.ts posthog validate
       ) 9>/buildkite/tofu-plugin-cache/.lock
     retry: *retry
     plugins:
@@ -1836,7 +1866,7 @@ steps:
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_posthog_tofu_kubernetes
+          <<: *pod_posthog_tofu_apply_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: tofu-posthog

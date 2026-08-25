@@ -144,6 +144,19 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
     reason: "This lane invokes only the cloudflare stack.",
   },
   {
+    step: "tofu-posthog-plan",
+    script: "packages/homelab/scripts/tofu-stack.ts",
+    names: [
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "POSTHOG_CLI_API_KEY",
+      "POSTHOG_TOFU_STATE_PASSPHRASE",
+    ],
+    reason:
+      "PRs run the posthog validate action with backend-free OpenTofu and a " +
+      "non-sensitive placeholder; the credentialed plan/apply runs only on main.",
+  },
+  {
     step: "pr-dryrun",
     script: "scripts/deploy-site.ts",
     names: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
