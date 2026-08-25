@@ -44,11 +44,11 @@ import { useExploreRunObserver } from "#src/hooks/use-explore-run-observer.ts";
 import { analyticsCaptureEnabled, track } from "#src/lib/analytics.ts";
 import { claimExploreRunFinished } from "#src/lib/explore-run-analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
-import {
-  ExploreRunsContext,
-  type ExploreRunsContextValue,
-  type StartExploreTurnInput,
-} from "#src/components/explore-runs-context.ts";
+import { ExploreRunsContext } from "#src/components/explore-runs-context.ts";
+import type {
+  ExploreRunsContextValue,
+  StartExploreTurnInput,
+} from "#src/lib/explore-runs-contract.ts";
 
 const NEW_CONVERSATION_KEY = "new";
 function conversationKey(conversationId: string | null): string {

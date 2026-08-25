@@ -46,12 +46,11 @@ export function createTurboCacheDeployment(chart: Chart) {
   const secrets = new OnePasswordItem(chart, "turbo-cache-secrets", {
     spec: {
       // vaultItemPath takes the 1Password item *ID*, not its title. This is the
-      // shared `buildkite-ci-secrets` item (same ID buildkite.ts references) —
-      // we only need its TURBO_TOKEN field for the remote cache bearer token.
-      itemPath: vaultItemPath("rzk3lawpk4yspyyu5rxlz44ssi"),
+      // dedicated Turbo item shared with Buildkite's exact TURBO_TOKEN grant.
+      itemPath: vaultItemPath("mzvcz4pqqbda75ufu7l5myd4ey"),
     },
     metadata: {
-      name: "buildkite-ci-secrets",
+      name: "turbo-cache-secrets",
     },
   });
   const secretRef = Secret.fromSecretName(

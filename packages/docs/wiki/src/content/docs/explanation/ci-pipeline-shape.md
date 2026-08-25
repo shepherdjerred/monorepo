@@ -114,6 +114,28 @@ The [release pod definition](https://github.com/shepherdjerred/monorepo/blob/mai
 and [refiner boundary](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/release-refiner.ts)
 define that separation.
 
+## Credentials follow issuer and rotation boundaries
+
+Buildkite credentials are stored in 1Password by issuer or rotation unit, not
+by an arbitrary target number of Secrets. GitHub, Buildkite, Turbo, npm,
+Claude, ChartMuseum, Argo CD, SeaweedFS, Cloudflare, Tailscale, and the ARR and
+tracker services therefore have independent items and Kubernetes Secrets.
+Semantic field names distinguish identities that may initially carry the same
+value but must rotate independently later, such as GitHub download, review,
+package publication, App, and OpenTofu access.
+
+The migration uses two stages. The first stage provisions all replacement
+Secrets while existing jobs continue reading the legacy aggregate Secret. It
+also creates the tokenless `buildkite-job` service account without a
+RoleBinding. This keeps the bootstrap additive: Argo CD can reconcile the new
+boundary before any running job depends on it. The second stage assigns each
+command container only its declared `secretKeyRef` grants, moves jobs to
+`buildkite-job`, and removes the legacy Secret declaration in the same change.
+
+The stable field names make later rotations pipeline-independent. The
+[Buildkite credential rotation procedure](/how-to/rotate-buildkite-credentials/)
+defines the reconciliation, acceptance, and archival checks.
+
 ## Related
 
 - [About the monorepo](/explanation/monorepo/) — why CI is Buildkite at all

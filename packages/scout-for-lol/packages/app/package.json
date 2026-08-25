@@ -13,6 +13,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts"
   },
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#src/*": "./src/*"
   },
   "dependencies": {
