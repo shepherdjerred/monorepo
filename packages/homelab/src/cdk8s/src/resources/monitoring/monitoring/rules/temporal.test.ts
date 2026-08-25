@@ -90,6 +90,12 @@ describe("Temporal workflow outcome rules", () => {
           expression.includes("approximate_backlog_count"),
       ),
     ).toBe(true);
+    expect(backlogExpressions).toContain(
+      'max(approximate_backlog_count{namespace="temporal",taskqueue="repo-automation",task_type=~"Workflow|Activity"}) > 0',
+    );
+    expect(backlogExpressions.join("\n")).not.toContain(
+      'taskqueue="repo_automation"',
+    );
 
     const workerMetricsDown = failuresGroup.rules.find(
       (rule) => rule.alert === "TemporalWorkerMetricsDown",

@@ -147,6 +147,17 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     },
   });
 
+  new KubeNetworkPolicy(chart, "temporal-repo-alertmanager-netpol", {
+    metadata: { name: "temporal-repo-alertmanager-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "repo-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
+      ],
+    },
+  });
+
   new KubeNetworkPolicy(chart, "temporal-infra-api-netpol", {
     metadata: { name: "temporal-infra-api-netpol" },
     spec: {

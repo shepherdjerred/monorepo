@@ -63,7 +63,6 @@ export const TEMPORAL_DOMAIN_QUEUES = [
 export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
   return TEMPORAL_DOMAIN_QUEUES.flatMap((definition) => {
     const workerSelector = `namespace="${definition.metricsNamespace}",exported_namespace="default",task_queue="${definition.queue}"`;
-    const serverQueue = definition.queue.replaceAll("-", "_");
     const labels = { severity: "warning", task_queue: definition.queue };
     return [
       {
@@ -100,7 +99,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
             "Temporal matching has reported queued workflow or activity tasks for ten minutes. Inspect pollers and schedule-to-start latency before changing capacity.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `max(approximate_backlog_count{namespace="temporal",taskqueue="${serverQueue}",task_type=~"Workflow|Activity"}) > 0`,
+          `max(approximate_backlog_count{namespace="temporal",taskqueue="${definition.queue}",task_type=~"Workflow|Activity"}) > 0`,
         ),
         for: "10m",
         labels,

@@ -165,5 +165,25 @@ describe("Temporal FreshRSS integration", () => {
         },
       ],
     });
+
+    const alertmanagerPolicy = findResource(
+      synthesized,
+      "NetworkPolicy",
+      "temporal-repo-alertmanager-netpol",
+    );
+    const alertmanagerPolicySpec = z
+      .object({
+        podSelector: z.object({
+          matchLabels: z.record(z.string(), z.string()),
+        }),
+        egress: z.array(z.unknown()),
+      })
+      .parse(alertmanagerPolicy.spec);
+    expect(alertmanagerPolicySpec.podSelector.matchLabels).toEqual({
+      component: "repo-worker",
+    });
+    expect(alertmanagerPolicySpec.egress).toContainEqual({
+      ports: [{ port: 9093, protocol: "TCP" }],
+    });
   });
 });
