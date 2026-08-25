@@ -199,6 +199,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runKometaWorkflow",
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
+  "runMainVulnScanWorkflow",
+  "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",
   // Awaits one scan activity (clone + trivy fs) then report delivery and the
   // Alertmanager publish. No workflow-level sleeps; each activity carries its
