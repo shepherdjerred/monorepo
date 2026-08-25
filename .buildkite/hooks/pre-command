@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+# Kubernetes resolves provider credentials only inside the command container,
+# so the Buildkite agent cannot discover their values through
+# BUILDKITE_REDACTED_VARS. Register the exact grants present in this container
+# before plugin pre-command hooks or the job command can emit output.
+grant_manifest="${BUILDKITE_BUILD_CHECKOUT_PATH}/.buildkite/secret-grants.json"
+if [ ! -r "$grant_manifest" ]; then
+  echo "Buildkite secret grant manifest is not readable: $grant_manifest" >&2
+  exit 1
+fi
+
+# Grant env names are schema-restricted to uppercase identifiers. Reading the
+# names from the committed contract keeps this hook in lockstep with newly
+# introduced grants without exposing any Secret values.
+ci_secret_names=$(sed -n 's/^[[:space:]]*"env": "\([A-Z][A-Z0-9_]*\)",[[:space:]]*$/\1/p' "$grant_manifest" | sort -u)
+if [ -z "$ci_secret_names" ]; then
+  echo "Buildkite secret grant manifest contains no credential env names" >&2
+  exit 1
+fi
+
+for ci_secret_name in $ci_secret_names; do
+  if ci_secret_value=$(printenv "$ci_secret_name"); then
+    if [ -z "$ci_secret_value" ]; then
+      echo "Buildkite credential $ci_secret_name is blank" >&2
+      exit 1
+    fi
+    printf '%s' "$ci_secret_value" | buildkite-agent redactor add --format=none
+  fi
+done

@@ -140,17 +140,6 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
-  new OnePasswordItem(chart, "buildkite-ci-secrets", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/rzk3lawpk4yspyyu5rxlz44ssi",
-    },
-    metadata: {
-      name: "buildkite-ci-secrets",
-      namespace: "buildkite",
-    },
-  });
-
   new OnePasswordItem(chart, "posthog-tofu-credentials", {
     spec: {
       itemPath:
@@ -422,15 +411,14 @@ overrides:
                 name: "workspace",
                 emptyDir: { medium: "Memory", sizeLimit: "16Gi" },
               },
-              // SECURITY: no envFrom on the agent container. It previously
-              // injected buildkite-ci-secrets into EVERY pod's agent
+              // SECURITY: no credentials on the agent container. It previously
+              // injected one shared Secret into EVERY pod's agent
               // container — including the pipeline-upload pod, where
               // `buildkite-agent pipeline upload` interpolates `$VAR`
               // references at upload time and bakes the secret VALUES into
               // the stored (UI/API-visible) pipeline. Steps that need
-              // secrets get them via their own container-0 envFrom in
-              // .buildkite/pipeline.yml, and secret refs there must be
-              // written `$$VAR` (runtime shell expansion).
+              // credentials get exact secretKeyRef grants on container-0 in
+              // .buildkite/pipeline.yml.
               "pod-spec-patch": {
                 priorityClassName: "batch-low",
                 // CI step pods run ONLY on the dedicated CI node (liskov):
@@ -440,8 +428,8 @@ overrides:
                 // back onto the prod node. Rollback = remove these two keys.
                 nodeSelector: { "kubernetes.io/hostname": CI_NODE_HOSTNAME },
                 tolerations: [CI_NODE_TOLERATION],
-                serviceAccountName: "buildkite-agent-stack-k8s-controller",
-                automountServiceAccountToken: true,
+                serviceAccountName: "buildkite-job",
+                automountServiceAccountToken: false,
                 // Mount shared Bun data and independent coordination volumes,
                 // but let the static pipeline opt current installs into their
                 // managed paths. Older pipeline revisions have no Bun cache
@@ -524,8 +512,8 @@ overrides:
                           "*_AUTH_TOKEN",
                           "*_CONNECTION_STRING",
                           "*_CREDENTIALS",
-                          // GH_TOKEN / GITHUB_APP_* / TURBO_TOKEN / NPM_TOKEN /
-                          // SEAWEEDFS_* / ARGOCD_AUTH_TOKEN are all already
+                          // GITHUB_* / TURBO_TOKEN / NPM_TOKEN / SEAWEEDFS_* /
+                          // ARGOCD_AUTH_TOKEN are all already
                           // covered by the suffix globs above.
                         ].join(","),
                       },

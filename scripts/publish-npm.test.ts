@@ -32,7 +32,7 @@ describe("expiryWarning", () => {
   test("warns inside the window and names the rotation target", () => {
     const warning = expiryWarning({ expiry: inDays(3) }, now);
     expect(warning).toContain("expires in 3 day(s)");
-    expect(warning).toContain("buildkite-ci-secrets");
+    expect(warning).toContain("Buildkite npm Credentials");
   });
 
   // The outage this exists to prevent: an already-lapsed token 401s every

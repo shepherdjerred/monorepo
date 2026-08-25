@@ -47,7 +47,8 @@ steps:
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
-            serviceAccountName: buildkite-agent-stack-k8s-controller
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - name: checkout
                 resources:
@@ -58,6 +59,12 @@ steps:
                 imagePullPolicy: IfNotPresent
                 securityContext:
                   allowPrivilegeEscalation: false
+                env:
+                  - name: BUILDKITE_ANALYTICS_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: buildkite-analytics-credentials
+                        key: BUILDKITE_ANALYTICS_TOKEN
                 resources:
                   requests: { cpu: "2", memory: "5Gi" }
                   limits: { cpu: "4", memory: "8Gi" }
@@ -65,8 +72,6 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
-                envFrom:
-                  - secretRef: { name: buildkite-ci-secrets }
 
   # Nightly home of the Scout design audit. It was moved off the per-commit
   # browser-E2E lanes because its intentional 616-case sweep covers 57 routes,
@@ -127,7 +132,8 @@ steps:
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
-            serviceAccountName: buildkite-agent-stack-k8s-controller
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - name: checkout
                 resources:
@@ -138,6 +144,12 @@ steps:
                 imagePullPolicy: IfNotPresent
                 securityContext:
                   allowPrivilegeEscalation: false
+                env:
+                  - name: BUILDKITE_ANALYTICS_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: buildkite-analytics-credentials
+                        key: BUILDKITE_ANALYTICS_TOKEN
                 # Boots the SPA, both Astro sites, and the Scout backend, then
                 # drives Chromium and WebKit over them.
                 resources:
@@ -147,8 +159,6 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
-                envFrom:
-                  - secretRef: { name: buildkite-ci-secrets }
 
   - label: ":bar_chart: complete tests and coverage"
     key: complete-test-reporting
@@ -202,7 +212,8 @@ steps:
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
-            serviceAccountName: buildkite-agent-stack-k8s-controller
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
             containers:
               - name: checkout
                 resources:
@@ -216,6 +227,21 @@ steps:
                 env:
                   - name: BUILDKITE_SHELL
                     value: "/bin/bash -e -c"
+                  - name: GITHUB_DOWNLOAD_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: buildkite-github-credentials
+                        key: GITHUB_DOWNLOAD_TOKEN
+                  - name: TURBO_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: buildkite-turbo-cache-credentials
+                        key: TURBO_TOKEN
+                  - name: BUILDKITE_ANALYTICS_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: buildkite-analytics-credentials
+                        key: BUILDKITE_ANALYTICS_TOKEN
                 resources:
                   requests:
                     { cpu: "1", memory: "18Gi", ephemeral-storage: "2Gi" }
@@ -225,5 +251,3 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
-                envFrom:
-                  - secretRef: { name: buildkite-ci-secrets }

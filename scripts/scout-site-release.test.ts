@@ -6,9 +6,9 @@ import path from "node:path";
 import {
   computeReleaseInputDigest,
   hashReleaseInputFiles,
-  selectPostHogSite,
   writeScoutReleaseState,
 } from "./scout-site-release.ts";
+import { selectPostHogSite } from "./lib/scout-analytics-config.ts";
 import {
   parseLegacyScoutReleaseManifest,
   parseScoutReleaseState,
@@ -33,6 +33,10 @@ const POSTHOG_REGISTRY = {
       key: "scout-prod",
       hostname: "scout-for-lol.com",
       sessionReplay: true,
+      marketing: {
+        pinterestTagId: "pin-1",
+        redditPixelId: "reddit-1",
+      },
     },
     {
       key: "scout-beta",
@@ -227,6 +231,10 @@ test("Scout release analytics map both hosts to the shared PostHog project", () 
     key: "scout-prod",
     domain: "scout-for-lol.com",
     sessionReplay: true,
+    marketing: {
+      pinterestTagId: "pin-1",
+      redditPixelId: "reddit-1",
+    },
   });
   expect(selectPostHogSite(POSTHOG_REGISTRY, "beta")).toEqual({
     projectToken: "phc_test",
@@ -235,6 +243,7 @@ test("Scout release analytics map both hosts to the shared PostHog project", () 
     key: "scout-beta",
     domain: "beta.scout-for-lol.com",
     sessionReplay: true,
+    marketing: undefined,
   });
 });
 

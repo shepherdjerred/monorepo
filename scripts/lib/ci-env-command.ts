@@ -9,7 +9,7 @@
 /**
  * Names a shell command assigns before/while running something, which the
  * secret does not carry. Steps routinely rename a secret key into the name a
- * script expects — `export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID"`,
+ * script expects — `export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"`,
  * `export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"`. Treating those as unprovided
  * would make this check's first run a wall of false positives.
  *

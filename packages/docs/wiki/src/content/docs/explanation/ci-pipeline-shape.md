@@ -29,10 +29,12 @@ any two of them would lose information the pipeline is built to preserve.
   exporter/collector/object-store path broke rather than a query. See the
   `docker-e2e` and `alert-dashboard-sqlite` steps in
   [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
-- **OpenTofu** stays split into infrastructure stacks, GitHub resources, and
-  Cloudflare resources. Those three have different ordering, concurrency,
-  credentials, and retry safety — one lane would have to take the strictest of
-  each. The three `tofu-*` steps live in
+- **OpenTofu** has one plan and apply job for each SeaweedFS, Tailscale,
+  Buildkite, ARR, GitHub, and Cloudflare stack. Each job receives the state
+  identity plus only that stack's provider identity. The dependency chain
+  preserves release ordering while the job boundary prevents one provider's
+  configuration from running with another provider's credential. The
+  `tofu-*` steps live in
   [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are
@@ -117,20 +119,32 @@ define that separation.
 ## Credentials follow issuer and rotation boundaries
 
 Buildkite credentials are stored in 1Password by issuer or rotation unit, not
-by an arbitrary target number of Secrets. GitHub, Buildkite, Turbo, npm,
-Claude, ChartMuseum, Argo CD, SeaweedFS, Cloudflare, Tailscale, and the ARR and
-tracker services therefore have independent items and Kubernetes Secrets.
+by an arbitrary target number of Secrets. GitHub, Buildkite API, Buildkite Test
+Analytics, Turbo, npm, Claude, ChartMuseum, Argo CD, SeaweedFS, Cloudflare,
+Tailscale, and the ARR and tracker services therefore have independent items
+and Kubernetes Secrets.
 Semantic field names distinguish identities that may initially carry the same
 value but must rotate independently later, such as GitHub download, review,
 package publication, App, and OpenTofu access.
 
-The migration uses two stages. The first stage provisions all replacement
-Secrets while existing jobs continue reading the legacy aggregate Secret. It
-also creates the tokenless `buildkite-job` service account without a
-RoleBinding. This keeps the bootstrap additive: Argo CD can reconcile the new
-boundary before any running job depends on it. The second stage assigns each
-command container only its declared `secretKeyRef` grants, moves jobs to
-`buildkite-job`, and removes the legacy Secret declaration in the same change.
+Every step pod uses the tokenless `buildkite-job` service account without a
+RoleBinding and disables service-account token mounting. Only `container-0`
+receives credential environment variables. The Buildkite agent, checkout,
+init, and sidecar containers receive none, and the job cannot use Kubernetes
+RBAC to discover another Secret.
+
+Because the agent process cannot see those container-only values, the
+repository `pre-command` hook registers only the grants present in
+`container-0` with Buildkite's runtime log redactor before plugins or job code
+can emit output. A redactor registration failure stops the job.
+
+`.buildkite/secret-grants.json` is the reviewable contract between step keys,
+environment variables, Kubernetes Secrets, and fields. `check-ci-env` compares
+the resolved pipeline with that contract and the hashed 1Password snapshot. It
+fails on missing or excessive grants, `envFrom`, optional references, blank or
+unknown fields, auxiliary-container credentials, the wrong service account, or
+an API-token mount. A credential expansion therefore needs an explicit manifest
+change that appears in the diff.
 
 The stable field names make later rotations pipeline-independent. The
 [Buildkite credential rotation procedure](/how-to/rotate-buildkite-credentials/)

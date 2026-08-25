@@ -592,7 +592,7 @@ test("resolves the newest main commit whose image release jobs passed", async ()
 
   expect(
     await lastSuccessfulImageReleaseCommit("current", fetcher, executor, {
-      BUILDKITE_API_TOKEN: "token",
+      BUILDKITE_READ_TOKEN: "token",
     }),
   ).toBe("image-green-commit");
   expect(commands).toEqual([

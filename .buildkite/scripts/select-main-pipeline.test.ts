@@ -178,6 +178,13 @@ test("retains the full dependency chain for an image release", () => {
   expect(selected.has("version-commit-back")).toBe(true);
 });
 
+test("retains Cloudflare reconciliation for an ArgoCD release", () => {
+  const selected = selectedKeys(steps, new Map([["argocd", true]]));
+
+  expect(selected.has("argocd-sync")).toBe(true);
+  expect(selected.has("tofu-apply-cloudflare")).toBe(true);
+});
+
 test("keeps browser, resume, and Docker E2E lanes independently selectable", () => {
   const laneDecisions = new Map([
     ["playwright", true],
@@ -197,8 +204,11 @@ test("keeps infrastructure and publish lanes in the main graph", () => {
     ["cooklang", true],
   ]);
   const selected = selectedKeys(steps, laneDecisions);
-  expect(selected.has("tofu-apply")).toBe(true);
-  expect(selected.has("tofu-github")).toBe(true);
+  expect(selected.has("tofu-apply-seaweedfs")).toBe(true);
+  expect(selected.has("tofu-apply-tailscale")).toBe(true);
+  expect(selected.has("tofu-apply-buildkite")).toBe(true);
+  expect(selected.has("tofu-apply-arr")).toBe(true);
+  expect(selected.has("tofu-apply-github")).toBe(true);
   expect(selected.has("publish")).toBe(true);
 });
 

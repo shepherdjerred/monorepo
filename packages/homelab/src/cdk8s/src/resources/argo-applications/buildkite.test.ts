@@ -24,6 +24,8 @@ const ApplicationSchema = z
                 }),
               }),
               "pod-spec-patch": z.object({
+                serviceAccountName: z.literal("buildkite-job"),
+                automountServiceAccountToken: z.literal(false),
                 volumes: z.array(
                   z.object({
                     name: z.string(),
@@ -297,6 +299,18 @@ it("syncs one Buildkite Secret per credential rotation boundary", () => {
       /^vaults\/v64ocnykdqju4ui6j6pua56xw4\/items\/[a-z0-9]{26}$/,
     );
   }
+});
+
+it("does not render the legacy aggregate CI Secret", () => {
+  const { resources } = synthBuildkiteResources();
+  expect(
+    resources.some((manifest) => {
+      const result = CredentialItemSchema.safeParse(manifest);
+      return (
+        result.success && result.data.metadata.name === "buildkite-ci-secrets"
+      );
+    }),
+  ).toBe(false);
 });
 
 it("provisions a tokenless service account for Buildkite jobs", () => {

@@ -2,9 +2,12 @@
 
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { z } from "zod";
 
 import { optionalEnv, requireEnv, run } from "./lib/run.ts";
+import {
+  readScoutPostHogSite,
+  requireMarketingIdentifiers,
+} from "./lib/scout-analytics-config.ts";
 import {
   CANONICAL_DIGEST_PATTERN,
   parseScoutReleaseState,
@@ -39,42 +42,6 @@ const BETA_PIXEL_PLACEHOLDERS: Readonly<Record<string, string>> = {
   PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
 };
 const ANALYTICS_REGISTRY_PATH = "config/analytics-sites.json";
-const AnalyticsRegistrySchema = z
-  .object({
-    provider: z.literal("posthog"),
-    projectToken: z.string().regex(/^phc_[A-Za-z0-9]+$/),
-    apiHost: z.literal("https://us.i.posthog.com"),
-    assetHost: z.literal("https://us-assets.i.posthog.com"),
-    sites: z.array(
-      z.object({
-        key: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-        hostname: z.string().min(1),
-        sessionReplay: z.boolean(),
-      }),
-    ),
-  })
-  .superRefine((registry, context) => {
-    const hostnames = new Set<string>();
-    const siteKeys = new Set<string>();
-    for (const site of registry.sites) {
-      if (hostnames.has(site.hostname)) {
-        context.addIssue({
-          code: "custom",
-          path: ["sites"],
-          message: `Duplicate analytics hostname: ${site.hostname}`,
-        });
-      }
-      if (siteKeys.has(site.key)) {
-        context.addIssue({
-          code: "custom",
-          path: ["sites"],
-          message: `Duplicate analytics site key: ${site.key}`,
-        });
-      }
-      hostnames.add(site.hostname);
-      siteKeys.add(site.key);
-    }
-  });
 const RELEASE_INPUT_PATHS = [
   "bun.lock",
   "bunfig.toml",
@@ -97,49 +64,12 @@ function repoRoot(): string {
   return new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 }
 
-export function selectPostHogSite(
-  registryRaw: unknown,
-  flavor: "prod" | "beta",
-): {
-  projectToken: string;
-  apiHost: "https://us.i.posthog.com";
-  assetHost: "https://us-assets.i.posthog.com";
-  key: string;
-  domain: string;
-  sessionReplay: boolean;
-} {
-  const registry = AnalyticsRegistrySchema.parse(registryRaw);
-  const domain =
-    flavor === "prod" ? "scout-for-lol.com" : "beta.scout-for-lol.com";
-  const matchingSites = registry.sites.filter(
-    (candidate) => candidate.hostname === domain,
-  );
-  if (matchingSites.length !== 1) {
-    throw new Error(
-      `Analytics registry must have exactly one PostHog site for ${domain}`,
-    );
-  }
-  const site = matchingSites[0];
-  if (site === undefined) {
-    throw new Error(`Analytics registry has no PostHog site for ${domain}`);
-  }
-  return {
-    projectToken: registry.projectToken,
-    apiHost: registry.apiHost,
-    assetHost: registry.assetHost,
-    key: site.key,
-    domain: site.hostname,
-    sessionReplay: site.sessionReplay,
-  };
-}
-
-async function readPostHogSite(
-  flavor: "prod" | "beta",
-): Promise<ReturnType<typeof selectPostHogSite>> {
-  const registryRaw: unknown = JSON.parse(
-    await Bun.file(`${repoRoot()}/${ANALYTICS_REGISTRY_PATH}`).text(),
-  );
-  return selectPostHogSite(registryRaw, flavor);
+async function marketingIdentifiers(): Promise<{
+  pinterestTagId: string;
+  redditPixelId: string;
+}> {
+  const prodSite = await readScoutPostHogSite(repoRoot(), "prod");
+  return requireMarketingIdentifiers(prodSite);
 }
 
 async function resolveGitSha(): Promise<string> {
@@ -240,7 +170,7 @@ async function buildSite(
     );
   }
   const identity = siteReleaseIdentity(state);
-  const posthogSite = await readPostHogSite(flavor);
+  const posthogSite = await readScoutPostHogSite(repoRoot(), flavor);
   const env: Record<string, string> = {
     VITE_SENTRY_RELEASE: identity,
     PUBLIC_SENTRY_RELEASE: identity,
@@ -273,8 +203,9 @@ async function buildSite(
     PUBLIC_SCOUT_SITE_FLAVOR: flavor,
   };
   if (flavor === "prod") {
-    env["PUBLIC_PINTEREST_TAG_ID"] = requireEnv("PUBLIC_PINTEREST_TAG_ID");
-    env["PUBLIC_REDDIT_PIXEL_ID"] = requireEnv("PUBLIC_REDDIT_PIXEL_ID");
+    const marketing = await marketingIdentifiers();
+    env["PUBLIC_PINTEREST_TAG_ID"] = marketing.pinterestTagId;
+    env["PUBLIC_REDDIT_PIXEL_ID"] = marketing.redditPixelId;
   } else {
     Object.assign(env, BETA_PIXEL_PLACEHOLDERS);
   }
@@ -315,13 +246,14 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
   if (!/^[0-9a-f]{40}$/.test(sourceCommit)) {
     throw new Error(`source commit is not canonical: ${sourceCommit}`);
   }
+  const marketing = await marketingIdentifiers();
   const releaseInputDigest = computeReleaseInputDigest({
     sourceCommit,
     backendImageDigest,
     sourceInputsDigest: await releaseSourceDigest(),
     contractHash: await contractHash(),
-    pinterestTagId: requireEnv("PUBLIC_PINTEREST_TAG_ID"),
-    redditPixelId: requireEnv("PUBLIC_REDDIT_PIXEL_ID"),
+    pinterestTagId: marketing.pinterestTagId,
+    redditPixelId: marketing.redditPixelId,
   });
   const provisional = ScoutReleaseStateSchema.parse({
     schema: "scout-release-state/v1",

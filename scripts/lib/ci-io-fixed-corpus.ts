@@ -5,7 +5,6 @@ import {
   type FixedCorpusBuild,
   type FixedCorpusGate,
   type FixedCorpusLane,
-  type JobOutcomeReport,
   type WindowIoReport,
 } from "./ci-io-report-model.ts";
 import {
@@ -13,6 +12,14 @@ import {
   reductionPercent,
   uniqueIssueCodes,
 } from "./ci-io-proof.ts";
+import {
+  corpusJobs,
+  isInactiveConditionalAlias,
+  lanes,
+  startedPhysicalSteps,
+  type CorpusJob,
+  type CorpusLane,
+} from "./ci-io-fixed-corpus-lanes.ts";
 
 const REQUIRED_LANE_GROUPS = [
   { name: "docs-only", stepKey: "verify" },
@@ -23,102 +30,11 @@ const REQUIRED_LANE_GROUPS = [
   { name: "Tofu", stepKey: "tofu" },
 ] as const;
 
-type CorpusLane = FixedCorpusLane & {
-  p95DurationSeconds: number | null;
-  totalWriteBytes: number;
-};
-
-type CorpusJob = {
-  branch: string;
-  stepKey: string;
-  buildNumber: number;
-  jobId: string;
-  jobState: string;
-};
-
 function percentChange(candidate: number, baseline: number): number | null {
   if (baseline === 0) {
     return null;
   }
   return ((candidate - baseline) / baseline) * 100;
-}
-
-function lanes(report: WindowIoReport): CorpusLane[] {
-  return report.branchSteps
-    .flatMap((lane) => {
-      const logicalStepKey = fixedCorpusLaneDefinition(lane.stepKey)?.[0];
-      return logicalStepKey === undefined
-        ? []
-        : [
-            {
-              branch: lane.branch,
-              stepKey: logicalStepKey,
-              jobCount: lane.jobCount,
-              p95DurationSeconds: lane.p95DurationSeconds,
-              totalWriteBytes: lane.totalWriteBytes,
-            },
-          ];
-    })
-    .sort(
-      (left, right) =>
-        left.branch.localeCompare(right.branch) ||
-        left.stepKey.localeCompare(right.stepKey),
-    );
-}
-
-function startedPhysicalSteps(report: WindowIoReport): ReadonlySet<string> {
-  return new Set(
-    report.jobOutcomes
-      .filter((job) => job.started)
-      .map((job) => JSON.stringify([job.buildNumber, job.stepKey])),
-  );
-}
-
-function isInactiveConditionalAlias(
-  job: JobOutcomeReport,
-  startedSteps: ReadonlySet<string>,
-): boolean {
-  const counterpart = fixedCorpusLaneDefinition(job.stepKey)?.[1];
-  return (
-    !job.started &&
-    job.jobState === "broken" &&
-    counterpart !== undefined &&
-    startedSteps.has(JSON.stringify([job.buildNumber, counterpart]))
-  );
-}
-
-function corpusJobs(report: WindowIoReport): CorpusJob[] {
-  const startedSteps = startedPhysicalSteps(report);
-  return report.jobOutcomes
-    .flatMap((job) => {
-      const logicalStepKey = fixedCorpusLaneDefinition(job.stepKey)?.[0];
-      // Buildkite represents a false step-level `if` as an unstarted broken
-      // job. Both PR and main variants are uploaded together, so ignore only
-      // an alias whose mutually exclusive counterpart actually started in the
-      // same build. A broken active alias and every other unsuccessful terminal
-      // state remain visible and make the corpus inconclusive below.
-      const inactiveConditionalAlias = isInactiveConditionalAlias(
-        job,
-        startedSteps,
-      );
-      return logicalStepKey === undefined || inactiveConditionalAlias
-        ? []
-        : [
-            {
-              branch: job.branch,
-              stepKey: logicalStepKey,
-              buildNumber: job.buildNumber,
-              jobId: job.jobId,
-              jobState: job.jobState,
-            },
-          ];
-    })
-    .sort(
-      (left, right) =>
-        left.branch.localeCompare(right.branch) ||
-        left.stepKey.localeCompare(right.stepKey) ||
-        left.buildNumber - right.buildNumber,
-    );
 }
 
 function corpusBuilds(

@@ -120,6 +120,13 @@ locals {
     "wiki-sjer-red"       = ["_astro/"]
     "better-skill-capped" = ["assets/"]
   }
+  # OpenTofu's S3 backend intentionally inherits the state-only AWS identity
+  # from the process. The AWS CLI provisioners mutate deployment buckets, so
+  # give those child processes the separate deployment identity explicitly.
+  seaweedfs_deploy_environment = {
+    AWS_ACCESS_KEY_ID     = var.seaweedfs_access_key_id
+    AWS_SECRET_ACCESS_KEY = var.seaweedfs_secret_access_key
+  }
 }
 
 resource "terraform_data" "static_site_asset_lifecycle" {
@@ -153,7 +160,8 @@ resource "terraform_data" "static_site_asset_lifecycle" {
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
+    environment = local.seaweedfs_deploy_environment
+    command     = <<-EOT
       aws s3api put-bucket-lifecycle-configuration \
         --bucket "${self.input.bucket}" \
         --endpoint-url "${self.input.endpoint_url}" \
@@ -180,7 +188,8 @@ resource "terraform_data" "public_sjer_red_lifecycle" {
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
+    environment = local.seaweedfs_deploy_environment
+    command     = <<-EOT
       aws s3api put-bucket-lifecycle-configuration \
         --bucket "${self.input.bucket}" \
         --endpoint-url "${self.input.endpoint_url}" \
@@ -208,7 +217,8 @@ resource "terraform_data" "public_sjer_red_seed" {
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
+    environment = local.seaweedfs_deploy_environment
+    command     = <<-EOT
       aws s3 cp "${path.module}/public/index.html" "s3://${self.input.bucket}/index.html" \
         --endpoint-url "${self.input.endpoint_url}" \
         --content-type "text/html; charset=utf-8"
@@ -257,7 +267,8 @@ resource "terraform_data" "llm_archive_lifecycle" {
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
+    environment = local.seaweedfs_deploy_environment
+    command     = <<-EOT
       aws s3api put-bucket-lifecycle-configuration \
         --bucket "${self.input.bucket}" \
         --endpoint-url "${self.input.endpoint_url}" \
@@ -288,7 +299,8 @@ resource "terraform_data" "streambot_voice_captures_lifecycle" {
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
+    environment = local.seaweedfs_deploy_environment
+    command     = <<-EOT
       aws s3api put-bucket-lifecycle-configuration \
         --bucket "${self.input.bucket}" \
         --endpoint-url "${self.input.endpoint_url}" \
@@ -340,7 +352,8 @@ resource "terraform_data" "scout_site_releases_lifecycle" {
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
+    environment = local.seaweedfs_deploy_environment
+    command     = <<-EOT
       aws s3api put-bucket-lifecycle-configuration \
         --bucket "${self.input.bucket}" \
         --endpoint-url "${self.input.endpoint_url}" \

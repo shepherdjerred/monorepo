@@ -9,20 +9,8 @@
  * Usage:
  *   bun packages/homelab/scripts/tofu-stack.ts <stack> validate|plan|apply [--dry-run]
  *
- * Env (required for plan/apply):
- *   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY   — S3 backend + provider creds
- *
- * Env (optional — each is wired to its TF var only when present; a
- * stack-irrelevant secret is simply skipped):
- *   GH_TOKEN, TF_VAR_CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN,
- *   TAILSCALE_OAUTH_CLIENT_ID, TAILSCALE_OAUTH_CLIENT_SECRET,
- *   TF_VAR_BUILDKITE_API_TOKEN, TF_VAR_RADARR_API_KEY, TF_VAR_SONARR_API_KEY,
- *   TF_VAR_PROWLARR_API_KEY, TF_VAR_QBITTORRENT_PASSWORD,
- *   TF_VAR_PRIVATEHD_PASSWORD, TF_VAR_PRIVATEHD_PID, TF_VAR_AVISTAZ_PASSWORD,
- *   TF_VAR_AVISTAZ_PID, TF_VAR_ANIMEZ_PASSWORD, TF_VAR_ANIMEZ_PID,
- *
- * Env (required for plan/apply on the `posthog` stack only):
- *   POSTHOG_CLI_API_KEY, POSTHOG_TOFU_STATE_PASSPHRASE
+ * Every stack requires the SeaweedFS state identity and only its own provider
+ * identity. `buildTofuEnvironment` is the executable credential contract.
  */
 
 import { existsSync, mkdtempSync } from "node:fs";
@@ -43,43 +31,122 @@ function homelabRoot(): string {
 
 const STACKS_REL = "src/tofu";
 
-/**
- * The optional secrets a stack may consume, mapped from a plain env var name to
- * the OpenTofu env var name the stack expects. Absent env vars are skipped —
- * stack-irrelevant secrets are simply not passed. Mirrors the old
- * `withTofuOptionalSecrets` mapping exactly (same target env var names); only
- * the source is now an env var instead of a Dagger Secret. The source var name
- * matches the target for TF_VAR_* / CLOUDFLARE_API_TOKEN / TAILSCALE_* since
- * those were already conventional env vars in the old operator flow.
- */
-// Source names match the buildkite-ci-secrets keys (and the repo's env-var
-// naming convention) exactly; targets are what each stack's variables.tf
-// declares.
-const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
-  ["GH_TOKEN", "TF_VAR_github_token"],
-  ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
-  ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_API_TOKEN"],
-  ["TAILSCALE_OAUTH_CLIENT_ID", "TAILSCALE_OAUTH_CLIENT_ID"],
-  ["TAILSCALE_OAUTH_CLIENT_SECRET", "TAILSCALE_OAUTH_CLIENT_SECRET"],
-  ["BUILDKITE_API_TOKEN", "TF_VAR_buildkite_api_token"],
-  ["RADARR_API_KEY", "TF_VAR_radarr_api_key"],
-  ["SONARR_API_KEY", "TF_VAR_sonarr_api_key"],
-  ["PROWLARR_API_KEY", "TF_VAR_prowlarr_api_key"],
-  ["QBITTORRENT_PASSWORD", "TF_VAR_qbittorrent_password"],
-  ["PRIVATEHD_PASSWORD", "TF_VAR_privatehd_password"],
-  ["PRIVATEHD_PID", "TF_VAR_privatehd_pid"],
-  ["AVISTAZ_PASSWORD", "TF_VAR_avistaz_password"],
-  ["AVISTAZ_PID", "TF_VAR_avistaz_pid"],
-  ["ANIMEZ_PASSWORD", "TF_VAR_animez_password"],
-  ["ANIMEZ_PID", "TF_VAR_animez_pid"],
+export type TofuStack =
+  | "seaweedfs"
+  | "tailscale"
+  | "buildkite"
+  | "arr"
+  | "github"
+  | "cloudflare"
+  | "posthog";
+
+function parseTofuStack(value: string): TofuStack {
+  switch (value) {
+    case "seaweedfs":
+    case "tailscale":
+    case "buildkite":
+    case "arr":
+    case "github":
+    case "cloudflare":
+    case "posthog":
+      return value;
+    default:
+      throw new Error(`Unknown OpenTofu stack: ${value}`);
+  }
+}
+
+type CredentialMapping = {
+  source: string;
+  target: string;
+};
+
+const STATE_CREDENTIALS: readonly CredentialMapping[] = [
+  {
+    source: "SEAWEEDFS_STATE_ACCESS_KEY_ID",
+    target: "AWS_ACCESS_KEY_ID",
+  },
+  {
+    source: "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
+    target: "AWS_SECRET_ACCESS_KEY",
+  },
 ];
 
-/** Build the env the tofu subprocess runs with. */
-function buildTofuEnv(stack: string): Record<string, string> {
-  const env: Record<string, string> = {
-    AWS_ACCESS_KEY_ID: requireEnv("AWS_ACCESS_KEY_ID"),
-    AWS_SECRET_ACCESS_KEY: requireEnv("AWS_SECRET_ACCESS_KEY"),
-  };
+export const STACK_CREDENTIALS = {
+  seaweedfs: [
+    {
+      source: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
+      target: "TF_VAR_seaweedfs_access_key_id",
+    },
+    {
+      source: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
+      target: "TF_VAR_seaweedfs_secret_access_key",
+    },
+  ],
+  tailscale: [
+    {
+      source: "TAILSCALE_OAUTH_CLIENT_ID",
+      target: "TAILSCALE_OAUTH_CLIENT_ID",
+    },
+    {
+      source: "TAILSCALE_OAUTH_CLIENT_SECRET",
+      target: "TAILSCALE_OAUTH_CLIENT_SECRET",
+    },
+  ],
+  buildkite: [
+    {
+      source: "BUILDKITE_ADMIN_TOKEN",
+      target: "TF_VAR_buildkite_api_token",
+    },
+  ],
+  arr: [
+    { source: "RADARR_API_KEY", target: "TF_VAR_radarr_api_key" },
+    { source: "SONARR_API_KEY", target: "TF_VAR_sonarr_api_key" },
+    { source: "PROWLARR_API_KEY", target: "TF_VAR_prowlarr_api_key" },
+    {
+      source: "QBITTORRENT_PASSWORD",
+      target: "TF_VAR_qbittorrent_password",
+    },
+    {
+      source: "PRIVATEHD_PASSWORD",
+      target: "TF_VAR_privatehd_password",
+    },
+    { source: "PRIVATEHD_PID", target: "TF_VAR_privatehd_pid" },
+    { source: "AVISTAZ_PASSWORD", target: "TF_VAR_avistaz_password" },
+    { source: "AVISTAZ_PID", target: "TF_VAR_avistaz_pid" },
+    { source: "ANIMEZ_PASSWORD", target: "TF_VAR_animez_password" },
+    { source: "ANIMEZ_PID", target: "TF_VAR_animez_pid" },
+  ],
+  github: [{ source: "TOFU_GITHUB_TOKEN", target: "TF_VAR_github_token" }],
+  cloudflare: [
+    {
+      source: "CLOUDFLARE_ACCOUNT_ID",
+      target: "TF_VAR_cloudflare_account_id",
+    },
+    { source: "CLOUDFLARE_API_TOKEN", target: "CLOUDFLARE_API_TOKEN" },
+  ],
+  posthog: [
+    { source: "POSTHOG_CLI_API_KEY", target: "POSTHOG_API_KEY" },
+    {
+      source: "POSTHOG_TOFU_STATE_PASSPHRASE",
+      target: "TF_VAR_state_passphrase",
+    },
+  ],
+} satisfies Readonly<Record<TofuStack, readonly CredentialMapping[]>>;
+
+const ALL_CREDENTIAL_ENV_NAMES = new Set(
+  [...STATE_CREDENTIALS, ...Object.values(STACK_CREDENTIALS).flat()].flatMap(
+    ({ source, target }) => [source, target],
+  ),
+);
+
+export function buildTofuEnvironment(
+  stack: TofuStack,
+  read: (name: string) => string = requireEnv,
+): { env: Record<string, string>; unsetEnv: string[] } {
+  const mappings = [...STATE_CREDENTIALS, ...STACK_CREDENTIALS[stack]];
+  const env = Object.fromEntries(
+    mappings.map(({ source, target }) => [target, read(source)]),
+  );
 
   // The seaweedfs stack shells out to the AWS CLI via local-exec provisioners
   // against SeaweedFS's S3 gateway, which needs s3v4 signing and the
@@ -90,25 +157,12 @@ function buildTofuEnv(stack: string): Record<string, string> {
     env["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED";
     env["AWS_RESPONSE_CHECKSUM_VALIDATION"] = "WHEN_REQUIRED";
   }
-
-  // The PostHog provider uses its standard POSTHOG_API_KEY name, while the
-  // repository's CLI environment deliberately uses POSTHOG_CLI_API_KEY. The
-  // encrypted backend also fails closed unless this stack's passphrase is
-  // supplied; never make either an optional cross-stack secret.
-  if (stack === "posthog") {
-    env["POSTHOG_API_KEY"] = requireEnv("POSTHOG_CLI_API_KEY");
-    env["TF_VAR_state_passphrase"] = requireEnv(
-      "POSTHOG_TOFU_STATE_PASSPHRASE",
-    );
-  }
-
-  for (const [source, target] of OPTIONAL_SECRET_ENV) {
-    const value = optionalEnv(source);
-    if (value !== null) {
-      env[target] = value;
-    }
-  }
-  return env;
+  return {
+    env,
+    unsetEnv: [...ALL_CREDENTIAL_ENV_NAMES].filter(
+      (name) => env[name] === undefined,
+    ),
+  };
 }
 
 function usage(): never {
@@ -127,12 +181,13 @@ async function main(): Promise<void> {
   }
   const dryRun = args.includes("--dry-run");
   const positional = args.filter((a) => !a.startsWith("--"));
-  const stack = positional[0];
+  const stackRaw = positional[0];
   const action = positional[1];
-  if (stack === undefined) {
+  if (stackRaw === undefined) {
     console.error("A stack name is required.");
     usage();
   }
+  const stack = parseTofuStack(stackRaw);
   if (action !== "validate" && action !== "plan" && action !== "apply") {
     console.error(
       `Action must be "validate", "plan", or "apply", got: ${String(action)}`,
@@ -151,7 +206,7 @@ async function main(): Promise<void> {
   if (dryRun) {
     console.log(
       `DRYRUN: would run \`tofu -chdir=${STACKS_REL}/${stack} init\` then ` +
-        `\`tofu ${action}\` with AWS creds + any present optional TF vars`,
+        `\`tofu ${action}\` with state access and only the ${stack} provider identity`,
     );
     return;
   }
@@ -197,11 +252,12 @@ async function main(): Promise<void> {
     return;
   }
 
-  const env = buildTofuEnv(stack);
+  const environment = buildTofuEnvironment(stack);
 
   await run(["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"], {
     cwd: root,
-    env,
+    env: environment.env,
+    unsetEnv: environment.unsetEnv,
   });
 
   if (action === "plan") {
@@ -215,7 +271,11 @@ async function main(): Promise<void> {
         "-input=false",
         "-detailed-exitcode",
       ],
-      { cwd: root, env },
+      {
+        cwd: root,
+        env: environment.env,
+        unsetEnv: environment.unsetEnv,
+      },
     );
     if (result.exitCode === 0) {
       console.log("No changes.");
@@ -243,9 +303,13 @@ async function main(): Promise<void> {
       "-auto-approve",
       "-input=false",
     ],
-    { cwd: root, env },
+    {
+      cwd: root,
+      env: environment.env,
+      unsetEnv: environment.unsetEnv,
+    },
   );
   console.log(`--- applied: ${stack}`);
 }
 
-await runMain(main);
+if (import.meta.main) await runMain(main);

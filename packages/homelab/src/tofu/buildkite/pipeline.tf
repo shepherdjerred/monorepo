@@ -68,6 +68,8 @@ resource "buildkite_pipeline" "monorepo" {
               # configuration regression from making CI unable to clone the
               # repository that contains its fix.
               podSpecPatch:
+                serviceAccountName: buildkite-job
+                automountServiceAccountToken: false
                 containers:
                   - name: checkout
                     resources:
@@ -144,6 +146,8 @@ resource "buildkite_pipeline" "reporting" {
                 labels:
                   ci.sjer.red/step-key: reporting-pipeline-upload
               podSpecPatch:
+                serviceAccountName: buildkite-job
+                automountServiceAccountToken: false
                 containers:
                   - name: checkout
                     resources:

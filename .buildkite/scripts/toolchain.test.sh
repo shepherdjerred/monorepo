@@ -9,9 +9,9 @@ BUN_INSTALL_WRAPPER="${SCRIPT_DIR}/bun-install.sh"
 BUN_CACHE_GC="${SCRIPT_DIR}/../../packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite-bun-cache-gc.sh"
 
 if ! awk '
-  $0 ~ /^[[:space:]]*mise install --yes[[:space:]]*$/ { install_line = NR }
-  $0 ~ /^[[:space:]]*mise reshim[[:space:]]*$/ { reshim_line = NR }
-  $0 ~ /^[[:space:]]*GH_EXECUTABLE=\$\(mise which gh\)[[:space:]]*$/ { gh_lookup_line = NR }
+  $0 ~ /^[[:space:]]*mise_ci install --yes[[:space:]]*$/ { install_line = NR }
+  $0 ~ /^[[:space:]]*mise_ci reshim[[:space:]]*$/ { reshim_line = NR }
+  $0 ~ /^[[:space:]]*GH_EXECUTABLE=\$\(mise_ci which gh\)[[:space:]]*$/ { gh_lookup_line = NR }
   $0 ~ /^[[:space:]]*ln -sf "\$GH_EXECUTABLE" \/usr\/local\/bin\/gh[[:space:]]*$/ { gh_link_line = NR }
   END {
     valid = install_line > 0

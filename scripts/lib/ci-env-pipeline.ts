@@ -2,14 +2,11 @@ import { z } from "zod";
 
 import { commandScopes } from "./ci-env-command.ts";
 
-export const CI_SECRET_NAME = "buildkite-ci-secrets";
-
 export type SecretKeyRef = { secretName: string; key: string };
 
 export type PipelineStep = {
   key: string;
   providedNames: Set<string>;
-  usesCiSecret: boolean;
   explicitSecretRefs?: ReadonlyMap<string, SecretKeyRef>;
   scripts: string[];
 };
@@ -41,28 +38,22 @@ const ContainerEnvSchema = z.object({
         .loose(),
     )
     .optional(),
-  envFrom: z
-    .array(
-      z.object({ secretRef: z.object({ name: z.string() }).loose() }).loose(),
-    )
-    .optional(),
 });
 const RecordSchema = z.record(z.string(), z.unknown());
 
 /**
- * Every `env` name and `envFrom` secret reachable anywhere inside a step. The
- * kubernetes plugin nests containers differently per anchor (`podSpec` vs
+ * Every explicit `env` name reachable anywhere inside a step. The Kubernetes
+ * plugin nests containers differently per anchor (`podSpec` vs
  * `podSpecPatch`), so this walks the whole subtree rather than a fixed path.
  */
 function collectContainerEnv(
   node: unknown,
   names: Set<string>,
-  secrets: Set<string>,
   explicitSecretRefs: Map<string, SecretKeyRef>,
 ): void {
   if (Array.isArray(node)) {
     for (const item of node) {
-      collectContainerEnv(item, names, secrets, explicitSecretRefs);
+      collectContainerEnv(item, names, explicitSecretRefs);
     }
     return;
   }
@@ -87,12 +78,9 @@ function collectContainerEnv(
         names.add(entry.name);
       }
     }
-    for (const entry of container.data.envFrom ?? []) {
-      secrets.add(entry.secretRef.name);
-    }
   }
   for (const value of Object.values(record.data)) {
-    collectContainerEnv(value, names, secrets, explicitSecretRefs);
+    collectContainerEnv(value, names, explicitSecretRefs);
   }
 }
 
@@ -127,9 +115,8 @@ export function collectSteps(
         .filter(([, value]) => value !== "")
         .map(([key]) => key),
     ]);
-    const secrets = new Set<string>();
     const explicitSecretRefs = new Map<string, SecretKeyRef>();
-    collectContainerEnv(step.plugins, stepNames, secrets, explicitSecretRefs);
+    collectContainerEnv(step.plugins, stepNames, explicitSecretRefs);
     const key = step.key ?? step.label ?? `step[${String(index)}]`;
     // One entry per subshell scope: a name exported inside `( … )` reaches the
     // scripts in that block and no others.
@@ -138,7 +125,6 @@ export function collectSteps(
       steps.push({
         key,
         providedNames: new Set([...stepNames, ...scope.assigned]),
-        usesCiSecret: secrets.has(CI_SECRET_NAME),
         explicitSecretRefs,
         scripts: [...new Set(scope.scripts)].toSorted(),
       });

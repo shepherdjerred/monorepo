@@ -10,6 +10,8 @@ terraform {
 }
 
 provider "aws" {
+  access_key                  = var.seaweedfs_access_key_id
+  secret_key                  = var.seaweedfs_secret_access_key
   region                      = "us-east-1"
   skip_credentials_validation = true
   skip_metadata_api_check     = true

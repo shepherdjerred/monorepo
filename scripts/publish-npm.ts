@@ -109,7 +109,7 @@ export function expiryWarning(
     `NPM_TOKEN expires ${when} (${expiry}). When it lapses, every npm call ` +
     `401s and this publish step fails with no other symptom. Mint a ` +
     `replacement granular token with bypass-2FA enabled and update the ` +
-    `NPM_TOKEN field of the buildkite-ci-secrets 1Password item.`
+    `NPM_TOKEN field of the Buildkite npm Credentials 1Password item.`
   );
 }
 
@@ -139,7 +139,7 @@ async function readTokenPage(
       "npm rejected NPM_TOKEN (HTTP 401). The token is expired, revoked, " +
         "or otherwise invalid — this is a credential rotation, not a bug " +
         "in this script. Mint a granular token with bypass-2FA enabled " +
-        "and update the NPM_TOKEN field of the buildkite-ci-secrets " +
+        "and update the NPM_TOKEN field of the Buildkite npm Credentials " +
         "1Password item; the operator syncs it to the buildkite namespace.",
     );
   }

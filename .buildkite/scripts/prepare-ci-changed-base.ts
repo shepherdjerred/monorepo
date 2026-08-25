@@ -21,8 +21,8 @@ async function laneChanged(base: string, lane: string): Promise<boolean> {
 }
 
 if (import.meta.main) {
-  const token = Bun.env["BUILDKITE_API_TOKEN"];
-  if (token === undefined) throw new Error("BUILDKITE_API_TOKEN is required");
+  const token = Bun.env["BUILDKITE_READ_TOKEN"];
+  if (token === undefined) throw new Error("BUILDKITE_READ_TOKEN is required");
   const organization = Bun.env["BUILDKITE_ORGANIZATION_SLUG"] ?? "sjerred";
   const pipeline = Bun.env["BUILDKITE_PIPELINE_SLUG"] ?? "monorepo";
   // The last-green base must come from the branch this pipeline treats as its

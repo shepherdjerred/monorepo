@@ -65,7 +65,7 @@ async function loadSelectorLanes(): Promise<Map<string, string[]>> {
 // both sides delegate to select-image-targets.ts, whose own test suite plus
 // validate-pipeline.ts cover the images-pr glob list. CI toolchain candidates
 // are exempt because their generated digest PRs test the candidate images.
-const LANE_TO_STEP: Record<string, string | null> = {
+const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
   playwright: "playwright-e2e-pr",
   resume: "resume-build-pr",
   "docker-e2e": "docker-e2e-pr",
@@ -73,7 +73,14 @@ const LANE_TO_STEP: Record<string, string | null> = {
   "ci-base": null,
   "ci-playwright": null,
   "helm-types": "pr-dryrun",
-  tofu: "pr-dryrun",
+  tofu: [
+    "tofu-plan-seaweedfs",
+    "tofu-plan-tailscale",
+    "tofu-plan-buildkite",
+    "tofu-plan-arr",
+    "tofu-plan-github",
+    "tofu-plan-cloudflare",
+  ],
   "tofu-posthog": "tofu-posthog-plan",
   helm: "pr-dryrun",
   argocd: "pr-dryrun",
@@ -110,6 +117,39 @@ function coveredBy(path: string, globs: readonly string[]): boolean {
   return globs.some((glob) => new Bun.Glob(glob).match(path));
 }
 
+async function uncoveredLaneInputs(
+  steps: ReadonlyMap<string, PipelineStep>,
+  lane: string,
+  mappedSteps: string | readonly string[],
+): Promise<string[]> {
+  const stepKeys =
+    typeof mappedSteps === "string" ? [mappedSteps] : mappedSteps;
+  const entries = selectorPathsForLane(lane);
+  if (entries === undefined) {
+    throw new Error(`lane ${lane} not found in ci-changed.ts`);
+  }
+  const sampledEntries = await Promise.all(
+    entries.map(async (entry) => ({
+      entry,
+      samples: await samplePaths(entry),
+    })),
+  );
+  const uncovered: string[] = [];
+  for (const stepKey of stepKeys) {
+    const step = steps.get(stepKey);
+    if (step === undefined || step.include.length === 0) {
+      throw new Error(`step ${stepKey} is missing or has no if_changed`);
+    }
+    for (const { entry, samples } of sampledEntries) {
+      for (const sample of samples) {
+        if (coveredBy(sample, step.include)) continue;
+        uncovered.push(`${lane} → ${stepKey}: ${entry} (sample ${sample})`);
+      }
+    }
+  }
+  return uncovered;
+}
+
 describe("lane↔if_changed coverage", () => {
   test("every ci-changed.ts lane maps to a PR step and vice versa", async () => {
     const lanePaths = await loadSelectorLanes();
@@ -120,23 +160,9 @@ describe("lane↔if_changed coverage", () => {
   test("every lane input is covered by its PR step's if_changed globs", async () => {
     const steps = await loadPipelineSteps();
     const uncovered: string[] = [];
-    for (const [lane, stepKey] of Object.entries(LANE_TO_STEP)) {
-      if (stepKey === null) continue;
-      const step = steps.get(stepKey);
-      if (step === undefined || step.include.length === 0) {
-        throw new Error(`step ${stepKey} is missing or has no if_changed`);
-      }
-      const entries = selectorPathsForLane(lane);
-      if (entries === undefined) {
-        throw new Error(`lane ${lane} not found in ci-changed.ts`);
-      }
-      for (const entry of entries) {
-        for (const sample of await samplePaths(entry)) {
-          if (!coveredBy(sample, step.include)) {
-            uncovered.push(`${lane} → ${stepKey}: ${entry} (sample ${sample})`);
-          }
-        }
-      }
+    for (const [lane, mappedSteps] of Object.entries(LANE_TO_STEP)) {
+      if (mappedSteps === null) continue;
+      uncovered.push(...(await uncoveredLaneInputs(steps, lane, mappedSteps)));
     }
     expect(uncovered).toEqual([]);
   });
