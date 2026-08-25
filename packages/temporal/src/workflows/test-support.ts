@@ -18,12 +18,29 @@ export async function runWithReportWorker(
   const reportRun = reportWorker.run();
   try {
     const workflowResult = options.runWorkflow();
+    const workflowState: {
+      outcome: "pending" | "fulfilled" | "rejected";
+    } = { outcome: "pending" };
+    const observedWorkflowResult = (async () => {
+      try {
+        const value = await workflowResult;
+        workflowState.outcome = "fulfilled";
+        return value;
+      } catch (error: unknown) {
+        workflowState.outcome = "rejected";
+        throw error;
+      }
+    })();
     try {
-      return await primaryWorker.runUntil(workflowResult);
-    } catch {
+      return await primaryWorker.runUntil(observedWorkflowResult);
+    } catch (error: unknown) {
       // The SDK can report a worker-thread shutdown race after the workflow
-      // result has already settled when two workers share a test server.
-      return await workflowResult;
+      // result has already settled when two workers share a test server. A
+      // worker failure before successful workflow completion must propagate.
+      if (workflowState.outcome === "fulfilled") {
+        return await observedWorkflowResult;
+      }
+      throw error;
     }
   } finally {
     reportWorker.shutdown();

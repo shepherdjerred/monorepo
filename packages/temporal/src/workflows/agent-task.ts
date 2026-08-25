@@ -77,6 +77,7 @@ async function executeAgentTask(
 }
 
 const legacyEmailActivities = proxyActivities<AgentTaskActivities>({
+  taskQueue: TASK_QUEUES.DEFAULT,
   startToCloseTimeout: AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
   retry: RETRY,
 });
