@@ -10,6 +10,28 @@ import { getAllChampions, resolveChampionKey } from "#src/utils/champion.ts";
 
 const logger = createLogger("validate-assets");
 
+/** Run one asset check, collecting any failure instead of throwing. */
+async function collectFailure(
+  failures: Error[],
+  check: () => Promise<void>,
+): Promise<void> {
+  try {
+    await check();
+  } catch (error) {
+    failures.push(error instanceof Error ? error : new Error(String(error)));
+  }
+}
+
+/** Validate the square, loading, and splash images for one champion key. */
+async function collectChampionAssetFailures(
+  failures: Error[],
+  key: string,
+): Promise<void> {
+  await collectFailure(failures, () => validateChampionImage(key));
+  await collectFailure(failures, () => validateChampionLoadingImage(key));
+  await collectFailure(failures, () => validateChampionSplashImage(key));
+}
+
 /**
  * Crashes the pod at startup if any Data Dragon champion asset is missing.
  * Two parallel passes:
@@ -28,45 +50,11 @@ export async function validateChampionAssets(): Promise<void> {
   const failures: Error[] = [];
 
   for (const { id } of registryChampions) {
-    const key = resolveChampionKey(id);
-
-    try {
-      await validateChampionImage(key);
-    } catch (error) {
-      failures.push(error instanceof Error ? error : new Error(String(error)));
-    }
-
-    try {
-      await validateChampionLoadingImage(key);
-    } catch (error) {
-      failures.push(error instanceof Error ? error : new Error(String(error)));
-    }
-
-    try {
-      await validateChampionSplashImage(key);
-    } catch (error) {
-      failures.push(error instanceof Error ? error : new Error(String(error)));
-    }
+    await collectChampionAssetFailures(failures, resolveChampionKey(id));
   }
 
   for (const { id } of dataDragonChampions) {
-    try {
-      await validateChampionImage(id);
-    } catch (error) {
-      failures.push(error instanceof Error ? error : new Error(String(error)));
-    }
-
-    try {
-      await validateChampionLoadingImage(id);
-    } catch (error) {
-      failures.push(error instanceof Error ? error : new Error(String(error)));
-    }
-
-    try {
-      await validateChampionSplashImage(id);
-    } catch (error) {
-      failures.push(error instanceof Error ? error : new Error(String(error)));
-    }
+    await collectChampionAssetFailures(failures, id);
   }
 
   if (failures.length > 0) {

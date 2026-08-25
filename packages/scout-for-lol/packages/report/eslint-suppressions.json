@@ -1,0 +1,31 @@
+{
+  "scripts/verify-visual-contract.ts": {
+    "@typescript-eslint/prefer-regexp-exec": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 3
+    },
+    "regexp/no-contradiction-with-assertion": {
+      "count": 1
+    },
+    "unicorn/import-style": {
+      "count": 1
+    }
+  },
+  "src/html/visualization-calendar-tooltip.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/html/visualization-snapshot-option.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/html/visualization-tooltip.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

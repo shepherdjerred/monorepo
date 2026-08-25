@@ -1,0 +1,17 @@
+{
+  "playwright.config.ts": {
+    "unicorn/prefer-simple-condition-first": {
+      "count": 1
+    }
+  },
+  "src/page-checks.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/static-token-check.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

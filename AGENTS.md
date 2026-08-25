@@ -799,6 +799,20 @@ Local and CI verification deliberately have different scopes:
 Run `bun run verify` locally only when explicitly reproducing CI or modifying
 the verification machinery itself. There is no `pre-push` hook.
 
+### Cognitive-complexity baseline — `eslint-suppressions.json`
+
+The shared ESLint config enforces `sonarjs/cognitive-complexity` at `error`
+with threshold 15 (alongside the cyclomatic `complexity` rule). Pre-existing
+violations are baselined with ESLint's native bulk-suppressions file — an
+`eslint-suppressions.json` per affected package holding per-file, per-rule
+counts. The baseline may only shrink: a violation in a new file, or one above
+a suppressed file's count, fails lint; and when refactoring drops a file below
+its baselined count, the now-stale entry itself fails lint until pruned. To
+prune after a legitimate reduction, run the package's own lint invocation with
+`--prune-suppressions` (e.g. `bunx eslint . --prune-suppressions`) from the
+package directory and commit the shrunken file. Never baseline new code with
+`--suppress-rule` — refactor it under the threshold instead.
+
 ### CI credentials — `check-ci-env`
 
 `scripts/check-ci-env.ts` (the `//#check-ci-env` turbo task, in `bun run

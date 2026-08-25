@@ -1,0 +1,12 @@
+{
+  "src/client/history-page.tsx": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/infrastructure/prisma-repository.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "packages/backend/src/emulator/engine-observation.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/game/events/diff.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/game/spatial/spatial-snapshot.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/goal/benchmark-harness.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/goal/benchmark-provider-failure.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/goal/catch-evidence.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/goal/game-battle-control-rules.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/goal/game-exit-navigation.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "packages/backend/src/goal/game-map.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/goal/game-navigation.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "packages/backend/src/goal/game-observation.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/goal/knowledge.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "packages/backend/src/goal/pokemonctl-output.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "scripts/generate-battle-data.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "scripts/generate-map-names.ts": {
+    "unicorn/prefer-string-raw": {
+      "count": 2
+    },
+    "unicorn/prefer-string-replace-all": {
+      "count": 3
+    },
+    "unicorn/prefer-type-error": {
+      "count": 1
+    }
+  },
+  "scripts/generate-species-data.ts": {
+    "unicorn/no-new-array": {
+      "count": 2
+    },
+    "unicorn/prefer-string-raw": {
+      "count": 2
+    }
+  },
+  "scripts/knowledge/pokeapi-relations.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

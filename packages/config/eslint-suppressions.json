@@ -1,0 +1,7 @@
+{
+  "src/resolver.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

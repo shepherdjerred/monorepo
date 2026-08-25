@@ -122,22 +122,101 @@ type IssueSink = {
  * Targeting both a layer and its descendant is merely redundant, but it reads
  * as though the narrower one adds something, so it is refused too.
  */
-function checkTargets(boundary: LayerBoundary, sink: IssueSink): void {
-  for (const target of boundary.to) {
-    if (contains(target, boundary.from) || contains(boundary.from, target)) {
+function checkTargetContainsSource(
+  boundary: LayerBoundary,
+  target: string,
+  sink: IssueSink,
+): void {
+  if (contains(target, boundary.from) || contains(boundary.from, target)) {
+    sink.addIssue({
+      code: "custom",
+      message: `boundary "${boundary.name}" forbids "${boundary.from}" from depending on "${target}", which is the same layer or contains it`,
+    });
+  }
+}
+
+function checkTargetDescendants(
+  boundary: LayerBoundary,
+  target: string,
+  sink: IssueSink,
+): void {
+  for (const other of boundary.to) {
+    if (target !== other && contains(target, other)) {
       sink.addIssue({
         code: "custom",
-        message: `boundary "${boundary.name}" forbids "${boundary.from}" from depending on "${target}", which is the same layer or contains it`,
+        message: `boundary "${boundary.name}" targets both "${target}" and its descendant "${other}"; the wider target already covers it`,
       });
     }
-    for (const other of boundary.to) {
-      if (target !== other && contains(target, other)) {
+  }
+}
+
+function checkTargets(boundary: LayerBoundary, sink: IssueSink): void {
+  for (const target of boundary.to) {
+    checkTargetContainsSource(boundary, target, sink);
+    checkTargetDescendants(boundary, target, sink);
+  }
+}
+
+function checkIsolatedGroup(group: IsolatedGroup, sink: IssueSink): void {
+  if (new Set(group.layers).size !== group.layers.length) {
+    sink.addIssue({
+      code: "custom",
+      message: `isolated group "${group.name}" repeats a layer`,
+    });
+  }
+  for (const layer of group.layers) {
+    for (const other of group.layers) {
+      if (layer !== other && contains(layer, other)) {
         sink.addIssue({
           code: "custom",
-          message: `boundary "${boundary.name}" targets both "${target}" and its descendant "${other}"; the wider target already covers it`,
+          message: `isolated group "${group.name}" contains "${layer}" and its descendant "${other}"; a group's members have to be disjoint regions of the tree`,
         });
       }
     }
+  }
+}
+
+function checkFixturePrefixOverlaps(
+  boundary: LayerBoundary,
+  prefixes: ReadonlyMap<string, string>,
+  sink: IssueSink,
+): void {
+  const prefix = flattenLayerPath(boundary.from);
+  for (const [otherPrefix, otherLayer] of prefixes) {
+    if (fixturePrefixesOverlap(prefix, otherPrefix)) {
+      sink.addIssue({
+        code: "custom",
+        message: `layers "${otherLayer}" and "${boundary.from}" have overlapping fixture prefixes "${otherPrefix}-" and "${prefix}-"`,
+      });
+    }
+  }
+}
+
+function checkBoundaryName(
+  boundary: LayerBoundary,
+  names: ReadonlySet<string>,
+  sink: IssueSink,
+): void {
+  if (boundary.name === CIRCULAR_RULE_NAME) {
+    sink.addIssue({
+      code: "custom",
+      message: `"${CIRCULAR_RULE_NAME}" is always enforced and cannot be redefined as a boundary`,
+    });
+  }
+  if (names.has(boundary.name)) {
+    sink.addIssue({
+      code: "custom",
+      message: `duplicate boundary name "${boundary.name}"`,
+    });
+  }
+}
+
+function checkRepeatedTargets(boundary: LayerBoundary, sink: IssueSink): void {
+  if (new Set(boundary.to).size !== boundary.to.length) {
+    sink.addIssue({
+      code: "custom",
+      message: `boundary "${boundary.name}" repeats a target layer`,
+    });
   }
 }
 
@@ -159,54 +238,16 @@ const ArchitectureDefinitionSchema = z
     const seenNames = new Set<string>();
     const seenFixturePrefixes = new Map<string, string>();
     for (const group of definition.isolatedGroups) {
-      if (new Set(group.layers).size !== group.layers.length) {
-        context.addIssue({
-          code: "custom",
-          message: `isolated group "${group.name}" repeats a layer`,
-        });
-      }
-      for (const layer of group.layers) {
-        for (const other of group.layers) {
-          if (layer !== other && contains(layer, other)) {
-            context.addIssue({
-              code: "custom",
-              message: `isolated group "${group.name}" contains "${layer}" and its descendant "${other}"; a group's members have to be disjoint regions of the tree`,
-            });
-          }
-        }
-      }
+      checkIsolatedGroup(group, context);
     }
     for (const boundary of expandBoundaries(definition)) {
       const prefix = flattenLayerPath(boundary.from);
-      for (const [otherPrefix, otherLayer] of seenFixturePrefixes) {
-        if (fixturePrefixesOverlap(prefix, otherPrefix)) {
-          context.addIssue({
-            code: "custom",
-            message: `layers "${otherLayer}" and "${boundary.from}" have overlapping fixture prefixes "${otherPrefix}-" and "${prefix}-"`,
-          });
-        }
-      }
+      checkFixturePrefixOverlaps(boundary, seenFixturePrefixes, context);
       seenFixturePrefixes.set(prefix, boundary.from);
-      if (boundary.name === CIRCULAR_RULE_NAME) {
-        context.addIssue({
-          code: "custom",
-          message: `"${CIRCULAR_RULE_NAME}" is always enforced and cannot be redefined as a boundary`,
-        });
-      }
-      if (seenNames.has(boundary.name)) {
-        context.addIssue({
-          code: "custom",
-          message: `duplicate boundary name "${boundary.name}"`,
-        });
-      }
+      checkBoundaryName(boundary, seenNames, context);
       seenNames.add(boundary.name);
       checkTargets(boundary, context);
-      if (new Set(boundary.to).size !== boundary.to.length) {
-        context.addIssue({
-          code: "custom",
-          message: `boundary "${boundary.name}" repeats a target layer`,
-        });
-      }
+      checkRepeatedTargets(boundary, context);
     }
   });
 

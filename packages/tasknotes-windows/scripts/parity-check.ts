@@ -68,16 +68,18 @@ async function loadTestSource(): Promise<string> {
   return sourceTexts.join("\n");
 }
 
-async function main(): Promise<void> {
-  const parity = ParitySchema.parse(
-    await Bun.file(path.join(packageRoot, "parity.json")).json(),
-  );
-  const scenariosDocument = ScenariosSchema.parse(
-    await Bun.file(path.join(packageRoot, "e2e", "scenarios.json")).json(),
-  );
+type ScenarioIndex = {
+  scenarioIds: Set<string>;
+  assertionOwners: Map<string, string>;
+};
+
+/** Index scenarios and verify each is implemented with typed evidence records. */
+function indexScenarios(
+  scenariosDocument: z.infer<typeof ScenariosSchema>,
+  testSource: string,
+): ScenarioIndex {
   const scenarioIds = new Set<string>();
   const assertionOwners = new Map<string, string>();
-  const testSource = await loadTestSource();
   for (const scenario of scenariosDocument.scenarios) {
     addUnique(scenarioIds, scenario.id, "E2E scenario id");
     for (const assertion of scenario.assertions) {
@@ -108,7 +110,20 @@ async function main(): Promise<void> {
       );
     }
   }
+  return { scenarioIds, assertionOwners };
+}
 
+type FeatureReferences = {
+  featureIds: Set<string>;
+  referencedScenarios: Set<string>;
+  referencedAssertions: Set<string>;
+};
+
+/** Verify every feature references known scenarios/assertions it owns. */
+function checkFeatures(
+  parity: z.infer<typeof ParitySchema>,
+  { scenarioIds, assertionOwners }: ScenarioIndex,
+): FeatureReferences {
   const featureIds = new Set<string>();
   const referencedScenarios = new Set<string>();
   const referencedAssertions = new Set<string>();
@@ -137,7 +152,14 @@ async function main(): Promise<void> {
       referencedAssertions.add(assertion);
     }
   }
+  return { featureIds, referencedScenarios, referencedAssertions };
+}
 
+/** Verify every scenario and assertion is required by the parity manifest. */
+function checkCoverage(
+  { scenarioIds, assertionOwners }: ScenarioIndex,
+  { referencedScenarios, referencedAssertions }: FeatureReferences,
+): void {
   for (const assertion of assertionOwners.keys()) {
     if (!referencedAssertions.has(assertion)) {
       throw new Error(
@@ -153,6 +175,21 @@ async function main(): Promise<void> {
       );
     }
   }
+}
+
+async function main(): Promise<void> {
+  const parity = ParitySchema.parse(
+    await Bun.file(path.join(packageRoot, "parity.json")).json(),
+  );
+  const scenariosDocument = ScenariosSchema.parse(
+    await Bun.file(path.join(packageRoot, "e2e", "scenarios.json")).json(),
+  );
+  const testSource = await loadTestSource();
+  const scenarioIndex = indexScenarios(scenariosDocument, testSource);
+  const { scenarioIds, assertionOwners } = scenarioIndex;
+  const featureReferences = checkFeatures(parity, scenarioIndex);
+  const { featureIds } = featureReferences;
+  checkCoverage(scenarioIndex, featureReferences);
 
   if (/evidence\.Record\(\s*"[^"]+"\s*\)/u.test(testSource)) {
     throw new Error(

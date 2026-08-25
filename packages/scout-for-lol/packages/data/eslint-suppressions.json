@@ -1,0 +1,121 @@
+{
+  "scripts/generate-asset-manifest.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    },
+    "custom-rules/zod-schema-naming": {
+      "count": 1
+    },
+    "unicorn/import-style": {
+      "count": 1
+    }
+  },
+  "scripts/patch-analysis.ts": {
+    "custom-rules/zod-schema-naming": {
+      "count": 1
+    }
+  },
+  "scripts/riot-patch.ts": {
+    "preserve-caught-error": {
+      "count": 1
+    }
+  },
+  "scripts/update-changelog.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    },
+    "unicorn/prefer-string-raw": {
+      "count": 2
+    }
+  },
+  "scripts/update-changelog.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "scripts/update-data-dragon.test.ts": {
+    "unicorn/numeric-separators-style": {
+      "count": 3
+    }
+  },
+  "scripts/update-data-dragon.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    },
+    "unicorn/no-useless-undefined": {
+      "count": 1
+    },
+    "unicorn/numeric-separators-style": {
+      "count": 2
+    },
+    "unicorn/prefer-simple-condition-first": {
+      "count": 1
+    }
+  },
+  "src/lane-priors/eval.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/model/legacy/report-query-expression.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/model/legacy/report-query-parser.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/model/legacy/report-query-render-validation.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/model/legacy/report-query-render.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/model/queue-window-drift.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/model/scoutql/analyze-display.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/model/scoutql/analyze-lower-aggregate.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/model/scoutql/ast.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/model/scoutql/cst-to-ast-expr.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/model/scoutql/plan.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/review/generator-helpers.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

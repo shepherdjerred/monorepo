@@ -11,24 +11,19 @@ export async function assertSemanticForms(page: Page): Promise<void> {
       }
       const controls = form.querySelectorAll<
         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >("input, select, textarea");
+      >(
+        ':is(input, select, textarea):not([type="hidden"]):not([aria-hidden="true"]):not(.monaco-editor *)',
+      );
       for (const control of controls) {
-        if (
-          control.getAttribute("aria-hidden") === "true" ||
-          control.closest(".monaco-editor") !== null
-        ) {
-          continue;
-        }
         const description = control.outerHTML.slice(0, 500);
         if (control.name.length === 0) missingNames.push(description);
-        if (control instanceof HTMLInputElement && control.type === "hidden") {
-          continue;
+        const labelCount = control.labels === null ? 0 : control.labels.length;
+        const ariaLabel = control.getAttribute("aria-label")?.trim() ?? "";
+        const labelledBy =
+          control.getAttribute("aria-labelledby")?.trim() ?? "";
+        if (labelCount === 0 && ariaLabel === "" && labelledBy === "") {
+          missingLabels.push(description);
         }
-        const hasAccessibleLabel =
-          (control.labels !== null && control.labels.length > 0) ||
-          (control.getAttribute("aria-label")?.trim().length ?? 0) > 0 ||
-          (control.getAttribute("aria-labelledby")?.trim().length ?? 0) > 0;
-        if (!hasAccessibleLabel) missingLabels.push(description);
       }
     }
 

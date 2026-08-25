@@ -1,0 +1,399 @@
+{
+  "scripts/backfill-overdue-season-comps.ts": {
+    "@typescript-eslint/prefer-optional-chain": {
+      "count": 1
+    }
+  },
+  "scripts/check-orphan-seasonids.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 8
+    }
+  },
+  "scripts/cleanup-iron-iv-entries.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 7
+    },
+    "unicorn/no-useless-undefined": {
+      "count": 1
+    }
+  },
+  "scripts/convert-common-denominator-reports.ts": {
+    "unicorn/no-negated-condition": {
+      "count": 1
+    }
+  },
+  "scripts/discover-marketing-showcase.ts": {
+    "custom-rules/prefer-async-await": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "unicorn/no-await-expression-member": {
+      "count": 1
+    }
+  },
+  "scripts/ensure-dev-postgres.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "scripts/evaluate-lane-priors.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "scripts/evaluate-predictions.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "scripts/generate-lane-priors.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "scripts/inspect-pipeline-trace.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    },
+    "@typescript-eslint/prefer-optional-chain": {
+      "count": 1
+    },
+    "custom-rules/prefer-structured-logging": {
+      "count": 25
+    },
+    "regexp/no-useless-lazy": {
+      "count": 1
+    },
+    "unicorn/consistent-existence-index-check": {
+      "count": 3
+    },
+    "unicorn/no-negated-condition": {
+      "count": 1
+    }
+  },
+  "scripts/lane-prior-cli.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "scripts/migrate-scoutql-v2.test.ts": {
+    "unicorn/no-await-expression-member": {
+      "count": 3
+    }
+  },
+  "scripts/outreach.ts": {
+    "@typescript-eslint/array-type": {
+      "count": 1
+    },
+    "@typescript-eslint/no-confusing-void-expression": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-template-expression": {
+      "count": 1
+    },
+    "complexity": {
+      "count": 1
+    },
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    },
+    "unicorn/no-await-expression-member": {
+      "count": 1
+    },
+    "unicorn/no-negated-condition": {
+      "count": 2
+    },
+    "unicorn/prefer-simple-condition-first": {
+      "count": 1
+    },
+    "unicorn/prefer-string-slice": {
+      "count": 1
+    }
+  },
+  "scripts/scoutql-v2-rewrite-render.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "scripts/seed-design-audit.ts": {
+    "custom-rules/no-parent-imports": {
+      "count": 1
+    }
+  },
+  "scripts/smoke.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 2
+    }
+  },
+  "scripts/update-queue-windows.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    },
+    "custom-rules/no-parent-imports": {
+      "count": 1
+    },
+    "custom-rules/prefer-structured-logging": {
+      "count": 6
+    },
+    "import/no-relative-packages": {
+      "count": 1
+    }
+  },
+  "src/betting/announce.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/ask-publish.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/classic-prematch-earnings.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/earnings-retry.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/earnings.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/betting/matching.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlay-evaluator.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlay-history.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlay-model-schema.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlay-place-bet.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlay-pricing.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlay-publish.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlay-settle.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/betting/parlay-stats.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/betting/settle.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/settlement-dm-delivery.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/settlement-dm.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/sweep-observability.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/sweep.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/weekly-parlay-contribution.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/weekly-parlay-open.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/weekly-parlay-settle.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/database/legacy-import/run-import.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/discord/interactions.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/discord/scout/visualization-format.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/discord/utils/dm.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/explore/run-turn.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/http/server.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/api/riot-call.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/competition/processors/generic-win-counter.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/discord/channel.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/initial-history/enqueue.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/review/test-reviews.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/tasks/cleanup/reconcile-removed-guilds.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/tasks/cleanup/validate-data.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/tasks/notification-filters.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/tasks/pairing/calculate-pairings.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/league/tasks/postmatch/index.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/tasks/prematch/active-game-detection.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/tasks/prematch/loading-screen-builder.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/league/tasks/prematch/prematch-notification.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/subscription/limits.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/report-lake/compactor.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/report-lake/rebuild-sources.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/reports/duckdb/compile-plan.injection.test.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/reports/identity.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/storage/s3-query.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
+  "src/testing/postgres-server.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/trpc/context.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/trpc/image-routes.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/trpc/router/competition.router.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}
