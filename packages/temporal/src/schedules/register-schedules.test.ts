@@ -337,12 +337,12 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
 });
 
 describe("Scout competition update schedule", () => {
-  test("uses a Temporal-owned minute trigger on the core queue", () => {
+  test("uses a Temporal-owned minute trigger on the Scout queue", () => {
     const schedule = findScheduleById("scout-competition-updates-minute");
     expect(schedule).toMatchObject({
       workflowType: "runScoutCompetitionUpdatesWorkflow",
       cronExpression: "* * * * *",
-      taskQueue: TASK_QUEUES.DEFAULT,
+      taskQueue: TASK_QUEUES.SCOUT,
       catchupWindow: "5 minutes",
       workflowExecutionTimeout: "35 minutes",
     });

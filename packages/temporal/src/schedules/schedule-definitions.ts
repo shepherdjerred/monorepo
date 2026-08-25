@@ -193,7 +193,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runScoutCompetitionUpdatesWorkflow",
     args: [],
     cronExpression: "* * * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: CATCHUP_TIGHT,
     // Each stage activity may use three 10-minute attempts. They run in

@@ -97,7 +97,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runCiIoImpact",
     args: [],
     cronExpression: "0 9 * * *",
-    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+    taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "2 hours",
     memo: "Daily deterministic schema-v4 CI I/O impact and observability report",
