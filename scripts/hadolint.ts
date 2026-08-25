@@ -1,4 +1,5 @@
 import { run } from "./lib/run.ts";
+import { trackedExistingFiles } from "./lib/tracked-files.ts";
 
 /**
  * A tracked file is a hadolint candidate when it is named like a Dockerfile
@@ -17,22 +18,8 @@ export function isHadolintCandidate(path: string): boolean {
 }
 
 export async function checkDockerfiles(): Promise<void> {
-  const result = await run(["git", "ls-files", "-z"], {
-    capture: true,
-    secret: true,
-  });
-  const candidates = result.stdout
-    .split("\0")
-    .filter((path) => path !== "" && isHadolintCandidate(path));
-  const candidateChecks = await Promise.all(
-    candidates.map(async (path) => ({
-      exists: await Bun.file(path).exists(),
-      path,
-    })),
-  );
-  const files = candidateChecks
-    .filter(({ exists }) => exists)
-    .map(({ path }) => path);
+  const trackedFiles = await trackedExistingFiles();
+  const files = trackedFiles.filter((path) => isHadolintCandidate(path));
   // Non-vacuity guard: this repo ships container images, so an empty candidate
   // list means the discovery patterns broke, not that there is nothing to lint.
   if (files.length === 0) {
