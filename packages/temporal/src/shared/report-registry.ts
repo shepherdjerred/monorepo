@@ -94,6 +94,13 @@ export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
     receiptRequiredAfter: SCANNER_REPORT_ACTIVATION,
   },
   {
+    scheduleId: "link-rot-scan-weekly",
+    reportType: "link-rot-scan",
+    cadenceHours: 168,
+    graceHours: defaultReportGraceHours(168),
+    receiptRequiredAfter: SCANNER_REPORT_ACTIVATION,
+  },
+  {
     scheduleId: "ci-io-post-merge-impact",
     reportType: "ci-io-impact",
     cadenceHours: 24,

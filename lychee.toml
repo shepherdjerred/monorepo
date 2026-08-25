@@ -1,0 +1,69 @@
+# Root lychee configuration — used by the weekly `link-rot-scan-weekly`
+# Temporal schedule (packages/temporal/src/activities/link-rot-scan.ts) and
+# runnable locally with `lychee --config lychee.toml .` (lychee is pinned in
+# .mise.toml and baked into the temporal-worker image).
+#
+# Scope: tracked Markdown documentation. This automates the rot-detection half
+# of the root AGENTS.md "Verify link liveness" rule; the commit-time check for
+# NEW URLs remains manual.
+
+# The scheduled activity is non-interactive; keep local runs identical.
+no_progress = true
+
+# Documentation is Markdown-first. Directory inputs recurse and check only
+# these extensions.
+extensions = ["md", "markdown"]
+
+# Only web links. `file://` targets are checked by the site builds that own
+# them, and mail addresses are not documentation links.
+scheme = ["https", "http"]
+include_mail = false
+
+# Code blocks hold example URLs (curl invocations, placeholder endpoints) that
+# are not live links. Never check verbatim content.
+include_verbatim = false
+
+# Private/loopback/link-local targets (localhost, 127.0.0.1, in-cluster
+# addresses) can never resolve from the scanner; they are examples, not links.
+exclude_all_private = true
+
+# Accepted status codes — a judgment call, documented:
+# - 2xx: alive.
+# - 403 + 429: bot-hostile hosts (Cloudflare-fronted sites, rate limiters)
+#   answer automated GETs with these while serving humans fine. Treating them
+#   as dead would page weekly for links that work; the cost is that a genuine
+#   permission-walled 403 goes unreported.
+accept = ["200..=299", "403", "429"]
+
+# Retries + timeout keep one slow host from dominating the weekly run.
+timeout = 20
+max_retries = 2
+max_concurrency = 8
+
+# Path exclusions (regexes) — mirrors .markdownlint-cli2.jsonc's ignore list:
+# vendored/generated/build output, fixtures under test, scratch space, and
+# imported third-party trees are not documentation we maintain. CHANGELOGs
+# accumulate historical release links that rot by design.
+exclude_path = [
+    "(^|/)sandbox/",
+    "(^|/)\\.claude/",
+    "(^|/)__tests__/fixtures/",
+    "(^|/)e2e/fixtures/",
+    "(^|/)node_modules/",
+    "(^|/)\\.venv/",
+    "(^|/)generated/",
+    "(^|/)dist/",
+    "(^|/)build/",
+    "(^|/)\\.build/",
+    "(^|/)target/",
+    "(^|/)Pods/",
+    "(^|/)test-results/",
+    "(^|/)playwright-report/",
+    "(^|/)ai_dev_log/",
+    "(^|/)CHANGELOG\\.md$",
+    "(^|/)packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/",
+    "(^|/)wasm-src/",
+    "(^|/)\\.terraform/",
+    "(^|/)packages/dotfiles/dot_agents/skills/",
+    "(^|/)packages/discord-video-stream/",
+]

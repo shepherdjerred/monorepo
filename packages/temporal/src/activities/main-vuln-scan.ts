@@ -1,16 +1,13 @@
-import { mkdir, rm } from "node:fs/promises";
 import { z } from "zod/v4";
 import {
   maintenanceActivityHooks,
-  maintenanceCommandEnvironment,
-  spawnMaintenanceCommand,
   spawnMaintenanceCommandCapturingStdout,
-  type MaintenanceCommand,
   type MaintenanceCommandHooks,
 } from "./maintenance.ts";
-
-const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
-const MAIN_BRANCH = "main";
+import {
+  mainRepositoryScanCommand,
+  withMainRepositoryScan,
+} from "./main-repository-scan.ts";
 /**
  * The warm Trivy database PVC mounted into the maintenance worker — kept fresh
  * every six hours by `buildkite-trivy-db-refresh`, which is why the scan runs
@@ -120,19 +117,6 @@ export function buildScanExcerpt(
     .slice(0, EXCERPT_LIMIT);
 }
 
-function scanCommand(
-  command: readonly string[],
-  cwd: string,
-): MaintenanceCommand {
-  return {
-    kind: "main-vuln-scan",
-    command,
-    cwd,
-    env: maintenanceCommandEnvironment({}),
-    secretValues: [],
-  };
-}
-
 const TRIVY_SCAN_COMMAND = [
   "trivy",
   "fs",
@@ -164,53 +148,29 @@ const TRIVY_SCAN_COMMAND = [
 async function scanMainForVulnerabilities(
   hooks: MaintenanceCommandHooks = maintenanceActivityHooks(),
 ): Promise<MainVulnScanResult> {
-  // Per-attempt scratch directory so a retry never trips over a previous
-  // attempt's half-cleaned clone. Never derive anything durable from it.
-  const tempDir = `/tmp/main-vuln-scan-${crypto.randomUUID()}`;
-  const repoDir = `${tempDir}/monorepo`;
-  await mkdir(tempDir, { recursive: true });
-  try {
-    await spawnMaintenanceCommand(
-      scanCommand(
-        [
-          "git",
-          "clone",
-          "--depth",
-          "1",
-          "--branch",
-          MAIN_BRANCH,
-          "--single-branch",
-          REPO_URL,
+  return withMainRepositoryScan(
+    "main-vuln-scan",
+    hooks,
+    async ({ repoDir, repoSha }) => {
+      const scan = await spawnMaintenanceCommandCapturingStdout(
+        mainRepositoryScanCommand(
+          "main-vuln-scan",
+          TRIVY_SCAN_COMMAND,
           repoDir,
-        ],
-        tempDir,
-      ),
-      hooks,
-    );
-    const revParse = await spawnMaintenanceCommandCapturingStdout(
-      scanCommand(["git", "rev-parse", "HEAD"], repoDir),
-      hooks,
-    );
-    const repoSha = revParse.stdout.trim();
-    if (repoSha === "") {
-      throw new Error("git rev-parse HEAD returned no commit for the clone");
-    }
-    const scan = await spawnMaintenanceCommandCapturingStdout(
-      scanCommand(TRIVY_SCAN_COMMAND, repoDir),
-      hooks,
-    );
-    const vulnerabilities = parseTrivyReport(scan.stdout);
-    return {
-      observedAt: new Date().toISOString(),
-      repoSha,
-      command: TRIVY_SCAN_COMMAND.join(" "),
-      exitCode: scan.exitCode,
-      vulnerabilities,
-      excerpt: buildScanExcerpt(vulnerabilities),
-    };
-  } finally {
-    await rm(tempDir, { recursive: true, force: true });
-  }
+        ),
+        hooks,
+      );
+      const vulnerabilities = parseTrivyReport(scan.stdout);
+      return {
+        observedAt: new Date().toISOString(),
+        repoSha,
+        command: TRIVY_SCAN_COMMAND.join(" "),
+        exitCode: scan.exitCode,
+        vulnerabilities,
+        excerpt: buildScanExcerpt(vulnerabilities),
+      };
+    },
+  );
 }
 
 export const mainVulnScanActivities = {

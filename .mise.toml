@@ -39,6 +39,10 @@ golangci-lint = "2"
 gh = "2"
 # CI scripts (bake-images.ts affected-scoping + digest collection) use jq
 jq = "1"
+# Link checker for the weekly Temporal link-rot report (root lychee.toml);
+# pinned here so local runs match the worker image's binary.
+# renovate: datasource=github-releases depName=lycheeverse/lychee extractVersion=^lychee-v(?<version>.*)$
+lychee = "0.24.2"
 # Semantic YAML/JSON comparison in the Minecraft config-drift check test
 # (misc/minecraft-drift-check.test.ts shells out to yq, matching the yq the
 # init container runs at deploy time)

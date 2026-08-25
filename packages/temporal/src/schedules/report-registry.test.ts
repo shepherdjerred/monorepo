@@ -52,7 +52,10 @@ describe("report schedule registry", () => {
         registration.cadenceHours + registration.graceHours;
       expect(pendingWindowHours).toBeGreaterThan(registration.cadenceHours);
     }
-    for (const scheduleId of ["main-vuln-scan-weekly"]) {
+    for (const scheduleId of [
+      "main-vuln-scan-weekly",
+      "link-rot-scan-weekly",
+    ]) {
       const registration = REPORT_SCHEDULE_REGISTRY.find(
         (candidate) => candidate.scheduleId === scheduleId,
       );

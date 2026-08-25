@@ -108,6 +108,7 @@ import type {
   GlitterContextRefreshResult,
 } from "#activities/glitter-context-refresh.ts";
 import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./main-vuln-scan.ts";
+import { runLinkRotScanWorkflow as runLinkRotScanWorkflowImplementation } from "./link-rot-scan.ts";
 import {
   runKometaWorkflow as runKometaWorkflowImplementation,
   runBunCacheGcWorkflow as runBunCacheGcWorkflowImplementation,
@@ -127,6 +128,10 @@ export async function runKometaWorkflow(): Promise<void> {
 
 export async function runMainVulnScanWorkflow(): Promise<void> {
   return runMainVulnScanWorkflowImplementation();
+}
+
+export async function runLinkRotScanWorkflow(): Promise<void> {
+  return runLinkRotScanWorkflowImplementation();
 }
 
 export async function runBunCacheGcWorkflow(): Promise<void> {

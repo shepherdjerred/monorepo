@@ -1,52 +1,58 @@
 import { describe, expect, it } from "vitest";
-import type { MainVulnScanResult } from "#activities/main-vuln-scan.ts";
+import type { DeadLink, LinkRotScanResult } from "#activities/link-rot-scan.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { runMainVulnScanWorkflow } from "./main-vuln-scan.ts";
+import { runLinkRotScanWorkflow } from "./link-rot-scan.ts";
 import * as scannerTest from "./scanner-workflow-test-support.ts";
 
+// The workflow deliberately splits queues: the git/lychee scan runs on the
+// serial MAINTENANCE queue while delivery and the Alertmanager publish stay on
+// the credentialed core queue. The test mirrors that with one worker per queue,
+// which also proves the routing — a single-queue harness would hang.
 const REPO_SHA = "d9ea9584e0123456789abcdef0123456789abcde";
 
 const getTestEnv = scannerTest.setupScannerWorkflowTestEnvironment();
 
-function scanResult(
-  vulnerabilities: MainVulnScanResult["vulnerabilities"],
-): MainVulnScanResult {
+const DEAD_LINK: DeadLink = {
+  url: "https://github.com/shepherdjerred/definitely-missing",
+  source: "README.md",
+  status: "Rejected status code: 404 Not Found",
+  statusCode: 404,
+  line: 12,
+};
+
+function scanResult(deadLinks: DeadLink[]): LinkRotScanResult {
   return {
     observedAt: "2026-08-23T12:00:00.000Z",
     repoSha: REPO_SHA,
-    command: "trivy fs --format json .",
-    exitCode: 0,
-    vulnerabilities,
+    command: "lychee --config lychee.toml --format json --no-progress .",
+    exitCode: deadLinks.length === 0 ? 0 : 2,
+    totalLinks: 120,
+    successfulLinks: 120 - deadLinks.length,
+    excludedLinks: 2,
+    deadLinks,
+    timedOutLinks: [],
     excerpt: "fixture",
   };
 }
 
-const CRITICAL_VULNERABILITY = {
-  vulnerabilityId: "CVE-2026-1234",
-  pkgName: "left-pad",
-  installedVersion: "1.3.0",
-  severity: "CRITICAL" as const,
-  target: "bun.lock",
-};
-
 async function runWorkflow(
   overrides: {
-    scan?: () => Promise<MainVulnScanResult>;
+    scan?: () => Promise<LinkRotScanResult>;
     publish?: () => Promise<void>;
   },
-  vulnerabilities: MainVulnScanResult["vulnerabilities"] = [],
+  deadLinks: DeadLink[] = [],
 ): Promise<{ harness: scannerTest.ScannerWorkflowHarness; failure: unknown }> {
   const harness = scannerTest.createScannerWorkflowHarness();
   const failure = await scannerTest.runScannerWorkflow(getTestEnv(), {
-    workflow: runMainVulnScanWorkflow,
-    workflowId: `test-main-vuln-scan-${crypto.randomUUID()}`,
+    workflow: runLinkRotScanWorkflow,
+    workflowId: `test-link-rot-scan-${crypto.randomUUID()}`,
     taskQueue: TASK_QUEUES.MAINTENANCE,
     workers: [
       {
         taskQueue: TASK_QUEUES.DEFAULT,
         activities: {
           deliverActivityReport: scannerTest.deliverScannerReport(harness),
-          publishMainVulnScanAlerts: scannerTest.publishScannerAlert(
+          publishLinkRotScanAlerts: scannerTest.publishScannerAlert(
             harness,
             overrides.publish,
           ),
@@ -55,8 +61,8 @@ async function runWorkflow(
       {
         taskQueue: TASK_QUEUES.MAINTENANCE,
         activities: {
-          scanMainForVulnerabilities:
-            overrides.scan ?? (async () => scanResult(vulnerabilities)),
+          scanMainForLinkRot:
+            overrides.scan ?? (async () => scanResult(deadLinks)),
         },
         runsWorkflow: true,
       },
@@ -65,25 +71,24 @@ async function runWorkflow(
   return { harness, failure };
 }
 
-describe("runMainVulnScanWorkflow", () => {
+describe("runLinkRotScanWorkflow", () => {
   it("delivers one clear report and resolves the alert on a clean scan", async () => {
     const { harness, failure } = await runWorkflow({});
     expect(failure).toBeUndefined();
     scannerTest.expectCompleteScannerReport(harness, "clear", 0, REPO_SHA);
   }, 60_000);
 
-  it("fires the alert with the critical count when findings exist", async () => {
-    const { harness, failure } = await runWorkflow({}, [
-      CRITICAL_VULNERABILITY,
-    ]);
+  it("reports dead links as warnings without paging", async () => {
+    const { harness, failure } = await runWorkflow({}, [DEAD_LINK]);
     expect(failure).toBeUndefined();
-    scannerTest.expectCompleteScannerReport(harness, "attention", 1, REPO_SHA);
+    // Dead links are warning findings by policy, so the occurrence resolves.
+    scannerTest.expectCompleteScannerReport(harness, "attention", 0, REPO_SHA);
   }, 60_000);
 
   it("delivers a failed report before rethrowing a scan failure", async () => {
     const { harness, failure } = await runWorkflow({
       scan: () => {
-        throw new Error("trivy database unavailable");
+        throw new Error("lychee configuration invalid");
       },
     });
     expect(failure).toBeInstanceOf(Error);
@@ -92,16 +97,15 @@ describe("runMainVulnScanWorkflow", () => {
 
   it("never contradicts a delivered scan report when the alert publish fails", async () => {
     // Regression guard: an Alertmanager outage after a successful scan and a
-    // delivered report must not send a second report claiming the scan failed.
-    // The workflow fails (temporal-failure-watch raises its own occurrence)
-    // with exactly one, accurate report on the wire.
+    // delivered report must not send a second report claiming the scan failed
+    // and produced no verdict.
     const { harness, failure } = await runWorkflow(
       {
         publish: () => {
           throw new Error("alertmanager unreachable");
         },
       },
-      [CRITICAL_VULNERABILITY],
+      [DEAD_LINK],
     );
     expect(failure).toBeInstanceOf(Error);
     scannerTest.expectNoContradictoryFailureReport(harness, "attention");

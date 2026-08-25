@@ -249,6 +249,32 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly Trivy HIGH/CRITICAL vulnerability scan of main (warm Buildkite Trivy DB) with report delivery; CRITICAL findings page via Alertmanager",
   },
   {
+    id: "link-rot-scan-weekly",
+    workflowType: "runLinkRotScanWorkflow",
+    args: [],
+    // Sun 09:00 PT. The scan activity contends for the maintenance worker's
+    // SINGLE activity slot, so this is staggered past the worst case of every
+    // sibling on that queue rather than merely past their start times:
+    // uv-cache-prune (03:15 +2h), kometa (04:30 +2h), main-vuln-scan
+    // (05:00 +2h → 07:00), and the 06:30 trivy-db-refresh (+2h → 08:30). The
+    // every-5-minute bun-cache-gc is short and skips while the slot is busy.
+    cronExpression: "0 9 * * 0",
+    // Start on the maintenance queue so no active schedule targets the
+    // migration-only default queue. The workflow's report and Alertmanager
+    // activities remain explicitly proxied to DEFAULT.
+    taskQueue: TASK_QUEUES.MAINTENANCE,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Must cover this workflow's own budget PLUS worst-case time queued behind
+    // another maintenance activity, because the deadline runs while the scan
+    // waits for the slot. Own budget is ~78m (three 20m scan attempts + 3m
+    // backoff, then delivery and alert retries); 4h leaves ~2.5h of queueing
+    // headroom so a long-running sibling cannot time this out before it has
+    // delivered its report. SKIP overlap and the weekly cadence make the wide
+    // ceiling harmless.
+    workflowExecutionTimeout: "4 hours",
+    memo: "Weekly lychee link-rot scan of main's tracked markdown (root lychee.toml) with report delivery; automates the rot-detection half of the link-liveness rule",
+  },
+  {
     id: "bugsink-housekeeping",
     workflowType: "runBugsinkHousekeepingWorkflow",
     args: [],

@@ -33,6 +33,8 @@ import { workflowFailureWatchActivities } from "./workflow-failure-watch-activit
 import { maintenanceActivities } from "./maintenance.ts";
 import { mainVulnScanActivities } from "./main-vuln-scan.ts";
 import { mainVulnScanAlertActivities } from "./main-vuln-scan-alerts.ts";
+import { linkRotScanActivities } from "./link-rot-scan.ts";
+import { linkRotScanAlertActivities } from "./link-rot-scan-alerts.ts";
 import { reportDeliveryActivities } from "./report-delivery.ts";
 import { protobufWatchActivities } from "./protobuf-watch.ts";
 import { tasknotesCanaryActivities } from "./tasknotes-canary.ts";
@@ -55,6 +57,7 @@ export const reportActivities = {
   sendAgentTaskEmail: agentTaskActivities.sendAgentTaskEmail,
   sendAgentTaskFailureReport: agentTaskActivities.sendAgentTaskFailureReport,
   ...mainVulnScanAlertActivities,
+  ...linkRotScanAlertActivities,
 };
 
 export const infraActivities = {
@@ -110,6 +113,7 @@ export const glitterContextWorkerActivities = {
 export const maintenanceWorkerActivities = {
   ...maintenanceActivities,
   ...mainVulnScanActivities,
+  ...linkRotScanActivities,
 };
 
 /**
