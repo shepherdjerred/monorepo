@@ -5,7 +5,15 @@ import {
   PREDICTION_OBSERVATION_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
-} from "@scout-for-lol/data";
+} from "@scout-for-lol/data/model/lake-columns.ts";
+
+export {
+  ACCOUNT_LAKE_COLUMNS,
+  COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+  MATCH_LAKE_COLUMNS,
+  PREDICTION_OBSERVATION_LAKE_COLUMNS,
+  PREMATCH_LAKE_COLUMNS,
+} from "@scout-for-lol/data/model/lake-columns.ts";
 
 /**
  * Backend-side helpers over the report-lake table schemas.

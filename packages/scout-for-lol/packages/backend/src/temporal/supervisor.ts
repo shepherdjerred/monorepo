@@ -11,10 +11,8 @@ import {
   scoutTemporalWorkers,
 } from "#src/metrics/temporal.ts";
 import { setScoutTemporalHealth } from "./health.ts";
-import type {
-  WeeklyParlayControlAction,
-  WeeklyParlayControlResult,
-} from "#src/betting/weekly-parlay-control.ts";
+import type { WeeklyParlayControlResult } from "#src/betting/weekly-parlay-control.ts";
+import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/weekly-parlay.ts";
 
 const logger = createLogger("temporal-supervisor");
 const RECONNECT_DELAY_MS = 5000;

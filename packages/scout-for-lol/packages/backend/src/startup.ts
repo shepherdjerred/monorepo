@@ -60,7 +60,7 @@ export async function startBackendRuntime(): Promise<
         await import("#src/report-lake/compactor.ts");
       await runReportLakeFold();
     },
-    startHttpServer: async () => await import("#src/http-server.ts"),
+    startHttpServer: async () => await import("#src/http/server.ts"),
     startTemporalCore: async () => {
       const [
         { startScoutTemporalSupervisor },

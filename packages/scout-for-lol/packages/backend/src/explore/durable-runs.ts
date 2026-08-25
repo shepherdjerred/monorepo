@@ -16,6 +16,9 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { reserveDurableExploreRun } from "#src/temporal/durable-quota.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { startScoutInteractiveRun } from "#src/temporal/starts.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("explore-durable-runs");
 
 type Subscriber = (event: ExploreStreamEvent) => void;
 

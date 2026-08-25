@@ -54,6 +54,13 @@ type ReportExecutionParams = Omit<
   "queryText" | "onPlan"
 >;
 
+export class InvalidSavedQueryError extends Error {
+  constructor(message: string, cause: unknown) {
+    super(message, { cause });
+    this.name = "InvalidSavedQueryError";
+  }
+}
+
 /**
  * Turn any `player('…')` names on the plan into PUUIDs, by reference index.
  *
