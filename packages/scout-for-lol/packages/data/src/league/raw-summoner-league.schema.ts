@@ -3,6 +3,7 @@ import { z } from "zod";
 export const StandardRankedQueueTypeSchema = z.enum([
   "RANKED_SOLO_5x5",
   "RANKED_FLEX_SR",
+  "RANKED_TEAM_5x5",
 ]);
 export type StandardRankedQueueType = z.infer<
   typeof StandardRankedQueueTypeSchema
@@ -31,7 +32,7 @@ const StandardMiniSeriesSchema = z.strictObject({
 });
 
 /**
- * A published Solo/Duo or Flex rank from League-V4. Riot omits numeric fields
+ * A published Solo/Duo, Flex, or Ranked 5s rank from League-V4. Riot omits numeric fields
  * whose value is zero, so those fields normalize to zero at this boundary.
  * Unknown-field auditing is performed by RawSummonerLeagueSchema before this
  * schema is used to interpret a relevant entry.

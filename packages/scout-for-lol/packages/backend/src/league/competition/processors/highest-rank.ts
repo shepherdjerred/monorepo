@@ -1,5 +1,5 @@
 import type { HighestRankCriteria, Ranks } from "@scout-for-lol/data";
-import { rankToLeaguePoints } from "@scout-for-lol/data";
+import { rankForQueue, rankToLeaguePoints } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import type {
   LeaderboardEntry,
@@ -27,22 +27,44 @@ export function processHighestRank(
 
   for (const participant of participants) {
     const playerRanks = ranks[participant.id];
-    const rank =
-      criteria.queue === "SOLO" ? playerRanks?.solo : playerRanks?.flex;
+    const components =
+      playerRanks === undefined
+        ? []
+        : criteria.queues.flatMap((queue) => {
+            const rank = rankForQueue(playerRanks, queue);
+            return rank === undefined
+              ? []
+              : [{ queue, rank, leaguePoints: rankToLeaguePoints(rank) }];
+          });
 
-    if (!rank) {
+    if (components.length === 0) {
       logger.info(
-        `[HighestRank] Skipping player ${participant.id.toString()} (${participant.alias}) - no ${criteria.queue} rank data (unranked or fetch failed)`,
+        `[HighestRank] Skipping player ${participant.id.toString()} (${participant.alias}) - no selected rank data (unranked or fetch failed)`,
       );
       continue;
     }
 
+    const winning = components.reduce((best, component) =>
+      component.leaguePoints > best.leaguePoints ? component : best,
+    );
+    const combinedLeaguePoints = components.reduce(
+      (total, component) => total + component.leaguePoints,
+      0,
+    );
+
     entries.push({
       playerId: participant.id,
       playerName: participant.alias,
-      score: rank,
+      score:
+        criteria.aggregation === "MAX" ? winning.rank : combinedLeaguePoints,
       metadata: {
-        leaguePoints: rankToLeaguePoints(rank),
+        aggregation: criteria.aggregation,
+        winningQueue: winning.queue,
+        leaguePoints:
+          criteria.aggregation === "MAX"
+            ? winning.leaguePoints
+            : combinedLeaguePoints,
+        components,
       },
       discordId: participant.discordId,
     });

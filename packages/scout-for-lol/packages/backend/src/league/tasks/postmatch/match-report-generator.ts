@@ -18,6 +18,7 @@ import {
   isArenaQueueOrMode,
   isClassicQueueType,
   isClassicAssetMode,
+  rankForQueue,
 } from "@scout-for-lol/data/index.ts";
 import configuration from "#src/configuration.ts";
 import { getPlayer } from "#src/league/model/player.ts";
@@ -263,7 +264,9 @@ async function processStandardMatch(
     matchData.info.gameType,
   );
   const queue =
-    queueType === "solo" || queueType === "flex" ? queueType : undefined;
+    queueType === "solo" || queueType === "flex" || queueType === "ranked 5s"
+      ? queueType
+      : undefined;
 
   // Build rank map for each player by looking up previous rank and using current as "after"
   const playerRanksMap = new Map<
@@ -275,7 +278,7 @@ async function processStandardMatch(
     await Promise.all(
       players.map(async (player) => {
         const puuid = player.config.league.leagueAccount.puuid;
-        const currentRank = player.ranks[queue]; // This is POST-match rank (already fetched by getPlayer)
+        const currentRank = rankForQueue(player.ranks, queue); // This is POST-match rank (already fetched by getPlayer)
 
         // Look up the most recent rank before this match
         const previousRank = await getLatestRankBefore(

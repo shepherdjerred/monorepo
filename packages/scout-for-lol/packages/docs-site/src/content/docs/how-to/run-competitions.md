@@ -16,11 +16,11 @@ nobody trusts.
 
 - **Most games played** — rewards volume. Good for a server-wide activity push,
   bad if you want to reward playing well.
-- **Highest rank** — peak rank reached, solo or flex only. Favors whoever was
-  already highest; use it when the point is bragging rights, not improvement.
-- **Most rank climb** — LP gained across the window, solo or flex only. This is
-  the one that lets a Silver player beat a Diamond player, so it is usually the
-  better "season race".
+- **Highest rank** — peak rank reached across Solo/Duo, Flex, or Ranked 5s.
+  Choose **Best selected rank** for one winning ladder or **Combined ranks** to
+  add the selected ladders' normalized points.
+- **Most rank climb** — LP gained across Solo/Duo, Flex, or Ranked 5s. Choose
+  the best complete ladder climb or add every complete selected-ladder change.
 - **Most wins** — wins in a queue you choose.
 - **Most wins on a champion** — wins on one specific champion, optionally
   restricted to a queue. The basis of one-trick challenges.
@@ -30,20 +30,27 @@ nobody trusts.
 Every criteria type and the queues each accepts are listed in the [competition
 reference](/docs/reference/competitions/).
 
+Choose **Modern League** or **League Classic** before choosing queues. Modern
+and Classic matches never mix. Classic has its own champion catalog and cannot
+use rank criteria because Scout has no Classic ladder. Choose **All queues** by
+itself, or select any number of compatible queues. Limited-time queues remain
+available and are labeled when they are not live.
+
 ## Control who takes part
 
 Set **Visibility** when you create it:
 
-- **SERVER_WIDE** — every tracked player is in automatically. No admin work, and
-  nobody can opt out.
-- **OPEN** — marked open to the server. Scout has no self-service join action
-  yet, so an admin still adds participants.
-- **INVITE_ONLY** — you pick the participants. Use for a subset, like one team.
+- **SERVER_WIDE** — Scout ignores manual selection and enrolls eligible tracked
+  players up to the cap.
+- **OPEN** — choose any initial tracked players; they become `JOINED`
+  immediately, and managers can add more later.
+- **INVITE_ONLY** — choose the managed roster up front. Use it for a subset,
+  like one team.
 
-For `INVITE_ONLY`, open the competition and manage its participants directly.
-Rows you add are `JOINED` straight away. `INVITED` and `LEFT` exist in the data
-model but there is currently no member-facing way to accept an invitation or
-leave, so use **Add all members** or add people individually.
+Initial selections for `OPEN` and `INVITE_ONLY` are created atomically with the
+competition. A duplicate, cross-server, or over-cap selection rejects the whole
+request. Participant management after creation still exposes `INVITED` and
+`LEFT`; Scout has no member-facing invitation acceptance flow.
 
 You can also cap the field with **Max participants**.
 
@@ -55,7 +62,21 @@ Choose either:
 - **Season** — the competition follows a League season's boundaries.
 
 Use a season for a climb race that should end when the season does; use fixed
-dates for anything shorter.
+dates for anything shorter. A season changes only the dates. Game version and
+queues decide which matches count. Fixed dates mean local day start through
+local day end in the **Competition timezone**, including on daylight-saving
+transitions.
+
+## Configure leaderboard updates
+
+Start and final announcements are mandatory. **Post leaderboard updates**
+controls only the standings posted while the competition is active. New competitions
+default to daily at 9:00 AM in your browser's timezone; you can disable them,
+choose a preset cadence, enter a custom at-most-daily cron expression, and save a
+separate schedule timezone.
+
+Selecting initial entrants requires `competitions:invite`. Enabling or
+customizing leaderboard delivery requires `competitions:schedule`.
 
 ## Let the lifecycle drive it
 
@@ -64,21 +85,20 @@ Scout checks competitions every fifteen minutes and, from that check:
 - announces the start when the start date arrives,
 - posts final standings and closes it when the end date passes.
 
-Intermediate standings posts are not dispatched today. For a running scoreboard
-in the channel, schedule a report instead.
+The Temporal-owned minute dispatcher selects only enabled, active competitions
+whose next fire is due. It advances the next fire after both successful and
+failed Discord attempts so one broken channel is not retried every minute.
 
 Status is derived from the dates rather than stored, so correcting a date
 immediately corrects whether the competition is upcoming, running, or finished.
 
 ## Adjust a running competition
 
-Open it and choose **Edit** to change the title, description, announcement
-channel, or dates.
-
-Changing the criteria of a running competition re-ranks it against the new
-measure — reasonable when you set it up wrong on day one, disruptive if people
-have been playing toward the old one for a week. Prefer cancelling and starting
-a clean competition in that case.
+Before the competition starts, **Edit** can change its complete setup. Once it
+is active, criteria and dates are locked because changing them would invalidate
+snapshots and lifecycle timing. You can still change the title, description,
+channel, analysis timezone, and increase the participant cap. Cancel and start
+a clean competition if the active scoring model is wrong.
 
 ![A competition detail page with an ACTIVE badge, details, schedule, criteria, standings, and participants.](../../../assets/dashboard-competition.png)
 

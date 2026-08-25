@@ -8,8 +8,10 @@ import type {
   LoadingScreenData,
   PlayerConfigEntry,
   QueueType,
+  RankedQueueType,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data";
+import { RankedQueueTypeSchema } from "@scout-for-lol/data";
 import { bettingParlayAiModel } from "#src/config/dynamic.ts";
 import {
   PARLAY_GENERATION_DEADLINE_MS,
@@ -118,7 +120,7 @@ export type StartParlayGenerationInput = {
 type GenerationReady = {
   kind: "ready";
   matchId: string;
-  queueType: "solo" | "flex";
+  queueType: RankedQueueType;
   selectedTeamId: number;
   subjects: readonly ParlaySubject[];
   context: ParlayGenerationContext;
@@ -133,10 +135,8 @@ async function prepareGeneration(
   prismaClient: ExtendedPrismaClient,
   deadline: AbortSignal,
 ): Promise<GenerationPreparation> {
-  if (
-    (input.queueType !== "solo" && input.queueType !== "flex") ||
-    input.loadingScreenData?.layout !== "standard"
-  ) {
+  const rankedQueue = RankedQueueTypeSchema.safeParse(input.queueType);
+  if (!rankedQueue.success || input.loadingScreenData?.layout !== "standard") {
     return { kind: "stop", status: "no_context" };
   }
   const matchId = `${input.gameInfo.platformId}_${input.gameInfo.gameId.toString()}`;
@@ -171,7 +171,7 @@ async function prepareGeneration(
   }
   const context = await buildParlayGenerationContext({
     matchId,
-    queue: input.queueType,
+    queue: rankedQueue.data,
     loadingScreenData: input.loadingScreenData,
     selectedTeamId: selected.teamId,
     subjects: selected.subjects,
@@ -185,7 +185,7 @@ async function prepareGeneration(
   return {
     kind: "ready",
     matchId,
-    queueType: input.queueType,
+    queueType: rankedQueue.data,
     selectedTeamId: selected.teamId,
     subjects: selected.subjects,
     context,

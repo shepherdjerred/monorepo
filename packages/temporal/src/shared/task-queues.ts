@@ -2,7 +2,10 @@ export const TASK_QUEUES = {
   DEFAULT: "default",
   /** Serial direct subprocess maintenance against the Buildkite PVCs. */
   MAINTENANCE: "maintenance",
-  SCOUT: "scout",
+  /** Scout beta activity worker, co-located with its database and Discord bot. */
+  SCOUT_BETA: "scout-beta",
+  /** Scout production activity worker, co-located with its database and Discord bot. */
+  SCOUT_PROD: "scout-prod",
   /**
    * Delayed and recurring report-only agent tasks. Kept off DEFAULT so
    * long-running Claude/Codex SDK sessions do not block HA/event cron work.

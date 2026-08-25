@@ -4,6 +4,7 @@ import type {
   CompetitionWithCriteria,
   LeaguePuuid,
   Rank,
+  RankedQueueType,
   Ranks,
   RawMatch,
 } from "@scout-for-lol/data/index.ts";
@@ -11,9 +12,11 @@ import {
   getCompetitionStatus,
   rankToLeaguePoints,
   RankSchema,
+  RanksSchema,
   LeaguePuuidSchema,
   ParticipantStatusSchema,
   RawSummonerLeagueSchema,
+  rankForQueue,
 } from "@scout-for-lol/data/index.ts";
 import { assignRanks } from "#src/league/competition/leaderboard-ranking.ts";
 import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
@@ -51,22 +54,43 @@ const logger = createLogger("competition-leaderboard");
  * Leaderboard entry with rank assigned
  */
 
-function ranksForQueue(queue: "SOLO" | "FLEX", rank: Rank): Ranks {
-  return queue === "SOLO" ? { solo: rank } : { flex: rank };
+function setRankForQueue(
+  ranks: Ranks,
+  queue: RankedQueueType,
+  rank: Rank,
+): void {
+  if (queue === "solo") {
+    ranks.solo = rank;
+  } else if (queue === "flex") {
+    ranks.flex = rank;
+  } else {
+    ranks.ranked5s = rank;
+  }
+}
+
+function hasAnyRank(ranks: Ranks | undefined): boolean {
+  return (
+    ranks !== undefined &&
+    (ranks.solo !== undefined ||
+      ranks.flex !== undefined ||
+      ranks.ranked5s !== undefined)
+  );
 }
 
 function highestRankFromCurrentRanks(
   rankData: Record<LeaguePuuid, Ranks>,
-  queue: "SOLO" | "FLEX",
+  queue: RankedQueueType,
 ): Rank | undefined {
   let highestRank: Rank | undefined;
   for (const ranks of Object.values(rankData)) {
-    highestRank = getHigherRank(
-      highestRank,
-      queue === "SOLO" ? ranks.solo : ranks.flex,
-    );
+    highestRank = getHigherRank(highestRank, rankForQueue(ranks, queue));
   }
   return highestRank;
+}
+
+function snapshotRanks(snapshot: unknown): Ranks | undefined {
+  const parsed = RanksSchema.safeParse(snapshot);
+  return parsed.success && hasAnyRank(parsed.data) ? parsed.data : undefined;
 }
 
 // ============================================================================
@@ -152,10 +176,12 @@ export async function fetchSnapshotData(options: {
 
             const solo = getRank(validatedResponse, "RANKED_SOLO_5x5");
             const flex = getRank(validatedResponse, "RANKED_FLEX_SR");
+            const ranked5s = getRank(validatedResponse, "RANKED_TEAM_5x5");
 
             allRanks[LeaguePuuidSchema.parse(account.puuid)] = {
               solo: solo,
               flex: flex,
+              ranked5s,
             };
           } catch (error) {
             logger.warn(
@@ -173,10 +199,7 @@ export async function fetchSnapshotData(options: {
             // Just fetch current rank from Riot API - this will be saved as the snapshot
             const currentRankData = await fetchCurrentRanks();
             const firstAccountRanks = Object.values(currentRankData)[0];
-            if (
-              firstAccountRanks &&
-              (firstAccountRanks.solo ?? firstAccountRanks.flex)
-            ) {
+            if (firstAccountRanks && hasAnyRank(firstAccountRanks)) {
               currentRanks[playerId.toString()] = firstAccountRanks;
             }
           })
@@ -198,15 +221,9 @@ export async function fetchSnapshotData(options: {
               );
             }
 
-            if ("solo" in startSnapshot || "flex" in startSnapshot) {
-              const data: Ranks = {};
-              if (startSnapshot.solo) {
-                data.solo = startSnapshot.solo;
-              }
-              if (startSnapshot.flex) {
-                data.flex = startSnapshot.flex;
-              }
-              startSnapshots[playerId.toString()] = data;
+            const startRanks = snapshotRanks(startSnapshot);
+            if (startRanks !== undefined) {
+              startSnapshots[playerId.toString()] = startRanks;
             }
 
             await match(competitionStatus)
@@ -227,15 +244,9 @@ export async function fetchSnapshotData(options: {
                   );
                 }
 
-                if ("solo" in endSnapshot || "flex" in endSnapshot) {
-                  const data: Ranks = {};
-                  if (endSnapshot.solo) {
-                    data.solo = endSnapshot.solo;
-                  }
-                  if (endSnapshot.flex) {
-                    data.flex = endSnapshot.flex;
-                  }
-                  endSnapshots[playerId.toString()] = data;
+                const endRanks = snapshotRanks(endSnapshot);
+                if (endRanks !== undefined) {
+                  endSnapshots[playerId.toString()] = endRanks;
                 }
               })
               .with("ACTIVE", "DRAFT", "CANCELLED", async () => {
@@ -243,10 +254,7 @@ export async function fetchSnapshotData(options: {
                 const currentRankData = await fetchCurrentRanks();
                 // Use the first account's ranks (or merge multiple accounts if needed)
                 const firstAccountRanks = Object.values(currentRankData)[0];
-                if (
-                  firstAccountRanks &&
-                  (firstAccountRanks.solo ?? firstAccountRanks.flex)
-                ) {
+                if (firstAccountRanks && hasAnyRank(firstAccountRanks)) {
                   endSnapshots[playerId.toString()] = firstAccountRanks;
                 }
               })
@@ -262,64 +270,59 @@ export async function fetchSnapshotData(options: {
             // Just fetch current rank from Riot API - this will be saved as the snapshot
             const currentRankData = await fetchCurrentRanks();
             const firstAccountRanks = Object.values(currentRankData)[0];
-            if (
-              firstAccountRanks &&
-              (firstAccountRanks.solo ?? firstAccountRanks.flex)
-            ) {
+            if (firstAccountRanks && hasAnyRank(firstAccountRanks)) {
               currentRanks[playerId.toString()] = firstAccountRanks;
             }
           })
           .with("calculate_leaderboard", async () => {
-            const queueType = criteria.queue === "SOLO" ? "solo" : "flex";
             const rankHistoryEndDate =
               competitionStatus === "ACTIVE" ? new Date() : competitionEndDate;
-            let highestRank =
-              competitionStartDate !== undefined &&
-              competitionStartDate !== null &&
-              rankHistoryEndDate !== undefined &&
-              rankHistoryEndDate !== null
-                ? await getHighestRankForPuuidsInWindow({
-                    prismaClient: prisma,
-                    puuids: participant.accounts.map(
-                      (account) => account.puuid,
-                    ),
-                    queueType,
-                    startDate: competitionStartDate,
-                    endDate: rankHistoryEndDate,
+            const currentRankData =
+              competitionStatus === "ACTIVE"
+                ? await fetchCurrentRanks()
+                : undefined;
+            const endSnapshot =
+              competitionStatus === "ENDED"
+                ? await getSnapshot(prisma, {
+                    competitionId,
+                    playerId,
+                    snapshotType: "END",
+                    criteria,
                   })
                 : undefined;
-
-            if (competitionStatus === "ACTIVE") {
-              const currentRankData = await fetchCurrentRanks();
-              highestRank = getHigherRank(
-                highestRank,
-                highestRankFromCurrentRanks(currentRankData, criteria.queue),
-              );
-            }
-
-            if (highestRank === undefined && competitionStatus === "ENDED") {
-              const endSnapshot = await getSnapshot(prisma, {
-                competitionId,
-                playerId,
-                snapshotType: "END",
-                criteria,
-              });
-              if (
-                endSnapshot &&
-                ("solo" in endSnapshot || "flex" in endSnapshot)
-              ) {
-                highestRank =
-                  criteria.queue === "SOLO"
-                    ? endSnapshot.solo
-                    : endSnapshot.flex;
+            const selectedRanks: Ranks = {};
+            for (const queueType of criteria.queues) {
+              let highestRank =
+                competitionStartDate !== undefined &&
+                competitionStartDate !== null &&
+                rankHistoryEndDate !== undefined &&
+                rankHistoryEndDate !== null
+                  ? await getHighestRankForPuuidsInWindow({
+                      prismaClient: prisma,
+                      puuids: participant.accounts.map(
+                        (account) => account.puuid,
+                      ),
+                      queueType,
+                      startDate: competitionStartDate,
+                      endDate: rankHistoryEndDate,
+                    })
+                  : undefined;
+              if (currentRankData !== undefined) {
+                highestRank = getHigherRank(
+                  highestRank,
+                  highestRankFromCurrentRanks(currentRankData, queueType),
+                );
+              }
+              const endRanks = snapshotRanks(endSnapshot);
+              if (highestRank === undefined && endRanks !== undefined) {
+                highestRank = rankForQueue(endRanks, queueType);
+              }
+              if (highestRank !== undefined) {
+                setRankForQueue(selectedRanks, queueType, highestRank);
               }
             }
-
-            if (highestRank !== undefined) {
-              currentRanks[playerId.toString()] = ranksForQueue(
-                criteria.queue,
-                highestRank,
-              );
+            if (hasAnyRank(selectedRanks)) {
+              currentRanks[playerId.toString()] = selectedRanks;
             }
           })
           .exhaustive();
@@ -471,6 +474,7 @@ export async function calculateLeaderboard(
     matches,
     players,
     snapshotData ?? undefined,
+    competition.gameVariant,
   );
 
   const participantMetadata = new Map(

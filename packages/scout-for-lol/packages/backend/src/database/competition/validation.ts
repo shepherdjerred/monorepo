@@ -1,6 +1,7 @@
 import { type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   CompetitionCriteriaSchema,
+  CompetitionGameVariantSchema,
   CompetitionVisibilitySchema,
   type DiscordAccountId,
   DiscordAccountIdSchema,
@@ -13,6 +14,7 @@ import { z } from "zod";
 import { getLimit } from "#src/configuration/flags.ts";
 import { activeOnlyWhere } from "#src/database/competition/queries.ts";
 import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
+import { validateCompetitionConfiguration } from "#src/database/competition/configuration-validation.ts";
 
 // ============================================================================
 // Constants
@@ -78,7 +80,9 @@ export const CompetitionCreationSchema = z
       .int("Max participants must be an integer")
       .min(2, "Competition must allow at least 2 participants")
       .max(100, "Competition cannot exceed 100 participants")
-      .default(50),
+      .default(100),
+
+    gameVariant: CompetitionGameVariantSchema.default("MODERN"),
 
     // Dates (discriminated union enforces XOR)
     dates: CompetitionDatesSchema,
@@ -99,7 +103,10 @@ export const CompetitionCreationSchema = z
           return false;
         }
         const criteria = { type: data.criteriaType, ...objectResult.data };
-        return CompetitionCriteriaSchema.safeParse(criteria).success;
+        const parsedCriteria = CompetitionCriteriaSchema.safeParse(criteria);
+        if (!parsedCriteria.success) return false;
+        validateCompetitionConfiguration(parsedCriteria.data, data.gameVariant);
+        return true;
       } catch {
         return false;
       }

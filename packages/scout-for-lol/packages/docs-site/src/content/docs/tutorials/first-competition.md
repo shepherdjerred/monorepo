@@ -27,13 +27,14 @@ A leaderboard that posts itself to your announcement channel:
 Go to the [Scout dashboard](/app/), choose your server, and open the
 **Competitions** tab. Choose **New competition**.
 
-## 2. Start from a preset
+## 2. Start from a scenario
 
-The form offers presets. Choose **Most games — 2-month sprint**.
+Choose **All-queue activity** from the scenario library.
 
-The preset fills in a title, a description, `MOST_GAMES_PLAYED` criteria across
-every queue, and a start and end date sixty days apart. You are going to change
-the dates so you do not have to wait two months to see anything.
+The starter fills in the title, description, `MOST_GAMES_PLAYED` criterion,
+Modern League, the `ALL` queue choice, and a 30-day window together. It is only
+a starting point: changing any field labels the setup **Customized from
+All-queue activity**.
 
 ## 3. Set a short window
 
@@ -45,7 +46,7 @@ happen rather than read about it.
 
 ## 4. Choose the announcement channel
 
-Pick the channel the leaderboard should post to under **Announcement channel**.
+Pick the channel the leaderboard should post to under **Discord channel**.
 Use the same channel you used for match notifications so everything is in one
 place.
 
@@ -53,22 +54,30 @@ place.
 
 Set **Visibility** to **SERVER_WIDE**.
 
-Scout has three visibilities:
+Scout has three roster modes:
 
 - `SERVER_WIDE` — every tracked player in the server is a participant.
-- `OPEN` — marked open to the server, but participants are still added by an
-  admin; there is no self-service join yet.
-- `INVITE_ONLY` — only people you invite are participants.
+- `OPEN` — selected tracked players join immediately; more can be added later.
+- `INVITE_ONLY` — the selected tracked players join immediately and the roster
+  stays manager-controlled.
 
 `SERVER_WIDE` is the one that needs no further work, which is what you want for
 a first run.
 
-## 6. Create it
+## 6. Review updates
+
+New competitions start with **Post leaderboard updates** enabled every day at
+9:00 AM in your browser's timezone. Leave that setting on for this tutorial.
+The **Review** section should say **Modern League** and **Most games played · All
+queues**, list the server-wide roster, show your inclusive date window, and show
+the 9:00 AM delivery schedule.
+
+## 7. Create it
 
 Choose **Create**. The competition appears in the list with a status derived
 from its dates — with a start date of today, it is already running.
 
-## 7. Look at the leaderboard
+## 8. Look at the leaderboard
 
 Open the competition. The detail page shows the participants and the standings.
 
@@ -80,19 +89,19 @@ same match data that produces your notifications. Refreshing needs the
 Standings are not frozen at creation either: as tracked players finish games,
 choose **Refresh standings** again to see the rows move.
 
-## 8. Let the lifecycle run
+## 9. Let the lifecycle run
 
 Scout checks competition lifecycle every fifteen minutes. When your end date
 arrives, it closes the competition and posts the final standings to the
 announcement channel you chose — nobody has to remember to do it.
 
-Interim standings are not posted automatically today, so open the competition
-page and refresh it while the competition runs — or build a [scheduled
-report](/docs/tutorials/first-report/) if you want the race in the channel.
+While it is active, the Temporal-owned minute dispatcher posts standings when
+the saved schedule is due. Turning leaderboard updates off does not suppress the
+mandatory start and final announcements.
 
 ## What you did
 
-You created a fixed-window competition from a preset, made every tracked player
+You created a fixed-window competition from a starter, made every tracked player
 a participant with one visibility setting, and handed the announcements to
 Scout's lifecycle.
 

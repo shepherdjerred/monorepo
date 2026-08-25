@@ -146,6 +146,7 @@ export type FlagName =
   | "weekly_parlays_enabled"
   | "betting_player_bet_outcome_dm_enabled"
   | "betting_settlement_dm_enabled"
+  | "competition_builder_v2_enabled"
   | "debug"
   | "initial_match_history_import_enabled"
   | "tournament_lobbies_enabled";
@@ -169,6 +170,7 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "weekly_parlays_enabled",
     "betting_player_bet_outcome_dm_enabled",
     "betting_settlement_dm_enabled",
+    "competition_builder_v2_enabled",
     "tournament_lobbies_enabled",
   ],
 );
@@ -183,6 +185,10 @@ export function isFeatureHardDisabled(name: FlagName): boolean {
  * Central registry for all boolean flags
  */
 const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
+  competition_builder_v2_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+  },
   ai_reports_enabled: {
     default: false,
     overrides: [

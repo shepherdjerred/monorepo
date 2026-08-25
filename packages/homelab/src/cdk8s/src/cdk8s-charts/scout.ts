@@ -128,6 +128,18 @@ export function createScoutChart(app: App, stage: Stage) {
           to: [{ podSelector: {} }],
           ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
         },
+        // Temporal activity polling for the stage-local competition dispatcher.
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              },
+              podSelector: { matchLabels: { app: "temporal-server" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
         // External HTTPS (Riot API, Discord, Sentry, OpenAI, Gemini, ElevenLabs)
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],

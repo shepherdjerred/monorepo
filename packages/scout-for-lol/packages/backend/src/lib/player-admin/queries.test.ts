@@ -26,7 +26,7 @@ function makeCompetition(
     isCancelled: false,
     visibility: "OPEN",
     criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queue: "FLEX" }),
+    criteriaConfig: JSON.stringify({ queues: ["flex"] }),
     maxParticipants: 50,
     startDate: new Date("2026-01-01T00:00:00Z"),
     endDate: new Date("2126-01-01T00:00:00Z"),
@@ -45,7 +45,10 @@ function makeCompetition(
     updatedTime: new Date("2026-01-01T00:00:00Z"),
     season: null,
     ...overrides,
+    gameVariant: overrides.gameVariant ?? "MODERN",
     analysisTimezone: overrides.analysisTimezone ?? "UTC",
+    scheduledUpdatesEnabled: overrides.scheduledUpdatesEnabled ?? false,
+    scheduleTimezone: overrides.scheduleTimezone ?? "UTC",
   };
 }
 

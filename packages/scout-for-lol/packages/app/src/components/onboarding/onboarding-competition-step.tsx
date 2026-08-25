@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -11,6 +11,7 @@ import {
 import { validateForm } from "#src/lib/competition-form-state.ts";
 import { COMPETITION_EXAMPLES } from "#src/lib/onboarding-examples.ts";
 import { OnboardingStepFrame } from "#src/components/onboarding/onboarding-step-frame.tsx";
+import { CompetitionBuilderV2 } from "#src/components/competition-builder-v2.tsx";
 
 const TITLE = "Start a competition";
 const DESCRIPTION =
@@ -37,6 +38,11 @@ export function OnboardingCompetitionStep(props: {
     initialState(props.exampleId ?? "", initialChannel),
   );
   const [error, setError] = useState<string | null>(null);
+  const builderQuery = useQuery(
+    trpc.competition.builderCapabilities.queryOptions({
+      guildId: props.guildId,
+    }),
+  );
 
   const mutation = useMutation(
     trpc.competition.create.mutationOptions({
@@ -67,7 +73,44 @@ export function OnboardingCompetitionStep(props: {
       maxParticipants: validated.maxParticipants,
       dates: validated.dates,
       criteria: validated.criteria,
+      analysisTimezone: state.analysisTimezone,
     });
+  }
+
+  if (builderQuery.isLoading) {
+    return <p className="text-sm text-scout-subtle">Loading builder…</p>;
+  }
+  if (builderQuery.error !== null) {
+    return (
+      <p className="text-sm text-scout-danger">{builderQuery.error.message}</p>
+    );
+  }
+
+  if (builderQuery.data?.builderV2Enabled === true) {
+    return (
+      <OnboardingStepFrame
+        step="build-competition"
+        title={TITLE}
+        description={DESCRIPTION}
+        hasChannels={props.channels.length > 0}
+        onBack={props.onBack}
+        onSkip={props.onSkip}
+      >
+        <div className="space-y-3">
+          <CompetitionBuilderV2
+            guildId={props.guildId}
+            channels={props.channels}
+            {...(props.exampleId === null
+              ? {}
+              : { initialScenarioId: props.exampleId })}
+            onCreated={props.onCreated}
+          />
+          <Button variant="ghost" type="button" onClick={props.onBack}>
+            ← Back
+          </Button>
+        </div>
+      </OnboardingStepFrame>
+    );
   }
 
   return (

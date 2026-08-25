@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const DEFAULT_COMPETITION_CRON = "0 0 * * *";
 export const DEFAULT_SCHEDULE_TIMEZONE = "UTC";
+export const DEFAULT_V2_COMPETITION_CRON = "0 9 * * *";
 
 const MIN_FIRE_GAP_MS = 23 * 60 * 60 * 1000;
 const FIRE_SAMPLE_COUNT = 10;
@@ -74,6 +75,16 @@ export const ReportScheduleTimezoneSchema = z
       ctx.addIssue({ code: "custom", message: "Unknown schedule timezone." });
     }
   });
+
+export const CompetitionScheduledUpdatesSchema = z.object({
+  enabled: z.boolean(),
+  cronExpression: CompetitionCronSchema,
+  timezone: ReportScheduleTimezoneSchema,
+});
+
+export type CompetitionScheduledUpdates = z.infer<
+  typeof CompetitionScheduledUpdatesSchema
+>;
 
 export function computeNextScheduledUpdateAt(
   cronExpression: string,

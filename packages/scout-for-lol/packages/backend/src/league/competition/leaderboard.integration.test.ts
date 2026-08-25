@@ -6,6 +6,7 @@ import { addParticipant } from "#src/database/competition/participants.ts";
 import {
   PlayerIdSchema,
   parseCompetition,
+  type CompetitionCriteria,
   type Rank,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -36,6 +37,10 @@ const s3Mock = mockClient(S3Client);
 
 // Create a temporary database for testing
 const { prisma } = createTestDatabase("leaderboard-test");
+const mostSoloGamesCriteria: CompetitionCriteria = {
+  type: "MOST_GAMES_PLAYED",
+  queues: ["solo"],
+};
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -128,7 +133,7 @@ describe("calculateLeaderboard integration tests", () => {
         visibility: "OPEN",
         maxParticipants: 10,
         criteriaType: "MOST_GAMES_PLAYED",
-        criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+        criteriaConfig: JSON.stringify({ queues: ["solo"] }),
         isCancelled: false,
         startDate: futureDate,
         endDate: endDate,
@@ -142,7 +147,11 @@ describe("calculateLeaderboard integration tests", () => {
     // Parse it to get CompetitionWithCriteria
     const competition = {
       ...rawCompetition,
-      criteria: { type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const },
+      gameVariant: "MODERN" as const,
+      criteria: {
+        type: "MOST_GAMES_PLAYED" as const,
+        queues: [...(["solo"] as const)],
+      },
     };
 
     // Should throw error for DRAFT competition
@@ -166,10 +175,7 @@ describe("calculateLeaderboard integration tests", () => {
         type: "FIXED_DATES",
         ...dates,
       },
-      criteria: {
-        type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
-      },
+      criteria: mostSoloGamesCriteria,
     });
 
     // No participants added
@@ -251,10 +257,7 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
         startDate,
         endDate,
       },
-      criteria: {
-        type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
-      },
+      criteria: mostSoloGamesCriteria,
     });
 
     await addParticipant({
@@ -314,7 +317,7 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
       visibility: "OPEN",
       maxParticipants: 10,
       dates: { type: "FIXED_DATES", startDate, endDate: activeEndDate },
-      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+      criteria: { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
     });
 
     await addParticipant({
@@ -461,7 +464,8 @@ describe("calculateLeaderboard - MOST_RANK_CLIMB Criteria", () => {
       },
       criteria: {
         type: "MOST_RANK_CLIMB",
-        queue: "SOLO",
+        aggregation: "MAX",
+        queues: ["solo"],
       },
     });
 
@@ -580,7 +584,8 @@ describe("calculateLeaderboard integration tests - rank history", () => {
       },
       criteria: {
         type: "HIGHEST_RANK",
-        queue: "SOLO",
+        aggregation: "MAX",
+        queues: ["solo"],
       },
     });
     await prisma.competitionParticipant.create({
@@ -716,10 +721,7 @@ describe("calculateLeaderboard integration tests - Filters", () => {
         type: "FIXED_DATES",
         ...dates,
       },
-      criteria: {
-        type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
-      },
+      criteria: mostSoloGamesCriteria,
     });
 
     // Add participants with different statuses

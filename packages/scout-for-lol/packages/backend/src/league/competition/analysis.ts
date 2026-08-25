@@ -1,5 +1,4 @@
 import {
-  COMPETITION_QUEUE_TO_QUEUE_TYPES,
   CompetitionAnalysisPresetSchema,
   ReportQueryPlanSchema,
   VisualizationSnapshotSchema,
@@ -12,6 +11,7 @@ import {
   type CompetitionAnalysisPreset,
   type CompetitionCriteria,
   type CompetitionQueueType,
+  type CompetitionGameVariant,
   type CompetitionWithCriteria,
   type ReportQueryPlan,
   type TemporalAnalysisSpec,
@@ -167,7 +167,10 @@ export async function analyzeCompetition(
             rangeOverride: range,
           },
           parseAndCompile(
-            competitionCriterionQuery(params.competition.criteria),
+            competitionCriterionQuery(
+              params.competition.criteria,
+              params.competition.gameVariant,
+            ),
           ),
         );
   const visualizationResult =
@@ -222,7 +225,10 @@ async function analyzeRankPosition(input: {
             rangeOverride: range,
           },
           parseAndCompile(
-            competitionCriterionQuery(params.competition.criteria),
+            competitionCriterionQuery(
+              params.competition.criteria,
+              params.competition.gameVariant,
+            ),
           ),
         )
       : null;
@@ -265,8 +271,12 @@ function requireStandingsResult(
 
 export function competitionCriterionQuery(
   criteria: CompetitionCriteria,
+  gameVariant: CompetitionGameVariant = "MODERN",
 ): string {
-  const queueCondition = competitionQueueCondition(criteria.queue ?? "ALL");
+  const queueCondition = competitionQueueCondition(
+    criteria.queues,
+    gameVariant,
+  );
   if (criteria.type === "MOST_GAMES_PLAYED") {
     return criterionScoutQl("games", [queueCondition]);
   }
@@ -301,14 +311,16 @@ function criterionScoutQl(
   return `SELECT player, ${metric} FROM competition_match_participants${where} GROUP BY player DURING ALL TIME ORDER BY ${metric} DESC LIMIT 100 RENDER bar_chart WITH (y = ${metric})`;
 }
 
-function competitionQueueCondition(queue: CompetitionQueueType): string | null {
-  if (queue === "ALL") return null;
-  const values =
-    queue === "RANKED_ANY"
-      ? ["solo", "flex"]
-      : queue === "CUSTOM"
-        ? ["custom"]
-        : COMPETITION_QUEUE_TO_QUEUE_TYPES[queue];
+function competitionQueueCondition(
+  queues: readonly CompetitionQueueType[],
+  gameVariant: CompetitionGameVariant,
+): string {
+  if (queues.includes("ALL")) {
+    return gameVariant === "CLASSIC"
+      ? "queue IN ('classic', 'classic aram mayhem')"
+      : "queue NOT IN ('classic', 'classic aram mayhem')";
+  }
+  const values = queues.filter((queue) => queue !== "ALL");
   return `queue IN (${values.map((value) => `'${value}'`).join(", ")})`;
 }
 

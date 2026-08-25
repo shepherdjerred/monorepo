@@ -26,6 +26,10 @@ const MessageContentSchema = z.object({
   content: z.string(),
   embeds: z.array(z.unknown()).optional(),
 });
+const mostSoloGamesCriteria: CompetitionCriteria = {
+  type: "MOST_GAMES_PLAYED",
+  queues: ["solo"],
+};
 
 // Mock the Discord send function BEFORE importing daily-update
 let sentMessages: {
@@ -199,10 +203,7 @@ afterAll(async () => {
 
 describe("Daily Leaderboard Update", () => {
   test("posts update for single active competition", async () => {
-    const criteria: CompetitionCriteria = {
-      type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
-    };
+    const criteria = mostSoloGamesCriteria;
 
     // Use dates relative to actual current time
     const now = new Date();
@@ -244,10 +245,7 @@ describe("Daily Leaderboard Update", () => {
   });
 
   test("posts updates for multiple active competitions", async () => {
-    const criteria: CompetitionCriteria = {
-      type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
-    };
+    const criteria = mostSoloGamesCriteria;
 
     // Use dates relative to actual current time
     const now = new Date();
@@ -306,10 +304,7 @@ describe("Daily Leaderboard Update", () => {
   });
 
   test("skips non-active competitions", async () => {
-    const criteria: CompetitionCriteria = {
-      type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
-    };
+    const criteria = mostSoloGamesCriteria;
 
     const now = new Date();
 
@@ -352,10 +347,7 @@ describe("Daily Leaderboard Update", () => {
   });
 
   test("handles competition with no participants", async () => {
-    const criteria: CompetitionCriteria = {
-      type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
-    };
+    const criteria = mostSoloGamesCriteria;
 
     const now = new Date();
     const startDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
@@ -380,10 +372,7 @@ describe("Daily Leaderboard Update", () => {
 
 describe("Daily Leaderboard Update - Error Handling & Edge Cases", () => {
   test("continues processing after error in one competition", async () => {
-    const criteria: CompetitionCriteria = {
-      type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
-    };
+    const criteria = mostSoloGamesCriteria;
 
     const now = new Date();
     const startDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
@@ -441,10 +430,7 @@ describe("Daily Leaderboard Update - Error Handling & Edge Cases", () => {
   });
 
   test("message includes day count for active competition", async () => {
-    const criteria: CompetitionCriteria = {
-      type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
-    };
+    const criteria = mostSoloGamesCriteria;
 
     const now = new Date();
     const startDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
@@ -487,10 +473,7 @@ describe("Daily Leaderboard Update - Error Handling & Edge Cases", () => {
   });
 
   test("respects rate limiting with delays between posts", async () => {
-    const criteria: CompetitionCriteria = {
-      type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
-    };
+    const criteria = mostSoloGamesCriteria;
 
     const now = new Date();
     const startDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);

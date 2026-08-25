@@ -51,6 +51,15 @@ const context = ParlayGenerationContextSchema.parse({
 });
 
 describe("parlay prompt", () => {
+  test("accepts Ranked 5s as a distinct ranked context", () => {
+    expect(
+      ParlayGenerationContextSchema.parse({
+        ...context,
+        queue: "ranked 5s",
+      }).queue,
+    ).toBe("ranked 5s");
+  });
+
   test("renders deterministically with exactly the match shortlist", () => {
     const first = buildParlayProposalPrompt(context);
     expect(buildParlayProposalPrompt(context)).toBe(first);

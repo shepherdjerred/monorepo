@@ -4,6 +4,7 @@ import { Namespace } from "cdk8s-plus-31";
 import {
   IntOrString,
   KubeNetworkPolicy,
+  type NetworkPolicyIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
 import { createTemporalDynamicConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/dynamic-config.ts";
@@ -14,6 +15,20 @@ import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker-network-policy.ts";
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker.ts";
 import { createTemporalScoutBetaNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/scout-beta-network.ts";
+
+function scoutCompetitionActivityIngress(): NetworkPolicyIngressRule {
+  return {
+    // Scout owns competition database and Discord delivery activities. Each
+    // stage polls its own task queue from its stage namespace.
+    from: ["scout-beta", "scout-prod"].map((namespace) => ({
+      namespaceSelector: {
+        matchLabels: { "kubernetes.io/metadata.name": namespace },
+      },
+      podSelector: { matchLabels: { app: "scout-backend" } },
+    })),
+    ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+  };
+}
 
 export function createTemporalChart(app: App) {
   const chart = new Chart(app, "temporal", {
@@ -134,6 +149,7 @@ export function createTemporalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
+        scoutCompetitionActivityIngress(),
         {
           // Allow Prometheus scraping metrics
           from: [

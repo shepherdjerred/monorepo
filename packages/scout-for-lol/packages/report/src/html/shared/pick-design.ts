@@ -44,5 +44,7 @@ export function pickRankedDesign(match: CompletedMatch): RankedDesign {
  * Everything else keeps the existing Report.
  */
 export function isRankedQueue(queueType: CompletedMatch["queueType"]): boolean {
-  return queueType === "solo" || queueType === "flex";
+  return (
+    queueType === "solo" || queueType === "flex" || queueType === "ranked 5s"
+  );
 }

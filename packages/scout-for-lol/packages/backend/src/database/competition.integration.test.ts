@@ -110,7 +110,7 @@ async function createTestCompetition(
     },
     criteria: {
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     },
   };
 

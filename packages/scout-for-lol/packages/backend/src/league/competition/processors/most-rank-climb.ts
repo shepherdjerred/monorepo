@@ -1,5 +1,5 @@
 import type { MostRankClimbCriteria, Ranks } from "@scout-for-lol/data";
-import { rankToLeaguePoints } from "@scout-for-lol/data";
+import { rankForQueue, rankToLeaguePoints } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("processors-most-rank-climb");
@@ -45,39 +45,54 @@ export function processMostRankClimb(
       continue;
     }
 
-    const startRank =
-      criteria.queue === "SOLO" ? startRanks.solo : startRanks.flex;
-    const endRank = criteria.queue === "SOLO" ? endRanks.solo : endRanks.flex;
+    const components = criteria.queues.flatMap((queue) => {
+      const startRank = rankForQueue(startRanks, queue);
+      const endRank = rankForQueue(endRanks, queue);
+      if (startRank === undefined || endRank === undefined) {
+        return [];
+      }
+      const startLP = rankToLeaguePoints(startRank);
+      const endLP = rankToLeaguePoints(endRank);
+      return [
+        {
+          queue,
+          startRank,
+          endRank,
+          startLP,
+          endLP,
+          lpGained: endLP - startLP,
+        },
+      ];
+    });
 
-    // Skip if player doesn't have rank data for the specific queue
-    if (!startRank) {
+    if (components.length === 0) {
       logger.info(
-        `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no ${criteria.queue} rank at START`,
+        `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no selected ladder has complete snapshots`,
       );
       continue;
     }
 
-    if (!endRank) {
-      logger.info(
-        `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no ${criteria.queue} rank at END`,
-      );
-      continue;
-    }
-
-    // Calculate LP delta
-    const startLP = rankToLeaguePoints(startRank);
-    const endLP = rankToLeaguePoints(endRank);
-    const lpGained = endLP - startLP;
+    const winning = components.reduce((best, component) =>
+      component.lpGained > best.lpGained ? component : best,
+    );
+    const combinedLpGained = components.reduce(
+      (total, component) => total + component.lpGained,
+      0,
+    );
 
     entries.push({
       playerId: participant.id,
       playerName: participant.alias,
-      score: lpGained,
+      score:
+        criteria.aggregation === "MAX" ? winning.lpGained : combinedLpGained,
       metadata: {
-        startRank: startRank,
-        endRank: endRank,
-        startLP,
-        endLP,
+        aggregation: criteria.aggregation,
+        winningQueue: winning.queue,
+        startRank: winning.startRank,
+        endRank: winning.endRank,
+        startLP: winning.startLP,
+        endLP: winning.endLP,
+        components,
       },
       discordId: participant.discordId,
     });

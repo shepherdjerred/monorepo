@@ -107,7 +107,7 @@ export type PlayerMatchOutcome = {
 export type SimplifiedMatch = {
   matchId: string;
   durationSeconds: number;
-  queueType: "solo" | "flex" | undefined;
+  queueType: "solo" | "flex" | "ranked 5s" | undefined;
   trackedPlayers: PlayerMatchOutcome[];
 };
 

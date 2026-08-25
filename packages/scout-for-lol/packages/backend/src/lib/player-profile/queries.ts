@@ -78,12 +78,14 @@ function parseRank(serialized: string | null): Rank | undefined {
 }
 
 /** Latest known rank per queue, newest game first. */
-async function latestRanks(
-  puuids: string[],
-): Promise<{ solo: Rank | undefined; flex: Rank | undefined }> {
+async function latestRanks(puuids: string[]): Promise<{
+  solo: Rank | undefined;
+  flex: Rank | undefined;
+  ranked5s: Rank | undefined;
+}> {
   const [rankHistory, current] = await Promise.all([
     Promise.all(
-      (["solo", "flex"] as const).map(async (queueType) =>
+      (["solo", "flex", "ranked 5s"] as const).map(async (queueType) =>
         prisma.matchRankHistory.findFirst({
           where: {
             puuid: { in: puuids },
@@ -105,13 +107,19 @@ async function latestRanks(
 
   function newestRank(
     live: (typeof rankHistory)[number] | undefined,
-    queueType: "solo" | "flex",
+    queueType: "solo" | "flex" | "ranked 5s",
   ): Rank | undefined {
-    const snapshot = current.find((entry) =>
-      queueType === "solo" ? entry.soloRank !== null : entry.flexRank !== null,
-    );
+    const snapshot = current.find((entry) => {
+      if (queueType === "solo") return entry.soloRank !== null;
+      if (queueType === "flex") return entry.flexRank !== null;
+      return entry.ranked5sRank !== null;
+    });
     const snapshotValue =
-      queueType === "solo" ? snapshot?.soloRank : snapshot?.flexRank;
+      queueType === "solo"
+        ? snapshot?.soloRank
+        : queueType === "flex"
+          ? snapshot?.flexRank
+          : snapshot?.ranked5sRank;
     if (
       snapshot !== undefined &&
       (live == null || snapshot.fetchedAt > live.capturedAt)
@@ -124,6 +132,7 @@ async function latestRanks(
   return {
     solo: newestRank(rankHistory[0], "solo"),
     flex: newestRank(rankHistory[1], "flex"),
+    ranked5s: newestRank(rankHistory[2], "ranked 5s"),
   };
 }
 

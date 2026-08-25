@@ -12,6 +12,7 @@ import {
   getCompetitionById,
   getCompetitionsByServer,
   getCompetitionsByServerPaginated,
+  getDueCompetitions,
 } from "#src/database/competition/queries.ts";
 import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
@@ -22,6 +23,10 @@ import { getSeasonFilterTimes } from "#src/testing/season-filter-times.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("competition-queries-test");
+const mostSoloGamesCriteria: CreateCompetitionInput["criteria"] = {
+  type: "MOST_GAMES_PLAYED",
+  queues: ["solo"],
+};
 
 beforeEach(async () => {
   // Clean up database before each test
@@ -31,6 +36,63 @@ beforeEach(async () => {
 });
 afterAll(async () => {
   await prisma.$disconnect();
+});
+
+describe("getDueCompetitions", () => {
+  test("returns only enabled, active, due competitions", async () => {
+    const now = new Date("2026-08-23T18:00:00.000Z");
+    const common: Omit<CreateCompetitionInput, "title" | "scheduledUpdates"> = {
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
+      description: "Scheduled query test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: {
+        type: "FIXED_DATES",
+        startDate: new Date("2026-08-01T00:00:00.000Z"),
+        endDate: new Date("2026-09-01T00:00:00.000Z"),
+      },
+      criteria: mostSoloGamesCriteria,
+    };
+    const enabled = await createCompetition(prisma, {
+      ...common,
+      title: "Enabled",
+      scheduledUpdates: {
+        enabled: true,
+        cronExpression: "0 9 * * *",
+        timezone: "America/Los_Angeles",
+      },
+    });
+    const disabled = await createCompetition(prisma, {
+      ...common,
+      title: "Disabled",
+    });
+    const ended = await createCompetition(prisma, {
+      ...common,
+      title: "Ended",
+      dates: {
+        type: "FIXED_DATES",
+        startDate: new Date("2026-07-01T00:00:00.000Z"),
+        endDate: new Date("2026-08-01T00:00:00.000Z"),
+      },
+      scheduledUpdates: {
+        enabled: true,
+        cronExpression: "0 9 * * *",
+        timezone: "America/Los_Angeles",
+      },
+    });
+    await prisma.competition.updateMany({
+      where: { id: { in: [enabled.id, disabled.id, ended.id] } },
+      data: {
+        startProcessedAt: new Date("2026-08-01T00:00:00.000Z"),
+        nextScheduledUpdateAt: new Date("2026-08-23T17:59:00.000Z"),
+      },
+    });
+
+    const due = await getDueCompetitions(prisma, now);
+    expect(due.map((competition) => competition.id)).toEqual([enabled.id]);
+  });
 });
 
 // ============================================================================
@@ -58,7 +120,7 @@ describe("createCompetition", () => {
       },
       criteria: {
         type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
+        queues: ["solo"],
       },
     };
 
@@ -68,7 +130,7 @@ describe("createCompetition", () => {
     expect(competition.title).toBe("Test Competition");
     expect(competition.criteria.type).toBe("MOST_GAMES_PLAYED");
     if (competition.criteria.type === "MOST_GAMES_PLAYED") {
-      expect(competition.criteria.queue).toBe("SOLO");
+      expect(competition.criteria.queues).toEqual(["solo"]);
     }
   });
 
@@ -87,7 +149,8 @@ describe("createCompetition", () => {
       },
       criteria: {
         type: "HIGHEST_RANK",
-        queue: "SOLO",
+        aggregation: "MAX",
+        queues: ["solo"],
       },
     };
 
@@ -117,7 +180,7 @@ describe("createCompetition", () => {
       criteria: {
         type: "MOST_WINS_CHAMPION",
         championId: ChampionIdSchema.parse(157),
-        queue: "SOLO",
+        queues: ["solo"],
       },
     };
 
@@ -144,7 +207,7 @@ describe("getCompetitionById", () => {
       visibility: "OPEN",
       maxParticipants: 50,
       dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
-      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      criteria: mostSoloGamesCriteria,
     };
 
     const created = await createCompetition(prisma, input);
@@ -176,7 +239,7 @@ describe("getCompetitionsByServer", () => {
         visibility: "OPEN",
         maxParticipants: 50,
         dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
-        criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+        criteria: mostSoloGamesCriteria,
       });
     }
 
@@ -198,7 +261,7 @@ describe("getCompetitionsByServer", () => {
         visibility: "OPEN",
         maxParticipants: 50,
         dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
-        criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+        criteria: mostSoloGamesCriteria,
       });
     }
 
@@ -242,7 +305,7 @@ describe("getCompetitionsByServer", () => {
         startDate: now,
         endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
       },
-      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      criteria: mostSoloGamesCriteria,
     });
 
     // Ended competition
@@ -259,7 +322,7 @@ describe("getCompetitionsByServer", () => {
         startDate: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
         endDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
       },
-      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      criteria: mostSoloGamesCriteria,
     });
 
     const activeOnly = await getCompetitionsByServer(
@@ -287,7 +350,7 @@ describe("getCompetitionsByServer", () => {
       visibility: "OPEN",
       maxParticipants: 50,
       dates: { type: "SEASON", seasonId },
-      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+      criteria: { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
     });
 
     const activeOnly = await getCompetitionsByServer(
@@ -312,7 +375,7 @@ describe("getCompetitionsByServer", () => {
       visibility: "OPEN",
       maxParticipants: 50,
       dates: { type: "SEASON", seasonId },
-      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+      criteria: { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
     });
 
     const activeOnly = await getCompetitionsByServer(
@@ -338,7 +401,7 @@ describe("getCompetitionsByServer", () => {
       visibility: "OPEN",
       maxParticipants: 50,
       dates: { type: "SEASON", seasonId },
-      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+      criteria: { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
     });
 
     // Simulate the lifecycle cron having wrapped this comp up early
@@ -368,7 +431,7 @@ describe("getCompetitionsByServer", () => {
       visibility: "OPEN",
       maxParticipants: 50,
       dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
-      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      criteria: mostSoloGamesCriteria,
     });
 
     await createCompetition(prisma, {
@@ -380,7 +443,7 @@ describe("getCompetitionsByServer", () => {
       visibility: "OPEN",
       maxParticipants: 50,
       dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
-      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      criteria: mostSoloGamesCriteria,
     });
 
     const owner1Comps = await getCompetitionsByServer(
@@ -420,7 +483,7 @@ describe("getActiveCompetitions", () => {
           startDate: now,
           endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
         },
-        criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+        criteria: mostSoloGamesCriteria,
       });
     }
 
@@ -444,7 +507,7 @@ describe("getActiveCompetitions", () => {
         startDate: now,
         endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
       },
-      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      criteria: mostSoloGamesCriteria,
     });
 
     await cancelCompetition(prisma, created.id);
@@ -470,7 +533,7 @@ describe("getActiveCompetitions", () => {
         startDate: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
         endDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), // Yesterday
       },
-      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      criteria: mostSoloGamesCriteria,
     });
 
     const active = await getActiveCompetitions(prisma);
@@ -490,7 +553,7 @@ describe("getActiveCompetitions", () => {
       visibility: "OPEN",
       maxParticipants: 50,
       dates: { type: "SEASON", seasonId },
-      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+      criteria: { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
     });
 
     const active = await getActiveCompetitions(prisma, inactiveAt);
@@ -510,7 +573,7 @@ describe("getActiveCompetitions", () => {
       visibility: "OPEN",
       maxParticipants: 50,
       dates: { type: "SEASON", seasonId },
-      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+      criteria: { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
     });
 
     const active = await getActiveCompetitions(prisma, activeAt);
@@ -534,7 +597,7 @@ describe("cancelCompetition", () => {
       visibility: "OPEN",
       maxParticipants: 50,
       dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
-      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      criteria: mostSoloGamesCriteria,
     });
 
     const cancelled = await cancelCompetition(prisma, created.id);

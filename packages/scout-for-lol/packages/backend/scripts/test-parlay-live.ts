@@ -2,7 +2,7 @@ import {
   createOpenRouterRuntime,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
-import { LeaguePuuidSchema } from "@scout-for-lol/data";
+import { LeaguePuuidSchema, type RankedQueueType } from "@scout-for-lol/data";
 import {
   DEFAULT_PARLAY_AI_MODEL,
   PARLAY_GENERATION_DEADLINE_MS,
@@ -91,7 +91,7 @@ function form(available: boolean, games: number) {
 }
 
 function scenario(input: {
-  queue: "solo" | "flex";
+  queue: RankedQueueType;
   subjectCount: number;
   historyAvailable: boolean;
   opposingTracked?: boolean;

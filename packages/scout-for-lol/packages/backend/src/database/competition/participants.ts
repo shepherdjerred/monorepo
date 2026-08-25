@@ -222,6 +222,64 @@ export async function bulkEnrollTrackedPlayers(options: {
   return { added };
 }
 
+/**
+ * Validate and join the exact tracked-player selection supplied at creation.
+ * The caller owns the surrounding transaction, so a rejected roster also
+ * rolls back the competition row.
+ */
+export async function enrollInitialPlayers(options: {
+  prisma: Db;
+  competitionId: CompetitionId;
+  guildId: DiscordGuildId;
+  playerIds: PlayerId[];
+  maxParticipants: number;
+}): Promise<{ added: number }> {
+  const { prisma, competitionId, guildId, playerIds, maxParticipants } =
+    options;
+  if (new Set(playerIds).size !== playerIds.length) {
+    throw new InitialEntrantsValidationError(
+      "Initial entrants must be unique.",
+    );
+  }
+  if (playerIds.length > maxParticipants) {
+    throw new InitialEntrantsValidationError(
+      `Initial entrants exceed the participant cap (${maxParticipants.toString()}).`,
+    );
+  }
+  if (playerIds.length === 0) {
+    return { added: 0 };
+  }
+
+  const players = await prisma.player.findMany({
+    where: { id: { in: playerIds } },
+    select: { id: true, serverId: true },
+  });
+  if (
+    players.length !== playerIds.length ||
+    players.some((player) => player.serverId !== guildId)
+  ) {
+    throw new InitialEntrantsValidationError(
+      "Every initial entrant must be a tracked player in this server.",
+    );
+  }
+
+  const now = new Date();
+  const result = await prisma.competitionParticipant.createMany({
+    data: playerIds.map((playerId) => ({
+      competitionId,
+      playerId,
+      status: "JOINED",
+      invitedBy: null,
+      invitedAt: null,
+      joinedAt: now,
+      leftAt: null,
+    })),
+  });
+  return { added: result.count };
+}
+
+export class InitialEntrantsValidationError extends Error {}
+
 // ============================================================================
 // Update Participant Status
 // ============================================================================

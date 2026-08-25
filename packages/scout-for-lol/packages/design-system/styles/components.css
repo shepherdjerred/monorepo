@@ -203,6 +203,27 @@
   color: var(--scout-color-text-muted);
 }
 
+.scout-control[type="date"] {
+  color: var(--scout-color-text);
+}
+
+.scout-control[type="date"]::-webkit-datetime-edit,
+.scout-control[type="date"]::-webkit-datetime-edit-fields-wrapper,
+.scout-control[type="date"]::-webkit-datetime-edit-day-field,
+.scout-control[type="date"]::-webkit-datetime-edit-month-field,
+.scout-control[type="date"]::-webkit-datetime-edit-year-field {
+  color: inherit;
+}
+
+.scout-control[type="date"][value=""]::-webkit-datetime-edit,
+.scout-control[type="date"]:invalid::-webkit-datetime-edit {
+  color: var(--scout-color-text-muted);
+}
+
+.scout-control[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.72;
+}
+
 button.scout-control {
   display: flex;
   align-items: center;

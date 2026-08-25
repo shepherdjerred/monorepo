@@ -87,8 +87,17 @@ export function resolveParticipantRankDisplay(
   }
 
   const ranks = participant.rankState.ranks;
-  if (queueType === "solo" || queueType === "flex") {
-    const rank = queueType === "solo" ? ranks.solo : ranks.flex;
+  if (
+    queueType === "solo" ||
+    queueType === "flex" ||
+    queueType === "ranked 5s"
+  ) {
+    const rank =
+      queueType === "solo"
+        ? ranks.solo
+        : queueType === "flex"
+          ? ranks.flex
+          : ranks.ranked5s;
     return {
       text: formatRankText(rank) ?? "Unranked",
       color: rank === undefined ? palette.grey[1] : palette.gold[3],
@@ -102,6 +111,10 @@ export function resolveParticipantRankDisplay(
   const flexRank = formatRankText(ranks.flex);
   if (flexRank !== undefined) {
     return { text: `Flex ${flexRank}`, color: palette.gold[3] };
+  }
+  const ranked5sRank = formatRankText(ranks.ranked5s);
+  if (ranked5sRank !== undefined) {
+    return { text: `Ranked 5s ${ranked5sRank}`, color: palette.gold[3] };
   }
 
   return { text: "Unranked", color: palette.grey[1] };

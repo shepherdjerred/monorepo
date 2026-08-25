@@ -1,10 +1,13 @@
-import { useState } from "react";
 import { match } from "ts-pattern";
 import {
   type CompetitionCriteria,
+  type CompetitionGameVariant,
+  type CompetitionQueueType,
+  type RankAggregation,
+  QueueTypeSchema,
   competitionQueueTypeToString,
-  CompetitionQueueTypeSchema,
   isCompetitionQueueCurrentlyAvailable,
+  queueMatchesGameVariant,
 } from "@scout-for-lol/data";
 import { ChampionCombobox } from "#src/components/champion-combobox.tsx";
 import { Input } from "@scout-for-lol/design-system/components/input";
@@ -19,7 +22,8 @@ import {
 
 export type CriteriaState = {
   criteriaType: CompetitionCriteria["type"];
-  queue: string;
+  queues: CompetitionQueueType[];
+  aggregation: RankAggregation;
   championId: string;
   minGames: string;
 };
@@ -36,153 +40,166 @@ const CRITERIA_OPTIONS: {
   { value: "MOST_RANK_CLIMB", label: "Most rank climb (LP)" },
 ];
 
-const ALL_QUEUES = CompetitionQueueTypeSchema.options;
-const RANKED_QUEUES = ["SOLO", "FLEX"] as const;
+const RANKED_QUEUES = ["solo", "flex", "ranked 5s"] as const;
 
-function isAvailableChoice(queue: string): boolean {
-  return isCompetitionQueueCurrentlyAvailable(
-    CompetitionQueueTypeSchema.parse(queue),
-  );
+function isRankCriterion(type: CompetitionCriteria["type"]): boolean {
+  return type === "HIGHEST_RANK" || type === "MOST_RANK_CLIMB";
 }
 
-function QueueSelect(props: {
-  id: string;
-  value: string;
-  options: readonly string[];
-  disabled?: boolean;
-  includeAny?: boolean;
-  onChange: (next: string) => void;
-}) {
-  // Limited-time queues that are not currently live are hidden until the
-  // checkbox reveals them; the current value always stays visible (editing
-  // an old competition must keep its queue selectable).
-  const [showUnavailable, setShowUnavailable] = useState(false);
-  const unavailableCount = props.options.filter(
-    (queue) => queue !== props.value && !isAvailableChoice(queue),
-  ).length;
-  const visibleOptions = props.options.filter(
-    (queue) =>
-      showUnavailable || queue === props.value || isAvailableChoice(queue),
-  );
+export function queueOptionsForVariant(
+  gameVariant: CompetitionGameVariant,
+): CompetitionQueueType[] {
+  return [
+    "ALL",
+    ...QueueTypeSchema.options.filter((queue) =>
+      queueMatchesGameVariant(queue, gameVariant),
+    ),
+  ];
+}
 
+function QueueMultiselect(props: {
+  value: CompetitionQueueType[];
+  options: readonly CompetitionQueueType[];
+  disabled?: boolean;
+  onChange: (next: CompetitionQueueType[]) => void;
+}) {
   return (
-    <div className="space-y-1.5">
-      <Select
-        value={props.value}
-        disabled={props.disabled ?? false}
-        onValueChange={props.onChange}
-      >
-        <SelectTrigger id={props.id}>
-          <SelectValue placeholder="Pick a queue" />
-        </SelectTrigger>
-        <SelectContent>
-          {props.includeAny === true && (
-            <SelectItem value="__ANY__">Any queue</SelectItem>
-          )}
-          {visibleOptions.map((queue) => (
-            <SelectItem key={queue} value={queue}>
-              <span
-                className={
-                  isAvailableChoice(queue) ? undefined : "text-scout-subtle"
+    <fieldset
+      className="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-2"
+      disabled={props.disabled ?? false}
+    >
+      <legend className="px-1 text-sm font-medium text-scout-ink">
+        Queues
+      </legend>
+      {props.options.map((queue) => {
+        const checked = props.value.includes(queue);
+        const available = isCompetitionQueueCurrentlyAvailable(queue);
+        return (
+          <label
+            key={queue}
+            className="flex min-h-11 cursor-pointer items-start gap-2 rounded-md px-2 py-2 hover:bg-scout-hover"
+          >
+            <input
+              type="checkbox"
+              className="mt-0.5 size-5 shrink-0"
+              checked={checked}
+              onChange={(event) => {
+                if (event.target.checked) {
+                  props.onChange(
+                    queue === "ALL"
+                      ? ["ALL"]
+                      : [
+                          ...props.value.filter((entry) => entry !== "ALL"),
+                          queue,
+                        ],
+                  );
+                  return;
                 }
-              >
-                {competitionQueueTypeToString(
-                  CompetitionQueueTypeSchema.parse(queue),
-                )}
-                {isAvailableChoice(queue) ? "" : " (not currently live)"}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {/* Rendered outside the Select: Radix moves focus among its SelectItem
-          collection and blocks Tab within the open listbox, so a checkbox
-          inside SelectContent is unreachable by keyboard. Placing it in normal
-          flow keeps it Tab-focusable. */}
-      {unavailableCount > 0 && (
-        <label className="flex w-fit cursor-pointer items-center gap-2 text-xs text-scout-subtle">
-          <input
-            type="checkbox"
-            className="size-6"
-            checked={showUnavailable}
-            disabled={props.disabled ?? false}
-            onChange={(event) => {
-              setShowUnavailable(event.target.checked);
-            }}
-          />
-          Show unavailable queues ({unavailableCount})
-        </label>
-      )}
-    </div>
+                const next = props.value.filter((entry) => entry !== queue);
+                if (next.length > 0) {
+                  props.onChange(next);
+                }
+              }}
+            />
+            <span className="flex flex-col text-sm text-scout-ink">
+              <span>{competitionQueueTypeToString(queue)}</span>
+              {!available && (
+                <span className="text-xs text-scout-subtle">
+                  Limited-time mode — not currently live
+                </span>
+              )}
+            </span>
+          </label>
+        );
+      })}
+    </fieldset>
   );
 }
 
 export function CompetitionCriteriaFields(props: {
   value: CriteriaState;
+  gameVariant: CompetitionGameVariant;
   disabled?: boolean;
   onChange: (next: CriteriaState) => void;
+  onGameVariantChange: (next: CompetitionGameVariant) => void;
 }) {
   const { value, disabled = false, onChange } = props;
+  const ranked = isRankCriterion(value.criteriaType);
+  const queueOptions: readonly CompetitionQueueType[] = ranked
+    ? RANKED_QUEUES
+    : queueOptionsForVariant(props.gameVariant);
 
   const fields = match(value.criteriaType)
     .with("HIGHEST_RANK", "MOST_RANK_CLIMB", () => (
-      <div className="space-y-2">
-        <Label htmlFor="criteria-queue">Queue</Label>
-        <QueueSelect
-          id="criteria-queue"
-          value={value.queue}
-          options={RANKED_QUEUES}
+      <div className="space-y-3">
+        <QueueMultiselect
+          value={value.queues}
+          options={queueOptions}
           disabled={disabled}
-          onChange={(next) => {
-            onChange({ ...value, queue: next });
+          onChange={(queues) => {
+            onChange({ ...value, queues });
           }}
         />
+        {value.queues.length > 1 && (
+          <div className="space-y-2">
+            <Label htmlFor="criteria-aggregation">Rank scoring</Label>
+            <Select
+              value={value.aggregation}
+              disabled={disabled}
+              onValueChange={(aggregation) => {
+                if (aggregation === "MAX" || aggregation === "SUM") {
+                  onChange({ ...value, aggregation });
+                }
+              }}
+            >
+              <SelectTrigger id="criteria-aggregation">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="MAX">Best selected rank</SelectItem>
+                <SelectItem value="SUM">Combined ranks</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
     ))
     .with("MOST_GAMES_PLAYED", "MOST_WINS_PLAYER", () => (
-      <div className="space-y-2">
-        <Label htmlFor="criteria-queue">Queue</Label>
-        <QueueSelect
-          id="criteria-queue"
-          value={value.queue}
-          options={ALL_QUEUES}
-          disabled={disabled}
-          onChange={(next) => {
-            onChange({ ...value, queue: next });
-          }}
-        />
-      </div>
+      <QueueMultiselect
+        value={value.queues}
+        options={queueOptions}
+        disabled={disabled}
+        onChange={(queues) => {
+          onChange({ ...value, queues });
+        }}
+      />
     ))
     .with("MOST_WINS_CHAMPION", () => (
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="space-y-3">
         <div className="space-y-2">
           <Label htmlFor="criteria-champion">Champion</Label>
           <ChampionCombobox
             id="criteria-champion"
             value={value.championId}
+            gameVariant={props.gameVariant}
             disabled={disabled}
             onChange={(championId) => {
               onChange({ ...value, championId });
             }}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="criteria-queue">Queue (optional)</Label>
-          <QueueSelect
-            id="criteria-queue"
-            value={value.queue}
-            options={ALL_QUEUES}
-            disabled={disabled}
-            includeAny
-            onChange={(next) => {
-              onChange({ ...value, queue: next });
-            }}
-          />
-        </div>
+        <QueueMultiselect
+          value={value.queues}
+          options={queueOptions}
+          disabled={disabled}
+          onChange={(queues) => {
+            onChange({ ...value, queues });
+          }}
+        />
       </div>
     ))
     .with("HIGHEST_WIN_RATE", () => (
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="space-y-3">
         <div className="space-y-2">
           <Label htmlFor="criteria-min-games">Minimum games</Label>
           <Input
@@ -196,35 +213,59 @@ export function CompetitionCriteriaFields(props: {
             }}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="criteria-queue">Queue</Label>
-          <QueueSelect
-            id="criteria-queue"
-            value={value.queue}
-            options={ALL_QUEUES}
-            disabled={disabled}
-            onChange={(next) => {
-              onChange({ ...value, queue: next });
-            }}
-          />
-        </div>
+        <QueueMultiselect
+          value={value.queues}
+          options={queueOptions}
+          disabled={disabled}
+          onChange={(queues) => {
+            onChange({ ...value, queues });
+          }}
+        />
       </div>
     ))
     .exhaustive();
 
+  const criteriaOptions =
+    props.gameVariant === "CLASSIC"
+      ? CRITERIA_OPTIONS.filter((option) => !isRankCriterion(option.value))
+      : CRITERIA_OPTIONS;
+
   return (
     <div className="space-y-3">
+      <div className="space-y-2">
+        <Label htmlFor="competition-game-variant">Game version</Label>
+        <Select
+          value={props.gameVariant}
+          disabled={disabled}
+          onValueChange={(next) => {
+            if (next === "MODERN" || next === "CLASSIC") {
+              props.onGameVariantChange(next);
+            }
+          }}
+        >
+          <SelectTrigger id="competition-game-variant">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="MODERN">Modern League</SelectItem>
+            <SelectItem value="CLASSIC">League Classic</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="criteria-type">Criteria</Label>
         <Select
           value={value.criteriaType}
           disabled={disabled}
           onValueChange={(next) => {
+            const option = criteriaOptions.find(
+              (entry) => entry.value === next,
+            );
+            if (option === undefined) return;
             onChange({
               ...value,
-              criteriaType: CRITERIA_OPTIONS.some((o) => o.value === next)
-                ? CompetitionCriteriaTypeFromString(next)
-                : value.criteriaType,
+              criteriaType: option.value,
+              queues: isRankCriterion(option.value) ? ["solo"] : value.queues,
             });
           }}
         >
@@ -232,7 +273,7 @@ export function CompetitionCriteriaFields(props: {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {CRITERIA_OPTIONS.map((option) => (
+            {criteriaOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
@@ -241,19 +282,10 @@ export function CompetitionCriteriaFields(props: {
         </Select>
       </div>
       {fields}
+      <p className="text-xs text-scout-subtle">
+        Season selection controls the date window. Game version and queues
+        control which matches count.
+      </p>
     </div>
   );
-}
-
-function CompetitionCriteriaTypeFromString(
-  value: string,
-): CompetitionCriteria["type"] {
-  return match(value)
-    .with("MOST_GAMES_PLAYED", () => "MOST_GAMES_PLAYED" as const)
-    .with("MOST_WINS_PLAYER", () => "MOST_WINS_PLAYER" as const)
-    .with("MOST_WINS_CHAMPION", () => "MOST_WINS_CHAMPION" as const)
-    .with("HIGHEST_WIN_RATE", () => "HIGHEST_WIN_RATE" as const)
-    .with("HIGHEST_RANK", () => "HIGHEST_RANK" as const)
-    .with("MOST_RANK_CLIMB", () => "MOST_RANK_CLIMB" as const)
-    .otherwise(() => "MOST_GAMES_PLAYED" as const);
 }

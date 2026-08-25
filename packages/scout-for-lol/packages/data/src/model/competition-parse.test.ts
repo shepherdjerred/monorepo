@@ -19,9 +19,15 @@ const SCHEDULE_FIELDS = {
   updateCronExpression: null,
   nextScheduledUpdateAt: null,
   lastScheduledUpdateAt: null,
+  scheduledUpdatesEnabled: false,
+  scheduleTimezone: "UTC",
 } satisfies Pick<
   Competition,
-  "updateCronExpression" | "nextScheduledUpdateAt" | "lastScheduledUpdateAt"
+  | "updateCronExpression"
+  | "nextScheduledUpdateAt"
+  | "lastScheduledUpdateAt"
+  | "scheduledUpdatesEnabled"
+  | "scheduleTimezone"
 >;
 
 const DEFAULT_COMPETITION_NOTIFICATION_FIELDS = {
@@ -38,11 +44,12 @@ describe("parseCompetition", () => {
     ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
     title: "Test Competition",
     description: "A test competition",
+    gameVariant: "MODERN",
     channelId: DiscordChannelIdSchema.parse("111222333444555666"),
     isCancelled: false,
     visibility: "OPEN",
     criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
     maxParticipants: 50,
     analysisTimezone: "UTC",
     startDate: new Date("2025-01-01"),
@@ -62,7 +69,7 @@ describe("parseCompetition", () => {
     const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "MOST_GAMES_PLAYED",
-      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      criteriaConfig: JSON.stringify({ queues: ["solo"] }),
     };
 
     const parsed = parseCompetition(raw);
@@ -71,7 +78,7 @@ describe("parseCompetition", () => {
     expect(parsed.title).toBe("Test Competition");
     expect(parsed.criteria).toEqual({
       type: "MOST_GAMES_PLAYED",
-      queue: "SOLO",
+      queues: ["solo"],
     });
   });
 
@@ -79,14 +86,15 @@ describe("parseCompetition", () => {
     const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "HIGHEST_RANK",
-      criteriaConfig: JSON.stringify({ queue: "FLEX" }),
+      criteriaConfig: JSON.stringify({ queues: ["flex"] }),
     };
 
     const parsed = parseCompetition(raw);
 
     expect(parsed.criteria).toEqual({
       type: "HIGHEST_RANK",
-      queue: "FLEX",
+      queues: ["flex"],
+      aggregation: "MAX",
     });
   });
 
@@ -96,7 +104,7 @@ describe("parseCompetition", () => {
       criteriaType: "MOST_WINS_CHAMPION",
       criteriaConfig: JSON.stringify({
         championId: ChampionIdSchema.parse(157),
-        queue: "SOLO",
+        queues: ["solo"],
       }),
     };
 
@@ -105,7 +113,7 @@ describe("parseCompetition", () => {
     expect(parsed.criteria).toEqual({
       type: "MOST_WINS_CHAMPION",
       championId: ChampionIdSchema.parse(157),
-      queue: "SOLO",
+      queues: ["solo"],
     });
   });
 
@@ -113,7 +121,7 @@ describe("parseCompetition", () => {
     const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "HIGHEST_WIN_RATE",
-      criteriaConfig: JSON.stringify({ queue: "FLEX" }),
+      criteriaConfig: JSON.stringify({ queues: ["flex"] }),
     };
 
     const parsed = parseCompetition(raw);
@@ -121,7 +129,7 @@ describe("parseCompetition", () => {
     expect(parsed.criteria).toEqual({
       type: "HIGHEST_WIN_RATE",
       minGames: 10,
-      queue: "FLEX",
+      queues: ["flex"],
     });
   });
 
@@ -204,7 +212,7 @@ describe("parseCompetition", () => {
     const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "MOST_WINS_CHAMPION",
-      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      criteriaConfig: JSON.stringify({ queues: ["solo"] }),
     };
 
     expect(() => parseCompetition(raw)).toThrow(/Invalid criteria/);
@@ -224,7 +232,7 @@ describe("parseCompetition", () => {
     const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "HIGHEST_RANK",
-      criteriaConfig: JSON.stringify({ queue: "ARENA" }),
+      criteriaConfig: JSON.stringify({ queues: ["arena"] }),
     };
 
     expect(() => parseCompetition(raw)).toThrow(/Invalid criteria/);

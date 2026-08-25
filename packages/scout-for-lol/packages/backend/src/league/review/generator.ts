@@ -23,6 +23,7 @@ import {
   selectRelevantPatchChanges,
   formatPatchNotes,
   requirePlayerAtIndex,
+  RankedQueueTypeSchema,
   type ReviewPipelineOutput,
 } from "@scout-for-lol/data/index.ts";
 import * as Sentry from "@sentry/bun";
@@ -146,6 +147,7 @@ async function buildDynamicReviewContext(parameters: {
   const selectedItems = selectedPlayer.champion.items;
   const durationInSeconds =
     "durationInSeconds" in match ? match.durationInSeconds : 0;
+  const rankQueue = RankedQueueTypeSchema.safeParse(match.queueType);
 
   const history = await buildPlayerHistoryContext({
     puuid: selectedPlayer.playerConfig.league.leagueAccount.puuid,
@@ -162,6 +164,7 @@ async function buildDynamicReviewContext(parameters: {
           : 0,
       durationSeconds: durationInSeconds,
     },
+    ...(rankQueue.success ? { rankQueue: rankQueue.data } : {}),
     ...(targetServerIds !== undefined && { targetServerIds }),
   });
 

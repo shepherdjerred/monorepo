@@ -17,7 +17,24 @@ export type Ranks = z.infer<typeof RanksSchema>;
 export const RanksSchema = z.strictObject({
   solo: RankSchema.optional(),
   flex: RankSchema.optional(),
+  ranked5s: RankSchema.optional(),
 });
+
+export const RankedQueueTypeSchema = z.enum(["solo", "flex", "ranked 5s"]);
+export type RankedQueueType = z.infer<typeof RankedQueueTypeSchema>;
+
+export function rankForQueue(
+  ranks: Ranks,
+  queue: RankedQueueType,
+): Rank | undefined {
+  if (queue === "solo") {
+    return ranks.solo;
+  }
+  if (queue === "flex") {
+    return ranks.flex;
+  }
+  return ranks.ranked5s;
+}
 
 export function rankToString(rank: Rank): string {
   return `${startCase(rank.tier)} ${divisionToString(rank.division)}, ${rank.lp.toString()}LP`;

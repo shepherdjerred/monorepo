@@ -152,12 +152,13 @@ model InitialMatchHistoryImport {
 // Current rank is not a per-match observation. Keeping it separate prevents
 // imported games from fabricating historical LP deltas.
 model CurrentRankSnapshot {
-  puuid     String   @id
-  soloRank  String?
-  flexRank  String?
-  fetchedAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  puuid         String   @id
+  soloRank      String?
+  flexRank      String?
+  ranked5sRank  String?
+  fetchedAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Report {
@@ -235,12 +236,13 @@ model Competition {
   ownerId          String // Discord user ID
   title            String
   description      String
+  gameVariant      String  @default("MODERN")
   channelId        String
   isCancelled      Boolean @default(false)
   visibility       String // OPEN, INVITE_ONLY, SERVER_WIDE
   criteriaType     String // Enum stored as string
   criteriaConfig   String // JSON stored as string
-  maxParticipants  Int     @default(50)
+  maxParticipants  Int     @default(100)
   analysisTimezone String  @default("UTC")
 
   // Time configuration (XOR: either fixed dates OR season)
@@ -258,16 +260,17 @@ model Competition {
   startNotificationMessageId String?
   endNotificationMessageId   String?
 
-  // Leaderboard-post schedule (CRON expression evaluated in UTC).
-  // NULL is treated as the legacy default '0 0 * * *' (daily midnight UTC).
-  // Validated at write time to fire at most once per day.
-  updateCronExpression  String?
+  // Optional leaderboard-post schedule. Legacy competitions remain disabled;
+  // enabled schedules evaluate the CRON expression in scheduleTimezone.
+  scheduledUpdatesEnabled Boolean   @default(false)
+  updateCronExpression    String?
+  scheduleTimezone        String    @default("UTC")
   // Next time the dispatcher should post a leaderboard update for this row.
   // The dispatcher selects rows where this is <= now (or NULL, as self-heal)
   // and recomputes this field from updateCronExpression after each post.
-  nextScheduledUpdateAt DateTime?
+  nextScheduledUpdateAt   DateTime?
   // Wall-clock time of the most recent dispatched leaderboard post.
-  lastScheduledUpdateAt DateTime?
+  lastScheduledUpdateAt   DateTime?
 
   // Relations
   participants CompetitionParticipant[]

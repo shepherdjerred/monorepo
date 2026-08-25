@@ -13,6 +13,7 @@ import {
   type LeaguePuuid,
   type MatchId,
   type DiscordGuildId,
+  type RankedQueueType,
 } from "@scout-for-lol/data/index.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -114,6 +115,7 @@ export async function buildPlayerHistoryContext(options: {
   puuid: LeaguePuuid;
   currentMatchId: MatchId;
   currentGame: CurrentGameContext;
+  rankQueue?: RankedQueueType;
   targetServerIds?: DiscordGuildId[];
   now?: Date;
   client?: ExtendedPrismaClient;
@@ -157,11 +159,14 @@ export async function buildPlayerHistoryContext(options: {
     teamId: row.team_id,
   }));
 
-  const rankRows = await client.matchRankHistory.findMany({
-    where: { puuid: options.puuid, queueType: "solo" },
-    orderBy: { matchGameEndAt: { sort: "desc", nulls: "last" } },
-    take: WINDOW_SIZE,
-  });
+  const rankRows =
+    options.rankQueue === undefined
+      ? []
+      : await client.matchRankHistory.findMany({
+          where: { puuid: options.puuid, queueType: options.rankQueue },
+          orderBy: { matchGameEndAt: { sort: "desc", nulls: "last" } },
+          take: WINDOW_SIZE,
+        });
   const rankPoints: RankPoint[] = rankRows.flatMap((row) => {
     if (row.matchGameEndAt === null) {
       return [];

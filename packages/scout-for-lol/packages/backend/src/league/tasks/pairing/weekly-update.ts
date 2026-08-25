@@ -126,7 +126,7 @@ function formatSurrenderRate(surrenders: number, totalGames: number): string {
 }
 
 /**
- * Generate the ranked (Solo/Flex) section of the message
+ * Generate the ranked (Solo/Flex/Ranked 5s) section of the message
  */
 function generateRankedSection(
   stats: ServerPairingStats,
@@ -134,7 +134,7 @@ function generateRankedSection(
 ): string {
   const lines: string[] = [];
 
-  lines.push("## Ranked (Solo/Flex)");
+  lines.push("## Ranked (Solo/Flex/Ranked 5s)");
   lines.push("");
 
   // Find the player(s) with highest surrender rate (min 10 games) - show percentage and count

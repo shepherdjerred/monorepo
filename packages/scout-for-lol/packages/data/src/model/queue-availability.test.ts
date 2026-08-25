@@ -100,16 +100,16 @@ describe("queueAvailabilityNote", () => {
 describe("isCompetitionQueueCurrentlyAvailable", () => {
   const now = new Date("2026-07-26T00:00:00Z");
 
-  test("aggregate choices are always available", () => {
-    for (const queue of ["ALL", "RANKED_ANY", "CUSTOM"] as const) {
+  test("ALL and permanent choices are always available", () => {
+    for (const queue of ["ALL", "solo", "custom"] as const) {
       expect(isCompetitionQueueCurrentlyAvailable(queue, now)).toBe(true);
     }
   });
 
   test("maps limited modes through to match-queue windows", () => {
-    expect(isCompetitionQueueCurrentlyAvailable("ARENA", now)).toBe(true);
-    expect(isCompetitionQueueCurrentlyAvailable("URF", now)).toBe(false);
-    expect(isCompetitionQueueCurrentlyAvailable("BRAWL", now)).toBe(false);
+    expect(isCompetitionQueueCurrentlyAvailable("arena", now)).toBe(true);
+    expect(isCompetitionQueueCurrentlyAvailable("urf", now)).toBe(false);
+    expect(isCompetitionQueueCurrentlyAvailable("brawl", now)).toBe(false);
   });
 
   test("every competition queue has a mapping", () => {

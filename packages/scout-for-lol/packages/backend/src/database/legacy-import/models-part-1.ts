@@ -7,6 +7,7 @@
  * compile error here.
  */
 import type { Prisma } from "#generated/prisma/client/index.js";
+import { z } from "zod";
 import {
   AccountIdSchema,
   CompetitionIdSchema,
@@ -43,6 +44,77 @@ import {
   toStrOrNull,
   type ImportModelSpec,
 } from "#src/database/legacy-import/convert.ts";
+
+const LegacyCriteriaConfigSchema = z.record(z.string(), z.unknown());
+
+function canonicalCompetitionQueues(queue: unknown): string[] {
+  if (queue === undefined || queue === "ALL") return ["ALL"];
+  if (queue === "SOLO") return ["solo"];
+  if (queue === "FLEX") return ["flex"];
+  if (queue === "RANKED_ANY") return ["solo", "flex"];
+  if (typeof queue === "string")
+    return [queue.toLowerCase().replaceAll("_", " ")];
+  throw new Error("Competition criteria queue must be a string");
+}
+
+function competitionInput(
+  row: Record<string, unknown>,
+): Prisma.CompetitionCreateManyInput {
+  const criteriaType = toStr(row, "criteriaType");
+  const rawConfig: unknown = JSON.parse(toStr(row, "criteriaConfig"));
+  const config = LegacyCriteriaConfigSchema.parse(rawConfig);
+  const { queue, ...rest } = config;
+  const criteriaConfig = {
+    ...rest,
+    queues: canonicalCompetitionQueues(queue),
+    ...(criteriaType === "HIGHEST_RANK" || criteriaType === "MOST_RANK_CLIMB"
+      ? { aggregation: "MAX" }
+      : {}),
+  };
+  const championId = config["championId"];
+  const numericChampionId =
+    typeof championId === "number"
+      ? championId
+      : typeof championId === "string"
+        ? Number(championId)
+        : undefined;
+
+  return {
+    id: CompetitionIdSchema.parse(toInt(row, "id")),
+    serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
+    ownerId: DiscordAccountIdSchema.parse(toStr(row, "ownerId")),
+    title: toStr(row, "title"),
+    description: toStr(row, "description"),
+    gameVariant:
+      numericChampionId !== undefined && numericChampionId >= 60_000
+        ? "CLASSIC"
+        : "MODERN",
+    channelId: DiscordChannelIdSchema.parse(toStr(row, "channelId")),
+    isCancelled: toBool(row, "isCancelled"),
+    visibility: CompetitionVisibilitySchema.parse(toStr(row, "visibility")),
+    criteriaType,
+    criteriaConfig: JSON.stringify(criteriaConfig),
+    maxParticipants: toInt(row, "maxParticipants"),
+    analysisTimezone: toStr(row, "analysisTimezone"),
+    startDate: toDateOrNull(row, "startDate"),
+    endDate: toDateOrNull(row, "endDate"),
+    seasonId: parseOrNull(SeasonIdSchema, toStrOrNull(row, "seasonId")),
+    startProcessedAt: toDateOrNull(row, "startProcessedAt"),
+    endProcessedAt: toDateOrNull(row, "endProcessedAt"),
+    startNotifiedAt: toDateOrNull(row, "startNotifiedAt"),
+    endNotifiedAt: toDateOrNull(row, "endNotifiedAt"),
+    startNotificationMessageId: toStrOrNull(row, "startNotificationMessageId"),
+    endNotificationMessageId: toStrOrNull(row, "endNotificationMessageId"),
+    updateCronExpression: toStrOrNull(row, "updateCronExpression"),
+    nextScheduledUpdateAt: toDateOrNull(row, "nextScheduledUpdateAt"),
+    lastScheduledUpdateAt: toDateOrNull(row, "lastScheduledUpdateAt"),
+    creatorDiscordId: DiscordAccountIdSchema.parse(
+      toStr(row, "creatorDiscordId"),
+    ),
+    createdTime: toDate(row, "createdTime"),
+    updatedTime: toDate(row, "updatedTime"),
+  };
+}
 
 export const IMPORT_MODELS_PART_1: ImportModelSpec[] = [
   defineImportModel({
@@ -240,40 +312,7 @@ export const IMPORT_MODELS_PART_1: ImportModelSpec[] = [
     model: "Competition",
     idColumns: ["id"],
     resetIdSequence: true,
-    transform: (row): Prisma.CompetitionCreateManyInput => ({
-      id: CompetitionIdSchema.parse(toInt(row, "id")),
-      serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
-      ownerId: DiscordAccountIdSchema.parse(toStr(row, "ownerId")),
-      title: toStr(row, "title"),
-      description: toStr(row, "description"),
-      channelId: DiscordChannelIdSchema.parse(toStr(row, "channelId")),
-      isCancelled: toBool(row, "isCancelled"),
-      visibility: CompetitionVisibilitySchema.parse(toStr(row, "visibility")),
-      criteriaType: toStr(row, "criteriaType"),
-      criteriaConfig: toStr(row, "criteriaConfig"),
-      maxParticipants: toInt(row, "maxParticipants"),
-      analysisTimezone: toStr(row, "analysisTimezone"),
-      startDate: toDateOrNull(row, "startDate"),
-      endDate: toDateOrNull(row, "endDate"),
-      seasonId: parseOrNull(SeasonIdSchema, toStrOrNull(row, "seasonId")),
-      startProcessedAt: toDateOrNull(row, "startProcessedAt"),
-      endProcessedAt: toDateOrNull(row, "endProcessedAt"),
-      startNotifiedAt: toDateOrNull(row, "startNotifiedAt"),
-      endNotifiedAt: toDateOrNull(row, "endNotifiedAt"),
-      startNotificationMessageId: toStrOrNull(
-        row,
-        "startNotificationMessageId",
-      ),
-      endNotificationMessageId: toStrOrNull(row, "endNotificationMessageId"),
-      updateCronExpression: toStrOrNull(row, "updateCronExpression"),
-      nextScheduledUpdateAt: toDateOrNull(row, "nextScheduledUpdateAt"),
-      lastScheduledUpdateAt: toDateOrNull(row, "lastScheduledUpdateAt"),
-      creatorDiscordId: DiscordAccountIdSchema.parse(
-        toStr(row, "creatorDiscordId"),
-      ),
-      createdTime: toDate(row, "createdTime"),
-      updatedTime: toDate(row, "updatedTime"),
-    }),
+    transform: competitionInput,
     createMany: async (tx, data) => {
       const result = await tx.competition.createMany({ data });
       return result.count;
