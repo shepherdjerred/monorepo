@@ -139,7 +139,8 @@ export function createScoutChart(app: App, stage: Stage) {
           to: [{ podSelector: {} }],
           ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
         },
-        // Temporal activity polling for the stage-local competition dispatcher.
+        // Temporal gRPC for the stage-local competition dispatcher and the
+        // embedded Scout workers. Restrict both to the server pod and port.
         {
           to: [
             {

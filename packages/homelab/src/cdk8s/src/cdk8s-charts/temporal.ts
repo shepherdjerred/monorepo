@@ -167,6 +167,22 @@ export function createTemporalChart(app: App) {
         },
         scoutCompetitionActivityIngress(),
         {
+          // Scout embeds its Workflow and Activity Workers in the sole
+          // stage backend pod so activities can use the live Discord gateway,
+          // stage database, and report-lake PVC directly.
+          from: [
+            ...["scout-beta", "scout-prod"].map((namespace) => ({
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": namespace,
+                },
+              },
+              podSelector: { matchLabels: { app: "scout-backend" } },
+            })),
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
+        {
           // Allow Prometheus scraping metrics
           from: [
             {

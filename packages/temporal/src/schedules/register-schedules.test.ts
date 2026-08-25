@@ -8,13 +8,44 @@ import {
   buildSchedulePolicies,
 } from "./register-schedules.ts";
 import { SCHEDULES } from "./schedule-definitions.ts";
-import { isOrphanSchedule } from "./orphan-detection.ts";
+import {
+  isOrphanSchedule,
+  isOwnedScoutReportSchedule,
+} from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
 } as const;
+
+const OWNED_SCOUT_REPORT_MEMO = {
+  owner: "scout-for-lol",
+  stage: "beta",
+  reportId: "report_123",
+  schemaVersion: 1,
+} as const;
+
+test("Scout report schedules require an exact id and ownership memo match", () => {
+  expect(
+    isOwnedScoutReportSchedule(
+      "scout-beta-report-report_123",
+      OWNED_SCOUT_REPORT_MEMO,
+    ),
+  ).toBe(true);
+  expect(
+    isOwnedScoutReportSchedule(
+      "scout-prod-report-report_123",
+      OWNED_SCOUT_REPORT_MEMO,
+    ),
+  ).toBe(false);
+  expect(
+    isOwnedScoutReportSchedule("scout-beta-report-report_123", {
+      ...OWNED_SCOUT_REPORT_MEMO,
+      owner: "unknown",
+    }),
+  ).toBe(false);
+});
 
 function findScheduleById(id: string) {
   const schedule = SCHEDULES.find((candidate) => candidate.id === id);
@@ -31,7 +62,6 @@ describe("direct maintenance schedules", () => {
     ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
     ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
-    ["main-vuln-scan-weekly", "runMainVulnScanWorkflow", "2 hours"],
   ] as const;
 
   it.each(definitions)(
@@ -78,7 +108,11 @@ test("dependency summary timeout covers every retried report phase", () => {
 test("FreshRSS sync keeps its bounded pre-refresh schedule", () => {
   const schedule = findScheduleById("freshrss-sync-hourly");
   expect(schedule.workflowType).toBe("runFreshRssSyncWorkflow");
-  expect(schedule.cronExpression).toBe("7 * * * *");
+  expect(schedule.timing).toEqual({
+    kind: "cron",
+    expression: "7 * * * *",
+    timezone: "America/Los_Angeles",
+  });
   expect(schedule.taskQueue).toBe(TASK_QUEUES.REPO_AUTOMATION);
   expect(schedule.catchupWindow).toBe("5 minutes");
   expect(schedule.workflowExecutionTimeout).toBe("6 minutes");
@@ -166,13 +200,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
   "runTurboCacheCleanWorkflow",
-  // Awaits one scan activity (clone + trivy fs) then report delivery and the
-  // Alertmanager publish. No workflow-level sleeps; each activity carries its
-  // own startToCloseTimeout + retry budget.
-  "runMainVulnScanWorkflow",
-  // Same shape as runMainVulnScanWorkflow: one lychee scan activity, then
-  // report delivery and the Alertmanager publish. No workflow-level sleeps.
-  "runLinkRotScanWorkflow",
   "monitorReportFreshness",
   "generateDependencySummary",
   "runProtobufWatch",
@@ -221,6 +248,15 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // execution result() calls + one Alertmanager POST). No workflow-level
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.
   "pollWorkflowFailuresWorkflow",
+  // Scout's schedule entrypoints delegate immediately to queue-specific
+  // activities or child workflows. Their activity retry budgets are bounded
+  // independently; none sleeps inside Workflow code.
+  "scoutRealtimePollWorkflow",
+  "scoutPostMatchDiscoveryWorkflow",
+  "scoutIngestionReconciliationWorkflow",
+  "scoutBackgroundJobWorkflow",
+  "scoutReportScheduleReconcilerWorkflow",
+  "scoutReportLakeWorkflow",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;
@@ -316,7 +352,11 @@ describe("Scout weekly parlay schedule config", () => {
     expect(schedule).toMatchObject({
       workflowType: "runScoutWeeklyParlayWorkflow",
       args: [{}],
-      cronExpression: "0 12 * * 0",
+      timing: {
+        kind: "cron",
+        expression: "0 12 * * 0",
+        timezone: "America/Los_Angeles",
+      },
       taskQueue: TASK_QUEUES.SCOUT,
       overlap: ScheduleOverlapPolicy.ALLOW_ALL,
       requiredEnvironment: [
@@ -332,7 +372,11 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
     expect(findScheduleById("scout-bryan-bucks-analytics")).toMatchObject({
       workflowType: "runScoutBryanBucksAnalyticsWorkflow",
       args: [],
-      cronExpression: "*/15 * * * *",
+      timing: {
+        kind: "cron",
+        expression: "*/15 * * * *",
+        timezone: "America/Los_Angeles",
+      },
       taskQueue: TASK_QUEUES.SCOUT,
       overlap: ScheduleOverlapPolicy.SKIP,
       workflowExecutionTimeout: "5 minutes",
@@ -349,7 +393,11 @@ describe("Scout competition update schedule", () => {
     const schedule = findScheduleById("scout-competition-updates-minute");
     expect(schedule).toMatchObject({
       workflowType: "runScoutCompetitionUpdatesWorkflow",
-      cronExpression: "* * * * *",
+      timing: {
+        kind: "cron",
+        expression: "* * * * *",
+        timezone: "America/Los_Angeles",
+      },
       taskQueue: TASK_QUEUES.SCOUT,
       catchupWindow: "5 minutes",
       workflowExecutionTimeout: "35 minutes",
@@ -370,7 +418,11 @@ describe("Glitter corpus schedule", () => {
   test("uses the dedicated queue and pauses until every credential is present", () => {
     const schedule = findScheduleById("glitter-corpus-daily");
     expect(schedule.taskQueue).toBe("glitter-corpus");
-    expect(schedule.cronExpression).toBe("15 4 * * *");
+    expect(schedule.timing).toEqual({
+      kind: "cron",
+      expression: "15 4 * * *",
+      timezone: "America/Los_Angeles",
+    });
     const paused = buildScheduleState(schedule, {});
     expect(paused.paused).toBe(true);
     expect(paused.note).toContain("GLITTER_DISCORD_TOKEN");
@@ -446,7 +498,11 @@ describe("Glitter context refresh schedule", () => {
   test("uses its isolated queue and remains paused through credential setup", () => {
     const schedule = findScheduleById("glitter-context-refresh-weekly");
     expect(schedule.taskQueue).toBe("glitter-context");
-    expect(schedule.cronExpression).toBe("0 11 * * 1");
+    expect(schedule.timing).toEqual({
+      kind: "cron",
+      expression: "0 11 * * 1",
+      timezone: "America/Los_Angeles",
+    });
     expect(schedule.args).toEqual([{ maxEstimatedCostUsd: 40 }]);
     expect(schedule.workflowExecutionTimeout).toBe("15 hours");
     expect(buildScheduleState(schedule, {}).paused).toBe(true);

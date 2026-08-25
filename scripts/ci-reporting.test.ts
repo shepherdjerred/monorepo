@@ -707,6 +707,9 @@ describe("CI reporting manifest", () => {
     const temporal = manifest.workspaces.find(
       (entry) => entry.directory === "packages/temporal",
     );
+    const scoutTemporal = manifest.workspaces.find(
+      (entry) => entry.directory === "packages/scout-for-lol/packages/temporal",
+    );
 
     expect(declaredDirectories.size).toBe(manifest.workspaces.length);
     expect(noTestDirectories.size).toBe(manifest.testlessWorkspaces.length);
@@ -751,6 +754,14 @@ describe("CI reporting manifest", () => {
         "src/workflows/agent-task.test.ts",
         "--no-file-parallelism",
       ],
+    });
+    expect(scoutTemporal?.steps.at(-1)).toEqual({
+      runner: "vitest",
+      name: "workflows",
+      runtime: "node",
+      runtimeReason:
+        "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
+      args: ["src/workflows", "--no-file-parallelism"],
     });
     // The Tauri crate (@scout-for-lol/desktop-rust) is intentionally listed in
     // testlessWorkspaces, not workspaces: its cargo tests require GTK/glib

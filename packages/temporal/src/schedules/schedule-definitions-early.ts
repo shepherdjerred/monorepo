@@ -7,7 +7,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "report-freshness-monitor",
     workflowType: "monitorReportFreshness",
     args: [],
-    cronExpression: "*/15 * * * *",
+    timing: {
+      kind: "cron",
+      expression: "*/15 * * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPORTS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "20 minutes",
@@ -17,7 +21,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "fetcher-skill-capped",
     workflowType: "fetchSkillCappedManifest",
     args: [],
-    cronExpression: "0 5 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 5 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "5 minutes",
@@ -27,7 +35,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "freshrss-sync-hourly",
     workflowType: "runFreshRssSyncWorkflow",
     args: [],
-    cronExpression: "7 * * * *",
+    timing: {
+      kind: "cron",
+      expression: "7 * * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: "5 minutes",
@@ -38,7 +50,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "buildkite-bun-cache-gc",
     workflowType: "runBunCacheGcWorkflow",
     args: [],
-    cronExpression: "*/5 * * * *",
+    timing: {
+      kind: "cron",
+      expression: "*/5 * * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 15-minute attempts plus exponential backoff and workflow overhead.
@@ -49,7 +65,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "turbo-cache-clean-daily",
     workflowType: "runTurboCacheCleanWorkflow",
     args: [],
-    cronExpression: "30 2 * * *",
+    timing: {
+      kind: "cron",
+      expression: "30 2 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
@@ -59,7 +79,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "deps-summary-weekly",
     workflowType: "generateDependencySummary",
     args: [7],
-    cronExpression: "0 9 * * 1",
+    timing: {
+      kind: "cron",
+      expression: "0 9 * * 1",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three sequential 10-minute activities can each use three attempts;
@@ -72,7 +96,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "protobufjs-v8-watch-weekly",
     workflowType: "runProtobufWatch",
     args: [],
-    cronExpression: "0 9 * * 1",
+    timing: {
+      kind: "cron",
+      expression: "0 9 * * 1",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Worst case: three 1m collection attempts, three 2m primary-delivery
@@ -86,7 +114,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "tasknotes-skipped-files-canary",
     workflowType: "runTasknotesCanary",
     args: [],
-    cronExpression: "0 9 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 9 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "20 minutes",
@@ -96,7 +128,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "ci-io-post-merge-impact",
     workflowType: "runCiIoImpact",
     args: [],
-    cronExpression: "0 9 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 9 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "2 hours",
@@ -106,7 +142,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     id: "dns-audit-daily",
     workflowType: "runDnsAudit",
     args: [],
-    cronExpression: "0 6 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 6 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "5 minutes",
@@ -120,7 +160,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     // drift is time-coupled (operator chart bumps ArgoCD-synced after
     // Renovate merges land), so only a schedule can see it — no CI gate runs
     // when the cluster changes.
-    cronExpression: "30 5 * * *",
+    timing: {
+      kind: "cron",
+      expression: "30 5 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "45 minutes",
@@ -134,7 +178,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     // Steady state is no-diff; the job opens a regen PR after a pinned
     // pokeemerald or knowledge source advances (hosted Renovate cannot run
     // the generators inside its own PR).
-    cronExpression: "30 4 * * *",
+    timing: {
+      kind: "cron",
+      expression: "30 4 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
@@ -146,7 +194,11 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     args: [{}],
     // 06:30 PT — staggered after dns-audit-daily (06:00). Lands in inbox
     // before goodMorningEarly (07:00 weekdays / 08:00 weekends) fires.
-    cronExpression: "30 6 * * *",
+    timing: {
+      kind: "cron",
+      expression: "30 6 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "50 minutes",

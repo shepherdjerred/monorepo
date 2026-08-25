@@ -46,6 +46,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     progressDeadline: Duration.seconds(2400),
+    terminationGracePeriod: Duration.seconds(45),
     securityContext: {},
     // Stable pod label so the namespace NetworkPolicies select only the
     // backend — a bare podSelector would also catch the Patroni/Spilo
@@ -221,6 +222,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     ENVIRONMENT: EnvValue.fromValue(stage),
     // Bootstrap for the flag client — these cannot come from a flag.
     FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+    TEMPORAL_NAMESPACE: EnvValue.fromValue("default"),
     FLIPT_URL: EnvValue.fromValue(
       "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
     ),

@@ -17,9 +17,21 @@ describe("backend startup", () => {
       startDiscord: async () => {
         calls.push("discord");
       },
+      startTemporalCore: async () => {
+        calls.push("temporal-core");
+      },
+      startTemporalDiscordWorkers: async () => {
+        calls.push("temporal-discord");
+      },
     });
 
-    expect(calls).toEqual(["champion-assets", "discord", "http-server"]);
+    expect(calls).toEqual([
+      "champion-assets",
+      "temporal-core",
+      "discord",
+      "temporal-discord",
+      "http-server",
+    ]);
     expect(runtime.shutdownHttpServer).toBe(shutdownHttpServer);
   });
 

@@ -4,6 +4,8 @@ import { requireCliValue, unresolvedSecrets } from "./migration-core.ts";
 
 const DEFAULT_BACKEND_PORT = 3000;
 const DEFAULT_WEB_PORT = 5180;
+const TEMPORAL_PORT_OFFSET = 4233;
+const TEMPORAL_UI_PORT_OFFSET = 5233;
 const DEFAULT_PG_PORT = "5471";
 const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
 const BACKEND_START_TIMEOUT_MS = 300_000;
@@ -12,6 +14,8 @@ const DEFAULT_DESIGN_AUDIT_DATABASE_NAME = "scout_design_audit";
 type DevWebOptions = {
   readonly backendPort: number;
   readonly webPort: number;
+  readonly temporalPort: number;
+  readonly temporalUiPort: number;
   readonly databaseUrl: string;
   readonly discordGatewayEnabled: boolean;
   readonly backendWatchEnabled: boolean;
@@ -131,6 +135,20 @@ export function parseDevWebArgs(
     "SCOUT_DEV_WEB_PORT",
   );
   let databaseUrl: string | undefined;
+  let temporalPort =
+    environment["SCOUT_DEV_TEMPORAL_PORT"] === undefined
+      ? undefined
+      : parsePort(
+          environment["SCOUT_DEV_TEMPORAL_PORT"],
+          "SCOUT_DEV_TEMPORAL_PORT",
+        );
+  let temporalUiPort =
+    environment["SCOUT_DEV_TEMPORAL_UI_PORT"] === undefined
+      ? undefined
+      : parsePort(
+          environment["SCOUT_DEV_TEMPORAL_UI_PORT"],
+          "SCOUT_DEV_TEMPORAL_UI_PORT",
+        );
   let discordGatewayEnabled = environment["SCOUT_DEV_NO_GATEWAY"] !== "true";
   let backendWatchEnabled =
     environment["SCOUT_DEV_NO_BACKEND_WATCH"] !== "true";
@@ -166,6 +184,22 @@ export function parseDevWebArgs(
       index += 1;
       continue;
     }
+    if (argument === "--temporal-port") {
+      temporalPort = parsePort(
+        requireCliValue(args, index, argument),
+        "--temporal-port",
+      );
+      index += 1;
+      continue;
+    }
+    if (argument === "--temporal-ui-port") {
+      temporalUiPort = parsePort(
+        requireCliValue(args, index, argument),
+        "--temporal-ui-port",
+      );
+      index += 1;
+      continue;
+    }
     if (argument === "--no-discord-gateway") {
       discordGatewayEnabled = false;
       continue;
@@ -193,8 +227,29 @@ export function parseDevWebArgs(
     throw new Error(`Unknown argument: ${argument ?? "<missing>"}`);
   }
 
-  if (backendPort === webPort) {
-    throw new Error("--backend-port and --web-port must be different");
+  const resolvedTemporalPort =
+    temporalPort ??
+    parsePort(
+      (backendPort + TEMPORAL_PORT_OFFSET).toString(),
+      "derived Temporal port",
+    );
+  const resolvedTemporalUiPort =
+    temporalUiPort ??
+    parsePort(
+      (backendPort + TEMPORAL_UI_PORT_OFFSET).toString(),
+      "derived Temporal UI port",
+    );
+  if (
+    new Set([
+      backendPort,
+      webPort,
+      resolvedTemporalPort,
+      resolvedTemporalUiPort,
+    ]).size !== 4
+  ) {
+    throw new Error(
+      "--backend-port, --web-port, --temporal-port, and --temporal-ui-port must be different",
+    );
   }
 
   return {
@@ -202,6 +257,8 @@ export function parseDevWebArgs(
     options: {
       backendPort,
       webPort,
+      temporalPort: resolvedTemporalPort,
+      temporalUiPort: resolvedTemporalUiPort,
       databaseUrl: databaseUrl ?? defaultDatabaseUrl(backendPort, environment),
       discordGatewayEnabled,
       backendWatchEnabled,
@@ -219,6 +276,8 @@ Options:
   --web-port <port>      Vite SPA port (default: 5180)
   --database-url <url>   Postgres URL (default: scout_dev_<backend-port> on
                          the shared local dev server, port 5471 / SCOUT_PG_PORT)
+  --temporal-port <port> Temporal gRPC port (default: backend port + 4233)
+  --temporal-ui-port <port> Temporal UI port (default: backend port + 5233)
   --no-discord-gateway   Run as a secondary UI/API copy without BETA gateway
   --no-backend-watch     Keep the backend stable until this command is restarted
   --marketing-origin <url>  Marketing site origin for cross-surface links
@@ -271,6 +330,36 @@ async function waitForBackend(
   );
 }
 
+async function waitForTemporal(
+  temporalUiPort: number,
+  temporal: Bun.Subprocess,
+): Promise<void> {
+  const startedAt = Date.now();
+  let lastFailure: unknown;
+  while (Date.now() - startedAt < BACKEND_START_TIMEOUT_MS) {
+    if (temporal.exitCode !== null) {
+      throw new Error(
+        `Temporal dev server exited with code ${temporal.exitCode.toString()} before becoming ready`,
+      );
+    }
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${temporalUiPort.toString()}/`,
+      );
+      if (response.ok) return;
+      lastFailure = new Error(
+        `Temporal UI readiness returned HTTP ${response.status.toString()}`,
+      );
+    } catch (error: unknown) {
+      lastFailure = error;
+    }
+    await Bun.sleep(250);
+  }
+  throw new Error("Temporal dev server did not become ready", {
+    cause: lastFailure,
+  });
+}
+
 if (import.meta.main) {
   const root = import.meta.dir.replace(/\/scripts$/, "");
   const isDesignAuditBoot = Bun.env["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] === "true";
@@ -319,6 +408,8 @@ if (import.meta.main) {
         isDesignAuditBoot || !options.discordGatewayEnabled ? "false" : "true",
       WEB_APP_ORIGIN: webOrigin,
       REPORT_LAKE_DIR: lakeDir,
+      TEMPORAL_ADDRESS: `127.0.0.1:${options.temporalPort.toString()}`,
+      TEMPORAL_NAMESPACE: "default",
       ...(isDesignAuditBoot
         ? {
             NODE_ENV: "test",
@@ -398,6 +489,40 @@ if (import.meta.main) {
         );
       }
     }
+
+    const temporalDatabase = path.join(
+      root,
+      `.temporal-dev-${options.backendPort.toString()}.db`,
+    );
+    const temporal = Bun.spawn(
+      [
+        "temporal",
+        "server",
+        "start-dev",
+        "--ip",
+        "127.0.0.1",
+        "--port",
+        options.temporalPort.toString(),
+        "--ui-port",
+        options.temporalUiPort.toString(),
+        "--db-filename",
+        temporalDatabase,
+      ],
+      {
+        cwd: root,
+        env: environment,
+        stdin: "inherit",
+        stdout: "inherit",
+        stderr: "inherit",
+      },
+    );
+    try {
+      await waitForTemporal(options.temporalUiPort, temporal);
+    } catch (error: unknown) {
+      temporal.kill();
+      await temporal.exited;
+      throw error;
+    }
     if (isDesignAuditBoot) {
       const seed = Bun.spawn(["bun", "scripts/seed-design-audit.ts"], {
         cwd: backendCwd,
@@ -408,6 +533,8 @@ if (import.meta.main) {
       });
       const seedExitCode = await seed.exited;
       if (seedExitCode !== 0) {
+        temporal.kill();
+        await temporal.exited;
         throw new Error(
           `Design-audit database seeding failed with exit code ${seedExitCode.toString()}`,
         );
@@ -437,7 +564,8 @@ if (import.meta.main) {
         await waitForBackend(backendOrigin, backend);
       } catch (error) {
         backend.kill();
-        await backend.exited;
+        temporal.kill();
+        await Promise.all([backend.exited, temporal.exited]);
         throw error;
       }
     }
@@ -468,17 +596,22 @@ if (import.meta.main) {
       },
     );
     console.log(
-      `Scout local dev is starting\nSPA: ${webOrigin}/app/\nBackend: ${backendOrigin}/trpc/\nDatabase: ${options.databaseUrl}\nBackend watch: ${options.backendWatchEnabled ? "enabled" : "disabled"}`,
+      `Scout local dev is starting\nSPA: ${webOrigin}/app/\nBackend: ${backendOrigin}/trpc/\nTemporal UI: http://127.0.0.1:${options.temporalUiPort.toString()}/\nDatabase: ${options.databaseUrl}\nBackend watch: ${options.backendWatchEnabled ? "enabled" : "disabled"}`,
     );
     const stop = (): void => {
       backend.kill();
       app.kill();
+      temporal.kill();
     };
     process.on("SIGINT", stop);
     process.on("SIGTERM", stop);
-    const exitCode = await Promise.race([backend.exited, app.exited]);
+    const exitCode = await Promise.race([
+      backend.exited,
+      app.exited,
+      temporal.exited,
+    ]);
     stop();
-    await Promise.all([backend.exited, app.exited]);
+    await Promise.all([backend.exited, app.exited, temporal.exited]);
     process.exitCode = exitCode;
   }
 }

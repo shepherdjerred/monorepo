@@ -4,11 +4,23 @@ import type { TaskQueue } from "#shared/task-queues.ts";
 
 export type CatchupWindow = "5 minutes" | "1 hour" | "12 hours";
 
+export type ScheduleTiming =
+  | {
+      kind: "cron";
+      expression: string;
+      timezone: string;
+    }
+  | {
+      kind: "interval";
+      every: Duration;
+      offset?: Duration;
+    };
+
 export type ScheduleDefinition = {
   id: string;
   workflowType: string;
   args: unknown[];
-  cronExpression: string;
+  timing: ScheduleTiming;
   taskQueue: TaskQueue;
   overlap: ScheduleOverlapPolicy;
   memo: string;

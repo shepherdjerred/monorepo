@@ -1,6 +1,10 @@
 import type { Client } from "@temporalio/client";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
 import { scheduleOrphans } from "#observability/metrics.ts";
+import {
+  ScoutScheduleOwnershipMemoSchema,
+  scoutReportScheduleId,
+} from "@scout-for-lol/temporal";
 
 // Gauge value written when `scheduleClient.list()` itself fails. Distinct from
 // 0 ("detection ran cleanly, found no orphans") so a monitoring rule can tell a
@@ -29,6 +33,18 @@ export function isDynamicAgentTaskSchedule(
   return memo?.[DYNAMIC_AGENT_TASK_MEMO_KEY] === true;
 }
 
+export function isOwnedScoutReportSchedule(
+  scheduleId: string,
+  memo: Record<string, unknown> | undefined,
+): boolean {
+  const parsed = ScoutScheduleOwnershipMemoSchema.safeParse(memo);
+  if (!parsed.success) return false;
+  return (
+    scheduleId ===
+    scoutReportScheduleId(parsed.data.stage, parsed.data.reportId)
+  );
+}
+
 // A live schedule is an orphan when it is neither declared in SCHEDULES, nor in
 // the DELETED_SCHEDULE_IDS allow-list, nor a dynamic agent-task schedule — i.e.
 // a renamed/removed schedule that was never added to the delete list and keeps
@@ -43,6 +59,7 @@ export function isOrphanSchedule(
   if (declaredIds.has(scheduleId)) return false;
   if (deletedIds.has(scheduleId)) return false;
   if (isDynamicAgentTaskSchedule(scheduleId, memo)) return false;
+  if (isOwnedScoutReportSchedule(scheduleId, memo)) return false;
   return true;
 }
 

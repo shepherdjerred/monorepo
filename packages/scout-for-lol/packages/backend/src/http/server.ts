@@ -1,5 +1,6 @@
 import configuration from "#src/configuration.ts";
 import { getMetrics, getRiotApiHealth } from "#src/metrics/index.ts";
+import { getScoutTemporalHealth } from "#src/temporal/health.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
@@ -149,6 +150,7 @@ function handleHealthz(request: Request): Response {
     lastSuccessTimestamp === undefined ||
     now - lastSuccessTimestamp > fiveMinutesMs;
   const healthy = !(hasRecentAttempts && lastSuccessStale);
+  const temporal = getScoutTemporalHealth();
 
   return Response.json(
     {
@@ -156,6 +158,7 @@ function handleHealthz(request: Request): Response {
       lastSuccessTimestamp: lastSuccessTimestamp ?? null,
       lastAttemptTimestamp: lastAttemptTimestamp ?? null,
       uptimeSeconds,
+      components: { temporal },
     },
     {
       status: healthy ? 200 : 503,

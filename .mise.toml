@@ -9,6 +9,8 @@ bun = "1.4.0"
 # Temporal's real workflow-worker tests need Node runtime primitives that Bun
 # 1.4 does not implement. Keep the sole exception on the current LTS line.
 node = "24.19.0"
+# renovate: datasource=github-releases depName=temporalio/cli
+temporal = "1.8.1"
 rust = "1.98.0"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk
 dotnet = "10.0.302"
