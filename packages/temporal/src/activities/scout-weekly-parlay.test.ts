@@ -33,7 +33,7 @@ describe("Scout weekly parlay Pacific timeline", () => {
     expect(timeline.finalizesAt).toBe("2027-11-07T19:00:00.000Z");
   });
 
-  test("builds stable period, slot, action, and update idempotency keys", () => {
+  test("builds a stable replay callback idempotency key", () => {
     expect(
       scoutWeeklyParlayActionKey({
         periodKey: "2027-03-08",

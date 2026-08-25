@@ -9,9 +9,7 @@ export function createTemporalScoutBetaNetworkPolicy(chart: Chart): void {
     new KubeNetworkPolicy(chart, constructId, {
       metadata: { name },
       spec: {
-        podSelector: {
-          matchLabels: { component },
-        },
+        podSelector: { matchLabels: { component } },
         policyTypes: ["Egress"],
         egress: [
           {
@@ -36,8 +34,6 @@ export function createTemporalScoutBetaNetworkPolicy(chart: Chart): void {
     "temporal-worker-scout-beta-netpol",
     "scout-worker",
   );
-  // Keep legacy default-queue executions connected until the migration drain
-  // proves that no pre-routing Scout parlay lifecycle remains.
   egress(
     "temporal-legacy-worker-scout-beta-netpol",
     "temporal-legacy-worker-scout-beta-netpol",

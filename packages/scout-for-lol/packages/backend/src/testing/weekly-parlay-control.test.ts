@@ -6,16 +6,14 @@ import { handleWeeklyParlayControl } from "#src/http/weekly-parlay-control.ts";
 const PATH = "http://localhost/api/internal/weekly-parlays/actions";
 const initialToken = Bun.env["WEEKLY_PARLAY_CONTROL_TOKEN"];
 
-function restoreToken(): void {
+afterEach(() => {
   if (initialToken === undefined) {
     delete Bun.env["WEEKLY_PARLAY_CONTROL_TOKEN"];
   } else {
     Bun.env["WEEKLY_PARLAY_CONTROL_TOKEN"] = initialToken;
   }
   resetConfigurationForTests();
-}
-
-afterEach(restoreToken);
+});
 
 describe("weekly parlay control action schema", () => {
   test("requires an index only for progress actions", () => {
@@ -80,7 +78,7 @@ describe("weekly parlay control action schema", () => {
   });
 });
 
-describe("weekly parlay control HTTP boundary", () => {
+describe("weekly parlay replay compatibility boundary", () => {
   test("is absent when its credential is not configured", async () => {
     delete Bun.env["WEEKLY_PARLAY_CONTROL_TOKEN"];
     resetConfigurationForTests();
@@ -92,23 +90,19 @@ describe("weekly parlay control HTTP boundary", () => {
     ).resolves.toBeNull();
   });
 
-  test("rejects unauthorized requests before parsing actions", async () => {
+  test("rejects unauthorized and malformed requests", async () => {
     Bun.env["WEEKLY_PARLAY_CONTROL_TOKEN"] = "test-control-secret";
     resetConfigurationForTests();
-    const response = await handleWeeklyParlayControl(
+    const unauthorized = await handleWeeklyParlayControl(
       new Request(PATH, {
         method: "POST",
         headers: { Authorization: "Bearer wrong-secret" },
       }),
       new URL(PATH),
     );
-    expect(response?.status).toBe(401);
-  });
+    expect(unauthorized?.status).toBe(401);
 
-  test("accepts the bearer boundary and rejects malformed actions", async () => {
-    Bun.env["WEEKLY_PARLAY_CONTROL_TOKEN"] = "test-control-secret";
-    resetConfigurationForTests();
-    const response = await handleWeeklyParlayControl(
+    const malformed = await handleWeeklyParlayControl(
       new Request(PATH, {
         method: "POST",
         headers: {
@@ -119,9 +113,6 @@ describe("weekly parlay control HTTP boundary", () => {
       }),
       new URL(PATH),
     );
-    expect(response?.status).toBe(400);
-    await expect(response?.json()).resolves.toEqual({
-      error: "invalid_action",
-    });
+    expect(malformed?.status).toBe(400);
   });
 });

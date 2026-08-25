@@ -1,21 +1,10 @@
-import { patched, proxyActivities } from "@temporalio/workflow";
+import { proxyActivities } from "@temporalio/workflow";
 import type {
   ScoutBryanBucksActivities,
   ScoutBryanBucksAnalyticsResult,
 } from "#activities/scout-bryan-bucks.ts";
 
 const { syncScoutBryanBucksAnalytics } =
-  proxyActivities<ScoutBryanBucksActivities>({
-    startToCloseTimeout: "2 minutes",
-    retry: {
-      maximumAttempts: 5,
-      initialInterval: "10 seconds",
-      backoffCoefficient: 2,
-      maximumInterval: "1 minute",
-    },
-  });
-
-const { syncScoutBryanBucksAnalytics: syncEmbeddedScoutBryanBucksAnalytics } =
   proxyActivities<ScoutBryanBucksActivities>({
     taskQueue: "scout-beta-background",
     startToCloseTimeout: "2 minutes",
@@ -29,8 +18,5 @@ const { syncScoutBryanBucksAnalytics: syncEmbeddedScoutBryanBucksAnalytics } =
   });
 
 export async function runScoutBryanBucksAnalyticsWorkflow(): Promise<ScoutBryanBucksAnalyticsResult> {
-  if (patched("scout-bryan-bucks-embedded-activity-v1")) {
-    return await syncEmbeddedScoutBryanBucksAnalytics();
-  }
   return await syncScoutBryanBucksAnalytics();
 }

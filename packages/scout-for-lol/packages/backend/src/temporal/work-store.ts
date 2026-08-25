@@ -10,7 +10,6 @@ import {
 import type { ScoutDetachedWorkInput } from "@scout-for-lol/temporal";
 import { prisma } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
-import { temporalBackgroundEnabled } from "#src/config/dynamic.ts";
 import { createLogger } from "#src/logger.ts";
 import type { StartParlayGenerationInput } from "#src/betting/parlay-generate.ts";
 import { currentScoutTemporalSupervisor } from "./runtime.ts";
@@ -163,8 +162,4 @@ export async function executeScoutTemporalWork(
     });
     throw error;
   }
-}
-
-export function shouldUseTemporalBackgroundWork(): boolean {
-  return temporalBackgroundEnabled();
 }

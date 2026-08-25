@@ -10,39 +10,18 @@ import { computeGameStartAt } from "#src/betting/pool-open.ts";
 import { buildPredictionObservation } from "#src/betting/prediction-inputs.ts";
 import { createLogger } from "#src/logger.ts";
 import type { ParticipantRanks } from "#src/league/tasks/prematch/loading-screen-builder.ts";
-import { ingestPredictionObservation } from "#src/report-store/store.ts";
-import {
-  enqueuePredictionObservation,
-  shouldUseTemporalBackgroundWork,
-} from "#src/temporal/work-store.ts";
+import { enqueuePredictionObservation } from "#src/temporal/work-store.ts";
 
 const logger = createLogger("betting-prediction-capture");
 
 export type PredictionCaptureDependencies = {
   build: typeof buildPredictionObservation;
-  ingest: (observation: BucksPredictionObservation) => Promise<void>;
+  enqueue: (observation: BucksPredictionObservation) => Promise<void>;
 };
-
-async function enqueuePredictionBestEffort(
-  observation: BucksPredictionObservation,
-  matchId: string,
-): Promise<void> {
-  try {
-    await enqueuePredictionObservation(observation);
-  } catch (error: unknown) {
-    logger.error(
-      `Failed to enqueue prediction observation for ${matchId}:`,
-      error,
-    );
-    Sentry.captureException(error, {
-      tags: { source: "prediction-observation-enqueue", matchId },
-    });
-  }
-}
 
 const defaultDependencies: PredictionCaptureDependencies = {
   build: buildPredictionObservation,
-  ingest: ingestPredictionObservation,
+  enqueue: enqueuePredictionObservation,
 };
 
 /** Capture one match-level estimate. No guild flag is accepted here: eligible
@@ -97,24 +76,14 @@ export async function capturePredictionForPrematch(
     return undefined;
   }
 
-  if (shouldUseTemporalBackgroundWork()) {
-    void enqueuePredictionBestEffort(observation, matchId);
-  } else {
-    // Legacy ownership remains best-effort until the Temporal family flag is
-    // enabled. The immutable observation makes this write idempotent.
-    void (async () => {
-      try {
-        await dependencies.ingest(observation);
-      } catch (error) {
-        logger.error(
-          `Failed to persist prediction observation for ${matchId}:`,
-          error,
-        );
-        Sentry.captureException(error, {
-          tags: { source: "prediction-observation-ingest", matchId },
-        });
-      }
-    })();
-  }
+  void dependencies.enqueue(observation).catch((error: unknown) => {
+    logger.error(
+      `Failed to enqueue prediction observation for ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "prediction-observation-enqueue", matchId },
+    });
+  });
   return observation.prediction;
 }

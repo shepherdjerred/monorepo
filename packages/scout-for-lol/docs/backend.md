@@ -1,6 +1,6 @@
 # Backend Service Architecture
 
-The backend service is a Discord bot that monitors League of Legends matches, generates reports, and manages competitions. It runs as a long-lived process with scheduled cron jobs.
+The backend service is a Discord bot that monitors League of Legends matches, generates reports, and manages competitions. It embeds Temporal Workers for durable scheduled and interactive work.
 
 ## Service Overview
 
@@ -15,7 +15,7 @@ flowchart TB
         PRISMA["Prisma Client"]
         DISCORD["Discord Client"]
         SENTRY_INIT["Sentry"]
-        CRON["Cron Scheduler"]
+        TEMPORAL["Temporal Workers"]
         HTTP["HTTP Server"]
     end
 
@@ -35,12 +35,12 @@ flowchart TB
     CONFIG --> PRISMA
     PRISMA --> DISCORD
     DISCORD --> SENTRY_INIT
-    SENTRY_INIT --> CRON
-    CRON --> HTTP
+    SENTRY_INIT --> TEMPORAL
+    TEMPORAL --> HTTP
 
     DISCORD --> COMMANDS
     DISCORD --> EVENTS
-    CRON --> TASKS
+    TEMPORAL --> TASKS
     TASKS --> API_CLIENT
     TASKS --> REVIEW
     TASKS --> COMPETITION
@@ -332,7 +332,8 @@ packages/backend/
 │   │   ├── competition/     # Competition system
 │   │   ├── review/          # AI review generation
 │   │   ├── tasks/           # Scheduled tasks
-│   │   └── cron.ts          # Cron scheduler
+│   ├── temporal/             # Activity workers and durable starts
+│   └── league/tasks/         # Workflow activity implementations
 │   ├── metrics/             # Prometheus metrics
 │   └── sentry/              # Error tracking
 └── package.json

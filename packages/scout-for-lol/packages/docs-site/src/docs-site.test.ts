@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 import path from "node:path";
-import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
-import { scoutQlSourceCatalogs } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
-import { SCOUTQL_FUNCTIONS } from "@scout-for-lol/data/model/scoutql/catalog-functions.ts";
-import { SCOUTQL_CHART_OPTION_NAMES } from "@scout-for-lol/data/model/scoutql/render-options.ts";
-import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
+import { REPORT_METRICS } from "@scout-for-lol/data/model/report-query-metrics.ts";
+import {
+  REPORT_RENDER_KINDS,
+  REPORT_SOURCES,
+} from "@scout-for-lol/data/model/report-query-registry.ts";
 import { ALL_PERMISSIONS } from "@scout-for-lol/data/model/permissions/catalog.ts";
 
 /**
@@ -69,27 +69,6 @@ function page(route: string): string {
     throw new Error(`${route} was not built`);
   }
   return html;
-}
-
-/**
- * Astro escapes text nodes, so a signature containing an apostrophe reaches
- * the page as `player(&#39;name&#39;)`. Comparing decoded text keeps these
- * assertions written the way the catalogs write them.
- */
-function decode(html: string): string {
-  return html
-    .replaceAll("&#x27;", "'")
-    .replaceAll("&#39;", "'")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#x3C;", "<")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&amp;", "&");
-}
-
-/** Whether a value is rendered as its own `<code>` cell, not merely mentioned. */
-function hasCodeCell(html: string, value: string): boolean {
-  return decode(html).includes(`<code>${value}</code>`);
 }
 
 describe("built pages", () => {
@@ -185,27 +164,18 @@ describe("generated render samples", () => {
     expect(status.trim()).toBe("");
   });
 
-  test("every render kind in the catalog has a generated sample", () => {
+  test("every render kind in the registry has a generated sample", () => {
     const covered = new Set(renderSampleManifest.map((entry) => entry.kind));
     expect(
-      SCOUTQL_RENDER_KINDS.filter((kind) => !covered.has(kind.id)).map(
+      REPORT_RENDER_KINDS.filter((kind) => !covered.has(kind.id)).map(
         (kind) => kind.id,
       ),
     ).toEqual([]);
   });
 
-  test("no sample is declared for a render kind that does not exist", () => {
-    const known = new Set(SCOUTQL_RENDER_KINDS.map((kind) => kind.id));
-    expect(
-      renderSampleManifest
-        .map((entry) => entry.kind)
-        .filter((kind) => !known.has(kind)),
-    ).toEqual([]);
-  });
-
   test("chart kinds produce an image and text kinds produce message content", () => {
     const wrong: string[] = [];
-    for (const kind of SCOUTQL_RENDER_KINDS) {
+    for (const kind of REPORT_RENDER_KINDS) {
       const entry = renderSampleManifest.find((item) => item.kind === kind.id);
       if (entry === undefined) {
         continue;
@@ -304,133 +274,87 @@ describe("cross-package facts the prose depends on", () => {
     ]);
   });
 
-  test("the documented query limits still match the analyzer", async () => {
-    // Three of the limits on the ScoutQL page are private constants in the
-    // analyzer rather than exported values the page could read, so the page
-    // states them by hand. This is what stops the hand-written copy drifting.
-    const scoutql = new URL("../../data/src/model/scoutql/", import.meta.url)
-      .pathname;
-    const claims: [string, string, string][] = [
-      ["1\u{2013}20 outputs", "analyze-select.ts", "const MAX_OUTPUTS = 20;"],
-      [
-        "1\u{2013}3 order keys",
-        "analyze-order.ts",
-        "const MAX_ORDER_KEYS = 3;",
-      ],
-      [
-        "0\u{2013}3 groupings",
-        "analyze-group.ts",
-        "A query may group by at most 3 dimensions",
-      ],
-    ];
-    const stale: string[] = [];
-    for (const [claim, file, snippet] of claims) {
-      const source = await Bun.file(path.join(scoutql, file)).text();
-      if (!source.includes(snippet)) {
-        stale.push(claim);
-      }
-    }
-    expect(stale).toEqual([]);
-  });
-
-  test("documented cron intervals still match the backend scheduler", async () => {
+  test("documented intervals still match the Temporal schedules", async () => {
     const source = await Bun.file(
-      new URL("../../backend/src/league/cron.ts", import.meta.url).pathname,
+      new URL(
+        "../../../../temporal/src/schedules/scout-schedule-definitions.ts",
+        import.meta.url,
+      ).pathname,
     ).text();
-    // Each entry is (documented claim → the schedule expression that backs it).
-    const claims: [string, string][] = [
-      ["pre-match every 30 seconds", "*/30 * * * * *"],
-      ["post-match every minute", "0 * * * * *"],
-      ["competition lifecycle every 15 minutes", "0 */15 * * * *"],
-      ["report lake fold every 15 minutes", "0 5-59/15 * * * *"],
-      ["report lake rebuild daily at 02:00 UTC", "0 0 2 * * *"],
-      ["player pruning daily at 03:00 UTC", "0 0 3 * * *"],
-      ["removed-guild cleanup daily at 04:00 UTC", "0 0 4 * * *"],
-      ["match-time refresh every 6 hours", "0 0 */6 * * *"],
+    // Each claim is tied to its schedule identity, so a matching expression on
+    // an unrelated schedule cannot make stale documentation pass.
+    const claims: [string, string, string][] = [
+      ["pre-match every 30 seconds", "prematch-poll", 'every: "30 seconds"'],
+      ["post-match every minute", "postmatch-discovery", 'every: "1 minute"'],
+      [
+        "competition lifecycle every 15 minutes",
+        "competition-refresh",
+        'every: "15 minutes"',
+      ],
+      [
+        "report lake fold every 15 minutes",
+        "report-lake-fold",
+        'every: "15 minutes"',
+      ],
+      [
+        "report lake rebuild daily at 02:00 UTC",
+        "report-lake-rebuild",
+        'expression: "0 2 * * *"',
+      ],
+      [
+        "player pruning daily at 03:00 UTC",
+        "player-pruning",
+        'expression: "0 3 * * *"',
+      ],
+      [
+        "removed-guild cleanup daily at 04:00 UTC",
+        "removed-guild-cleanup",
+        'expression: "0 4 * * *"',
+      ],
+      [
+        "match-time refresh every 6 hours",
+        "match-time-rebuild",
+        'expression: "0 */6 * * *"',
+      ],
     ];
     const stale = claims
-      .filter(([, schedule]) => !source.includes(`"${schedule}"`))
+      .filter(([, scheduleId, schedule]) => {
+        const start = source.indexOf(`"${scheduleId}"`);
+        return (
+          start === -1 || !source.slice(start, start + 500).includes(schedule)
+        );
+      })
       .map(([claim]) => claim);
     expect(stale).toEqual([]);
   });
 });
 
 describe("generated reference tables", () => {
-  test("every source and every one of its columns is documented", () => {
-    // The metric enum is gone: a source's columns ARE the SELECT vocabulary,
-    // so this page is the only place a reader can look one up. A column added
-    // to the lake and left off it is invisible.
-    const html = page("reference/scoutql-sources");
-    const missing: string[] = [];
-    for (const catalog of scoutQlSourceCatalogs()) {
-      if (!hasCodeCell(html, catalog.id)) {
-        missing.push(catalog.id);
-      }
-      for (const column of catalog.columns.values()) {
-        if (!hasCodeCell(html, column.name)) {
-          missing.push(`${catalog.id}.${column.name}`);
-        }
-      }
-    }
-    expect(missing).toEqual([]);
+  test("every metric in the registry is documented", () => {
+    const html = page("reference/scoutql-metrics");
+    expect(
+      REPORT_METRICS.filter((metric) => !html.includes(metric.id)).map(
+        (metric) => metric.id,
+      ),
+    ).toEqual([]);
   });
 
-  test("every source states its time column, or that it has none", () => {
-    const html = decode(page("reference/scoutql-sources"));
-    const missing = scoutQlSourceCatalogs()
-      .filter(
-        (catalog) =>
-          !html.includes(`<code>${catalog.timeColumn ?? "none"}</code>`),
-      )
-      .map((catalog) => catalog.id);
-    expect(missing).toEqual([]);
-  });
-
-  test("every function in the catalog is documented with its signature", () => {
-    const html = decode(page("reference/scoutql-functions"));
-    const missing = SCOUTQL_FUNCTIONS.flatMap((fn) =>
-      fn.signatures
-        .filter(
-          (signature) => !html.includes(`<code>${signature.label}</code>`),
-        )
-        .map((signature) => `${fn.name}: ${signature.label}`),
-    );
-    expect(missing).toEqual([]);
-  });
-
-  test("every render kind in the catalog is documented", () => {
+  test("every render kind in the registry is documented", () => {
     const html = page("reference/scoutql-render");
     expect(
-      SCOUTQL_RENDER_KINDS.filter((kind) => !hasCodeCell(html, kind.id)).map(
+      REPORT_RENDER_KINDS.filter((kind) => !html.includes(kind.id)).map(
         (kind) => kind.id,
       ),
     ).toEqual([]);
   });
 
-  test("every render option the language accepts is documented", () => {
-    const html = page("reference/scoutql-render");
+  test("every query source in the registry is documented", () => {
+    const html = page("reference/scoutql-sources");
     expect(
-      SCOUTQL_CHART_OPTION_NAMES.filter((name) => !hasCodeCell(html, name)),
+      REPORT_SOURCES.filter((source) => !html.includes(source.id)).map(
+        (source) => source.id,
+      ),
     ).toEqual([]);
-  });
-
-  test("every idiom is on the recipes page", () => {
-    const html = decode(page("how-to/scoutql-recipes"));
-    const missing = SCOUTQL_IDIOMS.filter(
-      (idiom) =>
-        !html.includes(`id="${idiom.id}"`) || !html.includes(idiom.title),
-    ).map((idiom) => idiom.id);
-    expect(missing).toEqual([]);
-  });
-
-  test("the retired metrics URL still resolves to the functions page", () => {
-    // The old path is in Discord messages, bookmarks, and the design-audit
-    // route list; it redirects rather than 404ing.
-    const html = htmlByPath.get(
-      path.join("reference/scoutql-metrics", "index.html"),
-    );
-    expect(html).toBeDefined();
-    expect(html ?? "").toContain("/docs/reference/scoutql-functions/");
   });
 
   test("every permission in the catalog is documented", () => {

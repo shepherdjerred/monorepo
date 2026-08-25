@@ -10,7 +10,6 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { AttachmentBuilder } from "discord.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -32,7 +31,6 @@ import {
 import type { Report } from "#generated/prisma/client/index.js";
 import { router } from "#src/trpc/trpc.ts";
 import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
-import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   guildProcedure,
   guildMutationProcedure,
@@ -44,8 +42,6 @@ import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { planResultColumns } from "#src/reports/plan-columns.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { renderReportOutput } from "#src/reports/output.ts";
-import { runReport } from "#src/reports/runner.ts";
-import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
 import { loadReportRunVisualization } from "#src/storage/s3-report-run.ts";
 import { mapInBatches } from "#src/utils/map-in-batches.ts";
@@ -55,8 +51,6 @@ import {
   ReportDataBrowseInputSchema,
 } from "#src/reports/data-explorer.ts";
 import { ACCOUNT_IDENTITY_COLUMN_IDS } from "#src/reports/data-explorer-columns.ts";
-import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
-import { temporalReportsEnabled } from "#src/config/dynamic.ts";
 import {
   enqueueReportScheduleDeletion,
   enqueueReportScheduleUpsert,
@@ -378,48 +372,11 @@ export const reportRouter = router({
     .input(ReportIdInput.extend({ post: z.boolean().default(true) }))
     .mutation(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
-      if (temporalReportsEnabled()) {
-        try {
-          return await runManualReportWithTemporal(report, input.post);
-        } catch (error) {
-          asBadRequest(error);
-        }
-      }
-      let result;
       try {
-        result = await runReport({ prisma, report, trigger: "MANUAL" });
+        return await runManualReportWithTemporal(report, input.post);
       } catch (error) {
         asBadRequest(error);
       }
-      if (input.post) {
-        const image = result.output.image;
-        const files =
-          image === null
-            ? []
-            : [new AttachmentBuilder(image.data, { name: image.filename })];
-        await deliverTrackedCoreOutput({
-          serverId: input.guildId,
-          outputKind: "report_manual",
-          async deliver() {
-            for (const [index, content] of splitMessageIntoChunks(
-              result.output.content,
-            ).entries()) {
-              await sendChannelMessage(
-                { content, files: index === 0 ? files : [] },
-                report.channelId,
-                report.serverId,
-              );
-            }
-          },
-        });
-      }
-      return {
-        content: result.output.content,
-        hasImage: result.output.image !== null,
-        rowsReturned: result.rowsReturned,
-        rowsScanned: result.rowsScanned,
-        posted: input.post,
-      };
     }),
 
   previewQuery: guildProcedure("reports", "run")

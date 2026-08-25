@@ -4,10 +4,7 @@ import { createLogger } from "#src/logger.ts";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
 import { initializeTracing } from "#src/observability/tracing.ts";
 import { shutdownProductAnalytics } from "#src/analytics/product-analytics.ts";
-import {
-  shutdownDynamicConfig,
-  temporalBackgroundEnabled,
-} from "#src/config/dynamic.ts";
+import { shutdownDynamicConfig } from "#src/config/dynamic.ts";
 import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
 
 // Initialize OTel tracing first so any subsequent module that opens a span
@@ -83,10 +80,6 @@ await initializeDynamicConfig({
     bucksAskModel: configuration.bucksAskModel,
     tournamentApiMode: configuration.tournamentApiMode,
     tournamentMaxOpenLobbies: configuration.tournamentMaxOpenLobbies,
-    temporalRealtimeEnabled: false,
-    temporalBackgroundEnabled: false,
-    temporalReportsEnabled: false,
-    temporalInteractiveEnabled: false,
   },
   metrics: featureFlagMetrics,
 });
@@ -106,32 +99,6 @@ await seedSeasons(prisma);
 logger.info("📈 Seeding scheduled-report freshness gauge from DB");
 import { seedScheduledReportLastSuccessMetric } from "#src/reports/schedule-metric-seed.ts";
 await seedScheduledReportLastSuccessMetric(prisma);
-
-logger.info("⏰ Starting cron job scheduler");
-if (configuration.enableBackgroundJobs) {
-  const { startCronJobs } = await import("#src/league/cron.ts");
-  startCronJobs();
-} else {
-  logger.warn("⏭️  Background jobs disabled for this local secondary instance");
-}
-
-// Incrementally seed the summoner-search index from existing data. Idempotent
-// and cheap to re-run (inserts only new PUUIDs); background so it never blocks
-// boot or request serving.
-if (!temporalBackgroundEnabled()) {
-  const { backfillFromExisting } =
-    await import("#src/lib/riot/summoner-index.ts");
-  void (async () => {
-    try {
-      const result = await backfillFromExisting();
-      logger.info(
-        `🗂️  Summoner index seeded: ${result.inserted.toString()} new of ${result.scanned.toString()} scanned`,
-      );
-    } catch (error) {
-      logger.warn("Summoner index backfill failed (non-fatal)", { error });
-    }
-  })();
-}
 
 logger.info("✅ Backend application startup complete");
 

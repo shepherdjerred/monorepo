@@ -209,8 +209,8 @@ function computeConfiguration() {
       "BETTING_PARLAY_AI_MODEL",
       "gpt-5.6-sol",
     ),
-    // Bootstrap credential for Temporal's private weekly-parlay control
-    // endpoint. When absent, the route is not registered at all.
+    // Replay-only compatibility credential for weekly-parlay executions that
+    // started before the embedded Scout Activity patch was recorded.
     weeklyParlayControlToken: getOptionalEnvVar("WEEKLY_PARLAY_CONTROL_TOKEN"),
     exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-luna").asString(),
     bucksAskModel: env.get("BB_ASK_MODEL").default("gpt-5.6-luna").asString(),

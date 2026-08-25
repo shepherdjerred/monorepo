@@ -6,10 +6,10 @@ import { createLogger } from "#src/logger.ts";
 import { downtimeDetectedTotal } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 
-const logger = createLogger("startup-recovery");
+const logger = createLogger("ingestion-reconciliation");
 
-export async function runStartupRecovery(): Promise<void> {
-  logger.info("Running startup recovery check");
+export async function runIngestionReconciliation(): Promise<void> {
+  logger.info("Running ingestion reconciliation");
 
   const lastPollAt = await getLastSuccessfulPollAt();
   const startupAt = new Date();
@@ -38,7 +38,7 @@ export async function runStartupRecovery(): Promise<void> {
     } catch (error) {
       logger.error("Failed to send offline notification:", error);
       Sentry.captureException(error, {
-        tags: { source: "startup-recovery-notification" },
+        tags: { source: "ingestion-reconciliation-notification" },
       });
     }
   }
@@ -54,11 +54,11 @@ export async function runStartupRecovery(): Promise<void> {
     } catch (error) {
       logger.error("Backfill failed:", error);
       Sentry.captureException(error, {
-        tags: { source: "startup-recovery-backfill" },
+        tags: { source: "ingestion-reconciliation-backfill" },
       });
       throw error;
     }
   }
 
-  logger.info("Startup recovery check complete");
+  logger.info("Ingestion reconciliation complete");
 }

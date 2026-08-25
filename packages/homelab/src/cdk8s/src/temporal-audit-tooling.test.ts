@@ -489,13 +489,13 @@ describe("Temporal operations worker isolation", () => {
       expect(repoEnv).toContain(required);
       expect(scoutEnv).not.toContain(required);
     }
-    for (const required of [
+    for (const replayOnly of [
       "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
       "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
     ]) {
-      expect(scoutEnv).toContain(required);
-      expect(repoEnv).not.toContain(required);
-      expect(infraEnv).not.toContain(required);
+      expect(scoutEnv).toContain(replayOnly);
+      expect(repoEnv).not.toContain(replayOnly);
+      expect(infraEnv).not.toContain(replayOnly);
     }
   });
 

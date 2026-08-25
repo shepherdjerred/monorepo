@@ -12,7 +12,6 @@ import {
   startExploreTurn,
 } from "#src/explore/store.ts";
 import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
-import { temporalInteractiveEnabled } from "#src/config/dynamic.ts";
 import { createLogger } from "#src/logger.ts";
 import type {
   ActiveRun,
@@ -110,7 +109,7 @@ export async function executeActiveExploreRun(input: {
             : "interrupted",
         emit: async (event) => {
           input.record(event);
-          if (event.type === "final" && temporalInteractiveEnabled()) {
+          if (event.type === "final") {
             await input.client.scoutInteractiveRun.updateMany({
               where: { id: input.run.summary.runId },
               data: {

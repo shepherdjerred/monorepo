@@ -1,6 +1,5 @@
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
-import { temporalReportsEnabled } from "#src/config/dynamic.ts";
 import { createLogger } from "#src/logger.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { signalScoutReportReconciliation } from "#src/temporal/starts.ts";
@@ -33,7 +32,6 @@ export async function enqueueReportScheduleDeletion(
 }
 
 export async function notifyReportScheduleReconciler(): Promise<void> {
-  if (!temporalReportsEnabled()) return;
   const supervisor = currentScoutTemporalSupervisor();
   if (supervisor === undefined) {
     logger.warn(
