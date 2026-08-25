@@ -57,15 +57,19 @@ describe("Scout weekly parlay deployment boundary", () => {
       ]),
     );
 
-    const glitterDeployment = DeploymentSpecSchema.parse(
-      findResource(temporal, "Deployment", "temporal-temporal-glitter-worker")
-        .spec,
-    );
-    expect(
-      glitterDeployment.template.spec.containers[0]?.env.some(
-        (entry) => entry.name === "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
-      ),
-    ).toBe(false);
+    for (const deploymentName of [
+      "temporal-temporal-glitter-corpus-worker",
+      "temporal-temporal-glitter-context-worker",
+    ]) {
+      const glitterDeployment = DeploymentSpecSchema.parse(
+        findResource(temporal, "Deployment", deploymentName).spec,
+      );
+      expect(
+        glitterDeployment.template.spec.containers[0]?.env.some(
+          (entry) => entry.name === "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+        ),
+      ).toBe(false);
+    }
   });
 
   test("keeps the private control endpoint absent from production Scout", () => {
