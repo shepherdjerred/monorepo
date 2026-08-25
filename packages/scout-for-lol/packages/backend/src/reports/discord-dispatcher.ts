@@ -1,6 +1,5 @@
 import { AttachmentBuilder } from "discord.js";
 import * as Sentry from "@sentry/bun";
-import { prisma } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
@@ -49,7 +48,20 @@ export async function deliverScheduledReportDispatches(
   );
 
   for (const dispatch of dispatches) {
-    await deliverReportDispatch(dispatch, "report_scheduled");
+    const delivered = await deliverReportDispatch(dispatch, "report_scheduled");
+    if (delivered) {
+      await prisma.reportRun.updateMany({
+        where: {
+          id: ReportRunIdSchema.parse(dispatch.result.runId),
+          deliveryState: "PENDING",
+        },
+        data: {
+          deliveryState: "DELIVERED",
+          deliveryError: null,
+          deliveredAt: new Date(),
+        },
+      });
+    }
     await new Promise((resolve) => setTimeout(resolve, POST_DELAY_MS));
   }
 }
@@ -113,7 +125,7 @@ export async function deliverReportDispatch(
   dispatch: ScheduledReportDispatch,
   outputKind: "report_manual" | "report_scheduled",
   failureMode: "isolate" | "propagate" = "isolate",
-): Promise<void> {
+): Promise<boolean> {
   const { id: reportId, channelId, serverId } = dispatch.report;
 
   // Skip guilds the bot is no longer a member of: delivery is impossible and
@@ -125,7 +137,7 @@ export async function deliverReportDispatch(
     );
     logger.warn(`[ReportDispatch] ${error.message}`);
     if (failureMode === "propagate") throw error;
-    return;
+    return false;
   }
 
   const image = dispatch.result.output.image;
@@ -190,7 +202,9 @@ export async function deliverReportDispatch(
       });
     }
     if (failureMode === "propagate") throw error;
+    return false;
   }
+  return true;
 }
 
 export async function deliverPendingReportDispatches(
