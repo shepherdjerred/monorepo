@@ -79,13 +79,68 @@ of the report-lake volume, so the extra topology is not free.
 ## Schedules are durable ownership records
 
 Fixed Scout work is declared with the rest of the
-[Temporal schedule fleet](/reference/temporal-schedules/). Each user report
-will own one strictly marked Schedule, while Postgres owns the report
-definition and revision.
+[Temporal schedule fleet](/reference/temporal-schedules/). Each enabled report
+owns one strictly marked Schedule, while Postgres owns the report definition
+and monotonic revision.
+
+A transactional outbox connects those two authorities. Report writes commit
+an upsert revision or a deletion tombstone beside the product change. A
+singleton reconciler receives an immediate Signal and also runs every minute,
+so a failed Signal cannot strand the outbox. It preserves an operator pause,
+repairs missing or drifted owned Schedules, deletes only exact ownership
+matches, and alerts on unknown prefix or memo mismatches.
+
+Scheduled report actions use `BUFFER_ONE`. The first overdue action claims the
+report's persisted local due date and advances it; older buffered actions then
+become no-ops. This preserves one run after downtime without replaying every
+missed cron occurrence.
 
 Schedules begin paused when a legacy owner still exists. A feature-family
 cutover transfers ownership explicitly; a Temporal outage never activates the
 legacy owner automatically.
+
+## Workflows match product lifecycles
+
+Post-match discovery starts one independently identified child Workflow per
+match and waits until each child is durably started. Initial-history imports
+use one quiet entity Workflow per PUUID: it processes one persisted page per
+Activity, Continues-As-New before history grows, and accepts a Signal when the
+product job is reopened after its cooldown.
+
+Explore and report-AI use one Workflow per turn or edit. A stop request is a
+Signal that cancels the Activity scope. Non-cancellable cleanup persists the
+terminal projection and releases quota. Before the provider call, the Activity
+atomically marks the attempt as ambiguous-or-started. A retry salvages partial
+output and interrupts the run instead of issuing a second billable request.
+
+The SSE broker remains a low-latency process transport. Reconnecting clients
+load persisted snapshots and terminal outcomes; Workflow history never becomes
+the public event store.
+
+## Replay and outage evidence are release gates
+
+Node-hosted Workflow tests cover Signals, cancellation cleanup, child close
+policies, Continue-As-New, overlap, staleness, and retries. A real Temporal dev
+server test also proves deterministic duplicate starts, portable replay,
+Worker restart, Worker-outage catch-up, server restart, per-report Schedule
+repair, pause preservation, and deletion tombstones.
+
+Before promotion, operators replay retained beta histories directly against
+the candidate bundles:
+
+```bash
+cd packages/scout-for-lol/packages/temporal
+TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true \
+  bun run replay:histories <scout-beta-workflow-id>...
+
+cd packages/temporal
+TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true \
+  bun run replay:scout-histories <weekly-or-bryan-workflow-id>...
+```
+
+The commands keep histories in memory and use the pinned Node runtime because
+Temporal supports Worker replay internals on Node. Production remains on the
+repository's Bun Worker runtime.
 
 ## Related
 
