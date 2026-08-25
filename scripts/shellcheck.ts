@@ -1,23 +1,10 @@
 import { run } from "./lib/run.ts";
 import { isShellcheckCandidate } from "./migration-core.ts";
+import { trackedExistingFiles } from "./lib/tracked-files.ts";
 
 export async function checkShellScripts(): Promise<void> {
-  const result = await run(["git", "ls-files", "-z", "*.sh"], {
-    capture: true,
-    secret: true,
-  });
-  const candidates = result.stdout
-    .split("\0")
-    .filter((path) => path !== "" && isShellcheckCandidate(path));
-  const candidateChecks = await Promise.all(
-    candidates.map(async (path) => ({
-      exists: await Bun.file(path).exists(),
-      path,
-    })),
-  );
-  const files = candidateChecks
-    .filter(({ exists }) => exists)
-    .map(({ path }) => path);
+  const trackedFiles = await trackedExistingFiles(["*.sh"]);
+  const files = trackedFiles.filter((path) => isShellcheckCandidate(path));
   if (files.length === 0) {
     console.log("no shell scripts to check");
     return;

@@ -18,6 +18,7 @@ const turboTasks = [
   "prettier-packages",
   "prettier-root",
   "shellcheck",
+  "hadolint",
   "knip",
   "gitleaks",
   "jscpd",

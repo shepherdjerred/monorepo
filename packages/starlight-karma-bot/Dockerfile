@@ -85,12 +85,16 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
 EXPOSE 8000
 
 # Health check reuses the in-repo health probe (unchanged from the old image).
+# Exec form (DL3025) with an explicit shell: the `|| exit 1` normalizes any
+# probe exit code to 1, since HEALTHCHECK reserves codes other than 0/1.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD bun run packages/starlight-karma-bot/src/health.ts || exit 1
+  CMD ["/bin/sh", "-c", "bun run packages/starlight-karma-bot/src/health.ts || exit 1"]
 
-# Run as the non-root `bun` user shipped in the base image. The COPY'd
-# node_modules tree is root-owned but read-only at runtime.
-USER bun
+# Run as the base image's non-root `bun` user (uid/gid 1000), addressed
+# numerically so the container runtime and Kubernetes runAsNonRoot admission
+# resolve it without a passwd lookup. The COPY'd node_modules tree is
+# root-owned but read-only at runtime.
+USER 1000:1000
 
 # Run from the package dir so Bun resolves this package's tsconfig and imports
 # map (the `#src/*` and `#generated/*` subpaths). The entrypoint applies pending

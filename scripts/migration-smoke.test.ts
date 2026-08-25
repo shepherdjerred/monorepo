@@ -10,7 +10,8 @@ test("root migration entrypoints load without running", async () => {
     import("./prettier-staged.ts"),
     import("./pyright-check.ts"),
     import("./shellcheck.ts"),
+    import("./hadolint.ts"),
   ]);
-  expect(modules).toHaveLength(8);
+  expect(modules).toHaveLength(9);
   expect(modules.every((module) => typeof module === "object")).toBe(true);
 });

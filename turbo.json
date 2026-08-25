@@ -263,6 +263,16 @@
     "//#shellcheck": {
       "inputs": ["**/*.sh", "!**/node_modules/**", "scripts/shellcheck.ts"]
     },
+    "//#hadolint": {
+      "inputs": [
+        "**/Dockerfile",
+        "**/Dockerfile.*",
+        "**/*.Dockerfile",
+        "!**/node_modules/**",
+        ".hadolint.yaml",
+        "scripts/hadolint.ts"
+      ]
+    },
     "//#knip": {
       // Knip resolves `#generated/prisma/...` imports, so the Prisma clients
       // must exist before it runs. Inside the verify graph these generate

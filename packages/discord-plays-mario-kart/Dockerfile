@@ -111,6 +111,11 @@ FROM base AS runtime
 # - Intel VAAPI stack (libva + iHD driver): h264_vaapi hardware encoding on an
 #   Intel iGPU. iHD lives in Debian non-free (enabled below) and is amd64-only;
 #   software libx264 is the fallback when the device/driver is absent.
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
 RUN set -e; \
   if [ -f /etc/apt/sources.list.d/debian.sources ]; then sed -i "s/^Components: main.*/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources; fi; \
   apt-get update \
@@ -188,9 +193,10 @@ ENV HOME=/tmp
 CMD ["sh", "-c", "cd packages/backend && bun x --no-install prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts"]
 
 FROM runtime AS smoke
-# This stage temporarily needs root only to assemble the smoke harness and its
-# writable config fixture. It drops back to the deploy UID before execution.
-USER root
+# This stage temporarily needs root (uid 0, numeric for DL3066) only to
+# assemble the smoke harness and its writable config fixture. It drops back to
+# the deploy UID before execution.
+USER 0
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
