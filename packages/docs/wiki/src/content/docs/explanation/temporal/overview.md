@@ -76,6 +76,13 @@ and ServiceMonitors select the unique `component` label rather than the shared
 image label. Each process serves `/healthz` after startup, with independent
 probes and per-queue metrics.
 
+The topology is delivered as a staged migration. The Glitter layer first
+replaces the combined Glitter Deployment with separate corpus and context
+workers while the legacy core and agent Deployments still serve the remaining
+queues. The gateway, home, reports, infra, repo, and Scout Deployments arrive
+in the later ingress and operations layers, before the default queue is
+retired.
+
 ## Batteries in the image
 
 The worker image bakes `gh`, `claude`, `codex`, `kubectl`, `talosctl`, `tofu`,
