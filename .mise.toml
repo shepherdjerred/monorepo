@@ -57,5 +57,9 @@ yq = "4"
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
 helm = "4"
 opentofu = "1.12.6"
+# Tofu-tree lint (packages/homelab lint:tofu), bundled terraform ruleset with
+# a repository-owned empty config — no plugins, no `tflint --init`, no network.
+# renovate: datasource=github-releases depName=terraform-linters/tflint
+tflint = "0.64.0"
 argocd = "3"
 awscli = "2"

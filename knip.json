@@ -434,6 +434,7 @@
     "pinchtab",
     "swift",
     "swiftlint",
+    "tflint",
     "uv",
     "uvx",
     "velero",
