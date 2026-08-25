@@ -37,6 +37,9 @@ describe("isTransientError", () => {
     "read tcp 10.0.0.5:51234->140.82.113.3:443: i/o timeout",
     // Node/libuv connect timeout errno.
     "connect ETIMEDOUT 140.82.113.3:443",
+    // PostHog's provider timeout diagnostics from the main Tofu lane.
+    "context deadline exceeded",
+    "Client.Timeout exceeded while awaiting headers",
     // DNS resolution flap (getaddrinfo temporary failure).
     "curl: (6) Could not resolve host: temporary failure in name resolution",
     // ArgoCD code 9: an overlapping sync op still holds the app (build 6296).
@@ -96,9 +99,8 @@ describe("isTransientError", () => {
   });
 
   test("recognizes an explicit TransientError regardless of message", () => {
-    // The caller already classified this as transient (e.g. a BuildKit
-    // signature like `context deadline exceeded` that the general pattern does
-    // not list); the brand must make runMain retry it.
+    // The caller already classified this as transient even if its diagnostic
+    // does not match the general pattern; the brand must make runMain retry it.
     expect(
       isTransientError(new TransientError("context deadline exceeded")),
     ).toBe(true);
