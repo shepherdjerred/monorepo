@@ -22,6 +22,7 @@
     "scripts/lint-helm.ts",
     "scripts/lint-helm.test.ts",
     "scripts/lint-tofu.ts",
+    "scripts/check-kubeconform.ts",
     "scripts/migration-core.ts",
     "scripts/migration-smoke.test.ts",
     "scripts/velero-backups.ts",

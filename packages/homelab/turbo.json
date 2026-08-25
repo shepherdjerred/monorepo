@@ -22,6 +22,17 @@
     // over every src/tofu stack.
     "lint:tofu": {
       "inputs": ["src/tofu/**", "scripts/lint-tofu.ts", ".tflint.hcl"]
+    },
+    // kubeconform validation of the cdk8s synth output. Ordered after the
+    // synth (like lint:helm) so it reads the final, patched dist/.
+    "check:kubeconform": {
+      "dependsOn": ["@homelab/cdk8s#build"],
+      "inputs": [
+        "scripts/check-kubeconform.ts",
+        "src/cdk8s/**",
+        "!src/cdk8s/node_modules/**",
+        "!src/cdk8s/dist/**"
+      ]
     }
   }
 }
