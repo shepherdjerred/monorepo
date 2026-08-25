@@ -21,10 +21,15 @@ const REPOSITORY_CHART_URLS = new Set([
 // ArgoCD reports `requiresPruning` for that Service alone; both PVCs
 // (`freshrss-data`, `freshrss-extensions`) are declared and are not candidates,
 // so no data is at risk.
+// temporal is here because the default Glitter worker was split into the
+// corpus/context workers. The old worker's Services, Deployment, and
+// ServiceMonitors are intentionally retired; leaving them live keeps the
+// healthy temporal Application OutOfSync and blocks the release health wait.
 const PRUNED_RELEASE_CHARTS = new Set([
   "freshrss",
   "media",
   "service-probes",
+  "temporal",
   "turbo-cache",
 ]);
 
