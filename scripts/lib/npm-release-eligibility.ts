@@ -188,6 +188,7 @@ function isKnownRepositoryOnlyPath(relativePath: string): boolean {
     ".npmignore",
     "bunfig.toml",
     "eslint.config.ts",
+    "eslint-suppressions.json",
     "generate-readme-core.ts",
     "generate-readme-smoke.test.ts",
     "generate-readme.ts",

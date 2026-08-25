@@ -127,6 +127,7 @@ describe("consumer file classification", () => {
           `${webringPath}/.github/workflows/ci.yml`,
           `${webringPath}/tsconfig.json`,
           `${webringPath}/eslint.config.ts`,
+          `${webringPath}/eslint-suppressions.json`,
         ],
         false,
       ).eligible,
