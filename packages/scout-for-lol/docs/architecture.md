@@ -17,7 +17,7 @@ flowchart TB
     subgraph Backend["Backend Service"]
         direction TB
         BOT["Discord Bot"]
-        CRON["Cron Scheduler"]
+        TEMPORAL["Embedded Temporal Workers"]
         MATCH_POLLER["Match History Poller"]
         REPORT_GEN["Report Generator"]
         AI_REVIEW["AI Review Generator"]
@@ -52,8 +52,8 @@ flowchart TB
     Backend --> SENTRY
 
     %% Internal backend connections
-    CRON --> MATCH_POLLER
-    CRON --> COMPETITION
+    TEMPORAL --> MATCH_POLLER
+    TEMPORAL --> COMPETITION
     MATCH_POLLER --> REPORT_GEN
     REPORT_GEN --> AI_REVIEW
     REPORT_GEN --> BOT
@@ -199,7 +199,7 @@ Selected-period analysis recomputes the criterion without mutating that cache.
 | Report Generator    | Orchestrates match data → PNG report pipeline           |
 | AI Review           | GPT-4o-mini match analysis, art prompt generation       |
 | Competition Manager | Leaderboard calculation, snapshot management            |
-| Cron Scheduler      | Schedules periodic tasks (polling, cleanup, updates)    |
+| Temporal Workers    | Run durable polling, cleanup, reports, and LLM work     |
 
 ### Data Package
 

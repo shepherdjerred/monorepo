@@ -136,30 +136,6 @@ const DEFINITION = {
       env: "TOURNAMENT_MAX_OPEN_LOBBIES",
     },
   },
-  temporalRealtimeEnabled: {
-    schema: z.boolean(),
-    sources: ["flag", "default"],
-    default: false,
-    names: { flag: "scout_temporal_realtime_enabled" },
-  },
-  temporalBackgroundEnabled: {
-    schema: z.boolean(),
-    sources: ["flag", "default"],
-    default: false,
-    names: { flag: "scout_temporal_background_enabled" },
-  },
-  temporalReportsEnabled: {
-    schema: z.boolean(),
-    sources: ["flag", "default"],
-    default: false,
-    names: { flag: "scout_temporal_reports_enabled" },
-  },
-  temporalInteractiveEnabled: {
-    schema: z.boolean(),
-    sources: ["flag", "default"],
-    default: false,
-    names: { flag: "scout_temporal_interactive_enabled" },
-  },
 } as const;
 
 /**
@@ -176,10 +152,6 @@ export type DynamicConfigSeed = {
   bucksAskModel?: string;
   tournamentApiMode?: TournamentApiMode;
   tournamentMaxOpenLobbies?: number;
-  temporalRealtimeEnabled?: boolean;
-  temporalBackgroundEnabled?: boolean;
-  temporalReportsEnabled?: boolean;
-  temporalInteractiveEnabled?: boolean;
 };
 
 const REFRESH_INTERVAL_MS = 60_000;
@@ -208,10 +180,6 @@ function buildSnapshot(
                 bucksAskModel: "string",
                 tournamentApiMode: "string",
                 tournamentMaxOpenLobbies: "number",
-                temporalRealtimeEnabled: "boolean",
-                temporalBackgroundEnabled: "boolean",
-                temporalReportsEnabled: "boolean",
-                temporalInteractiveEnabled: "boolean",
               },
             }),
           }
@@ -366,22 +334,6 @@ export function tournamentMaxOpenLobbies(): number {
     snapshot?.get("tournamentMaxOpenLobbies") ??
     configuration.tournamentMaxOpenLobbies
   );
-}
-
-export function temporalRealtimeEnabled(): boolean {
-  return snapshot?.get("temporalRealtimeEnabled") ?? false;
-}
-
-export function temporalBackgroundEnabled(): boolean {
-  return snapshot?.get("temporalBackgroundEnabled") ?? false;
-}
-
-export function temporalReportsEnabled(): boolean {
-  return snapshot?.get("temporalReportsEnabled") ?? false;
-}
-
-export function temporalInteractiveEnabled(): boolean {
-  return snapshot?.get("temporalInteractiveEnabled") ?? false;
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {

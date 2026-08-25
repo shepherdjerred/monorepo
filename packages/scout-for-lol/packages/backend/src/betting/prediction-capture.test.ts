@@ -92,7 +92,7 @@ describe("capturePredictionForPrematch", () => {
 
   test("captures eligible games independently of presentation and guild gates", async () => {
     let builds = 0;
-    let ingests = 0;
+    let enqueues = 0;
     const result = await capturePredictionForPrematch(
       {
         gameInfo,
@@ -105,23 +105,23 @@ describe("capturePredictionForPrematch", () => {
           builds += 1;
           return Promise.resolve(observation);
         },
-        ingest: () => {
-          ingests += 1;
+        enqueue: () => {
+          enqueues += 1;
           return Promise.resolve();
         },
       },
     );
     expect(result).toEqual(observation.prediction);
     expect(builds).toBe(1);
-    expect(ingests).toBe(1);
+    expect(enqueues).toBe(1);
   });
 
-  test("does not await observation persistence before returning the estimate", async () => {
-    let finishIngest: (() => void) | undefined;
-    const ingestPending = new Promise<void>((resolve) => {
-      finishIngest = resolve;
+  test("waits until durable observation work is enqueued", async () => {
+    let finishEnqueue: (() => void) | undefined;
+    const enqueuePending = new Promise<void>((resolve) => {
+      finishEnqueue = resolve;
     });
-    const result = await capturePredictionForPrematch(
+    const resultPromise = capturePredictionForPrematch(
       {
         gameInfo,
         queueType: "solo",
@@ -130,31 +130,32 @@ describe("capturePredictionForPrematch", () => {
       },
       {
         build: () => Promise.resolve(observation),
-        ingest: () => ingestPending,
+        enqueue: () => enqueuePending,
       },
     );
-    expect(result).toEqual(observation.prediction);
-    if (finishIngest === undefined) {
-      throw new Error("ingest was not started");
+    await Bun.sleep(0);
+    if (finishEnqueue === undefined) {
+      throw new Error("enqueue was not started");
     }
-    finishIngest();
+    finishEnqueue();
+    await expect(resultPromise).resolves.toEqual(observation.prediction);
   });
 
-  test("isolates an asynchronous observation-store failure", async () => {
-    const result = await capturePredictionForPrematch(
-      {
-        gameInfo,
-        queueType: "solo",
-        ranksByPuuid: new Map(),
-        observedAt: OBSERVED_AT,
-      },
-      {
-        build: () => Promise.resolve(observation),
-        ingest: () => Promise.reject(new Error("S3 unavailable")),
-      },
-    );
-    expect(result).toEqual(observation.prediction);
-    await Bun.sleep(0);
+  test("fails when durable work cannot be persisted", async () => {
+    await expect(
+      capturePredictionForPrematch(
+        {
+          gameInfo,
+          queueType: "solo",
+          ranksByPuuid: new Map(),
+          observedAt: OBSERVED_AT,
+        },
+        {
+          build: () => Promise.resolve(observation),
+          enqueue: () => Promise.reject(new Error("database unavailable")),
+        },
+      ),
+    ).rejects.toThrow("database unavailable");
   });
 
   test("does no work for an ineligible queue", async () => {
@@ -171,7 +172,7 @@ describe("capturePredictionForPrematch", () => {
           builds += 1;
           return Promise.resolve(observation);
         },
-        ingest: () => Promise.resolve(),
+        enqueue: () => Promise.resolve(),
       },
     );
     expect(result).toBeUndefined();

@@ -4,34 +4,23 @@ import {
   ReportAiEditRequestSchema,
   ReportAiHttpErrorSchema,
   REPORT_AI_REQUEST_MAX_BYTES,
-  REPORT_AI_TIMEOUT_MS,
-  ReportAiStreamEventSchema,
   type ReportAiEditRequest,
   type ReportAiQuotaSnapshot,
-  type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { createContext, type Context } from "#src/trpc/context.ts";
 import { resolveGuildPermissions } from "#src/trpc/guild-permission.ts";
-import { streamReportQueryAgent } from "#src/reports/ai/report-query-agent.ts";
 import {
-  getReportAiQuotaStatus,
   tryStartReportAiRun,
   type ReportAiRateLimitIdentity,
 } from "#src/reports/ai/rate-limit.ts";
 import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
 import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
-import {
-  scoutReportAiActiveRuns,
-  scoutReportAiRunDurationSeconds,
-  scoutReportAiRunsTotal,
-} from "#src/metrics/report-ai.ts";
-import { temporalInteractiveEnabled } from "#src/config/dynamic.ts";
+import { scoutReportAiRunsTotal } from "#src/metrics/report-ai.ts";
 import { createTemporalReportAiResponse } from "#src/reports/ai/temporal-runtime.ts";
 
 const STREAM_PATH = "/api/reports/query-agent/stream";
-const encoder = new TextEncoder();
 
 export async function handleReportAiRoute(
   request: Request,
@@ -95,129 +84,39 @@ export async function handleReportAiRoute(
     });
   }
 
-  if (temporalInteractiveEnabled()) {
-    const { reserveDurableReportAiRun } =
-      await import("#src/temporal/durable-quota.ts");
-    const durableRejection = await (async () => {
-      try {
-        return await reserveDurableReportAiRun({
-          id: ticket.runId,
-          identity: authResult.identity,
+  const { reserveDurableReportAiRun } =
+    await import("#src/temporal/durable-quota.ts");
+  const durableRejection = await (async () => {
+    try {
+      return await reserveDurableReportAiRun({
+        id: ticket.runId,
+        identity: authResult.identity,
+        exempt: status.exempt,
+        payload: JSON.stringify({
+          edit: parsedBody.input,
           exempt: status.exempt,
-          payload: JSON.stringify({
-            edit: parsedBody.input,
-            exempt: status.exempt,
-          }),
-        });
-      } catch (error) {
-        ticket.finish();
-        throw error;
-      }
-    })();
-    if (durableRejection !== null) {
-      ticket.finish();
-      scoutReportAiRunsTotal.inc({ status: "rate_limited" });
-      return jsonError(durableRejection.reason, 429, corsHeaders, {
-        quota: status.quota,
-        retryAfterSeconds: durableRejection.retryAfterSeconds,
+        }),
       });
+    } catch (error) {
+      ticket.finish();
+      throw error;
     }
-    return createTemporalReportAiResponse({
-      request,
-      edit: parsedBody.input,
-      identity: authResult.identity,
-      ticket,
-      exempt: status.exempt,
-      corsHeaders,
+  })();
+  if (durableRejection !== null) {
+    ticket.finish();
+    scoutReportAiRunsTotal.inc({ status: "rate_limited" });
+    return jsonError(durableRejection.reason, 429, corsHeaders, {
+      quota: status.quota,
+      retryAfterSeconds: durableRejection.retryAfterSeconds,
     });
   }
-
-  const stream = new ReadableStream({
-    start(controller) {
-      const abortController = new AbortController();
-      const timeout = setTimeout(() => {
-        abortController.abort("Report AI stream timed out.");
-      }, REPORT_AI_TIMEOUT_MS);
-      const abortFromRequest = () => {
-        abortController.abort("Client disconnected.");
-      };
-      request.signal.addEventListener("abort", abortFromRequest);
-      let closed = false;
-      let runStatus = "error";
-      const startedAt = Date.now();
-      scoutReportAiActiveRuns.inc();
-
-      const emit = (event: ReportAiStreamEvent): void => {
-        if (closed) {
-          return;
-        }
-        const parsed = ReportAiStreamEventSchema.parse(event);
-        controller.enqueue(
-          encoder.encode(
-            `event: ${parsed.type}\ndata: ${JSON.stringify(parsed)}\n\n`,
-          ),
-        );
-      };
-
-      emit({
-        type: "started",
-        runId: ticket.runId,
-      });
-
-      void (async () => {
-        try {
-          const draft = await streamReportQueryAgent({
-            runId: ticket.runId,
-            input: parsedBody.input,
-            abortSignal: abortController.signal,
-            emit,
-          });
-          ticket.finish();
-          runStatus = "success";
-          emit({
-            type: "final",
-            draft,
-            formattedQueryText: draft.queryText,
-            quota: getReportAiQuotaStatus(authResult.identity, Date.now(), {
-              exempt: status.exempt,
-            }).quota,
-          });
-        } catch (error) {
-          runStatus = abortController.signal.aborted ? "cancelled" : "error";
-          emit({
-            type: "error",
-            message: errorMessage(error),
-            retryAfterSeconds: null,
-            quota: getReportAiQuotaStatus(authResult.identity, Date.now(), {
-              exempt: status.exempt,
-            }).quota,
-          });
-        } finally {
-          clearTimeout(timeout);
-          request.signal.removeEventListener("abort", abortFromRequest);
-          ticket.finish();
-          scoutReportAiActiveRuns.dec();
-          scoutReportAiRunsTotal.inc({ status: runStatus });
-          scoutReportAiRunDurationSeconds
-            .labels(runStatus)
-            .observe((Date.now() - startedAt) / 1000);
-          emit({ type: "done" });
-          closed = true;
-          controller.close();
-        }
-      })();
-    },
-  });
-
-  return new Response(stream, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/event-stream; charset=utf-8",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
-      "X-Accel-Buffering": "no",
-      ...corsHeaders,
-    },
+  return createTemporalReportAiResponse({
+    request,
+    edit: parsedBody.input,
+    identity: authResult.identity,
+    ticket,
+    exempt: status.exempt,
+    corsHeaders,
   });
 }
 

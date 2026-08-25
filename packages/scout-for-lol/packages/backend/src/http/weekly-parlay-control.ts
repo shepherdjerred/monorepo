@@ -9,9 +9,7 @@ import { MY_SERVER } from "#src/configuration/flags.ts";
 
 function authorized(request: Request, expected: string): boolean {
   const header = request.headers.get("Authorization");
-  if (header?.startsWith("Bearer ") !== true) {
-    return false;
-  }
+  if (header?.startsWith("Bearer ") !== true) return false;
   const presentedBytes = Buffer.from(header.slice("Bearer ".length));
   const expectedBytes = Buffer.from(expected);
   return (

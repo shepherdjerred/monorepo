@@ -17,7 +17,8 @@ Confirm each layer independently:
 2. That image is deployed to beta and the Scout HTTP and Discord processes are
    healthy. A green PR or built image is not deployment evidence.
 3. Fixed Scout Schedules exist in the Temporal UI and remain paused.
-4. The four temporary `scout_temporal_*_enabled` flags are off.
+4. On a pre-cleanup rollout revision, the four temporary
+   `scout_temporal_*_enabled` flags are off.
 5. Temporal Worker readiness, task schedule-to-start latency, Workflow and
    Activity failures, report outbox age, schedule drift, stale projections,
    interrupted provider attempts, and duplicate-effect claims are visible.
@@ -55,6 +56,9 @@ The result must name `scout-beta-realtime`, `scout-beta-interactive`,
 Activity Worker is not polling its declared queue; do not start a cutover.
 
 ## Transfer one workload family
+
+The temporary family flags exist only on the rollout revisions. Complete this
+transfer and the production soak before deploying the final cleanup revision.
 
 1. Enable that family's `scout_temporal_*_enabled` flag. This first stops the
    legacy owner and allows new durable starts.
@@ -118,17 +122,25 @@ deployed.
 
 Do not reverse steps 3 and 4.
 
+After the cleanup revision is deployed, the temporary flags and workload
+owners no longer exist. The narrow weekly-parlay callback remains replay-only
+until its retention gate is satisfied. Roll back by pausing the affected
+Schedules, settling in-flight Temporal executions, and deploying the last
+compatible pre-cleanup image. Do not restore a legacy owner while Temporal work
+is still in flight.
+
 ## Remove compatibility code
 
-After the production soak, land the prepared cleanup that removes the legacy
-cron owner, process-local run managers, temporary flags, obsolete recovery
-code, and deleted Schedule definitions.
+After the production soak, close every pre-cutover weekly-parlay and Bryan
+Bucks execution and wait for 30 days of namespace retention to elapse. Replay
+the saved sanitized histories against the cleanup bundle one final time. Only then
+remove the replay-only HTTP callback Activity, shared token, both directions of
+the callback NetworkPolicy boundary, and the false branch of `patched()`.
 
-The weekly-parlay and Bryan Bucks HTTP callback boundary has a longer replay
-constraint. Keep its Activity implementation, secret, and NetworkPolicy rule
-until all pre-cutover executions are closed and 30 days of namespace retention
-have elapsed. Then remove the callback endpoint and token from Scout, the
-central Worker, 1Password resources, and network policy in one reviewed change.
+The workload-owner cleanup may land before that gate because it retains the
+compatibility branch. The callback-boundary deletion must not: removing the
+false branch of `patched()` sooner would make a retained pre-cutover history
+non-deterministic.
 
 ## Related
 

@@ -19,7 +19,13 @@ import type {
 const EMBEDDED_SCOUT_ACTIVITY_PATCH =
   "scout-weekly-parlay-embedded-activities-v1";
 
-const deliveryActivities = proxyActivities<ScoutWeeklyParlayActivities>({
+const timelineActivities = proxyActivities<
+  Pick<
+    ScoutWeeklyParlayActivities,
+    | "resolveScoutWeeklyParlayTimeline"
+    | "resolveScoutWeeklyParlayCatchupTimeline"
+  >
+>({
   startToCloseTimeout: "30 seconds",
   retry: {
     maximumAttempts: 5,
@@ -29,7 +35,17 @@ const deliveryActivities = proxyActivities<ScoutWeeklyParlayActivities>({
   },
 });
 
-const openActivities = proxyActivities<ScoutWeeklyParlayActivities>({
+const legacyDeliveryActivities = proxyActivities<ScoutWeeklyParlayActivities>({
+  startToCloseTimeout: "30 seconds",
+  retry: {
+    maximumAttempts: 5,
+    initialInterval: "10 seconds",
+    backoffCoefficient: 2,
+    maximumInterval: "1 minute",
+  },
+});
+
+const legacyOpenActivities = proxyActivities<ScoutWeeklyParlayActivities>({
   startToCloseTimeout: "5 minutes",
   retry: {
     maximumAttempts: 5,
@@ -39,7 +55,7 @@ const openActivities = proxyActivities<ScoutWeeklyParlayActivities>({
   },
 });
 
-const lifecycleActivities = proxyActivities<ScoutWeeklyParlayActivities>({
+const legacyLifecycleActivities = proxyActivities<ScoutWeeklyParlayActivities>({
   startToCloseTimeout: "30 seconds",
   retry: {
     maximumAttempts: 5,
@@ -78,19 +94,19 @@ const embeddedOpenActivities = proxyActivities<
 function deliveryActionActivities(
   useEmbedded: boolean,
 ): Pick<ScoutWeeklyParlayActivities, "invokeScoutWeeklyParlayAction"> {
-  return useEmbedded ? embeddedDeliveryActivities : deliveryActivities;
+  return useEmbedded ? embeddedDeliveryActivities : legacyDeliveryActivities;
 }
 
 function openActionActivities(
   useEmbedded: boolean,
 ): Pick<ScoutWeeklyParlayActivities, "invokeScoutWeeklyParlayAction"> {
-  return useEmbedded ? embeddedOpenActivities : openActivities;
+  return useEmbedded ? embeddedOpenActivities : legacyOpenActivities;
 }
 
 function lifecycleActionActivities(
   useEmbedded: boolean,
 ): Pick<ScoutWeeklyParlayActivities, "invokeScoutWeeklyParlayAction"> {
-  return useEmbedded ? embeddedDeliveryActivities : lifecycleActivities;
+  return useEmbedded ? embeddedDeliveryActivities : legacyLifecycleActivities;
 }
 
 const LIFECYCLE_RETRY_INTERVAL_MS = 5 * 60 * 1000;
@@ -333,7 +349,7 @@ export async function runScoutWeeklyParlayWorkflow(
   // remains stable even if no worker can process the first task until later.
   const scheduledStartAt = workflowInfo().startTime.toISOString();
   const timeline =
-    await deliveryActivities.resolveScoutWeeklyParlayTimeline(scheduledStartAt);
+    await timelineActivities.resolveScoutWeeklyParlayTimeline(scheduledStartAt);
   await runFrozenTimeline(
     timeline,
     input.slot,
@@ -361,7 +377,7 @@ export async function runScoutWeeklyParlayCatchupWorkflow(
   }
   const workflowStartAt = workflowInfo().startTime.toISOString();
   const timeline =
-    await deliveryActivities.resolveScoutWeeklyParlayCatchupTimeline(
+    await timelineActivities.resolveScoutWeeklyParlayCatchupTimeline(
       workflowStartAt,
       input.periodKey,
     );

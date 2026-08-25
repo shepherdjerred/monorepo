@@ -6,8 +6,6 @@ import {
   send as sendChannelMessage,
   ChannelSendError,
 } from "#src/league/discord/channel.ts";
-import { runDueReports } from "#src/reports/scheduler.ts";
-import { syncSystemReports } from "#src/reports/system-reports.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
 import {
@@ -28,13 +26,6 @@ import { loadReportRunImage } from "#src/storage/s3-report-run.ts";
 const logger = createLogger("report-discord-dispatcher");
 
 const POST_DELAY_MS = 1000;
-
-export async function runScheduledReportDispatch(): Promise<void> {
-  await syncSystemReports({ prisma });
-  const dispatches = await runDueReports({ prisma });
-
-  await deliverScheduledReportDispatches(dispatches);
-}
 
 export async function deliverScheduledReportDispatches(
   dispatches: Awaited<ReturnType<typeof runDueReports>>,

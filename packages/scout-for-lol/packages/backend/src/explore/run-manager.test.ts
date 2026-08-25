@@ -75,6 +75,7 @@ function createManager(
     client: trpc.prisma,
     runAgent: agent.runAgent,
     timeoutMs,
+    inlineExecutionForTests: true,
   });
   managers.push(manager);
   return manager;
@@ -500,6 +501,7 @@ describe("ExploreRunManager lifecycle", () => {
       client: trpc.prisma,
       runAgent: resolveAfterAbortAgent,
       timeoutMs: 10_000,
+      inlineExecutionForTests: true,
     });
     managers.push(manager);
     const summary = await startNew(manager, "Stop this question");

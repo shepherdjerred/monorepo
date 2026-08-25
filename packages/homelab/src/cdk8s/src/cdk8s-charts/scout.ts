@@ -63,9 +63,7 @@ export function createScoutChart(app: App, stage: Stage) {
                       },
                     },
                     podSelector: {
-                      matchLabels: {
-                        component: "scout-worker",
-                      },
+                      matchLabels: { component: "scout-worker" },
                     },
                   },
                   {
@@ -75,9 +73,7 @@ export function createScoutChart(app: App, stage: Stage) {
                       },
                     },
                     podSelector: {
-                      matchLabels: {
-                        component: "legacy-worker",
-                      },
+                      matchLabels: { component: "legacy-worker" },
                     },
                   },
                 ]

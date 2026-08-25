@@ -16,6 +16,9 @@ import type { CatchupWindow, ScheduleDefinition } from "./schedule-types.ts";
 // allow-list — NOT a blind prune of "anything not in SCHEDULES", which would
 // also delete the ad-hoc/cron agent-task schedules created via the /agent-tasks API.
 export const DELETED_SCHEDULE_IDS = [
+  // Replaced by the stage-specific Scout competition update Schedules owned
+  // by the embedded Scout Workers.
+  "scout-competition-updates-minute",
   "good-morning-weekday-early",
   "good-morning-weekend-early",
   // Replaced by the Buildkite `helm-types-drift-check` CI gate (the generated
