@@ -8,7 +8,7 @@ import {
   MessageFlags,
   type MessageComponentInteraction,
 } from "discord.js";
-import type { CommandInteraction } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import type { CommandInteraction } from "@shepherdjerred/streambot/discord/command-types.ts";
 import { sendPaginatedReply } from "@shepherdjerred/streambot/discord/pagination.ts";
 import { sendSubtitleMenu } from "@shepherdjerred/streambot/discord/subtitle-menu.ts";
 import { toUserId } from "@shepherdjerred/streambot/types/ids.ts";

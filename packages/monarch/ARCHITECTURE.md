@@ -96,6 +96,24 @@ Three output modes:
 
 Mutations use the local Monarch GraphQL client with cookie/CSRF session authentication, retry logic (3 attempts, exponential backoff), and a 500ms throttle between API calls.
 
+## Enforced boundaries
+
+The deep paths are horizontal, not layered: they run sequentially and share
+nothing but the pipeline contracts in `classifier/`, `enrichment/` and
+`monarch/`. Two rules are machine-enforced by `check-architecture` (part of
+`bun run lint`), declared in `architecture.config.ts`:
+
+| Rule                                             | What it forbids                                                                                                     |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `vendor-adapters-are-self-contained`             | Any deep path under `src/lib/` importing another. Pull genuinely common code up into the shared pipeline instead.   |
+| `monarch-client-does-not-depend-on-the-pipeline` | `lib/monarch/` — the Monarch Money API client — importing a deep path, the classifier, enrichment, or verification. |
+
+The first is declared once as an isolation group and expands to one rule per
+vendor, so adding an eighth deep path forbids it in both directions without a
+hand-maintained matrix. Every rule has a committed negative fixture under
+`architecture-fixtures/` that proves it can fail;
+`src/architecture-boundaries.test.ts` fails if a rule ever loses one.
+
 ## Module Map
 
 ```

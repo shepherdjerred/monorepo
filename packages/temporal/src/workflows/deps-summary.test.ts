@@ -1,10 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
-import type {
-  DependencyChange,
-  DependencyCollectionResult,
-} from "#activities/deps-summary.ts";
+import type { DependencyCollectionResult } from "#activities/deps-summary.ts";
+import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import type { ActivityReportInput } from "#activities/report-delivery.ts";
 import { generateDependencySummary } from "./index.ts";
 

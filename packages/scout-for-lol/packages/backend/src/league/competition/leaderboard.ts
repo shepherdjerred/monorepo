@@ -16,6 +16,7 @@ import {
   RawSummonerLeagueSchema,
 } from "@scout-for-lol/data/index.ts";
 import { assignRanks } from "#src/league/competition/leaderboard-ranking.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
 import { z } from "zod";
@@ -31,7 +32,7 @@ import {
 } from "#src/league/competition/processors/index.ts";
 import { riotClient } from "#src/league/api/api.ts";
 import { regionToPlatformRoute } from "@scout-for-lol/data";
-import { getSnapshot } from "#src/league/competition/snapshots.ts";
+import { getSnapshot } from "#src/league/competition/snapshot-store.ts";
 import { getRank } from "#src/league/model/rank.ts";
 import {
   getHigherRank,
@@ -49,9 +50,6 @@ const logger = createLogger("competition-leaderboard");
 /**
  * Leaderboard entry with rank assigned
  */
-export type RankedLeaderboardEntry = LeaderboardEntry & {
-  rank: number;
-};
 
 function ranksForQueue(queue: "SOLO" | "FLEX", rank: Rank): Ranks {
   return queue === "SOLO" ? { solo: rank } : { flex: rank };

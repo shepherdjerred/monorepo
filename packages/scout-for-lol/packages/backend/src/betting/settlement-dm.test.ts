@@ -8,8 +8,9 @@ import {
   deliverSettlementDms,
   type SettlementDmDeliveryDependencies,
 } from "#src/betting/settlement-dm-delivery.ts";
-import type { SettlementBet, SettlementSummary } from "#src/betting/settle.ts";
-import type { ClosedPosition } from "#src/betting/sweep.ts";
+import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementBet } from "#src/betting/settlement-types.ts";
+import type { ClosedPosition } from "#src/betting/sweep-types.ts";
 import {
   bucksTestDiscordId,
   bucksTestRoster,

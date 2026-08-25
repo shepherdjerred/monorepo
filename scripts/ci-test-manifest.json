@@ -18,6 +18,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/architecture",
+      "directory": "packages/architecture",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "astro-opengraph-images",
       "directory": "packages/astro-opengraph-images",
       "steps": [

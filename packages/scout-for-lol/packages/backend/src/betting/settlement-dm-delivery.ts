@@ -14,7 +14,7 @@ import {
 } from "#src/betting/settlement-dm.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
-import type { ClosedPosition } from "#src/betting/sweep.ts";
+import type { ClosedPosition } from "#src/betting/sweep-types.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";

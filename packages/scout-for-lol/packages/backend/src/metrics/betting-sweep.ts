@@ -56,7 +56,7 @@ export async function updateBettingMetrics(
       }),
       prisma.bucksAccount.findMany({
         where: { isHouse: true },
-        select: { balance: true },
+        select: { serverId: true, balance: true },
       }),
     ]);
 
@@ -78,14 +78,14 @@ export async function updateBettingMetrics(
           ),
     );
 
-    bettingPendingStakeBucks.set(
+    const pendingStakeBucks =
       pendingStake.reduce(
         (total, bet) => total + (bet.matchedStake ?? bet.stake),
         0,
       ) +
-        (pendingParlayStake._sum.stake ?? 0) +
-        (pendingWeeklyStake._sum.stake ?? 0),
-    );
+      (pendingParlayStake._sum.stake ?? 0) +
+      (pendingWeeklyStake._sum.stake ?? 0);
+    bettingPendingStakeBucks.set(pendingStakeBucks);
 
     bettingHouseBalanceBucks.set(
       houseAccounts.reduce((total, account) => total + account.balance, 0),

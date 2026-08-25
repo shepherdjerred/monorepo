@@ -8,6 +8,7 @@ var weekly_parlay_default = {
   openHour: 12,
   bettingCloseHour: 0,
   openActionBudgetMinutes: 4,
+  catchupMinimumBettingHours: 6,
   finalHour: 11,
   updateHour: 19,
   updateCount: 6,
@@ -21,6 +22,7 @@ var WeeklyParlayLifecycleSchema = z.strictObject({
   openHour: z.number().int().min(0).max(23),
   bettingCloseHour: z.number().int().min(0).max(23),
   openActionBudgetMinutes: z.number().int().positive(),
+  catchupMinimumBettingHours: z.number().int().positive(),
   finalHour: z.number().int().min(0).max(23),
   updateHour: z.number().int().min(0).max(23),
   updateCount: z.number().int().positive(),
@@ -34,7 +36,9 @@ var WeeklyParlayLifecycleSchema = z.strictObject({
 });
 var WEEKLY_PARLAY_LIFECYCLE = WeeklyParlayLifecycleSchema.parse(weekly_parlay_default);
 var WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS = WEEKLY_PARLAY_LIFECYCLE.openActionBudgetMinutes * 60 * 1000;
+var WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS = WEEKLY_PARLAY_LIFECYCLE.catchupMinimumBettingHours * 60 * 60 * 1000;
 export {
+  WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS,
   WEEKLY_PARLAY_LIFECYCLE,
   WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS
 };

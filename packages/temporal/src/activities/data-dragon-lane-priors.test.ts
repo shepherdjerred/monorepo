@@ -9,7 +9,7 @@ import {
   lanePriorEvalReportPath,
   updateLanePriors,
 } from "./data-dragon-lane-priors.ts";
-import { branchName as dataDragonBranchName } from "./data-dragon-util.ts";
+import { branchName as dataDragonBranchName } from "#shared/data-dragon-util.ts";
 
 const REPO_DIR = "/tmp/repo";
 

@@ -65,15 +65,21 @@ bun run format           # Formatting check across all packages
 bun run test             # Testing across all packages
 bun run generate         # Generate Prisma client and other generated code
 bun run clean            # Clean all node_modules
-bun run knip             # Find unused code/dependencies
-bun run duplication-check # Check for code duplication
 ```
+
+Unused code/dependency detection (knip) and code duplication (jscpd) run from
+the monorepo root: `bun run knip` and `bun run jscpd` cover scout via the root
+`//#knip` and `//#jscpd` gates. For a scoped knip run, use
+`bunx knip --workspace scout-for-lol --workspace '@scout-for-lol/*'` from the
+monorepo root. Both selectors are required: `scout-for-lol` is only the parent
+workspace (its knip project is just `scripts/**/*.ts`), and the backend,
+frontend, app, data, and other subpackages are separate workspace keys.
 
 ### Using mise (Task Runner)
 
 ```bash
 mise run dev             # Setup development environment
-mise run check           # Run all checks (typecheck, lint, format, test, knip, duplication-check)
+mise run check           # Run all checks (typecheck, lint, format, test)
 mise run generate        # Generate Prisma client
 ```
 
@@ -955,6 +961,16 @@ The `scout-weekly-parlay` Temporal schedule is the sole recurring coordinator.
 It calls the beta-only authenticated control endpoint with stable period/action
 keys. Keep the endpoint absent when its token is not configured; do not add an
 in-process timer. Pause the Temporal schedule for operational suspension.
+
+Missed Sunday openings use the separate, manually started
+`runScoutWeeklyParlayCatchupWorkflow`. Only its `open` action may carry a
+closed `catch_up` window. Scout validates the minimum betting duration and
+Sunday cutoff, freezes the clocks on the definition, and rejects a retry whose
+period/slot already has different clocks. Every later action derives reminder,
+progress, and settlement timing from that stored definition. Historical replay
+uses the same Pacific weekday/hour shape as the shortened live window,
+including zero-game windows. Catch-up execution never edits or replaces the
+recurring schedule.
 
 League Classic (`queueType: "classic"`, Riot queue 4310) is not a betting or
 parlay queue because this integration has no supported post-game payload. A

@@ -1,7 +1,12 @@
 import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
-import { z } from "zod";
 import { chromium, type Browser, type Page } from "playwright";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import {
+  BrowserInputSchema,
+  BrowserOutputSchema,
+  type BrowserContext,
+  type BrowserResult,
+} from "@shepherdjerred/birmel/agent-tools/tools/automation/browser-types.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -223,12 +228,6 @@ async function closeBrowser(): Promise<void> {
   logger.info("Browser session closed");
 }
 
-export type BrowserResult = z.output<typeof BrowserOutputSchema>;
-export type BrowserContext = Omit<
-  z.input<typeof BrowserInputSchema>,
-  "action"
-> & { action: string };
-
 async function handleNavigate(
   ctx: BrowserContext,
   signal: AbortSignal,
@@ -370,71 +369,6 @@ async function handleGetText(
     };
   });
 }
-
-const BrowserInputSchema = z.object({
-  action: z
-    .enum([
-      "start",
-      "list-profiles",
-      "open",
-      "tabs",
-      "navigate",
-      "snapshot",
-      "screenshot",
-      "click",
-      "type",
-      "press",
-      "get-text",
-      "cookies",
-      "close",
-    ])
-    .describe("The action to perform"),
-  profile: z.string().optional().describe("PinchTab profile name"),
-  instanceId: z.string().optional().describe("PinchTab instance ID"),
-  tabId: z.string().optional().describe("PinchTab tab ID"),
-  url: z.string().optional().describe("URL to navigate to (for navigate)"),
-  waitUntil: z
-    .enum(["load", "domcontentloaded", "networkidle"])
-    .optional()
-    .describe("Wait until page event (for navigate)"),
-  filename: z
-    .string()
-    .optional()
-    .describe("Screenshot filename (for screenshot)"),
-  fullPage: z
-    .boolean()
-    .optional()
-    .describe("Capture full scrollable page (for screenshot)"),
-  selector: z
-    .string()
-    .optional()
-    .describe("CSS selector (for click/type/get-text)"),
-  text: z.string().optional().describe("Text to type (for type)"),
-  pressEnter: z
-    .boolean()
-    .optional()
-    .describe("Press Enter after typing (for type)"),
-  timeout: z.number().optional().describe("Timeout in milliseconds"),
-  key: z.string().optional().describe("Key to press"),
-});
-
-const BrowserOutputSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-  data: z
-    .object({
-      url: z.string().optional(),
-      title: z.string().optional(),
-      path: z.string().optional(),
-      filename: z.string().optional(),
-      text: z.string().optional(),
-      provider: z.string().optional(),
-      instanceId: z.string().optional(),
-      tabId: z.string().optional(),
-      raw: z.unknown().optional(),
-    })
-    .optional(),
-});
 
 export const browserAutomationTool = createTool({
   id: "browser-automation",

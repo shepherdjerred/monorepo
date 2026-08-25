@@ -1,7 +1,7 @@
 import { Context } from "@temporalio/activity";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import type { DependencyChange } from "./deps-summary.ts";
+import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import { ociManifestAttempt } from "./deps-summary-oci.ts";
 import { dependencyNoteText } from "./deps-summary-text.ts";
 import { generateBoundedSynthesis } from "./openrouter-runtime.ts";

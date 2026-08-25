@@ -10,10 +10,8 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { competitionWithSeasonInclude } from "#src/database/competition/include.ts";
 import { createSnapshotsForAllParticipants } from "#src/league/competition/snapshots.ts";
-import {
-  calculateLeaderboard,
-  type RankedLeaderboardEntry,
-} from "#src/league/competition/leaderboard.ts";
+import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
 import {
   send as sendChannelMessage,
   ChannelSendError,

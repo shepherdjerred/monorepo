@@ -13,7 +13,7 @@ import {
   DailyBaselineSchema,
   FinalizeSnapshotInputSchema,
   type DailyBaseline,
-} from "./glitter-corpus-activity-types.ts";
+} from "#shared/glitter-corpus-activity-types.ts";
 import {
   glitterCorpusRuntimeConfig,
   jsonBytes,

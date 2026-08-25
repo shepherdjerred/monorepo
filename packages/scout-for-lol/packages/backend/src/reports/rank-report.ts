@@ -9,10 +9,8 @@ import type {
   ScoutQlPlan,
 } from "@scout-for-lol/data/model/scoutql/plan.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import {
-  calculateLeaderboard,
-  type RankedLeaderboardEntry,
-} from "#src/league/competition/leaderboard.ts";
+import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
 import type { CachedLeaderboardEntry } from "@scout-for-lol/data";
 import { collectAggregateColumnNames } from "#src/reports/duckdb/aggregate-sql.ts";
 import {
@@ -24,7 +22,7 @@ import {
   resultFromPlanRows,
   withoutComparison,
 } from "#src/reports/query-aggregates.ts";
-import type { ReportQueryResult } from "#src/reports/query-engine.ts";
+import type { ReportQueryResult } from "#src/reports/query-types.ts";
 import {
   evaluateAggregate,
   evaluateHaving,

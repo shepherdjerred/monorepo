@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -6,7 +6,7 @@ import {
   mintInstallAttributionToken,
   reconcilePendingInstallAttribution,
 } from "#src/analytics/install-attribution.ts";
-import type { ProductAnalytics } from "#src/analytics/product-analytics.ts";
+import { createAnalyticsFixture } from "#src/testing/analytics-fixture.ts";
 
 const { prisma } = createTestDatabase("install-attribution-test");
 const SERVER_ID = testGuildId("770");
@@ -17,12 +17,6 @@ const T0 = new Date("2026-08-22T12:00:00Z");
 const T_PLUS_1M = new Date("2026-08-22T12:01:00Z");
 const T_PLUS_5M = new Date("2026-08-22T12:05:00Z");
 const T_PLUS_20M = new Date("2026-08-22T12:20:00Z");
-
-function createAnalyticsFixture() {
-  const capture = vi.fn<ProductAnalytics["capture"]>(() => null);
-  const shutdown = vi.fn<ProductAnalytics["shutdown"]>(() => Promise.resolve());
-  return { analytics: { capture, shutdown }, capture };
-}
 
 async function seedInstall(options?: { installedAt?: Date }) {
   return prisma.guildInstall.create({

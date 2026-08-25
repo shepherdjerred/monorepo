@@ -4,6 +4,7 @@ import {
   type Client,
   type Interaction,
 } from "discord.js";
+import { captureBucksMemberActivity } from "#src/analytics/bryan-bucks.ts";
 import { handleChatInputCommand } from "#src/discord/commands/index.ts";
 import {
   handleBetButton,
@@ -56,6 +57,26 @@ import {
 import { asTextChannel } from "#src/discord/utils/channel.ts";
 
 const logger = createLogger("discord-interactions");
+
+async function captureButtonActivity(
+  interaction: RoutableButtonInteraction,
+  activityKind:
+    | "outcome_bet"
+    | "parlay_bet"
+    | "weekly_parlay_bet"
+    | "peek_pass"
+    | "ask"
+    | "navigation",
+  status: "success" | "error",
+): Promise<void> {
+  await captureBucksMemberActivity({
+    serverId: interaction.guildId,
+    discordId: interaction.user.id,
+    activityKind,
+    surface: "button",
+    status,
+  });
+}
 
 /**
  * The single `interactionCreate` registration.
@@ -137,8 +158,10 @@ async function routeWeeklyParlayButton(
       return;
     }
     await handleWeeklyParlayBetButton(interaction);
+    await captureButtonActivity(interaction, "weekly_parlay_bet", "success");
     discordComponentsTotal.inc({ namespace: "bbw", status: "success" });
   } catch (error) {
+    await captureButtonActivity(interaction, "weekly_parlay_bet", "error");
     logger.error("❌ Error handling a weekly Bryan Bucks button:", error);
     discordComponentsTotal.inc({ namespace: "bbw", status: "error" });
     if (interaction.deferred && !interaction.replied) {
@@ -169,8 +192,10 @@ export async function routeButton(
         return;
       }
       await handleParlayBetButton(interaction);
+      await captureButtonActivity(interaction, "parlay_bet", "success");
       discordComponentsTotal.inc({ namespace: "bbp", status: "success" });
     } catch (error) {
+      await captureButtonActivity(interaction, "parlay_bet", "error");
       logger.error("❌ Error handling a Bryan Bucks parlay button:", error);
       discordComponentsTotal.inc({ namespace: "bbp", status: "error" });
       if (interaction.deferred && !interaction.replied) {
@@ -198,8 +223,10 @@ export async function routeButton(
       }
 
       await handleBucksNavigation(interaction);
+      await captureButtonActivity(interaction, "navigation", "success");
       discordComponentsTotal.inc({ namespace: "bbnav", status: "success" });
     } catch (error) {
+      await captureButtonActivity(interaction, "navigation", "error");
       logger.error("❌ Error handling Bryan Bucks navigation:", error);
       discordComponentsTotal.inc({ namespace: "bbnav", status: "error" });
       if (interaction.deferred && !interaction.replied) {
@@ -247,8 +274,10 @@ export async function routeButton(
     // discord.js's ButtonInteraction structurally satisfies the handler's
     // parameter type, so this passes the real object with no cast.
     await handleBetButton(interaction);
+    await captureButtonActivity(interaction, "outcome_bet", "success");
     discordComponentsTotal.inc({ namespace: "bb", status: "success" });
   } catch (error) {
+    await captureButtonActivity(interaction, "outcome_bet", "error");
     logger.error("❌ Error handling a Bryan Bucks button:", error);
     discordComponentsTotal.inc({ namespace: "bb", status: "error" });
 
@@ -270,8 +299,10 @@ async function routePeekPassButton(
       return;
     }
     await handlePeekPassButton(interaction);
+    await captureButtonActivity(interaction, "peek_pass", "success");
     discordComponentsTotal.inc({ namespace: "bbpass", status: "success" });
   } catch (error) {
+    await captureButtonActivity(interaction, "peek_pass", "error");
     logger.error("❌ Error handling a Bryan Bucks peek pass:", error);
     discordComponentsTotal.inc({ namespace: "bbpass", status: "error" });
     if (interaction.deferred && !interaction.replied) {
@@ -294,11 +325,17 @@ async function routeBucksAskButton(
       return;
     }
     const outcome = await handleBucksAskPublish(interaction);
+    await captureButtonActivity(
+      interaction,
+      "ask",
+      outcome === "failed" ? "error" : "success",
+    );
     discordComponentsTotal.inc({
       namespace: "bbask",
       status: outcome === "failed" ? "error" : "success",
     });
   } catch (error) {
+    await captureButtonActivity(interaction, "ask", "error");
     logger.error("❌ Error publishing a Bryan Bucks answer:", error);
     discordComponentsTotal.inc({ namespace: "bbask", status: "error" });
     if (interaction.deferred && !interaction.replied) {

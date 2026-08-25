@@ -9,7 +9,11 @@ import {
   type WeeklyParlayContributionSnapshot,
   type WeeklyParlaySubject,
 } from "#src/betting/weekly-parlay-criteria.ts";
-import { weeklyParlayPeriod } from "#src/betting/weekly-parlay-period.ts";
+import {
+  weeklyParlayScoringShape,
+  weeklyParlayScoringWindowForPeriod,
+  type WeeklyParlayFrozenWindow,
+} from "#src/betting/weekly-parlay-period.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import {
@@ -83,8 +87,45 @@ function snapshotFor(
   });
 }
 
+export function buildObservedWeeklyReplayWindows(input: {
+  periodKey: string;
+  scoringWindow: Pick<
+    WeeklyParlayFrozenWindow,
+    "scoringStartsAt" | "scoringEndsAt"
+  >;
+  trackingStartedAt: Date;
+  contributions: readonly WeeklyParlayContributionSnapshot[];
+}): WeeklyParlayReplayWindow[] {
+  const shape = weeklyParlayScoringShape({
+    periodKey: input.periodKey,
+    ...input.scoringWindow,
+  });
+  return periodKeysBefore(input.periodKey).flatMap((periodKey) => {
+    const period = weeklyParlayScoringWindowForPeriod(periodKey, shape);
+    if (period.scoringStartsAt < input.trackingStartedAt) {
+      return [];
+    }
+    return [
+      {
+        periodKey,
+        contributions: input.contributions.filter((snapshot) => {
+          const completedAt = new Date(snapshot.completedAt);
+          return (
+            completedAt >= period.scoringStartsAt &&
+            completedAt < period.scoringEndsAt
+          );
+        }),
+      },
+    ];
+  });
+}
+
 export async function fetchWeeklyCandidateHistories(input: {
   periodKey: string;
+  scoringWindow: Pick<
+    WeeklyParlayFrozenWindow,
+    "scoringStartsAt" | "scoringEndsAt"
+  >;
   subjects: readonly WeeklyParlaySubject[];
   lakeDir?: string;
   abortSignal?: AbortSignal;
@@ -93,8 +134,15 @@ export async function fetchWeeklyCandidateHistories(input: {
     return [];
   }
   const keys = periodKeysBefore(input.periodKey);
-  const firstPeriod = weeklyParlayPeriod(keys[0] ?? "");
-  const lastPeriod = weeklyParlayPeriod(keys.at(-1) ?? "");
+  const shape = weeklyParlayScoringShape({
+    periodKey: input.periodKey,
+    ...input.scoringWindow,
+  });
+  const firstPeriod = weeklyParlayScoringWindowForPeriod(keys[0] ?? "", shape);
+  const lastPeriod = weeklyParlayScoringWindowForPeriod(
+    keys.at(-1) ?? "",
+    shape,
+  );
   const puuids = input.subjects.flatMap((subject) =>
     subject.accounts.map((account) => account.puuid),
   );
@@ -168,27 +216,19 @@ export async function fetchWeeklyCandidateHistories(input: {
       );
       const historyRows = historyRowsByPlayer.get(subject.playerId) ?? [];
       const snapshots = historyRows.map((row) => row.snapshot);
-      const windows = keys
-        .map((key) => {
-          const period = weeklyParlayPeriod(key);
-          return {
-            periodKey: key,
-            observed: period.scoringStartsAt.getTime() >= trackingStartedAt,
-            contributions: snapshots.filter((snapshot) => {
-              const completedAt = new Date(snapshot.completedAt);
-              return (
-                completedAt >= period.scoringStartsAt &&
-                completedAt < period.scoringEndsAt
-              );
-            }),
-          };
-        })
-        .filter((window) => window.observed)
-        .map((window) => ({
-          periodKey: window.periodKey,
-          contributions: window.contributions,
-        }));
-      const recentPeriod = weeklyParlayPeriod(keys.at(-1) ?? "");
+      const windows = buildObservedWeeklyReplayWindows({
+        periodKey: input.periodKey,
+        scoringWindow: input.scoringWindow,
+        trackingStartedAt: new Date(trackingStartedAt),
+        contributions: snapshots,
+      });
+      const alignedSnapshots = windows.flatMap(
+        (window) => window.contributions,
+      );
+      const recentPeriod = weeklyParlayScoringWindowForPeriod(
+        keys.at(-1) ?? "",
+        shape,
+      );
       const recentMatchIds = new Set(
         historyRows
           .filter((row) => {
@@ -206,9 +246,11 @@ export async function fetchWeeklyCandidateHistories(input: {
         fullyObservedWindows: windows.length,
         recentEligibleGames: recentMatchIds.size,
         observedChampions: new Set(
-          snapshots.map((snapshot) => snapshot.champion),
+          alignedSnapshots.map((snapshot) => snapshot.champion),
         ),
-        observedRoles: new Set(snapshots.map((snapshot) => snapshot.role)),
+        observedRoles: new Set(
+          alignedSnapshots.map((snapshot) => snapshot.role),
+        ),
       };
     })
     .filter(

@@ -26,8 +26,8 @@ import {
   canControlItem,
   isAdmin,
 } from "@shepherdjerred/streambot/discord/permissions.ts";
-import { formatTimecode } from "@shepherdjerred/streambot/discord/timecode.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import { formatTimecode } from "@shepherdjerred/streambot/util/timecode.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 /** Namespace prefix for every player-card component id, versioned so a format change is detectable. */

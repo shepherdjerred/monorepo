@@ -6,10 +6,8 @@ import {
 import { AttachmentBuilder } from "discord.js";
 import * as Sentry from "@sentry/bun";
 import { prisma } from "#src/database/index.ts";
-import {
-  calculateLeaderboard,
-  type RankedLeaderboardEntry,
-} from "#src/league/competition/leaderboard.ts";
+import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
 import { renderCompetitionChartBuffer } from "#src/league/competition/chart-builder.ts";
 import { saveCachedLeaderboard } from "#src/storage/s3-leaderboard.ts";
 import { saveLeaderboardImage } from "#src/storage/s3-leaderboard-image.ts";

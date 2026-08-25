@@ -12,7 +12,7 @@ import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 import type {
   ReportQueryResult,
   ReportResultRow,
-} from "#src/reports/query-engine.ts";
+} from "#src/reports/query-types.ts";
 import { planGroupingNames } from "#src/reports/plan-columns.ts";
 import { comparePatchLabels } from "#src/reports/temporal-labels.ts";
 import {

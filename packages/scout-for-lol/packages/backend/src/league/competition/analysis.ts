@@ -27,10 +27,8 @@ import {
   temporalPresetQuery,
 } from "#src/league/competition/analysis-queries.ts";
 import { standingsFromResult } from "#src/league/competition/analysis-results.ts";
-import {
-  executeCompiledReportQuery,
-  type ReportQueryResult,
-} from "#src/reports/query-engine.ts";
+import { executeCompiledReportQuery } from "#src/reports/query-engine.ts";
+import type { ReportQueryResult } from "#src/reports/query-types.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   clampTemporalRange,

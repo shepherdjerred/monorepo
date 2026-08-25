@@ -10,7 +10,7 @@ import {
   FinalizeSnapshotInputSchema,
   VerifyChannelInputSchema,
   type CapturePageInput,
-} from "#activities/glitter-corpus-activity-types.ts";
+} from "#shared/glitter-corpus-activity-types.ts";
 import {
   GuildInventorySchema,
   GuildSnapshotSchema,

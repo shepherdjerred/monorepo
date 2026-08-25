@@ -5,6 +5,7 @@ import {
   readScoutThemePreferenceOrDefault,
   resolveScoutMode,
   resolveScoutTheme,
+  scoutThemeCanvas,
   SCOUT_LEGACY_APP_THEME_KEY,
   SCOUT_LEGACY_MARKETING_THEME_KEY,
   SCOUT_THEME_STORAGE_KEY,
@@ -73,6 +74,13 @@ describe("Scout theme preference", () => {
     expect(
       resolveScoutTheme({ version: 1, skin: "classic", mode: "system" }, true),
     ).toBe("classic-dark");
+  });
+
+  test("maps each resolved theme to its canvas token", () => {
+    expect(scoutThemeCanvas("modern-light")).toBe("#F0E6D2");
+    expect(scoutThemeCanvas("modern-dark")).toBe("#010A13");
+    expect(scoutThemeCanvas("classic-light")).toBe("#E5D5A0");
+    expect(scoutThemeCanvas("classic-dark")).toBe("#050D17");
   });
 
   test("uses Modern/System in memory when browser storage is unavailable", () => {

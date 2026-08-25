@@ -15,6 +15,7 @@ Use `bun` commands exclusively (never npm/yarn/pnpm).
 ```
 packages/
 ├── anki/                       # Anki flashcard tools
+├── architecture/               # Shared dependency-cruiser module-boundary harness
 ├── astro-opengraph-images/     # Astro OpenGraph image generation (npm)
 ├── better-skill-capped/        # Browser extension
 ├── birmel/                     # Discord bot (AI SDK explicit agent runtime)
@@ -711,6 +712,64 @@ SQLite databases, caches, indexes, and sidecar/event-outbox files are
 version-sensitive and should be inspected read-only. `.context/` is workspace
 collaboration scratch space, not a canonical transcript archive. Do not treat
 diagnostic logs or transient sidecar files as the primary conversation history.
+
+## Architecture enforcement — `check-architecture`
+
+Module boundaries are enforced mechanically, as part of `lint`, by
+`@shepherdjerred/architecture` (`packages/architecture`) on top of
+dependency-cruiser. A package opts in with a `workspace:*` devDependency and
+`&& check-architecture` appended to its `lint` script; that alone enforces the
+universal **no eager import cycles** rule over `src/`. Layer boundaries are
+optional and declared in an `architecture.config.ts` at the package root.
+
+- **Never weaken a rule to make a package pass.** Fix the cycle by extracting
+  the shared module, inverting the dependency, or — only for a registry lookup
+  that cannot be resolved eagerly — deferring one edge behind `await import()`.
+  Do not add per-package exemptions or lower a severity.
+- **`no-circular` matches only cycles where every edge is eager.** An
+  `await import()` inside a function body resolves after every module has
+  initialised, so it cannot make initialisation order significant. Layer
+  boundaries get no such exemption: deferring changes _when_ an edge resolves,
+  not whether the layers are coupled.
+- **There is no type-only exemption, and adding one would be a bug.**
+  dependency-cruiser only labels an edge `type-only` when it can resolve
+  `typescript >=2.0.0 <7.0.0` from its own directory; under the isolated linker
+  that hits the flat fallback, which this repo's
+  `@typescript/native: npm:typescript@7.0.2` alias usually wins. The extractor
+  is then skipped silently and `import type` looks like an ordinary import — in
+  CI, though not necessarily in a long-lived worktree. So **boundaries apply to
+  every edge kind**, and a type shared across a boundary must move into a
+  module both sides may import rather than earn an exemption.
+- **Every boundary must prove it can fail.** A package declaring boundaries
+  commits one deliberate violation per boundary under `architecture-fixtures/`,
+  named `<from-layer>-<what-it-does>.ts`, and runs the meta-test from
+  `cruiseArchitectureFixtures`. The fixture rules are derived from the same
+  boundary list as the real rules, so the two cannot drift; a boundary with no
+  fixture, or a fixture matching no boundary, fails the suite. The check also
+  fails when a cruise inspects zero modules, because a vacuous rule set reads
+  as a green check.
+- **A layer may be a nested directory.** `from`/`to` accept a path such as
+  `lib/amazon`, so a package whose layers do not sit directly under the source
+  root does not have to narrow `sourceRoot` and drop its entry point out of the
+  cycle check. Fixture names flatten the path: `lib/amazon` is proven by
+  `architecture-fixtures/lib-amazon-<what-it-does>.ts`.
+- **Mutually independent siblings are one declaration, not a matrix.**
+  `isolatedGroups: [{ name, comment, layers }]` says no member may depend on
+  another and expands to one ordinary boundary per member, so adding a member
+  forbids it in both directions with no chance of an asymmetric hand-written
+  matrix. Monarch's vendor adapters are the motivating case. Each generated
+  boundary still needs its own fixture.
+- Expose the config to the meta-test with `"#architecture":
+"./architecture.config.ts"` in the package's `imports`; parent-relative
+  imports are banned.
+- Fixtures must not be compiled or linted. `@shepherdjerred/eslint-config`
+  ignores `**/architecture-fixtures/**/*` by default, but passing an explicit
+  `ignores` list **replaces** that default, so such a package has to repeat the
+  entry. A tsconfig without an explicit `include` needs
+  `"exclude": ["architecture-fixtures"]`.
+
+See `packages/architecture/README.md` for the API and the wiki's
+`explanation/architecture-enforcement.md` for the reasoning.
 
 ## Verification
 

@@ -1,6 +1,5 @@
 import { createActor } from "xstate";
 import { playerCardEnabled } from "@shepherdjerred/streambot/config/dynamic.ts";
-import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
 import {
@@ -9,22 +8,14 @@ import {
 } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import { buildPlaybackActors } from "@shepherdjerred/streambot/session/playback-actors.ts";
-import type {
-  ResolvedSource,
-  ResolveSourceInput,
-} from "@shepherdjerred/streambot/machine/types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
-import {
-  PlayerCardManager,
-  type PlayerCardPort,
-} from "@shepherdjerred/streambot/discord/player-card-manager.ts";
+import { PlayerCardManager } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
 import {
   playbackPositionSeconds,
   queueLength,
   setPlaybackState,
   voiceReconnectsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
-import type { UserbotProvider } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import {
   listPersistedStateFiles,
   saveState,
@@ -56,44 +47,14 @@ import type {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
-import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
-import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
 import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
 import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
 import { destroySession } from "@shepherdjerred/streambot/session/destroy-session.ts";
 import { deleteSessionStateAfterFlush } from "@shepherdjerred/streambot/session/delete-session-state.ts";
-import type { VoiceCaptureManager } from "@shepherdjerred/streambot/voice/capture-manager.ts";
+
+import type { SessionManagerDeps } from "@shepherdjerred/streambot/session/session-types.ts";
 
 const log = logger.child("session-manager");
-
-export type SessionManagerDeps = {
-  readonly config: Config;
-  readonly pool: UserbotProvider;
-  /** Resolve a queued source to an ffmpeg input (injected so the machine stays pure + testable). */
-  readonly resolveSource: (
-    input: ResolveSourceInput,
-    signal: AbortSignal,
-  ) => Promise<ResolvedSource>;
-  /** Post a world-readable notice to a channel (no-op when the channel is null/unknown). */
-  readonly announce: (
-    channelId: ChannelId | null,
-    message: string,
-  ) => Promise<void>;
-  /** Discord effects for the player card, plus its message → session routing table. */
-  readonly cards: PlayerCardPort;
-  readonly library?: () => readonly LibraryEntry[];
-  readonly resolvePlaySource?: (
-    source: Source,
-    signal: AbortSignal,
-  ) => Promise<ResolvedSource>;
-  readonly voiceModels?: LocalVoiceModels | null;
-  /** Loaded at boot alongside the models; fatal when missing while voice is enabled. */
-  readonly voiceFeedbackClips?: SpokenFeedbackClips | null;
-  /** Process-wide diagnostic capture and attempt-correlation owner. */
-  readonly voiceCaptureManager?: VoiceCaptureManager;
-};
 
 /**
  * Owns one playback session per `(guild, voice channel)`. A play command acquires a member-userbot

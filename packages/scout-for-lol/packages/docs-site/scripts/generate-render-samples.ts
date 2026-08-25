@@ -25,7 +25,7 @@ import {
   windowRange,
 } from "@scout-for-lol/backend/reports/temporal-plan.ts";
 import { buildVisualizationSnapshot } from "@scout-for-lol/backend/reports/visualization-snapshot.ts";
-import type { ReportQueryResult } from "@scout-for-lol/backend/reports/query-engine.ts";
+import type { ReportQueryResult } from "@scout-for-lol/backend/reports/query-types.ts";
 import { RENDER_SAMPLES } from "./render-sample-data.ts";
 
 const OUT_DIR = path.join(import.meta.dir, "..", "src", "assets", "generated");

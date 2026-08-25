@@ -6,8 +6,9 @@ import {
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
-import type { SettlementBet, SettlementSummary } from "#src/betting/settle.ts";
-import type { ClosedPosition } from "#src/betting/sweep.ts";
+import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementBet } from "#src/betting/settlement-types.ts";
+import type { ClosedPosition } from "#src/betting/sweep-types.ts";
 import type { OutcomeFraming } from "#src/betting/team.ts";
 import {
   formatInteger,

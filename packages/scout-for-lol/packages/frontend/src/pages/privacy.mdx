@@ -95,6 +95,13 @@ On the website, we may collect or process:
   recording shows layout and interaction rather than content.
 - When you are signed in to the dashboard, an opaque account identifier that we
   generate. It is not your Discord ID.
+- In the private Bryan Bucks beta, server-side activity and economy events use
+  a separate opaque identifier for each Bucks account. This lets us measure
+  member retention and betting activity within the beta guild while keeping the
+  Discord account ID out of analytics. The Bucks identifier is sent alongside
+  the guild ID, so the analytics provider can connect that beta member activity
+  to the guild's Scout installation; it is not used for public profiles or
+  shared outside the provider's analytics project.
 
 Website measurement and Discord bot data are connected, through the same
 analytics provider. When you open a server's dashboard, we record that server's

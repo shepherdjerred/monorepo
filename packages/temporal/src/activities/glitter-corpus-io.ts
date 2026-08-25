@@ -25,7 +25,7 @@ import {
   readRequiredObject,
   readVerifiedObject,
 } from "./glitter-corpus-storage.ts";
-import { ChannelStateResultSchema } from "./glitter-corpus-activity-types.ts";
+import { ChannelStateResultSchema } from "#shared/glitter-corpus-activity-types.ts";
 
 export function requireGlitterCorpusEnv(name: string): string {
   const value = Bun.env[name];

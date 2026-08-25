@@ -7,19 +7,16 @@ import {
   DiscordChannelIdSchema,
   type DiscordGuildId,
   DiscordGuildIdSchema,
-  SeasonIdSchema,
 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { differenceInCalendarDays } from "date-fns";
 
 import { getLimit } from "#src/configuration/flags.ts";
 import { activeOnlyWhere } from "#src/database/competition/queries.ts";
+import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
 
 // ============================================================================
 // Constants
 // ============================================================================
-
-const MAX_COMPETITION_DURATION_DAYS = 90;
 
 // ============================================================================
 // Helper Functions
@@ -50,52 +47,6 @@ export function isCompetitionActive(
 // ============================================================================
 // Zod Schemas for Validation
 // ============================================================================
-
-/**
- * Fixed-date competition schema
- * Enforces date ordering and duration limits at the type level
- */
-const FixedDateCompetitionSchema = z
-  .object({
-    type: z.literal("FIXED_DATES"),
-    startDate: z.date(),
-    endDate: z.date(),
-  })
-  .refine((data) => data.startDate < data.endDate, {
-    message: "startDate must be before endDate",
-    path: ["startDate"],
-  })
-  .superRefine((data, ctx) => {
-    const durationDays = differenceInCalendarDays(data.endDate, data.startDate);
-    if (durationDays > MAX_COMPETITION_DURATION_DAYS) {
-      ctx.addIssue({
-        code: "custom",
-        message: `Competition duration cannot exceed ${MAX_COMPETITION_DURATION_DAYS.toString()} days (got ${durationDays.toString()} days)`,
-        path: ["endDate"],
-      });
-    }
-  });
-
-/**
- * Season-based competition schema
- * No date constraints - follows League's season timing
- * Uses predefined season IDs only
- */
-const SeasonBasedCompetitionSchema = z.object({
-  type: z.literal("SEASON"),
-  seasonId: SeasonIdSchema,
-});
-
-/**
- * Discriminated union for competition dates
- * Type system enforces XOR constraint - can't have both fixed dates AND season
- */
-export const CompetitionDatesSchema = z.discriminatedUnion("type", [
-  FixedDateCompetitionSchema,
-  SeasonBasedCompetitionSchema,
-]);
-
-export type CompetitionDates = z.infer<typeof CompetitionDatesSchema>;
 
 /**
  * Schema for competition creation input with comprehensive validation

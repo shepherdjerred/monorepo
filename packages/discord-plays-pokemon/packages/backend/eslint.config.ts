@@ -5,6 +5,7 @@ const config = [
     projectService: {
       allowDefaultProject: [
         "eslint.config.ts",
+        "src/architecture-boundaries.test.ts",
         "src/config/index.test.ts",
         "src/config/schema.test.ts",
         "src/game/command/chord.test.ts",
@@ -16,8 +17,8 @@ const config = [
         "src/game/events/saves.test.ts",
         "src/game/game-save-details.test.ts",
         "src/game/spatial/spatial-snapshot.test.ts",
-        "src/discord/chord-validator.test.ts",
-        "src/discord/chord-executor.test.ts",
+        "src/game/command/chord-validator.test.ts",
+        "src/game/command/chord-executor.test.ts",
         "src/discord/event-notifier.test.ts",
         "src/discord/message-handler.test.ts",
         "src/discord/slashCommands/commands/goal.test.ts",

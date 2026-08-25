@@ -2,64 +2,55 @@
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["scripts/**/*.ts"],
-      "project": ["scripts/**/*.ts"]
+      "entry": [".buildkite/scripts/**/*.ts"],
+      "project": [".buildkite/**/*.ts"]
     },
     "scripts": {
       "entry": ["*.ts", "observability/**/*.ts", "lib/image-pin-catalog.ts"],
-      "project": ["**/*.ts"],
-      "ignoreDependencies": ["@openai/codex"]
+      "project": ["**/*.ts"]
     },
     "packages/birmel": {
-      "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts", "prisma/**/*.prisma"]
     },
     "packages/alert-dashboard": {
       "entry": [
-        "src/client/main.tsx",
-        "src/server/index.ts",
-        "src/dev.ts",
         "src/**/*.test.ts",
         "integration/**/*.ts",
         "e2e/**/*.ts",
-        "architecture-fixtures/**/*.ts",
-        "dependency-cruiser.config.cjs",
-        "dependency-cruiser.negative.config.cjs",
-        "playwright.config.ts",
-        "prisma.config.ts",
-        "vite.config.ts"
+        "architecture-fixtures/**/*.ts"
       ],
       "project": [
-        "src/**/*.{ts,tsx}",
+        "src/**/*.{ts,tsx,css}",
         "integration/**/*.ts",
         "e2e/**/*.ts",
         "architecture-fixtures/**/*.ts",
+        "prisma/**/*.prisma",
         "*.{ts,cjs}"
-      ],
-      "ignoreDependencies": ["shadcn"]
+      ]
+    },
+    "packages/architecture": {
+      "entry": ["bin/*.ts", "test/**/*.ts"],
+      "project": ["src/**/*.ts", "bin/**/*.ts", "test/**/*.ts"]
     },
     "packages/discord-plays-core": {
-      "entry": ["src/index.ts", "src/entry.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/eslint-config": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["eslint-import-resolver-node"]
     },
     "packages/astro-opengraph-images": {
-      "entry": ["src/index.ts", "src/presets/render-examples.ts"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "entry": ["src/presets/render-examples.ts"],
+      "project": ["src/**/*.{ts,tsx,astro}"]
     },
     "packages/better-skill-capped": {
       "entry": ["src/main.tsx", "src/**/*.test.ts", "vite.config.ts"],
-      "project": ["src/**/*.{ts,tsx}", "vite.config.ts"],
-      "ignoreDependencies": ["shadcn"],
+      "project": ["src/**/*.{ts,tsx,css}"],
       "vite": false
     },
     "packages/sjer.red": {
-      "entry": ["src/**/*.astro", "astro.config.ts"],
-      "project": ["src/**/*.{ts,tsx,astro}"]
+      "entry": ["src/**/*.astro"],
+      "project": ["src/**/*.{ts,tsx,astro,css,mdx,sass,scss}"]
     },
     "packages/docs/wiki": {
       "entry": ["public/posthog.js"]
@@ -68,11 +59,10 @@
       "entry": ["public/posthog.js"]
     },
     "packages/webring": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/home-assistant": {
-      "entry": ["src/index.ts", "src/codegen/cli.ts", "test/**/*.ts"],
+      "entry": ["test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/llm-models": {
@@ -81,19 +71,18 @@
     },
     "packages/glitter-context": {
       "entry": ["src/index.ts", "test/**/*.ts", "scripts/**/*.ts"],
-      "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"],
-      "ignoreDependencies": ["eslint"]
+      "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/llm-observability": {
-      "entry": ["src/index.ts", "test/**/*.ts"],
+      "entry": ["test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/starlight-karma-bot": {
       "entry": ["src/index.ts", "scripts/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "prisma/**/*.prisma"]
     },
     "packages/homelab/src/cdk8s": {
-      "entry": ["src/app.ts", "src/**/*.ts", "scripts/**/*.ts"],
+      "entry": ["src/**/*.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"],
       "ignoreDependencies": ["cdk8s-cli"]
     },
@@ -103,7 +92,6 @@
     },
     "packages/discord-plays-pokemon/packages/backend": {
       "entry": [
-        "src/index.ts",
         "src/**/*.test.ts",
         "scripts/**/*.ts",
         "src/goal/pokemonctl.ts"
@@ -111,17 +99,11 @@
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/common": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/frontend": {
-      "entry": [
-        "src/main.tsx",
-        "src/**/*.test.ts",
-        "src/stories/**/*.tsx",
-        "vite.config.ts"
-      ],
-      "project": ["src/**/*.{ts,tsx}", "*.ts"]
+      "entry": ["src/stories/**/*.tsx"],
+      "project": ["src/**/*.{ts,tsx,css}", "*.ts"]
     },
     "packages/discord-plays-pokemon": {
       "entry": ["scripts/**/*.ts"],
@@ -132,86 +114,56 @@
       "project": ["scripts/**/*.ts", "wasm-src/**/*.mjs"]
     },
     "packages/discord-plays-mario-kart/packages/backend": {
-      "entry": ["src/index.ts", "src/**/*.test.ts", "scripts/**/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"],
-      "ignoreDependencies": ["ws", "@types/ws"]
+      "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "prisma/**/*.prisma"]
     },
     "packages/discord-plays-mario-kart/packages/common": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-mario-kart/packages/frontend": {
-      "entry": [
-        "src/main.tsx",
-        "src/**/*.test.ts",
-        "src/stories/**/*.tsx",
-        "vite.config.ts"
-      ],
-      "project": ["src/**/*.{ts,tsx}", "*.ts"]
+      "entry": ["src/**/*.test.ts", "src/stories/**/*.tsx"],
+      "project": ["src/**/*.{ts,tsx,css}", "*.ts"]
     },
     "packages/scout-for-lol/packages/backend": {
-      "entry": ["src/index.ts", "src/**/*.test.ts", "scripts/**/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+      "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "prisma/**/*.prisma"]
     },
     "packages/scout-for-lol/packages/data": {
-      "entry": ["src/index.ts", "scripts/**/*.ts"],
+      "entry": ["scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/scout-for-lol/packages/report": {
-      "entry": ["src/index.ts", "build.ts"],
-      "project": ["src/**/*.{ts,tsx}", "*.ts"]
+      "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/scout-for-lol/packages/frontend": {
       "entry": [
-        "astro.config.ts",
         "src/**/*.astro",
         "src/**/*.tsx",
         "src/lib/sentry.ts",
         "src/*-stub.ts"
       ],
-      "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
+      "project": ["src/**/*.{ts,tsx,astro,css,mdx}"]
     },
     "packages/scout-for-lol/packages/docs-site": {
-      "entry": [
-        "astro.config.ts",
-        "src/**/*.astro",
-        "src/**/*.tsx",
-        "public/**/*.js"
-      ],
-      "project": ["src/**/*.{ts,tsx,astro}", "*.ts", "public/**/*.js"]
+      "entry": ["src/**/*.astro", "src/**/*.tsx", "public/**/*.js"],
+      "project": ["src/**/*.{ts,tsx,astro,mdx}", "*.ts", "public/**/*.js"]
     },
     "packages/scout-for-lol/packages/app": {
-      "entry": [
-        "src/main.tsx",
-        "src/**/*.test.ts",
-        "vite.config.ts",
-        "index.html",
-        "public/**/*.js"
-      ],
-      "project": ["src/**/*.{ts,tsx}", "*.ts", "public/**/*.js"]
+      "entry": ["src/**/*.test.ts", "index.html"],
+      "project": ["src/**/*.{ts,tsx,css}", "*.ts"]
     },
     "packages/scout-for-lol/packages/evals": {
-      "entry": [
-        "src/client/main.tsx",
-        "src/dev.ts",
-        "src/server/index.ts",
-        "src/scripts/**/*.ts",
-        "src/**/*.test.ts",
-        "e2e/**/*.ts",
-        "playwright.config.ts",
-        "vite.config.ts"
-      ],
-      "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "*.ts"],
-      "ignoreDependencies": ["shadcn"]
+      "entry": ["src/scripts/**/*.ts", "src/**/*.test.ts", "e2e/**/*.ts"],
+      "project": ["src/**/*.{ts,tsx,css}", "e2e/**/*.ts", "*.ts"]
     },
     "packages/scout-for-lol/packages/desktop": {
       "entry": ["src/main.tsx"],
-      "project": ["src/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx,css}"],
       "vite": false,
       "postcss": false
     },
     "packages/scout-for-lol/packages/ui": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/scout-for-lol": {
@@ -219,29 +171,19 @@
       "project": ["scripts/**/*.ts"]
     },
     "packages/cooklang-rich-preview": {
-      "entry": ["astro.config.mjs", "src/**/*.astro"],
-      "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
+      "entry": ["src/**/*.astro"],
+      "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
     },
     "packages/monarch": {
-      "entry": [
-        "src/index.ts",
-        "src/**/*.test.ts",
-        "src/lib/*/classify.ts",
-        "scripts/**/*.ts"
-      ],
+      "entry": ["src/**/*.test.ts", "src/lib/*/classify.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/stocks-sjer-red": {
-      "entry": ["astro.config.ts", "src/**/*.astro"],
-      "project": ["src/**/*.{ts,astro}", "*.ts"]
+      "entry": ["src/**/*.astro"],
+      "project": ["src/**/*.{ts,astro,css}", "*.ts"]
     },
     "packages/streambot": {
-      "entry": [
-        "src/index.ts",
-        "test/**/*.ts",
-        "integration/**/*.ts",
-        "e2e/**/*.ts"
-      ],
+      "entry": ["test/**/*.ts", "integration/**/*.ts", "e2e/**/*.ts"],
       "project": [
         "src/**/*.ts",
         "test/**/*.ts",
@@ -250,16 +192,11 @@
       ]
     },
     "packages/temporal": {
-      "entry": [
-        "src/worker.ts",
-        "src/client.ts",
-        "src/**/*.test.ts",
-        "scripts/**/*.ts"
-      ],
+      "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/trmnl-dashboard": {
-      "entry": ["src/index.ts", "src/__tests__/**/*.ts"],
+      "entry": ["src/__tests__/**/*.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/leetcode": {
@@ -282,33 +219,29 @@
     // MSBuild compiles the core's generated C# and the tests spawn the server
     // from its directory. The workspace deps are what order turbo's graph.
     "packages/tasknotes-windows": {
-      "entry": ["scripts/*.ts", "eslint.config.ts"],
-      "project": ["scripts/**/*.ts", "e2e/**/*.ts", "eslint.config.ts"],
+      "entry": ["scripts/*.ts"],
+      "project": ["scripts/**/*.ts"],
       "ignoreDependencies": ["tasknotes-core", "tasknotes-server"]
     },
     "packages/tasknotes-e2e": {
       "ignoreDependencies": ["tasknotes-server"]
     },
     "packages/tasknotes-server": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/tasknotes-types": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/homelab": {
-      "entry": ["scripts/**/*.ts", "eslint.config.ts"],
-      "project": ["scripts/**/*.ts", "eslint.config.ts"]
+      "entry": ["scripts/**/*.ts"],
+      "project": ["scripts/**/*.ts"]
     },
     "packages/discord-stream-lifecycle": {
       "entry": ["src/**/*.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/code-review": {
-      "entry": ["src/index.ts", "src/github.ts", "eslint.config.ts"],
-      "project": ["src/**/*.ts", "eslint.config.ts"],
-      "ignoreDependencies": ["eslint"]
+      "project": ["src/**/*.ts"]
     }
   },
   "ignoreExportsUsedInFile": true,
@@ -329,48 +262,29 @@
     "unlisted": "error",
     "binaries": "error"
   },
-  "ignoreUnresolved": [
-    "^#generated/ha-schema\\.ts$",
-    "^#generated/prisma/",
-    "^~icons/"
-  ],
   "ignore": [
     "**/eslint.config.ts",
-    "**/postcss.config.ts",
     "**/generated/**",
-    "**/dist/**",
     "sandbox/archive/**",
     "sandbox/practice/**",
-    "packages/discord-video-stream/**",
     "packages/resume/**",
     "packages/dotfiles/**",
-    "packages/fonts/**",
-    "packages/anki/**",
-    "packages/release-tools/**",
-    "packages/webring/example/**",
     "packages/cooklang-for-obsidian/**",
     "packages/tasks-for-obsidian/**",
-    "packages/bun-decompile/**",
     "sandbox/poc/**",
     "scripts/observability/local-stack/**"
   ],
   "ignoreDependencies": [
     "@anthropic-ai/claude-agent-sdk",
-    "@anthropic-ai/sdk",
-    "@astrojs/tailwind",
     "@commitlint/types",
     "@eslint-community/eslint-plugin-eslint-comments",
     "@eslint/compat",
     "@eslint/eslintrc",
     "@eslint/js",
     "@fontsource/roboto",
-    "@fortawesome/fontawesome-free",
-    "@google/generative-ai",
     "@grafana/grafana-foundation-sdk",
-    "@iconify-json/carbon",
     "@iconify-json/heroicons",
     "@iconify-json/mdi",
-    "@iconify-json/ph",
     "@iconify-json/simple-icons",
     "@libsql/client",
     "@opentelemetry/core",
@@ -387,7 +301,6 @@
     "@svgr/plugin-jsx",
     "@tailwindcss/forms",
     "@tailwindcss/postcss",
-    "@tailwindcss/typography",
     "@tanstack/eslint-plugin-query",
     "@tauri-apps/api",
     "@tauri-apps/plugin-dialog",
@@ -398,15 +311,12 @@
     "@types/express",
     "@types/lodash",
     "@types/react",
-    "@types/react-router-dom",
     "@typescript-eslint/eslint-plugin",
     "@typescript-eslint/parser",
     "@typescript-eslint/utils",
-    "@typescript/native",
     "@vitejs/plugin-react",
     "@vitejs/plugin-react-swc",
     "autoprefixer",
-    "bulma",
     "cron-parser",
     "debug",
     "eslint-config-prettier",
@@ -425,23 +335,16 @@
     "jiti",
     "keyboardjs",
     "lodash",
-    "openai",
     "postcss",
     "prism-media",
     "react",
-    "react-redux",
-    "react-scripts",
     "remeda",
-    "sass",
     "sodium-native",
-    "tailwindcss",
     "ts-morph",
     "ts-pattern",
     "tslib",
     "typescript-eslint",
-    "uuid",
     "vite-tsconfig-paths",
-    "vitest",
     "yoga-wasm-web",
     "youtubei.js",
     "zod"
@@ -450,9 +353,7 @@
     "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts",
     "packages/discord-plays-mario-kart/packages/frontend/src/util.ts",
     "packages/discord-plays-pokemon/packages/frontend/src/util.ts",
-    "packages/monarch/src/lib/costco/receipt-parser.ts",
-    "packages/scout-for-lol/packages/frontend/src/components/FeatureWithImage.astro",
-    "packages/scout-for-lol/packages/frontend/src/components/StatCard.astro"
+    "packages/monarch/src/lib/costco/receipt-parser.ts"
   ],
   "ignoreIssues": {
     "packages/better-skill-capped/src/components/ui/card.tsx": ["exports"],
@@ -483,7 +384,6 @@
     "packages/discord-plays-pokemon/packages/backend/src/observability/tracing.ts": [
       "exports"
     ],
-    "packages/eslint-config/src/rules/shared/tool-cache.ts": ["exports"],
     "packages/home-assistant/src/codegen/introspect.ts": ["exports"],
     "packages/monarch/src/lib/classifier/cache.ts": ["exports"],
     "packages/monarch/src/lib/classifier/claude.ts": ["exports"],
@@ -510,13 +410,10 @@
     "packages/temporal/src/workflows/ha/util.ts": ["exports"]
   },
   "ignoreBinaries": [
-    "HEAD",
     "argocd",
-    "codex",
-    "docker",
+    "buildkite-agent",
     "ffmpeg",
     "ffprobe",
-    "gh",
     "gitleaks",
     "go",
     "golangci-lint",
@@ -525,10 +422,8 @@
     "mktemp",
     "op",
     "pinchtab",
-    "rg",
     "swift",
     "swiftlint",
-    "tsc",
     "uv",
     "uvx",
     "velero",

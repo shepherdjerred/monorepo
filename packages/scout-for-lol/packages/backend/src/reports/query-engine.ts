@@ -1,11 +1,6 @@
-import {
-  CompetitionIdSchema,
-  parseCompetition,
-  type VisualizationSnapshot,
-} from "@scout-for-lol/data";
+import { CompetitionIdSchema, parseCompetition } from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
-import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   scoutReportQueryDurationSeconds,
@@ -14,6 +9,7 @@ import {
 import { runPlanAggregation } from "#src/reports/duckdb/execute.ts";
 import { ReportQueryTimeoutError } from "#src/reports/duckdb/instance.ts";
 import { resolvePlayerRefPuuids } from "#src/reports/identity.ts";
+import type { ReportQueryResult } from "#src/reports/query-types.ts";
 import {
   requireGuildScope,
   type LakeQueryScope,
@@ -35,85 +31,6 @@ import {
 } from "#src/reports/temporal-plan.ts";
 import { mergeTemporalPeriods } from "#src/reports/temporal-comparison.ts";
 import { buildVisualizationSnapshot } from "#src/reports/visualization-snapshot.ts";
-
-export type ReportResultValue = {
-  column: string;
-  value: number | string | null;
-  comparisonValue?: number | string | null;
-  absoluteDelta?: number | null;
-  percentageDelta?: number | null;
-  comparisonSampleSize?: number;
-  comparisonSuccesses?: number;
-  comparisonNumerator?: number;
-  comparisonDenominator?: number;
-  comparisonConfidenceInterval?: {
-    level: 0.95;
-    lower: number;
-    upper: number;
-  } | null;
-  sampleSize?: number;
-  successes?: number;
-  numerator?: number;
-  denominator?: number;
-  confidenceInterval?: {
-    level: 0.95;
-    lower: number;
-    upper: number;
-  } | null;
-};
-
-export type ReportMentionIdentity =
-  | {
-      kind: "player";
-      playerId: number | null;
-      alias: string;
-      discordId: string | null;
-    }
-  | {
-      kind: "group";
-      members: { playerId: number; alias: string }[];
-    };
-
-export type ReportResultRow = {
-  label: string;
-  dimensions: string[];
-  /**
-   * The typed grouping keys behind the label, aligned with `plan.groupings`.
-   * Charts read these rather than re-parsing the label: a numeric histogram
-   * bucket has to sort as a number, and a week bucket has to compare as a
-   * date, neither of which a display string can be trusted for.
-   */
-  keys: LakeScalar[];
-  mentionIdentity: ReportMentionIdentity | null;
-  values: ReportResultValue[];
-};
-
-export type ReportQueryResult = {
-  plan: ScoutQlPlan;
-  columns: string[];
-  rows: ReportResultRow[];
-  rowsScanned: number;
-  /** The range actually executed, after competition clamping or an override. */
-  range: TemporalRange;
-  /** Set when `compare = previous_period` ran a second aggregation. */
-  temporal?: TemporalContext | undefined;
-  visualization?: VisualizationSnapshot;
-  evidence?: {
-    label: string;
-    values: {
-      column: string;
-      sampleSize: number;
-      successes?: number;
-      numerator?: number;
-      denominator?: number;
-      confidenceInterval?: {
-        level: 0.95;
-        lower: number;
-        upper: number;
-      } | null;
-    }[];
-  }[];
-};
 
 export type ExecuteReportQueryParams = {
   prisma: ExtendedPrismaClient;

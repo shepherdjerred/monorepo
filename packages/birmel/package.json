@@ -9,6 +9,7 @@
     "./*": "./src/*"
   },
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#generated/*": "./generated/*"
   },
   "files": [
@@ -26,7 +27,7 @@
     "test:e2e:youtube-stream": "bun run e2e/youtube-stream-resource.ts",
     "test:e2e:openclaw-docker": "bun run e2e/openclaw-capabilities-docker.ts",
     "typecheck": "bun run generate && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "bun run generate && eslint .",
+    "lint": "bun run generate && eslint . && check-architecture",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/birmel:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t birmel:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
     "test:ci": "bun ../../scripts/run-ci-test.ts",
@@ -71,6 +72,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.0",
     "@typescript-eslint/utils": "^8.67.0",

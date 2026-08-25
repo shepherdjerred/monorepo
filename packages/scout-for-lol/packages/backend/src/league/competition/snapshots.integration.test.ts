@@ -1,9 +1,9 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   createSnapshot,
-  getSnapshot,
   createSnapshotsForAllParticipants,
 } from "#src/league/competition/snapshots.ts";
+import { getSnapshot } from "#src/league/competition/snapshot-store.ts";
 import {
   createCompetition,
   type CreateCompetitionInput,

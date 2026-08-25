@@ -29,7 +29,7 @@ import type {
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
 import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./lane-prior-refresh.ts";
-import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
+import type { DataDragonUpdateResult } from "#shared/data-dragon-types.ts";
 import type {
   LanePriorRefreshResult,
   LanePriorWorkflowInput,
@@ -41,11 +41,19 @@ import type { HomelabCrdImportsRefreshResult } from "#activities/homelab-crd-imp
 import { runPokeemeraldDataRefresh as _runPokeemeraldDataRefresh } from "./dpp-pokeemerald-data-refresh.ts";
 import type { PokeemeraldDataRefreshResult } from "#activities/dpp-pokeemerald-data-refresh.ts";
 import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout-showcase-refresh.ts";
-import { runScoutWeeklyParlayWorkflow as _runScoutWeeklyParlayWorkflow } from "./scout-weekly-parlay.ts";
+import {
+  runScoutWeeklyParlayCatchupWorkflow as _runScoutWeeklyParlayCatchupWorkflow,
+  runScoutWeeklyParlayWorkflow as _runScoutWeeklyParlayWorkflow,
+} from "./scout-weekly-parlay.ts";
 import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout-queue-windows.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout-queue-windows.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout-showcase-refresh.ts";
-import type { ScoutWeeklyParlayWorkflowInput } from "./scout-weekly-parlay.ts";
+import type {
+  ScoutWeeklyParlayCatchupWorkflowInput,
+  ScoutWeeklyParlayWorkflowInput,
+} from "./scout-weekly-parlay.ts";
+import { runScoutBryanBucksAnalyticsWorkflow as _runScoutBryanBucksAnalyticsWorkflow } from "./scout-bryan-bucks.ts";
+import type { ScoutBryanBucksAnalyticsResult } from "#activities/scout-bryan-bucks.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
@@ -91,7 +99,7 @@ import type {
 import type {
   ChannelStateResult,
   InventoryResult,
-} from "#activities/glitter-corpus-activity-types.ts";
+} from "#shared/glitter-corpus-activity-types.ts";
 import { runGlitterContextRefresh as _runGlitterContextRefresh } from "./glitter-context-refresh.ts";
 import type {
   GlitterContextRefreshInput,
@@ -246,6 +254,16 @@ export async function runScoutWeeklyParlayWorkflow(
   input: ScoutWeeklyParlayWorkflowInput = {},
 ): Promise<void> {
   return _runScoutWeeklyParlayWorkflow(input);
+}
+
+export async function runScoutWeeklyParlayCatchupWorkflow(
+  input: ScoutWeeklyParlayCatchupWorkflowInput,
+): Promise<void> {
+  return _runScoutWeeklyParlayCatchupWorkflow(input);
+}
+
+export async function runScoutBryanBucksAnalyticsWorkflow(): Promise<ScoutBryanBucksAnalyticsResult> {
+  return await _runScoutBryanBucksAnalyticsWorkflow();
 }
 
 export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResult> {

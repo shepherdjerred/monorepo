@@ -12,7 +12,7 @@ import type {
   ReportQueryResult,
   ReportResultRow,
   ReportResultValue,
-} from "#src/reports/query-engine.ts";
+} from "#src/reports/query-types.ts";
 import {
   localDateStart,
   type TemporalRange,

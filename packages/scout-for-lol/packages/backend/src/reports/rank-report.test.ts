@@ -6,7 +6,7 @@ import {
   rankToLeaguePoints,
   type Rank,
 } from "@scout-for-lol/data";
-import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
 import { aggregateRankLeaderboard } from "#src/reports/rank-report.ts";
 
 /**

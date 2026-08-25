@@ -5,7 +5,7 @@ import {
   type ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
 import { planResultColumns } from "#src/reports/plan-columns.ts";
-import type { ReportQueryResult } from "#src/reports/query-engine.ts";
+import type { ReportQueryResult } from "#src/reports/query-types.ts";
 
 export function reportQueryPreviewSummary(
   result: ReportQueryResult,

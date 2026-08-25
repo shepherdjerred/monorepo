@@ -12,7 +12,7 @@
  * disagreed with the window would silently draw a chart with holes in it.
  */
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
-import type { ReportResultRow } from "@scout-for-lol/backend/reports/query-engine.ts";
+import type { ReportResultRow } from "@scout-for-lol/backend/reports/query-types.ts";
 import type { LakeScalar } from "@scout-for-lol/backend/reports/duckdb/row-schema.ts";
 import type { TemporalRange } from "@scout-for-lol/backend/reports/temporal-range.ts";
 import { visualizationBucketLabels } from "@scout-for-lol/backend/reports/visualization-buckets.ts";

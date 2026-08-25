@@ -12,13 +12,13 @@ import {
   isBlockedSource,
   shameMessage,
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
-import { formatTimecode } from "@shepherdjerred/streambot/discord/timecode.ts";
+import { formatTimecode } from "@shepherdjerred/streambot/util/timecode.ts";
 import {
   chaptersText,
   nowPlayingText,
   queueText,
-  type PlaybackView,
 } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type {
   LoopMode,
   PlaybackEvent,

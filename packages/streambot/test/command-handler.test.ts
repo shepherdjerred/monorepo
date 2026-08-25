@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
-import {
-  CommandHandler,
-  type CommandHandlerDeps,
-  type CommandInteraction,
-} from "@shepherdjerred/streambot/discord/command-handler.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import { CommandHandler } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import type {
+  CommandHandlerDeps,
+  CommandInteraction,
+} from "@shepherdjerred/streambot/discord/command-types.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import {
   helpText,
   listPages,

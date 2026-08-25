@@ -1,14 +1,14 @@
 import { patched, proxyActivities } from "@temporalio/workflow";
+import type { DataDragonActivities } from "#activities/data-dragon.ts";
 import type {
-  DataDragonActivities,
   DataDragonVersionState,
   DataDragonUpdateMode,
   DataDragonUpdateResult,
-} from "#activities/data-dragon.ts";
+} from "#shared/data-dragon-types.ts";
 import {
   resolveTerminalFailureReason,
   UPDATE_DATA_DRAGON_MAX_ATTEMPTS,
-} from "#activities/data-dragon-util.ts";
+} from "#shared/data-dragon-util.ts";
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,

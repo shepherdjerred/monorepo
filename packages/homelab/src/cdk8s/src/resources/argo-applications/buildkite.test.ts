@@ -92,6 +92,22 @@ const TempoConfigMapSchema = z
   })
   .loose();
 
+const PostHogTofuCredentialsSchema = z
+  .object({
+    apiVersion: z.literal("onepassword.com/v1"),
+    kind: z.literal("OnePasswordItem"),
+    metadata: z.object({
+      name: z.literal("posthog-tofu-credentials"),
+      namespace: z.literal("buildkite"),
+    }),
+    spec: z.object({
+      itemPath: z.literal(
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/yh3xvqemmr4ic2up5zluo2rkcq",
+      ),
+    }),
+  })
+  .loose();
+
 function synthBuildkiteResources() {
   const chart = Testing.chart();
   createBuildkiteApp(chart);
@@ -211,6 +227,15 @@ it("uses the Tempo 3 configuration schema for the E2E sidecar", () => {
   expect(tempoConfig).toContain("distributor:");
   expect(tempoConfig).toContain("storage:");
   expect(tempoConfig).not.toMatch(/^(?:ingester|compactor):/mu);
+});
+
+it("syncs the dedicated PostHog OpenTofu credentials", () => {
+  const { resources } = synthBuildkiteResources();
+  expect(
+    resources.some(
+      (manifest) => PostHogTofuCredentialsSchema.safeParse(manifest).success,
+    ),
+  ).toBe(true);
 });
 
 describe("Buildkite application", () => {

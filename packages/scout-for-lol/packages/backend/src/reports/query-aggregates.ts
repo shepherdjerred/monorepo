@@ -17,7 +17,7 @@ import type {
   ReportQueryResult,
   ReportResultRow,
   ReportResultValue,
-} from "#src/reports/query-engine.ts";
+} from "#src/reports/query-types.ts";
 
 /**
  * Post-aggregation: turn executed plan rows into a report result.

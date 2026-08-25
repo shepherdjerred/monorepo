@@ -1,4 +1,4 @@
-import { formatTimecode } from "@shepherdjerred/streambot/discord/timecode.ts";
+import { formatTimecode } from "@shepherdjerred/streambot/util/timecode.ts";
 import type {
   PlaybackContext,
   PlaybackInput,

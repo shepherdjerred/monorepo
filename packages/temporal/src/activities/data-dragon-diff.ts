@@ -1,4 +1,4 @@
-import type { DataDragonUpdateInput } from "./data-dragon.ts";
+import type { DataDragonUpdateInput } from "#shared/data-dragon-types.ts";
 
 const SCOUT_ROOT = "packages/scout-for-lol";
 const DATA_PACKAGE_ROOT = `${SCOUT_ROOT}/packages/data`;

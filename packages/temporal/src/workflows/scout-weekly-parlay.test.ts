@@ -5,7 +5,10 @@ import type {
   ScoutWeeklyParlayAction,
   ScoutWeeklyParlayTimeline,
 } from "#activities/scout-weekly-parlay.ts";
-import { runScoutWeeklyParlayWorkflow } from "./scout-weekly-parlay.ts";
+import {
+  runScoutWeeklyParlayCatchupWorkflow,
+  runScoutWeeklyParlayWorkflow,
+} from "./scout-weekly-parlay.ts";
 
 const TASK_QUEUE = "scout-weekly-parlay-test";
 const TIMELINE: ScoutWeeklyParlayTimeline = {
@@ -59,7 +62,7 @@ afterEach(async () => {
 });
 
 describe("runScoutWeeklyParlayWorkflow", () => {
-  test("runs the frozen open, reminder, start, six updates, and final action sequence", async () => {
+  test("runs the frozen standard open, reminder, start, updates, and final action sequence", async () => {
     const actions: ScoutWeeklyParlayAction[] = [];
     let timelineAnchor: string | undefined;
     const worker = await weeklyParlayWorker({
@@ -96,6 +99,68 @@ describe("runScoutWeeklyParlayWorkflow", () => {
         updateIndex,
       })),
       { periodKey: TIMELINE.periodKey, slot: 2, action: "finalize" },
+    ]);
+  }, 30_000);
+
+  test("runs a frozen catch-up timeline and rejects a duplicate workflow ID", async () => {
+    const actions: ScoutWeeklyParlayAction[] = [];
+    let timelineAnchor: string | undefined;
+    const catchupTimeline: ScoutWeeklyParlayTimeline = {
+      periodKey: "2026-08-24",
+      openAt: "2026-08-29T23:00:00.000Z",
+      startsAt: "2026-08-30T07:00:00.000Z",
+      updatesAt: [],
+      finalizesAt: "2026-08-30T18:00:00.000Z",
+    };
+    const worker = await weeklyParlayWorker({
+      resolveScoutWeeklyParlayCatchupTimeline: (workflowStartAt: string) => {
+        timelineAnchor = workflowStartAt;
+        return catchupTimeline;
+      },
+      invokeScoutWeeklyParlayAction: (action: ScoutWeeklyParlayAction) => {
+        actions.push(action);
+        return { status: "reconciled", detail: action.action };
+      },
+    });
+
+    const catchupWorkflowId = "scout-weekly-parlay-catchup-2026-08-24-3";
+    const catchupHandle = await testEnvironment.client.workflow.start(
+      runScoutWeeklyParlayCatchupWorkflow,
+      {
+        args: [{ periodKey: catchupTimeline.periodKey, slot: 3 }],
+        taskQueue: TASK_QUEUE,
+        workflowId: catchupWorkflowId,
+      },
+    );
+    await expect(
+      testEnvironment.client.workflow.start(
+        runScoutWeeklyParlayCatchupWorkflow,
+        {
+          args: [{ periodKey: catchupTimeline.periodKey, slot: 3 }],
+          taskQueue: TASK_QUEUE,
+          workflowId: catchupWorkflowId,
+        },
+      ),
+    ).rejects.toThrow();
+    await worker.runUntil(catchupHandle.result());
+
+    const description = await catchupHandle.describe();
+    expect(timelineAnchor).toBe(description.startTime.toISOString());
+    expect(actions).toEqual([
+      {
+        periodKey: catchupTimeline.periodKey,
+        slot: 3,
+        action: "open",
+        window: {
+          kind: "catch_up",
+          openAt: catchupTimeline.openAt,
+          bettingClosesAt: catchupTimeline.startsAt,
+          scoringStartsAt: catchupTimeline.startsAt,
+          scoringEndsAt: catchupTimeline.finalizesAt,
+        },
+      },
+      { periodKey: catchupTimeline.periodKey, slot: 3, action: "start" },
+      { periodKey: catchupTimeline.periodKey, slot: 3, action: "finalize" },
     ]);
   }, 30_000);
 

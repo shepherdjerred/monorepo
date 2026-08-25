@@ -7,6 +7,7 @@ import {
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
 import { buildFailureAlertForExecution } from "./workflow-failure-watch-detail.ts";
+import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 
 /**
  * Polls the Temporal visibility API for workflow executions that closed as
@@ -69,26 +70,6 @@ export type PollWorkflowFailuresResult = {
 };
 
 /** Narrow structural slice of `Client["workflow"]` — real client and test fakes both satisfy it. */
-export type WorkflowVisibilityClient = {
-  workflow: {
-    list: (options: { query: string; pageSize?: number }) => AsyncIterable<{
-      workflowId: string;
-      runId: string;
-      type: string;
-      taskQueue: string;
-      startTime: Date;
-      closeTime?: Date;
-      status: { name: string };
-    }>;
-    getHandle: (
-      workflowId: string,
-      runId: string,
-    ) => {
-      result: () => Promise<unknown>;
-      fetchHistory: () => Promise<unknown>;
-    };
-  };
-};
 
 function jsonLog(
   level: "info" | "warning" | "error",

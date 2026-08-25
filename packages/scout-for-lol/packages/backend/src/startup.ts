@@ -22,8 +22,14 @@ export async function runBackendStartup(
   if (dependencies.ensureReportLakeReady !== undefined) {
     await dependencies.ensureReportLakeReady();
   }
-  const httpServer = await dependencies.startHttpServer();
+  // Discord connects before the HTTP server accepts traffic. Authorization
+  // paths read the live guild cache, and an unready cache is indistinguishable
+  // from "Scout is not installed" at several call sites — so serving while the
+  // gateway is still connecting hands out false NOT_FOUNDs to real members.
+  // This ordering used to be implicit: the client module logged in from a
+  // top-level await, which the HTTP server pulled in through its tRPC routers.
   await dependencies.startDiscord();
+  const httpServer = await dependencies.startHttpServer();
   return httpServer;
 }
 

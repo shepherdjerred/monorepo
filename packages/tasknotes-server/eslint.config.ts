@@ -4,6 +4,10 @@ const config = [
     tsconfigRootDir: import.meta.dirname,
     projectService: true,
     ignores: [
+      // Deliberate layer violations, rejected by `check-architecture` rather
+      // than linted. This list overrides the shared config's defaults, which
+      // already exclude them.
+      "**/architecture-fixtures/**/*",
       "**/dist/**/*",
       "**/node_modules/**/*",
       "**/*.md",

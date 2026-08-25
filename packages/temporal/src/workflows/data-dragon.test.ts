@@ -6,7 +6,7 @@ import type {
   DataDragonUpdateInput,
   DataDragonUpdateResult,
   DataDragonVersionState,
-} from "#activities/data-dragon.ts";
+} from "#shared/data-dragon-types.ts";
 import { runScoutDataDragonWeeklyRefresh } from "./index.ts";
 
 const TASK_QUEUE = "scout-data-dragon-test";

@@ -3,15 +3,10 @@ import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { captureDiscordCommandUsed } from "#src/analytics/command-usage.ts";
 import type { ProductAnalytics } from "#src/analytics/product-analytics.ts";
+import { createAnalyticsFixture } from "#src/testing/analytics-fixture.ts";
 
 const { prisma } = createTestDatabase("command-usage-analytics-test");
 const SERVER_ID = testGuildId("880");
-
-function createAnalyticsFixture() {
-  const capture = vi.fn<ProductAnalytics["capture"]>(() => null);
-  const shutdown = vi.fn<ProductAnalytics["shutdown"]>(() => Promise.resolve());
-  return { analytics: { capture, shutdown }, capture };
-}
 
 async function seedInstall(options?: { analyticsLifecycleTracked?: boolean }) {
   return prisma.guildInstall.create({
@@ -140,6 +135,8 @@ describe("captureDiscordCommandUsed", () => {
     });
     const analytics: ProductAnalytics = {
       capture,
+      captureBucksMember: () => null,
+      captureBucksSystem: () => null,
       shutdown: () => Promise.resolve(),
     };
 

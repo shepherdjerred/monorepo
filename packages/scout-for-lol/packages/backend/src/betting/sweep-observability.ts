@@ -1,4 +1,4 @@
-import type { ClosedPool } from "#src/betting/sweep.ts";
+import type { ClosedPool } from "#src/betting/sweep-types.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import {
   bettingBetsMatchedTotal,

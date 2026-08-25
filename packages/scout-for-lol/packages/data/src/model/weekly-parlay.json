@@ -4,6 +4,7 @@
   "openHour": 12,
   "bettingCloseHour": 0,
   "openActionBudgetMinutes": 4,
+  "catchupMinimumBettingHours": 6,
   "finalHour": 11,
   "updateHour": 19,
   "updateCount": 6,

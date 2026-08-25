@@ -7,7 +7,7 @@ import {
   DiscordGuildIdSchema,
   SeasonIdSchema,
 } from "@scout-for-lol/data";
-import { CompetitionDatesSchema } from "#src/database/competition/validation.ts";
+import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
 import type { UpdateCompetitionInput } from "#src/database/competition/queries.ts";
 
 /**

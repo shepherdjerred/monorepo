@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import {
   ChannelStateResultSchema,
   InventoryResultSchema,
-} from "#activities/glitter-corpus-activity-types.ts";
+} from "#shared/glitter-corpus-activity-types.ts";
 import { GlitterCorpusSnapshotPinSchema } from "#activities/glitter-context-refresh-corpus.ts";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { GuildSnapshotSchema } from "#shared/glitter-corpus.ts";

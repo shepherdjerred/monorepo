@@ -13,10 +13,8 @@ import {
 } from "#src/testing/test-ids.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
-import {
-  executeReportQuery,
-  type ReportResultRow,
-} from "#src/reports/query-engine.ts";
+import { executeReportQuery } from "#src/reports/query-engine.ts";
+import type { ReportResultRow } from "#src/reports/query-types.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 
 const { prisma } = createTestDatabase("report-query-engine-test");

@@ -2,7 +2,7 @@ import type { Rank } from "@scout-for-lol/data/index.ts";
 import { rankToLeaguePoints, RankSchema } from "@scout-for-lol/data/index.ts";
 import { z } from "zod";
 import type { LeaderboardEntry } from "#src/league/competition/processors/types.ts";
-import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
 
 /**
  * Check if two scores are equal

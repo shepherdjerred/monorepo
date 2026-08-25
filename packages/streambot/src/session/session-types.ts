@@ -1,11 +1,25 @@
 import type { Actor } from "xstate";
+import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
+import type { UserbotProvider } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
+import type {
+  ResolveSourceInput,
+  ResolvedSource,
+} from "@shepherdjerred/streambot/machine/types.ts";
+import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
+import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
+import type { VoiceCaptureManager } from "@shepherdjerred/streambot/voice/capture-manager.ts";
 import type { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import type {
   PlaybackEvent,
   PlaybackInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
-import type { PlayerCardManager } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
+import type {
+  PlayerCardManager,
+  PlayerCardPort,
+} from "@shepherdjerred/streambot/discord/player-card-manager.ts";
 import type { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { UserbotEntry } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
@@ -151,3 +165,37 @@ export const EMPTY_HANDLE: SessionHandle = {
 export function keyOf(guildId: GuildId, channelId: ChannelId): string {
   return `${guildId}:${channelId}`;
 }
+
+/**
+ * What a session manager needs to run one playback session.
+ *
+ * The voice-session factory takes this as its parameter and the manager
+ * imports the factory back, so the contract lives here rather than beside
+ * either of them.
+ */
+export type SessionManagerDeps = {
+  readonly config: Config;
+  readonly pool: UserbotProvider;
+  /** Resolve a queued source to an ffmpeg input (injected so the machine stays pure + testable). */
+  readonly resolveSource: (
+    input: ResolveSourceInput,
+    signal: AbortSignal,
+  ) => Promise<ResolvedSource>;
+  /** Post a world-readable notice to a channel (no-op when the channel is null/unknown). */
+  readonly announce: (
+    channelId: ChannelId | null,
+    message: string,
+  ) => Promise<void>;
+  /** Discord effects for the player card, plus its message → session routing table. */
+  readonly cards: PlayerCardPort;
+  readonly library?: () => readonly LibraryEntry[];
+  readonly resolvePlaySource?: (
+    source: Source,
+    signal: AbortSignal,
+  ) => Promise<ResolvedSource>;
+  readonly voiceModels?: LocalVoiceModels | null;
+  /** Loaded at boot alongside the models; fatal when missing while voice is enabled. */
+  readonly voiceFeedbackClips?: SpokenFeedbackClips | null;
+  /** Process-wide diagnostic capture and attempt-correlation owner. */
+  readonly voiceCaptureManager?: VoiceCaptureManager;
+};

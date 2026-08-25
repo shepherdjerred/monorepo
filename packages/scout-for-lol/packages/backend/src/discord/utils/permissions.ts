@@ -10,6 +10,7 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
 import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
 import type { PermissionNotifyStage } from "#src/database/guild-permission-errors.ts";
+import type { DeliveryFailureKind } from "#src/discord/utils/delivery-failure.ts";
 import {
   discordPermissionErrorsTotal,
   discordOwnerNotificationsTotal,
@@ -72,7 +73,6 @@ export function isUnknownGuildError(error: unknown): boolean {
 /**
  * How a delivery failed, for tailoring the owner notification copy.
  */
-export type DeliveryFailureKind = "permission" | "channel_missing";
 
 /**
  * Check if the bot has permission to send messages in a channel

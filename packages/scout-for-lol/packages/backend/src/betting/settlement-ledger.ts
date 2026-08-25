@@ -7,7 +7,7 @@ import {
 import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
 import { transferHouseCut } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
-import type { SettlementBet } from "#src/betting/settle.ts";
+import type { SettlementBet } from "#src/betting/settlement-types.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 
 type CreditBetInput = {

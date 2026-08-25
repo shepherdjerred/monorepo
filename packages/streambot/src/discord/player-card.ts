@@ -9,14 +9,14 @@
  * `▶️ Now playing …` announcement with no components, so both modes run through one code path.
  */
 import { findChapterAt } from "@shepherdjerred/streambot/sources/chapters.ts";
-import { formatTimecode } from "@shepherdjerred/streambot/discord/timecode.ts";
+import { formatTimecode } from "@shepherdjerred/streambot/util/timecode.ts";
 import {
   ControlAction,
   VOLUME_MAX_PERCENT,
   VOLUME_MIN_PERCENT,
   encodeControlId,
 } from "@shepherdjerred/streambot/discord/player-controls.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 
 /** Cells in the progress bar (one knob plus the track around it). */
 const PROGRESS_BAR_CELLS = 24;

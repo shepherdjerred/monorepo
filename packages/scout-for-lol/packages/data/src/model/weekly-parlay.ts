@@ -7,6 +7,7 @@ const WeeklyParlayLifecycleSchema = z.strictObject({
   openHour: z.number().int().min(0).max(23),
   bettingCloseHour: z.number().int().min(0).max(23),
   openActionBudgetMinutes: z.number().int().positive(),
+  catchupMinimumBettingHours: z.number().int().positive(),
   finalHour: z.number().int().min(0).max(23),
   updateHour: z.number().int().min(0).max(23),
   updateCount: z.number().int().positive(),
@@ -25,3 +26,5 @@ export type WeeklyParlayLifecycle = z.infer<typeof WeeklyParlayLifecycleSchema>;
 
 export const WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS =
   WEEKLY_PARLAY_LIFECYCLE.openActionBudgetMinutes * 60 * 1000;
+export const WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS =
+  WEEKLY_PARLAY_LIFECYCLE.catchupMinimumBettingHours * 60 * 60 * 1000;

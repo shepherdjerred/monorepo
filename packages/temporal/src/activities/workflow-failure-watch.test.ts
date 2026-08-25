@@ -12,8 +12,8 @@ import {
   buildVisibilityQuery,
   parseAlertTtlMs,
   pollWorkflowFailuresOnce,
-  type WorkflowVisibilityClient,
 } from "./workflow-failure-watch.ts";
+import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 import {
   workflowExecutionKey,
   type WorkflowFailureWatchCheckpoint,

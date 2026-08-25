@@ -12,7 +12,7 @@
     "login:browser": "bun run scripts/monarch-browser-login.ts",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "bunx eslint .",
+    "lint": "bunx eslint . && check-architecture",
     "test:ci": "bun ../../scripts/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
@@ -25,6 +25,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "bun-types": "1.4.0",
     "eslint": "^10.3.0",
@@ -35,5 +36,8 @@
     "@vitest/coverage-istanbul": "4.1.10"
   },
   "author": "Jerred Shepherd",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "imports": {
+    "#architecture": "./architecture.config.ts"
+  }
 }

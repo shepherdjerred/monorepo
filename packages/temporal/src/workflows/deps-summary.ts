@@ -1,8 +1,6 @@
 import { patched, proxyActivities } from "@temporalio/workflow";
-import type {
-  DependencyChange,
-  DepsSummaryActivities,
-} from "#activities/deps-summary.ts";
+import type { DepsSummaryActivities } from "#activities/deps-summary.ts";
+import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import type { DepsSummaryLegacyActivities } from "#activities/deps-summary-legacy.ts";
 import type { MissingReleaseNote } from "#activities/deps-summary-release-notes.ts";
 import type {

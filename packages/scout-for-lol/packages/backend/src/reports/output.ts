@@ -11,7 +11,7 @@ import {
 import type {
   ReportQueryResult,
   ReportResultRow,
-} from "#src/reports/query-engine.ts";
+} from "#src/reports/query-types.ts";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 import {
   formatRankedLabel,

@@ -3,7 +3,7 @@ import type {
   CurrentMessage,
 } from "#shared/glitter-corpus.ts";
 import { projectionChecksum } from "#shared/glitter-corpus-projection.ts";
-import type { ChannelStateResult } from "./glitter-corpus-activity-types.ts";
+import type { ChannelStateResult } from "#shared/glitter-corpus-activity-types.ts";
 import { writeChannelState } from "./glitter-corpus-io.ts";
 
 export function projectionStateFields(input: {

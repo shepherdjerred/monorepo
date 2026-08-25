@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { ReportAiModelPreviewSummarySchema } from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
-import type { ReportQueryResult } from "#src/reports/query-engine.ts";
+import type { ReportQueryResult } from "#src/reports/query-types.ts";
 
 const BOUND = "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY";
 const RANGE = {

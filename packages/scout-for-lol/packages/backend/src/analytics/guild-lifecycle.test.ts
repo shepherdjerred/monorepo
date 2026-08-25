@@ -16,15 +16,10 @@ import {
   tenureBucket,
 } from "#src/analytics/guild-lifecycle.ts";
 import type { ProductAnalytics } from "#src/analytics/product-analytics.ts";
+import { createAnalyticsFixture } from "#src/testing/analytics-fixture.ts";
 
 const { prisma } = createTestDatabase("guild-lifecycle-analytics-test");
 const SERVER_ID = testGuildId("780");
-
-function createAnalyticsFixture() {
-  const capture = vi.fn<ProductAnalytics["capture"]>(() => null);
-  const shutdown = vi.fn<ProductAnalytics["shutdown"]>(() => Promise.resolve());
-  return { analytics: { capture, shutdown }, capture, shutdown };
-}
 
 async function seedInstall(options?: {
   analyticsLifecycleTracked?: boolean;
@@ -391,6 +386,8 @@ describe("guild removal", () => {
     expect(
       await captureGuildRemoval(SERVER_ID, removedAt, prisma, {
         capture,
+        captureBucksMember: () => null,
+        captureBucksSystem: () => null,
         shutdown,
       }),
     ).toBe(true);

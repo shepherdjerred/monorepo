@@ -5,6 +5,7 @@ declare const WeeklyParlayLifecycleSchema: z.ZodObject<{
     openHour: z.ZodNumber;
     bettingCloseHour: z.ZodNumber;
     openActionBudgetMinutes: z.ZodNumber;
+    catchupMinimumBettingHours: z.ZodNumber;
     finalHour: z.ZodNumber;
     updateHour: z.ZodNumber;
     updateCount: z.ZodNumber;
@@ -16,6 +17,7 @@ export declare const WEEKLY_PARLAY_LIFECYCLE: {
     openHour: number;
     bettingCloseHour: number;
     openActionBudgetMinutes: number;
+    catchupMinimumBettingHours: number;
     finalHour: number;
     updateHour: number;
     updateCount: number;
@@ -23,4 +25,5 @@ export declare const WEEKLY_PARLAY_LIFECYCLE: {
 };
 export type WeeklyParlayLifecycle = z.infer<typeof WeeklyParlayLifecycleSchema>;
 export declare const WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS: number;
+export declare const WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_MS: number;
 export {};

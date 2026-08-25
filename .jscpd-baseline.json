@@ -1,0 +1,1957 @@
+{
+  "pairs": {
+    "packages/alert-dashboard/integration/sqlite.integration.test.ts|packages/alert-dashboard/integration/webhook-authority-cases.ts": {
+      "clones": 1,
+      "tokens": 134
+    },
+    "packages/alert-dashboard/src/client/dashboard-page.tsx|packages/alert-dashboard/src/client/history-page.tsx": {
+      "clones": 1,
+      "tokens": 99
+    },
+    "packages/alert-dashboard/src/client/main.tsx|packages/scout-for-lol/packages/evals/src/client/main.tsx": {
+      "clones": 1,
+      "tokens": 93
+    },
+    "packages/alert-dashboard/src/infrastructure/observability.ts|packages/discord-plays-core/src/observability/tracing.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/alert-dashboard/src/infrastructure/prisma-repository.ts|packages/alert-dashboard/src/infrastructure/prisma-webhook-ingest.ts": {
+      "clones": 1,
+      "tokens": 119
+    },
+    "packages/astro-opengraph-images/src/presets/custom-property.tsx|packages/astro-opengraph-images/src/presets/simple-blog.tsx": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/better-skill-capped/src/components/ui/badge.tsx|packages/scout-for-lol/packages/evals/src/components/ui/badge.tsx": {
+      "clones": 1,
+      "tokens": 146
+    },
+    "packages/better-skill-capped/src/components/ui/button.tsx|packages/scout-for-lol/packages/evals/src/components/ui/button.tsx": {
+      "clones": 1,
+      "tokens": 166
+    },
+    "packages/better-skill-capped/src/components/ui/card.tsx|packages/scout-for-lol/packages/evals/src/components/ui/card.tsx": {
+      "clones": 1,
+      "tokens": 139
+    },
+    "packages/better-skill-capped/src/lib/local-store.test.ts|packages/better-skill-capped/src/lib/safe-storage.test.ts": {
+      "clones": 1,
+      "tokens": 114
+    },
+    "packages/better-skill-capped/src/lib/local-store.test.ts|packages/better-skill-capped/src/storage/migrate.test.ts": {
+      "clones": 1,
+      "tokens": 116
+    },
+    "packages/birmel/e2e/music-playback.ts|packages/birmel/e2e/youtube-stream-resource.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/birmel/scripts/generate-prisma.ts|packages/starlight-karma-bot/scripts/generate-prisma.ts": {
+      "clones": 1,
+      "tokens": 254
+    },
+    "packages/birmel/scripts/smoke.ts|packages/scout-for-lol/packages/evals/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 142
+    },
+    "packages/birmel/scripts/smoke.ts|packages/starlight-karma-bot/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 127
+    },
+    "packages/birmel/scripts/smoke.ts|packages/streambot/scripts/smoke.ts": {
+      "clones": 2,
+      "tokens": 225
+    },
+    "packages/birmel/scripts/smoke.ts|packages/temporal/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 127
+    },
+    "packages/birmel/src/agent-runtime/contracts.ts|packages/birmel/src/agent-runtime/memory-extraction.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/birmel/src/agent-runtime/contracts.ts|packages/birmel/src/memory/schemas.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/birmel/src/agent-tools/tools/automation/browser.ts|packages/birmel/src/agent-tools/tools/automation/pinchtab-browser.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/channels.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/events.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/birmel/src/agent-tools/tools/discord/poll-actions.ts|packages/birmel/src/discord/polls/helpers.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/birmel/src/agent-tools/tools/discord/thread-actions.ts|packages/birmel/src/agent-tools/tools/discord/thread-actions.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/birmel/src/agent-tools/tools/elections/candidate-stats.ts|packages/birmel/src/agent-tools/tools/elections/election-actions.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/birmel/src/database/index.ts|packages/discord-plays-mario-kart/packages/backend/src/database/index.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/birmel/src/database/index.ts|packages/starlight-karma-bot/src/db/index.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/birmel/src/discord/polls/helpers.ts|packages/birmel/src/discord/polls/helpers.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/birmel/src/editor/github-pr.ts|packages/birmel/src/editor/repo-clone.ts": {
+      "clones": 1,
+      "tokens": 129
+    },
+    "packages/birmel/src/health/server.ts|packages/starlight-karma-bot/src/server/index.ts": {
+      "clones": 1,
+      "tokens": 93
+    },
+    "packages/birmel/src/observability/logs.integration.test.ts|packages/birmel/src/observability/tracing.integration.test.ts": {
+      "clones": 1,
+      "tokens": 128
+    },
+    "packages/birmel/src/observability/logs.integration.test.ts|packages/temporal/src/observability/logs.integration.test.ts": {
+      "clones": 2,
+      "tokens": 202
+    },
+    "packages/birmel/src/observability/metrics.ts|packages/scout-for-lol/packages/backend/src/metrics/feature-flags.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/birmel/src/observability/metrics.ts|packages/streambot/src/observability/metrics.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/birmel/src/observability/tracing.integration.test.ts|packages/temporal/src/observability/tracing.integration.test.ts": {
+      "clones": 1,
+      "tokens": 110
+    },
+    "packages/birmel/src/observability/tracing.ts|packages/scout-for-lol/packages/backend/src/observability/tracing.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/birmel/tests/context/context-bundle.test.ts|packages/birmel/tests/context/context-bundle.test.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/birmel/tests/database/migrations.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/benchmark-run.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/birmel/tests/database/migrations.test.ts|packages/homelab/src/cdk8s/scripts/r2-orphan-cleanup.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/birmel/tests/flow/turn-flow.test.ts|packages/birmel/tests/flow/turn-flow.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/birmel/tests/jobs/durable-job-recovery.test.ts|packages/birmel/tests/jobs/durable-job-recovery.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/birmel/tests/jobs/durable-jobs.test.ts|packages/birmel/tests/jobs/durable-jobs.test.ts": {
+      "clones": 4,
+      "tokens": 301
+    },
+    "packages/birmel/tests/jobs/job-effect-resolution.test.ts|packages/birmel/tests/jobs/job-effect-resolution.test.ts": {
+      "clones": 3,
+      "tokens": 225
+    },
+    "packages/birmel/tests/runtime/tools.test.ts|packages/birmel/tests/runtime/tools.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/birmel/tests/sessions/session-runtime.test.ts|packages/birmel/tests/sessions/session-runtime.test.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/code-review/src/github-issue-comments.ts|packages/code-review/src/github.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/code-review/src/github-review-threads.ts|packages/code-review/src/github-review-threads.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/config/src/resolver.test.ts|packages/config/src/resolver.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/config/src/resolver.test.ts|packages/config/src/snapshot.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/cooklang-for-obsidian/src/cook-parser.ts|packages/cooklang-for-obsidian/src/cook-parser.ts": {
+      "clones": 2,
+      "tokens": 185
+    },
+    "packages/discord-plays-mario-kart/packages/backend/scripts/e2e-audio.ts|packages/discord-plays-mario-kart/packages/backend/scripts/e2e-stream-latency.ts": {
+      "clones": 1,
+      "tokens": 111
+    },
+    "packages/discord-plays-mario-kart/packages/backend/scripts/e2e-audio.ts|packages/discord-plays-pokemon/packages/backend/src/stream/audio-transport.test.ts": {
+      "clones": 1,
+      "tokens": 107
+    },
+    "packages/discord-plays-mario-kart/packages/backend/scripts/e2e-press-to-glass.ts|packages/discord-plays-mario-kart/packages/backend/scripts/e2e-viewer-stats.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/discord-plays-mario-kart/packages/backend/scripts/smoke.ts|packages/discord-plays-pokemon/packages/backend/scripts/smoke.ts": {
+      "clones": 2,
+      "tokens": 401
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/config/index.ts|packages/discord-plays-pokemon/packages/backend/src/config/index.ts": {
+      "clones": 1,
+      "tokens": 238
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/config/schema.ts|packages/discord-plays-pokemon/packages/backend/src/config/schema.ts": {
+      "clones": 3,
+      "tokens": 505
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/discord/slashCommands/commands/screenshot.ts|packages/discord-plays-pokemon/packages/backend/src/discord/slashCommands/commands/screenshot.ts": {
+      "clones": 2,
+      "tokens": 182
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/discord/slashCommands/index.ts|packages/discord-plays-pokemon/packages/backend/src/discord/slashCommands/index.ts": {
+      "clones": 1,
+      "tokens": 123
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/emulator/png.test.ts|packages/discord-plays-mario-kart/packages/backend/src/webserver/dispatch.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/emulator/png.ts|packages/discord-plays-pokemon/packages/backend/src/emulator/png.ts": {
+      "clones": 2,
+      "tokens": 274
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/leaderboard/race-watcher.test.ts|packages/discord-plays-mario-kart/packages/backend/src/leaderboard/race-watcher.test.ts": {
+      "clones": 3,
+      "tokens": 215
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/lifecycle/mario-kart-driver.ts|packages/discord-plays-pokemon/packages/backend/src/lifecycle/pokemon-driver.ts": {
+      "clones": 1,
+      "tokens": 106
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/logger.ts|packages/discord-plays-pokemon/packages/backend/src/logger.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/webserver/index.ts|packages/discord-plays-pokemon/packages/backend/src/webserver/index.ts": {
+      "clones": 1,
+      "tokens": 96
+    },
+    "packages/discord-plays-mario-kart/packages/backend/src/webserver/socket.ts|packages/discord-plays-pokemon/packages/backend/src/webserver/socket.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/discord-plays-mario-kart/packages/common/src/model/login.ts|packages/discord-plays-pokemon/packages/common/src/model/login.ts": {
+      "clones": 1,
+      "tokens": 102
+    },
+    "packages/discord-plays-mario-kart/packages/common/src/model/screenshot.ts|packages/discord-plays-pokemon/packages/common/src/model/screenshot.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/discord-plays-mario-kart/packages/common/src/model/status.ts|packages/discord-plays-pokemon/packages/common/src/model/status.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/discord-plays-mario-kart/packages/frontend/src/analog-stick.tsx|packages/discord-plays-mario-kart/packages/frontend/src/controller-ui.tsx": {
+      "clones": 1,
+      "tokens": 105
+    },
+    "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx|packages/discord-plays-pokemon/packages/frontend/src/main.tsx": {
+      "clones": 2,
+      "tokens": 214
+    },
+    "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts|packages/discord-plays-pokemon/packages/frontend/src/model/connection.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/discord-plays-mario-kart/packages/frontend/src/model/notification.ts|packages/discord-plays-pokemon/packages/frontend/src/model/notification.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/discord-plays-mario-kart/packages/frontend/src/stories/button.tsx|packages/discord-plays-pokemon/packages/frontend/src/stories/button.tsx": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/discord-plays-mario-kart/packages/frontend/src/stories/notification.tsx|packages/discord-plays-pokemon/packages/frontend/src/stories/notification.tsx": {
+      "clones": 1,
+      "tokens": 373
+    },
+    "packages/discord-plays-mario-kart/packages/frontend/src/stories/notifications.tsx|packages/discord-plays-pokemon/packages/frontend/src/stories/notifications.tsx": {
+      "clones": 1,
+      "tokens": 151
+    },
+    "packages/discord-plays-mario-kart/packages/frontend/src/util.ts|packages/discord-plays-pokemon/packages/frontend/src/util.ts": {
+      "clones": 1,
+      "tokens": 148
+    },
+    "packages/discord-plays-pokemon/packages/backend/scripts/audio-e2e.ts|packages/discord-plays-pokemon/packages/backend/src/emulator/audio/audio-fingerprint.test.ts": {
+      "clones": 1,
+      "tokens": 109
+    },
+    "packages/discord-plays-pokemon/packages/backend/scripts/goal-benchmark-worker.ts|packages/discord-plays-pokemon/packages/backend/src/goal/benchmark-worker-boot-readiness.ts": {
+      "clones": 2,
+      "tokens": 235
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/config/schema.test.ts|packages/discord-plays-pokemon/packages/backend/src/config/schema.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/emulator/bios.ts|packages/discord-plays-pokemon/packages/backend/src/emulator/bios.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/emulator/emulator.ts|packages/discord-plays-pokemon/packages/backend/src/emulator/engine-map-topology.ts": {
+      "clones": 1,
+      "tokens": 102
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/emulator/engine-observation.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-observation.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/game/events/pokemon-struct.test.ts|packages/discord-plays-pokemon/packages/backend/src/game/events/pokemon-struct.ts": {
+      "clones": 1,
+      "tokens": 248
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/benchmark-codex-telemetry.ts|packages/llm-observability/src/codex-trace.ts": {
+      "clones": 1,
+      "tokens": 111
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/benchmark-evaluator.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/catch-evidence.test.ts": {
+      "clones": 1,
+      "tokens": 195
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/benchmark-harness.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/benchmark-harness.test.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/benchmark-run.ts|packages/discord-plays-pokemon/packages/backend/src/goal/benchmark-run.ts": {
+      "clones": 1,
+      "tokens": 184
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/benchmark-run.ts|packages/toolkit/test/lib/git-conflicts.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/e2e-goal.integration.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/game-battle-control.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-battle-control.test.ts": {
+      "clones": 6,
+      "tokens": 565
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/game-battle-control.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-controller-interact.test.ts": {
+      "clones": 1,
+      "tokens": 98
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/game-battle-control.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-controller.test.ts": {
+      "clones": 1,
+      "tokens": 125
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/game-controller.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-controller.test.ts": {
+      "clones": 9,
+      "tokens": 1148
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/game-exit-navigation-blocks.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-exit-navigation.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/game-exit-navigation.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-navigation.ts": {
+      "clones": 2,
+      "tokens": 173
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/goal-input-lease.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts": {
+      "clones": 1,
+      "tokens": 129
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts": {
+      "clones": 4,
+      "tokens": 391
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/knowledge.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/knowledge.test.ts": {
+      "clones": 2,
+      "tokens": 210
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/knowledge.ts|packages/discord-plays-pokemon/scripts/knowledge/model.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/stream/orchestrator-machine.test.ts|packages/discord-plays-pokemon/packages/backend/src/stream/orchestrator-machine.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/stream/orchestrator-machine.test.ts|packages/discord-plays-pokemon/packages/backend/src/stream/stream-machine.test.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/stream/orchestrator-machine.test.ts|packages/discord-stream-lifecycle/test/desired-stream-machine.test.ts": {
+      "clones": 6,
+      "tokens": 779
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/stream/stream-machine.test.ts|packages/discord-stream-lifecycle/test/raw-go-live-machine.test.ts": {
+      "clones": 8,
+      "tokens": 997
+    },
+    "packages/discord-plays-pokemon/scripts/generate-battle-data.ts|packages/discord-plays-pokemon/scripts/generate-battle-data.ts": {
+      "clones": 1,
+      "tokens": 112
+    },
+    "packages/discord-stream-lifecycle/src/raw-go-live-machine.ts|packages/discord-stream-lifecycle/src/raw-go-live-machine.ts": {
+      "clones": 3,
+      "tokens": 312
+    },
+    "packages/discord-stream-lifecycle/src/types.ts|packages/discord-stream-lifecycle/src/types.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/discord-stream-lifecycle/test/raw-go-live-machine.test.ts|packages/discord-stream-lifecycle/test/raw-go-live-machine.test.ts": {
+      "clones": 3,
+      "tokens": 250
+    },
+    "packages/discord-video-stream/src/client/processing/SPSVUIRewriter.ts|packages/discord-video-stream/src/client/processing/SPSVUIRewriter.ts": {
+      "clones": 1,
+      "tokens": 160
+    },
+    "packages/discord-video-stream/test/newApi.filters.test.ts|packages/discord-video-stream/test/newApi.filters.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/discord-video-stream/test/voice-audio.test.ts|packages/discord-video-stream/test/voice-audio.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/dotfiles/bin/git_cleanup_core.ts|packages/homelab/scripts/migration-core.ts": {
+      "clones": 1,
+      "tokens": 155
+    },
+    "packages/eslint-config/src/configs/base.ts|packages/scout-for-lol/eslint.config.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/eslint-config/src/rules/no-redundant-zod-parse.ts|packages/eslint-config/src/rules/zod-schema-naming.ts": {
+      "clones": 1,
+      "tokens": 115
+    },
+    "packages/eslint-config/src/rules/prefer-date-fns.ts|packages/eslint-config/src/rules/prefer-date-fns.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/home-assistant/src/codegen/introspect.ts|packages/home-assistant/src/codegen/introspect.ts": {
+      "clones": 1,
+      "tokens": 118
+    },
+    "packages/home-assistant/test/ws.test.ts|packages/home-assistant/test/ws.test.ts": {
+      "clones": 1,
+      "tokens": 108
+    },
+    "packages/homelab/scripts/check-suppressions.ts|packages/scout-for-lol/scripts/check-suppressions.ts": {
+      "clones": 1,
+      "tokens": 101
+    },
+    "packages/homelab/src/cdk8s/grafana/buildkite-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts": {
+      "clones": 3,
+      "tokens": 281
+    },
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-panels.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/homelab/src/cdk8s/grafana/ha-workflow-dashboard.ts|packages/homelab/src/cdk8s/grafana/smartctl-panels.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/homelab/src/cdk8s/grafana/ha-workflow-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
+      "clones": 4,
+      "tokens": 290
+    },
+    "packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts": {
+      "clones": 2,
+      "tokens": 163
+    },
+    "packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/velero-panels.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/homelab/src/cdk8s/grafana/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard-scheduled-report-panels.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/homelab/src/cdk8s/grafana/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/homelab/src/cdk8s/grafana/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
+      "clones": 1,
+      "tokens": 141
+    },
+    "packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts": {
+      "clones": 3,
+      "tokens": 264
+    },
+    "packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts|packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/homelab/src/cdk8s/grafana/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/homelab/src/cdk8s/grafana/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-panels.ts": {
+      "clones": 1,
+      "tokens": 101
+    },
+    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts": {
+      "clones": 3,
+      "tokens": 211
+    },
+    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/homelab/src/cdk8s/src/apps/1password.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/1password.ts": {
+      "clones": 2,
+      "tokens": 157
+    },
+    "packages/homelab/src/cdk8s/src/apps/argocd.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/argocd.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/homelab/src/cdk8s/src/argocd-api-contract.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/homelab/src/cdk8s/src/argocd-application-readiness.ts|packages/homelab/src/cdk8s/src/argocd-application-readiness.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts": {
+      "clones": 7,
+      "tokens": 589
+    },
+    "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
+      "clones": 1,
+      "tokens": 123
+    },
+    "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts": {
+      "clones": 5,
+      "tokens": 437
+    },
+    "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
+      "clones": 1,
+      "tokens": 142
+    },
+    "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
+      "clones": 8,
+      "tokens": 763
+    },
+    "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
+      "clones": 12,
+      "tokens": 1435
+    },
+    "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
+      "clones": 3,
+      "tokens": 258
+    },
+    "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
+      "clones": 6,
+      "tokens": 553
+    },
+    "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/homelab/src/cdk8s/src/argocd-script-support.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
+      "clones": 2,
+      "tokens": 239
+    },
+    "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
+      "clones": 11,
+      "tokens": 1097
+    },
+    "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
+      "clones": 2,
+      "tokens": 247
+    },
+    "packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
+      "clones": 4,
+      "tokens": 478
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/flipt.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/freshrss.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts": {
+      "clones": 1,
+      "tokens": 99
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
+      "clones": 1,
+      "tokens": 142
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts": {
+      "clones": 1,
+      "tokens": 118
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout-evals.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/syncthing.ts": {
+      "clones": 1,
+      "tokens": 107
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
+      "clones": 1,
+      "tokens": 126
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts": {
+      "clones": 1,
+      "tokens": 129
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts": {
+      "clones": 1,
+      "tokens": 99
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/freshrss.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/temporal/agent-worker-network-policy.ts": {
+      "clones": 1,
+      "tokens": 118
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts": {
+      "clones": 2,
+      "tokens": 235
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts": {
+      "clones": 3,
+      "tokens": 301
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout-evals.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/syncthing.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
+      "clones": 1,
+      "tokens": 108
+    },
+    "packages/homelab/src/cdk8s/src/misc/zfs-nvme-volume.ts|packages/homelab/src/cdk8s/src/misc/zfs-sata-volume.ts": {
+      "clones": 1,
+      "tokens": 104
+    },
+    "packages/homelab/src/cdk8s/src/resources/argo-applications/minecraft-shuxin.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/minecraft-sjerred.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/homelab/src/cdk8s/src/resources/argo-applications/minecraft-shuxin.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/minecraft-tsmc.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/homelab/src/cdk8s/src/resources/argo-applications/minecraft-sjerred.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/minecraft-tsmc.ts": {
+      "clones": 2,
+      "tokens": 170
+    },
+    "packages/homelab/src/cdk8s/src/resources/bugsink/index.ts|packages/homelab/src/cdk8s/src/resources/bugsink/index.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/homelab/src/cdk8s/src/resources/flipt/index.test.ts|packages/homelab/src/cdk8s/src/resources/freshrss.test.ts": {
+      "clones": 1,
+      "tokens": 118
+    },
+    "packages/homelab/src/cdk8s/src/resources/flipt/index.test.ts|packages/homelab/src/cdk8s/src/resources/stash/index.test.ts": {
+      "clones": 2,
+      "tokens": 201
+    },
+    "packages/homelab/src/cdk8s/src/resources/home/eufy-security-ws.ts|packages/homelab/src/cdk8s/src/resources/home/zwave-js-ui.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/homelab/src/cdk8s/src/resources/mario-kart.ts|packages/homelab/src/cdk8s/src/resources/pokemon.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/resource-monitoring.test.ts|packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/resource-monitoring.test.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/homelab/src/cdk8s/src/resources/monitoring/nvme-metrics.ts|packages/homelab/src/cdk8s/src/resources/monitoring/smartctl.ts": {
+      "clones": 1,
+      "tokens": 102
+    },
+    "packages/homelab/src/cdk8s/src/resources/monitoring/nvme-metrics.ts|packages/homelab/src/cdk8s/src/resources/monitoring/zfs-snapshots.ts": {
+      "clones": 2,
+      "tokens": 186
+    },
+    "packages/homelab/src/cdk8s/src/resources/monitoring/nvme-metrics.ts|packages/homelab/src/cdk8s/src/resources/monitoring/zfs-zpool.ts": {
+      "clones": 2,
+      "tokens": 206
+    },
+    "packages/homelab/src/cdk8s/src/resources/postgres/bugsink-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/homelab/src/cdk8s/src/resources/postgres/bugsink-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/temporal-db.ts": {
+      "clones": 1,
+      "tokens": 128
+    },
+    "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/temporal-db.ts": {
+      "clones": 1,
+      "tokens": 107
+    },
+    "packages/homelab/src/cdk8s/src/resources/relay/index.ts|packages/homelab/src/cdk8s/src/resources/temporal/ui.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts|packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/homelab/src/cdk8s/src/resources/torrents/radarr.ts|packages/homelab/src/cdk8s/src/resources/torrents/sonarr.ts": {
+      "clones": 2,
+      "tokens": 146
+    },
+    "packages/homelab/src/helm-types/src/cli.test.ts|packages/homelab/src/helm-types/src/cli.test.ts": {
+      "clones": 3,
+      "tokens": 222
+    },
+    "packages/homelab/src/helm-types/src/code-generator.ts|packages/homelab/src/helm-types/src/interface-generator.ts": {
+      "clones": 2,
+      "tokens": 934
+    },
+    "packages/homelab/src/helm-types/src/comment-parser.test.ts|packages/homelab/src/helm-types/src/yaml-comments.test.ts": {
+      "clones": 1,
+      "tokens": 237
+    },
+    "packages/homelab/src/helm-types/src/type-converter-helpers.ts|packages/homelab/src/helm-types/src/type-inference.ts": {
+      "clones": 1,
+      "tokens": 290
+    },
+    "packages/homelab/src/helm-types/src/type-converter.ts|packages/homelab/src/helm-types/src/type-inference.ts": {
+      "clones": 6,
+      "tokens": 1346
+    },
+    "packages/llm-observability/src/archive-uploader.ts|packages/llm-observability/test/e2e/signed-fetch.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/llm-observability/src/archive-uploader.ts|packages/temporal/src/shared/s3.ts": {
+      "clones": 4,
+      "tokens": 447
+    },
+    "packages/llm-observability/src/span-helpers.ts|packages/temporal/src/observability/tracing.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/llm-runtime/src/metrics.ts|packages/llm-runtime/src/metrics.ts": {
+      "clones": 1,
+      "tokens": 145
+    },
+    "packages/llm-runtime/test/attributed-fetch.test.ts|packages/llm-runtime/test/attributed-fetch.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/llm-runtime/test/runtime.test.ts|packages/llm-runtime/test/runtime.test.ts": {
+      "clones": 5,
+      "tokens": 501
+    },
+    "packages/macos-ai-subscription-tracker/scripts/verify-app.ts|packages/macos-ai-subscription-tracker/scripts/verify-notarized-app.ts": {
+      "clones": 1,
+      "tokens": 192
+    },
+    "packages/monarch/src/lib/amazon/classify.ts|packages/monarch/src/lib/costco/classify.ts": {
+      "clones": 1,
+      "tokens": 101
+    },
+    "packages/monarch/src/lib/amazon/enrich.ts|packages/monarch/src/lib/costco/enrich.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/monarch/src/lib/amazon/matcher.ts|packages/monarch/src/lib/costco/matcher.ts": {
+      "clones": 2,
+      "tokens": 190
+    },
+    "packages/monarch/src/lib/amazon/scraper.ts|packages/monarch/src/lib/costco/scraper.ts": {
+      "clones": 1,
+      "tokens": 84
+    },
+    "packages/monarch/src/lib/apple/matcher.ts|packages/monarch/src/lib/costco/matcher.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/monarch/src/lib/classifier/prompt.test.ts|packages/monarch/src/lib/classifier/prompt.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/monarch/src/lib/classifier/tier2.ts|packages/monarch/src/lib/classifier/tier3.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/monarch/src/lib/display.test.ts|packages/monarch/src/lib/display.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/monarch/src/lib/display.test.ts|packages/monarch/src/lib/enrichment/pipeline.ts": {
+      "clones": 1,
+      "tokens": 102
+    },
+    "packages/monarch/src/lib/scl/parser.ts|packages/monarch/src/lib/venmo/parser.ts": {
+      "clones": 1,
+      "tokens": 110
+    },
+    "packages/monarch/src/lib/usaa/classify.ts|packages/monarch/src/lib/usaa/enrich.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/openrouter-broadcast-ingest/test/app.test.ts|packages/openrouter-broadcast-ingest/test/app.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/pr-fleet-controller/src/controller-telemetry.ts|packages/pr-fleet-controller/src/controller-telemetry.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/pr-fleet-controller/src/replay-correlation.ts|packages/pr-fleet-controller/src/run-inspection.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/pr-fleet-controller/test/controller-worker-settlement.test.ts|packages/pr-fleet-controller/test/controller.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/pr-fleet-controller/test/controller.test.ts|packages/pr-fleet-controller/test/controller.test.ts": {
+      "clones": 8,
+      "tokens": 913
+    },
+    "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/operator-question-replay.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/replay-boundary-regressions.test.ts": {
+      "clones": 1,
+      "tokens": 115
+    },
+    "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/run-bundle.test.ts": {
+      "clones": 2,
+      "tokens": 192
+    },
+    "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/run-recorder-failure.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/pr-fleet-controller/test/operator-review-regressions.test.ts|packages/pr-fleet-controller/test/operator-review-regressions.test.ts": {
+      "clones": 2,
+      "tokens": 160
+    },
+    "packages/pr-fleet-controller/test/operator-review-regressions.test.ts|packages/pr-fleet-controller/test/replay-boundary-regressions.test.ts": {
+      "clones": 1,
+      "tokens": 84
+    },
+    "packages/pr-fleet-controller/test/operator-review-regressions.test.ts|packages/pr-fleet-controller/test/worktree.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/pr-fleet-controller/test/replay-boundary-regressions.test.ts|packages/pr-fleet-controller/test/replay-boundary-regressions.test.ts": {
+      "clones": 3,
+      "tokens": 284
+    },
+    "packages/pr-fleet-controller/test/replay-boundary-regressions.test.ts|packages/pr-fleet-controller/test/run-bundle.test.ts": {
+      "clones": 4,
+      "tokens": 300
+    },
+    "packages/pr-fleet-controller/test/run-bundle.test.ts|packages/pr-fleet-controller/test/run-bundle.test.ts": {
+      "clones": 3,
+      "tokens": 281
+    },
+    "packages/pr-fleet-controller/test/run-recorder-failure.test.ts|packages/pr-fleet-controller/test/run-recorder-failure.test.ts": {
+      "clones": 2,
+      "tokens": 180
+    },
+    "packages/pr-fleet-controller/test/worktree.test.ts|packages/pr-fleet-controller/test/worktree.test.ts": {
+      "clones": 2,
+      "tokens": 203
+    },
+    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/edit-account-dialog.tsx": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/link-discord-dialog.tsx": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/merge-players-dialog.tsx": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/rename-player-dialog.tsx": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/scout-for-lol/packages/app/src/components/add-account-dialog.tsx|packages/scout-for-lol/packages/app/src/components/transfer-account-dialog.tsx": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/scout-for-lol/packages/app/src/components/competition-form-fields.tsx|packages/scout-for-lol/packages/app/src/components/report-form-fields.tsx": {
+      "clones": 1,
+      "tokens": 84
+    },
+    "packages/scout-for-lol/packages/app/src/lib/explore-run-analytics.test.ts|packages/scout-for-lol/packages/app/src/lib/explore-run-markers.test.ts": {
+      "clones": 1,
+      "tokens": 147
+    },
+    "packages/scout-for-lol/packages/app/src/lib/subscription-result-messages.ts|packages/scout-for-lol/packages/app/src/lib/subscription-result-messages.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/scout-for-lol/packages/app/src/routes/onboarding-wizard.tsx|packages/scout-for-lol/packages/app/src/routes/onboarding-wizard.tsx": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/scout-for-lol/packages/backend/scripts/discover-marketing-showcase.ts|packages/scout-for-lol/packages/backend/scripts/generate-marketing-showcase.ts": {
+      "clones": 1,
+      "tokens": 296
+    },
+    "packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/update-queue-windows.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/scout-for-lol/packages/backend/scripts/lane-prior-s3.ts|packages/scout-for-lol/packages/backend/scripts/queue-activity-s3.ts": {
+      "clones": 2,
+      "tokens": 563
+    },
+    "packages/scout-for-lol/packages/backend/scripts/register-tournament-provider.ts|packages/scout-for-lol/packages/backend/scripts/tournament-stub-smoke.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlay.integration.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/announce.test.ts|packages/scout-for-lol/packages/backend/src/betting/announce.test.ts": {
+      "clones": 1,
+      "tokens": 134
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/bet-button.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/concurrent-race.integration.test.ts": {
+      "clones": 1,
+      "tokens": 147
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/concurrent-race.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/place-bet.integration.test.ts": {
+      "clones": 1,
+      "tokens": 170
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/earnings.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/earnings.integration.test.ts": {
+      "clones": 1,
+      "tokens": 97
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/message-refresh.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/message-refresh.integration.test.ts": {
+      "clones": 2,
+      "tokens": 202
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/message-refresh.ts|packages/scout-for-lol/packages/backend/src/betting/parlay-refresh.ts": {
+      "clones": 1,
+      "tokens": 101
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/parlay-criteria.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlay-criteria.test.ts": {
+      "clones": 3,
+      "tokens": 237
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/parlay-place-bet.ts|packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-bet.ts": {
+      "clones": 3,
+      "tokens": 251
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/parlay.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/parlay.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/sweep.integration.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/peek-pass.ts|packages/scout-for-lol/packages/backend/src/betting/peek-pass.ts": {
+      "clones": 1,
+      "tokens": 150
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/place-bet.ts|packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-bet.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/pool-open.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/prediction-capture.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/prediction.test.ts|packages/scout-for-lol/packages/backend/src/betting/prediction.test.ts": {
+      "clones": 1,
+      "tokens": 121
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
+      "clones": 3,
+      "tokens": 226
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/sweep.integration.test.ts": {
+      "clones": 1,
+      "tokens": 93
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/sweep.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/sweep.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-control.ts|packages/temporal/src/activities/scout-weekly-parlay.ts": {
+      "clones": 1,
+      "tokens": 136
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-period.ts|packages/temporal/src/activities/scout-weekly-parlay.ts": {
+      "clones": 3,
+      "tokens": 329
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-runtime.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/weekly-parlay-runtime.integration.test.ts": {
+      "clones": 2,
+      "tokens": 159
+    },
+    "packages/scout-for-lol/packages/backend/src/database/competition.integration.test.ts|packages/scout-for-lol/packages/backend/src/database/competition.integration.test.ts": {
+      "clones": 3,
+      "tokens": 304
+    },
+    "packages/scout-for-lol/packages/backend/src/database/competition/participants.integration.test.ts|packages/scout-for-lol/packages/backend/src/database/competition/participants.integration.test.ts": {
+      "clones": 6,
+      "tokens": 547
+    },
+    "packages/scout-for-lol/packages/backend/src/database/competition/permissions.integration.test.ts|packages/scout-for-lol/packages/backend/src/database/competition/permissions.integration.test.ts": {
+      "clones": 1,
+      "tokens": 85
+    },
+    "packages/scout-for-lol/packages/backend/src/database/competition/queries.integration.test.ts|packages/scout-for-lol/packages/backend/src/database/competition/queries.integration.test.ts": {
+      "clones": 2,
+      "tokens": 193
+    },
+    "packages/scout-for-lol/packages/backend/src/database/competition/validation.test.ts|packages/scout-for-lol/packages/backend/src/database/competition/validation.test.ts": {
+      "clones": 5,
+      "tokens": 415
+    },
+    "packages/scout-for-lol/packages/backend/src/database/guild-permission-errors.test.ts|packages/scout-for-lol/packages/backend/src/database/guild-permission-errors.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/scout-for-lol/packages/backend/src/database/season-seeder.ts|packages/scout-for-lol/packages/backend/src/testing/test-template.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.test.ts|packages/scout-for-lol/packages/backend/src/discord/commands/help.test.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.test.ts|packages/scout-for-lol/packages/backend/src/discord/rest.test.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts|packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts": {
+      "clones": 1,
+      "tokens": 96
+    },
+    "packages/scout-for-lol/packages/backend/src/discord/events/guild-create-install.test.ts|packages/scout-for-lol/packages/backend/src/discord/events/guild-create-install.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/scout-for-lol/packages/backend/src/discord/events/guild-create.test.ts|packages/scout-for-lol/packages/backend/src/discord/events/guild-create.test.ts": {
+      "clones": 2,
+      "tokens": 260
+    },
+    "packages/scout-for-lol/packages/backend/src/discord/rest.test.ts|packages/scout-for-lol/packages/backend/src/discord/rest.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/scout-for-lol/packages/backend/src/discord/scout/visualization.test.ts|packages/scout-for-lol/packages/backend/src/discord/scout/visualization.test.ts": {
+      "clones": 2,
+      "tokens": 172
+    },
+    "packages/scout-for-lol/packages/backend/src/discord/scout/visualization.ts|packages/scout-for-lol/packages/backend/src/discord/scout/visualization.ts": {
+      "clones": 2,
+      "tokens": 158
+    },
+    "packages/scout-for-lol/packages/backend/src/discord/utils/permissions.test.ts|packages/scout-for-lol/packages/backend/src/discord/utils/permissions.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/scout-for-lol/packages/backend/src/explore/http-auth.ts|packages/scout-for-lol/packages/backend/src/reports/ai/http-route.ts": {
+      "clones": 1,
+      "tokens": 203
+    },
+    "packages/scout-for-lol/packages/backend/src/explore/http-auth.ts|packages/scout-for-lol/packages/backend/src/trpc/trpc.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/scout-for-lol/packages/backend/src/explore/http-route.e2e.test.ts|packages/scout-for-lol/packages/backend/src/explore/http-route.e2e.test.ts": {
+      "clones": 1,
+      "tokens": 117
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/analysis.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/analysis.integration.test.ts": {
+      "clones": 1,
+      "tokens": 85
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/chart-builder.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/chart-builder.test.ts": {
+      "clones": 1,
+      "tokens": 224
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/leaderboard-ranking.ts|packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.test.ts": {
+      "clones": 1,
+      "tokens": 127
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.integration.test.ts": {
+      "clones": 3,
+      "tokens": 551
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.test.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.ts|packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.integration.test.ts": {
+      "clones": 1,
+      "tokens": 117
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.test.ts": {
+      "clones": 15,
+      "tokens": 1483
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.test.ts|packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": {
+      "clones": 2,
+      "tokens": 242
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/snapshots.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/snapshots.integration.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/scout-for-lol/packages/backend/src/league/competition/snapshots.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/competition/lifecycle.integration.test.ts": {
+      "clones": 1,
+      "tokens": 161
+    },
+    "packages/scout-for-lol/packages/backend/src/league/initial-history/enqueue.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/initial-history/enqueue.integration.test.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/scout-for-lol/packages/backend/src/league/model/__tests__/arena.match.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/model/__tests__/arena.match.integration.test.ts": {
+      "clones": 2,
+      "tokens": 198
+    },
+    "packages/scout-for-lol/packages/backend/src/league/model/match.ts|packages/scout-for-lol/packages/backend/src/league/model/match.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/scout-for-lol/packages/backend/src/league/model/match.ts|packages/scout-for-lol/packages/report/src/match.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/scout-for-lol/packages/backend/src/league/review/__tests__/generator.test.ts|packages/scout-for-lol/packages/backend/src/league/review/__tests__/generator.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/evals/src/materialization/openrouter-client.ts": {
+      "clones": 1,
+      "tokens": 108
+    },
+    "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/openrouter-clients.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts|packages/scout-for-lol/packages/backend/src/storage/s3-query.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/cleanup/prune-players.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/cleanup/prune-players.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/competition/daily-update.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/competition/daily-update.integration.test.ts": {
+      "clones": 5,
+      "tokens": 387
+    },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/competition/lifecycle.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/competition/lifecycle.integration.test.ts": {
+      "clones": 6,
+      "tokens": 641
+    },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts": {
+      "clones": 3,
+      "tokens": 272
+    },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-image.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-svg.test.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/prematch/__tests__/active-game-detection.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/prematch/__tests__/active-game-detection.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/prematch/prematch-loading-screen.ts|packages/scout-for-lol/packages/backend/src/league/tasks/prematch/prematch-notification.ts": {
+      "clones": 1,
+      "tokens": 124
+    },
+    "packages/scout-for-lol/packages/backend/src/lib/player-admin/account-mutations.test.ts|packages/scout-for-lol/packages/backend/src/lib/player-admin/player-mutations.test.ts": {
+      "clones": 2,
+      "tokens": 305
+    },
+    "packages/scout-for-lol/packages/backend/src/lib/player-admin/account-mutations.ts|packages/scout-for-lol/packages/backend/src/lib/player-admin/account-mutations.ts": {
+      "clones": 1,
+      "tokens": 117
+    },
+    "packages/scout-for-lol/packages/backend/src/lib/player-admin/player-mutations.test.ts|packages/scout-for-lol/packages/backend/src/lib/subscription/add-channel-move.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/scout-for-lol/packages/backend/src/lib/subscription/filters.ts|packages/scout-for-lol/packages/backend/src/lib/subscription/mute.ts": {
+      "clones": 1,
+      "tokens": 112
+    },
+    "packages/scout-for-lol/packages/backend/src/metrics/feature-flags.ts|packages/starlight-karma-bot/src/metrics.ts": {
+      "clones": 1,
+      "tokens": 98
+    },
+    "packages/scout-for-lol/packages/backend/src/observability/tracing.ts|packages/temporal/src/observability/tracing.ts": {
+      "clones": 3,
+      "tokens": 457
+    },
+    "packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts|packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts": {
+      "clones": 2,
+      "tokens": 187
+    },
+    "packages/scout-for-lol/packages/backend/src/report-lake/schema.test.ts|packages/scout-for-lol/packages/backend/src/report-lake/schema.ts": {
+      "clones": 1,
+      "tokens": 102
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/ai/http-route.e2e.test.ts|packages/scout-for-lol/packages/backend/src/trpc/image-routes.e2e.test.ts": {
+      "clones": 1,
+      "tokens": 108
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/duckdb/compile.ts|packages/scout-for-lol/packages/backend/src/reports/duckdb/compile.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/duckdb/execute.ts|packages/scout-for-lol/packages/backend/src/reports/duckdb/execute.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/identity.integration.test.ts|packages/scout-for-lol/packages/backend/src/reports/identity.integration.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/output-analytics.ts|packages/scout-for-lol/packages/backend/src/reports/output.ts": {
+      "clones": 4,
+      "tokens": 425
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/output.ts|packages/scout-for-lol/packages/backend/src/reports/output.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/query-engine.ts|packages/scout-for-lol/packages/backend/src/reports/query-engine.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/temporal-comparison.test.ts|packages/scout-for-lol/packages/backend/src/reports/temporal-comparison.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/temporal-labels.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-calendar-option.ts": {
+      "clones": 1,
+      "tokens": 122
+    },
+    "packages/scout-for-lol/packages/backend/src/reports/visualization-snapshot.test.ts|packages/scout-for-lol/packages/backend/src/reports/visualization-snapshot.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/scout-for-lol/packages/backend/src/showcase/manifest.ts|packages/scout-for-lol/packages/frontend/src/data/scout-showcase.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-helpers.ts|packages/scout-for-lol/packages/backend/src/storage/s3-prematch.ts": {
+      "clones": 2,
+      "tokens": 161
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-image.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-image.test.ts": {
+      "clones": 5,
+      "tokens": 382
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-image.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-svg.test.ts": {
+      "clones": 2,
+      "tokens": 312
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard-image.ts|packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard-image.ts|packages/scout-for-lol/packages/backend/src/storage/s3-report-run.ts": {
+      "clones": 1,
+      "tokens": 98
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard.ts|packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-prematch-data.no-bucket.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-prematch-data.test.ts": {
+      "clones": 1,
+      "tokens": 143
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-query.integration.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-query.integration.test.ts": {
+      "clones": 2,
+      "tokens": 150
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-query.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3-report-run.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-report-run.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/scout-for-lol/packages/backend/src/storage/s3.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3.test.ts": {
+      "clones": 13,
+      "tokens": 1080
+    },
+    "packages/scout-for-lol/packages/backend/src/trpc/auth-web.ts|packages/scout-for-lol/packages/backend/src/trpc/context.ts": {
+      "clones": 1,
+      "tokens": 131
+    },
+    "packages/scout-for-lol/packages/backend/src/trpc/router/competition-analysis-procedures.ts|packages/scout-for-lol/packages/backend/src/trpc/router/competition.router.ts": {
+      "clones": 1,
+      "tokens": 101
+    },
+    "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/sound-pack.router.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/scout-for-lol/packages/backend/src/trpc/router/sound-pack.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/sound-pack.router.ts": {
+      "clones": 2,
+      "tokens": 194
+    },
+    "packages/scout-for-lol/packages/backend/src/trpc/router/subscription-filters.router.test.ts|packages/scout-for-lol/packages/backend/src/trpc/router/subscription-mute.router.test.ts": {
+      "clones": 1,
+      "tokens": 156
+    },
+    "packages/scout-for-lol/packages/data/scripts/update-data-dragon-schemas.ts|packages/scout-for-lol/packages/data/src/data-dragon/item.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/scout-for-lol/packages/data/src/example/example.ts|packages/scout-for-lol/packages/report/src/html/index.test.ts": {
+      "clones": 5,
+      "tokens": 424
+    },
+    "packages/scout-for-lol/packages/data/src/lane-priors/eval.ts|packages/scout-for-lol/packages/data/src/lane-priors/schema.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/scout-for-lol/packages/data/src/league/raw-missions.schema.ts|packages/scout-for-lol/packages/data/src/model/arena/arena.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/scout-for-lol/packages/data/src/model/bryan-bucks.ts|packages/scout-for-lol/packages/data/src/model/bryan-bucks.ts": {
+      "clones": 2,
+      "tokens": 153
+    },
+    "packages/scout-for-lol/packages/data/src/model/competition.test.ts|packages/scout-for-lol/packages/data/src/model/competition.test.ts": {
+      "clones": 14,
+      "tokens": 1582
+    },
+    "packages/scout-for-lol/packages/data/src/model/explore.ts|packages/scout-for-lol/packages/data/src/model/report-ai.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/scout-for-lol/packages/data/src/model/loading-screen.test.ts|packages/scout-for-lol/packages/data/src/model/loading-screen.test.ts": {
+      "clones": 1,
+      "tokens": 84
+    },
+    "packages/scout-for-lol/packages/data/src/review/timeline-pipeline.test.ts|packages/scout-for-lol/packages/evals/src/materialization/s3-source.test.ts": {
+      "clones": 1,
+      "tokens": 97
+    },
+    "packages/scout-for-lol/packages/evals/scripts/smoke.ts|packages/starlight-karma-bot/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/scout-for-lol/packages/evals/scripts/smoke.ts|packages/tasknotes-server/scripts/smoke.ts": {
+      "clones": 4,
+      "tokens": 464
+    },
+    "packages/scout-for-lol/packages/evals/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
+      "clones": 2,
+      "tokens": 253
+    },
+    "packages/scout-for-lol/packages/frontend/src/components/review-tool/history-panel.tsx|packages/scout-for-lol/packages/frontend/src/components/review-tool/ratings-analytics.tsx": {
+      "clones": 1,
+      "tokens": 151
+    },
+    "packages/scout-for-lol/packages/frontend/src/lib/review-tool/history-manager.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/indexeddb.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/scout-for-lol/packages/report/src/html/competition-chart.ts|packages/scout-for-lol/packages/report/src/html/competition-chart.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/scout-for-lol/packages/report/src/html/index.test.ts|packages/scout-for-lol/packages/report/src/html/index.test.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/scout-for-lol/packages/report/src/html/ranked-banner/banner.integration.test.ts|packages/scout-for-lol/packages/report/src/html/ranked-square/square.integration.test.ts": {
+      "clones": 1,
+      "tokens": 104
+    },
+    "packages/scout-for-lol/packages/report/src/html/ranked-banner/report.tsx|packages/scout-for-lol/packages/report/src/html/ranked-square/report.tsx": {
+      "clones": 1,
+      "tokens": 97
+    },
+    "packages/scout-for-lol/packages/report/src/html/visualization-snapshot-option.test.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-option.test.ts": {
+      "clones": 4,
+      "tokens": 326
+    },
+    "packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/rule-editor.tsx|packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/sound-pool-editor.tsx": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/streambot/e2e/run.ts|packages/streambot/e2e/voice-recovery.ts": {
+      "clones": 1,
+      "tokens": 129
+    },
+    "packages/streambot/integration/subtitles.integration.test.ts|packages/streambot/integration/subtitles.integration.test.ts": {
+      "clones": 1,
+      "tokens": 137
+    },
+    "packages/streambot/scripts/voice-harness-evaluate.ts|packages/streambot/scripts/voice-human-holdout-evaluate.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/streambot/src/discord/commands.ts|packages/streambot/src/discord/commands.ts": {
+      "clones": 1,
+      "tokens": 104
+    },
+    "packages/streambot/src/discord/interaction-adapters.ts|packages/streambot/src/discord/interaction-adapters.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/streambot/src/index.ts|packages/streambot/test/config-dynamic.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/streambot/src/sources/chapters.ts|packages/streambot/src/sources/ytdlp.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/streambot/src/sources/ytdlp.ts|packages/streambot/src/sources/ytdlp.ts": {
+      "clones": 3,
+      "tokens": 239
+    },
+    "packages/streambot/src/voice/debug-audio-recorder.ts|packages/streambot/src/voice/wave-io.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/streambot/src/voice/local-models.ts|packages/streambot/src/voice/local-models.ts": {
+      "clones": 2,
+      "tokens": 175
+    },
+    "packages/streambot/test/command-handler.test.ts|packages/streambot/test/command-handler.test.ts": {
+      "clones": 3,
+      "tokens": 242
+    },
+    "packages/streambot/test/config-dynamic.test.ts|packages/streambot/test/config-dynamic.test.ts": {
+      "clones": 1,
+      "tokens": 110
+    },
+    "packages/streambot/test/persistence.test.ts|packages/streambot/test/persistence.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/streambot/test/playback-machine.test.ts|packages/streambot/test/playback-machine.test.ts": {
+      "clones": 16,
+      "tokens": 1440
+    },
+    "packages/streambot/test/player-card.test.ts|packages/streambot/test/player-controls.test.ts": {
+      "clones": 1,
+      "tokens": 118
+    },
+    "packages/streambot/test/realtime-transport.test.ts|packages/streambot/test/realtime-transport.test.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/streambot/test/realtime-transport.test.ts|packages/streambot/test/voice-audio-lifecycle.test.ts": {
+      "clones": 2,
+      "tokens": 154
+    },
+    "packages/streambot/test/session-manager.test.ts|packages/streambot/test/session-manager.test.ts": {
+      "clones": 8,
+      "tokens": 760
+    },
+    "packages/streambot/test/session-manager.test.ts|packages/streambot/test/userbot-pool.test.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/streambot/test/stream-observer.test.ts|packages/streambot/test/stream-observer.test.ts": {
+      "clones": 2,
+      "tokens": 193
+    },
+    "packages/streambot/test/streamer-pipeline.test.ts|packages/streambot/test/streamer-pipeline.test.ts": {
+      "clones": 3,
+      "tokens": 226
+    },
+    "packages/streambot/test/streamer-pipeline.test.ts|packages/streambot/test/streamer-position.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/streambot/test/streamer-position.test.ts|packages/streambot/test/streamer-position.test.ts": {
+      "clones": 5,
+      "tokens": 492
+    },
+    "packages/streambot/test/support/fake-realtime-transport.ts|packages/streambot/test/support/fake-realtime-transport.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/streambot/test/voice-audio-lifecycle.test.ts|packages/streambot/test/voice-audio-lifecycle.test.ts": {
+      "clones": 6,
+      "tokens": 507
+    },
+    "packages/tasknotes-core/ci/coverage-ratchet.ts|packages/tasknotes-windows/scripts/coverage-ratchet.ts": {
+      "clones": 1,
+      "tokens": 93
+    },
+    "packages/tasknotes-server/src/__tests__/concurrency.test.ts|packages/tasknotes-server/src/__tests__/v2-routes.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/tasknotes-server/src/__tests__/nlp-parser.test.ts|packages/tasknotes-server/src/__tests__/nlp.test.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/tasknotes-server/src/__tests__/nlp.test.ts|packages/tasknotes-server/src/nlp/parser.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/tasknotes-server/src/engine/recurring-completion.ts|packages/tasks-for-obsidian/src/data/sync/__tests__/fake-recurring-completion.ts": {
+      "clones": 2,
+      "tokens": 184
+    },
+    "packages/tasks-for-obsidian/src/components/common/KanbanBoard.tsx|packages/tasks-for-obsidian/src/components/common/KanbanColumn.tsx": {
+      "clones": 1,
+      "tokens": 113
+    },
+    "packages/tasks-for-obsidian/src/components/common/KanbanCard.tsx|packages/tasks-for-obsidian/src/components/task/TaskRow.tsx": {
+      "clones": 1,
+      "tokens": 140
+    },
+    "packages/tasks-for-obsidian/src/components/task/SwipeActions.tsx|packages/tasks-for-obsidian/src/components/task/SwipeActions.tsx": {
+      "clones": 1,
+      "tokens": 110
+    },
+    "packages/tasks-for-obsidian/src/data/api/TaskNotesClient.test.ts|packages/tasks-for-obsidian/src/data/api/TaskNotesClient.test.ts": {
+      "clones": 3,
+      "tokens": 305
+    },
+    "packages/tasks-for-obsidian/src/data/preferences/saved-view-repository.ts|packages/tasks-for-obsidian/src/data/store/TaskStore.ts": {
+      "clones": 1,
+      "tokens": 139
+    },
+    "packages/tasks-for-obsidian/src/data/store/TaskStore.test.ts|packages/tasks-for-obsidian/src/data/store/TaskStore.test.ts": {
+      "clones": 14,
+      "tokens": 1383
+    },
+    "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/data/sync/commands.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/agenda.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/job-search-board.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/recurrence-timezone.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/saved-view-collection.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/tasks-for-obsidian/src/domain/base-schemas.ts|packages/tasks-for-obsidian/src/domain/schemas.ts": {
+      "clones": 1,
+      "tokens": 404
+    },
+    "packages/tasks-for-obsidian/src/domain/base-schemas.ts|packages/tasks-for-obsidian/src/domain/wire.ts": {
+      "clones": 2,
+      "tokens": 166
+    },
+    "packages/tasks-for-obsidian/src/domain/recurrence-timezone.test.ts|packages/tasks-for-obsidian/src/domain/recurrence.test.ts": {
+      "clones": 1,
+      "tokens": 119
+    },
+    "packages/tasks-for-obsidian/src/lib/dates.test.ts|packages/tasks-for-obsidian/src/lib/nlp.test.ts": {
+      "clones": 1,
+      "tokens": 110
+    },
+    "packages/tasks-for-obsidian/src/screens/BrowseScreen.tsx|packages/tasks-for-obsidian/src/screens/SavedViewScreen.tsx": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/tasks-for-obsidian/src/screens/ContextDetailScreen.tsx|packages/tasks-for-obsidian/src/screens/ProjectDetailScreen.tsx": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/tasks-for-obsidian/src/screens/ContextDetailScreen.tsx|packages/tasks-for-obsidian/src/screens/TagDetailScreen.tsx": {
+      "clones": 2,
+      "tokens": 180
+    },
+    "packages/tasks-for-obsidian/src/screens/InboxScreen.tsx|packages/tasks-for-obsidian/src/screens/TodayScreen.tsx": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/tasks-for-obsidian/src/screens/InboxScreen.tsx|packages/tasks-for-obsidian/src/screens/UpcomingScreen.tsx": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/tasks-for-obsidian/src/screens/TodayScreen.tsx|packages/tasks-for-obsidian/src/screens/UpcomingScreen.tsx": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/tasks-for-obsidian/src/styles/colors.ios.ts|packages/tasks-for-obsidian/src/styles/dark-colors.ios.ts": {
+      "clones": 1,
+      "tokens": 158
+    },
+    "packages/temporal/scripts/test-workflows.ts|scripts/run-ci-test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/temporal/src/activities/agent-task-env.ts|packages/temporal/src/activities/agent-task-env.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/temporal/src/activities/agent-task-env.ts|scripts/lib/release-refiner.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/temporal/src/activities/agent-task-report-delivery.test.ts|packages/temporal/src/workflows/agent-task.test.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/temporal/src/activities/agent-task-runtime.ts|packages/temporal/src/activities/homelab-audit.ts": {
+      "clones": 2,
+      "tokens": 188
+    },
+    "packages/temporal/src/activities/agent-task.test.ts|packages/temporal/src/activities/agent-task.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/temporal/src/activities/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/data-dragon.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/temporal/src/activities/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/scout-season-refresh-git.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/temporal/src/activities/data-dragon-shell.ts|packages/temporal/src/activities/scout-season-refresh-git.ts": {
+      "clones": 1,
+      "tokens": 232
+    },
+    "packages/temporal/src/activities/data-dragon.ts|packages/temporal/src/activities/lane-prior-refresh.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/temporal/src/activities/deps-summary.ts|packages/version-catalog/src/index.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/homelab-crd-imports-refresh.ts": {
+      "clones": 2,
+      "tokens": 161
+    },
+    "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/scout-showcase-refresh.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/temporal/src/activities/glitter-corpus-recovery.ts|packages/temporal/src/activities/glitter-corpus-snapshot.ts": {
+      "clones": 2,
+      "tokens": 194
+    },
+    "packages/temporal/src/activities/ha.test.ts|packages/temporal/src/activities/ha.test.ts": {
+      "clones": 6,
+      "tokens": 518
+    },
+    "packages/temporal/src/activities/homelab-audit-buildkite.ts|packages/temporal/src/activities/homelab-audit-collectors.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/temporal/src/activities/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
+      "clones": 1,
+      "tokens": 127
+    },
+    "packages/temporal/src/activities/homelab-audit.ts|packages/temporal/src/activities/scout-season-refresh-claude.ts": {
+      "clones": 4,
+      "tokens": 457
+    },
+    "packages/temporal/src/activities/homelab-audit.ts|packages/temporal/src/activities/scout-season-refresh.ts": {
+      "clones": 1,
+      "tokens": 328
+    },
+    "packages/temporal/src/activities/homelab-crd-imports-refresh.ts|packages/temporal/src/activities/scout-showcase-refresh.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/temporal/src/activities/observe-review-signals.ts|scripts/probe-review-signal.ts": {
+      "clones": 1,
+      "tokens": 128
+    },
+    "packages/temporal/src/activities/report-delivery.test.ts|packages/temporal/src/activities/report-delivery.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/temporal/src/activities/report-freshness.ts|packages/temporal/src/activities/tasknotes-canary.ts": {
+      "clones": 1,
+      "tokens": 112
+    },
+    "packages/temporal/src/activities/scout-generated-preflight.test.ts|packages/temporal/src/activities/scout-generated-preflight.test.ts": {
+      "clones": 2,
+      "tokens": 158
+    },
+    "packages/temporal/src/activities/scout-season-refresh-git.integration.test.ts|packages/temporal/src/activities/scout-season-refresh-git.integration.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/temporal/src/activities/workflow-failure-watch.test.ts|packages/temporal/src/activities/workflow-failure-watch.test.ts": {
+      "clones": 8,
+      "tokens": 784
+    },
+    "packages/temporal/src/event-bridge/agent-task-api.ts|packages/temporal/src/event-bridge/sleep-webhook.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/temporal/src/event-bridge/github-webhook.test.ts|packages/temporal/src/event-bridge/github-webhook.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/temporal/src/event-bridge/sleep-webhook.ts|packages/temporal/src/event-bridge/xcode-cloud-webhook.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/temporal/src/shared/agent-task-output.ts|packages/temporal/src/shared/agent-task-output.ts": {
+      "clones": 1,
+      "tokens": 141
+    },
+    "packages/temporal/src/shared/agent-task.ts|packages/temporal/src/shared/agent-task.ts": {
+      "clones": 2,
+      "tokens": 349
+    },
+    "packages/temporal/src/shared/llm-catalog-alert.test.ts|packages/temporal/src/shared/llm-catalog-alert.test.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/temporal/src/workflows/deps-summary.test.ts|packages/temporal/src/workflows/deps-summary.test.ts": {
+      "clones": 2,
+      "tokens": 220
+    },
+    "packages/temporal/src/workflows/glitter-corpus.test.ts|packages/temporal/src/workflows/glitter-corpus.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/toolkit/src/commands/history/history.ts|packages/toolkit/src/commands/history/history.ts": {
+      "clones": 1,
+      "tokens": 107
+    },
+    "packages/toolkit/src/lib/bugsink/issues.ts|packages/toolkit/src/lib/bugsink/queries.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/toolkit/src/lib/bugsink/schemas.ts|packages/toolkit/src/lib/bugsink/schemas.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/toolkit/src/lib/discord/handlers.ts|packages/toolkit/src/lib/discord/handlers.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/toolkit/src/lib/git/conflicts.ts|packages/toolkit/test/lib/git-conflicts.test.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/toolkit/src/lib/github/pr.ts|packages/toolkit/src/lib/github/pr.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/toolkit/src/lib/history/conductor.ts|packages/toolkit/src/lib/history/sources.ts": {
+      "clones": 1,
+      "tokens": 122
+    },
+    "packages/toolkit/src/lib/history/index.ts|packages/toolkit/src/lib/history/index.ts": {
+      "clones": 1,
+      "tokens": 139
+    },
+    "packages/toolkit/test/bugsink/client.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/toolkit/test/lib/git-conflicts.test.ts|scripts/lib/test-git.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/toolkit/test/lib/http.test.ts|packages/toolkit/test/lib/http.test.ts": {
+      "clones": 2,
+      "tokens": 166
+    },
+    "scripts/check-analytics-sites.ts|scripts/scout-site-release.ts": {
+      "clones": 1,
+      "tokens": 98
+    },
+    "scripts/lib/ci-io-fixed-corpus.test.ts|scripts/lib/ci-io-fixed-corpus.test.ts": {
+      "clones": 2,
+      "tokens": 156
+    },
+    "scripts/lib/ci-io-report.test.ts|scripts/lib/ci-io-report.test.ts": {
+      "clones": 2,
+      "tokens": 182
+    },
+    "scripts/lib/scout-legacy-site-storage.ts|scripts/lib/scout-site-storage.ts": {
+      "clones": 3,
+      "tokens": 238
+    }
+  },
+  "updated": "2026-08-24T23:08:50.755Z"
+}
