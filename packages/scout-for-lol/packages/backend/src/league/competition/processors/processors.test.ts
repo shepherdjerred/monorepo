@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type {
   ChampionId,
+  CompetitionCriteria,
   LeaguePuuid,
   RawMatch,
   RawPerks,
@@ -64,6 +65,29 @@ const playerC: PlayerWithAccounts = {
 };
 
 const allParticipants = [playerA, playerB, playerC];
+const mostSoloGamesCriteria: CompetitionCriteria = {
+  type: "MOST_GAMES_PLAYED",
+  queues: ["solo"],
+};
+const highestSoloRankCriteria: CompetitionCriteria = {
+  type: "HIGHEST_RANK",
+  aggregation: "MAX",
+  queues: ["solo"],
+};
+const soloRankClimbCriteria: CompetitionCriteria = {
+  type: "MOST_RANK_CLIMB",
+  aggregation: "MAX",
+  queues: ["solo"],
+};
+const mostSoloWinsCriteria: CompetitionCriteria = {
+  type: "MOST_WINS_PLAYER",
+  queues: ["solo"],
+};
+const highestSoloWinRateCriteria: CompetitionCriteria = {
+  type: "HIGHEST_WIN_RATE",
+  minGames: 10,
+  queues: ["solo"],
+};
 
 // ============================================================================
 // Test Fixtures - Match Factory
@@ -547,11 +571,10 @@ describe("processMostGamesPlayed", () => {
       ]),
     ];
 
-    const result = processCriteria(
-      { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
-      matches,
-      [playerA, playerB],
-    );
+    const result = processCriteria(mostSoloGamesCriteria, matches, [
+      playerA,
+      playerB,
+    ]);
 
     const playerAEntry = result.find((e) => e.playerId === playerA.id);
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
@@ -736,7 +759,7 @@ describe("processHighestRank", () => {
     };
 
     const result = processCriteria(
-      { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
+      highestSoloRankCriteria,
       [],
       allParticipants,
       {
@@ -777,7 +800,7 @@ describe("processHighestRank", () => {
     };
 
     const result = processCriteria(
-      { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
+      highestSoloRankCriteria,
       [],
       [playerA, playerB],
       {
@@ -800,7 +823,7 @@ describe("processHighestRank", () => {
     };
 
     const result = processCriteria(
-      { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
+      highestSoloRankCriteria,
       [],
       [playerA, playerB],
       {
@@ -821,7 +844,7 @@ describe("processHighestRank", () => {
     };
 
     const result = processCriteria(
-      { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
+      highestSoloRankCriteria,
       [],
       [playerA, playerB, playerC],
       {
@@ -861,7 +884,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
+      soloRankClimbCriteria,
       [],
       [playerA, playerB],
       {
@@ -896,7 +919,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
+      soloRankClimbCriteria,
       [],
       [playerA, playerB],
       {
@@ -923,7 +946,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
+      soloRankClimbCriteria,
       [],
       [playerA, playerB],
       {
@@ -950,7 +973,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
+      soloRankClimbCriteria,
       [],
       [playerA, playerB],
       {
@@ -977,7 +1000,7 @@ describe("processMostRankClimb", () => {
     };
 
     const result = processCriteria(
-      { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
+      soloRankClimbCriteria,
       [],
       [playerA, playerB],
       {
@@ -1090,11 +1113,10 @@ describe("processMostWinsPlayer", () => {
       ]),
     ];
 
-    const result = processCriteria(
-      { type: "MOST_WINS_PLAYER", queues: ["solo"] },
-      matches,
-      [playerA, playerB],
-    );
+    const result = processCriteria(mostSoloWinsCriteria, matches, [
+      playerA,
+      playerB,
+    ]);
 
     const playerAEntry = result.find((e) => e.playerId === playerA.id);
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
@@ -1323,7 +1345,7 @@ describe("processHighestWinRate", () => {
     ];
 
     const result = processCriteria(
-      { type: "HIGHEST_WIN_RATE", minGames: 10, queues: ["solo"] },
+      highestSoloWinRateCriteria,
       matches,
       allParticipants,
     );
@@ -1386,11 +1408,10 @@ describe("processHighestWinRate", () => {
       ),
     ];
 
-    const result = processCriteria(
-      { type: "HIGHEST_WIN_RATE", minGames: 10, queues: ["solo"] },
-      matches,
-      [playerA, playerB],
-    );
+    const result = processCriteria(highestSoloWinRateCriteria, matches, [
+      playerA,
+      playerB,
+    ]);
 
     // Only PlayerB should be included (PlayerA has < 10 games)
     expect(result.length).toBe(1);
@@ -1417,16 +1438,12 @@ describe("processCriteria dispatcher", () => {
     // If any criteria type is missing, TypeScript would fail to compile
 
     expect(() =>
-      processCriteria(
-        { type: "MOST_GAMES_PLAYED", queues: ["solo"] },
-        emptyMatches,
-        emptyParticipants,
-      ),
+      processCriteria(mostSoloGamesCriteria, emptyMatches, emptyParticipants),
     ).not.toThrow();
 
     expect(() =>
       processCriteria(
-        { type: "HIGHEST_RANK", aggregation: "MAX", queues: ["solo"] },
+        highestSoloRankCriteria,
         emptyMatches,
         emptyParticipants,
         emptySnapshots,
@@ -1435,7 +1452,7 @@ describe("processCriteria dispatcher", () => {
 
     expect(() =>
       processCriteria(
-        { type: "MOST_RANK_CLIMB", aggregation: "MAX", queues: ["solo"] },
+        soloRankClimbCriteria,
         emptyMatches,
         emptyParticipants,
         emptySnapshots,
@@ -1443,11 +1460,7 @@ describe("processCriteria dispatcher", () => {
     ).not.toThrow();
 
     expect(() =>
-      processCriteria(
-        { type: "MOST_WINS_PLAYER", queues: ["solo"] },
-        emptyMatches,
-        emptyParticipants,
-      ),
+      processCriteria(mostSoloWinsCriteria, emptyMatches, emptyParticipants),
     ).not.toThrow();
 
     expect(() =>
@@ -1464,7 +1477,7 @@ describe("processCriteria dispatcher", () => {
 
     expect(() =>
       processCriteria(
-        { type: "HIGHEST_WIN_RATE", minGames: 10, queues: ["solo"] },
+        highestSoloWinRateCriteria,
         emptyMatches,
         emptyParticipants,
       ),

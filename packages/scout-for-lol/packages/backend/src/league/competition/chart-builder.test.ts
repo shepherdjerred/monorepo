@@ -56,6 +56,20 @@ const { buildCompetitionChartAttachment } =
 const NOW = new Date("2026-04-25T00:00:00Z");
 const START = new Date("2026-04-01T00:00:00Z");
 const END = new Date("2026-12-31T23:59:59Z");
+const GOLD_II = {
+  tier: "gold" as const,
+  division: 2 as const,
+  lp: 50,
+  wins: 0,
+  losses: 0,
+};
+const GOLD_I = {
+  tier: "gold" as const,
+  division: 1 as const,
+  lp: 0,
+  wins: 0,
+  losses: 0,
+};
 
 function competitionWith(
   criteria: CompetitionWithCriteria["criteria"],
@@ -103,6 +117,27 @@ function snapshot(
     calculatedAt: date.toISOString(),
     entries,
   });
+}
+
+function setRankTrendSnapshots(day0: Date, day1: Date) {
+  s3Mock.loaded = [
+    snapshot(day0, [
+      {
+        playerId: PlayerIdSchema.parse(1),
+        playerName: "Dan",
+        score: GOLD_II,
+        rank: 1,
+      },
+    ]),
+    snapshot(day1, [
+      {
+        playerId: PlayerIdSchema.parse(1),
+        playerName: "Dan",
+        score: GOLD_I,
+        rank: 1,
+      },
+    ]),
+  ];
 }
 
 describe("buildCompetitionChartAttachment", () => {
@@ -182,38 +217,7 @@ describe("buildCompetitionChartAttachment", () => {
   test("HIGHEST_RANK renders trend line when ≥2 snapshots exist", async () => {
     const day0 = START;
     const day1 = new Date(START.valueOf() + 86_400_000);
-    const goldII = {
-      tier: "gold" as const,
-      division: 2 as const,
-      lp: 50,
-      wins: 0,
-      losses: 0,
-    };
-    const goldI = {
-      tier: "gold" as const,
-      division: 1 as const,
-      lp: 0,
-      wins: 0,
-      losses: 0,
-    };
-    s3Mock.loaded = [
-      snapshot(day0, [
-        {
-          playerId: PlayerIdSchema.parse(1),
-          playerName: "Dan",
-          score: goldII,
-          rank: 1,
-        },
-      ]),
-      snapshot(day1, [
-        {
-          playerId: PlayerIdSchema.parse(1),
-          playerName: "Dan",
-          score: goldI,
-          rank: 1,
-        },
-      ]),
-    ];
+    setRankTrendSnapshots(day0, day1);
     reportRenderCalls.image = 0;
     const result = await buildCompetitionChartAttachment(
       competitionWith({
@@ -225,7 +229,7 @@ describe("buildCompetitionChartAttachment", () => {
         {
           playerId: PlayerIdSchema.parse(1),
           playerName: "Dan",
-          score: goldI,
+          score: GOLD_I,
           rank: 1,
         },
       ],
@@ -238,38 +242,7 @@ describe("buildCompetitionChartAttachment", () => {
   test("rankToLeaguePoints monotonic across rank tiers", async () => {
     const day0 = START;
     const day1 = new Date(START.valueOf() + 86_400_000);
-    const goldII = {
-      tier: "gold" as const,
-      division: 2 as const,
-      lp: 50,
-      wins: 0,
-      losses: 0,
-    };
-    const goldI = {
-      tier: "gold" as const,
-      division: 1 as const,
-      lp: 0,
-      wins: 0,
-      losses: 0,
-    };
-    s3Mock.loaded = [
-      snapshot(day0, [
-        {
-          playerId: PlayerIdSchema.parse(1),
-          playerName: "Dan",
-          score: goldII,
-          rank: 1,
-        },
-      ]),
-      snapshot(day1, [
-        {
-          playerId: PlayerIdSchema.parse(1),
-          playerName: "Dan",
-          score: goldI,
-          rank: 1,
-        },
-      ]),
-    ];
+    setRankTrendSnapshots(day0, day1);
     reportRenderCalls.image = 0;
     const result = await buildCompetitionChartAttachment(
       competitionWith({
@@ -281,15 +254,15 @@ describe("buildCompetitionChartAttachment", () => {
         {
           playerId: PlayerIdSchema.parse(1),
           playerName: "Dan",
-          score: goldI,
+          score: GOLD_I,
           rank: 1,
         },
       ],
     );
     expect(result).not.toBeNull();
     // Sanity check: rankToLeaguePoints monotonic across the two snapshots
-    expect(rankToLeaguePoints(goldI)).toBeGreaterThan(
-      rankToLeaguePoints(goldII),
+    expect(rankToLeaguePoints(GOLD_I)).toBeGreaterThan(
+      rankToLeaguePoints(GOLD_II),
     );
     expect(dataModule).toBeDefined();
     expect(NOW).toBeDefined();

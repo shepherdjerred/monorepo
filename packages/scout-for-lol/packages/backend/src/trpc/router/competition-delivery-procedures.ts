@@ -4,14 +4,11 @@ import {
   CompetitionIdSchema,
   DiscordGuildIdSchema,
   getCompetitionStatus,
-  type CompetitionId,
-  type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
 import {
   CompetitionScheduledUpdatesSchema,
   computeNextScheduledUpdateAt,
 } from "@scout-for-lol/data/model/competition-cron.ts";
-import { getCompetitionById } from "#src/database/competition/queries.ts";
 import { prisma } from "#src/database/index.ts";
 import { clearCompetitionAnalysisCache } from "#src/league/competition/analysis.ts";
 import { refreshAndCacheLeaderboard } from "#src/league/competition/refresh.ts";
@@ -23,6 +20,10 @@ import {
   guildMutationProcedure,
   guildProcedure,
 } from "#src/trpc/guild-permission.ts";
+import {
+  asCompetitionBadRequest,
+  loadGuildCompetitionOr404,
+} from "#src/trpc/router/competition-router-helpers.ts";
 
 const CompetitionIdInput = z.object({
   guildId: DiscordGuildIdSchema,
@@ -37,7 +38,7 @@ export const competitionDeliveryProcedures = {
       }),
     )
     .mutation(async ({ input }) => {
-      const competition = await loadCompetitionOr404(
+      const competition = await loadGuildCompetitionOr404(
         input.competitionId,
         input.guildId,
       );
@@ -68,21 +69,21 @@ export const competitionDeliveryProcedures = {
   leaderboard: guildProcedure("competitions", "read")
     .input(CompetitionIdInput)
     .query(async ({ input }) => {
-      await loadCompetitionOr404(input.competitionId, input.guildId);
+      await loadGuildCompetitionOr404(input.competitionId, input.guildId);
       return loadCachedLeaderboard(input.competitionId);
     }),
 
   leaderboardHistory: guildProcedure("competitions", "read")
     .input(CompetitionIdInput)
     .query(async ({ input }) => {
-      await loadCompetitionOr404(input.competitionId, input.guildId);
+      await loadGuildCompetitionOr404(input.competitionId, input.guildId);
       return loadHistoricalLeaderboardSnapshots(input.competitionId);
     }),
 
   refreshLeaderboard: guildMutationProcedure("competitions", "refresh")
     .input(CompetitionIdInput)
     .mutation(async ({ input }) => {
-      const competition = await loadCompetitionOr404(
+      const competition = await loadGuildCompetitionOr404(
         input.competitionId,
         input.guildId,
       );
@@ -91,26 +92,7 @@ export const competitionDeliveryProcedures = {
         clearCompetitionAnalysisCache();
         return { entries };
       } catch (error) {
-        asBadRequest(error);
+        asCompetitionBadRequest(error);
       }
     }),
 };
-
-function asBadRequest(error: unknown): never {
-  const message = error instanceof Error ? error.message : String(error);
-  throw new TRPCError({ code: "BAD_REQUEST", message });
-}
-
-async function loadCompetitionOr404(
-  competitionId: CompetitionId,
-  guildId: string,
-): Promise<CompetitionWithCriteria> {
-  const competition = await getCompetitionById(prisma, competitionId);
-  if (competition?.serverId !== guildId) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Competition not found",
-    });
-  }
-  return competition;
-}

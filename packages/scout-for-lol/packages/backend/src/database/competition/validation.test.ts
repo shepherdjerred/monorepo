@@ -10,6 +10,19 @@ import {
   testAccountId,
   testChannelId,
 } from "#src/testing/test-ids.ts";
+
+const validCompetitionCreationInput = {
+  serverId: testGuildId("123456789012345678"),
+  ownerId: testAccountId("987654321098765432"),
+  channelId: testChannelId("111111111111111111"),
+  title: "Test Competition",
+  description: "Test description",
+  visibility: "OPEN" as const,
+  maxParticipants: 50,
+  dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
+  criteriaType: "MOST_GAMES_PLAYED",
+  criteriaConfig: JSON.stringify({ queues: ["solo"] }),
+};
 // ============================================================================
 // isCompetitionActive
 // ============================================================================
@@ -281,18 +294,7 @@ describe("CompetitionDatesSchema - duration limit", () => {
 // ============================================================================
 
 describe("CompetitionCreationSchema - Discord ID validation", () => {
-  const validInput = {
-    serverId: testGuildId("123456789012345678"),
-    ownerId: testAccountId("987654321098765432"),
-    channelId: testChannelId("111111111111111111"),
-    title: "Test Competition",
-    description: "Test description",
-    visibility: "OPEN" as const,
-    maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
-    criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
-  };
+  const validInput = validCompetitionCreationInput;
 
   test("accepts valid Discord snowflake IDs", () => {
     const result = CompetitionCreationSchema.safeParse(validInput);
@@ -325,18 +327,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
 });
 
 describe("CompetitionCreationSchema - title validation", () => {
-  const validInput = {
-    serverId: testGuildId("123456789012345678"),
-    ownerId: testAccountId("987654321098765432"),
-    channelId: testChannelId("111111111111111111"),
-    title: "Test Competition",
-    description: "Test description",
-    visibility: "OPEN" as const,
-    maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
-    criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
-  };
+  const validInput = validCompetitionCreationInput;
 
   test("accepts valid title", () => {
     const result = CompetitionCreationSchema.safeParse(validInput);
@@ -386,18 +377,7 @@ describe("CompetitionCreationSchema - title validation", () => {
 });
 
 describe("CompetitionCreationSchema - description validation", () => {
-  const validInput = {
-    serverId: testGuildId("123456789012345678"),
-    ownerId: testAccountId("987654321098765432"),
-    channelId: testChannelId("111111111111111111"),
-    title: "Test Competition",
-    description: "Test description",
-    visibility: "OPEN" as const,
-    maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
-    criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
-  };
+  const validInput = validCompetitionCreationInput;
 
   test("accepts valid description", () => {
     const result = CompetitionCreationSchema.safeParse(validInput);
@@ -444,18 +424,7 @@ describe("CompetitionCreationSchema - description validation", () => {
 });
 
 describe("CompetitionCreationSchema - visibility validation", () => {
-  const validInput = {
-    serverId: testGuildId("123456789012345678"),
-    ownerId: testAccountId("987654321098765432"),
-    channelId: testChannelId("111111111111111111"),
-    title: "Test Competition",
-    description: "Test description",
-    visibility: "OPEN" as const,
-    maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
-    criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
-  };
+  const validInput = validCompetitionCreationInput;
 
   test("accepts OPEN visibility", () => {
     const result = CompetitionCreationSchema.safeParse(validInput);
@@ -488,18 +457,7 @@ describe("CompetitionCreationSchema - visibility validation", () => {
 });
 
 describe("CompetitionCreationSchema - maxParticipants validation", () => {
-  const validInput = {
-    serverId: testGuildId("123456789012345678"),
-    ownerId: testAccountId("987654321098765432"),
-    channelId: testChannelId("111111111111111111"),
-    title: "Test Competition",
-    description: "Test description",
-    visibility: "OPEN" as const,
-    maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
-    criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
-  };
+  const validInput = validCompetitionCreationInput;
 
   test("accepts valid maxParticipants", () => {
     const result = CompetitionCreationSchema.safeParse(validInput);
@@ -564,18 +522,7 @@ describe("CompetitionCreationSchema - maxParticipants validation", () => {
 });
 
 describe("CompetitionCreationSchema - criteria validation", () => {
-  const validInput = {
-    serverId: testGuildId("123456789012345678"),
-    ownerId: testAccountId("987654321098765432"),
-    channelId: testChannelId("111111111111111111"),
-    title: "Test Competition",
-    description: "Test description",
-    visibility: "OPEN" as const,
-    maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
-    criteriaType: "MOST_GAMES_PLAYED",
-    criteriaConfig: JSON.stringify({ queues: ["solo"] }),
-  };
+  const validInput = validCompetitionCreationInput;
 
   test("accepts valid MOST_GAMES_PLAYED criteria", () => {
     const result = CompetitionCreationSchema.safeParse(validInput);

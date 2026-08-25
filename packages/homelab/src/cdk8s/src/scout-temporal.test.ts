@@ -1,34 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { App } from "cdk8s";
-import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createScoutChart } from "./cdk8s-charts/scout.ts";
-import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
-
-const ResourceSchema = z
-  .object({
-    kind: z.string(),
-    metadata: z.object({ name: z.string(), namespace: z.string().optional() }),
-    spec: z.unknown().optional(),
-  })
-  .loose();
-
-function resources() {
-  const app = new App({ outdir: ".test-synth-scout-temporal" });
-  createTemporalChart(app);
-  createScoutChart(app, "beta");
-  createScoutChart(app, "prod");
-  return parseAllDocuments(app.synthYaml()).flatMap((document) => {
-    const parsed = ResourceSchema.safeParse(document.toJSON());
-    return parsed.success ? [parsed.data] : [];
-  });
-}
+import { allScoutTemporalResources } from "./scout-test-resources.ts";
 
 describe("Scout competition Temporal boundary", () => {
   test.each(["beta", "prod"] as const)(
     "configures %s with the Temporal endpoint and egress",
     (stage) => {
-      const synthesized = resources();
+      const synthesized = allScoutTemporalResources();
       const deployment = synthesized.find(
         (resource) =>
           resource.kind === "Deployment" &&
@@ -77,7 +55,7 @@ describe("Scout competition Temporal boundary", () => {
   );
 
   test("allows both Scout stages into the Temporal frontend", () => {
-    const temporalIngress = resources().find(
+    const temporalIngress = allScoutTemporalResources().find(
       (resource) =>
         resource.kind === "NetworkPolicy" &&
         resource.metadata.namespace === "temporal" &&

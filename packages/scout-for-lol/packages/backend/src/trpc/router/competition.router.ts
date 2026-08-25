@@ -22,7 +22,6 @@ import {
   PlayerIdSchema,
   CompetitionStatusSchema,
   getCompetitionStatus,
-  type CompetitionId,
   type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
 import {
@@ -48,7 +47,6 @@ import { prisma } from "#src/database/index.ts";
 import {
   cancelCompetition,
   createCompetition,
-  getCompetitionById,
   getCompetitionsByServerPaginated,
   updateCompetition,
 } from "#src/database/competition/queries.ts";
@@ -71,6 +69,10 @@ import {
 } from "#src/database/competition/rate-limit.ts";
 import { competitionAnalysisProcedures } from "#src/trpc/router/competition-analysis-procedures.ts";
 import { competitionDeliveryProcedures } from "#src/trpc/router/competition-delivery-procedures.ts";
+import {
+  asCompetitionBadRequest,
+  loadGuildCompetitionOr404,
+} from "#src/trpc/router/competition-router-helpers.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -97,26 +99,6 @@ const CompetitionWriteSchema = z.object({
     timezone: DEFAULT_SCHEDULE_TIMEZONE,
   }),
 });
-
-/** Translate a domain `Error` (thrown by participant/competition mutations) into a user-facing 400. */
-function asBadRequest(error: unknown): never {
-  const message = error instanceof Error ? error.message : String(error);
-  throw new TRPCError({ code: "BAD_REQUEST", message });
-}
-
-async function loadCompetitionOr404(
-  competitionId: CompetitionId,
-  guildId: string,
-): Promise<CompetitionWithCriteria> {
-  const competition = await getCompetitionById(prisma, competitionId);
-  if (competition?.serverId !== guildId) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Competition not found",
-    });
-  }
-  return competition;
-}
 
 export const competitionRouter = router({
   builderCapabilities: guildProcedure("competitions", "create")
@@ -175,7 +157,7 @@ export const competitionRouter = router({
   get: guildProcedure("competitions", "read")
     .input(CompetitionIdInput)
     .query(async ({ input }) => {
-      const competition = await loadCompetitionOr404(
+      const competition = await loadGuildCompetitionOr404(
         input.competitionId,
         input.guildId,
       );
@@ -217,7 +199,7 @@ export const competitionRouter = router({
       try {
         validateCompetitionConfiguration(input.criteria, input.gameVariant);
       } catch (error) {
-        asBadRequest(error);
+        asCompetitionBadRequest(error);
       }
 
       if (!ctx.permissions.isRoot && !checkRateLimit(input.guildId, ownerId)) {
@@ -237,7 +219,7 @@ export const competitionRouter = router({
         await validateServerLimit(prisma, input.guildId, ownerId);
         await validateOwnerLimit(prisma, input.guildId, ownerId);
       } catch (error) {
-        asBadRequest(error);
+        asCompetitionBadRequest(error);
       }
 
       // SERVER_WIDE bulk-enrolls every tracked player, which is participant
@@ -313,7 +295,7 @@ export const competitionRouter = router({
         });
       } catch (error) {
         if (error instanceof InitialEntrantsValidationError) {
-          asBadRequest(error);
+          asCompetitionBadRequest(error);
         }
         throw error;
       }
@@ -326,7 +308,7 @@ export const competitionRouter = router({
   edit: guildMutationProcedure("competitions", "update")
     .input(CompetitionEditInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const competition = await loadCompetitionOr404(
+      const competition = await loadGuildCompetitionOr404(
         input.competitionId,
         input.guildId,
       );
@@ -359,7 +341,7 @@ export const competitionRouter = router({
           input.gameVariant ?? competition.gameVariant,
         );
       } catch (error) {
-        asBadRequest(error);
+        asCompetitionBadRequest(error);
       }
 
       const updateInput = buildCompetitionUpdateInput(input);
@@ -382,7 +364,7 @@ export const competitionRouter = router({
           return result;
         });
       } catch (error) {
-        asBadRequest(error);
+        asCompetitionBadRequest(error);
       }
       return updated;
     }),
@@ -390,7 +372,7 @@ export const competitionRouter = router({
   cancel: guildMutationProcedure("competitions", "cancel")
     .input(CompetitionIdInput)
     .mutation(async ({ input }) => {
-      const competition = await loadCompetitionOr404(
+      const competition = await loadGuildCompetitionOr404(
         input.competitionId,
         input.guildId,
       );
@@ -417,7 +399,7 @@ export const competitionRouter = router({
       ),
     )
     .mutation(async ({ ctx, input }) => {
-      await loadCompetitionOr404(input.competitionId, input.guildId);
+      await loadGuildCompetitionOr404(input.competitionId, input.guildId);
 
       // The .refine guarantees exactly one of playerId/discordUserId is set;
       // resolve to a player scoped to this guild (early returns keep Prisma's
@@ -455,14 +437,14 @@ export const competitionRouter = router({
           invitedBy: DiscordAccountIdSchema.parse(ctx.user.discordId),
         });
       } catch (error) {
-        asBadRequest(error);
+        asCompetitionBadRequest(error);
       }
     }),
 
   removeParticipant: guildMutationProcedure("competitions", "invite")
     .input(CompetitionIdInput.extend({ playerId: PlayerIdSchema }))
     .mutation(async ({ input }) => {
-      await loadCompetitionOr404(input.competitionId, input.guildId);
+      await loadGuildCompetitionOr404(input.competitionId, input.guildId);
       try {
         return await removeParticipant(
           prisma,
@@ -470,14 +452,14 @@ export const competitionRouter = router({
           input.playerId,
         );
       } catch (error) {
-        asBadRequest(error);
+        asCompetitionBadRequest(error);
       }
     }),
 
   addAllMembers: guildMutationProcedure("competitions", "invite")
     .input(CompetitionIdInput)
     .mutation(async ({ input }) => {
-      await loadCompetitionOr404(input.competitionId, input.guildId);
+      await loadGuildCompetitionOr404(input.competitionId, input.guildId);
       // One transaction (like create/edit) so a mid-batch failure rolls back.
       return prisma.$transaction((tx) =>
         bulkEnrollTrackedPlayers({

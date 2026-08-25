@@ -6,6 +6,7 @@ import { addParticipant } from "#src/database/competition/participants.ts";
 import {
   PlayerIdSchema,
   parseCompetition,
+  type CompetitionCriteria,
   type Rank,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -36,6 +37,10 @@ const s3Mock = mockClient(S3Client);
 
 // Create a temporary database for testing
 const { prisma } = createTestDatabase("leaderboard-test");
+const mostSoloGamesCriteria: CompetitionCriteria = {
+  type: "MOST_GAMES_PLAYED",
+  queues: ["solo"],
+};
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -170,10 +175,7 @@ describe("calculateLeaderboard integration tests", () => {
         type: "FIXED_DATES",
         ...dates,
       },
-      criteria: {
-        type: "MOST_GAMES_PLAYED",
-        queues: ["solo"],
-      },
+      criteria: mostSoloGamesCriteria,
     });
 
     // No participants added
@@ -255,10 +257,7 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
         startDate,
         endDate,
       },
-      criteria: {
-        type: "MOST_GAMES_PLAYED",
-        queues: ["solo"],
-      },
+      criteria: mostSoloGamesCriteria,
     });
 
     await addParticipant({
@@ -722,10 +721,7 @@ describe("calculateLeaderboard integration tests - Filters", () => {
         type: "FIXED_DATES",
         ...dates,
       },
-      criteria: {
-        type: "MOST_GAMES_PLAYED",
-        queues: ["solo"],
-      },
+      criteria: mostSoloGamesCriteria,
     });
 
     // Add participants with different statuses

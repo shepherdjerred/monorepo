@@ -311,71 +311,58 @@ async function seedPermissions(
   });
 }
 
+async function expectCreateForbidden(
+  guildId: ReturnType<typeof nextGuildId>,
+  input: ReturnType<typeof createInput> & Record<string, unknown>,
+) {
+  trpc.setMembership([{ guildId, asAdmin: false }]);
+  await seedPermissions(guildId, [
+    { resource: "competitions", action: "create" },
+  ]);
+  await expect(
+    trpc.authedCaller(actorDiscordId).competition.create(input),
+  ).rejects.toMatchObject({ code: "FORBIDDEN" });
+}
+
 describe("competition.create advanced permissions", () => {
   test("initial entrants require competitions:invite", async () => {
     const guildId = nextGuildId();
     const [playerId] = await seedPlayers(guildId, 1);
     expect(playerId).toBeDefined();
     if (playerId === undefined) return;
-    trpc.setMembership([{ guildId, asAdmin: false }]);
-    await seedPermissions(guildId, [
-      { resource: "competitions", action: "create" },
-    ]);
-    await expect(
-      trpc.authedCaller(actorDiscordId).competition.create({
-        ...createInput(guildId, "OPEN"),
-        initialPlayerIds: [playerId],
-      }),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expectCreateForbidden(guildId, {
+      ...createInput(guildId, "OPEN"),
+      initialPlayerIds: [playerId],
+    });
   });
 
   test("enabled scheduling requires competitions:schedule", async () => {
     const guildId = nextGuildId();
-    trpc.setMembership([{ guildId, asAdmin: false }]);
-    await seedPermissions(guildId, [
-      { resource: "competitions", action: "create" },
-    ]);
-    await expect(
-      trpc.authedCaller(actorDiscordId).competition.create({
-        ...createInput(guildId, "OPEN"),
-        scheduledUpdates: {
-          enabled: true,
-          cronExpression: "0 9 * * *",
-          timezone: "America/Los_Angeles",
-        },
-      }),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expectCreateForbidden(guildId, {
+      ...createInput(guildId, "OPEN"),
+      scheduledUpdates: {
+        enabled: true,
+        cronExpression: "0 9 * * *",
+        timezone: "America/Los_Angeles",
+      },
+    });
   });
 
   test("server-wide enrollment requires competitions:invite", async () => {
     const guildId = nextGuildId();
-    trpc.setMembership([{ guildId, asAdmin: false }]);
-    await seedPermissions(guildId, [
-      { resource: "competitions", action: "create" },
-    ]);
-    await expect(
-      trpc
-        .authedCaller(actorDiscordId)
-        .competition.create(createInput(guildId, "SERVER_WIDE")),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expectCreateForbidden(guildId, createInput(guildId, "SERVER_WIDE"));
   });
 
   test("a disabled custom cadence still requires competitions:schedule", async () => {
     const guildId = nextGuildId();
-    trpc.setMembership([{ guildId, asAdmin: false }]);
-    await seedPermissions(guildId, [
-      { resource: "competitions", action: "create" },
-    ]);
-    await expect(
-      trpc.authedCaller(actorDiscordId).competition.create({
-        ...createInput(guildId, "OPEN"),
-        scheduledUpdates: {
-          enabled: false,
-          cronExpression: "0 12 * * *",
-          timezone: "America/Los_Angeles",
-        },
-      }),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expectCreateForbidden(guildId, {
+      ...createInput(guildId, "OPEN"),
+      scheduledUpdates: {
+        enabled: false,
+        cronExpression: "0 12 * * *",
+        timezone: "America/Los_Angeles",
+      },
+    });
   });
 });
 
