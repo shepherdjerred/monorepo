@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { agentActivities, reportActivities } from "./activities/index.ts";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
 import {
   getWorkerRoleContract,
@@ -43,6 +44,7 @@ describe("Temporal worker role contracts", () => {
   it("keeps gateway and event-bridge ownership explicit", () => {
     expect(getWorkerRoleContract("control")).toMatchObject({
       runsGateway: true,
+      validatesScheduleEnvironmentLocally: false,
       runsEventBridge: false,
       workers: [],
     });
@@ -60,6 +62,7 @@ describe("Temporal worker role contracts", () => {
     const contract = getWorkerRoleContract("all");
     expect(contract.workers).toHaveLength(Object.values(TASK_QUEUES).length);
     expect(contract.runsGateway).toBe(true);
+    expect(contract.validatesScheduleEnvironmentLocally).toBe(true);
     expect(contract.runsEventBridge).toBe(true);
     expect(contract.restoresGlitterCorpusMetrics).toBe(true);
   });
@@ -85,5 +88,16 @@ describe("Temporal worker role contracts", () => {
     for (const serialRole of serialRoles) {
       expect(concurrency.get(serialRole)).toBe(1);
     }
+  });
+
+  it("keeps report delivery capabilities separate from agent execution", () => {
+    expect(reportActivities.sendAgentTaskEmail).toBe(
+      agentActivities.sendAgentTaskEmail,
+    );
+    expect(reportActivities.sendAgentTaskFailureReport).toBe(
+      agentActivities.sendAgentTaskFailureReport,
+    );
+    expect(reportActivities).not.toHaveProperty("runAgentTask");
+    expect(reportActivities).not.toHaveProperty("prepareAgentTaskWorkdir");
   });
 });

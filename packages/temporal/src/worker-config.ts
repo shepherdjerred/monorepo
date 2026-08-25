@@ -126,6 +126,7 @@ function roleOwnsDefinition(
 export type WorkerRoleContract = {
   workers: readonly QueueWorkerDefinition[];
   runsGateway: boolean;
+  validatesScheduleEnvironmentLocally: boolean;
   runsEventBridge: boolean;
   restoresGlitterCorpusMetrics: boolean;
 };
@@ -136,6 +137,7 @@ export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
       roleOwnsDefinition(role, definition),
     ),
     runsGateway: role === "all" || role === "control" || role === "core",
+    validatesScheduleEnvironmentLocally: role === "all" || role === "core",
     runsEventBridge: role === "all" || role === "core" || role === "home",
     restoresGlitterCorpusMetrics:
       role === "all" || role === "glitter" || role === "glitter-corpus",

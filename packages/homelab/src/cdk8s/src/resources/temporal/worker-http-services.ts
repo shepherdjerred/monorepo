@@ -1,5 +1,5 @@
 import type { Chart } from "cdk8s";
-import type { Deployment } from "cdk8s-plus-31";
+import type { IPodSelector } from "cdk8s-plus-31";
 import {
   createAgentTaskApiService,
   createSleepWebhookService,
@@ -9,10 +9,10 @@ import {
 
 export function createTemporalWorkerHttpServices(
   chart: Chart,
-  deployment: Deployment,
+  selector: IPodSelector,
 ): void {
-  createTemporalWorkerGithubWebhookService(chart, deployment);
-  createAgentTaskApiService(chart, deployment);
-  createSleepWebhookService(chart, deployment);
-  createXcodeCloudWebhookService(chart, deployment);
+  createTemporalWorkerGithubWebhookService(chart, selector);
+  createAgentTaskApiService(chart, selector);
+  createSleepWebhookService(chart, selector);
+  createXcodeCloudWebhookService(chart, selector);
 }

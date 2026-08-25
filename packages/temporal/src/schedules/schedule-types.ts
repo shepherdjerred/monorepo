@@ -1,5 +1,6 @@
 import type { ScheduleOverlapPolicy } from "@temporalio/client";
 import type { Duration } from "@temporalio/common";
+import type { TaskQueue } from "#shared/task-queues.ts";
 
 export type CatchupWindow = "5 minutes" | "1 hour" | "12 hours";
 
@@ -8,7 +9,7 @@ export type ScheduleDefinition = {
   workflowType: string;
   args: unknown[];
   cronExpression: string;
-  taskQueue: string;
+  taskQueue: TaskQueue;
   overlap: ScheduleOverlapPolicy;
   memo: string;
   workflowExecutionTimeout?: Duration;

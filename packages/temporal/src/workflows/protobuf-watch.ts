@@ -4,16 +4,12 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const { collectProtobufWatch } = proxyActivities<ProtobufWatchActivities>({
   startToCloseTimeout: "1 minute",
   retry: { maximumAttempts: 3 },
 });
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  startToCloseTimeout: "2 minutes",
-  retry: { maximumAttempts: 3 },
-});
-
 function failureReport(startedAt: string, error: unknown): ActivityReportInput {
   const message = error instanceof Error ? error.message : String(error);
   const observedAt = new Date().toISOString();
@@ -52,6 +48,11 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 }
 
 export async function runProtobufWatch(): Promise<void> {
+  const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+    taskQueue: reportActivityTaskQueue(),
+    startToCloseTimeout: "2 minutes",
+    retry: { maximumAttempts: 3 },
+  });
   const startedAt = new Date().toISOString();
   try {
     const result = await collectProtobufWatch();

@@ -352,7 +352,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runVacuumIfNotHome",
     args: [],
     cronExpression: "0 9 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
@@ -364,7 +364,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runVacuumIfNotHome",
     args: [],
     cronExpression: "0 12 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
@@ -376,7 +376,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runVacuumIfNotHome",
     args: [],
     cronExpression: "0 17 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
@@ -394,7 +394,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "goodMorningPreheat",
     args: [],
     cronExpression: "45 5 * * 1-5",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "240 minutes",
     catchupWindow: CATCHUP_TIGHT,
@@ -405,7 +405,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "goodMorningWakeUp",
     args: [],
     cronExpression: "0 8 * * 1-5",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // goodMorningWakeUp still runs its 60-minute heat window (MORNING_HEAT_DURATION)
     // as the fallback when the preheat run was skipped; needs > 60m + slack
@@ -418,7 +418,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "goodMorningGetUp",
     args: [],
     cronExpression: "15 8 * * 1-5",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
     catchupWindow: CATCHUP_TIGHT,
@@ -430,7 +430,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "goodMorningPreheat",
     args: [],
     cronExpression: "45 6 * * 0,6",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "240 minutes",
     catchupWindow: CATCHUP_TIGHT,
@@ -441,7 +441,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "goodMorningWakeUp",
     args: [],
     cronExpression: "0 9 * * 0,6",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // goodMorningWakeUp still runs its 60-minute heat window (MORNING_HEAT_DURATION)
     // as the fallback when the preheat run was skipped; needs > 60m + slack
@@ -454,7 +454,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "goodMorningGetUp",
     args: [],
     cronExpression: "15 9 * * 0,6",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
     catchupWindow: CATCHUP_TIGHT,
@@ -468,7 +468,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // be recovered by the next poll; the matching alert TTL prevents duplicate
     // pages for executions observed again after recovery.
     cronExpression: "*/5 * * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPORTS,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Covers the activity's full 3-attempt retry budget (3x 2m + ~30s
     // backoff ≈ 6.5m) with margin; SKIP overlap makes the wider ceiling
