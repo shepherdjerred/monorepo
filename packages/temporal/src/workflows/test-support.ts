@@ -4,8 +4,8 @@ import type { TestWorkflowEnvironment } from "@temporalio/testing";
 export function createReportCapture(reportRunId: string): {
   reports: unknown[];
   deliverActivityReport: (input: unknown) => {
-    accepted: true;
-    duplicate: false;
+    accepted: boolean;
+    duplicate: boolean;
     reportRunId: string;
   };
 } {
