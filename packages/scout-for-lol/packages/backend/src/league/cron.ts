@@ -1,4 +1,5 @@
 import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
+import { runInitialHistoryImportTick } from "#src/league/initial-history/worker.ts";
 import { checkPreMatch } from "#src/league/tasks/prematch/index.ts";
 import { checkTournamentLobbies } from "#src/league/tournament/poller.ts";
 import { runLifecycleCheck } from "#src/league/tasks/competition/lifecycle.ts";
@@ -45,7 +46,7 @@ async function runLegacyStartupRecovery(): Promise<void> {
   }
 }
 
-export async function startCronJobs() {
+export function startCronJobs() {
   if (!temporalBackgroundEnabled()) {
     logger.info("⏰ Starting legacy recovery alongside cron initialization");
     void runLegacyStartupRecovery();
@@ -63,6 +64,26 @@ export async function startCronJobs() {
     timezone: "America/Los_Angeles",
     runOnInit: true,
     isExecutionOwner: () => !temporalRealtimeEnabled(),
+  });
+
+  // Initial-history imports are a separate lifecycle from live match polling:
+  // keep this owner alive during a realtime-only rollout until the Temporal
+  // background family takes over reconciliation.
+  logger.info("📅 Setting up initial-history import tick (every minute)");
+  createCronJob({
+    schedule: "30 * * * * *",
+    jobName: "initial_history_import",
+    task: async () => {
+      try {
+        await runInitialHistoryImportTick();
+      } catch (error) {
+        logger.error("Initial history import tick failed", error);
+      }
+    },
+    logMessage: "📚 Advancing queued initial-history imports",
+    timezone: "America/Los_Angeles",
+    runOnInit: true,
+    isExecutionOwner: () => !temporalBackgroundEnabled(),
   });
 
   // Tournament lobbies get their own tick rather than riding checkPreMatch,

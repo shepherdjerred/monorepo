@@ -1,8 +1,5 @@
 import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
-import {
-  checkMatchHistory,
-  isMatchHistoryPollingInProgress,
-} from "#src/league/tasks/postmatch/match-history-polling.ts";
+import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
 import { voidStaleBettingPools } from "#src/betting/void-stale.ts";
@@ -11,8 +8,6 @@ import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prema
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
-import { runInitialHistoryImportTick } from "#src/league/initial-history/worker.ts";
-import { temporalBackgroundEnabled } from "#src/config/dynamic.ts";
 
 const logger = createLogger("tasks-postmatch");
 
@@ -41,23 +36,6 @@ export async function checkPostMatch() {
         error,
       );
     }
-    if (
-      matchHistoryError === undefined &&
-      !temporalBackgroundEnabled() &&
-      !isMatchHistoryPollingInProgress()
-    ) {
-      try {
-        await runInitialHistoryImportTick();
-      } catch (error) {
-        // The durable job retained its checkpoint. Import traffic must never
-        // turn a successful notification-critical poll into a failed cron run.
-        logger.error(
-          "Initial history import tick failed after live polling",
-          error,
-        );
-      }
-    }
-
     if (bettingHardDisabled) {
       if (matchHistoryError !== undefined) {
         throw asError(matchHistoryError, "Match history polling failed");
