@@ -66,6 +66,10 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     ;;
   full)
     mise_ci install --yes
+    # The CI manifest runs Temporal workflow suites under Node rather than
+    # Bun. Request it explicitly so a stale image cannot satisfy the general
+    # install while leaving the manifest runtime unavailable.
+    mise_ci install --yes node
     expose_postgres_tools
     # Runtime installs can add a tool without creating its executable shim on a
     # stale ci-base image. Rebuild shims so commands such as gh are reachable

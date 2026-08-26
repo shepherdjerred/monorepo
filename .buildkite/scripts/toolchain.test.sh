@@ -27,6 +27,11 @@ if ! awk '
   exit 1
 fi
 
+if ! rg -Fq 'mise_ci install --yes node' "$TOOLCHAIN"; then
+  echo "CI toolchain must explicitly provide Node for manifest Node runtimes" >&2
+  exit 1
+fi
+
 if ! rg -Fq 'ln -sf "$(mise which gh)" /usr/local/bin/gh' "$CI_IMAGE" ||
   ! rg -Fq '&& gh --version' "$CI_IMAGE"; then
   echo "ci image must expose the mise-owned gh binary to login shells" >&2
