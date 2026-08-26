@@ -1,6 +1,5 @@
 import {
   EXPLORE_TIMEOUT_MS,
-  ExploreActiveRunSchema,
   ExploreRunSnapshotEventSchema,
   type DiscordAccountId,
   type ExploreActiveRun,
@@ -12,18 +11,16 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import {
   ExploreConversationBusyError,
-  getExploreQuotaStatus,
   tryStartExploreTurn,
   waitForExploreConversation,
-  type ExploreRateLimitIdentity,
   type ExploreRateLimitRejection,
+  type ExploreRateLimitIdentity,
 } from "#src/explore/rate-limit.ts";
 import {
   ExploreNotFoundError,
   deleteExploreConversation,
   loadExploreTranscript,
 } from "#src/explore/store.ts";
-import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
 import type { ExploreInvalidTurnError } from "#src/explore/store.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 import {
@@ -31,15 +28,14 @@ import {
   durableExploreOutcome,
   listDurableExploreRuns,
   requestDurableExploreStop,
-  reserveAndStartDurableExploreRun,
   subscribeDurableExploreRun,
   waitForDurableExploreRun,
 } from "#src/explore/durable-runs.ts";
 import {
   createDeferred,
   executeActiveExploreRun,
-  resolveTurnTarget,
 } from "#src/explore/run-manager-helpers.ts";
+import { startExploreRun } from "#src/explore/run-manager-start.ts";
 import type {
   ActiveRun,
   ExploreAgentRunner,
@@ -55,9 +51,7 @@ import {
 } from "#src/explore/run-events.ts";
 
 const TERMINAL_OUTCOME_TTL_MS = 5 * 60 * 1000;
-
 export class ExploreRunUnavailableError extends Error {}
-
 export class ExploreRunRateLimitedError extends Error {
   readonly rejection: ExploreRateLimitRejection;
 
@@ -141,97 +135,45 @@ export class ExploreRunManager {
     this.#startingConversations.set(conversationId, starting.promise);
 
     try {
-      const started = await resolveTurnTarget(
-        this.#client,
+      return await startExploreRun({
+        client: this.#client,
+        identity,
         request,
-        identity,
-        conversationId,
-      );
-      const versionCountAtStart = await this.#client.exploreMessage.count({
-        where: {
-          conversationId: started.conversationId,
-          parentId: started.messageId,
-          role: "assistant",
-        },
-      });
-      const transcript = await loadExploreTranscript(
-        this.#client,
-        started.conversationId,
-        identity.userId,
-        started.messageId,
-      );
-      if (transcript === null) {
-        throw new ExploreNotFoundError("Conversation not found.");
-      }
-      this.#assertAcceptingRuns();
-
-      const deferred = createDeferred();
-      const summary = ExploreActiveRunSchema.parse({
-        runId: ticket.runId,
-        conversationId: started.conversationId,
-        questionMessageId: started.messageId,
-        leafIdAtStart: started.expectedCurrentLeafId,
-        versionCountAtStart,
-        startedAt: new Date().toISOString(),
-      });
-      const run: ActiveRun = {
-        summary,
-        identity,
         guildIds,
+        conversationId,
         ticket,
-        started,
-        history: transcript.messages,
-        abortController: new AbortController(),
-        subscribers: new Set(),
-        answer: "",
-        activity: "Thinking…",
-        trace: [],
-        termination: null,
-        settled: deferred.promise,
-        resolveSettled: deferred.resolve,
-      };
-      this.#runs.set(summary.runId, run);
-      this.#conversationRuns.set(summary.conversationId, summary.runId);
-      if (this.#inlineExecutionForTests) {
-        void this.#execute(run);
-      } else {
-        try {
-          const durableRejection = await reserveAndStartDurableExploreRun({
-            database: this.#client,
-            summary,
-            ownerId: identity.userId,
-            started,
-            guildIds,
-          });
-          if (durableRejection !== null) {
-            throw new ExploreRunRateLimitedError({
-              allowed: false,
-              quota: getExploreQuotaStatus(identity).quota,
-              ...durableRejection,
-            });
-          }
-        } catch (error) {
-          if (
-            error instanceof DurableExploreUnavailableError ||
-            error instanceof ExploreRunRateLimitedError
-          ) {
-            await rollbackUnstartedExploreTurn(this.#client, {
-              ...started,
-              userId: identity.userId,
-            });
-          }
+        inlineExecutionForTests: this.#inlineExecutionForTests,
+        assertAcceptingRuns: () => {
+          this.#assertAcceptingRuns();
+        },
+        registerRun: (run) => {
+          this.#runs.set(run.summary.runId, run);
+          this.#conversationRuns.set(
+            run.summary.conversationId,
+            run.summary.runId,
+          );
+        },
+        removeRun: (summary) => {
           this.#runs.delete(summary.runId);
           this.#conversationRuns.delete(summary.conversationId);
-          if (error instanceof DurableExploreUnavailableError) {
-            throw new ExploreRunUnavailableError(
-              "Temporal is unavailable. Try again after it reconnects.",
-              { cause: error },
-            );
-          }
-          throw error;
-        }
-      }
-      return summary;
+        },
+        executeInline: (run) => {
+          void this.#execute(run);
+        },
+        clearStartingConversation: () => {
+          this.#startingConversations.delete(conversationId);
+        },
+        createRateLimitedError: (rejection) =>
+          new ExploreRunRateLimitedError(rejection),
+        isDurableUnavailable: (error) =>
+          error instanceof DurableExploreUnavailableError,
+        isRateLimited: (error) => error instanceof ExploreRunRateLimitedError,
+        createUnavailableError: (error) =>
+          new ExploreRunUnavailableError(
+            "Temporal is unavailable. Try again after it reconnects.",
+            { cause: error },
+          ),
+      });
     } catch (error) {
       ticket.finish();
       throw error;
@@ -345,8 +287,12 @@ export class ExploreRunManager {
       allowed: true,
       runId: input.summary.runId,
       claimConversation: () => true,
-      commit: () => undefined,
-      finish: () => undefined,
+      commit: () => {
+        // Rehydrated runs do not own a new quota reservation.
+      },
+      finish: () => {
+        // Rehydrated runs do not own a new quota reservation.
+      },
     };
     const deferred = createDeferred();
     const run: ActiveRun = {
@@ -560,5 +506,4 @@ export class ExploreRunManager {
     });
   }
 }
-
 export const exploreRunManager = new ExploreRunManager();

@@ -19,6 +19,24 @@ export type PredictionCaptureDependencies = {
   enqueue: (observation: BucksPredictionObservation) => Promise<void>;
 };
 
+async function enqueuePredictionBestEffort(
+  observation: BucksPredictionObservation,
+  matchId: string,
+  enqueue: PredictionCaptureDependencies["enqueue"],
+): Promise<void> {
+  try {
+    await enqueue(observation);
+  } catch (error: unknown) {
+    logger.error(
+      `Failed to enqueue prediction observation for ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "prediction-observation-enqueue", matchId },
+    });
+  }
+}
+
 const defaultDependencies: PredictionCaptureDependencies = {
   build: buildPredictionObservation,
   enqueue: enqueuePredictionObservation,
@@ -76,14 +94,6 @@ export async function capturePredictionForPrematch(
     return undefined;
   }
 
-  void dependencies.enqueue(observation).catch((error: unknown) => {
-    logger.error(
-      `Failed to enqueue prediction observation for ${matchId}:`,
-      error,
-    );
-    Sentry.captureException(error, {
-      tags: { source: "prediction-observation-enqueue", matchId },
-    });
-  });
+  void enqueuePredictionBestEffort(observation, matchId, dependencies.enqueue);
   return observation.prediction;
 }
