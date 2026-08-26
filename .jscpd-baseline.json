@@ -1280,6 +1280,10 @@
       "clones": 1,
       "tokens": 89
     },
+    "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-history-polling.ts|packages/scout-for-lol/packages/backend/src/league/tasks/prematch/active-game-detection.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts": {
       "clones": 1,
       "tokens": 76
@@ -1408,6 +1412,14 @@
       "clones": 13,
       "tokens": 1080
     },
+    "packages/scout-for-lol/packages/backend/src/temporal/activities.ts|packages/scout-for-lol/packages/backend/src/temporal/activities.ts": {
+      "clones": 1,
+      "tokens": 84
+    },
+    "packages/scout-for-lol/packages/backend/src/trpc/auth-web.ts|packages/scout-for-lol/packages/backend/src/trpc/context.ts": {
+      "clones": 1,
+      "tokens": 131
+    },
     "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts": {
       "clones": 1,
       "tokens": 74
@@ -1531,6 +1543,14 @@
     "packages/scout-for-lol/packages/report/src/html/visualization-snapshot-option.test.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-option.test.ts": {
       "clones": 4,
       "tokens": 326
+    },
+    "packages/scout-for-lol/packages/temporal/scripts/replay-histories-node.ts|packages/temporal/scripts/replay-scout-histories-node.ts": {
+      "clones": 2,
+      "tokens": 163
+    },
+    "packages/scout-for-lol/packages/temporal/scripts/replay-histories.ts|packages/temporal/scripts/replay-scout-histories.ts": {
+      "clones": 1,
+      "tokens": 141
     },
     "packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/rule-editor.tsx|packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/sound-pool-editor.tsx": {
       "clones": 1,
@@ -1748,6 +1768,10 @@
       "clones": 1,
       "tokens": 158
     },
+    "packages/temporal/scripts/replay-scout-histories.ts|packages/temporal/scripts/test-workflows.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
     "packages/temporal/scripts/test-workflows.ts|scripts/run-ci-test.ts": {
       "clones": 1,
       "tokens": 76
@@ -1949,5 +1973,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-25T06:08:20.721Z"
+  "updated": "2026-08-26T01:21:02.757Z"
 }
