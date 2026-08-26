@@ -14,9 +14,9 @@ import {
   ReportRunIdSchema,
 } from "@scout-for-lol/data";
 import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
-import {
+import type {
   runDueReports,
-  type ScheduledReportDispatch,
+  ScheduledReportDispatch,
 } from "#src/reports/scheduler.ts";
 import {
   claimScoutEffect,
@@ -29,6 +29,51 @@ import { loadReportRunImage } from "#src/storage/s3-report-run.ts";
 const logger = createLogger("report-discord-dispatcher");
 
 const POST_DELAY_MS = 1000;
+
+async function deliverChunksAndAnalytics(
+  dispatch: ScheduledReportDispatch,
+  outputKind: "report_manual" | "report_scheduled",
+  files: AttachmentBuilder[],
+): Promise<void> {
+  for (const [index, content] of splitMessageIntoChunks(
+    dispatch.result.output.content,
+  ).entries()) {
+    const effectKey = `report-discord:${dispatch.result.runId.toString()}:${index.toString()}`;
+    const claim = await claimScoutEffect({
+      key: effectKey,
+      kind: "report-discord",
+    });
+    if (claim === "completed") continue;
+    try {
+      await sendChannelMessage(
+        {
+          content,
+          files: index === 0 ? files : [],
+          nonce: `sr:${dispatch.result.runId.toString(36)}:${index.toString(36)}`,
+          enforceNonce: true,
+        },
+        dispatch.report.channelId,
+        dispatch.report.serverId,
+      );
+      await completeScoutEffect(effectKey);
+    } catch (error) {
+      await recordScoutEffectFailure(effectKey, error);
+      throw error;
+    }
+  }
+  const analyticsEffectKey = `report-analytics:${dispatch.result.runId.toString()}`;
+  const analyticsClaim = await claimScoutEffect({
+    key: analyticsEffectKey,
+    kind: "report-analytics",
+  });
+  if (analyticsClaim === "execute") {
+    await recordCoreOutputDelivered(
+      DiscordGuildIdSchema.parse(dispatch.report.serverId),
+      outputKind,
+    );
+    await completeScoutEffect(analyticsEffectKey);
+  }
+}
 
 export async function deliverScheduledReportDispatches(
   dispatches: Awaited<ReturnType<typeof runDueReports>>,
@@ -145,44 +190,7 @@ export async function deliverReportDispatch(
   // errors captured to Sentry inside `send`, so a ChannelSendError just gets a
   // warning here; anything unexpected is reported and we move on.
   try {
-    for (const [index, content] of splitMessageIntoChunks(
-      dispatch.result.output.content,
-    ).entries()) {
-      const effectKey = `report-discord:${dispatch.result.runId.toString()}:${index.toString()}`;
-      const claim = await claimScoutEffect({
-        key: effectKey,
-        kind: "report-discord",
-      });
-      if (claim === "completed") continue;
-      try {
-        await sendChannelMessage(
-          {
-            content,
-            files: index === 0 ? files : [],
-            nonce: `sr:${dispatch.result.runId.toString(36)}:${index.toString(36)}`,
-            enforceNonce: true,
-          },
-          channelId,
-          serverId,
-        );
-        await completeScoutEffect(effectKey);
-      } catch (error) {
-        await recordScoutEffectFailure(effectKey, error);
-        throw error;
-      }
-    }
-    const analyticsEffectKey = `report-analytics:${dispatch.result.runId.toString()}`;
-    const analyticsClaim = await claimScoutEffect({
-      key: analyticsEffectKey,
-      kind: "report-analytics",
-    });
-    if (analyticsClaim === "execute") {
-      await recordCoreOutputDelivered(
-        DiscordGuildIdSchema.parse(serverId),
-        outputKind,
-      );
-      await completeScoutEffect(analyticsEffectKey);
-    }
+    await deliverChunksAndAnalytics(dispatch, outputKind, files);
   } catch (error) {
     if (error instanceof ChannelSendError) {
       logger.warn(
@@ -235,59 +243,77 @@ export async function deliverPendingReportDispatches(
     orderBy: { id: "asc" },
   });
   for (const run of runs) {
-    if (run.renderedContent === null) {
-      throw new Error(
-        `Successful report run ${run.id.toString()} has no persisted rendered content`,
-      );
-    }
-    const imageBytes =
-      run.imageS3Key === null
-        ? null
-        : await loadReportRunImage(run.reportId, run.id);
-    if (imageBytes === null && run.imageS3Key !== null) {
-      throw new Error(
-        `Report run ${run.id.toString()} has a persisted image key but its image cannot be loaded`,
-      );
-    }
-    try {
-      await deliverReportDispatch(
-        {
-          report,
-          result: {
-            runId: run.id,
-            output: {
-              content: run.renderedContent,
-              image:
-                imageBytes === null
-                  ? null
-                  : {
-                      filename: `report-${run.id.toString()}.png`,
-                      data: imageBytes,
-                    },
-            },
-            rowsReturned: run.rowsReturned,
-            rowsScanned: run.rowsScanned,
+    await deliverPendingReportRun({
+      report,
+      run,
+      trigger: input.trigger,
+      failureMode: input.failureMode,
+      database,
+    });
+  }
+}
+
+async function deliverPendingReportRun(input: {
+  report: ScheduledReportDispatch["report"];
+  run: Awaited<
+    ReturnType<ExtendedPrismaClient["reportRun"]["findMany"]>
+  >[number];
+  trigger: "MANUAL" | "SCHEDULED";
+  failureMode: "isolate" | "propagate" | undefined;
+  database: ExtendedPrismaClient;
+}): Promise<void> {
+  if (input.run.renderedContent === null) {
+    throw new Error(
+      `Successful report run ${input.run.id.toString()} has no persisted rendered content`,
+    );
+  }
+  const imageBytes =
+    input.run.imageS3Key === null
+      ? null
+      : await loadReportRunImage(input.run.reportId, input.run.id);
+  if (imageBytes === null && input.run.imageS3Key !== null) {
+    throw new Error(
+      `Report run ${input.run.id.toString()} has a persisted image key but its image cannot be loaded`,
+    );
+  }
+  try {
+    await deliverReportDispatch(
+      {
+        report: input.report,
+        result: {
+          runId: input.run.id,
+          output: {
+            content: input.run.renderedContent,
+            image:
+              imageBytes === null
+                ? null
+                : {
+                    filename: `report-${input.run.id.toString()}.png`,
+                    data: imageBytes,
+                  },
           },
+          rowsReturned: input.run.rowsReturned,
+          rowsScanned: input.run.rowsScanned,
         },
-        input.trigger === "SCHEDULED" ? "report_scheduled" : "report_manual",
-        "propagate",
-      );
-      await database.reportRun.updateMany({
-        where: { id: run.id, deliveryState: "PENDING" },
-        data: {
-          deliveryState: "DELIVERED",
-          deliveryError: null,
-          deliveredAt: new Date(),
-        },
-      });
-    } catch (error) {
-      await database.reportRun.updateMany({
-        where: { id: run.id, deliveryState: "PENDING" },
-        data: {
-          deliveryError: error instanceof Error ? error.message : String(error),
-        },
-      });
-      if (input.failureMode !== "isolate") throw error;
-    }
+      },
+      input.trigger === "SCHEDULED" ? "report_scheduled" : "report_manual",
+      "propagate",
+    );
+    await input.database.reportRun.updateMany({
+      where: { id: input.run.id, deliveryState: "PENDING" },
+      data: {
+        deliveryState: "DELIVERED",
+        deliveryError: null,
+        deliveredAt: new Date(),
+      },
+    });
+  } catch (error) {
+    await input.database.reportRun.updateMany({
+      where: { id: input.run.id, deliveryState: "PENDING" },
+      data: {
+        deliveryError: error instanceof Error ? error.message : String(error),
+      },
+    });
+    if (input.failureMode !== "isolate") throw error;
   }
 }
