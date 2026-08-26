@@ -23,8 +23,9 @@ export function scoutCompetitionTaskQueue(
 
 /**
  * Start the stage-local activity worker used by the declarative Temporal
- * minute schedule. The core Temporal worker owns workflow execution; this
- * activity-only worker keeps database and Discord access inside Scout.
+ * minute schedule. Scout's embedded worker owns stage Workflow execution; this
+ * activity-only worker preserves the competition schedule contract while
+ * keeping database and Discord access inside Scout.
  */
 export async function startScoutCompetitionActivityWorker(): Promise<
   ScoutCompetitionActivityWorker | undefined

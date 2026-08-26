@@ -6,6 +6,7 @@ import {
   TimeoutFailure,
   TimeoutType,
 } from "@temporalio/common";
+import { historyFromJSON } from "@temporalio/common/lib/proto-utils.js";
 import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
 import { classifyWorkflowTimeoutHistory } from "./workflow-failure-history.ts";
 import {
@@ -148,6 +149,18 @@ function capturingPoster(): {
   return { poster, calls };
 }
 
+async function captureFirstFailureDescription(
+  client: WorkflowVisibilityClient,
+): Promise<string | undefined> {
+  const capture = capturingPoster();
+  await pollWorkflowFailuresOnce(client, capture.poster, {
+    now: NOW,
+    lookbackMs: LOOKBACK_MS,
+    ttlMs: TTL_MS,
+  });
+  return capture.calls.at(0)?.alerts.at(0)?.annotations["description"];
+}
+
 describe("buildVisibilityQuery", () => {
   it("filters to Failed/TimedOut closed after the lookback boundary", () => {
     const since = new Date("2026-07-30T17:45:00.000Z");
@@ -210,6 +223,59 @@ describe("workflow timeout history classification", () => {
     expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
       "no activity reached execution",
     );
+  });
+
+  it("classifies an SDK History instance without a parser error", async () => {
+    const history = historyFromJSON({
+      events: [
+        {
+          eventId: "1",
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+          activityTaskScheduledEventAttributes: {
+            activityId: "activity-1",
+            activityType: { name: "someActivity" },
+            taskQueue: { name: "scout" },
+            workflowTaskCompletedEventId: "0",
+          },
+        },
+        {
+          eventId: "2",
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
+          activityTaskTimedOutEventAttributes: {
+            scheduledEventId: "1",
+            startedEventId: "0",
+            retryState: "RETRY_STATE_TIMEOUT",
+            failure: {
+              message: "activity dispatch timed out",
+              timeoutFailureInfo: {
+                timeoutType: "TIMEOUT_TYPE_SCHEDULE_TO_START",
+              },
+            },
+          },
+        },
+      ],
+    });
+    const client = fakeClient(
+      [
+        {
+          workflowId: "sdk-history-timeout",
+          runId: "run-timeout",
+          type: "agentTaskWorkflow",
+          taskQueue: "scout",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "TIMED_OUT" },
+        },
+      ],
+      {
+        "sdk-history-timeout/run-timeout": () =>
+          rejectWithActivityTimeoutFailure(TimeoutType.SCHEDULE_TO_START),
+      },
+      { "sdk-history-timeout/run-timeout": history },
+    );
+    const description = await captureFirstFailureDescription(client);
+    expect(description).toContain("timeoutClassification activity");
+    expect(description).toContain("timeoutDispatchState pre-dispatch");
+    expect(description).not.toContain("historyError");
   });
 });
 

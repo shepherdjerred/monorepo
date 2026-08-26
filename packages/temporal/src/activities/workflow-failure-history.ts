@@ -19,6 +19,10 @@ const ProtobufLongSchema = z.object({
   high: z.number().int(),
   unsigned: z.boolean(),
 });
+const UnknownRecordSchema = z.object({}).catchall(z.unknown());
+const HistorySchema = z.object({
+  events: z.array(z.unknown()).optional(),
+});
 
 const TIMEOUT_CLASSIFICATIONS: Readonly<
   Record<string, WorkflowTimeoutClassification>
@@ -32,7 +36,7 @@ function eventRecord(event: unknown): Record<string, unknown> | undefined {
   if (typeof event !== "object" || event === null) {
     return undefined;
   }
-  return z.record(z.string(), z.unknown()).parse(event);
+  return UnknownRecordSchema.parse(event);
 }
 
 function eventId(value: unknown): string | undefined {
@@ -178,9 +182,7 @@ function historyEvents(history: unknown): readonly unknown[] {
   if (typeof history !== "object" || history === null) {
     return [];
   }
-  const record = z.record(z.string(), z.unknown()).parse(history);
-  const events = record["events"];
-  return Array.isArray(events) ? events : [];
+  return HistorySchema.parse(history).events ?? [];
 }
 
 function eventTypeName(value: unknown): string | undefined {

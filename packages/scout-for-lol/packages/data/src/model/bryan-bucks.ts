@@ -313,6 +313,13 @@ const MvpContextSchema = z.strictObject({
  * meaning of an existing one.
  */
 export type BucksLedgerContext = z.infer<typeof BucksLedgerContextSchema>;
+// Weekly v2 pricing uses a challenging 20–30% YES range. Keep the original
+// 40–60% range readable for v1 ledger entries because ledger history is
+// append-only and the context does not carry the weekly schema version.
+export const BucksWeeklyParlayYesProbabilityBpsSchema = z.union([
+  z.number().int().min(2000).max(3000),
+  z.number().int().min(4000).max(6000),
+]);
 export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("seed"),
@@ -431,7 +438,7 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     periodKey: z.iso.date(),
     slot: z.number().int().nonnegative(),
     side: BucksParlaySideSchema,
-    yesProbabilityBps: z.number().int().min(4000).max(6000),
+    yesProbabilityBps: BucksWeeklyParlayYesProbabilityBpsSchema,
     totalStake: BucksStakeSchema,
     quotedGrossPayout: BucksStakeSchema,
   }),
@@ -442,7 +449,7 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     periodKey: z.iso.date(),
     slot: z.number().int().nonnegative(),
     side: BucksParlaySideSchema,
-    yesProbabilityBps: z.number().int().min(4000).max(6000),
+    yesProbabilityBps: BucksWeeklyParlayYesProbabilityBpsSchema,
     totalStake: BucksStakeSchema,
     totalReserve: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
     quotedGrossPayout: BucksStakeSchema,

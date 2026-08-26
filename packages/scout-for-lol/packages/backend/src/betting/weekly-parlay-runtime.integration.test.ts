@@ -8,6 +8,7 @@ import {
   vi,
 } from "vitest";
 import {
+  BucksLedgerContextSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
@@ -169,6 +170,7 @@ async function clearAll(): Promise<void> {
 
 async function makeMarket(input?: {
   criteria?: unknown;
+  yesProbabilityBps?: number;
   evaluatorVersion?: string;
   schemaVersion?: number;
   marketState?: "publishing" | "open" | "active";
@@ -208,7 +210,7 @@ async function makeMarket(input?: {
       criteria: JSON.stringify(input?.criteria ?? hitCriteria()),
       historySample: "[]",
       pricing: "{}",
-      yesProbabilityBps: 5000,
+      yesProbabilityBps: input?.yesProbabilityBps ?? 5000,
       promptVersion: "test",
       catalogVersion: "test",
       schemaVersion: input?.schemaVersion ?? 1,
@@ -440,6 +442,33 @@ describe("weekly parlay match eligibility", () => {
 });
 
 describe("weekly parlay ledger and settlement", () => {
+  test("accepts current weekly prices below the legacy ledger range", async () => {
+    const market = await makeMarket({
+      yesProbabilityBps: 2273,
+      schemaVersion: 2,
+      evaluatorVersion: "2",
+    });
+
+    await expect(place(market.id, "YES", 10)).resolves.toMatchObject({
+      kind: "placed",
+      grossPayout: 44,
+    });
+
+    const entries = await db.bucksLedgerEntry.findMany({
+      where: { weeklyParlayBetId: { not: null } },
+    });
+    expect(entries).toHaveLength(2);
+    expect(
+      entries.map((entry) =>
+        BucksLedgerContextSchema.parse(JSON.parse(entry.context)),
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ yesProbabilityBps: 2273 }),
+      ]),
+    );
+  });
+
   test("reprices top-ups and cancels for free with ledger conservation", async () => {
     const market = await makeMarket();
     await expect(place(market.id, "YES", 10)).resolves.toMatchObject({

@@ -258,6 +258,25 @@ describe("version catalog integrity", () => {
     ).toThrow("pin state drift");
   });
 
+  test("keeps the committed candidate state aligned with the committed catalog", async () => {
+    const [stateSource, catalogSourceText] = await Promise.all([
+      Bun.file(new URL("pin-candidates-state.json", import.meta.url)).text(),
+      Bun.file(
+        new URL(
+          "../packages/version-catalog/src/catalog.json",
+          import.meta.url,
+        ),
+      ).text(),
+    ]);
+
+    expect(() =>
+      validateStateAgainstVersions(
+        parsePinCandidatesState(stateSource),
+        parseVersionCatalogSource(catalogSourceText),
+      ),
+    ).not.toThrow();
+  });
+
   test("rejects duplicate source keys", () => {
     expect(() =>
       parseVersionCatalogSource(
