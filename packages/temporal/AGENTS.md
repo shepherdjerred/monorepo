@@ -62,35 +62,6 @@ Buildkite PVCs and has no Kubernetes API token or Job RBAC; Kometa reaches Plex
 over the cluster network with credentials projected from namespace-local
 OnePassword resources.
 
-`main-vuln-scan-weekly` (`runMainVulnScanWorkflow`) also runs on the
-maintenance queue: it shallow-clones public `main` and runs
-`trivy fs --skip-db-update` against the warm `/buildkite/trivy-db` PVC that
-`buildkite-trivy-db-refresh` keeps fresh (the single activity slot means the
-scan can never race the DB refresh writer). Only the scan activity lives on
-this queue — the workflow proxies `deliverActivityReport` and the Alertmanager
-publish to `TASK_QUEUES.DEFAULT`, so Postal/S3/`ALERTMANAGER_URL` credentials
-never reach the maintenance pod. Policy: the report email is delivered on
-every run; Alertmanager receives one fire/resolve occurrence
-(`MainVulnScanCritical`) that fires only while ≥1 CRITICAL finding exists and
-resolves on the next clean run (`src/shared/main-vuln-scan-alert.ts`).
-
-`link-rot-scan-weekly` (`runLinkRotScanWorkflow`) is the same shape: it
-shallow-clones public `main` and runs the image's pinned `lychee` binary over
-the tracked markdown using the clone's root `lychee.toml` + `.lycheeignore` (so
-configuration is versioned with the docs it governs). The workflow orchestrates
-from the core queue, but its long git/lychee subprocess — which reaches
-arbitrary external hosts — is proxied to the serial `maintenance` queue so that
-network and process-failure risk stays out of the credentialed core pod, with
-delivery and Alertmanager publication proxied back to `TASK_QUEUES.DEFAULT`.
-Because that queue has a single activity slot, the schedule is staggered past
-the worst case of every sibling on it and its execution timeout budgets for
-queueing as well as its own retries — the deadline runs while the scan waits
-for the slot. It automates the rot-detection half of the root
-AGENTS.md link-liveness rule; the commit-time check for new URLs stays manual.
-Dead links map to `warning` findings — email-only in practice — while the
-symmetric `LinkRotScanCritical` fire/resolve occurrence pages only if a
-critical finding ever appears (`src/shared/link-rot-alert.ts`).
-
 ## Schedules (`src/schedules/register-schedules.ts`, `src/schedules/schedule-definitions.ts`)
 
 The declarative `SCHEDULES` array plus its supporting types/data (`ScheduleDefinition`,
@@ -242,7 +213,7 @@ Workflow:
 - `XCODE_CLOUD_WEBHOOK_TOKEN` — unguessable token embedded in the Xcode Cloud webhook URL path (`/hook/<token>`). Xcode Cloud webhooks carry no signature/auth header, so the URL path IS the credential. **Required** to start the receiver; when unset the server is skipped.
 - `XCODE_CLOUD_WEBHOOK_PORT` — port for the Xcode Cloud webhook receiver (default `9468`).
 - `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
-- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by five features: the Xcode Cloud webhook receiver (when enabled), the `temporal-failure-watch` schedule (see below), `llm-catalog-refresh-weekly`, which publishes its withheld state on every run (firing when the cross-check withholds edits, resolving when it withholds none), and `main-vuln-scan-weekly` plus `link-rot-scan-weekly`, which publish their critical-finding state on every run (firing while ≥1 critical finding exists, resolving on a clean run) — all POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
+- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by three features: the Xcode Cloud webhook receiver (when enabled), the `temporal-failure-watch` schedule (see below), and `llm-catalog-refresh-weekly`, which publishes its withheld state on every run (firing when the cross-check withholds edits, resolving when it withholds none) — all POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
 - `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `87090` = 24h lookback plus the full 6.5m activity retry budget and a 5m delivery margin).
 
 ## Scout weekly parlay lifecycle
