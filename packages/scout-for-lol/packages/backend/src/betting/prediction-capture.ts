@@ -81,7 +81,15 @@ export async function capturePredictionForPrematch(
   }
 
   if (shouldUseTemporalBackgroundWork()) {
-    await enqueuePredictionObservation(observation);
+    void enqueuePredictionObservation(observation).catch((error: unknown) => {
+      logger.error(
+        `Failed to enqueue prediction observation for ${matchId}:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: { source: "prediction-observation-enqueue", matchId },
+      });
+    });
   } else {
     // Legacy ownership remains best-effort until the Temporal family flag is
     // enabled. The immutable observation makes this write idempotent.

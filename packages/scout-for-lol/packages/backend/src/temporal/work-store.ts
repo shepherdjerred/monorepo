@@ -153,7 +153,11 @@ export async function executeScoutTemporalWork(
     await prisma.scoutTemporalWork.update({
       where: { id: input.workId },
       data: {
-        state: "failed",
+        // Keep the durable handoff eligible for the reconciliation workflow.
+        // Temporal retries the current execution first; if its retry budget is
+        // exhausted, the next reconciliation starts a new failed-only
+        // workflow execution with the same stable work ID.
+        state: "queued",
         lastError: error instanceof Error ? error.message : String(error),
       },
     });

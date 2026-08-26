@@ -4,6 +4,7 @@ import {
   getExternalWorkflowHandle,
   isCancellation,
   setHandler,
+  sleep,
   startChild,
   workflowInfo,
 } from "@temporalio/workflow";
@@ -47,6 +48,15 @@ export async function scoutInitialHistoryWorkflow(
       page = await activities.fetchInitialHistoryPage(input);
     } catch (error: unknown) {
       if (isCancellation(error)) throw error;
+      continue;
+    }
+    if (page.nextAttemptAt !== undefined) {
+      const delayMs = Math.max(
+        0,
+        new Date(page.nextAttemptAt).getTime() - Date.now(),
+      );
+      if (delayMs > 0) await sleep(delayMs);
+      runRequested = true;
       continue;
     }
     const pagesProcessed = input.pagesProcessed + 1;

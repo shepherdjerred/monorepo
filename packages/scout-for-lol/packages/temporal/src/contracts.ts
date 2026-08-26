@@ -183,6 +183,7 @@ export type ScoutQueueCanaryProbeResult = z.infer<
 
 export const InitialHistoryPageResultSchema = z.object({
   nextCursor: z.string().min(1).max(512).optional(),
+  nextAttemptAt: IsoInstantSchema.optional(),
   persistedMatches: z.number().int().nonnegative(),
   complete: z.boolean(),
   nextAction: z.enum(["continue", "fold-lake"]).default("continue"),

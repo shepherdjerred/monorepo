@@ -11,7 +11,11 @@ import { runDueReports } from "#src/reports/scheduler.ts";
 import { syncSystemReports } from "#src/reports/system-reports.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
-import { DiscordGuildIdSchema, ReportIdSchema } from "@scout-for-lol/data";
+import {
+  DiscordGuildIdSchema,
+  ReportIdSchema,
+  ReportRunIdSchema,
+} from "@scout-for-lol/data";
 import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
 import { loadReportRunImage } from "#src/storage/s3-report-run.ts";
 import type { ScheduledReportDispatch } from "#src/reports/scheduler.ts";
@@ -58,14 +62,18 @@ export async function deliverScheduledReportDispatches(
  */
 export async function deliverStoredScheduledReport(
   reportId: number,
+  runId?: number,
 ): Promise<boolean> {
   const parsedReportId = ReportIdSchema.parse(reportId);
+  const parsedRunId =
+    runId === undefined ? undefined : ReportRunIdSchema.parse(runId);
   const report = await prisma.report.findUnique({
     where: { id: parsedReportId },
   });
   if (report === null) return false;
   const run = await prisma.reportRun.findFirst({
     where: {
+      ...(parsedRunId === undefined ? {} : { id: parsedRunId }),
       reportId: parsedReportId,
       trigger: "SCHEDULED",
       status: "SUCCESS",

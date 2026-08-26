@@ -250,7 +250,7 @@ export class ExploreRunManager {
   async listDurable(userId: DiscordAccountId): Promise<ExploreActiveRun[]> {
     const local = this.list(userId);
     if (!temporalInteractiveEnabled()) return local;
-    return await listDurableExploreRuns(this.#client, userId, local);
+    return await listDurableExploreRuns(this.#client, userId, []);
   }
 
   subscribe(
@@ -282,8 +282,9 @@ export class ExploreRunManager {
     userId: DiscordAccountId,
     subscriber: Subscriber,
   ): Promise<(() => void) | null> {
-    const local = this.subscribe(runId, userId, subscriber);
-    if (local !== null || !temporalInteractiveEnabled()) return local;
+    if (!temporalInteractiveEnabled()) {
+      return this.subscribe(runId, userId, subscriber);
+    }
     return await subscribeDurableExploreRun(
       this.#client,
       runId,
@@ -295,7 +296,16 @@ export class ExploreRunManager {
   async stop(runId: string, userId: DiscordAccountId): Promise<boolean> {
     const run = this.#runs.get(runId);
     if (temporalInteractiveEnabled()) {
-      return await requestDurableExploreStop(this.#client, runId, userId);
+      const durable = await this.#client.scoutInteractiveRun.findFirst({
+        where: { id: runId, kind: "explore", ownerId: userId },
+        select: { id: true },
+      });
+      if (durable !== null) {
+        return await requestDurableExploreStop(this.#client, runId, userId);
+      }
+      if (run?.identity.userId !== userId) return false;
+      this.#abort(run, "stop", "Explore turn stopped by the asker.");
+      return true;
     }
     if (run?.identity.userId !== userId) {
       return false;
@@ -401,7 +411,7 @@ export class ExploreRunManager {
     userId: DiscordAccountId,
   ): Promise<ExploreRunOutcome | null> {
     const local = this.outcome(runId, userId);
-    if (local !== null || !temporalInteractiveEnabled()) return local;
+    if (!temporalInteractiveEnabled()) return local;
     return await durableExploreOutcome(this.#client, runId, userId);
   }
 

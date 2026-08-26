@@ -1,6 +1,6 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
-import { ReportRunIdSchema } from "@scout-for-lol/data";
+import { ReportIdSchema, ReportRunIdSchema } from "@scout-for-lol/data";
 import { client } from "#src/discord/client.ts";
 import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
@@ -377,11 +377,13 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           Context.current().heartbeat({ reportId, phase: "running" });
           if (input.source === "schedule") {
+            const executionStartedAt = new Date();
             const { runDueReports } = await import("#src/reports/scheduler.ts");
             const dispatches = await runDueReports({
               prisma,
               reportId,
               limit: 1,
+              now: executionStartedAt,
             });
             const { deliverScheduledReportDispatches } =
               await import("#src/reports/discord-dispatcher.ts");
@@ -390,9 +392,22 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
                 propagateErrors: true,
               });
             } else {
-              const { deliverStoredScheduledReport } =
-                await import("#src/reports/discord-dispatcher.ts");
-              await deliverStoredScheduledReport(reportId);
+              const parsedReportId = ReportIdSchema.parse(reportId);
+              const generatedRun = await prisma.reportRun.findFirst({
+                where: {
+                  reportId: parsedReportId,
+                  trigger: "SCHEDULED",
+                  status: "SUCCESS",
+                  startedAt: { gte: executionStartedAt },
+                },
+                orderBy: [{ startedAt: "desc" }, { id: "desc" }],
+                select: { id: true },
+              });
+              if (generatedRun !== null) {
+                const { deliverStoredScheduledReport } =
+                  await import("#src/reports/discord-dispatcher.ts");
+                await deliverStoredScheduledReport(reportId, generatedRun.id);
+              }
             }
           } else {
             const runId = input.runId === undefined ? NaN : Number(input.runId);

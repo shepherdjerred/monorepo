@@ -73,6 +73,15 @@ export async function processInitialHistoryWorkflowPage(
     return { persistedMatches: 0, complete: true, nextAction: "continue" };
   }
 
+  if (selected.nextAttemptAt > now) {
+    return {
+      nextAttemptAt: selected.nextAttemptAt.toISOString(),
+      persistedMatches: 0,
+      complete: false,
+      nextAction: "continue",
+    };
+  }
+
   const shouldProcess = await claimTrackedJobOrCompleteUntracked(
     db,
     selected,

@@ -102,7 +102,13 @@ export async function executeReportQuery(
   // records an error datapoint (with an honest source) rather than nothing.
   let source = "unknown";
   try {
-    const plan = compileScoutQl(params.queryText);
+    let plan: ScoutQlPlan;
+    try {
+      plan = compileScoutQl(params.queryText);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new InvalidSavedQueryError(message, error);
+    }
     source = plan.source;
     params.onPlan?.(plan);
     const result = await executeCompiledReportQuery(params, plan);
