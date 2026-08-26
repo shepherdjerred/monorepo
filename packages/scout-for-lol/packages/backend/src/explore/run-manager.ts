@@ -211,7 +211,10 @@ export class ExploreRunManager {
             });
           }
         } catch (error) {
-          if (error instanceof DurableExploreUnavailableError) {
+          if (
+            error instanceof DurableExploreUnavailableError ||
+            error instanceof ExploreRunRateLimitedError
+          ) {
             await rollbackUnstartedExploreTurn(this.#client, {
               ...started,
               userId: identity.userId,
