@@ -179,10 +179,13 @@ operation you need; Desktop integration may authenticate per command even when
 - Explore and every ScoutQL report read the **report lake**, not the database.
   A checkout with no lake answers every question with zero rows and looks
   broken rather than empty — see the shared seed below.
-- The BETA Discord app (`1311755320745394317`) must list
-  `http://localhost:<each-web-port>/api/auth/discord/callback` in its OAuth
-  redirect URIs, otherwise the token exchange returns 400. `dev:login` avoids
-  OAuth and is preferred for secondary copies.
+- `dev:web` defaults to a local signed dev-login and a consumer preview of the
+  fixture guild `1337623164146155593`; the normal app sign-in link follows that
+  local session path, so secondary copies do not need a Discord callback.
+- Set `SCOUT_DEV_AUTH_MODE=oauth` to test the real Discord flow. The BETA Discord
+  app (`1311755320745394317`) must then list the exact
+  `http://localhost:<each-web-port>/api/auth/discord/callback` URI, otherwise
+  Discord rejects the request before Scout receives it.
 - The bot only sees guilds it has been invited to. To populate the guild
   picker, make sure your test guild has the BETA bot in it.
 
@@ -242,7 +245,8 @@ config fails closed. `scripts/dev-web.ts` sets it for local runs. When
 of `0.0.0.0`, so the unauthenticated dev-login route can't be reached from
 another host on the network.
 
-Driving this by hand: with `dev:web` running, visiting
+Driving this by hand: with `dev:web` running, open the printed local login URL
+or click the app's normal sign-in button. Visiting
 `http://localhost:5180/api/dev/login?discordId=<id>&returnTo=/app/g/123` in
 a browser signs you in as that user and lands on the given route. Omit
 `discordId` for a stable fake test user; pass a real Discord ID (e.g. the
@@ -260,12 +264,19 @@ toolkit screenshot scout-app /app/ --discord-id 160509172704739328
 #### `DEV_USER_GUILDS` — dev-only Discord membership (needed for `/app/explore`)
 
 A dev-login session carries **no Discord OAuth token**, so anything that
-resolves the caller's servers cannot answer for it: `fetchUserGuilds` calls
+resolves the caller's servers cannot answer for it unless `dev:web` supplies
+its local membership preview: `fetchUserGuilds` calls
 `getFreshUserAccessToken(user)` and fails as `token_refresh_failed` →
-`UNAUTHORIZED`. That is why dev-login alone gets you the guild picker's empty
+`UNAUTHORIZED`. Without that preview, a manually minted dev-login gets the guild picker's empty
 state and, on `/app/explore`, the "Explore couldn't load" panel rather than the
 page — `explore.status` converts only `FORBIDDEN` into `enabled: false`, so an
 auth failure rethrows.
+
+`dev:web` derives `DEV_USER_GUILDS` and `EXPLORE_GUILD_ALLOWLIST` from
+`SCOUT_DEV_CONSUMER_GUILD_ID` by default, and enables the local player-profile
+flag through static feature-flag configuration. Set
+`SCOUT_DEV_CONSUMER_PREVIEW=false` to test denied or unavailable states, then
+provide the two variables explicitly when needed.
 
 `DEV_USER_GUILDS` is a comma-separated list of Discord server ids that stands in
 for Discord's answer, as owner + `ADMINISTRATOR` (a member-only stand-in would
@@ -1531,10 +1542,10 @@ no Discord API:
   object. `assertGuildAdmin` / `assertChannelInGuild` are stubbed, so real Discord
   admin/membership is out of scope for these tests.
 
-For the running app end-to-end, `bun run dev:web` uses the explicit local
-session bootstrap above when OAuth click-through is unnecessary. Use real
-Discord OAuth only when testing the OAuth flow itself; the BETA app must still
-contain the localhost callback URI and the test guild must contain the BETA bot.
+For the running app end-to-end, `bun run dev:web` uses the local signed session
+and consumer preview by default. Use real Discord OAuth only when testing the
+OAuth flow itself; set `SCOUT_DEV_AUTH_MODE=oauth`, register the exact
+localhost callback URI, and ensure the test guild contains the BETA bot.
 
 ---
 

@@ -130,5 +130,15 @@ export default defineConfig({
   },
   site: siteOrigin,
   trailingSlash: "always",
-  vite: { plugins: [scoutAssetsPlugin()] },
+  vite: {
+    plugins: [scoutAssetsPlugin()],
+    server: {
+      proxy: {
+        "/trpc": {
+          target: env.PUBLIC_APP_ORIGIN ?? "http://localhost:5180",
+          changeOrigin: true,
+        },
+      },
+    },
+  },
 });

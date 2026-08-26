@@ -144,6 +144,14 @@ function computeConfiguration() {
     // unauthenticated session-minting endpoint. Requiring this explicit flag
     // (set only by scripts/dev-web.ts) means an omitted config fails closed.
     enableDevLogin: env.get("ENABLE_DEV_LOGIN").default("false").asBool(),
+    // Local web boots use the signed dev-login route by default so a secondary
+    // copy does not depend on a Discord Developer Portal callback registration.
+    // Production and Beta retain OAuth unless a local script explicitly opts
+    // into dev-login.
+    devAuthMode: env
+      .get("DEV_AUTH_MODE")
+      .default("oauth")
+      .asEnum(["dev-login", "oauth"]),
     // Dev-only stand-in for the caller's Discord server membership. A
     // dev-login session carries no Discord OAuth token, so anything that
     // resolves guilds — the guild picker, assertGuildAdmin, and explore's
@@ -277,6 +285,9 @@ const configuration: Configuration = {
   },
   get enableDevLogin() {
     return getConfiguration().enableDevLogin;
+  },
+  get devAuthMode() {
+    return getConfiguration().devAuthMode;
   },
   get devUserGuilds() {
     return getConfiguration().devUserGuilds;

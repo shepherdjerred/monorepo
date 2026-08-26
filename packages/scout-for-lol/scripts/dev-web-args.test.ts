@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { parseDevWebArgs } from "./dev-web.ts";
+import { buildDevEnvironment } from "./dev-web-environment.ts";
 
 test("parses isolated ports and database URL", () => {
   expect(
@@ -24,6 +25,9 @@ test("parses isolated ports and database URL", () => {
       backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4321",
       docsOrigin: "http://localhost:4322",
+      authMode: "dev-login",
+      consumerPreview: true,
+      consumerGuildId: "1337623164146155593",
     },
   });
 });
@@ -43,6 +47,9 @@ test("derives an isolated database for a non-default backend port", () => {
       backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4321",
       docsOrigin: "http://localhost:4322",
+      authMode: "dev-login",
+      consumerPreview: true,
+      consumerGuildId: "1337623164146155593",
     },
   });
 });
@@ -72,6 +79,9 @@ test("supports a stable secondary copy without the BETA gateway", () => {
       backendWatchEnabled: false,
       marketingOrigin: "http://localhost:4321",
       docsOrigin: "http://localhost:4322",
+      authMode: "dev-login",
+      consumerPreview: true,
+      consumerGuildId: "1337623164146155593",
     },
   });
 });
@@ -97,6 +107,76 @@ test("configures alternate surface origins for a second stack", () => {
       backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4324",
       docsOrigin: "http://localhost:4325",
+      authMode: "dev-login",
+      consumerPreview: true,
+      consumerGuildId: "1337623164146155593",
     },
+  });
+});
+
+test("defaults a local boot to the consumer preview and dev login", () => {
+  const parsed = parseDevWebArgs([], {
+    ENVIRONMENT: "dev",
+    DATABASE_URL: "postgres://scout@127.0.0.1:5471/scout_dev_3000",
+  });
+
+  expect(parsed.kind).toBe("options");
+  if (parsed.kind !== "options") return;
+
+  const environment = buildDevEnvironment(
+    {},
+    parsed.options,
+    "/tmp/scout-report-lake",
+    false,
+  );
+
+  expect(environment).toMatchObject({
+    ENABLE_DEV_LOGIN: "true",
+    DEV_AUTH_MODE: "dev-login",
+    DEV_USER_GUILDS: "1337623164146155593",
+    EXPLORE_GUILD_ALLOWLIST: "1337623164146155593",
+    FEATURE_FLAGS_MODE: "static",
+    FEATURE_FLAGS_STATIC_OVERRIDES:
+      '{"scout-consumer-player-profiles-enabled":true}',
+    WEB_APP_ORIGIN: "http://localhost:5180",
+  });
+});
+
+test("preserves explicit local access and auth overrides", () => {
+  const parsed = parseDevWebArgs([], {
+    SCOUT_DEV_AUTH_MODE: "oauth",
+    SCOUT_DEV_CONSUMER_PREVIEW: "false",
+    SCOUT_DEV_CONSUMER_GUILD_ID: "1337623164146155593",
+    FEATURE_FLAGS_MODE: "disabled",
+    FEATURE_FLAGS_STATIC_OVERRIDES:
+      '{"scout-consumer-player-profiles-enabled":false}',
+    DEV_USER_GUILDS: "",
+    EXPLORE_GUILD_ALLOWLIST: "",
+  });
+
+  expect(parsed.kind).toBe("options");
+  if (parsed.kind !== "options") return;
+
+  const environment = buildDevEnvironment(
+    {
+      FEATURE_FLAGS_MODE: "disabled",
+      FEATURE_FLAGS_STATIC_OVERRIDES:
+        '{"scout-consumer-player-profiles-enabled":false}',
+      DEV_USER_GUILDS: "",
+      EXPLORE_GUILD_ALLOWLIST: "",
+    },
+    parsed.options,
+    "/tmp/scout-report-lake",
+    false,
+  );
+
+  expect(environment).toMatchObject({
+    ENABLE_DEV_LOGIN: "false",
+    DEV_AUTH_MODE: "oauth",
+    DEV_USER_GUILDS: "",
+    EXPLORE_GUILD_ALLOWLIST: "",
+    FEATURE_FLAGS_MODE: "disabled",
+    FEATURE_FLAGS_STATIC_OVERRIDES:
+      '{"scout-consumer-player-profiles-enabled":false}',
   });
 });
