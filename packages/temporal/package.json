@@ -20,7 +20,7 @@
     "typecheck": "bun run scripts/ensure-ha-schema.ts && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint --cache . && check-architecture",
     "test": "bun run scripts/ensure-ha-schema.ts && bun run test:bun && bun run test:workflows",
-    "test:bun": "bun --no-install --bun vitest --config ../../vitest.config.ts run src/activities src/event-bridge src/observability src/schedules src/shared src/lib src/workflows/agent-task.test.ts",
+    "test:bun": "bun --no-install --bun vitest --config ../../vitest.config.ts run src/activities src/event-bridge src/observability src/schedules src/shared src/lib src/workflows/agent-task.test.ts src/worker-config.test.ts",
     "test:workflows": "bun scripts/test-workflows.ts",
     "replay:scout-histories": "bun scripts/replay-scout-histories.ts",
     "replay:scout-histories:node": "node --experimental-strip-types scripts/replay-scout-histories-node.ts",

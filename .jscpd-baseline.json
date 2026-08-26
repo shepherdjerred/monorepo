@@ -1441,8 +1441,8 @@
       "tokens": 81
     },
     "packages/scout-for-lol/packages/data/src/model/bryan-bucks.ts|packages/scout-for-lol/packages/data/src/model/bryan-bucks.ts": {
-      "clones": 2,
-      "tokens": 153
+      "clones": 1,
+      "tokens": 70
     },
     "packages/scout-for-lol/packages/data/src/model/competition.test.ts|packages/scout-for-lol/packages/data/src/model/competition.test.ts": {
       "clones": 14,
@@ -1945,5 +1945,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-26T03:29:21.520Z"
+  "updated": "2026-08-26T06:11:02.613Z"
 }

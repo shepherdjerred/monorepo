@@ -47,6 +47,21 @@ describe("Temporal worker role contracts", () => {
     ).toEqual([TASK_QUEUES.GLITTER_CORPUS, TASK_QUEUES.GLITTER_CONTEXT]);
   });
 
+  it("keeps embedded Scout Workflow queues out of central workers", () => {
+    expect(
+      getWorkerRoleContract("scout").workers.map(
+        (definition) => definition.taskQueue,
+      ),
+    ).toEqual([TASK_QUEUES.SCOUT]);
+    expect(
+      QUEUE_WORKER_DEFINITIONS.some(
+        (definition) =>
+          definition.taskQueue === TASK_QUEUES.SCOUT_BETA ||
+          definition.taskQueue === TASK_QUEUES.SCOUT_PROD,
+      ),
+    ).toBe(false);
+  });
+
   it("keeps gateway and event-bridge ownership explicit", () => {
     expect(getWorkerRoleContract("control")).toMatchObject({
       runsGateway: true,
