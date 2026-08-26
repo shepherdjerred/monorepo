@@ -1222,6 +1222,7 @@
         "@temporalio/common": "1.22.0",
         "@temporalio/worker": "1.22.0",
         "@trpc/server": "11",
+        "@trpc/server": "11",
         "ai": "^7.0.77",
         "cron": "^4.1.4",
         "cron-parser": "^5.5.0",
