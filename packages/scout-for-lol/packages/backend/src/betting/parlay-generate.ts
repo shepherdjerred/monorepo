@@ -436,9 +436,9 @@ export async function runParlayGeneration(
         tags: { source: "betting-parlay-generate", matchId, status },
       });
     }
-    // Temporal owns retries and durable failure state once the background
-    // family is enabled. Preserve the historical best-effort fire-and-forget
-    // behavior only for the legacy inline caller.
-    if (execution === "temporal") throw error;
+    // Expected generation outcomes are terminal for both execution modes.
+    // Retrying them would repeat provider calls without creating a definition;
+    // Temporal only retries unexpected provider or persistence failures.
+    if (execution === "temporal" && !expected) throw error;
   }
 }
