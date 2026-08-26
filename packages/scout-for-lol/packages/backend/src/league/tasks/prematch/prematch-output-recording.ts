@@ -37,7 +37,7 @@ export async function recordPrematchOutputs(input: {
 
   await recordCoreOutputsDelivered(input.deliveredGuildIds, "prematch");
   if (input.bucks.bettingGuildIds.size > 0) {
-    startParlayGeneration({
+    await startParlayGeneration({
       gameInfo: input.gameInfo,
       trackedPlayers: input.trackedPlayers,
       queueType: input.queueType,

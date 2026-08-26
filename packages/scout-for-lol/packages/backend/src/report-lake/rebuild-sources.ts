@@ -43,6 +43,11 @@ type RebuildSourceOptions = {
   writer: NdjsonFileWriter;
   foldedIds: Set<string>;
   abortSignal?: AbortSignal;
+  onProgress?: (progress: {
+    files: number;
+    rows: number;
+    skipped: number;
+  }) => void;
 };
 
 export async function populateMatchesFromS3(
@@ -79,6 +84,11 @@ export async function populateMatchesFromS3(
       }
       foldedIds.add(stagingIdForMatch(match.metadata.matchId));
     }
+    options.onProgress?.({
+      files: foldedIds.size + skipped,
+      rows: writer.rows,
+      skipped,
+    });
   };
 
   for await (const ref of enumerateRawObjects(
@@ -142,6 +152,11 @@ export async function populatePrematchFromS3(
         ),
       );
     }
+    options.onProgress?.({
+      files: foldedIds.size + skipped,
+      rows: writer.rows,
+      skipped,
+    });
   };
 
   for await (const ref of enumerateRawObjects(
@@ -199,6 +214,11 @@ export async function populatePredictionObservationsFromS3(
       writer.write(flattenPredictionObservation(observation));
       foldedIds.add(stagingIdForPredictionObservation(observation.matchId));
     }
+    options.onProgress?.({
+      files: foldedIds.size + skipped,
+      rows: writer.rows,
+      skipped,
+    });
   };
 
   for await (const ref of enumerateRawObjects(

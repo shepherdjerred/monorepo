@@ -1,92 +1,57 @@
-import * as Sentry from "@sentry/bun";
 import {
-  EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TIMEOUT_MS,
-  ExploreActiveRunSchema,
   ExploreRunSnapshotEventSchema,
   type DiscordAccountId,
   type ExploreActiveRun,
-  type ExploreMessage,
   type ExploreRunOutcome,
-  type ExploreStreamEvent,
   type ExploreTraceEntry,
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import {
-  streamExploreAgent,
-  type ExploreAgentParams,
-  type ExploreAgentResult,
-} from "#src/explore/agent.ts";
+import { streamExploreAgent } from "#src/explore/agent.ts";
 import {
   ExploreConversationBusyError,
   tryStartExploreTurn,
   waitForExploreConversation,
-  type ExploreRateLimitIdentity,
   type ExploreRateLimitRejection,
-  type ExploreRateLimitTicket,
+  type ExploreRateLimitIdentity,
 } from "#src/explore/rate-limit.ts";
 import {
-  ExploreInvalidTurnError,
   ExploreNotFoundError,
   deleteExploreConversation,
   loadExploreTranscript,
-  resolveRegenerateTarget,
-  startExploreTurn,
 } from "#src/explore/store.ts";
-import { recordExploreTraceEvent } from "#src/explore/trace.ts";
-import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
-import { createLogger } from "#src/logger.ts";
+import type { ExploreInvalidTurnError } from "#src/explore/store.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
+import {
+  DurableExploreUnavailableError,
+  durableExploreOutcome,
+  listDurableExploreRuns,
+  requestDurableExploreStop,
+  subscribeDurableExploreRun,
+  waitForDurableExploreRun,
+} from "#src/explore/durable-runs.ts";
+import {
+  createDeferred,
+  executeActiveExploreRun,
+} from "#src/explore/run-manager-helpers.ts";
+import { startExploreRun } from "#src/explore/run-manager-start.ts";
+import type {
+  ActiveRun,
+  ExploreAgentRunner,
+  RunTermination,
+  Subscriber,
+  StartedTurn,
+  TerminalRun,
+} from "#src/explore/run-manager-types.ts";
+import type { ExploreRateLimitTicket } from "#src/explore/rate-limit.ts";
+import {
+  broadcastExploreEvent,
+  recordExploreEvent,
+} from "#src/explore/run-events.ts";
 
-const logger = createLogger("explore-run-manager");
 const TERMINAL_OUTCOME_TTL_MS = 5 * 60 * 1000;
-
-type RunTermination = "stop" | "delete" | "shutdown" | null;
-type Subscriber = (event: ExploreStreamEvent) => void;
-export type ExploreAgentRunner = (
-  params: ExploreAgentParams,
-) => Promise<ExploreAgentResult>;
-
-type StartedTurn = {
-  conversationId: string;
-  title: string;
-  messageId: string;
-  question: string;
-  expectedCurrentLeafId: string | null;
-};
-
-type ActiveRun = {
-  summary: ExploreActiveRun;
-  identity: ExploreRateLimitIdentity;
-  /**
-   * The asker's Discord servers, carried for the whole run so a `player('…')`
-   * alias resolves against the servers this person actually belongs to. It is
-   * authorization context, not a quota key, so it rides on the run rather than
-   * on `identity`, and not on the request, which is client-supplied.
-   */
-  guildIds: string[];
-  ticket: ExploreRateLimitTicket;
-  started: StartedTurn;
-  history: ExploreMessage[];
-  abortController: AbortController;
-  subscribers: Set<Subscriber>;
-  answer: string;
-  activity: string | null;
-  trace: ExploreTraceEntry[];
-  termination: RunTermination;
-  settled: Promise<null>;
-  resolveSettled: (value: null) => void;
-};
-
-type TerminalRun = {
-  userId: DiscordAccountId;
-  outcome: ExploreRunOutcome;
-  completedAt: number;
-};
-
 export class ExploreRunUnavailableError extends Error {}
-
 export class ExploreRunRateLimitedError extends Error {
   readonly rejection: ExploreRateLimitRejection;
 
@@ -106,15 +71,15 @@ export type ExploreRunStartError =
 /**
  * Owns Explore work independently of any one browser response.
  *
- * Scout currently runs one backend replica, so process-local ownership is
- * exact and intentionally avoids pretending to survive a deploy. Questions
- * and completed/partial answers remain durable in SQLite; only live execution
- * and observer state live here.
+ * Temporal owns durable execution. This manager owns only the Activity's live
+ * provider stream and in-process SSE subscribers; persisted snapshots and
+ * terminal outcomes let reconnecting clients recover across a deploy.
  */
 export class ExploreRunManager {
   readonly #client: ExtendedPrismaClient;
   readonly #runAgent: ExploreAgentRunner;
   readonly #timeoutMs: number;
+  readonly #inlineExecutionForTests: boolean;
   readonly #runs = new Map<string, ActiveRun>();
   readonly #conversationRuns = new Map<string, string>();
   readonly #startingConversations = new Map<string, Promise<null>>();
@@ -127,11 +92,14 @@ export class ExploreRunManager {
       client?: ExtendedPrismaClient;
       runAgent?: ExploreAgentRunner;
       timeoutMs?: number;
+      inlineExecutionForTests?: boolean;
     } = {},
   ) {
     this.#client = dependencies.client ?? prisma;
     this.#runAgent = dependencies.runAgent ?? streamExploreAgent;
     this.#timeoutMs = dependencies.timeoutMs ?? EXPLORE_TIMEOUT_MS;
+    this.#inlineExecutionForTests =
+      dependencies.inlineExecutionForTests ?? false;
   }
 
   async start(
@@ -167,59 +135,45 @@ export class ExploreRunManager {
     this.#startingConversations.set(conversationId, starting.promise);
 
     try {
-      const started = await resolveTurnTarget(
-        this.#client,
+      return await startExploreRun({
+        client: this.#client,
+        identity,
         request,
-        identity,
-        conversationId,
-      );
-      const versionCountAtStart = await this.#client.exploreMessage.count({
-        where: {
-          conversationId: started.conversationId,
-          parentId: started.messageId,
-          role: "assistant",
-        },
-      });
-      const transcript = await loadExploreTranscript(
-        this.#client,
-        started.conversationId,
-        identity.userId,
-        started.messageId,
-      );
-      if (transcript === null) {
-        throw new ExploreNotFoundError("Conversation not found.");
-      }
-      this.#assertAcceptingRuns();
-
-      const deferred = createDeferred();
-      const summary = ExploreActiveRunSchema.parse({
-        runId: ticket.runId,
-        conversationId: started.conversationId,
-        questionMessageId: started.messageId,
-        leafIdAtStart: started.expectedCurrentLeafId,
-        versionCountAtStart,
-        startedAt: new Date().toISOString(),
-      });
-      const run: ActiveRun = {
-        summary,
-        identity,
         guildIds,
+        conversationId,
         ticket,
-        started,
-        history: transcript.messages,
-        abortController: new AbortController(),
-        subscribers: new Set(),
-        answer: "",
-        activity: "Thinking…",
-        trace: [],
-        termination: null,
-        settled: deferred.promise,
-        resolveSettled: deferred.resolve,
-      };
-      this.#runs.set(summary.runId, run);
-      this.#conversationRuns.set(summary.conversationId, summary.runId);
-      void this.#execute(run);
-      return summary;
+        inlineExecutionForTests: this.#inlineExecutionForTests,
+        assertAcceptingRuns: () => {
+          this.#assertAcceptingRuns();
+        },
+        registerRun: (run) => {
+          this.#runs.set(run.summary.runId, run);
+          this.#conversationRuns.set(
+            run.summary.conversationId,
+            run.summary.runId,
+          );
+        },
+        removeRun: (summary) => {
+          this.#runs.delete(summary.runId);
+          this.#conversationRuns.delete(summary.conversationId);
+        },
+        executeInline: (run) => {
+          void this.#execute(run);
+        },
+        clearStartingConversation: () => {
+          this.#startingConversations.delete(conversationId);
+        },
+        createRateLimitedError: (rejection) =>
+          new ExploreRunRateLimitedError(rejection),
+        isDurableUnavailable: (error) =>
+          error instanceof DurableExploreUnavailableError,
+        isRateLimited: (error) => error instanceof ExploreRunRateLimitedError,
+        createUnavailableError: (error) =>
+          new ExploreRunUnavailableError(
+            "Temporal is unavailable. Try again after it reconnects.",
+            { cause: error },
+          ),
+      });
     } catch (error) {
       ticket.finish();
       throw error;
@@ -234,6 +188,12 @@ export class ExploreRunManager {
       .filter((run) => run.identity.userId === userId)
       .map((run) => run.summary)
       .toSorted((left, right) => left.startedAt.localeCompare(right.startedAt));
+  }
+
+  async listDurable(userId: DiscordAccountId): Promise<ExploreActiveRun[]> {
+    const local = this.list(userId);
+    if (this.#inlineExecutionForTests) return local;
+    return await listDurableExploreRuns(this.#client, userId, local);
   }
 
   subscribe(
@@ -260,13 +220,109 @@ export class ExploreRunManager {
     };
   }
 
-  stop(runId: string, userId: DiscordAccountId): boolean {
-    const run = this.#runs.get(runId);
-    if (run?.identity.userId !== userId) {
-      return false;
+  async subscribeDurable(
+    runId: string,
+    userId: DiscordAccountId,
+    subscriber: Subscriber,
+  ): Promise<(() => void) | null> {
+    const local = this.subscribe(runId, userId, subscriber);
+    if (local !== null || this.#inlineExecutionForTests) return local;
+    return await subscribeDurableExploreRun(
+      this.#client,
+      runId,
+      userId,
+      subscriber,
+    );
+  }
+
+  async stop(runId: string, userId: DiscordAccountId): Promise<boolean> {
+    if (this.#inlineExecutionForTests) {
+      const run = this.#runs.get(runId);
+      if (run?.identity.userId !== userId) return false;
+      this.#abort(run, "stop", "Explore turn stopped by the asker.");
+      return true;
     }
-    this.#abort(run, "stop", "Explore turn stopped by the asker.");
-    return true;
+    return await requestDurableExploreStop(this.#client, runId, userId);
+  }
+
+  snapshot(
+    runId: string,
+  ): { answer: string; trace: ExploreTraceEntry[] } | undefined {
+    const run = this.#runs.get(runId);
+    return run === undefined
+      ? undefined
+      : { answer: run.answer, trace: run.trace };
+  }
+
+  cancelTemporal(runId: string, message: string): void {
+    const run = this.#runs.get(runId);
+    if (run !== undefined) this.#abort(run, "stop", message);
+  }
+
+  async rehydrateTemporalRun(input: {
+    summary: ExploreActiveRun;
+    identity: ExploreRateLimitIdentity;
+    guildIds: string[];
+    started: StartedTurn;
+  }): Promise<void> {
+    if (this.#runs.has(input.summary.runId)) return;
+    const existingRunId = this.#conversationRuns.get(
+      input.summary.conversationId,
+    );
+    if (existingRunId !== undefined && existingRunId !== input.summary.runId) {
+      throw new ExploreConversationBusyError(
+        "This conversation already has an answer running.",
+      );
+    }
+    const transcript = await loadExploreTranscript(
+      this.#client,
+      input.summary.conversationId,
+      input.identity.userId,
+      input.started.messageId,
+    );
+    if (transcript === null) {
+      throw new ExploreNotFoundError("Conversation not found.");
+    }
+    const ticket: ExploreRateLimitTicket = {
+      allowed: true,
+      runId: input.summary.runId,
+      claimConversation: () => true,
+      commit: () => {
+        // Rehydrated runs do not own a new quota reservation.
+      },
+      finish: () => {
+        // Rehydrated runs do not own a new quota reservation.
+      },
+    };
+    const deferred = createDeferred();
+    const run: ActiveRun = {
+      summary: input.summary,
+      identity: input.identity,
+      guildIds: input.guildIds,
+      ticket,
+      started: input.started,
+      history: transcript.messages,
+      abortController: new AbortController(),
+      subscribers: new Set(),
+      answer: "",
+      activity: "Thinking…",
+      trace: [],
+      termination: null,
+      settled: deferred.promise,
+      resolveSettled: deferred.resolve,
+    };
+    this.#runs.set(run.summary.runId, run);
+    this.#conversationRuns.set(run.summary.conversationId, run.summary.runId);
+  }
+
+  async executeTemporal(runId: string): Promise<ExploreRunOutcome> {
+    const run = this.#runs.get(runId);
+    if (run === undefined) {
+      throw new ExploreRunUnavailableError(
+        `Explore run ${runId} is not active in this process`,
+      );
+    }
+    return await this.#execute(run);
   }
 
   outcome(runId: string, userId: DiscordAccountId): ExploreRunOutcome | null {
@@ -277,6 +333,15 @@ export class ExploreRunManager {
       return null;
     }
     return terminal.outcome;
+  }
+
+  async durableOutcome(
+    runId: string,
+    userId: DiscordAccountId,
+  ): Promise<ExploreRunOutcome | null> {
+    const local = this.outcome(runId, userId);
+    if (local !== null || this.#inlineExecutionForTests) return local;
+    return await durableExploreOutcome(this.#client, runId, userId);
   }
 
   async deleteConversationAndWait(
@@ -300,17 +365,39 @@ export class ExploreRunManager {
       const runId = this.#conversationRuns.get(conversationId);
       const run = runId === undefined ? undefined : this.#runs.get(runId);
       if (run?.identity.userId === userId) {
-        this.#abort(
-          run,
-          "delete",
-          "Explore conversation deleted by the asker.",
-        );
-        await run.settled;
+        if (this.#inlineExecutionForTests) {
+          this.#abort(
+            run,
+            "delete",
+            "Explore conversation deleted by the asker.",
+          );
+          await run.settled;
+        } else {
+          await this.stop(run.summary.runId, userId);
+          await this.#waitForDurableRun(run.summary.runId);
+        }
       } else {
-        // Discord one-shot runs are outside the web observer registry, but
-        // they share the process-wide conversation lease. Let one finish
-        // before removing the rows it is about to persist into.
-        await waitForExploreConversation(conversationId);
+        if (this.#inlineExecutionForTests) {
+          await waitForExploreConversation(conversationId);
+          return await deleteExploreConversation(
+            this.#client,
+            conversationId,
+            userId,
+          );
+        }
+        const durableRun = await this.#client.scoutInteractiveRun.findFirst({
+          where: {
+            kind: "explore",
+            ownerId: userId,
+            conversationId,
+            state: { in: ["PENDING", "RUNNING"] },
+          },
+          select: { id: true },
+        });
+        if (durableRun !== null) {
+          await this.stop(durableRun.id, userId);
+          await this.#waitForDurableRun(durableRun.id);
+        }
       }
       return await deleteExploreConversation(
         this.#client,
@@ -359,6 +446,17 @@ export class ExploreRunManager {
     }
   }
 
+  async #waitForDurableRun(runId: string): Promise<void> {
+    try {
+      await waitForDurableExploreRun(this.#client, runId, this.#timeoutMs);
+    } catch (error) {
+      throw new ExploreRunUnavailableError(
+        "Explore did not finish cancellation before the delete deadline.",
+        { cause: error },
+      );
+    }
+  }
+
   #abort(
     run: ActiveRun,
     reason: Exclude<RunTermination, null>,
@@ -372,81 +470,21 @@ export class ExploreRunManager {
     run.abortController.abort(message);
   }
 
-  #broadcast(run: ActiveRun, event: ExploreStreamEvent): void {
-    for (const subscriber of run.subscribers) {
-      try {
-        subscriber(event);
-      } catch {
-        // A subscriber is only an HTTP response. Losing it must not change the
-        // model run; remove the dead observer and keep the background task.
-        run.subscribers.delete(subscriber);
-      }
-    }
-  }
-
-  #record(run: ActiveRun, event: ExploreStreamEvent): void {
-    if (
-      event.type === "error" &&
-      (run.termination === "stop" || run.termination === "delete")
-    ) {
-      return;
-    }
-    if (event.type === "answer_delta") {
-      const available = EXPLORE_ANSWER_MAX_LENGTH - run.answer.length;
-      if (available <= 0) {
-        return;
-      }
-      const text = event.text.slice(0, available);
-      run.answer += text;
-      this.#broadcast(run, { type: "answer_delta", text });
-      return;
-    }
-    if (event.type === "tool_call" || event.type === "tool_result") {
-      run.activity = event.message;
-    }
-    recordExploreTraceEvent(run.trace, event);
-    this.#broadcast(run, event);
-  }
-
-  async #execute(run: ActiveRun): Promise<void> {
-    let outcome: ExploreRunOutcome = "failed";
-
+  async #execute(run: ActiveRun): Promise<ExploreRunOutcome> {
+    const outcome = await executeActiveExploreRun({
+      run,
+      client: this.#client,
+      runAgent: this.#runAgent,
+      timeoutMs: this.#timeoutMs,
+      record: (event) => {
+        recordExploreEvent(run, event);
+      },
+    });
     try {
-      const result = await runPersistedExploreTurn(
-        {
-          ticket: run.ticket,
-          identity: run.identity,
-          guildIds: run.guildIds,
-          started: run.started,
-          history: run.history,
-          abortSignal: run.abortController.signal,
-          abortOutcome: () =>
-            run.termination === "stop" || run.termination === "delete"
-              ? "stopped"
-              : "interrupted",
-          emit: (event) => {
-            this.#record(run, event);
-          },
-        },
-        {
-          client: this.#client,
-          executeAgent: this.#runAgent,
-          now: Date.now,
-          timeoutMs: this.#timeoutMs,
-        },
-      );
-      outcome = result.outcome;
-    } catch (error) {
-      logger.error(
-        "Shared Explore turn runner escaped unexpectedly",
-        errorMessage(error),
-      );
-      Sentry.captureException(error, {
-        tags: { source: "explore-background-run-manager" },
-      });
+      return outcome;
     } finally {
       this.#recordTerminalOutcome(run, outcome);
-      this.#broadcast(run, { type: "done", outcome });
+      broadcastExploreEvent(run, { type: "done", outcome });
       run.subscribers.clear();
       this.#runs.delete(run.summary.runId);
       this.#conversationRuns.delete(run.summary.conversationId);
@@ -468,46 +506,4 @@ export class ExploreRunManager {
     });
   }
 }
-
-async function resolveTurnTarget(
-  client: ExtendedPrismaClient,
-  input: ExploreTurnRequest,
-  identity: ExploreRateLimitIdentity,
-  newId: string,
-): Promise<StartedTurn> {
-  if (input.question === null) {
-    if (input.conversationId === null || input.attach.kind !== "message") {
-      throw new ExploreInvalidTurnError(
-        "Answering again needs an existing question.",
-      );
-    }
-    return await resolveRegenerateTarget(client, {
-      conversationId: input.conversationId,
-      userId: identity.userId,
-      parentMessageId: input.attach.messageId,
-    });
-  }
-
-  const started = await startExploreTurn(client, {
-    conversationId: input.conversationId,
-    newId,
-    userId: identity.userId,
-    question: input.question,
-    attach: input.attach,
-  });
-  return { ...started, question: input.question };
-}
-
-function createDeferred(): {
-  promise: Promise<null>;
-  resolve: (value: null) => void;
-} {
-  const deferred = Promise.withResolvers<null>();
-  return { promise: deferred.promise, resolve: deferred.resolve };
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 export const exploreRunManager = new ExploreRunManager();

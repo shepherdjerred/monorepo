@@ -1,6 +1,53 @@
 import { describe, expect, test } from "vitest";
 import { getScoutRuleGroups } from "./scout.ts";
 
+describe("Scout Temporal alert rules", () => {
+  const temporal = getScoutRuleGroups().find(
+    (group) => group.name === "scout-temporal",
+  );
+
+  test("covers Worker, latency, drift, projection, provider, and effect health", () => {
+    if (temporal?.rules === undefined) {
+      throw new Error("Missing scout-temporal rule group");
+    }
+    const alerts = new Set(temporal.rules.map((rule) => rule.alert));
+    expect(alerts).toEqual(
+      new Set([
+        "ScoutTemporalDisconnected",
+        "ScoutTemporalWorkerMissing",
+        "ScoutTemporalActivityFailing",
+        "ScoutTemporalTaskScheduleToStartHigh",
+        "ScoutTemporalDurabilityMetricsUnknown",
+        "ScoutTemporalReportOutboxStale",
+        "ScoutTemporalReportScheduleDrift",
+        "ScoutTemporalProductProjectionStale",
+        "ScoutTemporalProviderAttemptInterrupted",
+        "ScoutTemporalDuplicateEffectClaim",
+      ]),
+    );
+  });
+
+  test("alerts when Scout Temporal metrics are absent in either stage", () => {
+    if (temporal?.rules === undefined) {
+      throw new Error("Missing scout-temporal rule group");
+    }
+    for (const alert of [
+      "ScoutTemporalDisconnected",
+      "ScoutTemporalWorkerMissing",
+      "ScoutTemporalDurabilityMetricsUnknown",
+    ]) {
+      const rule = temporal.rules.find(
+        (candidate) => candidate.alert === alert,
+      );
+      if (rule === undefined) throw new Error(`Missing ${alert}`);
+      const expression = JSON.stringify(rule.expr);
+      expect(expression).toContain("absent(");
+      expect(expression).toContain(String.raw`environment=\"beta\"`);
+      expect(expression).toContain(String.raw`environment=\"prod\"`);
+    }
+  });
+});
+
 describe("Scout bot-health alert rules", () => {
   const botHealth = getScoutRuleGroups().find(
     (group) => group.name === "scout-bot-health",

@@ -326,11 +326,6 @@
       "count": 2
     }
   },
-  "src/league/tasks/postmatch/index.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/league/tasks/prematch/active-game-detection.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

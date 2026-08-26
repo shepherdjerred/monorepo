@@ -71,7 +71,7 @@ export async function handleExploreRoute(
     unsubscribe();
     writer.disconnected();
   };
-  const subscription = exploreRunManager.subscribe(
+  const subscription = await exploreRunManager.subscribeDurable(
     parsedBody.input.runId,
     authResult.identity.userId,
     (event) => {

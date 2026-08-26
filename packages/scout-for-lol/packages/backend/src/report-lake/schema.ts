@@ -1,11 +1,27 @@
 import {
+  ACCOUNT_LAKE_COLUMNS as importedAccountLakeColumns,
+  COMPETITION_RANK_HISTORY_LAKE_COLUMNS as importedCompetitionRankHistoryLakeColumns,
+  MATCH_LAKE_COLUMNS as importedMatchLakeColumns,
+  PREDICTION_OBSERVATION_LAKE_COLUMNS as importedPredictionObservationLakeColumns,
+  PREMATCH_LAKE_COLUMNS as importedPrematchLakeColumns,
+  type DuckDbColumnType,
+} from "@scout-for-lol/data/model/lake-columns.ts";
+
+const ACCOUNT_LAKE_COLUMNS = importedAccountLakeColumns;
+const COMPETITION_RANK_HISTORY_LAKE_COLUMNS =
+  importedCompetitionRankHistoryLakeColumns;
+const MATCH_LAKE_COLUMNS = importedMatchLakeColumns;
+const PREDICTION_OBSERVATION_LAKE_COLUMNS =
+  importedPredictionObservationLakeColumns;
+const PREMATCH_LAKE_COLUMNS = importedPrematchLakeColumns;
+
+export {
   ACCOUNT_LAKE_COLUMNS,
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
   PREDICTION_OBSERVATION_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
-  type DuckDbColumnType,
-} from "@scout-for-lol/data";
+};
 
 /**
  * Backend-side helpers over the report-lake table schemas.

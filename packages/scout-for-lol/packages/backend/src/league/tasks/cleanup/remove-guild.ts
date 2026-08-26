@@ -17,6 +17,10 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 import { recordConversionIfAny } from "#src/league/tasks/outreach/conversions.ts";
 import { createLogger } from "#src/logger.ts";
 import { captureGuildRemoval } from "#src/analytics/guild-lifecycle.ts";
+import {
+  enqueueReportScheduleDeletion,
+  notifyReportScheduleReconciler,
+} from "#src/reports/temporal-schedules.ts";
 
 const logger = createLogger("cleanup-removed-guild");
 
@@ -83,6 +87,10 @@ export async function cleanupRemovedGuild(
         select: { id: true },
       });
       const playerIds = playerRows.map((player) => player.id);
+      const reportRows = await tx.report.findMany({
+        where: { serverId },
+        select: { id: true, revision: true },
+      });
 
       // Competitions first: cascades participants + snapshots for this guild's
       // own competitions, and stops system reports from being recreated.
@@ -101,6 +109,9 @@ export async function cleanupRemovedGuild(
         });
       }
 
+      for (const report of reportRows) {
+        await enqueueReportScheduleDeletion(tx, report.id, report.revision + 1);
+      }
       const reports = await tx.report.deleteMany({ where: { serverId } });
       const subscriptions = await tx.subscription.deleteMany({
         where: { serverId },
@@ -130,6 +141,10 @@ export async function cleanupRemovedGuild(
       };
     },
   );
+
+  if (summary.reports > 0) {
+    await notifyReportScheduleReconciler();
+  }
 
   logger.info(
     `[RemoveGuild] ✅ Cleaned guild ${serverId}: ${JSON.stringify(summary)}`,

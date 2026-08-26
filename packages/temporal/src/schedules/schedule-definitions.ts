@@ -186,10 +186,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly Scout Bryan Bucks parlay lifecycle from Sunday publication through final settlement",
     initialPauseNote:
       "Awaiting the approved Discord fixture cycle before private-beta activation",
-    requiredEnvironment: [
-      "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
-      "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
-    ],
   },
   {
     id: "scout-bryan-bucks-analytics",
@@ -204,10 +200,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "5 minutes",
     memo: "Every-15-minute committed Bryan Bucks ledger and economy analytics sync",
-    requiredEnvironment: [
-      "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
-      "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
-    ],
   },
   {
     id: "scout-queue-windows-daily",
@@ -230,23 +222,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // catch-path failure report, each with three 2-minute attempts.
     workflowExecutionTimeout: "90 minutes",
     memo: "Daily LoL limited-queue window watcher — proposes queue-windows.json edits from scout-prod match volume; auto-merge on open/reopen, plain PR on close",
-  },
-  {
-    id: "scout-competition-updates-minute",
-    workflowType: "runScoutCompetitionUpdatesWorkflow",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "* * * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.SCOUT,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    catchupWindow: CATCHUP_TIGHT,
-    // Each stage activity may use three 10-minute attempts. They run in
-    // parallel, so this covers the retry budget plus backoff and workflow work.
-    workflowExecutionTimeout: "35 minutes",
-    memo: "Every-minute dispatch of enabled, active, due Scout competition standings in beta and production",
   },
   {
     id: "zfs-maintenance-weekly",

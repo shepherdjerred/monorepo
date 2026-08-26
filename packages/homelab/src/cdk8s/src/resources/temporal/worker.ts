@@ -74,14 +74,6 @@ export function createTemporalWorkerDeployment(
     "temporal-starlight-bot-secret",
     starlightBotItem.name,
   );
-  const freshRssCredentialItem = new OnePasswordItem(
-    chart,
-    "temporal-freshrss-sync-1p",
-    {
-      metadata: { name: "temporal-freshrss-sync" },
-      spec: { itemPath: vaultItemPath("freshrss-sync") },
-    },
-  );
   const scoutWeeklyParlayItem = new OnePasswordItem(
     chart,
     "temporal-scout-weekly-parlay-control-1p",
@@ -94,6 +86,14 @@ export function createTemporalWorkerDeployment(
     chart,
     "temporal-scout-weekly-parlay-control-secret",
     scoutWeeklyParlayItem.name,
+  );
+  const freshRssCredentialItem = new OnePasswordItem(
+    chart,
+    "temporal-freshrss-sync-1p",
+    {
+      metadata: { name: "temporal-freshrss-sync" },
+      spec: { itemPath: vaultItemPath("freshrss-sync") },
+    },
   );
   const freshRssCredential = Secret.fromSecretName(
     chart,

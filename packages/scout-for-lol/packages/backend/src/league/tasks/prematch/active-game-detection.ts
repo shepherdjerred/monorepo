@@ -265,13 +265,7 @@ export async function checkActiveGames(
     );
 
     // Sort by lastCheckedAt ascending (oldest first), then limit
-    const sorted = eligible.toSorted((a, b) => {
-      if (a.lastCheckedAt === undefined && b.lastCheckedAt === undefined)
-        return 0;
-      if (a.lastCheckedAt === undefined) return -1;
-      if (b.lastCheckedAt === undefined) return 1;
-      return a.lastCheckedAt.getTime() - b.lastCheckedAt.getTime();
-    });
+    const sorted = eligible.toSorted(compareByLastCheckedAt);
     const playersToCheck = sorted.slice(0, MAX_PLAYERS_PER_RUN);
 
     if (eligible.length > MAX_PLAYERS_PER_RUN) {
@@ -461,4 +455,14 @@ export async function checkActiveGames(
     isCheckInProgress = false;
     checkStartTime = undefined;
   }
+}
+
+function compareByLastCheckedAt(
+  left: { lastCheckedAt: Date | undefined },
+  right: { lastCheckedAt: Date | undefined },
+): number {
+  return (
+    (left.lastCheckedAt?.getTime() ?? Number.NEGATIVE_INFINITY) -
+    (right.lastCheckedAt?.getTime() ?? Number.NEGATIVE_INFINITY)
+  );
 }

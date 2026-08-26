@@ -36,7 +36,7 @@ Monorepo workflows:
   deployed [SELECTOR]          Trace a commit or service to the live homelab
   screenshot <PKG> [ROUTE]     Start a site and capture a browser screenshot
   alerts <list|show>           Query the durable alert ledger
-  bugsink <SUBCOMMAND>         Query or resolve self-hosted error tracking
+  bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
   history <SUBCOMMAND>         Search private local agent history
 

@@ -6,10 +6,10 @@ import { createLogger } from "#src/logger.ts";
 import { downtimeDetectedTotal } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 
-const logger = createLogger("startup-recovery");
+const logger = createLogger("ingestion-reconciliation");
 
-export async function runStartupRecovery(): Promise<void> {
-  logger.info("Running startup recovery check");
+export async function runIngestionReconciliation(): Promise<void> {
+  logger.info("Running ingestion reconciliation");
 
   const lastPollAt = await getLastSuccessfulPollAt();
   const startupAt = new Date();
@@ -34,33 +34,31 @@ export async function runStartupRecovery(): Promise<void> {
     downtimeDetectedTotal.inc({ severity: "offline_notification" });
     logger.info("Downtime exceeds 1 day, sending offline notification");
     try {
-      await sendOfflineNotification();
+      await sendOfflineNotification(downtime.lastPollAt ?? startupAt);
     } catch (error) {
       logger.error("Failed to send offline notification:", error);
       Sentry.captureException(error, {
-        tags: { source: "startup-recovery-notification" },
+        tags: { source: "ingestion-reconciliation-notification" },
       });
     }
   }
 
   if (downtime.shouldBackfill && downtime.lastPollAt !== undefined) {
     const backfillStart = downtime.lastPollAt;
-    logger.info("Starting background S3 backfill for missed matches");
-    // Fire-and-forget: backfill runs in the background while normal polling starts
-    void (async () => {
-      try {
-        const result = await backfillMatchesToS3(backfillStart, startupAt);
-        logger.info(
-          `Backfill completed: ${result.totalMatchesSaved.toString()} matches saved to S3`,
-        );
-      } catch (error) {
-        logger.error("Backfill failed:", error);
-        Sentry.captureException(error, {
-          tags: { source: "startup-recovery-backfill" },
-        });
-      }
-    })();
+    logger.info("Starting S3 backfill for missed matches");
+    try {
+      const result = await backfillMatchesToS3(backfillStart, startupAt);
+      logger.info(
+        `Backfill completed: ${result.totalMatchesSaved.toString()} matches saved to S3`,
+      );
+    } catch (error) {
+      logger.error("Backfill failed:", error);
+      Sentry.captureException(error, {
+        tags: { source: "ingestion-reconciliation-backfill" },
+      });
+      throw error;
+    }
   }
 
-  logger.info("Startup recovery check complete");
+  logger.info("Ingestion reconciliation complete");
 }

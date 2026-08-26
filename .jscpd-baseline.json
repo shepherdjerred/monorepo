@@ -1748,10 +1748,6 @@
       "clones": 1,
       "tokens": 158
     },
-    "packages/temporal/scripts/test-workflows.ts|scripts/run-ci-test.ts": {
-      "clones": 1,
-      "tokens": 76
-    },
     "packages/temporal/src/activities/agent-task-env.ts|packages/temporal/src/activities/agent-task-env.ts": {
       "clones": 1,
       "tokens": 71
@@ -1811,6 +1807,10 @@
     "packages/temporal/src/activities/homelab-audit-buildkite.ts|packages/temporal/src/activities/homelab-audit-collectors.ts": {
       "clones": 1,
       "tokens": 78
+    },
+    "packages/temporal/src/activities/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
+      "clones": 1,
+      "tokens": 127
     },
     "packages/temporal/src/activities/homelab-audit.ts|packages/temporal/src/activities/scout-season-refresh-claude.ts": {
       "clones": 4,
@@ -1945,5 +1945,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-26T00:57:18.743Z"
+  "updated": "2026-08-26T03:29:21.520Z"
 }

@@ -226,7 +226,6 @@ Workflow:
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
 - `SLEEP_WEBHOOK_TOKEN` — bearer token for the direct iOS sleep webhook on port 9469; the listener is skipped when unset (local/dev workers can omit it)
 - `SLEEP_WEBHOOK_PORT` — port for the direct sleep webhook (default `9469`)
-- `SCOUT_WEEKLY_PARLAY_CONTROL_URL`, `SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN` — beta Scout's private weekly-parlay control endpoint and shared bearer credential. Both are required by the `scout-weekly-parlay` schedule; the token is synced from the same 1Password item as Scout and must never be logged.
 - `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to the bundled `runbooks/homelab-audit.md`)
 - `ALERT_DASHBOARD_URL` — in-cluster Alerts API URL (homelab audit)
 - `BUGSINK_URL`, `BUGSINK_TOKEN` — Bugsink REST API base + token (homelab audit)
@@ -257,8 +256,11 @@ idempotency key. Do not derive the period again after a sleep or use
 workflow-local timers outside Temporal's durable `sleep`.
 
 Scout owns generation, Discord delivery, betting, contribution persistence, and
-settlement. Temporal owns only orchestration and calls the authenticated control
-endpoint. Reminder/progress staleness is a Scout decision. Publication,
+settlement. Temporal owns only orchestration. New executions route actions to
+Scout's embedded background Activity queue. Histories that predate
+`scout-weekly-parlay-embedded-activities-v1` replay through the authenticated
+control endpoint until every such execution is closed and the namespace's
+30-day retention has elapsed. Reminder/progress staleness is a Scout decision. Publication,
 reminder, and progress use bounded delivery retries. Scoring start retries
 durably until the finalization cutoff, when an unstarted market can be voided;
 the final action begins at that cutoff, accepts Scout's incomplete response

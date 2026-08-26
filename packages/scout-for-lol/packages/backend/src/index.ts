@@ -80,15 +80,12 @@ await initializeDynamicConfig({
     bucksAskModel: configuration.bucksAskModel,
     tournamentApiMode: configuration.tournamentApiMode,
     tournamentMaxOpenLobbies: configuration.tournamentMaxOpenLobbies,
-    temporalRealtimeEnabled: false,
-    temporalBackgroundEnabled: false,
-    temporalReportsEnabled: false,
-    temporalInteractiveEnabled: false,
   },
   metrics: featureFlagMetrics,
 });
 
-const { shutdownHttpServer, shutdownTemporal } = await startBackendRuntime();
+const { shutdownHttpServer, shutdownTemporal, shutdownDiscord } =
+  await startBackendRuntime();
 
 const { startScoutCompetitionActivityWorker } =
   await import("#src/league/tasks/competition/temporal-worker.ts");
@@ -103,57 +100,34 @@ logger.info("📈 Seeding scheduled-report freshness gauge from DB");
 import { seedScheduledReportLastSuccessMetric } from "#src/reports/schedule-metric-seed.ts";
 await seedScheduledReportLastSuccessMetric(prisma);
 
-logger.info("⏰ Starting cron job scheduler");
-if (configuration.enableBackgroundJobs) {
-  const { startCronJobs } = await import("#src/league/cron.ts");
-  void startCronJobs();
-} else {
-  logger.warn("⏭️  Background jobs disabled for this local secondary instance");
-}
-
-// Incrementally seed the summoner-search index from existing data. Idempotent
-// and cheap to re-run (inserts only new PUUIDs); background so it never blocks
-// boot or request serving.
-import { backfillFromExisting } from "#src/lib/riot/summoner-index.ts";
-void (async () => {
-  try {
-    const result = await backfillFromExisting();
-    logger.info(
-      `🗂️  Summoner index seeded: ${result.inserted.toString()} new of ${result.scanned.toString()} scanned`,
-    );
-  } catch (error) {
-    logger.warn("Summoner index backfill failed (non-fatal)", { error });
-  }
-})();
-
 logger.info("✅ Backend application startup complete");
 
 // Handle graceful shutdown
-process.on("SIGTERM", () => {
-  logger.info("🛑 Received SIGTERM, shutting down gracefully");
+let shutdownStarted = false;
+const gracefullyShutdown = (signal: "SIGINT" | "SIGTERM"): void => {
+  if (shutdownStarted) return;
+  shutdownStarted = true;
+  logger.info(`🛑 Received ${signal}, shutting down gracefully`);
   void (async () => {
     await shutdownTemporal();
-    await shutdownHttpServer();
     await competitionActivityWorker?.shutdown();
+    await shutdownHttpServer();
+    await shutdownDiscord();
     // Stops the config poller before analytics flushes, so a refresh cannot
     // race the exit.
     await shutdownDynamicConfig();
     await shutdownProductAnalytics();
+    await prisma.$disconnect();
     process.exit(0);
   })();
+};
+
+process.on("SIGTERM", () => {
+  gracefullyShutdown("SIGTERM");
 });
 
 process.on("SIGINT", () => {
-  logger.info("🛑 Received SIGINT, shutting down gracefully");
-  void (async () => {
-    await shutdownTemporal();
-    await shutdownHttpServer();
-    // Stops the config poller before analytics flushes, so a refresh cannot
-    // race the exit.
-    await shutdownDynamicConfig();
-    await shutdownProductAnalytics();
-    process.exit(0);
-  })();
+  gracefullyShutdown("SIGINT");
 });
 
 // Handle unhandled promise rejections

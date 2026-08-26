@@ -387,7 +387,7 @@ describe("guild removal", () => {
       await captureGuildRemoval(SERVER_ID, removedAt, prisma, {
         capture,
         captureBucksMember: () => null,
-        captureBucksSystem: () => null,
+        captureBucksSystem: () => true,
         shutdown,
       }),
     ).toBe(true);

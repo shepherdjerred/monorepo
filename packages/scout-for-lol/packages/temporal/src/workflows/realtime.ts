@@ -2,6 +2,7 @@ import { startChild, workflowInfo } from "@temporalio/workflow";
 import {
   defineSearchAttributeKey,
   SearchAttributeType,
+  WorkflowExecutionAlreadyStartedError,
 } from "@temporalio/common";
 import {
   ScoutMatchIngestionInputSchema,
@@ -53,13 +54,21 @@ export async function scoutPostMatchDiscoveryWorkflow(
   const discovered = await realtimeActivities(input.stage).discoverPostMatchIds(
     input,
   );
-  for (const matchId of discovered.matchIds) {
-    await startChild(scoutMatchIngestionWorkflow, {
-      workflowId: scoutMatchWorkflowId(input.stage, matchId),
-      taskQueue: scoutTaskQueues(input.stage).workflow,
-      parentClosePolicy: "ABANDON",
-      args: [{ stage: input.stage, matchId }],
-    });
+  let childrenStarted = 0;
+  for (const match of discovered.matches) {
+    try {
+      await startChild(scoutMatchIngestionWorkflow, {
+        workflowId: scoutMatchWorkflowId(input.stage, match.matchId),
+        workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
+        taskQueue: scoutTaskQueues(input.stage).workflow,
+        parentClosePolicy: "ABANDON",
+        args: [{ stage: input.stage, ...match }],
+      });
+      childrenStarted += 1;
+    } catch (error) {
+      if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+    }
   }
-  return { status: "completed", childrenStarted: discovered.matchIds.length };
+  await realtimeActivities(input.stage).runPostMatchMaintenance(input);
+  return { status: "completed", childrenStarted };
 }

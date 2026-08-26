@@ -4,13 +4,7 @@ import {
   StructuredOutputUsageError,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
-import type {
-  LoadingScreenData,
-  PlayerConfigEntry,
-  QueueType,
-  RankedQueueType,
-  RawCurrentGameInfo,
-} from "@scout-for-lol/data";
+import type { RankedQueueType } from "@scout-for-lol/data";
 import { RankedQueueTypeSchema } from "@scout-for-lol/data";
 import { bettingParlayAiModel } from "#src/config/dynamic.ts";
 import {
@@ -64,6 +58,8 @@ import {
   bettingParlayTokensTotal,
 } from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
+import { enqueueParlayGeneration } from "#src/temporal/work-store.ts";
+import type { StartParlayGenerationInput } from "#src/betting/parlay-generation-types.ts";
 
 const logger = createLogger("betting-parlay-generate");
 
@@ -109,13 +105,6 @@ function timedOut(signal: AbortSignal, error: unknown): boolean {
       (error.name === "AbortError" || error.name === "TimeoutError"))
   );
 }
-
-export type StartParlayGenerationInput = {
-  gameInfo: RawCurrentGameInfo;
-  trackedPlayers: readonly PlayerConfigEntry[];
-  queueType: QueueType | undefined;
-  loadingScreenData: LoadingScreenData | undefined;
-};
 
 type GenerationReady = {
   kind: "ready";
@@ -385,13 +374,16 @@ function generationStatusForError(
 
 /** Start the caught background task only after normal prematch delivery and
  * outcome message-reference persistence have completed. */
-export function startParlayGeneration(input: StartParlayGenerationInput): void {
-  void runParlayGeneration(input);
+export async function startParlayGeneration(
+  input: StartParlayGenerationInput,
+): Promise<void> {
+  await enqueueParlayGeneration(input);
 }
 
 export async function runParlayGeneration(
   input: StartParlayGenerationInput,
   prismaClient: ExtendedPrismaClient = prisma,
+  execution: "legacy" | "temporal" = "legacy",
 ): Promise<void> {
   const startedAt = Date.now();
   const deadline = AbortSignal.timeout(PARLAY_GENERATION_DEADLINE_MS);
@@ -444,5 +436,9 @@ export async function runParlayGeneration(
         tags: { source: "betting-parlay-generate", matchId, status },
       });
     }
+    // Expected generation outcomes are terminal for both execution modes.
+    // Retrying them would repeat provider calls without creating a definition;
+    // Temporal only retries unexpected provider or persistence failures.
+    if (execution === "temporal" && !expected) throw error;
   }
 }

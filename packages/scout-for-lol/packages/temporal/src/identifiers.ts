@@ -7,10 +7,12 @@ export const SCOUT_WORKFLOW_NAMES = {
   initialHistory: "scoutInitialHistoryWorkflow",
   ingestionReconciliation: "scoutIngestionReconciliationWorkflow",
   backgroundJob: "scoutBackgroundJobWorkflow",
+  detachedWork: "scoutDetachedWorkWorkflow",
   reportLake: "scoutReportLakeWorkflow",
   reportRun: "scoutReportRunWorkflow",
   reportScheduleReconciler: "scoutReportScheduleReconcilerWorkflow",
   interactiveRun: "scoutInteractiveRunWorkflow",
+  queueCanary: "scoutQueueCanaryWorkflow",
 } as const;
 
 export function scoutTaskQueues(stage: ScoutStage) {
@@ -46,6 +48,14 @@ export function scoutInitialHistoryWorkflowId(
   return `scout-${stage}-history-${puuid}`;
 }
 
+export function scoutDetachedWorkWorkflowId(
+  stage: ScoutStage,
+  kind: "prediction-ingest" | "parlay-generation",
+  workId: string,
+): string {
+  return `scout-${stage}-${kind}-${workId}`;
+}
+
 export function scoutReportScheduleReconcilerWorkflowId(
   stage: ScoutStage,
 ): string {
@@ -61,6 +71,13 @@ export function scoutReportScheduleId(
 
 export function scoutFixedScheduleId(stage: ScoutStage, name: string): string {
   return `scout-${stage}-${name}`;
+}
+
+export function scoutQueueCanaryWorkflowId(
+  stage: ScoutStage,
+  canaryId: string,
+): string {
+  return `scout-${stage}-canary-${canaryId}`;
 }
 
 export function scoutSchedulePrefix(stage: ScoutStage): string {

@@ -199,6 +199,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runKometaWorkflow",
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
+  "runMainVulnScanWorkflow",
+  "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",
   // Awaits one scan activity (clone + trivy fs) then report delivery and the
   // Alertmanager publish. No workflow-level sleeps; each activity carries its
@@ -354,7 +356,7 @@ describe("Scout lane-prior schedule config", () => {
 });
 
 describe("Scout weekly parlay schedule config", () => {
-  test("starts one Pacific lifecycle at Sunday noon with required control credentials", () => {
+  test("starts one Pacific lifecycle at Sunday noon", () => {
     const schedule = findScheduleById("scout-weekly-parlay");
     expect(schedule).toMatchObject({
       workflowType: "runScoutWeeklyParlayWorkflow",
@@ -366,10 +368,6 @@ describe("Scout weekly parlay schedule config", () => {
       },
       taskQueue: TASK_QUEUES.SCOUT,
       overlap: ScheduleOverlapPolicy.ALLOW_ALL,
-      requiredEnvironment: [
-        "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
-        "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
-      ],
     });
   });
 });
@@ -387,27 +385,6 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
       taskQueue: TASK_QUEUES.SCOUT,
       overlap: ScheduleOverlapPolicy.SKIP,
       workflowExecutionTimeout: "5 minutes",
-      requiredEnvironment: [
-        "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
-        "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
-      ],
-    });
-  });
-});
-
-describe("Scout competition update schedule", () => {
-  test("uses a Temporal-owned minute trigger on the Scout queue", () => {
-    const schedule = findScheduleById("scout-competition-updates-minute");
-    expect(schedule).toMatchObject({
-      workflowType: "runScoutCompetitionUpdatesWorkflow",
-      timing: {
-        kind: "cron",
-        expression: "* * * * *",
-        timezone: "America/Los_Angeles",
-      },
-      taskQueue: TASK_QUEUES.SCOUT,
-      catchupWindow: "5 minutes",
-      workflowExecutionTimeout: "35 minutes",
     });
   });
 });

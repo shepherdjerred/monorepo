@@ -341,6 +341,7 @@ export type Report = {
   lastRunError: string | null;
   createdTime: Date;
   updatedTime: Date;
+  revision: number;
 };
 
 export type ReportRun = {

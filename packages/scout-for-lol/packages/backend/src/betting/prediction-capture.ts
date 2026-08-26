@@ -10,18 +10,36 @@ import { computeGameStartAt } from "#src/betting/pool-open.ts";
 import { buildPredictionObservation } from "#src/betting/prediction-inputs.ts";
 import { createLogger } from "#src/logger.ts";
 import type { ParticipantRanks } from "#src/league/tasks/prematch/loading-screen-builder.ts";
-import { ingestPredictionObservation } from "#src/report-store/store.ts";
+import { enqueuePredictionObservation } from "#src/temporal/work-store.ts";
 
 const logger = createLogger("betting-prediction-capture");
 
 export type PredictionCaptureDependencies = {
   build: typeof buildPredictionObservation;
-  ingest: (observation: BucksPredictionObservation) => Promise<void>;
+  enqueue: (observation: BucksPredictionObservation) => Promise<void>;
 };
+
+async function enqueuePredictionBestEffort(
+  observation: BucksPredictionObservation,
+  matchId: string,
+  enqueue: PredictionCaptureDependencies["enqueue"],
+): Promise<void> {
+  try {
+    await enqueue(observation);
+  } catch (error: unknown) {
+    logger.error(
+      `Failed to enqueue prediction observation for ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "prediction-observation-enqueue", matchId },
+    });
+  }
+}
 
 const defaultDependencies: PredictionCaptureDependencies = {
   build: buildPredictionObservation,
-  ingest: ingestPredictionObservation,
+  enqueue: enqueuePredictionObservation,
 };
 
 /** Capture one match-level estimate. No guild flag is accepted here: eligible
@@ -76,21 +94,6 @@ export async function capturePredictionForPrematch(
     return undefined;
   }
 
-  // Persistence is best-effort and deliberately outside the time-sensitive
-  // pool-open / Discord-delivery path. The observation is immutable and
-  // idempotent, so a late write cannot change the frozen estimate.
-  void (async () => {
-    try {
-      await dependencies.ingest(observation);
-    } catch (error) {
-      logger.error(
-        `Failed to persist prediction observation for ${matchId}:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: { source: "prediction-observation-ingest", matchId },
-      });
-    }
-  })();
+  void enqueuePredictionBestEffort(observation, matchId, dependencies.enqueue);
   return observation.prediction;
 }

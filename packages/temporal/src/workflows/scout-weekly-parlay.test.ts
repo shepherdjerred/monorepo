@@ -8,7 +8,8 @@ import {
   runScoutWeeklyParlayWorkflow,
 } from "./scout-weekly-parlay.ts";
 
-const TASK_QUEUE = "scout-weekly-parlay-test";
+const EMBEDDED_ACTIVITY_QUEUE = "scout-beta-background";
+const TASK_QUEUE = EMBEDDED_ACTIVITY_QUEUE;
 const TIMELINE: ScoutWeeklyParlayTimeline = {
   periodKey: "2027-03-08",
   openAt: "2027-03-07T20:00:00.000Z",

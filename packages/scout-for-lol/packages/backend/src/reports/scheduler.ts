@@ -1,4 +1,8 @@
-import type { Report } from "@scout-for-lol/data";
+import {
+  ReportIdSchema,
+  type Report,
+  type ReportRunId,
+} from "@scout-for-lol/data";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
 import * as Sentry from "@sentry/bun";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
@@ -41,15 +45,32 @@ type RunDueReportsParams = {
   prisma: ExtendedPrismaClient;
   now?: Date;
   limit?: number;
+  reportId?: number;
+};
+
+type ScheduledReportClaim = {
+  report: Report;
+  runId: ReportRunId;
+  status: string;
+  isNew: boolean;
+};
+
+type RunScheduledReportOccurrenceParams = {
+  prisma: ExtendedPrismaClient;
+  report: Report;
+  workflowRunId: string;
+  now?: Date;
 };
 
 export async function getDueReports(
   prisma: ExtendedPrismaClient,
   now: Date,
   limit: number,
+  reportId?: number,
 ): Promise<Report[]> {
   return await prisma.report.findMany({
     where: {
+      ...(reportId === undefined ? {} : { id: ReportIdSchema.parse(reportId) }),
       isEnabled: true,
       OR: [{ nextScheduledRunAt: null }, { nextScheduledRunAt: { lte: now } }],
     },
@@ -67,7 +88,12 @@ export async function runDueReports(
     where: { isEnabled: true },
   });
   scheduledReportsActive.set(activeReports);
-  const reports = await getDueReports(params.prisma, now, limit);
+  const reports = await getDueReports(
+    params.prisma,
+    now,
+    limit,
+    params.reportId,
+  );
   scheduledReportsDueTotal.inc(reports.length);
   if (reports.length > 0) {
     logger.info(
@@ -78,92 +104,18 @@ export async function runDueReports(
   let earlyFailures = 0;
 
   for (const report of reports) {
-    const scheduledAt = report.nextScheduledRunAt ?? now;
-    const localDate = scheduledLocalDate(scheduledAt, report.scheduleTimezone);
-    const claim = await params.prisma.report.updateMany({
-      where: {
-        id: report.id,
-        OR: [
-          { lastScheduledLocalDate: null },
-          { lastScheduledLocalDate: { not: localDate } },
-        ],
-      },
-      data: { lastScheduledLocalDate: localDate },
+    const claim = await claimScheduledReport({
+      prisma: params.prisma,
+      report,
+      now,
     });
-    if (claim.count === 0) {
-      logger.warn(
-        `[ReportScheduler] Suppressed duplicate local-date run for report ${report.id.toString()} on ${localDate}`,
-      );
-      await params.prisma.report.update({
-        where: { id: report.id },
-        data: {
-          nextScheduledRunAt: computeNextScheduledUpdateAt(
-            report.cronExpression,
-            now,
-            report.scheduleTimezone,
-          ),
-          updatedTime: new Date(),
-        },
-      });
-      continue;
-    }
+    if (claim === null) continue;
     try {
-      const result = await runReport({
-        prisma: params.prisma,
-        report,
-        trigger: "SCHEDULED",
-        now,
-      });
+      const result = await executeScheduledReportClaim(params.prisma, claim);
       dispatched.push({ report, result });
     } catch (error) {
       earlyFailures++;
-      // A stored query that no longer compiles is its own failure mode: the
-      // catch below advances the schedule regardless, so without this counter
-      // a language change that broke every saved report would be invisible.
-      if (isReportCompileFailure(report.queryText)) {
-        scheduledReportCompileFailuresTotal.inc({
-          system_source: report.systemSource ?? "USER",
-        });
-      }
-      logger.error(
-        `[ReportScheduler] Failed to run report ${report.id.toString()}:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: {
-          source: "scheduled-report",
-          reportId: report.id.toString(),
-          serverId: report.serverId,
-          systemSource: report.systemSource ?? "USER",
-        },
-      });
-    } finally {
-      const nextScheduledRunAt = computeNextScheduledUpdateAt(
-        report.cronExpression,
-        now,
-        report.scheduleTimezone,
-      );
-      // Always set `lastScheduledRunAt = now` even if `runReport` threw
-      // before reaching `runner.ts`'s success/failure branches — that's
-      // the only signal the staleness alert has that the dispatcher
-      // actually attempted this fire.
-      await params.prisma.report.update({
-        where: { id: report.id },
-        data: {
-          nextScheduledRunAt,
-          lastScheduledRunAt: now,
-          updatedTime: new Date(),
-        },
-      });
-      if (report.sourceCompetitionId !== null) {
-        await params.prisma.competition.update({
-          where: { id: report.sourceCompetitionId },
-          data: {
-            nextScheduledUpdateAt: nextScheduledRunAt,
-            lastScheduledUpdateAt: now,
-          },
-        });
-      }
+      recordScheduledReportFailure(report, error);
     }
   }
 
@@ -174,6 +126,313 @@ export async function runDueReports(
   }
 
   return dispatched;
+}
+
+/**
+ * Run one Temporal Schedule occurrence. The Temporal Workflow Run ID is the
+ * durable idempotency key: the due-time cursor and RUNNING ReportRun are
+ * committed together, so an Activity retry resumes the claimed row instead of
+ * observing the advanced cursor and silently returning.
+ */
+export async function runScheduledReportOccurrence(
+  params: RunScheduledReportOccurrenceParams,
+): Promise<number | null> {
+  scheduledReportsActive.set(
+    await params.prisma.report.count({ where: { isEnabled: true } }),
+  );
+  const now = params.now ?? new Date();
+  const claim = await claimScheduledReport({
+    prisma: params.prisma,
+    report: params.report,
+    now,
+    workflowRunId: params.workflowRunId,
+  });
+  if (claim === null) return null;
+  if (claim.isNew) scheduledReportsDueTotal.inc();
+  if (claim.status === "SUCCESS") {
+    await finishSuccessfulScheduledBookkeeping(params.prisma, claim);
+    return claim.runId;
+  }
+  try {
+    await executeScheduledReportClaim(params.prisma, claim);
+    return claim.runId;
+  } catch (error) {
+    recordScheduledReportFailure(claim.report, error);
+    throw error;
+  }
+}
+
+async function claimScheduledReport(params: {
+  prisma: ExtendedPrismaClient;
+  report: Report;
+  now: Date;
+  workflowRunId?: string;
+}): Promise<ScheduledReportClaim | null> {
+  if (params.workflowRunId !== undefined) {
+    const existing = await findWorkflowClaim(
+      params.prisma,
+      params.report,
+      params.workflowRunId,
+    );
+    if (existing !== null) return existing;
+  }
+
+  const scheduledAt = params.report.nextScheduledRunAt ?? params.now;
+  const localDate = scheduledLocalDate(
+    scheduledAt,
+    params.report.scheduleTimezone,
+  );
+  const nextScheduledRunAt = computeNextScheduledUpdateAt(
+    params.report.cronExpression,
+    params.now,
+    params.report.scheduleTimezone,
+  );
+  try {
+    return await params.prisma.$transaction(async (tx) => {
+      const claim = await tx.report.updateMany({
+        where: {
+          id: params.report.id,
+          revision: params.report.revision,
+          isEnabled: true,
+          OR: [
+            { nextScheduledRunAt: null },
+            { nextScheduledRunAt: { lte: params.now } },
+          ],
+          AND: {
+            OR: [
+              { lastScheduledLocalDate: null },
+              { lastScheduledLocalDate: { not: localDate } },
+            ],
+          },
+        },
+        data: {
+          lastScheduledLocalDate: localDate,
+          nextScheduledRunAt,
+          lastScheduledRunAt: params.now,
+          updatedTime: new Date(),
+        },
+      });
+      if (claim.count === 0) {
+        if (params.workflowRunId !== undefined) {
+          const raced = await tx.reportRun.findUnique({
+            where: { temporalWorkflowRunId: params.workflowRunId },
+          });
+          if (raced !== null) {
+            if (
+              raced.reportId !== params.report.id ||
+              raced.trigger !== "SCHEDULED"
+            ) {
+              throw new Error(
+                `Temporal Workflow Run ${params.workflowRunId} raced with an incompatible report execution`,
+              );
+            }
+            return {
+              report: params.report,
+              runId: raced.id,
+              status: raced.status,
+              isNew: false,
+            };
+          }
+        }
+        const duplicate = await tx.report.updateMany({
+          where: {
+            id: params.report.id,
+            revision: params.report.revision,
+            isEnabled: true,
+            lastScheduledLocalDate: localDate,
+            OR: [
+              { nextScheduledRunAt: null },
+              { nextScheduledRunAt: { lte: params.now } },
+            ],
+          },
+          data: { nextScheduledRunAt, updatedTime: new Date() },
+        });
+        if (duplicate.count > 0) {
+          logger.warn(
+            `[ReportScheduler] Suppressed duplicate local-date run for report ${params.report.id.toString()} on ${localDate}`,
+          );
+        }
+        return null;
+      }
+      const run = await tx.reportRun.create({
+        data: {
+          reportId: params.report.id,
+          serverId: params.report.serverId,
+          deliveryChannelId: params.report.channelId,
+          deliveryServerId: params.report.serverId,
+          trigger: "SCHEDULED",
+          status: "RUNNING",
+          startedAt: params.now,
+          querySnapshot: params.report.queryText,
+          deliveryState: "PENDING",
+          ...(params.workflowRunId === undefined
+            ? {}
+            : { temporalWorkflowRunId: params.workflowRunId }),
+        },
+      });
+      if (params.report.sourceCompetitionId !== null) {
+        await tx.competition.update({
+          where: { id: params.report.sourceCompetitionId },
+          data: {
+            nextScheduledUpdateAt: nextScheduledRunAt,
+            lastScheduledUpdateAt: params.now,
+          },
+        });
+      }
+      return {
+        report: params.report,
+        runId: run.id,
+        status: run.status,
+        isNew: true,
+      };
+    });
+  } catch (error) {
+    if (params.workflowRunId !== undefined) {
+      const existing = await params.prisma.reportRun.findUnique({
+        where: { temporalWorkflowRunId: params.workflowRunId },
+      });
+      if (existing !== null) {
+        if (
+          existing.reportId !== params.report.id ||
+          existing.trigger !== "SCHEDULED"
+        ) {
+          throw new Error(
+            `Temporal Workflow Run ${params.workflowRunId} raced with an incompatible report execution`,
+            { cause: error },
+          );
+        }
+        return {
+          report: params.report,
+          runId: existing.id,
+          status: existing.status,
+          isNew: false,
+        };
+      }
+    }
+    throw error;
+  }
+}
+
+async function findWorkflowClaim(
+  prisma: ExtendedPrismaClient,
+  report: Report,
+  workflowRunId: string,
+): Promise<ScheduledReportClaim | null> {
+  const existing = await prisma.reportRun.findUnique({
+    where: { temporalWorkflowRunId: workflowRunId },
+  });
+  if (existing === null) return null;
+  if (existing.reportId !== report.id || existing.trigger !== "SCHEDULED") {
+    throw new Error(
+      `Temporal Workflow Run ${workflowRunId} is already bound to an incompatible report execution`,
+    );
+  }
+  return {
+    report,
+    runId: existing.id,
+    status: existing.status,
+    isNew: false,
+  };
+}
+
+async function finishSuccessfulScheduledBookkeeping(
+  database: ExtendedPrismaClient,
+  claim: ScheduledReportClaim,
+): Promise<void> {
+  const run = await database.reportRun.findUniqueOrThrow({
+    where: { id: claim.runId },
+  });
+  if (run.status !== "SUCCESS") {
+    throw new Error(
+      `Report run ${claim.runId.toString()} changed from SUCCESS to ${run.status}`,
+    );
+  }
+  await database.report.update({
+    where: { id: claim.report.id },
+    data: {
+      lastRunStatus: "SUCCESS",
+      lastRunError: null,
+      lastScheduledRunAt: run.startedAt,
+      updatedTime: run.completedAt ?? new Date(),
+    },
+  });
+}
+
+async function executeScheduledReportClaim(
+  database: ExtendedPrismaClient,
+  claim: ScheduledReportClaim,
+): Promise<ReportRunResult> {
+  if (claim.status === "SUCCESS") {
+    throw new Error(
+      `Successful report run ${claim.runId.toString()} cannot be executed again`,
+    );
+  }
+  if (claim.status === "FAILED") {
+    const reopened = await database.reportRun.updateMany({
+      where: { id: claim.runId, status: "FAILED" },
+      data: {
+        status: "RUNNING",
+        completedAt: null,
+        durationMs: null,
+        errorMessage: null,
+        rowsReturned: 0,
+        rowsScanned: 0,
+        renderedContent: null,
+        imageS3Key: null,
+        imageByteSize: null,
+        visualizationS3Key: null,
+        visualizationByteSize: null,
+        deliveryState: "PENDING",
+        deliveryError: null,
+        deliveredAt: null,
+      },
+    });
+    if (reopened.count === 0) {
+      const current = await database.reportRun.findUniqueOrThrow({
+        where: { id: claim.runId },
+      });
+      if (current.status === "SUCCESS") {
+        throw new Error(
+          `Successful report run ${claim.runId.toString()} cannot be executed again`,
+        );
+      }
+      throw new Error(
+        `Report run ${claim.runId.toString()} could not be reopened from ${current.status}`,
+      );
+    }
+  } else if (claim.status !== "RUNNING") {
+    throw new Error(
+      `Report run ${claim.runId.toString()} cannot execute from ${claim.status}`,
+    );
+  }
+  return await runReport({
+    prisma: database,
+    report: claim.report,
+    trigger: "SCHEDULED",
+    now: new Date(),
+    runId: claim.runId,
+    deliveryRequested: true,
+  });
+}
+
+function recordScheduledReportFailure(report: Report, error: unknown): void {
+  if (isReportCompileFailure(report.queryText)) {
+    scheduledReportCompileFailuresTotal.inc({
+      system_source: report.systemSource ?? "USER",
+    });
+  }
+  logger.error(
+    `[ReportScheduler] Failed to run report ${report.id.toString()}:`,
+    error,
+  );
+  Sentry.captureException(error, {
+    tags: {
+      source: "scheduled-report",
+      reportId: report.id.toString(),
+      serverId: report.serverId,
+      systemSource: report.systemSource ?? "USER",
+    },
+  });
 }
 
 export function scheduledLocalDate(now: Date, timezone: string): string {

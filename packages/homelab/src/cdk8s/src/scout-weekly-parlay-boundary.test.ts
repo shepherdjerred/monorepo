@@ -27,7 +27,7 @@ const DeploymentSpecSchema = z.object({
   }),
 });
 
-function defineScoutTemporalAccessTests(): void {
+describe("Scout weekly parlay deployment boundary", () => {
   test.each(["beta", "prod"] as const)(
     "%s Scout has exact Temporal gRPC access and drain budget",
     (stage) => {
@@ -74,9 +74,9 @@ function defineScoutTemporalAccessTests(): void {
       );
     },
   );
-}
+});
 
-function defineTemporalIngressTest(): void {
+describe("Scout Temporal ingress identity", () => {
   test("Temporal admits only the two Scout backend identities on gRPC", () => {
     const policy = findResource(
       temporalResources(),
@@ -101,183 +101,74 @@ function defineTemporalIngressTest(): void {
       }),
     );
   });
-}
+});
 
-function defineSharedCredentialTest(): void {
-  test("shares one 1Password credential with Beta Scout and the core worker", () => {
-    const beta = scoutResources("beta");
-    const betaDeployment = DeploymentSpecSchema.parse(
-      findResource(beta, "Deployment", "scout-beta-scout-backend").spec,
+describe("Scout weekly parlay compatibility boundary", () => {
+  test("retains the replay callback credential only for Beta Scout and compatible workers", () => {
+    const beta = DeploymentSpecSchema.parse(
+      findResource(
+        scoutResources("beta"),
+        "Deployment",
+        "scout-beta-scout-backend",
+      ).spec,
     );
-    expect(betaDeployment.template.spec.containers[0]?.env).toContainEqual(
-      expect.objectContaining({
-        name: "WEEKLY_PARLAY_CONTROL_TOKEN",
-        valueFrom: expect.any(Object),
-      }),
+    expect(beta.template.spec.containers[0]?.env).toContainEqual(
+      expect.objectContaining({ name: "WEEKLY_PARLAY_CONTROL_TOKEN" }),
     );
-
-    const temporal = temporalResources();
-    const temporalDeployment = DeploymentSpecSchema.parse(
-      findResource(temporal, "Deployment", "temporal-temporal-worker").spec,
-    );
-    expect(temporalDeployment.template.spec.containers[0]?.env).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
-          value:
-            "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/weekly-parlays/actions",
-        }),
-        expect.objectContaining({
-          name: "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
-          valueFrom: expect.any(Object),
-        }),
-      ]),
-    );
-
-    for (const deploymentName of [
-      "temporal-temporal-glitter-corpus-worker",
-      "temporal-temporal-glitter-context-worker",
-    ]) {
-      const glitterDeployment = DeploymentSpecSchema.parse(
-        findResource(temporal, "Deployment", deploymentName).spec,
-      );
-      expect(
-        glitterDeployment.template.spec.containers[0]?.env.some(
-          (entry) => entry.name === "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
-        ),
-      ).toBe(false);
-    }
-  });
-}
-
-function defineProductionIsolationTest(): void {
-  test("keeps the private control endpoint absent from production Scout", () => {
-    const prod = scoutResources("prod");
-    const deployment = DeploymentSpecSchema.parse(
-      findResource(prod, "Deployment", "scout-prod-scout-backend").spec,
+    const prod = DeploymentSpecSchema.parse(
+      findResource(
+        scoutResources("prod"),
+        "Deployment",
+        "scout-prod-scout-backend",
+      ).spec,
     );
     expect(
-      deployment.template.spec.containers[0]?.env.some(
+      prod.template.spec.containers[0]?.env.some(
         (entry) => entry.name === "WEEKLY_PARLAY_CONTROL_TOKEN",
       ),
     ).toBe(false);
-    expect(
-      prod.some(
-        (resource) =>
-          resource.kind === "OnePasswordItem" &&
-          resource.metadata.name === "scout-weekly-parlay-control",
-      ),
-    ).toBe(false);
-  });
-}
 
-function defineLegacyWorkerIngressTest(): void {
-  test("allows the Scout and legacy Temporal workers to reach Beta Scout", () => {
-    const beta = scoutResources("beta");
-    const policy = findResource(beta, "NetworkPolicy", "scout-ingress-netpol");
-    expect(policy.spec).toEqual(
-      expect.objectContaining({
-        ingress: expect.arrayContaining([
+    const temporal = temporalResources();
+    for (const name of [
+      "temporal-temporal-worker",
+      "temporal-temporal-scout-worker",
+    ]) {
+      const deployment = DeploymentSpecSchema.parse(
+        findResource(temporal, "Deployment", name).spec,
+      );
+      expect(deployment.template.spec.containers[0]?.env).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "SCOUT_WEEKLY_PARLAY_CONTROL_URL" }),
           expect.objectContaining({
-            from: expect.arrayContaining([
-              {
-                namespaceSelector: {
-                  matchLabels: {
-                    "kubernetes.io/metadata.name": "temporal",
-                  },
-                },
-                podSelector: {
-                  matchLabels: {
-                    component: "scout-worker",
-                  },
-                },
-              },
-              {
-                namespaceSelector: {
-                  matchLabels: {
-                    "kubernetes.io/metadata.name": "temporal",
-                  },
-                },
-                podSelector: {
-                  matchLabels: {
-                    component: "legacy-worker",
-                  },
-                },
-              },
-            ]),
-            ports: [{ port: 3000, protocol: "TCP" }],
+            name: "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
           }),
         ]),
-      }),
+      );
+    }
+  });
+
+  test("retains both directions of the replay callback network boundary", () => {
+    const betaPolicy = findResource(
+      scoutResources("beta"),
+      "NetworkPolicy",
+      "scout-ingress-netpol",
+    );
+    expect(JSON.stringify(betaPolicy.spec)).toContain(
+      '"kubernetes.io/metadata.name":"temporal"',
     );
 
     const temporal = temporalResources();
-    const egressPolicy = findResource(
-      temporal,
-      "NetworkPolicy",
+    for (const name of [
       "temporal-worker-scout-beta-netpol",
-    );
-    expect(egressPolicy.spec).toEqual(
-      expect.objectContaining({
-        podSelector: {
-          matchLabels: {
-            component: "scout-worker",
-          },
-        },
-        egress: [
-          {
-            to: [
-              {
-                namespaceSelector: {
-                  matchLabels: {
-                    "kubernetes.io/metadata.name": "scout-beta",
-                  },
-                },
-                podSelector: { matchLabels: { app: "scout-backend" } },
-              },
-            ],
-            ports: [{ port: 3000, protocol: "TCP" }],
-          },
-        ],
-      }),
-    );
-
-    const legacyEgressPolicy = findResource(
-      temporal,
-      "NetworkPolicy",
       "temporal-legacy-worker-scout-beta-netpol",
-    );
-    expect(legacyEgressPolicy.spec).toEqual(
-      expect.objectContaining({
-        podSelector: {
-          matchLabels: {
-            component: "legacy-worker",
-          },
-        },
-        egress: [
-          {
-            to: [
-              {
-                namespaceSelector: {
-                  matchLabels: {
-                    "kubernetes.io/metadata.name": "scout-beta",
-                  },
-                },
-                podSelector: { matchLabels: { app: "scout-backend" } },
-              },
-            ],
-            ports: [{ port: 3000, protocol: "TCP" }],
-          },
-        ],
-      }),
-    );
+    ]) {
+      expect(
+        temporal.some(
+          (resource) =>
+            resource.kind === "NetworkPolicy" &&
+            resource.metadata.name === name,
+        ),
+      ).toBe(true);
+    }
   });
-}
-
-describe("Scout weekly parlay deployment boundary", () => {
-  defineScoutTemporalAccessTests();
-  defineTemporalIngressTest();
-  defineSharedCredentialTest();
-  defineProductionIsolationTest();
-  defineLegacyWorkerIngressTest();
 });

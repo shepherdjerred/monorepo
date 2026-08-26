@@ -11,27 +11,46 @@ import {
   scoutTemporalWorkers,
 } from "#src/metrics/temporal.ts";
 import { setScoutTemporalHealth } from "./health.ts";
+import type { WeeklyParlayControlResult } from "#src/betting/weekly-parlay-control.ts";
+import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/weekly-parlay.ts";
 
 const logger = createLogger("temporal-supervisor");
 const RECONNECT_DELAY_MS = 5000;
 
 type RealtimeActivities = Pick<
   ScoutTemporalActivities,
-  "pollRealtime" | "discoverPostMatchIds" | "ingestMatch"
+  | "pollRealtime"
+  | "discoverPostMatchIds"
+  | "runPostMatchMaintenance"
+  | "ingestMatch"
+  | "probeQueue"
 >;
 type InteractiveActivities = Pick<
   ScoutTemporalActivities,
-  "runInteractive" | "persistInteractiveOutcome"
+  "runInteractive" | "persistInteractiveOutcome" | "probeQueue"
 >;
 type BackgroundActivities = Pick<
   ScoutTemporalActivities,
   | "fetchInitialHistoryPage"
   | "reconcileIngestion"
   | "runBackgroundJob"
+  | "runDetachedBackgroundWork"
   | "drainReportScheduleOutbox"
   | "runReport"
+  | "probeQueue"
+> & {
+  invokeScoutWeeklyParlayAction: (
+    action: WeeklyParlayControlAction,
+  ) => Promise<WeeklyParlayControlResult>;
+  syncScoutBryanBucksAnalytics: () => Promise<{
+    status: "reconciled" | "skipped";
+    detail: string;
+  }>;
+};
+type LakeActivities = Pick<
+  ScoutTemporalActivities,
+  "runReportLakeJob" | "runDetachedLakeWork" | "probeQueue"
 >;
-type LakeActivities = Pick<ScoutTemporalActivities, "runReportLakeJob">;
 
 export type ScoutTemporalActivityGroups = {
   readonly realtime: RealtimeActivities;

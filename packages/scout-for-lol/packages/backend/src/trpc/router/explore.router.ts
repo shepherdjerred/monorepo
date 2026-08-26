@@ -114,7 +114,7 @@ export const exploreRouter = router({
 
   activeRuns: exploreProcedure.query(async ({ ctx }) => {
     const userId = await requireExploreUser(ctx.user);
-    return exploreRunManager.list(userId);
+    return await exploreRunManager.listDurable(userId);
   }),
 
   runOutcome: exploreProcedure
@@ -122,7 +122,7 @@ export const exploreRouter = router({
     .query(async ({ ctx, input }) => {
       const userId = await requireExploreUser(ctx.user);
       return ExploreRunOutcomeResultSchema.parse({
-        outcome: exploreRunManager.outcome(input.runId, userId),
+        outcome: await exploreRunManager.durableOutcome(input.runId, userId),
       });
     }),
 
@@ -162,7 +162,7 @@ export const exploreRouter = router({
     .input(z.object({ runId: ExploreRunIdSchema }).strict())
     .mutation(async ({ ctx, input }) => {
       const userId = await requireExploreUser(ctx.user);
-      if (!exploreRunManager.stop(input.runId, userId)) {
+      if (!(await exploreRunManager.stop(input.runId, userId))) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Run not found." });
       }
       return { ok: true };

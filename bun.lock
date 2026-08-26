@@ -95,7 +95,7 @@
     },
     "packages/astro-opengraph-images": {
       "name": "astro-opengraph-images",
-      "version": "1.19.0",
+      "version": "1.20.0",
       "dependencies": {
         "@resvg/resvg-js": "^2.6.2",
         "jsdom": "^30.0.0",
@@ -866,7 +866,7 @@
     },
     "packages/homelab/src/helm-types": {
       "name": "@shepherdjerred/helm-types",
-      "version": "1.6.0",
+      "version": "1.7.0",
       "bin": {
         "helm-types": "dist/cli.js",
       },
@@ -1217,11 +1217,12 @@
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
+        "@temporalio/activity": "1.22.0",
         "@temporalio/client": "1.22.0",
+        "@temporalio/common": "1.22.0",
         "@temporalio/worker": "1.22.0",
         "@trpc/server": "11",
         "ai": "^7.0.77",
-        "cron": "^4.1.4",
         "cron-parser": "^5.5.0",
         "date-fns": "^4.1.0",
         "discord.js": "^14.26.4",
@@ -1546,7 +1547,9 @@
       },
       "devDependencies": {
         "@scout-for-lol/data": "workspace:*",
+        "@shepherdjerred/root-scripts": "workspace:*",
         "@temporalio/activity": "1.22.0",
+        "@temporalio/client": "1.22.0",
         "@temporalio/testing": "1.22.0",
         "@temporalio/worker": "1.22.0",
         "@types/node": "^26.1.1",
@@ -1918,6 +1921,7 @@
       "devDependencies": {
         "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/root-scripts": "workspace:*",
         "@temporalio/testing": "1.22.0",
         "@tsconfig/node-lts": "^24.0.0",
         "@tsconfig/recommended": "^1.0.13",
@@ -2041,6 +2045,8 @@
         "@shepherdjerred/code-review": "workspace:*",
         "@shepherdjerred/release-tools": "workspace:*",
         "@shepherdjerred/version-catalog": "workspace:*",
+        "@temporalio/client": "1.22.0",
+        "@temporalio/worker": "1.22.0",
         "fast-xml-builder": "1.3.1",
         "fast-xml-parser": "5.11.0",
         "fast-xml-validator": "1.4.2",
@@ -4339,8 +4345,6 @@
 
     "@types/lodash": ["@types/lodash@4.17.25", "", {}, "sha512-+K1NIO8I+F9/wNulfVvu23QYd0Pe9/OCqRrim4NoYIf1VoEDL90Ve4ClzpyqBLc7NpGGWRvYNCKZ1BE/Jpf8dQ=="],
 
-    "@types/luxon": ["@types/luxon@3.7.5", "", {}, "sha512-jJ41Q4z6ZVO260MNDdHfW7+7a5iMiX8Mr6ZJHcmgrvhZha6dz5704o/lF2kKl6URjH6ivEL97w9xS/MgpJEphg=="],
-
     "@types/mdast": ["@types/mdast@4.0.4", "", { "dependencies": { "@types/unist": "*" } }, "sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA=="],
 
     "@types/mdx": ["@types/mdx@2.0.14", "", {}, "sha512-T48PeuJtvLosNTPVhfnIp3i/n3a4g4Bad7YCq5k64D4u7NwDrAotikQ+5+sjtUvBmxCMlbo3dVL+C2dP0rWHzg=="],
@@ -5048,8 +5052,6 @@
     "cosmiconfig": ["cosmiconfig@8.3.6", "", { "dependencies": { "import-fresh": "^3.3.0", "js-yaml": "^4.1.0", "parse-json": "^5.2.0", "path-type": "^4.0.0" }, "peerDependencies": { "typescript": ">=4.9.5" }, "optionalPeers": ["typescript"] }, "sha512-kcZ6+W5QzcJ3P1Mt+83OUv/oHFqZHIx8DuxG6eZ5RGMERoLqp4BuGjhHLYGK+Kf5XVkQvqBSmAy/nGWN3qDgEA=="],
 
     "crelt": ["crelt@1.0.7", "", {}, "sha512-aK6BbWfhf4U/wCcLHKPJl/xa6VkVstRaPywWtMKGwuOLc/wZTyQYuoxgvZnNsBvv7Kg3YTBQYYBCggcviQczuA=="],
-
-    "cron": ["cron@4.4.0", "", { "dependencies": { "@types/luxon": "~3.7.0", "luxon": "~3.7.0" } }, "sha512-fkdfq+b+AHI4cKdhZlppHveI/mgz2qpiYxcm+t5E5TsxX7QrLS1VE0+7GENEk9z0EeGPcpSciGv6ez24duWhwQ=="],
 
     "cron-parser": ["cron-parser@5.10.0", "", { "dependencies": { "luxon": "^3.7.2" } }, "sha512-izNAxJyRWUP8ljBoDSub5WyrVOUlT4SLGShswE7eoRBpp6QUsSycYxLBMJlbshgPBMcPT/nrfgjNY2918ayv2A=="],
 

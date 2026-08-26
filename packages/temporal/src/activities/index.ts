@@ -129,5 +129,5 @@ export const activities = {
   ...agentActivities,
   ...glitterCorpusWorkerActivities,
   ...glitterContextWorkerActivities,
-  ...maintenanceActivities,
+  ...maintenanceWorkerActivities,
 };

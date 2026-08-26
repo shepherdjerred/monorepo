@@ -303,8 +303,8 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
     return handleTournamentCallback(request);
   }
 
-  // Temporal-only weekly Bryan Bucks control surface. The handler is absent
-  // (returns null) unless its bootstrap credential is configured.
+  // Retained only for Workflow histories that predate the embedded-Activity
+  // patch. The route is absent unless its private bootstrap token is present.
   const weeklyParlayResponse = await handleWeeklyParlayControl(request, url);
   if (weeklyParlayResponse !== null) {
     return weeklyParlayResponse;

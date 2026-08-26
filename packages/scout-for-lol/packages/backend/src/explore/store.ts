@@ -279,6 +279,9 @@ export async function startExploreTurn(
   title: string;
   messageId: string;
   expectedCurrentLeafId: string | null;
+  previousCurrentLeafId: string | null;
+  createdConversation: boolean;
+  createdQuestion: boolean;
 }> {
   if (input.conversationId === null) {
     const created = await prisma.exploreConversation.create({
@@ -299,6 +302,9 @@ export async function startExploreTurn(
       title: created.title,
       messageId,
       expectedCurrentLeafId: null,
+      previousCurrentLeafId: null,
+      createdConversation: true,
+      createdQuestion: true,
     };
   }
   const existing = await prisma.exploreConversation.findFirst({
@@ -369,6 +375,9 @@ export async function startExploreTurn(
     title: existing.title,
     messageId: created.id,
     expectedCurrentLeafId: created.id,
+    previousCurrentLeafId: existing.currentLeafId,
+    createdConversation: false,
+    createdQuestion: true,
   };
 }
 
@@ -392,6 +401,9 @@ export async function resolveRegenerateTarget(
   messageId: string;
   question: string;
   expectedCurrentLeafId: string | null;
+  previousCurrentLeafId: string | null;
+  createdConversation: boolean;
+  createdQuestion: boolean;
 }> {
   const existing = await prisma.exploreConversation.findFirst({
     where: { id: input.conversationId, userId: input.userId },
@@ -415,6 +427,9 @@ export async function resolveRegenerateTarget(
     messageId: parent.id,
     question: parent.content,
     expectedCurrentLeafId: existing.currentLeafId,
+    previousCurrentLeafId: existing.currentLeafId,
+    createdConversation: false,
+    createdQuestion: false,
   };
 }
 

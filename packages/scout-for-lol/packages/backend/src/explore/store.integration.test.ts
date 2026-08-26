@@ -22,6 +22,7 @@ import {
   startExploreTurn,
   titleFromQuestion,
 } from "#src/explore/store.ts";
+import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
 import {
   applyGeneratedTitle,
   rollbackGeneratedTitle,
@@ -107,6 +108,58 @@ async function path(conversationId: string): Promise<string[]> {
 }
 
 describe("explore store", () => {
+  test("rolls back a persisted question when durable admission rejects", async () => {
+    const first = await askAndAnswer({
+      conversationId: null,
+      question: "Who wins the most?",
+    });
+    const started = await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId,
+      question: "What about this patch?",
+      attach: { kind: "leaf" },
+    });
+
+    await rollbackUnstartedExploreTurn(prisma, {
+      ...started,
+      userId,
+    });
+
+    expect(await path(first.conversationId)).toEqual([
+      "Who wins the most?",
+      ANSWER.answer,
+    ]);
+    await expect(
+      prisma.exploreMessage.findUnique({ where: { id: started.messageId } }),
+    ).resolves.toBeNull();
+    await expect(
+      prisma.exploreConversation.findUniqueOrThrow({
+        where: { id: first.conversationId },
+        select: { currentLeafId: true },
+      }),
+    ).resolves.toEqual({ currentLeafId: first.answerId });
+  });
+
+  test("removes a new conversation when durable admission rejects", async () => {
+    const started = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Who wins the most?",
+      attach: { kind: "leaf" },
+    });
+
+    await rollbackUnstartedExploreTurn(prisma, {
+      ...started,
+      userId,
+    });
+
+    await expect(
+      prisma.exploreConversation.findUnique({
+        where: { id: started.conversationId },
+      }),
+    ).resolves.toBeNull();
+  });
+
   /**
    * The question is written before the model runs so an abandoned turn stays
    * resumable. That only holds if the branch moves onto it: the transcript is

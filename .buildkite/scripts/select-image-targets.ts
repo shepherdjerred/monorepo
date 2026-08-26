@@ -22,7 +22,6 @@ import type {
 
 import {
   loadWorkspaces,
-  dependencyClosure,
   targetClosureDirs,
 } from "./select-image-targets-workspaces.ts";
 import type { WorkspacePackage } from "./select-image-targets-workspaces.ts";
@@ -236,20 +235,11 @@ function addClosureReasons(
   reasons: Map<string, string[]>,
 ): void {
   for (const [target, owner] of Object.entries(IMAGE_TARGET_OWNERS)) {
-    const closure = dependencyClosure(owner, packages);
-    const dirs = [...closure].map((name) => {
-      const pkg = packages.get(name);
-      if (pkg === undefined) {
-        throw new Error(
-          `workspace disappeared while selecting images: ${name}`,
-        );
-      }
-      return pkg.dir;
-    });
+    const dirs = targetClosureDirs(target, owner, packages);
     for (const path of changedPaths) {
       const dir = dirs.find((candidate) => path.startsWith(candidate));
       if (dir !== undefined) {
-        addReason(reasons, target, `workspace closure: ${path} under ${dir}`);
+        addReason(reasons, target, `workspace closure: ${path} under ${dir}/`);
       }
     }
   }

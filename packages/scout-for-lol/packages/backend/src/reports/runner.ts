@@ -35,6 +35,7 @@ import {
 } from "#src/storage/s3-report-run.ts";
 
 export type ReportRunResult = {
+  runId: number;
   output: RenderedReportOutput;
   rowsReturned: number;
   rowsScanned: number;
@@ -45,13 +46,15 @@ type RunReportParams = {
   report: Report;
   trigger: ReportRunTrigger;
   now?: Date;
+  runId?: number;
+  deliveryRequested?: boolean;
 };
 
 export async function runReport(
   params: RunReportParams,
 ): Promise<ReportRunResult> {
   const trigger = ReportRunTriggerSchema.parse(params.trigger);
-  const startedAt = params.now ?? new Date();
+  const requestedStartAt = params.now ?? new Date();
   // Duration measures real elapsed wall time. `startedAt` may be an injected
   // logical clock (the scheduled tick, or a pinned test date), and Postgres
   // INTEGER rejects the multi-billion-ms "duration" that (real now − logical
@@ -61,16 +64,33 @@ export async function runReport(
   // query whose RENDER clause won't parse — is captured as a FAILED run rather
   // than thrown before the run is ever recorded. The `output_format` metric
   // label is only known once the query parses; until then it stays UNKNOWN.
-  const run = await params.prisma.reportRun.create({
-    data: {
-      reportId: params.report.id,
-      serverId: params.report.serverId,
-      trigger,
-      status: "RUNNING",
-      startedAt,
-      querySnapshot: params.report.queryText,
-    },
-  });
+  const run =
+    params.runId === undefined
+      ? await params.prisma.reportRun.create({
+          data: {
+            reportId: params.report.id,
+            serverId: params.report.serverId,
+            deliveryChannelId: params.report.channelId,
+            deliveryServerId: params.report.serverId,
+            trigger,
+            status: "RUNNING",
+            startedAt: requestedStartAt,
+            querySnapshot: params.report.queryText,
+          },
+        })
+      : await params.prisma.reportRun.findUniqueOrThrow({
+          where: { id: params.runId },
+        });
+  if (
+    run.reportId !== params.report.id ||
+    run.trigger !== trigger ||
+    run.status !== "RUNNING"
+  ) {
+    throw new Error(
+      `Report run ${run.id.toString()} does not match the requested execution`,
+    );
+  }
+  const startedAt = run.startedAt;
   let renderKind: ReportMetricLabel = "UNKNOWN";
 
   try {
@@ -133,6 +153,10 @@ export async function runReport(
         imageByteSize: output.image?.data.length ?? null,
         visualizationS3Key: visualizationArtifact?.key ?? null,
         visualizationByteSize: visualizationArtifact?.size ?? null,
+        deliveryState:
+          params.deliveryRequested === true ? "PENDING" : "NOT_REQUESTED",
+        deliveryError: null,
+        deliveredAt: null,
       },
     });
     await params.prisma.report.update({
@@ -156,6 +180,7 @@ export async function runReport(
     });
 
     return {
+      runId: run.id,
       output,
       rowsReturned: result.rows.length,
       rowsScanned: result.rowsScanned,

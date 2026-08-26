@@ -27,6 +27,7 @@ type ScoutIntervalSchedule = ScoutSchedule & {
 type ScoutCronSchedule = ScoutSchedule & {
   readonly expression: string;
   readonly timezone?: string;
+  readonly catchupWindow?: "1 hour" | "12 hours";
 };
 
 function scoutWorkflowTaskQueue(stage: ScoutStage) {
@@ -69,7 +70,7 @@ function cronSchedule(
     },
     taskQueue: scoutWorkflowTaskQueue(stage),
     overlap: ScheduleOverlapPolicy.SKIP,
-    catchupWindow: CATCHUP_RELAXED,
+    catchupWindow: schedule.catchupWindow ?? CATCHUP_RELAXED,
     memo: `Scout ${stage} ${schedule.name}`,
     initialPauseNote: INITIAL_PAUSE_NOTE,
   };
@@ -111,9 +112,22 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       every: "15 minutes",
     }),
     intervalSchedule(stage, {
+      name: "competition-scheduled-updates",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "competition-scheduled-updates" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
       name: "competition-validation",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "competition-validation" }],
+      every: "1 hour",
+    }),
+    intervalSchedule(stage, {
+      name: "summoner-index-backfill",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "summoner-index-backfill" }],
       every: "1 hour",
     }),
     intervalSchedule(stage, {
@@ -165,6 +179,20 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "conversion-check" }],
       expression: "30 10 * * *",
+    }),
+    cronSchedule(stage, {
+      name: "bucks-reconciliation",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "bucks-reconciliation" }],
+      expression: "0 5 * * *",
+    }),
+    cronSchedule(stage, {
+      name: "weekly-bucks-leaderboard",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "weekly-bucks-leaderboard" }],
+      expression: "0 17 * * 5",
+      timezone: "America/Los_Angeles",
+      catchupWindow: "12 hours",
     }),
   ];
 }

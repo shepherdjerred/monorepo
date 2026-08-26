@@ -333,23 +333,61 @@ describe("cross-package facts the prose depends on", () => {
     expect(stale).toEqual([]);
   });
 
-  test("documented cron intervals still match the backend scheduler", async () => {
+  test("documented schedule intervals still match Temporal definitions", async () => {
     const source = await Bun.file(
-      new URL("../../backend/src/league/cron.ts", import.meta.url).pathname,
+      new URL(
+        "../../../../temporal/src/schedules/scout-schedule-definitions.ts",
+        import.meta.url,
+      ).pathname,
     ).text();
-    // Each entry is (documented claim → the schedule expression that backs it).
-    const claims: [string, string][] = [
-      ["pre-match every 30 seconds", "*/30 * * * * *"],
-      ["post-match every minute", "0 * * * * *"],
-      ["competition lifecycle every 15 minutes", "0 */15 * * * *"],
-      ["report lake fold every 15 minutes", "0 5-59/15 * * * *"],
-      ["report lake rebuild daily at 02:00 UTC", "0 0 2 * * *"],
-      ["player pruning daily at 03:00 UTC", "0 0 3 * * *"],
-      ["removed-guild cleanup daily at 04:00 UTC", "0 0 4 * * *"],
-      ["match-time refresh every 6 hours", "0 0 */6 * * *"],
+    // Each entry is (documented claim → the Temporal schedule fields that back it).
+    const claims: [string, string, string][] = [
+      [
+        "pre-match every 30 seconds",
+        'name: "prematch-poll"',
+        'every: "30 seconds"',
+      ],
+      [
+        "post-match every minute",
+        'name: "postmatch-discovery"',
+        'every: "1 minute"',
+      ],
+      [
+        "competition lifecycle every 15 minutes",
+        'name: "competition-refresh"',
+        'every: "15 minutes"',
+      ],
+      [
+        "report lake fold every 15 minutes",
+        'name: "report-lake-fold"',
+        'every: "15 minutes"',
+      ],
+      [
+        "report lake rebuild daily at 02:00 UTC",
+        'name: "report-lake-rebuild"',
+        'expression: "0 2 * * *"',
+      ],
+      [
+        "player pruning daily at 03:00 UTC",
+        'name: "player-pruning"',
+        'expression: "0 3 * * *"',
+      ],
+      [
+        "removed-guild cleanup daily at 04:00 UTC",
+        'name: "removed-guild-cleanup"',
+        'expression: "0 4 * * *"',
+      ],
+      [
+        "match-time refresh every 6 hours",
+        'name: "match-time-rebuild"',
+        'expression: "0 */6 * * *"',
+      ],
     ];
     const stale = claims
-      .filter(([, schedule]) => !source.includes(`"${schedule}"`))
+      .filter(
+        ([, name, timing]) =>
+          !source.includes(name) || !source.includes(timing),
+      )
       .map(([claim]) => claim);
     expect(stale).toEqual([]);
   });

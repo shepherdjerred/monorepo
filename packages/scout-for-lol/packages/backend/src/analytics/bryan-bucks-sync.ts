@@ -67,7 +67,7 @@ export async function syncBucksAnalytics(options?: {
   for (const outboxEntry of outboxEntries) {
     if (reserved.has(outboxEntry.eventId)) continue;
     const entry = outboxEntry.ledgerEntry;
-    captureBucksEconomy({
+    const captured = captureBucksEconomy({
       serverId: entry.bucksAccount.serverId,
       movement: BucksLedgerKindSchema.parse(entry.kind),
       deltaBucks: entry.delta,
@@ -79,7 +79,7 @@ export async function syncBucksAnalytics(options?: {
     pendingLedgerEvents.push({
       outboxId: outboxEntry.id,
       eventId: outboxEntry.eventId,
-      captured: true,
+      captured,
     });
   }
 
@@ -134,7 +134,7 @@ export async function syncBucksAnalytics(options?: {
     const serverAccounts = accounts.filter(
       (account) => account.serverId === serverId,
     );
-    captureBucksEconomySnapshot({
+    const captured = captureBucksEconomySnapshot({
       serverId,
       memberAccounts: serverAccounts.filter((account) => !account.isHouse)
         .length,
@@ -150,7 +150,7 @@ export async function syncBucksAnalytics(options?: {
       uuid: eventId,
       analytics,
     });
-    pendingSnapshotEvents.push({ eventId, captured: true });
+    pendingSnapshotEvents.push({ eventId, captured });
   }
 
   const pendingEvents = [

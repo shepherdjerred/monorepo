@@ -286,23 +286,6 @@ describe("createHttpClient post and raw", () => {
     expect(result).toEqual({ success: true, data: "plain body" });
   });
 
-  it("POSTs JSON and returns an empty raw success body", async () => {
-    const { requests } = installFetchMock(new Response(null, { status: 204 }));
-    const client = createHttpClient({
-      baseUrl: "https://api.example.test",
-      auth: { scheme: "Bearer", token: "t" },
-      errorLabel: "Example API",
-    });
-
-    const result = await client.postRaw("/items/resolve", {
-      body: { is_resolved: true },
-    });
-
-    expect(result).toEqual({ success: true, data: "" });
-    expect(requests[0]!.init?.method).toBe("POST");
-    expect(requests[0]!.init?.body).toBe(JSON.stringify({ is_resolved: true }));
-  });
-
   it("omits Content-Type on raw requests", async () => {
     const { requests } = installFetchMock(new Response("x", { status: 200 }));
     const client = createHttpClient({

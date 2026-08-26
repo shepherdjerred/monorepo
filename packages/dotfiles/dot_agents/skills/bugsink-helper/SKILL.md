@@ -201,27 +201,12 @@ curl -s -H "$AUTH" "$API/issues/$ISSUE_UUID/" | \
 
 ---
 
-## Resolving Issues (direct API only)
+## Resolving / Muting Issues (web UI only)
 
-Issue triage remains read-only by default. Reviewed issue cleanup uses the
-repository's explicit UUID-only resolver, which calls the canonical REST API
-directly; never automate the Bugsink web UI and never add automatic
-classification or muting:
+The canonical REST API is **read-only** for issues — `PATCH`/`POST` on an issue returns `405` (Allow: GET, HEAD, OPTIONS). To resolve or mute, drive the Django + allauth web-UI bulk-action form:
 
-```bash
-toolkit bugsink resolve <UUID...> --dry-run
-toolkit bugsink resolve <UUID...> --confirm
-toolkit bugsink resolve --from-file issues.txt --confirm --json
-```
-
-The resolver preflights every explicit UUID with `GET
-/api/canonical/0/issues/{uuid}/`, rejects missing or muted issues before any
-mutation, skips already-resolved issues, and POSTs only eligible issues to
-`/api/canonical/0/issues/{uuid}/resolve/` with the complete current issue
-payload required by Bugsink. It verifies every successful mutation with a
-follow-up GET and stops on the first mutation or verification error without
-retrying. `--confirm` is required for mutation; without it, the command is a
-dry run. Resolution is the only supported mutation.
+1. **Log in:** GET `/accounts/login/` for the `csrfmiddlewaretoken` + `csrftoken` cookie, then POST `username`/`password`/`csrfmiddlewaretoken`/`next` to `/accounts/login/` **with `Origin` and `Referer` headers** (Django HTTPS CSRF requires them, else `403 CSRF verification failed`). A `sessionid` cookie means success.
+2. **Bulk action:** the issue list is at `/issues/<project_id>/` (integer id); scrape its `issueForm` for a fresh `csrfmiddlewaretoken`, then POST to `/issues/<project_id>/` with `csrfmiddlewaretoken`, `action=resolved_next` (or `mute` / `mute_for:...` / `unmute`), and one `issue_ids[]=<uuid>` per issue (batch allowed). Verify via `GET /api/canonical/0/issues/<uuid>/` → `is_resolved: true`.
 
 Resolving does **not** prevent recurrence — the issue reopens as a regression on the next matching event, so resolve "fixed" issues only after the fix deploys.
 

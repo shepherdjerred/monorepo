@@ -1,11 +1,14 @@
 import type {
   InteractiveOutcome,
   ScoutBackgroundJobInput,
+  ScoutDetachedWorkInput,
   ScoutIngestionReconciliationInput,
   ScoutInitialHistoryInput,
   ScoutInteractiveRunInput,
   ScoutMatchIngestionInput,
   ScoutPostMatchDiscoveryInput,
+  ScoutQueueCanaryInput,
+  ScoutQueueCanaryProbeResult,
   ScoutRealtimePollInput,
   ScoutReportLakeInput,
   ScoutReportRunInput,
@@ -18,10 +21,12 @@ import { scoutPostMatchDiscoveryWorkflow as postMatchDiscovery } from "./realtim
 import { scoutInitialHistoryWorkflow as initialHistory } from "./background.ts";
 import { scoutIngestionReconciliationWorkflow as ingestionReconciliation } from "./background.ts";
 import { scoutBackgroundJobWorkflow as backgroundJob } from "./background.ts";
+import { scoutDetachedWorkWorkflow as detachedWork } from "./background.ts";
 import { scoutReportLakeWorkflow as reportLake } from "./reports.ts";
 import { scoutReportRunWorkflow as reportRun } from "./reports.ts";
 import { scoutReportScheduleReconcilerWorkflow as reportScheduleReconciler } from "./reports.ts";
 import { scoutInteractiveRunWorkflow as interactiveRun } from "./interactive.ts";
+import { scoutQueueCanaryWorkflow as queueCanary } from "./canary.ts";
 
 export async function scoutRealtimePollWorkflow(
   input: ScoutRealtimePollInput,
@@ -59,6 +64,12 @@ export async function scoutBackgroundJobWorkflow(
   return await backgroundJob(input);
 }
 
+export async function scoutDetachedWorkWorkflow(
+  input: ScoutDetachedWorkInput,
+): Promise<ScoutWorkflowStatus> {
+  return await detachedWork(input);
+}
+
 export async function scoutReportLakeWorkflow(
   input: ScoutReportLakeInput,
 ): Promise<ScoutWorkflowStatus> {
@@ -81,4 +92,10 @@ export async function scoutInteractiveRunWorkflow(
   input: ScoutInteractiveRunInput,
 ): Promise<InteractiveOutcome> {
   return await interactiveRun(input);
+}
+
+export async function scoutQueueCanaryWorkflow(
+  input: ScoutQueueCanaryInput,
+): Promise<ScoutQueueCanaryProbeResult[]> {
+  return await queueCanary(input);
 }

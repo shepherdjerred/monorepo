@@ -35,7 +35,7 @@ export type ScoutWeeklyParlayTimeline = z.infer<
   typeof ScoutWeeklyParlayTimelineSchema
 >;
 
-const ScoutWeeklyParlayControlResultSchema = z.strictObject({
+export const ScoutWeeklyParlayControlResultSchema = z.strictObject({
   status: z.enum(["reconciled", "skipped"]),
   detail: z.string(),
   marketId: z.number().int().positive().optional(),
@@ -242,10 +242,6 @@ export async function invokeScoutWeeklyParlayAction(
           "Idempotency-Key": scoutWeeklyParlayActionKey(action),
         },
         body: JSON.stringify(action),
-        // Opening can deterministically replay player history and generate a
-        // priced market, so it needs more time than the bounded reminder and
-        // settlement calls. The activity timeout is sized to cover this
-        // request and still lets Temporal retry a genuinely unavailable Scout.
         signal: AbortSignal.timeout(
           action.action === "open"
             ? OPEN_ACTION_TIMEOUT_MS

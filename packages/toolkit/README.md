@@ -97,21 +97,8 @@ is already occupied rather than capturing an unrelated process.
 ### Operations and local history
 
 - `toolkit alerts list|show` queries the durable alert occurrence ledger.
-- `toolkit bugsink ...` queries self-hosted Bugsink and can resolve an explicit
-  reviewed issue UUID allowlist through the canonical REST API.
-
-To preview or apply a reviewed resolution set:
-
-```bash
-toolkit bugsink resolve <ISSUE_UUID...> --dry-run
-toolkit bugsink resolve --from-file issues.txt --confirm
-```
-
-Resolution always preflights every target, refuses missing or muted issues, and
-verifies each successful REST action with a follow-up API read. `--confirm` is
-required for changes; the command never uses the Bugsink web UI and does not
-support muting or broad selector-based cleanup.
-
+- `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
+  and releases in self-hosted Bugsink.
 - `toolkit discord ...` operates the private local Discord session daemon.
 - `toolkit history ...` searches the private, rebuildable local agent-history
   index. It never treats prior conversation as current deployment truth.

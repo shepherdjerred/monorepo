@@ -22,6 +22,7 @@ import { addDynamicConfigRefreshListener } from "#src/config/dynamic.ts";
 const logger = createLogger("discord-bootstrap");
 
 let removeDynamicConfigRefreshListener: (() => void) | undefined;
+let metricsInterval: ReturnType<typeof setInterval> | undefined;
 
 /**
  * Every gateway event this bot handles.
@@ -129,7 +130,7 @@ export function registerDiscordEventHandlers(target: Client): void {
     logger.info("🔊 Voice manager initialized");
 
     // Update metrics periodically
-    setInterval(() => {
+    metricsInterval ??= setInterval(() => {
       discordGuildsGauge.set(readyClient.guilds.cache.size);
       discordUsersGauge.set(readyClient.users.cache.size);
       discordLatency.set(readyClient.ws.ping);
@@ -160,6 +161,17 @@ export function registerDiscordEventHandlers(target: Client): void {
     discordGuildsGauge.set(target.guilds.cache.size);
     void handleGuildDelete(guild);
   });
+}
+
+export function stopDiscordGateway(target: Client = client): void {
+  removeDynamicConfigRefreshListener?.();
+  removeDynamicConfigRefreshListener = undefined;
+  if (metricsInterval !== undefined) {
+    clearInterval(metricsInterval);
+    metricsInterval = undefined;
+  }
+  void target.destroy();
+  discordConnectionStatus.set(0);
 }
 
 /**
