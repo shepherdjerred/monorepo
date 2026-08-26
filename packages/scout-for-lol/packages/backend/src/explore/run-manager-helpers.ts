@@ -17,8 +17,38 @@ import { createLogger } from "#src/logger.ts";
 import type {
   ActiveRun,
   ExploreAgentRunner,
+  RunTermination,
   StartedTurn,
+  TerminalRun,
 } from "#src/explore/run-manager-types.ts";
+
+export function abortActiveExploreRun(
+  run: ActiveRun,
+  reason: Exclude<RunTermination, null>,
+  message: string,
+): void {
+  if (run.termination !== null) return;
+  run.termination = reason;
+  run.activity = reason === "stop" ? "Stopping…" : run.activity;
+  run.abortController.abort(message);
+}
+
+export function recordTerminalExploreOutcome(
+  terminalRuns: Map<string, TerminalRun>,
+  run: ActiveRun,
+  outcome: ExploreRunOutcome,
+  ttlMs: number,
+): void {
+  const completedAt = Date.now();
+  for (const [runId, terminal] of terminalRuns) {
+    if (completedAt - terminal.completedAt > ttlMs) terminalRuns.delete(runId);
+  }
+  terminalRuns.set(run.summary.runId, {
+    userId: run.identity.userId,
+    outcome,
+    completedAt,
+  });
+}
 
 const logger = createLogger("explore-run-manager");
 

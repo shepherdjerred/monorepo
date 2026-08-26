@@ -22,6 +22,13 @@ const BATCH_SIZE = 100;
 const OWNERSHIP_SCHEMA_VERSION = 1;
 const logger = createLogger("report-schedule-reconciler");
 
+type EnabledReportSchedule = {
+  id: number;
+  revision: number;
+  cronExpression: string;
+  scheduleTimezone: string;
+};
+
 function ownershipMemo(stage: ScoutStage, reportId: number) {
   return ScoutScheduleOwnershipMemoSchema.parse({
     owner: "scout-for-lol",
@@ -98,6 +105,35 @@ async function deleteOwnedSchedule(
   }
 }
 
+async function saveReportSchedule(input: {
+  client: Client;
+  stage: ScoutStage;
+  reportId: number;
+  scheduleId: string;
+  configuration: ReturnType<typeof scheduleConfiguration>;
+}): Promise<void> {
+  const handle = input.client.schedule.getHandle(input.scheduleId);
+  try {
+    await assertOwned(
+      input.client,
+      input.scheduleId,
+      input.stage,
+      input.reportId,
+    );
+    await handle.update((previous) => ({
+      ...input.configuration,
+      state: previous.state,
+    }));
+  } catch (error) {
+    if (!(error instanceof ScheduleNotFoundError)) throw error;
+    await input.client.schedule.create({
+      scheduleId: input.scheduleId,
+      ...input.configuration,
+      memo: ownershipMemo(input.stage, input.reportId),
+    });
+  }
+}
+
 async function upsertReportSchedule(input: {
   client: Client;
   stage: ScoutStage;
@@ -125,27 +161,21 @@ async function upsertReportSchedule(input: {
     cronExpression: report.cronExpression,
     timezone: report.scheduleTimezone,
   });
-  const handle = input.client.schedule.getHandle(scheduleId);
-  try {
-    await assertOwned(input.client, scheduleId, input.stage, input.reportId);
-    await handle.update((previous) => ({
-      ...configuration,
-      state: previous.state,
-    }));
-  } catch (error) {
-    if (!(error instanceof ScheduleNotFoundError)) throw error;
-    await input.client.schedule.create({
-      scheduleId,
-      ...configuration,
-      memo: ownershipMemo(input.stage, input.reportId),
-    });
-  }
+  await saveReportSchedule({
+    client: input.client,
+    stage: input.stage,
+    reportId: input.reportId,
+    scheduleId,
+    configuration,
+  });
 
   if (
     report.nextScheduledRunAt !== null &&
     report.nextScheduledRunAt.getTime() <= Date.now()
   ) {
-    await handle.trigger(ScheduleOverlapPolicy.BUFFER_ONE);
+    await input.client.schedule
+      .getHandle(scheduleId)
+      .trigger(ScheduleOverlapPolicy.BUFFER_ONE);
   }
 }
 
@@ -189,27 +219,64 @@ async function auditReportSchedules(
     }
   }
 
-  let drift = unknownIds.size;
-  let orphans = 0;
-  for (const report of reports) {
-    const scheduleId = scoutReportScheduleId(stage, report.id.toString());
-    if (!ownedIds.has(scheduleId)) {
+  const drift = await reconcileDesiredReportSchedules({
+    client,
+    stage,
+    database,
+    reports,
+    ownedIds,
+    unknownIds,
+  });
+  const orphans = await deleteOrphanedReportSchedules(
+    client,
+    stage,
+    ownedIds,
+    desiredIds,
+  );
+
+  scoutTemporalReportScheduleDrift.set(drift);
+  scoutTemporalReportScheduleOrphans.set(orphans);
+  if (unknownIds.size > 0) {
+    logger.error(
+      "Unknown Scout report Schedule ownership mismatches detected",
+      {
+        stage,
+        scheduleIds: [...unknownIds].sort(),
+      },
+    );
+  }
+}
+
+async function reconcileDesiredReportSchedules(input: {
+  client: Client;
+  stage: ScoutStage;
+  database: ExtendedPrismaClient;
+  reports: EnabledReportSchedule[];
+  ownedIds: Set<string>;
+  unknownIds: Set<string>;
+}): Promise<number> {
+  let drift = input.unknownIds.size;
+  for (const report of input.reports) {
+    const scheduleId = scoutReportScheduleId(input.stage, report.id.toString());
+    if (!input.ownedIds.has(scheduleId)) {
       drift += 1;
-      if (!unknownIds.has(scheduleId)) {
+      if (!input.unknownIds.has(scheduleId)) {
         await upsertReportSchedule({
-          client,
-          stage,
+          client: input.client,
+          stage: input.stage,
           reportId: report.id,
           revision: report.revision,
-          database,
+          database: input.database,
         });
       }
       continue;
     }
-    const description = await client.schedule.getHandle(scheduleId).describe();
+    const description = await input.client.schedule
+      .getHandle(scheduleId)
+      .describe();
     if (
       !scheduleMatchesReport(description, {
-        stage,
+        stage: input.stage,
         reportId: report.id,
         revision: report.revision,
         cronExpression: report.cronExpression,
@@ -218,15 +285,24 @@ async function auditReportSchedules(
     ) {
       drift += 1;
       await upsertReportSchedule({
-        client,
-        stage,
+        client: input.client,
+        stage: input.stage,
         reportId: report.id,
         revision: report.revision,
-        database,
+        database: input.database,
       });
     }
   }
+  return drift;
+}
 
+async function deleteOrphanedReportSchedules(
+  client: Client,
+  stage: ScoutStage,
+  ownedIds: Set<string>,
+  desiredIds: Set<string>,
+): Promise<number> {
+  let orphans = 0;
   for (const scheduleId of ownedIds) {
     if (desiredIds.has(scheduleId)) continue;
     orphans += 1;
@@ -240,18 +316,7 @@ async function auditReportSchedules(
     }
     await deleteOwnedSchedule(client, stage, reportId);
   }
-
-  scoutTemporalReportScheduleDrift.set(drift);
-  scoutTemporalReportScheduleOrphans.set(orphans);
-  if (unknownIds.size > 0) {
-    logger.error(
-      "Unknown Scout report Schedule ownership mismatches detected",
-      {
-        stage,
-        scheduleIds: [...unknownIds].sort(),
-      },
-    );
-  }
+  return orphans;
 }
 
 export async function drainReportScheduleOutbox(

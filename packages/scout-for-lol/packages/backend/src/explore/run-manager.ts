@@ -33,14 +33,15 @@ import {
   waitForDurableExploreRun,
 } from "#src/explore/durable-runs.ts";
 import {
+  abortActiveExploreRun,
   createDeferred,
   executeActiveExploreRun,
+  recordTerminalExploreOutcome,
 } from "#src/explore/run-manager-helpers.ts";
 import { startExploreRun } from "#src/explore/run-manager-start.ts";
 import type {
   ActiveRun,
   ExploreAgentRunner,
-  RunTermination,
   Subscriber,
   StartedTurn,
   TerminalRun,
@@ -249,7 +250,7 @@ export class ExploreRunManager {
     if (this.#inlineExecutionForTests || !temporalInteractiveEnabled()) {
       const run = this.#runs.get(runId);
       if (run?.identity.userId !== userId) return false;
-      this.#abort(run, "stop", "Explore turn stopped by the asker.");
+      abortActiveExploreRun(run, "stop", "Explore turn stopped by the asker.");
       return true;
     }
     return await requestDurableExploreStop(this.#client, runId, userId);
@@ -266,7 +267,7 @@ export class ExploreRunManager {
 
   cancelTemporal(runId: string, message: string): void {
     const run = this.#runs.get(runId);
-    if (run !== undefined) this.#abort(run, "stop", message);
+    if (run !== undefined) abortActiveExploreRun(run, "stop", message);
   }
 
   async rehydrateTemporalRun(input: {
@@ -382,7 +383,7 @@ export class ExploreRunManager {
       const run = runId === undefined ? undefined : this.#runs.get(runId);
       if (run?.identity.userId === userId) {
         if (this.#inlineExecutionForTests || !temporalInteractiveEnabled()) {
-          this.#abort(
+          abortActiveExploreRun(
             run,
             "delete",
             "Explore conversation deleted by the asker.",
@@ -430,7 +431,11 @@ export class ExploreRunManager {
     await Promise.all(this.#startingConversations.values());
     const runs = [...this.#runs.values()];
     for (const run of runs) {
-      this.#abort(run, "shutdown", "Explore backend is shutting down.");
+      abortActiveExploreRun(
+        run,
+        "shutdown",
+        "Explore backend is shutting down.",
+      );
     }
     await Promise.all(
       runs.map(async (run) => {
@@ -473,19 +478,6 @@ export class ExploreRunManager {
     }
   }
 
-  #abort(
-    run: ActiveRun,
-    reason: Exclude<RunTermination, null>,
-    message: string,
-  ) {
-    if (run.termination !== null) {
-      return;
-    }
-    run.termination = reason;
-    run.activity = reason === "stop" ? "Stopping…" : run.activity;
-    run.abortController.abort(message);
-  }
-
   async #execute(run: ActiveRun): Promise<ExploreRunOutcome> {
     const outcome = await executeActiveExploreRun({
       run,
@@ -499,27 +491,18 @@ export class ExploreRunManager {
     try {
       return outcome;
     } finally {
-      this.#recordTerminalOutcome(run, outcome);
+      recordTerminalExploreOutcome(
+        this.#terminalRuns,
+        run,
+        outcome,
+        TERMINAL_OUTCOME_TTL_MS,
+      );
       broadcastExploreEvent(run, { type: "done", outcome });
       run.subscribers.clear();
       this.#runs.delete(run.summary.runId);
       this.#conversationRuns.delete(run.summary.conversationId);
       run.resolveSettled(null);
     }
-  }
-
-  #recordTerminalOutcome(run: ActiveRun, outcome: ExploreRunOutcome): void {
-    const completedAt = Date.now();
-    for (const [runId, terminal] of this.#terminalRuns) {
-      if (completedAt - terminal.completedAt > TERMINAL_OUTCOME_TTL_MS) {
-        this.#terminalRuns.delete(runId);
-      }
-    }
-    this.#terminalRuns.set(run.summary.runId, {
-      userId: run.identity.userId,
-      outcome,
-      completedAt,
-    });
   }
 }
 export const exploreRunManager = new ExploreRunManager();

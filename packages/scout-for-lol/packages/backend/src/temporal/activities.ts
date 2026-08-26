@@ -4,13 +4,14 @@ import { ReportIdSchema, ReportRunIdSchema } from "@scout-for-lol/data";
 import { client } from "#src/discord/client.ts";
 import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
-import { MY_SERVER } from "#src/configuration/flags.ts";
 import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
-
+import { invokeWeeklyParlayAction } from "./weekly-parlay-activity.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
 >[0];
-
+type ReportActivityInput = Parameters<
+  ScoutTemporalActivityGroups["background"]["runReport"]
+>[0];
 async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
   await heartbeatWhile(
     { kind: input.kind, workId: input.workId, phase: "running" },
@@ -26,7 +27,73 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
     phase: "complete",
   });
 }
-
+async function runScheduledReportActivity(reportId: number): Promise<void> {
+  const { prisma } = await import("#src/database/index.ts");
+  const executionStartedAt = new Date();
+  const { runDueReports } = await import("#src/reports/scheduler.ts");
+  const dispatches = await runDueReports({
+    prisma,
+    reportId,
+    limit: 1,
+    now: executionStartedAt,
+  });
+  const { deliverScheduledReportDispatches } =
+    await import("#src/reports/discord-dispatcher.ts");
+  if (dispatches.length > 0) {
+    await deliverScheduledReportDispatches(dispatches, {
+      propagateErrors: true,
+    });
+    return;
+  }
+  const generatedRun = await prisma.reportRun.findFirst({
+    where: {
+      reportId: ReportIdSchema.parse(reportId),
+      trigger: "SCHEDULED",
+      status: "SUCCESS",
+      startedAt: { gte: executionStartedAt },
+    },
+    orderBy: [{ startedAt: "desc" }, { id: "desc" }],
+    select: { id: true },
+  });
+  if (generatedRun === null) return;
+  const { deliverStoredScheduledReport } =
+    await import("#src/reports/discord-dispatcher.ts");
+  await deliverStoredScheduledReport(reportId, generatedRun.id);
+}
+async function runManualReportActivity(
+  input: ReportActivityInput,
+  reportId: number,
+): Promise<void> {
+  const runId = input.runId === undefined ? NaN : Number(input.runId);
+  if (!Number.isSafeInteger(runId) || runId <= 0) {
+    throw ApplicationFailure.nonRetryable(
+      "Manual report execution requires a valid run ID",
+      "InvalidReportRunId",
+    );
+  }
+  const { prisma } = await import("#src/database/index.ts");
+  const fullReport = await prisma.report.findUniqueOrThrow({
+    where: { id: reportId },
+  });
+  const { runReport } = await import("#src/reports/runner.ts");
+  const result = await runReport({
+    prisma,
+    report: fullReport,
+    trigger: "MANUAL",
+    runId,
+  }).catch(async (error: unknown) => {
+    const { InvalidSavedQueryError } =
+      await import("#src/reports/query-engine.ts");
+    if (error instanceof InvalidSavedQueryError) {
+      throw ApplicationFailure.nonRetryable(error.message, "InvalidSavedQuery");
+    }
+    throw error;
+  });
+  if (!input.post) return;
+  const { deliverReportDispatch } =
+    await import("#src/reports/discord-dispatcher.ts");
+  await deliverReportDispatch({ report: fullReport, result }, "report_manual");
+}
 function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
   return {
     probeQueue,
@@ -78,7 +145,6 @@ function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
     },
   };
 }
-
 function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive"] {
   return {
     probeQueue,
@@ -94,7 +160,6 @@ function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive
     },
   };
 }
-
 function createBackgroundActivities(): ScoutTemporalActivityGroups["background"] {
   return {
     probeQueue,
@@ -267,31 +332,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
       });
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
     },
-    invokeScoutWeeklyParlayAction: async (action) => {
-      const result = await heartbeatWhile(
-        {
-          kind: "weekly-parlay",
-          action: action.action,
-          periodKey: action.periodKey,
-          phase: "running",
-        },
-        async () => {
-          const { runWeeklyParlayControlAction } =
-            await import("#src/betting/weekly-parlay-control.ts");
-          return await runWeeklyParlayControlAction(action, {
-            serverId: MY_SERVER,
-            signal: Context.current().cancellationSignal,
-          });
-        },
-      );
-      Context.current().heartbeat({
-        kind: "weekly-parlay",
-        action: action.action,
-        periodKey: action.periodKey,
-        phase: result.status,
-      });
-      return result;
-    },
+    invokeScoutWeeklyParlayAction: invokeWeeklyParlayAction,
     syncScoutBryanBucksAnalytics: async () => {
       const result = await heartbeatWhile(
         { kind: "bryan-bucks-analytics", phase: "running" },
@@ -383,74 +424,9 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           Context.current().heartbeat({ reportId, phase: "running" });
           if (input.source === "schedule") {
-            const executionStartedAt = new Date();
-            const { runDueReports } = await import("#src/reports/scheduler.ts");
-            const dispatches = await runDueReports({
-              prisma,
-              reportId,
-              limit: 1,
-              now: executionStartedAt,
-            });
-            const { deliverScheduledReportDispatches } =
-              await import("#src/reports/discord-dispatcher.ts");
-            if (dispatches.length > 0) {
-              await deliverScheduledReportDispatches(dispatches, {
-                propagateErrors: true,
-              });
-            } else {
-              const parsedReportId = ReportIdSchema.parse(reportId);
-              const generatedRun = await prisma.reportRun.findFirst({
-                where: {
-                  reportId: parsedReportId,
-                  trigger: "SCHEDULED",
-                  status: "SUCCESS",
-                  startedAt: { gte: executionStartedAt },
-                },
-                orderBy: [{ startedAt: "desc" }, { id: "desc" }],
-                select: { id: true },
-              });
-              if (generatedRun !== null) {
-                const { deliverStoredScheduledReport } =
-                  await import("#src/reports/discord-dispatcher.ts");
-                await deliverStoredScheduledReport(reportId, generatedRun.id);
-              }
-            }
+            await runScheduledReportActivity(reportId);
           } else {
-            const runId = input.runId === undefined ? NaN : Number(input.runId);
-            if (!Number.isSafeInteger(runId) || runId <= 0) {
-              throw ApplicationFailure.nonRetryable(
-                "Manual report execution requires a valid run ID",
-                "InvalidReportRunId",
-              );
-            }
-            const fullReport = await prisma.report.findUniqueOrThrow({
-              where: { id: reportId },
-            });
-            const { runReport } = await import("#src/reports/runner.ts");
-            const result = await runReport({
-              prisma,
-              report: fullReport,
-              trigger: "MANUAL",
-              runId,
-            }).catch(async (error: unknown) => {
-              const { InvalidSavedQueryError } =
-                await import("#src/reports/query-engine.ts");
-              if (error instanceof InvalidSavedQueryError) {
-                throw ApplicationFailure.nonRetryable(
-                  error.message,
-                  "InvalidSavedQuery",
-                );
-              }
-              throw error;
-            });
-            if (input.post) {
-              const { deliverReportDispatch } =
-                await import("#src/reports/discord-dispatcher.ts");
-              await deliverReportDispatch(
-                { report: fullReport, result },
-                "report_manual",
-              );
-            }
+            await runManualReportActivity(input, reportId);
           }
           Context.current().heartbeat({ reportId, phase: "complete" });
         },
@@ -458,7 +434,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
     },
   };
 }
-
 function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
   return {
     probeQueue,
@@ -488,7 +463,6 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
     },
   };
 }
-
 export function createScoutTemporalActivityGroups(): ScoutTemporalActivityGroups {
   return {
     realtime: createRealtimeActivities(),

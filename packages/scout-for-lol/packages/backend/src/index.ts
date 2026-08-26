@@ -110,7 +110,7 @@ await seedScheduledReportLastSuccessMetric(prisma);
 logger.info("⏰ Starting cron job scheduler");
 if (configuration.enableBackgroundJobs) {
   const { startCronJobs } = await import("#src/league/cron.ts");
-  void startCronJobs();
+  startCronJobs();
 } else {
   logger.warn("⏭️  Background jobs disabled for this local secondary instance");
 }

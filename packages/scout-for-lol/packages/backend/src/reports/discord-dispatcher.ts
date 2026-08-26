@@ -81,7 +81,9 @@ export async function deliverStoredScheduledReport(
     },
     orderBy: [{ startedAt: "desc" }, { id: "desc" }],
   });
-  if (run === null || run.renderedContent === null) return false;
+  if (run?.renderedContent === undefined || run.renderedContent === null) {
+    return false;
+  }
   const imageBytes =
     run.imageS3Key === null
       ? null
