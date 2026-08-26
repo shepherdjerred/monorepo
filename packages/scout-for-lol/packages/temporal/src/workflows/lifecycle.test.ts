@@ -287,6 +287,7 @@ test("initial history drains incomplete pages across Continue-As-New and accepts
       cursor: "cursor-100",
       pagesProcessed: 100,
       pagesInCurrentRun: 0,
+      runOnStart: true,
     },
     {
       stage: "dev",
