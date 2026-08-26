@@ -227,6 +227,10 @@ model ReportRun {
   querySnapshot         String?
   visualizationS3Key    String?
   visualizationByteSize Int?
+  deliveryState         String                  @default("NOT_REQUESTED")
+  deliveryError         String?
+  deliveredAt           DateTime?
+  temporalWorkflowRunId String?                 @unique
   createdAt             DateTime  @default(now())
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
@@ -234,6 +238,7 @@ model ReportRun {
   @@index([reportId, startedAt])
   @@index([serverId, startedAt])
   @@index([status, startedAt])
+  @@index([deliveryState, createdAt])
 }
 
 // Season metadata seeded from packages/data/src/seasons.ts on every bot startup.
