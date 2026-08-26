@@ -608,10 +608,5 @@
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
-  },
-  "scripts/dev-web.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
   }
 }

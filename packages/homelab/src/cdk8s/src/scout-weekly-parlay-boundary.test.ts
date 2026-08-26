@@ -27,7 +27,7 @@ const DeploymentSpecSchema = z.object({
   }),
 });
 
-describe("Scout weekly parlay deployment boundary", () => {
+function defineScoutTemporalAccessTests(): void {
   test.each(["beta", "prod"] as const)(
     "%s Scout has exact Temporal gRPC access and drain budget",
     (stage) => {
@@ -74,7 +74,9 @@ describe("Scout weekly parlay deployment boundary", () => {
       );
     },
   );
+}
 
+function defineTemporalIngressTest(): void {
   test("Temporal admits only the two Scout backend identities on gRPC", () => {
     const policy = findResource(
       temporalResources(),
@@ -99,6 +101,9 @@ describe("Scout weekly parlay deployment boundary", () => {
       }),
     );
   });
+}
+
+function defineSharedCredentialTest(): void {
   test("shares one 1Password credential with Beta Scout and the core worker", () => {
     const beta = scoutResources("beta");
     const betaDeployment = DeploymentSpecSchema.parse(
@@ -143,7 +148,9 @@ describe("Scout weekly parlay deployment boundary", () => {
       ).toBe(false);
     }
   });
+}
 
+function defineProductionIsolationTest(): void {
   test("keeps the private control endpoint absent from production Scout", () => {
     const prod = scoutResources("prod");
     const deployment = DeploymentSpecSchema.parse(
@@ -162,7 +169,9 @@ describe("Scout weekly parlay deployment boundary", () => {
       ),
     ).toBe(false);
   });
+}
 
+function defineLegacyWorkerIngressTest(): void {
   test("allows the Scout and legacy Temporal workers to reach Beta Scout", () => {
     const beta = scoutResources("beta");
     const policy = findResource(beta, "NetworkPolicy", "scout-ingress-netpol");
@@ -263,4 +272,12 @@ describe("Scout weekly parlay deployment boundary", () => {
       }),
     );
   });
+}
+
+describe("Scout weekly parlay deployment boundary", () => {
+  defineScoutTemporalAccessTests();
+  defineTemporalIngressTest();
+  defineSharedCredentialTest();
+  defineProductionIsolationTest();
+  defineLegacyWorkerIngressTest();
 });

@@ -34,7 +34,12 @@ export type GetStartedClickEvent = typeof GET_STARTED_CLICK_EVENT;
  * the separately running Vite server. The dashboard gates on Discord sign-in
  * and surfaces the "Add Scout to a server" install flow itself.
  */
-export const APP_DASHBOARD_URL = surfaceHref(APP_ORIGIN, "/app/");
+export const APP_LOGIN_URL = surfaceHref(
+  APP_ORIGIN,
+  "/app/login?returnTo=/app/",
+);
+export const APP_EXPLORE_URL = surfaceHref(APP_ORIGIN, "/app/explore");
+export const APP_PLAYERS_URL = surfaceHref(APP_ORIGIN, "/app/players");
 
 /** The same-origin Starlight documentation site shipped with the Scout release. */
 export const DOCS_URL = surfaceHref(DOCS_ORIGIN, "/docs/");

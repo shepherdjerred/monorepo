@@ -1,4 +1,7 @@
-import { GlobalNavbar } from "@scout-for-lol/design-system/layout";
+import {
+  GlobalNavbar,
+  useNavbarSessionState,
+} from "@scout-for-lol/design-system/layout";
 import {
   ScoutThemeProvider,
   type ScoutThemeChangedPayload,
@@ -16,9 +19,12 @@ function captureThemeChange(payload: ScoutThemeChangedPayload): void {
 }
 
 export function SharedNavbar(props: { currentPath?: string | undefined }) {
+  const signedIn = useNavbarSessionState();
+
   return (
     <ScoutThemeProvider surface="marketing" onThemeChanged={captureThemeChange}>
       <GlobalNavbar
+        signedIn={signedIn}
         currentPath={props.currentPath}
         getStartedTrackingEvent={GET_STARTED_CLICK_EVENT}
         getStartedLocation="navbar"

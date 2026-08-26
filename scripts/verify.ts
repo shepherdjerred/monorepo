@@ -43,6 +43,8 @@ const turboTasks = [
   "tunnel-dns-coverage",
   "check:talos",
   "lint:helm",
+  "lint:tofu",
+  "check:kubeconform",
   "check:1password",
   "check:ios-native-deps",
   "check:release-bundle",

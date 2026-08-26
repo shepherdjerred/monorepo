@@ -1,7 +1,7 @@
 ---
 layout: "../layouts/ContentLayout.astro"
 title: "Privacy Policy"
-subtitle: "Last updated: May 30, 2026"
+subtitle: "Last updated: August 24, 2026"
 description: "How Scout for League of Legends collects, uses, and protects your data. We never sell your data."
 ---
 
@@ -12,6 +12,7 @@ The privacy of your data is important to us. In this policy, we explain what dat
 ## Table of Contents
 
 - [What we collect and why](#what-we-collect-and-why)
+- [Explore and player profile visibility](#explore-and-player-profile-visibility)
 - [Marketing and documentation use](#marketing-and-documentation-use)
 - [Website analytics and advertising measurement](#website-analytics-and-advertising-measurement)
 - [When we access or disclose your information](#when-we-access-or-disclose-your-information)
@@ -55,6 +56,33 @@ When you link your League of Legends account or request game data, we collect:
 We collect this data through Riot Games' official API to provide you with gameplay analysis, statistics, and insights.
 
 **We never sell your personal information to third parties.**
+
+## Explore and player profile visibility
+
+Scout's signed-in member features use Discord server membership as an access
+boundary, but they present two different data scopes:
+
+- **Explore queries are global.** An eligible member's question may analyze the
+  combined match corpus Scout has ingested across communities. Results are
+  aggregates and Scout states that the corpus is not the full League ladder.
+  Explore does not limit every query to the member's own Discord server.
+- **Player Profiles are shared-server scoped.** Members of an enabled Discord
+  server can search the Scout aliases and Riot IDs configured in that server.
+  A profile may combine several Riot accounts under the server's one player
+  alias and show each account's last observed rank, freshness, and recorded
+  match attribution. This grouping is intentionally visible to fellow members
+  of that server.
+
+Player Profiles do not expose Discord IDs, the person who created a player,
+subscriptions, permissions, or server-management details. Profiles require
+Discord sign-in, are not intended for search indexing, and do not contact Riot
+when opened. Scout's automatic polling and ingest pipeline controls freshness.
+
+Explore conversations remain private to their owner unless the owner chooses
+to share one. Sharing creates a link to a frozen copy of the selected
+conversation branch, including its question, answer, caveats, and presentation.
+Anyone with an active share link may view that frozen copy. Later follow-ups do
+not change it, and the owner can revoke the link.
 
 ### Usage Data
 
@@ -102,6 +130,9 @@ On the website, we may collect or process:
   the guild ID, so the analytics provider can connect that beta member activity
   to the guild's Scout installation; it is not used for public profiles or
   shared outside the provider's analytics project.
+- Player search and profile-open events limited to result state and entry
+  surface. We do not send search text, player IDs, Riot IDs, aliases, Discord
+  server IDs, or server names with those events.
 
 Website measurement and Discord bot data are connected, through the same
 analytics provider. When you open a server's dashboard, we record that server's

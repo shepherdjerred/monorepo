@@ -29,7 +29,8 @@ export type CoreOutputKind =
 export type RemovalActivationState =
   "installed_only" | "configured" | "activated";
 export type TenureBucket = "<1d" | "1-6d" | "7-29d" | "30-89d" | "90d+";
-export type AttributionSurface = "guild_picker" | "onboarding_wizard";
+export type AttributionSurface =
+  "guild_picker" | "marketing_home" | "onboarding_wizard";
 export type AttributionTiming = "before_gateway" | "after_gateway";
 export type DiscordCommandName =
   | "help"

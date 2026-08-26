@@ -81,8 +81,16 @@ production and beta, unset origins preserve the normal same-origin routes.
 `--database-url postgres://...` (or `SCOUT_DEV_DATABASE_URL`) overrides the
 derived database; only `postgres://`/`postgresql://` URLs are accepted. The web server
 uses strict port binding, so a busy port fails clearly instead of silently
-moving the SPA to a URL that `dev:login` does not know about. For a secondary
-copy, point the login wrapper at its origins:
+moving the SPA to a URL that `dev:login` does not know about.
+
+By default `dev:web` starts a local consumer preview: it uses a signed dev
+session, fakes membership of the shared fixture guild, enables Explore and
+Player Profiles through static local flags, and prints a browser-ready login
+URL. The app's normal sign-in link follows that local session path, so a
+secondary copy does not require a Discord Developer Portal callback.
+
+For a secondary copy, point the login wrapper at its origins only when you want
+to mint a session directly:
 
 ```bash
 SCOUT_DEV_BACKEND_URL=http://127.0.0.1:3001 \
@@ -119,16 +127,17 @@ http://localhost:<each-web-port>/api/auth/discord/callback
 ```
 
 The test guild must contain the BETA bot for guild discovery and Discord-backed
-authorization to work. The local `dev:login` flow avoids OAuth and is preferred
+authorization to work. The local `dev-login` mode avoids OAuth and is preferred
 for secondary copies; register every OAuth callback port only when testing OAuth
-itself.
+itself. Set `SCOUT_DEV_AUTH_MODE=oauth` to opt into that round-trip.
 
 ## Local session bootstrap
 
 This is a session bootstrap, not a global authorization bypass. The backend
 still uses signed cookies, CSRF, and Discord-backed guild authorization.
 
-With `dev:web` running:
+With `dev:web` running, open the printed local login URL or click the app's
+normal sign-in button:
 
 ```bash
 bun run --filter='./packages/scout-for-lol' dev:login
@@ -139,7 +148,8 @@ bun run --filter='./packages/scout-for-lol' dev:login -- \
 ```
 
 The command checks `http://127.0.0.1:3000/ping` and prints a URL. Open that URL
-in a browser or navigate to it with PinchTab. The route is registered only when
+in a browser or navigate to it with PinchTab when you need to mint a different
+user. The route is registered only when
 `ENVIRONMENT=dev` and `ENABLE_DEV_LOGIN=true`; the local backend binds to
 loopback when it is enabled. Do not add `SKIP_AUTH`, `DEV_AUTH`, or a deployed
 auth bypass.

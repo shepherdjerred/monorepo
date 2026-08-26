@@ -1,7 +1,12 @@
 terraform {
+  # Mirrors the calling cloudflare stack's pins (providers.tf) — this module
+  # is only consumed from that stack.
+  required_version = ">= 1.6.0"
+
   required_providers {
     cloudflare = {
-      source = "cloudflare/cloudflare"
+      source  = "cloudflare/cloudflare"
+      version = "~> 5.22"
     }
   }
 }

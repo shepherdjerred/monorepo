@@ -38,8 +38,8 @@ const {
 
 <div
   class:list={[
-    "scout-hero scout-section relative isolate px-6 lg:px-8",
-    size === "home" && "flex min-h-[calc(100svh-7rem)] items-center",
+    "scout-hero relative isolate px-6 lg:px-8",
+    size === "home" ? "flex items-center" : "scout-section",
   ]}
 >
   {
@@ -59,7 +59,7 @@ const {
   <div
     class:list={[
       "mx-auto max-w-2xl",
-      size === "home" ? "py-20 sm:py-28 lg:py-32" : "py-16 sm:py-20",
+      size === "home" ? "py-12 sm:py-16" : "py-16 sm:py-20",
     ]}
   >
     <div class="text-center">
@@ -77,7 +77,7 @@ const {
       }
       {
         ctaButtons.length > 0 && (
-          <div class="mt-10 flex items-center justify-center gap-x-6">
+          <div class="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
             {ctaButtons.map((button) => {
               if (button.trackingEvent === undefined) {
                 return button.variant === "secondary" ? (

@@ -12,166 +12,160 @@ const INITIAL_PAUSE_NOTE =
 type ScoutInterval =
   "20 seconds" | "30 seconds" | "1 minute" | "15 minutes" | "1 hour";
 
+type ScoutSchedule = {
+  readonly name: string;
+  readonly workflowType: string;
+  readonly args: unknown[];
+};
+
+type ScoutIntervalSchedule = ScoutSchedule & {
+  readonly every: ScoutInterval;
+  readonly catchupWindow?: "5 minutes" | "1 hour";
+  readonly offset?: "5 minutes";
+};
+
+type ScoutCronSchedule = ScoutSchedule & {
+  readonly expression: string;
+  readonly timezone?: string;
+};
+
 function scoutWorkflowTaskQueue(stage: ScoutStage) {
   return stage === "beta" ? TASK_QUEUES.SCOUT_BETA : TASK_QUEUES.SCOUT_PROD;
 }
 
 function intervalSchedule(
   stage: ScoutStage,
-  name: string,
-  workflowType: string,
-  args: unknown[],
-  every: ScoutInterval,
-  catchupWindow: "5 minutes" | "1 hour" = CATCHUP_RELAXED,
-  offset?: "5 minutes",
+  schedule: ScoutIntervalSchedule,
 ): ScheduleDefinition {
   return {
-    id: scoutFixedScheduleId(stage, name),
-    workflowType,
-    args,
+    id: scoutFixedScheduleId(stage, schedule.name),
+    workflowType: schedule.workflowType,
+    args: schedule.args,
     timing: {
       kind: "interval",
-      every,
-      ...(offset === undefined ? {} : { offset }),
+      every: schedule.every,
+      ...(schedule.offset === undefined ? {} : { offset: schedule.offset }),
     },
     taskQueue: scoutWorkflowTaskQueue(stage),
     overlap: ScheduleOverlapPolicy.SKIP,
-    catchupWindow,
-    memo: `Scout ${stage} ${name}`,
+    catchupWindow: schedule.catchupWindow ?? CATCHUP_RELAXED,
+    memo: `Scout ${stage} ${schedule.name}`,
     initialPauseNote: INITIAL_PAUSE_NOTE,
   };
 }
 
 function cronSchedule(
   stage: ScoutStage,
-  name: string,
-  workflowType: string,
-  args: unknown[],
-  expression: string,
-  timezone = "UTC",
+  schedule: ScoutCronSchedule,
 ): ScheduleDefinition {
   return {
-    id: scoutFixedScheduleId(stage, name),
-    workflowType,
-    args,
+    id: scoutFixedScheduleId(stage, schedule.name),
+    workflowType: schedule.workflowType,
+    args: schedule.args,
     timing: {
       kind: "cron",
-      expression,
-      timezone,
+      expression: schedule.expression,
+      timezone: schedule.timezone ?? "UTC",
     },
     taskQueue: scoutWorkflowTaskQueue(stage),
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: CATCHUP_RELAXED,
-    memo: `Scout ${stage} ${name}`,
+    memo: `Scout ${stage} ${schedule.name}`,
     initialPauseNote: INITIAL_PAUSE_NOTE,
   };
 }
 
 function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
   return [
-    intervalSchedule(
-      stage,
-      "prematch-poll",
-      "scoutRealtimePollWorkflow",
-      [{ stage, kind: "prematch", maximumAgeSeconds: 90 }],
-      "30 seconds",
-      CATCHUP_TIGHT,
-    ),
-    intervalSchedule(
-      stage,
-      "tournament-lobby-poll",
-      "scoutRealtimePollWorkflow",
-      [{ stage, kind: "tournament-lobbies", maximumAgeSeconds: 60 }],
-      "20 seconds",
-      CATCHUP_TIGHT,
-    ),
-    intervalSchedule(
-      stage,
-      "postmatch-discovery",
-      "scoutPostMatchDiscoveryWorkflow",
-      [{ stage }],
-      "1 minute",
-      CATCHUP_TIGHT,
-    ),
-    intervalSchedule(
-      stage,
-      "ingestion-reconciliation",
-      "scoutIngestionReconciliationWorkflow",
-      [{ stage, trigger: "schedule" }],
-      "1 minute",
-    ),
-    intervalSchedule(
-      stage,
-      "competition-refresh",
-      "scoutBackgroundJobWorkflow",
-      [{ stage, kind: "competition-refresh" }],
-      "15 minutes",
-    ),
-    intervalSchedule(
-      stage,
-      "competition-validation",
-      "scoutBackgroundJobWorkflow",
-      [{ stage, kind: "competition-validation" }],
-      "1 hour",
-    ),
-    intervalSchedule(
-      stage,
-      "report-schedule-reconciler",
-      "scoutReportScheduleReconcilerWorkflow",
-      [{ stage }],
-      "1 minute",
-    ),
-    intervalSchedule(
-      stage,
-      "report-lake-fold",
-      "scoutReportLakeWorkflow",
-      [{ stage, kind: "fold" }],
-      "15 minutes",
-      CATCHUP_RELAXED,
-      "5 minutes",
-    ),
-    cronSchedule(
-      stage,
-      "report-lake-rebuild",
-      "scoutReportLakeWorkflow",
-      [{ stage, kind: "rebuild" }],
-      "0 2 * * *",
-    ),
-    cronSchedule(
-      stage,
-      "player-pruning",
-      "scoutBackgroundJobWorkflow",
-      [{ stage, kind: "player-pruning" }],
-      "0 3 * * *",
-    ),
-    cronSchedule(
-      stage,
-      "removed-guild-cleanup",
-      "scoutBackgroundJobWorkflow",
-      [{ stage, kind: "removed-guild-cleanup" }],
-      "0 4 * * *",
-    ),
-    cronSchedule(
-      stage,
-      "match-time-rebuild",
-      "scoutBackgroundJobWorkflow",
-      [{ stage, kind: "match-time-rebuild" }],
-      "0 */6 * * *",
-    ),
-    cronSchedule(
-      stage,
-      "outreach",
-      "scoutBackgroundJobWorkflow",
-      [{ stage, kind: "outreach" }],
-      "0 10 * * *",
-    ),
-    cronSchedule(
-      stage,
-      "conversion-check",
-      "scoutBackgroundJobWorkflow",
-      [{ stage, kind: "conversion-check" }],
-      "30 10 * * *",
-    ),
+    intervalSchedule(stage, {
+      name: "prematch-poll",
+      workflowType: "scoutRealtimePollWorkflow",
+      args: [{ stage, kind: "prematch", maximumAgeSeconds: 90 }],
+      every: "30 seconds",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
+      name: "tournament-lobby-poll",
+      workflowType: "scoutRealtimePollWorkflow",
+      args: [{ stage, kind: "tournament-lobbies", maximumAgeSeconds: 60 }],
+      every: "20 seconds",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
+      name: "postmatch-discovery",
+      workflowType: "scoutPostMatchDiscoveryWorkflow",
+      args: [{ stage }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
+      name: "ingestion-reconciliation",
+      workflowType: "scoutIngestionReconciliationWorkflow",
+      args: [{ stage, trigger: "schedule" }],
+      every: "1 minute",
+    }),
+    intervalSchedule(stage, {
+      name: "competition-refresh",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "competition-refresh" }],
+      every: "15 minutes",
+    }),
+    intervalSchedule(stage, {
+      name: "competition-validation",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "competition-validation" }],
+      every: "1 hour",
+    }),
+    intervalSchedule(stage, {
+      name: "report-schedule-reconciler",
+      workflowType: "scoutReportScheduleReconcilerWorkflow",
+      args: [{ stage }],
+      every: "1 minute",
+    }),
+    intervalSchedule(stage, {
+      name: "report-lake-fold",
+      workflowType: "scoutReportLakeWorkflow",
+      args: [{ stage, kind: "fold" }],
+      every: "15 minutes",
+      catchupWindow: CATCHUP_RELAXED,
+      offset: "5 minutes",
+    }),
+    cronSchedule(stage, {
+      name: "report-lake-rebuild",
+      workflowType: "scoutReportLakeWorkflow",
+      args: [{ stage, kind: "rebuild" }],
+      expression: "0 2 * * *",
+    }),
+    cronSchedule(stage, {
+      name: "player-pruning",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "player-pruning" }],
+      expression: "0 3 * * *",
+    }),
+    cronSchedule(stage, {
+      name: "removed-guild-cleanup",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "removed-guild-cleanup" }],
+      expression: "0 4 * * *",
+    }),
+    cronSchedule(stage, {
+      name: "match-time-rebuild",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "match-time-rebuild" }],
+      expression: "0 */6 * * *",
+    }),
+    cronSchedule(stage, {
+      name: "outreach",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "outreach" }],
+      expression: "0 10 * * *",
+    }),
+    cronSchedule(stage, {
+      name: "conversion-check",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "conversion-check" }],
+      expression: "30 10 * * *",
+    }),
   ];
 }
 

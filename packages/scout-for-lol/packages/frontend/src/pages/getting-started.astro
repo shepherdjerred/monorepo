@@ -3,7 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import {
-  APP_DASHBOARD_URL,
+  APP_LOGIN_URL,
   DOCS_URL,
   GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
@@ -35,7 +35,7 @@ import {
           </p>
           <div class="mt-10 flex flex-wrap gap-4">
             <a
-              href={APP_DASHBOARD_URL}
+              href={APP_LOGIN_URL}
               data-scout-conversion={GET_STARTED_CLICK_EVENT}
               data-scout-cta-location="getting-started"
               class="rounded-md bg-scout-brand px-5 py-3 font-semibold text-scout-brand-ink shadow-sm hover:bg-scout-brand"

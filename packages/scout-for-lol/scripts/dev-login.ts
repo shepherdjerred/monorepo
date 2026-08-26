@@ -1,4 +1,5 @@
 import { requireCliValue } from "./migration-core.ts";
+import { parseDevOrigin } from "./dev-origin.ts";
 
 type DevLoginOptions = {
   readonly discordId: string | undefined;
@@ -15,14 +16,6 @@ type ParseResult =
 const DEFAULT_BACKEND_ORIGIN = "http://127.0.0.1:3000";
 const DEFAULT_WEB_ORIGIN = "http://localhost:5180";
 const DEFAULT_RETURN_TO = "/app/";
-
-function parseOrigin(value: string, name: string): string {
-  const origin = new URL(value);
-  if (origin.protocol !== "http:" && origin.protocol !== "https:") {
-    throw new Error(`${name} must use http or https`);
-  }
-  return origin.origin;
-}
 
 function parseReturnTo(value: string): string {
   if (!value.startsWith("/") || value.startsWith("//")) {
@@ -65,11 +58,11 @@ export function parseDevLoginArgs(args: readonly string[]): ParseResult {
       discordId,
       username,
       returnTo,
-      backendOrigin: parseOrigin(
+      backendOrigin: parseDevOrigin(
         Bun.env["SCOUT_DEV_BACKEND_URL"] ?? DEFAULT_BACKEND_ORIGIN,
         "SCOUT_DEV_BACKEND_URL",
       ),
-      webOrigin: parseOrigin(
+      webOrigin: parseDevOrigin(
         Bun.env["SCOUT_DEV_WEB_ORIGIN"] ?? DEFAULT_WEB_ORIGIN,
         "SCOUT_DEV_WEB_ORIGIN",
       ),

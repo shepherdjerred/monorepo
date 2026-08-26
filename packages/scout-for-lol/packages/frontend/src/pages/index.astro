@@ -9,15 +9,14 @@ import FeatureCard from "../components/FeatureCard.astro";
 import FeatureGrid from "../components/FeatureGrid.astro";
 import CTA from "../components/CTA.astro";
 import GalleryItem from "../components/GalleryItem.astro";
-import BenefitCard from "../components/BenefitCard.astro";
 import ProcessStep from "../components/ProcessStep.astro";
+import ConsumerExperiencePreviews from "../components/ConsumerExperiencePreviews.astro";
 import {
   generatedScoutShowcaseAssets,
   getGeneratedScoutShowcaseAssetSrc,
 } from "../data/scout-showcase";
 import {
-  APP_DASHBOARD_URL,
-  DOCS_URL,
+  APP_LOGIN_URL,
   GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 
@@ -39,17 +38,30 @@ const requireShowcaseAsset = (id: string): GeneratedScoutShowcaseAsset => {
   return asset;
 };
 
-// Cover the main queues — Arena (×2), Ranked Flex, Ranked Solo/Duo, ARAM —
-// leading with the "report inside Discord" composites.
 const showcasePreviews = [
-  requireShowcaseAsset("arena-discord"),
-  requireShowcaseAsset("ranked-solo-discord"),
-  requireShowcaseAsset("aram-discord"),
-  requireShowcaseAsset("ranked-flex-1-postmatch"),
-  requireShowcaseAsset("arena-4-postmatch"),
+  {
+    label: "League Classic",
+    detail: "Pre-match coverage",
+    asset: requireShowcaseAsset("classic-prematch"),
+  },
+  {
+    label: "Ranked",
+    detail: "Solo/Duo · Flex · Ranked 5s",
+    asset: requireShowcaseAsset("ranked-solo-discord"),
+  },
+  {
+    label: "ARAM",
+    detail: "Post-match report",
+    asset: requireShowcaseAsset("aram-discord"),
+  },
+  {
+    label: "Arena",
+    detail: "Placement and team report",
+    asset: requireShowcaseAsset("arena-discord"),
+  },
 ];
 
-const initialShowcasePreview = showcasePreviews.at(0);
+const initialShowcasePreview = showcasePreviews.at(0)?.asset;
 ---
 
 <Layout
@@ -57,83 +69,83 @@ const initialShowcasePreview = showcasePreviews.at(0);
   description="Get notified when your friends start League of Legends matches and get beautiful post-match reports delivered right to your Discord server."
 >
   <div class="bg-scout-surface">
-    <div role="region" aria-label="Latest update">
-      <WhatsNewBanner />
-    </div>
-    <Navbar activePage="home" />
-    <main>
+    <div
+      class="grid min-h-svh min-w-0 grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)]"
+      data-home-above-fold
+    >
+      <div role="region" aria-label="Latest update">
+        <WhatsNewBanner />
+      </div>
+      <Navbar activePage="home" />
       <Hero
         title="Scout for League of Legends"
-        subtitle="Get notified when your friends start League matches and receive beautiful post-match reports with detailed stats, all delivered right to your Discord server."
+        subtitle="Track your server’s League players with pre-match alerts and detailed recaps, run competitions and scheduled reports, then let members explore recorded games and shared player profiles."
         showGradient={true}
         size="home"
         ctaButtons={[
           {
             text: "Get Started",
-            href: APP_DASHBOARD_URL,
+            href: APP_LOGIN_URL,
             variant: "primary",
             trackingEvent: GET_STARTED_CLICK_EVENT,
             trackingLocation: "home_hero",
           },
-          { text: "View Documentation", href: DOCS_URL, variant: "secondary" },
         ]}
       />
-
+    </div>
+    <main>
       <!-- Features Section -->
       <div id="features" class="py-24 sm:py-32">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
           <SectionHeader
             badge="Everything you need"
-            title="Never miss a League match again"
-            subtitle="Scout automatically tracks your friends' League of Legends matches and provides rich notifications and detailed post-match analysis."
+            title="Everything your League server needs"
+            subtitle="Scout follows each tracked player from queue pop to post-game, then turns recorded matches into reports, competitions, profiles, and answers."
           />
           <FeatureGrid>
             <FeatureCard
-              icon="heroicons:bell"
-              title="Match Notifications"
-              description="Get notifications when subscribed players finish a League match."
-            />
-            <FeatureCard
               icon="heroicons:eye"
-              title="Pre-Match Alerts"
-              description="Know the moment your friends start a game. Scout detects active matches in real-time and sends a notification with champion picks and game mode."
-            />
-            <FeatureCard
-              icon="heroicons:document-text"
-              title="Detailed Post-Match Reports"
-              description="Beautiful, automatically generated post-match reports with KDA, damage, gold, items, and performance statistics. See a preview below!"
-            />
-            <FeatureCard
-              icon="heroicons:users"
-              title="Multi-Region Support"
-              description="Track players across all League of Legends regions including NA, EUW, EUNE, KR, and more."
-            />
-            <FeatureCard
-              icon="heroicons:trophy"
-              title="Competitions & Leaderboards"
-              description="Create scheduled competitions with configurable criteria, League seasons or custom dates, and automatic leaderboard posts."
-            />
-            <FeatureCard
-              icon="heroicons:chart-bar-square"
-              title="Scheduled Reports"
-              description="Turn match history into recurring Discord reports for leaderboards, surrender trends, champion stats, and pairing performance."
+              title="Pre- & Post-Match Updates"
+              description="Know when a tracked player starts a game, then get a detailed Discord recap with the result, builds, ranks, and standout stats."
             />
             <FeatureCard
               icon="heroicons:bolt"
-              title="Arena Mode Support"
-              description="Full support for League's Arena mode with detailed reports for 18-player 3v3 matches, augments, and placements, while legacy duo reports still render."
+              title="All the Modes You Play"
+              description="Track League Classic, Arena, ARAM, ARAM Mayhem, Clash, Ranked Solo/Duo, Ranked Flex, and Ranked 5s."
+            />
+            <FeatureCard
+              icon="heroicons:users"
+              title="Every Region, Every Name"
+              description="Follow Riot accounts across every supported region and render multilingual player names clearly in every report."
+            />
+            <FeatureCard
+              icon="heroicons:trophy"
+              title="Competitions, Leaderboards & Reports"
+              description="Run season or date-based competitions and schedule recurring Discord reports for standings, champion trends, surrender rates, and team performance."
+            />
+            <FeatureCard
+              icon="heroicons:user-circle"
+              title="Player Profiles"
+              description="See configured accounts together with observed ranks, recent form, champion performance, and every game Scout recorded."
+            />
+            <FeatureCard
+              icon="heroicons:sparkles"
+              title="Explore & Ask Scout"
+              description="Ask questions across Scout’s recorded games in Explore or start with /scout ask in Discord, then continue the conversation on the web."
             />
           </FeatureGrid>
         </div>
       </div>
 
+      <ConsumerExperiencePreviews />
+
       <!-- Match Report Preview -->
       <div class="py-24 sm:py-32">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
           <SectionHeader
-            badge="Report Preview"
-            title="See what your reports look like"
-            subtitle="Every match is automatically analyzed and formatted into a beautiful, easy-to-read report that shows all the key statistics and performance data."
+            badge="Automatic Match Reports"
+            title="The whole match, at a glance"
+            subtitle="When a tracked game ends, Scout posts a polished Discord recap with the result, team compositions, builds, ranks, and the numbers behind every performance."
           />
 
           <div class="mx-auto mt-16 max-w-5xl">
@@ -141,29 +153,6 @@ const initialShowcasePreview = showcasePreviews.at(0);
               imageSrc={matchImg}
               imageAlt="Example League of Legends match report showing team compositions, player statistics, KDA, damage dealt, gold earned, and items"
             />
-
-            <div class="mx-auto mt-12 max-w-2xl lg:max-w-none">
-              <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                <BenefitCard
-                  title="Complete Stats"
-                  description="KDA, damage, gold, CS, items, and more - everything you need to analyze the match."
-                  icon="heroicons:check-circle"
-                  color="green"
-                />
-                <BenefitCard
-                  title="Team Overview"
-                  description="Clear team compositions with champion portraits and roles for easy identification."
-                  icon="heroicons:users"
-                  color="blue"
-                />
-                <BenefitCard
-                  title="Ranked Progress"
-                  description="Track rank changes and LP gains/losses with beautiful rank emblems."
-                  icon="heroicons:sparkles"
-                  color="purple"
-                />
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -171,27 +160,38 @@ const initialShowcasePreview = showcasePreviews.at(0);
       <!-- Features Gallery Section -->
       <div class="bg-scout-surface py-24 sm:py-32">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
-          <SectionHeader badge="Feature Showcase" title="See Scout in Action" />
+          <SectionHeader
+            badge="Supported Game Modes"
+            title="Reports for the modes you play"
+          />
 
           <div
-            class="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            class="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2"
           >
             {
               showcasePreviews.map((preview) => (
                 <button
                   type="button"
-                  class="group mx-auto block w-full max-w-sm cursor-zoom-in rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus focus-visible:ring-offset-4 focus-visible:ring-offset-scout-canvas"
+                  class="group mx-auto block w-full cursor-zoom-in overflow-hidden rounded-xl border border-scout-border bg-scout-raised text-left shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus focus-visible:ring-offset-4 focus-visible:ring-offset-scout-canvas"
                   data-scout-lightbox-trigger
-                  data-lightbox-src={preview.src}
-                  data-lightbox-alt={preview.title}
-                  aria-label={`View ${preview.title} larger`}
+                  data-lightbox-src={preview.asset.src}
+                  data-lightbox-alt={preview.asset.title}
+                  aria-label={`View ${preview.label} example larger`}
                 >
                   <img
-                    src={preview.src}
-                    alt={preview.title}
+                    src={preview.asset.src}
+                    alt={preview.asset.title}
                     loading="lazy"
-                    class="h-auto w-full rounded-md transition duration-200 group-hover:opacity-90"
+                    class="aspect-video h-auto w-full object-cover object-top transition duration-200 group-hover:opacity-90"
                   />
+                  <span class="block px-5 py-4">
+                    <span class="block text-lg font-semibold text-scout-ink">
+                      {preview.label}
+                    </span>
+                    <span class="mt-1 block text-sm text-scout-subtle">
+                      {preview.detail}
+                    </span>
+                  </span>
                 </button>
               ))
             }
@@ -206,7 +206,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
           }
 
           {
-            initialShowcasePreview && (
+            initialShowcasePreview !== undefined && (
               <div
                 class="fixed inset-0 z-50 hidden items-center justify-center bg-scout-canvas/90 p-4 backdrop-blur-sm"
                 data-scout-lightbox
@@ -408,12 +408,11 @@ const initialShowcasePreview = showcasePreviews.at(0);
         buttons={[
           {
             text: "Get Started",
-            href: APP_DASHBOARD_URL,
+            href: APP_LOGIN_URL,
             variant: "primary",
             trackingEvent: GET_STARTED_CLICK_EVENT,
             trackingLocation: "home_final_cta",
           },
-          { text: "Read the docs", href: DOCS_URL, variant: "secondary" },
         ]}
       />
     </main>

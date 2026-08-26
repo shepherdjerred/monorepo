@@ -4,6 +4,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 import { EARLY_SCHEDULES } from "./schedule-definitions-early.ts";
 import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
+import { SECURITY_SCHEDULES } from "./security-schedule-definitions.ts";
 import type { ScheduleDefinition } from "./schedule-types.ts";
 import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
 
@@ -291,6 +292,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowExecutionTimeout: "2 hours",
     memo: "Buildkite Trivy vulnerability database refresh every six hours",
   },
+  ...SECURITY_SCHEDULES,
   {
     id: "bugsink-housekeeping",
     workflowType: "runBugsinkHousekeepingWorkflow",

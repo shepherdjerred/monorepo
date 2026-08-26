@@ -34,6 +34,13 @@ import {
   AttributionSurfaceSchema,
   mintInstallAttributionToken,
 } from "#src/analytics/install-attribution.ts";
+import { buildDevLoginRedirect } from "#src/trpc/dev-auth-redirect.ts";
+import {
+  buildCookie,
+  generateCsrfToken,
+  getAppOrigin,
+  safeReturnTo,
+} from "#src/trpc/auth-web-helpers.ts";
 
 const logger = createLogger("auth-web");
 const DISCORD_API_BASE = "https://discord.com/api/v10";
@@ -69,25 +76,6 @@ const DiscordUserSchema = z.object({
   avatar: z.string().nullable(),
 });
 
-export function buildCookie(params: {
-  name: string;
-  value: string;
-  maxAgeSeconds: number;
-  httpOnly: boolean;
-  secure: boolean;
-  sameSite: "Strict" | "Lax";
-}): string {
-  const parts = [
-    `${params.name}=${encodeURIComponent(params.value)}`,
-    "Path=/",
-    `Max-Age=${params.maxAgeSeconds.toString()}`,
-    `SameSite=${params.sameSite}`,
-  ];
-  if (params.httpOnly) parts.push("HttpOnly");
-  if (params.secure) parts.push("Secure");
-  return parts.join("; ");
-}
-
 function buildClearCookie(
   name: string,
   secure: boolean,
@@ -103,7 +91,7 @@ function parseCookies(header: string | null): Map<string, string> {
   if (header === null) return map;
   for (const part of header.split(";")) {
     const trimmed = part.trim();
-    if (trimmed.length === 0) continue;
+    if (trimmed === "") continue;
     const eq = trimmed.indexOf("=");
     if (eq === -1) continue;
     const name = trimmed.slice(0, eq);
@@ -119,14 +107,6 @@ function parseCookies(header: string | null): Map<string, string> {
  * Caddy which terminates TLS, so request.url's protocol is `http:` and
  * MUST NOT be used to derive Discord redirect URIs.
  */
-export function getAppOrigin(): string {
-  const origin = configuration.webAppOrigin;
-  if (origin === undefined || origin.length === 0) {
-    throw new Error("WEB_APP_ORIGIN is not configured");
-  }
-  return origin;
-}
-
 function getCallbackUrl(): string {
   return `${getAppOrigin()}/api/auth/discord/callback`;
 }
@@ -137,20 +117,6 @@ function checkStateNonce(
 ): boolean {
   if (expectedNonce === undefined || expectedNonce.length === 0) return false;
   return state.startsWith(`${expectedNonce}|`);
-}
-
-export function safeReturnTo(value: string | null): string {
-  if (value === null) return "/app/";
-  // Only allow same-app paths. Prevents open-redirect via returnTo.
-  if (value.startsWith("/app/")) return value;
-  return "/app/";
-}
-
-/** 32 random bytes, hex-encoded. Shared by every flow that mints a CSRF token. */
-export function generateCsrfToken(): string {
-  const bytes = new Uint8Array(32);
-  globalThis.crypto.getRandomValues(bytes);
-  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -164,6 +130,14 @@ export function handleDiscordStart(request: Request): Response {
   webSigninTotal.inc({ result: "started" });
   const url = new URL(request.url);
   const returnTo = safeReturnTo(url.searchParams.get("returnTo"));
+
+  if (
+    configuration.environment === "dev" &&
+    configuration.enableDevLogin &&
+    configuration.devAuthMode === "dev-login"
+  ) {
+    return buildDevLoginRedirect(getAppOrigin(), returnTo);
+  }
 
   const nonceBytes = new Uint8Array(32);
   globalThis.crypto.getRandomValues(nonceBytes);
