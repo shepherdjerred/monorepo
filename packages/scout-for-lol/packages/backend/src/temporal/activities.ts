@@ -7,6 +7,26 @@ import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import { MY_SERVER } from "#src/configuration/flags.ts";
 import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
 
+type DetachedWorkInput = Parameters<
+  ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
+>[0];
+
+async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
+  await heartbeatWhile(
+    { kind: input.kind, workId: input.workId, phase: "running" },
+    async () => {
+      const { executeScoutTemporalWork } =
+        await import("#src/temporal/work-store.ts");
+      await executeScoutTemporalWork(input);
+    },
+  );
+  Context.current().heartbeat({
+    kind: input.kind,
+    workId: input.workId,
+    phase: "complete",
+  });
+}
+
 function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
   return {
     probeQueue,
@@ -170,21 +190,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
         },
       );
     },
-    runDetachedBackgroundWork: async (input) => {
-      await heartbeatWhile(
-        { kind: input.kind, workId: input.workId, phase: "running" },
-        async () => {
-          const { executeScoutTemporalWork } =
-            await import("#src/temporal/work-store.ts");
-          await executeScoutTemporalWork(input);
-        },
-      );
-      Context.current().heartbeat({
-        kind: input.kind,
-        workId: input.workId,
-        phase: "complete",
-      });
-    },
+    runDetachedBackgroundWork: runDetachedWork,
     runBackgroundJob: async (input) => {
       await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
         switch (input.kind) {
@@ -456,21 +462,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
 function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
   return {
     probeQueue,
-    runDetachedLakeWork: async (input) => {
-      await heartbeatWhile(
-        { kind: input.kind, workId: input.workId, phase: "running" },
-        async () => {
-          const { executeScoutTemporalWork } =
-            await import("#src/temporal/work-store.ts");
-          await executeScoutTemporalWork(input);
-        },
-      );
-      Context.current().heartbeat({
-        kind: input.kind,
-        workId: input.workId,
-        phase: "complete",
-      });
-    },
+    runDetachedLakeWork: runDetachedWork,
     runReportLakeJob: async (input) => {
       await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
         const { runReportLakeFold, runReportLakeRebuild } =

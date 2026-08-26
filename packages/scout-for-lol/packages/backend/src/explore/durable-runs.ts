@@ -138,6 +138,7 @@ export async function subscribeDurableExploreRun(
   let stopped = false;
   let reading = false;
   let lastPartial = "";
+  let lastTrace = "[]";
   const emitRow = (row: typeof initial): boolean => {
     if (row.state !== "PENDING" && row.state !== "RUNNING") {
       subscriber({ type: "done", outcome: outcomeForStatus(row.state) });
@@ -150,6 +151,7 @@ export async function subscribeDurableExploreRun(
       .array(ExploreTraceEntrySchema)
       .parse(row.trace === null ? [] : JSON.parse(row.trace));
     lastPartial = row.partialOutput ?? "";
+    lastTrace = row.trace ?? "[]";
     subscriber(
       ExploreRunSnapshotEventSchema.parse({
         type: "snapshot",
@@ -177,7 +179,10 @@ export async function subscribeDurableExploreRun(
         stopped = true;
         clearInterval(timer);
         subscriber({ type: "done", outcome: outcomeForStatus(row.state) });
-      } else if ((row.partialOutput ?? "") !== lastPartial) {
+      } else if (
+        (row.partialOutput ?? "") !== lastPartial ||
+        (row.trace ?? "[]") !== lastTrace
+      ) {
         emitRow(row);
       }
     } catch (error) {

@@ -2,9 +2,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import { buildBugsinkApiUrl } from "#lib/bugsink/client.ts";
 import { getIssues } from "#lib/bugsink/issues.ts";
 import { getReleases } from "#lib/bugsink/queries.ts";
-import { captureBugsinkEnvironment } from "./test-helpers.ts";
 
-const bugsinkEnvironment = captureBugsinkEnvironment();
+const ORIGINAL_FETCH = globalThis.fetch;
+const ORIGINAL_URL = Bun.env["BUGSINK_URL"];
+const ORIGINAL_TOKEN = Bun.env["BUGSINK_TOKEN"];
 
 type FetchInput = Parameters<typeof fetch>[0];
 
@@ -13,7 +14,7 @@ function installFetchMock(
 ): void {
   const fetchMock: typeof fetch = Object.assign(
     async (input: FetchInput) => handler(input),
-    { preconnect: bugsinkEnvironment.originalFetch.preconnect },
+    { preconnect: ORIGINAL_FETCH.preconnect },
   );
   globalThis.fetch = fetchMock;
 }
@@ -29,7 +30,17 @@ function fetchInputToUrl(input: FetchInput): string {
 }
 
 afterEach(() => {
-  bugsinkEnvironment.restore();
+  globalThis.fetch = ORIGINAL_FETCH;
+  if (ORIGINAL_URL === undefined) {
+    Reflect.deleteProperty(Bun.env, "BUGSINK_URL");
+  } else {
+    Bun.env["BUGSINK_URL"] = ORIGINAL_URL;
+  }
+  if (ORIGINAL_TOKEN === undefined) {
+    Reflect.deleteProperty(Bun.env, "BUGSINK_TOKEN");
+  } else {
+    Bun.env["BUGSINK_TOKEN"] = ORIGINAL_TOKEN;
+  }
 });
 
 function bugsinkPage(results: readonly unknown[]): Response {

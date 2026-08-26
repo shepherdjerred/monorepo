@@ -23,6 +23,23 @@ export type PredictionCaptureDependencies = {
   ingest: (observation: BucksPredictionObservation) => Promise<void>;
 };
 
+async function enqueuePredictionBestEffort(
+  observation: BucksPredictionObservation,
+  matchId: string,
+): Promise<void> {
+  try {
+    await enqueuePredictionObservation(observation);
+  } catch (error: unknown) {
+    logger.error(
+      `Failed to enqueue prediction observation for ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "prediction-observation-enqueue", matchId },
+    });
+  }
+}
+
 const defaultDependencies: PredictionCaptureDependencies = {
   build: buildPredictionObservation,
   ingest: ingestPredictionObservation,
@@ -81,15 +98,7 @@ export async function capturePredictionForPrematch(
   }
 
   if (shouldUseTemporalBackgroundWork()) {
-    void enqueuePredictionObservation(observation).catch((error: unknown) => {
-      logger.error(
-        `Failed to enqueue prediction observation for ${matchId}:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: { source: "prediction-observation-enqueue", matchId },
-      });
-    });
+    void enqueuePredictionBestEffort(observation, matchId);
   } else {
     // Legacy ownership remains best-effort until the Temporal family flag is
     // enabled. The immutable observation makes this write idempotent.

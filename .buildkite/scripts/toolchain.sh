@@ -67,13 +67,9 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
   full)
     mise_ci install --yes
     # The CI manifest runs Temporal workflow suites under Node rather than
-    # Bun. A stale image can retain a broken install record for Node while
-    # `mise install` otherwise succeeds, so repair that exact tool and prove
-    # it resolves before allowing the manifest runner to start.
-    if ! mise_ci where node; then
-      mise_ci install --yes --force node
-      mise_ci where node
-    fi
+    # Bun. Request it explicitly so a stale image cannot satisfy the general
+    # install while leaving the manifest runtime unavailable.
+    mise_ci install --yes node
     expose_postgres_tools
     # Runtime installs can add a tool without creating its executable shim on a
     # stale ci-base image. Rebuild shims so commands such as gh are reachable

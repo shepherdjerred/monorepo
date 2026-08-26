@@ -1,6 +1,5 @@
 import {
   EXPLORE_TIMEOUT_MS,
-  ExploreActiveRunSchema,
   ExploreRunSnapshotEventSchema,
   type DiscordAccountId,
   type ExploreActiveRun,
@@ -12,19 +11,16 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import {
   ExploreConversationBusyError,
-  getExploreQuotaStatus,
   tryStartExploreTurn,
   waitForExploreConversation,
-  type ExploreRateLimitIdentity,
   type ExploreRateLimitRejection,
-  type ExploreRateLimitTicket,
+  type ExploreRateLimitIdentity,
 } from "#src/explore/rate-limit.ts";
 import {
   ExploreNotFoundError,
   deleteExploreConversation,
   loadExploreTranscript,
 } from "#src/explore/store.ts";
-import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
 import type { ExploreInvalidTurnError } from "#src/explore/store.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 import { temporalInteractiveEnabled } from "#src/config/dynamic.ts";
@@ -33,15 +29,14 @@ import {
   durableExploreOutcome,
   listDurableExploreRuns,
   requestDurableExploreStop,
-  reserveAndStartDurableExploreRun,
   subscribeDurableExploreRun,
   waitForDurableExploreRun,
 } from "#src/explore/durable-runs.ts";
 import {
   createDeferred,
   executeActiveExploreRun,
-  resolveTurnTarget,
 } from "#src/explore/run-manager-helpers.ts";
+import { startExploreRun } from "#src/explore/run-manager-start.ts";
 import type {
   ActiveRun,
   ExploreAgentRunner,
@@ -50,15 +45,14 @@ import type {
   StartedTurn,
   TerminalRun,
 } from "#src/explore/run-manager-types.ts";
+import type { ExploreRateLimitTicket } from "#src/explore/rate-limit.ts";
 import {
   broadcastExploreEvent,
   recordExploreEvent,
 } from "#src/explore/run-events.ts";
 
 const TERMINAL_OUTCOME_TTL_MS = 5 * 60 * 1000;
-
 export class ExploreRunUnavailableError extends Error {}
-
 export class ExploreRunRateLimitedError extends Error {
   readonly rejection: ExploreRateLimitRejection;
 
@@ -78,15 +72,15 @@ export type ExploreRunStartError =
 /**
  * Owns Explore work independently of any one browser response.
  *
- * Scout currently runs one backend replica, so process-local ownership is
- * exact and intentionally avoids pretending to survive a deploy. Questions
- * and completed/partial answers remain durable in SQLite; only live execution
- * and observer state live here.
+ * Temporal owns durable execution. This manager owns only the Activity's live
+ * provider stream and in-process SSE subscribers; persisted snapshots and
+ * terminal outcomes let reconnecting clients recover across a deploy.
  */
 export class ExploreRunManager {
   readonly #client: ExtendedPrismaClient;
   readonly #runAgent: ExploreAgentRunner;
   readonly #timeoutMs: number;
+  readonly #inlineExecutionForTests: boolean;
   readonly #runs = new Map<string, ActiveRun>();
   readonly #conversationRuns = new Map<string, string>();
   readonly #startingConversations = new Map<string, Promise<null>>();
@@ -99,11 +93,14 @@ export class ExploreRunManager {
       client?: ExtendedPrismaClient;
       runAgent?: ExploreAgentRunner;
       timeoutMs?: number;
+      inlineExecutionForTests?: boolean;
     } = {},
   ) {
     this.#client = dependencies.client ?? prisma;
     this.#runAgent = dependencies.runAgent ?? streamExploreAgent;
     this.#timeoutMs = dependencies.timeoutMs ?? EXPLORE_TIMEOUT_MS;
+    this.#inlineExecutionForTests =
+      dependencies.inlineExecutionForTests ?? false;
   }
 
   async start(
@@ -139,98 +136,46 @@ export class ExploreRunManager {
     this.#startingConversations.set(conversationId, starting.promise);
 
     try {
-      const started = await resolveTurnTarget(
-        this.#client,
+      return await startExploreRun({
+        client: this.#client,
+        identity,
         request,
-        identity,
-        conversationId,
-      );
-      const versionCountAtStart = await this.#client.exploreMessage.count({
-        where: {
-          conversationId: started.conversationId,
-          parentId: started.messageId,
-          role: "assistant",
-        },
-      });
-      const transcript = await loadExploreTranscript(
-        this.#client,
-        started.conversationId,
-        identity.userId,
-        started.messageId,
-      );
-      if (transcript === null) {
-        throw new ExploreNotFoundError("Conversation not found.");
-      }
-      this.#assertAcceptingRuns();
-
-      const deferred = createDeferred();
-      const summary = ExploreActiveRunSchema.parse({
-        runId: ticket.runId,
-        conversationId: started.conversationId,
-        questionMessageId: started.messageId,
-        leafIdAtStart: started.expectedCurrentLeafId,
-        versionCountAtStart,
-        startedAt: new Date().toISOString(),
-      });
-      const run: ActiveRun = {
-        summary,
-        identity,
         guildIds,
+        conversationId,
         ticket,
-        started,
-        history: transcript.messages,
-        abortController: new AbortController(),
-        subscribers: new Set(),
-        answer: "",
-        activity: "Thinking…",
-        trace: [],
-        termination: null,
-        settled: deferred.promise,
-        resolveSettled: deferred.resolve,
-      };
-      this.#runs.set(summary.runId, run);
-      this.#conversationRuns.set(summary.conversationId, summary.runId);
-      if (temporalInteractiveEnabled()) {
-        try {
-          const durableRejection = await reserveAndStartDurableExploreRun({
-            database: this.#client,
-            summary,
-            ownerId: identity.userId,
-            started,
-            guildIds,
-          });
-          if (durableRejection !== null) {
-            await rollbackUnstartedExploreTurn(this.#client, {
-              ...started,
-              userId: identity.userId,
-            });
-            throw new ExploreRunRateLimitedError({
-              allowed: false,
-              quota: getExploreQuotaStatus(identity).quota,
-              ...durableRejection,
-            });
-          }
-        } catch (error) {
-          if (error instanceof DurableExploreUnavailableError) {
-            await rollbackUnstartedExploreTurn(this.#client, {
-              ...started,
-              userId: identity.userId,
-            });
-          }
+        inlineExecutionForTests:
+          this.#inlineExecutionForTests || !temporalInteractiveEnabled(),
+        assertAcceptingRuns: () => {
+          this.#assertAcceptingRuns();
+        },
+        registerRun: (run) => {
+          this.#runs.set(run.summary.runId, run);
+          this.#conversationRuns.set(
+            run.summary.conversationId,
+            run.summary.runId,
+          );
+        },
+        removeRun: (summary) => {
           this.#runs.delete(summary.runId);
           this.#conversationRuns.delete(summary.conversationId);
-          if (error instanceof DurableExploreUnavailableError) {
-            throw new ExploreRunUnavailableError(
-              "Temporal is unavailable. Try again after it reconnects.",
-              { cause: error },
-            );
-          }
-          throw error;
-        }
-      } else {
-        void this.#execute(run);
-      }
-      return summary;
+        },
+        executeInline: (run) => {
+          void this.#execute(run);
+        },
+        clearStartingConversation: () => {
+          this.#startingConversations.delete(conversationId);
+        },
+        createRateLimitedError: (rejection) =>
+          new ExploreRunRateLimitedError(rejection),
+        isDurableUnavailable: (error) =>
+          error instanceof DurableExploreUnavailableError,
+        isRateLimited: (error) => error instanceof ExploreRunRateLimitedError,
+        createUnavailableError: (error) =>
+          new ExploreRunUnavailableError(
+            "Temporal is unavailable. Try again after it reconnects.",
+            { cause: error },
+          ),
+      });
     } catch (error) {
       ticket.finish();
       throw error;
@@ -249,8 +194,10 @@ export class ExploreRunManager {
 
   async listDurable(userId: DiscordAccountId): Promise<ExploreActiveRun[]> {
     const local = this.list(userId);
-    if (!temporalInteractiveEnabled()) return local;
-    return await listDurableExploreRuns(this.#client, userId, []);
+    if (this.#inlineExecutionForTests || !temporalInteractiveEnabled()) {
+      return local;
+    }
+    return await listDurableExploreRuns(this.#client, userId, local);
   }
 
   subscribe(
@@ -282,8 +229,13 @@ export class ExploreRunManager {
     userId: DiscordAccountId,
     subscriber: Subscriber,
   ): Promise<(() => void) | null> {
-    if (!temporalInteractiveEnabled()) {
-      return this.subscribe(runId, userId, subscriber);
+    const local = this.subscribe(runId, userId, subscriber);
+    if (
+      local !== null ||
+      this.#inlineExecutionForTests ||
+      !temporalInteractiveEnabled()
+    ) {
+      return local;
     }
     return await subscribeDurableExploreRun(
       this.#client,
@@ -294,24 +246,13 @@ export class ExploreRunManager {
   }
 
   async stop(runId: string, userId: DiscordAccountId): Promise<boolean> {
-    const run = this.#runs.get(runId);
-    if (temporalInteractiveEnabled()) {
-      const durable = await this.#client.scoutInteractiveRun.findFirst({
-        where: { id: runId, kind: "explore", ownerId: userId },
-        select: { id: true },
-      });
-      if (durable !== null) {
-        return await requestDurableExploreStop(this.#client, runId, userId);
-      }
+    if (this.#inlineExecutionForTests || !temporalInteractiveEnabled()) {
+      const run = this.#runs.get(runId);
       if (run?.identity.userId !== userId) return false;
       this.#abort(run, "stop", "Explore turn stopped by the asker.");
       return true;
     }
-    if (run?.identity.userId !== userId) {
-      return false;
-    }
-    this.#abort(run, "stop", "Explore turn stopped by the asker.");
-    return true;
+    return await requestDurableExploreStop(this.#client, runId, userId);
   }
 
   snapshot(
@@ -328,12 +269,6 @@ export class ExploreRunManager {
     if (run !== undefined) this.#abort(run, "stop", message);
   }
 
-  /**
-   * Rebuild the process-local execution adapter for a durable run that was
-   * accepted by Temporal immediately before this backend restarted. The
-   * durable row already owns the quota reservation, so this ticket is a
-   * no-op adapter; Temporal and Postgres remain the source of execution truth.
-   */
   async rehydrateTemporalRun(input: {
     summary: ExploreActiveRun;
     identity: ExploreRateLimitIdentity;
@@ -362,8 +297,12 @@ export class ExploreRunManager {
       allowed: true,
       runId: input.summary.runId,
       claimConversation: () => true,
-      commit: () => undefined,
-      finish: () => undefined,
+      commit: () => {
+        // Rehydrated runs do not own a new quota reservation.
+      },
+      finish: () => {
+        // Rehydrated runs do not own a new quota reservation.
+      },
     };
     const deferred = createDeferred();
     const run: ActiveRun = {
@@ -411,7 +350,13 @@ export class ExploreRunManager {
     userId: DiscordAccountId,
   ): Promise<ExploreRunOutcome | null> {
     const local = this.outcome(runId, userId);
-    if (!temporalInteractiveEnabled()) return local;
+    if (
+      local !== null ||
+      this.#inlineExecutionForTests ||
+      !temporalInteractiveEnabled()
+    ) {
+      return local;
+    }
     return await durableExploreOutcome(this.#client, runId, userId);
   }
 
@@ -436,37 +381,38 @@ export class ExploreRunManager {
       const runId = this.#conversationRuns.get(conversationId);
       const run = runId === undefined ? undefined : this.#runs.get(runId);
       if (run?.identity.userId === userId) {
-        if (temporalInteractiveEnabled()) {
-          await this.stop(run.summary.runId, userId);
-          await this.#waitForDurableRun(run.summary.runId);
-        } else {
+        if (this.#inlineExecutionForTests || !temporalInteractiveEnabled()) {
           this.#abort(
             run,
             "delete",
             "Explore conversation deleted by the asker.",
           );
           await run.settled;
+        } else {
+          await this.stop(run.summary.runId, userId);
+          await this.#waitForDurableRun(run.summary.runId);
         }
       } else {
-        if (temporalInteractiveEnabled()) {
-          const durableRun = await this.#client.scoutInteractiveRun.findFirst({
-            where: {
-              kind: "explore",
-              ownerId: userId,
-              conversationId,
-              state: { in: ["PENDING", "RUNNING"] },
-            },
-            select: { id: true },
-          });
-          if (durableRun !== null) {
-            await this.stop(durableRun.id, userId);
-            await this.#waitForDurableRun(durableRun.id);
-          }
-        } else {
-          // Discord one-shot runs are outside the web observer registry, but
-          // they share the process-wide conversation lease. Let one finish
-          // before removing the rows it is about to persist into.
+        if (this.#inlineExecutionForTests || !temporalInteractiveEnabled()) {
           await waitForExploreConversation(conversationId);
+          return await deleteExploreConversation(
+            this.#client,
+            conversationId,
+            userId,
+          );
+        }
+        const durableRun = await this.#client.scoutInteractiveRun.findFirst({
+          where: {
+            kind: "explore",
+            ownerId: userId,
+            conversationId,
+            state: { in: ["PENDING", "RUNNING"] },
+          },
+          select: { id: true },
+        });
+        if (durableRun !== null) {
+          await this.stop(durableRun.id, userId);
+          await this.#waitForDurableRun(durableRun.id);
         }
       }
       return await deleteExploreConversation(
@@ -576,5 +522,4 @@ export class ExploreRunManager {
     });
   }
 }
-
 export const exploreRunManager = new ExploreRunManager();

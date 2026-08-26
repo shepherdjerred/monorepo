@@ -42,7 +42,6 @@
     // restore a stale report from another build.
     "test:ci": {
       "env": ["NODE_ENV"],
-      "passThroughEnv": ["MISE_DATA_DIR"],
       "dependsOn": ["^build", "generate"]
     },
     // The scheduled reporting pipeline must execute every test and produce a
@@ -50,7 +49,6 @@
     "test:report": {
       "cache": false,
       "env": ["NODE_ENV"],
-      "passThroughEnv": ["MISE_DATA_DIR"],
       "dependsOn": ["generate", "^build"]
     },
     "lint": {

@@ -1,9 +1,7 @@
 import { afterEach, describe, expect, test } from "vitest";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
-import { managedFlagInventory } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { loadConfigFromEnvironment } from "@shepherdjerred/birmel/config/index.ts";
 import {
-  DYNAMIC_FLAG_NAMES,
   initializeDynamicConfig,
   shutdownDynamicConfig,
 } from "@shepherdjerred/birmel/config/dynamic.ts";
@@ -20,14 +18,6 @@ afterEach(async () => {
 });
 
 describe("Birmel dynamic config", () => {
-  test("covers exactly the Birmel entries in the managed inventory", () => {
-    const expected = managedFlagInventory.flags
-      .filter((flag) => flag.owner === "birmel")
-      .map((flag) => flag.key)
-      .sort();
-    expect([...DYNAMIC_FLAG_NAMES].sort()).toEqual(expected);
-  });
-
   test("applies typed flag values without changing bootstrap config", async () => {
     const config = loadConfigFromEnvironment(VALID_ENVIRONMENT);
     await initializeDynamicConfig({

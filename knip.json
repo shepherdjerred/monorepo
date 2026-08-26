@@ -327,7 +327,6 @@
     "@vitejs/plugin-react",
     "@vitejs/plugin-react-swc",
     "autoprefixer",
-    "cron-parser",
     "debug",
     "eslint-config-prettier",
     "eslint-import-resolver-typescript-bun",

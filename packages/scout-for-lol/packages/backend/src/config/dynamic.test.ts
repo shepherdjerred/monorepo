@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
-import { managedFlagInventory } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import {
   exploreGuildAllowlist,
   exploreModel,
@@ -8,9 +7,7 @@ import {
   isDynamicConfigReady,
   llmHourlyTokenBudget,
   shutdownDynamicConfig,
-  tournamentMaxOpenLobbies,
   tournamentApiMode,
-  DYNAMIC_FLAG_NAMES,
   type DynamicConfigSeed,
 } from "#src/config/dynamic.ts";
 
@@ -30,16 +27,6 @@ afterEach(async () => {
 });
 
 describe("scout dynamic config", () => {
-  test("covers exactly the Scout dynamic entries in the managed inventory", () => {
-    const expected = managedFlagInventory.flags
-      .filter(
-        (flag) => flag.owner === "scout" && flag.source === "scout-dynamic",
-      )
-      .map((flag) => flag.key)
-      .sort();
-    expect([...DYNAMIC_FLAG_NAMES].sort()).toEqual(expected);
-  });
-
   test("resolves to the seed when neither a flag nor env supplies a value", async () => {
     await initializeDynamicConfig({
       environment: DISABLED,
@@ -168,16 +155,6 @@ describe("tournament api mode", () => {
       provider: new StaticProvider({ "scout-tournament-api-mode": "live" }),
     });
     expect(tournamentApiMode()).toBe("live");
-  });
-
-  test("resolves the lobby limit through the variant flag", async () => {
-    await initializeDynamicConfig({
-      environment: { ...DISABLED, TOURNAMENT_MAX_OPEN_LOBBIES: "3" },
-      seed: SEED,
-      startPolling: false,
-      provider: new StaticProvider({ "scout-tournament-max-open-lobbies": 7 }),
-    });
-    expect(tournamentMaxOpenLobbies()).toBe(7);
   });
 
   test("an unparseable value keeps the seed rather than guessing", async () => {

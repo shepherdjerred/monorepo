@@ -47,13 +47,6 @@ export async function bugsinkRequestRaw(
   return client().raw(endpoint, { query: params });
 }
 
-export async function bugsinkRequestPostRaw(
-  endpoint: string,
-  body: unknown,
-): Promise<BugsinkRawResult> {
-  return client().postRaw(endpoint, { body });
-}
-
 export function buildBugsinkApiUrl(baseUrl: string, endpoint: string): URL {
   const normalizedBase = baseUrl
     .replace(/\/$/, "")

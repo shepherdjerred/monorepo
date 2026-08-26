@@ -43,66 +43,89 @@ export async function scoutInitialHistoryWorkflow(
   for (;;) {
     await condition(() => runRequested);
     runRequested = false;
-    let page: Awaited<ReturnType<typeof activities.fetchInitialHistoryPage>>;
-    try {
-      page = await activities.fetchInitialHistoryPage(input);
-    } catch (error: unknown) {
-      if (isCancellation(error)) throw error;
-      continue;
-    }
+    const page = await fetchHistoryPage(
+      activities.fetchInitialHistoryPage,
+      input,
+    );
+    if (page === undefined) continue;
     if (page.nextAttemptAt !== undefined) {
-      const delayMs = Math.max(
-        0,
-        new Date(page.nextAttemptAt).getTime() - Date.now(),
-      );
-      if (delayMs > 0) await sleep(delayMs);
+      await sleepUntil(page.nextAttemptAt);
       runRequested = true;
       continue;
     }
-    const pagesProcessed = input.pagesProcessed + 1;
-    const pagesInCurrentRun = input.pagesInCurrentRun + 1;
     if (page.nextAction === "fold-lake") {
       await lakeActivities(input.stage).runReportLakeJob({
         stage: input.stage,
         kind: "fold",
       });
     }
-    if (page.complete) {
-      input = {
+    const next = nextHistoryInput(input, page);
+    input = next.input;
+    runRequested = !next.complete;
+    if (
+      next.input.pagesInCurrentRun >= 100 ||
+      workflowInfo().continueAsNewSuggested
+    ) {
+      await continueAsNew<typeof scoutInitialHistoryWorkflow>({
+        ...input,
+        runOnStart: runRequested,
+        pagesInCurrentRun: 0,
+      });
+    }
+  }
+}
+
+async function fetchHistoryPage(
+  fetchPage: (input: ScoutInitialHistoryInput) => Promise<InitialHistoryPage>,
+  input: ScoutInitialHistoryInput,
+): Promise<InitialHistoryPage | undefined> {
+  try {
+    return await fetchPage(input);
+  } catch (error: unknown) {
+    if (isCancellation(error)) throw error;
+    return undefined;
+  }
+}
+
+type InitialHistoryPage = Awaited<
+  ReturnType<ReturnType<typeof backgroundActivities>["fetchInitialHistoryPage"]>
+>;
+
+async function sleepUntil(nextAttemptAt: string): Promise<void> {
+  const delayMs = Math.max(0, new Date(nextAttemptAt).getTime() - Date.now());
+  if (delayMs > 0) await sleep(delayMs);
+}
+
+function nextHistoryInput(
+  input: ScoutInitialHistoryInput,
+  page: InitialHistoryPage,
+): { readonly input: ScoutInitialHistoryInput; readonly complete: boolean } {
+  const pagesProcessed = input.pagesProcessed + 1;
+  const pagesInCurrentRun = input.pagesInCurrentRun + 1;
+  if (page.complete) {
+    return {
+      input: {
         stage: input.stage,
         puuid: input.puuid,
         pagesProcessed,
         pagesInCurrentRun,
-      };
-      if (pagesInCurrentRun >= 100 || workflowInfo().continueAsNewSuggested) {
-        await continueAsNew<typeof scoutInitialHistoryWorkflow>({
-          ...input,
-          runOnStart: runRequested,
-          pagesInCurrentRun: 0,
-        });
-      }
-      continue;
-    }
-    runRequested = true;
-    if (page.nextCursor === undefined) {
-      throw new Error(
-        "An incomplete initial-history page must return a cursor",
-      );
-    }
-    input = {
+      },
+      complete: true,
+    };
+  }
+  if (page.nextCursor === undefined) {
+    throw new Error("An incomplete initial-history page must return a cursor");
+  }
+  return {
+    input: {
       stage: input.stage,
       puuid: input.puuid,
       cursor: page.nextCursor,
       pagesProcessed,
       pagesInCurrentRun,
-    };
-    if (pagesInCurrentRun >= 100 || workflowInfo().continueAsNewSuggested) {
-      await continueAsNew<typeof scoutInitialHistoryWorkflow>({
-        ...input,
-        pagesInCurrentRun: 0,
-      });
-    }
-  }
+    },
+    complete: false,
+  };
 }
 
 export async function scoutIngestionReconciliationWorkflow(
@@ -112,65 +135,88 @@ export async function scoutIngestionReconciliationWorkflow(
   const reconciliation = await backgroundActivities(
     input.stage,
   ).reconcileIngestion(input);
-  for (const puuid of reconciliation.initialHistoryPuuids) {
+  await startInitialHistoryChildren(
+    input.stage,
+    reconciliation.initialHistoryPuuids,
+  );
+  await startDetachedChildren(input.stage, reconciliation.detachedWorks);
+  await startInteractiveChildren(input.stage, reconciliation.interactiveRuns);
+  return "completed";
+}
+
+async function startInitialHistoryChildren(
+  stage: ScoutInitialHistoryInput["stage"],
+  puuids: readonly string[],
+): Promise<void> {
+  for (const puuid of puuids) {
     try {
       await startChild(scoutInitialHistoryWorkflow, {
-        workflowId: scoutInitialHistoryWorkflowId(input.stage, puuid),
+        workflowId: scoutInitialHistoryWorkflowId(stage, puuid),
         workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
-        taskQueue: scoutTaskQueues(input.stage).workflow,
+        taskQueue: scoutTaskQueues(stage).workflow,
         parentClosePolicy: "ABANDON",
-        args: [
-          {
-            stage: input.stage,
-            puuid,
-            pagesProcessed: 0,
-            pagesInCurrentRun: 0,
-          },
-        ],
+        args: [{ stage, puuid, pagesProcessed: 0, pagesInCurrentRun: 0 }],
       });
     } catch (error) {
       if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
       await getExternalWorkflowHandle(
-        scoutInitialHistoryWorkflowId(input.stage, puuid),
+        scoutInitialHistoryWorkflowId(stage, puuid),
       ).signal(requestInitialHistoryRunSignal);
     }
   }
-  for (const work of reconciliation.detachedWorks) {
+}
+
+async function startDetachedChildren(
+  stage: ScoutDetachedWorkInput["stage"],
+  works: readonly DetachedWork[],
+): Promise<void> {
+  for (const work of works) {
     try {
       await startChild(scoutDetachedWorkWorkflow, {
-        workflowId: scoutDetachedWorkWorkflowId(
-          input.stage,
-          work.kind,
-          work.workId,
-        ),
+        workflowId: scoutDetachedWorkWorkflowId(stage, work.kind, work.workId),
         workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
-        taskQueue: scoutTaskQueues(input.stage).workflow,
+        taskQueue: scoutTaskQueues(stage).workflow,
         parentClosePolicy: "ABANDON",
-        args: [{ stage: input.stage, ...work }],
+        args: [{ stage, kind: work.kind, workId: work.workId }],
       });
     } catch (error) {
       if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
     }
   }
-  for (const run of reconciliation.interactiveRuns) {
+}
+
+async function startInteractiveChildren(
+  stage: ScoutIngestionReconciliationInput["stage"],
+  runs: readonly InteractiveRun[],
+): Promise<void> {
+  for (const run of runs) {
     try {
       await startChild(scoutInteractiveRunWorkflow, {
         workflowId: scoutInteractiveWorkflowId(
-          input.stage,
+          stage,
           run.kind,
           run.databaseRunId,
         ),
         workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
-        taskQueue: scoutTaskQueues(input.stage).workflow,
+        taskQueue: scoutTaskQueues(stage).workflow,
         parentClosePolicy: "ABANDON",
-        args: [{ stage: input.stage, ...run }],
+        args: [{ stage, ...run }],
       });
     } catch (error) {
       if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
     }
   }
-  return "completed";
 }
+
+type InteractiveRun = {
+  readonly kind: "explore" | "report-ai";
+  readonly databaseRunId: string;
+};
+
+type DetachedWork = {
+  readonly kind: "prediction-ingest" | "parlay-generation";
+  readonly workId: string;
+};
 
 export async function scoutBackgroundJobWorkflow(
   rawInput: ScoutBackgroundJobInput,

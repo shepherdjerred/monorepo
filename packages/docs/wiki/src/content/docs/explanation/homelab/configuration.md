@@ -103,15 +103,6 @@ consequences worth stating rather than leaving implicit in a policy file:
 
 If Flipt ever gains authentication, both of those are worth revisiting.
 
-The same boundary keeps several controls outside Flipt: capability grants,
-boot-wired startup choices, observability enablement, and CI or automation
-deciders. They need lifecycle or authorization changes before they can be
-runtime flags. The repository-owned
-`packages/feature-flags/src/managed-flag-inventory.json`
-records those exemptions alongside the 53 managed keys. Operators can use the
-[Flipt inventory check](/how-to/check-flipt-flag-inventory/) to compare it with
-the live evaluation snapshot.
-
 ## Durability
 
 Flipt v2 defaults to **in-memory storage**. It accepts flag writes, serves them

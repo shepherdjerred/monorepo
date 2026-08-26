@@ -1,9 +1,7 @@
 import { afterEach, describe, expect, test } from "vitest";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
-import { managedFlagInventory } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import {
-  DYNAMIC_FLAG_NAMES,
   initializeDynamicConfig,
   isDynamicConfigReady,
   playerCardEnabled,
@@ -25,14 +23,6 @@ afterEach(async () => {
 });
 
 describe("streambot dynamic config", () => {
-  test("covers exactly the Streambot entries in the managed inventory", () => {
-    const expected = managedFlagInventory.flags
-      .filter((flag) => flag.owner === "streambot")
-      .map((flag) => flag.key)
-      .sort();
-    expect([...DYNAMIC_FLAG_NAMES].sort()).toEqual(expected);
-  });
-
   test("returns the caller's value before initialization", () => {
     // No window where a toggle flips because config was not ready. The call
     // sites pass what they already had.

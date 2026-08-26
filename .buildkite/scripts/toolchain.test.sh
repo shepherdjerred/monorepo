@@ -27,9 +27,8 @@ if ! awk '
   exit 1
 fi
 
-if ! rg -Fq 'mise_ci where node' "$TOOLCHAIN" ||
-  ! rg -Fq 'mise_ci install --yes --force node' "$TOOLCHAIN"; then
-  echo "CI toolchain must repair and verify Node for manifest Node runtimes" >&2
+if ! rg -Fq 'mise_ci install --yes node' "$TOOLCHAIN"; then
+  echo "CI toolchain must explicitly provide Node for manifest Node runtimes" >&2
   exit 1
 fi
 

@@ -7,7 +7,6 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
-import { prepareDefinition } from "@shepherdjerred/config/definition.ts";
 import { z } from "zod";
 import { featureFlagMetrics } from "@shepherdjerred/birmel/observability/metrics.ts";
 import { getConfig } from "./index.ts";
@@ -171,10 +170,6 @@ const DEFINITION = {
     },
   },
 } as const;
-
-export const DYNAMIC_FLAG_NAMES = Object.entries(DEFINITION).map(
-  ([key, definition]) => prepareDefinition(key, definition).names.flag,
-);
 
 type Snapshot = ReturnType<typeof createSnapshot>["snapshot"];
 

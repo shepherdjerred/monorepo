@@ -16,7 +16,7 @@ function createAnalyticsFixture() {
     () => null,
   );
   const captureBucksSystem = vi.fn<ProductAnalytics["captureBucksSystem"]>(
-    () => null,
+    () => true,
   );
   const analytics: ProductAnalytics = {
     capture: () => null,

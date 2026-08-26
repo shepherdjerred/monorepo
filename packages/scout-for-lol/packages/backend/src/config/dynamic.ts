@@ -9,7 +9,6 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
-import { prepareDefinition } from "@shepherdjerred/config/definition.ts";
 import { createLogger } from "#src/logger.ts";
 import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
 import configuration from "#src/configuration.ts";
@@ -162,10 +161,6 @@ const DEFINITION = {
     names: { flag: "scout_temporal_interactive_enabled" },
   },
 } as const;
-
-export const DYNAMIC_FLAG_NAMES = Object.entries(DEFINITION).map(
-  ([key, definition]) => prepareDefinition(key, definition).names.flag,
-);
 
 /**
  * The values the snapshot starts from, so a read before the first refresh is

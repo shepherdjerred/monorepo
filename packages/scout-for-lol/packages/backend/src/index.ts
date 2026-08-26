@@ -83,6 +83,10 @@ await initializeDynamicConfig({
     bucksAskModel: configuration.bucksAskModel,
     tournamentApiMode: configuration.tournamentApiMode,
     tournamentMaxOpenLobbies: configuration.tournamentMaxOpenLobbies,
+    temporalRealtimeEnabled: false,
+    temporalBackgroundEnabled: false,
+    temporalReportsEnabled: false,
+    temporalInteractiveEnabled: false,
   },
   metrics: featureFlagMetrics,
 });
