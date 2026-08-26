@@ -1416,10 +1416,6 @@
       "clones": 13,
       "tokens": 1080
     },
-    "packages/scout-for-lol/packages/backend/src/trpc/auth-web.ts|packages/scout-for-lol/packages/backend/src/trpc/context.ts": {
-      "clones": 1,
-      "tokens": 131
-    },
     "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts": {
       "clones": 1,
       "tokens": 74
