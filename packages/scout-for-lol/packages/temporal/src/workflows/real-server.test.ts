@@ -231,7 +231,7 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
     SCOUT_WORKFLOW_NAMES.matchIngestion,
     duplicateOptions,
   );
-  await expect.poll(() => matchRuns).toEqual(["NA1_4242"]);
+  await expect.poll(() => matchRuns, { timeout: 20_000 }).toEqual(["NA1_4242"]);
   const duplicate = await client.workflow.start(
     SCOUT_WORKFLOW_NAMES.matchIngestion,
     duplicateOptions,

@@ -29,6 +29,11 @@ const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
   "discord-plays-mario-kart": ["@discord-plays-mario-kart/frontend"],
 };
 
+// Repository tooling is installed in the build stage but is not copied into
+// any production image. Keep it out of image closure attribution even when a
+// runtime workspace lists a tooling helper as a development dependency.
+const NON_IMAGE_WORKSPACE_DIRS = new Set(["scripts/"]);
+
 function stringArray(value: unknown, label: string): string[] {
   if (
     !Array.isArray(value) ||
@@ -126,11 +131,12 @@ export function targetClosureDirs(
       names.add(name);
     }
   }
-  return [...names].map((name) => {
+  return [...names].flatMap((name) => {
     const pkg = packages.get(name);
     if (pkg === undefined) {
       throw new Error(`workspace disappeared while selecting images: ${name}`);
     }
-    return pkg.dir.replace(/\/$/, "");
+    if (NON_IMAGE_WORKSPACE_DIRS.has(pkg.dir)) return [];
+    return [pkg.dir.replace(/\/$/, "")];
   });
 }

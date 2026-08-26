@@ -108,6 +108,11 @@ export type HttpClient = {
     endpoint: string,
     options: HttpPostOptions<T> & { schema: z.ZodType<T> },
   ) => Promise<HttpResult<T>>;
+  /** POST `endpoint`, returning the raw response text. */
+  postRaw: (
+    endpoint: string,
+    options?: HttpPostOptions<string>,
+  ) => Promise<HttpResult<string>>;
   /** GET `endpoint`, return the raw text body (no JSON parse). */
   raw: (
     endpoint: string,
@@ -241,5 +246,27 @@ export function createHttpClient(
     }
   }
 
-  return { get, post, raw };
+  async function postRaw(
+    endpoint: string,
+    postOptions?: HttpPostOptions<string>,
+  ): Promise<HttpResult<string>> {
+    try {
+      const options = resolveOptions(optionsOrFactory);
+      const url = buildUrl(options, endpoint, postOptions?.query);
+      const response = await fetch(url.toString(), {
+        method: "POST",
+        headers: jsonHeaders(options),
+        body: JSON.stringify(postOptions?.body),
+      });
+      if (!response.ok) {
+        return await errorEnvelope(options, response);
+      }
+      const text = await response.text();
+      return { success: true, data: text };
+    } catch (error) {
+      return wrapError(error);
+    }
+  }
+
+  return { get, post, postRaw, raw };
 }
