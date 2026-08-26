@@ -1,6 +1,15 @@
 import path from "node:path";
 import { adoptSeedIfUnseeded, resolveBackendLakeDir } from "./dev-lake-seed.ts";
 import { requireCliValue, unresolvedSecrets } from "./migration-core.ts";
+import {
+  DEFAULT_DESIGN_AUDIT_LAKE_DIR,
+  origins,
+  pinnedTemporalExecutable,
+  printHelp,
+  sharedServerDatabaseName,
+  waitForBackend,
+  waitForTemporal,
+} from "./dev-web-runtime-helpers.ts";
 
 const DEFAULT_BACKEND_PORT = 3000;
 const DEFAULT_WEB_PORT = 5180;
@@ -8,10 +17,9 @@ const TEMPORAL_PORT_OFFSET = 4233;
 const TEMPORAL_UI_PORT_OFFSET = 5233;
 const DEFAULT_PG_PORT = "5471";
 const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
-const BACKEND_START_TIMEOUT_MS = 300_000;
 const DEFAULT_DESIGN_AUDIT_DATABASE_NAME = "scout_design_audit";
 
-type DevWebOptions = {
+export type DevWebOptions = {
   readonly backendPort: number;
   readonly webPort: number;
   readonly temporalPort: number;
@@ -51,32 +59,6 @@ function sharedServerUrl(
 ): string {
   const pgPort = environment["SCOUT_PG_PORT"] ?? DEFAULT_PG_PORT;
   return `postgres://scout@127.0.0.1:${pgPort}/${databaseName}`;
-}
-
-/**
- * When the resolved URL targets the shared local dev server, return the
- * database name so the boot path can ensure server + database exist.
- * External URLs (e.g. a restored beta snapshot database) return undefined
- * and are used as-is.
- */
-export function sharedServerDatabaseName(
-  databaseUrl: string,
-  environment: Readonly<Record<string, string | undefined>>,
-): string | undefined {
-  const pgPort = environment["SCOUT_PG_PORT"] ?? DEFAULT_PG_PORT;
-  let parsed: URL;
-  try {
-    parsed = new URL(databaseUrl);
-  } catch {
-    return undefined;
-  }
-  const isLoopback =
-    parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
-  if (!isLoopback || parsed.port !== pgPort) {
-    return undefined;
-  }
-  const dbName = parsed.pathname.replace(/^\//, "");
-  return /^[a-z][a-z0-9_]*$/.test(dbName) ? dbName : undefined;
 }
 
 function parseOrigin(value: string, flag: string): string {
@@ -126,238 +108,153 @@ export function parseDevWebArgs(
   args: readonly string[],
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): ParseResult {
-  let backendPort = parsePort(
-    environment["SCOUT_DEV_BACKEND_PORT"] ?? DEFAULT_BACKEND_PORT.toString(),
-    "SCOUT_DEV_BACKEND_PORT",
-  );
-  let webPort = parsePort(
-    environment["SCOUT_DEV_WEB_PORT"] ?? DEFAULT_WEB_PORT.toString(),
-    "SCOUT_DEV_WEB_PORT",
-  );
-  let databaseUrl: string | undefined;
-  let temporalPort =
-    environment["SCOUT_DEV_TEMPORAL_PORT"] === undefined
-      ? undefined
-      : parsePort(
-          environment["SCOUT_DEV_TEMPORAL_PORT"],
-          "SCOUT_DEV_TEMPORAL_PORT",
-        );
-  let temporalUiPort =
-    environment["SCOUT_DEV_TEMPORAL_UI_PORT"] === undefined
-      ? undefined
-      : parsePort(
-          environment["SCOUT_DEV_TEMPORAL_UI_PORT"],
-          "SCOUT_DEV_TEMPORAL_UI_PORT",
-        );
-  let discordGatewayEnabled = environment["SCOUT_DEV_NO_GATEWAY"] !== "true";
-  let backendWatchEnabled =
-    environment["SCOUT_DEV_NO_BACKEND_WATCH"] !== "true";
-  let marketingOrigin = parseOrigin(
-    environment["SCOUT_DEV_MARKETING_ORIGIN"] ?? "http://localhost:4321",
-    "SCOUT_DEV_MARKETING_ORIGIN",
-  );
-  let docsOrigin = parseOrigin(
-    environment["SCOUT_DEV_DOCS_ORIGIN"] ?? "http://localhost:4322",
-    "SCOUT_DEV_DOCS_ORIGIN",
-  );
+  const state = initialOptions(environment);
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
-    if (argument === "--help" || argument === "-h") {
-      return { kind: "help" };
-    }
-    if (argument === "--backend-port") {
-      backendPort = parsePort(
-        requireCliValue(args, index, argument),
-        "--backend-port",
-      );
-      index += 1;
-      continue;
-    }
-    if (argument === "--web-port") {
-      webPort = parsePort(requireCliValue(args, index, argument), "--web-port");
-      index += 1;
-      continue;
-    }
-    if (argument === "--database-url") {
-      databaseUrl = parseDatabaseUrl(requireCliValue(args, index, argument));
-      index += 1;
-      continue;
-    }
-    if (argument === "--temporal-port") {
-      temporalPort = parsePort(
-        requireCliValue(args, index, argument),
-        "--temporal-port",
-      );
-      index += 1;
-      continue;
-    }
-    if (argument === "--temporal-ui-port") {
-      temporalUiPort = parsePort(
-        requireCliValue(args, index, argument),
-        "--temporal-ui-port",
-      );
-      index += 1;
-      continue;
-    }
-    if (argument === "--no-discord-gateway") {
-      discordGatewayEnabled = false;
-      continue;
-    }
-    if (argument === "--no-backend-watch") {
-      backendWatchEnabled = false;
-      continue;
-    }
-    if (argument === "--marketing-origin") {
-      marketingOrigin = parseOrigin(
-        requireCliValue(args, index, argument),
-        "--marketing-origin",
-      );
-      index += 1;
-      continue;
-    }
-    if (argument === "--docs-origin") {
-      docsOrigin = parseOrigin(
-        requireCliValue(args, index, argument),
-        "--docs-origin",
-      );
-      index += 1;
-      continue;
-    }
-    throw new Error(`Unknown argument: ${argument ?? "<missing>"}`);
+    const consumed = applyArgument(state, args, index, argument);
+    if (consumed === "help") return { kind: "help" };
+    index += consumed;
   }
 
-  const resolvedTemporalPort =
-    temporalPort ??
+  const ports = resolvePorts(state);
+
+  return {
+    kind: "options",
+    options: {
+      backendPort: state.backendPort,
+      webPort: state.webPort,
+      temporalPort: ports.temporalPort,
+      temporalUiPort: ports.temporalUiPort,
+      databaseUrl:
+        state.databaseUrl ?? defaultDatabaseUrl(state.backendPort, environment),
+      discordGatewayEnabled: state.discordGatewayEnabled,
+      backendWatchEnabled: state.backendWatchEnabled,
+      marketingOrigin: state.marketingOrigin,
+      docsOrigin: state.docsOrigin,
+    },
+  };
+}
+
+type ParseState = {
+  backendPort: number;
+  webPort: number;
+  databaseUrl?: string;
+  temporalPort?: number;
+  temporalUiPort?: number;
+  discordGatewayEnabled: boolean;
+  backendWatchEnabled: boolean;
+  marketingOrigin: string;
+  docsOrigin: string;
+};
+
+function initialOptions(
+  environment: Readonly<Record<string, string | undefined>>,
+): ParseState {
+  return {
+    backendPort: parsePort(
+      environment["SCOUT_DEV_BACKEND_PORT"] ?? DEFAULT_BACKEND_PORT.toString(),
+      "SCOUT_DEV_BACKEND_PORT",
+    ),
+    webPort: parsePort(
+      environment["SCOUT_DEV_WEB_PORT"] ?? DEFAULT_WEB_PORT.toString(),
+      "SCOUT_DEV_WEB_PORT",
+    ),
+    temporalPort: optionalPort(environment, "SCOUT_DEV_TEMPORAL_PORT"),
+    temporalUiPort: optionalPort(environment, "SCOUT_DEV_TEMPORAL_UI_PORT"),
+    discordGatewayEnabled: environment["SCOUT_DEV_NO_GATEWAY"] !== "true",
+    backendWatchEnabled: environment["SCOUT_DEV_NO_BACKEND_WATCH"] !== "true",
+    marketingOrigin: parseOrigin(
+      environment["SCOUT_DEV_MARKETING_ORIGIN"] ?? "http://localhost:4321",
+      "SCOUT_DEV_MARKETING_ORIGIN",
+    ),
+    docsOrigin: parseOrigin(
+      environment["SCOUT_DEV_DOCS_ORIGIN"] ?? "http://localhost:4322",
+      "SCOUT_DEV_DOCS_ORIGIN",
+    ),
+  };
+}
+
+function optionalPort(
+  environment: Readonly<Record<string, string | undefined>>,
+  name: string,
+): number | undefined {
+  const value = environment[name];
+  return value === undefined ? undefined : parsePort(value, name);
+}
+
+function applyArgument(
+  state: ParseState,
+  args: readonly string[],
+  index: number,
+  argument: string | undefined,
+): number | "help" {
+  if (argument === "--help" || argument === "-h") return "help";
+  const valueOptions: Readonly<Record<string, (value: string) => void>> = {
+    "--backend-port": (value) => {
+      state.backendPort = parsePort(value, "--backend-port");
+    },
+    "--web-port": (value) => {
+      state.webPort = parsePort(value, "--web-port");
+    },
+    "--database-url": (value) => {
+      state.databaseUrl = parseDatabaseUrl(value);
+    },
+    "--temporal-port": (value) => {
+      state.temporalPort = parsePort(value, "--temporal-port");
+    },
+    "--temporal-ui-port": (value) => {
+      state.temporalUiPort = parsePort(value, "--temporal-ui-port");
+    },
+    "--marketing-origin": (value) => {
+      state.marketingOrigin = parseOrigin(value, "--marketing-origin");
+    },
+    "--docs-origin": (value) => {
+      state.docsOrigin = parseOrigin(value, "--docs-origin");
+    },
+  };
+  const valueHandler =
+    argument === undefined ? undefined : valueOptions[argument];
+  if (valueHandler !== undefined) {
+    valueHandler(requireCliValue(args, index, argument));
+    return 1;
+  }
+  if (argument === "--no-discord-gateway") {
+    state.discordGatewayEnabled = false;
+    return 0;
+  }
+  if (argument === "--no-backend-watch") {
+    state.backendWatchEnabled = false;
+    return 0;
+  }
+  throw new Error(`Unknown argument: ${argument ?? "<missing>"}`);
+}
+
+function resolvePorts(state: ParseState): {
+  readonly temporalPort: number;
+  readonly temporalUiPort: number;
+} {
+  const temporalPort =
+    state.temporalPort ??
     parsePort(
-      (backendPort + TEMPORAL_PORT_OFFSET).toString(),
+      (state.backendPort + TEMPORAL_PORT_OFFSET).toString(),
       "derived Temporal port",
     );
-  const resolvedTemporalUiPort =
-    temporalUiPort ??
+  const temporalUiPort =
+    state.temporalUiPort ??
     parsePort(
-      (backendPort + TEMPORAL_UI_PORT_OFFSET).toString(),
+      (state.backendPort + TEMPORAL_UI_PORT_OFFSET).toString(),
       "derived Temporal UI port",
     );
   if (
-    new Set([
-      backendPort,
-      webPort,
-      resolvedTemporalPort,
-      resolvedTemporalUiPort,
-    ]).size !== 4
+    new Set([state.backendPort, state.webPort, temporalPort, temporalUiPort])
+      .size !== 4
   ) {
     throw new Error(
       "--backend-port, --web-port, --temporal-port, and --temporal-ui-port must be different",
     );
   }
-
-  return {
-    kind: "options",
-    options: {
-      backendPort,
-      webPort,
-      temporalPort: resolvedTemporalPort,
-      temporalUiPort: resolvedTemporalUiPort,
-      databaseUrl: databaseUrl ?? defaultDatabaseUrl(backendPort, environment),
-      discordGatewayEnabled,
-      backendWatchEnabled,
-      marketingOrigin,
-      docsOrigin,
-    },
-  };
-}
-
-function printHelp(): void {
-  console.log(`Usage: bun run dev:web -- [options]
-
-Options:
-  --backend-port <port>  Backend port (default: 3000)
-  --web-port <port>      Vite SPA port (default: 5180)
-  --database-url <url>   Postgres URL (default: scout_dev_<backend-port> on
-                         the shared local dev server, port 5471 / SCOUT_PG_PORT)
-  --temporal-port <port> Temporal gRPC port (default: backend port + 4233)
-  --temporal-ui-port <port> Temporal UI port (default: backend port + 5233)
-  --no-discord-gateway   Run as a secondary UI/API copy without BETA gateway
-  --no-backend-watch     Keep the backend stable until this command is restarted
-  --marketing-origin <url>  Marketing site origin for cross-surface links
-  --docs-origin <url>       Docs site origin for cross-surface links
-  --help                 Show this help
-
-For a second copy, choose different ports. Its database defaults to
-scout_dev_<backend-port> on the shared local Postgres. The BETA Discord gateway still has one
-owner: run one gateway owner and pass --no-discord-gateway to secondary copies.
-Secondary copies do not have the live bot guild/channel cache, so guild-picker
-and channel-picker flows require the gateway owner.`);
-}
-
-function origins(options: DevWebOptions): {
-  readonly backendOrigin: string;
-  readonly webOrigin: string;
-} {
-  return {
-    backendOrigin: `http://127.0.0.1:${options.backendPort.toString()}`,
-    webOrigin: `http://localhost:${options.webPort.toString()}`,
-  };
-}
-
-async function waitForBackend(
-  backendOrigin: string,
-  backend: Bun.Subprocess,
-): Promise<void> {
-  const startedAt = Date.now();
-  let lastFailure: unknown;
-  while (Date.now() - startedAt < BACKEND_START_TIMEOUT_MS) {
-    if (backend.exitCode !== null) {
-      throw new Error(
-        `Scout backend exited with code ${backend.exitCode.toString()} before becoming ready`,
-      );
-    }
-    try {
-      const response = await fetch(`${backendOrigin}/api/version`);
-      if (response.ok) return;
-      lastFailure = new Error(
-        `Scout backend readiness returned HTTP ${response.status.toString()}`,
-      );
-    } catch (error) {
-      lastFailure = error;
-    }
-    await Bun.sleep(250);
-  }
-  throw new Error(
-    `Scout backend did not become ready within ${BACKEND_START_TIMEOUT_MS.toString()}ms`,
-    { cause: lastFailure },
-  );
-}
-
-async function waitForTemporal(
-  temporalUiPort: number,
-  temporal: Bun.Subprocess,
-): Promise<void> {
-  const startedAt = Date.now();
-  let lastFailure: unknown;
-  while (Date.now() - startedAt < BACKEND_START_TIMEOUT_MS) {
-    if (temporal.exitCode !== null) {
-      throw new Error(
-        `Temporal dev server exited with code ${temporal.exitCode.toString()} before becoming ready`,
-      );
-    }
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:${temporalUiPort.toString()}/`,
-      );
-      if (response.ok) return;
-      lastFailure = new Error(
-        `Temporal UI readiness returned HTTP ${response.status.toString()}`,
-      );
-    } catch (error: unknown) {
-      lastFailure = error;
-    }
-    await Bun.sleep(250);
-  }
-  throw new Error("Temporal dev server did not become ready", {
-    cause: lastFailure,
-  });
+  return { temporalPort, temporalUiPort };
 }
 
 if (import.meta.main) {
@@ -496,7 +393,8 @@ if (import.meta.main) {
     );
     const temporal = Bun.spawn(
       [
-        "temporal",
+        pinnedTemporalExecutable(root),
+        "--disable-config-file",
         "server",
         "start-dev",
         "--ip",
@@ -555,10 +453,6 @@ if (import.meta.main) {
       stdout: "inherit",
       stderr: "inherit",
     });
-    // Playwright probes the SPA through Vite's backend proxy. Starting Vite
-    // before the backend is ready can leave that first proxy request hanging
-    // for the entire webServer timeout. The audit checkout is immutable, so it
-    // also has no reason to pay for a backend file watcher.
     if (isDesignAuditBoot) {
       try {
         await waitForBackend(backendOrigin, backend);
@@ -580,11 +474,6 @@ if (import.meta.main) {
         "--port",
         options.webPort.toString(),
         "--strictPort",
-        // Playwright restarts this server between sequential audit shards.
-        // A Vite optimizer process killed with the preceding shard can leave
-        // the shared dependency cache waiting indefinitely before the next
-        // server binds. Re-optimizing made the same live CI checkout ready in
-        // under a second and keeps this lifecycle repair audit-only.
         ...(isDesignAuditBoot ? ["--force"] : []),
       ],
       {

@@ -75,6 +75,9 @@ describe("Scout weekly parlay deployment boundary", () => {
     },
   );
 
+});
+
+describe("Scout Temporal ingress identity", () => {
   test("Temporal admits only the two Scout backend identities on gRPC", () => {
     const policy = findResource(
       temporalResources(),
@@ -99,6 +102,9 @@ describe("Scout weekly parlay deployment boundary", () => {
       }),
     );
   });
+});
+
+describe("Scout weekly parlay compatibility boundary", () => {
   test("shares one 1Password credential with Beta Scout and the core worker", () => {
     const beta = scoutResources("beta");
     const betaDeployment = DeploymentSpecSchema.parse(

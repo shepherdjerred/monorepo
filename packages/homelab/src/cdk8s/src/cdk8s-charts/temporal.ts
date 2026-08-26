@@ -171,14 +171,18 @@ export function createTemporalChart(app: App) {
           // stage backend pod so activities can use the live Discord gateway,
           // stage database, and report-lake PVC directly.
           from: [
-            ...["scout-beta", "scout-prod"].map((namespace) => ({
+            {
               namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": namespace,
-                },
+                matchLabels: { "kubernetes.io/metadata.name": "scout-beta" },
               },
               podSelector: { matchLabels: { app: "scout-backend" } },
-            })),
+            },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "scout-prod" },
+              },
+              podSelector: { matchLabels: { app: "scout-backend" } },
+            },
           ],
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
