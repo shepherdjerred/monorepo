@@ -162,7 +162,13 @@ test("requestStop cancels the activity and runs non-cancellable cleanup", async 
     activities: {
       runInteractive: async () => {
         started.resolve(undefined);
-        await Context.current().cancelled;
+        const context = Context.current();
+        const heartbeat = setInterval(() => context.heartbeat(), 10);
+        try {
+          await context.cancelled;
+        } finally {
+          clearInterval(heartbeat);
+        }
         return { status: "completed", partialOutputAvailable: false };
       },
       persistInteractiveOutcome: (input: {

@@ -217,67 +217,9 @@ export class ScoutTemporalSupervisor {
       this.#attempt += 1;
       if (this.#attempt > 1) scoutTemporalReconnects.inc();
       try {
-        const discordWorkersEnabled = this.#discordWorkersEnabled;
-        const runtime = await createConnectedRuntime(
-          this.#options,
-          discordWorkersEnabled,
-        );
-        if (this.#shouldStop()) {
-          await closeConnectedRuntime(runtime);
-          return;
-        }
-        if (discordWorkersEnabled !== this.#discordWorkersEnabled) {
-          await closeConnectedRuntime(runtime);
-          continue;
-        }
-        this.#active = runtime;
-        scoutTemporalConnected.set(1);
-        scoutTemporalWorkers.set({ queue_class: "workflow" }, 1);
-        scoutTemporalWorkers.set({ queue_class: "interactive" }, 1);
-        scoutTemporalWorkers.set({ queue_class: "lake" }, 1);
-        scoutTemporalWorkers.set(
-          { queue_class: "realtime" },
-          this.#discordWorkersEnabled ? 1 : 0,
-        );
-        scoutTemporalWorkers.set(
-          { queue_class: "background" },
-          this.#discordWorkersEnabled ? 1 : 0,
-        );
-        setScoutTemporalHealth({
-          state: "connected",
-          workerCount: runtime.workers.length,
-          discordWorkersEnabled: this.#discordWorkersEnabled,
-          lastError: null,
-        });
-        logger.info("Temporal workers connected", {
-          address: this.#options.address,
-          stage: this.#options.stage,
-          workerCount: runtime.workers.length,
-          discordWorkersEnabled: this.#discordWorkersEnabled,
-        });
-        const runs = runtime.workers.map(async (worker) => {
-          await worker.run();
-        });
-        try {
-          await Promise.race(runs);
-        } finally {
-          this.#active = undefined;
-          await stopConnectedRuntime(runtime, runs);
-        }
+        await this.#connectAndRun();
       } catch (error: unknown) {
-        this.#active = undefined;
-        const message = error instanceof Error ? error.message : String(error);
-        logger.warn("Temporal component is degraded; reconnecting", {
-          address: this.#options.address,
-          attempt: this.#attempt,
-          message,
-        });
-        setScoutTemporalHealth({
-          state: "degraded",
-          workerCount: 0,
-          discordWorkersEnabled: this.#discordWorkersEnabled,
-          lastError: message,
-        });
+        this.#recordDegradedState(error);
       } finally {
         scoutTemporalConnected.set(0);
         if (this.#active === undefined) scoutTemporalWorkers.reset();
@@ -285,6 +227,75 @@ export class ScoutTemporalSupervisor {
       if (this.#shouldStop()) return;
       await Bun.sleep(RECONNECT_DELAY_MS);
     }
+  }
+
+  async #connectAndRun(): Promise<void> {
+    const discordWorkersEnabled = this.#discordWorkersEnabled;
+    const runtime = await createConnectedRuntime(
+      this.#options,
+      discordWorkersEnabled,
+    );
+    if (
+      this.#shouldStop() ||
+      discordWorkersEnabled !== this.#discordWorkersEnabled
+    ) {
+      await closeConnectedRuntime(runtime);
+      return;
+    }
+    this.#active = runtime;
+    this.#recordConnectedState(runtime);
+    const runs = runtime.workers.map(async (worker) => {
+      await worker.run();
+    });
+    try {
+      await Promise.race(runs);
+    } finally {
+      this.#active = undefined;
+      await stopConnectedRuntime(runtime, runs);
+    }
+  }
+
+  #recordConnectedState(runtime: ConnectedRuntime): void {
+    scoutTemporalConnected.set(1);
+    scoutTemporalWorkers.set({ queue_class: "workflow" }, 1);
+    scoutTemporalWorkers.set({ queue_class: "interactive" }, 1);
+    scoutTemporalWorkers.set({ queue_class: "lake" }, 1);
+    scoutTemporalWorkers.set(
+      { queue_class: "realtime" },
+      this.#discordWorkersEnabled ? 1 : 0,
+    );
+    scoutTemporalWorkers.set(
+      { queue_class: "background" },
+      this.#discordWorkersEnabled ? 1 : 0,
+    );
+    setScoutTemporalHealth({
+      state: "connected",
+      workerCount: runtime.workers.length,
+      discordWorkersEnabled: this.#discordWorkersEnabled,
+      lastError: null,
+    });
+    logger.info("Temporal workers connected", {
+      address: this.#options.address,
+      stage: this.#options.stage,
+      workerCount: runtime.workers.length,
+      discordWorkersEnabled: this.#discordWorkersEnabled,
+    });
+  }
+
+  #recordDegradedState(error: unknown): void {
+    this.#active = undefined;
+    const message = error instanceof Error ? error.message : String(error);
+    logger.warn("Temporal component is degraded; reconnecting", {
+      address: this.#options.address,
+      attempt: this.#attempt,
+      message,
+    });
+    setScoutTemporalHealth({
+      state: "degraded",
+      workerCount: 0,
+      discordWorkersEnabled: this.#discordWorkersEnabled,
+      lastError: message,
+    });
   }
 
   #shouldStop(): boolean {
