@@ -93,69 +93,42 @@ async function markStaleReportExecution(
   }
 }
 
-export async function runScoutReportActivity(
+async function executeScheduledReport(
   input: ScoutReportActivityInput,
-  database: ExtendedPrismaClient = prisma,
+  report: NonNullable<ScoutReportRecord>,
+  reportId: number,
+  database: ExtendedPrismaClient,
 ): Promise<void> {
-  const reportId = Number(input.reportId);
-  if (!Number.isSafeInteger(reportId) || reportId <= 0) {
-    throw ApplicationFailure.nonRetryable(
-      `Invalid report ID ${input.reportId}`,
-      "InvalidReportId",
-    );
-  }
-  const manualRunId = parseManualRunId(input);
-  const report = await database.report.findUnique({
-    where: { id: reportId },
-  });
-  // A completed manual run can still have a pending Discord delivery after an
-  // activity retry. A subsequent report edit changes the revision, but must
-  // not make that durable delivery unreachable; the persisted run already
-  // contains the validated output to deliver.
-  if (
-    await resumeCompletedManualDelivery(input, report, manualRunId, database)
-  ) {
-    return;
-  }
-  if (reportExecutionIsStale(report, input)) {
-    await markStaleReportExecution(input, manualRunId, database);
-    return;
-  }
-  if (report === null) {
-    throw new Error("Report disappeared after the execution staleness check");
-  }
-  if (input.source === "schedule") {
-    let runId: number | null;
-    try {
-      runId = await runScheduledReportOccurrence({
-        prisma: database,
-        report,
-        workflowRunId: input.workflowRunId,
-      });
-    } catch (error: unknown) {
-      if (error instanceof InvalidSavedQueryError) {
-        throw ApplicationFailure.nonRetryable(
-          error.message,
-          "InvalidSavedQuery",
-        );
-      }
-      throw error;
+  let runId: number | null;
+  try {
+    runId = await runScheduledReportOccurrence({
+      prisma: database,
+      report,
+      workflowRunId: input.workflowRunId,
+    });
+  } catch (error: unknown) {
+    if (error instanceof InvalidSavedQueryError) {
+      throw ApplicationFailure.nonRetryable(error.message, "InvalidSavedQuery");
     }
-    if (runId === null) return;
-    await deliverPendingReportDispatches(
-      { reportId, trigger: "SCHEDULED", runId },
-      database,
-    );
-    await deliverPendingReportDispatches(
-      { reportId, trigger: "SCHEDULED", failureMode: "isolate" },
-      database,
-    );
-    return;
+    throw error;
   }
-  if (manualRunId === undefined) {
-    throw new Error("Missing manual run ID");
-  }
-  const runId = manualRunId;
+  if (runId === null) return;
+  await deliverPendingReportDispatches(
+    { reportId, trigger: "SCHEDULED", runId },
+    database,
+  );
+  await deliverPendingReportDispatches(
+    { reportId, trigger: "SCHEDULED", failureMode: "isolate" },
+    database,
+  );
+}
+
+async function executeManualReport(
+  input: ScoutReportActivityInput,
+  report: NonNullable<ScoutReportRecord>,
+  runId: ReportRunId,
+  database: ExtendedPrismaClient,
+): Promise<void> {
   const existingRun = await database.reportRun.findUniqueOrThrow({
     where: { id: runId },
     select: { status: true },
@@ -207,8 +180,49 @@ export async function runScoutReportActivity(
   }
   if (input.post) {
     await deliverPendingReportDispatches(
-      { reportId, trigger: "MANUAL", runId },
+      { reportId: Number(input.reportId), trigger: "MANUAL", runId },
       database,
     );
   }
+}
+
+export async function runScoutReportActivity(
+  input: ScoutReportActivityInput,
+  database: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  const reportId = Number(input.reportId);
+  if (!Number.isSafeInteger(reportId) || reportId <= 0) {
+    throw ApplicationFailure.nonRetryable(
+      `Invalid report ID ${input.reportId}`,
+      "InvalidReportId",
+    );
+  }
+  const manualRunId = parseManualRunId(input);
+  const report = await database.report.findUnique({
+    where: { id: reportId },
+  });
+  // A completed manual run can still have a pending Discord delivery after an
+  // activity retry. A subsequent report edit changes the revision, but must
+  // not make that durable delivery unreachable; the persisted run already
+  // contains the validated output to deliver.
+  if (
+    await resumeCompletedManualDelivery(input, report, manualRunId, database)
+  ) {
+    return;
+  }
+  if (reportExecutionIsStale(report, input)) {
+    await markStaleReportExecution(input, manualRunId, database);
+    return;
+  }
+  if (report === null) {
+    throw new Error("Report disappeared after the execution staleness check");
+  }
+  if (input.source === "schedule") {
+    await executeScheduledReport(input, report, reportId, database);
+    return;
+  }
+  if (manualRunId === undefined) {
+    throw new Error("Missing manual run ID");
+  }
+  await executeManualReport(input, report, manualRunId, database);
 }
