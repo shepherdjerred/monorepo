@@ -212,10 +212,6 @@ if (import.meta.main) {
       stdout: "inherit",
       stderr: "inherit",
     });
-    // Playwright probes the SPA through Vite's backend proxy. Starting Vite
-    // before the backend is ready can leave that first proxy request hanging
-    // for the entire webServer timeout. The audit checkout is immutable, so it
-    // also has no reason to pay for a backend file watcher.
     if (isDesignAuditBoot) {
       try {
         await waitForBackend(backendOrigin, backend);
@@ -237,11 +233,6 @@ if (import.meta.main) {
         "--port",
         options.webPort.toString(),
         "--strictPort",
-        // Playwright restarts this server between sequential audit shards.
-        // A Vite optimizer process killed with the preceding shard can leave
-        // the shared dependency cache waiting indefinitely before the next
-        // server binds. Re-optimizing made the same live CI checkout ready in
-        // under a second and keeps this lifecycle repair audit-only.
         ...(isDesignAuditBoot ? ["--force"] : []),
       ],
       {
