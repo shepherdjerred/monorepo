@@ -169,6 +169,10 @@ function computeConfiguration() {
     enableDiscordGateway,
     enableBackgroundJobs,
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
+    temporalNamespace: env
+      .get("TEMPORAL_NAMESPACE")
+      .default("default")
+      .asString(),
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
     applicationId: getRequiredEnvVar("APPLICATION_ID"),
     discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),
@@ -300,6 +304,9 @@ const configuration: Configuration = {
   },
   get temporalAddress() {
     return getConfiguration().temporalAddress;
+  },
+  get temporalNamespace() {
+    return getConfiguration().temporalNamespace;
   },
   get discordToken() {
     return getConfiguration().discordToken;

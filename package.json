@@ -135,6 +135,7 @@
     "packages/scout-for-lol/packages/evals",
     "packages/scout-for-lol/packages/frontend",
     "packages/scout-for-lol/packages/report",
+    "packages/scout-for-lol/packages/temporal",
     "packages/scout-for-lol/packages/ui",
     "packages/sjer.red",
     "packages/starlight-karma-bot",

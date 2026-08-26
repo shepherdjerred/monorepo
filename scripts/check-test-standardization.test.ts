@@ -69,6 +69,14 @@ describe("test standardization guard", () => {
       manifestStepViolations("@shepherdjerred/temporal", [temporalStep]),
     ).toEqual([]);
     expect(
+      manifestStepViolations("@scout-for-lol/temporal", [
+        {
+          ...temporalStep,
+          args: ["src/workflows", "--no-file-parallelism"],
+        },
+      ]),
+    ).toEqual([]);
+    expect(
       manifestStepViolations("other-package", [temporalStep]),
     ).toHaveLength(1);
     expect(

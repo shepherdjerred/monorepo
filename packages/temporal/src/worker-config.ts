@@ -71,6 +71,13 @@ export const QUEUE_WORKER_DEFINITIONS: readonly QueueWorkerDefinition[] = [
   },
   {
     role: "scout",
+    taskQueue: TASK_QUEUES.SCOUT,
+    activities: scoutActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 2,
+  },
+  {
+    role: "scout",
     taskQueue: TASK_QUEUES.SCOUT_BETA,
     activities: scoutActivities,
     maxConcurrentActivityTaskExecutions: 1,

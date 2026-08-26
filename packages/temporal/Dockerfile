@@ -375,6 +375,7 @@ COPY --parents \
   packages/llm-observability \
   packages/llm-runtime \
   packages/scout-for-lol/packages/data \
+  packages/scout-for-lol/packages/temporal \
   ./
 
 # Built artifacts from the build stage.

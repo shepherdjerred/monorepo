@@ -80,11 +80,15 @@ await initializeDynamicConfig({
     bucksAskModel: configuration.bucksAskModel,
     tournamentApiMode: configuration.tournamentApiMode,
     tournamentMaxOpenLobbies: configuration.tournamentMaxOpenLobbies,
+    temporalRealtimeEnabled: false,
+    temporalBackgroundEnabled: false,
+    temporalReportsEnabled: false,
+    temporalInteractiveEnabled: false,
   },
   metrics: featureFlagMetrics,
 });
 
-const { shutdownHttpServer } = await startBackendRuntime();
+const { shutdownHttpServer, shutdownTemporal } = await startBackendRuntime();
 
 const { startScoutCompetitionActivityWorker } =
   await import("#src/league/tasks/competition/temporal-worker.ts");
@@ -128,6 +132,7 @@ logger.info("✅ Backend application startup complete");
 process.on("SIGTERM", () => {
   logger.info("🛑 Received SIGTERM, shutting down gracefully");
   void (async () => {
+    await shutdownTemporal();
     await shutdownHttpServer();
     await competitionActivityWorker?.shutdown();
     // Stops the config poller before analytics flushes, so a refresh cannot
@@ -141,6 +146,7 @@ process.on("SIGTERM", () => {
 process.on("SIGINT", () => {
   logger.info("🛑 Received SIGINT, shutting down gracefully");
   void (async () => {
+    await shutdownTemporal();
     await shutdownHttpServer();
     // Stops the config poller before analytics flushes, so a refresh cannot
     // race the exit.

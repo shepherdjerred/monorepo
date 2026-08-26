@@ -1,199 +1,30 @@
 import path from "node:path";
 import { adoptSeedIfUnseeded, resolveBackendLakeDir } from "./dev-lake-seed.ts";
-import { requireCliValue, unresolvedSecrets } from "./migration-core.ts";
+import { buildDevEnvironment, devWebOrigins } from "./dev-web-environment.ts";
 import {
-  buildDevEnvironment,
-  parseConsumerOptions,
-  type DevWebOptions,
-} from "./dev-web-environment.ts";
-import { parseDevOrigin } from "./dev-origin.ts";
-
-const DEFAULT_BACKEND_PORT = 3000;
-const DEFAULT_WEB_PORT = 5180;
-const DEFAULT_PG_PORT = "5471";
-const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
-const BACKEND_START_TIMEOUT_MS = 300_000;
-const DEFAULT_DESIGN_AUDIT_DATABASE_NAME = "scout_design_audit";
-const DEFAULT_CONSUMER_GUILD_ID = "1337623164146155593";
-
-type ParseResult =
-  | { readonly kind: "help" }
-  | { readonly kind: "options"; readonly options: DevWebOptions };
-
-function parsePort(value: string, flag: string): number {
-  const port = Number(value);
-  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
-    throw new Error(`${flag} must be an integer between 1 and 65535`);
-  }
-  return port;
-}
-
-function parseDatabaseUrl(value: string): string {
-  if (!value.startsWith("postgres://") && !value.startsWith("postgresql://")) {
-    throw new Error(
-      "--database-url must be a postgres:// URL (SQLite is no longer supported)",
-    );
-  }
-  return value;
-}
-
-function sharedServerUrl(
-  backendPort: number,
-  environment: Readonly<Record<string, string | undefined>>,
-  databaseName = `scout_dev_${backendPort.toString()}`,
-): string {
-  const pgPort = environment["SCOUT_PG_PORT"] ?? DEFAULT_PG_PORT;
-  return `postgres://scout@127.0.0.1:${pgPort}/${databaseName}`;
-}
-
-/**
- * When the resolved URL targets the shared local dev server, return the
- * database name so the boot path can ensure server + database exist.
- * External URLs (e.g. a restored beta snapshot database) return undefined
- * and are used as-is.
- */
-export function sharedServerDatabaseName(
-  databaseUrl: string,
-  environment: Readonly<Record<string, string | undefined>>,
-): string | undefined {
-  const pgPort = environment["SCOUT_PG_PORT"] ?? DEFAULT_PG_PORT;
-  let parsed: URL;
-  try {
-    parsed = new URL(databaseUrl);
-  } catch {
-    return undefined;
-  }
-  const isLoopback =
-    parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
-  if (!isLoopback || parsed.port !== pgPort) {
-    return undefined;
-  }
-  const dbName = parsed.pathname.replace(/^\//, "");
-  return /^[a-z][a-z0-9_]*$/.test(dbName) ? dbName : undefined;
-}
-
-function defaultDatabaseUrl(
-  backendPort: number,
-  environment: Readonly<Record<string, string | undefined>>,
-): string {
-  if (environment["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] === "true") {
-    return sharedServerUrl(
-      backendPort,
-      environment,
-      DEFAULT_DESIGN_AUDIT_DATABASE_NAME,
-    );
-  }
-  const configured = environment["SCOUT_DEV_DATABASE_URL"];
-  if (configured !== undefined) return parseDatabaseUrl(configured);
-
-  const inherited = environment["DATABASE_URL"];
-  if (
-    backendPort === DEFAULT_BACKEND_PORT &&
-    inherited !== undefined &&
-    inherited.length > 0
-  ) {
-    return parseDatabaseUrl(inherited);
-  }
-  return sharedServerUrl(backendPort, environment);
-}
+  parseDevWebArgs as parseDevWebArgsFromOptions,
+  sharedServerDatabaseName as sharedServerDatabaseNameFromOptions,
+} from "./dev-web-options.ts";
+import { unresolvedSecrets } from "./migration-core.ts";
+import { startTemporalDevServer } from "./dev-web-temporal.ts";
 
 export function parseDevWebArgs(
   args: readonly string[],
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
-): ParseResult {
-  let backendPort = parsePort(
-    environment["SCOUT_DEV_BACKEND_PORT"] ?? DEFAULT_BACKEND_PORT.toString(),
-    "SCOUT_DEV_BACKEND_PORT",
-  );
-  let webPort = parsePort(
-    environment["SCOUT_DEV_WEB_PORT"] ?? DEFAULT_WEB_PORT.toString(),
-    "SCOUT_DEV_WEB_PORT",
-  );
-  let databaseUrl: string | undefined;
-  let discordGatewayEnabled = environment["SCOUT_DEV_NO_GATEWAY"] !== "true";
-  let backendWatchEnabled =
-    environment["SCOUT_DEV_NO_BACKEND_WATCH"] !== "true";
-  let marketingOrigin = parseDevOrigin(
-    environment["SCOUT_DEV_MARKETING_ORIGIN"] ?? "http://localhost:4321",
-    "SCOUT_DEV_MARKETING_ORIGIN",
-  );
-  let docsOrigin = parseDevOrigin(
-    environment["SCOUT_DEV_DOCS_ORIGIN"] ?? "http://localhost:4322",
-    "SCOUT_DEV_DOCS_ORIGIN",
-  );
-  for (let index = 0; index < args.length; index += 1) {
-    const argument = args[index];
-    if (argument === "--help" || argument === "-h") {
-      return { kind: "help" };
-    }
-    if (argument === "--backend-port") {
-      backendPort = parsePort(
-        requireCliValue(args, index, argument),
-        "--backend-port",
-      );
-      index += 1;
-      continue;
-    }
-    if (argument === "--web-port") {
-      webPort = parsePort(requireCliValue(args, index, argument), "--web-port");
-      index += 1;
-      continue;
-    }
-    if (argument === "--database-url") {
-      databaseUrl = parseDatabaseUrl(requireCliValue(args, index, argument));
-      index += 1;
-      continue;
-    }
-    if (argument === "--no-discord-gateway") {
-      discordGatewayEnabled = false;
-      continue;
-    }
-    if (argument === "--no-backend-watch") {
-      backendWatchEnabled = false;
-      continue;
-    }
-    if (argument === "--marketing-origin") {
-      marketingOrigin = parseDevOrigin(
-        requireCliValue(args, index, argument),
-        "--marketing-origin",
-      );
-      index += 1;
-      continue;
-    }
-    if (argument === "--docs-origin") {
-      docsOrigin = parseDevOrigin(
-        requireCliValue(args, index, argument),
-        "--docs-origin",
-      );
-      index += 1;
-      continue;
-    }
-    throw new Error(`Unknown argument: ${argument ?? "<missing>"}`);
-  }
-
-  if (backendPort === webPort) {
-    throw new Error("--backend-port and --web-port must be different");
-  }
-
-  const consumerOptions = parseConsumerOptions(
-    environment,
-    DEFAULT_CONSUMER_GUILD_ID,
-  );
-
-  return {
-    kind: "options",
-    options: {
-      backendPort,
-      webPort,
-      databaseUrl: databaseUrl ?? defaultDatabaseUrl(backendPort, environment),
-      discordGatewayEnabled,
-      backendWatchEnabled,
-      marketingOrigin,
-      docsOrigin,
-      ...consumerOptions,
-    },
-  };
+) {
+  return parseDevWebArgsFromOptions(args, environment);
 }
+
+export function sharedServerDatabaseName(
+  databaseUrl: string,
+  environment: Readonly<Record<string, string | undefined>>,
+) {
+  return sharedServerDatabaseNameFromOptions(databaseUrl, environment);
+}
+
+const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
+const BACKEND_START_TIMEOUT_MS = 300_000;
+const DEFAULT_CONSUMER_GUILD_ID = "1337623164146155593";
 
 function printHelp(): void {
   console.log(`Usage: bun run dev:web -- [options]
@@ -203,6 +34,8 @@ Options:
   --web-port <port>      Vite SPA port (default: 5180)
   --database-url <url>   Postgres URL (default: scout_dev_<backend-port> on
                          the shared local dev server, port 5471 / SCOUT_PG_PORT)
+  --temporal-port <port> Temporal gRPC port (default: backend port + 4233)
+  --temporal-ui-port <port> Temporal UI port (default: backend port + 5233)
   --no-discord-gateway   Run as a secondary UI/API copy without BETA gateway
   --no-backend-watch     Keep the backend stable until this command is restarted
   --marketing-origin <url>  Marketing site origin for cross-surface links
@@ -216,16 +49,6 @@ scout_dev_<backend-port> on the shared local Postgres. The BETA Discord gateway 
 owner: run one gateway owner and pass --no-discord-gateway to secondary copies.
 Secondary copies do not have the live bot guild/channel cache, so guild-picker
 and channel-picker flows require the gateway owner.`);
-}
-
-function origins(options: DevWebOptions): {
-  readonly backendOrigin: string;
-  readonly webOrigin: string;
-} {
-  return {
-    backendOrigin: `http://127.0.0.1:${options.backendPort.toString()}`,
-    webOrigin: `http://localhost:${options.webPort.toString()}`,
-  };
 }
 
 async function waitForBackend(
@@ -273,7 +96,7 @@ if (import.meta.main) {
       }
     }
     const { options } = parsed;
-    const { backendOrigin, webOrigin } = origins(options);
+    const { backendOrigin, webOrigin } = devWebOrigins(options);
     const backendCwd = path.join(root, "packages", "backend");
     const lakeDir = resolveBackendLakeDir(
       backendCwd,
@@ -297,6 +120,9 @@ if (import.meta.main) {
       environment["EXPLORE_GUILD_ALLOWLIST"] ??=
         Bun.env["SCOUT_DESIGN_AUDIT_GUILD_ID"] ?? DEFAULT_CONSUMER_GUILD_ID;
     }
+    environment["TEMPORAL_ADDRESS"] =
+      `127.0.0.1:${options.temporalPort.toString()}`;
+    environment["TEMPORAL_NAMESPACE"] = "default";
     const sharedDbName = sharedServerDatabaseName(options.databaseUrl, Bun.env);
     if (sharedDbName !== undefined) {
       const ensure = Bun.spawn(
@@ -346,6 +172,14 @@ if (import.meta.main) {
         );
       }
     }
+
+    const temporal = await startTemporalDevServer({
+      root,
+      backendPort: options.backendPort,
+      temporalPort: options.temporalPort,
+      temporalUiPort: options.temporalUiPort,
+      environment,
+    });
     if (isDesignAuditBoot) {
       const seed = Bun.spawn(["bun", "scripts/seed-design-audit.ts"], {
         cwd: backendCwd,
@@ -356,6 +190,8 @@ if (import.meta.main) {
       });
       const seedExitCode = await seed.exited;
       if (seedExitCode !== 0) {
+        temporal.kill();
+        await temporal.exited;
         throw new Error(
           `Design-audit database seeding failed with exit code ${seedExitCode.toString()}`,
         );
@@ -376,16 +212,13 @@ if (import.meta.main) {
       stdout: "inherit",
       stderr: "inherit",
     });
-    // Playwright probes the SPA through Vite's backend proxy. Starting Vite
-    // before the backend is ready can leave that first proxy request hanging
-    // for the entire webServer timeout. The audit checkout is immutable, so it
-    // also has no reason to pay for a backend file watcher.
     if (isDesignAuditBoot) {
       try {
         await waitForBackend(backendOrigin, backend);
       } catch (error) {
         backend.kill();
-        await backend.exited;
+        temporal.kill();
+        await Promise.all([backend.exited, temporal.exited]);
         throw error;
       }
     }
@@ -400,11 +233,6 @@ if (import.meta.main) {
         "--port",
         options.webPort.toString(),
         "--strictPort",
-        // Playwright restarts this server between sequential audit shards.
-        // A Vite optimizer process killed with the preceding shard can leave
-        // the shared dependency cache waiting indefinitely before the next
-        // server binds. Re-optimizing made the same live CI checkout ready in
-        // under a second and keeps this lifecycle repair audit-only.
         ...(isDesignAuditBoot ? ["--force"] : []),
       ],
       {
@@ -421,6 +249,7 @@ if (import.meta.main) {
         "Scout local dev is starting",
         `SPA: ${webOrigin}/app/`,
         `Backend: ${backendOrigin}/trpc/`,
+        `Temporal UI: http://127.0.0.1:${options.temporalUiPort.toString()}/`,
         `Database: ${options.databaseUrl}`,
         `Backend watch: ${options.backendWatchEnabled ? "enabled" : "disabled"}`,
         `Auth: ${options.authMode}`,
@@ -435,12 +264,17 @@ if (import.meta.main) {
     const stop = (): void => {
       backend.kill();
       app.kill();
+      temporal.kill();
     };
     process.on("SIGINT", stop);
     process.on("SIGTERM", stop);
-    const exitCode = await Promise.race([backend.exited, app.exited]);
+    const exitCode = await Promise.race([
+      backend.exited,
+      app.exited,
+      temporal.exited,
+    ]);
     stop();
-    await Promise.all([backend.exited, app.exited]);
+    await Promise.all([backend.exited, app.exited, temporal.exited]);
     process.exitCode = exitCode;
   }
 }

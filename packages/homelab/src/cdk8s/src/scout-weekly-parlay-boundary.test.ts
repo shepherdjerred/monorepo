@@ -9,6 +9,7 @@ import {
 const DeploymentSpecSchema = z.object({
   template: z.object({
     spec: z.object({
+      terminationGracePeriodSeconds: z.number().optional(),
       containers: z.array(
         z.object({
           env: z.array(
@@ -26,7 +27,83 @@ const DeploymentSpecSchema = z.object({
   }),
 });
 
-describe("Scout weekly parlay deployment boundary", () => {
+function defineScoutTemporalAccessTests(): void {
+  test.each(["beta", "prod"] as const)(
+    "%s Scout has exact Temporal gRPC access and drain budget",
+    (stage) => {
+      const scout = scoutResources(stage);
+      const deployment = DeploymentSpecSchema.parse(
+        findResource(scout, "Deployment", `scout-${stage}-scout-backend`).spec,
+      );
+      expect(deployment.template.spec.terminationGracePeriodSeconds).toBe(45);
+      expect(deployment.template.spec.containers[0]?.env).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "TEMPORAL_ADDRESS",
+            value:
+              "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
+          }),
+          expect.objectContaining({
+            name: "TEMPORAL_NAMESPACE",
+            value: "default",
+          }),
+        ]),
+      );
+      expect(
+        findResource(scout, "NetworkPolicy", "scout-egress-netpol").spec,
+      ).toEqual(
+        expect.objectContaining({
+          egress: expect.arrayContaining([
+            {
+              to: [
+                {
+                  namespaceSelector: {
+                    matchLabels: {
+                      "kubernetes.io/metadata.name": "temporal",
+                    },
+                  },
+                  podSelector: {
+                    matchLabels: { app: "temporal-server" },
+                  },
+                },
+              ],
+              ports: [{ port: 7233, protocol: "TCP" }],
+            },
+          ]),
+        }),
+      );
+    },
+  );
+}
+
+function defineTemporalIngressTest(): void {
+  test("Temporal admits only the two Scout backend identities on gRPC", () => {
+    const policy = findResource(
+      temporalResources(),
+      "NetworkPolicy",
+      "temporal-server-netpol",
+    );
+    expect(policy.spec).toEqual(
+      expect.objectContaining({
+        ingress: expect.arrayContaining([
+          {
+            from: ["scout-beta", "scout-prod"].map((namespace) => ({
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": namespace,
+                },
+              },
+              podSelector: { matchLabels: { app: "scout-backend" } },
+            })),
+            ports: [{ port: 7233, protocol: "TCP" }],
+          },
+        ]),
+      }),
+    );
+  });
+}
+
+function defineSharedCredentialTest(): void {
   test("shares one 1Password credential with Beta Scout and the core worker", () => {
     const beta = scoutResources("beta");
     const betaDeployment = DeploymentSpecSchema.parse(
@@ -71,7 +148,9 @@ describe("Scout weekly parlay deployment boundary", () => {
       ).toBe(false);
     }
   });
+}
 
+function defineProductionIsolationTest(): void {
   test("keeps the private control endpoint absent from production Scout", () => {
     const prod = scoutResources("prod");
     const deployment = DeploymentSpecSchema.parse(
@@ -90,7 +169,9 @@ describe("Scout weekly parlay deployment boundary", () => {
       ),
     ).toBe(false);
   });
+}
 
+function defineLegacyWorkerIngressTest(): void {
   test("allows the Scout and legacy Temporal workers to reach Beta Scout", () => {
     const beta = scoutResources("beta");
     const policy = findResource(beta, "NetworkPolicy", "scout-ingress-netpol");
@@ -191,4 +272,12 @@ describe("Scout weekly parlay deployment boundary", () => {
       }),
     );
   });
+}
+
+describe("Scout weekly parlay deployment boundary", () => {
+  defineScoutTemporalAccessTests();
+  defineTemporalIngressTest();
+  defineSharedCredentialTest();
+  defineProductionIsolationTest();
+  defineLegacyWorkerIngressTest();
 });

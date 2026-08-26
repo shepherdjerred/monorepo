@@ -84,6 +84,7 @@ COPY --parents \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/design-system \
   packages/scout-for-lol/packages/report \
+  packages/scout-for-lol/packages/temporal \
   packages/config \
   packages/feature-flags \
   packages/llm-models \

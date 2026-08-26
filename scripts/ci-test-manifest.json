@@ -464,6 +464,23 @@
       ]
     },
     {
+      "package": "@scout-for-lol/temporal",
+      "directory": "packages/scout-for-lol/packages/temporal",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src", "--exclude", "src/workflows/*.test.ts"]
+        },
+        {
+          "runner": "vitest",
+          "name": "workflows",
+          "runtime": "node",
+          "runtimeReason": "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
+          "args": ["src/workflows", "--no-file-parallelism"]
+        }
+      ]
+    },
+    {
       "package": "starlight-karma-bot",
       "directory": "packages/starlight-karma-bot",
       "steps": [

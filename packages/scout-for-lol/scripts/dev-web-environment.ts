@@ -3,6 +3,8 @@ export type DevAuthMode = "dev-login" | "oauth";
 export type DevWebOptions = {
   readonly backendPort: number;
   readonly webPort: number;
+  readonly temporalPort: number;
+  readonly temporalUiPort: number;
   readonly databaseUrl: string;
   readonly discordGatewayEnabled: boolean;
   readonly backendWatchEnabled: boolean;
@@ -12,6 +14,16 @@ export type DevWebOptions = {
   readonly consumerPreview: boolean;
   readonly consumerGuildId: string | undefined;
 };
+
+export function devWebOrigins(options: DevWebOptions): {
+  readonly backendOrigin: string;
+  readonly webOrigin: string;
+} {
+  return {
+    backendOrigin: `http://127.0.0.1:${options.backendPort.toString()}`,
+    webOrigin: `http://localhost:${options.webPort.toString()}`,
+  };
+}
 
 function parseBoolean(
   value: string | undefined,

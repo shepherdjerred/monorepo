@@ -1,13 +1,13 @@
 ---
 title: Temporal schedule mechanics
-description: How the ~30 cron schedules are defined, reconciled, paused, deleted, and caught up after an outage.
+description: How cron and interval schedules are defined, reconciled, paused, deleted, and caught up after an outage.
 sidebar:
   order: 2
 ---
 
 All recurring automation is a single `SCHEDULES` array in
 [`schedule-definitions.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-definitions.ts).
-Every worker boot upserts the whole fleet — currently about 30 schedules.
+Every worker boot upserts the whole fleet.
 
 [`register-schedules.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/register-schedules.ts)
 owns reconciliation and the explicit `DELETED_SCHEDULE_IDS` allowlist.
@@ -17,14 +17,15 @@ For the list of what runs and when, see
 
 ## Schedule properties
 
-| Property        | Value                                                               |
-| --------------- | ------------------------------------------------------------------- |
-| Timezone        | `America/Los_Angeles`, wall-clock                                   |
-| Overlap policy  | `SKIP` by default; the weekly Scout parlay uses `ALLOW_ALL`         |
-| Reconciliation  | upsert of every schedule at each worker boot                        |
-| Source of truth | the `SCHEDULES` array in code; a PR is the change process           |
-| Deletion        | explicit — add the schedule ID to the deletion list                 |
-| Orphan drift    | a metric is exported for any server schedule code no longer defines |
+| Property        | Value                                                                |
+| --------------- | -------------------------------------------------------------------- |
+| Timing          | Cron with an IANA timezone, or a fixed interval with optional offset |
+| Timezone        | Declared per cron schedule; interval schedules do not use a timezone |
+| Overlap policy  | `SKIP` by default; the weekly Scout parlay uses `ALLOW_ALL`          |
+| Reconciliation  | upsert of every schedule at each worker boot                         |
+| Source of truth | the `SCHEDULES` array in code; a PR is the change process            |
+| Deletion        | explicit — add the schedule ID to the deletion list                  |
+| Orphan drift    | a metric is exported for any server schedule code no longer defines  |
 
 ## Pause behaviour
 
@@ -42,10 +43,11 @@ period key, and a delayed prior finalization must not suppress the next market.
 
 ## Catchup windows
 
-| Schedule class              | Catchup window |
-| --------------------------- | -------------- |
-| Most schedules              | 1 hour         |
-| Time-of-day home automation | 5 minutes      |
+| Schedule class                       | Catchup window |
+| ------------------------------------ | -------------- |
+| Most schedules and Scout maintenance | 1 hour         |
+| Time-of-day home automation          | 5 minutes      |
+| Scout latest-state polling           | 5 minutes      |
 
 Home automation is deliberately tight: a 09:00 vacuum run should not fire at
 noon after an outage.

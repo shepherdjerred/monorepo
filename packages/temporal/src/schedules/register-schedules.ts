@@ -11,10 +11,6 @@ import type { CatchupWindow, ScheduleDefinition } from "./schedule-types.ts";
 // #schedules/schedule-definitions.ts directly, not from this file — no
 // re-export here (custom-rules/no-re-exports).
 
-// All cron expressions in schedule-definitions.ts are wall-clock local time
-// for the homelab.
-const SCHEDULE_TIMEZONE = "America/Los_Angeles";
-
 // Schedules whose workflow type was removed from the bundle. registerSchedules
 // deletes these on startup so they stop firing and failing. Explicit removal
 // allow-list — NOT a blind prune of "anything not in SCHEDULES", which would
@@ -76,10 +72,22 @@ export function buildSchedulePolicies(schedule: ScheduleDefinition): {
 
 function buildScheduleConfiguration(schedule: ScheduleDefinition) {
   return {
-    spec: {
-      cronExpressions: [schedule.cronExpression],
-      timezone: SCHEDULE_TIMEZONE,
-    },
+    spec:
+      schedule.timing.kind === "cron"
+        ? {
+            cronExpressions: [schedule.timing.expression],
+            timezone: schedule.timing.timezone,
+          }
+        : {
+            intervals: [
+              {
+                every: schedule.timing.every,
+                ...(schedule.timing.offset === undefined
+                  ? {}
+                  : { offset: schedule.timing.offset }),
+              },
+            ],
+          },
     action: {
       type: "startWorkflow" as const,
       workflowType: schedule.workflowType,

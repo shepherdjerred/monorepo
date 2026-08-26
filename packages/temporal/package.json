@@ -61,6 +61,7 @@
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
+    "@scout-for-lol/temporal": "workspace:*",
     "@temporalio/activity": "1.22.0",
     "@temporalio/client": "1.22.0",
     "@temporalio/common": "1.22.0",

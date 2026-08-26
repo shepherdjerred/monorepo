@@ -20,6 +20,8 @@ test("parses isolated ports and database URL", () => {
     options: {
       backendPort: 3001,
       webPort: 5181,
+      temporalPort: 7234,
+      temporalUiPort: 8234,
       databaseUrl: "postgres://scout@127.0.0.1:5471/agent_one",
       discordGatewayEnabled: true,
       backendWatchEnabled: true,
@@ -42,6 +44,8 @@ test("derives an isolated database for a non-default backend port", () => {
     options: {
       backendPort: 3001,
       webPort: 5181,
+      temporalPort: 7234,
+      temporalUiPort: 8234,
       databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3001",
       discordGatewayEnabled: true,
       backendWatchEnabled: true,
@@ -74,6 +78,8 @@ test("supports a stable secondary copy without the BETA gateway", () => {
     options: {
       backendPort: 3001,
       webPort: 5180,
+      temporalPort: 7234,
+      temporalUiPort: 8234,
       databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3001",
       discordGatewayEnabled: false,
       backendWatchEnabled: false,
@@ -102,6 +108,8 @@ test("configures alternate surface origins for a second stack", () => {
     options: {
       backendPort: 3000,
       webPort: 5180,
+      temporalPort: 7233,
+      temporalUiPort: 8233,
       databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3000",
       discordGatewayEnabled: true,
       backendWatchEnabled: true,

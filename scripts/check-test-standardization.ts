@@ -103,13 +103,18 @@ function isExpectedTemporalWorkflowStep(
   step: VitestTestStep,
 ): boolean {
   return (
-    packageName === "@shepherdjerred/temporal" &&
-    step.args?.length === 4 &&
-    step.args[0] === "src/workflows" &&
-    step.args[1] === "--exclude" &&
-    step.args[2] === "src/workflows/agent-task.test.ts" &&
-    step.args[3] === "--no-file-parallelism" &&
-    step.runtimeReason !== undefined
+    (packageName === "@shepherdjerred/temporal" &&
+      step.args?.length === 4 &&
+      step.args[0] === "src/workflows" &&
+      step.args[1] === "--exclude" &&
+      step.args[2] === "src/workflows/agent-task.test.ts" &&
+      step.args[3] === "--no-file-parallelism" &&
+      step.runtimeReason !== undefined) ||
+    (packageName === "@scout-for-lol/temporal" &&
+      step.args?.length === 2 &&
+      step.args[0] === "src/workflows" &&
+      step.args[1] === "--no-file-parallelism" &&
+      step.runtimeReason !== undefined)
   );
 }
 

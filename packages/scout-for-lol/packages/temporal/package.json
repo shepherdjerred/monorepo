@@ -1,0 +1,43 @@
+{
+  "name": "@scout-for-lol/temporal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./activities": "./src/activities.ts",
+    "./contracts": "./src/contracts.ts",
+    "./identifiers": "./src/identifiers.ts",
+    "./workflows": "./src/workflows/index.ts"
+  },
+  "scripts": {
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "bun x eslint src",
+    "format": "bun x prettier --check src package.json tsconfig.json",
+    "test": "bun run test:ci",
+    "test:bun": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run src --exclude 'src/workflows/*.test.ts'",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts"
+  },
+  "dependencies": {
+    "@temporalio/common": "1.22.0",
+    "@temporalio/workflow": "1.22.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@scout-for-lol/data": "workspace:*",
+    "@temporalio/activity": "1.22.0",
+    "@temporalio/testing": "1.22.0",
+    "@temporalio/worker": "1.22.0",
+    "@types/node": "^26.1.1",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "bun-types": "1.4.0",
+    "eslint": "^10.3.0",
+    "typescript": "^6.0.3",
+    "vitest": "4.1.10"
+  }
+}

@@ -4,7 +4,9 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 import { EARLY_SCHEDULES } from "./schedule-definitions-early.ts";
 import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
+import { SECURITY_SCHEDULES } from "./security-schedule-definitions.ts";
 import type { ScheduleDefinition } from "./schedule-types.ts";
+import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -47,11 +49,16 @@ export const WEEKLY_PARLAY_CRON_EXPRESSION = `0 ${WEEKLY_PARLAY_LIFECYCLE.openHo
 // call site.
 export const SCHEDULES: ScheduleDefinition[] = [
   ...EARLY_SCHEDULES,
+  ...SCOUT_SCHEDULES,
   {
     id: "kometa-daily",
     workflowType: "runKometaWorkflow",
     args: [],
-    cronExpression: "30 4 * * *",
+    timing: {
+      kind: "cron",
+      expression: "30 4 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
@@ -62,7 +69,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "scout-data-dragon-version-check",
     workflowType: "runScoutDataDragonVersionCheck",
     args: [],
-    cronExpression: "0 6 * * 0-5",
+    timing: {
+      kind: "cron",
+      expression: "0 6 * * 0-5",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Must exceed updateDataDragon's full retry budget so the final attempt's
@@ -77,7 +88,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "scout-data-dragon-weekly-refresh",
     workflowType: "runScoutDataDragonWeeklyRefresh",
     args: [],
-    cronExpression: "0 6 * * 6",
+    timing: {
+      kind: "cron",
+      expression: "0 6 * * 6",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // See scout-data-dragon-version-check above: sized to exceed
@@ -90,7 +105,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "scout-lane-priors-weekly-refresh",
     workflowType: "runScoutLanePriorsWeeklyRefresh",
     args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
-    cronExpression: "0 7 * * 6",
+    timing: {
+      kind: "cron",
+      expression: "0 7 * * 6",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "4 hours",
@@ -102,7 +121,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     args: [],
     // 09:00 PT every Monday — staggered after scout-season-refresh (07:00)
     // so the weekly PR-opening jobs don't contend for the worker pod at once.
-    cronExpression: "0 9 * * 1",
+    timing: {
+      kind: "cron",
+      expression: "0 9 * * 1",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
@@ -112,7 +135,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "scout-season-refresh-weekly",
     workflowType: "runScoutSeasonRefreshWorkflow",
     args: [],
-    cronExpression: "0 7 * * 1",
+    timing: {
+      kind: "cron",
+      expression: "0 7 * * 1",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Two 30-minute research attempts, their 5-minute backoff, and both
@@ -128,7 +155,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // NoSuchKey failure means a manifest-referenced S3 object vanished
     // despite the scout-image-gc showcase exemption — re-curate the manifest
     // (scout AGENTS.md runbook) rather than retrying.
-    cronExpression: "0 10 * * 1",
+    timing: {
+      kind: "cron",
+      expression: "0 10 * * 1",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "60 minutes",
@@ -141,7 +172,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // Sunday 12:00 PT. The workflow remains open through the following Sunday
     // 11:00 PT and owns the reminder, start, six progress updates, and final
     // reconciliation for one immutable period/slot.
-    cronExpression: WEEKLY_PARLAY_CRON_EXPRESSION,
+    timing: {
+      kind: "cron",
+      expression: WEEKLY_PARLAY_CRON_EXPRESSION,
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     // Preserve the full Sunday betting window when Temporal itself is down.
     catchupWindow: CATCHUP_WEEKLY_PARLAY,
@@ -160,7 +195,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "scout-bryan-bucks-analytics",
     workflowType: "runScoutBryanBucksAnalyticsWorkflow",
     args: [],
-    cronExpression: "*/15 * * * *",
+    timing: {
+      kind: "cron",
+      expression: "*/15 * * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "5 minutes",
@@ -179,7 +218,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // drift; opens an auto-merging PR for window opens/reopens, a plain PR
     // for closes (a human confirms against patch notes), and emails
     // warnings-only runs. Steady state still sends a concise clear heartbeat.
-    cronExpression: "45 6 * * *",
+    timing: {
+      kind: "cron",
+      expression: "45 6 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // The two 30-minute scan attempts plus 2-minute backoff consume 62 minutes.
@@ -192,7 +235,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "scout-competition-updates-minute",
     workflowType: "runScoutCompetitionUpdatesWorkflow",
     args: [],
-    cronExpression: "* * * * *",
+    timing: {
+      kind: "cron",
+      expression: "* * * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: CATCHUP_TIGHT,
@@ -205,7 +252,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "zfs-maintenance-weekly",
     workflowType: "runZfsMaintenanceWorkflow",
     args: [],
-    cronExpression: "0 3 * * 0",
+    timing: {
+      kind: "cron",
+      expression: "0 3 * * 0",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
@@ -215,7 +266,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "buildkite-uv-cache-prune-weekly",
     workflowType: "runUvCachePruneWorkflow",
     args: [],
-    cronExpression: "15 3 * * 0",
+    timing: {
+      kind: "cron",
+      expression: "15 3 * * 0",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
@@ -226,59 +281,27 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "buildkite-trivy-db-refresh",
     workflowType: "runTrivyDbRefreshWorkflow",
     args: [],
-    cronExpression: "30 */6 * * *",
+    timing: {
+      kind: "cron",
+      expression: "30 */6 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "2 hours",
     memo: "Buildkite Trivy vulnerability database refresh every six hours",
   },
-  {
-    id: "main-vuln-scan-weekly",
-    workflowType: "runMainVulnScanWorkflow",
-    args: [],
-    // Sun 05:00 PT — after the 03:00–04:30 maintenance window and clear of the
-    // six-hourly trivy-db-refresh slots (:30 past 0/6/12/18), so the scan reads
-    // a database refreshed at 00:30 and never queues behind the refresh writer.
-    cronExpression: "0 5 * * 0",
-    taskQueue: TASK_QUEUES.MAINTENANCE,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // Three 20-minute scan attempts plus backoff, then report delivery and the
-    // Alertmanager publish with their own three-attempt budgets.
-    workflowExecutionTimeout: "2 hours",
-    memo: "Weekly Trivy HIGH/CRITICAL vulnerability scan of main (warm Buildkite Trivy DB) with report delivery; CRITICAL findings page via Alertmanager",
-  },
-  {
-    id: "link-rot-scan-weekly",
-    workflowType: "runLinkRotScanWorkflow",
-    args: [],
-    // Sun 09:00 PT. The scan activity contends for the maintenance worker's
-    // SINGLE activity slot, so this is staggered past the worst case of every
-    // sibling on that queue rather than merely past their start times:
-    // uv-cache-prune (03:15 +2h), kometa (04:30 +2h), main-vuln-scan
-    // (05:00 +2h → 07:00), and the 06:30 trivy-db-refresh (+2h → 08:30). The
-    // every-5-minute bun-cache-gc is short and skips while the slot is busy.
-    cronExpression: "0 9 * * 0",
-    // Start on the maintenance queue so no active schedule targets the
-    // migration-only default queue. The workflow's report and Alertmanager
-    // activities remain explicitly proxied to DEFAULT.
-    taskQueue: TASK_QUEUES.MAINTENANCE,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // Must cover this workflow's own budget PLUS worst-case time queued behind
-    // another maintenance activity, because the deadline runs while the scan
-    // waits for the slot. Own budget is ~78m (three 20m scan attempts + 3m
-    // backoff, then delivery and alert retries); 4h leaves ~2.5h of queueing
-    // headroom so a long-running sibling cannot time this out before it has
-    // delivered its report. SKIP overlap and the weekly cadence make the wide
-    // ceiling harmless.
-    workflowExecutionTimeout: "4 hours",
-    memo: "Weekly lychee link-rot scan of main's tracked markdown (root lychee.toml) with report delivery; automates the rot-detection half of the link-liveness rule",
-  },
+  ...SECURITY_SCHEDULES,
   {
     id: "bugsink-housekeeping",
     workflowType: "runBugsinkHousekeepingWorkflow",
     args: [],
-    cronExpression: "0 3 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 3 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
@@ -290,7 +313,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     args: [{ retentionDays: 30, dryRun: false }],
     // 04:00 PT — after the 03:00 bugsink/zfs maintenance window so the nightly
     // destructive jobs don't contend for the worker pod at once.
-    cronExpression: "0 4 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 4 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.SCOUT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // First run sweeps ~110k objects and deletes ~38k; steady-state runs finish
@@ -310,7 +337,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // 04:15 PT — after the maintenance window starts and before the other
     // data-refresh jobs. The dedicated queue enforces one Discord request at
     // a time regardless of other Temporal activity traffic.
-    cronExpression: "15 4 * * *",
+    timing: {
+      kind: "cron",
+      expression: "15 4 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.GLITTER_CORPUS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "6 hours",
@@ -329,7 +360,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runGlitterContextRefresh",
     args: [{ maxEstimatedCostUsd: 40 }],
     // Monday 11:00 PT, isolated from Discord capture and after other PR jobs.
-    cronExpression: "0 11 * * 1",
+    timing: {
+      kind: "cron",
+      expression: "0 11 * * 1",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
     overlap: ScheduleOverlapPolicy.SKIP,
     // The activity allows two complete 7h attempts separated by a 2m
@@ -354,7 +389,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     args: [],
     // 03:30 PT — staggered after zfs-maintenance so the audit captures a
     // stable post-backup state.
-    cronExpression: "30 3 * * *",
+    timing: {
+      kind: "cron",
+      expression: "30 3 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.INFRA,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
@@ -366,7 +405,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     args: [],
     // Every 6 hours — frequent enough to catch same-day review latency
     // patterns without hammering the GitHub API on every recent PR.
-    cronExpression: "0 */6 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 */6 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Must fit the activity's FULL retry budget, not one attempt: the
@@ -382,7 +425,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "golink-sync",
     workflowType: "syncGolinks",
     args: [],
-    cronExpression: "0 5 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 5 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "4 minutes",
@@ -392,7 +439,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "vacuum-9am",
     workflowType: "runVacuumIfNotHome",
     args: [],
-    cronExpression: "0 9 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 9 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
@@ -404,7 +455,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "vacuum-12pm",
     workflowType: "runVacuumIfNotHome",
     args: [],
-    cronExpression: "0 12 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 12 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
@@ -416,7 +471,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "vacuum-5pm",
     workflowType: "runVacuumIfNotHome",
     args: [],
-    cronExpression: "0 17 * * *",
+    timing: {
+      kind: "cron",
+      expression: "0 17 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
@@ -434,7 +493,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "good-morning-weekday-preheat",
     workflowType: "goodMorningPreheat",
     args: [],
-    cronExpression: "45 5 * * 1-5",
+    timing: {
+      kind: "cron",
+      expression: "45 5 * * 1-5",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "240 minutes",
@@ -445,7 +508,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "good-morning-weekday-wake",
     workflowType: "goodMorningWakeUp",
     args: [],
-    cronExpression: "0 8 * * 1-5",
+    timing: {
+      kind: "cron",
+      expression: "0 8 * * 1-5",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // goodMorningWakeUp still runs its 60-minute heat window (MORNING_HEAT_DURATION)
@@ -458,7 +525,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "good-morning-weekday-up",
     workflowType: "goodMorningGetUp",
     args: [],
-    cronExpression: "15 8 * * 1-5",
+    timing: {
+      kind: "cron",
+      expression: "15 8 * * 1-5",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
@@ -470,7 +541,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "good-morning-weekend-preheat",
     workflowType: "goodMorningPreheat",
     args: [],
-    cronExpression: "45 6 * * 0,6",
+    timing: {
+      kind: "cron",
+      expression: "45 6 * * 0,6",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "240 minutes",
@@ -481,7 +556,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "good-morning-weekend-wake",
     workflowType: "goodMorningWakeUp",
     args: [],
-    cronExpression: "0 9 * * 0,6",
+    timing: {
+      kind: "cron",
+      expression: "0 9 * * 0,6",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     // goodMorningWakeUp still runs its 60-minute heat window (MORNING_HEAT_DURATION)
@@ -494,7 +573,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "good-morning-weekend-up",
     workflowType: "goodMorningGetUp",
     args: [],
-    cronExpression: "15 9 * * 0,6",
+    timing: {
+      kind: "cron",
+      expression: "15 9 * * 0,6",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.HOME,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
@@ -508,7 +591,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // Every 5 minutes. The activity looks back 24 hours so a worker outage can
     // be recovered by the next poll; the matching alert TTL prevents duplicate
     // pages for executions observed again after recovery.
-    cronExpression: "*/5 * * * *",
+    timing: {
+      kind: "cron",
+      expression: "*/5 * * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.REPORTS,
     overlap: ScheduleOverlapPolicy.SKIP,
     // Covers the activity's full 3-attempt retry budget (3x 2m + ~30s
