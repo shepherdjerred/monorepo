@@ -136,7 +136,7 @@ describe("captureDiscordCommandUsed", () => {
     const analytics: ProductAnalytics = {
       capture,
       captureBucksMember: () => null,
-      captureBucksSystem: () => null,
+      captureBucksSystem: () => true,
       shutdown: () => Promise.resolve(),
     };
 

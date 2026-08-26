@@ -117,12 +117,12 @@ export function captureBucksEconomy(input: {
   timestamp?: Date;
   uuid?: string;
   analytics?: ProductAnalytics;
-}): void {
+}): boolean {
   const serverId = DiscordGuildIdSchema.safeParse(input.serverId);
-  if (!serverId.success) return;
+  if (!serverId.success) return false;
 
   const analytics = input.analytics ?? getProductAnalytics();
-  analytics.captureBucksSystem(
+  return analytics.captureBucksSystem(
     serverId.data,
     {
       event: "bryan_bucks_economy",
@@ -146,12 +146,12 @@ export function captureBucksEconomySnapshot(input: {
   timestamp?: Date;
   uuid?: string;
   analytics?: ProductAnalytics;
-}): void {
+}): boolean {
   const serverId = DiscordGuildIdSchema.safeParse(input.serverId);
-  if (!serverId.success) return;
+  if (!serverId.success) return false;
 
   const analytics = input.analytics ?? getProductAnalytics();
-  analytics.captureBucksSystem(
+  return analytics.captureBucksSystem(
     serverId.data,
     {
       event: "bryan_bucks_economy_snapshot",

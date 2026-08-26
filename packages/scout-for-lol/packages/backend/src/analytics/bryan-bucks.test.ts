@@ -127,7 +127,7 @@ describe("Bryan Bucks analytics", () => {
     const analytics: ProductAnalytics = {
       capture: () => null,
       captureBucksMember,
-      captureBucksSystem: () => null,
+      captureBucksSystem: () => true,
       shutdown: () => Promise.resolve(),
     };
     await prisma.bucksAccount.create({

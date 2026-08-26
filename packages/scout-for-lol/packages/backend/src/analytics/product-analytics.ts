@@ -168,7 +168,7 @@ export type ProductAnalytics = {
     serverId: string,
     event: BucksSystemAnalyticsEvent,
     options?: ProductAnalyticsEventOptions,
-  ) => void;
+  ) => boolean;
   flush?: () => Promise<boolean>;
   shutdown: () => Promise<void>;
 };
@@ -244,7 +244,7 @@ export function createProductAnalytics(options: {
         return;
       },
       captureBucksSystem() {
-        return;
+        return true;
       },
       shutdown() {
         return Promise.resolve();
@@ -326,7 +326,7 @@ export function createProductAnalytics(options: {
       });
     },
     captureBucksSystem(serverId, event, eventOptions) {
-      capture({
+      return capture({
         distinctId: `${analyticsConfiguration.siteKey}:bryan-bucks-system`,
         serverId,
         event,
