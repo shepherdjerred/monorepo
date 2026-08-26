@@ -95,7 +95,7 @@
     },
     "packages/astro-opengraph-images": {
       "name": "astro-opengraph-images",
-      "version": "1.19.0",
+      "version": "1.20.0",
       "dependencies": {
         "@resvg/resvg-js": "^2.6.2",
         "jsdom": "^30.0.0",
@@ -866,7 +866,7 @@
     },
     "packages/homelab/src/helm-types": {
       "name": "@shepherdjerred/helm-types",
-      "version": "1.6.0",
+      "version": "1.7.0",
       "bin": {
         "helm-types": "dist/cli.js",
       },
@@ -1549,6 +1549,7 @@
       "devDependencies": {
         "@scout-for-lol/data": "workspace:*",
         "@temporalio/activity": "1.22.0",
+        "@temporalio/client": "1.22.0",
         "@temporalio/testing": "1.22.0",
         "@temporalio/worker": "1.22.0",
         "@types/node": "^26.1.1",
