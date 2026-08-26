@@ -189,10 +189,6 @@ homekit:
   # The Reolink integration and its entities remain available in HA for
   # dashboards and automations.
 
-http:
-  use_x_forwarded_for: true
-  trusted_proxies:
-    - 0.0.0.0/0
 sonos:
   media_player:
     advertise_addr: 192.168.1.81
