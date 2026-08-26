@@ -9,6 +9,7 @@ import {
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
 import {
+  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   ReportIdSchema,
   ReportRunIdSchema,
@@ -136,8 +137,14 @@ export async function deliverStoredScheduledReport(
   }
   const deliveryReport = {
     ...report,
-    channelId: run.deliveryChannelId ?? report.channelId,
-    serverId: run.deliveryServerId ?? run.serverId,
+    channelId:
+      run.deliveryChannelId === null
+        ? report.channelId
+        : DiscordChannelIdSchema.parse(run.deliveryChannelId),
+    serverId:
+      run.deliveryServerId === null
+        ? report.serverId
+        : DiscordGuildIdSchema.parse(run.deliveryServerId),
   };
   const imageBytes =
     run.imageS3Key === null
@@ -274,8 +281,14 @@ async function deliverPendingReportRun(input: {
   }
   const deliveryReport = {
     ...input.report,
-    channelId: input.run.deliveryChannelId ?? input.report.channelId,
-    serverId: input.run.deliveryServerId ?? input.run.serverId,
+    channelId:
+      input.run.deliveryChannelId === null
+        ? input.report.channelId
+        : DiscordChannelIdSchema.parse(input.run.deliveryChannelId),
+    serverId:
+      input.run.deliveryServerId === null
+        ? input.report.serverId
+        : DiscordGuildIdSchema.parse(input.run.deliveryServerId),
   };
   const imageBytes =
     input.run.imageS3Key === null
