@@ -430,6 +430,7 @@
     "kubeconform",
     "kubectl",
     "mktemp",
+    "mise",
     "op",
     "pinchtab",
     "swift",

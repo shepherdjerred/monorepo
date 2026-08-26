@@ -11,6 +11,8 @@
     "test:report": "CI_TEST_COVERAGE=1 bun run-ci-test.ts"
   },
   "dependencies": {
+    "@temporalio/client": "1.22.0",
+    "@temporalio/worker": "1.22.0",
     "@anthropic-ai/claude-agent-sdk": "0.3.241",
     "@openai/codex-sdk": "0.149.0",
     "@shepherdjerred/code-review": "workspace:*",

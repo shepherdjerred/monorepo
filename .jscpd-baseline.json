@@ -1748,10 +1748,6 @@
       "clones": 1,
       "tokens": 158
     },
-    "packages/temporal/scripts/test-workflows.ts|scripts/run-ci-test.ts": {
-      "clones": 1,
-      "tokens": 76
-    },
     "packages/temporal/src/activities/agent-task-env.ts|packages/temporal/src/activities/agent-task-env.ts": {
       "clones": 1,
       "tokens": 71
@@ -1949,5 +1945,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-26T02:27:37.431Z"
+  "updated": "2026-08-26T03:29:21.520Z"
 }
