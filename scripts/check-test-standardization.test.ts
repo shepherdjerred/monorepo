@@ -85,5 +85,14 @@ describe("test standardization guard", () => {
         },
       ]),
     ).toHaveLength(1);
+    expect(
+      manifestStepViolations("other-package", [
+        {
+          runner: "command",
+          name: "custom test suite",
+          command: ["bun", "run", "custom-test-suite"],
+        },
+      ]),
+    ).toEqual([]);
   });
 });

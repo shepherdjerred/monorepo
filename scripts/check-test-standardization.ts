@@ -17,6 +17,8 @@ type PackageManifest = {
   scripts?: Record<string, string> | undefined;
 };
 
+type VitestTestStep = Extract<TestStep, { runner: "vitest" }>;
+
 const RootPackageSchema = z.object({ workspaces: z.array(z.string()) });
 const PackageManifestSchema = z.object({
   name: z.string().optional(),
@@ -70,17 +72,7 @@ export function manifestStepViolations(
 ): string[] {
   const violations: string[] = [];
   for (const step of steps) {
-    if (
-      step.runner === "vitest" &&
-      step.runtime === "node" &&
-      (packageName !== "@shepherdjerred/temporal" ||
-        step.args?.length !== 4 ||
-        step.args[0] !== "src/workflows" ||
-        step.args[1] !== "--exclude" ||
-        step.args[2] !== "src/workflows/agent-task.test.ts" ||
-        step.args[3] !== "--no-file-parallelism" ||
-        step.runtimeReason === undefined)
-    ) {
+    if (isInvalidNodeHostedVitestStep(packageName, step)) {
       violations.push(
         `scripts/ci-test-manifest.json (${packageName}): Node-hosted Vitest is restricted to Temporal SDK workflow tests with an explicit reason`,
       );
@@ -96,6 +88,29 @@ export function manifestStepViolations(
     }
   }
   return violations;
+}
+
+function isInvalidNodeHostedVitestStep(
+  packageName: string,
+  step: TestStep,
+): boolean {
+  if (step.runner !== "vitest" || step.runtime !== "node") return false;
+  return !isExpectedTemporalWorkflowStep(packageName, step);
+}
+
+function isExpectedTemporalWorkflowStep(
+  packageName: string,
+  step: VitestTestStep,
+): boolean {
+  return (
+    packageName === "@shepherdjerred/temporal" &&
+    step.args?.length === 4 &&
+    step.args[0] === "src/workflows" &&
+    step.args[1] === "--exclude" &&
+    step.args[2] === "src/workflows/agent-task.test.ts" &&
+    step.args[3] === "--no-file-parallelism" &&
+    step.runtimeReason !== undefined
+  );
 }
 
 async function main(): Promise<void> {
