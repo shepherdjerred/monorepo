@@ -64,6 +64,7 @@
     "check-floating-deps": "bun scripts/check-floating-deps.ts",
     "check-patched-deps": "bun scripts/check-patched-deps.ts",
     "check-ci-env": "bun scripts/check-ci-env.ts",
+    "check-flipt-flag-inventory": "bun scripts/check-flipt-flag-inventory.ts",
     "check-script-migrations": "bun scripts/check-script-migrations.ts",
     "check-test-standardization": "bun scripts/check-test-standardization.ts",
     "script-coverage": "bun scripts/check-script-coverage.ts"

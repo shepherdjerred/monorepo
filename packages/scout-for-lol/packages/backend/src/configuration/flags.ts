@@ -278,6 +278,8 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   },
 };
 
+export const POLICY_FLAG_NAMES = Object.keys(FLAG_REGISTRY);
+
 /**
  * The overrides each flag was declared with, captured at module load.
  *

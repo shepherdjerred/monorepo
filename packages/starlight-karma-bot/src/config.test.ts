@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, test } from "vitest";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
+import { managedFlagInventory } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import {
+  DYNAMIC_FLAG_NAMES,
   describeDynamicConfig,
   initializeConfig,
   karmaAdminUserId,
@@ -15,6 +17,14 @@ afterEach(async () => {
 });
 
 describe("dynamic config", () => {
+  test("covers exactly the Karma entries in the managed inventory", () => {
+    const expected = managedFlagInventory.flags
+      .filter((flag) => flag.owner === "starlight-karma-bot")
+      .map((flag) => flag.key)
+      .sort();
+    expect([...DYNAMIC_FLAG_NAMES].sort()).toEqual(expected);
+  });
+
   test("falls back to the declared default with no flag and no env", async () => {
     await initializeConfig({ environment: DISABLED });
     await expect(karmaEmoji("guild-1")).resolves.toBe("⭐");
