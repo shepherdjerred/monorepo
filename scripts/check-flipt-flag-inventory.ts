@@ -32,11 +32,11 @@ const SnapshotSchema = z.object({ flags: z.array(SnapshotFlagSchema) });
 function argument(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);
   const value = Bun.argv[index + 1];
-  return index >= 0 && value !== undefined ? value : undefined;
+  return index !== -1 && value !== undefined ? value : undefined;
 }
 
 function requiredUrl(): string {
-  const url = argument("--url") ?? Bun.env.FLIPT_URL;
+  const url = argument("--url") ?? Bun.env["FLIPT_URL"];
   if (url === undefined || url.length === 0) {
     throw new Error(
       "FLIPT_URL or --url is required; this operator-only check never guesses a Flipt endpoint",
@@ -60,18 +60,72 @@ function normalizeRollouts(
   );
 }
 
-function expectedDefault(flag: (typeof managedFlagInventory.flags)[number]) {
-  return flag.default;
+type ManagedFlag = (typeof managedFlagInventory.flags)[number];
+type SnapshotFlag = z.infer<typeof SnapshotFlagSchema>;
+
+function keySetError(
+  expectedByKey: Map<string, ManagedFlag>,
+  actualByKey: Map<string, SnapshotFlag>,
+): string | undefined {
+  const expectedKeys = [...expectedByKey.keys()].sort();
+  const actualKeys = [...actualByKey.keys()].sort();
+  if (JSON.stringify(expectedKeys) === JSON.stringify(actualKeys)) {
+    return undefined;
+  }
+  const missing = expectedKeys.filter((key) => !actualByKey.has(key));
+  const unexpected = actualKeys.filter((key) => !expectedByKey.has(key));
+  return `key set mismatch: expected ${expectedKeys.length.toString()}, got ${actualKeys.length.toString()}; missing=${missing.join(",") || "none"}; unexpected=${unexpected.join(",") || "none"}`;
+}
+
+function flagErrors(expected: ManagedFlag, actual: SnapshotFlag): string[] {
+  const actualType =
+    actual.type === "BOOLEAN_FLAG_TYPE" ? "boolean" : "variant";
+  if (actualType !== expected.type) {
+    return [
+      `${expected.key}: expected type ${expected.type}, got ${actualType}`,
+    ];
+  }
+
+  const actualDefault =
+    expected.type === "boolean" ? actual.enabled : actual.defaultVariant?.key;
+  const errors: string[] = [];
+  if (actualDefault !== expected.default) {
+    errors.push(
+      `${expected.key}: expected default ${JSON.stringify(expected.default)}, got ${JSON.stringify(actualDefault)}`,
+    );
+  }
+  const actualRollouts = normalizeRollouts(actual.rollouts);
+  if (JSON.stringify(actualRollouts) !== JSON.stringify(expected.rollouts)) {
+    errors.push(
+      `${expected.key}: rollout contract mismatch; expected ${JSON.stringify(expected.rollouts)}, got ${JSON.stringify(actualRollouts)}`,
+    );
+  }
+  return errors;
+}
+
+function compareSnapshot(snapshot: z.infer<typeof SnapshotSchema>): string[] {
+  const expectedByKey = new Map(
+    managedFlagInventory.flags.map((flag) => [flag.key, flag]),
+  );
+  const actualByKey = new Map(snapshot.flags.map((flag) => [flag.key, flag]));
+  const errors = keySetError(expectedByKey, actualByKey);
+  return [
+    ...(errors === undefined ? [] : [errors]),
+    ...managedFlagInventory.flags.flatMap((expected) => {
+      const actual = actualByKey.get(expected.key);
+      return actual === undefined ? [] : flagErrors(expected, actual);
+    }),
+  ];
 }
 
 async function main(): Promise<void> {
   const namespace =
     argument("--namespace") ??
-    Bun.env.FLIPT_NAMESPACE ??
+    Bun.env["FLIPT_NAMESPACE"] ??
     managedFlagInventory.namespace;
   const environment =
     argument("--environment") ??
-    Bun.env.FLIPT_ENVIRONMENT ??
+    Bun.env["FLIPT_ENVIRONMENT"] ??
     managedFlagInventory.environment;
   const url = requiredUrl();
   const response = await fetch(
@@ -91,53 +145,14 @@ async function main(): Promise<void> {
   }
 
   const snapshot = SnapshotSchema.parse(await response.json());
-  const expectedByKey = new Map(
-    managedFlagInventory.flags.map((flag) => [flag.key, flag]),
-  );
-  const actualByKey = new Map(snapshot.flags.map((flag) => [flag.key, flag]));
-  const errors: string[] = [];
-
-  const expectedKeys = [...expectedByKey.keys()].sort();
-  const actualKeys = [...actualByKey.keys()].sort();
-  if (JSON.stringify(expectedKeys) !== JSON.stringify(actualKeys)) {
-    errors.push(
-      `key set mismatch: expected ${expectedKeys.length}, got ${actualKeys.length}; missing=${expectedKeys.filter((key) => !actualByKey.has(key)).join(",") || "none"}; unexpected=${actualKeys.filter((key) => !expectedByKey.has(key)).join(",") || "none"}`,
-    );
-  }
-
-  for (const expected of managedFlagInventory.flags) {
-    const actual = actualByKey.get(expected.key);
-    if (actual === undefined) continue;
-    const actualType =
-      actual.type === "BOOLEAN_FLAG_TYPE" ? "boolean" : "variant";
-    if (actualType !== expected.type) {
-      errors.push(
-        `${expected.key}: expected type ${expected.type}, got ${actualType}`,
-      );
-      continue;
-    }
-    const actualDefault =
-      expected.type === "boolean" ? actual.enabled : actual.defaultVariant?.key;
-    if (actualDefault !== expectedDefault(expected)) {
-      errors.push(
-        `${expected.key}: expected default ${JSON.stringify(expectedDefault(expected))}, got ${JSON.stringify(actualDefault)}`,
-      );
-    }
-    const actualRollouts = normalizeRollouts(actual.rollouts);
-    if (JSON.stringify(actualRollouts) !== JSON.stringify(expected.rollouts)) {
-      errors.push(
-        `${expected.key}: rollout contract mismatch; expected ${JSON.stringify(expected.rollouts)}, got ${JSON.stringify(actualRollouts)}`,
-      );
-    }
-  }
-
+  const errors = compareSnapshot(snapshot);
   if (errors.length > 0) {
     throw new Error(
       `Flipt managed-flag drift detected:\n- ${errors.join("\n- ")}`,
     );
   }
   console.log(
-    `Flipt managed-flag inventory is aligned: ${expectedKeys.length.toString()} keys in ${namespace}/${environment}`,
+    `Flipt managed-flag inventory is aligned: ${managedFlagInventory.flags.length.toString()} keys in ${namespace}/${environment}`,
   );
 }
 
