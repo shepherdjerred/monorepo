@@ -3,6 +3,10 @@ import { ApplicationFailure } from "@temporalio/common";
 import { client } from "#src/discord/client.ts";
 import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
+import {
+  isFeatureHardDisabled,
+  type FlagName,
+} from "#src/configuration/flags.ts";
 import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
 import { invokeWeeklyParlayAction } from "./weekly-parlay-activity.ts";
 type DetachedWorkInput = Parameters<
@@ -23,10 +27,31 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
     phase: "complete",
   });
 }
+
+export function hardDisabledFeatureForTemporalWork(
+  kind: string,
+): FlagName | null {
+  switch (kind) {
+    case "tournament-lobbies":
+      return "tournament_lobbies_enabled";
+    case "bucks-reconciliation":
+    case "weekly-bucks-leaderboard":
+      return "betting_enabled";
+    default:
+      return null;
+  }
+}
+
+function temporalWorkHardDisabled(kind: string): boolean {
+  const feature = hardDisabledFeatureForTemporalWork(kind);
+  return feature !== null && isFeatureHardDisabled(feature);
+}
+
 function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
   return {
     probeQueue,
     pollRealtime: async (input) => {
+      if (temporalWorkHardDisabled(input.kind)) return;
       await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
         if (input.kind === "prematch") {
           const { checkPreMatch } =
@@ -126,9 +151,9 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
       return await heartbeatWhile(
         { phase: "reconciling-ingestion" },
         async () => {
-          const { runStartupRecovery } =
-            await import("#src/league/tasks/recovery/startup-recovery.ts");
-          await runStartupRecovery();
+          const { runIngestionReconciliation } =
+            await import("#src/league/tasks/recovery/ingestion-reconciliation.ts");
+          await runIngestionReconciliation();
           const { prisma } = await import("#src/database/index.ts");
           const jobs = await prisma.initialMatchHistoryImport.findMany({
             where: {
@@ -186,6 +211,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
     },
     runDetachedBackgroundWork: runDetachedWork,
     runBackgroundJob: async (input) => {
+      if (temporalWorkHardDisabled(input.kind)) return;
       await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
         switch (input.kind) {
           case "competition-refresh": {
