@@ -843,13 +843,6 @@ describe("CI reporting manifest", () => {
     expect(rootTurbo).toContain(
       '"//#script-coverage": {\n      "dependsOn": ["//#check-script-migrations"],\n      "cache": false,',
     );
-    expect(rootTurbo).toContain(
-      '"test:ci": {\n      "env": ["NODE_ENV"],\n      "passThroughEnv": ["MISE_DATA_DIR"]',
-    );
-    expect(rootTurbo).toContain(
-      '"test:report": {\n      "cache": false,\n      "env": ["NODE_ENV"],\n      "passThroughEnv": ["MISE_DATA_DIR"]',
-    );
-
     const cdk8sTurbo = await Bun.file(
       path.join(repositoryRoot, "packages/homelab/src/cdk8s/turbo.json"),
     ).text();
@@ -876,4 +869,16 @@ describe("CI reporting manifest", () => {
       expect(turbo).toContain(expectedTask);
     }
   });
+});
+
+test("preserves the mise store for manifest test tasks", async () => {
+  const rootTurbo = await Bun.file(
+    path.join(repositoryRoot, "turbo.json"),
+  ).text();
+  expect(rootTurbo).toContain(
+    '"test:ci": {\n      "env": ["NODE_ENV"],\n      "passThroughEnv": ["MISE_DATA_DIR"]',
+  );
+  expect(rootTurbo).toContain(
+    '"test:report": {\n      "cache": false,\n      "env": ["NODE_ENV"],\n      "passThroughEnv": ["MISE_DATA_DIR"]',
+  );
 });
