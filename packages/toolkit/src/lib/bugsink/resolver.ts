@@ -96,6 +96,106 @@ function failureResult({
   };
 }
 
+type PreflightResult =
+  | { kind: "eligible"; issue: BugsinkIssue }
+  | { kind: "skipped" }
+  | { kind: "error"; error: { id: string; message: string } };
+
+async function preflightIssue(
+  api: BugsinkIssueResolverApi,
+  issueId: string,
+): Promise<PreflightResult> {
+  try {
+    const issue = await api.getIssue(issueId);
+    if (issue == null) {
+      return {
+        kind: "error",
+        error: { id: issueId, message: "Issue not found" },
+      };
+    }
+    if (issue.is_muted) {
+      return {
+        kind: "error",
+        error: { id: issueId, message: "Issue is muted" },
+      };
+    }
+    if (issue.is_resolved) {
+      return { kind: "skipped" };
+    }
+    return { kind: "eligible", issue };
+  } catch (error) {
+    return {
+      kind: "error",
+      error: { id: issueId, message: errorMessage(error) },
+    };
+  }
+}
+
+async function preflightIssues(
+  api: BugsinkIssueResolverApi,
+  requested: readonly string[],
+): Promise<{
+  eligibleIssues: BugsinkIssue[];
+  eligible: string[];
+  skipped: string[];
+  errors: { id: string; message: string }[];
+}> {
+  const eligibleIssues: BugsinkIssue[] = [];
+  const eligible: string[] = [];
+  const skipped: string[] = [];
+  const errors: { id: string; message: string }[] = [];
+
+  for (const issueId of requested) {
+    const result = await preflightIssue(api, issueId);
+    if (result.kind === "eligible") {
+      eligibleIssues.push(result.issue);
+      eligible.push(issueId);
+    } else if (result.kind === "skipped") {
+      skipped.push(issueId);
+    } else {
+      errors.push(result.error);
+    }
+  }
+
+  return { eligibleIssues, eligible, skipped, errors };
+}
+
+function verificationError(issue: BugsinkIssue | null): string | null {
+  if (issue == null) {
+    return "Issue disappeared during verification";
+  }
+  if (!issue.is_resolved || issue.is_muted) {
+    return "Verification failed: issue is not resolved and unmuted";
+  }
+  return null;
+}
+
+async function resolveEligibleIssues(
+  api: BugsinkIssueResolverApi,
+  issues: readonly BugsinkIssue[],
+): Promise<{
+  resolved: string[];
+  error: { id: string; message: string } | null;
+}> {
+  const resolved: string[] = [];
+  for (const issue of issues) {
+    try {
+      await api.resolveIssue(issue);
+      const error = verificationError(await api.getIssue(issue.id));
+      if (error !== null) {
+        return { resolved, error: { id: issue.id, message: error } };
+      }
+      resolved.push(issue.id);
+    } catch (error) {
+      return {
+        resolved,
+        error: { id: issue.id, message: errorMessage(error) },
+      };
+    }
+  }
+  return { resolved, error: null };
+}
+
 export async function resolveIssues(
   issueIds: readonly string[],
   options: ResolveIssuesOptions = {},
@@ -103,34 +203,16 @@ export async function resolveIssues(
   const requested = normalizeBugsinkIssueIds(issueIds);
   const dryRun = options.dryRun === true || options.confirm !== true;
   const api = options.api ?? defaultApi;
-  const eligibleIssues: BugsinkIssue[] = [];
-  const eligible: string[] = [];
-  const skipped: string[] = [];
-  const preflightErrors: { id: string; message: string }[] = [];
+  const { eligibleIssues, eligible, skipped, errors } = await preflightIssues(
+    api,
+    requested,
+  );
 
-  for (const issueId of requested) {
-    try {
-      const issue = await api.getIssue(issueId);
-      if (issue == null) {
-        preflightErrors.push({ id: issueId, message: "Issue not found" });
-      } else if (issue.is_muted) {
-        preflightErrors.push({ id: issueId, message: "Issue is muted" });
-      } else if (issue.is_resolved) {
-        skipped.push(issueId);
-      } else {
-        eligibleIssues.push(issue);
-        eligible.push(issueId);
-      }
-    } catch (error) {
-      preflightErrors.push({ id: issueId, message: errorMessage(error) });
-    }
-  }
-
-  if (preflightErrors.length > 0) {
+  if (errors.length > 0) {
     return failureResult({
       requested,
       dryRun,
-      errors: preflightErrors,
+      errors,
       eligible,
       skipped,
     });
@@ -148,49 +230,16 @@ export async function resolveIssues(
     };
   }
 
-  const resolved: string[] = [];
-  for (const issue of eligibleIssues) {
-    try {
-      await api.resolveIssue(issue);
-      const verified = await api.getIssue(issue.id);
-      if (verified == null) {
-        return failureResult({
-          requested,
-          dryRun: false,
-          errors: [
-            { id: issue.id, message: "Issue disappeared during verification" },
-          ],
-          eligible,
-          skipped,
-          resolved,
-        });
-      }
-      if (!verified.is_resolved || verified.is_muted) {
-        return failureResult({
-          requested,
-          dryRun: false,
-          errors: [
-            {
-              id: issue.id,
-              message: "Verification failed: issue is not resolved and unmuted",
-            },
-          ],
-          eligible,
-          skipped,
-          resolved,
-        });
-      }
-      resolved.push(issue.id);
-    } catch (error) {
-      return failureResult({
-        requested,
-        dryRun: false,
-        errors: [{ id: issue.id, message: errorMessage(error) }],
-        eligible,
-        skipped,
-        resolved,
-      });
-    }
+  const { resolved, error } = await resolveEligibleIssues(api, eligibleIssues);
+  if (error !== null) {
+    return failureResult({
+      requested,
+      dryRun: false,
+      errors: [error],
+      eligible,
+      skipped,
+      resolved,
+    });
   }
 
   return {

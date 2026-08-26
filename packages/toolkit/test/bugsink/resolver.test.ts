@@ -8,12 +8,11 @@ import {
   resolveIssues,
   type BugsinkIssueResolverApi,
 } from "#lib/bugsink/resolver.ts";
+import { captureBugsinkEnvironment } from "./test-helpers.ts";
 
 const ISSUE_ID = "311e191f-5e83-4524-a5b5-d1d1d08581fa";
 const SECOND_ISSUE_ID = "fa406347-79cf-4f94-8b2d-afce20eb2d41";
-const ORIGINAL_FETCH = globalThis.fetch;
-const ORIGINAL_URL = Bun.env["BUGSINK_URL"];
-const ORIGINAL_TOKEN = Bun.env["BUGSINK_TOKEN"];
+const bugsinkEnvironment = captureBugsinkEnvironment();
 type FetchInput = Parameters<typeof fetch>[0];
 
 function issue(overrides: Partial<BugsinkIssue> = {}): BugsinkIssue {
@@ -51,17 +50,7 @@ function resolverApi(
 }
 
 afterEach(() => {
-  globalThis.fetch = ORIGINAL_FETCH;
-  if (ORIGINAL_URL === undefined) {
-    Reflect.deleteProperty(Bun.env, "BUGSINK_URL");
-  } else {
-    Bun.env["BUGSINK_URL"] = ORIGINAL_URL;
-  }
-  if (ORIGINAL_TOKEN === undefined) {
-    Reflect.deleteProperty(Bun.env, "BUGSINK_TOKEN");
-  } else {
-    Bun.env["BUGSINK_TOKEN"] = ORIGINAL_TOKEN;
-  }
+  bugsinkEnvironment.restore();
 });
 
 describe("Bugsink issue target parsing", () => {
@@ -208,7 +197,7 @@ describe("Bugsink resolve API action", () => {
         });
         return new Response(null, { status: 204 });
       },
-      { preconnect: ORIGINAL_FETCH.preconnect },
+      { preconnect: bugsinkEnvironment.originalFetch.preconnect },
     );
     Bun.env["BUGSINK_URL"] = "https://bugsink.example.test";
     Bun.env["BUGSINK_TOKEN"] = "secret-token";
