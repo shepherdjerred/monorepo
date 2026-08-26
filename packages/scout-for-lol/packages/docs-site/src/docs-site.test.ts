@@ -6,6 +6,7 @@ import {
   REPORT_SOURCES,
 } from "@scout-for-lol/data/model/report-query-registry.ts";
 import { ALL_PERMISSIONS } from "@scout-for-lol/data/model/permissions/catalog.ts";
+import { scoutFixedScheduleId } from "@scout-for-lol/temporal";
 import { SCOUT_SCHEDULES } from "@shepherdjerred/temporal/src/schedules/scout-schedule-definitions.ts";
 
 /**
@@ -184,7 +185,7 @@ describe("generated render samples", () => {
       const hasImage = entry.image !== null;
       if (hasImage !== kind.isChart) {
         wrong.push(
-          `${kind.id}: isChart=${String(kind.isChart)} but image=${String(hasImage)}`,
+          `${String(kind.id)}: isChart=${String(kind.isChart)} but image=${String(hasImage)}`,
         );
       }
     }
@@ -315,7 +316,7 @@ describe("cross-package facts the prose depends on", () => {
     const stale = claims
       .filter(([, scheduleId, schedule]) => {
         const declared = SCOUT_SCHEDULES.find(
-          (entry) => entry.id === scheduleId,
+          (entry) => entry.id === scoutFixedScheduleId("beta", scheduleId),
         );
         if (declared === undefined) return true;
         if (schedule.startsWith("every: ")) {

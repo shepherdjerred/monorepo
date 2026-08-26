@@ -141,7 +141,7 @@ describe("capturePredictionForPrematch", () => {
     await expect(resultPromise).resolves.toEqual(observation.prediction);
   });
 
-  test("fails when durable work cannot be persisted", async () => {
+  test("keeps the prediction when durable work cannot be persisted", async () => {
     await expect(
       capturePredictionForPrematch(
         {
@@ -155,7 +155,7 @@ describe("capturePredictionForPrematch", () => {
           enqueue: () => Promise.reject(new Error("database unavailable")),
         },
       ),
-    ).rejects.toThrow("database unavailable");
+    ).resolves.toEqual(observation.prediction);
   });
 
   test("does no work for an ineligible queue", async () => {
