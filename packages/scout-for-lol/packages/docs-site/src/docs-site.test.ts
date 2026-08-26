@@ -6,6 +6,7 @@ import {
   REPORT_SOURCES,
 } from "@scout-for-lol/data/model/report-query-registry.ts";
 import { ALL_PERMISSIONS } from "@scout-for-lol/data/model/permissions/catalog.ts";
+import { SCOUT_SCHEDULES } from "@shepherdjerred/temporal/src/schedules/scout-schedule-definitions.ts";
 
 /**
  * These assertions run against the built site (`bun run build` precedes
@@ -275,12 +276,6 @@ describe("cross-package facts the prose depends on", () => {
   });
 
   test("documented intervals still match the Temporal schedules", async () => {
-    const source = await Bun.file(
-      new URL(
-        "../../../../temporal/src/schedules/scout-schedule-definitions.ts",
-        import.meta.url,
-      ).pathname,
-    ).text();
     // Each claim is tied to its schedule identity, so a matching expression on
     // an unrelated schedule cannot make stale documentation pass.
     const claims: [string, string, string][] = [
@@ -319,9 +314,19 @@ describe("cross-package facts the prose depends on", () => {
     ];
     const stale = claims
       .filter(([, scheduleId, schedule]) => {
-        const start = source.indexOf(`"${scheduleId}"`);
+        const declared = SCOUT_SCHEDULES.find(
+          (entry) => entry.id === scheduleId,
+        );
+        if (declared === undefined) return true;
+        if (schedule.startsWith("every: ")) {
+          return (
+            declared.timing.kind !== "interval" ||
+            declared.timing.every !== schedule.slice("every: ".length)
+          );
+        }
         return (
-          start === -1 || !source.slice(start, start + 500).includes(schedule)
+          declared.timing.kind !== "cron" ||
+          declared.timing.expression !== schedule.slice("expression: ".length)
         );
       })
       .map(([claim]) => claim);
