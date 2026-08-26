@@ -4,13 +4,7 @@ import {
   StructuredOutputUsageError,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
-import type {
-  LoadingScreenData,
-  PlayerConfigEntry,
-  QueueType,
-  RankedQueueType,
-  RawCurrentGameInfo,
-} from "@scout-for-lol/data";
+import type { RankedQueueType } from "@scout-for-lol/data";
 import { RankedQueueTypeSchema } from "@scout-for-lol/data";
 import { bettingParlayAiModel } from "#src/config/dynamic.ts";
 import {
@@ -65,6 +59,7 @@ import {
 } from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
 import { enqueueParlayGeneration } from "#src/temporal/work-store.ts";
+import type { StartParlayGenerationInput } from "#src/betting/parlay-generation-types.ts";
 
 const logger = createLogger("betting-parlay-generate");
 
@@ -110,13 +105,6 @@ function timedOut(signal: AbortSignal, error: unknown): boolean {
       (error.name === "AbortError" || error.name === "TimeoutError"))
   );
 }
-
-export type StartParlayGenerationInput = {
-  gameInfo: RawCurrentGameInfo;
-  trackedPlayers: readonly PlayerConfigEntry[];
-  queueType: QueueType | undefined;
-  loadingScreenData: LoadingScreenData | undefined;
-};
 
 type GenerationReady = {
   kind: "ready";

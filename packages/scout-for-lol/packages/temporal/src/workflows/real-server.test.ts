@@ -327,7 +327,6 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
     spec: {
       intervals: [{ every: 1000 }],
       startAt: outageWindowStart,
-      endAt: new Date(outageWindowStart.getTime() + 1000),
     },
     action: {
       type: "startWorkflow",

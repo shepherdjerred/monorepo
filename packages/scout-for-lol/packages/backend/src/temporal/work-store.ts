@@ -11,7 +11,7 @@ import type { ScoutDetachedWorkInput } from "@scout-for-lol/temporal";
 import { prisma } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
-import type { StartParlayGenerationInput } from "#src/betting/parlay-generate.ts";
+import type { StartParlayGenerationInput } from "#src/betting/parlay-generation-types.ts";
 import { currentScoutTemporalSupervisor } from "./runtime.ts";
 import { startScoutDetachedWork } from "./starts.ts";
 
