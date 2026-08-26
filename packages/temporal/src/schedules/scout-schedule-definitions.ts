@@ -112,6 +112,13 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       every: "15 minutes",
     }),
     intervalSchedule(stage, {
+      name: "competition-scheduled-updates",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "competition-scheduled-updates" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
       name: "competition-validation",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "competition-validation" }],

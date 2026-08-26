@@ -258,6 +258,8 @@ async function claimScheduledReport(params: {
         data: {
           reportId: params.report.id,
           serverId: params.report.serverId,
+          deliveryChannelId: params.report.channelId,
+          deliveryServerId: params.report.serverId,
           trigger: "SCHEDULED",
           status: "RUNNING",
           startedAt: params.now,

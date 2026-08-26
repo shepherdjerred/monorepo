@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { replayTemporalHistories } from "../../../../../scripts/temporal-replay.ts";
+import { replayTemporalHistories } from "@shepherdjerred/root-scripts/temporal-replay.ts";
 
 const WorkflowIdSchema = z.string().regex(/^scout-(?:beta|prod)-[\w.:-]+$/u);
 async function main(): Promise<void> {

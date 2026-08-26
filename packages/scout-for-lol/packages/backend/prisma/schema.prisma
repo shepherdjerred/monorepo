@@ -228,6 +228,10 @@ model ReportRun {
   visualizationS3Key    String?
   visualizationByteSize Int?
   deliveryState         String                  @default("NOT_REQUESTED")
+  // Snapshot the destination selected for this occurrence. Report edits must
+  // not redirect an already-rendered delivery during replay/reconciliation.
+  deliveryChannelId     String?
+  deliveryServerId      String?
   deliveryError         String?
   deliveredAt           DateTime?
   temporalWorkflowRunId String?                 @unique

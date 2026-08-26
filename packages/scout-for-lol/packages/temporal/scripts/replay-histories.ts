@@ -1,5 +1,5 @@
 import path from "node:path";
-import { runTemporalNodeScript } from "../../../../../scripts/run-temporal-node.ts";
+import { runTemporalNodeScript } from "@shepherdjerred/root-scripts/run-temporal-node.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "..");
 const repositoryRoot = path.resolve(packageRoot, "../../../..");

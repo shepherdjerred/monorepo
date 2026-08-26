@@ -70,6 +70,8 @@ export async function runReport(
           data: {
             reportId: params.report.id,
             serverId: params.report.serverId,
+            deliveryChannelId: params.report.channelId,
+            deliveryServerId: params.report.serverId,
             trigger,
             status: "RUNNING",
             startedAt: requestedStartAt,

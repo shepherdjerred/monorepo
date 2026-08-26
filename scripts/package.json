@@ -39,6 +39,14 @@
     "@vitest/coverage-istanbul": "4.1.10"
   },
   "exports": {
+    "./run-temporal-node.ts": {
+      "types": "./run-temporal-node.ts",
+      "default": "./run-temporal-node.ts"
+    },
+    "./temporal-replay.ts": {
+      "types": "./temporal-replay.ts",
+      "default": "./temporal-replay.ts"
+    },
     "./lib/commit-message.ts": {
       "types": "./types/commit-message.d.ts",
       "default": "./lib/commit-message.ts"

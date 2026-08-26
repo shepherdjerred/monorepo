@@ -18,6 +18,8 @@ export async function runManualReportWithTemporal(
     data: {
       reportId: report.id,
       serverId: report.serverId,
+      deliveryChannelId: report.channelId,
+      deliveryServerId: report.serverId,
       trigger: "MANUAL",
       status: "RUNNING",
       startedAt: new Date(),

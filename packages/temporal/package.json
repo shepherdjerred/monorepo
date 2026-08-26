@@ -86,6 +86,7 @@
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/root-scripts": "workspace:*",
     "@temporalio/testing": "1.22.0",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/recommended": "^1.0.13",

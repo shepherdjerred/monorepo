@@ -134,13 +134,18 @@ export async function deliverStoredScheduledReport(
   if (run?.renderedContent === undefined || run.renderedContent === null) {
     return false;
   }
+  const deliveryReport = {
+    ...report,
+    channelId: run.deliveryChannelId ?? report.channelId,
+    serverId: run.deliveryServerId ?? run.serverId,
+  };
   const imageBytes =
     run.imageS3Key === null
       ? null
       : await loadReportRunImage(report.id, run.id);
   await deliverReportDispatch(
     {
-      report,
+      report: deliveryReport,
       result: {
         runId: run.id,
         rowsReturned: run.rowsReturned,
@@ -267,6 +272,11 @@ async function deliverPendingReportRun(input: {
       `Successful report run ${input.run.id.toString()} has no persisted rendered content`,
     );
   }
+  const deliveryReport = {
+    ...input.report,
+    channelId: input.run.deliveryChannelId ?? input.report.channelId,
+    serverId: input.run.deliveryServerId ?? input.run.serverId,
+  };
   const imageBytes =
     input.run.imageS3Key === null
       ? null
@@ -279,7 +289,7 @@ async function deliverPendingReportRun(input: {
   try {
     await deliverReportDispatch(
       {
-        report: input.report,
+        report: deliveryReport,
         result: {
           runId: input.run.id,
           output: {

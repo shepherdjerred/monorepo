@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@scout-for-lol/data": "workspace:*",
+    "@shepherdjerred/root-scripts": "workspace:*",
     "@temporalio/activity": "1.22.0",
     "@temporalio/client": "1.22.0",
     "@temporalio/testing": "1.22.0",
