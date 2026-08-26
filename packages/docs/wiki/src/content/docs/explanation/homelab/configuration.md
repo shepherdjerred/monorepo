@@ -108,13 +108,9 @@ boot-wired startup choices, observability enablement, and CI or automation
 deciders. They need lifecycle or authorization changes before they can be
 runtime flags. The repository-owned
 `packages/feature-flags/src/managed-flag-inventory.json`
-records those exemptions alongside the 53 managed keys.
-
-The operator-only `bun run check-flipt-flag-inventory` command compares that
-inventory with Flipt's evaluation snapshot. It checks the exact key set, flag
-types, defaults, and targeting constraints. Run it with `FLIPT_URL` set to the
-Flipt endpoint; it is deliberately not part of service startup or CI because
-the live endpoint is an operational dependency, not a build input.
+records those exemptions alongside the 53 managed keys. Operators can use the
+[Flipt inventory check](/how-to/check-flipt-flag-inventory/) to compare it with
+the live evaluation snapshot.
 
 ## Durability
 

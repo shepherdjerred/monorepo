@@ -31,12 +31,96 @@
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["segmentKey", "property", "value", "result"],
+              "required": [
+                "segmentKey",
+                "segmentOperator",
+                "matchType",
+                "constraints",
+                "result"
+              ],
               "properties": {
                 "segmentKey": { "type": "string", "minLength": 1 },
-                "property": { "type": "string", "minLength": 1 },
-                "value": { "type": "string", "minLength": 1 },
-                "result": {}
+                "segmentOperator": { "type": "string", "minLength": 1 },
+                "matchType": { "type": "string", "minLength": 1 },
+                "constraints": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["type", "property", "operator", "value"],
+                    "properties": {
+                      "type": { "type": "string", "minLength": 1 },
+                      "property": { "type": "string", "minLength": 1 },
+                      "operator": { "type": "string", "minLength": 1 },
+                      "value": { "type": "string", "minLength": 1 }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "result": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "rank",
+                "segmentOperator",
+                "segments",
+                "distributions"
+              ],
+              "properties": {
+                "rank": { "type": "integer", "minimum": 0 },
+                "segmentOperator": { "type": "string", "minLength": 1 },
+                "segments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["key", "matchType", "constraints"],
+                    "properties": {
+                      "key": { "type": "string", "minLength": 1 },
+                      "matchType": { "type": "string", "minLength": 1 },
+                      "constraints": { "type": "array" }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "distributions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["variantKey", "rollout", "variantAttachment"],
+                    "properties": {
+                      "variantKey": { "type": "string", "minLength": 1 },
+                      "rollout": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "variantAttachment": { "type": "string" }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "thresholdRollouts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["rank", "percentage", "result"],
+              "properties": {
+                "rank": { "type": "integer", "minimum": 0 },
+                "percentage": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "result": { "type": "boolean" }
               },
               "additionalProperties": false
             }

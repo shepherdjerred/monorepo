@@ -13,8 +13,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-guild-1337623164146155593",
-          "property": "server",
-          "value": "1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
           "result": true
         }
       ]
@@ -29,8 +37,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-user-160509172704739328",
-          "property": "user",
-          "value": "160509172704739328",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "user",
+              "operator": "eq",
+              "value": "160509172704739328"
+            }
+          ],
           "result": true
         }
       ]
@@ -45,8 +61,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-guild-1337623164146155593",
-          "property": "server",
-          "value": "1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
           "result": true
         }
       ]
@@ -61,8 +85,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-guild-1337623164146155593",
-          "property": "server",
-          "value": "1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
           "result": true
         }
       ]
@@ -77,8 +109,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-guild-1337623164146155593",
-          "property": "server",
-          "value": "1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
           "result": true
         }
       ]
@@ -93,8 +133,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-guild-1337623164146155593",
-          "property": "server",
-          "value": "1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
           "result": true
         }
       ]
@@ -109,8 +157,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-guild-1337623164146155593",
-          "property": "server",
-          "value": "1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
           "result": true
         }
       ]
@@ -125,8 +181,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-user-160509172704739328",
-          "property": "user",
-          "value": "160509172704739328",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "user",
+              "operator": "eq",
+              "value": "160509172704739328"
+            }
+          ],
           "result": true
         }
       ]
@@ -159,8 +223,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-guild-1337623164146155593",
-          "property": "server",
-          "value": "1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
           "result": true
         }
       ]
@@ -175,8 +247,16 @@
       "rollouts": [
         {
           "segmentKey": "scout-guild-1337623164146155593",
-          "property": "server",
-          "value": "1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
           "result": true
         }
       ]
