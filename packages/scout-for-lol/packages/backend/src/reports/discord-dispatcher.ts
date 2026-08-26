@@ -16,10 +16,7 @@ import {
   ReportRunIdSchema,
 } from "@scout-for-lol/data";
 import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
-import type {
-  runDueReports,
-  ScheduledReportDispatch,
-} from "#src/reports/scheduler.ts";
+import type { ScheduledReportDispatch } from "#src/reports/scheduler.ts";
 import {
   claimScoutEffect,
   completeScoutEffect,
