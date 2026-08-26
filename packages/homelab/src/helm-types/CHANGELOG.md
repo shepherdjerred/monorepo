@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.6.0...helm-types-v1.7.0) (2026-08-25)
+
+No library behavior changes. The generator produces the same output as `1.6.0`; this release exists only because of repo-level housekeeping that release-please picked up.
+
+- `parseChartInfoFromVersions` now null-checks `line` and `nextLine` before inspecting them, ahead of the emptiness and content checks. The same lines are skipped as before — this is ordering only, with no observable difference ([6f0d73e](https://github.com/shepherdjerred/monorepo/commit/6f0d73e8b171bae4ff66ed9c921185af9f61e924))
+- Comment-only wording update to the `kube-prometheus-stack` entry in `EXTENSIBLE_TYPE_PATTERNS`, following the PagerDuty removal ([5c692c4](https://github.com/shepherdjerred/monorepo/commit/5c692c498e4545a7ec4e0e68203b0436ee0c7da4))
+
 ## [1.6.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.5.0...helm-types-v1.6.0) (2026-08-03)
 
 

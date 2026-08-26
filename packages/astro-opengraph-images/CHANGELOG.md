@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.19.0...astro-opengraph-images-v1.20.0) (2026-08-25)
+
+A major `satori` bump plus a startup-cost improvement; no public API changes.
+
+- `satori` and `@resvg/resvg-js` are now imported lazily, at the moment a page is rendered, rather than when the integration module is loaded. Builds whose filter matches no pages no longer pay to load the native resvg binding ([6f0d73e](https://github.com/shepherdjerred/monorepo/commit/6f0d73e8b171bae4ff66ed9c921185af9f61e924))
+- Runtime dep `satori` bumped to `^0.33.0` (was `^0.29.0`) ([6f0d73e](https://github.com/shepherdjerred/monorepo/commit/6f0d73e8b171bae4ff66ed9c921185af9f61e924))
+- README logo assets now resolve from the monorepo instead of the retired standalone repository's CDN ([3dd65f4](https://github.com/shepherdjerred/monorepo/commit/3dd65f47c287056c61edde228fb944d8fd83cc3d))
+
 ## [1.19.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.18.0...astro-opengraph-images-v1.19.0) (2026-08-23)
 
 
