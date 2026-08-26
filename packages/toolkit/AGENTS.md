@@ -12,6 +12,7 @@ bun run src/index.ts pr health             # PR health check
 bun run src/index.ts deployed scout        # Is a service/commit live on the homelab?
 bun run src/index.ts alerts list           # Alert ledger occurrences
 bun run src/index.ts bugsink issues        # Bugsink issues
+bun run src/index.ts bugsink resolve ...   # Explicit REST API resolution
 bun run src/index.ts prom query 'up == 0'  # GCX-backed Prometheus query
 bun run src/index.ts bk build list         # Native Buildkite CLI with repo defaults
 bun run src/index.ts screenshot stocks-sjer-red /   # Visually verify a frontend change
@@ -340,7 +341,7 @@ this layer.
 
 - **`src/lib/http.ts`** — `createHttpClient({ baseUrl, auth, errorLabel, headers?, normalizeUrl? })`
   returns a client with `get(endpoint, { schema, query? })`, `post(endpoint, { schema, body?, query? })`,
-  and `raw(endpoint, { query? })` (text, no JSON parse). All three return the
+  `postRaw(endpoint, { body?, query? })`, and `raw(endpoint, { query? })` (text, no JSON parse). All four return the
   standard `{ success, data?, error? }` envelope. `auth` is a discriminated shape —
   `{ scheme: "Bearer", token }` or `{ scheme: "Token token=", token }` — written
   verbatim into the `Authorization` header. Query params are `set` for scalars and
@@ -358,6 +359,13 @@ route the GitHub, Buildkite, S3, Discord, or native passthrough transports
 through it; they have different process and authentication boundaries. Unit
 tests live in `test/lib/` (`http.test.ts`, `config.test.ts`),
 wired into the `test:unit` glob.
+
+`toolkit bugsink resolve` is the one Bugsink mutation command. It accepts only
+explicit issue UUIDs (directly or from a newline-delimited file), requires
+`--confirm`, preflights every target before the first POST, and verifies every
+resolved issue with a follow-up GET. It calls the canonical REST API directly;
+it never drives the Bugsink web UI, supports no broad selectors, and cannot
+mute issues.
 
 ## Adding New Commands
 

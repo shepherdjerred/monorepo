@@ -6,6 +6,7 @@ import { projectsCommand, projectCommand } from "#commands/bugsink/projects.ts";
 import { eventsCommand, eventCommand } from "#commands/bugsink/events.ts";
 import { stacktraceCommand } from "#commands/bugsink/stacktrace.ts";
 import { releasesCommand, releaseCommand } from "#commands/bugsink/releases.ts";
+import { resolveCommand } from "#commands/bugsink/resolve.ts";
 
 function parseJsonFlag(args: string[]) {
   return parseArgs({
@@ -145,6 +146,26 @@ async function handleRelease(args: string[]): Promise<void> {
   await releaseCommand(uuid, { json: values.json });
 }
 
+async function handleResolve(args: string[]): Promise<void> {
+  const { values, positionals } = parseArgs({
+    args,
+    options: {
+      confirm: { type: "boolean", default: false },
+      "dry-run": { type: "boolean", default: false },
+      json: { type: "boolean", default: false },
+      "from-file": { type: "string" },
+    },
+    allowPositionals: true,
+  });
+  await resolveCommand({
+    confirm: values.confirm,
+    dryRun: values["dry-run"],
+    fromFile: values["from-file"],
+    ids: positionals,
+    json: values.json,
+  });
+}
+
 export async function handleBugsinkCommand(
   subcommand: string | undefined,
   args: string[],
@@ -170,12 +191,16 @@ Subcommands:
   stacktrace <EVT_UUID> Get event stacktrace (markdown)
   releases              List releases
   release <UUID>        View release details
+  resolve <UUID...>     Preview or resolve explicit issue UUIDs via the REST API
 
 Options:
   --json                Output as JSON
   --project <slug|id>   (issues/releases) Filter by project
   --team <uuid>         (projects) Filter by team UUID
   --limit <n>           Maximum number of results
+  --from-file <path>    Read additional newline-delimited issue UUIDs
+  --dry-run             Preview resolution without changing Bugsink
+  --confirm             Apply resolution after preflighting every target
 
 Environment:
   BUGSINK_URL           Required. Your Bugsink instance URL.
@@ -190,6 +215,8 @@ Examples:
   tools bugsink events <issue-uuid>
   tools bugsink stacktrace <event-uuid>
   tools bugsink releases --project my-app
+  tools bugsink resolve <issue-uuid> --dry-run
+  tools bugsink resolve --from-file issues.txt --confirm
 `);
     process.exit(0);
   }
@@ -227,6 +254,9 @@ Examples:
       break;
     case "release":
       await handleRelease(args);
+      break;
+    case "resolve":
+      await handleResolve(args);
       break;
     default:
       console.error(`Unknown bugsink subcommand: ${subcommand}`);
