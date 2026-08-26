@@ -149,7 +149,10 @@ export async function runScheduledReportOccurrence(
   });
   if (claim === null) return null;
   if (claim.isNew) scheduledReportsDueTotal.inc();
-  if (claim.status === "SUCCESS") return claim.runId;
+  if (claim.status === "SUCCESS") {
+    await finishSuccessfulScheduledBookkeeping(params.prisma, claim);
+    return claim.runId;
+  }
   try {
     await executeScheduledReportClaim(params.prisma, claim);
     return claim.runId;
@@ -166,25 +169,12 @@ async function claimScheduledReport(params: {
   workflowRunId?: string;
 }): Promise<ScheduledReportClaim | null> {
   if (params.workflowRunId !== undefined) {
-    const existing = await params.prisma.reportRun.findUnique({
-      where: { temporalWorkflowRunId: params.workflowRunId },
-    });
-    if (existing !== null) {
-      if (
-        existing.reportId !== params.report.id ||
-        existing.trigger !== "SCHEDULED"
-      ) {
-        throw new Error(
-          `Temporal Workflow Run ${params.workflowRunId} is already bound to an incompatible report execution`,
-        );
-      }
-      return {
-        report: params.report,
-        runId: existing.id,
-        status: existing.status,
-        isNew: false,
-      };
-    }
+    const existing = await findWorkflowClaim(
+      params.prisma,
+      params.report,
+      params.workflowRunId,
+    );
+    if (existing !== null) return existing;
   }
 
   const scheduledAt = params.report.nextScheduledRunAt ?? params.now;
@@ -223,6 +213,27 @@ async function claimScheduledReport(params: {
         },
       });
       if (claim.count === 0) {
+        if (params.workflowRunId !== undefined) {
+          const raced = await tx.reportRun.findUnique({
+            where: { temporalWorkflowRunId: params.workflowRunId },
+          });
+          if (raced !== null) {
+            if (
+              raced.reportId !== params.report.id ||
+              raced.trigger !== "SCHEDULED"
+            ) {
+              throw new Error(
+                `Temporal Workflow Run ${params.workflowRunId} raced with an incompatible report execution`,
+              );
+            }
+            return {
+              report: params.report,
+              runId: raced.id,
+              status: raced.status,
+              isNew: false,
+            };
+          }
+        }
         const duplicate = await tx.report.updateMany({
           where: {
             id: params.report.id,
@@ -298,6 +309,51 @@ async function claimScheduledReport(params: {
     }
     throw error;
   }
+}
+
+async function findWorkflowClaim(
+  prisma: ExtendedPrismaClient,
+  report: Report,
+  workflowRunId: string,
+): Promise<ScheduledReportClaim | null> {
+  const existing = await prisma.reportRun.findUnique({
+    where: { temporalWorkflowRunId: workflowRunId },
+  });
+  if (existing === null) return null;
+  if (existing.reportId !== report.id || existing.trigger !== "SCHEDULED") {
+    throw new Error(
+      `Temporal Workflow Run ${workflowRunId} is already bound to an incompatible report execution`,
+    );
+  }
+  return {
+    report,
+    runId: existing.id,
+    status: existing.status,
+    isNew: false,
+  };
+}
+
+async function finishSuccessfulScheduledBookkeeping(
+  database: ExtendedPrismaClient,
+  claim: ScheduledReportClaim,
+): Promise<void> {
+  const run = await database.reportRun.findUniqueOrThrow({
+    where: { id: claim.runId },
+  });
+  if (run.status !== "SUCCESS") {
+    throw new Error(
+      `Report run ${claim.runId.toString()} changed from SUCCESS to ${run.status}`,
+    );
+  }
+  await database.report.update({
+    where: { id: claim.report.id },
+    data: {
+      lastRunStatus: "SUCCESS",
+      lastRunError: null,
+      lastScheduledRunAt: run.startedAt,
+      updatedTime: run.completedAt ?? new Date(),
+    },
+  });
 }
 
 async function executeScheduledReportClaim(
