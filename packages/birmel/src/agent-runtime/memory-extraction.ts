@@ -63,7 +63,20 @@ const VerifiedToolExperienceMemorySchema = z.strictObject({
   validUntil: z.iso.datetime().nullable(),
 });
 
-export const SelfMemorySchema = z.discriminatedUnion("kind", [
+// z.union, not z.discriminatedUnion, and the difference is load-bearing: Zod
+// emits `oneOf` for a discriminated union and `anyOf` for a plain one, and
+// OpenAI-style strict structured outputs permit only `anyOf`. Azure rejected
+// every extraction outright with "In context=('properties', 'selfMemories',
+// 'items'), 'oneOf' is not permitted", so post-response memory extraction failed
+// on every delivered turn while the reply itself succeeded.
+//
+// This is routing-dependent, which is what made it survive review: providers
+// that tolerate `oneOf` pass the same schema happily, so the failure only
+// appears once OpenRouter routes the workload to Azure.
+//
+// The `kind` literals stay disjoint, so parsing behaviour is unchanged; only
+// the failure message for invalid input is less specific.
+export const SelfMemorySchema = z.union([
   AcceptedAliasMemorySchema,
   CommitmentMemorySchema,
   VerifiedToolExperienceMemorySchema,

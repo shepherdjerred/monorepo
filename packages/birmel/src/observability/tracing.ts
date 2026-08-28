@@ -32,6 +32,7 @@ import {
   logger,
   setOtlpLogsEnabled,
 } from "@shepherdjerred/birmel/utils/logger.ts";
+import { llmSubjectAttributes } from "@shepherdjerred/llm-observability/subject";
 
 let nodeSdk: NodeSDK | null = null;
 let tracer: Tracer | null = null;
@@ -330,6 +331,23 @@ export type DiscordSpanAttributes = {
 };
 
 /**
+ * Repository-wide subject attributes for a Discord user, emitted alongside
+ * `discord.user_id` rather than instead of it: existing queries and saved views
+ * key on the Discord attribute, while cross-service dashboards group by the
+ * shared vocabulary.
+ *
+ * Returns nothing when there is no id. An empty subject would collapse every
+ * unattributed span onto one key and render as a single dominant user.
+ *
+ * Kept out of `withSpan` so its attribute literal stays a flat list; inlining
+ * the conditional pushed that function past the cognitive-complexity limit.
+ */
+function subjectAttributes(userId: string | undefined): Record<string, string> {
+  if (userId === undefined || userId === "") return {};
+  return llmSubjectAttributes({ kind: "discord_user", id: userId });
+}
+
+/**
  * Create a span with Discord context attributes.
  */
 export async function withSpan<T>(
@@ -356,6 +374,7 @@ export async function withSpan<T>(
         "discord.guild_id": attributes.guildId ?? "",
         "discord.channel_id": attributes.channelId ?? "",
         "discord.user_id": attributes.userId ?? "",
+        ...subjectAttributes(attributes.userId),
         "discord.message_id": attributes.messageId ?? "",
         "operation.name": attributes.operation ?? name,
         "birmel.route": attributes.route ?? "",

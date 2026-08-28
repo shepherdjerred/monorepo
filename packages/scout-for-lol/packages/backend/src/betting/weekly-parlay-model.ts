@@ -19,6 +19,7 @@ import {
 import type { WeeklyParlayChampionSummary } from "#src/betting/weekly-parlay-history.ts";
 import { bettingParlayAiModel } from "#src/config/dynamic.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
+import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
 
 export const WEEKLY_PARLAY_PROMPT_VERSION = "2";
 
@@ -175,6 +176,29 @@ function canonicalProposal(
 }
 
 export async function generateWeeklyParlayProposals(input: {
+  periodKey: string;
+  subjects: readonly WeeklyParlaySubject[];
+  championShortlists: ReadonlyMap<
+    string,
+    readonly WeeklyParlayChampionSummary[]
+  >;
+  historyWindows: number;
+  abortSignal?: AbortSignal;
+}): Promise<{
+  proposals: WeeklyParlayProposal[];
+  model: string;
+  resolvedModel: string | null;
+  usage: unknown;
+}> {
+  // Periodic, fleet-wide work with no requester and no owning guild.
+  return await withLlmSubjectSpan(
+    "scout.betting.weekly-parlay",
+    { kind: "system", id: "scout.betting.weekly-parlay" },
+    () => generateWeeklyParlayProposalsInternal(input),
+  );
+}
+
+async function generateWeeklyParlayProposalsInternal(input: {
   periodKey: string;
   subjects: readonly WeeklyParlaySubject[];
   championShortlists: ReadonlyMap<

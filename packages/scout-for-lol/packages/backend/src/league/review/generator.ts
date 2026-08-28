@@ -44,6 +44,7 @@ import {
   resolveProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
 import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-issue-kinds.ts";
+import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
 
 const logger = createLogger("generator");
 
@@ -349,15 +350,30 @@ export async function generateMatchReview(
   }
 
   try {
-    pipelineOutput = await generateFullMatchReview({
-      match: matchInput,
-      player: {
-        index: playerIndex,
+    // Wrapping the pipeline rather than each stage: withLlmSubjectSpan opens an
+    // *active* span, so every text and image call the pipeline makes inherits
+    // the subject through context. That keeps @scout-for-lol/data
+    // provider-neutral -- no subject parameter has to be threaded through
+    // TextGenerationClient, ImageGenerationClient, and every stage between.
+    // The subject is the tracked player, not a requester: nobody asks for a
+    // match report, it is generated because this player is tracked.
+    pipelineOutput = await withLlmSubjectSpan(
+      "scout.review",
+      {
+        kind: "tracked_player",
+        id: selectedPlayer.playerConfig.league.leagueAccount.puuid,
       },
-      prompts: promptsInput,
-      clients: clientsInput,
-      stages,
-    });
+      () =>
+        generateFullMatchReview({
+          match: matchInput,
+          player: {
+            index: playerIndex,
+          },
+          prompts: promptsInput,
+          clients: clientsInput,
+          stages,
+        }),
+    );
   } catch (error) {
     if (
       didReportLlmProviderIssue(error, {

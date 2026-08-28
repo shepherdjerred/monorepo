@@ -60,6 +60,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { enqueueParlayGeneration } from "#src/temporal/work-store.ts";
 import type { StartParlayGenerationInput } from "#src/betting/parlay-generation-types.ts";
+import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
 
 const logger = createLogger("betting-parlay-generate");
 
@@ -384,6 +385,22 @@ export async function runParlayGeneration(
   input: StartParlayGenerationInput,
   prismaClient: ExtendedPrismaClient = prisma,
   execution: "legacy" | "temporal" = "legacy",
+): Promise<void> {
+  // `system`, not `guild`: a parlay covers whichever tracked players happen to
+  // be in one live game, and those players can be tracked in different servers,
+  // so there is no single guild this spend belongs to. Marking it explicitly
+  // unattributed is honest; picking an arbitrary guild would not be.
+  return await withLlmSubjectSpan(
+    "scout.betting.parlay",
+    { kind: "system", id: "scout.betting.parlay" },
+    () => runParlayGenerationInternal(input, prismaClient, execution),
+  );
+}
+
+async function runParlayGenerationInternal(
+  input: StartParlayGenerationInput,
+  prismaClient: ExtendedPrismaClient,
+  execution: "legacy" | "temporal",
 ): Promise<void> {
   const startedAt = Date.now();
   const deadline = AbortSignal.timeout(PARLAY_GENERATION_DEADLINE_MS);

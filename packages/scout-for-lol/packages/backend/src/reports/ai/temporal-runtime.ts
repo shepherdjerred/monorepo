@@ -123,6 +123,7 @@ export function createTemporalReportAiResponse(input: {
     execute: async () => {
       const draft = await streamReportQueryAgent({
         runId: input.ticket.runId,
+        subject: { kind: "discord_user", id: input.identity.userId },
         input: input.edit,
         abortSignal: abortController.signal,
         emit,
