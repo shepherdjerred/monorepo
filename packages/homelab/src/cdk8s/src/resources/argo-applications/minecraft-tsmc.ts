@@ -50,6 +50,9 @@ export function createMinecraftTsmcApp(chart: Chart) {
     port: 8100,
     hosts: ["minecraft-tsmc-bluemap"],
     proxyClass: "medium",
+    // The server statefulset hibernates at 0 replicas (mc-router wake-on-join),
+    // so a synthetic probe only measures sleep: 60s failures around the clock.
+    disableProbe: true,
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-tsmc-bluemap-cf-tunnel", {
@@ -58,6 +61,9 @@ export function createMinecraftTsmcApp(chart: Chart) {
     namespace: "minecraft-tsmc",
     disableDnsUpdates: true,
     port: 8100,
+    // Hibernates at 0 replicas (see above); the public probe additionally made
+    // cloudflared log an unreachable-origin error every minute.
+    disableProbe: true,
   });
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {

@@ -26,13 +26,22 @@ export function createMinecraftShuxinApp(chart: Chart) {
     service: "minecraft-shuxin-bluemap",
     port: 8100,
     hosts: ["minecraft-shuxin-bluemap"],
+    // The server statefulset hibernates at 0 replicas (mc-router wake-on-join),
+    // so a synthetic probe only measures sleep: 60s failures around the clock.
+    disableProbe: true,
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-shuxin-bluemap-cf-tunnel", {
     serviceName: "minecraft-shuxin-bluemap",
-    subdomain: "shuxin.bluemap",
+    // First-level subdomain: Cloudflare Universal SSL covers only *.sjer.red,
+    // so the former shuxin.bluemap.sjer.red could never complete a TLS
+    // handshake. Must match the tofu DNS record in
+    // src/tofu/cloudflare/sjer-red.tf.
+    subdomain: "shuxin-bluemap",
     namespace: "minecraft-shuxin",
     port: 8100,
+    // Hibernates at 0 replicas (see above).
+    disableProbe: true,
   });
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
