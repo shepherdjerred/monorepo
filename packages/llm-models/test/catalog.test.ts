@@ -143,6 +143,40 @@ describe("pricing accessors", () => {
     ).toBeCloseTo(0.02, 6);
   });
 
+  test("Luna pricing includes cache writes and the published long-context tier", () => {
+    expect(getPricing("gpt-5.6-luna")).toEqual({
+      modality: "text",
+      input: 0.2,
+      cachedInput: 0.02,
+      cacheWrite: 0.25,
+      output: 1.2,
+      longContextSurcharge: {
+        thresholdInputTokens: 272_000,
+        inputMultiplier: 2,
+        outputMultiplier: 1.5,
+      },
+    });
+    expect(
+      costForTextUsage("gpt-5.6-luna", {
+        inputTokens: 272_000,
+        outputTokens: 100_000,
+      }),
+    ).toBeCloseTo((272_000 * 0.2 + 100_000 * 1.2) / 1_000_000, 9);
+    expect(
+      costForTextUsage("gpt-5.6-luna", {
+        inputTokens: 272_001,
+        outputTokens: 100_000,
+      }),
+    ).toBeCloseTo((272_001 * 0.2 * 2 + 100_000 * 1.2 * 1.5) / 1_000_000, 9);
+    expect(
+      costForTextUsage("gpt-5.6-luna", {
+        inputTokens: 270_000,
+        cacheWriteTokens: 2001,
+        outputTokens: 0,
+      }),
+    ).toBeCloseTo(((270_000 * 0.2 + 2001 * 0.25) * 2) / 1_000_000, 9);
+  });
+
   test("Anthropic cache read/write bill separately from input (temporal parity)", () => {
     // Haiku: input $1, output $5, cacheRead $0.1, cacheWrite $1.25 per 1M.
     // 10k input + 100k cacheRead + 5k cacheWrite + 2k output.

@@ -65,7 +65,7 @@ describe("createOpenRouterClient", () => {
     expect(parsedRequest).toMatchObject({
       max_tokens: 3000,
       model: "openai/gpt-5.4-nano",
-      provider: { allow_fallbacks: true, data_collection: "deny" },
+      provider: { allow_fallbacks: false, data_collection: "deny" },
       usage: { include: true },
     });
     expect(parsedRequest.messages.map(({ role }) => role)).toEqual([
