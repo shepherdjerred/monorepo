@@ -425,7 +425,11 @@ export async function cleanTurboCache(
     Bun.env["TURBO_CACHE_CLEAN_URL"] ?? TURBO_CACHE_CLEAN_URL,
   );
   url.searchParams.set("slug", "monorepo");
-  url.searchParams.set("olderThan", "30");
+  // Days. 14, not 30: at the observed ~13 GiB/day ingest a 30-day window's
+  // steady state (~390 GiB) exceeds even the 512 GiB PVC's comfort zone, and
+  // CI cache hits older than two weeks are vanishingly rare
+  // (PVCProjectedFullWithin14Days, 2026-08-28).
+  url.searchParams.set("olderThan", "14");
 
   try {
     const response = await fetcher(url, {

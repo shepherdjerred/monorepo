@@ -201,7 +201,7 @@ describe("Turbo cache cleanup", () => {
     });
     expect(requestUrl).toContain("/v8/clean");
     expect(requestUrl).toContain("slug=monorepo");
-    expect(requestUrl).toContain("olderThan=30");
+    expect(requestUrl).toContain("olderThan=14");
     expect(authorization).toBe("Bearer turbo-secret-for-test");
     const exposition = await register.metrics();
     expect(exposition).toContain(
