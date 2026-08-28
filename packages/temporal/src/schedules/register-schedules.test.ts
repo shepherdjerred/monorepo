@@ -118,6 +118,21 @@ test("FreshRSS sync keeps its bounded pre-refresh schedule", () => {
   expect(schedule.workflowExecutionTimeout).toBe("6 minutes");
 });
 
+test("Flipt inventory drift runs daily on the repo automation queue", () => {
+  expect(findScheduleById("flipt-flag-inventory-daily")).toMatchObject({
+    workflowType: "runFliptFlagInventory",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "15 6 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+  });
+});
+
 test("protobuf watch timeout covers collection and both delivery paths", () => {
   const timeout = findScheduleById(
     "protobufjs-v8-watch-weekly",
@@ -193,6 +208,7 @@ const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set([
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
+  "runFliptFlagInventory",
   // These workflows await one direct maintenance activity; the activity
   // timeout and retry policy are the relevant execution budget.
   "runBunCacheGcWorkflow",

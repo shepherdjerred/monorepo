@@ -43,6 +43,7 @@ import { ciIoImpactActivities } from "./ci-io-impact.ts";
 import { freshrssActivities } from "./freshrss.ts";
 import { scoutWeeklyParlayActivities } from "./scout-weekly-parlay.ts";
 import { scoutBryanBucksActivities } from "./scout-bryan-bucks.ts";
+import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -85,6 +86,7 @@ export const repoActivities = {
   ...observeReviewSignalsActivities,
   ...protobufWatchActivities,
   ...freshrssActivities,
+  ...fliptFlagInventoryActivities,
 };
 
 export const scoutActivities = {

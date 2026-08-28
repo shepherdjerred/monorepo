@@ -6,8 +6,8 @@
   ],
   "compilerOptions": {
     "types": ["@types/bun"],
-    "moduleResolution": "Node16",
-    "module": "Node16",
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
     "target": "ES2022",
     "noEmit": true,
     "allowImportingTsExtensions": true,

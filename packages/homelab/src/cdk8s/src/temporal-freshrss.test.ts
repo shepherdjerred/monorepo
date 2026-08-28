@@ -111,6 +111,10 @@ describe("Temporal FreshRSS integration", () => {
       name: "FRESHRSS_API_PASSWORD_FILE",
       value: "/run/secrets/freshrss/password",
     });
+    expect(container.env).toContainEqual({
+      name: "FLIPT_URL",
+      value: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+    });
     expect(container.volumeMounts).toContainEqual(
       expect.objectContaining({
         mountPath: "/etc/freshrss",
@@ -184,6 +188,33 @@ describe("Temporal FreshRSS integration", () => {
     });
     expect(alertmanagerPolicySpec.egress).toContainEqual({
       ports: [{ port: 9093, protocol: "TCP" }],
+    });
+
+    const fliptPolicy = findResource(
+      synthesized,
+      "NetworkPolicy",
+      "temporal-repo-flipt-netpol",
+    );
+    const fliptPolicySpec = z
+      .object({
+        podSelector: z.object({
+          matchLabels: z.record(z.string(), z.string()),
+        }),
+        egress: z.array(z.unknown()),
+      })
+      .parse(fliptPolicy.spec);
+    expect(fliptPolicySpec.podSelector.matchLabels).toEqual({
+      component: "repo-worker",
+    });
+    expect(fliptPolicySpec.egress).toContainEqual({
+      ports: [{ port: 8080, protocol: "TCP" }],
+      to: [
+        {
+          namespaceSelector: {
+            matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+          },
+        },
+      ],
     });
   });
 });

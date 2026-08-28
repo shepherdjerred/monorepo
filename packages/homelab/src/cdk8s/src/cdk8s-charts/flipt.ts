@@ -24,6 +24,7 @@ const CONSUMER_NAMESPACES = [
   "scout-beta",
   "scout-prod",
   "birmel",
+  "temporal",
   // streambot is deployed inside the `media` chart, not its own namespace.
   "media",
 ] as const;

@@ -117,6 +117,8 @@ import {
   runTurboCacheCleanWorkflow as runTurboCacheCleanWorkflowImplementation,
 } from "./maintenance.ts";
 import { runFreshRssSyncWorkflow as _runFreshRssSyncWorkflow } from "./freshrss.ts";
+import { runFliptFlagInventory as _runFliptFlagInventory } from "./flipt-flag-inventory.ts";
+import type { FliptFlagInventoryResult } from "#activities/flipt-flag-inventory.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -152,6 +154,10 @@ export async function runTurboCacheCleanWorkflow(): Promise<void> {
 
 export async function runFreshRssSyncWorkflow(): Promise<void> {
   return _runFreshRssSyncWorkflow();
+}
+
+export async function runFliptFlagInventory(): Promise<FliptFlagInventoryResult> {
+  return _runFliptFlagInventory();
 }
 
 export async function generateDependencySummary(
