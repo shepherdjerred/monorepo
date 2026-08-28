@@ -27,8 +27,18 @@ Run the repository command from the monorepo root:
 bun run check-flipt-flag-inventory
 ```
 
-The command compares the `default/default` namespace and environment unless
-`FLIPT_NAMESPACE` or `FLIPT_ENVIRONMENT` overrides them.
+The command checks every environment declared in the managed inventory. During
+the migration, that means `default`, `beta`, and `prod` in the `default`
+namespace.
+
+To check one exact environment, pass a filter:
+
+```bash
+bun run check-flipt-flag-inventory -- --environment beta
+```
+
+`FLIPT_NAMESPACE` changes the namespace. `FLIPT_ENVIRONMENT` is also accepted
+as the exact environment filter.
 
 ## 3. Interpret failures
 
@@ -41,8 +51,15 @@ The check fails when Flipt differs from the inventory in any of these areas:
 - variant rules and distributions;
 - percentage threshold rollouts.
 
-Fix the repository inventory or the audited Flipt state, then run the command
-again until it reports alignment.
+Each diagnostic names the failing namespace and environment. Fix the repository
+inventory or that environment's audited Flipt state, then run the complete
+check again until every environment reports alignment.
+
+When environments intentionally differ, record a full behavioral override in
+the environment's inventory entry. An override replaces the flag's default,
+segment rollouts, variant rules, and threshold rollouts together. Partial
+overrides are rejected so an environment cannot inherit an accidental mixture
+of old and new behavior.
 
 The scheduled alert is read-only. It never deletes Flipt flags or edits the
 inventory. A failed snapshot request does not resolve an existing alert; the

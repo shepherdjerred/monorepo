@@ -1,7 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
   "namespace": "default",
-  "environment": "default",
   "flags": [
     {
       "key": "ai_reports_enabled",
@@ -25,7 +24,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "ai_reports_unlimited",
@@ -49,7 +50,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "ai_reviews_enabled",
@@ -73,7 +76,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "betting_enabled",
@@ -97,7 +102,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "betting_player_bet_outcome_dm_enabled",
@@ -121,7 +128,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "betting_settlement_dm_enabled",
@@ -145,7 +154,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "competition_builder_v2_enabled",
@@ -169,7 +180,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "debug",
@@ -193,7 +206,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "initial_match_history_import_enabled",
@@ -202,7 +217,9 @@
       "purpose": "Enable the initial Scout match-history import.",
       "type": "boolean",
       "default": false,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "scout-consumer-player-profiles-enabled",
@@ -211,7 +228,9 @@
       "purpose": "Enable Scout consumer player profiles.",
       "type": "boolean",
       "default": false,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "tournament_lobbies_enabled",
@@ -235,7 +254,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "weekly_parlays_enabled",
@@ -259,7 +280,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "scout-betting-parlay-ai-model",
@@ -268,7 +291,9 @@
       "purpose": "Select the Scout parlay AI model.",
       "type": "variant",
       "default": "gpt-5.6-sol",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "scout-bucks-ask-model",
@@ -277,7 +302,9 @@
       "purpose": "Select the Scout Bryan Bucks ask model.",
       "type": "variant",
       "default": "gpt-5.6-luna",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "scout-explore-model",
@@ -286,7 +313,9 @@
       "purpose": "Select the Scout Explore AI model.",
       "type": "variant",
       "default": "gpt-5.6-sol",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "scout-report-ai-model",
@@ -295,7 +324,9 @@
       "purpose": "Select the Scout report AI model.",
       "type": "variant",
       "default": "gpt-5.6-sol",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "scout-tournament-api-mode",
@@ -304,7 +335,9 @@
       "purpose": "Select the Scout tournament API mode.",
       "type": "variant",
       "default": "stub",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "scout-tournament-max-open-lobbies",
@@ -313,7 +346,9 @@
       "purpose": "Bound the number of concurrently open Scout tournament lobbies.",
       "type": "variant",
       "default": "10",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "explore-guild-allowlist",
@@ -322,7 +357,9 @@
       "purpose": "Select the Scout guilds allowed to use Explore.",
       "type": "variant",
       "default": "1337623164146155593",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "llm-daily-token-budget",
@@ -331,7 +368,9 @@
       "purpose": "Bound Scout daily LLM token usage.",
       "type": "variant",
       "default": "20000000",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "llm-hourly-token-budget",
@@ -340,7 +379,9 @@
       "purpose": "Bound Scout hourly LLM token usage.",
       "type": "variant",
       "default": "2000000",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-activity-tracking-enabled",
@@ -349,7 +390,9 @@
       "purpose": "Enable Birmel activity tracking and role aggregation.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-agent-max-steps",
@@ -358,7 +401,9 @@
       "purpose": "Bound Birmel agent steps.",
       "type": "variant",
       "default": "8",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-agent-response-timeout-ms",
@@ -367,7 +412,9 @@
       "purpose": "Bound Birmel agent response time.",
       "type": "variant",
       "default": "120000",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-agent-router-timeout-ms",
@@ -376,7 +423,9 @@
       "purpose": "Bound Birmel agent router time.",
       "type": "variant",
       "default": "30000",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-birthdays-enabled",
@@ -385,7 +434,9 @@
       "purpose": "Enable Birmel birthday announcements and roles.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-daily-posts-enabled",
@@ -394,7 +445,9 @@
       "purpose": "Enable Birmel daily posts.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-elections-enabled",
@@ -403,7 +456,9 @@
       "purpose": "Enable Birmel elections.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-llm-classifier-model",
@@ -412,7 +467,9 @@
       "purpose": "Select the Birmel classifier model.",
       "type": "variant",
       "default": "gpt-5.4-nano",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-llm-embedding-model",
@@ -421,7 +478,9 @@
       "purpose": "Select the Birmel embedding model.",
       "type": "variant",
       "default": "text-embedding-3-small",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-llm-max-output-tokens",
@@ -430,7 +489,9 @@
       "purpose": "Bound Birmel LLM output tokens.",
       "type": "variant",
       "default": "4096",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-llm-memory-model",
@@ -439,7 +500,9 @@
       "purpose": "Select the Birmel memory model.",
       "type": "variant",
       "default": "gpt-5.4-nano",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-llm-model",
@@ -448,7 +511,9 @@
       "purpose": "Select the Birmel primary LLM model.",
       "type": "variant",
       "default": "gpt-5.6-sol",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-llm-reasoning-effort",
@@ -457,7 +522,9 @@
       "purpose": "Select Birmel reasoning effort.",
       "type": "variant",
       "default": "medium",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-persona-enabled",
@@ -466,7 +533,9 @@
       "purpose": "Enable Birmel persona projection.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-persona-style-model",
@@ -475,7 +544,9 @@
       "purpose": "Select the Birmel persona style model.",
       "type": "variant",
       "default": "gpt-5.4-nano",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-responder-enabled",
@@ -484,7 +555,9 @@
       "purpose": "Enable the Birmel conversational responder.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-responder-engagement-window-ms",
@@ -493,7 +566,9 @@
       "purpose": "Bound the Birmel responder engagement window.",
       "type": "variant",
       "default": "180000",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-responder-transcript-max-messages",
@@ -502,7 +577,9 @@
       "purpose": "Bound Birmel responder transcript messages.",
       "type": "variant",
       "default": "50",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "birmel-responder-transcript-window-ms",
@@ -511,7 +588,9 @@
       "purpose": "Bound the Birmel responder transcript window.",
       "type": "variant",
       "default": "3600000",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "karma-admin-user-id",
@@ -520,7 +599,9 @@
       "purpose": "Select the Karma administrator user.",
       "type": "variant",
       "default": "160509172704739328",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "karma-emoji",
@@ -529,7 +610,9 @@
       "purpose": "Select the emoji that awards karma.",
       "type": "variant",
       "default": "⭐",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "player-card-enabled",
@@ -538,7 +621,9 @@
       "purpose": "Enable Streambot player cards.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-idle-timeout-seconds",
@@ -547,7 +632,9 @@
       "purpose": "Bound Streambot idle timeout.",
       "type": "variant",
       "default": "300",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-player-card-repost-after-messages",
@@ -556,7 +643,9 @@
       "purpose": "Set Streambot player-card repost interval.",
       "type": "variant",
       "default": "5",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-player-card-tick-ms",
@@ -565,7 +654,9 @@
       "purpose": "Set Streambot player-card refresh interval.",
       "type": "variant",
       "default": "10000",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-playlist-limit",
@@ -574,7 +665,9 @@
       "purpose": "Bound the Streambot playlist.",
       "type": "variant",
       "default": "100",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-reconnect-delay-seconds",
@@ -583,7 +676,9 @@
       "purpose": "Set Streambot reconnect delay.",
       "type": "variant",
       "default": "5",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-reconnect-enabled",
@@ -592,7 +687,9 @@
       "purpose": "Enable Streambot reconnects after transient voice disconnects.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-reconnect-max-attempts",
@@ -601,7 +698,9 @@
       "purpose": "Bound Streambot reconnect attempts.",
       "type": "variant",
       "default": "3",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-subtitle-languages",
@@ -610,7 +709,9 @@
       "purpose": "Select Streambot subtitle languages.",
       "type": "variant",
       "default": "en",
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-subtitles-include-auto-generated",
@@ -619,7 +720,9 @@
       "purpose": "Use auto-generated captions when human subtitles are unavailable.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "subtitles-enabled",
@@ -628,7 +731,9 @@
       "purpose": "Enable Streambot subtitles.",
       "type": "boolean",
       "default": true,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     }
   ],
   "exemptions": [
@@ -673,6 +778,20 @@
         "equivalent startup configuration"
       ],
       "reason": "The service needs these values before a flag provider can initialize, so they cannot be sourced from Flipt."
+    }
+  ],
+  "environments": [
+    {
+      "key": "default",
+      "overrides": []
+    },
+    {
+      "key": "beta",
+      "overrides": []
+    },
+    {
+      "key": "prod",
+      "overrides": []
     }
   ]
 }

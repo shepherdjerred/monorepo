@@ -25,15 +25,16 @@ export type FliptFlagInventoryActivities = typeof fliptFlagInventoryActivities;
 
 export const fliptFlagInventoryActivities = {
   async checkFliptFlagInventory(): Promise<FliptFlagInventoryResult> {
+    const environment = requiredEnvironment("FLIPT_ENVIRONMENT");
     const snapshot = await fetchFliptSnapshot({
       url: requiredEnvironment("FLIPT_URL"),
       namespace: managedFlagInventory.namespace,
-      environment: managedFlagInventory.environment,
+      environment,
     });
     const drift = compareManagedFlagInventory(snapshot);
     const result: FliptFlagInventoryResult = {
       namespace: managedFlagInventory.namespace,
-      environment: managedFlagInventory.environment,
+      environment,
       missingInFlipt: drift.missingInFlipt,
       undeclaredInInventory: drift.undeclaredInInventory,
       observedAt: new Date().toISOString(),

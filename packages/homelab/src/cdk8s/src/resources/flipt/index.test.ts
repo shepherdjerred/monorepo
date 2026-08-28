@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
 import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flipt.ts";
+import { createEnvironmentMigrationScript } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 
 const ManifestSchema = z
   .object({
@@ -15,6 +16,10 @@ const ContainerSchema = z
     name: z.string(),
     image: z.string(),
     command: z.array(z.string()).optional(),
+    args: z.array(z.string()).optional(),
+    volumeMounts: z
+      .array(z.object({ name: z.string(), mountPath: z.string() }).loose())
+      .optional(),
     securityContext: z
       .object({
         runAsUser: z.number().optional(),
@@ -30,7 +35,15 @@ const DeploymentSchema = z
   .object({
     spec: z.object({
       template: z.object({
-        spec: z.object({ containers: z.array(ContainerSchema) }).loose(),
+        metadata: z
+          .object({ annotations: z.record(z.string(), z.string()) })
+          .loose(),
+        spec: z
+          .object({
+            containers: z.array(ContainerSchema),
+            initContainers: z.array(ContainerSchema),
+          })
+          .loose(),
       }),
     }),
   })
@@ -62,6 +75,11 @@ function findManifest(
   if (manifest === undefined)
     throw new Error(`Missing ${kind}/${name} manifest`);
   return manifest;
+}
+
+async function run(command: string[]): Promise<number> {
+  const subprocess = Bun.spawn(command, { stdout: "ignore", stderr: "ignore" });
+  return subprocess.exited;
 }
 
 describe("Flipt chart", () => {
@@ -123,9 +141,58 @@ describe("Flipt chart", () => {
     expect(yaml).toContain('version: "2.0"');
     expect(yaml).toContain("type: local");
     expect(yaml).toContain("path: /var/opt/flipt/data");
+    expect(yaml).toContain("path: /var/opt/flipt/data-beta");
+    expect(yaml).toContain("path: /var/opt/flipt/data-prod");
+    expect(yaml).toContain("name: beta");
+    expect(yaml).toContain("name: prod");
     // Both default to true and would fail continuously against DNS-only egress.
     expect(yaml).toContain("check_for_updates: false");
     expect(yaml).toContain("telemetry_enabled: false");
+  });
+
+  it("restarts when the complete Flipt configuration changes", () => {
+    const deployment = DeploymentSchema.parse(
+      findManifest(synthesize(), "Deployment", "flipt"),
+    );
+    expect(
+      deployment.spec.template.metadata.annotations["config-hash"],
+    ).toMatch(/^[a-f\d]{12}$/);
+  });
+
+  it("copies only absent environment repositories and rejects partial state", () => {
+    const deployment = DeploymentSchema.parse(
+      findManifest(synthesize(), "Deployment", "flipt"),
+    );
+    const migration = deployment.spec.template.spec.initContainers.find(
+      (container) => container.name === "migrate-environments",
+    );
+    expect(migration?.command).toEqual(["/bin/sh", "-c"]);
+    const script = migration?.args?.[0] ?? "";
+    expect(script).toContain('validate_repo "$source_repo"');
+    expect(script).toContain('if [ -e "$destination" ]');
+    expect(script).toContain('cp -a "$source_repo" "$destination"');
+    expect(script).toContain('diff -qr "$source_repo" "$destination"');
+    expect(script).toContain('copy_environment "/var/opt/flipt/data-beta"');
+    expect(script).toContain('copy_environment "/var/opt/flipt/data-prod"');
+    expect(migration?.volumeMounts?.map((mount) => mount.mountPath)).toContain(
+      "/var/opt/flipt",
+    );
+  });
+
+  it("fails fast for an invalid source or partial destination repository", async () => {
+    const root = `/tmp/flipt-migration-test-${crypto.randomUUID()}`;
+    expect(await run(["mkdir", "-p", `${root}/data/objects`])).toBe(0);
+    expect(
+      await run(["/bin/sh", "-c", createEnvironmentMigrationScript(root)]),
+    ).not.toBe(0);
+
+    await Bun.write(`${root}/data/HEAD`, "ref: refs/heads/main\n");
+    await Bun.write(`${root}/data/config`, "[core]\n\tbare = true\n");
+    expect(await run(["mkdir", "-p", `${root}/data-beta`])).toBe(0);
+    expect(
+      await run(["/bin/sh", "-c", createEnvironmentMigrationScript(root)]),
+    ).not.toBe(0);
+    expect(await run(["rm", "-rf", root])).toBe(0);
   });
 
   it("restricts egress to DNS only", () => {

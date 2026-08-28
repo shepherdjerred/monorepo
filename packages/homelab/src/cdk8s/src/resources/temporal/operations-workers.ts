@@ -165,6 +165,7 @@ export function createTemporalOperationsWorkers(
       FLIPT_URL: EnvValue.fromValue(
         "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       ),
+      FLIPT_ENVIRONMENT: EnvValue.fromValue("default"),
       FRESHRSS_API_URL: EnvValue.fromValue(
         "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",
       ),
