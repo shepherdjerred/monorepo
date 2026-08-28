@@ -9,7 +9,6 @@
 // hardcoded `pokemon.*` values.
 
 import { context, trace, type Span, type Tracer } from "@opentelemetry/api";
-import { costForTextUsage } from "@shepherdjerred/llm-models";
 import type { Registry } from "prom-client";
 import { z } from "zod";
 import { getLlmTracer } from "./span-helpers.ts";
@@ -273,14 +272,12 @@ function recordCodexMetrics(
     { ...labels, type: "reasoning" },
     usage.reasoningOutputTokens,
   );
-  const cost = costForTextUsage(options.model, {
-    inputTokens: usage.inputTokens,
-    cachedInputTokens: usage.cachedInputTokens,
-    outputTokens: usage.outputTokens + usage.reasoningOutputTokens,
-  });
-  if (cost !== undefined) {
-    metrics.cost.inc({ ...labels, type: "catalog" }, cost);
-  }
+  // Deliberately no `metrics.cost.inc` here. Codex runs against a
+  // ChatGPT-managed subscription bundle, so a catalog estimate is a price we do
+  // not pay per call. It was also the only cost this transport reported -- there
+  // was never an `actual` figure to compare it against -- so publishing it made
+  // `llm_cost_usd_total` look complete while being a guess. Tokens above remain
+  // the usage signal.
 }
 
 type ToolHandlerArgs = {
