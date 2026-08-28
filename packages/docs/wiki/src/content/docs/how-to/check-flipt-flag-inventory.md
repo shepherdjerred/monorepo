@@ -66,6 +66,21 @@ inventory. A failed snapshot request does not resolve an existing alert; the
 workflow fails so the Temporal failure watcher can report the unavailable
 check separately.
 
+## 4. Change one environment
+
+Select the intended environment in the Flipt UI before editing a flag. The
+`beta` and `prod` repositories are independent; changing one never updates the
+other.
+
+After the edit, check that environment first:
+
+```bash
+bun run check-flipt-flag-inventory -- --environment prod
+```
+
+Then run the unfiltered command. This catches accidental drift in every managed
+environment before the operator change is considered complete.
+
 :::caution
 Flipt has no authentication. Network reachability is the authorization
 boundary, so keep the endpoint private and do not expose it publicly.
