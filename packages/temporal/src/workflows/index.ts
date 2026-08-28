@@ -73,11 +73,6 @@ import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
 import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
 import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
-import { observeReviewSignalsWorkflow as _observeReviewSignalsWorkflow } from "./observe-review-signals.ts";
-import type {
-  ObserveReviewSignalsInput,
-  ObserveReviewSignalsResult,
-} from "#activities/observe-review-signals.ts";
 import { pollWorkflowFailuresWorkflow as _pollWorkflowFailuresWorkflow } from "./workflow-failure-watch.ts";
 import type { PollWorkflowFailuresResult } from "#activities/workflow-failure-watch.ts";
 import type {
@@ -348,12 +343,6 @@ export async function checkPrMergeConflictsWorkflow(
   input: CheckPrMergeConflictsInput,
 ): Promise<void> {
   return _checkPrMergeConflictsWorkflow(input);
-}
-
-export async function observeReviewSignalsWorkflow(
-  input: ObserveReviewSignalsInput = {},
-): Promise<ObserveReviewSignalsResult> {
-  return _observeReviewSignalsWorkflow(input);
 }
 
 export async function pollWorkflowFailuresWorkflow(): Promise<PollWorkflowFailuresResult> {

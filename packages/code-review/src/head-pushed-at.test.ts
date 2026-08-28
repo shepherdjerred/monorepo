@@ -90,7 +90,7 @@ describe("resolveHeadPushedAt", () => {
   });
 
   test("returns null when the PR head has advanced past the requested sha", () => {
-    // Guards a stale build / collector list-query race: even with a ref-update
+    // Guards a stale build / list-query race: even with a ref-update
     // time, the sha is no longer the head, so a newer 👍 must not misattribute.
     expect(
       resolveHeadPushedAt(

@@ -1800,10 +1800,6 @@
       "clones": 1,
       "tokens": 95
     },
-    "packages/temporal/src/activities/observe-review-signals.ts|scripts/probe-review-signal.ts": {
-      "clones": 1,
-      "tokens": 128
-    },
     "packages/temporal/src/activities/report-delivery.test.ts|packages/temporal/src/activities/report-delivery.test.ts": {
       "clones": 1,
       "tokens": 70

@@ -105,10 +105,7 @@ function stateStore(): StateStore {
           ? { accessKeyId, secretAccessKey }
           : { accessKeyId, secretAccessKey, sessionToken },
     }),
-    bucket:
-      Bun.env["REPORT_RECEIPT_BUCKET"] ??
-      Bun.env["REVIEW_SIGNAL_ARCHIVE_BUCKET"] ??
-      "llm-archive",
+    bucket: Bun.env["REPORT_RECEIPT_BUCKET"] ?? "llm-archive",
   };
 }
 

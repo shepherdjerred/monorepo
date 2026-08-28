@@ -259,7 +259,7 @@ async function postFailureBatch(
 
     if (postedAlerts.length > 0) {
       await poster(postedAlerts);
-      // Recorded after the poster succeeds, mirroring observe-review-signals.ts
+      // Recorded after the poster succeeds, mirroring the archive-after-success pattern
       // — an activity retry after a failed post re-alerts (safe: Alertmanager
       // dedups by label) but this counter is informational only, not exactly-once.
       for (const alert of postedAlerts) {

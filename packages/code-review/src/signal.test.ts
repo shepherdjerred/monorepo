@@ -51,10 +51,10 @@ describe("formatSignalEvent", () => {
     });
   });
 
-  test("accepts a custom component (e.g. the collector)", () => {
+  test("accepts a custom component", () => {
     const parsed: unknown = JSON.parse(
-      formatSignalEvent(event, "review-signal-collector"),
+      formatSignalEvent(event, "review-gate-test"),
     );
-    expect(parsed).toMatchObject({ component: "review-signal-collector" });
+    expect(parsed).toMatchObject({ component: "review-gate-test" });
   });
 });

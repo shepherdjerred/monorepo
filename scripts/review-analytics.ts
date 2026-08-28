@@ -6,9 +6,6 @@
  * reconstructible from GitHub after the fact — reviews, review comments, their
  * `commit_id`s and timestamps are retained indefinitely — so copying them into
  * S3 would duplicate a durable store and leave a second thing to keep correct.
- * The durable collector (`review-signals-collect`) stays as it is; it snapshots
- * the *current* head every six hours and therefore cannot answer any per-push
- * question, which is what this answers.
  *
  * Severity is parsed with the repository's own provider rules, so a count is
  * only comparable against the parser that produced it — run this from the

@@ -171,8 +171,8 @@ export function resolveHeadPushedAt(
 ): string | null {
   const pullRequest =
     repository === null ? null : recordField(repository, "pullRequest");
-  // If the PR advanced past `sha` (a stale build, or a list/query race in the
-  // collector), the Activity lookup could still find that sha's historical ref
+  // If the PR advanced past `sha`, the Activity lookup could still find that
+  // sha's historical ref
   // update and a newer 👍 for the CURRENT head would be misattributed to the old
   // sha. Only resolve a head-push time while `sha` is still the PR head;
   // otherwise (mismatch, or a null/failed snapshot) leave it unbound.

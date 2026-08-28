@@ -386,10 +386,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
   "syncGolinks",
-  // Awaits a single runObserveReviewSignals activity (list PRs + per-PR
-  // GitHub reads + one S3 NDJSON write). No workflow-level sleeps; the
-  // activity carries its own startToCloseTimeout + retry budget.
-  "observeReviewSignalsWorkflow",
   "runGlitterCorpusDaily",
   "runGlitterContextRefresh",
   // Awaits a single pollWorkflowFailures activity (visibility list + per-
@@ -716,6 +712,13 @@ describe("catchup window policy", () => {
 describe("orphan schedule detection", () => {
   const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
   const deletedIds = new Set<string>(DELETED_SCHEDULE_IDS);
+
+  test("review-signal collector schedule is queued for deletion", () => {
+    expect(DELETED_SCHEDULE_IDS).toContain("review-signals-collect");
+    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
+      "review-signals-collect",
+    );
+  });
 
   test("both pokeemerald wasm schedules are queued for deletion", () => {
     // The pokeemerald.wasm download workflow is gone — the wasm was built

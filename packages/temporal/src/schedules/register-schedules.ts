@@ -63,6 +63,9 @@ export const DELETED_SCHEDULE_IDS = [
   // down with them.
   "pr-review-eval-nightly",
   "pr-review-ab-weekly-report",
+  // The review-signal collector was removed; delete its live schedule during
+  // reconciliation so it cannot continue starting a missing workflow.
+  "review-signals-collect",
   // Replaced by per-execution temporal-failure-watch alerts and worker-task
   // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",

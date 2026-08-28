@@ -76,10 +76,7 @@ function store(): { client: S3Client; bucket: string; prefix: string } {
           : { sessionToken }),
       },
     }),
-    bucket:
-      Bun.env["REPORT_RECEIPT_BUCKET"] ??
-      Bun.env["REVIEW_SIGNAL_ARCHIVE_BUCKET"] ??
-      "llm-archive",
+    bucket: Bun.env["REPORT_RECEIPT_BUCKET"] ?? "llm-archive",
     prefix: Bun.env["REPORT_RECEIPT_PREFIX"] ?? "reports/receipts",
   };
 }

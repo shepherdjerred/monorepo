@@ -137,10 +137,7 @@ function baselineStore(): Store {
           : { sessionToken }),
       },
     }),
-    bucket:
-      Bun.env["REPORT_RECEIPT_BUCKET"] ??
-      Bun.env["REVIEW_SIGNAL_ARCHIVE_BUCKET"] ??
-      "llm-archive",
+    bucket: Bun.env["REPORT_RECEIPT_BUCKET"] ?? "llm-archive",
     prefix: `${Bun.env["REPORT_STATE_PREFIX"] ?? "reports/state"}/tasknotes-canary/tasknotes-skipped-files-canary/`,
   };
 }

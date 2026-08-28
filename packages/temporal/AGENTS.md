@@ -192,7 +192,6 @@ Workflow:
 - `FRESHRSS_API_URL`, `FRESHRSS_USER`, `FRESHRSS_CATEGORY` — FreshRSS Repo Stack reconciliation settings
 - `FRESHRSS_MANIFEST_PATH`, `FRESHRSS_API_PASSWORD_FILE` — mounted FreshRSS manifest and password paths
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
-- `REVIEW_SIGNAL_ARCHIVE_BUCKET` — S3/SeaweedFS bucket the review-signal collector writes NDJSON archives to (`review-signals/<temporal-run-id>.ndjson` — the object is keyed by the Temporal workflow run id, with no wall-clock component, so an activity retry overwrites idempotently rather than forking a second object; each NDJSON event carries its own `ts`). Optional — defaults to the existing `llm-archive` bucket (namespaced by the key prefix), so no new bucket/env is needed to start collecting
 - `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for GitHub automation so GitHub attributes those actions to the app bot.
 - `OPENROUTER_API_KEY` — service-scoped OpenRouter key for every ordinary text, tool, embedding, image, and structured-output call.
 - `CLAUDE_CODE_OAUTH_TOKEN` — Claude Agent SDK subscription token for homelab-audit, generic Claude agent tasks, and scout-season-refresh.
@@ -293,7 +292,7 @@ delivered through the shared reporter as partial.
 3. Builds one `AlertmanagerAlert` per execution via the pure `buildWorkflowFailureAlert` helper (`src/shared/workflow-failure-alert.ts`) — labels `{alertname: "TemporalWorkflowFailed", workflowType, taskQueue, workflowId, runId}` for identity/dedup, plus a summary/description with the actual error, timeout classification/diagnosis, and a direct link to the failed run in the Temporal UI (`temporalUiExecutionUrl`).
 4. Posts the batch via `createAlertmanagerPoster` (`src/lib/alertmanager.ts`, shared with the Xcode Cloud webhook), which routes through the existing Alertmanager Alerts receiver.
 
-No exclusion list — every workflow type produces an occurrence on any failure, including per-PR bots (`prReview`/`prSummary`) that the older threshold-based rules deliberately exclude. Revisit with an exclusion list if that proves too noisy.
+No exclusion list — every workflow type produces an occurrence on any failure. Revisit with an exclusion list if that proves too noisy.
 
 ## Generic agent tasks
 
@@ -635,8 +634,7 @@ The Buildkite pipeline has one **blocking** Codex review gate on PR builds
 latest revision must be resolved before the aggregate
 `buildkite/monorepo/pr` required status can go green. The gate implementation
 remains provider-neutral, and Qodo remains registered for optional/manual use;
-it is not a required Buildkite gate for now. The durable signal collector
-remains provider-neutral and records the selected provider on each signal.
+it is not a required Buildkite gate for now.
 These CI gates are wholly separate from the GitHub webhook server
 (`## GitHub webhook` below), which handles only the merge-conflict check and
 PR-closed build cancellation.
@@ -644,10 +642,6 @@ PR-closed build cancellation.
 - **Gate on review threads, not the provider's own status.** A thread blocks iff authored by the active provider (`isProviderAuthor`, which strips the REST `[bot]` suffix so GraphQL `greptile-apps` / `chatgpt-codex-connector` and their `[bot]` REST forms compare equal) AND `!isResolved` AND `!isOutdated` AND its severity is at/above the threshold. Providers auto-resolve/outdate their own threads as referenced lines change.
 - **Completion detection is provider-specific** (`CompletionStrategy` in the package). Qodo uses `issue-comment`: it keeps every finding in one persistent issue comment and posts a **separate acknowledgement** naming the commit it just read (`… was updated up to the latest commit <sha>`). That acknowledgement is the completion signal, not the review comment: Qodo relinks the review comment's findings to a new head within seconds of a push, long before re-reading the code, so the body alone proves nothing. While a re-review runs it replaces the rendered review with a `New Review Started` placeholder, which carries the review heading but no findings and is deliberately ignored. Codex uses `review-at-head`: its latest PR review must have `commit_id === head`, and a clean review is represented by the provider's 👍 reaction (`thumbsup-reaction`). For context, Greptile posts a check-run per reviewed commit (`.greptile/config.json` `statusCheck:true`), useful only as a "reviewed this head?" marker since it goes green with comments unresolved (verified on PR #1026).
 - **A PR the provider never reviews can time out.** Qodo does **not** reliably re-review on push — it may relink its comment without re-reading — so a PR whose head was never reviewed stays `reviewing` until the gate times out. Re-trigger by commenting `/review` on the PR; the acknowledgement for the new head follows within a few minutes. (Greptile's empty-diff PRs post `No reviewable files…`, handled by the provider skip marker; Codex re-triggers with `@codex review`.) Such a PR needs a genuine reviewable diff, to be closed, or admin-merged once any conflict is cleared.
-
-### Durable review-signal collector (`review-signals-collect`)
-
-Separate from the CI gate above: `review-signals-collect` (cron `0 */6 * * *` PT, `observeReviewSignalsWorkflow` on `TASK_QUEUES.REPO_AUTOMATION`) is a scheduled job, not a per-PR gate. Every 6 hours it lists the most-recently-updated PRs (`GET /repos/{repo}/pulls?state=all&sort=updated&direction=desc`, `ObserveReviewSignalsInput.limit`, default 30) and, for each, builds the same provider-neutral `ReviewSignalEvent` the gate computes (`src/activities/observe-review-signals.ts`, mirroring `scripts/probe-review-signal.ts` / `scripts/wait-for-review.ts` including the head-commit latency guard). It records `review_*` Prometheus metrics (`src/observability/metrics.ts`) and writes the batch as NDJSON to S3 at `review-signals/<temporal-run-id>.ndjson` in `REVIEW_SIGNAL_ARCHIVE_BUCKET` (default `llm-archive`; same shared `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` credentials as every other S3 writer in this package — see `homelab-audit-archive.ts` for the pattern this follows) — a durable, queryable "what did the review bot do and when" dataset independent of ephemeral CI logs. The object is keyed by the workflow run id (not a wall-clock timestamp) so an activity retry overwrites the same object idempotently; each NDJSON event carries its own `ts` for time-filtering. A single PR's fetch failing is logged + skipped (`errored` in the result); a token-mint or PR-listing failure fails the whole run. The pure aggregation helper (`src/shared/review-signals.ts`, `summarizeReviewSignals`) is unit-tested and safe to import from workflow code — no I/O, no Sentry.
 
 ## GitHub webhook (merge-conflict check + PR-closed build cancel)
 
