@@ -1,5 +1,11 @@
 import { expect, test } from "vitest";
-import { getLlmRuleGroups } from "./llm.ts";
+import {
+  getLlmRuleGroups,
+  LLM_DAILY_SPEND_CRITICAL_USD,
+  LLM_DAILY_SPEND_WARNING_USD,
+  LLM_WORKLOAD_SPIKE_FLOOR_USD_PER_HOUR,
+  LLM_WORKLOAD_SPIKE_RATIO,
+} from "./llm.ts";
 
 test("keeps LLM recording and Broadcast alert coverage together", () => {
   const groups = getLlmRuleGroups();
@@ -32,4 +38,63 @@ test("keeps LLM recording and Broadcast alert coverage together", () => {
     const alert = rules.find((rule) => rule?.alert === alertName);
     expect(alert?.labels).toEqual({ severity: "warning", category: "llm" });
   }
+});
+
+test("alerts on LLM spend and on a silent Broadcast webhook", () => {
+  const rules = getLlmRuleGroups().flatMap(
+    ({ rules: groupRules }) => groupRules,
+  );
+  const alertNamed = (name: string) =>
+    rules.find((rule) => rule?.alert === name);
+
+  for (const [name, severity] of [
+    ["LlmDailySpendHigh", "warning"],
+    ["LlmDailySpendCritical", "critical"],
+    ["LlmWorkloadCostSpike", "warning"],
+    ["OpenRouterBroadcastSilent", "warning"],
+  ] as const) {
+    expect(alertNamed(name)?.labels).toEqual({ severity, category: "llm" });
+  }
+
+  // The critical tier must sit above the warning tier, or the warning alert is
+  // unreachable and the ceiling silently becomes a single threshold.
+  expect(LLM_DAILY_SPEND_CRITICAL_USD).toBeGreaterThan(
+    LLM_DAILY_SPEND_WARNING_USD,
+  );
+  expect(alertNamed("LlmDailySpendHigh")?.expr?.value).toContain(
+    `> ${LLM_DAILY_SPEND_WARNING_USD.toString()}`,
+  );
+  expect(alertNamed("LlmDailySpendCritical")?.expr?.value).toContain(
+    `> ${LLM_DAILY_SPEND_CRITICAL_USD.toString()}`,
+  );
+
+  // BYOK routes bill nothing through OpenRouter, so an actual-only ceiling
+  // would miss them entirely. Both accounting sources must be in the ceiling.
+  for (const spendAlert of ["LlmDailySpendHigh", "LlmDailySpendCritical"]) {
+    const expr = alertNamed(spendAlert)?.expr?.value;
+    expect(expr).toContain('type=~"actual|upstream"');
+    expect(expr).toContain("max by (service, workload, model)");
+  }
+
+  // The spike alert needs both halves: a ratio alone fires on any burst from a
+  // workload that costs fractions of a cent.
+  const spike = alertNamed("LlmWorkloadCostSpike")?.expr?.value;
+  expect(spike).toContain(`> ${LLM_WORKLOAD_SPIKE_RATIO.toString()} *`);
+  expect(spike).toContain(
+    `* 3600 > ${LLM_WORKLOAD_SPIKE_FLOOR_USD_PER_HOUR.toString()}`,
+  );
+
+  // Uptime gating is what keeps a pod restart, which zeroes the gauge, from
+  // alerting before the service has had a day to receive a delivery.
+  const silent = alertNamed("OpenRouterBroadcastSilent")?.expr?.value;
+  expect(silent).toContain(
+    "openrouter_broadcast_ingest_process_start_time_seconds",
+  );
+  expect(silent).toContain(
+    "openrouter_broadcast_last_success_timestamp_seconds",
+  );
+
+  expect(JSON.stringify(getLlmRuleGroups())).toContain(
+    "llm:cost_discrepancy:rate5m",
+  );
 });

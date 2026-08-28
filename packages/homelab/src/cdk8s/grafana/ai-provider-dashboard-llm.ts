@@ -78,12 +78,12 @@ export function addLlmPanels(
         "Actual OpenRouter or Claude SDK cost, canonical catalog cost, and upstream inference cost. The discrepancy series is actual minus catalog cost.",
       targets: [
         {
-          query: `sum by (service, model, type) (rate(llm_cost_usd_total{${llmFilter}}[5m])) or on() vector(0)`,
-          legend: "{{service}} {{model}} {{type}}",
+          query: `sum by (service, workload, model, type) (rate(llm_cost_usd_total{${llmFilter}}[5m])) or on() vector(0)`,
+          legend: "{{service}} {{workload}} {{model}} {{type}}",
         },
         {
-          query: `sum by (service, model) (rate(llm_cost_usd_total{${llmFilter},type="actual"}[5m])) - sum by (service, model) (rate(llm_cost_usd_total{${llmFilter},type="catalog"}[5m]))`,
-          legend: "{{service}} {{model}} actual-catalog",
+          query: `sum by (service, workload, model) (rate(llm_cost_usd_total{${llmFilter},type="actual"}[5m])) - sum by (service, workload, model) (rate(llm_cost_usd_total{${llmFilter},type="catalog"}[5m]))`,
+          legend: "{{service}} {{workload}} {{model}} actual-catalog",
         },
       ],
       gridPos: { x: 12, y: 49, w: 12, h: 8 },
@@ -91,10 +91,26 @@ export function addLlmPanels(
     }),
   );
 
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Top Cost by Feature (24h)",
+      description:
+        "Rolling 24h billed spend per workload. Takes the per-series maximum of OpenRouter's charged cost and upstream inference cost so BYOK routes, which bill nothing through OpenRouter and would read as $0 under an actual-only query, are still counted.",
+      targets: [
+        {
+          query: `topk(10, sum by (service, workload) (max by (service, workload, model) (increase(llm_cost_usd_total{${llmFilter},type=~"actual|upstream"}[24h])))) or on() vector(0)`,
+          legend: "{{service}} {{workload}}",
+        },
+      ],
+      gridPos: { x: 0, y: 57, w: 24, h: 8 },
+      unit: "currencyUSD",
+    }),
+  );
+
   builder.withRow(
     new dashboard.RowBuilder("Routing and Structured Output").gridPos({
       x: 0,
-      y: 57,
+      y: 65,
       w: 24,
       h: 1,
     }),
@@ -111,7 +127,7 @@ export function addLlmPanels(
           legend: "{{service}} {{model}} {{upstream_provider}} {{outcome}}",
         },
       ],
-      gridPos: { x: 0, y: 58, w: 12, h: 8 },
+      gridPos: { x: 0, y: 66, w: 12, h: 8 },
       unit: "ops",
     }),
   );
@@ -127,7 +143,7 @@ export function addLlmPanels(
           legend: "{{service}} {{model}} {{upstream_provider}}",
         },
       ],
-      gridPos: { x: 12, y: 58, w: 12, h: 8 },
+      gridPos: { x: 12, y: 66, w: 12, h: 8 },
       unit: "ops",
     }),
   );
@@ -143,7 +159,7 @@ export function addLlmPanels(
           legend: "{{service}} {{workload}} {{model}} {{outcome}}",
         },
       ],
-      gridPos: { x: 0, y: 66, w: 12, h: 8 },
+      gridPos: { x: 0, y: 74, w: 12, h: 8 },
       unit: "ops",
     }),
   );
@@ -159,7 +175,7 @@ export function addLlmPanels(
           legend: "{{service}} {{workload}} {{model}}",
         },
       ],
-      gridPos: { x: 12, y: 66, w: 12, h: 8 },
+      gridPos: { x: 12, y: 74, w: 12, h: 8 },
       unit: "ops",
     }),
   );
@@ -167,7 +183,7 @@ export function addLlmPanels(
   builder.withRow(
     new dashboard.RowBuilder("Broadcast Archive and Tempo").gridPos({
       x: 0,
-      y: 74,
+      y: 82,
       w: 24,
       h: 1,
     }),
@@ -185,7 +201,7 @@ export function addLlmPanels(
           legend: "{{outcome}}",
         },
       ],
-      gridPos: { x: 0, y: 75, w: 8, h: 8 },
+      gridPos: { x: 0, y: 83, w: 8, h: 8 },
       unit: "reqps",
     }),
   );
@@ -202,7 +218,7 @@ export function addLlmPanels(
           legend: "{{operation}} {{outcome}}",
         },
       ],
-      gridPos: { x: 8, y: 75, w: 8, h: 8 },
+      gridPos: { x: 8, y: 83, w: 8, h: 8 },
       unit: "ops",
     }),
   );
@@ -224,7 +240,7 @@ export function addLlmPanels(
           legend: "last success age",
         },
       ],
-      gridPos: { x: 16, y: 75, w: 8, h: 8 },
+      gridPos: { x: 16, y: 83, w: 8, h: 8 },
       unit: "s",
     }),
   );
