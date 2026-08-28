@@ -1,8 +1,6 @@
 export const TASK_QUEUES = {
   /** Every new central Workflow execution starts on this deterministic queue. */
   WORKFLOWS: "monorepo-workflows",
-  /** Migration-only queue retained until every existing execution drains. */
-  DEFAULT: "default",
   /** Latency-sensitive Home Assistant workflows and activities. */
   HOME: "home",
   /** Shared report delivery, freshness, and failure-notification work. */
@@ -20,7 +18,7 @@ export const TASK_QUEUES = {
   /** Scout production activity worker, co-located with its database and Discord bot. */
   SCOUT_PROD: "scout-prod",
   /**
-   * Delayed and recurring report-only agent tasks. Kept off DEFAULT so
+   * Delayed and recurring report-only agent tasks. Kept separate so
    * long-running Claude/Codex SDK sessions do not block HA/event cron work.
    */
   AGENT_TASK: "agent-task",

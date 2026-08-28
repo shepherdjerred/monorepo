@@ -34,9 +34,4 @@ export function createTemporalScoutBetaNetworkPolicy(chart: Chart): void {
     "temporal-worker-scout-beta-netpol",
     "scout-worker",
   );
-  egress(
-    "temporal-legacy-worker-scout-beta-netpol",
-    "temporal-legacy-worker-scout-beta-netpol",
-    "legacy-worker",
-  );
 }

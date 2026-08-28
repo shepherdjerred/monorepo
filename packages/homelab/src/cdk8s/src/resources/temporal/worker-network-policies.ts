@@ -69,22 +69,6 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     },
   });
 
-  new KubeNetworkPolicy(chart, "temporal-worker-netpol", {
-    metadata: { name: "temporal-worker-netpol" },
-    spec: {
-      podSelector: { matchLabels: { component: "legacy-worker" } },
-      policyTypes: ["Ingress", "Egress"],
-      ingress: metricsIngress([9464]),
-      egress: [
-        dnsEgress(),
-        temporalServerEgress(),
-        { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
-        { ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }] },
-        { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
-      ],
-    },
-  });
-
   for (const component of [
     "gateway",
     "home-worker",

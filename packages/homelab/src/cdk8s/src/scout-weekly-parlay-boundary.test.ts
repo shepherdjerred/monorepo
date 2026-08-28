@@ -104,7 +104,7 @@ describe("Scout Temporal ingress identity", () => {
 });
 
 describe("Scout weekly parlay compatibility boundary", () => {
-  test("retains the replay callback credential only for Beta Scout and compatible workers", () => {
+  test("retains the callback credential only for Beta Scout and owning workers", () => {
     const beta = DeploymentSpecSchema.parse(
       findResource(
         scoutResources("beta"),
@@ -129,25 +129,29 @@ describe("Scout weekly parlay compatibility boundary", () => {
     ).toBe(false);
 
     const temporal = temporalResources();
-    for (const name of [
-      "temporal-temporal-worker",
-      "temporal-temporal-scout-worker",
-    ]) {
-      const deployment = DeploymentSpecSchema.parse(
-        findResource(temporal, "Deployment", name).spec,
-      );
-      expect(deployment.template.spec.containers[0]?.env).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ name: "SCOUT_WEEKLY_PARLAY_CONTROL_URL" }),
-          expect.objectContaining({
-            name: "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
-          }),
-        ]),
-      );
-    }
+    const scout = DeploymentSpecSchema.parse(
+      findResource(temporal, "Deployment", "temporal-temporal-scout-worker")
+        .spec,
+    );
+    expect(scout.template.spec.containers[0]?.env).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "SCOUT_WEEKLY_PARLAY_CONTROL_URL" }),
+        expect.objectContaining({ name: "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN" }),
+      ]),
+    );
+
+    const infra = DeploymentSpecSchema.parse(
+      findResource(temporal, "Deployment", "temporal-temporal-infra-worker")
+        .spec,
+    );
+    expect(infra.template.spec.containers[0]?.env).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN" }),
+      ]),
+    );
   });
 
-  test("retains both directions of the replay callback network boundary", () => {
+  test("retains both directions of the callback network boundary", () => {
     const betaPolicy = findResource(
       scoutResources("beta"),
       "NetworkPolicy",
@@ -158,17 +162,19 @@ describe("Scout weekly parlay compatibility boundary", () => {
     );
 
     const temporal = temporalResources();
-    for (const name of [
-      "temporal-worker-scout-beta-netpol",
-      "temporal-legacy-worker-scout-beta-netpol",
-    ]) {
-      expect(
-        temporal.some(
-          (resource) =>
-            resource.kind === "NetworkPolicy" &&
-            resource.metadata.name === name,
-        ),
-      ).toBe(true);
-    }
+    expect(
+      temporal.some(
+        (resource) =>
+          resource.kind === "NetworkPolicy" &&
+          resource.metadata.name === "temporal-worker-scout-beta-netpol",
+      ),
+    ).toBe(true);
+    expect(
+      temporal.some(
+        (resource) =>
+          resource.kind === "NetworkPolicy" &&
+          resource.metadata.name === "temporal-legacy-worker-scout-beta-netpol",
+      ),
+    ).toBe(false);
   });
 });

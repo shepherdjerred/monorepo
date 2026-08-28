@@ -269,7 +269,7 @@ Flag: projects with no recent releases (SDK may not be reporting), large gap bet
 
 ## Section 10: Temporal Workflows
 
-Temporal runs in the `temporal` namespace (server + UI + worker + PostgreSQL). The UI is at `https://temporal-ui.tailnet-1a49.ts.net`. Workflow source is in `packages/temporal/` (`good-night`, `good-morning`, `golink-sync`, `fetcher`, `dns-audit`, `deps-summary`).
+Temporal runs in the `temporal` namespace (server + UI + canonical workers + PostgreSQL). The UI is at `https://temporal-ui.tailnet-1a49.ts.net`. Workflow source is in `packages/temporal/` (`good-night`, `good-morning`, `golink-sync`, `fetcher`, `dns-audit`, `deps-summary`). The retired `default` worker is intentionally absent after the retention gate.
 
 The scheduled audit worker has the Temporal CLI installed and `TEMPORAL_ADDRESS`
 points at `temporal-temporal-server-service:7233`, so run Temporal commands
@@ -334,9 +334,20 @@ Flag: schedules with empty recent actions (never fired), paused without a docume
 toolkit prom query 'rate(temporal_workflow_execution_failed_total[15m])'
 toolkit prom query 'temporal_workflow_task_timeout_count'
 toolkit prom query 'up{namespace="temporal"}'
+toolkit prom query 'up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}'
 ```
 
 Flag: non-zero failure rate, scrape target down.
+
+### Default-queue retirement acceptance
+
+Before applying the cleanup revision, verify that the 30-day retention gate has
+passed since the latest default-queue execution. Then confirm there are no
+running default-queue workflows, no pending default-queue activity or workflow
+tasks, no schedules or event-start surfaces targeting `default`, and no retained
+default histories. After ArgoCD reconciliation, verify that the legacy
+Deployment, Services, ServiceMonitors, NetworkPolicies, and ServiceAccount
+bindings are absent and that each canonical worker has a healthy metrics target.
 
 ### Agent-task execution hardening signals
 

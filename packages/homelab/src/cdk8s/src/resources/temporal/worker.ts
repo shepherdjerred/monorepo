@@ -1,22 +1,13 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
 import {
-  Cpu,
   ConfigMap,
-  Deployment,
-  DeploymentStrategy,
   EnvValue,
   Secret,
   ServiceAccount,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  withCommonProps,
-  setRevisionHistoryLimit,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   createTemporalWorkerAuditRbac,
   createTemporalWorkerTasknotesCanaryRbac,
@@ -26,13 +17,8 @@ import { createTemporalWorkerCrdReaderRbac } from "./crd-rbac.ts";
 import { glitterContextEnv, glitterCorpusEnv } from "./glitter-corpus-env.ts";
 import { createTemporalGlitterWorkers } from "./glitter-worker.ts";
 import { createTemporalIngressWorkers } from "./ingress-workers.ts";
-import { createTemporalLegacyWorkerMetrics } from "./legacy-worker-metrics.ts";
-import {
-  homelabAuditEnv,
-  legacyWorkerEnvironment,
-} from "./legacy-worker-env.ts";
+import { homelabAuditEnv } from "./homelab-audit-env.ts";
 import { createTemporalOperationsWorkers } from "./operations-workers.ts";
-import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import { createTemporalWorkflowWorker } from "./workflow-worker.ts";
 import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss-config.ts";
 import {
@@ -49,8 +35,6 @@ export function createTemporalWorkerDeployment(
   chart: Chart,
   props: CreateTemporalWorkerDeploymentProps,
 ) {
-  const UID = 1000;
-
   const onePasswordItem = new OnePasswordItem(chart, "temporal-worker-1p", {
     spec: {
       itemPath: vaultItemPath("mjgnqqh37jxyzseqrddde2jgaq"),
@@ -106,7 +90,6 @@ export function createTemporalWorkerDeployment(
     data: { "desired.json": FRESHRSS_DESIRED_JSON },
   });
 
-  const serviceAccount = createTemporalWorkerServiceAccount(chart);
   const infraServiceAccount = createTemporalWorkerServiceAccount(chart, {
     constructId: "temporal-infra-worker-sa",
     name: "temporal-infra-worker",
@@ -119,103 +102,21 @@ export function createTemporalWorkerDeployment(
     },
   );
 
-  createTemporalWorkerIngressReaderRbac(chart, [
-    serviceAccount,
-    infraServiceAccount,
-  ]);
-  createTemporalWorkerMaintenanceRbac(chart, [
-    serviceAccount,
-    infraServiceAccount,
-  ]);
+  createTemporalWorkerIngressReaderRbac(chart, [infraServiceAccount]);
+  createTemporalWorkerMaintenanceRbac(chart, [infraServiceAccount]);
 
   // Cluster-wide read-only RBAC for deterministic collectors and generic
-  // report-only investigations. Only the core worker receives the separate
+  // report-only investigations. Only the infra worker receives the separate
   // TaskNotes exec role; the agent worker cannot exec into any pod.
   createTemporalWorkerAuditRbac(chart, [
-    serviceAccount,
     infraServiceAccount,
     agentServiceAccount,
   ]);
-  createTemporalWorkerTasknotesCanaryRbac(chart, [
-    serviceAccount,
-    infraServiceAccount,
-  ]);
+  createTemporalWorkerTasknotesCanaryRbac(chart, [infraServiceAccount]);
 
   // Read-only CRD access for homelab-crd-imports-daily. See ./crd-rbac.ts.
-  createTemporalWorkerCrdReaderRbac(chart, [
-    serviceAccount,
-    infraServiceAccount,
-  ]);
+  createTemporalWorkerCrdReaderRbac(chart, [infraServiceAccount]);
 
-  const deployment = new Deployment(chart, "temporal-worker", {
-    replicas: 1,
-    strategy: DeploymentStrategy.recreate(),
-    serviceAccount,
-    automountServiceAccountToken: true,
-    securityContext: {
-      fsGroup: UID,
-    },
-    podMetadata: {
-      labels: {
-        app: "temporal-worker",
-        component: "legacy-worker",
-      },
-    },
-  });
-
-  setRevisionHistoryLimit(deployment, 5);
-
-  const container = deployment.addContainer(
-    withCommonProps({
-      name: "temporal-worker",
-      image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
-      // :9464 = Temporal SDK's built-in Prometheus bridge (workflow_completed,
-      //        activity_task_fail, etc. — see installRuntime in worker.ts)
-      // :9465 = application Prometheus registry (pr_*, default Bun process
-      //        metrics — see observability/metrics.ts)
-      ports: [
-        { number: 9464, name: "metrics" },
-        { number: 9465, name: "app-metrics" },
-      ],
-      securityContext: {
-        user: UID,
-        group: UID,
-        readOnlyRootFilesystem: false,
-      },
-      // Sized for in-process claude -p invocations. The pr-agent activity
-      // (review + summary) runs for a few minutes; the homelab-audit-daily
-      // workflow runs ~25 min and shells out to kubectl / talosctl / curl
-      // alongside claude. 30d working-set peak hit 3.9Gi against the old 4Gi
-      // limit (near-OOM), so the request reflects real usage and the limit
-      // has slack above the observed peak.
-      resources: {
-        cpu: {
-          request: Cpu.millis(500),
-          limit: Cpu.millis(1500),
-        },
-        memory: {
-          request: Size.mebibytes(512),
-          limit: Size.gibibytes(6),
-        },
-      },
-      ...temporalWorkerHealthProbes(),
-      envVariables: legacyWorkerEnvironment({
-        serverServiceName: props.serverServiceName,
-        secret,
-        starlightBotSecret,
-        scoutWeeklyParlaySecret,
-      }),
-    }),
-  );
-
-  // Bun resolves its scratch directory to /tmp at startup and bails with
-  // `bun is unable to write files to tempdir: AccessDenied` if the path
-  // isn't writable for UID 1000. Activities also stage real work under
-  // /tmp (deps-summary clones, the kubectl / gh / github-mcp-server
-  // installers in image.ts). A node-disk-backed emptyDir keeps that out
-  // of the 2 GiB pod memory budget.
-  const tmpVolume = Volume.fromEmptyDir(chart, "temporal-worker-tmp", "tmp");
-  container.mount("/tmp", tmpVolume);
   const freshRssManifestVolume = Volume.fromConfigMap(
     chart,
     "temporal-freshrss-manifest-volume",
@@ -228,13 +129,6 @@ export function createTemporalWorkerDeployment(
     freshRssCredential,
     { items: { password: { path: "password" } } },
   );
-  container.mount("/etc/freshrss", freshRssManifestVolume, {
-    readOnly: true,
-  });
-  container.mount("/run/secrets/freshrss", freshRssCredentialVolume, {
-    readOnly: true,
-  });
-
   const agentDeployment = createTemporalAgentWorker(chart, {
     serviceAccount: agentServiceAccount,
     envVariables: {
@@ -353,8 +247,6 @@ export function createTemporalWorkerDeployment(
       defaultMode: 0o400,
     },
   );
-  container.mount("/etc/talos", talosConfigVolume, { readOnly: true });
-
   const { infraDeployment, repoDeployment, scoutDeployment } =
     createTemporalOperationsWorkers(chart, {
       serverServiceName: props.serverServiceName,
@@ -367,10 +259,7 @@ export function createTemporalWorkerDeployment(
       freshRssCredentialVolume,
     });
 
-  createTemporalLegacyWorkerMetrics(chart);
-
   return {
-    deployment,
     agentDeployment,
     gatewayDeployment,
     homeDeployment,

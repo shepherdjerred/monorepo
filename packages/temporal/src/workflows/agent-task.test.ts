@@ -104,7 +104,7 @@ async function runAgentTaskExpectingFailure(
 ): Promise<unknown> {
   const workflowWorker = await Worker.create({
     connection: testEnvironment.nativeConnection,
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.WORKFLOWS,
     workflowsPath: new URL("index.ts", import.meta.url).pathname,
   });
   const agentWorker = await Worker.create({
@@ -124,7 +124,7 @@ async function runAgentTaskExpectingFailure(
     await workflowWorker.runUntil(
       testEnvironment.client.workflow.execute(agentTaskWorkflow, {
         args: [INPUT],
-        taskQueue: TASK_QUEUES.DEFAULT,
+        taskQueue: TASK_QUEUES.WORKFLOWS,
         workflowId: `${workflowIdPrefix}-${crypto.randomUUID()}`,
       }),
     );

@@ -169,7 +169,7 @@ ip6tables -L OUTPUT -n`,
           // to 1 (packages/temporal/src/worker.ts), so overlapping scheduled
           // tasks queue instead of multiplying provider subprocesses. Keep a
           // rounded 768MiB request and 1GiB limit for task bursts without
-          // reserving the 3GiB used by the larger core and glitter workers.
+          // reserving the 3GiB used by the larger infra and glitter workers.
           request: Size.mebibytes(768),
           limit: Size.gibibytes(1),
         },

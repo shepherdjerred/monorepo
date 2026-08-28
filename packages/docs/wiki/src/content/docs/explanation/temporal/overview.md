@@ -62,27 +62,26 @@ change.
 The gateway is a control process: it reconciles schedules and serves the public
 HTTP surfaces but does not poll a task queue or receive a Kubernetes token. A
 second credentialless process runs all deterministic central Workflow code.
-Every new start, schedule, and child goes to `monorepo-workflows`. Ten
-Activity-only roles own `default`, `home`, `reports`, `infra`,
+Every new start, schedule, and child goes to `monorepo-workflows`. Nine
+Activity-only roles own `home`, `reports`, `infra`,
 `repo-automation`, `scout`, `agent-task`, `glitter-corpus`, `glitter-context`,
-and `maintenance`. The `default` Activity Worker exists only to drain commands
-already scheduled by pre-cutover histories; no new root targets it.
+and `maintenance`.
 
 Temporal executions cannot move to another Workflow task queue after they
-start. The Workflow-only process therefore polls `monorepo-workflows` plus all
-legacy central queues until live visibility shows that each old queue has zero
-open executions. Continue-as-new inherits the current queue, so new chains stay
-on `monorepo-workflows` and old chains remain drainable. A replay test generated
-a real history before Activity queues were explicit and verifies it against the
-new routing on every change.
+start. The Workflow-only process therefore polls `monorepo-workflows` plus the
+remaining legacy central queues until live visibility shows that each old queue
+has zero open executions. Continue-as-new inherits the current queue, so new
+chains stay on `monorepo-workflows`; pre-retirement default histories are no
+longer supported. A replay test generated a real history before Activity queues
+were explicit and verifies it against the new routing on every change.
 
 The split is about authorization and failure isolation, not capacity. Queues
 isolate concurrency; **processes** isolate runtime failures, credentials, and
 Kubernetes identities. Home and reports can each run four activities. Infra,
 repo, Scout, agent, both Glitter domains, and maintenance remain serial.
 
-Infra and the temporary legacy worker receive the broad audit and pod-exec
-roles. Agent receives read-only audit access but cannot exec into pods. Gateway,
+Infra receives the broad audit and pod-exec roles. Agent receives read-only audit
+access but cannot exec into pods. Gateway,
 the Workflow worker, home, reports, repo, Scout, and both Glitter workers
 disable service-account token mounting. Each Deployment receives an allowlisted
 environment. Network policies, Services, and ServiceMonitors select the unique

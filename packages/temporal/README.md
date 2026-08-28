@@ -10,19 +10,16 @@ homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 Production runs one image in twelve single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
 without a task queue. The credentialless `workflows` role owns deterministic
-Workflow execution on `monorepo-workflows` and temporarily polls every legacy
-central queue so open histories can finish where they started. The domain roles
-own only Activity Workers, with separate registries, credentials, service
-accounts, and concurrency budgets. The `legacy` role drains Activity tasks
-already scheduled on `default`; no new Workflow starts or schedules target that
-queue. The default `all` role composes every role in one process for local
-development.
+Workflow execution on `monorepo-workflows` and temporarily polls the remaining
+legacy central queues so open histories can finish where they started. The domain
+roles own only Activity Workers, with separate registries, credentials, service
+accounts, and concurrency budgets. The default `all` role composes every role in
+one process for local development.
 
 | Role              | Queue or surface                              |           Execution concurrency |
 | ----------------- | --------------------------------------------- | ------------------------------: |
 | `control`         | schedules and HTTP APIs                       |                            none |
 | `workflows`       | `monorepo-workflows` + legacy Workflow queues | 8 new / 2 legacy Workflow tasks |
-| `legacy`          | `default` Activity drain                      |                               1 |
 | `home`            | `home`                                        |                               4 |
 | `reports`         | `reports`                                     |                               4 |
 | `infra`           | `infra`                                       |                               1 |
@@ -36,8 +33,8 @@ development.
 Every central start, schedule, and child Workflow targets
 `monorepo-workflows`. Every `proxyActivities` call names its domain Activity
 queue explicitly. Continue-as-new inherits the execution's current queue: a new
-chain remains on `monorepo-workflows`, while a chain created before the cutover
-remains on its legacy queue until it closes.
+chain remains on `monorepo-workflows`. Pre-retirement default histories are
+unsupported after the legacy worker removal.
 
 ## Quick start
 

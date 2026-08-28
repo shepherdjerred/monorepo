@@ -276,13 +276,6 @@ describe("Container resource requests backstop", () => {
         { requests: { cpu: "100m", memory: "2560Mi" } },
       ],
       [
-        "temporal-temporal-worker/temporal-worker",
-        {
-          requests: { cpu: "500m", memory: "512Mi" },
-          limits: { cpu: "1500m", memory: "6144Mi" },
-        },
-      ],
-      [
         "temporal-temporal-workflows/temporal-workflows",
         {
           requests: { cpu: "250m", memory: "512Mi" },

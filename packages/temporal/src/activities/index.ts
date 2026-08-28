@@ -115,19 +115,3 @@ export const maintenanceWorkerActivities = {
   ...mainVulnScanActivities,
   ...linkRotScanActivities,
 };
-
-/**
- * Transitional union used only by the legacy `default` queue. New domain
- * workers receive one of the capability-scoped registries above.
- */
-export const activities = {
-  ...homeActivities,
-  ...reportActivities,
-  ...infraActivities,
-  ...repoActivities,
-  ...scoutActivities,
-  ...agentActivities,
-  ...glitterCorpusWorkerActivities,
-  ...glitterContextWorkerActivities,
-  ...maintenanceWorkerActivities,
-};

@@ -4,13 +4,11 @@ export const WorkerRoleSchema = z.enum([
   "all",
   "agent",
   "control",
-  "core",
   "glitter",
   "glitter-context",
   "glitter-corpus",
   "home",
   "infra",
-  "legacy",
   "maintenance",
   "repo",
   "reports",
@@ -22,10 +20,6 @@ export type WorkerRole = z.infer<typeof WorkerRoleSchema>;
 
 export function parseWorkerRole(value: string | undefined): WorkerRole {
   return WorkerRoleSchema.parse(value ?? "all");
-}
-
-export function workerRoleRunsCore(role: WorkerRole): boolean {
-  return role === "all" || role === "core";
 }
 
 export function workerRoleRunsAgent(role: WorkerRole): boolean {

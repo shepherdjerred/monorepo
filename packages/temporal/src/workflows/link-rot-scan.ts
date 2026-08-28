@@ -1,4 +1,4 @@
-import { patched, proxyActivities } from "@temporalio/workflow";
+import { proxyActivities } from "@temporalio/workflow";
 import type {
   LinkRotScanActivities,
   LinkRotScanResult,
@@ -22,13 +22,13 @@ const RETRY = {
 // Clone + full markdown link check (hundreds of URLs at bounded concurrency
 // with retries) fits well inside 20 minutes; heartbeats fire every 15s.
 //
-// The scan runs on the isolated MAINTENANCE queue, not the core default queue:
+// The scan runs on the isolated MAINTENANCE queue, not the reports queue:
 // it is a long git/lychee subprocess reaching arbitrary external hosts, and the
-// core deployment also serves latency-sensitive HA, webhook, and report work.
+// reports worker also serves latency-sensitive report work.
 // The maintenance worker is already serial (one activity slot), runs the same
 // image (so it carries the pinned lychee binary), and keeps that failure and
-// memory risk out of the credentialed core pod — the same split the Trivy scan
-// uses.
+// memory risk out of the credentialed reports pod — the same split the Trivy
+// scan uses.
 const { scanMainForLinkRot } = proxyActivities<LinkRotScanActivities>({
   taskQueue: TASK_QUEUES.MAINTENANCE,
   startToCloseTimeout: "20 minutes",
@@ -36,30 +36,17 @@ const { scanMainForLinkRot } = proxyActivities<LinkRotScanActivities>({
   retry: RETRY,
 });
 // Delivery and alert publication run on the reports queue, which owns the
-// Postal, report-state S3, and ALERTMANAGER_URL credentials. The legacy branch
-// is retained only for histories created before this queue migration.
-const legacyDeliveryActivities = proxyActivities<ReportDeliveryActivities>({
-  taskQueue: TASK_QUEUES.DEFAULT,
-  startToCloseTimeout: "2 minutes",
-  retry: RETRY,
-});
-const reportsDeliveryActivities = proxyActivities<ReportDeliveryActivities>({
+// Postal, report-state S3, and ALERTMANAGER_URL credentials.
+const deliveryActivities = proxyActivities<ReportDeliveryActivities>({
   taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: "2 minutes",
   retry: RETRY,
 });
-const legacyAlertActivities = proxyActivities<LinkRotScanAlertActivities>({
-  taskQueue: TASK_QUEUES.DEFAULT,
-  startToCloseTimeout: "1 minute",
-  retry: RETRY,
-});
-const reportsAlertActivities = proxyActivities<LinkRotScanAlertActivities>({
+const alertActivities = proxyActivities<LinkRotScanAlertActivities>({
   taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: "1 minute",
   retry: RETRY,
 });
-
-const REPORTS_QUEUE_PATCH = "link-rot-scan-reports-queue-v1";
 
 /**
  * Weekly lychee link-rot scan of current `main`.
@@ -70,13 +57,6 @@ const REPORTS_QUEUE_PATCH = "link-rot-scan-reports-queue-v1";
  * vulnerability scan and pages only if a critical finding ever appears.
  */
 export async function runLinkRotScanWorkflow(): Promise<void> {
-  const useReportsQueue = patched(REPORTS_QUEUE_PATCH);
-  const deliveryActivities = useReportsQueue
-    ? reportsDeliveryActivities
-    : legacyDeliveryActivities;
-  const alertActivities = useReportsQueue
-    ? reportsAlertActivities
-    : legacyAlertActivities;
   const startedAt = new Date().toISOString();
   // Only a clone/scan failure produces the failure report. Wrapping the
   // delivery and alert calls too would let an Alertmanager outage — after the
