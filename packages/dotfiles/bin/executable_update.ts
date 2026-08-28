@@ -1,16 +1,15 @@
 #!/usr/bin/env bun
 
-import * as R from "remeda";
-
-type Command = {
-  executable: string;
-  args: string[];
+export type Command = {
+  readonly executable: string;
+  readonly args: readonly string[];
 };
 
-const isLinux = process.platform === "linux";
-const isMac = process.platform === "darwin";
+export type RunCommand = (command: Command) => Promise<void>;
 
-async function run({ executable, args }: Command) {
+const isLinux = process.platform === "linux";
+
+export async function run({ executable, args }: Command): Promise<void> {
   const prefix = `[${executable} ${args.join(" ")}]`;
 
   const proc = Bun.spawn([executable, ...args], {
@@ -23,7 +22,10 @@ async function run({ executable, args }: Command) {
     pipeThrough(prefix, proc.stderr, Bun.stderr),
   ]);
 
-  await proc.exited;
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) {
+    throw new Error(`${prefix} exited with code ${exitCode.toString()}`);
+  }
 }
 
 async function pipeThrough(
@@ -34,14 +36,13 @@ async function pipeThrough(
   const decoder = new TextDecoder();
   for await (const chunk of readable) {
     const text = decoder.decode(chunk);
-    writable.write(new TextEncoder().encode(`${prefix} ${text}`));
+    await writable.write(new TextEncoder().encode(`${prefix} ${text}`));
   }
 }
 
 // Sequential commands (must run in order)
 const sequentialCommands: Command[] = [
   { executable: "chezmoi", args: ["update"] },
-  { executable: "chezmoi", args: ["apply"] },
   ...(isLinux
     ? [
         { executable: "sudo", args: ["apt", "update"] },
@@ -60,21 +61,30 @@ const parallelCommands: Command[] = [
 ];
 
 // Sequential command chains (each array runs in order)
-async function updateBrew() {
-  await run({ executable: "brew", args: ["update"] });
-  await run({ executable: "brew", args: ["upgrade"] });
+async function updateBrew(runCommand: RunCommand): Promise<void> {
+  await runCommand({ executable: "brew", args: ["update"] });
+  await runCommand({ executable: "brew", args: ["upgrade"] });
 }
 
-// Run sequential commands first
-for (const cmd of sequentialCommands) {
-  await run(cmd);
+export async function main(runCommand: RunCommand = run): Promise<void> {
+  // Run sequential commands first
+  for (const cmd of sequentialCommands) {
+    await runCommand(cmd);
+  }
+
+  // Run parallel commands (including chains that are internally sequential)
+  await Promise.all([
+    ...parallelCommands.map((command) => runCommand(command)),
+    updateBrew(runCommand),
+  ]);
+
+  // Export current brew state
+  const home = Bun.env["HOME"];
+  if (home === undefined) throw new Error("HOME is required");
+  await runCommand({
+    executable: "bash",
+    args: [`${home}/bin/write_brewfile.sh`],
+  });
 }
 
-// Run parallel commands (including chains that are internally sequential)
-await Promise.all([...R.pipe(parallelCommands, R.map(run)), updateBrew()]);
-
-// Export current brew state
-await run({
-  executable: "bash",
-  args: [`${process.env.HOME}/bin/write_brewfile.sh`],
-});
+if (import.meta.main) await main();

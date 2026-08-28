@@ -6,6 +6,7 @@
   },
   "include": [
     "bin/executable_git_cleanup.ts",
+    "bin/executable_update.ts",
     "bin/git_cleanup_core.ts",
     "scripts/*.ts"
   ]
