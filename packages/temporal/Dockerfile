@@ -126,6 +126,11 @@ ARG TRIVY_VERSION=0.72.0
 ARG LYCHEE_VERSION=lychee-v0.24.2
 # renovate: datasource=github-releases depName=Kometa-Team/Kometa
 ARG KOMETA_VERSION=2.4.5
+# Shared local/CI Postgres pin — keep in lockstep with .mise.toml's
+# "ubi:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
+# run against the same server binaries here as on dev/CI machines.
+# renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
+ARG POSTGRESQL_BINARIES_VERSION=16.15.0
 ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
 
 # --- Base system deps: ca-certificates, curl, git, and the pod-local agent firewall ---
@@ -357,6 +362,36 @@ RUN set -e; \
     printf '%s\n' '#!/bin/sh' 'exec /opt/kometa/venv/bin/python /opt/kometa/kometa.py "$@"' > /usr/local/bin/kometa; \
     chmod +x /usr/local/bin/kometa; \
     kometa --help >/dev/null
+
+# --- PostgreSQL server binaries (per-arch tarball, SHA256-verified) ---
+# The Data Dragon updater's snapshot step runs scout-backend tests, and since
+# the SQLite→Postgres migration (PR #2310) every backend test boots a local
+# Postgres via ensureDevPostgres (pg_isready/psql/postgres/initdb/pg_ctl/
+# createdb — packages/scout-for-lol/packages/backend/src/testing/
+# postgres-server.ts). Dev/CI machines get these from mise; this image must
+# carry them itself or the daily data-dragon workflow fails at its final step
+# (ScoutDataDragonUpdateFailed, 2026-08-26). The full tree stays under
+# /opt/postgresql because initdb resolves share/ relative to its prefix.
+RUN set -e; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in amd64) pgarch=x86_64 ;; arm64) pgarch=aarch64 ;; \
+      *) echo "unsupported architecture: $arch" >&2; exit 1 ;; esac; \
+    base="https://github.com/theseus-rs/postgresql-binaries/releases/download/${POSTGRESQL_BINARIES_VERSION}"; \
+    tarball="postgresql-${POSTGRESQL_BINARIES_VERSION}-${pgarch}-unknown-linux-gnu.tar.gz"; \
+    curl -fsSL "$base/$tarball" -o /tmp/postgresql.tar.gz; \
+    curl -fsSL "$base/$tarball.sha256" -o /tmp/postgresql.sha256; \
+    expected="$(awk '{print $1}' /tmp/postgresql.sha256)"; \
+    [ -n "$expected" ] || { echo "no checksum for $tarball" >&2; exit 1; }; \
+    actual="$(sha256sum /tmp/postgresql.tar.gz | awk '{print $1}')"; \
+    [ "$expected" = "$actual" ] || { echo "postgresql-binaries checksum mismatch (expected $expected, got $actual)" >&2; exit 1; }; \
+    mkdir -p /opt/postgresql; \
+    tar -xzf /tmp/postgresql.tar.gz -C /opt/postgresql --strip-components=1; \
+    for bin in pg_isready psql postgres initdb pg_ctl createdb dropdb; do \
+      ln -s "/opt/postgresql/bin/$bin" "/usr/local/bin/$bin"; \
+    done; \
+    rm /tmp/postgresql.tar.gz /tmp/postgresql.sha256; \
+    pg_isready --version; \
+    initdb --version
 
 # Production node_modules + workspace manifests. The isolated-linker tree uses
 # relative symlinks (store at node_modules/.bun), so copying the whole install
