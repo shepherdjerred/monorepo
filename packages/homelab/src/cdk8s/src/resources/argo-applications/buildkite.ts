@@ -104,6 +104,50 @@ const BUILDKITE_CREDENTIAL_ITEMS = [
     secretName: "buildkite-arr-credentials",
     itemId: "vkzv5jm2euzb7727x6uxdpwu5y",
   },
+  {
+    secretName: "openai-tofu-credentials",
+    itemId: "jkqhgshctzikhed3vwgogtkmuy",
+  },
+  {
+    secretName: "anthropic-tofu-credentials",
+    itemId: "a3limlclcej76wmf3kftiqex4u",
+  },
+  {
+    secretName: "discord-tofu-credentials",
+    itemId: "z2tt5eswusadzfsztg4uwr6vay",
+  },
+  {
+    secretName: "openrouter-tofu-credentials",
+    itemId: "msklmk7gk2r3rq4kyeywpuafny",
+  },
+  {
+    secretName: "cloudflare-tokens-tofu-credentials",
+    itemId: "rzxdklctncniksfcywoypt3fs4",
+  },
+  {
+    secretName: "discord-birmel-credentials",
+    itemId: "w5c27dzybxor3j6dzl7lub2soe",
+  },
+  {
+    secretName: "discord-starlight-beta-credentials",
+    itemId: "tdxe6cq7ozhv7cesfvnlkl5gh4",
+  },
+  {
+    secretName: "discord-starlight-prod-credentials",
+    itemId: "cmp6si6n5syhr4smxew3qfcmfi",
+  },
+  {
+    secretName: "discord-scout-beta-credentials",
+    itemId: "rtu44pohnp5ixdp2njuv5f6t2e",
+  },
+  {
+    secretName: "discord-scout-prod-credentials",
+    itemId: "pacrc4wfbtct4y3qazkvazop5a",
+  },
+  {
+    secretName: "discord-minecraft-credentials",
+    itemId: "q37vet77dfggoqbvu4bqle3gje",
+  },
 ] as const;
 
 function createBuildkiteCredentialBoundaries(chart: Chart): void {

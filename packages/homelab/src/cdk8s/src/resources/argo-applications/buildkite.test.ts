@@ -147,6 +147,17 @@ const EXPECTED_CREDENTIAL_SECRET_NAMES = [
   "buildkite-cloudflare-credentials",
   "buildkite-tailscale-credentials",
   "buildkite-arr-credentials",
+  "openai-tofu-credentials",
+  "anthropic-tofu-credentials",
+  "discord-tofu-credentials",
+  "openrouter-tofu-credentials",
+  "cloudflare-tokens-tofu-credentials",
+  "discord-birmel-credentials",
+  "discord-starlight-beta-credentials",
+  "discord-starlight-prod-credentials",
+  "discord-scout-beta-credentials",
+  "discord-scout-prod-credentials",
+  "discord-minecraft-credentials",
 ];
 
 function synthBuildkiteResources() {
