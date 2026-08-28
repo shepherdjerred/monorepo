@@ -85,7 +85,7 @@ Inspect the schedule and its recent actions:
 toolkit temporal schedule describe --schedule-id freshrss-sync-hourly
 kubectl logs \
   --namespace temporal \
-  deployment/temporal-temporal-worker
+  deployment/temporal-temporal-repo-worker
 ```
 
 | Symptom                        | Check                                                                      |
