@@ -113,7 +113,15 @@ export function createTempoApp(chart: Chart) {
         namespace: "tempo",
       },
       syncPolicy: {
-        automated: { enabled: true },
+        // selfHeal (velero/seaweedfs precedent): without it, automated sync
+        // runs once per revision, so a renderer change under a fixed chart
+        // revision strands the app OutOfSync forever. Exactly that happened
+        // 2026-08-23: the ArgoCD 10.4.0 bump swapped bundled Helm 3→4, Helm 4
+        // drops null-valued default keys during coalesce, and tempo's chart
+        // declares `opencensus:` (null) in its default receivers — the desired
+        // ConfigMap render changed under 1.24.4 and nothing ever re-converged
+        // it, pinning the root app at Progressing.
+        automated: { enabled: true, selfHeal: true },
         syncOptions: ["CreateNamespace=true", "Replace=true"],
       },
     },
