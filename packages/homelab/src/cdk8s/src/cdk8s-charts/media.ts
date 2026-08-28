@@ -31,8 +31,12 @@ export async function createMediaChart(app: App) {
   const downloadsVolume = new ZfsSataVolume(chart, "qbittorrent-hdd-pvc", {
     storage: Size.tebibytes(2),
   });
+  // 8 TiB, up from 6: steadily growing library hit 77% with a 21–64 day
+  // projection to full (PVCProjectedFullWithin14Days, 2026-08-28). tv and
+  // downloads stay as-is — the qbittorrent projection was a download-burst
+  // artifact, not trend.
   const moviesVolume = new ZfsSataVolume(chart, "plex-movies-hdd-pvc", {
-    storage: Size.tebibytes(6),
+    storage: Size.tebibytes(8),
   });
   // Media services that share volumes
   createBazarrDeployment(chart, {
