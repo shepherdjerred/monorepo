@@ -63,8 +63,8 @@ describe("check-flipt-flag-inventory", () => {
       },
     });
 
-    expect(loaded).toEqual(["default", "beta", "prod"]);
-    expect(messages).toHaveLength(3);
+    expect(loaded).toEqual(["beta", "prod"]);
+    expect(messages).toHaveLength(2);
   });
 
   test("checks only an exact environment filter", async () => {

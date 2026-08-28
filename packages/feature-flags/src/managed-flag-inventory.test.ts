@@ -46,10 +46,12 @@ function exploreModel(environment: string) {
 }
 
 describe("ManagedFlagInventorySchema", () => {
-  test("keeps legacy default on Sol while beta and prod use Luna", () => {
-    expect(exploreModel("default")).toBe("gpt-5.6-sol");
+  test("uses Luna in both managed environments", () => {
     expect(exploreModel("beta")).toBe("gpt-5.6-luna");
     expect(exploreModel("prod")).toBe("gpt-5.6-luna");
+    expect(() =>
+      materializeManagedEnvironment(managedFlagInventory, "default"),
+    ).toThrow(/unknown managed environment/);
   });
 
   test("materializes a full-state environment override", () => {

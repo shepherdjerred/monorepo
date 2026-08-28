@@ -48,8 +48,9 @@ const DATA_PATH = "/var/opt/flipt";
 // storage: without an explicit local backend it happily accepts flag writes and
 // silently loses every one of them on restart. Verified by creating a flag,
 // restarting the container, and getting a 404 from the evaluation snapshot.
-// With this config the same test round-trips, and a bare git repo materialises
-// at `${DATA_PATH}/data`.
+// With this config the same test round-trips, and each managed environment has
+// its own bare git repository. The retired `${DATA_PATH}/data` repository stays
+// on the PVC as an unreferenced rollback artifact.
 //
 // check_for_updates and telemetry_enabled both default to true and would fail
 // continuously against the DNS-only egress policy below.
@@ -61,10 +62,6 @@ server:
   host: 0.0.0.0
   http_port: ${FLIPT_PORT.toString()}
 storage:
-  default:
-    backend:
-      type: local
-      path: ${DATA_PATH}/data
   beta:
     backend:
       type: local
@@ -74,15 +71,12 @@ storage:
       type: local
       path: ${DATA_PATH}/data-prod
 environments:
-  default:
-    name: default
-    default: true
-    storage: default
   beta:
     name: beta
     storage: beta
   prod:
     name: prod
+    default: true
     storage: prod
 authentication:
   required: false
@@ -97,10 +91,8 @@ meta:
   state_directory: ${DATA_PATH}/state
 `;
 
-export function createEnvironmentMigrationScript(dataPath: string): string {
+export function createEnvironmentValidationScript(dataPath: string): string {
   return `set -eu
-
-source_repo="${dataPath}/data"
 
 validate_repo() {
   repo="$1"
@@ -110,30 +102,13 @@ validate_repo() {
   fi
 }
 
-copy_environment() {
-  destination="$1"
-  if [ -e "$destination" ]; then
-    validate_repo "$destination"
-    return
-  fi
-
-  temporary="\${destination}.migrating"
-  if [ -e "$temporary" ]; then
-    echo "Flipt migration has an incomplete temporary repository: $temporary" >&2
-    exit 1
-  fi
-  cp -a "$source_repo" "$temporary"
-  diff -qr "$source_repo" "$temporary"
-  mv "$temporary" "$destination"
-}
-
-validate_repo "$source_repo"
-copy_environment "${dataPath}/data-beta"
-copy_environment "${dataPath}/data-prod"
+validate_repo "${dataPath}/data-beta"
+validate_repo "${dataPath}/data-prod"
 `;
 }
 
-const MIGRATE_ENVIRONMENTS_SCRIPT = createEnvironmentMigrationScript(DATA_PATH);
+const VALIDATE_ENVIRONMENTS_SCRIPT =
+  createEnvironmentValidationScript(DATA_PATH);
 
 export function createFliptDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "flipt", {
@@ -169,10 +144,10 @@ export function createFliptDeployment(chart: Chart) {
 
   deployment.addInitContainer(
     withCommonProps({
-      name: "migrate-environments",
+      name: "validate-environments",
       image: `flipt/flipt:${versions["flipt-io/flipt"]}`,
       command: ["/bin/sh", "-c"],
-      args: [MIGRATE_ENVIRONMENTS_SCRIPT],
+      args: [VALIDATE_ENVIRONMENTS_SCRIPT],
       resources: {
         cpu: { request: Cpu.millis(5), limit: Cpu.millis(50) },
         memory: { request: Size.mebibytes(8), limit: Size.mebibytes(32) },
