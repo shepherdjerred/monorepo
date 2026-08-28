@@ -35,6 +35,13 @@ machine:
       evictionSoftGracePeriod:
         memory.available: "2m"
         nodefs.available: "2m"
+      # Age-based image GC — same rationale and values as torvalds (see its
+      # 2026-08-28 comment): CI image churn accrues here too (imageFs was 265 GiB
+      # at 33 days old), and the default threshold-only GC first fires at the
+      # same 85% line as nodefs soft eviction above.
+      imageMaximumGCAge: "720h"
+      imageGCHighThresholdPercent: 70
+      imageGCLowThresholdPercent: 60
       # CI is the fork-storm workload this cap was designed against (Dagger
       # goroutines 24 -> 1164 in <60s during the 2026-07 freeze investigation).
       # Watch for PIDPressure under real heavy-concurrency load.

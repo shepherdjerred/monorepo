@@ -73,6 +73,17 @@ machine:
       evictionSoftGracePeriod:
         memory.available: "2m"
         nodefs.available: "2m"
+      # Age-based image GC (2026-08-28 /var capacity investigation): kubelet's
+      # default is threshold-only GC (85/80) with imageMaximumGCAge disabled, so
+      # image history accrued ~13 GiB/day for 465 days — 2.7 TiB of images with
+      # 99.1% of the bytes unreferenced (~16 GiB in use by running pods) — and
+      # the first GC would have fired at 85%, the exact nodefs soft-eviction
+      # line above, so GC churn and eviction pressure would arrive together.
+      # Expire images unused for 30 days and keep threshold GC (70/60) well
+      # below the eviction band. Worst case for an expired image is a re-pull.
+      imageMaximumGCAge: "720h"
+      imageGCHighThresholdPercent: 70
+      imageGCLowThresholdPercent: 60
       # 2026-07 CI-freeze hardening. podPidsLimit: cluster-wide (single node, so
       # effectively node-wide — Kubernetes has no per-pod override) cgroup
       # pids.max cap. 4096 is the standard Kubernetes-documented default for
