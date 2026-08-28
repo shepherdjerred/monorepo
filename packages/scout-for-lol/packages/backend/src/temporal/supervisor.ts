@@ -78,6 +78,12 @@ function workflowsPath(): string {
     .pathname;
 }
 
+function workflowUiInterceptorPath(): string {
+  return new URL(
+    import.meta.resolve("@scout-for-lol/temporal/workflow-ui-interceptor"),
+  ).pathname;
+}
+
 async function createConnectedRuntime(
   options: ScoutTemporalSupervisorOptions,
   discordWorkersEnabled: boolean,
@@ -98,6 +104,9 @@ async function createConnectedRuntime(
       namespace: options.namespace,
       shutdownGraceTime: 20_000,
       shutdownForceTime: 25_000,
+      interceptors: {
+        workflowModules: [workflowUiInterceptorPath()],
+      },
     };
     const workers = [
       await Worker.create({

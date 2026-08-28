@@ -30,6 +30,7 @@ import {
 } from "#src/identifiers.ts";
 import { requestInitialHistoryRunSignal } from "#src/signals.ts";
 import { scoutInteractiveRunWorkflow } from "./interactive.ts";
+import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
 
 export async function scoutInitialHistoryWorkflow(
   rawInput: ScoutInitialHistoryInput,
@@ -41,19 +42,25 @@ export async function scoutInitialHistoryWorkflow(
   });
   const activities = backgroundActivities(input.stage);
   for (;;) {
+    setWorkflowPhase("**Phase:** waiting for an initial-history request");
     await condition(() => runRequested);
     runRequested = false;
+    setWorkflowPhase("**Phase:** fetching the next initial-history page");
     const page = await fetchHistoryPage(
       activities.fetchInitialHistoryPage,
       input,
     );
     if (page === undefined) continue;
     if (page.nextAttemptAt !== undefined) {
+      setWorkflowPhase(
+        "**Phase:** waiting for the history provider retry window",
+      );
       await sleepUntil(page.nextAttemptAt);
       runRequested = true;
       continue;
     }
     if (page.nextAction === "fold-lake") {
+      setWorkflowPhase("**Phase:** folding report-lake data");
       await lakeActivities(input.stage).runReportLakeJob({
         stage: input.stage,
         kind: "fold",
@@ -132,6 +139,7 @@ export async function scoutIngestionReconciliationWorkflow(
   rawInput: ScoutIngestionReconciliationInput,
 ): Promise<ScoutWorkflowStatus> {
   const input = ScoutIngestionReconciliationInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** reconciling ingestion state");
   const reconciliation = await backgroundActivities(
     input.stage,
   ).reconcileIngestion(input);
@@ -141,6 +149,7 @@ export async function scoutIngestionReconciliationWorkflow(
   );
   await startDetachedChildren(input.stage, reconciliation.detachedWorks);
   await startInteractiveChildren(input.stage, reconciliation.interactiveRuns);
+  setWorkflowPhase("**Phase:** ingestion reconciliation complete");
   return "completed";
 }
 
@@ -222,6 +231,7 @@ export async function scoutBackgroundJobWorkflow(
   rawInput: ScoutBackgroundJobInput,
 ): Promise<ScoutWorkflowStatus> {
   const input = ScoutBackgroundJobInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** running background work");
   await backgroundActivities(input.stage).runBackgroundJob(input);
   return "completed";
 }
@@ -230,6 +240,7 @@ export async function scoutDetachedWorkWorkflow(
   rawInput: ScoutDetachedWorkInput,
 ): Promise<ScoutWorkflowStatus> {
   const input = ScoutDetachedWorkInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** running detached work");
   if (input.kind === "prediction-ingest") {
     await lakeActivities(input.stage).runDetachedLakeWork(input);
   } else {

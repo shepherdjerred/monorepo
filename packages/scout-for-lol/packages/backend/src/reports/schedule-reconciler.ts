@@ -16,6 +16,11 @@ import {
   scoutTemporalReportScheduleOrphans,
 } from "#src/metrics/temporal.ts";
 import { createLogger } from "#src/logger.ts";
+import appConfiguration from "#src/configuration.ts";
+import {
+  buildTemporalExecutionStartMetadata,
+  ExecutionMetadataSchema,
+} from "@scout-for-lol/temporal/execution-metadata";
 import { scheduleMatchesReport } from "#src/reports/report-schedule-drift.ts";
 
 const BATCH_SIZE = 100;
@@ -45,6 +50,16 @@ function scheduleConfiguration(input: {
   cronExpression: string;
   timezone: string;
 }) {
+  const executionMetadata = buildTemporalExecutionStartMetadata({
+    metadata: ExecutionMetadataSchema.parse({
+      Environment: input.stage,
+      Domain: "reports",
+      Trigger: "schedule",
+      ReleaseCommit: appConfiguration.gitSha,
+    }),
+    summary: "Run scheduled Scout report",
+    description: "Generates one database-configured Scout report.",
+  });
   return {
     spec: {
       cronExpressions: [input.cronExpression],
@@ -63,6 +78,7 @@ function scheduleConfiguration(input: {
       ],
       taskQueue: scoutTaskQueues(input.stage).workflow,
       workflowExecutionTimeout: 15 * 60 * 1000,
+      ...executionMetadata,
     },
     policies: {
       overlap: ScheduleOverlapPolicy.BUFFER_ONE,

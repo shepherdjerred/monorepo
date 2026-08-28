@@ -15,6 +15,7 @@ import {
 } from "#src/contracts.ts";
 import { scoutMatchWorkflowId, scoutTaskQueues } from "#src/identifiers.ts";
 import { realtimeActivities } from "./activity-options.ts";
+import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
 
 const TemporalScheduledStartTime = defineSearchAttributeKey(
   "TemporalScheduledStartTime",
@@ -33,8 +34,10 @@ export async function scoutRealtimePollWorkflow(
       ? (scheduleTime ?? workflowInfo().startTime).getTime()
       : new Date(input.scheduledStartAt).getTime();
   if (Date.now() - scheduledStart > input.maximumAgeSeconds * 1000) {
+    setWorkflowPhase("**Phase:** skipped because the poll was stale");
     return "stale";
   }
+  setWorkflowPhase("**Phase:** polling realtime Scout state");
   await realtimeActivities(input.stage).pollRealtime(input);
   return "completed";
 }
@@ -43,6 +46,7 @@ export async function scoutMatchIngestionWorkflow(
   rawInput: ScoutMatchIngestionInput,
 ): Promise<ScoutWorkflowStatus> {
   const input = ScoutMatchIngestionInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** ingesting a completed match");
   await realtimeActivities(input.stage).ingestMatch(input);
   return "completed";
 }
@@ -51,6 +55,7 @@ export async function scoutPostMatchDiscoveryWorkflow(
   rawInput: ScoutPostMatchDiscoveryInput,
 ): Promise<{ status: ScoutWorkflowStatus; childrenStarted: number }> {
   const input = ScoutPostMatchDiscoveryInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** discovering completed matches");
   const discovered = await realtimeActivities(input.stage).discoverPostMatchIds(
     input,
   );
@@ -69,6 +74,7 @@ export async function scoutPostMatchDiscoveryWorkflow(
       if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
     }
   }
+  setWorkflowPhase("**Phase:** running post-match maintenance");
   await realtimeActivities(input.stage).runPostMatchMaintenance(input);
   return { status: "completed", childrenStarted };
 }

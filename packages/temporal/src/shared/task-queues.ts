@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export const TASK_QUEUES = {
   /** Every new central Workflow execution starts on this deterministic queue. */
   WORKFLOWS: "monorepo-workflows",
@@ -35,3 +37,18 @@ export const TASK_QUEUES = {
 } as const;
 
 export type TaskQueue = (typeof TASK_QUEUES)[keyof typeof TASK_QUEUES];
+
+export const TaskQueueSchema = z.enum([
+  TASK_QUEUES.DEFAULT,
+  TASK_QUEUES.HOME,
+  TASK_QUEUES.REPORTS,
+  TASK_QUEUES.INFRA,
+  TASK_QUEUES.REPO_AUTOMATION,
+  TASK_QUEUES.SCOUT,
+  TASK_QUEUES.MAINTENANCE,
+  TASK_QUEUES.SCOUT_BETA,
+  TASK_QUEUES.SCOUT_PROD,
+  TASK_QUEUES.AGENT_TASK,
+  TASK_QUEUES.GLITTER_CORPUS,
+  TASK_QUEUES.GLITTER_CONTEXT,
+]);

@@ -15,6 +15,10 @@ import { CATCHUP_RELAXED, SCHEDULES } from "./schedule-definitions.ts";
 import type { CatchupWindow, ScheduleDefinition } from "./schedule-types.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { AgentTaskInputSchema } from "#shared/agent-task.ts";
+import {
+  buildExecutionStartMetadata,
+  type TemporalBootstrapMetadata,
+} from "#shared/execution-metadata.ts";
 
 // SCHEDULES/CATCHUP_* live in ./schedule-definitions.ts and the shared types
 // live in ./schedule-types.ts (this file sits at the repo's max-lines cap).
@@ -152,7 +156,17 @@ export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   };
 }
 
-function buildScheduleConfiguration(schedule: ScheduleDefinition) {
+function buildScheduleConfiguration(
+  schedule: ScheduleDefinition,
+  bootstrap: TemporalBootstrapMetadata,
+) {
+  const executionMetadata = buildExecutionStartMetadata({
+    bootstrap,
+    taskQueue: schedule.taskQueue,
+    trigger: "schedule",
+    summary: `Run ${schedule.workflowType}`,
+    description: schedule.memo,
+  });
   return {
     spec:
       schedule.timing.kind === "cron"
@@ -176,6 +190,7 @@ function buildScheduleConfiguration(schedule: ScheduleDefinition) {
       args: schedule.args,
       taskQueue: schedule.taskQueue,
       memo: { description: schedule.memo },
+      ...executionMetadata,
       ...(schedule.workflowExecutionTimeout === undefined
         ? {}
         : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
@@ -222,7 +237,10 @@ async function reconcileDynamicAgentTaskSchedules(
 
 export async function registerSchedules(
   client: Client,
-  options: { validateLocalEnvironment?: boolean } = {},
+  options: {
+    bootstrap: TemporalBootstrapMetadata;
+    validateLocalEnvironment?: boolean;
+  },
 ): Promise<void> {
   const scheduleClient = client.schedule;
   const validateLocalEnvironment = options.validateLocalEnvironment ?? true;
@@ -254,7 +272,7 @@ export async function registerSchedules(
       // Update the existing schedule
       await handle.update((prev) => ({
         ...prev,
-        ...buildScheduleConfiguration(schedule),
+        ...buildScheduleConfiguration(schedule, options.bootstrap),
         state: buildScheduleState(
           schedule,
           Bun.env,
@@ -271,7 +289,7 @@ export async function registerSchedules(
       // Schedule doesn't exist yet — create it
       await scheduleClient.create({
         scheduleId: schedule.id,
-        ...buildScheduleConfiguration(schedule),
+        ...buildScheduleConfiguration(schedule, options.bootstrap),
         memo: { description: schedule.memo },
         state: buildScheduleState(
           schedule,

@@ -68,6 +68,8 @@ export function createTemporalNamespaceInitJob(
           // Create default namespace if needed, then enforce current retention.
           'if temporal operator namespace describe --namespace default; then echo "Temporal default namespace already exists"; else temporal operator namespace create --namespace default --retention 720h; fi',
           "temporal operator namespace update --namespace default --retention 720h",
+          'SEARCH_ATTRIBUTES="$(temporal operator search-attribute list --namespace default --output json)"',
+          'for ATTRIBUTE in Environment Domain Trigger ReleaseCommit; do if printf "%s" "$SEARCH_ATTRIBUTES" | grep -q "\\\"$ATTRIBUTE\\\": \\\"INDEXED_VALUE_TYPE_KEYWORD\\\""; then echo "Temporal Search Attribute $ATTRIBUTE already exists"; else temporal operator search-attribute create --namespace default --name "$ATTRIBUTE" --type Keyword; fi; done',
           'echo "Namespace init complete"',
         ].join(" && "),
       ],

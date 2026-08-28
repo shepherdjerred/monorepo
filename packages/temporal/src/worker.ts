@@ -30,6 +30,8 @@ import {
   getWorkerRoleContract,
   type QueueWorkerDefinition,
 } from "./worker-config.ts";
+import { parseTemporalBootstrapMetadata } from "./shared/execution-metadata.ts";
+import { ExecutionMetadataClientInterceptor } from "./lib/execution-metadata-client-interceptor.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -99,6 +101,7 @@ async function createQueueWorker(
   definition: QueueWorkerDefinition,
   connection: NativeConnection,
   workflowsPath: string,
+  workflowUiInterceptorPath: string,
   bootstrap: TemporalBootstrap,
 ): Promise<Worker> {
   if (definition.kind === "workflow") {
@@ -107,6 +110,7 @@ async function createQueueWorker(
       connection,
       namespace: bootstrap.namespace,
       workflowsPath,
+      interceptors: { workflowModules: [workflowUiInterceptorPath] },
       workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
       taskQueue: definition.taskQueue,
       ...(workerDeployment === undefined
@@ -298,8 +302,15 @@ async function main(): Promise<void> {
   jsonLog("info", "Connecting to Temporal server", { address, role });
 
   const connection = await NativeConnection.connect({ address });
+  const bootstrapMetadata = parseTemporalBootstrapMetadata(
+    Bun.env["ENVIRONMENT"],
+    Bun.env["GIT_SHA"],
+  );
 
   const workflowsPath = new URL("workflows/index.ts", import.meta.url).pathname;
+  const workflowUiInterceptorPath = new URL(
+    import.meta.resolve("@scout-for-lol/temporal/workflow-ui-interceptor"),
+  ).pathname;
   const workers: Worker[] = [];
   let httpServers: EventBridgeHandle | undefined;
   let eventBridge: EventBridgeHandle | undefined;
@@ -309,6 +320,7 @@ async function main(): Promise<void> {
       definition,
       connection,
       workflowsPath,
+      workflowUiInterceptorPath,
       bootstrap,
     );
     workers.push(worker);
@@ -333,10 +345,14 @@ async function main(): Promise<void> {
     const client = new Client({
       connection: clientConnection,
       namespace: bootstrap.namespace,
+      interceptors: {
+        workflow: [new ExecutionMetadataClientInterceptor(bootstrapMetadata)],
+      },
     });
 
     if (roleContract.runsGateway) {
       await registerSchedules(client, {
+        bootstrap: bootstrapMetadata,
         validateLocalEnvironment:
           roleContract.validatesScheduleEnvironmentLocally,
       });
