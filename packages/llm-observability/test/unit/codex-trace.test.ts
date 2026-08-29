@@ -29,6 +29,7 @@ test("parser accumulates usage totals from the real fixture", () => {
   expect(parser.total()).toEqual({
     inputTokens: 22_623,
     cachedInputTokens: 22_400,
+    cacheWriteInputTokens: 0,
     outputTokens: 70,
     reasoningOutputTokens: 63,
   });
@@ -36,6 +37,7 @@ test("parser accumulates usage totals from the real fixture", () => {
     {
       inputTokens: 22_623,
       cachedInputTokens: 22_400,
+      cacheWriteInputTokens: 0,
       outputTokens: 70,
       reasoningOutputTokens: 63,
     },
@@ -51,6 +53,32 @@ test("parser handles chunked pushes across line boundaries", () => {
   parser.push(codexFixture.slice(mid));
   parser.finish();
   expect(events.filter((e) => e.kind === "turn.completed").length).toBe(1);
+});
+
+test("parser preserves cache-write usage for per-turn pricing", () => {
+  const parser = createCodexJsonlParser();
+  parser.push(
+    `${JSON.stringify({
+      type: "turn.completed",
+      usage: {
+        input_tokens: 100,
+        cached_input_tokens: 25,
+        cache_write_input_tokens: 10,
+        output_tokens: 5,
+        reasoning_output_tokens: 2,
+      },
+    })}\n`,
+  );
+  parser.finish();
+  expect(parser.turns()).toEqual([
+    {
+      inputTokens: 100,
+      cachedInputTokens: 25,
+      cacheWriteInputTokens: 10,
+      outputTokens: 5,
+      reasoningOutputTokens: 2,
+    },
+  ]);
 });
 
 test("attachCodexTrace emits run + turn spans with gen_ai attributes", () => {

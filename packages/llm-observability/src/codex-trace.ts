@@ -291,6 +291,7 @@ function recordCodexMetrics(input: {
           turns.map((turn) => ({
             inputTokens: turn.inputTokens,
             cachedInputTokens: turn.cachedInputTokens,
+            cacheWriteTokens: turn.cacheWriteInputTokens,
             outputTokens: turn.outputTokens + turn.reasoningOutputTokens,
           })),
         )

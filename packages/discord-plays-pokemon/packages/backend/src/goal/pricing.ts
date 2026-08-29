@@ -9,6 +9,7 @@ import {
 export type TurnUsage = {
   inputTokens: number;
   cachedInputTokens: number;
+  cacheWriteInputTokens?: number;
   outputTokens: number;
   reasoningOutputTokens: number;
 };
@@ -16,6 +17,7 @@ export type TurnUsage = {
 export const EMPTY_USAGE: TurnUsage = {
   inputTokens: 0,
   cachedInputTokens: 0,
+  cacheWriteInputTokens: 0,
   outputTokens: 0,
   reasoningOutputTokens: 0,
 };
@@ -24,6 +26,8 @@ export function addUsage(left: TurnUsage, right: TurnUsage): TurnUsage {
   return {
     inputTokens: left.inputTokens + right.inputTokens,
     cachedInputTokens: left.cachedInputTokens + right.cachedInputTokens,
+    cacheWriteInputTokens:
+      (left.cacheWriteInputTokens ?? 0) + (right.cacheWriteInputTokens ?? 0),
     outputTokens: left.outputTokens + right.outputTokens,
     reasoningOutputTokens:
       left.reasoningOutputTokens + right.reasoningOutputTokens,
@@ -45,12 +49,14 @@ export function computeCost(
           turns.map((turn) => ({
             inputTokens: turn.inputTokens,
             cachedInputTokens: turn.cachedInputTokens,
+            cacheWriteTokens: turn.cacheWriteInputTokens ?? 0,
             outputTokens: turn.outputTokens + turn.reasoningOutputTokens,
           })),
         )
       : costForTextUsage(model, {
           inputTokens: usage.inputTokens,
           cachedInputTokens: usage.cachedInputTokens,
+          cacheWriteTokens: usage.cacheWriteInputTokens ?? 0,
           outputTokens: usage.outputTokens + usage.reasoningOutputTokens,
         });
   return cost ?? null;

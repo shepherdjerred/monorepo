@@ -147,6 +147,7 @@ describe("addUsage", () => {
     expect(total).toEqual({
       inputTokens: 30,
       cachedInputTokens: 10,
+      cacheWriteInputTokens: 0,
       outputTokens: 3,
       reasoningOutputTokens: 3,
     });
