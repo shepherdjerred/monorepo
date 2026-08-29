@@ -866,7 +866,7 @@
     },
     "packages/llm-observability/src/span-helpers.ts|packages/temporal/src/observability/tracing.ts": {
       "clones": 1,
-      "tokens": 94
+      "tokens": 91
     },
     "packages/llm-runtime/src/metrics.ts|packages/llm-runtime/src/metrics.ts": {
       "clones": 1,
@@ -1945,5 +1945,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-26T06:11:02.613Z"
+  "updated": "2026-08-29T19:50:24.140Z"
 }

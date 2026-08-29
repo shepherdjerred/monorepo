@@ -1,12 +1,11 @@
 import {
   context,
   createContextKey,
-  SpanStatusCode,
   type Context,
   type Span,
 } from "@opentelemetry/api";
 import { z } from "zod";
-import { getLlmTracer } from "./span-helpers.ts";
+import { getLlmTracer, runSpanLifecycle } from "./span-helpers.ts";
 
 /**
  * Who or what an LLM call was made on behalf of.
@@ -119,26 +118,10 @@ export async function withLlmSubjectSpan<T>(
   fn: (span: Span) => Promise<T>,
 ): Promise<T> {
   const attributes = llmSubjectAttributes(subject);
-  return await getLlmTracer().startActiveSpan(name, async (span) => {
+  return await getLlmTracer().startActiveSpan(name, (span) => {
     span.setAttributes(attributes);
-    try {
-      const result = await context.with(
-        setLlmSubject(context.active(), subject),
-        () => fn(span),
-      );
-      span.setStatus({ code: SpanStatusCode.OK });
-      return result;
-    } catch (error: unknown) {
-      span.setStatus({
-        code: SpanStatusCode.ERROR,
-        message: error instanceof Error ? error.message : String(error),
-      });
-      if (error instanceof Error) {
-        span.recordException(error);
-      }
-      throw error;
-    } finally {
-      span.end();
-    }
+    return context.with(setLlmSubject(context.active(), subject), () =>
+      runSpanLifecycle(span, fn),
+    );
   });
 }
