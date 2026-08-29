@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-An agent task is a scheduled Claude or Codex run that inspects current state and
+An agent task is a scheduled Codex run that inspects current state and
 emails you a report. Use one when Linear work needs checking later and you do
 not want to remember to check it.
 
@@ -22,7 +22,7 @@ work in `source.note`.
 {
   "contractVersion": 2,
   "title": "Recheck Birmel post-deploy metrics",
-  "provider": "claude",
+  "provider": "codex",
   "mode": "report-only",
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
