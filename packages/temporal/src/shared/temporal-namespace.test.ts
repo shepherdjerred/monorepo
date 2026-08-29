@@ -25,12 +25,20 @@ describe("Temporal namespace contracts", () => {
   });
 
   test("includes default monitoring only during the drain", () => {
-    expect(temporalNamespacesForMonitoring(undefined)).toEqual([
+    expect(temporalNamespacesForMonitoring("prod", undefined)).toEqual([
       "prod",
       "beta",
     ]);
-    expect(temporalNamespacesForMonitoring("default")).toEqual([
+    expect(temporalNamespacesForMonitoring("prod", "default")).toEqual([
       "prod",
+      "beta",
+      "default",
+    ]);
+  });
+
+  test("monitors the active namespace during local development", () => {
+    expect(temporalNamespacesForMonitoring("dev", undefined)).toEqual(["dev"]);
+    expect(temporalNamespacesForMonitoring("beta", "default")).toEqual([
       "beta",
       "default",
     ]);

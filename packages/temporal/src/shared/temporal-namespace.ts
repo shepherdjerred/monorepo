@@ -35,9 +35,16 @@ export function parseAnyTemporalNamespace(
 }
 
 export function temporalNamespacesForMonitoring(
+  activeNamespace: TemporalNamespace,
   legacyNamespace: LegacyTemporalNamespace | undefined,
 ): readonly (TemporalNamespace | LegacyTemporalNamespace)[] {
+  const activeNamespaces: readonly TemporalNamespace[] =
+    activeNamespace === "dev"
+      ? ["dev"]
+      : activeNamespace === "prod"
+        ? ["prod", "beta"]
+        : ["beta"];
   return legacyNamespace === undefined
-    ? ["prod", "beta"]
-    : ["prod", "beta", legacyNamespace];
+    ? activeNamespaces
+    : [...activeNamespaces, legacyNamespace];
 }

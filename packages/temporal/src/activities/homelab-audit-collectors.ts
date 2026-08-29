@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import { createTemporalReadClient } from "#client";
 import {
   parseLegacyTemporalNamespace,
+  parseTemporalNamespace,
   temporalNamespacesForMonitoring,
   type AnyTemporalNamespace,
 } from "#shared/temporal-namespace.ts";
@@ -327,6 +328,7 @@ async function collectTemporal(): Promise<CollectorResult> {
   const evidenceId = "temporal-health-evidence";
   try {
     const namespaces = temporalNamespacesForMonitoring(
+      parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]),
       parseLegacyTemporalNamespace(Bun.env["TEMPORAL_LEGACY_NAMESPACE"]),
     );
     const namespaceHealth = await Promise.all(

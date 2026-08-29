@@ -77,6 +77,17 @@ export function targetPauseAction(
   return undefined;
 }
 
+export function isRootWorkflowExecution(execution: {
+  runId: string;
+  rootExecution?: { runId: string | null } | null;
+}): boolean {
+  return (
+    execution.rootExecution === undefined ||
+    execution.rootExecution === null ||
+    execution.rootExecution.runId === execution.runId
+  );
+}
+
 export function classifyScheduleNamespace(
   scheduleId: string,
   memo: Record<string, unknown> | undefined,
@@ -430,6 +441,7 @@ export async function auditNamespaceMigration(input: {
 
   const query = `StartTime >= "${input.cutoverAt.toISOString()}"`;
   for await (const execution of input.sourceClient.workflow.list({ query })) {
+    if (!isRootWorkflowExecution(execution)) continue;
     throw new Error(
       `Workflow ${execution.workflowId} started in default after cutover`,
     );
