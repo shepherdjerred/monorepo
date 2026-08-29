@@ -104,4 +104,16 @@ describe("Codex editor", () => {
     );
     expect(pathsOutsideAllowed(["src/index.ts"], ["src/**"])).toEqual([]);
   });
+
+  test("rejects the source of a rename into an allowed path", async () => {
+    const directory = await repository();
+    await Bun.write(path.join(directory, "outside.txt"), "outside\n");
+    await git(directory, "add", "outside.txt");
+    await git(directory, "commit", "-m", "outside fixture");
+    await git(directory, "mv", "outside.txt", "allowed-new.txt");
+
+    await expect(
+      changesFromGitDiff(directory, ["allowed-new.txt"]),
+    ).rejects.toThrow("outside.txt");
+  });
 });

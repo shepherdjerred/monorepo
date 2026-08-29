@@ -45,6 +45,7 @@ async function changedPaths(
 ): Promise<string[]> {
   const tracked = await runGit(workingDirectory, [
     "diff",
+    "--no-renames",
     "--name-only",
     "--diff-filter=ACDMRTUXB",
     "-z",
