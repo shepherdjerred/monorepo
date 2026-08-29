@@ -382,6 +382,14 @@ export class GoalManager {
     return saveOnGoalEnd(this.checkpointGame, status, this.checkpointRetry);
   }
 
+  private recordUsage(active: ActiveGoal): void {
+    const usage = active.jsonl.total();
+    recordGoalUsage(
+      usage,
+      computeCost(this.config.model, usage, active.jsonl.turns()),
+    );
+  }
+
   private async observeProcess(id: string): Promise<void> {
     const active = this.active;
     if (active?.state.id !== id) return;
@@ -427,11 +435,7 @@ export class GoalManager {
     if (active === undefined) return;
     try {
       await settleGoalProcess(active, true, () => this.controlGate.drain());
-      const usage = active.jsonl.total();
-      recordGoalUsage(
-        usage,
-        computeCost(this.config.model, usage, active.jsonl.turns()),
-      );
+      this.recordUsage(active);
       active.state.status = "timeout";
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport = "Goal timed out before Codex finished.";
@@ -458,11 +462,7 @@ export class GoalManager {
     if (active === undefined) return;
     try {
       await settleGoalProcess(active, true, () => this.controlGate.drain());
-      const usage = active.jsonl.total();
-      recordGoalUsage(
-        usage,
-        computeCost(this.config.model, usage, active.jsonl.turns()),
-      );
+      this.recordUsage(active);
       active.state.status = status;
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport =
