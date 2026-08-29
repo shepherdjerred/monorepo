@@ -5,8 +5,9 @@
   "type": "module",
   "exports": {
     "./interceptors": "./src/interceptors.ts",
-    "./workflow-span-sink": "./src/workflow-span-sink.ts",
-    "./tracing-resource": "./src/tracing-resource.ts"
+    "./log-fields": "./src/log-fields.ts",
+    "./tracing-resource": "./src/tracing-resource.ts",
+    "./workflow-span-sink": "./src/workflow-span-sink.ts"
   },
   "scripts": {
     "lint": "bunx eslint --cache .",

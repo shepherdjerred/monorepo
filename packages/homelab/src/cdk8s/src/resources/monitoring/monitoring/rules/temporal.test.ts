@@ -21,6 +21,33 @@ function findFailureRule(alertName: string): string {
 }
 
 describe("Temporal workflow outcome rules", () => {
+  test("alerts on schedule delay, Workflow Task failures, nondeterminism, and exhausted Activity retries", () => {
+    const healthGroup = getTemporalRuleGroups().find(
+      (group) => group.name === "temporal-platform-health",
+    );
+    if (healthGroup?.rules === undefined) {
+      throw new Error("Missing temporal-platform-health rule group");
+    }
+    const expressions = new Map(
+      healthGroup.rules.map((rule) => [rule.alert, rule.expr.value]),
+    );
+    expect(expressions.get("TemporalScheduleActionDelayed")).toContain(
+      "schedule_action_delay_bucket",
+    );
+    expect(expressions.get("TemporalWorkflowTaskFailing")).toContain(
+      "temporal_worker_workflow_task_execution_failed",
+    );
+    expect(expressions.get("TemporalWorkflowNondeterministic")).toContain(
+      'failure_reason="NonDeterminismError"',
+    );
+    expect(expressions.get("TemporalActivityRetriesExhausted")).toContain(
+      "activity_fail",
+    );
+    expect(expressions.get("TemporalActivityRetriesExhausted")).not.toContain(
+      "activity_task_fail",
+    );
+  });
+
   test("excludes intentional warm-morning preheat skips", () => {
     const outcomeGroup = getTemporalRuleGroups().find(
       (group) => group.name === "temporal-workflow-outcomes",

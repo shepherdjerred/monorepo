@@ -57,6 +57,32 @@ Pause state is the deliberate exception: it is runtime state, preserved across
 reconciliation, because pausing is an operational act rather than a design
 change.
 
+## Visibility is an operational index, not a data store
+
+Every programmatic start and Schedule carries the same four Keyword Search
+Attributes: environment, domain, trigger, and the Git commit that initiated the
+execution. Temporal's built-in Schedule attributes remain authoritative for
+Schedule identity. This makes the UI and CLI useful across the shared
+`default` namespace without copying Schedule IDs into another attribute.
+
+Static summaries explain the execution or Schedule in one line. Static details
+and current Workflow details expose only bounded phase and ownership metadata.
+They deliberately exclude credentials, task tokens, Activity arguments,
+prompts, report bodies, player data, and model output. Those belong in their
+existing systems of record, not in Temporal visibility or logs.
+
+Call-graph tracing is a boot-time rollout flag. The official Temporal client,
+Workflow, and Activity interceptors propagate trace context; a repository-owned
+sink validates the replayed Workflow spans and forwards their recorded trace
+and span IDs into the existing OpenTelemetry 2 processor. The Worker does not
+install a second provider. Activity-owned `gen_ai.*` spans therefore appear
+beneath the Activity span rather than as unrelated traces.
+
+SDK, Workflow, and Activity logs use Temporal context and structured fields.
+Workflow logs remain replay-suppressed, and the Runtime logging boundary strips
+payload-like fields and the SDK's base64 Activity task token before stdout or
+OTLP export.
+
 ## Workflow code and effects run apart
 
 The gateway is a control process: it reconciles schedules and serves the public

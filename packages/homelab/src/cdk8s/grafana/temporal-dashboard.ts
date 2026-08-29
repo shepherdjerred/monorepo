@@ -1,5 +1,10 @@
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 import { statPanel, timeseriesPanel } from "./dashboard-panels.ts";
+import {
+  createTemporalPlatformPanels,
+  temporalDashboardLinks,
+  temporalDashboardVariables,
+} from "./temporal-platform-panels.ts";
 
 function createGlitterContextPanels() {
   return [
@@ -48,6 +53,8 @@ export function createTemporalDashboard() {
     version: 1,
     refresh: "1m",
     time: { from: "now-7d", to: "now" },
+    links: temporalDashboardLinks(),
+    templating: temporalDashboardVariables(),
     panels: [
       statPanel({
         id: 1,
@@ -149,6 +156,7 @@ export function createTemporalDashboard() {
         w: 12,
         h: 8,
       }),
+      ...createTemporalPlatformPanels(),
       // -----------------------------------------------------------------
       // GitHub webhook row (y >= 48) — the merge-conflict check + PR-closed
       // Buildkite build-cancellation ingress. Metrics emitted by
