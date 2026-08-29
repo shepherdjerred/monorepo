@@ -125,6 +125,22 @@ async function linkMatch(
   lobby: TournamentLobbyRecord,
   mode: TournamentApiMode,
 ): Promise<TournamentLobbyState | undefined> {
+  const joinedPuuids = lobby.joinedPuuids.map((puuid) =>
+    LeaguePuuidSchema.parse(puuid),
+  );
+  const trackedAccounts = await prisma.account.findMany({
+    where: {
+      serverId: lobby.serverId,
+      puuid: { in: joinedPuuids },
+    },
+    select: { puuid: true },
+  });
+  const trackedPuuids = trackedAccounts.map((account) => account.puuid);
+  if (trackedPuuids.length === 0) {
+    tournamentMatchLinkTotal.inc({ status: "no_tracked_player" });
+    return undefined;
+  }
+
   const resolved = await resolveMatchId(lobby, mode);
   if (resolved === undefined) {
     if (!supportsGamesByCode(mode)) {
@@ -134,7 +150,6 @@ async function linkMatch(
   }
 
   const matchId = MatchIdSchema.parse(resolved.matchId);
-  const trackedPuuids = [...lobby.bluePuuids, ...lobby.redPuuids];
   await upsertActiveGame(matchId, resolved.gameId, trackedPuuids);
 
   await updateLobby(prisma, lobby.id, {
@@ -197,14 +212,15 @@ async function pollLobby(
 
   // Entering champ select is what sends the card, and a state is only ever
   // entered once — that is the whole no-duplicate-notification guarantee.
+  const currentLobby = { ...lobby, joinedPuuids: [...result.joinedPuuids] };
   const messageIds = entersChampSelect(result.transitions)
-    ? await deliverLobbyPrematch(lobby)
+    ? await deliverLobbyPrematch(currentLobby)
     : lobby.prematchMessageIds;
 
   let state = result.state;
   if (state === "in_game" || state === "resolved") {
     const linked = await linkMatch(
-      { ...lobby, prematchMessageIds: messageIds, state },
+      { ...currentLobby, prematchMessageIds: messageIds, state },
       mode,
     );
     if (linked !== undefined) state = linked;

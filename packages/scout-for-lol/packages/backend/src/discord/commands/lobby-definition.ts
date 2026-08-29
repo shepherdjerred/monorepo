@@ -7,17 +7,10 @@ import { SlashCommandBuilder } from "discord.js";
  * a globally registered gated command sits in every guild's picker doing
  * nothing.
  *
- * Teams are two separate free-text options rather than one `players` list.
- * That is not cosmetic — the team split is the one thing lobby events cannot
- * supply (they carry a PUUID per join and never a side) and spectator does not
- * reliably surface custom lobbies, so taking it as command input is what lets
- * the prematch card and the Bryan Bucks market work at all.
- *
- * `teamSize` is derived as max(blue, red) rather than being its own option:
- * two lists and a size field can disagree, and Riot accepts only one number.
- *
- * Free text rather than autocomplete, pinned by definitions.test.ts —
- * matching an alias is a lookup the user can see the result of.
+ * A tournament code can be open: its recipient decides who to invite from the
+ * League client, rather than having to prepare a Scout roster first. Lobby
+ * events tell Scout who actually joined, but not which side they chose, so an
+ * open lobby has no preassigned-team card or pregame Bryan Bucks market.
  */
 export const lobbyCommand = new SlashCommandBuilder()
   .setName("lobby")
@@ -26,17 +19,39 @@ export const lobbyCommand = new SlashCommandBuilder()
     subcommand
       .setName("create")
       .setDescription("Create a custom game lobby")
-      .addStringOption((option) =>
+      .addIntegerOption((option) =>
         option
-          .setName("blue")
-          .setDescription("Comma-separated Scout aliases on blue side")
-          .setRequired(true),
+          .setName("size")
+          .setDescription("Players on each team (default 5)")
+          .addChoices(
+            { name: "1v1", value: 1 },
+            { name: "2v2", value: 2 },
+            { name: "3v3", value: 3 },
+            { name: "4v4", value: 4 },
+            { name: "5v5", value: 5 },
+          ),
       )
       .addStringOption((option) =>
         option
-          .setName("red")
-          .setDescription("Comma-separated Scout aliases on red side")
-          .setRequired(true),
+          .setName("region")
+          .setDescription("League region (default North America)")
+          .addChoices(
+            { name: "Brazil", value: "BRAZIL" },
+            { name: "Europe East", value: "EU_EAST" },
+            { name: "Europe West", value: "EU_WEST" },
+            { name: "Japan", value: "JAPAN" },
+            { name: "Korea", value: "KOREA" },
+            { name: "Latin North", value: "LAT_NORTH" },
+            { name: "Latin South", value: "LAT_SOUTH" },
+            { name: "North America", value: "AMERICA_NORTH" },
+            { name: "Oceania", value: "OCEANIA" },
+            { name: "Public Beta Environment", value: "PBE" },
+            { name: "Russia", value: "RUSSIA" },
+            { name: "Singapore", value: "SINGAPORE" },
+            { name: "Taiwan", value: "TAIWAN" },
+            { name: "Turkey", value: "TURKEY" },
+            { name: "Vietnam", value: "VIETNAM" },
+          ),
       )
       .addStringOption((option) =>
         option

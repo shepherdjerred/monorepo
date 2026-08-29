@@ -16,7 +16,8 @@ import {
 } from "@scout-for-lol/data/index.ts";
 
 /**
- * Reads and writes for TournamentLobby.
+ * Reads and writes for TournamentLobby. New open lobbies store empty declared
+ * roster arrays; the retained fields let historical lobbies render faithfully.
  *
  * Enum-shaped columns are TEXT for Postgres-cutover portability, so every read
  * re-validates them with Zod rather than trusting the column. A row that fails

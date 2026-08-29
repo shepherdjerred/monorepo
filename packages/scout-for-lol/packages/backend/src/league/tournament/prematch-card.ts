@@ -5,10 +5,11 @@ import type { TournamentLobbyRecord } from "#src/league/tournament/lobby-store.t
  * The prematch card built from what Scout itself knows.
  *
  * This is the product, not a fallback. Spectator does not reliably surface
- * custom lobbies, and lobby events carry a PUUID per join but never a side —
- * so the team split can only come from the `/lobby create` arguments. Building
- * the card from those makes the feature complete without spectator, and leaves
- * a successful spectator probe as an upgrade that edits this message in place.
+ * custom lobbies, and lobby events carry a PUUID per join but never a side.
+ * Open lobbies therefore announce a team-neutral Riot-ID roster without
+ * inventing a team split. If identity enrichment is unavailable, the card uses
+ * only the accurate joined-player count. Old declared-roster rows retain their
+ * more detailed card while they age out.
  *
  * Deliberately does NOT fabricate a `RawCurrentGameInfo`. That value is written
  * to S3 as the canonical match store and the report lake is rebuilt from it, so
@@ -35,16 +36,24 @@ function pickLabel(pickType: string): string {
   return pickType.toLowerCase().replaceAll("_", " ");
 }
 
+function hasDeclaredRosters(lobby: TournamentLobbyRecord): boolean {
+  return lobby.blueAliases.length > 0 || lobby.redAliases.length > 0;
+}
+
 export function buildLobbyPrematchEmbed(
   lobby: TournamentLobbyRecord,
+  joinedPlayerNames: readonly string[] | undefined = undefined,
 ): EmbedBuilder {
-  const size = `${lobby.blueAliases.length.toString()}v${lobby.redAliases.length.toString()}`;
-
-  return new EmbedBuilder()
+  const size = `${lobby.teamSize.toString()}v${lobby.teamSize.toString()}`;
+  const embed = new EmbedBuilder()
     .setColor(BLUE)
     .setTitle(`Custom game starting — ${size}`)
-    .setDescription(`${mapLabel(lobby.mapType)} · ${pickLabel(lobby.pickType)}`)
-    .addFields(
+    .setDescription(
+      `${mapLabel(lobby.mapType)} · ${pickLabel(lobby.pickType)}`,
+    );
+
+  if (hasDeclaredRosters(lobby)) {
+    embed.addFields(
       {
         name: "Blue",
         value: rosterLines(lobby.blueAliases),
@@ -56,6 +65,17 @@ export function buildLobbyPrematchEmbed(
         inline: true,
       },
     );
+  } else {
+    embed.addFields({
+      name: joinedPlayerNames === undefined ? "Open lobby" : "Players",
+      value:
+        joinedPlayerNames === undefined
+          ? `${lobby.joinedPuuids.length.toString()} player(s) joined · teams are set in League`
+          : rosterLines(joinedPlayerNames),
+    });
+  }
+
+  return embed;
   // The code, lobby name and password are deliberately absent: this message is
   // public, and the code is the join credential.
 }
@@ -67,7 +87,9 @@ export function buildLobbyPrematchEmbed(
 export function describeLobby(lobby: TournamentLobbyRecord): string {
   const parts = [
     `**${lobby.code}** — ${lobby.state}`,
-    `${lobby.blueAliases.join(", ")} vs ${lobby.redAliases.join(", ")}`,
+    hasDeclaredRosters(lobby)
+      ? `${lobby.blueAliases.join(", ")} vs ${lobby.redAliases.join(", ")}`
+      : `Open lobby · ${lobby.teamSize.toString()}v${lobby.teamSize.toString()} · ${lobby.joinedPuuids.length.toString()} joined`,
   ];
   if (lobby.lobbyName !== undefined) {
     parts.push(`lobby: ${lobby.lobbyName}`);

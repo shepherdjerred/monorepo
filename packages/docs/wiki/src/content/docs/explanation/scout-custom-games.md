@@ -21,28 +21,37 @@ _tournament code_ is recorded in Match-V5 like any other, with
 `/lobby create`, and the game becomes visible to the pipeline that already
 exists.
 
+Tournament-code custom games are a permanent **beta-only** Scout feature. The
+production command surface hard-disables them before any beta flag or operator
+override is evaluated.
+
 That single constraint explains almost every other decision in the feature.
 
-## The team split has to come from the person, not from Riot
+## An open code is more useful than a predeclared roster
 
-Opening a Bryan Bucks market or drawing a useful prematch card requires knowing
-who is on blue and who is on red **before** the game starts. Riot will not tell
-us:
+Riot will not reveal custom-game teams before the game starts. Its lobby events
+say that a PUUID joined, but never which side they joined. Spectator can show a
+roster sometimes, but not reliably enough to make it a dependency.
 
-- `lobby-events/by-code` reports that a player joined, and gives their PUUID —
-  but never which side they joined.
-- Spectator would give the full roster, and does carry it for a custom
-  _sometimes_, but not dependably enough to build a feature on.
+Scout used to ask the person creating a lobby for Blue and Red player lists.
+That made the code an allow-list and turned a spontaneous custom into a setup
+task. An open Tournament code better matches the way friends start a game: the
+creator shares it, then decides teams in League.
 
-So `/lobby create` takes two lists, `blue:` and `red:`, rather than one
-`players:` list. The prematch card and the betting market are built from what
-the person who created the lobby told us. A successful spectator probe is
-treated as an upgrade, never as a prerequisite.
+The tradeoff is explicit. Scout can announce the map, pick type, intended team
+size, and the Riot IDs of people Riot says joined. It cannot honestly draw Blue
+and Red rosters, so an open lobby does not open a pregame Bryan Bucks market.
 
-Players can still swap sides in the lobby — Riot enforces the participant
-allow-list in aggregate, not per team. That is tolerable because a bet is
-placed on a _side_, and settlement reads the actual team IDs off the finished
-match.
+The identifying data is useful without being persistent tracking. Scout
+reverse-resolves the event PUUIDs only for the lobby card. If Riot cannot
+resolve everyone, Scout shows the exact joined-player count instead; it never
+posts encrypted identifiers or a partial roster.
+
+Once a tracked player in the server joins, Scout uses that actual participant to
+link the game to its normal match-history ingest. Everyone else may be
+untracked; the tracked participant is enough for the resulting match to reach
+the report pipeline. A lobby with no tracked participant produces no Scout
+report, rather than falsely promising one.
 
 ## Notifying exactly once, from an endpoint that repeats itself
 
@@ -84,23 +93,22 @@ match. A second ingest path would have to re-establish exactly-once against it
 and would gain nothing, since tournament games appear in the ordinary
 by-PUUID matchlist anyway.
 
-This is also why `/lobby create` insists every participant is already tracked
-in the calling server. It is not gatekeeping — an untracked lobby would produce
-a code, a game, and no report at all, because nothing would be polling for it.
+This is why an open lobby still needs one tracked participant before it becomes
+a reportable Scout game. The requirement is discovered from who actually joins,
+not imposed on the person creating the code.
 
 ## Betting requires a code Scout minted
 
 Bryan Bucks pays real balance for participation, and a custom game is trivially
 farmable: ten accounts, instant surrender, repeat. So `"custom"` is
-deliberately **not** an earning queue. What qualifies a custom game is that its
-`tournamentCode` matches a lobby Scout itself created, in a server an operator
-opted in — which makes farming require asking Scout for lobbies, one at a time.
+deliberately **not** an earning queue. An open code also has no pregame market:
+the Tournament API cannot tell Scout Blue and Red sides, and guessing would
+make settlement unfair.
 
-The market is further limited to 5v5, because the MVP calculation normalises
-each player's contribution against a five-man team. In a 2v2 every share would
-roughly double, producing grades and payouts that are wrong rather than merely
-noisy. Smaller lobbies still get reports, stats, and AI review; they just get
-no market.
+After the game, a recognised Scout-created tournament code can still establish
+eligible 5v5 participation from the finished match. Smaller lobbies get
+reports, stats, and AI review; they do not get a market because the MVP formula
+normalises each player's contribution against a five-man team.
 
 ## What the stub cannot tell us
 

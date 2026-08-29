@@ -1467,9 +1467,9 @@ model TournamentLobby {
   channelId        String
   creatorDiscordId String
 
-  /// JSON string arrays. Teams come from the /lobby create arguments because
-  /// lobby events carry a PUUID per join and never a side, and spectator is
-  /// unreliable for customs — so this is the only pregame source of the split.
+  /// JSON string arrays retained for compatibility with old declared-roster
+  /// lobbies. New lobbies are open, so these arrays are empty: lobby events
+  /// reveal who joined but never which side they chose.
   bluePuuids    String
   redPuuids     String
   blueAliases   String

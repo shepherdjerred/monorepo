@@ -47,16 +47,24 @@ export const tournamentUnknownLobbyEventsTotal = new Counter({
 /**
  * Which prematch path a lobby took.
  *
- * `spectator_enriched` means the opportunistic upgrade landed and the message
- * carries the full loading-screen image; `declared_roster` means it did not and
- * the card shows the rosters from /lobby create. This ratio is the measurement
- * of how reliably spectator sees tournament lobbies — an open question the stub
- * cannot answer.
+ * `joined_players` means every joined PUUID was resolved to a Riot ID for the
+ * card; `joined_count` means the card retained only its accurate count because
+ * an identity lookup was unavailable. `declared_roster` is retained for old
+ * pre-open-code rows. `no_destination` means none of those players has a
+ * matching channel subscription in the lobby's server.
  */
 export const tournamentPrematchTotal = new Counter({
   name: "scout_tournament_prematch_total",
   help: "Tournament prematch notifications by delivery path",
   labelNames: ["path"] as const,
+  registers: [registry],
+});
+
+/** Whether joined Tournament-event PUUIDs became a complete display roster. */
+export const tournamentRosterIdentityTotal = new Counter({
+  name: "scout_tournament_roster_identity_total",
+  help: "Tournament lobby Riot-ID enrichment outcomes",
+  labelNames: ["status"] as const,
   registers: [registry],
 });
 

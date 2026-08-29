@@ -9,7 +9,11 @@ import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
 import { channelsPassingQueueFilter } from "#src/league/tasks/notification-filters.ts";
 import { buildLobbyPrematchEmbed } from "#src/league/tournament/prematch-card.ts";
 import type { TournamentLobbyRecord } from "#src/league/tournament/lobby-store.ts";
-import { tournamentPrematchTotal } from "#src/metrics/tournament.ts";
+import { resolveLobbyPlayerNames } from "#src/league/tournament/player-identities.ts";
+import {
+  tournamentPrematchTotal,
+  tournamentRosterIdentityTotal,
+} from "#src/metrics/tournament.ts";
 
 const logger = createLogger("tournament-prematch");
 
@@ -17,9 +21,11 @@ const logger = createLogger("tournament-prematch");
  * Sends the prematch card for a lobby entering champ select.
  *
  * Delivery goes to the same channels a matchmade game would: every channel
- * subscribed to one of the lobby's players that also passes a `"custom"` queue
+ * subscribed to a player who actually joined and passes a `"custom"` queue
  * filter. A subscription with an explicit filter list must name `"custom"` —
- * that is the documented allow-list semantics, not an oversight.
+ * that is the documented allow-list semantics, not an oversight. Restricting
+ * delivery to the lobby's server prevents a player tracked in another server
+ * from receiving an unrelated lobby's card.
  *
  * Returns the channel -> message ID map so the poller can hand it to the
  * ActiveGame row, which is what makes the post-match report reply to this
@@ -31,11 +37,13 @@ const logger = createLogger("tournament-prematch");
 export async function deliverLobbyPrematch(
   lobby: TournamentLobbyRecord,
 ): Promise<Record<string, string> | undefined> {
-  const puuids = [...lobby.bluePuuids, ...lobby.redPuuids].map((puuid) =>
+  const puuids = lobby.joinedPuuids.map((puuid) =>
     LeaguePuuidSchema.parse(puuid),
   );
   const subscribed = await getChannelsSubscribedToPlayers(puuids);
-  const channels = channelsPassingQueueFilter(subscribed, "custom");
+  const channels = channelsPassingQueueFilter(subscribed, "custom").filter(
+    (channel) => channel.serverId === lobby.serverId,
+  );
 
   if (channels.length === 0) {
     logger.info(
@@ -45,7 +53,17 @@ export async function deliverLobbyPrematch(
     return undefined;
   }
 
-  const embed = buildLobbyPrematchEmbed(lobby);
+  const isOpenLobby =
+    lobby.blueAliases.length === 0 && lobby.redAliases.length === 0;
+  const joinedPlayerNames = isOpenLobby
+    ? await resolveLobbyPlayerNames(lobby)
+    : undefined;
+  if (isOpenLobby) {
+    tournamentRosterIdentityTotal.inc({
+      status: joinedPlayerNames === undefined ? "unavailable" : "resolved",
+    });
+  }
+  const embed = buildLobbyPrematchEmbed(lobby, joinedPlayerNames);
   const messageIds: Record<string, string> = {};
 
   for (const destination of channels) {
@@ -64,6 +82,12 @@ export async function deliverLobbyPrematch(
     }
   }
 
-  tournamentPrematchTotal.inc({ path: "declared_roster" });
+  tournamentPrematchTotal.inc({
+    path: isOpenLobby
+      ? joinedPlayerNames === undefined
+        ? "joined_count"
+        : "joined_players"
+      : "declared_roster",
+  });
   return Object.keys(messageIds).length === 0 ? undefined : messageIds;
 }
