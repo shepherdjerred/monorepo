@@ -812,10 +812,6 @@
       "clones": 1,
       "tokens": 107
     },
-    "packages/homelab/src/cdk8s/src/resources/relay/index.ts|packages/homelab/src/cdk8s/src/resources/temporal/ui.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
     "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts|packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts": {
       "clones": 1,
       "tokens": 79
@@ -1941,6 +1937,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-29T19:50:24.140Z"
   "updated": "2026-08-29T21:34:46.948Z"
 }

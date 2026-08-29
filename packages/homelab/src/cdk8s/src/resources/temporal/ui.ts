@@ -1,7 +1,6 @@
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { Duration } from "cdk8s";
 import {
-  Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
@@ -15,6 +14,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { temporalUtilityContainerDefaults } from "./container-defaults.ts";
 
 export type CreateTemporalUiDeploymentProps = {
   serverService: ServiceType;
@@ -24,7 +24,6 @@ export function createTemporalUiDeployment(
   chart: Chart,
   props: CreateTemporalUiDeploymentProps,
 ) {
-  const UID = 1000;
   const GID = 1000;
 
   const deployment = new Deployment(chart, "temporal-ui", {
@@ -57,22 +56,7 @@ export function createTemporalUiDeployment(
           "https://temporal-ui.tailnet-1a49.ts.net",
         ),
       },
-      securityContext: {
-        user: UID,
-        group: GID,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: false,
-      },
-      resources: {
-        cpu: {
-          request: Cpu.millis(50),
-          limit: Cpu.millis(250),
-        },
-        memory: {
-          request: Size.mebibytes(64),
-          limit: Size.mebibytes(256),
-        },
-      },
+      ...temporalUtilityContainerDefaults(),
       liveness: Probe.fromTcpSocket({
         port: 8080,
         initialDelaySeconds: Duration.seconds(10),

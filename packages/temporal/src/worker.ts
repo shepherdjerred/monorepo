@@ -20,10 +20,7 @@ import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
 import { retryUntilReady, sleepUnlessClosed } from "./shared/startup-retry.ts";
 import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
-import {
-  getWorkerRoleContract,
-  type QueueWorkerDefinition,
-} from "./worker-config.ts";
+import { getWorkerRoleContract } from "./worker-config.ts";
 import {
   parseLegacyTemporalNamespace,
   parseTemporalNamespace,
@@ -34,6 +31,11 @@ import {
   assertCentralWorkerNamespace,
   workerNamespaces,
 } from "./shared/worker-namespaces.ts";
+import type { QueueWorkerDefinition } from "./worker-config.ts";
+import {
+  parseScheduleReconciliationMode,
+  type ScheduleReconciliationMode,
+} from "./shared/schedule-reconciliation.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -89,44 +91,6 @@ function initSentry(): void {
     skipOpenTelemetrySetup: true,
   });
   jsonLog("info", "Sentry initialized");
-}
-
-async function createQueueWorker(
-  definition: QueueWorkerDefinition,
-  connection: NativeConnection,
-  workflowsPath: string,
-  namespace: TemporalNamespace | LegacyTemporalNamespace,
-  legacyDrain: boolean,
-): Promise<Worker> {
-  if (definition.kind === "workflow") {
-    return await Worker.create({
-      connection,
-      namespace,
-      workflowsPath,
-      workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
-      taskQueue: definition.taskQueue,
-      ...(!legacyDrain &&
-      definition.maxConcurrentWorkflowTaskExecutions === undefined
-        ? {}
-        : {
-            maxConcurrentWorkflowTaskExecutions:
-              definition.maxConcurrentWorkflowTaskExecutions ?? 1,
-          }),
-    });
-  }
-  return await Worker.create({
-    connection,
-    namespace,
-    activities: definition.activities,
-    taskQueue: definition.taskQueue,
-    ...(!legacyDrain &&
-    definition.maxConcurrentActivityTaskExecutions === undefined
-      ? {}
-      : {
-          maxConcurrentActivityTaskExecutions:
-            definition.maxConcurrentActivityTaskExecutions ?? 1,
-        }),
-  });
 }
 
 function formatError(error: unknown): string {
@@ -272,6 +236,111 @@ function startEventBridgeSupervisor(client: Client): EventBridgeHandle {
   };
 }
 
+async function createRoleWorkers(input: {
+  connection: NativeConnection;
+  definitions: readonly QueueWorkerDefinition[];
+  activeNamespace: TemporalNamespace;
+  legacyNamespace: LegacyTemporalNamespace | undefined;
+}): Promise<Worker[]> {
+  const workers: Worker[] = [];
+  const workflowsPath = new URL("workflows/index.ts", import.meta.url).pathname;
+  for (const definition of input.definitions) {
+    const namespaces = workerNamespaces({
+      queueRole: definition.role,
+      activeNamespace: input.activeNamespace,
+      legacyNamespace: input.legacyNamespace,
+    });
+    for (const namespace of namespaces) {
+      const legacyDrain = namespace === input.legacyNamespace;
+      const worker = await Worker.create({
+        connection: input.connection,
+        workflowsPath,
+        workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
+        namespace,
+        activities: definition.activities,
+        taskQueue: definition.taskQueue,
+        ...(!legacyDrain &&
+        definition.maxConcurrentActivityTaskExecutions === undefined
+          ? {}
+          : {
+              maxConcurrentActivityTaskExecutions:
+                definition.maxConcurrentActivityTaskExecutions ?? 1,
+            }),
+        ...(!legacyDrain &&
+        definition.maxConcurrentWorkflowTaskExecutions === undefined
+          ? {}
+          : {
+              maxConcurrentWorkflowTaskExecutions:
+                definition.maxConcurrentWorkflowTaskExecutions ?? 1,
+            }),
+      });
+      workers.push(worker);
+      jsonLog("info", "Worker created", {
+        namespace,
+        legacyDrain,
+        queueRole: definition.role,
+        taskQueue: definition.taskQueue,
+        maxConcurrentActivityTaskExecutions:
+          definition.maxConcurrentActivityTaskExecutions,
+        maxConcurrentWorkflowTaskExecutions:
+          definition.maxConcurrentWorkflowTaskExecutions,
+      });
+    }
+  }
+  return workers;
+}
+
+async function startControlSurfaces(input: {
+  address: string;
+  namespace: TemporalNamespace;
+  scheduleReconciliation: ScheduleReconciliationMode;
+  roleContract: ReturnType<typeof getWorkerRoleContract>;
+}): Promise<{
+  httpServers: EventBridgeHandle | undefined;
+  eventBridge: EventBridgeHandle | undefined;
+}> {
+  if (!input.roleContract.runsGateway && !input.roleContract.runsEventBridge) {
+    return { httpServers: undefined, eventBridge: undefined };
+  }
+
+  const connection = await Connection.connect({ address: input.address });
+  const client = new Client({
+    connection,
+    namespace: input.namespace,
+  });
+
+  let httpServers: EventBridgeHandle | undefined;
+  if (
+    input.roleContract.runsGateway &&
+    input.scheduleReconciliation === "enabled"
+  ) {
+    const scheduleNamespaces: readonly TemporalNamespace[] =
+      input.namespace === "prod" ? ["prod", "beta"] : [input.namespace];
+    for (const namespace of scheduleNamespaces) {
+      const scheduleClient = new Client({ connection, namespace });
+      await registerSchedules(scheduleClient, {
+        namespace,
+        validateLocalEnvironment:
+          input.roleContract.validatesScheduleEnvironmentLocally,
+      });
+      jsonLog("info", "Schedules registered", { namespace });
+    }
+    httpServers = startHttpServers(client);
+  } else if (input.roleContract.runsGateway) {
+    jsonLog("info", "Schedule reconciliation disabled", {
+      namespace: input.namespace,
+    });
+    httpServers = startHttpServers(client);
+  }
+
+  return {
+    httpServers,
+    eventBridge: input.roleContract.runsEventBridge
+      ? startEventBridgeSupervisor(client)
+      : undefined,
+  };
+}
+
 async function main(): Promise<void> {
   const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
   const roleContract = getWorkerRoleContract(role);
@@ -281,6 +350,9 @@ async function main(): Promise<void> {
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
   const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  const scheduleReconciliation = parseScheduleReconciliationMode(
+    Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"],
+  );
   assertCentralWorkerNamespace(role, namespace);
   const legacyNamespace = parseLegacyTemporalNamespace(
     Bun.env["TEMPORAL_LEGACY_NAMESPACE"],
@@ -294,78 +366,18 @@ async function main(): Promise<void> {
 
   const connection = await NativeConnection.connect({ address });
 
-  const workflowsPath = new URL("workflows/index.ts", import.meta.url).pathname;
-  const workers: Worker[] = [];
-  let httpServers: EventBridgeHandle | undefined;
-  let eventBridge: EventBridgeHandle | undefined;
-
-  for (const definition of roleContract.workers) {
-    const namespaces = workerNamespaces({
-      queueRole: definition.role,
-      activeNamespace: namespace,
-      legacyNamespace,
-    });
-    for (const workerNamespace of namespaces) {
-      const legacyDrain = workerNamespace === legacyNamespace;
-      const worker = await createQueueWorker(
-        definition,
-        connection,
-        workflowsPath,
-        workerNamespace,
-        legacyDrain,
-      );
-      workers.push(worker);
-      jsonLog("info", "Worker created", {
-        namespace: workerNamespace,
-        legacyDrain,
-        workerKind: definition.kind,
-        queueRole: definition.role,
-        taskQueue: definition.taskQueue,
-        ...(definition.kind === "activity"
-          ? {
-              maxConcurrentActivityTaskExecutions:
-                definition.maxConcurrentActivityTaskExecutions,
-            }
-          : {
-              maxConcurrentWorkflowTaskExecutions:
-                definition.maxConcurrentWorkflowTaskExecutions,
-            }),
-      });
-    }
-  }
-
-  if (roleContract.runsGateway || roleContract.runsEventBridge) {
-    const clientConnection = await Connection.connect({ address });
-    const client = new Client({
-      connection: clientConnection,
-      namespace,
-    });
-
-    if (roleContract.runsGateway) {
-      const scheduleNamespaces: readonly TemporalNamespace[] =
-        namespace === "prod" ? ["prod", "beta"] : [namespace];
-      for (const scheduleNamespace of scheduleNamespaces) {
-        const scheduleClient = new Client({
-          connection: clientConnection,
-          namespace: scheduleNamespace,
-        });
-        await registerSchedules(scheduleClient, {
-          namespace: scheduleNamespace,
-          validateLocalEnvironment:
-            roleContract.validatesScheduleEnvironmentLocally,
-        });
-        jsonLog("info", "Schedules registered", {
-          namespace: scheduleNamespace,
-        });
-      }
-
-      httpServers = startHttpServers(client);
-    }
-
-    if (roleContract.runsEventBridge) {
-      eventBridge = startEventBridgeSupervisor(client);
-    }
-  }
+  const workers = await createRoleWorkers({
+    connection,
+    definitions: roleContract.workers,
+    activeNamespace: namespace,
+    legacyNamespace,
+  });
+  const { httpServers, eventBridge } = await startControlSurfaces({
+    address,
+    namespace,
+    scheduleReconciliation,
+    roleContract,
+  });
 
   // The event-loop-backed health endpoint starts only after every worker in
   // this role has been created and all role-specific startup has completed.
