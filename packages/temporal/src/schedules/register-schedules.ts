@@ -74,14 +74,20 @@ async function pauseLegacyClaudeSchedules(client: Client): Promise<void> {
     if (!isDynamicAgentTaskSchedule(schedule.scheduleId, schedule.memo)) {
       continue;
     }
-    if (schedule.action.type !== "startWorkflow") continue;
-    if (schedule.action.workflowType !== "agentTaskWorkflow") continue;
-    const rawInput = schedule.action.args?.[0];
-    const input = AgentTaskInputSchema.safeParse(rawInput);
+    const action = schedule.action;
+    if (action?.type !== "startWorkflow") continue;
+    if (action.workflowType !== "agentTaskWorkflow") continue;
+    const description = await client.schedule
+      .getHandle(schedule.scheduleId)
+      .describe();
+    if (description.action.workflowType !== "agentTaskWorkflow") continue;
+    const input = AgentTaskInputSchema.safeParse(description.action.args?.[0]);
     if (!input.success || input.data.provider !== "claude") continue;
-    await client.schedule.getHandle(schedule.scheduleId).pause(
-      "Paused during the OpenRouter migration; resubmit this task with provider codex",
-    );
+    await client.schedule
+      .getHandle(schedule.scheduleId)
+      .pause(
+        "Paused during the OpenRouter migration; resubmit this task with provider codex",
+      );
     console.warn(
       `Paused legacy Claude agent-task schedule: ${schedule.scheduleId}`,
     );

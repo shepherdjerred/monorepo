@@ -104,6 +104,7 @@ export async function runSeasonAgent(
       cwd: input.workdir,
       env: envForTrustedAgent({ OPENROUTER_API_KEY: openRouterApiKey }),
       signal,
+      redactTokens: secretState.tokens,
       beforeEvent: async () => {
         try {
           await secretState.refresh();

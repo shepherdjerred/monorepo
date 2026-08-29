@@ -20,6 +20,8 @@ export type ExecuteEditOptions = {
 
 type CommandResult = { stdout: string; exitCode: number };
 
+const CODEX_SESSION_PREFIX = "codex:";
+
 async function runGit(
   workingDirectory: string,
   args: readonly string[],
@@ -37,13 +39,16 @@ async function runGit(
   return { stdout, exitCode };
 }
 
-async function changedPaths(workingDirectory: string): Promise<string[]> {
+async function changedPaths(
+  workingDirectory: string,
+  baselineCommit: string,
+): Promise<string[]> {
   const tracked = await runGit(workingDirectory, [
     "diff",
     "--name-only",
     "--diff-filter=ACDMRTUXB",
     "-z",
-    "HEAD",
+    baselineCommit,
     "--",
   ]);
   if (tracked.exitCode !== 0) throw new Error("Unable to read editor Git diff");
@@ -75,8 +80,12 @@ export function pathsOutsideAllowed(
 async function oldContent(
   workingDirectory: string,
   path: string,
+  baselineCommit: string,
 ): Promise<string | null> {
-  const result = await runGit(workingDirectory, ["show", `HEAD:${path}`]);
+  const result = await runGit(workingDirectory, [
+    "show",
+    `${baselineCommit}:${path}`,
+  ]);
   return result.exitCode === 0 ? result.stdout : null;
 }
 
@@ -96,8 +105,10 @@ async function newContent(
 export async function changesFromGitDiff(
   workingDirectory: string,
   allowedPaths?: readonly string[],
+  baselineCommit?: string,
 ): Promise<FileChange[]> {
-  const paths = await changedPaths(workingDirectory);
+  const baseline = baselineCommit ?? (await gitHead(workingDirectory));
+  const paths = await changedPaths(workingDirectory, baseline);
   const disallowed = pathsOutsideAllowed(paths, allowedPaths);
   if (disallowed.length > 0) {
     throw new Error(
@@ -107,7 +118,7 @@ export async function changesFromGitDiff(
   return await Promise.all(
     paths.map(async (path): Promise<FileChange> => {
       const [before, after] = await Promise.all([
-        oldContent(workingDirectory, path),
+        oldContent(workingDirectory, path, baseline),
         newContent(workingDirectory, path),
       ]);
       return {
@@ -119,6 +130,30 @@ export async function changesFromGitDiff(
       };
     }),
   );
+}
+
+async function gitHead(workingDirectory: string): Promise<string> {
+  const result = await runGit(workingDirectory, ["rev-parse", "HEAD"]);
+  if (result.exitCode !== 0) {
+    throw new Error("Unable to read editor Git baseline");
+  }
+  const commit = result.stdout.trim();
+  if (commit.length === 0) {
+    throw new Error("Unable to read editor Git baseline");
+  }
+  return commit;
+}
+
+function encodeSessionId(sessionId: string | undefined): string | null {
+  return sessionId === undefined || sessionId.length === 0
+    ? null
+    : `${CODEX_SESSION_PREFIX}${sessionId}`;
+}
+
+function decodeSessionId(sessionId: string): string | undefined {
+  if (!sessionId.startsWith(CODEX_SESSION_PREFIX)) return undefined;
+  const decoded = sessionId.slice(CODEX_SESSION_PREFIX.length);
+  return decoded.length > 0 ? decoded : undefined;
 }
 
 function codexEnvironment(): Record<string, string> {
@@ -133,14 +168,20 @@ function codexEnvironment(): Record<string, string> {
 export function threadSelection(
   resumeSessionId: string | undefined,
 ): { kind: "start" } | { kind: "resume"; id: string } {
-  return resumeSessionId === undefined || resumeSessionId.length === 0
+  const decoded =
+    resumeSessionId === undefined
+      ? undefined
+      : decodeSessionId(resumeSessionId);
+  return decoded === undefined
     ? { kind: "start" }
-    : { kind: "resume", id: resumeSessionId };
+    : { kind: "resume", id: decoded };
 }
 
 export async function executeEdit(
   opts: ExecuteEditOptions,
 ): Promise<EditResult> {
+  const baselineCommit = await gitHead(opts.workingDirectory);
+  const selection = threadSelection(opts.resumeSessionId);
   const openRouter = createOpenRouterCodexConfig({
     apiKey: Bun.env["OPENROUTER_API_KEY"] ?? "",
     modelId: MODEL,
@@ -149,8 +190,7 @@ export async function executeEdit(
   logger.info("Executing edit", {
     workingDirectory: opts.workingDirectory,
     model: openRouter.catalogModelId,
-    hasResume:
-      opts.resumeSessionId !== undefined && opts.resumeSessionId.length > 0,
+    hasResume: selection.kind === "resume",
   });
   const codex = new Codex(openRouter.codexOptions);
   const threadOptions = {
@@ -162,7 +202,6 @@ export async function executeEdit(
     webSearchMode: "disabled" as const,
     workingDirectory: opts.workingDirectory,
   };
-  const selection = threadSelection(opts.resumeSessionId);
   const thread =
     selection.kind === "start"
       ? codex.startThread(threadOptions)
@@ -201,6 +240,7 @@ export async function executeEdit(
   const changes = await changesFromGitDiff(
     opts.workingDirectory,
     opts.allowedPaths,
+    baselineCommit,
   );
   summary = summary.trim();
   logger.info("Edit complete", {
@@ -209,7 +249,7 @@ export async function executeEdit(
     model: openRouter.catalogModelId,
   });
   return {
-    sdkSessionId: thread.id ?? opts.resumeSessionId ?? null,
+    sdkSessionId: encodeSessionId(thread.id),
     changes,
     summary: summary.length > 0 ? summary : "Changes applied successfully.",
   };
