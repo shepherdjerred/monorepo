@@ -276,13 +276,13 @@ export function addLlmPanels(
  * `actualCostUsd` and join them to these spans on `traceId`.
  */
 const ATTRIBUTION_NOTE =
-  "Subject ids are span attributes, never metric labels, so this panel reads Tempo and inherits Tempo's 30-day retention and 3h metrics-query cap. For spend over a longer window, join Loki's llm.openrouter.response cost records to these spans on traceId.";
+  "Selects gen_ai.* spans, which carry both the subject and the usage: OpenTelemetry does not inherit attributes down a trace, so a query matching the attribution span above them would find no tokens to sum, and would count one span per interaction rather than one per model call. Subject ids are span attributes, never metric labels, so this panel reads Tempo and inherits Tempo's 30-day retention and 3h metrics-query cap. For spend over a longer window, join Loki's llm.openrouter.response cost records to these spans on traceId.";
 
 function createSubjectTokenPanel() {
   return new timeseries.PanelBuilder()
     .title("Output Tokens by Subject")
     .description(
-      `Output tokens grouped by who the call was made on behalf of. ${ATTRIBUTION_NOTE}`,
+      `Output tokens per model call, grouped by who the call was made on behalf of. ${ATTRIBUTION_NOTE}`,
     )
     .datasource(TEMPO_DATASOURCE)
     .withTarget(
@@ -290,7 +290,7 @@ function createSubjectTokenPanel() {
         .queryType("traceql")
         .metricsQueryType(tempo.MetricsQueryType.Range)
         .query(
-          '{span.llm.subject.id != ""} | sum_over_time(span.gen_ai.usage.output_tokens) by (span.llm.subject.kind, span.llm.subject.id)',
+          '{span.gen_ai.operation.name != "" && span.llm.subject.id != ""} | sum_over_time(span.gen_ai.usage.output_tokens) by (span.llm.subject.kind, span.llm.subject.id)',
         ),
     )
     .unit("short")
@@ -303,7 +303,7 @@ function createSubjectCallPanel() {
   return new timeseries.PanelBuilder()
     .title("Attributed Calls by Subject Kind")
     .description(
-      `Span counts by subject kind. A rising \`system\` share means spend is shifting to scheduled work with no requester, which is expected for match reviews and betting but not for interactive features. ${ATTRIBUTION_NOTE}`,
+      `Model calls by subject kind. A rising \`system\` share means spend is shifting to scheduled work with no requester, which is expected for match reviews and betting but not for interactive features. ${ATTRIBUTION_NOTE}`,
     )
     .datasource(TEMPO_DATASOURCE)
     .withTarget(
@@ -311,7 +311,7 @@ function createSubjectCallPanel() {
         .queryType("traceql")
         .metricsQueryType(tempo.MetricsQueryType.Range)
         .query(
-          '{span.llm.subject.kind != ""} | count_over_time() by (span.llm.subject.kind)',
+          '{span.gen_ai.operation.name != "" && span.llm.subject.kind != ""} | count_over_time() by (span.llm.subject.kind)',
         ),
     )
     .unit("short")

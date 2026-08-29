@@ -15,12 +15,16 @@ Tempo retention limit.
 ## 1. Find spend for the feature you care about
 
 ```bash
-toolkit prom query 'topk(10, sum by (service, workload) (max by (service, workload, model) (increase(llm_cost_usd_total{type=~"actual|upstream"}[24h]))))'
+toolkit prom query 'topk(10, sum by (service, workload) (max by (service, workload, model) (sum by (service, workload, model, type) (increase(llm_cost_usd_total{type=~"actual|upstream"}[24h])))))'
 ```
 
 Take the per-series maximum of `actual` and `upstream`, not `actual` alone: a BYOK
 route bills nothing through OpenRouter and reads as `$0` under an actual-only query
 while still costing real money upstream.
+
+The inner `sum` must stay inside the `max`. These series carry `pod`, so a deploy
+inside the window leaves two counter series per workload, and taking the maximum
+first would keep only the longer-lived pod's spend.
 
 ## 2. Pull the per-call cost records with their trace IDs
 
@@ -45,15 +49,18 @@ toolkit tempo get <traceId> --jq '.trace.resourceSpans[].scopeSpans[].spans[]
 
 Sum the cost records sharing a trace ID to get that subject's total for the
 interaction. A trace is one interaction, so every workload inside it — routing,
-embedding, the answer itself — belongs to the same subject even though only the
-top-level span carries the subject attributes.
+embedding, the answer itself — belongs to the same subject.
+
+Filter on `gen_ai.operation.name` when you want one row per model call. The
+subject is stamped onto every `gen_ai.*` span as well as the attribution span
+above them, so matching without that filter counts the interaction twice.
 
 ## Alternative: recent activity, without the join
 
 For "who is active right now" rather than exact dollars, query Tempo directly:
 
 ```bash
-toolkit tempo metrics '{span.llm.subject.id != ""} | count_over_time() by (span.llm.subject.kind)' --since 3h
+toolkit tempo metrics '{span.gen_ai.operation.name != "" && span.llm.subject.id != ""} | count_over_time() by (span.llm.subject.kind)' --since 3h
 ```
 
 Tempo caps metrics queries at a three-hour range, so this cannot replace the join

@@ -390,7 +390,7 @@ export async function runParlayGeneration(
   // be in one live game, and those players can be tracked in different servers,
   // so there is no single guild this spend belongs to. Marking it explicitly
   // unattributed is honest; picking an arbitrary guild would not be.
-  return await withLlmSubjectSpan(
+  await withLlmSubjectSpan(
     "scout.betting.parlay",
     { kind: "system", id: "scout.betting.parlay" },
     () => runParlayGenerationInternal(input, prismaClient, execution),

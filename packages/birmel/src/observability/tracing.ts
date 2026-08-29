@@ -1,6 +1,7 @@
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import {
+  context as otelContext,
   trace,
   diag,
   DiagLogLevel,
@@ -32,7 +33,10 @@ import {
   logger,
   setOtlpLogsEnabled,
 } from "@shepherdjerred/birmel/utils/logger.ts";
-import { llmSubjectAttributes } from "@shepherdjerred/llm-observability/subject";
+import {
+  llmSubjectAttributes,
+  setLlmSubject,
+} from "@shepherdjerred/llm-observability/subject";
 
 let nodeSdk: NodeSDK | null = null;
 let tracer: Tracer | null = null;
@@ -348,6 +352,26 @@ function subjectAttributes(userId: string | undefined): Record<string, string> {
 }
 
 /**
+ * Run `fn` with the turn's user established as the ambient LLM subject, so the
+ * `gen_ai.*` spans the runtime opens beneath this one carry it too.
+ *
+ * Setting the attributes on this span alone is not enough: OpenTelemetry does
+ * not inherit attributes down a trace, and token usage is recorded on the
+ * `gen_ai.*` spans rather than here, so a per-subject token query reading this
+ * span would find no usage to sum.
+ */
+function withSubjectContext<T>(
+  userId: string | undefined,
+  fn: () => Promise<T>,
+): Promise<T> {
+  if (userId === undefined || userId === "") return fn();
+  return otelContext.with(
+    setLlmSubject(otelContext.active(), { kind: "discord_user", id: userId }),
+    fn,
+  );
+}
+
+/**
  * Create a span with Discord context attributes.
  */
 export async function withSpan<T>(
@@ -389,7 +413,9 @@ export async function withSpan<T>(
         "birmel.job_payload_kind": attributes.payloadKind ?? "",
       });
 
-      const result = await fn(span);
+      const result = await withSubjectContext(attributes.userId, () =>
+        fn(span),
+      );
       span.setStatus({ code: SpanStatusCode.OK });
       return result;
     } catch (error) {
