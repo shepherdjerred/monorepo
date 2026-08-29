@@ -4,6 +4,11 @@ import {
   PostgresqlSpecPostgresqlVersion,
   PostgresqlSpecUsers,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do";
+import {
+  TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE,
+  TEMPORAL_POSTGRES_TLS_PRIVATE_KEY_FILE,
+  TEMPORAL_POSTGRES_TLS_SECRET,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 
 export function createTemporalPostgreSQLDatabase(chart: Chart) {
   // The postgres-operator will automatically generate passwords and store them
@@ -25,6 +30,13 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
     spec: {
       numberOfInstances: 1,
       teamId: "homelab",
+      tls: {
+        secretName: TEMPORAL_POSTGRES_TLS_SECRET,
+        certificateFile: TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE,
+        privateKeyFile: TEMPORAL_POSTGRES_TLS_PRIVATE_KEY_FILE,
+        caSecretName: TEMPORAL_POSTGRES_TLS_SECRET,
+        caFile: TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE,
+      },
       postgresql: {
         version: PostgresqlSpecPostgresqlVersion.VALUE_16,
         parameters: {
