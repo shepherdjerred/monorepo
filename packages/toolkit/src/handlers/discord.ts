@@ -38,6 +38,7 @@ Commands (talk to the running daemon):
   toolkit discord read <channelId> [-n 20] [--json]      Recent messages (incl. embeds)
   toolkit discord wait <channelId> [--from <userId>] [--contains <str>] [--timeout 30]
   toolkit discord slash <channelId> <botId> <command> [args…]   Invoke another bot's slash command (userbot)
+    --direct [--wait-public] [--contains <str>] [--timeout 30]   Use an isolated one-shot user gateway
   toolkit discord voice join <channelId>                 Userbot joins VC; presence persists
   toolkit discord voice leave
   toolkit discord voice states <guildId> [--json]        Who's in VC, streaming flags
@@ -168,17 +169,46 @@ async function handleWait(args: string[]): Promise<void> {
 }
 
 async function handleSlash(args: string[]): Promise<void> {
-  const { values, positionals } = parseJsonFlag(args);
-  const usage = "toolkit discord slash <channelId> <botId> <command> [args…]";
+  const { values, positionals } = parseArgs({
+    args,
+    options: {
+      json: { type: "boolean", default: false },
+      direct: { type: "boolean", default: false },
+      "wait-public": { type: "boolean", default: false },
+      contains: { type: "string" },
+      timeout: { type: "string" },
+    },
+    allowPositionals: true,
+  });
+  const usage =
+    "toolkit discord slash <channelId> <botId> <command> [args…] [--direct --wait-public --contains <str> --timeout 30]";
   const channelId = requirePositional(positionals, 0, "channel id", usage);
   const botId = requirePositional(positionals, 1, "bot id", usage);
   const command = requirePositional(positionals, 2, "command name", usage);
+  const timeoutSeconds = Number.parseInt(values.timeout ?? "30", 10);
+  if (
+    !Number.isInteger(timeoutSeconds) ||
+    timeoutSeconds < 1 ||
+    timeoutSeconds > 600
+  ) {
+    throw new Error("--timeout must be a whole number from 1 through 600");
+  }
+  if (values["wait-public"] && !values.direct) {
+    throw new Error("--wait-public requires --direct");
+  }
+  if (values.contains != null && !values["wait-public"]) {
+    throw new Error("--contains requires --wait-public");
+  }
   await slashCommand({
     channelId,
     botId,
     command,
     args: positionals.slice(3),
     json: values.json,
+    direct: values.direct,
+    waitForPublicResponse: values["wait-public"],
+    publicResponseContains: values.contains,
+    timeoutSeconds,
   });
 }
 

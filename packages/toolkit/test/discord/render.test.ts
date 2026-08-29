@@ -22,6 +22,9 @@ const message: IpcMessage = {
     },
   ],
   attachments: [],
+  mentionUserIds: [],
+  mentionRoleIds: [],
+  mentionsEveryone: false,
 };
 
 describe("renderMessages", () => {
