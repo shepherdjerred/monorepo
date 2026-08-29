@@ -170,7 +170,6 @@ describe("Flipt chart", () => {
     const script = migration?.args?.[0] ?? "";
     expect(script).toContain('validate_repo "$source_repo"');
     expect(script).toContain('if [ -e "$destination" ]');
-    expect(script).toContain('diff -qr "$source_repo" "$destination"');
     expect(script).toContain('temporary="${destination}.migrating"');
     expect(script).toContain('cp -a "$source_repo" "$temporary"');
     expect(script).toContain('diff -qr "$source_repo" "$temporary"');
@@ -195,6 +194,27 @@ describe("Flipt chart", () => {
     expect(
       await run(["/bin/sh", "-c", createEnvironmentMigrationScript(root)]),
     ).not.toBe(0);
+    expect(await run(["rm", "-rf", root])).toBe(0);
+  });
+
+  it("preserves an already initialized environment with different content", async () => {
+    const root = `/tmp/flipt-migration-test-${crypto.randomUUID()}`;
+    expect(await run(["mkdir", "-p", `${root}/data/objects`])).toBe(0);
+    await Bun.write(`${root}/data/HEAD`, "ref: refs/heads/main\n");
+    await Bun.write(`${root}/data/config`, "[core]\n\tbare = true\n");
+    expect(await run(["mkdir", "-p", `${root}/data-beta/objects`])).toBe(0);
+    await Bun.write(`${root}/data-beta/HEAD`, "ref: refs/heads/luna\n");
+    await Bun.write(`${root}/data-beta/config`, "[core]\n\tbare = false\n");
+
+    expect(
+      await run(["/bin/sh", "-c", createEnvironmentMigrationScript(root)]),
+    ).toBe(0);
+    expect(await Bun.file(`${root}/data-prod/HEAD`).text()).toBe(
+      "ref: refs/heads/main\n",
+    );
+    expect(await Bun.file(`${root}/data-beta/HEAD`).text()).toBe(
+      "ref: refs/heads/luna\n",
+    );
     expect(await run(["rm", "-rf", root])).toBe(0);
   });
 

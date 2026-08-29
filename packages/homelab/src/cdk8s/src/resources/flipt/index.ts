@@ -114,7 +114,6 @@ copy_environment() {
   destination="$1"
   if [ -e "$destination" ]; then
     validate_repo "$destination"
-    diff -qr "$source_repo" "$destination"
     return
   fi
 
