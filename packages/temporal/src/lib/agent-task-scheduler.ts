@@ -81,6 +81,11 @@ export async function startOrScheduleAgentTask(
   options?: AgentTaskSchedulerOptions,
 ): Promise<AgentTaskStartResult> {
   const input = AgentTaskInputSchema.parse(rawInput);
+  if (input.provider === "claude") {
+    throw new Error(
+      "New agent tasks must use provider codex; Claude is retained only for deterministic replay",
+    );
+  }
 
   if (input.cron !== undefined) {
     const scheduleId = await agentTaskScheduleId(input);

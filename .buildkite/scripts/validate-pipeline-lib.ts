@@ -8,7 +8,6 @@ export const SHARED_POD_ANCHORS = [
   "pod_buildkit_kubernetes",
   "pod_verify_kubernetes",
   "pod_light_kubernetes",
-  "pod_release_codex_auth_kubernetes",
   "pod_tofu_kubernetes",
   "pod_posthog_tofu_kubernetes",
   "pod_posthog_tofu_apply_kubernetes",

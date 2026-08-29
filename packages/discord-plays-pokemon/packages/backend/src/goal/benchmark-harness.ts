@@ -13,7 +13,7 @@ const BenchmarkArgsSchema = z.strictObject({
   output: z.string().min(1),
   runs: z.coerce.number().int().positive().max(100).default(1),
   goal: z.string().min(1).default(DEFAULT_BENCHMARK_GOAL),
-  model: z.string().min(1).default("gpt-5.6-luna"),
+  model: z.string().min(1).default("gpt-5.6-sol"),
   reasoning: ReasoningEffortSchema.default("medium"),
   runtimeMinutes: z.coerce.number().int().positive().max(30).default(30),
   controlHost: z.string().min(1).default("127.0.0.1"),

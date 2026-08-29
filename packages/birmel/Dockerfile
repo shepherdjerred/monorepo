@@ -4,7 +4,7 @@
 # (which passes `-f Dockerfile ../..`).
 #
 # birmel's editor specialist shells out to `gh` to open PRs and uses the
-# package-local Claude Agent SDK for edits; its music stack shells out through
+# package-local Codex SDK through OpenRouter for edits; its music stack shells out through
 # youtube-dl-exec (needs Node + Python + a yt-dlp binary) and ffmpeg-static.
 #
 # Multi-stage: deps does a full (dev-inclusive) install to feed the in-image

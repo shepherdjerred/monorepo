@@ -243,12 +243,12 @@ describe("collectErrors", () => {
     const errors = collectErrors({
       steps: [step],
       requiredFor: () =>
-        required({ CODEX_ACCESS_TOKEN: "scripts/release.ts:63" }),
+        required({ OPENROUTER_API_KEY: "scripts/release.ts:63" }),
     });
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain("release-please");
     expect(errors[0]).toContain("scripts/release.ts");
-    expect(errors[0]).toContain("CODEX_ACCESS_TOKEN");
+    expect(errors[0]).toContain("OPENROUTER_API_KEY");
     expect(errors[0]).toContain("scripts/release.ts:63");
   });
 

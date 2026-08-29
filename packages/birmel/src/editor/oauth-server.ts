@@ -3,9 +3,9 @@ import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { createOAuthRoutes } from "./oauth-routes.ts";
 import {
-  checkClaudePrerequisites,
+  checkCodexPrerequisites,
   checkGhPrerequisites,
-} from "./claude-client.ts";
+} from "./codex-client.ts";
 
 const logger = loggers.editor.child("oauth-server");
 
@@ -25,19 +25,19 @@ export async function startOAuthServer(): Promise<void> {
   }
 
   // Check prerequisites and warn if missing
-  const claudeCheck = checkClaudePrerequisites();
-  if (claudeCheck.installed) {
-    logger.info("Claude Agent SDK available", { version: claudeCheck.version });
-    if (!claudeCheck.hasApiKey) {
+  const codexCheck = checkCodexPrerequisites();
+  if (codexCheck.installed) {
+    logger.info("Codex Agent SDK available", { version: codexCheck.version });
+    if (!codexCheck.hasApiKey) {
       logger.warn(
-        "CLAUDE_CODE_OAUTH_TOKEN not set - run 'claude login' locally or configure the production OAuth token",
+        "OPENROUTER_API_KEY not set - configure the editor OpenRouter key",
       );
     }
   } else {
     logger.warn(
-      "Claude Agent SDK is unavailable - editor feature will not work",
+      "Codex Agent SDK is unavailable - editor feature will not work",
       {
-        dependency: "@anthropic-ai/claude-agent-sdk",
+        dependency: "@openai/codex-sdk",
       },
     );
   }

@@ -143,7 +143,7 @@ function makeStubSpawner(): SpawnerRecord {
 function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
   return {
     enabled: true,
-    model: "gpt-5.6-luna",
+    model: "gpt-5.6-sol",
     reasoning_effort: "medium",
     runtime_directory: runtimeDirectory,
     screenshot_dir: "screenshots",

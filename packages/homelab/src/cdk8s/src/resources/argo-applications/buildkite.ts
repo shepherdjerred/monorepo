@@ -77,7 +77,7 @@ const BUILDKITE_CREDENTIAL_ITEMS = [
     itemId: "4fmd5otmvwcpsrxjaptrloppvu",
   },
   {
-    secretName: "buildkite-claude-credentials",
+    secretName: "buildkite-release-openrouter-credentials",
     itemId: "2r6nqphyvaegtnbjgcg4avff3m",
   },
   {

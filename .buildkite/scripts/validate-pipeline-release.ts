@@ -253,8 +253,8 @@ function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
   }
   requireIncludes(
     releasePlease,
-    "<<: *pod_release_codex_auth_kubernetes",
-    "release-please is missing the managed Codex auth pod",
+    "<<: *pod_light_kubernetes",
+    "release-please is missing the light pod",
   );
 
   validateVersionCommitBackInstall(stepBlocks.get("version-commit-back"));

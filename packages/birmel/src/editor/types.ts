@@ -1,5 +1,5 @@
 /**
- * Represents a file change captured from Claude Agent SDK
+ * Represents a file change derived from the editor checkout's Git diff.
  */
 export type FileChange = {
   filePath: string;
@@ -9,7 +9,7 @@ export type FileChange = {
 };
 
 /**
- * Result from executing an edit with Claude Agent SDK
+ * Result from executing an edit with Codex Agent SDK.
  */
 export type EditResult = {
   sdkSessionId: string | null;

@@ -51,7 +51,7 @@ export const prWebhookSignatureFailuresTotal = new Counter({
 
 export const homelabAuditSubprocessDurationSeconds = new Histogram({
   name: "homelab_audit_subprocess_duration_seconds",
-  help: "Wall-clock duration of native Claude Agent SDK runs for the homelab daily audit; the metric name is retained for time-series continuity",
+  help: "Wall-clock duration of Codex SDK runs for the homelab daily audit; the metric name is retained for time-series continuity",
   labelNames: ["model", "exit_code"] as const,
   buckets: [60, 300, 600, 900, 1500, 1800, 2100, 2700],
   registers: [register],
@@ -59,14 +59,14 @@ export const homelabAuditSubprocessDurationSeconds = new Histogram({
 
 export const homelabAuditSubprocessExitTotal = new Counter({
   name: "homelab_audit_subprocess_exit_total",
-  help: "Homelab-audit Claude Agent SDK outcomes; the metric name and exit_code label are retained for time-series continuity",
+  help: "Homelab-audit Codex SDK outcomes; the metric name and exit_code label are retained for time-series continuity",
   labelNames: ["exit_code"] as const,
   registers: [register],
 });
 
 export const homelabAuditTokensTotal = new Counter({
   name: "homelab_audit_tokens_total",
-  help: "Tokens consumed by the homelab-audit Claude Agent SDK run, by model and direction",
+  help: "Tokens consumed by the homelab-audit Codex SDK run, by model and direction",
   labelNames: ["model", "direction"] as const,
   registers: [register],
 });
@@ -145,7 +145,7 @@ new Counter({
 
 export const agentTaskSdkDurationSeconds = new Histogram({
   name: "agent_task_sdk_duration_seconds",
-  help: "Wall-clock duration of native Claude Agent SDK and Codex SDK runs",
+  help: "Wall-clock duration of native Codex SDK runs",
   labelNames: ["provider", "model", "outcome"] as const,
   buckets: [30, 60, 180, 300, 600, 900, 1500, 1800, 2700, 3600],
   registers: [register],
@@ -202,7 +202,7 @@ new Counter({
 // ---------------------------------------------------------------------------
 // scout-season-refresh workflow metrics
 //
-// Weekly LoL season-date drift check. Claude Agent SDK researches the current season
+// Weekly LoL season-date drift check. Codex SDK researches the current season
 // schedule and edits packages/scout-for-lol/.../seasons.ts when Riot has
 // announced new acts or moved dates. Activity opens a PR (human review, no
 // auto-merge) when there's drift; no-op when seasons.ts is already accurate.
@@ -225,14 +225,14 @@ export const scoutSeasonRefreshDurationSeconds = new Histogram({
 
 export const scoutSeasonRefreshSubprocessExitTotal = new Counter({
   name: "scout_season_refresh_subprocess_exit_total",
-  help: "scout-season-refresh Claude Agent SDK outcomes; the metric name and exit_code label are retained for time-series continuity",
+  help: "scout-season-refresh Codex SDK outcomes; the metric name and exit_code label are retained for time-series continuity",
   labelNames: ["exit_code"] as const,
   registers: [register],
 });
 
 export const scoutSeasonRefreshTokensTotal = new Counter({
   name: "scout_season_refresh_tokens_total",
-  help: "Tokens consumed by the scout-season-refresh Claude Agent SDK run, by model and direction",
+  help: "Tokens consumed by the scout-season-refresh Codex SDK run, by model and direction",
   labelNames: ["model", "direction"] as const,
   registers: [register],
 });

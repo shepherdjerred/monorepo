@@ -479,19 +479,17 @@ to the gate itself can be exercised before it lands, and for the one-time
 Codex rollout bridge described above. Set it when creating the build, as with
 `CI_IO_FIXED_CORPUS`; never in committed configuration.
 
-### Release refinement providers
+### Release refinement provider
 
 The main-only `release-please` lane runs `scripts/release.ts`. Its CHANGELOG
-refiner uses Claude first and falls back to Codex only when Claude returns a
-validated usage-quota error. `CLAUDE_CODE_OAUTH_TOKEN` and the isolated
-`CODEX_HOME/auth.json` ChatGPT-managed bundle are required; Codex refreshes the
-bundle in its persistent, non-backed-up, release-only PVC instead of receiving
-an extracted short-lived access token. Unknown provider failures and fallback
-failures remain hard CI failures. Claude Agent SDK and Codex SDK are pinned
-production dependencies of `@shepherdjerred/root-scripts`, so the lane's
-filtered install provides both native SDK runtimes without globally installed
-`claude` or `codex` commands. Keep the provider-neutral procedure in
-`scripts/prompts/refine-release-please.md`.
+refiner uses the pinned Codex SDK with `gpt-5.6-luna` through OpenRouter and has
+no provider or model fallback. `OPENROUTER_API_KEY` is the only inference
+credential. The lane passes it to the SDK constructor and does not expose it to
+the agent's tool subprocesses. Codex SDK and `@shepherdjerred/llm-runtime` are
+pinned production dependencies of `@shepherdjerred/root-scripts`, so the
+filtered install provides the native runtime without a globally installed
+`codex` command or a subscription-auth volume. Keep the provider-neutral
+procedure in `scripts/prompts/refine-release-please.md`.
 
 ## GitHub CLI in Codex
 

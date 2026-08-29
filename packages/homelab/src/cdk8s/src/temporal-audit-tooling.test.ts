@@ -590,8 +590,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
     for (const required of [
       "TEMPORAL_ADDRESS",
       "TEMPORAL_WORKER_ROLE",
-      "CLAUDE_CODE_OAUTH_TOKEN",
-      "CODEX_ACCESS_TOKEN",
+      "OPENROUTER_API_KEY",
       "PROMETHEUS_URL",
       "ALERT_DASHBOARD_URL",
     ]) {
@@ -607,6 +606,8 @@ describe("temporal homelab audit tooling access boundaries", () => {
       "BUILDKITE_API_TOKEN",
       "CLOUDFLARE_API_TOKEN",
       "CODEX_API_KEY",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "CODEX_ACCESS_TOKEN",
       "GITHUB_APP_ID",
       "GITHUB_APP_INSTALLATION_ID",
       "GITHUB_APP_PRIVATE_KEY",
@@ -614,7 +615,6 @@ describe("temporal homelab audit tooling access boundaries", () => {
       "GRAFANA_API_KEY",
       "HA_TOKEN",
       "OPENAI_API_KEY",
-      "OPENROUTER_API_KEY",
       "POSTAL_API_KEY",
       "RECIPIENT_EMAIL",
       "SENDER_EMAIL",

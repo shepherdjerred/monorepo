@@ -60,7 +60,7 @@ unmigrated database, resolves the verified baseline when appropriate, and runs
 bun run docker:build   # builds birmel:dev from the repo root context (Dockerfile)
 ```
 
-The image includes `gh`, Claude Code, Node, Python, yt-dlp, and ffmpeg for the
+The image includes `gh`, Node, Python, yt-dlp, and ffmpeg for the
 editor and music specialists. Production deploys go through the Buildkite
 image build and ArgoCD GitOps flow.
 

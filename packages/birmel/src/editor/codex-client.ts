@@ -1,0 +1,201 @@
+import { Codex } from "@openai/codex-sdk";
+import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import type { EditResult, FileChange } from "./types.ts";
+
+const MODEL = "gpt-5.6-luna";
+const logger = loggers.editor.child("codex-client");
+
+export type ExecuteEditOptions = {
+  prompt: string;
+  workingDirectory: string;
+  resumeSessionId?: string | undefined;
+  allowedPaths?: string[] | undefined;
+};
+
+type CommandResult = { stdout: string; exitCode: number };
+
+async function runGit(
+  workingDirectory: string,
+  args: readonly string[],
+): Promise<CommandResult> {
+  const process = Bun.spawn(["git", ...args], {
+    cwd: workingDirectory,
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [stdout, exitCode] = await Promise.all([
+    new Response(process.stdout).text(),
+    process.exited,
+  ]);
+  return { stdout, exitCode };
+}
+
+async function changedPaths(workingDirectory: string): Promise<string[]> {
+  const tracked = await runGit(workingDirectory, [
+    "diff",
+    "--name-only",
+    "--diff-filter=ACDMRTUXB",
+    "-z",
+    "HEAD",
+    "--",
+  ]);
+  if (tracked.exitCode !== 0) throw new Error("Unable to read editor Git diff");
+  const untracked = await runGit(workingDirectory, [
+    "ls-files",
+    "--others",
+    "--exclude-standard",
+    "-z",
+  ]);
+  if (untracked.exitCode !== 0) {
+    throw new Error("Unable to read untracked editor files");
+  }
+  return [tracked.stdout, untracked.stdout]
+    .flatMap((output) => output.split("\0"))
+    .filter((path) => path.length > 0)
+    .toSorted()
+    .filter((path, index, paths) => index === 0 || path !== paths[index - 1]);
+}
+
+export function pathsOutsideAllowed(
+  paths: readonly string[],
+  allowedPaths: readonly string[] | undefined,
+): string[] {
+  const patterns = allowedPaths ?? ["**/*"];
+  const globs = patterns.map((pattern) => new Bun.Glob(pattern));
+  return paths.filter((path) => !globs.some((glob) => glob.match(path)));
+}
+
+async function oldContent(
+  workingDirectory: string,
+  path: string,
+): Promise<string | null> {
+  const result = await runGit(workingDirectory, ["show", `HEAD:${path}`]);
+  return result.exitCode === 0 ? result.stdout : null;
+}
+
+async function newContent(
+  workingDirectory: string,
+  path: string,
+): Promise<string | null> {
+  const file = Bun.file(`${workingDirectory}/${path}`);
+  return (await file.exists()) ? await file.text() : null;
+}
+
+export async function changesFromGitDiff(
+  workingDirectory: string,
+  allowedPaths?: readonly string[],
+): Promise<FileChange[]> {
+  const paths = await changedPaths(workingDirectory);
+  const disallowed = pathsOutsideAllowed(paths, allowedPaths);
+  if (disallowed.length > 0) {
+    throw new Error(
+      `Codex editor changed paths outside allowedPaths: ${disallowed.join(", ")}`,
+    );
+  }
+  return await Promise.all(
+    paths.map(async (path): Promise<FileChange> => {
+      const [before, after] = await Promise.all([
+        oldContent(workingDirectory, path),
+        newContent(workingDirectory, path),
+      ]);
+      return {
+        filePath: path,
+        oldContent: before,
+        newContent: after,
+        changeType:
+          before === null ? "create" : after === null ? "delete" : "modify",
+      };
+    }),
+  );
+}
+
+function codexEnvironment(): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const key of ["PATH", "HOME", "TMPDIR", "LANG", "LC_ALL"] as const) {
+    const value = Bun.env[key];
+    if (value !== undefined) env[key] = value;
+  }
+  return env;
+}
+
+export function threadSelection(
+  resumeSessionId: string | undefined,
+): { kind: "start" } | { kind: "resume"; id: string } {
+  return resumeSessionId === undefined || resumeSessionId.length === 0
+    ? { kind: "start" }
+    : { kind: "resume", id: resumeSessionId };
+}
+
+export async function executeEdit(
+  opts: ExecuteEditOptions,
+): Promise<EditResult> {
+  const openRouter = createOpenRouterCodexConfig({
+    apiKey: Bun.env["OPENROUTER_API_KEY"] ?? "",
+    modelId: MODEL,
+    env: codexEnvironment(),
+  });
+  logger.info("Executing edit", {
+    workingDirectory: opts.workingDirectory,
+    model: openRouter.catalogModelId,
+    hasResume:
+      opts.resumeSessionId !== undefined && opts.resumeSessionId.length > 0,
+  });
+  const codex = new Codex(openRouter.codexOptions);
+  const threadOptions = {
+    approvalPolicy: "never" as const,
+    model: openRouter.routeModelId,
+    modelReasoningEffort: "high" as const,
+    networkAccessEnabled: false,
+    sandboxMode: "workspace-write" as const,
+    webSearchMode: "disabled" as const,
+    workingDirectory: opts.workingDirectory,
+  };
+  const selection = threadSelection(opts.resumeSessionId);
+  const thread =
+    selection.kind === "start"
+      ? codex.startThread(threadOptions)
+      : codex.resumeThread(selection.id, threadOptions);
+  const turn = await thread.run(opts.prompt);
+  const changes = await changesFromGitDiff(
+    opts.workingDirectory,
+    opts.allowedPaths,
+  );
+  const summary = turn.finalResponse.trim();
+  logger.info("Edit complete", {
+    sessionId: thread.id,
+    changeCount: changes.length,
+    model: openRouter.catalogModelId,
+  });
+  return {
+    sdkSessionId: thread.id ?? opts.resumeSessionId ?? null,
+    changes,
+    summary: summary.length > 0 ? summary : "Changes applied successfully.",
+  };
+}
+
+export function checkCodexPrerequisites(): {
+  installed: boolean;
+  version: string | undefined;
+  hasApiKey: boolean;
+} {
+  const apiKey = Bun.env["OPENROUTER_API_KEY"];
+  return {
+    installed: true,
+    version: undefined,
+    hasApiKey: apiKey !== undefined && apiKey.length > 0,
+  };
+}
+
+export async function checkGhPrerequisites(): Promise<{ installed: boolean }> {
+  try {
+    const process = Bun.spawn(["gh", "--version"], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    return { installed: (await process.exited) === 0 };
+  } catch {
+    return { installed: false };
+  }
+}

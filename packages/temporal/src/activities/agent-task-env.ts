@@ -45,11 +45,12 @@ const DIRECT_PROVIDER_CREDENTIAL_KEYS = new Set([
   "XAI_API_KEY",
 ]);
 
-// The subscription credential each native agent SDK authenticates with.
-const PROVIDER_CREDENTIAL_KEYS: Record<AgentTaskProvider, string> = {
+// Legacy subscription credentials are scrubbed even though fresh tasks no
+// longer receive them.
+const PROVIDER_CREDENTIAL_KEYS = {
   claude: "CLAUDE_CODE_OAUTH_TOKEN",
-  codex: "CODEX_ACCESS_TOKEN",
-};
+  codex: "OPENROUTER_API_KEY",
+} as const satisfies Record<AgentTaskProvider, string>;
 const AGENT_SUBSCRIPTION_CREDENTIAL_KEYS = new Set<string>(
   Object.values(PROVIDER_CREDENTIAL_KEYS),
 );
@@ -252,7 +253,7 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
 // Build the deliberately small environment for a native agent SDK run. The SDK
 // child process inherits nothing by default: only basic process/TLS settings,
 // non-secret evidence endpoints, the dedicated read-only Kubernetes identity,
-// and the one subscription credential its own provider needs. Every other
+// and the one OpenRouter credential its own provider needs. Every other
 // worker credential — Postal, S3, GitHub, Temporal, Talos — stays out, so a
 // prompt-injected agent has nothing to exfiltrate from its own environment.
 export function envForProvider(
@@ -270,6 +271,11 @@ export function envForProvider(
     }
   }
   env["HOME"] = workdir;
+  if (provider === "claude") {
+    throw new Error(
+      "Legacy Claude agent tasks can be decoded for replay but cannot execute after the OpenRouter migration",
+    );
+  }
   const credentialKey = PROVIDER_CREDENTIAL_KEYS[provider];
   const credential = sourceEnv[credentialKey];
   if (credential === undefined || credential === "") {

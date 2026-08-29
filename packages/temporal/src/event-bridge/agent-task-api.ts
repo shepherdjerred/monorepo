@@ -88,6 +88,12 @@ export function buildAgentTaskApiApp(
       }
       throw error;
     }
+    if (input.provider !== "codex") {
+      return c.json(
+        { error: "bad payload", issues: ["provider must be codex"] },
+        400,
+      );
+    }
 
     try {
       const result = await startTask(client, input);

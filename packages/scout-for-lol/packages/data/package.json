@@ -29,9 +29,8 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.3.241",
+    "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/llm-models": "workspace:*",
-    "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/glitter-context": "workspace:*",
     "chevrotain": "^13.0.0",
     "cron-parser": "^5.5.0",

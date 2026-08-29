@@ -52,7 +52,7 @@ async function runPhase(phase: "setup" | "verify"): Promise<void> {
     "--env",
     "OPENROUTER_API_KEY=e2e-openrouter",
     "--env",
-    "CLAUDE_CODE_OAUTH_TOKEN=dummy",
+    "OPENROUTER_API_KEY=dummy",
     "--env",
     "DATABASE_URL=file:/workspace/packages/birmel/data/openclaw-e2e.db",
     "--env",

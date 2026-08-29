@@ -140,7 +140,7 @@ const EXPECTED_CREDENTIAL_SECRET_NAMES = [
   "buildkite-analytics-credentials",
   "buildkite-turbo-cache-credentials",
   "buildkite-npm-credentials",
-  "buildkite-claude-credentials",
+  "buildkite-release-openrouter-credentials",
   "buildkite-chartmuseum-credentials",
   "buildkite-argocd-credentials",
   "buildkite-seaweedfs-credentials",

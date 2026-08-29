@@ -161,16 +161,6 @@ export function createBirmelDeployment(chart: Chart) {
         LLM_EMBEDDING_MODEL: EnvValue.fromValue("text-embedding-3-small"),
         LLM_REASONING_EFFORT: EnvValue.fromValue("medium"),
 
-        // Claude Agent SDK editor auth
-        CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "birmel-claude-oauth-secret",
-            onePasswordItem.name,
-          ),
-          key: "CLAUDE_CODE_OAUTH_TOKEN",
-        }),
-
         // Database paths
         DATABASE_URL: EnvValue.fromValue("file:/app/data/birmel.db"),
         OPS_DATABASE_URL: EnvValue.fromValue("file:/app/data/birmel-ops.db"),

@@ -133,6 +133,6 @@ Disconnect Prisma clients in test teardown. Use fake Discord/model/PinchTab
 boundaries in the normal suite; live production acceptance is a separate
 operator step.
 
-The image must include `gh`, Claude Code, Node, Python, yt-dlp, and ffmpeg for
+The image must include `gh`, Node, Python, yt-dlp, and ffmpeg for
 the editor and music specialists. Production deploys only through the existing
 Buildkite image and ArgoCD GitOps flow.

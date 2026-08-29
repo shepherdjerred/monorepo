@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { query } from "@anthropic-ai/claude-agent-sdk";
 import { Codex } from "@openai/codex-sdk";
+import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 
 const ScriptsPackageSchema = z.looseObject({
@@ -9,18 +9,21 @@ const ScriptsPackageSchema = z.looseObject({
 
 describe("release refiner native SDK contract", () => {
   test("loads the native agent SDK entrypoints", () => {
-    expect(typeof query).toBe("function");
     expect(typeof Codex).toBe("function");
+    expect(typeof createOpenRouterCodexConfig).toBe("function");
   });
 
-  test("pins SDKs without retaining the standalone Codex CLI", async () => {
+  test("pins Codex SDK and the shared OpenRouter adapter", async () => {
     const manifest = ScriptsPackageSchema.parse(
       await Bun.file(`${import.meta.dir}/package.json`).json(),
     );
-    expect(manifest.dependencies["@anthropic-ai/claude-agent-sdk"]).toBe(
-      "0.3.241",
-    );
+    expect(
+      manifest.dependencies["@anthropic-ai/claude-agent-sdk"],
+    ).toBeUndefined();
     expect(manifest.dependencies["@openai/codex-sdk"]).toBe("0.149.0");
+    expect(manifest.dependencies["@shepherdjerred/llm-runtime"]).toBe(
+      "workspace:*",
+    );
     expect(manifest.dependencies["@openai/codex"]).toBeUndefined();
   });
 });

@@ -28,24 +28,42 @@ describe("AI architecture guard", () => {
     ]);
   });
 
-  test("accepts OpenRouter and native SDK integrations", () => {
+  test("accepts OpenRouter and Codex SDK integrations", () => {
     expect(
       findAiArchitectureViolations([
         {
           path: "packages/app/package.json",
           contents: [
             '"@openrouter/ai-sdk-provider": "3.0.0"',
-            '"@anthropic-ai/claude-agent-sdk": "0.3.220"',
             '"@openai/codex-sdk": "0.147.0"',
           ].join("\n"),
         },
         {
           path: "packages/app/src/runtime.ts",
-          contents:
-            "const key = Bun.env.OPENROUTER_API_KEY;\nconst token = Bun.env.CODEX_ACCESS_TOKEN;",
+          contents: "const key = Bun.env.OPENROUTER_API_KEY;",
         },
       ]),
     ).toEqual([]);
+  });
+
+  test("rejects Claude Agent SDK and unapproved subscription authentication", () => {
+    const violations = findAiArchitectureViolations([
+      {
+        path: "packages/app/package.json",
+        contents: '"@anthropic-ai/claude-agent-sdk": "0.3.220"',
+      },
+      {
+        path: "packages/app/src/runtime.ts",
+        contents:
+          "const claude = Bun.env.CLAUDE_CODE_OAUTH_TOKEN;\nconst codex = Bun.env.CODEX_ACCESS_TOKEN;",
+      },
+    ]);
+
+    expect(violations.map(({ rule }) => rule)).toEqual([
+      "legacy-agent-sdk",
+      "provider-api-key",
+      "provider-api-key",
+    ]);
   });
 
   test("includes templated runtime configuration in the scanned file set", () => {
@@ -77,6 +95,30 @@ describe("AI architecture guard", () => {
         },
       ]),
     ).toEqual([]);
+  });
+
+  test("allows subscription authentication only for the Pokémon Codex goal workload", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/discord-plays-pokemon/packages/backend/src/goal/codex-auth.ts",
+          contents: "const token = Bun.env.CODEX_ACCESS_TOKEN;",
+        },
+        {
+          path: "packages/homelab/src/cdk8s/src/resources/pokemon.ts",
+          contents: 'const key = "CODEX_ACCESS_TOKEN";',
+        },
+      ]),
+    ).toEqual([]);
+
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/discord-plays-pokemon/packages/backend/src/goal/new-agent.ts",
+          contents: "const token = Bun.env.CODEX_ACCESS_TOKEN;",
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["provider-api-key"]);
   });
 
   test("does not turn a broad source path into a provider exception", () => {

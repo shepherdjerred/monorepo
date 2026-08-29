@@ -103,12 +103,7 @@ export function createTemporalOperationsWorkers(
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
       ),
-      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
       DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
-      CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "CLAUDE_CODE_OAUTH_TOKEN",
-      }),
       OPENROUTER_API_KEY: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "OPENROUTER_API_KEY",
@@ -206,12 +201,7 @@ export function createTemporalOperationsWorkers(
       ),
       ...s3Env(props.secret),
       ...githubEnv(props.secret),
-      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
       DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
-      CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "CLAUDE_CODE_OAUTH_TOKEN",
-      }),
       SCOUT_WEEKLY_PARLAY_CONTROL_URL: EnvValue.fromValue(
         "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/weekly-parlays/actions",
       ),

@@ -1,6 +1,4 @@
 import {
-  AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
-  AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2,
   type AgentTaskInput,
@@ -12,11 +10,10 @@ import {
 } from "#shared/agent-task-prompt.ts";
 import { jsonSchemaFingerprint } from "#shared/agent-task-json-schema.ts";
 
-const DEFAULT_CLAUDE_MODEL = "claude-opus-5";
-const DEFAULT_CODEX_MODEL = "gpt-5.6-sol";
+const DEFAULT_CODEX_MODEL = "gpt-5.6-luna";
 const DEFAULT_MAX_TURNS = 80;
 
-export const CLAUDE_AGENT_ALLOWED_TOOLS = [
+export const AGENT_ALLOWED_TOOLS = [
   "Bash",
   "Read",
   "Grep",
@@ -39,9 +36,9 @@ export type AgentTaskSdkConfig = {
 
 function outputSchema(input: AgentTaskInput): Record<string, unknown> {
   if (input.provider === "claude") {
-    return input.contractVersion === 2
-      ? AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2
-      : AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE;
+    throw new Error(
+      "Legacy Claude agent tasks can be decoded for replay but cannot execute after the OpenRouter migration",
+    );
   }
   return input.contractVersion === 2
     ? AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2
@@ -53,9 +50,7 @@ export function buildAgentTaskSdkConfig(
   workdir: string,
   phase: AgentTaskPromptPhase = SINGLE_AGENT_TASK_PROMPT_PHASE,
 ): AgentTaskSdkConfig {
-  const model =
-    input.model ??
-    (input.provider === "claude" ? DEFAULT_CLAUDE_MODEL : DEFAULT_CODEX_MODEL);
+  const model = input.model ?? DEFAULT_CODEX_MODEL;
   const schema = outputSchema(input);
   return {
     provider: input.provider,
@@ -70,7 +65,6 @@ export function buildAgentTaskSdkConfig(
     // Finalization may only reason over the already-captured evidence catalog,
     // so the agent runs with no tools at all. Anything it could still discover
     // would be evidence that never passed a declared collector.
-    allowedTools:
-      phase.kind === "finalization" ? [] : CLAUDE_AGENT_ALLOWED_TOOLS,
+    allowedTools: phase.kind === "finalization" ? [] : AGENT_ALLOWED_TOOLS,
   };
 }
