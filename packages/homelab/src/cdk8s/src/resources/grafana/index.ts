@@ -155,7 +155,7 @@ const DISCORD_PLAYS_DASHBOARD: DashboardConfig = {
   exportFn: exportDiscordPlaysDashboardJson,
 };
 
-const ALL_DASHBOARDS: DashboardConfig[] = [
+export const ALL_DASHBOARDS: DashboardConfig[] = [
   {
     id: "alert-dashboard-configmap",
     name: "alert-dashboard",

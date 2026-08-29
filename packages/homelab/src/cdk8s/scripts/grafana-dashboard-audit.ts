@@ -9,10 +9,16 @@ const SearchResultSchema = z.object({
   type: z.string(),
 });
 
+const DatasourceRefSchema = z.union([
+  z.string(),
+  z.object({ type: z.string().optional(), uid: z.string().optional() }).loose(),
+]);
+
 const TargetSchema = z
   .object({
     expr: z.string().optional(),
     refId: z.string().optional(),
+    datasource: DatasourceRefSchema.optional(),
   })
   .loose();
 
@@ -20,6 +26,7 @@ const PanelSchema = z
   .object({
     title: z.string().optional(),
     type: z.string().optional(),
+    datasource: DatasourceRefSchema.optional(),
     targets: z.array(TargetSchema).optional(),
     panels: z.array(z.unknown()).optional(),
     gridPos: z
@@ -124,6 +131,44 @@ async function queryPrometheus(expr: string): Promise<{
   return { resultCount: body.data?.result?.length ?? 0 };
 }
 
+const LokiQuerySchema = z.object({
+  status: z.string(),
+  data: z
+    .object({
+      result: z.array(z.unknown()).optional(),
+    })
+    .optional(),
+});
+
+async function queryLoki(expr: string): Promise<{
+  resultCount: number;
+  error?: string;
+}> {
+  const url = new URL(
+    `${grafanaUrl}/api/datasources/proxy/uid/loki/loki/api/v1/query_range`,
+  );
+  url.searchParams.set("query", replaceGrafanaVariables(expr));
+  const nowNs = Date.now() * 1_000_000;
+  url.searchParams.set("start", String(nowNs - 6 * 3600 * 1_000_000_000));
+  url.searchParams.set("end", String(nowNs));
+  url.searchParams.set("limit", "10");
+  const body = LokiQuerySchema.parse(await getJson(url.toString()));
+
+  if (body.status !== "success") {
+    return { resultCount: 0, error: "loki_query_error" };
+  }
+
+  return { resultCount: body.data?.result?.length ?? 0 };
+}
+
+type DatasourceRef = z.infer<typeof DatasourceRefSchema>;
+
+function datasourceType(ref: DatasourceRef | undefined): string | undefined {
+  if (ref === undefined) return undefined;
+  if (typeof ref === "string") return ref;
+  return ref.type ?? ref.uid;
+}
+
 const searchUrl = new URL(`${grafanaUrl}/api/search`);
 searchUrl.searchParams.set("type", "dash-db");
 
@@ -149,10 +194,26 @@ for (const searchResult of searchResults) {
         continue;
       }
 
-      const queryResult = await queryPrometheus(target.expr);
+      // A target's datasource wins over its panel's; string refs and
+      // {type, uid} objects both occur in provisioned dashboards.
+      const dsType =
+        datasourceType(target.datasource) ??
+        datasourceType(panel.datasource) ??
+        "prometheus";
+      // Grafana expression targets compute from other refIds and cannot be
+      // executed against a datasource proxy.
+      if (dsType === "__expr__" || dsType === "datasource") {
+        continue;
+      }
+
+      const queryResult =
+        dsType === "loki"
+          ? await queryLoki(target.expr)
+          : await queryPrometheus(target.expr);
       queryResults.push({
         panel: panel.title ?? "(untitled)",
         refId: target.refId ?? "",
+        datasource: dsType,
         expr: target.expr,
         ...queryResult,
       });

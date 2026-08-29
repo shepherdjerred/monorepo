@@ -25,6 +25,14 @@ import type { TaintedNode } from "cdk8s-plus-31";
  *   runs only CI.
  */
 export const PROD_NODE_HOSTNAME = "torvalds";
+
+/**
+ * torvalds' Kubernetes InternalIP (its Tailscale address). Static scrape
+ * endpoint for host services that run outside Kubernetes — e.g. Talos-managed
+ * etcd, whose metrics listener (src/talos/torvalds/patches/etcd-metrics.yaml)
+ * the kube-prometheus-stack `kubeEtcd.endpoints` value points at.
+ */
+export const PROD_NODE_INTERNAL_IP = "100.102.88.88";
 export const CI_NODE_HOSTNAME = "liskov";
 export const CI_TAINT_KEY = "ci";
 export const CI_TAINT_VALUE = "only";

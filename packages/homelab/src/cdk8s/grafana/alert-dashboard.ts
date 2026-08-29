@@ -81,7 +81,7 @@ export function createAlertDashboardGrafanaDashboard() {
       .fillOpacity(10)
       .gridPos({ x: 0, y: 4, w: 24, h: 8 }),
   );
-  return builder;
+  return builder.build();
 }
 
 export function exportAlertDashboardJson(): string {

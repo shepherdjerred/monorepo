@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createAiProviderDashboard } from "./ai-provider-dashboard.ts";
+import { createAlertDashboardGrafanaDashboard } from "./alert-dashboard.ts";
 import { createBuildkiteDashboard } from "./buildkite-dashboard.ts";
 import { createBuildkitdDashboard } from "./buildkitd-dashboard.ts";
 import { createDiscordPlaysDashboard } from "./discord-plays-dashboard.ts";
@@ -13,6 +14,7 @@ import { createZfsDashboard } from "./zfs-dashboard.ts";
 
 const dashboardJson = [
   createAiProviderDashboard(),
+  createAlertDashboardGrafanaDashboard(),
   createBuildkiteDashboard(),
   createBuildkitdDashboard(),
   createDiscordPlaysDashboard(),

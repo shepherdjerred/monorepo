@@ -5,7 +5,6 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 import {
-  addL2arcPanels,
   addMemoryPanels,
   addBufferAndAdvancedPanels,
 } from "./zfs-dashboard-panels.ts";
@@ -341,8 +340,9 @@ export function createZfsDashboard() {
       .gridPos({ x: 12, y: 13, w: 12, h: 8 }),
   );
 
-  // Rows 3-7: L2ARC, Memory, Performance, Buffer, and Advanced panels
-  addL2arcPanels(builder, prometheusDatasource, buildFilter);
+  // Rows 3-6: Memory, Performance, Buffer, and Advanced panels.
+  // No L2ARC row: the pool has no L2ARC device and the ~99% ARC hit rate
+  // doesn't warrant one, so those panels could only ever render 0/0 = NaN.
   addMemoryPanels(builder, prometheusDatasource, buildFilter);
   addPerformancePanels(builder, prometheusDatasource, buildFilter);
   addBufferAndAdvancedPanels(builder, prometheusDatasource, buildFilter);
