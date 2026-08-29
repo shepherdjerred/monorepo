@@ -407,7 +407,7 @@ export class GoalManager {
       await this.persistState(claimed.state);
       await this.saveCheckpoint(claimed.state.status);
       const usage = claimed.jsonl.total();
-      const cost = computeCost(this.config.model, usage);
+      const cost = computeCost(this.config.model, usage, claimed.jsonl.turns());
       recordGoalUsage(usage, cost);
       const costLine = formatCostLine(this.config.model, cost, usage);
       await this.sendMessage({
@@ -432,7 +432,10 @@ export class GoalManager {
     try {
       await settleGoalProcess(active, true, () => this.controlGate.drain());
       const usage = active.jsonl.total();
-      recordGoalUsage(usage, computeCost(this.config.model, usage));
+      recordGoalUsage(
+        usage,
+        computeCost(this.config.model, usage, active.jsonl.turns()),
+      );
       active.state.status = "timeout";
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport = "Goal timed out before Codex finished.";
@@ -462,7 +465,10 @@ export class GoalManager {
     try {
       await settleGoalProcess(active, true, () => this.controlGate.drain());
       const usage = active.jsonl.total();
-      recordGoalUsage(usage, computeCost(this.config.model, usage));
+      recordGoalUsage(
+        usage,
+        computeCost(this.config.model, usage, active.jsonl.turns()),
+      );
       active.state.status = status;
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport =

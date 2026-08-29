@@ -4,6 +4,7 @@ import {
   allModelIds,
   assertModelId,
   costForTextUsage,
+  costForTextUsageByTurn,
   getModel,
   getOpenRouterRoute,
   getPerTokenPricing,
@@ -175,6 +176,31 @@ describe("pricing accessors", () => {
         outputTokens: 0,
       }),
     ).toBeCloseTo(((270_000 * 0.2 + 2001 * 0.25) * 2) / 1_000_000, 9);
+  });
+
+  test("Luna cache reads stay on cached-input pricing with cache writes", () => {
+    expect(
+      costForTextUsage("gpt-5.6-luna", {
+        inputTokens: 200_000,
+        cachedInputTokens: 100_000,
+        cacheWriteTokens: 1000,
+        outputTokens: 0,
+      }),
+    ).toBeCloseTo(
+      (100_000 * 0.2 + 100_000 * 0.02 + 1000 * 0.25) / 1_000_000,
+      9,
+    );
+  });
+
+  test("long-context surcharge applies independently to each turn", () => {
+    const turns = [
+      { inputTokens: 200_000, outputTokens: 100_000 },
+      { inputTokens: 200_000, outputTokens: 100_000 },
+    ];
+    expect(costForTextUsageByTurn("gpt-5.6-luna", turns)).toBeCloseTo(
+      (400_000 * 0.2 + 200_000 * 1.2) / 1_000_000,
+      9,
+    );
   });
 
   test("Anthropic cache read/write bill separately from input (temporal parity)", () => {

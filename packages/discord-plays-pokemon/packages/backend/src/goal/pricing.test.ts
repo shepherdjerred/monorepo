@@ -72,14 +72,24 @@ describe("computeCost", () => {
     expect(mini / nano).toBeCloseTo(3.71, 1);
   });
 
-  test("gpt-5.6-luna bills at $1/$6 per 1M", () => {
-    // 1M uncached input → $1; 1M output → $6
+  test("gpt-5.6-luna applies its long-context surcharge", () => {
+    // 1M exceeds Luna's 272k threshold: $0.20 × 2 input; $1.20 × 1.5 output.
     expect(
       computeCost("gpt-5.6-luna", usage({ inputTokens: 1_000_000 })),
-    ).toBeCloseTo(1, 6);
+    ).toBeCloseTo(0.4, 6);
     expect(
       computeCost("gpt-5.6-luna", usage({ outputTokens: 1_000_000 })),
-    ).toBeCloseTo(6, 6);
+    ).toBeCloseTo(1.2, 6);
+  });
+
+  test("Luna surcharge is applied per turn, not to aggregate usage", () => {
+    const turns = [
+      usage({ inputTokens: 200_000, outputTokens: 100_000 }),
+      usage({ inputTokens: 200_000, outputTokens: 100_000 }),
+    ];
+    expect(
+      computeCost("gpt-5.6-luna", addUsage(turns[0], turns[1]), turns),
+    ).toBeCloseTo((400_000 * 0.2 + 200_000 * 1.2) / 1_000_000, 9);
   });
 });
 

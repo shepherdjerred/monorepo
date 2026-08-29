@@ -94,6 +94,7 @@ export type CodexEventListener = (event: CodexEvent) => void;
 
 type ParserState = {
   total: CodexTurnUsage;
+  turns: CodexTurnUsage[];
   listeners: CodexEventListener[];
 };
 
@@ -101,6 +102,7 @@ export type CodexJsonlParser = {
   push: (chunk: string) => void;
   finish: () => void;
   total: () => CodexTurnUsage;
+  turns: () => CodexTurnUsage[];
   subscribe: (listener: CodexEventListener) => () => void;
 };
 
@@ -109,6 +111,7 @@ export function createCodexJsonlParser(
 ): CodexJsonlParser {
   const state: ParserState = {
     total: { ...EMPTY_CODEX_USAGE },
+    turns: [],
     listeners: [],
   };
   let buffer = "";
@@ -150,6 +153,7 @@ export function createCodexJsonlParser(
         const usage = normalizeUsage(
           completed.success ? completed.data.usage : undefined,
         );
+        state.turns.push(usage);
         state.total = addCodexUsage(state.total, usage);
         emit({ kind: "turn.completed", usage, raw: parsed });
         return;
@@ -193,6 +197,9 @@ export function createCodexJsonlParser(
     },
     total(): CodexTurnUsage {
       return { ...state.total };
+    },
+    turns(): CodexTurnUsage[] {
+      return state.turns.map((usage) => ({ ...usage }));
     },
     subscribe(listener: CodexEventListener): () => void {
       state.listeners.push(listener);

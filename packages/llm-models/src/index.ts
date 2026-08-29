@@ -317,6 +317,20 @@ export function costForTextUsage(
   return total / 1_000_000;
 }
 
+/** Price independent requests without combining their context lengths. */
+export function costForTextUsageByTurn(
+  id: string,
+  usages: readonly TextUsage[],
+): number | undefined {
+  let total = 0;
+  for (const usage of usages) {
+    const cost = costForTextUsage(id, usage);
+    if (cost === undefined) return undefined;
+    total += cost;
+  }
+  return total;
+}
+
 export function allModelIds(): string[] {
   return Object.keys(MODELS);
 }

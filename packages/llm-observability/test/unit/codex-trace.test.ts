@@ -32,6 +32,14 @@ test("parser accumulates usage totals from the real fixture", () => {
     outputTokens: 70,
     reasoningOutputTokens: 63,
   });
+  expect(parser.turns()).toEqual([
+    {
+      inputTokens: 22_623,
+      cachedInputTokens: 22_400,
+      outputTokens: 70,
+      reasoningOutputTokens: 63,
+    },
+  ]);
 });
 
 test("parser handles chunked pushes across line boundaries", () => {
