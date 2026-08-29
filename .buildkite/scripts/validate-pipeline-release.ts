@@ -70,6 +70,11 @@ export function validateHomelabReleaseAdmission(
     "tofu-apply-arr",
     "tofu-apply-github",
     "tofu-posthog",
+    "tofu-platform-openai",
+    "tofu-platform-anthropic",
+    "tofu-platform-discord",
+    "tofu-platform-openrouter",
+    "tofu-platform-cloudflare-tokens",
     "argocd-sync",
     "tofu-apply-cloudflare",
   ]) {
@@ -92,6 +97,30 @@ export function validateHomelabReleaseAdmission(
     'artifact upload "homelab-release-result.json"',
     "argocd-sync must publish the applied-verified release receipt",
   );
+
+  for (const step of [
+    "tofu-platform-openai",
+    "tofu-platform-anthropic",
+    "tofu-platform-discord",
+    "tofu-platform-openrouter",
+    "tofu-platform-cloudflare-tokens",
+  ]) {
+    const block = stepBlocks.get(step);
+    if (hasTrimmedLine(block, "retry: *retry")) {
+      fail(`${step} must not retry credential mutations automatically`);
+    }
+    for (const required of [
+      "requested_platform=$${TOFU_PLATFORM_APPLY:-}",
+      "plan / opt-in apply",
+      "concurrency_group: monorepo/tofu-platform-credentials",
+    ]) {
+      requireIncludes(
+        block,
+        required,
+        `${step} is missing platform apply safety invariant ${required}`,
+      );
+    }
+  }
 }
 
 function validateReleaseSteps({

@@ -44,6 +44,18 @@ uses a local override to keep auto-sync disabled between batches; the final
 prune restores that one policy. Stage 7 is the single authoritative scoped
 health gate.
 
+After verification, watch the serialized `openai`, `anthropic`, `discord`,
+`openrouter`, and `cloudflare-tokens` jobs. An ordinary main build plans each
+encrypted platform state and never applies it. After reviewing a plan, create a
+targeted build of the current main commit with `TOFU_PLATFORM_APPLY` set to
+exactly one of those stack names. The selector schedules only that no-retry
+platform job, which repeats the plan immediately before applying it.
+
+If one fails, stop the rollout at that platform. Inspect its vendor resources,
+encrypted state object, and intended 1Password rotation units. Resume only
+after deciding whether the failed operation completed; do not start a
+replacement apply while that result is unknown.
+
 Stage 5 renders the same exact root revision and walks its child Applications
 in numeric sync-wave order. Repository-published children take their immutable
 revision from the release inventory. External children, such as cert-manager,

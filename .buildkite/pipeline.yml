@@ -159,6 +159,108 @@ common:
         secretKeyRef:
           name: buildkite-cloudflare-credentials
           key: CLOUDFLARE_API_TOKEN
+  - grant_openai_admin_key: &grant_openai_admin_key
+      name: OPENAI_ADMIN_KEY
+      valueFrom:
+        secretKeyRef:
+          name: openai-tofu-credentials
+          key: OPENAI_ADMIN_KEY
+  - grant_openai_certificate_values: &grant_openai_certificate_values
+      name: OPENAI_CERTIFICATE_VALUES_JSON
+      valueFrom:
+        secretKeyRef:
+          name: openai-tofu-credentials
+          key: OPENAI_CERTIFICATE_VALUES_JSON
+  - grant_openai_tofu_state: &grant_openai_tofu_state
+      name: TOFU_STATE_ENCRYPTION_PASSPHRASE
+      valueFrom:
+        secretKeyRef:
+          name: openai-tofu-credentials
+          key: TOFU_STATE_ENCRYPTION_PASSPHRASE
+  - grant_anthropic_admin_key: &grant_anthropic_admin_key
+      name: ANTHROPIC_ADMIN_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: anthropic-tofu-credentials
+          key: ANTHROPIC_ADMIN_API_KEY
+  - grant_anthropic_tofu_state: &grant_anthropic_tofu_state
+      name: TOFU_STATE_ENCRYPTION_PASSPHRASE
+      valueFrom:
+        secretKeyRef:
+          name: anthropic-tofu-credentials
+          key: TOFU_STATE_ENCRYPTION_PASSPHRASE
+  - grant_discord_tofu_state: &grant_discord_tofu_state
+      name: TOFU_STATE_ENCRYPTION_PASSPHRASE
+      valueFrom:
+        secretKeyRef:
+          name: discord-tofu-credentials
+          key: TOFU_STATE_ENCRYPTION_PASSPHRASE
+  - grant_discord_birmel_token: &grant_discord_birmel_token
+      name: DISCORD_BIRMEL_BOT_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: discord-birmel-credentials
+          key: DISCORD_TOKEN
+  - grant_discord_starlight_beta_token: &grant_discord_starlight_beta_token
+      name: DISCORD_STARLIGHT_BETA_BOT_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: discord-starlight-beta-credentials
+          key: DISCORD_TOKEN
+  - grant_discord_starlight_prod_token: &grant_discord_starlight_prod_token
+      name: DISCORD_STARLIGHT_PROD_BOT_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: discord-starlight-prod-credentials
+          key: DISCORD_TOKEN
+  - grant_discord_scout_beta_token: &grant_discord_scout_beta_token
+      name: DISCORD_SCOUT_BETA_BOT_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: discord-scout-beta-credentials
+          key: DISCORD_TOKEN
+  - grant_discord_scout_prod_token: &grant_discord_scout_prod_token
+      name: DISCORD_SCOUT_PROD_BOT_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: discord-scout-prod-credentials
+          key: DISCORD_TOKEN
+  - grant_discord_minecraft_token: &grant_discord_minecraft_token
+      name: DISCORD_MINECRAFT_BOT_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: discord-minecraft-credentials
+          key: DISCORD_BOT_TOKEN
+  - grant_openrouter_management_key: &grant_openrouter_management_key
+      name: OPENROUTER_MANAGEMENT_KEY
+      valueFrom:
+        secretKeyRef:
+          name: openrouter-tofu-credentials
+          key: OPENROUTER_MANAGEMENT_KEY
+  - grant_openrouter_byok_keys: &grant_openrouter_byok_keys
+      name: OPENROUTER_BYOK_KEYS_JSON
+      valueFrom:
+        secretKeyRef:
+          name: openrouter-tofu-credentials
+          key: OPENROUTER_BYOK_KEYS_JSON
+  - grant_openrouter_tofu_state: &grant_openrouter_tofu_state
+      name: TOFU_STATE_ENCRYPTION_PASSPHRASE
+      valueFrom:
+        secretKeyRef:
+          name: openrouter-tofu-credentials
+          key: TOFU_STATE_ENCRYPTION_PASSPHRASE
+  - grant_cloudflare_tokens_admin: &grant_cloudflare_tokens_admin
+      name: CLOUDFLARE_API_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: cloudflare-tokens-tofu-credentials
+          key: CLOUDFLARE_API_TOKEN
+  - grant_cloudflare_tokens_tofu_state: &grant_cloudflare_tokens_tofu_state
+      name: TOFU_STATE_ENCRYPTION_PASSPHRASE
+      valueFrom:
+        secretKeyRef:
+          name: cloudflare-tokens-tofu-credentials
+          key: TOFU_STATE_ENCRYPTION_PASSPHRASE
   - grant_tailscale_client_id: &grant_tailscale_client_id
       name: TAILSCALE_OAUTH_CLIENT_ID
       valueFrom:
@@ -1857,6 +1959,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts seaweedfs plan
@@ -1888,6 +1991,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts tailscale plan
@@ -1919,6 +2023,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts buildkite plan
@@ -1949,6 +2054,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts arr plan
@@ -1988,6 +2094,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts github plan
@@ -2018,6 +2125,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare plan
@@ -2040,8 +2148,62 @@ steps:
                   - *grant_cloudflare_account
                   - *grant_cloudflare_token
 
-  # PostHog requires its own credential boundary, so it cannot join the shared
-  # PR dry-run pod. The generic Tofu plan above continues to cover Cloudflare.
+  # New platform stacks start encrypted and validate on PRs without a backend
+  # or any platform credential. Their main-only jobs below own real plans and
+  # applies through one exact credential boundary per platform.
+  - label: ":terraform: OpenTofu validate — platform control planes"
+    key: tofu-platforms-validate
+    timeout_in_minutes: 30
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed: &tofu_platforms_if_changed
+      include:
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/scripts/buildkite-handoff.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/secret-grants.json"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/homelab/package.json"
+        - "packages/homelab/scripts/platform-desired-state.ts"
+        - "packages/homelab/scripts/tofu-stack.ts"
+        - "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json"
+        - "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts"
+        - "packages/homelab/src/tofu/anthropic/**"
+        - "packages/homelab/src/tofu/cloudflare-tokens/**"
+        - "packages/homelab/src/tofu/discord/**"
+        - "packages/homelab/src/tofu/openai/**"
+        - "packages/homelab/src/tofu/openrouter/**"
+        - "packages/homelab/src/tofu/platform-desired-state.schema.json"
+        - "scripts/lib/run.ts"
+        - "scripts/lib/transient.ts"
+    depends_on: verify
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      for stack in openai anthropic discord openrouter cloudflare-tokens; do
+        flock -x /buildkite/tofu-plugin-cache/.lock \
+          bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" validate
+      done
+    plugins:
+      - kubernetes:
+          <<: *pod_posthog_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-platforms-validate
+
+  # PostHog requires its own credential boundary, so it cannot join shared
+  # OpenTofu validation. The generic Tofu plan above continues to cover Cloudflare.
   - label: ":terraform: OpenTofu plan — PostHog control plane"
     key: tofu-posthog-plan
     timeout_in_minutes: 60
@@ -2527,6 +2689,7 @@ steps:
       fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts seaweedfs apply
@@ -2565,6 +2728,7 @@ steps:
       fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts tailscale apply
@@ -2603,6 +2767,7 @@ steps:
       fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts buildkite apply
@@ -2640,6 +2805,7 @@ steps:
       fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
       flock -x /buildkite/tofu-plugin-cache/.lock \
         bun --no-install packages/homelab/scripts/tofu-stack.ts arr apply
@@ -2690,6 +2856,7 @@ steps:
       fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       (
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
         flock -x 9
@@ -2744,6 +2911,248 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: tofu-posthog
+
+  # Platform control planes are intentionally serialized. Ordinary main builds
+  # plan only. An operator may set TOFU_PLATFORM_APPLY to exactly one stack name
+  # to admit one no-retry apply after reviewing that plan; the other platform
+  # jobs are omitted by the main selector. Each job receives only its own admin
+  # material plus the shared state credentials.
+  - label: ":terraform: OpenTofu plan / opt-in apply — OpenAI"
+    key: tofu-platform-openai
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: homelab-release-admission
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/tofu-platform-credentials
+    command: |
+      requested_platform=$${TOFU_PLATFORM_APPLY:-}
+      if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "openai" ]; then exit 0; fi
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts openai plan
+      if [ "$$requested_platform" = "openai" ]; then
+        flock -x /buildkite/tofu-plugin-cache/.lock \
+          bun --no-install packages/homelab/scripts/tofu-stack.ts openai apply
+      fi
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-platform-openai
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_openai_admin_key
+                  - *grant_openai_certificate_values
+                  - *grant_openai_tofu_state
+
+  - label: ":terraform: OpenTofu plan / opt-in apply — Anthropic"
+    key: tofu-platform-anthropic
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: homelab-release-admission
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/tofu-platform-credentials
+    command: |
+      requested_platform=$${TOFU_PLATFORM_APPLY:-}
+      if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "anthropic" ]; then exit 0; fi
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts anthropic plan
+      if [ "$$requested_platform" = "anthropic" ]; then
+        flock -x /buildkite/tofu-plugin-cache/.lock \
+          bun --no-install packages/homelab/scripts/tofu-stack.ts anthropic apply
+      fi
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-platform-anthropic
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_anthropic_admin_key
+                  - *grant_anthropic_tofu_state
+
+  - label: ":terraform: OpenTofu plan / opt-in apply — Discord"
+    key: tofu-platform-discord
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: homelab-release-admission
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/tofu-platform-credentials
+    command: |
+      requested_platform=$${TOFU_PLATFORM_APPLY:-}
+      if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "discord" ]; then exit 0; fi
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts discord plan
+      if [ "$$requested_platform" = "discord" ]; then
+        flock -x /buildkite/tofu-plugin-cache/.lock \
+          bun --no-install packages/homelab/scripts/tofu-stack.ts discord apply
+      fi
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-platform-discord
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_discord_tofu_state
+                  - *grant_discord_birmel_token
+                  - *grant_discord_starlight_beta_token
+                  - *grant_discord_starlight_prod_token
+                  - *grant_discord_scout_beta_token
+                  - *grant_discord_scout_prod_token
+                  - *grant_discord_minecraft_token
+
+  - label: ":terraform: OpenTofu plan / opt-in apply — OpenRouter"
+    key: tofu-platform-openrouter
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: homelab-release-admission
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/tofu-platform-credentials
+    command: |
+      requested_platform=$${TOFU_PLATFORM_APPLY:-}
+      if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "openrouter" ]; then exit 0; fi
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts openrouter plan
+      if [ "$$requested_platform" = "openrouter" ]; then
+        flock -x /buildkite/tofu-plugin-cache/.lock \
+          bun --no-install packages/homelab/scripts/tofu-stack.ts openrouter apply
+      fi
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-platform-openrouter
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_openrouter_management_key
+                  - *grant_openrouter_byok_keys
+                  - *grant_openrouter_tofu_state
+
+  - label: ":terraform: OpenTofu plan / opt-in apply — Cloudflare API tokens"
+    key: tofu-platform-cloudflare-tokens
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: homelab-release-admission
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/tofu-platform-credentials
+    command: |
+      requested_platform=$${TOFU_PLATFORM_APPLY:-}
+      if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "cloudflare-tokens" ]; then exit 0; fi
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+      flock -x /buildkite/tofu-plugin-cache/.lock \
+        bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare-tokens plan
+      if [ "$$requested_platform" = "cloudflare-tokens" ]; then
+        flock -x /buildkite/tofu-plugin-cache/.lock \
+          bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare-tokens apply
+      fi
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-platform-cloudflare-tokens
+          podSpecPatch:
+            <<: *pod_tofu_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_tofu_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_state_access
+                  - *grant_seaweedfs_state_secret
+                  - *grant_cloudflare_tokens_admin
+                  - *grant_cloudflare_tokens_tofu_state
 
   - label: ":argo: sync + wait"
     key: argocd-sync
@@ -3164,6 +3573,11 @@ steps:
       - tofu-apply-arr
       - tofu-apply-github
       - tofu-posthog
+      - tofu-platform-openai
+      - tofu-platform-anthropic
+      - tofu-platform-discord
+      - tofu-platform-openrouter
+      - tofu-platform-cloudflare-tokens
       - argocd-sync
       - scout-beta-release
       - publish

@@ -84,6 +84,7 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
     "tofu-plan-cloudflare",
   ],
   "tofu-posthog": "tofu-posthog-plan",
+  "tofu-platforms": "tofu-platforms-validate",
   helm: "pr-dryrun",
   argocd: "pr-dryrun",
   npm: "pr-dryrun",

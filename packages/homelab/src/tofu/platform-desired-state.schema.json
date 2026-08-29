@@ -1,0 +1,439 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "platform-desired-state.schema.json",
+  "title": "Platform OpenTofu desired state",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "platform",
+        "openai_projects",
+        "openai_service_accounts",
+        "openai_organization_users",
+        "openai_project_users",
+        "openai_project_spend_alerts",
+        "openai_groups",
+        "openai_group_users",
+        "openai_group_roles",
+        "openai_user_roles",
+        "openai_roles",
+        "openai_certificates",
+        "openai_organization_spend_alerts",
+        "openai_organization_spend_limits",
+        "openai_project_groups",
+        "openai_project_group_roles",
+        "openai_project_data_retention",
+        "openai_project_model_permissions",
+        "openai_project_hosted_tool_permissions",
+        "openai_project_spend_limits",
+        "openai_project_rate_limits"
+      ],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "openai" },
+        "openai_projects": { "$ref": "#/$defs/openAiProjectMap" },
+        "openai_service_accounts": {
+          "$ref": "#/$defs/openAiServiceAccountMap"
+        },
+        "openai_organization_users": { "$ref": "#/$defs/resourceMap" },
+        "openai_project_users": { "$ref": "#/$defs/resourceMap" },
+        "openai_project_spend_alerts": { "$ref": "#/$defs/resourceMap" },
+        "openai_groups": { "$ref": "#/$defs/resourceMap" },
+        "openai_group_users": { "$ref": "#/$defs/resourceMap" },
+        "openai_group_roles": { "$ref": "#/$defs/resourceMap" },
+        "openai_user_roles": { "$ref": "#/$defs/resourceMap" },
+        "openai_roles": { "$ref": "#/$defs/resourceMap" },
+        "openai_certificates": { "$ref": "#/$defs/resourceMap" },
+        "openai_organization_spend_alerts": { "$ref": "#/$defs/resourceMap" },
+        "openai_organization_spend_limits": { "$ref": "#/$defs/resourceMap" },
+        "openai_project_groups": { "$ref": "#/$defs/resourceMap" },
+        "openai_project_group_roles": { "$ref": "#/$defs/resourceMap" },
+        "openai_project_data_retention": { "$ref": "#/$defs/resourceMap" },
+        "openai_project_model_permissions": { "$ref": "#/$defs/resourceMap" },
+        "openai_project_hosted_tool_permissions": {
+          "$ref": "#/$defs/resourceMap"
+        },
+        "openai_project_spend_limits": { "$ref": "#/$defs/resourceMap" },
+        "openai_project_rate_limits": { "$ref": "#/$defs/resourceMap" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "platform",
+        "anthropic_workspaces",
+        "anthropic_api_keys",
+        "anthropic_workspace_members"
+      ],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "anthropic" },
+        "anthropic_workspaces": { "$ref": "#/$defs/resourceMap" },
+        "anthropic_api_keys": { "$ref": "#/$defs/anthropicApiKeyMap" },
+        "anthropic_workspace_members": { "$ref": "#/$defs/resourceMap" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "platform", "discord_bots"],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "discord" },
+        "discord_bots": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/discordBot" }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "platform",
+        "openrouter_workspaces",
+        "openrouter_guardrails",
+        "openrouter_api_keys",
+        "openrouter_byok_credentials"
+      ],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "openrouter" },
+        "openrouter_workspaces": {
+          "$ref": "#/$defs/openRouterWorkspaceMap"
+        },
+        "openrouter_guardrails": {
+          "$ref": "#/$defs/openRouterGuardrailMap"
+        },
+        "openrouter_api_keys": { "$ref": "#/$defs/openRouterApiKeyMap" },
+        "openrouter_byok_credentials": {
+          "$ref": "#/$defs/openRouterByokMap"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "platform", "cloudflare_api_tokens"],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "cloudflare-tokens" },
+        "cloudflare_api_tokens": { "$ref": "#/$defs/cloudflareTokenMap" }
+      }
+    }
+  ],
+  "$defs": {
+    "schemaReference": {
+      "const": "../platform-desired-state.schema.json"
+    },
+    "resourceMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "type": "object" }
+    },
+    "onePasswordTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vault_item_id", "vault_field"],
+      "properties": {
+        "vault_item_id": { "type": "string", "minLength": 1 },
+        "vault_field": { "type": "string", "minLength": 1 },
+        "vault_json_path": { "type": "string", "minLength": 1 }
+      }
+    },
+    "openAiProjectMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "project_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "geography": { "type": "string", "minLength": 1 },
+          "external_key_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiServiceAccountMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "name", "onepassword_targets"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "onepassword_targets": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/onePasswordTarget" }
+          }
+        }
+      }
+    },
+    "anthropicApiKeyMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "api_key_id",
+          "name",
+          "status",
+          "vault_item_id",
+          "vault_field"
+        ],
+        "properties": {
+          "api_key_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "vault_item_id": { "type": "string", "minLength": 1 },
+          "vault_field": { "type": "string", "minLength": 1 },
+          "vault_json_path": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openRouterWorkspaceMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "slug"],
+        "properties": {
+          "workspace_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "slug": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "default_text_model": { "type": "string", "minLength": 1 },
+          "default_image_model": { "type": "string", "minLength": 1 },
+          "default_provider_sort": { "type": "string", "minLength": 1 },
+          "io_logging_api_key_ids": {
+            "type": "array",
+            "items": { "type": "number" }
+          },
+          "io_logging_sampling_rate": { "type": "number" },
+          "is_data_discount_logging_enabled": { "type": "boolean" },
+          "is_observability_broadcast_enabled": { "type": "boolean" },
+          "is_observability_io_logging_enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "openRouterGuardrailMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "guardrail_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "workspace_key": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "limit_usd": { "type": "number" },
+          "reset_interval": { "type": "string", "minLength": 1 },
+          "allowed_models": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "allowed_providers": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "ignored_models": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "ignored_providers": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "enforce_zdr_anthropic": { "type": "boolean" },
+          "enforce_zdr_google": { "type": "boolean" },
+          "enforce_zdr_openai": { "type": "boolean" },
+          "enforce_zdr_other": { "type": "boolean" }
+        }
+      }
+    },
+    "openRouterApiKeyMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "allOf": [
+          {
+            "if": { "not": { "required": ["import_id"] } },
+            "then": {
+              "required": ["onepassword_targets"],
+              "properties": {
+                "onepassword_targets": { "minItems": 1 }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "import_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "workspace_key": { "type": "string", "minLength": 1 },
+          "limit": { "type": "number" },
+          "limit_reset": { "type": "string", "minLength": 1 },
+          "include_byok_in_limit": { "type": "boolean" },
+          "disabled": { "type": "boolean" },
+          "expires_at": { "type": "string", "minLength": 1 },
+          "onepassword_targets": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/onePasswordTarget" }
+          }
+        }
+      }
+    },
+    "openRouterByokMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["provider_slug"],
+        "properties": {
+          "byok_key_id": { "type": "string", "minLength": 1 },
+          "provider_slug": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "workspace_key": { "type": "string", "minLength": 1 },
+          "allowed_models": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "allowed_user_ids": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "disabled": { "type": "boolean" },
+          "is_fallback": { "type": "boolean" },
+          "allowed_api_key_hashes": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "cloudflareTokenMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "supersedes_id",
+          "name",
+          "policies",
+          "vault_item_id",
+          "vault_field"
+        ],
+        "properties": {
+          "supersedes_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "policies": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["effect", "permission_groups", "resources"],
+              "properties": {
+                "effect": { "type": "string", "minLength": 1 },
+                "permission_groups": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["id", "name"],
+                    "properties": {
+                      "id": { "type": "string", "minLength": 1 },
+                      "name": { "type": "string", "minLength": 1 }
+                    }
+                  }
+                },
+                "resources": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "propertyNames": { "minLength": 1 },
+                  "additionalProperties": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          },
+          "condition": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "request_ip": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "in": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1 }
+                  },
+                  "not_in": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1 }
+                  }
+                }
+              }
+            }
+          },
+          "expires_on": { "type": "string", "minLength": 1 },
+          "not_before": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "vault_item_id": { "type": "string", "minLength": 1 },
+          "vault_field": { "type": "string", "minLength": 1 },
+          "vault_json_path": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "discordBot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_name",
+        "expected_application_id",
+        "vault_item_id"
+      ],
+      "properties": {
+        "application_name": { "type": "string", "minLength": 1 },
+        "expected_application_id": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "vault_item_id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "custom_install_url": { "type": "string", "format": "uri" },
+        "interactions_endpoint_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "role_connections_verification_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

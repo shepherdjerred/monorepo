@@ -26,6 +26,10 @@
     "scripts/migration-core.ts",
     "scripts/migration-smoke.test.ts",
     "scripts/velero-backups.ts",
-    "scripts/velero-backups.test.ts"
+    "scripts/velero-backups.test.ts",
+    "scripts/platform-desired-state.ts",
+    "scripts/tofu-stack-manifest.ts",
+    "scripts/tofu-stack.ts",
+    "scripts/tofu-stack.test.ts"
   ]
 }

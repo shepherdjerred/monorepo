@@ -1,0 +1,165 @@
+{
+  "$schema": "../platform-desired-state.schema.json",
+  "platform": "openrouter",
+  "openrouter_workspaces": {
+    "default": {
+      "workspace_id": "f30efb3a-57fe-56d1-8718-e1a7fa0fc7ad",
+      "name": "Default Workspace",
+      "slug": "default",
+      "io_logging_sampling_rate": 1,
+      "is_data_discount_logging_enabled": false,
+      "is_observability_broadcast_enabled": false,
+      "is_observability_io_logging_enabled": true
+    }
+  },
+  "openrouter_guardrails": {},
+  "openrouter_api_keys": {
+    "birmel-existing": {
+      "import_id": "c0c87757d6670b147a38653829a0deef777483bc1a0a679dc74e07ecaef050f9",
+      "name": "birmel",
+      "workspace_key": "default",
+      "limit": 10,
+      "limit_reset": "monthly",
+      "include_byok_in_limit": true,
+      "disabled": false,
+      "expires_at": "2027-08-15T00:45:22.240Z",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "w5c27dzybxor3j6dzl7lub2soe",
+          "vault_field": "OPENROUTER_API_KEY"
+        }
+      ]
+    },
+    "scout-shared-existing": {
+      "import_id": "8c156f487a7a5ebd3a5e3948b3894e4f7376b03992216ca9d505de3aceed05f5",
+      "name": "scout beta",
+      "workspace_key": "default",
+      "limit": 10,
+      "limit_reset": "weekly",
+      "include_byok_in_limit": true,
+      "disabled": false,
+      "expires_at": "2027-08-15T00:45:46.231Z",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "rtu44pohnp5ixdp2njuv5f6t2e",
+          "vault_field": "OPENROUTER_API_KEY"
+        },
+        {
+          "vault_item_id": "pacrc4wfbtct4y3qazkvazop5a",
+          "vault_field": "OPENROUTER_API_KEY"
+        }
+      ]
+    },
+    "temporal-existing": {
+      "import_id": "60eae5b7dc0406416c739eb2fb1640594b1af7b05400a553007d0d635de5f27a",
+      "name": "temporal",
+      "workspace_key": "default",
+      "limit": 40,
+      "limit_reset": "monthly",
+      "include_byok_in_limit": true,
+      "disabled": false,
+      "expires_at": "2027-08-15T00:46:00.002Z",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "mjgnqqh37jxyzseqrddde2jgaq",
+          "vault_field": "OPENROUTER_API_KEY"
+        }
+      ]
+    },
+    "buildkite-existing": {
+      "import_id": "82926524e3be9d029cb979b76315fc9063655409ec4fa0779d90baccb2aece3c",
+      "name": "BuildKite",
+      "workspace_key": "default",
+      "limit": 10,
+      "limit_reset": "monthly",
+      "include_byok_in_limit": true,
+      "disabled": false,
+      "expires_at": "2027-08-29T19:52:40.651Z"
+    },
+    "macbook-existing": {
+      "import_id": "09fca92eea4d82539b7ac2588ec0a034e43e1e89c9c9dc3bce601d13ee0391d1",
+      "name": "MacBook",
+      "workspace_key": "default",
+      "limit": 20,
+      "limit_reset": "monthly",
+      "include_byok_in_limit": true,
+      "disabled": false
+    },
+    "birmel-2026-08": {
+      "name": "birmel 2026-08",
+      "workspace_key": "default",
+      "limit": 10,
+      "limit_reset": "monthly",
+      "include_byok_in_limit": true,
+      "disabled": false,
+      "expires_at": "2027-08-29T00:00:00Z",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "w5c27dzybxor3j6dzl7lub2soe",
+          "vault_field": "OPENROUTER_API_KEY"
+        }
+      ]
+    },
+    "scout-beta-2026-08": {
+      "name": "scout beta 2026-08",
+      "workspace_key": "default",
+      "limit": 10,
+      "limit_reset": "weekly",
+      "include_byok_in_limit": true,
+      "disabled": false,
+      "expires_at": "2027-08-29T00:00:00Z",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "rtu44pohnp5ixdp2njuv5f6t2e",
+          "vault_field": "OPENROUTER_API_KEY"
+        }
+      ]
+    },
+    "scout-prod-2026-08": {
+      "name": "scout prod 2026-08",
+      "workspace_key": "default",
+      "limit": 10,
+      "limit_reset": "weekly",
+      "include_byok_in_limit": true,
+      "disabled": false,
+      "expires_at": "2027-08-29T00:00:00Z",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "pacrc4wfbtct4y3qazkvazop5a",
+          "vault_field": "OPENROUTER_API_KEY"
+        }
+      ]
+    },
+    "temporal-2026-08": {
+      "name": "temporal 2026-08",
+      "workspace_key": "default",
+      "limit": 40,
+      "limit_reset": "monthly",
+      "include_byok_in_limit": true,
+      "disabled": false,
+      "expires_at": "2027-08-29T00:00:00Z",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "mjgnqqh37jxyzseqrddde2jgaq",
+          "vault_field": "OPENROUTER_API_KEY"
+        }
+      ]
+    }
+  },
+  "openrouter_byok_credentials": {
+    "anthropic": {
+      "byok_key_id": "1b403168-3a58-4940-a3c9-2e4701513e37",
+      "provider_slug": "anthropic",
+      "workspace_key": "default",
+      "disabled": false,
+      "is_fallback": false
+    },
+    "openai": {
+      "byok_key_id": "f0ab6178-3d8b-48a7-aafc-0c2ce983d998",
+      "provider_slug": "openai",
+      "workspace_key": "default",
+      "disabled": false,
+      "is_fallback": false
+    }
+  }
+}

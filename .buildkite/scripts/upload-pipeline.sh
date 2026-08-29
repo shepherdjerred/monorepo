@@ -28,6 +28,20 @@ if [ "${CI_IO_FIXED_CORPUS:-}" = true ] && [ "${BUILDKITE_BRANCH:-}" != "$defaul
   exit 1
 fi
 
+case "${TOFU_PLATFORM_APPLY:-}" in
+  "") ;;
+  openai | anthropic | discord | openrouter | cloudflare-tokens)
+    if [ "${BUILDKITE_BRANCH:-}" != "$default_branch" ]; then
+      echo "TOFU_PLATFORM_APPLY is ${default_branch}-only; BUILDKITE_BRANCH was ${BUILDKITE_BRANCH:-unset}" >&2
+      exit 1
+    fi
+    ;;
+  *)
+    echo 'TOFU_PLATFORM_APPLY must be one of openai, anthropic, discord, openrouter, cloudflare-tokens' >&2
+    exit 1
+    ;;
+esac
+
 if [ "${BUILDKITE_BRANCH:-}" = "$default_branch" ]; then
   buildkite-agent pipeline upload .buildkite/main-bootstrap.yml
   exit 0

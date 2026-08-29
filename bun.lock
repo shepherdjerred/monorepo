@@ -812,6 +812,7 @@
     "packages/homelab": {
       "name": "homelab",
       "dependencies": {
+        "@shepherdjerred/root-scripts": "workspace:*",
         "yaml": "^2.8.3",
         "zod": "^4.4.3",
       },

@@ -1,0 +1,84 @@
+{
+  "$schema": "../platform-desired-state.schema.json",
+  "platform": "openai",
+  "openai_projects": {
+    "misc": {
+      "project_id": "proj_2JVXsupL8Fuilnhtw8NVoKjv",
+      "name": "Misc"
+    },
+    "scout": {
+      "project_id": "proj_QrJyOV4FfAHWITH4KItJavYU",
+      "name": "Scout for LoL"
+    },
+    "birmel": {
+      "project_id": "proj_koLZlKBDZ1BhN2tpCnWFEZhb",
+      "name": "Birmel"
+    },
+    "neovim": {
+      "project_id": "proj_8m0jc7LzBGpAjl6iVSiZ4aea",
+      "name": "Neovim"
+    },
+    "temporal": {
+      "project_id": "proj_UtwKMvBNkqdVG3OQHzsbCuzT",
+      "name": "Temporal"
+    },
+    "openrouter": {
+      "project_id": "proj_lqojsKzeBDSgLX9UM57p8ZZ4",
+      "name": "OpenRouter"
+    },
+    "streambot": {
+      "project_id": "proj_uy98PiWuGIrnHS1aj2ayEe0k",
+      "name": "Streambot"
+    },
+    "pokemon": {
+      "project_id": "proj_WSOt43df4BHtErRdEWXM7c25",
+      "name": "Pokemon"
+    }
+  },
+  "openai_service_accounts": {
+    "streambot-2026-08": {
+      "project_key": "streambot",
+      "name": "streambot 2026-08",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "kdv3urwh5uwhgolabrz3pn5wsa",
+          "vault_field": "OPENAI_API_KEY"
+        }
+      ]
+    },
+    "openrouter-byok-2026-08": {
+      "project_key": "openrouter",
+      "name": "OpenRouter BYOK 2026-08",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "msklmk7gk2r3rq4kyeywpuafny",
+          "vault_field": "OPENROUTER_BYOK_KEYS_JSON",
+          "vault_json_path": "/openai"
+        }
+      ]
+    }
+  },
+  "openai_organization_users": {
+    "jerred": {
+      "user_id": "user-8KXMrChyYhvRhxvShlkDhRxW",
+      "role": "owner"
+    }
+  },
+  "openai_project_users": {},
+  "openai_project_spend_alerts": {},
+  "openai_groups": {},
+  "openai_group_users": {},
+  "openai_group_roles": {},
+  "openai_user_roles": {},
+  "openai_roles": {},
+  "openai_certificates": {},
+  "openai_organization_spend_alerts": {},
+  "openai_organization_spend_limits": {},
+  "openai_project_groups": {},
+  "openai_project_group_roles": {},
+  "openai_project_data_retention": {},
+  "openai_project_model_permissions": {},
+  "openai_project_hosted_tool_permissions": {},
+  "openai_project_spend_limits": {},
+  "openai_project_rate_limits": {}
+}

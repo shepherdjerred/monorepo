@@ -1,300 +1,367 @@
 #!/usr/bin/env bun
-/**
- * Run `tofu plan` or `tofu apply` on a named OpenTofu stack.
- *
- * Ported from the old CI's `tofuApplyHelper` / `tofuPlanHelper` /
- * `withTofuOptionalSecrets` (.dagger/src/release.ts). Runs locally as a plain
- * Bun script; every credential is a plain env var.
- *
- * Usage:
- *   bun packages/homelab/scripts/tofu-stack.ts <stack> validate|plan|apply [--dry-run]
- *
- * Every stack requires the SeaweedFS state identity and only its own provider
- * identity. `buildTofuEnvironment` is the executable credential contract.
- */
 
-import { existsSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
 import {
+  optionalEnv,
+  requireEnv,
   run,
   runAllowExit,
-  requireEnv,
-  optionalEnv,
-} from "../../../scripts/lib/run.ts";
-import { isTransientError, runMain } from "../../../scripts/lib/transient.ts";
-import { TransientError } from "../../../scripts/lib/transient-error.ts";
+  tmpBase,
+  type RunOptions,
+} from "@shepherdjerred/root-scripts/lib/run.ts";
+import {
+  isTransientError,
+  runMain,
+} from "@shepherdjerred/root-scripts/lib/transient.ts";
+import { TransientError } from "@shepherdjerred/root-scripts/lib/transient-error.ts";
+import {
+  loadPlatformDesiredState,
+  type PlatformStack,
+} from "./platform-desired-state.ts";
+import {
+  parseTofuStack,
+  STACK_MANIFEST,
+  STATE_CREDENTIALS,
+  type StackDefinition,
+  type TofuStack,
+} from "./tofu-stack-manifest.ts";
 
-/** homelab package root = two levels up from this script (packages/homelab). */
+const STACKS_REL = "src/tofu";
+
+const AMBIENT_ENV_ALLOWLIST = [
+  "CI",
+  "HOME",
+  "HTTPS_PROXY",
+  "HTTP_PROXY",
+  "LANG",
+  "LC_ALL",
+  "NO_PROXY",
+  "PATH",
+  "SSL_CERT_DIR",
+  "SSL_CERT_FILE",
+  "TF_IN_AUTOMATION",
+  "TF_PLUGIN_CACHE_DIR",
+  "TMPDIR",
+  "USER",
+] as const;
+
+type TofuAction = "validate" | "plan" | "apply";
+
 function homelabRoot(): string {
   return new URL("..", import.meta.url).pathname;
 }
 
-const STACKS_REL = "src/tofu";
-
-export type TofuStack =
-  | "seaweedfs"
-  | "tailscale"
-  | "buildkite"
-  | "arr"
-  | "github"
-  | "cloudflare"
-  | "posthog";
-
-function parseTofuStack(value: string): TofuStack {
-  switch (value) {
-    case "seaweedfs":
-    case "tailscale":
-    case "buildkite":
-    case "arr":
-    case "github":
-    case "cloudflare":
-    case "posthog":
-      return value;
-    default:
-      throw new Error(`Unknown OpenTofu stack: ${value}`);
-  }
+function ambientEnvironment(): Record<string, string> {
+  const entries = AMBIENT_ENV_ALLOWLIST.flatMap((name) => {
+    const value = optionalEnv(name);
+    return value === null ? [] : [[name, value] as const];
+  });
+  return Object.fromEntries(entries);
 }
-
-type CredentialMapping = {
-  source: string;
-  target: string;
-};
-
-const STATE_CREDENTIALS: readonly CredentialMapping[] = [
-  {
-    source: "SEAWEEDFS_STATE_ACCESS_KEY_ID",
-    target: "AWS_ACCESS_KEY_ID",
-  },
-  {
-    source: "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
-    target: "AWS_SECRET_ACCESS_KEY",
-  },
-];
-
-export const STACK_CREDENTIALS = {
-  seaweedfs: [
-    {
-      source: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
-      target: "TF_VAR_seaweedfs_access_key_id",
-    },
-    {
-      source: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
-      target: "TF_VAR_seaweedfs_secret_access_key",
-    },
-  ],
-  tailscale: [
-    {
-      source: "TAILSCALE_OAUTH_CLIENT_ID",
-      target: "TAILSCALE_OAUTH_CLIENT_ID",
-    },
-    {
-      source: "TAILSCALE_OAUTH_CLIENT_SECRET",
-      target: "TAILSCALE_OAUTH_CLIENT_SECRET",
-    },
-  ],
-  buildkite: [
-    {
-      source: "BUILDKITE_ADMIN_TOKEN",
-      target: "TF_VAR_buildkite_api_token",
-    },
-  ],
-  arr: [
-    { source: "RADARR_API_KEY", target: "TF_VAR_radarr_api_key" },
-    { source: "SONARR_API_KEY", target: "TF_VAR_sonarr_api_key" },
-    { source: "PROWLARR_API_KEY", target: "TF_VAR_prowlarr_api_key" },
-    {
-      source: "QBITTORRENT_PASSWORD",
-      target: "TF_VAR_qbittorrent_password",
-    },
-    {
-      source: "PRIVATEHD_PASSWORD",
-      target: "TF_VAR_privatehd_password",
-    },
-    { source: "PRIVATEHD_PID", target: "TF_VAR_privatehd_pid" },
-    { source: "AVISTAZ_PASSWORD", target: "TF_VAR_avistaz_password" },
-    { source: "AVISTAZ_PID", target: "TF_VAR_avistaz_pid" },
-    { source: "ANIMEZ_PASSWORD", target: "TF_VAR_animez_password" },
-    { source: "ANIMEZ_PID", target: "TF_VAR_animez_pid" },
-  ],
-  github: [{ source: "TOFU_GITHUB_TOKEN", target: "TF_VAR_github_token" }],
-  cloudflare: [
-    {
-      source: "CLOUDFLARE_ACCOUNT_ID",
-      target: "TF_VAR_cloudflare_account_id",
-    },
-    { source: "CLOUDFLARE_API_TOKEN", target: "CLOUDFLARE_API_TOKEN" },
-  ],
-  posthog: [
-    { source: "POSTHOG_CLI_API_KEY", target: "POSTHOG_API_KEY" },
-    {
-      source: "POSTHOG_TOFU_STATE_PASSPHRASE",
-      target: "TF_VAR_state_passphrase",
-    },
-  ],
-} satisfies Readonly<Record<TofuStack, readonly CredentialMapping[]>>;
-
-const ALL_CREDENTIAL_ENV_NAMES = new Set(
-  [...STATE_CREDENTIALS, ...Object.values(STACK_CREDENTIALS).flat()].flatMap(
-    ({ source, target }) => [source, target],
-  ),
-);
 
 export function buildTofuEnvironment(
   stack: TofuStack,
   read: (name: string) => string = requireEnv,
-): { env: Record<string, string>; unsetEnv: string[] } {
-  const mappings = [...STATE_CREDENTIALS, ...STACK_CREDENTIALS[stack]];
-  const env = Object.fromEntries(
-    mappings.map(({ source, target }) => [target, read(source)]),
-  );
-
-  // The seaweedfs stack shells out to the AWS CLI via local-exec provisioners
-  // against SeaweedFS's S3 gateway, which needs s3v4 signing and the
-  // WHEN_REQUIRED checksum settings (matches deploy-site.ts). Harmless on other
-  // stacks, but only wired for seaweedfs to keep the env minimal.
+): Record<string, string> {
+  const definition = STACK_MANIFEST[stack];
+  const env = ambientEnvironment();
+  for (const { source, target } of [
+    ...STATE_CREDENTIALS,
+    ...definition.credentials,
+  ]) {
+    env[target] = read(source);
+  }
+  if (definition.secretObject !== undefined) {
+    env[definition.secretObject.target] = JSON.stringify(
+      Object.fromEntries(
+        Object.entries(definition.secretObject.entries).map(
+          ([name, source]) => [name, read(source)],
+        ),
+      ),
+    );
+  }
   if (stack === "seaweedfs") {
     env["AWS_DEFAULT_REGION"] = "us-east-1";
     env["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED";
     env["AWS_RESPONSE_CHECKSUM_VALIDATION"] = "WHEN_REQUIRED";
   }
-  return {
-    env,
-    unsetEnv: [...ALL_CREDENTIAL_ENV_NAMES].filter(
-      (name) => env[name] === undefined,
+  return env;
+}
+
+async function addDesiredStateEnvironment(
+  stackDir: string,
+  platform: PlatformStack,
+  env: Record<string, string>,
+): Promise<Record<string, unknown>> {
+  const desiredState = await loadPlatformDesiredState(stackDir, platform);
+  for (const [name, value] of Object.entries(desiredState)) {
+    env[`TF_VAR_${name}`] = JSON.stringify(value);
+  }
+  return desiredState;
+}
+
+export function addValidationOnlySecrets(
+  platform: PlatformStack,
+  desiredState: Readonly<Record<string, unknown>>,
+  env: Record<string, string>,
+): void {
+  if (platform !== "openrouter") return;
+  const credentials = desiredState["openrouter_byok_credentials"];
+  if (
+    typeof credentials !== "object" ||
+    credentials === null ||
+    Array.isArray(credentials)
+  ) {
+    throw new TypeError(
+      "openrouter_byok_credentials must be an object after desired-state validation",
+    );
+  }
+  env["TF_VAR_openrouter_byok_keys"] = JSON.stringify(
+    Object.fromEntries(
+      Object.keys(credentials).map((name) => [
+        name,
+        "ci-validation-only-provider-key",
+      ]),
     ),
-  };
+  );
+}
+
+function isolatedOptions(
+  env: Record<string, string>,
+  cwd?: string,
+): RunOptions {
+  return cwd === undefined
+    ? { env, inheritEnv: false }
+    : { cwd, env, inheritEnv: false };
+}
+
+async function temporaryDirectory(
+  prefix: string,
+  env: Record<string, string>,
+): Promise<string> {
+  const result = await run(
+    ["mktemp", "-d", `${tmpBase()}/${prefix}.XXXXXXXX`],
+    {
+      ...isolatedOptions(env),
+      capture: true,
+      echoCapturedStdout: false,
+    },
+  );
+  const path = result.stdout.trim();
+  if (path === "") throw new Error(`mktemp returned no path for ${prefix}`);
+  return path;
+}
+
+async function validationEnvironment(definition: StackDefinition): Promise<{
+  env: Record<string, string>;
+  dataRoot: string;
+}> {
+  const env = ambientEnvironment();
+  const dataRoot = await temporaryDirectory("tofu-validation", env);
+  env["TF_DATA_DIR"] = dataRoot;
+  if (definition.encrypted === true) {
+    env["TF_VAR_tofu_state_encryption_passphrase"] =
+      "ci-validation-only-passphrase";
+  }
+  if (definition.secretObject !== undefined) {
+    env[definition.secretObject.target] = JSON.stringify(
+      Object.fromEntries(
+        Object.keys(definition.secretObject.entries).map((name) => [
+          name,
+          "ci-validation-only-token",
+        ]),
+      ),
+    );
+  }
+  if (definition.platform === "openai") {
+    env["TF_VAR_openai_certificate_values"] = "{}";
+  }
+  return { env, dataRoot };
+}
+
+async function commandOutput(
+  command: string[],
+  options: RunOptions,
+): Promise<string> {
+  const result = await run(command, {
+    ...options,
+    capture: true,
+    echoCapturedStdout: false,
+  });
+  return result.stdout.trim();
+}
+
+async function prepareAsuswrtProvider(
+  root: string,
+  env: Record<string, string>,
+): Promise<string> {
+  const declaration = await Bun.file(
+    `${root}/${STACKS_REL}/asuswrt/providers.tf`,
+  ).text();
+  const version =
+    /source\s*=\s*"shepherdjerred\/asuswrt"[\s\S]*?version\s*=\s*"([^"]+)"/u.exec(
+      declaration,
+    )?.[1];
+  if (version === undefined) {
+    throw new Error("The AsusWRT provider declaration has no tracked version");
+  }
+  const temporaryRoot = await temporaryDirectory("asuswrt-provider", env);
+  const options = isolatedOptions(env, root);
+  const goos = await commandOutput(["go", "env", "GOOS"], options);
+  const goarch = await commandOutput(["go", "env", "GOARCH"], options);
+  const mirror = `${temporaryRoot}/mirror/registry.opentofu.org/shepherdjerred/asuswrt/${version}/${goos}_${goarch}`;
+  await run(["mkdir", "-p", mirror], options);
+  await run(
+    [
+      "go",
+      "build",
+      "-trimpath",
+      "-buildvcs=false",
+      "-o",
+      `${mirror}/terraform-provider-asuswrt_v${version}`,
+      ".",
+    ],
+    isolatedOptions(env, `${root}/../terraform-provider-asuswrt`),
+  );
+  const cliConfig = `${temporaryRoot}/tofu.tfrc`;
+  await Bun.write(
+    cliConfig,
+    `provider_installation {\n  filesystem_mirror {\n    path = "${temporaryRoot}/mirror"\n    include = ["registry.opentofu.org/shepherdjerred/asuswrt"]\n  }\n  direct {}\n}\n`,
+  );
+  env["TF_CLI_CONFIG_FILE"] = cliConfig;
+  return temporaryRoot;
+}
+
+async function removeTemporaryDirectory(path: string): Promise<void> {
+  await run(["rm", "-rf", "--", path], isolatedOptions(ambientEnvironment()));
+}
+
+export function validationInitArguments(stack: TofuStack): string[] {
+  const argumentsList = [
+    "tofu",
+    `-chdir=${STACKS_REL}/${stack}`,
+    "init",
+    "-backend=false",
+    "-reconfigure",
+  ];
+  if (STACK_MANIFEST[stack].localProvider === undefined) {
+    argumentsList.push("-lockfile=readonly");
+  }
+  argumentsList.push("-input=false");
+  return argumentsList;
+}
+
+async function validateStack(
+  stack: TofuStack,
+  root: string,
+  stackDir: string,
+): Promise<void> {
+  const definition = STACK_MANIFEST[stack];
+  const { env, dataRoot } = await validationEnvironment(definition);
+  if (definition.platform !== undefined) {
+    const desiredState = await addDesiredStateEnvironment(
+      stackDir,
+      definition.platform,
+      env,
+    );
+    addValidationOnlySecrets(definition.platform, desiredState, env);
+  }
+  let localProviderRoot: string | null = null;
+  try {
+    if (definition.localProvider === "asuswrt") {
+      localProviderRoot = await prepareAsuswrtProvider(root, env);
+    }
+    const options = isolatedOptions(env, root);
+    await run(validationInitArguments(stack), options);
+    await run(["tofu", `-chdir=${STACKS_REL}/${stack}`, "validate"], options);
+  } finally {
+    if (localProviderRoot !== null) {
+      await removeTemporaryDirectory(localProviderRoot);
+    }
+    await removeTemporaryDirectory(dataRoot);
+  }
 }
 
 function usage(): never {
   console.error(
-    "Usage: bun packages/homelab/scripts/tofu-stack.ts <stack> " +
-      "validate|plan|apply " +
-      "[--dry-run]",
+    "Usage: bun packages/homelab/scripts/tofu-stack.ts <stack> validate|plan|apply [--dry-run]",
   );
   process.exit(1);
 }
 
+function parseAction(value: string | undefined): TofuAction {
+  if (value === "validate" || value === "plan" || value === "apply") {
+    return value;
+  }
+  return usage();
+}
+
+async function plan(
+  stack: TofuStack,
+  definition: StackDefinition,
+  options: RunOptions,
+): Promise<void> {
+  const result = await runAllowExit(
+    [
+      "tofu",
+      `-chdir=${STACKS_REL}/${stack}`,
+      "plan",
+      "-input=false",
+      "-detailed-exitcode",
+    ],
+    options,
+  );
+  if (result.exitCode === 0) {
+    console.log("No changes.");
+    return;
+  }
+  if (result.exitCode === 2) {
+    console.log("Changes detected.");
+    return;
+  }
+  const message = `tofu plan failed (exit ${result.exitCode.toString()})`;
+  if (definition.platform === undefined && isTransientError(result.stderr)) {
+    throw new TransientError(message);
+  }
+  throw new Error(message);
+}
+
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
-  if (args.includes("--help") || args.includes("-h")) {
-    usage();
-  }
-  const dryRun = args.includes("--dry-run");
-  const positional = args.filter((a) => !a.startsWith("--"));
-  const stackRaw = positional[0];
-  const action = positional[1];
-  if (stackRaw === undefined) {
-    console.error("A stack name is required.");
-    usage();
-  }
-  const stack = parseTofuStack(stackRaw);
-  if (action !== "validate" && action !== "plan" && action !== "apply") {
-    console.error(
-      `Action must be "validate", "plan", or "apply", got: ${String(action)}`,
-    );
-    usage();
-  }
-
+  if (args.includes("--help") || args.includes("-h")) usage();
+  const positional = args.filter((argument) => !argument.startsWith("--"));
+  const stackName = positional[0];
+  if (stackName === undefined) usage();
+  const stack = parseTofuStack(stackName);
+  const action = parseAction(positional[1]);
   const root = homelabRoot();
   const stackDir = `${root}/${STACKS_REL}/${stack}`;
-  if (!existsSync(stackDir)) {
-    throw new Error(`Unknown stack: ${stack} (no dir at ${stackDir})`);
+  if (!(await Bun.file(`${stackDir}/providers.tf`).exists())) {
+    throw new Error(`Stack ${stack} has no providers.tf`);
   }
-
-  console.log(`--- tofu ${action}: ${stack}${dryRun ? " (dry run)" : ""}`);
-
-  if (dryRun) {
-    console.log(
-      `DRYRUN: would run \`tofu -chdir=${STACKS_REL}/${stack} init\` then ` +
-        `\`tofu ${action}\` with state access and only the ${stack} provider identity`,
-    );
+  if (args.includes("--dry-run")) {
+    console.log(`DRYRUN: would run tofu ${action} for ${stack}`);
     return;
   }
-
-  // `tofu init` — NOTE: the old code wrapped init in a bounded retry loop to
-  // survive slow provider-registry / GitHub release CDN responses. That retry
-  // is intentionally OMITTED here: this runs locally under an operator who can
-  // simply re-run on a transient network blip, and there is no unattended CI
-  // pod to keep alive. The `github` stack in particular must NOT be retried
-  // blindly — a failed apply there can leave GitHub repo/ruleset state
-  // half-written, and a naive retry could compound the drift; the operator
-  // should inspect and re-run deliberately.
   if (action === "validate") {
-    // PR validation runs untrusted branch code. It must not receive the
-    // encrypted state passphrase, provider API key, backend credentials, or
-    // any other runtime secret. The placeholder only satisfies the required
-    // encryption variable while backend-free validation checks the HCL and
-    // provider schemas without contacting PostHog.
-    const env: Record<string, string> = {
-      TF_VAR_state_passphrase: "ci-validation-only-placeholder",
-      TF_DATA_DIR: mkdtempSync(`${tmpdir()}/posthog-tofu-validation-`),
-    };
-    const pluginCacheDir = optionalEnv("TF_PLUGIN_CACHE_DIR");
-    if (pluginCacheDir !== null) {
-      env["TF_PLUGIN_CACHE_DIR"] = pluginCacheDir;
-    }
-    await run(
-      [
-        "tofu",
-        `-chdir=${STACKS_REL}/${stack}`,
-        "init",
-        "-backend=false",
-        "-reconfigure",
-        "-input=false",
-      ],
-      { cwd: root, env },
-    );
-    await run(["tofu", `-chdir=${STACKS_REL}/${stack}`, "validate"], {
-      cwd: root,
-      env,
-    });
-    console.log("Validation passed.");
+    await validateStack(stack, root, stackDir);
+    console.log(`--- validated: ${stack}`);
     return;
   }
 
-  const environment = buildTofuEnvironment(stack);
-
-  await run(["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"], {
-    cwd: root,
-    env: environment.env,
-    unsetEnv: environment.unsetEnv,
-  });
-
-  if (action === "plan") {
-    // -detailed-exitcode: 0 = no changes, 2 = changes detected (not an error),
-    // anything else = real failure.
-    const result = await runAllowExit(
-      [
-        "tofu",
-        `-chdir=${STACKS_REL}/${stack}`,
-        "plan",
-        "-input=false",
-        "-detailed-exitcode",
-      ],
-      {
-        cwd: root,
-        env: environment.env,
-        unsetEnv: environment.unsetEnv,
-      },
-    );
-    if (result.exitCode === 0) {
-      console.log("No changes.");
-      return;
-    }
-    if (result.exitCode === 2) {
-      console.log("Changes detected.");
-      return;
-    }
-    const stderr = result.stderr.trim();
-    const message =
-      `tofu plan failed (exit ${result.exitCode.toString()})` +
-      (stderr === "" ? "" : `\n--- stderr (tail) ---\n${stderr}`);
-    if (isTransientError(stderr)) {
-      throw new TransientError(message);
-    }
-    throw new Error(message);
+  const definition = STACK_MANIFEST[stack];
+  const env = buildTofuEnvironment(stack);
+  if (definition.platform !== undefined) {
+    await addDesiredStateEnvironment(stackDir, definition.platform, env);
   }
-
+  const options = isolatedOptions(env, root);
+  await run(
+    ["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"],
+    options,
+  );
+  if (action === "plan") {
+    await plan(stack, definition, options);
+    return;
+  }
   await run(
     [
       "tofu",
@@ -303,11 +370,7 @@ async function main(): Promise<void> {
       "-auto-approve",
       "-input=false",
     ],
-    {
-      cwd: root,
-      env: environment.env,
-      unsetEnv: environment.unsetEnv,
-    },
+    options,
   );
   console.log(`--- applied: ${stack}`);
 }
