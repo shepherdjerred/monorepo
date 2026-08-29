@@ -81,6 +81,13 @@ rollout is running.
 Roll out Scout beta before Scout production. Mutating Scout production actions
 verify that the same Build ID is already the current, unramped beta version with
 a healthy beta Workflow poller; rollback remains available independently.
+Scout bootstrap requires two capable image releases because the unversioned
+embedded poller cannot be a Worker Deployment rollback version. A pin at or
+before build 12197 creates no workflow-only pod. Copy the first capable
+candidate pin to stable to create only the stable poller; a later distinct
+candidate pin creates the ramp target. Never remove the embedded poller before
+candidate replay, canary, soak, stable-pin promotion, and a healthy stable
+poller. Repeat the sequence for production only after beta runtime acceptance.
 
 ## Structure
 

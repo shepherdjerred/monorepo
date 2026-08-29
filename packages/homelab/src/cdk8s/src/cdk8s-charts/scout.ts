@@ -8,10 +8,21 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
+import { createScoutWorkflowWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
+import { createDnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-network-policies.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export type Stage = "prod" | "beta";
+type WorkflowWorkerImageOverrides = {
+  stable?: string;
+  candidate?: string;
+};
 
-export function createScoutChart(app: App, stage: Stage) {
+export function createScoutChart(
+  app: App,
+  stage: Stage,
+  workflowWorkerImageOverrides?: WorkflowWorkerImageOverrides,
+) {
   const chart = new Chart(app, `scout-${stage}`, {
     namespace: `scout-${stage}`,
     disableResourceNameHashes: true,
@@ -25,6 +36,28 @@ export function createScoutChart(app: App, stage: Stage) {
 
   createScoutPostgreSQLDatabase(chart, stage);
   createScoutDeployment(chart, stage);
+  const stableImage =
+    workflowWorkerImageOverrides?.stable ??
+    versions[`shepherdjerred/scout-for-lol/${stage}/workflows/stable`];
+  const candidateImage =
+    workflowWorkerImageOverrides?.candidate ??
+    versions[`shepherdjerred/scout-for-lol/${stage}/workflows/candidate`];
+  const stableWorkflowWorker =
+    stage === "beta"
+      ? createScoutWorkflowWorker(chart, stage, "stable", stableImage)
+      : undefined;
+  // The embedded backend poller is unversioned and cannot be a rollback target.
+  // Bootstrap a capable stable version first. Keep the candidate Deployment
+  // rendered even when its pin equals stable so promotion does not leave
+  // unmanaged candidate resources behind when pruning is disabled.
+  const candidateWorkflowWorker =
+    stage === "beta" &&
+    stableWorkflowWorker !== undefined &&
+    candidateImage !== undefined
+      ? createScoutWorkflowWorker(chart, stage, "candidate", candidateImage)
+      : undefined;
+  const workflowWorkerCreated =
+    stableWorkflowWorker !== undefined || candidateWorkflowWorker !== undefined;
 
   // NetworkPolicy: Allow ingress from Prometheus (scrapes scout-backend
   // metrics on :3000), in-namespace pods, and the shared s3-static-sites
@@ -146,4 +179,49 @@ export function createScoutChart(app: App, stage: Stage) {
       ],
     },
   });
+
+  if (workflowWorkerCreated) {
+    new KubeNetworkPolicy(chart, "scout-workflow-worker-netpol", {
+      metadata: {
+        name: "scout-workflow-worker-netpol",
+        annotations: { "argocd.argoproj.io/sync-wave": "-2" },
+      },
+      spec: {
+        podSelector: {
+          matchLabels: { "worker-family": "scout-beta-workflows" },
+        },
+        policyTypes: ["Ingress", "Egress"],
+        ingress: [
+          {
+            from: [
+              {
+                namespaceSelector: {
+                  matchLabels: {
+                    "kubernetes.io/metadata.name": "prometheus",
+                  },
+                },
+              },
+            ],
+            ports: [{ port: IntOrString.fromNumber(9464), protocol: "TCP" }],
+          },
+        ],
+        egress: [
+          createDnsEgressRule(),
+          {
+            to: [
+              {
+                namespaceSelector: {
+                  matchLabels: {
+                    "kubernetes.io/metadata.name": "temporal",
+                  },
+                },
+                podSelector: { matchLabels: { app: "temporal-server" } },
+              },
+            ],
+            ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          },
+        ],
+      },
+    });
+  }
 }

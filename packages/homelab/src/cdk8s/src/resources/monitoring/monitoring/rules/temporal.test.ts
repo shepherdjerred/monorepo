@@ -126,8 +126,16 @@ describe("Temporal workflow outcome rules", () => {
       )
       .map((rule) => rule.expr.value);
     expect(workflowPollerExpressions).toContain(
-      'absent(temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) or max(temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) < 1',
+      'absent(temporal_worker_num_pollers{namespace="buildkite",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) or max(temporal_worker_num_pollers{namespace="buildkite",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) < 1',
     );
+    const scoutBetaExpression = workflowPollerExpressions.find((expression) =>
+      expression.includes('task_queue="scout-beta"'),
+    );
+    if (scoutBetaExpression !== undefined) {
+      expect(scoutBetaExpression).toBe(
+        'absent(temporal_worker_num_pollers{namespace="scout-beta",exported_namespace="default",task_queue="scout-beta",poller_type="workflow_task"}) or max(temporal_worker_num_pollers{namespace="scout-beta",exported_namespace="default",task_queue="scout-beta",poller_type="workflow_task"}) < 1',
+      );
+    }
 
     const reportHeartbeat = failuresGroup.rules.find(
       (rule) => rule.alert === "TemporalReportHeartbeatStale",

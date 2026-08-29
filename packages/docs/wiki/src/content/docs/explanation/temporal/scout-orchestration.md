@@ -1,25 +1,34 @@
 ---
-title: Why Scout embeds Temporal Workers
-description: Why Scout keeps orchestration durable while product state remains in Postgres and effects remain in the backend.
+title: How Scout separates Temporal workflows from effects
+description: Why deterministic orchestration can run without product credentials while Scout effects remain in the backend.
 sidebar:
   order: 6
 ---
 
-Scout embeds its Temporal Workers because durable orchestration needs the same
-Discord gateway, database, credentials, and report-lake volume as the backend.
+Scout's deterministic Workflow code needs only a Temporal connection. Its
+Activities need the Discord gateway, database, credentials, and report-lake
+volume, so those effectful Workers stay in the backend.
 
-This topology avoids a second Discord client and a private control API. It also
-means old and new Worker versions cannot coexist during Scout's `Recreate`
-deployment, so Workflow changes use replay-safe patches instead of Worker
-Versioning.
+Workflow-only pods can therefore be credentialless and independently
+versioned without introducing a second Discord client or a private control API.
+The split is staged: beta first registers a capable stable version, then a
+distinct candidate. The embedded poller drains old unversioned histories; it
+cannot serve as a Worker Deployment rollback version. It is removed only after
+replay, a version-targeted canary, ramp, soak, stable-pin promotion, and healthy
+versioned pollers. Production follows after beta acceptance.
 
 ```mermaid
 flowchart LR
   accTitle: Scout Temporal ownership and queue boundaries
-  accDescr: Temporal owns durable execution and dispatches workflow tasks to one orchestration queue. The embedded Scout backend consumes four activity queues, while Postgres and S3 retain product data and idempotent effects.
+  accDescr: Temporal dispatches deterministic workflow tasks to credentialless stable and candidate pollers and effectful activity tasks to the Scout backend. During bootstrap the embedded workflow poller drains old unversioned histories.
 
   T[Temporal server] --> W[Workflow queue]
-  W --> R[Realtime activities]
+  W --> S[Credentialless stable workflow poller]
+  W --> C[Credentialless candidate workflow poller]
+  W --> E[Embedded drain poller during bootstrap]
+  S --> R[Realtime activities]
+  C --> R
+  E --> R
   W --> I[Interactive activities]
   W --> B[Background activities]
   W --> L[Serial lake activities]
@@ -55,26 +64,26 @@ Activities use separate realtime, interactive, background, and lake queues.
 The separation preserves responsive polling under slow model work. It also
 serializes every mutation of the report-lake volume.
 
-The Workers share one Temporal connection inside the
+The Activity Workers share one Temporal connection inside the
 [`scout-for-lol`](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
-backend. A Temporal outage degrades this component without taking down HTTP or
-Discord. Scout does not silently return durable work to its legacy scheduler,
-because two owners would make duplicate effects possible.
+backend. Workflow-only pods have a separate connection and no product
+credentials or data volumes. A Temporal outage degrades this component without
+taking down HTTP or Discord. Scout does not silently return durable work to its
+legacy scheduler, because two schedulers would make duplicate effects possible.
 
 ## Replay compatibility follows the deployment topology
 
-Temporal normally prefers Worker Versioning. Scout cannot use it while one
-`Recreate` replica embeds every Worker, because compatible Worker versions
-cannot overlap during a deployment.
+The workflow-only role registers an exact image Git SHA under
+`scout-beta-workflows` or `scout-prod-workflows` and uses `AUTO_UPGRADE`.
+Candidate and stable images can coexist without duplicating Discord or
+report-lake ownership because neither version runs Activities.
 
-Potentially open Workflows therefore protect command or control-flow changes
-with replay patches. Sanitized histories exercise those patches before
-promotion. Continue-As-New bounds long histories, but it is not a compatibility
-escape hatch for the history that already exists.
-
-Independently deploying the Workers would make Worker Versioning practical. It
-would also require a durable boundary for Discord access and careful ownership
-of the report-lake volume, so the extra topology is not free.
+Potentially open Workflows still protect command or control-flow changes with
+replay patches. Retained histories exercise those patches before promotion.
+Continue-As-New bounds long histories, but it is not a compatibility escape
+hatch for the history that already exists. During the one-time bootstrap, the
+unversioned embedded poller remains available until the first stable versioned
+poller is healthy.
 
 ## Schedules are durable ownership records
 

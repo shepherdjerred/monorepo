@@ -105,6 +105,10 @@ are one-shot and each command starts a new saved conversation.
   scheduled/user-authored report queries
 - Temporal schedules handle recurring maintenance (queue-window drift
   detection, marketing showcase refresh, image GC)
+- Scout beta bootstraps deterministic Workflow versioning with a capable stable
+  image followed by a distinct credentialless candidate; the backend retains
+  its embedded drain poller and all effectful Activity Workers until the
+  candidate is promoted and soaked
 - PostHog for privacy-scoped server-side product analytics
 - Docker image built and deployed from CI; beta deploys continuously and prod
   is promoted via a Renovate image-pin PR

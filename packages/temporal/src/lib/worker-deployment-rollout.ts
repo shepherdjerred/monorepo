@@ -296,6 +296,7 @@ async function requireRegisteredWorkflowVersion(
     ),
   );
 }
+
 async function executeStart(
   options: WorkerDeploymentRolloutOptions,
   status: WorkerDeploymentRolloutStatus,

@@ -48,9 +48,14 @@ determinism boundary.
 | `scout-beta` | `scout-beta`         | `scout-beta-workflows`       | `shepherdjerred/scout-for-lol/beta/workflows/` |
 | `scout-prod` | `scout-prod`         | `scout-prod-workflows`       | `shepherdjerred/scout-for-lol/prod/workflows/` |
 
-The Scout targets become operable after the corresponding workflow-only
-deployment is installed. Until that staged extraction, its backend continues
-to poll the stage Workflow queue.
+Scout beta requires two workflow-capable image releases. Pins at or before build
+12197 create no workflow-only pods. Copying the first capable candidate pin to
+stable creates only the stable pod; a later distinct candidate pin creates the
+ramp target. Both pods have only Temporal and DNS egress, expose SDK metrics to
+Prometheus, and carry no Discord, PostgreSQL, Riot, S3, or report-lake access.
+The embedded backend poller drains old unversioned histories but is not a
+Worker Deployment rollback version. Scout production repeats the sequence only
+after beta acceptance.
 
 Bootstrap configuration:
 
