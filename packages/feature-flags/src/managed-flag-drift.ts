@@ -196,9 +196,7 @@ export function compareManagedFlagInventory(
   snapshot: FliptSnapshot,
   expectedFlags: readonly ManagedFlag[] = managedFlagInventory.flags,
 ): ManagedFlagDrift {
-  const expectedByKey = new Map(
-    expectedFlags.map((flag) => [flag.key, flag]),
-  );
+  const expectedByKey = new Map(expectedFlags.map((flag) => [flag.key, flag]));
   const actualByKey = new Map(snapshot.flags.map((flag) => [flag.key, flag]));
   const expectedKeys = [...expectedByKey.keys()].sort();
   const actualKeys = [...actualByKey.keys()].sort();
