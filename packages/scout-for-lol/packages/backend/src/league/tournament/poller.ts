@@ -1,4 +1,8 @@
-import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import {
+  LeaguePuuidSchema,
+  MatchIdSchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
@@ -82,7 +86,10 @@ function shouldSkipCheck(): boolean {
 async function resolveMatchId(
   lobby: TournamentLobbyRecord,
   mode: TournamentApiMode,
-): Promise<{ matchId: string; gameId: number } | undefined> {
+): Promise<
+  | { matchId: string; gameId: number; participantPuuids: LeaguePuuid[] }
+  | undefined
+> {
   if (supportsGamesByCode(mode)) {
     const games = await getGamesByCode({ mode }, lobby.code);
     const game = games?.[0];
@@ -90,6 +97,9 @@ async function resolveMatchId(
       return {
         matchId: `${lobby.platformId}_${game.gameId.toString()}`,
         gameId: game.gameId,
+        participantPuuids: [...game.winningTeam, ...game.losingTeam].map(
+          (participant) => LeaguePuuidSchema.parse(participant.puuid),
+        ),
       };
     }
   }
@@ -109,6 +119,11 @@ async function resolveMatchId(
   return {
     matchId: `${game.platformId}_${game.gameId.toString()}`,
     gameId: game.gameId,
+    participantPuuids: game.participants.flatMap((participant) =>
+      participant.puuid === null
+        ? []
+        : [LeaguePuuidSchema.parse(participant.puuid)],
+    ),
   };
 }
 
@@ -125,27 +140,24 @@ async function linkMatch(
   lobby: TournamentLobbyRecord,
   mode: TournamentApiMode,
 ): Promise<TournamentLobbyState | undefined> {
-  const joinedPuuids = lobby.joinedPuuids.map((puuid) =>
-    LeaguePuuidSchema.parse(puuid),
-  );
+  const resolved = await resolveMatchId(lobby, mode);
+  if (resolved === undefined) {
+    if (!supportsGamesByCode(mode)) {
+      tournamentMatchLinkTotal.inc({ status: "stub_unsupported" });
+    }
+    return undefined;
+  }
+
   const trackedAccounts = await prisma.account.findMany({
     where: {
       serverId: lobby.serverId,
-      puuid: { in: joinedPuuids },
+      puuid: { in: resolved.participantPuuids },
     },
     select: { puuid: true },
   });
   const trackedPuuids = trackedAccounts.map((account) => account.puuid);
   if (trackedPuuids.length === 0) {
     tournamentMatchLinkTotal.inc({ status: "no_tracked_player" });
-    return undefined;
-  }
-
-  const resolved = await resolveMatchId(lobby, mode);
-  if (resolved === undefined) {
-    if (!supportsGamesByCode(mode)) {
-      tournamentMatchLinkTotal.inc({ status: "stub_unsupported" });
-    }
     return undefined;
   }
 

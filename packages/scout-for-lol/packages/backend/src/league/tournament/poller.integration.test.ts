@@ -17,6 +17,7 @@ let lobbyEvents: RawLobbyEvent[] | undefined = [];
 let lobbyEventCalls = 0;
 let prematchSends = 0;
 let activeGameUpserts: { matchId: string; trackedPuuids: string[] }[] = [];
+let gamePuuids: ReturnType<typeof LeaguePuuidSchema.parse>[] = [];
 
 vi.doMock("#src/database/index.ts", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -32,7 +33,9 @@ vi.doMock("#src/league/api/tournament/client.ts", () => ({
     Promise.resolve([
       {
         startTime: 1,
-        winningTeam: [],
+        winningTeam: gamePuuids.map((participantPuuid) => ({
+          puuid: participantPuuid,
+        })),
         losingTeam: [],
         shortCode: "TEST-CODE",
         gameId: 5_421_167_767,
@@ -145,6 +148,7 @@ beforeEach(async () => {
   lobbyEventCalls = 0;
   prematchSends = 0;
   activeGameUpserts = [];
+  gamePuuids = [];
 });
 
 afterAll(async () => {
@@ -183,6 +187,7 @@ describe("checkTournamentLobbies", () => {
     await seedLobby();
     const joinedPlayer = puuid("joined");
     await trackJoinedPlayer(joinedPlayer);
+    gamePuuids = [joinedPlayer];
     lobbyEvents = [
       event("PlayerJoinedGameEvent", joinedPlayer),
       event("PracticeGameCreatedEvent"),
@@ -217,6 +222,29 @@ describe("checkTournamentLobbies", () => {
     expect(lobby?.state).toBe("in_game");
     expect(lobby?.matchId).toBeUndefined();
     expect(activeGameUpserts).toEqual([]);
+  });
+
+  test("links a tracked participant who left the lobby before the game started", async () => {
+    await seedLobby();
+    const trackedPlayer = puuid("left");
+    await trackJoinedPlayer(trackedPlayer);
+    gamePuuids = [trackedPlayer];
+    lobbyEvents = [
+      event("PlayerJoinedGameEvent", trackedPlayer),
+      event("PlayerQuitGameEvent", trackedPlayer),
+      event("PracticeGameCreatedEvent"),
+      event("ChampSelectStartedEvent"),
+      event("GameAllocatedToLsmEvent"),
+    ];
+
+    await checkTournamentLobbies();
+
+    const lobby = await findLobbyByCode(testPrisma, "TEST-CODE");
+    expect(lobby?.state).toBe("resolved");
+    expect(lobby?.matchId).toBe("NA1_5421167767");
+    expect(activeGameUpserts).toEqual([
+      { matchId: "NA1_5421167767", trackedPuuids: [trackedPlayer] },
+    ]);
   });
 
   test("a failed poll leaves the lobby untouched", async () => {
