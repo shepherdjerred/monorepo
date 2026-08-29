@@ -464,9 +464,8 @@ clones of this public repository are unauthenticated, and
 new agent email delivery activities execute on `TASK_QUEUES.REPORTS`. Replayed
 histories preserve their original agent-queue activity command for Temporal
 determinism; that credential-free compatibility activity delegates a fixed
-`deliverReportWorkflow` to `TASK_QUEUES.DEFAULT` until the retention window
-expires. Postal and report-state S3 credentials therefore remain in the reports
-worker in both paths. The outer email
+`deliverReportWorkflow` to `TASK_QUEUES.REPORTS`. Postal and report-state S3
+credentials therefore remain in the reports worker in both paths. The outer email
 activity budget must exceed the complete delegated delivery retry window; both
 durations are defined in `src/shared/report-delivery-policy.ts`.
 

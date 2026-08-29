@@ -92,10 +92,9 @@ credentials that can publish that change or mutate the operational APIs.
 Report delivery crosses back into the credentialed reports queue. New workflow
 histories schedule their email activity there directly. Histories replayed from
 before that queue migration must preserve the original agent-queue activity for
-Temporal determinism; the activity contains no Postal or S3 credentials and
-delegates a fixed `deliverReportWorkflow` to the default queue until retention
-expires. Both paths therefore use the shared sender without restoring delivery
-secrets to the agent pod.
+Temporal determinism; that credential-free compatibility activity delegates a
+fixed `deliverReportWorkflow` to the reports queue. Both paths therefore use
+the shared sender without restoring delivery secrets to the agent pod.
 
 ## Why it is built this way anyway
 
