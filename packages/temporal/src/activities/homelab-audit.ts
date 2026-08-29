@@ -162,6 +162,7 @@ async function runAuditAgent(
       callSite: "homelab-audit",
       prompt,
       model,
+      maxTurns,
       cwd: process.cwd(),
       env: envForTrustedAgent({
         OPENROUTER_API_KEY: openRouterApiKey,
