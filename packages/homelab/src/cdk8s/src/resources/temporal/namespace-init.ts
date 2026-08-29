@@ -20,10 +20,10 @@ export function createTemporalNamespaceInitJob(
     metadata: {
       name: "temporal-namespace-init",
       annotations: {
-        // Create the application namespaces before namespace-scoped clients
-        // and workers become healthy. The job waits for the server below, so
-        // it is safe to run before the ordinary Temporal resources finish.
-        "argocd.argoproj.io/hook": "PreSync",
+        // Run after the server's wave has become healthy and before the
+        // namespace-scoped client deployments in wave 2.
+        "argocd.argoproj.io/hook": "Sync",
+        "argocd.argoproj.io/sync-wave": "1",
         "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation",
         "argocd.argoproj.io/sync-wave": "-2",
       },

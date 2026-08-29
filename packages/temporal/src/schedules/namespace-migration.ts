@@ -380,6 +380,8 @@ export async function rollbackNamespaceMigration(input: {
     }
   }
 
+  await assertNoTargetWorkflowStarts(input.targetClients, input.schedules);
+
   for (const { migration, target } of prepared) {
     if (!target.state.paused) {
       await targetClient(input.targetClients, migration.targetNamespace)
@@ -387,8 +389,6 @@ export async function rollbackNamespaceMigration(input: {
         .pause(target.state.note);
     }
   }
-  await assertNoTargetWorkflowStarts(input.targetClients, input.schedules);
-
   for (const { migration, target } of prepared) {
     const state = decodeMigrationState(target.state.note);
     const source = input.sourceClient.schedule.getHandle(
