@@ -7,22 +7,40 @@ description: |
 
 # Discord Agent Access
 
-Two ways to act on Discord, both verified live on 2026-06-12:
+Two ways to act on Discord, both verified live on 2026-08-29:
 
 1. **`toolkit discord`** (recommended for common ops) — a session daemon that logs in once, holds the gateway connections in memory, and exposes one-shot CLI commands. One `op` call per session; no boilerplate; voice presence persists between commands.
 2. **Write a Bun/TypeScript script** (escape hatch) — for anything the CLI doesn't cover. Same libraries underneath.
 
-## Credentials — ask the user
+## Credentials
 
-**Do not assume which Discord credentials to use.** Ask the user which 1Password item (or env vars) holds the right tokens, and which server/channels to target. Different bots and tasks use different identities.
+On Jerred's managed local Mac, Chezmoi exports both dedicated test identities:
 
-There is a **default test identity** (a throwaway Discord user account, userbot only) for quick checks:
+- `DISCORD_USER_TOKEN`: the throwaway Derrej user (`derrej_`), for userbot-only actions.
+- `DISCORD_BOT_TOKEN`: the Derrej bot (`Derrej#8685`), for bot actions.
+
+If those variables are already present, use them without calling `op` or asking
+the user to unlock 1Password. Never print their values. Start the daemon
+directly:
 
 ```bash
-export DISCORD_USER_TOKEN=$(op read "op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN")
+toolkit discord daemon start --ttl 30m
 ```
 
-For a bot identity (needed for `voice states` and for reading message content reliably), ask the user for the bot token and export it as `DISCORD_BOT_TOKEN`. Never write tokens to files or print them to logs — env vars only, loaded in the same command that starts the daemon.
+An existing Conductor session may have captured its environment before the
+latest Chezmoi apply. In that case, start the daemon through a fresh Fish login
+shell (or use a newly launched Conductor session) instead of falling back to
+another `op` read:
+
+```bash
+fish -lc 'toolkit discord daemon start --ttl 30m'
+```
+
+In other environments, or when the managed variables are absent, do not assume
+which credentials to use. Ask the user which 1Password items or environment
+variables hold the right tokens and which server/channels to target. Load
+tokens into the daemon environment without printing them or passing them on the
+command line. Never commit the rendered Fish config or token values.
 
 ## Identities: userbot vs bot
 
@@ -35,11 +53,12 @@ A bot **cannot** invoke another bot's slash commands or appear as a user in voic
 
 ## `toolkit discord` — the daemon
 
-Start it once per session with the tokens in env (one `op` call). The daemon prints the logged-in identities and stays up until you stop it or it idles out (default 4h, `--ttl 30m` to shorten):
+Start it once per session with the managed tokens already in the environment.
+The daemon prints the logged-in identities and stays up until you stop it or it
+idles out (default 4h, `--ttl 30m` to shorten):
 
 ```bash
-bash -c 'export DISCORD_USER_TOKEN=$(op read "op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN") \
-  && toolkit discord daemon start --ttl 30m'
+toolkit discord daemon start --ttl 30m
 ```
 
 Then every other command talks to the running daemon over a unix socket (no token, no login cost):
