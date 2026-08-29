@@ -7,37 +7,35 @@ generic report-only agent tasks (Claude/Codex subprocesses) including the daily
 homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 (GitHub merge-conflict check and build cancel, Xcode Cloud, iOS sleep).
 
-Production runs one image in twelve single-replica Kubernetes Deployments. The
+Production runs one image in ten single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
-without a task queue. The credentialless `workflows` role owns deterministic
-Workflow execution on `monorepo-workflows` and temporarily polls every legacy
-central queue so open histories can finish where they started. The domain roles
-own only Activity Workers, with separate registries, credentials, service
-accounts, and concurrency budgets. The `legacy` role drains Activity tasks
-already scheduled on `default`; no new Workflow starts or schedules target that
-queue. The default `all` role composes every role in one process for local
-development.
+without a task queue. `home`, `reports`, `infra`, `repo`, `scout`, `agent`,
+`glitter-corpus`, `glitter-context`, and `maintenance` each own one queue with
+their own activity registry, credentials, service account, and concurrency
+budget. The compatibility `default` queue is served by the core worker in the
+active namespace and by a bounded drain worker in `default`; it has no
+production start site. The default `all` role runs everything in one process
+for local development.
 
-| Role              | Queue or surface                              |           Execution concurrency |
-| ----------------- | --------------------------------------------- | ------------------------------: |
-| `control`         | schedules and HTTP APIs                       |                            none |
-| `workflows`       | `monorepo-workflows` + legacy Workflow queues | 8 new / 2 legacy Workflow tasks |
-| `legacy`          | `default` Activity drain                      |                               1 |
-| `home`            | `home`                                        |                               4 |
-| `reports`         | `reports`                                     |                               4 |
-| `infra`           | `infra`                                       |                               1 |
-| `repo`            | `repo-automation`                             |                               1 |
-| `scout`           | `scout`                                       |                               1 |
-| `agent`           | `agent-task`                                  |                               1 |
-| `glitter-corpus`  | `glitter-corpus`                              |                               1 |
-| `glitter-context` | `glitter-context`                             |                               1 |
-| `maintenance`     | `maintenance`                                 |                               1 |
+| Role              | Queue or surface        | Activity concurrency |
+| ----------------- | ----------------------- | -------------------: |
+| `control`         | schedules and HTTP APIs |                 none |
+| `home`            | `home`                  |                    4 |
+| `reports`         | `reports`               |                    4 |
+| `infra`           | `infra`                 |                    1 |
+| `repo`            | `repo-automation`       |                    1 |
+| `scout`           | `scout`                 |                    1 |
+| `agent`           | `agent-task`            |                    1 |
+| `glitter-corpus`  | `glitter-corpus`        |                    1 |
+| `glitter-context` | `glitter-context`       |                    1 |
+| `maintenance`     | `maintenance`           |                    1 |
 
-Every central start, schedule, and child Workflow targets
-`monorepo-workflows`. Every `proxyActivities` call names its domain Activity
-queue explicitly. Continue-as-new inherits the execution's current queue: a new
-chain remains on `monorepo-workflows`, while a chain created before the cutover
-remains on its legacy queue until it closes.
+The production manifests land in layers. In the Glitter layer, the existing
+legacy core and agent Deployments remain in place while the combined Glitter
+Deployment is replaced by `temporal-glitter-corpus-worker` and
+`temporal-glitter-context-worker`. The gateway, home, reports, infra, repo, and
+Scout Deployments arrive in the later ingress and operations layers; the table
+above describes the final topology.
 
 ## Quick start
 

@@ -27,8 +27,11 @@ async function main(): Promise<void> {
   );
   const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
   const client = new Client({ connection, namespace });
+  const sourceSchedules = SCHEDULES.filter(
+    (schedule) => schedule.namespace === namespace,
+  );
   const sourceById = new Map(
-    SCHEDULES.map((schedule) => [schedule.id, schedule]),
+    sourceSchedules.map((schedule) => [schedule.id, schedule]),
   );
   const reportIds = new Set(
     REPORT_SCHEDULE_REGISTRY.map((registration) => registration.scheduleId),
@@ -48,13 +51,13 @@ async function main(): Promise<void> {
 
   live.sort((left, right) => left.scheduleId.localeCompare(right.scheduleId));
   const liveIds = new Set(live.map((schedule) => schedule.scheduleId));
-  const sourceOnly = SCHEDULES.filter(
-    (schedule) => !liveIds.has(schedule.id),
-  ).map((schedule) => ({
-    scheduleId: schedule.id,
-    workflowType: schedule.workflowType,
-    reportRegistered: reportIds.has(schedule.id),
-  }));
+  const sourceOnly = sourceSchedules
+    .filter((schedule) => !liveIds.has(schedule.id))
+    .map((schedule) => ({
+      scheduleId: schedule.id,
+      workflowType: schedule.workflowType,
+      reportRegistered: reportIds.has(schedule.id),
+    }));
   const liveOnly = live.filter((schedule) => !schedule.sourceDefined);
 
   console.warn(

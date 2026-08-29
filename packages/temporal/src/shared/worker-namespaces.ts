@@ -22,7 +22,13 @@ export function workerNamespaces(input: {
   legacyNamespace: LegacyTemporalNamespace | undefined;
 }): readonly (TemporalNamespace | LegacyTemporalNamespace)[] {
   if (input.queueRole === "legacy") {
-    return input.legacyNamespace === undefined ? [] : [input.legacyNamespace];
+    const namespaces: (TemporalNamespace | LegacyTemporalNamespace)[] = [
+      input.activeNamespace,
+    ];
+    if (input.legacyNamespace !== undefined) {
+      namespaces.push(input.legacyNamespace);
+    }
+    return namespaces;
   }
   const activeNamespaces: readonly TemporalNamespace[] =
     input.queueRole === "scout" && input.activeNamespace === "prod"

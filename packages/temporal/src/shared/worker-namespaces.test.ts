@@ -26,21 +26,21 @@ describe("workerNamespaces", () => {
     ).toEqual(["prod", "default"]);
   });
 
-  test("never creates the retired default queue in the active namespace", () => {
+  test("keeps the compatibility queue available in active and legacy namespaces", () => {
     expect(
       workerNamespaces({
         queueRole: "legacy",
         activeNamespace: "prod",
         legacyNamespace: "default",
       }),
-    ).toEqual(["default"]);
+    ).toEqual(["prod", "default"]);
     expect(
       workerNamespaces({
         queueRole: "legacy",
         activeNamespace: "prod",
         legacyNamespace: undefined,
       }),
-    ).toEqual([]);
+    ).toEqual(["prod"]);
   });
 
   test("uses only the active namespace after the drain", () => {

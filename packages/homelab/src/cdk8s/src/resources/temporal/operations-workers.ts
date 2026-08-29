@@ -9,28 +9,7 @@ import {
 } from "cdk8s-plus-31";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
-
-function runtimeEnv(
-  serverServiceName: string,
-  secret: ISecret,
-  role: "infra" | "repo" | "scout",
-  serviceName: string,
-): Record<string, EnvValue> {
-  return {
-    TEMPORAL_ADDRESS: EnvValue.fromValue(`${serverServiceName}:7233`),
-    TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
-    TEMPORAL_LEGACY_NAMESPACE: EnvValue.fromValue("default"),
-    TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
-    TEMPORAL_WORKER_ROLE: EnvValue.fromValue(role),
-    ENVIRONMENT: EnvValue.fromValue("production"),
-    TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-    OTLP_ENDPOINT: EnvValue.fromValue(
-      "http://tempo.tempo.svc.cluster.local:4318",
-    ),
-    TELEMETRY_SERVICE_NAME: EnvValue.fromValue(serviceName),
-    SENTRY_DSN: EnvValue.fromSecretValue({ secret, key: "SENTRY_DSN" }),
-  };
-}
+import { temporalRuntimeEnv } from "./runtime-env.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
@@ -96,7 +75,7 @@ export function createTemporalOperationsWorkers(
     memoryRequest: Size.gibibytes(2),
     memoryLimit: Size.gibibytes(6),
     envVariables: {
-      ...runtimeEnv(
+      ...temporalRuntimeEnv(
         props.serverServiceName,
         props.secret,
         "infra",
@@ -137,7 +116,7 @@ export function createTemporalOperationsWorkers(
     memoryRequest: Size.mebibytes(512),
     memoryLimit: Size.gibibytes(4),
     envVariables: {
-      ...runtimeEnv(
+      ...temporalRuntimeEnv(
         props.serverServiceName,
         props.secret,
         "repo",
@@ -200,7 +179,7 @@ export function createTemporalOperationsWorkers(
     memoryRequest: Size.mebibytes(512),
     memoryLimit: Size.gibibytes(4),
     envVariables: {
-      ...runtimeEnv(
+      ...temporalRuntimeEnv(
         props.serverServiceName,
         props.secret,
         "scout",
