@@ -15,6 +15,7 @@ export const WorkerRoleSchema = z.enum([
   "repo",
   "reports",
   "scout",
+  "workflows",
 ]);
 
 export type WorkerRole = z.infer<typeof WorkerRoleSchema>;

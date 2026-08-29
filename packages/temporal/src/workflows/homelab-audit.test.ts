@@ -3,6 +3,7 @@ import { ActivityFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { HomelabAuditCollection } from "#activities/homelab-audit-collectors.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import { createReportCapture, runWithReportWorker } from "./test-support.ts";
 
@@ -53,7 +54,7 @@ function collection(): HomelabAuditCollection {
 
 describe("runHomelabAuditWorkflow", () => {
   it("delivers one clean report after all six collectors pass", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
+    const taskQueue = TASK_QUEUES.INFRA;
     const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
     const { reports, deliverActivityReport } = createReportCapture("report-1");
     const worker = await Worker.create({
@@ -87,7 +88,7 @@ describe("runHomelabAuditWorkflow", () => {
   }, 30_000);
 
   it("delivers a failed report before rethrowing collector failure", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
+    const taskQueue = TASK_QUEUES.INFRA;
     const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
     const { reports, deliverActivityReport } = createReportCapture("report-2");
     const worker = await Worker.create({

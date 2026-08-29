@@ -20,7 +20,10 @@ import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
 import { retryUntilReady, sleepUnlessClosed } from "./shared/startup-retry.ts";
 import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
-import { getWorkerRoleContract } from "./worker-config.ts";
+import {
+  getWorkerRoleContract,
+  type QueueWorkerDefinition,
+} from "./worker-config.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -76,6 +79,40 @@ function initSentry(): void {
     skipOpenTelemetrySetup: true,
   });
   jsonLog("info", "Sentry initialized");
+}
+
+async function createQueueWorker(
+  definition: QueueWorkerDefinition,
+  connection: NativeConnection,
+  workflowsPath: string,
+): Promise<Worker> {
+  if (definition.kind === "workflow") {
+    return await Worker.create({
+      connection,
+      namespace: "default",
+      workflowsPath,
+      workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
+      taskQueue: definition.taskQueue,
+      ...(definition.maxConcurrentWorkflowTaskExecutions === undefined
+        ? {}
+        : {
+            maxConcurrentWorkflowTaskExecutions:
+              definition.maxConcurrentWorkflowTaskExecutions,
+          }),
+    });
+  }
+  return await Worker.create({
+    connection,
+    namespace: "default",
+    activities: definition.activities,
+    taskQueue: definition.taskQueue,
+    ...(definition.maxConcurrentActivityTaskExecutions === undefined
+      ? {}
+      : {
+          maxConcurrentActivityTaskExecutions:
+            definition.maxConcurrentActivityTaskExecutions,
+        }),
+  });
 }
 
 function formatError(error: unknown): string {
@@ -234,43 +271,30 @@ async function main(): Promise<void> {
   const connection = await NativeConnection.connect({ address });
 
   const workflowsPath = new URL("workflows/index.ts", import.meta.url).pathname;
-  const commonWorkerOptions = {
-    connection,
-    namespace: "default",
-    workflowsPath,
-    workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
-  };
-
   const workers: Worker[] = [];
   let httpServers: EventBridgeHandle | undefined;
   let eventBridge: EventBridgeHandle | undefined;
 
   for (const definition of roleContract.workers) {
-    const worker = await Worker.create({
-      ...commonWorkerOptions,
-      activities: definition.activities,
+    const worker = await createQueueWorker(
+      definition,
+      connection,
+      workflowsPath,
+    );
+    workers.push(worker);
+    jsonLog("info", "Worker created", {
+      workerKind: definition.kind,
+      queueRole: definition.role,
       taskQueue: definition.taskQueue,
-      ...(definition.maxConcurrentActivityTaskExecutions === undefined
-        ? {}
-        : {
+      ...(definition.kind === "activity"
+        ? {
             maxConcurrentActivityTaskExecutions:
               definition.maxConcurrentActivityTaskExecutions,
-          }),
-      ...(definition.maxConcurrentWorkflowTaskExecutions === undefined
-        ? {}
+          }
         : {
             maxConcurrentWorkflowTaskExecutions:
               definition.maxConcurrentWorkflowTaskExecutions,
           }),
-    });
-    workers.push(worker);
-    jsonLog("info", "Worker created", {
-      queueRole: definition.role,
-      taskQueue: definition.taskQueue,
-      maxConcurrentActivityTaskExecutions:
-        definition.maxConcurrentActivityTaskExecutions,
-      maxConcurrentWorkflowTaskExecutions:
-        definition.maxConcurrentWorkflowTaskExecutions,
     });
   }
 

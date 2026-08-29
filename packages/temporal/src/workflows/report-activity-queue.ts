@@ -11,7 +11,9 @@ export function reportActivityTaskQueue(explicitQueue?: string): string {
   if (explicitQueue !== undefined) {
     return explicitQueue;
   }
-  return patched(REPORT_ACTIVITY_QUEUE_PATCH)
-    ? TASK_QUEUES.REPORTS
-    : TASK_QUEUES.DEFAULT;
+  // Preserve the marker for executions that already recorded it. Activity
+  // task-queue attributes are replay-compatible, so both history branches can
+  // now use the credential-scoped reports queue.
+  patched(REPORT_ACTIVITY_QUEUE_PATCH);
+  return TASK_QUEUES.REPORTS;
 }

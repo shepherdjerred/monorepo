@@ -1,4 +1,6 @@
 export const TASK_QUEUES = {
+  /** Every new central Workflow execution starts on this deterministic queue. */
+  WORKFLOWS: "monorepo-workflows",
   /** Migration-only queue retained until every existing execution drains. */
   DEFAULT: "default",
   /** Latency-sensitive Home Assistant workflows and activities. */

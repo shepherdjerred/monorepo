@@ -13,6 +13,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const {
@@ -20,6 +21,7 @@ const {
   recordDataDragonSkipped,
   recordDataDragonFailure,
 } = proxyActivities<DataDragonActivities>({
+  taskQueue: TASK_QUEUES.SCOUT,
   startToCloseTimeout: "1 minute",
   retry: {
     maximumAttempts: 3,
@@ -30,6 +32,7 @@ const {
 });
 
 const { updateDataDragon } = proxyActivities<DataDragonActivities>({
+  taskQueue: TASK_QUEUES.SCOUT,
   startToCloseTimeout: "90 minutes",
   heartbeatTimeout: "60 seconds",
   retry: {

@@ -3,9 +3,11 @@ import type {
   PokeemeraldDataRefreshActivities,
   PokeemeraldDataRefreshResult,
 } from "#activities/dpp-pokeemerald-data-refresh.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshPokeemeraldData } =
   proxyActivities<PokeemeraldDataRefreshActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     // Clones the monorepo, does the workspace install, fetches four small
     // files from raw.githubusercontent.com, and opens a PR on drift.
     // Heartbeats fire every 10s (see

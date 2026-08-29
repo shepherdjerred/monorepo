@@ -4,9 +4,11 @@ import type {
   GlitterContextRefreshInput,
   GlitterContextRefreshResult,
 } from "#activities/glitter-context-refresh.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshGlitterContext } =
   proxyActivities<GlitterContextRefreshActivities>({
+    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
     // The weekly schedule's 15h workflow deadline accommodates both complete
     // attempts plus the retry backoff.
     startToCloseTimeout: "7 hours",

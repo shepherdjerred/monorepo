@@ -8,10 +8,12 @@ import type {
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
 import { SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS } from "#shared/scout-queue-windows-lookback.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const { refreshScoutQueueWindows } =
   proxyActivities<ScoutQueueWindowsActivities>({
+    taskQueue: TASK_QUEUES.SCOUT,
     // Clones the monorepo, does the root + scout workspace installs, scans
     // the scout-prod match lake for the 28-day lookback, and opens a PR on
     // window drift (auto-merge for open/reopen edits only). Heartbeats fire

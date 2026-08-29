@@ -5,65 +5,102 @@ type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
 
 export const TEMPORAL_DOMAIN_QUEUES = [
   {
+    queue: "monorepo-workflows",
+    metricsNamespace: "temporal",
+    deploymentPattern: "temporal-temporal-workflows.*",
+    servicePattern: ".*temporal-workflows.*metrics.*",
+    activityPoller: false,
+  },
+  {
     queue: "home",
     metricsNamespace: "temporal",
-    deployment: "temporal-temporal-home-worker",
+    deploymentPattern: "temporal-temporal-home-worker",
     servicePattern: ".*temporal-home-worker.*metrics.*",
+    activityPoller: true,
   },
   {
     queue: "reports",
     metricsNamespace: "temporal",
-    deployment: "temporal-temporal-reports-worker",
+    deploymentPattern: "temporal-temporal-reports-worker",
     servicePattern: ".*temporal-reports-worker.*metrics.*",
+    activityPoller: true,
   },
   {
     queue: "infra",
     metricsNamespace: "temporal",
-    deployment: "temporal-temporal-infra-worker",
+    deploymentPattern: "temporal-temporal-infra-worker",
     servicePattern: ".*temporal-infra-worker.*metrics.*",
+    activityPoller: true,
   },
   {
     queue: "repo-automation",
     metricsNamespace: "temporal",
-    deployment: "temporal-temporal-repo-worker",
+    deploymentPattern: "temporal-temporal-repo-worker",
     servicePattern: ".*temporal-repo-worker.*metrics.*",
+    activityPoller: true,
   },
   {
     queue: "scout",
     metricsNamespace: "temporal",
-    deployment: "temporal-temporal-scout-worker",
+    deploymentPattern: "temporal-temporal-scout-worker",
     servicePattern: ".*temporal-scout-worker.*metrics.*",
+    activityPoller: true,
   },
   {
     queue: "agent-task",
     metricsNamespace: "temporal",
-    deployment: "temporal-temporal-agent-worker",
+    deploymentPattern: "temporal-temporal-agent-worker",
     servicePattern: ".*temporal-agent-worker.*metrics.*",
+    activityPoller: true,
   },
   {
     queue: "glitter-corpus",
     metricsNamespace: "temporal",
-    deployment: "temporal-temporal-glitter-corpus-worker",
+    deploymentPattern: "temporal-temporal-glitter-corpus-worker",
     servicePattern: ".*temporal-glitter-corpus-worker.*metrics.*",
+    activityPoller: true,
   },
   {
     queue: "glitter-context",
     metricsNamespace: "temporal",
-    deployment: "temporal-temporal-glitter-context-worker",
+    deploymentPattern: "temporal-temporal-glitter-context-worker",
     servicePattern: ".*temporal-glitter-context-worker.*metrics.*",
+    activityPoller: true,
   },
   {
     queue: "maintenance",
     metricsNamespace: "buildkite",
-    deployment: "temporal-maintenance-worker",
+    deploymentPattern: "temporal-maintenance-worker",
     servicePattern: ".*temporal-maintenance-worker.*metrics.*",
+    activityPoller: true,
   },
 ] as const;
 
 export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
   return TEMPORAL_DOMAIN_QUEUES.flatMap((definition) => {
-    const workerSelector = `namespace="${definition.metricsNamespace}",exported_namespace="default",task_queue="${definition.queue}"`;
+    const workflowSelector = `namespace="temporal",exported_namespace="default",task_queue="${definition.queue}"`;
+    const activitySelector = `namespace="${definition.metricsNamespace}",exported_namespace="default",task_queue="${definition.queue}"`;
     const labels = { severity: "warning", task_queue: definition.queue };
+    const activityRules: PrometheusRule[] = definition.activityPoller
+      ? [
+          {
+            alert: "TemporalDomainActivityPollerUnavailable",
+            annotations: {
+              summary: `Temporal activity poller unavailable for ${definition.queue}`,
+              description:
+                "The domain queue has had no activity-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
+            },
+            expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+              `absent(temporal_worker_num_pollers{${activitySelector},poller_type="activity_task"}) or max(temporal_worker_num_pollers{${activitySelector},poller_type="activity_task"}) < 1`,
+            ),
+            for: "5m",
+            labels,
+          },
+        ]
+      : [];
+    const latencyExpression = definition.activityPoller
+      ? `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${workflowSelector}}[5m]))) > 5 or histogram_quantile(0.95, sum by (le) (rate(temporal_worker_activity_schedule_to_start_latency_seconds_bucket{${activitySelector}}[5m]))) > 5`
+      : `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${workflowSelector}}[5m]))) > 5`;
     return [
       {
         alert: "TemporalDomainWorkflowPollerUnavailable",
@@ -73,24 +110,12 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
             "The domain queue has had no workflow-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `absent(temporal_worker_num_pollers{${workerSelector},poller_type="workflow_task"}) or max(temporal_worker_num_pollers{${workerSelector},poller_type="workflow_task"}) < 1`,
+          `absent(temporal_worker_num_pollers{${workflowSelector},poller_type="workflow_task"}) or max(temporal_worker_num_pollers{${workflowSelector},poller_type="workflow_task"}) < 1`,
         ),
         for: "5m",
         labels,
       },
-      {
-        alert: "TemporalDomainActivityPollerUnavailable",
-        annotations: {
-          summary: `Temporal activity poller unavailable for ${definition.queue}`,
-          description:
-            "The domain queue has had no activity-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `absent(temporal_worker_num_pollers{${workerSelector},poller_type="activity_task"}) or max(temporal_worker_num_pollers{${workerSelector},poller_type="activity_task"}) < 1`,
-        ),
-        for: "5m",
-        labels,
-      },
+      ...activityRules,
       {
         alert: "TemporalDomainQueueBacklog",
         annotations: {
@@ -99,7 +124,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
             "Temporal matching has reported queued workflow or activity tasks for ten minutes. Inspect pollers and schedule-to-start latency before changing capacity.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `max(approximate_backlog_count{namespace="temporal",taskqueue="${definition.queue}",task_type=~"Workflow|Activity"}) > 0`,
+          `max(approximate_backlog_count{namespace="temporal",taskqueue="${definition.queue}",task_type=~"${definition.activityPoller ? "Workflow|Activity" : "Workflow"}"}) > 0`,
         ),
         for: "10m",
         labels,
@@ -111,9 +136,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
           description:
             "The queue's workflow or activity schedule-to-start p95 has exceeded five seconds for five minutes.",
         },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${workerSelector}}[5m]))) > 5 or histogram_quantile(0.95, sum by (le) (rate(temporal_worker_activity_schedule_to_start_latency_seconds_bucket{${workerSelector}}[5m]))) > 5`,
-        ),
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(latencyExpression),
         for: "5m",
         labels,
       },
@@ -138,7 +161,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
             "The single domain worker Deployment has no available replica.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `absent(kube_deployment_status_replicas_available{namespace="${definition.metricsNamespace}",deployment="${definition.deployment}"}) or max(kube_deployment_status_replicas_available{namespace="${definition.metricsNamespace}",deployment="${definition.deployment}"}) < 1`,
+          `absent(kube_deployment_status_replicas_available{namespace="${definition.metricsNamespace}",deployment=~"${definition.deploymentPattern}"}) or max(kube_deployment_status_replicas_available{namespace="${definition.metricsNamespace}",deployment=~"${definition.deploymentPattern}"}) < 1`,
         ),
         for: "5m",
         labels,

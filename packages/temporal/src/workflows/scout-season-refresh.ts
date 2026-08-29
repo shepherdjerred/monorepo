@@ -8,10 +8,12 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const { runScoutSeasonRefresh } = proxyActivities<ScoutSeasonRefreshActivities>(
   {
+    taskQueue: TASK_QUEUES.SCOUT,
     startToCloseTimeout: "30 minutes",
     heartbeatTimeout: "60 seconds",
     retry: {

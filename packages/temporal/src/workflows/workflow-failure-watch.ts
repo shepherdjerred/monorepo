@@ -1,9 +1,11 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { PollWorkflowFailuresResult } from "#activities/workflow-failure-watch.ts";
 import type { WorkflowFailureWatchActivities } from "#activities/workflow-failure-watch-activity.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { pollWorkflowFailures } =
   proxyActivities<WorkflowFailureWatchActivities>({
+    taskQueue: TASK_QUEUES.REPORTS,
     startToCloseTimeout: "2 minutes",
     heartbeatTimeout: "30 seconds",
     retry: {

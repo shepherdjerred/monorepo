@@ -1,11 +1,15 @@
 import { describe, test, expect, it } from "vitest";
 import type { Duration } from "@temporalio/common";
-import { ScheduleOverlapPolicy } from "@temporalio/client";
+import {
+  ScheduleOverlapPolicy,
+  type ScheduleUpdateOptions,
+} from "@temporalio/client";
 import { LanePriorWorkflowInputSchema } from "#activities/lane-prior-refresh.ts";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
 import {
   DELETED_SCHEDULE_IDS,
   buildSchedulePolicies,
+  routeDynamicAgentTaskSchedule,
 } from "./register-schedules.ts";
 import { SCHEDULES } from "./schedule-definitions.ts";
 import {
@@ -55,7 +59,7 @@ function findScheduleById(id: string) {
   return schedule;
 }
 
-describe("direct maintenance schedules", () => {
+describe("central Workflow schedule routing", () => {
   const definitions = [
     ["buildkite-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
     ["kometa-daily", "runKometaWorkflow", "2 hours"],
@@ -65,18 +69,18 @@ describe("direct maintenance schedules", () => {
   ] as const;
 
   it.each(definitions)(
-    "%s keeps its workflow identity while using the maintenance queue",
+    "%s keeps its workflow identity on the deterministic Workflow queue",
     (id, workflowType, workflowExecutionTimeout) => {
       const schedule = findScheduleById(id);
       expect(schedule.workflowType).toBe(workflowType);
-      expect(schedule.taskQueue).toBe(TASK_QUEUES.MAINTENANCE);
+      expect(schedule.taskQueue).toBe(TASK_QUEUES.WORKFLOWS);
       expect(schedule.requiredEnvironment).toBeUndefined();
       expect(schedule.workflowExecutionTimeout).toBe(workflowExecutionTimeout);
     },
   );
 });
 
-describe("domain schedule routing", () => {
+describe("central schedule routing", () => {
   it.each([
     "vacuum-9am",
     "vacuum-12pm",
@@ -87,15 +91,68 @@ describe("domain schedule routing", () => {
     "good-morning-weekend-preheat",
     "good-morning-weekend-wake",
     "good-morning-weekend-up",
-  ])("routes %s to the home queue", (id) => {
-    expect(findScheduleById(id).taskQueue).toBe(TASK_QUEUES.HOME);
+  ])("routes %s to the shared Workflow queue", (id) => {
+    expect(findScheduleById(id).taskQueue).toBe(TASK_QUEUES.WORKFLOWS);
   });
 
   it.each(["report-freshness-monitor", "temporal-failure-watch"])(
-    "routes %s to the reports queue",
+    "routes %s to the shared Workflow queue",
     (id) => {
-      expect(findScheduleById(id).taskQueue).toBe(TASK_QUEUES.REPORTS);
+      expect(findScheduleById(id).taskQueue).toBe(TASK_QUEUES.WORKFLOWS);
     },
+  );
+
+  test("routes every central schedule to the shared Workflow queue", () => {
+    const centralSchedules = SCHEDULES.filter(
+      (schedule) =>
+        schedule.taskQueue !== TASK_QUEUES.SCOUT_BETA &&
+        schedule.taskQueue !== TASK_QUEUES.SCOUT_PROD,
+    );
+    expect(
+      new Set(centralSchedules.map((schedule) => schedule.taskQueue)),
+    ).toEqual(new Set([TASK_QUEUES.WORKFLOWS]));
+  });
+});
+
+test("dynamic agent schedules preserve state while moving future runs", () => {
+  const existing: ScheduleUpdateOptions = {
+    spec: {
+      cronExpressions: ["0 9 * * *"],
+      timezone: "America/Los_Angeles",
+    },
+    action: {
+      type: "startWorkflow",
+      workflowType: "agentTaskWorkflow",
+      taskQueue: TASK_QUEUES.AGENT_TASK,
+      args: [{ title: "Inspect production" }],
+    },
+    policies: { overlap: ScheduleOverlapPolicy.SKIP },
+    state: { paused: true, note: "operator pause" },
+  };
+
+  expect(routeDynamicAgentTaskSchedule(existing)).toEqual({
+    ...existing,
+    action: {
+      ...existing.action,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+    },
+  });
+});
+
+test("dynamic schedule reconciliation rejects a forged ownership marker", () => {
+  const unrelated: ScheduleUpdateOptions = {
+    spec: { intervals: [{ every: "1 hour" }] },
+    action: {
+      type: "startWorkflow",
+      workflowType: "runDnsAudit",
+      taskQueue: TASK_QUEUES.INFRA,
+      args: [],
+    },
+    state: {},
+  };
+
+  expect(() => routeDynamicAgentTaskSchedule(unrelated)).toThrow(
+    "must start agentTaskWorkflow",
   );
 });
 
@@ -113,12 +170,12 @@ test("FreshRSS sync keeps its bounded pre-refresh schedule", () => {
     expression: "7 * * * *",
     timezone: "America/Los_Angeles",
   });
-  expect(schedule.taskQueue).toBe(TASK_QUEUES.REPO_AUTOMATION);
+  expect(schedule.taskQueue).toBe(TASK_QUEUES.WORKFLOWS);
   expect(schedule.catchupWindow).toBe("5 minutes");
   expect(schedule.workflowExecutionTimeout).toBe("6 minutes");
 });
 
-test("Flipt inventory drift runs daily on the repo automation queue", () => {
+test("Flipt inventory drift starts on the shared Workflow queue", () => {
   expect(findScheduleById("flipt-flag-inventory-daily")).toMatchObject({
     workflowType: "runFliptFlagInventory",
     args: [],
@@ -127,7 +184,7 @@ test("Flipt inventory drift runs daily on the repo automation queue", () => {
       expression: "15 6 * * *",
       timezone: "America/Los_Angeles",
     },
-    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+    taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
   });
@@ -382,7 +439,7 @@ describe("Scout weekly parlay schedule config", () => {
         expression: "0 12 * * 0",
         timezone: "America/Los_Angeles",
       },
-      taskQueue: TASK_QUEUES.SCOUT,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
       overlap: ScheduleOverlapPolicy.ALLOW_ALL,
     });
   });
@@ -398,7 +455,7 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
         expression: "*/15 * * * *",
         timezone: "America/Los_Angeles",
       },
-      taskQueue: TASK_QUEUES.SCOUT,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
       overlap: ScheduleOverlapPolicy.SKIP,
       workflowExecutionTimeout: "5 minutes",
     });
@@ -415,9 +472,9 @@ describe("DELETED_SCHEDULE_IDS", () => {
 });
 
 describe("Glitter corpus schedule", () => {
-  test("uses the dedicated queue and pauses until every credential is present", () => {
+  test("uses the Workflow queue and pauses until every credential is present", () => {
     const schedule = findScheduleById("glitter-corpus-daily");
-    expect(schedule.taskQueue).toBe("glitter-corpus");
+    expect(schedule.taskQueue).toBe(TASK_QUEUES.WORKFLOWS);
     expect(schedule.timing).toEqual({
       kind: "cron",
       expression: "15 4 * * *",
@@ -495,9 +552,9 @@ describe("Glitter corpus schedule", () => {
 });
 
 describe("Glitter context refresh schedule", () => {
-  test("uses its isolated queue and remains paused through credential setup", () => {
+  test("uses the Workflow queue and remains paused through credential setup", () => {
     const schedule = findScheduleById("glitter-context-refresh-weekly");
-    expect(schedule.taskQueue).toBe("glitter-context");
+    expect(schedule.taskQueue).toBe(TASK_QUEUES.WORKFLOWS);
     expect(schedule.timing).toEqual({
       kind: "cron",
       expression: "0 11 * * 1",

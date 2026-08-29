@@ -12,14 +12,16 @@ a durable workflow.
 ```mermaid
 flowchart LR
   accTitle: Temporal worker system map
-  accDescr: A tokenless gateway reconciles schedules and receives public requests. Temporal dispatches each workflow and activity to one of nine domain queues. Home Assistant events enter through the home worker. Every domain has independent health and metrics endpoints.
+  accDescr: A tokenless gateway reconciles schedules and receives public requests. Temporal sends deterministic code to a credentialless Workflow worker and effects to ten Activity queues. Home Assistant events enter through the home worker. Every domain has independent health and metrics endpoints.
 
   S[Schedule definitions] --> G[Gateway<br/>control role]
   W[Public webhooks and APIs] --> G
   G --> T[Temporal server]
   E[Home Assistant events] --> H[Home worker]
   H --> T
-  T --> H
+  T --> F[Credentialless Workflow worker]
+  F --> T
+  T --> H[Home Activity worker]
   T --> R[Reports worker]
   T --> I[Infra worker]
   T --> P[Repo worker]
@@ -55,33 +57,42 @@ Pause state is the deliberate exception: it is runtime state, preserved across
 reconciliation, because pausing is an operational act rather than a design
 change.
 
-## Ten processes, nine queues
+## Workflow code and effects run apart
 
 The gateway is a control process: it reconciles schedules and serves the public
-HTTP surfaces but does not poll a task queue or receive a Kubernetes token.
-Nine workers own `home`, `reports`, `infra`, `repo-automation`, `scout`,
-`agent-task`, `glitter-corpus`, `glitter-context`, and `maintenance`. All ten
-run the same image and deterministic workflow bundle, selected by a strict
-process role. The old `default` queue has no worker or start site.
+HTTP surfaces but does not poll a task queue or receive a Kubernetes token. A
+second credentialless process runs all deterministic central Workflow code.
+Every new start, schedule, and child goes to `monorepo-workflows`. Ten
+Activity-only roles own `default`, `home`, `reports`, `infra`,
+`repo-automation`, `scout`, `agent-task`, `glitter-corpus`, `glitter-context`,
+and `maintenance`. The `default` Activity Worker exists only to drain commands
+already scheduled by pre-cutover histories; no new root targets it.
+
+Temporal executions cannot move to another Workflow task queue after they
+start. The Workflow-only process therefore polls `monorepo-workflows` plus all
+legacy central queues until live visibility shows that each old queue has zero
+open executions. Continue-as-new inherits the current queue, so new chains stay
+on `monorepo-workflows` and old chains remain drainable. A replay test generated
+a real history before Activity queues were explicit and verifies it against the
+new routing on every change.
 
 The split is about authorization and failure isolation, not capacity. Queues
 isolate concurrency; **processes** isolate runtime failures, credentials, and
 Kubernetes identities. Home and reports can each run four activities. Infra,
 repo, Scout, agent, both Glitter domains, and maintenance remain serial.
 
-Only infra receives the broad audit and pod-exec roles. Gateway, home, reports,
-repo, Scout, and both Glitter workers disable service-account token mounting.
-Each Deployment receives an allowlisted environment. Network policies, Services,
-and ServiceMonitors select the unique `component` label rather than the shared
-image label. Each process serves `/healthz` after startup, with independent
-probes and per-queue metrics.
+Infra and the temporary legacy worker receive the broad audit and pod-exec
+roles. Agent receives read-only audit access but cannot exec into pods. Gateway,
+the Workflow worker, home, reports, repo, Scout, and both Glitter workers
+disable service-account token mounting. Each Deployment receives an allowlisted
+environment. Network policies, Services, and ServiceMonitors select the unique
+`component` label rather than the shared image label. Each process serves
+`/healthz` after startup, with independent probes and per-queue metrics.
 
-The topology is delivered as a staged migration. The Glitter layer first
-replaces the combined Glitter Deployment with separate corpus and context
-workers while the legacy core and agent Deployments still serve the remaining
-queues. The gateway, home, reports, infra, repo, and Scout Deployments arrive
-in the later ingress and operations layers, before the default queue is
-retired.
+The Workflow pod receives no application credentials, secret volumes, or
+Kubernetes API token. Its NetworkPolicy allows only DNS, Temporal gRPC, OTLP,
+and metrics scraping. Activity pods retain only the credentials and network
+paths required by their domain.
 
 ## Batteries in the image
 

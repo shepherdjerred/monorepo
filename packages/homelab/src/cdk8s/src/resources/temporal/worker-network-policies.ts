@@ -5,43 +5,79 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalScoutBetaNetworkPolicy } from "./scout-beta-network.ts";
 
+function metricsIngress(ports: readonly number[]) {
+  return [
+    {
+      from: [
+        {
+          namespaceSelector: {
+            matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+          },
+        },
+      ],
+      ports: ports.map((port) => ({
+        port: IntOrString.fromNumber(port),
+        protocol: "TCP",
+      })),
+    },
+  ];
+}
+
+function dnsEgress() {
+  return {
+    to: [
+      {
+        namespaceSelector: {},
+        podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+      },
+    ],
+    ports: [
+      { port: IntOrString.fromNumber(53), protocol: "UDP" },
+      { port: IntOrString.fromNumber(53), protocol: "TCP" },
+    ],
+  };
+}
+
+function temporalServerEgress() {
+  return {
+    to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
+    ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+  };
+}
+
 export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
+  new KubeNetworkPolicy(chart, "temporal-central-workflows-netpol", {
+    metadata: { name: "temporal-central-workflows-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "central-workflows" } },
+      policyTypes: ["Ingress", "Egress"],
+      ingress: metricsIngress([9464, 9465]),
+      egress: [
+        dnsEgress(),
+        temporalServerEgress(),
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+
   new KubeNetworkPolicy(chart, "temporal-worker-netpol", {
     metadata: { name: "temporal-worker-netpol" },
     spec: {
       podSelector: { matchLabels: { component: "legacy-worker" } },
       policyTypes: ["Ingress", "Egress"],
-      ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "prometheus",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(9464), protocol: "TCP" }],
-        },
-      ],
+      ingress: metricsIngress([9464]),
       egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        {
-          to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
-        },
+        dnsEgress(),
+        temporalServerEgress(),
         { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
         { ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }] },
         { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
@@ -64,40 +100,10 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       spec: {
         podSelector: { matchLabels: { component } },
         policyTypes: ["Ingress", "Egress"],
-        ingress: [
-          {
-            from: [
-              {
-                namespaceSelector: {
-                  matchLabels: {
-                    "kubernetes.io/metadata.name": "prometheus",
-                  },
-                },
-              },
-            ],
-            ports: [
-              { port: IntOrString.fromNumber(9464), protocol: "TCP" },
-              { port: IntOrString.fromNumber(9465), protocol: "TCP" },
-            ],
-          },
-        ],
+        ingress: metricsIngress([9464, 9465]),
         egress: [
-          {
-            to: [
-              {
-                namespaceSelector: {},
-                podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-              },
-            ],
-            ports: [
-              { port: IntOrString.fromNumber(53), protocol: "UDP" },
-              { port: IntOrString.fromNumber(53), protocol: "TCP" },
-            ],
-          },
-          {
-            to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
-            ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
-          },
+          dnsEgress(),
+          temporalServerEgress(),
           { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
           { ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }] },
         ],

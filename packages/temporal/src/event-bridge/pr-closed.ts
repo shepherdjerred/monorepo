@@ -49,7 +49,7 @@ export async function startCancelBuildkiteBuilds(
   // idempotent path — surface it as an info log, not a failure.
   try {
     await client.workflow.start("cancelBuildkiteBuildsWorkflow", {
-      taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
       workflowId: cancelBuildkiteWorkflowIdFor(input),
       workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
       args: [input],

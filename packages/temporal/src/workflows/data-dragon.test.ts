@@ -7,10 +7,9 @@ import type {
   DataDragonUpdateResult,
   DataDragonVersionState,
 } from "#shared/data-dragon-types.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runScoutDataDragonWeeklyRefresh } from "./index.ts";
 import { runWithReportWorker } from "./test-support.ts";
-
-const TASK_QUEUE_PREFIX = "scout-data-dragon-test";
 
 const VERSION_STATE: DataDragonVersionState = {
   currentVersion: "16.15.0",
@@ -40,8 +39,8 @@ async function runWithFailingUpdate(updateError: Error): Promise<{
 }> {
   const recorded: RecordFailureInput[] = [];
   const reports: unknown[] = [];
-  const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-  const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
+  const taskQueue = TASK_QUEUES.SCOUT;
+  const reportTaskQueue = `scout-data-dragon-test-reports-${crypto.randomUUID()}`;
   const deliverActivityReport = (input: unknown) => {
     reports.push(input);
     return { accepted: true, duplicate: false, reportRunId: "report-1" };
@@ -113,8 +112,8 @@ describe("runScoutDataDragonWeeklyRefresh terminal-failure recording", () => {
 
   test("does not record an updater failure when only report delivery fails", async () => {
     const recorded: RecordFailureInput[] = [];
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
+    const taskQueue = TASK_QUEUES.SCOUT;
+    const reportTaskQueue = `scout-data-dragon-test-reports-${crypto.randomUUID()}`;
     const deliverActivityReport = (_input: unknown): never => {
       throw new Error("report delivery unavailable");
     };

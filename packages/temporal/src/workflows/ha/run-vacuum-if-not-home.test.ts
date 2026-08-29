@@ -3,10 +3,11 @@ import type { EntityState } from "@shepherdjerred/home-assistant";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { OutcomeRecord } from "#activities/outcome.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runVacuumIfNotHome } from "./run-vacuum-if-not-home.ts";
 import { VACUUMS } from "./util.ts";
 
-const TASK_QUEUE = "run-vacuum-if-not-home-test";
+const TASK_QUEUE = TASK_QUEUES.HOME;
 
 let testEnv: TestWorkflowEnvironment;
 

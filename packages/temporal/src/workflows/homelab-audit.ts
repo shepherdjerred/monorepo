@@ -9,6 +9,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const RETRY = {
@@ -19,29 +20,38 @@ const RETRY = {
 };
 
 const { runHomelabAuditPreflight } = proxyActivities<HomelabAuditActivities>({
+  taskQueue: TASK_QUEUES.INFRA,
   startToCloseTimeout: "2 minutes",
   retry: RETRY,
 });
 const { runHomelabAuditAgent } = proxyActivities<HomelabAuditActivities>({
+  taskQueue: TASK_QUEUES.INFRA,
   startToCloseTimeout: "45 minutes",
   heartbeatTimeout: "60 seconds",
   retry: RETRY,
 });
 const { archiveHomelabAuditBody, sendHomelabAuditEmail } =
   proxyActivities<HomelabAuditActivities>({
+    taskQueue: TASK_QUEUES.INFRA,
     startToCloseTimeout: "2 minutes",
     retry: RETRY,
   });
 const { archiveHomelabAuditMetadata } = proxyActivities<HomelabAuditActivities>(
-  { startToCloseTimeout: "1 minute", retry: RETRY },
+  {
+    taskQueue: TASK_QUEUES.INFRA,
+    startToCloseTimeout: "1 minute",
+    retry: RETRY,
+  },
 );
 const { synthesizeHomelabAuditEvidence } =
   proxyActivities<HomelabAuditActivities>({
+    taskQueue: TASK_QUEUES.INFRA,
     startToCloseTimeout: "2 minutes",
     retry: { maximumAttempts: 2 },
   });
 const { collectHomelabAuditEvidence } =
   proxyActivities<HomelabAuditCollectorActivities>({
+    taskQueue: TASK_QUEUES.INFRA,
     startToCloseTimeout: "8 minutes",
     retry: RETRY,
   });

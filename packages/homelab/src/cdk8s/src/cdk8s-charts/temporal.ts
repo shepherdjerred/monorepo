@@ -128,6 +128,7 @@ export function createTemporalChart(app: App) {
                       "glitter-corpus-worker",
                       "glitter-context-worker",
                       "legacy-worker",
+                      "central-workflows",
                     ],
                   },
                 ],

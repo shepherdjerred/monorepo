@@ -6,7 +6,13 @@ import type {
   DailyBaseline,
   InventoryResult,
 } from "#shared/glitter-corpus-activity-types.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import * as glitterFailures from "./glitter-corpus-failures.ts";
+import {
+  largestSnowflake,
+  smallestSnowflake,
+  snowflakeImmediatelyBefore,
+} from "./glitter-corpus-snowflake.ts";
 
 const PAGE_LIMIT_SAFETY_CEILING = 100_000;
 const OVERLAP_DAYS = 7;
@@ -23,6 +29,7 @@ const {
   finalizeGlitterCorpusSnapshot,
   loadGlitterCorpusDailyBaseline,
 } = proxyActivities<typeof glitterCorpusActivities>({
+  taskQueue: TASK_QUEUES.GLITTER_CORPUS,
   startToCloseTimeout: "1 hour",
   retry: {
     maximumAttempts: 3,
@@ -51,32 +58,6 @@ type FullTraversalResult = {
 };
 
 const nowIso = (): string => new Date().toISOString();
-
-function smallestSnowflake(ids: readonly string[]): string | undefined {
-  return ids.toSorted((left, right) => {
-    if (left.length !== right.length) {
-      return left.length - right.length;
-    }
-    return left.localeCompare(right);
-  })[0];
-}
-
-function largestSnowflake(ids: readonly string[]): string | undefined {
-  return ids.toSorted((left, right) => {
-    if (left.length !== right.length) {
-      return right.length - left.length;
-    }
-    return right.localeCompare(left);
-  })[0];
-}
-
-function snowflakeImmediatelyBefore(id: string): string {
-  const value = BigInt(id);
-  if (value === 0n) {
-    throw new Error("Discord snowflake cannot be zero");
-  }
-  return String(value - 1n);
-}
 
 async function capturePage(input: {
   guildId: string;
@@ -358,6 +339,7 @@ export async function runGlitterCorpusBackfill(
   for (const entry of entries) {
     states.push(
       await executeChild(runGlitterCorpusChannelBackfill, {
+        taskQueue: TASK_QUEUES.WORKFLOWS,
         workflowId: `glitter-corpus-backfill-${snapshotId}-${entry.channelId}`,
         args: [
           {
@@ -432,6 +414,7 @@ export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResu
     ) {
       states.push(
         await executeChild(runGlitterCorpusChannelBackfill, {
+          taskQueue: TASK_QUEUES.WORKFLOWS,
           workflowId: `glitter-corpus-backfill-${snapshotId}-${entry.channelId}`,
           args: [
             {
@@ -457,6 +440,7 @@ export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResu
     } else {
       states.push(
         await executeChild(runGlitterCorpusChannelOverlap, {
+          taskQueue: TASK_QUEUES.WORKFLOWS,
           workflowId: `glitter-corpus-overlap-${snapshotId}-${entry.channelId}`,
           args: [
             {

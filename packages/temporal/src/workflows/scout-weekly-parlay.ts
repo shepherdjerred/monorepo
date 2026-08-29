@@ -15,6 +15,7 @@ import type {
   ScoutWeeklyParlayActivities,
   ScoutWeeklyParlayTimeline,
 } from "#activities/scout-weekly-parlay.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const EMBEDDED_SCOUT_ACTIVITY_PATCH =
   "scout-weekly-parlay-embedded-activities-v1";
@@ -26,6 +27,7 @@ const timelineActivities = proxyActivities<
     | "resolveScoutWeeklyParlayCatchupTimeline"
   >
 >({
+  taskQueue: TASK_QUEUES.SCOUT,
   startToCloseTimeout: "30 seconds",
   retry: {
     maximumAttempts: 5,
@@ -36,6 +38,7 @@ const timelineActivities = proxyActivities<
 });
 
 const legacyDeliveryActivities = proxyActivities<ScoutWeeklyParlayActivities>({
+  taskQueue: TASK_QUEUES.SCOUT,
   startToCloseTimeout: "30 seconds",
   retry: {
     maximumAttempts: 5,
@@ -46,6 +49,7 @@ const legacyDeliveryActivities = proxyActivities<ScoutWeeklyParlayActivities>({
 });
 
 const legacyOpenActivities = proxyActivities<ScoutWeeklyParlayActivities>({
+  taskQueue: TASK_QUEUES.SCOUT,
   startToCloseTimeout: "5 minutes",
   retry: {
     maximumAttempts: 5,
@@ -56,6 +60,7 @@ const legacyOpenActivities = proxyActivities<ScoutWeeklyParlayActivities>({
 });
 
 const legacyLifecycleActivities = proxyActivities<ScoutWeeklyParlayActivities>({
+  taskQueue: TASK_QUEUES.SCOUT,
   startToCloseTimeout: "30 seconds",
   retry: {
     maximumAttempts: 5,

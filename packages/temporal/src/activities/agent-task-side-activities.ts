@@ -227,7 +227,7 @@ function agentTaskReportInput(
 
 export type AgentTaskReportDeliveryWorkflowOptions = {
   args: [ReportEnvelopeV1];
-  taskQueue: typeof TASK_QUEUES.REPORTS;
+  taskQueue: typeof TASK_QUEUES.WORKFLOWS;
   workflowId: string;
   workflowIdReusePolicy: WorkflowIdReusePolicy;
   workflowIdConflictPolicy: WorkflowIdConflictPolicy;
@@ -245,7 +245,7 @@ export function agentTaskReportDeliveryWorkflowOptions(
   const report = ReportEnvelopeV1Schema.parse(rawReport);
   return {
     args: [report],
-    taskQueue: TASK_QUEUES.REPORTS,
+    taskQueue: TASK_QUEUES.WORKFLOWS,
     workflowId: `report-delivery:${report.reportRunId}`,
     // An activity retry after accepted delivery may start a new execution. The
     // shared sender's S3 receipt check turns it into a deterministic dedupe.

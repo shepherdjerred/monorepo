@@ -3,9 +3,10 @@ import { ActivityFailure, ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { GlitterContextRefreshResult } from "#activities/glitter-context-refresh.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runGlitterContextRefresh } from "./glitter-context-refresh.ts";
 
-const TASK_QUEUE = "glitter-context-refresh-test";
+const TASK_QUEUE = TASK_QUEUES.GLITTER_CONTEXT;
 let testEnvironment: TestWorkflowEnvironment;
 
 beforeAll(async () => {

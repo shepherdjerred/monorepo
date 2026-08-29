@@ -33,6 +33,7 @@ import {
 } from "./legacy-worker-env.ts";
 import { createTemporalOperationsWorkers } from "./operations-workers.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
+import { createTemporalWorkflowWorker } from "./workflow-worker.ts";
 import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
@@ -277,6 +278,10 @@ export function createTemporalWorkerDeployment(
       secret,
     });
 
+  const workflowDeployment = createTemporalWorkflowWorker(chart, {
+    serverServiceName: props.serverServiceName,
+  });
+
   const glitterCommonEnv = {
     TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
@@ -370,6 +375,7 @@ export function createTemporalWorkerDeployment(
     gatewayDeployment,
     homeDeployment,
     reportsDeployment,
+    workflowDeployment,
     infraDeployment,
     repoDeployment,
     scoutDeployment,

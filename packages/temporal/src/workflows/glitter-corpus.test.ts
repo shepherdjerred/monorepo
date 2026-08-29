@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { Worker } from "@temporalio/worker";
+import { Worker, type WorkerOptions } from "@temporalio/worker";
 import type { z } from "zod/v4";
 import {
   ApplyOverlapInputSchema,
@@ -16,13 +16,13 @@ import {
   GuildSnapshotSchema,
   StoredObjectSchema,
 } from "#shared/glitter-corpus.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   runGlitterCorpusBackfill,
   runGlitterCorpusChannelBackfill,
   runGlitterCorpusDaily,
 } from "./glitter-corpus.ts";
 
-const TASK_QUEUE = "glitter-corpus-test";
 const GUILD_ID = "1000";
 const CREATED_AT = "2026-07-26T12:00:00.000Z";
 const SHA256 = "a".repeat(64);
@@ -145,23 +145,41 @@ function finalSnapshot(rawInput: z.input<typeof FinalizeSnapshotInputSchema>) {
   };
 }
 
+async function runGlitterWorkflow<T>(
+  activities: NonNullable<WorkerOptions["activities"]>,
+  execute: () => Promise<T>,
+): Promise<T> {
+  const workflowWorker = await Worker.create({
+    connection: testEnvironment.nativeConnection,
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    workflowsPath: new URL("index.ts", import.meta.url).pathname,
+  });
+  const activityWorker = await Worker.create({
+    connection: testEnvironment.nativeConnection,
+    taskQueue: TASK_QUEUES.GLITTER_CORPUS,
+    activities,
+  });
+  const activityRun = activityWorker.run();
+  try {
+    return await workflowWorker.runUntil(execute());
+  } finally {
+    activityWorker.shutdown();
+    await activityRun;
+  }
+}
+
 describe("Glitter corpus workflows", () => {
   it("fails a traversal safety ceiling non-retryably", async () => {
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUE,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
-          const input = CapturePageInputSchema.parse(rawInput);
-          return pageResult(input, ["2", "1"], [CREATED_AT, CREATED_AT]);
-        },
+    const activities = {
+      captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
+        const input = CapturePageInputSchema.parse(rawInput);
+        return pageResult(input, ["2", "1"], [CREATED_AT, CREATED_AT]);
       },
-    });
+    };
 
     let failure: unknown;
     try {
-      await worker.runUntil(
+      await runGlitterWorkflow(activities, () =>
         testEnvironment.client.workflow.execute(
           runGlitterCorpusChannelBackfill,
           {
@@ -175,7 +193,7 @@ describe("Glitter corpus workflows", () => {
                 maxPages: 1,
               },
             ],
-            taskQueue: TASK_QUEUE,
+            taskQueue: TASK_QUEUES.WORKFLOWS,
             workflowId: `glitter-corpus-ceiling-${crypto.randomUUID()}`,
           },
         ),
@@ -204,53 +222,48 @@ describe("Glitter corpus workflows", () => {
     const captured: CapturePageInput[] = [];
     const verified: z.input<typeof VerifyChannelInputSchema>[] = [];
     const approvedInventory = inventory(["10"]);
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUE,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        loadApprovedGlitterInventory: async () => ({
-          inventory: approvedInventory,
-          inventoryKey: "inventory.json",
-          inventoryObject: storedObject("inventory.json"),
-        }),
-        captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
-          const input = CapturePageInputSchema.parse(rawInput);
-          captured.push(input);
-          if (input.direction === "backward") {
-            return input.before === undefined
-              ? pageResult(input, ["2", "1"], [CREATED_AT, CREATED_AT])
-              : pageResult(input, [], []);
-          }
-          if (input.direction === "forward") {
-            return input.after === "0"
-              ? pageResult(
-                  input,
-                  ["1", "2", "3"],
-                  [CREATED_AT, CREATED_AT, CREATED_AT],
-                )
-              : pageResult(input, [], []);
-          }
-          throw new Error(`unexpected direction ${input.direction}`);
-        },
-        verifyGlitterCorpusChannel: async (
-          rawInput: z.input<typeof VerifyChannelInputSchema>,
-        ) => {
-          const input = VerifyChannelInputSchema.parse(rawInput);
-          verified.push(input);
-          const manifestKey = `states/${input.snapshotId}.json`;
-          return {
-            channelId: input.channelId,
-            manifestKey,
-            manifestObject: storedObject(manifestKey),
-            uniqueMessageCount: 2,
-          };
-        },
-        finalizeGlitterCorpusSnapshot: finalSnapshot,
+    const activities = {
+      loadApprovedGlitterInventory: async () => ({
+        inventory: approvedInventory,
+        inventoryKey: "inventory.json",
+        inventoryObject: storedObject("inventory.json"),
+      }),
+      captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
+        const input = CapturePageInputSchema.parse(rawInput);
+        captured.push(input);
+        if (input.direction === "backward") {
+          return input.before === undefined
+            ? pageResult(input, ["2", "1"], [CREATED_AT, CREATED_AT])
+            : pageResult(input, [], []);
+        }
+        if (input.direction === "forward") {
+          return input.after === "0"
+            ? pageResult(
+                input,
+                ["1", "2", "3"],
+                [CREATED_AT, CREATED_AT, CREATED_AT],
+              )
+            : pageResult(input, [], []);
+        }
+        throw new Error(`unexpected direction ${input.direction}`);
       },
-    });
+      verifyGlitterCorpusChannel: async (
+        rawInput: z.input<typeof VerifyChannelInputSchema>,
+      ) => {
+        const input = VerifyChannelInputSchema.parse(rawInput);
+        verified.push(input);
+        const manifestKey = `states/${input.snapshotId}.json`;
+        return {
+          channelId: input.channelId,
+          manifestKey,
+          manifestObject: storedObject(manifestKey),
+          uniqueMessageCount: 2,
+        };
+      },
+      finalizeGlitterCorpusSnapshot: finalSnapshot,
+    };
 
-    const result = await worker.runUntil(
+    const result = await runGlitterWorkflow(activities, () =>
       testEnvironment.client.workflow.execute(runGlitterCorpusBackfill, {
         args: [
           {
@@ -259,7 +272,7 @@ describe("Glitter corpus workflows", () => {
             maxPagesPerChannel: 10,
           },
         ],
-        taskQueue: TASK_QUEUE,
+        taskQueue: TASK_QUEUES.WORKFLOWS,
         workflowId: "glitter-corpus-backfill-test",
       }),
     );
@@ -285,70 +298,65 @@ describe("Glitter corpus daily overlap workflows", () => {
     const captured: CapturePageInput[] = [];
     const baselineInventory = inventory(["10"]);
     const stateObject = storedObject("states/baseline.json");
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUE,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        loadGlitterCorpusDailyBaseline: async () => ({
-          inventory: baselineInventory,
-          inventoryObject: storedObject("inventory-baseline.json"),
-          states: {
-            "10": {
-              manifestKey: stateObject.key,
-              manifestObject: stateObject,
-              uniqueMessageCount: 3,
-              newestMessageId: "100",
-              lineageDepth: 1,
-              seedPrefix: null,
-            },
+    const activities = {
+      loadGlitterCorpusDailyBaseline: async () => ({
+        inventory: baselineInventory,
+        inventoryObject: storedObject("inventory-baseline.json"),
+        states: {
+          "10": {
+            manifestKey: stateObject.key,
+            manifestObject: stateObject,
+            uniqueMessageCount: 3,
+            newestMessageId: "100",
+            lineageDepth: 1,
+            seedPrefix: null,
           },
-        }),
-        inventoryGlitterGuild: async () => ({
-          inventory: baselineInventory,
-          inventoryKey: "inventory-current.json",
-          inventoryObject: storedObject("inventory-current.json"),
-        }),
-        captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
-          const input = CapturePageInputSchema.parse(rawInput);
-          captured.push(input);
-          if (input.direction !== "daily-overlap") {
-            throw new Error(`unexpected direction ${input.direction}`);
-          }
-          if (input.before === undefined) {
-            return pageResult(
-              input,
-              ["300", "200"],
-              ["2010-01-02T00:00:00.000Z", "2010-01-01T00:00:00.000Z"],
-            );
-          }
+        },
+      }),
+      inventoryGlitterGuild: async () => ({
+        inventory: baselineInventory,
+        inventoryKey: "inventory-current.json",
+        inventoryObject: storedObject("inventory-current.json"),
+      }),
+      captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
+        const input = CapturePageInputSchema.parse(rawInput);
+        captured.push(input);
+        if (input.direction !== "daily-overlap") {
+          throw new Error(`unexpected direction ${input.direction}`);
+        }
+        if (input.before === undefined) {
           return pageResult(
             input,
-            ["100", "99"],
-            ["2009-12-31T00:00:00.000Z", "2009-12-30T00:00:00.000Z"],
+            ["300", "200"],
+            ["2010-01-02T00:00:00.000Z", "2010-01-01T00:00:00.000Z"],
           );
-        },
-        applyGlitterCorpusOverlap: async (
-          rawInput: z.input<typeof ApplyOverlapInputSchema>,
-        ) => {
-          const input = ApplyOverlapInputSchema.parse(rawInput);
-          overlapInputs.push(input);
-          const manifestKey = `states/${input.snapshotId}.json`;
-          return {
-            channelId: input.channelId,
-            manifestKey,
-            manifestObject: storedObject(manifestKey),
-            uniqueMessageCount: 4,
-          };
-        },
-        finalizeGlitterCorpusSnapshot: finalSnapshot,
+        }
+        return pageResult(
+          input,
+          ["100", "99"],
+          ["2009-12-31T00:00:00.000Z", "2009-12-30T00:00:00.000Z"],
+        );
       },
-    });
+      applyGlitterCorpusOverlap: async (
+        rawInput: z.input<typeof ApplyOverlapInputSchema>,
+      ) => {
+        const input = ApplyOverlapInputSchema.parse(rawInput);
+        overlapInputs.push(input);
+        const manifestKey = `states/${input.snapshotId}.json`;
+        return {
+          channelId: input.channelId,
+          manifestKey,
+          manifestObject: storedObject(manifestKey),
+          uniqueMessageCount: 4,
+        };
+      },
+      finalizeGlitterCorpusSnapshot: finalSnapshot,
+    };
 
-    const result = await worker.runUntil(
+    const result = await runGlitterWorkflow(activities, () =>
       testEnvironment.client.workflow.execute(runGlitterCorpusDaily, {
         args: [],
-        taskQueue: TASK_QUEUE,
+        taskQueue: TASK_QUEUES.WORKFLOWS,
         workflowId: "glitter-corpus-daily-overlap-test",
       }),
     );
@@ -367,67 +375,60 @@ describe("Glitter corpus daily overlap workflows", () => {
     const captured: CapturePageInput[] = [];
     const baselineInventory = inventory(["10"]);
     const stateObject = storedObject("states/empty-baseline.json");
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUE,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        loadGlitterCorpusDailyBaseline: async () => ({
-          inventory: baselineInventory,
-          inventoryObject: storedObject("inventory-empty-baseline.json"),
-          states: {
-            "10": {
-              manifestKey: stateObject.key,
-              manifestObject: stateObject,
-              uniqueMessageCount: 0,
-              newestMessageId: null,
-              lineageDepth: 1,
-              seedPrefix: null,
-            },
+    const activities = {
+      loadGlitterCorpusDailyBaseline: async () => ({
+        inventory: baselineInventory,
+        inventoryObject: storedObject("inventory-empty-baseline.json"),
+        states: {
+          "10": {
+            manifestKey: stateObject.key,
+            manifestObject: stateObject,
+            uniqueMessageCount: 0,
+            newestMessageId: null,
+            lineageDepth: 1,
+            seedPrefix: null,
           },
-        }),
-        inventoryGlitterGuild: async () => ({
-          inventory: baselineInventory,
-          inventoryKey: "inventory-current-empty-baseline.json",
-          inventoryObject: storedObject(
-            "inventory-current-empty-baseline.json",
-          ),
-        }),
-        captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
-          const input = CapturePageInputSchema.parse(rawInput);
-          captured.push(input);
-          if (input.direction !== "daily-overlap") {
-            throw new Error(`unexpected direction ${input.direction}`);
-          }
-          return input.before === undefined
-            ? pageResult(
-                input,
-                ["2", "1"],
-                ["2010-01-02T00:00:00.000Z", "2010-01-01T00:00:00.000Z"],
-              )
-            : pageResult(input, [], []);
         },
-        applyGlitterCorpusOverlap: async (
-          rawInput: z.input<typeof ApplyOverlapInputSchema>,
-        ) => {
-          const input = ApplyOverlapInputSchema.parse(rawInput);
-          overlapInputs.push(input);
-          const manifestKey = `states/${input.snapshotId}.json`;
-          return {
-            channelId: input.channelId,
-            manifestKey,
-            manifestObject: storedObject(manifestKey),
-            uniqueMessageCount: 2,
-          };
-        },
-        finalizeGlitterCorpusSnapshot: finalSnapshot,
+      }),
+      inventoryGlitterGuild: async () => ({
+        inventory: baselineInventory,
+        inventoryKey: "inventory-current-empty-baseline.json",
+        inventoryObject: storedObject("inventory-current-empty-baseline.json"),
+      }),
+      captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
+        const input = CapturePageInputSchema.parse(rawInput);
+        captured.push(input);
+        if (input.direction !== "daily-overlap") {
+          throw new Error(`unexpected direction ${input.direction}`);
+        }
+        return input.before === undefined
+          ? pageResult(
+              input,
+              ["2", "1"],
+              ["2010-01-02T00:00:00.000Z", "2010-01-01T00:00:00.000Z"],
+            )
+          : pageResult(input, [], []);
       },
-    });
+      applyGlitterCorpusOverlap: async (
+        rawInput: z.input<typeof ApplyOverlapInputSchema>,
+      ) => {
+        const input = ApplyOverlapInputSchema.parse(rawInput);
+        overlapInputs.push(input);
+        const manifestKey = `states/${input.snapshotId}.json`;
+        return {
+          channelId: input.channelId,
+          manifestKey,
+          manifestObject: storedObject(manifestKey),
+          uniqueMessageCount: 2,
+        };
+      },
+      finalizeGlitterCorpusSnapshot: finalSnapshot,
+    };
 
-    const result = await worker.runUntil(
+    const result = await runGlitterWorkflow(activities, () =>
       testEnvironment.client.workflow.execute(runGlitterCorpusDaily, {
         args: [],
-        taskQueue: TASK_QUEUE,
+        taskQueue: TASK_QUEUES.WORKFLOWS,
         workflowId: "glitter-corpus-daily-empty-baseline-test",
       }),
     );
@@ -447,56 +448,51 @@ describe("Glitter corpus periodic full refresh", () => {
     const verified: z.input<typeof VerifyChannelInputSchema>[] = [];
     const baselineInventory = inventory(["10"]);
     const stateObject = storedObject("states/deep-baseline.json");
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUE,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        loadGlitterCorpusDailyBaseline: async () => ({
-          inventory: baselineInventory,
-          inventoryObject: storedObject("inventory-deep-baseline.json"),
-          states: {
-            "10": {
-              manifestKey: stateObject.key,
-              manifestObject: stateObject,
-              uniqueMessageCount: 2,
-              newestMessageId: "2",
-              lineageDepth: 6,
-              seedPrefix: "seed/approved",
-            },
-          },
-        }),
-        inventoryGlitterGuild: async () => ({
-          inventory: baselineInventory,
-          inventoryKey: "inventory-current-deep-baseline.json",
-          inventoryObject: storedObject("inventory-current-deep-baseline.json"),
-        }),
-        captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
-          const input = CapturePageInputSchema.parse(rawInput);
-          captured.push(input);
-          return pageResult(input, [], []);
-        },
-        verifyGlitterCorpusChannel: async (
-          rawInput: z.input<typeof VerifyChannelInputSchema>,
-        ) => {
-          const input = VerifyChannelInputSchema.parse(rawInput);
-          verified.push(input);
-          const manifestKey = `states/${input.snapshotId}.json`;
-          return {
-            channelId: input.channelId,
-            manifestKey,
-            manifestObject: storedObject(manifestKey),
+    const activities = {
+      loadGlitterCorpusDailyBaseline: async () => ({
+        inventory: baselineInventory,
+        inventoryObject: storedObject("inventory-deep-baseline.json"),
+        states: {
+          "10": {
+            manifestKey: stateObject.key,
+            manifestObject: stateObject,
             uniqueMessageCount: 2,
-          };
+            newestMessageId: "2",
+            lineageDepth: 6,
+            seedPrefix: "seed/approved",
+          },
         },
-        finalizeGlitterCorpusSnapshot: finalSnapshot,
+      }),
+      inventoryGlitterGuild: async () => ({
+        inventory: baselineInventory,
+        inventoryKey: "inventory-current-deep-baseline.json",
+        inventoryObject: storedObject("inventory-current-deep-baseline.json"),
+      }),
+      captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
+        const input = CapturePageInputSchema.parse(rawInput);
+        captured.push(input);
+        return pageResult(input, [], []);
       },
-    });
+      verifyGlitterCorpusChannel: async (
+        rawInput: z.input<typeof VerifyChannelInputSchema>,
+      ) => {
+        const input = VerifyChannelInputSchema.parse(rawInput);
+        verified.push(input);
+        const manifestKey = `states/${input.snapshotId}.json`;
+        return {
+          channelId: input.channelId,
+          manifestKey,
+          manifestObject: storedObject(manifestKey),
+          uniqueMessageCount: 2,
+        };
+      },
+      finalizeGlitterCorpusSnapshot: finalSnapshot,
+    };
 
-    await worker.runUntil(
+    await runGlitterWorkflow(activities, () =>
       testEnvironment.client.workflow.execute(runGlitterCorpusDaily, {
         args: [],
-        taskQueue: TASK_QUEUE,
+        taskQueue: TASK_QUEUES.WORKFLOWS,
         workflowId: "glitter-corpus-daily-full-refresh-test",
       }),
     );

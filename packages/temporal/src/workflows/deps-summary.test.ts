@@ -4,10 +4,10 @@ import { Worker } from "@temporalio/worker";
 import type { DependencyCollectionResult } from "#activities/deps-summary.ts";
 import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import type { ActivityReportInput } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { generateDependencySummary } from "./index.ts";
 import { runWithReportWorker } from "./test-support.ts";
 
-const TASK_QUEUE_PREFIX = "dependency-summary-test";
 const COMMIT_SHA = "a".repeat(40);
 const HEAD_SHA = "b".repeat(40);
 
@@ -48,8 +48,8 @@ afterAll(async () => {
 
 describe("dependency summary delivery checkpoint", () => {
   test("reports missing notes as partial before advancing the checkpoint", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
+    const taskQueue = TASK_QUEUES.REPO_AUTOMATION;
+    const reportTaskQueue = `dependency-summary-test-reports-${crypto.randomUUID()}`;
     const reports: ActivityReportInput[] = [];
     const events: string[] = [];
     const deliverActivityReport = (report: ActivityReportInput) => {
@@ -125,8 +125,8 @@ describe("dependency summary delivery checkpoint", () => {
   }, 30_000);
 
   test("does not advance the checkpoint when delivery is not accepted", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
+    const taskQueue = TASK_QUEUES.REPO_AUTOMATION;
+    const reportTaskQueue = `dependency-summary-test-reports-${crypto.randomUUID()}`;
     const events: string[] = [];
     const deliverActivityReport = (): never => {
       events.push("deliver-failed");
@@ -184,8 +184,8 @@ describe("dependency summary delivery checkpoint", () => {
   }, 30_000);
 
   test("retries checkpoint persistence without redelivering the report", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
+    const taskQueue = TASK_QUEUES.REPO_AUTOMATION;
+    const reportTaskQueue = `dependency-summary-test-reports-${crypto.randomUUID()}`;
     let deliveryCalls = 0;
     let checkpointCalls = 0;
     const deliverActivityReport = () => {
@@ -243,8 +243,8 @@ describe("dependency summary delivery checkpoint", () => {
 
 describe("dependency summary checkpoint failure reporting", () => {
   test("reports a distinct failure after accepted delivery when checkpoint retries exhaust", async () => {
-    const taskQueue = `${TASK_QUEUE_PREFIX}-${crypto.randomUUID()}`;
-    const reportTaskQueue = `${TASK_QUEUE_PREFIX}-reports-${crypto.randomUUID()}`;
+    const taskQueue = TASK_QUEUES.REPO_AUTOMATION;
+    const reportTaskQueue = `dependency-summary-test-reports-${crypto.randomUUID()}`;
     const reports: ActivityReportInput[] = [];
     let checkpointCalls = 0;
     const deliverActivityReport = (report: ActivityReportInput) => {

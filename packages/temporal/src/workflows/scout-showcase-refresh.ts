@@ -3,9 +3,11 @@ import type {
   ScoutShowcaseRefreshActivities,
   ScoutShowcaseRefreshResult,
 } from "#activities/scout-showcase-refresh.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshScoutShowcase } =
   proxyActivities<ScoutShowcaseRefreshActivities>({
+    taskQueue: TASK_QUEUES.SCOUT,
     // Clones the monorepo, does the root + scout workspace installs (the
     // heavy part), downloads the manifest's S3 objects, renders the discord
     // composites, and opens a PR on drift. Heartbeats fire every 10s (see

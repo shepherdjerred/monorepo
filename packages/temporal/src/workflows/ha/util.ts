@@ -18,8 +18,10 @@ import type {
   WorkflowOutcome,
 } from "#activities/outcome.ts";
 import type { HaSchema } from "#generated/ha-schema.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const activities = proxyActivities<HaActivities>({
+  taskQueue: TASK_QUEUES.HOME,
   startToCloseTimeout: "30 seconds",
   retry: { maximumAttempts: 3 },
 });
@@ -28,6 +30,7 @@ const activities = proxyActivities<HaActivities>({
 // a bounded, fixed retry budget that fits within the workflow's 60-minute
 // cleanup buffer instead of the normal three-attempt activity policy.
 const cleanupActivities = proxyActivities<HaActivities>({
+  taskQueue: TASK_QUEUES.HOME,
   startToCloseTimeout: "10 seconds",
   retry: {
     maximumAttempts: 90,
@@ -38,6 +41,7 @@ const cleanupActivities = proxyActivities<HaActivities>({
 });
 
 const outcomeActivities = proxyActivities<OutcomeActivities>({
+  taskQueue: TASK_QUEUES.HOME,
   startToCloseTimeout: "10 seconds",
   retry: { maximumAttempts: 2 },
 });

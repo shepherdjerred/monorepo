@@ -6,7 +6,7 @@ import {
 
 /**
  * Publishes the link-rot scan's fire/resolve occurrence to Alertmanager.
- * Runs on TASK_QUEUES.DEFAULT — the core worker owns ALERTMANAGER_URL.
+ * Runs on TASK_QUEUES.REPORTS — the reports worker owns ALERTMANAGER_URL.
  */
 export const linkRotScanAlertActivities = {
   async publishLinkRotScanAlerts(input: LinkRotAlertInput): Promise<void> {

@@ -3,12 +3,13 @@ import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   DEFAULT_SLEEP_AC_DURATION_MINUTES,
   DEFAULT_SLEEP_MUSIC_DURATION_MINUTES,
 } from "./sleep.ts";
 
-const TASK_QUEUE = "sleep-automation-test";
+const TASK_QUEUE = TASK_QUEUES.HOME;
 const WORKFLOW_TEST_TIMEOUT_MS = 30_000;
 
 let testEnv: TestWorkflowEnvironment;

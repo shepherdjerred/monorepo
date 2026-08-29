@@ -4,9 +4,11 @@ import type {
   CheckPrMergeConflictsInput,
   // imported only for the inferred return type's reach
 } from "#shared/schemas.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { runCheckPrMergeConflicts } =
   proxyActivities<CheckPrMergeConflictsActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     startToCloseTimeout: "10 minutes",
     heartbeatTimeout: "90 seconds",
     retry: {

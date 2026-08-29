@@ -3,9 +3,11 @@ import type {
   ScoutBryanBucksActivities,
   ScoutBryanBucksAnalyticsResult,
 } from "#activities/scout-bryan-bucks.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { syncScoutBryanBucksAnalytics } =
   proxyActivities<ScoutBryanBucksActivities>({
+    taskQueue: TASK_QUEUES.SCOUT,
     startToCloseTimeout: "2 minutes",
     retry: {
       maximumAttempts: 5,

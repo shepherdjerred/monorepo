@@ -3,9 +3,11 @@ import type {
   FliptFlagInventoryActivities,
   FliptFlagInventoryResult,
 } from "#activities/flipt-flag-inventory.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { checkFliptFlagInventory } =
   proxyActivities<FliptFlagInventoryActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     startToCloseTimeout: "2 minutes",
     retry: {
       maximumAttempts: 3,

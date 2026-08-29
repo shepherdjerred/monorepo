@@ -1,9 +1,11 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { DnsAuditActivities } from "#activities/dns-audit.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { DnsCheckResult } from "#shared/types.ts";
 
 const { getDomains, checkDomain, logAuditResults } =
   proxyActivities<DnsAuditActivities>({
+    taskQueue: TASK_QUEUES.INFRA,
     startToCloseTimeout: "1 minute",
   });
 
