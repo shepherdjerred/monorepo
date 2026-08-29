@@ -189,6 +189,36 @@ operation you need; Desktop integration may authenticate per command even when
 - The bot only sees guilds it has been invited to. To populate the guild
   picker, make sure your test guild has the BETA bot in it.
 
+### Discord-only development and smoke tests
+
+Use the Derrej-only runtime when testing Discord behavior. It never uses the
+BETA token, BETA guild, BETA database, or report lake:
+
+```bash
+SCOUT_DISCORD_SMOKE_GUILD_ID=<dedicated-guild-id> \
+bun run --filter='./packages/scout-for-lol' dev:discord -- --scenario gateway
+```
+
+`dev:discord` maps `DISCORD_BOT_TOKEN` to Scout's `DISCORD_TOKEN`, pins Derrej's
+application id, runs the normal backend through `src/dev-discord.ts`, and keeps
+the gateway plus local Temporal while disabling background jobs, report-lake
+seed adoption/folding, Vite, and backend watch. Its scenario registry is closed
+and the entrypoint refuses non-development environments.
+
+The operator-only smoke command is never a CI task:
+
+```bash
+bun run --filter='./packages/scout-for-lol' test:discord:smoke -- \
+  --scenario gateway
+```
+
+It validates the tracked public fixture, both Discord credentials, guild and
+channel membership, application identity, and the dedicated running PinchTab
+profile before creating an isolated `scout_test_*` database. Runs write an
+atomic manifest under the workspace `.context/discord-smoke/<run-id>/`; failed
+databases are preserved, successful databases are dropped, and `--resume`
+never invokes Discord again. Stop every local gateway process after testing.
+
 ### Shared report-lake seed (multiple checkouts / parallel agents)
 
 `REPORT_LAKE_DIR` defaults to `./report-lake` **relative to the backend's

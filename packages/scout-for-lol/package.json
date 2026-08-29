@@ -9,6 +9,8 @@
     "lint": "eslint scripts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
     "dev:web": "op run --env-file=./dev-web.env.tpl -- bun scripts/dev-web.ts",
+    "dev:discord": "op run --env-file=./dev-web.env.tpl -- bun scripts/dev-discord.ts",
+    "test:discord:smoke": "op run --env-file=./dev-web.env.tpl -- bun scripts/discord-smoke.ts",
     "dev:design-audit": "bun scripts/dev-web.ts",
     "dev:seed": "bun scripts/dev-seed.ts",
     "dev:login": "bun scripts/dev-login.ts",
@@ -17,6 +19,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "devDependencies": {
+    "@scout-for-lol/backend": "workspace:*",
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
     "@eslint/js": "^10.0.1",
     "@shepherdjerred/eslint-config": "workspace:*",

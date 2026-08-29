@@ -37,6 +37,8 @@ Options:
   --temporal-port <port> Temporal gRPC port (default: backend port + 4233)
   --temporal-ui-port <port> Temporal UI port (default: backend port + 5233)
   --no-discord-gateway   Run as a secondary UI/API copy without BETA gateway
+  --no-background-jobs   Skip scheduled workers and report-lake preparation
+  --no-web               Skip the Vite SPA
   --no-backend-watch     Keep the backend stable until this command is restarted
   --marketing-origin <url>  Marketing site origin for cross-surface links
   --docs-origin <url>       Docs site origin for cross-surface links
@@ -80,6 +82,28 @@ async function waitForBackend(
   );
 }
 
+export function shouldPrepareReportLake(
+  options: { readonly backgroundJobsEnabled: boolean },
+  isDesignAuditBoot: boolean,
+): boolean {
+  return isDesignAuditBoot || options.backgroundJobsEnabled;
+}
+
+export function resolveBackendEntrypoint(
+  environment: Readonly<Record<string, string | undefined>>,
+): "src/index.ts" | "src/dev-discord.ts" {
+  const configured = environment["SCOUT_DEV_BACKEND_ENTRYPOINT"];
+  if (configured === undefined || configured === "src/index.ts") {
+    return "src/index.ts";
+  }
+  if (configured === "src/dev-discord.ts") {
+    return configured;
+  }
+  throw new Error(
+    "SCOUT_DEV_BACKEND_ENTRYPOINT must be src/index.ts or src/dev-discord.ts",
+  );
+}
+
 if (import.meta.main) {
   const root = import.meta.dir.replace(/\/scripts$/, "");
   const isDesignAuditBoot = Bun.env["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] === "true";
@@ -104,7 +128,13 @@ if (import.meta.main) {
         ? DEFAULT_DESIGN_AUDIT_LAKE_DIR
         : Bun.env["REPORT_LAKE_DIR"],
     );
-    console.log(await adoptSeedIfUnseeded(lakeDir));
+    if (shouldPrepareReportLake(options, isDesignAuditBoot)) {
+      console.log(await adoptSeedIfUnseeded(lakeDir));
+    } else {
+      console.log(
+        "Report lake: skipped (background jobs are disabled for this runtime)",
+      );
+    }
 
     const environment = buildDevEnvironment(
       Bun.env,
@@ -198,10 +228,11 @@ if (import.meta.main) {
       }
     }
 
+    const backendEntrypoint = resolveBackendEntrypoint(Bun.env);
     const backendCommand =
       !isDesignAuditBoot && options.backendWatchEnabled
-        ? ["bun", "--watch", "src/index.ts"]
-        : ["bun", "src/index.ts"];
+        ? ["bun", "--watch", backendEntrypoint]
+        : ["bun", backendEntrypoint];
     const backend = Bun.spawn(backendCommand, {
       cwd: backendCwd,
       env: {
@@ -222,35 +253,42 @@ if (import.meta.main) {
         throw error;
       }
     }
-    const app = Bun.spawn(
-      [
-        "bun",
-        "run",
-        "dev",
-        "--",
-        "--host",
-        "127.0.0.1",
-        "--port",
-        options.webPort.toString(),
-        "--strictPort",
-        ...(isDesignAuditBoot ? ["--force"] : []),
-      ],
-      {
-        cwd: path.join(root, "packages", "app"),
-        env: environment,
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
-      },
-    );
+    const app = options.webEnabled
+      ? Bun.spawn(
+          [
+            "bun",
+            "run",
+            "dev",
+            "--",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            options.webPort.toString(),
+            "--strictPort",
+            ...(isDesignAuditBoot ? ["--force"] : []),
+          ],
+          {
+            cwd: path.join(root, "packages", "app"),
+            env: environment,
+            stdin: "inherit",
+            stdout: "inherit",
+            stderr: "inherit",
+          },
+        )
+      : null;
     const devLoginUrl = `${webOrigin}/api/dev/login?returnTo=${encodeURIComponent("/app/")}`;
     console.log(
       [
         "Scout local dev is starting",
         `SPA: ${webOrigin}/app/`,
         `Backend: ${backendOrigin}/trpc/`,
+        `Backend entrypoint: ${backendEntrypoint}`,
         `Temporal UI: http://127.0.0.1:${options.temporalUiPort.toString()}/`,
         `Database: ${options.databaseUrl}`,
+        `Discord gateway: ${options.discordGatewayEnabled ? "enabled" : "disabled"}`,
+        `Background jobs: ${options.backgroundJobsEnabled ? "enabled" : "disabled"}`,
+        `Report lake preparation: ${shouldPrepareReportLake(options, isDesignAuditBoot) ? "enabled" : "skipped"}`,
+        `Vite: ${options.webEnabled ? webOrigin : "disabled"}`,
         `Backend watch: ${options.backendWatchEnabled ? "enabled" : "disabled"}`,
         `Auth: ${options.authMode}`,
         `Consumer preview: ${options.consumerPreview ? (options.consumerGuildId ?? "unset") : "disabled"}`,
@@ -263,18 +301,22 @@ if (import.meta.main) {
     );
     const stop = (): void => {
       backend.kill();
-      app.kill();
+      app?.kill();
       temporal.kill();
     };
     process.on("SIGINT", stop);
     process.on("SIGTERM", stop);
     const exitCode = await Promise.race([
       backend.exited,
-      app.exited,
+      ...(app === null ? [] : [app.exited]),
       temporal.exited,
     ]);
     stop();
-    await Promise.all([backend.exited, app.exited, temporal.exited]);
+    await Promise.all([
+      backend.exited,
+      ...(app === null ? [] : [app.exited]),
+      temporal.exited,
+    ]);
     process.exitCode = exitCode;
   }
 }

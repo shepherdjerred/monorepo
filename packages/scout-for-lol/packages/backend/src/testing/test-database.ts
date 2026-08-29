@@ -88,6 +88,35 @@ export function createTestDatabase(testName: string): {
   };
 }
 
+export async function dropTestDatabase(
+  prismaClient: ExtendedPrismaClient,
+  databaseName: string,
+): Promise<void> {
+  if (!/^scout_test_[a-z0-9_]+$/u.test(databaseName)) {
+    throw new Error(`Refusing to drop non-test database ${databaseName}`);
+  }
+  await prismaClient.$disconnect();
+  const result = Bun.spawnSync(
+    [
+      "dropdb",
+      "-h",
+      "127.0.0.1",
+      "-p",
+      devPostgresPort().toString(),
+      "-U",
+      "scout",
+      "--force",
+      databaseName,
+    ],
+    { stdout: "pipe", stderr: "pipe" },
+  );
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `dropdb ${databaseName} failed: ${result.stderr.toString()}`,
+    );
+  }
+}
+
 /**
  * Helper function to safely delete from tables that might not exist.
  * Useful in beforeEach/afterEach hooks for cleanup.

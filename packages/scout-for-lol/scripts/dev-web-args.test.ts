@@ -1,5 +1,9 @@
 import { expect, test } from "vitest";
 import { parseDevWebArgs } from "./dev-web.ts";
+import {
+  resolveBackendEntrypoint,
+  shouldPrepareReportLake,
+} from "./dev-web.ts";
 import { buildDevEnvironment } from "./dev-web-environment.ts";
 
 test("parses isolated ports and database URL", () => {
@@ -24,6 +28,8 @@ test("parses isolated ports and database URL", () => {
       temporalUiPort: 8234,
       databaseUrl: "postgres://scout@127.0.0.1:5471/agent_one",
       discordGatewayEnabled: true,
+      backgroundJobsEnabled: true,
+      webEnabled: true,
       backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4321",
       docsOrigin: "http://localhost:4322",
@@ -48,6 +54,8 @@ test("derives an isolated database for a non-default backend port", () => {
       temporalUiPort: 8234,
       databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3001",
       discordGatewayEnabled: true,
+      backgroundJobsEnabled: true,
+      webEnabled: true,
       backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4321",
       docsOrigin: "http://localhost:4322",
@@ -82,6 +90,8 @@ test("supports a stable secondary copy without the BETA gateway", () => {
       temporalUiPort: 8234,
       databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3001",
       discordGatewayEnabled: false,
+      backgroundJobsEnabled: true,
+      webEnabled: true,
       backendWatchEnabled: false,
       marketingOrigin: "http://localhost:4321",
       docsOrigin: "http://localhost:4322",
@@ -112,6 +122,8 @@ test("configures alternate surface origins for a second stack", () => {
       temporalUiPort: 8233,
       databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3000",
       discordGatewayEnabled: true,
+      backgroundJobsEnabled: true,
+      webEnabled: true,
       backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4324",
       docsOrigin: "http://localhost:4325",
@@ -187,4 +199,39 @@ test("preserves explicit local access and auth overrides", () => {
     FEATURE_FLAGS_STATIC_OVERRIDES:
       '{"scout-consumer-player-profiles-enabled":false}',
   });
+});
+
+test("supports a gateway-only runtime without jobs, lake preparation, or Vite", () => {
+  const parsed = parseDevWebArgs(
+    ["--no-background-jobs", "--no-web", "--no-backend-watch"],
+    {},
+  );
+  expect(parsed.kind).toBe("options");
+  if (parsed.kind !== "options") return;
+
+  expect(parsed.options).toMatchObject({
+    discordGatewayEnabled: true,
+    backgroundJobsEnabled: false,
+    webEnabled: false,
+    backendWatchEnabled: false,
+  });
+  expect(shouldPrepareReportLake(parsed.options, false)).toBe(false);
+  expect(
+    buildDevEnvironment({}, parsed.options, "/unused/report-lake", false),
+  ).toMatchObject({
+    ENABLE_DISCORD_GATEWAY: "true",
+    ENABLE_BACKGROUND_JOBS: "false",
+  });
+});
+
+test("allows only the normal and Discord smoke backend entrypoints", () => {
+  expect(resolveBackendEntrypoint({})).toBe("src/index.ts");
+  expect(
+    resolveBackendEntrypoint({
+      SCOUT_DEV_BACKEND_ENTRYPOINT: "src/dev-discord.ts",
+    }),
+  ).toBe("src/dev-discord.ts");
+  expect(() =>
+    resolveBackendEntrypoint({ SCOUT_DEV_BACKEND_ENTRYPOINT: "src/other.ts" }),
+  ).toThrow("must be src/index.ts or src/dev-discord.ts");
 });

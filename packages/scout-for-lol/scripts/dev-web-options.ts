@@ -24,6 +24,8 @@ type CliOverrides = {
   readonly temporalPort: number | undefined;
   readonly temporalUiPort: number | undefined;
   readonly discordGatewayEnabled: boolean | undefined;
+  readonly backgroundJobsEnabled: boolean | undefined;
+  readonly webEnabled: boolean | undefined;
   readonly backendWatchEnabled: boolean | undefined;
   readonly marketingOrigin: string | undefined;
   readonly docsOrigin: string | undefined;
@@ -131,6 +133,8 @@ function parseCliOverrides(args: readonly string[]): CliOverrides | undefined {
     if (argument === "--help" || argument === "-h") return undefined;
     if (
       argument === "--no-discord-gateway" ||
+      argument === "--no-background-jobs" ||
+      argument === "--no-web" ||
       argument === "--no-backend-watch"
     ) {
       flags.add(argument);
@@ -159,6 +163,10 @@ function parseCliOverrides(args: readonly string[]): CliOverrides | undefined {
     discordGatewayEnabled: flags.has("--no-discord-gateway")
       ? false
       : undefined,
+    backgroundJobsEnabled: flags.has("--no-background-jobs")
+      ? false
+      : undefined,
+    webEnabled: flags.has("--no-web") ? false : undefined,
     backendWatchEnabled: flags.has("--no-backend-watch") ? false : undefined,
     marketingOrigin: parseOptionalValue(values, "--marketing-origin", (value) =>
       parseDevOrigin(value, "--marketing-origin"),
@@ -244,6 +252,10 @@ export function parseDevWebArgs(
       discordGatewayEnabled:
         cli.discordGatewayEnabled ??
         environment["SCOUT_DEV_NO_GATEWAY"] !== "true",
+      backgroundJobsEnabled:
+        cli.backgroundJobsEnabled ??
+        environment["SCOUT_DEV_NO_BACKGROUND_JOBS"] !== "true",
+      webEnabled: cli.webEnabled ?? environment["SCOUT_DEV_NO_WEB"] !== "true",
       backendWatchEnabled:
         cli.backendWatchEnabled ??
         environment["SCOUT_DEV_NO_BACKEND_WATCH"] !== "true",

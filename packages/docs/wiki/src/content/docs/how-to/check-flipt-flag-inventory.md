@@ -16,7 +16,7 @@ Set `FLIPT_URL` to the reachable Flipt endpoint. The checker never guesses an
 endpoint and does not run during service startup or CI.
 
 ```bash
-export FLIPT_URL="https://flipt.example.internal"
+export FLIPT_URL="https://flipt.tailnet-1a49.ts.net"
 ```
 
 ## 2. Run the check
