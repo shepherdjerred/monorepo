@@ -8,6 +8,7 @@ import {
 } from "@opentelemetry/api";
 import { OpenTelemetry, type OpenTelemetryOptions } from "@ai-sdk/otel";
 import { modelIdForOpenRouterRoute } from "@shepherdjerred/llm-models";
+import { activeLlmSubjectAttributes } from "./subject.ts";
 import { z } from "zod";
 
 type StartEvent = Parameters<OpenTelemetry["onStart"]>[0];
@@ -67,6 +68,12 @@ export class RepositoryOpenTelemetry extends OpenTelemetry {
         "gen_ai.request.model": model,
         "llm.service": this.#service,
         "llm.call_site": workload,
+        // Stamped here rather than inherited: OpenTelemetry does not propagate
+        // attributes down a trace, and usage lands on this span and its
+        // children. Putting the subject on the same span as the usage is what
+        // lets one query group spend by who it was spent for. Empty when the
+        // call site opened no attribution span.
+        ...activeLlmSubjectAttributes(),
       },
     });
     const parentContext = trace.setSpan(context.active(), span);

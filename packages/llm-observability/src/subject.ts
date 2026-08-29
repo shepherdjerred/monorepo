@@ -1,4 +1,10 @@
-import { SpanStatusCode, type Span } from "@opentelemetry/api";
+import {
+  context,
+  createContextKey,
+  SpanStatusCode,
+  type Context,
+  type Span,
+} from "@opentelemetry/api";
 import { getLlmTracer } from "./span-helpers.ts";
 
 /**
@@ -52,6 +58,45 @@ export function llmSubjectAttributes(
   };
 }
 
+const SUBJECT_CONTEXT_KEY = createContextKey("shepherdjerred.llm.subject");
+
+/** Attach `subject` to `ctx` so nested model calls can find it. */
+export function setLlmSubject(ctx: Context, subject: LlmSubject): Context {
+  return ctx.setValue(SUBJECT_CONTEXT_KEY, subject);
+}
+
+/**
+ * The subject of the innermost enclosing `withLlmSubjectSpan`, if any.
+ *
+ * This exists because OpenTelemetry span attributes are **not** inherited.
+ * Usage lands on the `gen_ai.*` spans the AI SDK creates, several levels below
+ * the attribution span, so a query that groups by subject and sums tokens finds
+ * the two on different spans and returns nothing. Propagating through context
+ * lets the telemetry layer stamp the subject onto the same span that carries
+ * the usage, which is what makes per-subject token and cost queries answerable
+ * at all.
+ */
+export function activeLlmSubject(): LlmSubject | undefined {
+  const value: unknown = context.active().getValue(SUBJECT_CONTEXT_KEY);
+  if (value === null || typeof value !== "object") return undefined;
+  if (!("kind" in value) || !("id" in value)) return undefined;
+  const { kind, id } = value;
+  if (typeof id !== "string") return undefined;
+  // `find` both validates the kind and yields it already narrowed to the union,
+  // so no type assertion is needed to rebuild the subject.
+  const matched = LLM_SUBJECT_KINDS.find((known) => known === kind);
+  return matched === undefined ? undefined : { kind: matched, id };
+}
+
+/**
+ * Subject attributes for the active subject, or an empty object when there is
+ * none. Safe to spread into any span's attributes.
+ */
+export function activeLlmSubjectAttributes(): Record<string, string> {
+  const subject = activeLlmSubject();
+  return subject === undefined ? {} : llmSubjectAttributes(subject);
+}
+
 /**
  * Open an active span carrying the subject and run `fn` inside it.
  *
@@ -70,7 +115,10 @@ export async function withLlmSubjectSpan<T>(
   return await getLlmTracer().startActiveSpan(name, async (span) => {
     span.setAttributes(attributes);
     try {
-      const result = await fn(span);
+      const result = await context.with(
+        setLlmSubject(context.active(), subject),
+        () => fn(span),
+      );
       span.setStatus({ code: SpanStatusCode.OK });
       return result;
     } catch (error: unknown) {

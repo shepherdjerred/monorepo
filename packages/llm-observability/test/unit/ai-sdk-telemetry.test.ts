@@ -1,5 +1,10 @@
 import { expect, test } from "vitest";
 import { RepositoryOpenTelemetry } from "#src/ai-sdk-telemetry.ts";
+import {
+  LLM_SUBJECT_ID_ATTRIBUTE,
+  LLM_SUBJECT_KIND_ATTRIBUTE,
+  withLlmSubjectSpan,
+} from "#src/subject.ts";
 import { exporter } from "./otel-test-provider.ts";
 
 test("AI SDK spans are children of a repository-owned GenAI parent", () => {
@@ -69,4 +74,104 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
   expect(sdkOperation?.parentSpanContext?.spanId).toBe(
     parent?.spanContext().spanId,
   );
+});
+
+test("the active subject lands on the span that carries usage", async () => {
+  exporter.reset();
+  const telemetry = new RepositoryOpenTelemetry({
+    service: "scout-backend",
+    embedding: true,
+  });
+
+  // OpenTelemetry does not propagate attributes down a trace, so a subject set
+  // only on an outer span and usage recorded only on the inner gen_ai span can
+  // never be summed together by one query. The subject has to be stamped onto
+  // the same span as the usage, which is what this asserts.
+  await withLlmSubjectSpan(
+    "scout.bucks-ask",
+    { kind: "discord_user", id: "160509172704739328" },
+    () => {
+      telemetry.onStart({
+        callId: "call-subject",
+        operationId: "ai.embed",
+        provider: "openrouter.embedding",
+        modelId: "openai/text-embedding-3-small",
+        value: "hello",
+        maxRetries: 2,
+        headers: undefined,
+        providerOptions: undefined,
+        functionId: "scout.bucks-ask",
+        recordInputs: true,
+        recordOutputs: true,
+      });
+      telemetry.onEnd({
+        callId: "call-subject",
+        operationId: "ai.embed",
+        provider: "openrouter.embedding",
+        modelId: "openai/text-embedding-3-small",
+        value: "hello",
+        embedding: [0.1, 0.2],
+        usage: { tokens: 1 },
+        warnings: [],
+        providerMetadata: undefined,
+        response: undefined,
+      });
+      return Promise.resolve();
+    },
+  );
+
+  const genAi = exporter
+    .getFinishedSpans()
+    .find((span) => span.name === "gen_ai.embeddings");
+  expect(genAi).toBeDefined();
+  expect(genAi?.attributes[LLM_SUBJECT_KIND_ATTRIBUTE]).toBe("discord_user");
+  expect(genAi?.attributes[LLM_SUBJECT_ID_ATTRIBUTE]).toBe(
+    "160509172704739328",
+  );
+  // The feature dimension must survive alongside it, so one query can group by
+  // both what was called and who it was called for.
+  expect(genAi?.attributes["llm.call_site"]).toBe("scout.bucks-ask");
+});
+
+test("a call with no enclosing subject span carries no subject attributes", () => {
+  exporter.reset();
+  const telemetry = new RepositoryOpenTelemetry({
+    service: "temporal",
+    embedding: true,
+  });
+
+  // Unattributed work must stay visibly unattributed rather than inheriting a
+  // stale subject from whatever ran before it on the same context.
+  telemetry.onStart({
+    callId: "call-none",
+    operationId: "ai.embed",
+    provider: "openrouter.embedding",
+    modelId: "openai/text-embedding-3-small",
+    value: "hello",
+    maxRetries: 2,
+    headers: undefined,
+    providerOptions: undefined,
+    functionId: "homelab-audit-synthesis",
+    recordInputs: true,
+    recordOutputs: true,
+  });
+  telemetry.onEnd({
+    callId: "call-none",
+    operationId: "ai.embed",
+    provider: "openrouter.embedding",
+    modelId: "openai/text-embedding-3-small",
+    value: "hello",
+    embedding: [0.1, 0.2],
+    usage: { tokens: 1 },
+    warnings: [],
+    providerMetadata: undefined,
+    response: undefined,
+  });
+
+  const genAi = exporter
+    .getFinishedSpans()
+    .find((span) => span.name === "gen_ai.embeddings");
+  expect(genAi).toBeDefined();
+  expect(genAi?.attributes[LLM_SUBJECT_KIND_ATTRIBUTE]).toBeUndefined();
+  expect(genAi?.attributes[LLM_SUBJECT_ID_ATTRIBUTE]).toBeUndefined();
 });

@@ -57,6 +57,14 @@ reads `trace.getSpan(context.active())` when it builds a call's attribution
 headers, so a call made outside an active span reaches OpenRouter with no trace
 id and its cost log cannot be joined back to the span that names the subject.
 
+The subject also travels through OpenTelemetry context, and `RepositoryOpenTelemetry`
+stamps it onto every `gen_ai.*` span it opens. This is not a convenience: OTel
+does not propagate attributes down a trace, and usage lands on the `gen_ai.*`
+spans rather than on the attribution span above them. Without the context hop, a
+query grouping by subject and summing tokens would be reading two different
+spans and would return nothing. Calls made outside an attribution span carry no
+subject attributes at all, so unattributed work stays visibly unattributed.
+
 Subject ids are span attributes only. They must never become Prometheus labels —
 the LLM metrics carry bounded service/workload/provider/model/outcome labels by
 design, and Tempo is already the store for trace, session, and user ids.
