@@ -74,6 +74,7 @@ talosctl gen config \
   --with-secrets secrets.yaml \
   --config-patch-control-plane @torvalds/patches/scheduling.yaml \
   --config-patch-control-plane @torvalds/patches/certsans.yaml \
+  --config-patch-control-plane @torvalds/patches/etcd-metrics.yaml \
   --config-patch @torvalds/patches/image.yaml \
   --config-patch @torvalds/patches/tailscale.yaml \
   --config-patch @torvalds/patches/dns.yaml \
