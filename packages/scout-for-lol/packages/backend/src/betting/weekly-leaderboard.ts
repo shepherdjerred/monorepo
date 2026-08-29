@@ -194,26 +194,6 @@ export async function runWeeklyBucksLeaderboard(
   );
 
   const runWeek = Math.floor(Date.now() / WEEK_MS);
-  // The rows are frozen into chunks above, so this is the moment the numbers
-  // the post will disclose exist — persist exactly them. The post is the
-  // product and the snapshot is derived disclosure, so a persist failure is
-  // reported but never blocks the send.
-  try {
-    await dependencies.persistSnapshot({
-      serverId,
-      runWeek,
-      entries: rankBucksLeaderboard(rows).map((row) => ({
-        rank: row.rank,
-        discordId: row.discordId,
-        balance: row.balance,
-      })),
-    });
-  } catch (error) {
-    Sentry.captureException(error);
-    logger.error(
-      `💰 Could not persist the weekly Bryan Bucks leaderboard snapshot: ${getErrorMessage(error)}`,
-    );
-  }
   const failures: unknown[] = [];
   for (const [chunkIndex, chunk] of chunks.entries()) {
     try {
@@ -239,6 +219,28 @@ export async function runWeeklyBucksLeaderboard(
     throw new AggregateError(
       failures,
       `Weekly Bryan Bucks leaderboard failed to deliver ${failures.length.toString()}/${chunks.length.toString()} chunk(s)`,
+    );
+  }
+
+  // Persist only after every chunk is confirmed delivered: the stored
+  // snapshot is documented as "exactly what the post disclosed", so a
+  // partial or failed send must never leave the web endpoint exposing
+  // standings nobody in Discord actually saw. A persist failure here is
+  // reported but never retroactively undoes an already-delivered post.
+  try {
+    await dependencies.persistSnapshot({
+      serverId,
+      runWeek,
+      entries: rankBucksLeaderboard(rows).map((row) => ({
+        rank: row.rank,
+        discordId: row.discordId,
+        balance: row.balance,
+      })),
+    });
+  } catch (error) {
+    Sentry.captureException(error);
+    logger.error(
+      `💰 Could not persist the weekly Bryan Bucks leaderboard snapshot: ${getErrorMessage(error)}`,
     );
   }
 

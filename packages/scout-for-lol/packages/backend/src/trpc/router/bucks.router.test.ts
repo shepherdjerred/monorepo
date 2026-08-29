@@ -160,7 +160,11 @@ async function seedParlayMarket(
   });
 }
 
-async function seedWeeklyMarket(playerId: number): Promise<number> {
+async function seedWeeklyMarket(
+  playerId: number,
+  input?: { slot?: number },
+): Promise<number> {
+  const slot = input?.slot ?? 0;
   const openAt = new Date(Date.now() - 60 * 60_000);
   const bettingClosesAt = new Date(Date.now() + 60 * 60_000);
   const scoringStartsAt = new Date(Date.now() + 2 * 60 * 60_000);
@@ -169,7 +173,7 @@ async function seedWeeklyMarket(playerId: number): Promise<number> {
     data: {
       serverId: guildId,
       periodKey: "2026-08-31",
-      slot: 0,
+      slot,
       openAt,
       bettingClosesAt,
       scoringStartsAt,
@@ -235,7 +239,7 @@ async function seedWeeklyMarket(playerId: number): Promise<number> {
       definitionId: definition.id,
       serverId: guildId,
       periodKey: "2026-08-31",
-      slot: 0,
+      slot,
       publishedAt: openAt,
       bettingClosesAt,
       scoringEndsAt,
@@ -337,6 +341,63 @@ describe("bucks reads", () => {
     expect(position.offeredStake).toBe(10);
     // 20% of 10, rounded to nearest — but asserted as the computed number.
     expect(position.cancellationFee).toBe(2);
+  });
+
+  test("wallet quotes no cancellation fee once the deadline has passed but the sweep hasn't run", async () => {
+    await seedTrackedPlayer();
+    await seedPool();
+    const placed = await caller().bucks.placeOutcomeBet({
+      guildId,
+      matchId: MATCH_ID,
+      teamId: 100,
+      stake: 10,
+    });
+    expect(placed.kind).toBe("placed");
+    // Simulate the real race: closesAt has passed but voidStaleBettingPools
+    // hasn't swept the row yet, so poolState still reads "open". cancelBet
+    // itself requires closesAt > now and would refuse with window_closed, so
+    // the wallet must not advertise a fee here either.
+    await db.bucksMatchPool.update({
+      where: { matchId_serverId: { matchId: MATCH_ID, serverId: guildId } },
+      data: { closesAt: new Date(Date.now() - 1000) },
+    });
+
+    const view = await caller().bucks.wallet({ guildId });
+    const position = view.wallet?.pendingPositions[0];
+    if (position?.marketType !== "outcome") {
+      throw new Error("Expected an outcome pending position");
+    }
+    expect(position.poolState).toBe("open");
+    expect(position.cancellationFee).toBeNull();
+  });
+
+  test("wallet gives two weekly-parlay slots in the same period distinct identities", async () => {
+    // A member can hold bets in two weekly-parlay slots for the same period,
+    // so the period key alone is not a unique position identity — the app's
+    // React key relies on the market id being embedded too.
+    addFlagOverride("weekly_parlays_enabled", true, { server: guildId });
+    const playerId = await seedTrackedPlayer();
+    const firstMarketId = await seedWeeklyMarket(playerId, { slot: 0 });
+    const secondMarketId = await seedWeeklyMarket(playerId, { slot: 1 });
+    await caller().bucks.placeWeeklyParlayBet({
+      guildId,
+      marketId: firstMarketId,
+      side: "YES",
+      stake: 1,
+    });
+    await caller().bucks.placeWeeklyParlayBet({
+      guildId,
+      marketId: secondMarketId,
+      side: "NO",
+      stake: 1,
+    });
+
+    const view = await caller().bucks.wallet({ guildId });
+    const matchIds = (view.wallet?.pendingPositions ?? [])
+      .filter((position) => position.marketType === "parlay")
+      .map((position) => position.matchId);
+    expect(matchIds).toHaveLength(2);
+    expect(new Set(matchIds).size).toBe(2);
   });
 
   test("ledger pages stay frozen against new entries and omit raw context", async () => {
@@ -679,6 +740,31 @@ describe("bucks mutations", () => {
       guildId,
       matchId: MATCH_ID,
       teamId: 100,
+      stake: 2,
+    });
+    expect(placed.kind).toBe("placed");
+  });
+
+  test("a failing weekly-parlay message refresh never fails the mutation", async () => {
+    addFlagOverride("weekly_parlays_enabled", true, { server: guildId });
+    const playerId = await seedTrackedPlayer();
+    const marketId = await seedWeeklyMarket(playerId);
+    // Point the market message at a channel the (offline) Discord client
+    // cannot reach: the stake has already committed by the time the refresh
+    // runs, so a Discord failure here must never surface as a mutation error
+    // (that would invite a retry that tops up and debits again).
+    await db.bucksWeeklyParlayMarket.update({
+      where: { id: marketId },
+      data: {
+        messageRefs: JSON.stringify([
+          { channelId: "100000000000000900", messageId: "100000000000000901" },
+        ]),
+      },
+    });
+    const placed = await caller().bucks.placeWeeklyParlayBet({
+      guildId,
+      marketId,
+      side: "YES",
       stake: 2,
     });
     expect(placed.kind).toBe("placed");

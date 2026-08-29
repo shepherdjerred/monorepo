@@ -111,10 +111,14 @@ export const bucksRouter = router({
                 position.marketType === "outcome"
                   ? {
                       ...position,
-                      // Cancellation exists only while the window is open, so
-                      // a locked position carries no fee quote.
+                      // Cancellation exists only while the window is open AND
+                      // still before its deadline — `poolState` alone can lag
+                      // a passed `closesAt` until the sweep runs, and
+                      // `cancelBet` itself requires `closesAt > now`. A locked
+                      // position carries no fee quote.
                       cancellationFee:
-                        position.poolState === "open"
+                        position.poolState === "open" &&
+                        position.closesAt.getTime() > Date.now()
                           ? cancellationHouseCut(position.offeredStake)
                           : null,
                     }

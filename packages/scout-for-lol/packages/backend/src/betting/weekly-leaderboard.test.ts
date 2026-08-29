@@ -258,4 +258,44 @@ describe("weekly Bryan Bucks leaderboard snapshot", () => {
     expect(result.status).toBe("sent");
     expect(sends).toHaveLength(1);
   });
+
+  test("never persists when delivery fails, so the web never exposes an undisclosed snapshot", async () => {
+    let persisted = false;
+    const rows = Array.from({ length: 80 }, (_unused, index) =>
+      row(index + 1, 100 - index),
+    );
+    await expect(
+      runWeeklyBucksLeaderboard(
+        dependencies({
+          rows,
+          persistSnapshot: () => {
+            persisted = true;
+            return Promise.resolve();
+          },
+          sendMessage: () =>
+            Promise.reject(new Error("Discord delivery failed")),
+        }),
+      ),
+    ).rejects.toThrow("failed to deliver");
+    expect(persisted).toBe(false);
+  });
+
+  test("persists only after every chunk is confirmed delivered", async () => {
+    const events: string[] = [];
+    await runWeeklyBucksLeaderboard(
+      dependencies({
+        rows: [row(1, 10)],
+        sendMessage: (options) => {
+          events.push(`send:${options.content ?? ""}`);
+          return Promise.resolve(undefined);
+        },
+        persistSnapshot: () => {
+          events.push("persist");
+          return Promise.resolve();
+        },
+      }),
+    );
+    expect(events.at(-1)).toBe("persist");
+    expect(events.filter((event) => event === "persist")).toHaveLength(1);
+  });
 });
