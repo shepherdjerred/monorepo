@@ -434,7 +434,7 @@ async function runSynthesis(input: {
         reasoningEffort: "medium",
         seed,
         truncationError: SYNTHESIS_TRUNCATION_ERROR,
-        exhaustionError: `GPT-5.6 Sol did not return a parsed synthesis for ${input.candidate.person.id}`,
+        exhaustionError: `GPT-5.6 Luna did not return a parsed synthesis for ${input.candidate.person.id}`,
       });
     },
   });

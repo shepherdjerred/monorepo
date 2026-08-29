@@ -153,7 +153,7 @@ export async function proposeRelationships(input: {
         reasoningEffort: "medium",
         seed: DETERMINISTIC_SEED,
         exhaustionError:
-          "GPT-5.6 Sol did not return parsed relationship proposals",
+          "GPT-5.6 Luna did not return parsed relationship proposals",
       });
     },
   });

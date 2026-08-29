@@ -53,11 +53,11 @@ describe("glitter object artifacts", () => {
       useGlitterObjectArtifact({
         artifact: artifact({
           outcome: "failure",
-          error: "GPT-5.6 Sol did not return a parsed synthesis for aaron",
+          error: "GPT-5.6 Luna did not return a parsed synthesis for aaron",
           rawContent: null,
         }),
         budget,
       }),
-    ).toThrow("GPT-5.6 Sol did not return a parsed synthesis for aaron");
+    ).toThrow("GPT-5.6 Luna did not return a parsed synthesis for aaron");
   });
 });
