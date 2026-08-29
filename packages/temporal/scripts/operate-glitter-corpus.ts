@@ -18,12 +18,12 @@ function usage(): never {
   console.error(
     [
       "Usage:",
-      "  bun run glitter:operate inventory",
-      "  bun run glitter:operate canary --guild-id=<id> --guild-slug=<slug> --channel-id=<id> [--seed-prefix=<prefix>] [--max-pages=<n>]",
-      "  bun run glitter:operate backfill --inventory-key=<key> --inventory-sha=<sha256> [--seed-prefix=<prefix>] [--max-pages=<n>] [--wait=true]",
-      "  bun run glitter:operate daily [--wait=true]",
-      "  bun run glitter:operate context-refresh --dry-run=<true|false> --max-estimated-cost-usd=<usd> [--now=<iso>] [--snapshot-id=<uuid> --snapshot-sha256=<sha256>] [--wait=true]",
-      "  bun run glitter:operate context-audit [--now=<iso>] [--snapshot-id=<uuid> --snapshot-sha256=<sha256>] [--wait=true]",
+      "  TEMPORAL_NAMESPACE=prod bun run glitter:operate inventory",
+      "  TEMPORAL_NAMESPACE=prod bun run glitter:operate canary --guild-id=<id> --guild-slug=<slug> --channel-id=<id> [--seed-prefix=<prefix>] [--max-pages=<n>]",
+      "  TEMPORAL_NAMESPACE=prod bun run glitter:operate backfill --inventory-key=<key> --inventory-sha=<sha256> [--seed-prefix=<prefix>] [--max-pages=<n>] [--wait=true]",
+      "  TEMPORAL_NAMESPACE=prod bun run glitter:operate daily [--wait=true]",
+      "  TEMPORAL_NAMESPACE=prod bun run glitter:operate context-refresh --dry-run=<true|false> --max-estimated-cost-usd=<usd> [--now=<iso>] [--snapshot-id=<uuid> --snapshot-sha256=<sha256>] [--wait=true]",
+      "  TEMPORAL_NAMESPACE=prod bun run glitter:operate context-audit [--now=<iso>] [--snapshot-id=<uuid> --snapshot-sha256=<sha256>] [--wait=true]",
     ].join("\n"),
   );
   process.exit(2);
