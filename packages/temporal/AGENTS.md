@@ -259,7 +259,7 @@ Start one run with a stable period/slot ID and reject every reuse:
 
 ```bash
 TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
-  toolkit temporal workflow start \
+  toolkit temporal --namespace beta workflow start \
     --workflow-id scout-weekly-parlay-catchup-2026-08-24-0 \
     --type runScoutWeeklyParlayCatchupWorkflow \
     --task-queue default \

@@ -1,7 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import type { Service } from "cdk8s-plus-31";
-import { Cpu, Job, Secret, Volume } from "cdk8s-plus-31";
+import { Cpu, Job } from "cdk8s-plus-31";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -20,8 +20,10 @@ export function createTemporalNamespaceInitJob(
     metadata: {
       name: "temporal-namespace-init",
       annotations: {
-        // Run after the temporal-server deployment is synced
-        "argocd.argoproj.io/hook": "PostSync",
+        // Create the application namespaces before namespace-scoped clients
+        // and workers become healthy. The job waits for the server below, so
+        // it is safe to run before the ordinary Temporal resources finish.
+        "argocd.argoproj.io/hook": "PreSync",
         "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation",
       },
     },
@@ -36,22 +38,6 @@ export function createTemporalNamespaceInitJob(
       },
     },
   });
-
-  // Mount postgres secret for admin-tools DB access
-  const postgresSecretName =
-    "temporal.temporal-postgresql.credentials.postgresql.acid.zalan.do";
-  const pgSecretVolume = Volume.fromSecret(
-    chart,
-    "namespace-init-pg-secret-volume",
-    Secret.fromSecretName(
-      chart,
-      "namespace-init-pg-secret",
-      postgresSecretName,
-    ),
-    {
-      name: "pg-secret",
-    },
-  );
 
   job.addContainer(
     withCommonProps({
@@ -85,13 +71,6 @@ export function createTemporalNamespaceInitJob(
         ensureNonRoot: true,
         readOnlyRootFilesystem: false,
       },
-      volumeMounts: [
-        {
-          path: "/pg-secret",
-          volume: pgSecretVolume,
-          readOnly: true,
-        },
-      ],
       resources: {
         cpu: {
           request: Cpu.millis(50),

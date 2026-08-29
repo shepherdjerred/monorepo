@@ -62,6 +62,14 @@ describe("Scout competition Temporal boundary", () => {
         resource.kind === "Job" &&
         resource.metadata.name === "temporal-namespace-init",
     );
+    const namespaceJobMetadata = z
+      .object({
+        annotations: z.record(z.string(), z.string()),
+      })
+      .parse(namespaceJob?.metadata);
+    expect(namespaceJobMetadata.annotations["argocd.argoproj.io/hook"]).toBe(
+      "PreSync",
+    );
     const serialized = JSON.stringify(namespaceJob?.spec);
     expect(serialized).toContain("for namespace in prod beta");
     expect(serialized).toContain("--retention 720h");
