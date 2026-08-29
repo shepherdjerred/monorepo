@@ -131,6 +131,15 @@ export const bettingPeekPassesTotal = new Counter({
   registers: [registry],
 });
 
+/* ----------------------------------------------------------- transfers -- */
+
+export const bettingTransfersTotal = new Counter({
+  name: "betting_transfers_total",
+  help: "Bryan Bucks wallet transfer attempts, by result.",
+  labelNames: ["result"] as const,
+  registers: [registry],
+});
+
 /* --------------------------------------------------- message delivery -- */
 
 export const bettingMessageOperationsTotal = new Counter({

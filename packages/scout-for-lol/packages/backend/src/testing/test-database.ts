@@ -19,6 +19,21 @@ function extendClient(client: PrismaClient): ExtendedPrismaClient {
   });
 }
 
+export function connectTestDatabase(databaseUrl: string): ExtendedPrismaClient {
+  const parsed = new URL(databaseUrl);
+  if (
+    parsed.protocol !== "postgres:" ||
+    !/^scout_test_[a-z0-9_]+$/u.test(parsed.pathname.slice(1))
+  ) {
+    throw new Error(`Refusing to connect to non-test database ${databaseUrl}`);
+  }
+  return extendClient(
+    new PrismaClient({
+      adapter: new PrismaPg({ connectionString: databaseUrl }),
+    }),
+  );
+}
+
 /** Postgres identifiers cap at 63 bytes; the name encodes its creation time. */
 function testDatabaseName(testName: string): string {
   const sanitized = testName
@@ -75,14 +90,10 @@ export function createTestDatabase(testName: string): {
   }
 
   const dbUrl = devDatabaseUrl(dbName);
-  const basePrisma = new PrismaClient({
+  return {
     // Must mirror src/database/index.ts so tests exercise the same adapter
     // as production.
-    adapter: new PrismaPg({ connectionString: dbUrl }),
-  });
-
-  return {
-    prisma: extendClient(basePrisma),
+    prisma: connectTestDatabase(dbUrl),
     dbPath: dbName,
     dbUrl,
   };

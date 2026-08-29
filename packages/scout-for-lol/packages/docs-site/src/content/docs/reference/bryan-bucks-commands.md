@@ -14,6 +14,7 @@ Bryan Bucks is enabled.
 | ------------------- | ----------------------------------------------------- | --------------------------------- |
 | `/bb balance`       | Available Bucks, Bucks at risk, and pending positions | Private                           |
 | `/bb history`       | Paged transaction ledger with running balances        | Private                           |
+| `/bb transfer`      | Send half of a total spend to another wallet          | Private result, public receipt    |
 | `/bb open`          | Match and weekly markets still taking bets            | Private                           |
 | `/bb bet`           | Place or top up an outcome bet                        | Private                           |
 | `/bb parlay`        | Place or top up a match or weekly parlay bet          | Private                           |
@@ -24,8 +25,10 @@ Bryan Bucks is enabled.
 | `/bb rules`         | The complete rulebook                                 | **Public**                        |
 | `/bb prizes`        | The joke prize catalogue                              | **Public**                        |
 
-Everything except `rules` and `prizes` answers only to you. Balances, positions,
-and estimates are never posted to the channel by Scout.
+Every command starts privately except `rules` and `prizes`. A successful
+`transfer` then posts its sender, recipient, total spend, received amount, and
+house fee publicly. Balances, positions, and estimates are never posted to the
+channel by Scout.
 
 ## Options
 
@@ -55,6 +58,17 @@ If one player appears in several open parlays, the alias is intentionally
 ambiguous. Use the buttons on the specific market message you want instead of
 letting Scout guess. The same rule lets weekly parlays support several subjects
 and several concurrent markets without changing the command.
+
+### `/bb transfer`
+
+| Option      | Required | Values                                   |
+| ----------- | -------- | ---------------------------------------- |
+| `recipient` | yes      | A non-bot member with an existing wallet |
+| `amount`    | yes      | Your total whole-BB spend, at least 2 BB |
+
+The recipient receives half rounded down; the house receives half rounded up.
+The transfer is immediate and irreversible. Both wallets must already exist in
+this server, and you cannot transfer to yourself.
 
 ### `/bb peek`
 
@@ -119,4 +133,6 @@ settlement. Updates mention featured players and current bettors but expose
 only aggregate YES/NO totals—never a person's side or stake.
 
 Bets never add messages. Placing, topping up, and cancelling all edit the
-market message in place.
+market message in place. A successful `/bb transfer` is the exception: it adds
+one Western Union-style public receipt that mentions only the sender and
+recipient and never shows either balance.

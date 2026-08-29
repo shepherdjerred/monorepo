@@ -1,17 +1,26 @@
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import { z } from "zod";
+import { addFlagOverride } from "#src/configuration/flags.ts";
 
-export const DiscordSmokeScenarioNameSchema = z.enum(["gateway"]);
+export const DiscordSmokeScenarioNameSchema = z.enum([
+  "gateway",
+  "bb-transfer",
+]);
 export type DiscordSmokeScenarioName = z.infer<
   typeof DiscordSmokeScenarioNameSchema
 >;
 
 export function applyDiscordSmokeScenario(
-  _scenario: DiscordSmokeScenarioName,
-  _guildId: DiscordGuildId,
+  scenario: DiscordSmokeScenarioName,
+  guildId: DiscordGuildId,
 ): void {
-  void _scenario;
-  void _guildId;
+  switch (scenario) {
+    case "gateway":
+      return;
+    case "bb-transfer":
+      addFlagOverride("betting_enabled", true, { server: guildId });
+      addFlagOverride("bucks_transfers_enabled", true, { server: guildId });
+  }
 }
 
 export function discordSmokeStaticOverrides(

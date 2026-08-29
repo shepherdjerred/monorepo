@@ -32,7 +32,9 @@ export type BucksLifecycleTransition =
   | "bucks.weekly_parlay_bet.settled"
   | "bucks.weekly_parlay.contribution_recorded"
   | "bucks.earning.awarded"
-  | "bucks.peek_pass.purchased";
+  | "bucks.peek_pass.purchased"
+  | "bucks.transfer.completed"
+  | "bucks.transfer.rejected";
 
 type BucksPendingOutcome = {
   stake: number;
