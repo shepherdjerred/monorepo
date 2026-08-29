@@ -51,6 +51,11 @@ Every stage has one Workflow task queue. The Workflow bundle is registered
 once, which prevents queue-specific Workers from drifting into different
 orchestration capabilities.
 
+Each stage also has its own Temporal namespace. Queue names describe workload
+classes, while the `beta` and `prod` namespaces prevent either deployment from
+consuming the other's work. Shared Scout maintenance remains in the `prod`
+control plane.
+
 Activities use separate realtime, interactive, background, and lake queues.
 The separation preserves responsive polling under slow model work. It also
 serializes every mutation of the report-lake volume.
@@ -98,6 +103,10 @@ missed cron occurrence.
 Schedules begin paused when a legacy owner still exists. A feature-family
 cutover transfers ownership explicitly; a Temporal outage never activates the
 legacy owner automatically.
+
+During namespace migration, worker-only pollers continue serving retained
+histories in `default`. New starts and schedule reconciliation target only the
+stage namespace.
 
 ## Workflows match product lifecycles
 

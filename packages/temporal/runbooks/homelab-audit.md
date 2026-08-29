@@ -290,10 +290,13 @@ Flag: any pod not Running/Ready, `CreateContainerConfigError` (missing secret â€
 
 ```bash
 toolkit temporal operator cluster health                          # gRPC ping to frontend (expect SERVING)
-toolkit temporal operator namespace list                          # expected namespaces (default)
+toolkit temporal operator namespace list                          # expected active namespaces (prod, beta); default is drain-only
 ```
 
-Flag: non-SERVING status, gRPC connection error despite server pods Running (NetworkPolicy change, service endpoint mismatch), missing `default` namespace.
+Flag: non-SERVING status, gRPC connection error despite server pods Running
+(NetworkPolicy change, service endpoint mismatch), or missing `prod`/`beta`
+namespaces. During migration, flag workflow starts or active schedules in
+`default`; after drain, it must remain empty.
 
 ### Failed or stuck workflow executions
 
@@ -367,8 +370,8 @@ The removed `agent-task-timeout-watch` aggregate alert must not be used as a
 health signal. Query the SDK metrics instead:
 
 ```bash
-toolkit prom query 'temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="agent-task",poller_type="workflow_task"}'
-toolkit prom query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="temporal",exported_namespace="default",task_queue="agent-task"}[5m])))'
+toolkit prom query 'temporal_worker_num_pollers{namespace="temporal",exported_namespace="prod",task_queue="agent-task",poller_type="workflow_task"}'
+toolkit prom query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="temporal",exported_namespace="prod",task_queue="agent-task"}[5m])))'
 toolkit prom query 'up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}'
 ```
 

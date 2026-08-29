@@ -7,13 +7,17 @@ sidebar:
 
 Work down this list in order. Each step rules out a class of cause.
 
-The Temporal Web UI is tailnet-gated and lives in the `temporal` namespace.
+The Temporal Web UI is tailnet-gated. Select `prod` for shared and production
+jobs, or `beta` for Scout beta jobs, before inspecting a schedule.
 
 ## 1. Pause it, if that is all you need
 
 Pause the schedule in the Temporal UI. Pause state is runtime state: it is
 preserved across worker restarts and across reconciliation, so a boot will not
 silently resume it.
+
+Confirm the namespace before pausing. The same queue name can exist in both
+`beta` and `prod`, while schedules and histories remain isolated.
 
 This is the right move for a noisy or misbehaving job. It is not how you remove
 one — see the last section.

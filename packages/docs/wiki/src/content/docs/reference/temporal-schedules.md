@@ -7,7 +7,7 @@ sidebar:
 
 All recurring automation is a single `SCHEDULES` array in
 [`schedule-definitions.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-definitions.ts).
-Every worker boot upserts the whole fleet.
+The gateway upserts the schedules owned by each active namespace.
 
 [`register-schedules.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/register-schedules.ts)
 owns reconciliation and the explicit `DELETED_SCHEDULE_IDS` allowlist.
@@ -26,6 +26,18 @@ For the list of what runs and when, see
 | Source of truth | the `SCHEDULES` array in code; a PR is the change process             |
 | Deletion        | explicit — add the schedule ID to the deletion list                   |
 | Orphan drift    | a metric is exported for any server schedule code no longer defines   |
+
+## Namespace ownership
+
+| Namespace | Ownership                                                                                    |
+| --------- | -------------------------------------------------------------------------------------------- |
+| `dev`     | Local Temporal servers only. Local reconciliation overlays the complete source inventory.    |
+| `beta`    | Scout beta fixed schedules, beta report schedules, weekly parlay, and Bryan Bucks analytics. |
+| `prod`    | Production automation, Scout prod, dynamic agent tasks, and shared Scout maintenance.        |
+| `default` | Migration drain only. No reconciler or start surface targets it.                             |
+
+Every source schedule carries a target namespace. Dynamic Scout report memos
+must match that namespace. Dynamic agent schedules are valid only in `prod`.
 
 ## Pause behaviour
 

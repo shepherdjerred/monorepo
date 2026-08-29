@@ -185,6 +185,8 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
+- `TEMPORAL_NAMESPACE` — required active namespace: `dev`, `beta`, or `prod`. `default` is rejected for clients and active workers.
+- `TEMPORAL_LEGACY_NAMESPACE` — optional migration-only worker namespace. The only accepted value is `default`; remove it after the drain and retention window.
 - `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `core`, `agent`, `glitter`, or `maintenance`. Invalid values fail startup.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
@@ -290,7 +292,7 @@ delivered through the shared reporter as partial.
 
 1. Queries the Temporal visibility API for `ExecutionStatus IN ("Failed", "TimedOut")` closed in the last 24 hours so a worker outage can be recovered by the next poll (safe to overlap because Alertmanager dedups alerts by label set and each alert expires from the execution's close time, not from the latest poll).
 2. For each match, calls `getHandle(workflowId, runId).fetchHistory()` and then `.result()`, with bounded concurrency and Alertmanager batches so recovery can page partial progress before the activity deadline. The history classifies timeouts as `workflow-task`, `activity`, `execution`, or `unknown`; an agent-task timeout before any `ACTIVITY_TASK_STARTED` event is explicitly a worker/task-queue availability failure, including scheduled-but-undispatched activities. The closed `result()` rejects immediately with `WorkflowFailedError`, whose `.cause` carries the same failure type/message/stack the Temporal UI shows.
-3. Builds one `AlertmanagerAlert` per execution via the pure `buildWorkflowFailureAlert` helper (`src/shared/workflow-failure-alert.ts`) — labels `{alertname: "TemporalWorkflowFailed", workflowType, taskQueue, workflowId, runId}` for identity/dedup, plus a summary/description with the actual error, timeout classification/diagnosis, and a direct link to the failed run in the Temporal UI (`temporalUiExecutionUrl`).
+3. Builds one `AlertmanagerAlert` per execution via the pure `buildWorkflowFailureAlert` helper (`src/shared/workflow-failure-alert.ts`) — labels `{alertname: "TemporalWorkflowFailed", temporalNamespace, workflowType, taskQueue, workflowId, runId}` for identity/dedup, plus a summary/description with the actual error, timeout classification/diagnosis, and a namespace-correct direct link to the failed run in the Temporal UI (`temporalUiExecutionUrl`).
 4. Posts the batch via `createAlertmanagerPoster` (`src/lib/alertmanager.ts`, shared with the Xcode Cloud webhook), which routes through the existing Alertmanager Alerts receiver.
 
 No exclusion list — every workflow type produces an occurrence on any failure, including per-PR bots (`prReview`/`prSummary`) that the older threshold-based rules deliberately exclude. Revisit with an exclusion list if that proves too noisy.
@@ -303,7 +305,8 @@ Create/update a task from a doc block locally as an operator:
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task.md
+TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
+  bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task.md
 ```
 
 `--from-doc` validates every `temporal-agent-task` block before connecting and
@@ -365,7 +368,7 @@ the in-cluster service name is only resolvable inside Kubernetes:
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
   bun run canary:agent-task
 ```
 

@@ -9,6 +9,10 @@ sidebar:
 bot, scheduled agent, Glitter refresh, and home-automation routine runs here as
 a durable workflow.
 
+The fleet uses `dev`, `beta`, and `prod` namespaces as execution trust
+boundaries. A namespace separates workflow IDs, schedules, histories, and task
+queues even when queue names match.
+
 ```mermaid
 flowchart LR
   accTitle: Temporal worker system map
@@ -80,6 +84,21 @@ The split is about authorization and failure isolation, not capacity. Queues
 isolate concurrency; **processes** isolate runtime failures, credentials, and
 Kubernetes identities. Home and reports can each run four activities. Infra,
 repo, Scout, agent, both Glitter domains, and maintenance remain serial.
+
+Namespace isolation adds the deployment-stage boundary that queues cannot
+provide. Scout beta and prod keep identical queue contracts without consuming
+each other's work. Shared and cross-stage jobs belong to the `prod` control
+plane. Local servers use `dev`, which never exists in the cluster.
+
+The central `scout` queue has one deliberate exception: its worker polls both
+`prod` and `beta` because the beta-owned weekly parlay and Bryan Bucks
+analytics workflows remain in the central workflow bundle. This preserves the
+existing queue contract; clients and shared Scout schedules still start only
+in `prod`.
+
+Existing histories cannot move between namespaces. The migration therefore
+keeps bounded worker-only pollers in `default` until those histories close.
+Clients and schedule reconcilers never target that drain namespace.
 
 Infra and the temporary legacy worker receive the broad audit and pod-exec
 roles. Agent receives read-only audit access but cannot exec into pods. Gateway,

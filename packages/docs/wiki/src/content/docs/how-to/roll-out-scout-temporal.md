@@ -39,6 +39,53 @@ TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true \
 Do not remove a replay patch until no open execution needs it and the
 namespace's 30-day retention period has elapsed.
 
+## Move schedules into the stage namespaces
+
+Provision `prod` and `beta` before deploying any process whose active namespace
+has changed. While every existing application still starts work in `default`,
+run the migration inventory from the candidate revision:
+
+```bash
+cd packages/temporal
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+  bun run migrate:namespaces -- prepare
+```
+
+The inventory must account for every live schedule. Resolve unknown ownership
+instead of excluding it, and re-read the live count rather than comparing it to
+a count copied from an earlier rollout. Then create the target copies in their
+paused migration state:
+
+```bash
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+  bun run migrate:namespaces -- prepare --confirm
+```
+
+Do this before deploying the namespace-switching gateway. Gateway
+reconciliation updates existing schedules and preserves their pause state; it
+must not be the process that first creates an active target copy. Deploy the
+new workers and clients, prove pollers and empty target backlogs, and immediately
+re-run the read-only `prepare` inventory. Re-read both sides one final time,
+then cut over:
+
+```bash
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+  bun run migrate:namespaces -- cutover --confirm
+```
+
+Record the printed cutover timestamp. Audit parity and the absence of later
+starts in `default` with that exact timestamp:
+
+```bash
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+  bun run migrate:namespaces -- audit --cutover-at <ISO timestamp>
+```
+
+Rollback is available only while no prepared target has started a Workflow.
+After the first target start, recover forward. Leave source schedules paused in
+`default`; they remain rollback and audit evidence until the drain and the
+additional 30-day retention window have both completed.
+
 ## Prove every queue
 
 Run the side-effect-free canary against the deployed Scout Workers:
@@ -48,7 +95,7 @@ cd packages/scout-for-lol/packages/temporal
 bun run canary -- \
   --stage beta \
   --address <beta-address> \
-  --namespace default
+  --namespace beta
 ```
 
 The result must name `scout-beta-realtime`, `scout-beta-interactive`,
@@ -110,7 +157,12 @@ four families enabled for at least 24 hours. The soak passes only when:
 
 Record the end time and evidence before promoting the same image to production.
 Repeat the queue canary and representative manual triggers after production is
-deployed.
+deployed, using `--stage prod --namespace prod`.
+
+During the namespace drain, verify that new beta starts appear only in `beta`
+and new production starts appear only in `prod`. Existing `default` executions
+must keep pollers until they close; do not cancel or replay them merely to
+finish the migration.
 
 ## Roll back a family
 

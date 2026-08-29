@@ -28,6 +28,9 @@ Schedules, programmatic roots, and child Workflows name
 Every Activity proxy explicitly names one of the domain queues and the source
 guard rejects missing queues or effects routed to `monorepo-workflows`.
 
+Unless a Scout row is explicitly beta-owned, workflows run in `prod`. Scout
+beta workflows and reports run in `beta`; local development uses `dev`.
+
 ## Repo upkeep
 
 | Workflow            | Trigger     | Brain                            | Output                                                                      |

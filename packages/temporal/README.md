@@ -17,6 +17,14 @@ active namespace and by a bounded drain worker in `default`; it has no
 production start site. The default `all` role runs everything in one process
 for local development.
 
+Temporal namespaces are environment-scoped: local servers use `dev`, Scout
+beta uses `beta`, and production plus shared control-plane jobs use `prod`.
+During migration, `TEMPORAL_LEGACY_NAMESPACE=default` adds bounded worker-only
+pollers so existing histories can finish without allowing new starts there.
+The central Scout worker also polls its unchanged `scout` queue in `beta` for
+the beta-owned weekly parlay and Bryan Bucks analytics schedules; all other
+central queues remain `prod` plus the temporary `default` drain.
+
 | Role              | Queue or surface        | Activity concurrency |
 | ----------------- | ----------------------- | -------------------: |
 | `control`         | schedules and HTTP APIs |                 none |
@@ -42,10 +50,15 @@ above describes the final topology.
 Run from `packages/temporal`:
 
 ```bash
-bun run start        # start the worker (connects to the Temporal server)
+TEMPORAL_NAMESPACE=dev bun run start # start a local worker
 bun run typecheck    # tsc --noEmit (stubs the HA schema first)
 bun run test         # unit tests, including the workflow-bundle smoke test
 bun run lint         # eslint
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 bun run migrate:namespaces -- prepare # read-only inventory
+bun run migrate:namespaces -- prepare --confirm # create paused targets
+bun run migrate:namespaces -- cutover --confirm # pause default, activate targets
+bun run migrate:namespaces -- rollback --confirm # only before a target workflow starts
+bun run migrate:namespaces -- audit --cutover-at <ISO timestamp>
 ```
 
 During the namespace migration, inventory and prepare schedules before
@@ -65,6 +78,10 @@ TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPAC
 
 Record the cutover timestamp and use it for the final audit. Rollback is
 allowed only before a target workflow starts; after that, recover forward.
+
+The migration command always reads its source from `default` and writes only to
+`prod` or `beta`; it intentionally ignores `TEMPORAL_NAMESPACE`. The other
+clients and operator scripts require `TEMPORAL_NAMESPACE=dev|beta|prod`.
 
 ## Documentation
 
