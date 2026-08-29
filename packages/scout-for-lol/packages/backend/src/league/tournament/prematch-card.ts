@@ -42,7 +42,7 @@ function hasDeclaredRosters(lobby: TournamentLobbyRecord): boolean {
 
 export function buildLobbyPrematchEmbed(
   lobby: TournamentLobbyRecord,
-  joinedPlayerNames: readonly string[] | undefined = undefined,
+  joinedPlayerNames?: readonly string[],
 ): EmbedBuilder {
   const size = `${lobby.teamSize.toString()}v${lobby.teamSize.toString()}`;
   const embed = new EmbedBuilder()

@@ -19,7 +19,7 @@ export async function resolveLobbyPlayerNames(
       getRiotIdByPuuid(LeaguePuuidSchema.parse(puuid), lobby.region),
     ),
   );
-  if (identities.some((identity) => identity === null)) {
+  if (identities.includes(null)) {
     return undefined;
   }
 
