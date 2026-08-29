@@ -26,7 +26,7 @@ const DashboardSchema = z.object({
 describe("alert ledger Grafana dashboard", () => {
   it("uses the provisioned Prometheus datasource UID for every panel", () => {
     const dashboard = DashboardSchema.parse(
-      createAlertDashboardGrafanaDashboard(),
+      createAlertDashboardGrafanaDashboard().build(),
     );
 
     expect(dashboard.panels).not.toHaveLength(0);
@@ -36,7 +36,7 @@ describe("alert ledger Grafana dashboard", () => {
 
   it("queries the synthesized Alert Dashboard ServiceMonitor identity", () => {
     const dashboard = DashboardSchema.parse(
-      createAlertDashboardGrafanaDashboard(),
+      createAlertDashboardGrafanaDashboard().build(),
     );
     const servicePanel = dashboard.panels.find(
       (panel) => panel.title === "Service up",

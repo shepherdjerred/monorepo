@@ -14,7 +14,10 @@ import { createZfsDashboard } from "./zfs-dashboard.ts";
 
 const dashboardJson = [
   createAiProviderDashboard(),
-  createAlertDashboardGrafanaDashboard(),
+  // Unlike the other create*Dashboard functions here, this one deliberately
+  // returns the raw builder (exportAlertDashboardJson calls .build() itself);
+  // build it explicitly so this array holds Dashboard objects consistently.
+  createAlertDashboardGrafanaDashboard().build(),
   createBuildkiteDashboard(),
   createBuildkitdDashboard(),
   createDiscordPlaysDashboard(),
