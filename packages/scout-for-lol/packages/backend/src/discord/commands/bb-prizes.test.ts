@@ -57,15 +57,18 @@ describe("/bb prizes", () => {
     expect(rendered).toContain("Subaru Jimmy");
     expect(rendered).toContain("Bryan plays one game of League");
     expect(rendered).toContain("Jerred says “what’s up guys”");
-    expect(rendered).toContain("15,000 BB** / CAD $150,000");
-    expect(rendered).toContain("100 BB** / CAD $1,000");
+    expect(rendered).toContain("15,000 BB**");
+    expect(rendered).toContain("100 BB**");
+    // Per-prize CAD figures were dropped; the exchange-rate line carries the
+    // joke conversion once.
+    expect(rendered).not.toContain("/ CAD $");
     expect(embed.footer?.text).toBe(
       "Prizes can be redeemed in person with Bryan.",
     );
 
     for (const prize of BB_PRIZES) {
       expect(rendered).toContain(
-        `${prize.bbCost.toLocaleString("en-CA")} BB** / CAD $${(prize.bbCost * 10).toLocaleString("en-CA")}`,
+        `${prize.bbCost.toLocaleString("en-CA")} BB**`,
       );
     }
 

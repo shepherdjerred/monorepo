@@ -45,6 +45,32 @@ const successfulAgent = async (params: ExploreAgentParams) => {
   };
 };
 
+// A bucks-tools turn runs no ScoutQL, so its answer carries queryText: null
+// and nothing downstream may require a preview or a chart.
+const bucksOnlyAgent = async (params: ExploreAgentParams) => {
+  await params.emit({
+    type: "tool_result",
+    toolCallId: "call-bb",
+    toolName: "query_bucks_bets",
+    status: "succeeded",
+    message: "Got Bryan Bucks results.",
+    durationMs: 3,
+    details: null,
+    rawOutput: null,
+  });
+  return {
+    answer: {
+      answer: "You are up 12 BB this month.",
+      title: "Monthly Bryan Bucks net",
+      queryText: null,
+      caveats: [],
+      followUps: [],
+    },
+    preview: null,
+    visualization: null,
+  };
+};
+
 const failingAgent = async (params: ExploreAgentParams) => {
   await params.emit({ type: "answer_delta", text: "Partial evidence." });
   throw new Error("provider failed");
@@ -133,31 +159,6 @@ describe("shared persisted Explore turn", () => {
   });
 
   test("persists a Bryan-Bucks-only answer with no ScoutQL, preview, or visualization", async () => {
-    // A bucks-tools turn runs no ScoutQL, so its answer carries queryText:
-    // null and nothing downstream may require a preview or a chart.
-    const bucksOnlyAgent = async (params: ExploreAgentParams) => {
-      await params.emit({
-        type: "tool_result",
-        toolCallId: "call-bb",
-        toolName: "query_bucks_bets",
-        status: "succeeded",
-        message: "Got Bryan Bucks results.",
-        durationMs: 3,
-        details: null,
-        rawOutput: null,
-      });
-      return {
-        answer: {
-          answer: "You are up 12 BB this month.",
-          title: "Monthly Bryan Bucks net",
-          queryText: null,
-          caveats: [],
-          followUps: [],
-        },
-        preview: null,
-        visualization: null,
-      };
-    };
     const prepared = await preparedTurn();
 
     const terminal = await runPersistedExploreTurn(

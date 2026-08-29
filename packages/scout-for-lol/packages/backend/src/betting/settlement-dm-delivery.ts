@@ -155,7 +155,7 @@ function buildGameLine(
           `${participant.trackedAlias} (${getChampionDisplayNameById(participant.championId)})`,
         ],
   );
-  if (tracked.length === 0 && queueLabel === undefined) {
+  if (queueLabel === undefined && tracked.length === 0) {
     return undefined;
   }
   const players = tracked.join(", ");
@@ -178,8 +178,8 @@ function buildResultLine(
   }
   const winningTeamId = summary.winningTeamId;
   const winners = roster.flatMap((participant) =>
-    participant.trackedAlias !== undefined &&
-    participant.teamId === winningTeamId
+    participant.teamId === winningTeamId &&
+    participant.trackedAlias !== undefined
       ? [participant.trackedAlias]
       : [],
   );

@@ -989,13 +989,29 @@ ledger ID so new entries cannot reshuffle pages. Market digests show anonymous
 side totals, never bettor identities or inferred odds. Betting itself is
 button-only: there is no slash command to place, top up, or cancel a position,
 and the retired peek feature (`/bb pass`/`/bb peek`) no longer exists — the
-pregame estimate is visible only in the settlement recap. There is no
-on-demand leaderboard:
-the complete non-house wallet list is posted Fridays at 5 PM
-America/Los_Angeles in the shared Common Denominator channel. Both deployments
-run the cron, but only the Discord application in the one enabled guild posts;
-more than one enabled guild is a hard failure until an explicit channel mapping
-exists.
+pregame estimate is visible only in the settlement recap. `/bb balance`
+attaches a best-effort balance-over-time PNG (ledger `balanceAfter` per day,
+rendered with the report package's ECharts line chart) — a chart failure
+degrades to the numbers-only embed, never an error. `/bb history` rows show
+the tracked players behind each entry (frozen context aliases, then the pool
+roster, then weekly-parlay subjects; raw match ID as the fallback). There is
+no on-demand leaderboard: the complete non-house wallet list is posted Fridays
+at 5 PM America/Los_Angeles in the shared Common Denominator channel, along
+with the trailing week's superlatives (most gained/lost from ledger delta,
+most bets and parlays won — house excluded, ties broken on account id). Both
+deployments run the cron, but only the Discord application in the one enabled
+guild posts; more than one enabled guild is a hard failure until an explicit
+channel mapping exists.
+
+Settlement DMs are rich embeds sent through `sendDM`'s embeds support: a game
+line (queue, tracked players, champions), the result, the revealed prediction
+when displayable, "WIN on <alias>" receipt lines, and the recipient's own
+earnings. The plain-text rendering remains the `DmAuditLog` record, and
+budgeted DMs refuse embeds because the budget footer is a content mutation.
+The `/bb notifications` hint is shown on a recipient's first eligible DM and
+then once every `SETTLEMENT_DM_HINT_EVERY` delivered settlement DMs, derived
+from `DmAuditLog` rows newer than the re-stamped `settlementDmHintShownAt` —
+derive, never store.
 
 Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in rural
 Canada. There is no monetary component and nothing transfers to real goods.

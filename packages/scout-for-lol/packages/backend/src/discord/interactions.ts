@@ -115,7 +115,8 @@ async function routeWeeklyParlayButton(
     discordComponentsTotal.inc({ namespace: "bbw", status: "error" });
     if (interaction.deferred && !interaction.replied) {
       await interaction.editReply({
-        content: "😵 Weekly bet failed. Try again shortly.",
+        content:
+          "😵 Something went wrong placing that weekly parlay bet. Try again shortly.",
       });
     }
   }

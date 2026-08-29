@@ -1,4 +1,5 @@
 import {
+  BucksPredictionSchema,
   type BucksPredictionFeature,
   type BucksPredictionQuality,
   type BucksPredictionV2,
@@ -248,6 +249,30 @@ export function predictWin(input: {
     },
     drivers,
   };
+}
+
+/**
+ * The settlement-time reveal sentence for a pool's stored estimate, or nothing
+ * when the stored call was inside the near-even suppression band.
+ */
+export function formatStoredPrediction(raw: string | null): string | undefined {
+  if (raw === null) {
+    return undefined;
+  }
+  const parsed = BucksPredictionSchema.safeParse(JSON.parse(raw));
+  if (!parsed.success) {
+    return undefined;
+  }
+  if (!("version" in parsed.data)) {
+    return shouldDisplayPrediction(parsed.data.winProbability)
+      ? parsed.data.sentence
+      : undefined;
+  }
+  if (!shouldDisplayPrediction(parsed.data.blueWinProbability)) {
+    return undefined;
+  }
+  const blue = Math.round(parsed.data.blueWinProbability * 100);
+  return `🔮 Scout's experimental estimate was Blue ${blue.toString()}% / Red ${(100 - blue).toString()}% · ${parsed.data.dataQuality} data quality.`;
 }
 
 export function shouldDisplayPrediction(winProbability: number): boolean {

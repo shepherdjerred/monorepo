@@ -76,7 +76,7 @@ export async function resolveBucksCapability(
     return null;
   }
   const serverId = enabled[0];
-  if (enabled.length > 1 || serverId === undefined) {
+  if (serverId === undefined || enabled.length > 1) {
     throw new Error(
       "Bryan Bucks analysis requires exactly one enabled guild in scope; " +
         "add an explicit mapping before enabling a second guild.",

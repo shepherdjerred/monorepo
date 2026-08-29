@@ -51,7 +51,7 @@ describe("buildBalanceChartAttachment", () => {
     // PNG magic bytes prove a real render, not an empty buffer.
     const data = attachment?.attachment;
     if (!Buffer.isBuffer(data)) {
-      throw new Error("expected a Buffer attachment");
+      throw new TypeError("expected a Buffer attachment");
     }
     expect([...data.subarray(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47]);
   });

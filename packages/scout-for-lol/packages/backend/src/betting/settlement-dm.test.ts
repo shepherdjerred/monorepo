@@ -279,6 +279,7 @@ describe("Bryan Bucks settlement DMs", () => {
       markNotificationHintShown: async () => {
         await Promise.resolve();
       },
+      countRecentSettlementDms: async () => 0,
       observeBucksDelivery: async (_input, run) => {
         observed++;
         try {
@@ -364,6 +365,7 @@ describe("Bryan Bucks settlement DM delivery failures", () => {
       markNotificationHintShown: async () => {
         await Promise.resolve();
       },
+      countRecentSettlementDms: async () => 0,
       observeBucksDelivery: async (_input, run) => run(),
       sendDm: async () => {
         sends++;

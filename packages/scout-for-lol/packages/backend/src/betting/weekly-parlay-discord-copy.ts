@@ -1,3 +1,4 @@
+import { formatInteger } from "#src/betting/display-format.ts";
 import type {
   WeeklyParlayDefinitionCriteria,
   WeeklyParlayLeg,
@@ -235,7 +236,7 @@ export function weeklyParlayDeliveryContent(input: {
     ...legs,
     qualification ?? "",
     qualificationProgress ?? "",
-    `**${input.bettorCount.toString()} ${countLabel(input.bettorCount, "bettor")} · ${input.totalStaked.toString()} BB staked**`,
+    `**${formatInteger(input.bettorCount)} ${countLabel(input.bettorCount, "bettor")} · ${formatInteger(input.totalStaked)} BB staked**`,
     deliveryTimeCopy({
       kind: input.kind,
       bettingClosesAt: input.bettingClosesAt,
