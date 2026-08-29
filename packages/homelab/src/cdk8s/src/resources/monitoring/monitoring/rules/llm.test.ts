@@ -88,9 +88,13 @@ test("alerts on LLM spend and on a silent Broadcast webhook", () => {
     // leaves two counter series per workload; selecting the maximum before
     // summing them keeps only the longer-lived pod and silently understates
     // spend. The per-type sum must therefore appear *inside* the max.
-    const maxAt = expr?.indexOf("max by (service, workload, model)") ?? -1;
-    const sumAt =
-      expr?.indexOf("sum by (service, workload, model, type)") ?? -1;
+    // `expr.value` is typed `string | number`, so narrow before searching it
+    // rather than letting an unexpected numeric expression silently skip the
+    // ordering assertions below.
+    expect(typeof expr).toBe("string");
+    const rendered = typeof expr === "string" ? expr : "";
+    const maxAt = rendered.indexOf("max by (service, workload, model)");
+    const sumAt = rendered.indexOf("sum by (service, workload, model, type)");
     expect(maxAt).toBeGreaterThanOrEqual(0);
     expect(sumAt).toBeGreaterThan(maxAt);
   }
