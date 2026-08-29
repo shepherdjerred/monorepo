@@ -228,6 +228,45 @@ const CODEX_TOOL_ITEM_TYPES = new Set([
 ]);
 
 /**
+ * Codex calls the whole prompt a single turn, but tool iterations are emitted
+ * as item events inside that turn. Count those actual agent steps so the
+ * activity's maxTurns safety budget cannot be bypassed by a long tool loop.
+ */
+export function codexAgentStepViolation(input: {
+  maxTurns: number;
+  stepsStarted: number;
+  event: ThreadEvent;
+}): { stepsStarted: number; violation: string | undefined } {
+  if (
+    input.event.type !== "item.started" ||
+    !CODEX_TOOL_ITEM_TYPES.has(input.event.item.type)
+  ) {
+    return { stepsStarted: input.stepsStarted, violation: undefined };
+  }
+
+  const stepsStarted = input.stepsStarted + 1;
+  return {
+    stepsStarted,
+    violation:
+      stepsStarted > input.maxTurns
+        ? `Codex SDK exceeded maxTurns (${String(input.maxTurns)}) after ${String(stepsStarted)} tool steps`
+        : undefined,
+  };
+}
+
+function enforceCodexAgentStepBudget(input: {
+  maxTurns: number;
+  stepsStarted: number;
+  event: ThreadEvent;
+}): number {
+  const result = codexAgentStepViolation(input);
+  if (result.violation !== undefined) {
+    throw new Error(result.violation);
+  }
+  return result.stepsStarted;
+}
+
+/**
  * The Codex SDK has no tool allow-list, so a read-only finalization thread can
  * still shell out and read the checkout. The phase contract is therefore
  * enforced on the event stream: any tool use during finalization would put
@@ -262,6 +301,7 @@ async function runCodexSdk(
   let usage: CodexUsage | undefined;
   let traceOutcome: "success" | "error" | "cancelled" = "success";
   let sessionId: string | undefined;
+  let stepsStarted = 0;
   const parser = createCodexJsonlParser({ warn: input.warn });
   const trace = attachCodexTrace(parser, {
     service: "temporal",
@@ -308,6 +348,11 @@ async function runCodexSdk(
         );
       }
       const redactedEvent = redactUnknown(event, input.redactTokens);
+      stepsStarted = enforceCodexAgentStepBudget({
+        maxTurns: input.config.maxTurns,
+        stepsStarted,
+        event,
+      });
       parser.push(`${JSON.stringify(redactedEvent)}\n`);
       generationStarted ||= event.type !== "thread.started";
       possiblyAppliedEffects ||= codexEventMayApplyEffect(event);
