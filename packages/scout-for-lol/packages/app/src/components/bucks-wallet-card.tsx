@@ -27,6 +27,8 @@ export function BucksWalletCard(props: {
     totalAtRisk: number;
     pendingPositionCount: number;
   } | null;
+  /** A tracked player who hasn't bet yet vs. someone who never can. */
+  eligible: boolean;
 }) {
   return (
     <Card>
@@ -44,8 +46,9 @@ export function BucksWalletCard(props: {
       <CardContent>
         {props.wallet === null ? (
           <p className="text-scout-subtle">
-            No wallet yet — bet on a live game below and you&apos;ll get a
-            starting balance.
+            {props.eligible
+              ? "No wallet yet — bet on a live game below and you'll get a starting balance."
+              : "Only players tracked in this server can hold a Bryan Bucks wallet."}
           </p>
         ) : (
           <dl className="flex flex-wrap gap-8">

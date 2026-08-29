@@ -36,6 +36,9 @@ export function BucksParlayCard(props: {
   market: ParlayCardMarket;
   remainingMs: number;
   balance: number | null;
+  /** False for a signed-in member with no tracked player in this server —
+   * every submission would return `not_eligible`, so the form stays hidden. */
+  canBet: boolean;
   nameOf: (discordId: string) => string;
   pending: boolean;
   serverError: string | null;
@@ -82,7 +85,7 @@ export function BucksParlayCard(props: {
           </p>
         )}
         {market.yourPosition === null ? (
-          closed ? null : (
+          closed ? null : props.canBet ? (
             <BucksBetForm
               idPrefix={props.idPrefix}
               sideOptions={[
@@ -94,6 +97,10 @@ export function BucksParlayCard(props: {
               serverError={props.serverError}
               onSubmit={props.onPlace}
             />
+          ) : (
+            <p className="text-scout-subtle text-sm">
+              Only players tracked in this server can bet.
+            </p>
           )
         ) : (
           <div className="space-y-2">
@@ -101,7 +108,7 @@ export function BucksParlayCard(props: {
               Your bet: {market.yourPosition.side}{" "}
               {formatInteger(market.yourPosition.stake)} BB
             </p>
-            {closed ? null : (
+            {closed || !props.canBet ? null : (
               <BucksBetForm
                 idPrefix={`${props.idPrefix}-topup`}
                 sideOptions={[

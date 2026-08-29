@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { BucksCountdown } from "#src/components/bucks-countdown.tsx";
 import { BucksLedgerList } from "#src/components/bucks-ledger-list.tsx";
 import { BucksMarketCard } from "#src/components/bucks-market-card.tsx";
+import { BucksParlayCard } from "#src/components/bucks-parlay-card.tsx";
 import { BucksPendingPositions } from "#src/components/bucks-pending-positions.tsx";
 import { BucksWalletCard } from "#src/components/bucks-wallet-card.tsx";
 
@@ -15,6 +16,7 @@ describe("BucksWalletCard", () => {
     const html = renderToStaticMarkup(
       <BucksWalletCard
         wallet={{ balance: 3000, totalAtRisk: 1250, pendingPositionCount: 3 }}
+        eligible={true}
       />,
     );
     expect(html).toContain("3,000");
@@ -24,9 +26,19 @@ describe("BucksWalletCard", () => {
     expect(html).not.toContain("%");
   });
 
-  test("renders the no-wallet state", () => {
-    const html = renderToStaticMarkup(<BucksWalletCard wallet={null} />);
+  test("renders the no-wallet-yet state for an eligible member", () => {
+    const html = renderToStaticMarkup(
+      <BucksWalletCard wallet={null} eligible={true} />,
+    );
     expect(html).toContain("No wallet yet");
+  });
+
+  test("renders the never-eligible state distinctly for an untracked member", () => {
+    const html = renderToStaticMarkup(
+      <BucksWalletCard wallet={null} eligible={false} />,
+    );
+    expect(html).not.toContain("No wallet yet");
+    expect(html).toContain("tracked");
   });
 });
 
@@ -60,6 +72,7 @@ describe("BucksMarketCard", () => {
         market={market}
         remainingMs={90_000}
         balance={25}
+        canBet={true}
         nameOf={(id) => `user-${id}`}
         pending={false}
         serverError={null}
@@ -81,6 +94,7 @@ describe("BucksMarketCard", () => {
         market={market}
         remainingMs={0}
         balance={25}
+        canBet={true}
         nameOf={(id) => id}
         pending={false}
         serverError={null}
@@ -90,6 +104,51 @@ describe("BucksMarketCard", () => {
     );
     expect(html).toContain("Betting closed");
     expect(html).not.toContain("Place bet");
+  });
+
+  test("suppresses the bet form for an ineligible member instead of inviting an impossible submission", () => {
+    const html = renderToStaticMarkup(
+      <BucksMarketCard
+        market={market}
+        remainingMs={90_000}
+        balance={null}
+        canBet={false}
+        nameOf={(id) => id}
+        pending={false}
+        serverError={null}
+        onPlace={noop}
+        onCancelRequest={noop}
+      />,
+    );
+    expect(html).not.toContain("Place bet");
+    expect(html).toContain("Only players tracked in this server can bet.");
+  });
+});
+
+describe("BucksParlayCard", () => {
+  test("suppresses the bet form for an ineligible member", () => {
+    const html = renderToStaticMarkup(
+      <BucksParlayCard
+        idPrefix="parlay-test"
+        market={{
+          title: "Match parlay",
+          subtitle: "jerred · NA1_123",
+          legs: ["jerred gets at least 7 kills"],
+          yesOdds: "2.50",
+          noOdds: "1.67",
+          yourPosition: null,
+        }}
+        remainingMs={90_000}
+        balance={null}
+        canBet={false}
+        nameOf={(id) => id}
+        pending={false}
+        serverError={null}
+        onPlace={noop}
+      />,
+    );
+    expect(html).not.toContain("Place bet");
+    expect(html).toContain("Only players tracked in this server can bet.");
   });
 });
 

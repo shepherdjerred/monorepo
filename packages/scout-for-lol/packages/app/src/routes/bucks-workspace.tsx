@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { Link, NavLink, Outlet, useOutletContext } from "react-router";
+import { useEffect, useState } from "react";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useLocation,
+  useOutletContext,
+} from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -7,6 +13,11 @@ import {
   LoadingState,
 } from "@scout-for-lol/design-system/domain/states";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
+import {
+  analyticsContextRoute,
+  clearGuildContext,
+  resolveGuildContext,
+} from "#src/lib/analytics.ts";
 import { cn } from "#src/lib/cn.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
@@ -64,10 +75,43 @@ function SectionNav() {
  */
 export function BucksWorkspace() {
   const trpc = useTRPC();
+  const location = useLocation();
   const statusQuery = useQuery(
     trpc.bucks.status.queryOptions(undefined, { retry: 2 }),
   );
   const [selectedGuildId, setSelectedGuildId] = useState<string | null>(null);
+
+  // Computed independently of the narrowed render-path `guild` below so this
+  // can feed the analytics effect ahead of any early return (hooks must run
+  // unconditionally on every render).
+  const availableGuilds =
+    statusQuery.data?.state === "available"
+      ? statusQuery.data.guilds
+      : undefined;
+  const resolvedGuildId =
+    availableGuilds === undefined
+      ? undefined
+      : (availableGuilds.length === 1
+          ? availableGuilds[0]
+          : availableGuilds.find(
+              (candidate) => candidate.id === selectedGuildId,
+            )
+        )?.id;
+
+  // This is the only component mounted for every `/bucks*` route, so — like
+  // `GuildWorkspace` for `/g/:guildId` — it owns the guild super property for
+  // every Bucks pageview and mutation event. "Settled" means the status probe
+  // has answered at all: a forbidden/error result or an unresolved multi-guild
+  // picker are themselves settled "no guild attached" answers, not pending
+  // ones, so the root layout's entry-pageview gate does not wait on them.
+  const contextRoute = analyticsContextRoute(location.pathname);
+  useEffect(() => {
+    if (contextRoute === undefined || statusQuery.isPending) return;
+    resolveGuildContext(contextRoute, resolvedGuildId);
+    return () => {
+      clearGuildContext();
+    };
+  }, [contextRoute, statusQuery.isPending, resolvedGuildId]);
 
   if (statusQuery.isPending) {
     return <LoadingState label="Checking Bryan Bucks availability…" />;
@@ -96,10 +140,9 @@ export function BucksWorkspace() {
     );
   }
 
-  const guild =
-    status.guilds.length === 1
-      ? status.guilds[0]
-      : status.guilds.find((candidate) => candidate.id === selectedGuildId);
+  const guild = status.guilds.find(
+    (candidate) => candidate.id === resolvedGuildId,
+  );
   if (guild === undefined) {
     return (
       <EmptyState>

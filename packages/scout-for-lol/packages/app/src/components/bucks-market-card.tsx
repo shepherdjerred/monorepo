@@ -72,6 +72,9 @@ export function BucksMarketCard(props: {
   market: OutcomeMarketView;
   remainingMs: number;
   balance: number | null;
+  /** False for a signed-in member with no tracked player in this server —
+   * every submission would return `not_eligible`, so the form stays hidden. */
+  canBet: boolean;
   nameOf: (discordId: string) => string;
   pending: boolean;
   serverError: string | null;
@@ -98,7 +101,7 @@ export function BucksMarketCard(props: {
           ))}
         </div>
         {props.market.yourPosition === null ? (
-          closed ? null : (
+          closed ? null : props.canBet ? (
             <BucksBetForm
               idPrefix={`bet-${props.market.matchId}`}
               sideOptions={props.market.sides.map((side) => ({
@@ -110,6 +113,10 @@ export function BucksMarketCard(props: {
               serverError={props.serverError}
               onSubmit={props.onPlace}
             />
+          ) : (
+            <p className="text-scout-subtle text-sm">
+              Only players tracked in this server can bet.
+            </p>
           )
         ) : (
           <div className="flex flex-wrap items-center gap-3">
@@ -120,20 +127,22 @@ export function BucksMarketCard(props: {
             </p>
             {closed ? null : (
               <>
-                <BucksBetForm
-                  idPrefix={`topup-${props.market.matchId}`}
-                  sideOptions={[
-                    {
-                      value: props.market.yourPosition.teamId.toString(),
-                      label: sideLabel(props.market.yourPosition.teamId),
-                    },
-                  ]}
-                  balance={props.balance ?? Number.MAX_SAFE_INTEGER}
-                  pending={props.pending}
-                  serverError={props.serverError}
-                  submitLabel="Add to bet"
-                  onSubmit={props.onPlace}
-                />
+                {props.canBet ? (
+                  <BucksBetForm
+                    idPrefix={`topup-${props.market.matchId}`}
+                    sideOptions={[
+                      {
+                        value: props.market.yourPosition.teamId.toString(),
+                        label: sideLabel(props.market.yourPosition.teamId),
+                      },
+                    ]}
+                    balance={props.balance ?? Number.MAX_SAFE_INTEGER}
+                    pending={props.pending}
+                    serverError={props.serverError}
+                    submitLabel="Add to bet"
+                    onSubmit={props.onPlace}
+                  />
+                ) : null}
                 <Button
                   type="button"
                   variant="outline"

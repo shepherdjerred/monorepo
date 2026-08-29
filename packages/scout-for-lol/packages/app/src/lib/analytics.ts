@@ -349,12 +349,18 @@ export function syncAnalyticsIdentity(session: {
  * The part of a path whose analytics context must resolve before this route may
  * emit anything, or undefined when the route carries no context beyond identity.
  *
- * Today that is only the guild workspace. A future route that registers its own
- * property belongs here too — that is what keeps the gate one rule rather than
- * a race rediscovered per screen.
+ * The guild workspace and the Bryan Bucks workspace both register the guild
+ * super property so their events attribute to the server whose economy they
+ * acted on. A future route that registers its own property belongs here too —
+ * that is what keeps the gate one rule rather than a race rediscovered per
+ * screen.
  */
 export function analyticsContextRoute(pathname: string): string | undefined {
-  return /^\/g\/[^/]+/.exec(pathname)?.[0] ?? undefined;
+  return (
+    /^\/g\/[^/]+/.exec(pathname)?.[0] ??
+    /^\/bucks\b/.exec(pathname)?.[0] ??
+    undefined
+  );
 }
 
 /** Snapshot + subscription for `useSyncExternalStore` in the root layout. */

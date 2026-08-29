@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatInteger } from "@scout-for-lol/data";
-import { EmptyState } from "@scout-for-lol/design-system/layout";
 import { BucksCancelDialog } from "#src/components/bucks-cancel-dialog.tsx";
-import { BucksMarketCard } from "#src/components/bucks-market-card.tsx";
-import { BucksParlayCard } from "#src/components/bucks-parlay-card.tsx";
+import {
+  BucksMarketSections,
+  MarketsStatusBanner,
+  type MarketErrorMap,
+} from "#src/components/bucks-market-sections.tsx";
 import { BucksPendingPositions } from "#src/components/bucks-pending-positions.tsx";
 import { BucksWalletCard } from "#src/components/bucks-wallet-card.tsx";
 import type { BucksBetSubmission } from "#src/components/bucks-bet-form.tsx";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import { useNow } from "#src/hooks/use-now.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { computeClockSkewMs, remainingMs } from "#src/lib/bucks-countdown.ts";
+import { computeClockSkewMs } from "#src/lib/bucks-countdown.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
 
@@ -72,8 +74,6 @@ function refusalCancelCopy(kind: string): string {
       return "Scout couldn't cancel that bet.";
   }
 }
-
-type MarketErrorMap = Record<string, string>;
 
 /** Everything a bet-placing hook needs to answer a mutation uniformly. */
 type BetPlacementSink = {
@@ -163,7 +163,7 @@ export function BucksOverview() {
     },
   };
 
-  const placeOutcome = useMutation(
+  const placeOutcomeMutation = useMutation(
     trpc.bucks.placeOutcomeBet.mutationOptions({
       meta: analyticsMeta("bucks_bet_placed"),
     }),
@@ -173,18 +173,82 @@ export function BucksOverview() {
       meta: analyticsMeta("bucks_bet_cancelled"),
     }),
   );
-  const placeParlay = useMutation(
+  const placeParlayMutation = useMutation(
     trpc.bucks.placeParlayBet.mutationOptions({
       meta: analyticsMeta("bucks_parlay_bet_placed"),
     }),
   );
-  const placeWeekly = useMutation(
+  const placeWeeklyMutation = useMutation(
     trpc.bucks.placeWeeklyParlayBet.mutationOptions({
       meta: analyticsMeta("bucks_weekly_parlay_bet_placed"),
     }),
   );
 
+  const placeOutcome = (matchId: string, submission: BucksBetSubmission) => {
+    const key = `outcome:${matchId}`;
+    placeOutcomeMutation.mutate(
+      {
+        guildId,
+        matchId,
+        teamId: Number(submission.side) === 200 ? 200 : 100,
+        stake: submission.stake,
+      },
+      {
+        onSuccess: (result) => {
+          sink.settleResult(key, result);
+        },
+        onError: (error) => {
+          sink.fail(key, error);
+        },
+      },
+    );
+  };
+  const placeParlay = (matchId: string, submission: BucksBetSubmission) => {
+    const key = `parlay:${matchId}`;
+    placeParlayMutation.mutate(
+      {
+        guildId,
+        matchId,
+        side: submission.side === "NO" ? "NO" : "YES",
+        stake: submission.stake,
+      },
+      {
+        onSuccess: (result) => {
+          sink.settleResult(key, result);
+        },
+        onError: (error) => {
+          sink.fail(key, error);
+        },
+      },
+    );
+  };
+  const placeWeekly = (marketId: number, submission: BucksBetSubmission) => {
+    const key = `weekly:${marketId.toString()}`;
+    placeWeeklyMutation.mutate(
+      {
+        guildId,
+        marketId,
+        side: submission.side === "NO" ? "NO" : "YES",
+        stake: submission.stake,
+      },
+      {
+        onSuccess: (result) => {
+          sink.settleResult(key, result);
+        },
+        onError: (error) => {
+          sink.fail(key, error);
+        },
+      },
+    );
+  };
+
   const balance = walletQuery.data?.wallet?.balance ?? null;
+  // `eligible: false` means bucks.wallet answers `{ wallet: null }` forever
+  // for this member — every submission would return `not_eligible`, so the
+  // market cards must not offer a form for it. Default closed (no bet
+  // forms) while the wallet answer is still loading or failed, since an
+  // impossible mutation is worse than a brief false negative.
+  const canBet = walletQuery.data?.eligible === true;
   const requestCancel = (matchId: string) => {
     setCancelError(null);
     setCancelTarget(matchId);
@@ -199,141 +263,38 @@ export function BucksOverview() {
 
   return (
     <div className="space-y-4">
-      <BucksWalletCard wallet={walletQuery.data?.wallet ?? null} />
+      <BucksWalletCard
+        wallet={walletQuery.data?.wallet ?? null}
+        eligible={walletQuery.data?.eligible === true}
+      />
       <BucksPendingPositions
         positions={walletQuery.data?.wallet?.pendingPositions ?? []}
         onCancelOutcome={requestCancel}
       />
-      {noMarkets ? (
-        <EmptyState>
-          <p>
-            No open markets right now. Markets open when an eligible game
-            starts.
-          </p>
-        </EmptyState>
-      ) : null}
-      {markets?.outcome.map((market) => {
-        const key = `outcome:${market.matchId}`;
-        const place = (submission: BucksBetSubmission) => {
-          placeOutcome.mutate(
-            {
-              guildId,
-              matchId: market.matchId,
-              teamId: Number(submission.side) === 200 ? 200 : 100,
-              stake: submission.stake,
-            },
-            {
-              onSuccess: (result) => {
-                sink.settleResult(key, result);
-              },
-              onError: (error) => {
-                sink.fail(key, error);
-              },
-            },
-          );
-        };
-        return (
-          <BucksMarketCard
-            key={key}
-            market={market}
-            remainingMs={remainingMs(market.closesAt, nowMs, skewMs)}
-            balance={balance}
-            nameOf={nameOf}
-            pending={placeOutcome.isPending}
-            serverError={marketErrors[key] ?? null}
-            onPlace={place}
-            onCancelRequest={() => {
-              requestCancel(market.matchId);
-            }}
-          />
-        );
-      })}
-      {markets?.parlays.map((market) => {
-        const key = `parlay:${market.matchId}`;
-        return (
-          <BucksParlayCard
-            key={key}
-            idPrefix={key}
-            market={{
-              title: "Match parlay",
-              subtitle: `${market.subjects.join(", ")} · ${market.matchId}`,
-              legs: market.legs,
-              yesOdds: market.yesOdds,
-              noOdds: market.noOdds,
-              yourPosition: market.yourPosition,
-              positions: market.positions,
-            }}
-            remainingMs={remainingMs(market.closesAt, nowMs, skewMs)}
-            balance={balance}
-            nameOf={nameOf}
-            pending={placeParlay.isPending}
-            serverError={marketErrors[key] ?? null}
-            onPlace={(submission) => {
-              placeParlay.mutate(
-                {
-                  guildId,
-                  matchId: market.matchId,
-                  side: submission.side === "NO" ? "NO" : "YES",
-                  stake: submission.stake,
-                },
-                {
-                  onSuccess: (result) => {
-                    sink.settleResult(key, result);
-                  },
-                  onError: (error) => {
-                    sink.fail(key, error);
-                  },
-                },
-              );
-            }}
-          />
-        );
-      })}
-      {markets?.weeklyParlays.map((market) => {
-        const key = `weekly:${market.marketId.toString()}`;
-        return (
-          <BucksParlayCard
-            key={key}
-            idPrefix={key}
-            market={{
-              title: "Weekly parlay",
-              subtitle: `${market.subjects.join(", ")} · week of ${market.periodKey}`,
-              legs: market.legs,
-              qualification: market.qualification,
-              yesOdds: market.yesOdds,
-              noOdds: market.noOdds,
-              yourPosition: market.yourPosition,
-              aggregate: {
-                bettorCount: market.bettorCount,
-                totalStaked: market.totalStaked,
-              },
-            }}
-            remainingMs={remainingMs(market.bettingClosesAt, nowMs, skewMs)}
-            balance={balance}
-            nameOf={nameOf}
-            pending={placeWeekly.isPending}
-            serverError={marketErrors[key] ?? null}
-            onPlace={(submission) => {
-              placeWeekly.mutate(
-                {
-                  guildId,
-                  marketId: market.marketId,
-                  side: submission.side === "NO" ? "NO" : "YES",
-                  stake: submission.stake,
-                },
-                {
-                  onSuccess: (result) => {
-                    sink.settleResult(key, result);
-                  },
-                  onError: (error) => {
-                    sink.fail(key, error);
-                  },
-                },
-              );
-            }}
-          />
-        );
-      })}
+      <MarketsStatusBanner
+        isPending={marketsQuery.isPending}
+        isError={marketsQuery.isError}
+        onRetry={() => {
+          void marketsQuery.refetch();
+        }}
+        isEmpty={noMarkets}
+      />
+      <BucksMarketSections
+        markets={markets}
+        nowMs={nowMs}
+        skewMs={skewMs}
+        balance={balance}
+        canBet={canBet}
+        nameOf={nameOf}
+        marketErrors={marketErrors}
+        placeOutcome={placeOutcome}
+        placeOutcomePending={placeOutcomeMutation.isPending}
+        placeParlay={placeParlay}
+        placeParlayPending={placeParlayMutation.isPending}
+        placeWeekly={placeWeekly}
+        placeWeeklyPending={placeWeeklyMutation.isPending}
+        onCancelRequest={requestCancel}
+      />
       <BucksCancelDialog
         open={cancelTarget !== null}
         onOpenChange={(open) => {
