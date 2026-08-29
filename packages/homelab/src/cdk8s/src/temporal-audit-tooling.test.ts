@@ -13,7 +13,11 @@ const RuleSchema = z.object({
 const ResourceSchema = z.object({
   kind: z.string(),
   metadata: z
-    .object({ name: z.string().optional(), namespace: z.string().optional() })
+    .object({
+      name: z.string().optional(),
+      namespace: z.string().optional(),
+      annotations: z.record(z.string(), z.string()).optional(),
+    })
     .optional(),
   data: z.record(z.string(), z.string()).optional(),
   rules: z.array(RuleSchema).optional(),
@@ -121,6 +125,20 @@ function requireDeployment(
   return deployment;
 }
 
+function requireResource(
+  resources: z.infer<typeof ResourceSchema>[],
+  kind: string,
+  name: string,
+) {
+  const resource = resources.find(
+    (candidate) => candidate.kind === kind && candidate.metadata?.name === name,
+  );
+  if (resource === undefined) {
+    throw new Error(`Missing synthesized ${kind} ${name}`);
+  }
+  return resource;
+}
+
 function envValue(
   deployment: SynthesizedDeployment,
   name: string,
@@ -172,7 +190,9 @@ describe("temporal homelab audit tooling configuration", () => {
 
 describe("temporal homelab audit tooling worker topology", () => {
   it("isolates core, agent, and both Glitter queues behind event-loop health probes", async () => {
-    const deployments = parseDeployments(await synthesizeApp());
+    const yaml = await synthesizeApp();
+    const deployments = parseDeployments(yaml);
+    const resources = parseResources(yaml);
     const core = requireDeployment(deployments, "temporal-temporal-worker");
     const gateway = requireDeployment(deployments, "temporal-temporal-gateway");
     const home = requireDeployment(
@@ -200,6 +220,11 @@ describe("temporal homelab audit tooling worker topology", () => {
     expect(envValue(gateway, "TEMPORAL_WORKER_ROLE")).toBe("control");
     expect(envValue(gateway, "SLEEP_WEBHOOK_PORT")).toBe("9469");
     expect(gateway.metadata).toMatchObject({
+      annotations: { "argocd.argoproj.io/sync-wave": "-1" },
+    });
+    expect(
+      requireResource(resources, "ServiceAccount", "temporal-gateway").metadata,
+    ).toMatchObject({
       annotations: { "argocd.argoproj.io/sync-wave": "-1" },
     });
     expect(envValue(home, "TEMPORAL_WORKER_ROLE")).toBe("home");
@@ -283,10 +308,12 @@ describe("temporal homelab audit tooling worker topology", () => {
       ]);
     }
 
-    const yaml = await synthesizeApp();
-    expect(yaml).toContain("name: temporal-worker-sleep-webhook");
-    expect(yaml).toContain("https://temporal-sleep.sjer.red/healthz");
-    expect(yaml).toContain("name: SLEEP_WEBHOOK_TOKEN");
+    const sleepWebhookYaml = await synthesizeApp();
+    expect(sleepWebhookYaml).toContain("name: temporal-worker-sleep-webhook");
+    expect(sleepWebhookYaml).toContain(
+      "https://temporal-sleep.sjer.red/healthz",
+    );
+    expect(sleepWebhookYaml).toContain("name: SLEEP_WEBHOOK_TOKEN");
   });
 });
 

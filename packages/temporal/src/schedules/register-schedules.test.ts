@@ -10,6 +10,7 @@ import {
   DELETED_SCHEDULE_IDS,
   buildSchedulePolicies,
   routeDynamicAgentTaskSchedule,
+  terminateRetiredWorkflowExecutions,
 } from "./register-schedules.ts";
 import { SCHEDULES } from "./schedule-definitions.ts";
 import {
@@ -531,6 +532,37 @@ describe("DELETED_SCHEDULE_IDS", () => {
       expect(activeIds).not.toContain(deletedId);
     }
   });
+});
+
+test("terminates running executions of retired workflow types", async () => {
+  const queries: string[] = [];
+  const terminated: string[] = [];
+  const client = {
+    workflow: {
+      list({ query }: { query: string }) {
+        queries.push(query);
+        return (async function* () {
+          yield { workflowId: "retired-workflow", runId: "retired-run" };
+        })();
+      },
+      getHandle(workflowId: string, runId: string) {
+        return {
+          terminate: async (reason?: string) => {
+            terminated.push(`${workflowId}/${runId}: ${reason ?? ""}`);
+          },
+        };
+      },
+    },
+  };
+
+  await terminateRetiredWorkflowExecutions(client);
+
+  expect(queries).toEqual([
+    'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+  ]);
+  expect(terminated).toEqual([
+    "retired-workflow/retired-run: Workflow type retired; terminating during deployment",
+  ]);
 });
 
 describe("Glitter corpus schedule", () => {

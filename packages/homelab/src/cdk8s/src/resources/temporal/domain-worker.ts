@@ -44,7 +44,16 @@ export function createTemporalDomainWorker(
   const serviceAccount =
     props.serviceAccount ??
     new ServiceAccount(chart, `${props.name}-service-account`, {
-      metadata: { name: props.name },
+      metadata: {
+        name: props.name,
+        ...(props.syncWave === undefined
+          ? {}
+          : {
+              annotations: {
+                "argocd.argoproj.io/sync-wave": String(props.syncWave),
+              },
+            }),
+      },
     });
   const deployment = new Deployment(chart, props.name, {
     replicas: 1,
