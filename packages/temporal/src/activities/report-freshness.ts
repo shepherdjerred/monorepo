@@ -161,7 +161,7 @@ export function publishReportFreshnessMetrics(
   reportFreshnessState.reset();
   for (const result of results) {
     reportFreshnessState.set(
-      { schedule_id: result.scheduleId },
+      { temporal_namespace: "prod", schedule_id: result.scheduleId },
       result.status === "fresh"
         ? 1
         : result.status === "pending"

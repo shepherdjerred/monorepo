@@ -51,6 +51,8 @@ export function legacyWorkerEnvironment(props: {
     EnvValue.fromSecretValue({ secret: props.secret, key });
   return {
     TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+    TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
+    TEMPORAL_LEGACY_NAMESPACE: EnvValue.fromValue("default"),
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
     TEMPORAL_WORKER_ROLE: EnvValue.fromValue("legacy"),
     FRESHRSS_API_URL: EnvValue.fromValue(

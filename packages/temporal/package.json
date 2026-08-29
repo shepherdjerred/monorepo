@@ -31,6 +31,7 @@
     "canary:agent-task": "bun run scripts/agent-task-structured-output-canary.ts --production-only",
     "canary:report-reliability": "bun run scripts/report-reliability-canary.ts --production-only",
     "inventory:report-schedules": "bun run scripts/inventory-report-schedules.ts",
+    "migrate:namespaces": "bun run scripts/migrate-namespaces.ts",
     "check:rehearsal": "bun run scripts/check-schedule-rehearsal.ts",
     "glitter:import-seed": "bun run scripts/import-glitter-seed.ts",
     "glitter:operate": "bun run scripts/operate-glitter-corpus.ts",

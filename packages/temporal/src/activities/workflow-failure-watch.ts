@@ -8,6 +8,10 @@ import {
 } from "./workflow-failure-watch-checkpoint.ts";
 import { buildFailureAlertForExecution } from "./workflow-failure-watch-detail.ts";
 import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
+import type {
+  LegacyTemporalNamespace,
+  TemporalNamespace,
+} from "#shared/temporal-namespace.ts";
 
 /**
  * Polls the Temporal visibility API for workflow executions that closed as
@@ -353,6 +357,7 @@ function advanceRecoveryCheckpoint(
 }
 
 export type PollWorkflowFailuresOptions = {
+  namespace?: TemporalNamespace | LegacyTemporalNamespace;
   now: Date;
   lookbackMs: number;
   ttlMs: number;
@@ -406,6 +411,7 @@ export async function pollWorkflowFailuresOnce(
         continue;
       }
       pendingExecutions.push({
+        temporalNamespace: options.namespace ?? "prod",
         workflowId: info.workflowId,
         runId: info.runId,
         workflowType: info.type,

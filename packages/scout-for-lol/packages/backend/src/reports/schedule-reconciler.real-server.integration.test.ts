@@ -61,6 +61,8 @@ beforeAll(async () => {
       "--disable-config-file",
       "server",
       "start-dev",
+      "--namespace",
+      "dev",
       "--headless",
       "--ip",
       "127.0.0.1",
@@ -85,7 +87,7 @@ beforeAll(async () => {
         address,
         connectTimeout: 500,
       });
-      client = new Client({ connection, namespace: "default" });
+      client = new Client({ connection, namespace: "dev" });
       return;
     } catch (error: unknown) {
       lastError = error;

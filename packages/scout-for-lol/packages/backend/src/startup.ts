@@ -71,6 +71,7 @@ export async function startBackendRuntime(): Promise<
       temporalSupervisor = startScoutTemporalSupervisor({
         address: configuration.temporalAddress,
         namespace: configuration.temporalNamespace,
+        legacyNamespace: configuration.temporalLegacyNamespace,
         stage: configuration.environment,
         activities: createScoutTemporalActivityGroups(),
       });

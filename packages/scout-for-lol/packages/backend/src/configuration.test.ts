@@ -6,12 +6,15 @@ import {
 } from "#src/configuration.ts";
 import configuration from "#src/configuration.ts";
 
+Bun.env["TEMPORAL_NAMESPACE"] ??= "dev";
+
 type TrackedKey =
   | "ENVIRONMENT"
   | "NODE_ENV"
   | "ENABLE_DISCORD_GATEWAY"
   | "ENABLE_BACKGROUND_JOBS"
   | "TEMPORAL_ADDRESS"
+  | "TEMPORAL_NAMESPACE"
   | "BB_ASK_MODEL"
   | "EXPLORE_MODEL";
 
@@ -22,46 +25,34 @@ function snapshotEnv(): Record<TrackedKey, string | undefined> {
     ENABLE_DISCORD_GATEWAY: Bun.env["ENABLE_DISCORD_GATEWAY"],
     ENABLE_BACKGROUND_JOBS: Bun.env["ENABLE_BACKGROUND_JOBS"],
     TEMPORAL_ADDRESS: Bun.env["TEMPORAL_ADDRESS"],
+    TEMPORAL_NAMESPACE: Bun.env["TEMPORAL_NAMESPACE"],
     BB_ASK_MODEL: Bun.env["BB_ASK_MODEL"],
     EXPLORE_MODEL: Bun.env["EXPLORE_MODEL"],
   };
 }
 
+function restoreEnvKey(key: TrackedKey, value: string | undefined): void {
+  if (value === undefined) {
+    Reflect.deleteProperty(Bun.env, key);
+  } else {
+    Bun.env[key] = value;
+  }
+}
+
 function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
-  if (snapshot.ENVIRONMENT === undefined) {
-    delete Bun.env["ENVIRONMENT"];
-  } else {
-    Bun.env["ENVIRONMENT"] = snapshot.ENVIRONMENT;
-  }
-  if (snapshot.NODE_ENV === undefined) {
-    delete Bun.env.NODE_ENV;
-  } else {
-    Bun.env.NODE_ENV = snapshot.NODE_ENV;
-  }
-  if (snapshot.ENABLE_DISCORD_GATEWAY === undefined) {
-    delete Bun.env["ENABLE_DISCORD_GATEWAY"];
-  } else {
-    Bun.env["ENABLE_DISCORD_GATEWAY"] = snapshot.ENABLE_DISCORD_GATEWAY;
-  }
-  if (snapshot.ENABLE_BACKGROUND_JOBS === undefined) {
-    delete Bun.env["ENABLE_BACKGROUND_JOBS"];
-  } else {
-    Bun.env["ENABLE_BACKGROUND_JOBS"] = snapshot.ENABLE_BACKGROUND_JOBS;
-  }
-  if (snapshot.TEMPORAL_ADDRESS === undefined) {
-    delete Bun.env["TEMPORAL_ADDRESS"];
-  } else {
-    Bun.env["TEMPORAL_ADDRESS"] = snapshot.TEMPORAL_ADDRESS;
-  }
-  if (snapshot.BB_ASK_MODEL === undefined) {
-    delete Bun.env["BB_ASK_MODEL"];
-  } else {
-    Bun.env["BB_ASK_MODEL"] = snapshot.BB_ASK_MODEL;
-  }
-  if (snapshot.EXPLORE_MODEL === undefined) {
-    delete Bun.env["EXPLORE_MODEL"];
-  } else {
-    Bun.env["EXPLORE_MODEL"] = snapshot.EXPLORE_MODEL;
+  for (const key of Object.keys(snapshot)) {
+    if (
+      key === "ENVIRONMENT" ||
+      key === "NODE_ENV" ||
+      key === "ENABLE_DISCORD_GATEWAY" ||
+      key === "ENABLE_BACKGROUND_JOBS" ||
+      key === "TEMPORAL_ADDRESS" ||
+      key === "TEMPORAL_NAMESPACE" ||
+      key === "BB_ASK_MODEL" ||
+      key === "EXPLORE_MODEL"
+    ) {
+      restoreEnvKey(key, snapshot[key]);
+    }
   }
   resetConfigurationForTests();
 }
@@ -148,6 +139,33 @@ describe("local runtime flags", () => {
     expect(configuration.enableDiscordGateway).toBe(false);
     expect(configuration.enableBackgroundJobs).toBe(false);
     expect(configuration.temporalAddress).toBeUndefined();
+    expect(configuration.temporalNamespace).toBe("dev");
+  });
+
+  test("requires an active Temporal namespace", () => {
+    delete Bun.env["TEMPORAL_NAMESPACE"];
+    resetConfigurationForTests();
+
+    expect(() => configuration.temporalNamespace).toThrow(
+      /TEMPORAL_NAMESPACE.*required/,
+    );
+  });
+
+  test("rejects default as an active Temporal namespace", () => {
+    Bun.env["TEMPORAL_NAMESPACE"] = "default";
+    resetConfigurationForTests();
+
+    expect(() => configuration.temporalNamespace).toThrow();
+  });
+
+  test("requires the active Temporal namespace to match the Scout stage", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["TEMPORAL_NAMESPACE"] = "prod";
+    resetConfigurationForTests();
+
+    expect(() => configuration.temporalNamespace).toThrow(
+      /TEMPORAL_NAMESPACE=prod must match ENVIRONMENT=beta/,
+    );
   });
 
   test("rejects disabled gateway or jobs outside development", () => {

@@ -8,6 +8,7 @@ import { GlitterCorpusSnapshotPinSchema } from "#activities/glitter-context-refr
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { GuildSnapshotSchema } from "#shared/glitter-corpus.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";
@@ -289,7 +290,8 @@ async function main(): Promise<void> {
       defaultAddress: DEFAULT_TEMPORAL_ADDRESS,
     }),
   );
-  const client = new Client({ connection });
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  const client = new Client({ connection, namespace });
   switch (command) {
     case "inventory": {
       await runInventory(client, argv);

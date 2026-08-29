@@ -1,8 +1,8 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import type { ScheduleDefinition } from "./schedule-types.ts";
+import { schedulesInNamespace } from "./schedule-types.ts";
 
-export const EARLY_SCHEDULES: ScheduleDefinition[] = [
+export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
   {
     id: "report-freshness-monitor",
     workflowType: "monitorReportFreshness",
@@ -218,4 +218,4 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     workflowExecutionTimeout: "50 minutes",
     memo: "Deterministic daily homelab health check with evidence-backed report delivery",
   },
-];
+]);

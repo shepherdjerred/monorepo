@@ -39,6 +39,7 @@ function intervalSchedule(
   schedule: ScoutIntervalSchedule,
 ): ScheduleDefinition {
   return {
+    namespace: stage,
     id: scoutFixedScheduleId(stage, schedule.name),
     workflowType: schedule.workflowType,
     args: schedule.args,
@@ -60,6 +61,7 @@ function cronSchedule(
   schedule: ScoutCronSchedule,
 ): ScheduleDefinition {
   return {
+    namespace: stage,
     id: scoutFixedScheduleId(stage, schedule.name),
     workflowType: schedule.workflowType,
     args: schedule.args,

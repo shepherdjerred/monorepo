@@ -11,6 +11,7 @@ import {
 import { buildScheduleState } from "./schedule-state.ts";
 import { CATCHUP_RELAXED, SCHEDULES } from "./schedule-definitions.ts";
 import type { CatchupWindow, ScheduleDefinition } from "./schedule-types.ts";
+import type { TemporalNamespace } from "#shared/temporal-namespace.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 // SCHEDULES/CATCHUP_* live in ./schedule-definitions.ts and the shared types
@@ -67,6 +68,11 @@ export const DELETED_SCHEDULE_IDS = [
   // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",
 ] as const;
+
+export const DELETED_SCHEDULES = DELETED_SCHEDULE_IDS.map((id) => ({
+  id,
+  namespace: "prod" as const,
+}));
 
 export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   overlap: ScheduleOverlapPolicy;
@@ -144,12 +150,22 @@ async function reconcileDynamicAgentTaskSchedules(
 
 export async function registerSchedules(
   client: Client,
-  options: { validateLocalEnvironment?: boolean } = {},
+  options: {
+    namespace: TemporalNamespace;
+    validateLocalEnvironment?: boolean;
+  },
 ): Promise<void> {
   const scheduleClient = client.schedule;
   const validateLocalEnvironment = options.validateLocalEnvironment ?? true;
+  const schedules = SCHEDULES.filter(
+    (schedule) =>
+      options.namespace === "dev" || schedule.namespace === options.namespace,
+  );
+  const deletedSchedules = DELETED_SCHEDULES.filter(
+    (schedule) => schedule.namespace === options.namespace,
+  );
 
-  for (const scheduleId of DELETED_SCHEDULE_IDS) {
+  for (const { id: scheduleId } of deletedSchedules) {
     try {
       await scheduleClient.getHandle(scheduleId).delete();
       console.warn(`Deleted orphaned schedule: ${scheduleId}`);
@@ -163,9 +179,11 @@ export async function registerSchedules(
   // Dynamic schedules are intentionally absent from SCHEDULES, but their next
   // action must move with the deterministic Workflow Worker. Reconcile every
   // owned schedule before evaluating whether legacy Workflow pollers can drain.
-  await reconcileDynamicAgentTaskSchedules(scheduleClient);
+  if (options.namespace === "prod") {
+    await reconcileDynamicAgentTaskSchedules(scheduleClient);
+  }
 
-  for (const schedule of SCHEDULES) {
+  for (const schedule of schedules) {
     const handle = scheduleClient.getHandle(schedule.id);
     try {
       // Update the existing schedule
@@ -206,7 +224,8 @@ export async function registerSchedules(
   // list). Non-fatal — see detectOrphanSchedules.
   await detectOrphanSchedules(
     scheduleClient,
-    new Set(SCHEDULES.map((schedule) => schedule.id)),
-    new Set(DELETED_SCHEDULE_IDS),
+    options.namespace,
+    new Set(schedules.map((schedule) => schedule.id)),
+    new Set(deletedSchedules.map((schedule) => schedule.id)),
   );
 }

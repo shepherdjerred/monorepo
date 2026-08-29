@@ -20,11 +20,18 @@
 
   [profile.default]
     address = "localhost:7233"
-    namespace = "default"
+    namespace = "dev"
 
   [profile.homelab]
     address = "temporal.tailnet-1a49.ts.net:443"
-    namespace = "default"
+    namespace = "prod"
 
     [profile.homelab.tls]
+      disabled = false
+
+  [profile.beta]
+    address = "temporal.tailnet-1a49.ts.net:443"
+    namespace = "beta"
+
+    [profile.beta.tls]
       disabled = false

@@ -118,11 +118,11 @@ export function createTemporalDashboard() {
         id: 6,
         title: "Temporal Activity Failures",
         description:
-          "Temporal server activity task failures by workflow/activity",
+          "Temporal server activity task failures by namespace, workflow, and activity",
         targets: [
           {
-            expr: 'sum by (workflowType, activityType) (increase(activity_task_fail{namespace="default"}[1h])) or on() vector(0)',
-            legend: "{{workflowType}} {{activityType}}",
+            expr: 'sum by (namespace, workflowType, activityType) (increase(activity_task_fail{namespace=~"prod|beta"}[1h])) or on() vector(0)',
+            legend: "{{namespace}} {{workflowType}} {{activityType}}",
           },
         ],
         x: 0,

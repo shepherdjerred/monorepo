@@ -24,6 +24,16 @@ import {
   getWorkerRoleContract,
   type QueueWorkerDefinition,
 } from "./worker-config.ts";
+import {
+  parseLegacyTemporalNamespace,
+  parseTemporalNamespace,
+  type LegacyTemporalNamespace,
+  type TemporalNamespace,
+} from "./shared/temporal-namespace.ts";
+import {
+  assertCentralWorkerNamespace,
+  workerNamespaces,
+} from "./shared/worker-namespaces.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -85,32 +95,36 @@ async function createQueueWorker(
   definition: QueueWorkerDefinition,
   connection: NativeConnection,
   workflowsPath: string,
+  namespace: TemporalNamespace | LegacyTemporalNamespace,
+  legacyDrain: boolean,
 ): Promise<Worker> {
   if (definition.kind === "workflow") {
     return await Worker.create({
       connection,
-      namespace: "default",
+      namespace,
       workflowsPath,
       workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
       taskQueue: definition.taskQueue,
-      ...(definition.maxConcurrentWorkflowTaskExecutions === undefined
+      ...(!legacyDrain &&
+      definition.maxConcurrentWorkflowTaskExecutions === undefined
         ? {}
         : {
             maxConcurrentWorkflowTaskExecutions:
-              definition.maxConcurrentWorkflowTaskExecutions,
+              definition.maxConcurrentWorkflowTaskExecutions ?? 1,
           }),
     });
   }
   return await Worker.create({
     connection,
-    namespace: "default",
+    namespace,
     activities: definition.activities,
     taskQueue: definition.taskQueue,
-    ...(definition.maxConcurrentActivityTaskExecutions === undefined
+    ...(!legacyDrain &&
+    definition.maxConcurrentActivityTaskExecutions === undefined
       ? {}
       : {
           maxConcurrentActivityTaskExecutions:
-            definition.maxConcurrentActivityTaskExecutions,
+            definition.maxConcurrentActivityTaskExecutions ?? 1,
         }),
   });
 }
@@ -266,7 +280,17 @@ async function main(): Promise<void> {
   initializeTracing();
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
-  jsonLog("info", "Connecting to Temporal server", { address, role });
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  assertCentralWorkerNamespace(role, namespace);
+  const legacyNamespace = parseLegacyTemporalNamespace(
+    Bun.env["TEMPORAL_LEGACY_NAMESPACE"],
+  );
+  jsonLog("info", "Connecting to Temporal server", {
+    address,
+    role,
+    namespace,
+    legacyNamespace,
+  });
 
   const connection = await NativeConnection.connect({ address });
 
@@ -276,38 +300,64 @@ async function main(): Promise<void> {
   let eventBridge: EventBridgeHandle | undefined;
 
   for (const definition of roleContract.workers) {
-    const worker = await createQueueWorker(
-      definition,
-      connection,
-      workflowsPath,
-    );
-    workers.push(worker);
-    jsonLog("info", "Worker created", {
-      workerKind: definition.kind,
+    const namespaces = workerNamespaces({
       queueRole: definition.role,
-      taskQueue: definition.taskQueue,
-      ...(definition.kind === "activity"
-        ? {
-            maxConcurrentActivityTaskExecutions:
-              definition.maxConcurrentActivityTaskExecutions,
-          }
-        : {
-            maxConcurrentWorkflowTaskExecutions:
-              definition.maxConcurrentWorkflowTaskExecutions,
-          }),
+      activeNamespace: namespace,
+      legacyNamespace,
     });
+    for (const workerNamespace of namespaces) {
+      const legacyDrain = workerNamespace === legacyNamespace;
+      const worker = await createQueueWorker(
+        definition,
+        connection,
+        workflowsPath,
+        workerNamespace,
+        legacyDrain,
+      );
+      workers.push(worker);
+      jsonLog("info", "Worker created", {
+        namespace: workerNamespace,
+        legacyDrain,
+        workerKind: definition.kind,
+        queueRole: definition.role,
+        taskQueue: definition.taskQueue,
+        ...(definition.kind === "activity"
+          ? {
+              maxConcurrentActivityTaskExecutions:
+                definition.maxConcurrentActivityTaskExecutions,
+            }
+          : {
+              maxConcurrentWorkflowTaskExecutions:
+                definition.maxConcurrentWorkflowTaskExecutions,
+            }),
+      });
+    }
   }
 
   if (roleContract.runsGateway || roleContract.runsEventBridge) {
     const clientConnection = await Connection.connect({ address });
-    const client = new Client({ connection: clientConnection });
+    const client = new Client({
+      connection: clientConnection,
+      namespace,
+    });
 
     if (roleContract.runsGateway) {
-      await registerSchedules(client, {
-        validateLocalEnvironment:
-          roleContract.validatesScheduleEnvironmentLocally,
-      });
-      jsonLog("info", "Schedules registered");
+      const scheduleNamespaces: readonly TemporalNamespace[] =
+        namespace === "prod" ? ["prod", "beta"] : [namespace];
+      for (const scheduleNamespace of scheduleNamespaces) {
+        const scheduleClient = new Client({
+          connection: clientConnection,
+          namespace: scheduleNamespace,
+        });
+        await registerSchedules(scheduleClient, {
+          namespace: scheduleNamespace,
+          validateLocalEnvironment:
+            roleContract.validatesScheduleEnvironmentLocally,
+        });
+        jsonLog("info", "Schedules registered", {
+          namespace: scheduleNamespace,
+        });
+      }
 
       httpServers = startHttpServers(client);
     }

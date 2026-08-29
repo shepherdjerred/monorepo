@@ -4,6 +4,7 @@ import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { SCHEDULES } from "#schedules/schedule-definitions.ts";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
 import { REPORT_SCHEDULE_REGISTRY } from "#shared/report-registry.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";
@@ -24,7 +25,8 @@ async function main(): Promise<void> {
       defaultAddress: DEFAULT_TEMPORAL_ADDRESS,
     }),
   );
-  const client = new Client({ connection });
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  const client = new Client({ connection, namespace });
   const sourceById = new Map(
     SCHEDULES.map((schedule) => [schedule.id, schedule]),
   );
@@ -57,7 +59,13 @@ async function main(): Promise<void> {
 
   console.warn(
     JSON.stringify(
-      { observedAt: new Date().toISOString(), live, liveOnly, sourceOnly },
+      {
+        observedAt: new Date().toISOString(),
+        namespace,
+        live,
+        liveOnly,
+        sourceOnly,
+      },
       undefined,
       2,
     ),

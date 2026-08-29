@@ -45,6 +45,10 @@ describe("Scout weekly parlay deployment boundary", () => {
           }),
           expect.objectContaining({
             name: "TEMPORAL_NAMESPACE",
+            value: stage,
+          }),
+          expect.objectContaining({
+            name: "TEMPORAL_LEGACY_NAMESPACE",
             value: "default",
           }),
         ]),

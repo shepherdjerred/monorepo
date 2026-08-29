@@ -152,7 +152,7 @@ if (import.meta.main) {
     }
     environment["TEMPORAL_ADDRESS"] =
       `127.0.0.1:${options.temporalPort.toString()}`;
-    environment["TEMPORAL_NAMESPACE"] = "default";
+    environment["TEMPORAL_NAMESPACE"] = "dev";
     const sharedDbName = sharedServerDatabaseName(options.databaseUrl, Bun.env);
     if (sharedDbName !== undefined) {
       const ensure = Bun.spawn(

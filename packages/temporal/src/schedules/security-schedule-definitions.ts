@@ -1,8 +1,8 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import type { ScheduleDefinition } from "./schedule-types.ts";
+import { schedulesInNamespace } from "./schedule-types.ts";
 
-export const SECURITY_SCHEDULES: readonly ScheduleDefinition[] = [
+export const SECURITY_SCHEDULES = schedulesInNamespace("prod", [
   {
     id: "main-vuln-scan-weekly",
     workflowType: "runMainVulnScanWorkflow",
@@ -31,4 +31,4 @@ export const SECURITY_SCHEDULES: readonly ScheduleDefinition[] = [
     workflowExecutionTimeout: "4 hours",
     memo: "Weekly lychee link-rot scan of main's tracked markdown with report delivery",
   },
-];
+]);

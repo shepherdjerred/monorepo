@@ -1,7 +1,15 @@
 import { z } from "zod";
 
-export const ScoutStageSchema = z.enum(["dev", "beta", "prod"]);
-export type ScoutStage = z.infer<typeof ScoutStageSchema>;
+export const TemporalNamespaceSchema = z.enum(["dev", "beta", "prod"]);
+export type TemporalNamespace = z.infer<typeof TemporalNamespaceSchema>;
+
+export const ScoutStageSchema = TemporalNamespaceSchema;
+export type ScoutStage = TemporalNamespace;
+
+export const TemporalLegacyNamespaceSchema = z.literal("default");
+export type TemporalLegacyNamespace = z.infer<
+  typeof TemporalLegacyNamespaceSchema
+>;
 
 const OpaqueIdentifierSchema = z
   .string()
