@@ -468,8 +468,18 @@ describe("summarizeCodexJsonl", () => {
       toolOutputCharacters: 22,
       inputTokens: 100,
       cachedInputTokens: 80,
+      cacheWriteInputTokens: 0,
       outputTokens: 20,
       reasoningOutputTokens: 10,
+      turnUsages: [
+        {
+          inputTokens: 100,
+          cachedInputTokens: 80,
+          cacheWriteInputTokens: 0,
+          outputTokens: 20,
+          reasoningOutputTokens: 10,
+        },
+      ],
       codexThreadId: "thread-123",
     });
   });

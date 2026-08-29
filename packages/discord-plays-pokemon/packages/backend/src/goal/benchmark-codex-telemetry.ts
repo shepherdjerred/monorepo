@@ -5,6 +5,14 @@ import {
   type MovementLoopState,
 } from "./benchmark-movement-telemetry.ts";
 
+export type BenchmarkTurnUsage = {
+  inputTokens: number;
+  cachedInputTokens: number;
+  cacheWriteInputTokens: number;
+  outputTokens: number;
+  reasoningOutputTokens: number;
+};
+
 export type CodexBenchmarkTelemetry = {
   turns: number;
   toolCalls: number;
@@ -24,8 +32,10 @@ export type CodexBenchmarkTelemetry = {
   toolOutputCharacters: number;
   inputTokens: number;
   cachedInputTokens: number;
+  cacheWriteInputTokens: number;
   outputTokens: number;
   reasoningOutputTokens: number;
+  turnUsages: readonly BenchmarkTurnUsage[];
   codexThreadId: string | null;
 };
 
@@ -46,6 +56,7 @@ const ItemSchema = z.looseObject({
 const UsageSchema = z.looseObject({
   input_tokens: z.number().int().nonnegative().optional(),
   cached_input_tokens: z.number().int().nonnegative().optional(),
+  cache_write_input_tokens: z.number().int().nonnegative().optional(),
   output_tokens: z.number().int().nonnegative().optional(),
   reasoning_output_tokens: z.number().int().nonnegative().optional(),
 });
@@ -67,8 +78,10 @@ export function summarizeCodexJsonl(jsonl: string): CodexBenchmarkTelemetry {
     toolOutputCharacters: 0,
     inputTokens: 0,
     cachedInputTokens: 0,
+    cacheWriteInputTokens: 0,
     outputTokens: 0,
     reasoningOutputTokens: 0,
+    turnUsages: [],
     codexThreadId: null,
   };
   const state: TelemetryParseState = {
@@ -124,8 +137,20 @@ function countLifecycleEvent(
     if (usage.success) {
       result.inputTokens += usage.data.input_tokens ?? 0;
       result.cachedInputTokens += usage.data.cached_input_tokens ?? 0;
+      result.cacheWriteInputTokens +=
+        usage.data.cache_write_input_tokens ?? 0;
       result.outputTokens += usage.data.output_tokens ?? 0;
       result.reasoningOutputTokens += usage.data.reasoning_output_tokens ?? 0;
+      result.turnUsages = [
+        ...result.turnUsages,
+        {
+          inputTokens: usage.data.input_tokens ?? 0,
+          cachedInputTokens: usage.data.cached_input_tokens ?? 0,
+          cacheWriteInputTokens: usage.data.cache_write_input_tokens ?? 0,
+          outputTokens: usage.data.output_tokens ?? 0,
+          reasoningOutputTokens: usage.data.reasoning_output_tokens ?? 0,
+        },
+      ];
     }
   }
   if (type.includes("error") || type.endsWith(".failed")) {
