@@ -286,6 +286,13 @@ export function codexFinalizationToolViolation(input: {
   return `Codex finalization invoked the ${event.item.type} tool; the finalization phase may only reason over the captured evidence catalog`;
 }
 
+function startCodexTurn(turnsStarted: number, maxTurns: number): number {
+  if (turnsStarted >= maxTurns) {
+    throw new Error(`Codex agent exceeded maxTurns=${String(maxTurns)}`);
+  }
+  return turnsStarted + 1;
+}
+
 async function runCodexSdk(
   input: AgentTaskSdkRunInput,
 ): Promise<AgentTaskSdkResult> {
@@ -299,6 +306,7 @@ async function runCodexSdk(
   let output: string | undefined;
   const evidenceEvents: unknown[] = [];
   let usage: CodexUsage | undefined;
+  let turnsStarted = 0;
   let traceOutcome: "success" | "error" | "cancelled" = "success";
   let sessionId: string | undefined;
   let stepsStarted = 0;
@@ -383,6 +391,8 @@ async function runCodexSdk(
           }
           break;
         case "turn.started":
+          turnsStarted = startCodexTurn(turnsStarted, input.config.maxTurns);
+          break;
         case "item.started":
         case "item.updated":
           break;
