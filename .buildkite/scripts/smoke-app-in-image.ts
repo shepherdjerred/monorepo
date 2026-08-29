@@ -365,6 +365,7 @@ const commands: Record<
       DISCORD_TOKEN: "smoke-test-dummy",
       APPLICATION_ID: "000000000000000000",
       RIOT_API_KEY: "smoke-test-dummy",
+      TEMPORAL_NAMESPACE: "prod",
       FEATURE_FLAGS_MODE: "disabled",
       LEGACY_SQLITE_PATH: "/tmp/no-legacy-sqlite.db",
       ENABLE_DISCORD_GATEWAY: "false",
