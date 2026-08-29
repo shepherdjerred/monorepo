@@ -36,8 +36,8 @@ describe("catalog", () => {
       0,
     );
     expect(ALL_PERMISSIONS.length).toBe(expected);
-    expect(ALL_PERMISSIONS.length).toBe(31);
-    expect(Object.keys(PERMISSION_CATALOG).length).toBe(8);
+    expect(ALL_PERMISSIONS.length).toBe(33);
+    expect(Object.keys(PERMISSION_CATALOG).length).toBe(9);
   });
 
   test("every catalog pair round-trips through the DB key form", () => {

@@ -64,6 +64,10 @@ const MEMBER_SCHEMAS = {
     resource: z.literal("channels"),
     action: z.enum(PERMISSION_CATALOG.channels.actions.map((a) => a.name)),
   }),
+  customs: z.object({
+    resource: z.literal("customs"),
+    action: z.enum(PERMISSION_CATALOG.customs.actions.map((a) => a.name)),
+  }),
   audit: z.object({
     resource: z.literal("audit"),
     action: z.enum(PERMISSION_CATALOG.audit.actions.map((a) => a.name)),
@@ -81,6 +85,7 @@ export const PermissionSchema = z.discriminatedUnion("resource", [
   MEMBER_SCHEMAS.competitions,
   MEMBER_SCHEMAS.reports,
   MEMBER_SCHEMAS.channels,
+  MEMBER_SCHEMAS.customs,
   MEMBER_SCHEMAS.audit,
   MEMBER_SCHEMAS.roles,
 ]);

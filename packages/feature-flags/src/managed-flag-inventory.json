@@ -211,6 +211,32 @@
       "thresholdRollouts": []
     },
     {
+      "key": "custom_nights_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable the beta-only Scout custom-night Activity.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "debug",
       "owner": "scout",
       "source": "scout-policy",

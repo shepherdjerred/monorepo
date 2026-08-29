@@ -31,6 +31,7 @@ const PRODUCTION_DENIED_FLAGS = [
   "betting_player_bet_outcome_dm_enabled",
   "betting_settlement_dm_enabled",
   "competition_builder_v2_enabled",
+  "custom_nights_enabled",
   "tournament_lobbies_enabled",
 ] as const;
 
@@ -80,6 +81,7 @@ describe("production hard-disable policy", () => {
         bucks_transfers_enabled: true,
         betting_player_bet_outcome_dm_enabled: true,
         betting_settlement_dm_enabled: true,
+        custom_nights_enabled: true,
         tournament_lobbies_enabled: true,
       }),
     });
