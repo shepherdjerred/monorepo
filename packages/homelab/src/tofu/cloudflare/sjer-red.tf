@@ -278,10 +278,14 @@ resource "cloudflare_dns_record" "sjer_red_cname_resume" {
 #   - Operator ~/.aws/config default + seaweedfs profiles (packages/dotfiles/)
 #   - Tofu state backends (already used seaweedfs-s3.tailnet-1a49.ts.net)
 
+# First-level hosts on purpose: Universal SSL covers only *.sjer.red, so the
+# former second-level names (shuxin.bluemap.sjer.red / sjerred.bluemap.sjer.red)
+# could never complete a TLS handshake. Must match the `subdomain:` props in
+# the minecraft-{shuxin,sjerred} cloudflare tunnel bindings (cdk8s).
 resource "cloudflare_dns_record" "sjer_red_cname_shuxin_bluemap" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
-  name    = "shuxin.bluemap"
+  name    = "shuxin-bluemap"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
@@ -290,7 +294,7 @@ resource "cloudflare_dns_record" "sjer_red_cname_shuxin_bluemap" {
 resource "cloudflare_dns_record" "sjer_red_cname_sjerred_bluemap" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
-  name    = "sjerred.bluemap"
+  name    = "sjerred-bluemap"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true

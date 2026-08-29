@@ -84,7 +84,13 @@ resource "tailscale_acl" "homelab" {
       # here, every worker joined after torvalds is invisible to node-level
       # monitoring (verified: liskov's node-exporter timed out for its first
       # ~18h while kubelet on 10250 scraped fine — NodeExporterDown, 2026-07-26).
-      { action = "accept", src = ["tag:k8s"], dst = ["tag:k8s:6443", "tag:k8s:10250", "tag:k8s:9100"] },
+      # 50000 is Talos apid: the committed talosconfig endpoint is torvalds, so
+      # every `talosctl -n <worker>` call is torvalds' apid dialing the worker's
+      # apid over the tailnet. Same gap class as 9100 above — without it,
+      # `talosctl health` and any discovery-addressed fleet operation time out
+      # against every worker (verified against liskov, 2026-08-28). trustd
+      # (50001) is deliberately absent: workers correctly refuse it.
+      { action = "accept", src = ["tag:k8s"], dst = ["tag:k8s:6443", "tag:k8s:10250", "tag:k8s:9100", "tag:k8s:50000"] },
 
       # A dedicated CI runner tagged tag:ci (none today — CI currently runs on the
       # tag:k8s node above) would also need the tofu-state backend on 443.
@@ -151,11 +157,13 @@ resource "tailscale_acl" "homelab" {
       },
       # CRITICAL: the cluster node + proxies (tag:k8s) MUST reach tailnet ingresses
       # on 443, the control-plane API endpoint on 6443, worker kubelets on 10250,
-      # and node-exporter on 9100 (cross-node InternalIP scrapes). A future edit
-      # that drops any path fails here before it can break cluster operations.
+      # node-exporter on 9100 (cross-node InternalIP scrapes), and Talos apid on
+      # 50000 (talosctl proxies worker calls through the endpoint node's apid).
+      # A future edit that drops any path fails here before it can break cluster
+      # operations.
       {
         src    = "tag:k8s"
-        accept = ["tag:k8s:443", "tag:k8s:6443", "tag:k8s:10250", "tag:k8s:9100"]
+        accept = ["tag:k8s:443", "tag:k8s:6443", "tag:k8s:10250", "tag:k8s:9100", "tag:k8s:50000"]
         deny   = ["tag:k8s:22"]
       },
       # NOTE: the "non-admin members reach only the published web apps" invariant

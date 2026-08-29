@@ -32,7 +32,11 @@ import {
 
 // ducktors/turborepo-remote-cache listens on 3000 by default (PORT env).
 const PORT = 3000;
-const CACHE_PVC_SIZE = Size.gibibytes(256);
+// 512, not 256: ingest reached ~13 GiB/day and the 256 GiB PVC projected full
+// within 14 days (2026-08-28). Paired with the daily clean's olderThan=14
+// retention (packages/temporal cleanTurboCache) this leaves ~2x headroom over
+// the expected steady state. liskov's nvme pool has >1.4 TiB free.
+const CACHE_PVC_SIZE = Size.gibibytes(512);
 // The ducktors image runs as uid/gid 1001 (`app`). A fresh PVC's root is
 // created root:root 0755, so the non-root process can't `mkdir /cache/<team>`
 // and every artifact upload 412s. fsGroup makes the kubelet chgrp the volume

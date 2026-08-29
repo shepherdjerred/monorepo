@@ -49,13 +49,22 @@ export function createMinecraftSjerredApp(chart: Chart) {
     service: "minecraft-sjerred-bluemap",
     port: 8100,
     hosts: ["minecraft-sjerred-bluemap"],
+    // The server statefulset hibernates at 0 replicas (mc-router wake-on-join),
+    // so a synthetic probe only measures sleep: 60s failures around the clock.
+    disableProbe: true,
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-sjerred-bluemap-cf-tunnel", {
     serviceName: "minecraft-sjerred-bluemap",
-    subdomain: "sjerred.bluemap",
+    // First-level subdomain: Cloudflare Universal SSL covers only *.sjer.red,
+    // so the former sjerred.bluemap.sjer.red could never complete a TLS
+    // handshake. Must match the tofu DNS record in
+    // src/tofu/cloudflare/sjer-red.tf.
+    subdomain: "sjerred-bluemap",
     namespace: "minecraft-sjerred",
     port: 8100,
+    // Hibernates at 0 replicas (see above).
+    disableProbe: true,
   });
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {

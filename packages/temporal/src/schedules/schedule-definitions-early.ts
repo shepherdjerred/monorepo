@@ -87,7 +87,7 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
-    memo: "Daily deletion of monorepo Turbo cache artifacts unused for 30 days",
+    memo: "Daily deletion of monorepo Turbo cache artifacts unused for 14 days",
   },
   {
     id: "deps-summary-weekly",

@@ -59,6 +59,16 @@ const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "trivy", args: ["trivy", "version"] },
   { name: "lychee", args: ["lychee", "--version"] },
   { name: "kometa", args: ["kometa", "--help"] },
+  // Postgres server binaries: the data-dragon bot clone runs scout-backend
+  // tests, which boot a local Postgres (ensureDevPostgres). check:rehearsal
+  // runs on mise-equipped agents and cannot detect these missing from the
+  // image — this smoke is the only gate that proves the image has them.
+  { name: "pg_isready", args: ["pg_isready", "--version"] },
+  { name: "psql", args: ["psql", "--version"] },
+  { name: "postgres", args: ["postgres", "--version"] },
+  { name: "initdb", args: ["initdb", "--version"] },
+  { name: "pg_ctl", args: ["pg_ctl", "--version"] },
+  { name: "createdb", args: ["createdb", "--version"] },
 ];
 // Reaching this log line proves the worker booted through runtime install,
 // Sentry, tracing, and the metrics server, and is attempting the connection.

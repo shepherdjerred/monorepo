@@ -153,7 +153,15 @@ export function createSeaweedfsApp(chart: Chart) {
         {
           name: "data",
           type: "persistentVolumeClaim",
-          size: Size.gibibytes(384).asString(),
+          // 512, up from 384: legitimate retained growth (PR assets carry a
+          // 365-day TTL that cannot expire anything until the bucket is a
+          // year old) put the volume on a ~43-day projection to full
+          // (2026-08-28). This renders into a StatefulSet volumeClaimTemplate
+          // — an immutable field — so the live PVC must be expanded first
+          // (kubectl patch pvc data-seaweedfs-volume-0 -n seaweedfs) and the
+          // StatefulSet recreated with --cascade=orphan if the apply is
+          // rejected.
+          size: Size.gibibytes(512).asString(),
           storageClass: NVME_STORAGE_CLASS,
           // Volume-slot cap. With master.volumeSizeLimitMB at 30 GiB, 88 GiB of
           // data packs into a few dozen volumes, so this is generous headroom, not

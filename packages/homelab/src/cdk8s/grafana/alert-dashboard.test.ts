@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { createAlertDashboardGrafanaDashboard } from "./alert-dashboard.ts";
+import {
+  createAlertDashboardGrafanaDashboard,
+  exportAlertDashboardJson,
+} from "./alert-dashboard.ts";
 
 const DashboardSchema = z.object({
   panels: z.array(
@@ -42,5 +45,25 @@ describe("alert ledger Grafana dashboard", () => {
     expect(servicePanel.targets?.[0]?.expr).toContain(
       'service="alert-dashboard-alert-dashboard-service"',
     );
+  });
+
+  it("exports a built dashboard with a title, not the builder instance", () => {
+    // Guards the export path itself: exportAlertDashboardJson once serialized
+    // the DashboardBuilder (missing .build()), producing a titleless JSON blob
+    // Grafana rejected every 30s ("Dashboard title cannot be empty") while the
+    // builder-based tests above stayed green. Helm escapes ({{ print "{{" }})
+    // are reverted before parsing since they only become valid JSON post-Helm.
+    const exported = exportAlertDashboardJson()
+      .replaceAll('{{ print "{{" }}', "{{")
+      .replaceAll('{{ print "}}" }}', "}}");
+    const dashboard = z
+      .object({
+        title: z.string().min(1),
+        panels: z.array(z.unknown()).nonempty(),
+      })
+      .loose()
+      .parse(JSON.parse(exported));
+
+    expect(dashboard.title).toBe("Alerts — Ledger Health");
   });
 });

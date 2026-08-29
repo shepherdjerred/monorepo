@@ -86,6 +86,6 @@ export function createAlertDashboardGrafanaDashboard() {
 
 export function exportAlertDashboardJson(): string {
   return exportDashboardWithHelmEscaping(
-    createAlertDashboardGrafanaDashboard(),
+    createAlertDashboardGrafanaDashboard().build(),
   );
 }
