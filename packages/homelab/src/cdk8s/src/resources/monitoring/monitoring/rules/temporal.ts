@@ -201,6 +201,22 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "temporal-workflow-failures",
       rules: [
         {
+          alert: "TemporalDefaultNamespaceStartAttempted",
+          annotations: {
+            summary: "A workflow start was attempted in Temporal default",
+            description: escapePrometheusTemplate(
+              "Temporal received {{ $value }} workflow-start request(s) for the migration-only default namespace in the last 15 minutes. Legacy workers may finish existing executions there, but no client or schedule may start new work. Inspect the operation label and the default namespace immediately.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(service_requests{namespace="default",operation=~"StartWorkflowExecution|SignalWithStartWorkflowExecution"}[15m]) > 0',
+          ),
+          for: "1m",
+          labels: {
+            severity: "critical",
+          },
+        },
+        {
           alert: "TemporalWorkflowActivityFailing",
           annotations: {
             summary: escapePrometheusTemplate(
@@ -211,7 +227,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{namespace="default"}[30m]) > 5',
+            'increase(activity_task_fail{namespace=~"prod|beta"}[30m]) > 5',
           ),
           for: "15m",
           labels: {
@@ -227,7 +243,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{namespace="default",workflowType="syncGolinks"}[30m]) > 3',
+            'increase(activity_task_fail{namespace="prod",workflowType="syncGolinks"}[30m]) > 3',
           ),
           for: "15m",
           labels: {
@@ -243,7 +259,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{namespace="default",workflowType="syncGolinks"}[2h]) > 20',
+            'increase(activity_task_fail{namespace="prod",workflowType="syncGolinks"}[2h]) > 20',
           ),
           for: "30m",
           labels: {
@@ -259,7 +275,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{namespace="default",workflowType="runZfsMaintenanceWorkflow"}[24h]) > 0',
+            'increase(activity_task_fail{namespace="prod",workflowType="runZfsMaintenanceWorkflow"}[24h]) > 0',
           ),
           for: "1h",
           labels: {
@@ -383,7 +399,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             [
               "increase(activity_task_fail{",
-              'namespace="default",',
+              'namespace=~"prod|beta",',
               `workflowType!~"${["welcomeHome", "leavingHome", "goodNight"].join("|")}"`,
               "}[48h]) >= 2",
             ].join(""),

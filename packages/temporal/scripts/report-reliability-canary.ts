@@ -11,6 +11,7 @@ import {
   type AgentTaskInputV2,
   type AgentTaskStartResult,
 } from "#shared/agent-task.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";
@@ -176,13 +177,17 @@ async function runCanary(
 async function main(): Promise<void> {
   requireProductionInvocation();
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_TEMPORAL_ADDRESS;
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  if (namespace !== "prod") {
+    throw new Error("The report reliability canary requires prod namespace");
+  }
   const connection = await Connection.connect(
     temporalConnectionOptions({
       environment: Bun.env,
       defaultAddress: address,
     }),
   );
-  const client = new Client({ connection });
+  const client = new Client({ connection, namespace });
   for (const name of ["success", "partial", "failure"] as const) {
     await runCanary(client, name);
   }

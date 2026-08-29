@@ -3,27 +3,8 @@ import { Size } from "cdk8s";
 import { Cpu, EnvValue, type ISecret, Pods } from "cdk8s-plus-31";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { sleepWebhookEnv } from "./http-services.ts";
+import { temporalRuntimeEnv } from "./runtime-env.ts";
 import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
-
-function runtimeEnv(
-  serverServiceName: string,
-  secret: ISecret,
-  role: "control" | "home" | "reports",
-  serviceName: string,
-): Record<string, EnvValue> {
-  return {
-    TEMPORAL_ADDRESS: EnvValue.fromValue(`${serverServiceName}:7233`),
-    TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
-    TEMPORAL_WORKER_ROLE: EnvValue.fromValue(role),
-    ENVIRONMENT: EnvValue.fromValue("production"),
-    TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-    OTLP_ENDPOINT: EnvValue.fromValue(
-      "http://tempo.tempo.svc.cluster.local:4318",
-    ),
-    TELEMETRY_SERVICE_NAME: EnvValue.fromValue(serviceName),
-    SENTRY_DSN: EnvValue.fromSecretValue({ secret, key: "SENTRY_DSN" }),
-  };
-}
 
 export function createTemporalIngressWorkers(
   chart: Chart,
@@ -45,7 +26,7 @@ export function createTemporalIngressWorkers(
       { number: 9469, name: "sleep-webhook" },
     ],
     envVariables: {
-      ...runtimeEnv(
+      ...temporalRuntimeEnv(
         props.serverServiceName,
         props.secret,
         "control",
@@ -85,7 +66,7 @@ export function createTemporalIngressWorkers(
     cpuRequest: Cpu.millis(100),
     memoryRequest: Size.mebibytes(512),
     envVariables: {
-      ...runtimeEnv(
+      ...temporalRuntimeEnv(
         props.serverServiceName,
         props.secret,
         "home",
@@ -108,7 +89,7 @@ export function createTemporalIngressWorkers(
     cpuRequest: Cpu.millis(100),
     memoryRequest: Size.mebibytes(512),
     envVariables: {
-      ...runtimeEnv(
+      ...temporalRuntimeEnv(
         props.serverServiceName,
         props.secret,
         "reports",

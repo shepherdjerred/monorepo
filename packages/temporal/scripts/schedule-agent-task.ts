@@ -14,6 +14,7 @@ import {
 } from "#shared/agent-task.ts";
 import { parseAgentTaskInputsFromMarkdown } from "#lib/agent-task-markdown.ts";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";
@@ -76,7 +77,8 @@ async function main(): Promise<void> {
       defaultAddress: DEFAULT_TEMPORAL_ADDRESS,
     }),
   );
-  const client = new Client({ connection });
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  const client = new Client({ connection, namespace });
   const results = [];
   for (const input of inputs) {
     results.push(

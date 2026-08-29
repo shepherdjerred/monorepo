@@ -1,4 +1,8 @@
 import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts";
+import type {
+  LegacyTemporalNamespace,
+  TemporalNamespace,
+} from "#shared/temporal-namespace.ts";
 import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 import {
   workflowExecutionKey,
@@ -12,6 +16,7 @@ const FAILURE_STATUS_NAMES = ["FAILED", "TIMED_OUT"] as const;
 type FailureStatusName = (typeof FAILURE_STATUS_NAMES)[number];
 
 type ScanWorkflowFailureVisibilityOptions = {
+  namespace: TemporalNamespace | LegacyTemporalNamespace;
   query: string;
   checkpoint: WorkflowFailureWatchCheckpoint | undefined;
   detailedAlertsConsumed: number;
@@ -69,6 +74,7 @@ function failureExecutionFromVisibilityInfo(
   const status = toFailureStatusName(info.status.name);
   if (status === undefined || info.closeTime === undefined) return undefined;
   return {
+    temporalNamespace: options.namespace,
     workflowId: info.workflowId,
     runId: info.runId,
     workflowType: info.type,

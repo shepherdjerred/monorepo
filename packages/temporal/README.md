@@ -16,38 +16,44 @@ roles own only Activity Workers, with separate registries, credentials, service
 accounts, and concurrency budgets. The default `all` role composes every role in
 one process for local development.
 
-| Role              | Queue or surface                              |           Execution concurrency |
-| ----------------- | --------------------------------------------- | ------------------------------: |
-| `control`         | schedules and HTTP APIs                       |                            none |
-| `workflows`       | `monorepo-workflows` + legacy Workflow queues | 8 new / 2 legacy Workflow tasks |
-| `home`            | `home`                                        |                               4 |
-| `reports`         | `reports`                                     |                               4 |
-| `infra`           | `infra`                                       |                               1 |
-| `repo`            | `repo-automation`                             |                               1 |
-| `scout`           | `scout`                                       |                               1 |
-| `agent`           | `agent-task`                                  |                               1 |
-| `glitter-corpus`  | `glitter-corpus`                              |                               1 |
-| `glitter-context` | `glitter-context`                             |                               1 |
-| `maintenance`     | `maintenance`                                 |                               1 |
+Production and beta use separate Temporal namespaces. Set `TEMPORAL_NAMESPACE`
+to `prod` or `beta`; local development uses `dev`. During the migration,
+`TEMPORAL_LEGACY_NAMESPACE=default` enables bounded legacy pollers so existing
+default executions can drain. New workflows and schedules must never target
+`default`.
 
-Every central start, schedule, and child Workflow targets
-`monorepo-workflows`. Every `proxyActivities` call names its domain Activity
-queue explicitly. Continue-as-new inherits the execution's current queue: a new
-chain remains on `monorepo-workflows`. Pre-retirement default histories are
-unsupported after the legacy worker removal.
+| Role              | Queue or surface        | Activity concurrency |
+| ----------------- | ----------------------- | -------------------: |
+| `control`         | schedules and HTTP APIs |                 none |
+| `home`            | `home`                  |                    4 |
+| `reports`         | `reports`               |                    4 |
+| `infra`           | `infra`                 |                    1 |
+| `repo`            | `repo-automation`       |                    1 |
+| `scout`           | `scout`                 |                    1 |
+| `agent`           | `agent-task`            |                    1 |
+| `glitter-corpus`  | `glitter-corpus`        |                    1 |
+| `glitter-context` | `glitter-context`       |                    1 |
+| `maintenance`     | `maintenance`           |                    1 |
+
+The production manifests land in layers. In the Glitter layer, the existing
+legacy core and agent Deployments remain in place while the combined Glitter
+Deployment is replaced by `temporal-glitter-corpus-worker` and
+`temporal-glitter-context-worker`. The gateway, home, reports, infra, repo, and
+Scout Deployments arrive in the later ingress and operations layers; the table
+above describes the final topology.
 
 ## Quick start
 
 Run from `packages/temporal`:
 
 ```bash
-bun run start        # start the worker (connects to the Temporal server)
+TEMPORAL_NAMESPACE=dev bun run start # start the local worker
 bun run typecheck    # tsc --noEmit (stubs the HA schema first)
 bun run test         # unit tests, including the workflow-bundle smoke test
 bun run lint         # eslint
-bun run worker-deployment inspect --build-id <image-git-sha>
-bun run worker-deployment status --build-id <image-git-sha>
-bun run worker-deployment status --target scout-beta --build-id <image-git-sha>
+TEMPORAL_NAMESPACE=prod bun run worker-deployment inspect --build-id <image-git-sha>
+TEMPORAL_NAMESPACE=prod bun run worker-deployment status --build-id <image-git-sha>
+TEMPORAL_NAMESPACE=beta bun run worker-deployment status --target scout-beta --build-id <image-git-sha>
 ```
 
 Worker Deployment rollouts use the package-local `worker-deployment` command;

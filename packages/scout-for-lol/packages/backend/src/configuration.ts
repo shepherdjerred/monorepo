@@ -3,6 +3,10 @@ import env from "env-var";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 import { TournamentApiModeSchema } from "#src/configuration/tournament-mode.ts";
+import {
+  ScoutStageSchema,
+  TemporalLegacyNamespaceSchema,
+} from "@scout-for-lol/temporal";
 
 const logger = createLogger("config");
 
@@ -119,6 +123,9 @@ function computeConfiguration() {
       "ENABLE_BACKGROUND_JOBS requires ENABLE_DISCORD_GATEWAY: background jobs use the Discord client and guild filtering",
     );
   }
+  const temporalNamespace = ScoutStageSchema.parse(
+    env.get("TEMPORAL_NAMESPACE").required().asString(),
+  );
   const config = {
     version: getRequiredEnvVar("VERSION"),
     gitSha: getRequiredEnvVar("GIT_SHA"),
@@ -169,10 +176,10 @@ function computeConfiguration() {
     enableDiscordGateway,
     enableBackgroundJobs,
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
-    temporalNamespace: env
-      .get("TEMPORAL_NAMESPACE")
-      .default("default")
-      .asString(),
+    temporalNamespace,
+    temporalLegacyNamespace: TemporalLegacyNamespaceSchema.optional().parse(
+      getOptionalEnvVar("TEMPORAL_LEGACY_NAMESPACE"),
+    ),
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
     applicationId: getRequiredEnvVar("APPLICATION_ID"),
     discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),
@@ -305,7 +312,16 @@ const configuration: Configuration = {
     return getConfiguration().temporalAddress;
   },
   get temporalNamespace() {
-    return getConfiguration().temporalNamespace;
+    const current = getConfiguration();
+    if (current.temporalNamespace !== current.environment) {
+      throw new Error(
+        `TEMPORAL_NAMESPACE=${current.temporalNamespace} must match ENVIRONMENT=${current.environment}`,
+      );
+    }
+    return current.temporalNamespace;
+  },
+  get temporalLegacyNamespace() {
+    return getConfiguration().temporalLegacyNamespace;
   },
   get discordToken() {
     return getConfiguration().discordToken;

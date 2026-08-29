@@ -18,6 +18,6 @@ export const reportLastAcceptedTimestampSeconds = new Gauge({
 export const reportFreshnessState = new Gauge({
   name: "temporal_report_freshness_state",
   help: "Report heartbeat freshness by schedule id: 2 pending, 1 fresh, 0 stale, -1 unknown",
-  labelNames: ["schedule_id"] as const,
+  labelNames: ["temporal_namespace", "schedule_id"] as const,
   registers: [register],
 });

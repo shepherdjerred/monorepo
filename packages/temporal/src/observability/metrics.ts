@@ -350,6 +350,7 @@ export const prMergeConflictCheckDurationSeconds = new Histogram({
 export const scheduleOrphans = new Gauge({
   name: "temporal_schedule_orphans",
   help: "Live Temporal schedules not declared in register-schedules.ts (excluding dynamic agent-task schedules). >0 means a removed/renamed schedule was never added to DELETED_SCHEDULE_IDS and is still firing. -1 means orphan detection failed to list schedules (count unknown).",
+  labelNames: ["temporal_namespace"] as const,
   registers: [register],
 });
 

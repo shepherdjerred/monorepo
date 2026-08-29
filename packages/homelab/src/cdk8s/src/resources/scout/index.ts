@@ -222,7 +222,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     // Bootstrap for the flag client — these cannot come from a flag.
     FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
     FLIPT_ENVIRONMENT: EnvValue.fromValue(stage),
-    TEMPORAL_NAMESPACE: EnvValue.fromValue("default"),
+    TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
+    TEMPORAL_LEGACY_NAMESPACE: EnvValue.fromValue("default"),
     FLIPT_URL: EnvValue.fromValue(
       "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
     ),

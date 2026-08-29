@@ -1,5 +1,5 @@
 import { Context } from "@temporalio/activity";
-import { createTemporalClient } from "#client";
+import { createTemporalVisibilityClient } from "#client";
 import {
   createAlertmanagerPoster,
   type AlertPoster,
@@ -17,6 +17,10 @@ import {
   serializedCheckpoint,
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
+import {
+  parseLegacyTemporalNamespace,
+  temporalNamespacesForMonitoring,
+} from "#shared/temporal-namespace.ts";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
@@ -25,19 +29,37 @@ async function runPollWorkflowFailuresImpl(
   lookbackSince: Date,
   onCheckpoint: (checkpoint: WorkflowFailureWatchCheckpoint) => void,
 ): Promise<PollWorkflowFailuresResult> {
-  const client = await createTemporalClient();
   const poster: AlertPoster = createAlertmanagerPoster(
     requiredEnv("ALERTMANAGER_URL"),
   );
-  const options = {
-    now: new Date(),
-    lookbackMs: DEFAULT_LOOKBACK_MS,
-    lookbackSince,
-    ttlMs: readTtlMs(),
-    onCheckpoint,
-    ...(checkpoint === undefined ? {} : { checkpoint }),
+  const namespaces = temporalNamespacesForMonitoring(
+    parseLegacyTemporalNamespace(Bun.env["TEMPORAL_LEGACY_NAMESPACE"]),
+  );
+  const aggregate: PollWorkflowFailuresResult = {
+    scanned: 0,
+    alerted: 0,
+    errored: 0,
   };
-  return pollWorkflowFailuresOnce(client, poster, options);
+  for (const namespace of namespaces) {
+    const client = await createTemporalVisibilityClient(namespace);
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      namespace,
+      now: new Date(),
+      lookbackMs: DEFAULT_LOOKBACK_MS,
+      lookbackSince,
+      ttlMs: readTtlMs(),
+      ...(namespace === "prod"
+        ? {
+            onCheckpoint,
+            ...(checkpoint === undefined ? {} : { checkpoint }),
+          }
+        : {}),
+    });
+    aggregate.scanned += result.scanned;
+    aggregate.alerted += result.alerted;
+    aggregate.errored += result.errored;
+  }
+  return aggregate;
 }
 
 export type WorkflowFailureWatchActivities =

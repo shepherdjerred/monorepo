@@ -65,6 +65,8 @@ function startServer(port: number, databasePath: string) {
       "--disable-config-file",
       "server",
       "start-dev",
+      "--namespace",
+      "dev",
       "--headless",
       "--ip",
       "127.0.0.1",
@@ -128,11 +130,13 @@ async function startWorkers(input: {
   const workers = [
     await Worker.create({
       connection: input.connection,
+      namespace: "dev",
       taskQueue: queues.workflow,
       workflowsPath,
     }),
     await Worker.create({
       connection: input.connection,
+      namespace: "dev",
       taskQueue: queues.realtime,
       activities: {
         ingestMatch: async (activityInput: { matchId: string }) => {
@@ -143,6 +147,7 @@ async function startWorkers(input: {
     }),
     await Worker.create({
       connection: input.connection,
+      namespace: "dev",
       taskQueue: queues.background,
       activities: {
         runReport: (activityInput: { reportId: string }) => {
@@ -190,7 +195,7 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
   let server = startServer(port, databasePath);
   let connection = await connectEventually(address, server);
   let nativeConnection = await NativeConnection.connect({ address });
-  let client = new Client({ connection, namespace: "default" });
+  let client = new Client({ connection, namespace: "dev" });
   const reportRuns: string[] = [];
   const matchRuns: string[] = [];
   const matchGate = Promise.withResolvers<null>();
@@ -358,7 +363,7 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
   server = startServer(port, databasePath);
   connection = await connectEventually(address, server);
   nativeConnection = await NativeConnection.connect({ address });
-  client = new Client({ connection, namespace: "default" });
+  client = new Client({ connection, namespace: "dev" });
   const restoredSchedule = await client.schedule
     .getHandle("scout-dev-real-server-outage-catchup")
     .describe();

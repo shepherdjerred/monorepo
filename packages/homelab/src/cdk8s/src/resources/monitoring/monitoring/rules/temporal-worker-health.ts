@@ -141,8 +141,8 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
 
 export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
   return TEMPORAL_DOMAIN_QUEUES.flatMap((definition) => {
-    const workflowSelector = `namespace="${definition.metricsNamespace}",exported_namespace="default",task_queue="${definition.queue}"`;
-    const activitySelector = `namespace="${definition.metricsNamespace}",exported_namespace="default",task_queue="${definition.queue}"`;
+    const workflowSelector = `namespace="${definition.metricsNamespace}",exported_namespace="prod",task_queue="${definition.queue}"`;
+    const activitySelector = `namespace="${definition.metricsNamespace}",exported_namespace="prod",task_queue="${definition.queue}"`;
     const labels = { severity: "warning", task_queue: definition.queue };
     const candidateDeploymentPattern = definition.candidateDeploymentPattern;
     const candidateServicePattern = definition.candidateServicePattern;

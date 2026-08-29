@@ -49,19 +49,35 @@ export async function startScoutCompetitionActivityWorker(): Promise<
 
   const taskQueue = scoutCompetitionTaskQueue(configuration.environment);
   const connection = await NativeConnection.connect({ address });
-  const worker = await Worker.create({
-    connection,
-    namespace: "default",
-    taskQueue,
-    activities: { runScheduledCompetitionUpdates },
-    maxConcurrentActivityTaskExecutions: 1,
-  });
+  const namespaces =
+    configuration.temporalLegacyNamespace === undefined
+      ? [configuration.temporalNamespace]
+      : [
+          configuration.temporalNamespace,
+          configuration.temporalLegacyNamespace,
+        ];
+  const workers = await Promise.all(
+    namespaces.map(
+      async (namespace) =>
+        await Worker.create({
+          connection,
+          namespace,
+          taskQueue,
+          activities: { runScheduledCompetitionUpdates },
+          maxConcurrentActivityTaskExecutions: 1,
+        }),
+    ),
+  );
 
   const lifecycle = { shutdownStarted: false };
   let runFailure: Error | undefined;
   const completion = (async () => {
     try {
-      await worker.run();
+      await Promise.all(
+        workers.map(async (worker) => {
+          await worker.run();
+        }),
+      );
       if (!lifecycle.shutdownStarted) {
         throw new Error(
           "Scout competition Temporal activity worker stopped unexpectedly",
@@ -97,8 +113,10 @@ export async function startScoutCompetitionActivityWorker(): Promise<
     shutdown: async () => {
       if (lifecycle.shutdownStarted) return;
       lifecycle.shutdownStarted = true;
-      if (worker.getState() === "RUNNING") {
-        worker.shutdown();
+      for (const worker of workers) {
+        if (worker.getState() === "RUNNING") {
+          worker.shutdown();
+        }
       }
       await completion;
       await connection.close();

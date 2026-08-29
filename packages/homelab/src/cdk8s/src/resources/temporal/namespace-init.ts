@@ -61,11 +61,10 @@ export function createTemporalNamespaceInitJob(
           'echo "Waiting for Temporal frontend..."',
           "until temporal operator cluster health; do sleep 5; done",
           'echo "Temporal frontend is ready"',
-          // Create default namespace if needed, then enforce current retention.
-          'if temporal operator namespace describe --namespace default; then echo "Temporal default namespace already exists"; else temporal operator namespace create --namespace default --retention 720h; fi',
-          "temporal operator namespace update --namespace default --retention 720h",
-          'SEARCH_ATTRIBUTES="$(temporal operator search-attribute list --namespace default --output json)"',
-          String.raw`for ATTRIBUTE in Environment Domain Trigger ReleaseCommit; do if printf "%s" "$SEARCH_ATTRIBUTES" | grep -q "\"$ATTRIBUTE\": \"INDEXED_VALUE_TYPE_KEYWORD\""; then echo "Temporal Search Attribute $ATTRIBUTE already exists"; else temporal operator search-attribute create --namespace default --name "$ATTRIBUTE" --type Keyword; fi; done`,
+          // The built-in default namespace is retained only as a migration
+          // drain. Production creates the two active control-plane namespaces
+          // and registers the search attributes required by schedule actions.
+          'for namespace in prod beta; do if temporal operator namespace describe --namespace "$namespace"; then echo "Temporal $namespace namespace already exists"; else temporal operator namespace create --namespace "$namespace" --retention 720h; fi; temporal operator namespace update --namespace "$namespace" --retention 720h; SEARCH_ATTRIBUTES="$(temporal operator search-attribute list --namespace "$namespace" --output json)"; for ATTRIBUTE in Environment Domain Trigger ReleaseCommit; do if printf "%s" "$SEARCH_ATTRIBUTES" | grep -q "\"$ATTRIBUTE\": \"INDEXED_VALUE_TYPE_KEYWORD\""; then echo "Temporal Search Attribute $ATTRIBUTE already exists in $namespace"; else temporal operator search-attribute create --namespace "$namespace" --name "$ATTRIBUTE" --type Keyword; fi; done; done',
           'echo "Namespace init complete"',
         ].join(" && "),
       ],

@@ -39,12 +39,14 @@ export const scoutTemporalReportOutboxOldestTimestamp = new Gauge({
 export const scoutTemporalReportScheduleDrift = new Gauge({
   name: "scout_temporal_report_schedule_drift",
   help: "Desired Scout report Schedules that are missing or differ from their closed-world definition",
+  labelNames: ["temporal_namespace"] as const,
   registers: [registry],
 });
 
 export const scoutTemporalReportScheduleOrphans = new Gauge({
   name: "scout_temporal_report_schedule_orphans",
   help: "Strictly owned Scout report Schedules whose report is absent or disabled",
+  labelNames: ["temporal_namespace"] as const,
   registers: [registry],
 });
 

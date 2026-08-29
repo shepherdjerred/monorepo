@@ -188,6 +188,16 @@ describe("Temporal workflow outcome rules", () => {
     expect(alerts).not.toContain("TemporalAgentTaskTimingOut");
     expect(alerts).not.toContain("TemporalAgentTaskTimeoutScanFailed");
   });
+
+  test("guards default against new workflow starts while permitting drain polling", () => {
+    const expression = findFailureRule(
+      "TemporalDefaultNamespaceStartAttempted",
+    );
+    expect(expression).toContain('namespace="default"');
+    expect(expression).toContain("StartWorkflowExecution");
+    expect(expression).toContain("SignalWithStartWorkflowExecution");
+    expect(expression).not.toContain("poll");
+  });
 });
 
 describe("Scout Data Dragon failure rules", () => {

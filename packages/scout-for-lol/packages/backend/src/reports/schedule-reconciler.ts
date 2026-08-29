@@ -262,8 +262,11 @@ async function auditReportSchedules(
     desiredIds,
   );
 
-  scoutTemporalReportScheduleDrift.set(drift);
-  scoutTemporalReportScheduleOrphans.set(orphans);
+  scoutTemporalReportScheduleDrift.set({ temporal_namespace: stage }, drift);
+  scoutTemporalReportScheduleOrphans.set(
+    { temporal_namespace: stage },
+    orphans,
+  );
   if (unknownIds.size > 0) {
     logger.error(
       "Unknown Scout report Schedule ownership mismatches detected",

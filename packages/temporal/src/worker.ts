@@ -28,7 +28,11 @@ import {
 // no-op provider makes the emit() call a harmless no-op, same as the trace
 // API before NodeSDK.start().
 import { log as jsonLog } from "./observability/log.ts";
+import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
+import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
+import { retryUntilReady } from "./shared/startup-retry.ts";
+import { formatError } from "./shared/format-error.ts";
 import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
 import {
   parseTemporalBootstrap,
@@ -55,9 +59,15 @@ import {
   shutdownCallGraphTracing,
 } from "./config/call-graph-tracing.ts";
 import {
-  restoreGlitterCorpusMetricsAfterWorkerStart,
-  restoreSeaweedFsMetricsAfterWorkerStart,
-} from "./observability/restore-startup-metrics.ts";
+  parseLegacyTemporalNamespace,
+  parseTemporalNamespace,
+  type LegacyTemporalNamespace,
+  type TemporalNamespace,
+} from "./shared/temporal-namespace.ts";
+import {
+  assertCentralWorkerNamespace,
+  workerNamespaces,
+} from "./shared/worker-namespaces.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -152,6 +162,8 @@ type CreateQueueWorkerOptions = {
 async function createQueueWorker(
   definition: QueueWorkerDefinition,
   options: CreateQueueWorkerOptions,
+  namespace: TemporalNamespace | LegacyTemporalNamespace,
+  legacyDrain: boolean,
 ): Promise<Worker> {
   const {
     connection,
@@ -162,10 +174,10 @@ async function createQueueWorker(
     temporalTracing,
   } = options;
   if (definition.kind === "workflow") {
-    const workerDeployment = bootstrap.workerDeployment;
+    const workerDeployment = legacyDrain ? undefined : bootstrap.workerDeployment;
     return await Worker.create({
       connection,
-      namespace: bootstrap.namespace,
+      namespace,
       workflowsPath,
       interceptors: {
         // domainTaggingInterceptorPath must stay after every tracing module:
@@ -192,29 +204,70 @@ async function createQueueWorker(
               defaultVersioningBehavior: VersioningBehavior.AUTO_UPGRADE,
             },
           }),
-      ...(definition.maxConcurrentWorkflowTaskExecutions === undefined
+      ...(!legacyDrain &&
+      definition.maxConcurrentWorkflowTaskExecutions === undefined
         ? {}
         : {
             maxConcurrentWorkflowTaskExecutions:
-              definition.maxConcurrentWorkflowTaskExecutions,
+              definition.maxConcurrentWorkflowTaskExecutions ?? 1,
           }),
     });
   }
   return await Worker.create({
     connection,
-    namespace: bootstrap.namespace,
+    namespace,
     activities: definition.activities,
     taskQueue: definition.taskQueue,
     ...(temporalTracing === undefined
       ? {}
       : { interceptors: { activity: temporalTracing.activity } }),
-    ...(definition.maxConcurrentActivityTaskExecutions === undefined
+    ...(!legacyDrain &&
+    definition.maxConcurrentActivityTaskExecutions === undefined
       ? {}
       : {
           maxConcurrentActivityTaskExecutions:
-            definition.maxConcurrentActivityTaskExecutions,
+            definition.maxConcurrentActivityTaskExecutions ?? 1,
         }),
   });
+}
+
+async function restoreGlitterCorpusMetricsAfterWorkerStart(
+  isClosed: () => boolean,
+): Promise<void> {
+  try {
+    const result = await retryUntilReady({
+      operation: restoreGlitterCorpusSnapshotMetrics,
+      shouldRetry: isTransientCorpusStorageError,
+      isClosed,
+      onRetry: ({ attempt, delayMs, error }) => {
+        jsonLog(
+          "error",
+          "Glitter corpus snapshot metric restoration failed; retrying",
+          {
+            attempt,
+            delayMs,
+            error: formatError(error),
+          },
+        );
+      },
+      onEscalate: ({ attempt, error }) => {
+        Sentry.captureMessage(
+          `Glitter corpus snapshot metric restoration has failed ${String(attempt)} consecutive times (latest error: ${formatError(error)}); still retrying`,
+          "warning",
+        );
+      },
+    });
+    if (result === "succeeded") {
+      jsonLog("info", "Glitter corpus snapshot metric restoration completed");
+    }
+  } catch (error: unknown) {
+    Sentry.captureException(error);
+    jsonLog(
+      "error",
+      "Glitter corpus snapshot metric restoration failed; corpus operations fail closed while other queues continue",
+      { error: formatError(error) },
+    );
+  }
 }
 
 async function initializeTemporalTracing(
@@ -292,12 +345,31 @@ async function startRoleServices(options: {
   });
   let httpServers: EventBridgeHandle | undefined;
   if (options.roleContract.runsGateway) {
-    await registerSchedules(client, {
-      bootstrap: options.bootstrapMetadata,
-      validateLocalEnvironment:
-        options.roleContract.validatesScheduleEnvironmentLocally,
-    });
-    jsonLog("info", "Schedules registered");
+    const scheduleNamespaces: readonly TemporalNamespace[] =
+      options.namespace === "prod" ? ["prod", "beta"] : [options.namespace];
+    for (const scheduleNamespace of scheduleNamespaces) {
+      const scheduleClient = new Client({
+        connection: clientConnection,
+        namespace: scheduleNamespace,
+        interceptors: {
+          workflow: [
+            new ExecutionMetadataClientInterceptor(options.bootstrapMetadata),
+            ...(options.callGraphTracing
+              ? [createTemporalClientTracingInterceptor()]
+              : []),
+          ],
+        },
+      });
+      await registerSchedules(scheduleClient, {
+        bootstrap: options.bootstrapMetadata,
+        namespace: scheduleNamespace,
+        validateLocalEnvironment:
+          options.roleContract.validatesScheduleEnvironmentLocally,
+      });
+      jsonLog("info", "Schedules registered", {
+        namespace: scheduleNamespace,
+      });
+    }
     httpServers = startHttpServers(client);
   }
   return {
@@ -330,6 +402,8 @@ async function main(): Promise<void> {
   const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
   const bootstrap = parseTemporalBootstrap(Bun.env);
   const roleContract = getWorkerRoleContract(role);
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  assertCentralWorkerNamespace(role, namespace);
   if (role === "workflows") {
     requireWorkerDeployment(bootstrap);
   }
@@ -342,7 +416,7 @@ async function main(): Promise<void> {
   const { callGraphTracing, temporalTracing } = await initializeTemporalTracing(
     role,
     roleContract,
-    bootstrap.namespace,
+    namespace,
     bootstrapMetadata,
   );
   // Boot-time-only, resolved once here rather than re-queried per call:
@@ -353,7 +427,15 @@ async function main(): Promise<void> {
   Bun.env["TEMPORAL_CALL_GRAPH_TRACING"] = callGraphTracing ? "true" : "false";
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
-  jsonLog("info", "Connecting to Temporal server", { address, role });
+  const legacyNamespace = parseLegacyTemporalNamespace(
+    Bun.env["TEMPORAL_LEGACY_NAMESPACE"],
+  );
+  jsonLog("info", "Connecting to Temporal server", {
+    address,
+    role,
+    namespace,
+    legacyNamespace,
+  });
 
   const connection = await NativeConnection.connect({ address });
 
@@ -367,36 +449,51 @@ async function main(): Promise<void> {
   ).pathname;
   const workers: Worker[] = [];
   for (const definition of roleContract.workers) {
-    const worker = await createQueueWorker(definition, {
-      connection,
-      workflowsPath,
-      workflowUiInterceptorPath,
-      domainTaggingInterceptorPath,
-      bootstrap,
-      temporalTracing,
-    });
-    workers.push(worker);
-    jsonLog("info", "Worker created", {
-      workerKind: definition.kind,
+    const namespaces = workerNamespaces({
       queueRole: definition.role,
-      taskQueue: definition.taskQueue,
-      ...(definition.kind === "activity"
-        ? {
-            maxConcurrentActivityTaskExecutions:
-              definition.maxConcurrentActivityTaskExecutions,
-          }
-        : {
-            maxConcurrentWorkflowTaskExecutions:
-              definition.maxConcurrentWorkflowTaskExecutions,
-          }),
+      activeNamespace: namespace,
+      legacyNamespace,
     });
+    for (const workerNamespace of namespaces) {
+      const legacyDrain = workerNamespace === legacyNamespace;
+      const worker = await createQueueWorker(
+        definition,
+        {
+          connection,
+          workflowsPath,
+          workflowUiInterceptorPath,
+          domainTaggingInterceptorPath,
+          bootstrap,
+          temporalTracing,
+        },
+        workerNamespace,
+        legacyDrain,
+      );
+      workers.push(worker);
+      jsonLog("info", "Worker created", {
+        namespace: workerNamespace,
+        legacyDrain,
+        workerKind: definition.kind,
+        queueRole: definition.role,
+        taskQueue: definition.taskQueue,
+        ...(definition.kind === "activity"
+          ? {
+              maxConcurrentActivityTaskExecutions:
+                definition.maxConcurrentActivityTaskExecutions,
+            }
+          : {
+              maxConcurrentWorkflowTaskExecutions:
+                definition.maxConcurrentWorkflowTaskExecutions,
+            }),
+      });
+    }
   }
 
   const { httpServers, eventBridge } = await startRoleServices({
     address,
     bootstrapMetadata,
     callGraphTracing,
-    namespace: bootstrap.namespace,
+    namespace,
     roleContract,
   });
 
@@ -457,9 +554,6 @@ async function main(): Promise<void> {
   const workerRuns = workers.map((roleWorker) => roleWorker.run());
   if (roleContract.restoresGlitterCorpusMetrics) {
     void restoreGlitterCorpusMetricsAfterWorkerStart(() => shutdownStarted);
-  }
-  if (roleContract.restoresSeaweedFsBackupMetrics) {
-    void restoreSeaweedFsMetricsAfterWorkerStart(() => shutdownStarted);
   }
   if (workerRuns.length === 0) {
     await controlLifecycle;

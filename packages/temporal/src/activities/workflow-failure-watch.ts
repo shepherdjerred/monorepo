@@ -446,6 +446,7 @@ export async function pollWorkflowFailuresOnce(
   };
 
   const scan = await scanWorkflowFailureVisibility(client, {
+    namespace: options.namespace ?? "prod",
     query,
     checkpoint,
     detailedAlertsConsumed: checkpoint?.detailedAlertsConsumed ?? 0,

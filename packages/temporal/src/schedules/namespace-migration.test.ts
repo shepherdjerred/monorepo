@@ -1,0 +1,98 @@
+import { describe, expect, test } from "vitest";
+import { SCHEDULES } from "./schedule-definitions.ts";
+import {
+  classifyScheduleNamespace,
+  decodeMigrationState,
+  encodeMigrationState,
+  sourceStateAllowsCutover,
+  targetPauseAction,
+} from "./namespace-migration.ts";
+
+describe("Temporal namespace migration ownership", () => {
+  test("classifies every declared schedule by its source-owned namespace", () => {
+    for (const schedule of SCHEDULES) {
+      expect(classifyScheduleNamespace(schedule.id, undefined)).toBe(
+        schedule.namespace,
+      );
+    }
+  });
+
+  test("routes stage-owned report schedules to their matching namespace", () => {
+    const memo = {
+      owner: "scout-for-lol",
+      stage: "beta",
+      reportId: "42",
+      schemaVersion: 1,
+    } as const;
+    expect(classifyScheduleNamespace("scout-beta-report-42", memo)).toBe(
+      "beta",
+    );
+    expect(() =>
+      classifyScheduleNamespace("scout-prod-report-42", memo),
+    ).toThrow("Unknown Scout schedule ownership");
+  });
+
+  test("routes dynamic agent schedules only to prod", () => {
+    expect(classifyScheduleNamespace("agent-task-audit-123", undefined)).toBe(
+      "prod",
+    );
+    expect(
+      classifyScheduleNamespace("custom-agent-task", {
+        dynamicAgentTask: true,
+      }),
+    ).toBe("prod");
+  });
+
+  test("blocks unknown schedule ownership", () => {
+    expect(() =>
+      classifyScheduleNamespace("unknown-live-schedule", undefined),
+    ).toThrow("Unknown schedule ownership");
+  });
+
+  test.each([
+    { sourcePaused: true, sourceNote: "operator pause" },
+    { sourcePaused: false, sourceNote: undefined },
+  ])("round-trips original pause state", (state) => {
+    expect(decodeMigrationState(encodeMigrationState(state))).toEqual(state);
+  });
+
+  test("accepts a cutover retry after sources were migration-paused", () => {
+    const prepared = { sourcePaused: false, sourceNote: undefined };
+    expect(
+      sourceStateAllowsCutover(
+        {
+          paused: true,
+          note: "Migrated to environment-scoped Temporal namespace",
+        },
+        prepared,
+      ),
+    ).toBe(true);
+    expect(
+      sourceStateAllowsCutover(
+        { paused: true, note: "unexpected operator pause" },
+        prepared,
+      ),
+    ).toBe(false);
+  });
+
+  test("target activation is idempotent during a partial cutover", () => {
+    expect(
+      targetPauseAction(false, {
+        sourcePaused: false,
+        sourceNote: undefined,
+      }),
+    ).toBeUndefined();
+    expect(
+      targetPauseAction(true, {
+        sourcePaused: false,
+        sourceNote: undefined,
+      }),
+    ).toBe("unpause");
+    expect(
+      targetPauseAction(true, {
+        sourcePaused: true,
+        sourceNote: "operator pause",
+      }),
+    ).toBeUndefined();
+  });
+});

@@ -13,6 +13,7 @@ import {
 import { buildScheduleState } from "./schedule-state.ts";
 import { CATCHUP_RELAXED, SCHEDULES } from "./schedule-definitions.ts";
 import type { CatchupWindow, ScheduleDefinition } from "./schedule-types.ts";
+import type { TemporalNamespace } from "#shared/temporal-namespace.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { AgentTaskInputSchema } from "#shared/agent-task.ts";
 import {
@@ -143,6 +144,11 @@ async function pauseLegacyClaudeSchedules(client: Client): Promise<void> {
   }
 }
 
+export const DELETED_SCHEDULES = DELETED_SCHEDULE_IDS.map((id) => ({
+  id,
+  namespace: "prod" as const,
+}));
+
 export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   overlap: ScheduleOverlapPolicy;
   // CatchupWindow (not `Duration`): the resolved value is always one of the two
@@ -256,14 +262,22 @@ export async function registerSchedules(
   client: Client,
   options: {
     bootstrap: TemporalBootstrapMetadata;
+    namespace: TemporalNamespace;
     validateLocalEnvironment?: boolean;
   },
 ): Promise<void> {
   const scheduleClient = client.schedule;
   const validateLocalEnvironment = options.validateLocalEnvironment ?? true;
-  const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
+  const schedules = SCHEDULES.filter(
+    (schedule) =>
+      options.namespace === "dev" || schedule.namespace === options.namespace,
+  );
+  const deletedSchedules = DELETED_SCHEDULES.filter(
+    (schedule) => schedule.namespace === options.namespace,
+  );
+  const declaredIds = new Set(schedules.map((schedule) => schedule.id));
 
-  for (const scheduleId of DELETED_SCHEDULE_IDS) {
+  for (const { id: scheduleId } of deletedSchedules) {
     try {
       await scheduleClient.getHandle(scheduleId).delete();
       console.warn(`Deleted orphaned schedule: ${scheduleId}`);
@@ -285,9 +299,11 @@ export async function registerSchedules(
     declaredIds,
     options.bootstrap,
   );
-  await terminateRetiredWorkflowExecutions(client);
+  if (options.namespace === "prod") {
+    await terminateRetiredWorkflowExecutions(client);
+  }
 
-  for (const schedule of SCHEDULES) {
+  for (const schedule of schedules) {
     const handle = scheduleClient.getHandle(schedule.id);
     try {
       // Update the existing schedule
@@ -323,13 +339,16 @@ export async function registerSchedules(
       console.warn(`Created schedule: ${schedule.id}`);
     }
   }
-  await pauseLegacyClaudeSchedules(client);
+  if (options.namespace === "prod") {
+    await pauseLegacyClaudeSchedules(client);
+  }
   // After reconciling the declared set, surface any live schedule that is no
   // longer represented in source (renamed/removed but not added to the delete
   // list). Non-fatal — see detectOrphanSchedules.
   await detectOrphanSchedules(
     scheduleClient,
+    options.namespace,
     declaredIds,
-    new Set(DELETED_SCHEDULE_IDS),
+    new Set(deletedSchedules.map((schedule) => schedule.id)),
   );
 }

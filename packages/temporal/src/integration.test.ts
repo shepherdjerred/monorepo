@@ -23,13 +23,13 @@ async function runWithDomainActivityWorker(
   });
   const workflowWorker = await Worker.create({
     connection: nativeConnection,
-    namespace: "default",
+    namespace: "dev",
     taskQueue: workflowTaskQueue,
     workflowsPath: new URL("workflows/index.ts", import.meta.url).pathname,
   });
   const activityWorker = await Worker.create({
     connection: nativeConnection,
-    namespace: "default",
+    namespace: "dev",
     taskQueue: activityTaskQueue,
     activities,
   });
@@ -37,7 +37,10 @@ async function runWithDomainActivityWorker(
   const activityWorkerRun = activityWorker.run();
 
   try {
-    await run(new Client({ connection: clientConnection }), workflowTaskQueue);
+    await run(
+      new Client({ connection: clientConnection, namespace: "dev" }),
+      workflowTaskQueue,
+    );
   } finally {
     workflowWorker.shutdown();
     activityWorker.shutdown();
@@ -53,7 +56,7 @@ describe("temporal integration", () => {
       address: TEMPORAL_ADDRESS,
     });
     try {
-      const client = new Client({ connection });
+      const client = new Client({ connection, namespace: "dev" });
 
       // Verify we can list workflows (empty is fine)
       const handle = client.workflow.list();

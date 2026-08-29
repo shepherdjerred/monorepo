@@ -92,6 +92,8 @@ describe("Scout competition Temporal boundary", () => {
       expect(env.get("TEMPORAL_ADDRESS")).toBe(
         "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
       );
+      expect(env.get("TEMPORAL_NAMESPACE")).toBe(stage);
+      expect(env.get("TEMPORAL_LEGACY_NAMESPACE")).toBe("default");
 
       const egressPolicy = synthesized.find(
         (resource) =>
@@ -105,6 +107,47 @@ describe("Scout competition Temporal boundary", () => {
       );
     },
   );
+
+  test("creates only prod and beta with thirty-day retention", () => {
+    const namespaceJob = allScoutTemporalResources().find(
+      (resource) =>
+        resource.kind === "Job" &&
+        resource.metadata.name === "temporal-namespace-init",
+    );
+    const serialized = JSON.stringify(namespaceJob?.spec);
+    expect(serialized).toContain("for namespace in prod beta");
+    expect(serialized).toContain("--retention 720h");
+    expect(serialized).not.toContain("for namespace in dev");
+  });
+
+  test("gives every central worker its active and drain namespaces", () => {
+    const synthesized = allScoutTemporalResources();
+    const workerNames = [
+      "temporal-temporal-worker",
+      "temporal-temporal-agent-worker",
+      "temporal-temporal-gateway",
+      "temporal-temporal-home-worker",
+      "temporal-temporal-reports-worker",
+      "temporal-temporal-glitter-corpus-worker",
+      "temporal-temporal-glitter-context-worker",
+      "temporal-temporal-infra-worker",
+      "temporal-temporal-repo-worker",
+      "temporal-temporal-scout-worker",
+    ];
+    for (const name of workerNames) {
+      const deployment = synthesized.find(
+        (resource) =>
+          resource.kind === "Deployment" && resource.metadata.name === name,
+      );
+      const serialized = JSON.stringify(deployment?.spec);
+      expect(serialized, name).toContain(
+        '"name":"TEMPORAL_NAMESPACE","value":"prod"',
+      );
+      expect(serialized, name).toContain(
+        '"name":"TEMPORAL_LEGACY_NAMESPACE","value":"default"',
+      );
+    }
+  });
 
   test("allows both Scout stages into the Temporal frontend", () => {
     const temporalIngress = allScoutTemporalResources().find(
