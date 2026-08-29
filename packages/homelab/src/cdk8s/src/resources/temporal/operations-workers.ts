@@ -202,6 +202,10 @@ export function createTemporalOperationsWorkers(
       ...s3Env(props.secret),
       ...githubEnv(props.secret),
       DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
+      OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+        secret: props.secret,
+        key: "OPENROUTER_API_KEY",
+      }),
       SCOUT_WEEKLY_PARLAY_CONTROL_URL: EnvValue.fromValue(
         "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/weekly-parlays/actions",
       ),
