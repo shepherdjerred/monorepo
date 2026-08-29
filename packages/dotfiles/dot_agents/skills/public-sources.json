@@ -155,6 +155,20 @@
           "notes": "Preserved the six phases, bundled references, report schema, and validator; added only local output/tool boundaries."
         }
       ]
+    },
+    {
+      "repository": "https://github.com/temporalio/skill-temporal-developer",
+      "commit": "5de78ea2a3775abfc0802926ead357afb53f2258",
+      "license": "MIT",
+      "reviewDate": "2026-08-28",
+      "imports": [
+        {
+          "upstreamSkillPath": ".",
+          "localSkillPath": "temporal-helper",
+          "integration": "adapted",
+          "notes": "Audited the complete upstream core and TypeScript material, then independently rewrote verified execution, failure, testing, deployment, Worker, and runtime guidance with repository-specific Node/Bun and live-operation safety boundaries."
+        }
+      ]
     }
   ]
 }

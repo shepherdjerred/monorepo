@@ -41,5 +41,16 @@ in [`public-sources.json`](public-sources.json).
 - Integrated content: vendored `security-audit`, including its six-phase
   workflow, references, `report-schema.json`, and `validate-findings.cjs`.
 
+## Temporal developer skill
+
+- Source: <https://github.com/temporalio/skill-temporal-developer/tree/5de78ea2a3775abfc0802926ead357afb53f2258>
+- License: MIT; the applicable license text is retained at
+  `third-party-licenses/temporalio-skill-temporal-developer.MIT`.
+- Integrated content: adapted the verified core execution model and TypeScript
+  topic structure into `temporal-helper`. The local skill corrects stale or
+  unsafe upstream examples, uses current Worker Deployments, distinguishes
+  authentic Node support from the repository's Bun exception, and adds an
+  explicit live-operation authorization boundary.
+
 The Swift community skill repository was intentionally not copied because its
 PolyForm Perimeter license is not suitable for this public skill SOT.

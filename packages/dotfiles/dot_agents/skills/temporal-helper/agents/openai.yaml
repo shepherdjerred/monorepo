@@ -1,0 +1,4 @@
+interface:
+  display_name: "Temporal Helper"
+  short_description: "Design, test, deploy, and operate Temporal safely"
+  default_prompt: "Use $temporal-helper to diagnose or implement this Temporal request with safe runtime and live-operation boundaries."
