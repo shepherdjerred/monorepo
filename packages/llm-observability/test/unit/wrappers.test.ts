@@ -76,6 +76,8 @@ test("traceClaudeAgent accumulates assistant messages and result usage", async (
   expect(span.attributes["gen_ai.response.finish_reasons"]).toEqual([
     "end_turn",
   ]);
+  // Retained on the span as a provider-reported fact, and useful when reading
+  // one trace, but it is a subscription-equivalent API price rather than cash.
   expect(span.attributes["llm.cost_usd"]).toBe(0.0012);
   expect(span.attributes["llm.claude_code.num_turns"]).toBe(2);
   const outputs = JSON.parse(
@@ -87,8 +89,12 @@ test("traceClaudeAgent accumulates assistant messages and result usage", async (
   expect(metrics).toContain('provider="claude_agent_sdk"');
   expect(metrics).toContain('model="claude-sonnet-4-6"');
   expect(metrics).toContain('outcome="success"');
-  expect(metrics).toContain('type="actual"');
-  expect(metrics).toContain('type="catalog"');
+  // The Claude Agent SDK bills against a subscription, so it contributes token
+  // samples but must never contribute a cost sample. The counter itself stays
+  // registered because the OpenRouter path shares it; what must be absent is any
+  // `llm_cost_usd_total` series carrying this transport's labels.
+  expect(metrics).toContain('type="cached_input"');
+  expect(metrics).not.toMatch(/^llm_cost_usd_total\{/m);
 });
 
 test("traceClaudeAgent runs SDK iteration beneath its repository-owned span", async () => {

@@ -37,6 +37,34 @@ export type LlmResponseAttrs = {
 };
 
 /**
+ * Run `fn` inside `span`: set OK/ERROR status from whether it throws, record the
+ * exception, and always end the span. Every `with*Span` helper in this package
+ * shares this lifecycle rather than each re-implementing it, so the
+ * status/recordException/end contract has one definition.
+ */
+export async function runSpanLifecycle<T>(
+  span: Span,
+  fn: (span: Span) => Promise<T>,
+): Promise<T> {
+  try {
+    const result = await fn(span);
+    span.setStatus({ code: SpanStatusCode.OK });
+    return result;
+  } catch (error: unknown) {
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    if (error instanceof Error) {
+      span.recordException(error);
+    }
+    throw error;
+  } finally {
+    span.end();
+  }
+}
+
+/**
  * Open a `gen_ai.<operation>` span and run `fn`. The caller sets request/response
  * body attributes via `span.setAttributes({...})` inside `fn`; this helper takes
  * care of error recording, status, and ending the span.
@@ -53,22 +81,7 @@ export async function withLlmSpan<T>(
   const tracer = getLlmTracer();
   return tracer.startActiveSpan(`gen_ai.${operation}`, async (span) => {
     span.setAttributes(buildBaseAttributes(metadata, request, operation));
-    try {
-      const result = await fn(span);
-      span.setStatus({ code: SpanStatusCode.OK });
-      return result;
-    } catch (error: unknown) {
-      span.setStatus({
-        code: SpanStatusCode.ERROR,
-        message: error instanceof Error ? error.message : String(error),
-      });
-      if (error instanceof Error) {
-        span.recordException(error);
-      }
-      throw error;
-    } finally {
-      span.end();
-    }
+    return runSpanLifecycle(span, fn);
   });
 }
 

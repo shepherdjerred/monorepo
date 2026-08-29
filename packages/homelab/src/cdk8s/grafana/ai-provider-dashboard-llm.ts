@@ -75,7 +75,7 @@ export function addLlmPanels(
     createTimeseriesPanel({
       title: "Cost Rate and Discrepancy",
       description:
-        "Actual OpenRouter or Claude SDK cost, canonical catalog cost, and upstream inference cost. The discrepancy series is actual minus catalog cost.",
+        "OpenRouter cost only, by accounting type: actual charged cost, canonical catalog cost, and upstream inference cost. The discrepancy series is actual minus catalog. The Claude Agent SDK and Codex SDK bill against subscriptions and deliberately contribute no cost series, so their spend is not represented here -- see their token panels instead.",
       targets: [
         {
           query: `sum by (service, workload, model, type) (rate(llm_cost_usd_total{${llmFilter}}[5m])) or on() vector(0)`,

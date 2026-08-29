@@ -53,7 +53,24 @@ labels. OpenRouter, Claude Agent SDK, and Codex SDK share:
 - `llm_requests_total`
 - `llm_request_duration_seconds`
 - `llm_tokens_total`
-- `llm_cost_usd_total`
+
+`llm_cost_usd_total` is **not** shared. Only the OpenRouter gateway contributes
+to it. Both native SDKs bill against a subscription rather than per call, so any
+figure they report is an API-equivalent price rather than money that moved.
+Publishing that into the same series as real OpenRouter charges would have made
+the one number people sum, and the ceilings that alert on it, wrong. The native
+SDKs record tokens instead. Codex never had an `actual` figure at all, only a
+catalog estimate, which made the series look complete while being a guess.
+
+Cost is recorded under three `type` labels and they disagree, deliberately.
+`actual` is what OpenRouter charged, `catalog` is what our own pricing table
+predicts, and `upstream` is the provider's inference cost. For a BYOK route
+OpenRouter charges nothing, so `actual` reads zero while the real money sits in
+`upstream`. A spend query that reads only `actual` therefore understates the
+fleet. Which of the three is authoritative in the general case is still an open
+question, waiting on the correlated OpenRouter Broadcast record to settle it;
+until then the spend ceilings take the per-series maximum of `actual` and
+`upstream`, because an alert should err toward firing.
 
 Structured-output attempts, router attempts, and missing router metadata have
 separate counters. Existing `ai_provider_errors_total` and

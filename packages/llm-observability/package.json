@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./span-processor": "./src/archive-span-processor.ts",
     "./span-helpers": "./src/span-helpers.ts",
+    "./subject": "./src/subject.ts",
     "./metrics": "./src/metrics.ts",
     "./ai-sdk-telemetry": "./src/ai-sdk-telemetry.ts",
     "./wrappers/claude-agent": "./src/claude-agent-wrapper.ts",

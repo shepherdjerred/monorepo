@@ -5,7 +5,6 @@ import {
   type AttributeValue,
   type Span,
 } from "@opentelemetry/api";
-import { costForTextUsage } from "@shepherdjerred/llm-models";
 import type { Registry } from "prom-client";
 import {
   getLlmTracer,
@@ -167,18 +166,12 @@ function recordMetrics(
     { ...labels, type: "cache_write_input" },
     acc.cacheCreationInputTokens ?? 0,
   );
-  if (acc.totalCostUsd !== undefined) {
-    metrics.cost.inc({ ...labels, type: "actual" }, acc.totalCostUsd);
-  }
-  const catalogCostUsd = costForTextUsage(labels.model, {
-    inputTokens: acc.inputTokens ?? 0,
-    outputTokens: acc.outputTokens ?? 0,
-    cacheReadTokens: acc.cacheReadInputTokens ?? 0,
-    cacheWriteTokens: acc.cacheCreationInputTokens ?? 0,
-  });
-  if (catalogCostUsd !== undefined) {
-    metrics.cost.inc({ ...labels, type: "catalog" }, catalogCostUsd);
-  }
+  // Deliberately no `metrics.cost.inc` here. The Claude Agent SDK runs against
+  // a subscription (CLAUDE_CODE_OAUTH_TOKEN), so no money moves per call and the
+  // SDK's own `total_cost_usd` is an API-equivalent price, not cash. Summing it
+  // into `llm_cost_usd_total` alongside real OpenRouter charges would make the
+  // fleet-wide spend figure -- and the ceilings that alert on it -- wrong.
+  // Tokens are recorded above and remain the usage signal for this transport.
 }
 
 function newAccumulator(): Accumulator {
@@ -289,6 +282,9 @@ function applyResultMetaAttrs(
     attrs["gen_ai.response.finish_reasons"] = [finishReason];
   }
   if (acc.totalCostUsd !== undefined) {
+    // Subscription-equivalent API price, not cash spent. Kept on the span
+    // because it is useful when reading one trace; deliberately absent from
+    // `llm_cost_usd_total`, which means OpenRouter cash and nothing else.
     attrs["llm.cost_usd"] = acc.totalCostUsd;
   }
   if (acc.numTurns !== undefined) {
