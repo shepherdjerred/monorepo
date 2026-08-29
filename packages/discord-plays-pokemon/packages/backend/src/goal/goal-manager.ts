@@ -190,9 +190,7 @@ export class GoalManager {
     try {
       return await startPromise;
     } finally {
-      if (this.startPromise === startPromise) {
-        this.startPromise = undefined;
-      }
+      if (this.startPromise === startPromise) this.startPromise = undefined;
     }
   }
 
@@ -386,9 +384,7 @@ export class GoalManager {
 
   private async observeProcess(id: string): Promise<void> {
     const active = this.active;
-    if (active?.state.id !== id) {
-      return;
-    }
+    if (active?.state.id !== id) return;
 
     await active.process.exited;
     const claimed = this.claimActive(id);
@@ -459,9 +455,7 @@ export class GoalManager {
 
   private async stopActive(status: "replaced" | "shutdown"): Promise<void> {
     const active = this.claimActive();
-    if (active === undefined) {
-      return;
-    }
+    if (active === undefined) return;
     try {
       await settleGoalProcess(active, true, () => this.controlGate.drain());
       const usage = active.jsonl.total();
@@ -492,9 +486,8 @@ export class GoalManager {
 
   private claimActive(id?: string): ActiveGoal | undefined {
     const active = this.active;
-    if (active === undefined || (id !== undefined && active.state.id !== id)) {
+    if (active === undefined || (id !== undefined && active.state.id !== id))
       return undefined;
-    }
     // Claim synchronously before any terminal-path await. SIGTERM resolves the
     // process exit promise, so stop/timeout and observeProcess can otherwise
     // race through teardown and release the same lease twice.
