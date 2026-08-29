@@ -144,6 +144,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     encrypted: true,
     credentials: [
       { source: "OPENAI_ADMIN_KEY", target: "OPENAI_ADMIN_KEY" },
+      { source: "OPENAI_ADMIN_KEY", target: "OPENAI_API_KEY" },
       {
         source: "OPENAI_CERTIFICATE_VALUES_JSON",
         target: "TF_VAR_openai_certificate_values",

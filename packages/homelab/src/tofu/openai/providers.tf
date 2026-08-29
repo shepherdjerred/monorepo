@@ -14,11 +14,12 @@ terraform {
 }
 
 provider "openai" {
-  # Authenticated through OPENAI_ADMIN_KEY.
+  # The official provider reads OPENAI_API_KEY; the wrapper maps that name from
+  # the dedicated OPENAI_ADMIN_KEY 1Password field.
 }
 
 provider "openaikeys" {
-  # The companion provider is used only for the service-account API key
-  # returned by its service-account resource; organization controls remain on
-  # the official provider above.
+  # The companion provider also reads OPENAI_API_KEY and is used only for the
+  # service-account API key returned by its service-account resource;
+  # organization controls remain on the official provider above.
 }
