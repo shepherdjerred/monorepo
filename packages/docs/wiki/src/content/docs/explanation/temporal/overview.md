@@ -92,9 +92,9 @@ plane. Local servers use `dev`, which never exists in the cluster.
 
 The central `scout` queue has one deliberate exception: its worker polls both
 `prod` and `beta` because the beta-owned weekly parlay and Bryan Bucks
-analytics workflows remain in the central workflow bundle. This preserves the
-existing queue contract; clients and shared Scout schedules still start only
-in `prod`.
+analytics workflows remain in the central workflow bundle. This behavior is
+implemented by [`worker-namespaces.ts`](https://github.com/shepherdjerred/monorepo/blob/2b612ab307be00ee7bbf30aba24a9e0665defb7c/packages/temporal/src/shared/worker-namespaces.ts)
+and wired at [`worker.ts`](https://github.com/shepherdjerred/monorepo/blob/2b612ab307be00ee7bbf30aba24a9e0665defb7c/packages/temporal/src/worker.ts). Clients and shared Scout schedules still start only in `prod`.
 
 Existing histories cannot move between namespaces. The migration therefore
 keeps bounded worker-only pollers in `default` until those histories close.

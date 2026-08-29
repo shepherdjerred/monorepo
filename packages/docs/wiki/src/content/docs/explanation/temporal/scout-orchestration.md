@@ -52,9 +52,9 @@ once, which prevents queue-specific Workers from drifting into different
 orchestration capabilities.
 
 Each stage also has its own Temporal namespace. Queue names describe workload
-classes, while the `beta` and `prod` namespaces prevent either deployment from
-consuming the other's work. Shared Scout maintenance remains in the `prod`
-control plane.
+classes, while namespace ownership is defined by the
+[Temporal schedule reference](/reference/temporal-schedules/). Shared and
+cross-stage Scout maintenance follows that same reference.
 
 Activities use separate realtime, interactive, background, and lake queues.
 The separation preserves responsive polling under slow model work. It also

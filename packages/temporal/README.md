@@ -54,7 +54,9 @@ TEMPORAL_NAMESPACE=dev bun run start # start a local worker
 bun run typecheck    # tsc --noEmit (stubs the HA schema first)
 bun run test         # unit tests, including the workflow-bundle smoke test
 bun run lint         # eslint
-TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 bun run migrate:namespaces -- prepare # read-only inventory
+export TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443
+export TEMPORAL_TLS=true
+bun run migrate:namespaces -- prepare # read-only inventory
 bun run migrate:namespaces -- prepare --confirm # create paused targets
 bun run migrate:namespaces -- cutover --confirm # pause default, activate targets
 bun run migrate:namespaces -- rollback --confirm # only before a target workflow starts

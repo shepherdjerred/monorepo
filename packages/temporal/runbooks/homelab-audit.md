@@ -296,7 +296,10 @@ toolkit temporal operator namespace list                          # expected act
 Flag: non-SERVING status, gRPC connection error despite server pods Running
 (NetworkPolicy change, service endpoint mismatch), or missing `prod`/`beta`
 namespaces. During migration, flag workflow starts or active schedules in
-`default`; after drain, it must remain empty.
+`default`. After the last default execution closes, continue checking for new
+starts and active schedules there through the retention window; histories and
+paused schedules may remain until the window ends, after which `default` must
+be empty.
 
 ### Failed or stuck workflow executions
 
@@ -306,18 +309,17 @@ The Temporal CLI requires RFC3339 timestamps in query clauses. Compute them inli
 # 24h ago, RFC3339 UTC. macOS uses -v; GNU date uses -d.
 DAY_AGO="$(date -u -v-24H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)"
 
-# Workflows that failed in the last 24h
-toolkit temporal workflow list --query "ExecutionStatus='Failed' AND CloseTime > '${DAY_AGO}'"
+# Run each query in both active namespaces.
+for TEMPORAL_NAMESPACE in prod beta; do
+  echo "== ${TEMPORAL_NAMESPACE} =="
+  toolkit temporal --namespace "${TEMPORAL_NAMESPACE}" workflow list --query "ExecutionStatus='Failed' AND CloseTime > '${DAY_AGO}'"
+  toolkit temporal --namespace "${TEMPORAL_NAMESPACE}" workflow list --query "ExecutionStatus='Running' AND StartTime < '${DAY_AGO}'"
+  toolkit temporal --namespace "${TEMPORAL_NAMESPACE}" workflow list --query "ExecutionStatus IN ('Terminated','Canceled','TimedOut') AND CloseTime > '${DAY_AGO}'"
+done
 
-# Running executions older than a day (possible stuck)
-toolkit temporal workflow list --query "ExecutionStatus='Running' AND StartTime < '${DAY_AGO}'"
-
-# Terminated / Canceled / TimedOut recently
-toolkit temporal workflow list --query "ExecutionStatus IN ('Terminated','Canceled','TimedOut') AND CloseTime > '${DAY_AGO}'"
-
-# Drill into a specific execution
-toolkit temporal workflow describe --workflow-id <WF_ID>
-toolkit temporal workflow show     --workflow-id <WF_ID>         # full event history
+# Drill into a specific execution in its owning namespace.
+toolkit temporal --namespace prod workflow describe --workflow-id <WF_ID>
+toolkit temporal --namespace prod workflow show --workflow-id <WF_ID> # full event history
 ```
 
 Flag: any recently-failed workflow, Running executions older than a day, Terminated executions not initiated by a known deploy/rotation.
@@ -325,8 +327,11 @@ Flag: any recently-failed workflow, Running executions older than a day, Termina
 ### Schedule health
 
 ```bash
-toolkit temporal schedule list                                    # one row per scheduled workflow
-toolkit temporal schedule describe --schedule-id <SCHED_ID>       # recent actions + next fire time
+for TEMPORAL_NAMESPACE in prod beta; do
+  echo "== ${TEMPORAL_NAMESPACE} schedules =="
+  toolkit temporal --namespace "${TEMPORAL_NAMESPACE}" schedule list
+done
+toolkit temporal --namespace prod schedule describe --schedule-id <SCHED_ID> # recent actions + next fire time
 ```
 
 Flag: schedules with empty recent actions (never fired), paused without a documented reason, next fire time in the past.
@@ -370,8 +375,10 @@ The removed `agent-task-timeout-watch` aggregate alert must not be used as a
 health signal. Query the SDK metrics instead:
 
 ```bash
-toolkit prom query 'temporal_worker_num_pollers{namespace="temporal",exported_namespace="prod",task_queue="agent-task",poller_type="workflow_task"}'
-toolkit prom query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="temporal",exported_namespace="prod",task_queue="agent-task"}[5m])))'
+for TEMPORAL_NAMESPACE in prod beta; do
+  toolkit prom query "temporal_worker_num_pollers{namespace=\"temporal\",exported_namespace=\"${TEMPORAL_NAMESPACE}\",task_queue=\"agent-task\",poller_type=\"workflow_task\"}"
+  toolkit prom query "histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace=\"temporal\",exported_namespace=\"${TEMPORAL_NAMESPACE}\",task_queue=\"agent-task\"}[5m])))"
+done
 toolkit prom query 'up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}'
 ```
 
