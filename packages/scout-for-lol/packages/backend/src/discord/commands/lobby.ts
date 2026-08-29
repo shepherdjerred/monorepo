@@ -10,25 +10,18 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { getFlag } from "#src/configuration/flags.ts";
-import { createTournamentCodes } from "#src/league/api/tournament/client.ts";
-import {
-  toPlatformId,
-  toTournamentRegion,
-} from "#src/league/api/tournament/regions.ts";
 import {
   tournamentApiMode,
   tournamentMaxOpenLobbies,
 } from "#src/config/dynamic.ts";
-import { requireTournamentRegistration } from "#src/league/tournament/registration.ts";
 import { resolveLobbyRosters } from "#src/league/tournament/roster-resolution.ts";
 import {
-  LOBBY_ABANDON_TTL_MS,
   countOpenLobbiesForGuild,
-  createLobby,
   findLobbyByCode,
   listLobbiesForGuild,
   updateLobby,
 } from "#src/league/tournament/lobby-store.ts";
+import { provisionTournamentLobby } from "#src/league/tournament/provision-lobby.ts";
 import { describeLobby } from "#src/league/tournament/prematch-card.ts";
 import { isTerminal } from "#src/league/tournament/lifecycle.ts";
 import { tournamentLobbiesTotal } from "#src/metrics/tournament.ts";
@@ -81,67 +74,25 @@ async function executeCreate(
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const mode = tournamentApiMode();
-  const region = rosters.blue.region;
-  const tournamentRegion = toTournamentRegion(region);
-  const registration = await requireTournamentRegistration(
-    prisma,
-    mode,
-    tournamentRegion,
-  );
-
   const teamSize = Math.max(
     rosters.blue.puuids.length,
     rosters.red.puuids.length,
   );
 
-  const codes = await createTournamentCodes(
-    { mode },
-    registration.tournamentId,
-    1,
-    {
-      teamSize,
-      pickType,
-      mapType,
-      // ALL by default: if custom-lobby visibility in Spectator correlates with
-      // this at all, it maximises the chance the prematch card gets upgraded
-      // with a real loading screen. It costs nothing otherwise.
-      spectatorType: "ALL",
-      enoughPlayers: false,
-      // Riot enforces the allow-list in aggregate, not per team, so both sides
-      // go in together.
-      allowedParticipants: [...rosters.blue.puuids, ...rosters.red.puuids],
-    },
-  );
-
-  const code = codes[0];
-  if (code === undefined) {
-    await replyPrivate(interaction, "Riot did not return a tournament code.");
-    return;
-  }
-
-  await createLobby(prisma, {
-    code,
-    apiMode: mode,
-    providerId: registration.providerId,
-    tournamentId: registration.tournamentId,
-    region,
-    platformId: toPlatformId(region),
+  const mode = tournamentApiMode();
+  const lobby = await provisionTournamentLobby(prisma, {
+    requestId: `discord:${interaction.id}`,
+    mode,
     serverId,
     channelId: DiscordChannelIdSchema.parse(interaction.channelId),
     creatorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
-    bluePuuids: [...rosters.blue.puuids],
-    redPuuids: [...rosters.red.puuids],
-    blueAliases: [...rosters.blue.aliases],
-    redAliases: [...rosters.red.aliases],
-    teamSize,
+    blue: rosters.blue,
+    red: rosters.red,
     pickType,
     mapType,
     spectatorType: "ALL",
-    lobbyName: undefined,
-    password: undefined,
-    expiresAt: new Date(Date.now() + LOBBY_ABANDON_TTL_MS),
   });
+  const code = lobby.code;
 
   tournamentLobbiesTotal.inc({ action: "created" });
   logger.info(`🏟️ Created lobby ${code} for ${serverId}`);

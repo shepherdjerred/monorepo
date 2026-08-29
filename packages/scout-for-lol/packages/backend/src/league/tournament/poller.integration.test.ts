@@ -13,6 +13,7 @@ import {
 const { prisma: testPrisma } = createTestDatabase("tournament-poller");
 
 let lobbyEvents: RawLobbyEvent[] | undefined = [];
+let lobbyEventCalls = 0;
 let prematchSends = 0;
 let activeGameUpserts: string[] = [];
 
@@ -22,7 +23,10 @@ vi.doMock("#src/database/index.ts", async (importOriginal) => ({
 }));
 
 vi.doMock("#src/league/api/tournament/client.ts", () => ({
-  getLobbyEvents: () => Promise.resolve(lobbyEvents),
+  getLobbyEvents: () => {
+    lobbyEventCalls += 1;
+    return Promise.resolve(lobbyEvents);
+  },
   getGamesByCode: () =>
     Promise.resolve([
       {
@@ -97,6 +101,7 @@ async function seedLobby() {
 beforeEach(async () => {
   await deleteIfExists(() => testPrisma.tournamentLobby.deleteMany());
   lobbyEvents = [];
+  lobbyEventCalls = 0;
   prematchSends = 0;
   activeGameUpserts = [];
 });
@@ -202,5 +207,37 @@ describe("checkTournamentLobbies", () => {
     expect(prematchSends).toBe(0);
     const untouched = await findLobbyByCode(testPrisma, "TEST-CODE");
     expect(untouched?.state).toBe("cancelled");
+  });
+
+  test("a resolved lobby waits for Match-V5 without another Tournament call", async () => {
+    const lobby = await seedLobby();
+    await testPrisma.tournamentLobby.update({
+      where: { id: lobby.id },
+      data: { state: "resolved", matchId: "NA1_5421167767" },
+    });
+
+    await checkTournamentLobbies();
+
+    expect(lobbyEventCalls).toBe(0);
+    const waiting = await findLobbyByCode(testPrisma, "TEST-CODE");
+    expect(waiting?.state).toBe("resolved");
+  });
+
+  test("an expired resolved lobby is swept without a Tournament call", async () => {
+    const lobby = await seedLobby();
+    await testPrisma.tournamentLobby.update({
+      where: { id: lobby.id },
+      data: {
+        state: "resolved",
+        matchId: "NA1_5421167767",
+        expiresAt: new Date(Date.now() - 1),
+      },
+    });
+
+    await checkTournamentLobbies();
+
+    expect(lobbyEventCalls).toBe(0);
+    const expired = await findLobbyByCode(testPrisma, "TEST-CODE");
+    expect(expired?.state).toBe("expired");
   });
 });

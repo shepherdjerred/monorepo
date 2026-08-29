@@ -35,7 +35,7 @@ export const TournamentLobbyStateSchema = z.enum([
   "in_game",
   /** We know the match ID and have written the ActiveGame row. */
   "resolved",
-  /** The post-match report was delivered. */
+  /** Match-V5 was durably ingested and post-match processing may advance. */
   "reported",
   /** An operator cancelled the lobby. */
   "cancelled",
