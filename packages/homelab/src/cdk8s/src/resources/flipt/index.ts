@@ -65,11 +65,25 @@ storage:
     backend:
       type: local
       path: ${DATA_PATH}/data
+  beta:
+    backend:
+      type: local
+      path: ${DATA_PATH}/data-beta
+  prod:
+    backend:
+      type: local
+      path: ${DATA_PATH}/data-prod
 environments:
   default:
     name: default
     default: true
     storage: default
+  beta:
+    name: beta
+    storage: beta
+  prod:
+    name: prod
+    storage: prod
 authentication:
   required: false
 metrics:
@@ -82,6 +96,44 @@ meta:
   telemetry_enabled: false
   state_directory: ${DATA_PATH}/state
 `;
+
+export function createEnvironmentMigrationScript(dataPath: string): string {
+  return `set -eu
+
+source_repo="${dataPath}/data"
+
+validate_repo() {
+  repo="$1"
+  if [ ! -f "$repo/HEAD" ] || [ ! -f "$repo/config" ] || [ ! -d "$repo/objects" ]; then
+    echo "Flipt repository is missing or structurally invalid: $repo" >&2
+    exit 1
+  fi
+}
+
+copy_environment() {
+  destination="$1"
+  if [ -e "$destination" ]; then
+    validate_repo "$destination"
+    return
+  fi
+
+  temporary="\${destination}.migrating"
+  if [ -e "$temporary" ]; then
+    echo "Flipt migration has an incomplete temporary repository: $temporary" >&2
+    exit 1
+  fi
+  cp -a "$source_repo" "$temporary"
+  diff -qr "$source_repo" "$temporary"
+  mv "$temporary" "$destination"
+}
+
+validate_repo "$source_repo"
+copy_environment "${dataPath}/data-beta"
+copy_environment "${dataPath}/data-prod"
+`;
+}
+
+const MIGRATE_ENVIRONMENTS_SCRIPT = createEnvironmentMigrationScript(DATA_PATH);
 
 export function createFliptDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "flipt", {
@@ -97,9 +149,47 @@ export function createFliptDeployment(chart: Chart) {
     data: { "config.yml": FLIPT_CONFIG },
   });
 
+  deployment.podMetadata.addAnnotation(
+    "config-hash",
+    new Bun.CryptoHasher("sha256")
+      .update(FLIPT_CONFIG)
+      .digest("hex")
+      .slice(0, 12),
+  );
+
   const dataVolume = new ZfsNvmeVolume(chart, "flipt-data", {
     storage: Size.gibibytes(2),
   });
+
+  const persistentDataVolume = Volume.fromPersistentVolumeClaim(
+    chart,
+    "flipt-data-volume",
+    dataVolume.claim,
+  );
+
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "migrate-environments",
+      image: `flipt/flipt:${versions["flipt-io/flipt"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [MIGRATE_ENVIRONMENTS_SCRIPT],
+      resources: {
+        cpu: { request: Cpu.millis(5), limit: Cpu.millis(50) },
+        memory: { request: Size.mebibytes(8), limit: Size.mebibytes(32) },
+      },
+      securityContext: {
+        user: FLIPT_UID,
+        group: FLIPT_GID,
+        ensureNonRoot: true,
+        readOnlyRootFilesystem: true,
+        allowPrivilegeEscalation: false,
+        privileged: false,
+        capabilities: { drop: [Capability.ALL] },
+        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
+      },
+      volumeMounts: [{ path: DATA_PATH, volume: persistentDataVolume }],
+    }),
+  );
 
   deployment.addContainer(
     withCommonProps({
@@ -144,11 +234,7 @@ export function createFliptDeployment(chart: Chart) {
       volumeMounts: [
         {
           path: DATA_PATH,
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "flipt-data-volume",
-            dataVolume.claim,
-          ),
+          volume: persistentDataVolume,
         },
         {
           path: "/etc/flipt",

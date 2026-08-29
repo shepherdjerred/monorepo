@@ -151,6 +151,7 @@ describe("fetchFliptSnapshot", () => {
     await expect(
       fetchFliptSnapshot({
         url: "http://flipt.test",
+        environment: "default",
         fetcher: async () =>
           new Response("unavailable", {
             status: 503,
@@ -164,6 +165,7 @@ describe("fetchFliptSnapshot", () => {
     await expect(
       fetchFliptSnapshot({
         url: "http://flipt.test",
+        environment: "default",
         fetcher: async () => {
           throw new Error("connection refused");
         },
@@ -175,6 +177,7 @@ describe("fetchFliptSnapshot", () => {
     await expect(
       fetchFliptSnapshot({
         url: "http://flipt.test",
+        environment: "default",
         fetcher: async () =>
           Response.json({ flags: [{ key: "broken" }] }, { status: 200 }),
       }),

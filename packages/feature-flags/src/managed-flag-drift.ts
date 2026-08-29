@@ -79,7 +79,7 @@ export type FliptFetcher = (
 export type FetchFliptSnapshotOptions = {
   readonly url: string;
   readonly namespace?: string;
-  readonly environment?: string;
+  readonly environment: string;
   readonly fetcher?: FliptFetcher;
 };
 
@@ -194,10 +194,9 @@ function contractErrors(expected: ManagedFlag, actual: SnapshotFlag): string[] {
 
 export function compareManagedFlagInventory(
   snapshot: FliptSnapshot,
+  expectedFlags: readonly ManagedFlag[] = managedFlagInventory.flags,
 ): ManagedFlagDrift {
-  const expectedByKey = new Map(
-    managedFlagInventory.flags.map((flag) => [flag.key, flag]),
-  );
+  const expectedByKey = new Map(expectedFlags.map((flag) => [flag.key, flag]));
   const actualByKey = new Map(snapshot.flags.map((flag) => [flag.key, flag]));
   const expectedKeys = [...expectedByKey.keys()].sort();
   const actualKeys = [...actualByKey.keys()].sort();
@@ -205,7 +204,7 @@ export function compareManagedFlagInventory(
   return {
     missingInFlipt: expectedKeys.filter((key) => !actualByKey.has(key)),
     undeclaredInInventory: actualKeys.filter((key) => !expectedByKey.has(key)),
-    contractMismatches: managedFlagInventory.flags.flatMap((expected) => {
+    contractMismatches: expectedFlags.flatMap((expected) => {
       const actual = actualByKey.get(expected.key);
       return actual === undefined ? [] : contractErrors(expected, actual);
     }),
@@ -232,7 +231,7 @@ export async function fetchFliptSnapshot(
   options: FetchFliptSnapshotOptions,
 ): Promise<FliptSnapshot> {
   const namespace = options.namespace ?? managedFlagInventory.namespace;
-  const environment = options.environment ?? managedFlagInventory.environment;
+  const environment = options.environment;
   const url = `${options.url.replace(/\/$/u, "")}/internal/v1/evaluation/snapshot/namespace/${encodeURIComponent(namespace)}`;
   const fetcher: FliptFetcher =
     options.fetcher ?? ((input, init) => fetch(input, init));
