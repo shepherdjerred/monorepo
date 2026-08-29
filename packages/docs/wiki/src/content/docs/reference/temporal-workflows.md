@@ -28,6 +28,41 @@ Schedules, programmatic roots, and child Workflows name
 Every Activity proxy explicitly names one of the domain queues and the source
 guard rejects missing queues or effects routed to `monorepo-workflows`.
 
+## Worker Deployment contract
+
+The central Workflow role has two credentialless Kubernetes Deployments:
+
+| Track     | Image pin                                            | Temporal identity                        |
+| --------- | ---------------------------------------------------- | ---------------------------------------- |
+| stable    | `shepherdjerred/temporal-worker/workflows/stable`    | `monorepo-central-workflows.<image SHA>` |
+| candidate | `shepherdjerred/temporal-worker/workflows/candidate` | `monorepo-central-workflows.<image SHA>` |
+
+Both tracks poll the same Workflow queues, use the exact image Git SHA as the
+Build ID, and declare `AUTO_UPGRADE` as the default Workflow behavior. Activity
+Workers remain unversioned because Workflow code, not effect execution, is the
+determinism boundary.
+
+Bootstrap configuration:
+
+| Name                              | Contract                                   |
+| --------------------------------- | ------------------------------------------ |
+| `TEMPORAL_NAMESPACE`              | non-empty; currently `default`             |
+| `TEMPORAL_WORKER_DEPLOYMENT_NAME` | paired with Build ID; central value above  |
+| `TEMPORAL_WORKER_BUILD_ID`        | exact lowercase 40-character image Git SHA |
+
+The image bakes `GIT_SHA` as build provenance. When Kubernetes supplies a
+deployment name, the worker resolves a missing explicit Build ID from that
+immutable SHA. Non-image runtimes can set `TEMPORAL_WORKER_BUILD_ID` directly.
+A partial or non-SHA identity fails before the Workflow Worker starts.
+
+The operator interface is `bun run worker-deployment
+<status|start|advance|promote|rollback> --build-id <image-git-sha>` from
+`packages/temporal`. `TEMPORAL_ADDRESS` is required. The initial start also
+accepts `--stable-build-id <image-git-sha>` to establish current routing before
+opening the candidate ramp. It calls the native Temporal CLI through the
+existing `toolkit temporal` passthrough plus the existing Prometheus passthrough
+and does not add a toolkit command.
+
 ## Repo upkeep
 
 | Workflow            | Trigger     | Brain                            | Output                                                                      |

@@ -109,6 +109,8 @@ export const VersionMapSchema = z
     "temporalio/ui": z.string(),
     "temporalio/admin-tools": z.string(),
     "shepherdjerred/temporal-worker": z.string(),
+    "shepherdjerred/temporal-worker/workflows/candidate": z.string(),
+    "shepherdjerred/temporal-worker/workflows/stable": z.string(),
     "shepherdjerred/trmnl-dashboard": z.string(),
     "flipt-io/flipt": z.string(),
   })

@@ -7,11 +7,13 @@ import {
 } from "./release-configuration.ts";
 
 describe("applyCurrentBuildImageOverrides", () => {
-  test("updates bare and beta pins but never prod", () => {
+  test("updates bare and beta pins while preserving the stable workflow pin", () => {
     const versions: Record<string, string> = {
       "shepherdjerred/worker": "old@sha256:old",
       "shepherdjerred/scout/beta": "old@sha256:old",
       "shepherdjerred/scout/prod": "old@sha256:prod",
+      "shepherdjerred/worker/workflows/stable": "old@sha256:old",
+      "shepherdjerred/worker/workflows/candidate": "old@sha256:old",
     };
     const postgresImageDigests = applyCurrentBuildImageOverrides(
       versions,
@@ -25,6 +27,8 @@ describe("applyCurrentBuildImageOverrides", () => {
       "shepherdjerred/worker": `2.0.0-42@sha256:${"a".repeat(64)}`,
       "shepherdjerred/scout/beta": `2.0.0-42@sha256:${"b".repeat(64)}`,
       "shepherdjerred/scout/prod": "old@sha256:prod",
+      "shepherdjerred/worker/workflows/stable": "old@sha256:old",
+      "shepherdjerred/worker/workflows/candidate": `2.0.0-42@sha256:${"a".repeat(64)}`,
     });
     expect(postgresImageDigests).toEqual(new Set());
 
@@ -39,6 +43,27 @@ describe("applyCurrentBuildImageOverrides", () => {
       "2.0.0-43",
     );
     expect(migratedDigests).toEqual(new Set([`sha256:${"c".repeat(64)}`]));
+  });
+
+  test("retains a divergent workflow candidate while a rollout is active", () => {
+    const versions: Record<string, string> = {
+      "shepherdjerred/worker": "old@sha256:old",
+      "shepherdjerred/worker/workflows/stable": `2.0.0-41@sha256:${"a".repeat(64)}`,
+      "shepherdjerred/worker/workflows/candidate": `2.0.0-42@sha256:${"b".repeat(64)}`,
+    };
+    applyCurrentBuildImageOverrides(
+      versions,
+      JSON.stringify({
+        "shepherdjerred/worker": `sha256:${"c".repeat(64)}`,
+      }),
+      "2.0.0-43",
+    );
+    expect(versions["shepherdjerred/worker/workflows/stable"]).toBe(
+      `2.0.0-41@sha256:${"a".repeat(64)}`,
+    );
+    expect(versions["shepherdjerred/worker/workflows/candidate"]).toBe(
+      `2.0.0-42@sha256:${"b".repeat(64)}`,
+    );
   });
 
   test("fails on an unknown image key", () => {

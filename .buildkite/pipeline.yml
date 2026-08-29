@@ -2856,7 +2856,11 @@ steps:
     depends_on: images
     cancel_on_build_failing: true
     concurrency: 1
-    concurrency_group: monorepo/version-commit-back
+    # Serialize commit-back with image publication. A later image build must
+    # not evaluate converged pins from its stale checkout while an earlier
+    # release's candidate ramp is being committed.
+    concurrency_group: monorepo/image-push
+    concurrency_method: ordered
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production

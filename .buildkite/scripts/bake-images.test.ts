@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
 import {
   annotate,
+  assertNoPendingVersionBump,
+  assertTemporalCandidatePinsConverged,
   ensureBuilder,
   execute,
   lastSuccessfulImageReleaseCommit,
@@ -12,6 +14,7 @@ import {
   VERSION_CATALOG_URL,
   writeFallbackReport,
 } from "./bake-images.ts";
+import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
 import { ensureAnonymousGhcrPull } from "./ghcr-public-access.ts";
 import {
   assertImageSourceLabel,
@@ -44,6 +47,146 @@ function commandResult(
   return { exitCode, stdout, stderr };
 }
 
+test("publishes a central Workflow candidate without changing stable", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  const workflowPin = `2.0.0-41@sha256:${"c".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      {
+        "shepherdjerred/temporal-worker": digest,
+        "shepherdjerred/other": digest,
+      },
+      "42",
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/temporal-worker/workflows/candidate",
+          value: workflowPin,
+        },
+        {
+          name: "shepherdjerred/temporal-worker/workflows/stable",
+          value: workflowPin,
+        },
+      ]),
+    ),
+  ).toEqual({
+    "shepherdjerred/temporal-worker": {
+      version: "2.0.0-42",
+      digest,
+    },
+    "shepherdjerred/temporal-worker/workflows/candidate": {
+      version: "2.0.0-42",
+      digest,
+    },
+    "shepherdjerred/other": { version: "2.0.0-42", digest },
+  });
+});
+
+test("blocks candidate admission while the durable version branch exists", async () => {
+  await expect(
+    assertNoPendingVersionBump(async () =>
+      commandResult(0, "abc123\trefs/heads/chore/version-bump-pending\n"),
+    ),
+  ).rejects.toThrow(TransientError);
+});
+
+test("fails transiently when the durable version branch cannot be checked", async () => {
+  await expect(
+    assertNoPendingVersionBump(async () => commandResult(1, "", "network")),
+  ).rejects.toThrow(TransientError);
+});
+
+test("blocks admission when live main has a divergent Temporal candidate", async () => {
+  const catalog = JSON.stringify({
+    entries: [
+      {
+        name: "shepherdjerred/temporal-worker/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/temporal-worker/workflows/candidate",
+        value: "2.0.0-42@sha256:candidate",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/prod/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/prod/workflows/candidate",
+        value: "2.0.0-41@sha256:stable",
+      },
+    ],
+  });
+  const executor: CommandExecutor = async (command) =>
+    command[1] === "fetch" ? commandResult() : commandResult(0, catalog);
+  await expect(assertTemporalCandidatePinsConverged(executor)).rejects.toThrow(
+    TransientError,
+  );
+});
+
+test("retains a central Workflow candidate until its pin converges with stable", () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/temporal-worker": digest },
+      "44",
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/temporal-worker/workflows/candidate",
+          value: `2.0.0-43@sha256:${"c".repeat(64)}`,
+        },
+        {
+          name: "shepherdjerred/temporal-worker/workflows/stable",
+          value: `2.0.0-42@sha256:${"d".repeat(64)}`,
+        },
+      ]),
+    ),
+  ).toEqual({
+    "shepherdjerred/temporal-worker": {
+      version: "2.0.0-44",
+      digest,
+    },
+  });
+});
+
+test("does not publish nonexistent Scout Workflow catalog pins", () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/scout-for-lol/beta": digest },
+      "43",
+      versionCatalogSource([]),
+    ),
+  ).toEqual({
+    "shepherdjerred/scout-for-lol/beta": {
+      version: "2.0.0-43",
+      digest,
+    },
+  });
+});
+
+test("does not synthesize a Scout Workflow candidate while its pins are absent", () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/scout-for-lol/beta": digest },
+      "44",
+      versionCatalogSource([]),
+    ),
+  ).toEqual({
+    "shepherdjerred/scout-for-lol/beta": {
+      version: "2.0.0-44",
+      digest,
+    },
+  });
+});
 function versionCatalogSource(
   entries: readonly { readonly name: string; readonly value: string }[],
 ): string {

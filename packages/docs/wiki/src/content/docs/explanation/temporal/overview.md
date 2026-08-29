@@ -93,6 +93,19 @@ Kubernetes API token. Its NetworkPolicy allows only DNS, Temporal gRPC, OTLP,
 and metrics scraping. Activity pods retain only the credentials and network
 paths required by their domain.
 
+Workflow releases preserve two image identities at once. The candidate can
+register and poll without becoming current; Temporal routes an exact-version
+canary to it before any percentage ramp begins. New `AUTO_UPGRADE` executions
+then move through a bounded 10%, 50%, and 100% ramp while both Workflow images
+remain available. Activity Workers are not part of that ramp, so changing
+Workflow routing does not duplicate effects or move Activity credentials into
+the deterministic process.
+
+The stable pin is deliberately slower than the live routing state. It changes
+only after a full-day clean soak, making the last accepted Workflow bundle
+available throughout the ramp and keeping rollback a removal of the candidate
+route rather than an emergency image rebuild.
+
 ## Batteries in the image
 
 The worker image bakes `gh`, `claude`, `codex`, `kubectl`, `talosctl`, `tofu`,

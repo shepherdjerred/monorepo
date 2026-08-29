@@ -64,6 +64,58 @@ function parseJson(raw: string, label: string): unknown {
   }
 }
 
+function workflowStableKey(candidate: string): string | undefined {
+  return candidate.endsWith("/workflows/candidate")
+    ? candidate.replace("/workflows/candidate", "/workflows/stable")
+    : undefined;
+}
+
+function canUpdateImagePin(
+  versions: Readonly<Record<string, string>>,
+  candidate: string,
+): boolean {
+  const stableKey = workflowStableKey(candidate);
+  return (
+    stableKey === undefined ||
+    !Object.hasOwn(versions, stableKey) ||
+    versions[stableKey] === versions[candidate]
+  );
+}
+
+function applyImagePin(
+  versions: Record<string, string>,
+  candidate: string,
+  version: string,
+): void {
+  versions[candidate] = version;
+}
+
+function applyDigestOverride(
+  versions: Record<string, string>,
+  imageKey: string,
+  digest: string,
+  releaseVersion: string,
+): boolean {
+  const candidates = [
+    imageKey,
+    `${imageKey}/beta`,
+    `${imageKey}/workflows/candidate`,
+    `${imageKey}/beta/workflows/candidate`,
+  ];
+  let matched = false;
+  for (const candidate of candidates) {
+    if (!Object.hasOwn(versions, candidate)) {
+      continue;
+    }
+    if (!canUpdateImagePin(versions, candidate)) {
+      continue;
+    }
+    applyImagePin(versions, candidate, `${releaseVersion}@${digest}`);
+    matched = true;
+  }
+  return matched;
+}
+
 export function applyCurrentBuildImageOverrides(
   versions: Record<string, string>,
   rawDigests: string | undefined = Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"],
@@ -81,23 +133,13 @@ export function applyCurrentBuildImageOverrides(
   }
   const releaseVersion = BuildVersionSchema.parse(buildVersion);
   for (const [imageKey, digest] of Object.entries(digests)) {
-    const candidates = [imageKey, `${imageKey}/beta`];
-    let matched = false;
-    for (const candidate of candidates) {
-      if (!Object.hasOwn(versions, candidate)) {
-        continue;
-      }
-      const version = `${releaseVersion}@${digest}`;
-      versions[candidate] = version;
-      if (candidate.startsWith("shepherdjerred/scout-for-lol")) {
-        postgresImageDigests.add(digest);
-      }
-      matched = true;
-    }
-    if (!matched) {
+    if (!applyDigestOverride(versions, imageKey, digest, releaseVersion)) {
       throw new Error(
         `Current-build image ${imageKey} does not match a bare or beta versions.ts entry`,
       );
+    }
+    if (imageKey.startsWith("shepherdjerred/scout-for-lol")) {
+      postgresImageDigests.add(digest);
     }
   }
   return postgresImageDigests;

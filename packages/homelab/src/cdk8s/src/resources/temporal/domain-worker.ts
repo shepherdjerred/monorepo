@@ -22,6 +22,8 @@ export type TemporalDomainWorkerProps = {
   name: string;
   component: string;
   syncWave?: number;
+  podLabels?: Record<string, string>;
+  imageKey?: string;
   envVariables: Record<string, EnvValue>;
   ports?: { number: number; name: string }[];
   cpuRequest: Cpu;
@@ -41,6 +43,11 @@ export function createTemporalDomainWorker(
   chart: Chart,
   props: TemporalDomainWorkerProps,
 ): Deployment {
+  const imageKey = props.imageKey ?? "shepherdjerred/temporal-worker";
+  const imageVersion = versions[imageKey];
+  if (imageVersion === undefined) {
+    throw new Error(`Missing Temporal worker image pin ${imageKey}`);
+  }
   const serviceAccount =
     props.serviceAccount ??
     new ServiceAccount(chart, `${props.name}-service-account`, {
@@ -62,7 +69,11 @@ export function createTemporalDomainWorker(
     automountServiceAccountToken: props.automountServiceAccountToken ?? false,
     securityContext: { fsGroup: 1000 },
     podMetadata: {
-      labels: { app: "temporal-worker", component: props.component },
+      labels: {
+        app: "temporal-worker",
+        component: props.component,
+        ...props.podLabels,
+      },
     },
     metadata:
       props.syncWave === undefined
@@ -78,7 +89,7 @@ export function createTemporalDomainWorker(
   const container = deployment.addContainer(
     withCommonProps({
       name: props.name,
-      image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+      image: `ghcr.io/shepherdjerred/temporal-worker:${imageVersion}`,
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },

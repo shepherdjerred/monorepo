@@ -114,6 +114,17 @@ import {
 import { runFreshRssSyncWorkflow as _runFreshRssSyncWorkflow } from "./freshrss.ts";
 import { runFliptFlagInventory as _runFliptFlagInventory } from "./flipt-flag-inventory.ts";
 import type { FliptFlagInventoryResult } from "#activities/flipt-flag-inventory.ts";
+import {
+  workerDeploymentCanaryWorkflow as workerDeploymentCanaryWorkflowImplementation,
+  type WorkerDeploymentCanaryInput,
+} from "./worker-deployment-canary.ts";
+
+export function workerDeploymentCanaryWorkflow(
+  input: WorkerDeploymentCanaryInput,
+): Promise<void> {
+  workerDeploymentCanaryWorkflowImplementation(input);
+  return Promise.resolve();
+}
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
