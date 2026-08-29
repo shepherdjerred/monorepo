@@ -309,8 +309,14 @@ The Temporal CLI requires RFC3339 timestamps in query clauses. Compute them inli
 # 24h ago, RFC3339 UTC. macOS uses -v; GNU date uses -d.
 DAY_AGO="$(date -u -v-24H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)"
 
-# Run each query in both active namespaces.
-for TEMPORAL_NAMESPACE in prod beta; do
+# Run each query in both active namespaces. During the drain, include the
+# legacy namespace explicitly so failures and stalled executions there remain
+# visible; after the legacy setting is removed this stays prod/beta-only.
+TEMPORAL_AUDIT_NAMESPACES="prod beta"
+if [ "${TEMPORAL_LEGACY_NAMESPACE:-}" = "default" ]; then
+  TEMPORAL_AUDIT_NAMESPACES="${TEMPORAL_AUDIT_NAMESPACES} default"
+fi
+for TEMPORAL_NAMESPACE in ${TEMPORAL_AUDIT_NAMESPACES}; do
   echo "== ${TEMPORAL_NAMESPACE} =="
   toolkit temporal --namespace "${TEMPORAL_NAMESPACE}" workflow list --query "ExecutionStatus='Failed' AND CloseTime > '${DAY_AGO}'"
   toolkit temporal --namespace "${TEMPORAL_NAMESPACE}" workflow list --query "ExecutionStatus='Running' AND StartTime < '${DAY_AGO}'"
@@ -327,7 +333,7 @@ Flag: any recently-failed workflow, Running executions older than a day, Termina
 ### Schedule health
 
 ```bash
-for TEMPORAL_NAMESPACE in prod beta; do
+for TEMPORAL_NAMESPACE in ${TEMPORAL_AUDIT_NAMESPACES}; do
   echo "== ${TEMPORAL_NAMESPACE} schedules =="
   toolkit temporal --namespace "${TEMPORAL_NAMESPACE}" schedule list
 done

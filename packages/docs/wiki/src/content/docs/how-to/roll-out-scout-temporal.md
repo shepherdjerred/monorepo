@@ -164,6 +164,29 @@ and new production starts appear only in `prod`. Existing `default` executions
 must keep pollers until they close; do not cancel or replay them merely to
 finish the migration.
 
+## Retire the drain namespace
+
+After the last `default` execution closes, wait the additional 30-day retention
+window. Re-read live state immediately before cleanup and run the migration
+audit with the recorded cutover timestamp. The audit must show schedule parity,
+no active source schedules, no `default` workflow starts after cutover, and no
+remaining `default` executions.
+
+Only after those checks pass, delete every paused source schedule from the
+drain namespace. List the schedules first, then delete each exact ID; do not
+use a wildcard or delete a target schedule in `prod` or `beta`:
+
+```bash
+toolkit temporal --namespace default schedule list
+toolkit temporal --namespace default schedule delete --schedule-id <SCHED_ID>
+```
+
+Remove `TEMPORAL_LEGACY_NAMESPACE` from the worker and client deployment
+configuration in the same reviewed GitOps change, restart the affected
+deployments, and run the audit again against `prod` and `beta`. Keep the
+built-in `default` namespace present but guarded and empty; this is the only
+post-drain operation that targets it.
+
 ## Roll back a family
 
 1. Pause its Temporal Schedules.
