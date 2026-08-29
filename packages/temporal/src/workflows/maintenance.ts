@@ -1,5 +1,6 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { MaintenanceActivities } from "#activities/maintenance.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const maintenanceRetry = {
   maximumAttempts: 3,
@@ -10,11 +11,13 @@ const maintenanceRetry = {
 
 const { runKometa, runUvCachePrune, runTrivyDbRefresh } =
   proxyActivities<MaintenanceActivities>({
+    taskQueue: TASK_QUEUES.MAINTENANCE,
     heartbeatTimeout: "90 seconds",
     retry: maintenanceRetry,
     startToCloseTimeout: "30 minutes",
   });
 const { runBunCacheGc } = proxyActivities<MaintenanceActivities>({
+  taskQueue: TASK_QUEUES.MAINTENANCE,
   heartbeatTimeout: "90 seconds",
   retry: maintenanceRetry,
   startToCloseTimeout: "15 minutes",
@@ -30,6 +33,7 @@ export const turboCacheCleanActivityOptions = {
 } as const;
 
 const { runTurboCacheClean } = proxyActivities<MaintenanceActivities>({
+  taskQueue: TASK_QUEUES.MAINTENANCE,
   ...turboCacheCleanActivityOptions,
 });
 

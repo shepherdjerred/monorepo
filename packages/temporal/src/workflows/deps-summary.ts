@@ -7,6 +7,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const RETRY = {
@@ -21,6 +22,7 @@ const {
   fetchDependencyReleaseNotes,
   synthesizeDependencyChanges,
 } = proxyActivities<DepsSummaryActivities>({
+  taskQueue: TASK_QUEUES.REPO_AUTOMATION,
   startToCloseTimeout: "10 minutes",
   heartbeatTimeout: "60 seconds",
   retry: RETRY,
@@ -28,6 +30,7 @@ const {
 
 const { advanceDependencySummaryCheckpoint } =
   proxyActivities<DepsSummaryActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     startToCloseTimeout: "1 minute",
     retry: RETRY,
   });
@@ -37,17 +40,20 @@ const { advanceDependencySummaryCheckpoint } =
 // as they were when those histories were written.
 const { cloneAndGetVersionChanges, fetchReleaseNotes } =
   proxyActivities<DepsSummaryLegacyActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     startToCloseTimeout: "5 minutes",
     heartbeatTimeout: "60 seconds",
     retry: RETRY,
   });
 
 const { summarizeWithLLM } = proxyActivities<DepsSummaryLegacyActivities>({
+  taskQueue: TASK_QUEUES.REPO_AUTOMATION,
   startToCloseTimeout: "3 minutes",
   retry: RETRY,
 });
 
 const { formatAndSendEmail } = proxyActivities<DepsSummaryLegacyActivities>({
+  taskQueue: TASK_QUEUES.REPO_AUTOMATION,
   startToCloseTimeout: "1 minute",
   retry: RETRY,
 });

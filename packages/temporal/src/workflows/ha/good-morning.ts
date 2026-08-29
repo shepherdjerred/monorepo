@@ -20,8 +20,10 @@ import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
   HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
 } from "#shared/ha-errors.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const weatherActivities = proxyActivities<WeatherActivities>({
+  taskQueue: TASK_QUEUES.HOME,
   startToCloseTimeout: "30 seconds",
   retry: { maximumAttempts: 3 },
 });

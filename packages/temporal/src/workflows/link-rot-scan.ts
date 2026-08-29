@@ -35,16 +35,16 @@ const { scanMainForLinkRot } = proxyActivities<LinkRotScanActivities>({
   heartbeatTimeout: "90 seconds",
   retry: RETRY,
 });
-// Delivery and alert publication stay on the core queue, which owns the Postal,
+// Delivery and alert publication stay on the reports queue, which owns Postal,
 // report-state S3, and ALERTMANAGER_URL credentials.
 const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  taskQueue: TASK_QUEUES.DEFAULT,
+  taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: "2 minutes",
   retry: RETRY,
 });
 const { publishLinkRotScanAlerts } =
   proxyActivities<LinkRotScanAlertActivities>({
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPORTS,
     startToCloseTimeout: "1 minute",
     retry: RETRY,
   });

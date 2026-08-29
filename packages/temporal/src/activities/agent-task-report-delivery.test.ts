@@ -226,10 +226,10 @@ describe("agent task report delivery delegation", () => {
     expect(report.limitations[0]).toContain("workdir may remain");
   });
 
-  test("targets the credentialed reports queue with a stable workflow identity", () => {
+  test("targets the Workflow queue with a stable workflow identity", () => {
     expect(agentTaskReportDeliveryWorkflowOptions(REPORT)).toEqual({
       args: [REPORT],
-      taskQueue: TASK_QUEUES.REPORTS,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
       workflowId: `report-delivery:${REPORT.reportRunId}`,
       workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
       workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,

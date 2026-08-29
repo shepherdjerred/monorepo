@@ -43,11 +43,10 @@ async function startWorkflow(input: {
   workflowType: string;
   workflowId: string;
   args: unknown[];
-  taskQueue?: string;
 }) {
   const handle = await input.client.workflow.start(input.workflowType, {
     args: input.args,
-    taskQueue: input.taskQueue ?? TASK_QUEUES.GLITTER_CORPUS,
+    taskQueue: TASK_QUEUES.WORKFLOWS,
     workflowId: input.workflowId,
   });
   console.warn(
@@ -229,7 +228,6 @@ async function runContextRefresh(
     client,
     workflowType: "runGlitterContextRefresh",
     workflowId: `glitter-context-refresh-manual-${crypto.randomUUID()}`,
-    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
     args: [
       {
         dryRun: parsed["dry-run"] === "true",

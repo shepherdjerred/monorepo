@@ -60,7 +60,6 @@ describe("Temporal workflow outcome rules", () => {
 
     const healthAlerts = [
       "TemporalDomainWorkflowPollerUnavailable",
-      "TemporalDomainActivityPollerUnavailable",
       "TemporalDomainQueueBacklog",
       "TemporalDomainScheduleToStartHigh",
       "TemporalDomainWorkerScrapeDown",
@@ -80,6 +79,17 @@ describe("Temporal workflow outcome rules", () => {
       );
     }
 
+    const activityRules = failuresGroup.rules.filter(
+      (rule) => rule.alert === "TemporalDomainActivityPollerUnavailable",
+    );
+    expect(activityRules).toHaveLength(
+      TEMPORAL_DOMAIN_QUEUES.filter((definition) => definition.activityPoller)
+        .length,
+    );
+    expect(
+      activityRules.map((rule) => rule.labels?.["task_queue"]),
+    ).not.toContain("monorepo-workflows");
+
     const backlogExpressions = failuresGroup.rules
       .filter((rule) => rule.alert === "TemporalDomainQueueBacklog")
       .map((rule) => rule.expr.value);
@@ -93,6 +103,9 @@ describe("Temporal workflow outcome rules", () => {
     expect(backlogExpressions).toContain(
       'max(approximate_backlog_count{namespace="temporal",taskqueue="repo-automation",task_type=~"Workflow|Activity"}) > 0',
     );
+    expect(backlogExpressions).toContain(
+      'max(approximate_backlog_count{namespace="temporal",taskqueue="monorepo-workflows",task_type=~"Workflow"}) > 0',
+    );
     expect(backlogExpressions.join("\n")).not.toContain(
       'taskqueue="repo_automation"',
     );
@@ -104,6 +117,15 @@ describe("Temporal workflow outcome rules", () => {
       throw new Error("Missing TemporalWorkerMetricsDown alert");
     }
     expect(workerMetricsDown.for).toBe("5m");
+
+    const workflowPollerExpressions = failuresGroup.rules
+      .filter(
+        (rule) => rule.alert === "TemporalDomainWorkflowPollerUnavailable",
+      )
+      .map((rule) => rule.expr.value);
+    expect(workflowPollerExpressions).toContain(
+      'absent(temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) or max(temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) < 1',
+    );
 
     const reportHeartbeat = failuresGroup.rules.find(
       (rule) => rule.alert === "TemporalReportHeartbeatStale",

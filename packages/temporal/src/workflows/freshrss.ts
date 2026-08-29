@@ -1,7 +1,9 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { FreshRssActivities } from "#activities/freshrss.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { runFreshRssSync } = proxyActivities<FreshRssActivities>({
+  taskQueue: TASK_QUEUES.REPO_AUTOMATION,
   startToCloseTimeout: "4 minutes",
   scheduleToCloseTimeout: "5 minutes",
   retry: {

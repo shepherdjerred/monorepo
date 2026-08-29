@@ -13,7 +13,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 const legacyReportDeliveryActivities = proxyActivities<
   Pick<ReportDeliveryActivities, "deliverReport">
 >({
-  taskQueue: TASK_QUEUES.DEFAULT,
+  taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
   retry: REPORT_DELIVERY_ACTIVITY_RETRY,
 });

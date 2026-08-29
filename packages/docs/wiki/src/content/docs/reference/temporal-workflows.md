@@ -14,6 +14,20 @@ or a native **agent SDK** run with tools.
 Cron times are `America/Los_Angeles` wall-clock. Source:
 [`src/workflows/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/temporal/src/workflows).
 
+## Task queue routing
+
+| Concern                        | Queue                  | Poller                                   |
+| ------------------------------ | ---------------------- | ---------------------------------------- |
+| New central Workflow tasks     | `monorepo-workflows`   | credentialless `workflows` role          |
+| Pre-cutover Workflow tasks     | original central queue | temporary poller in the `workflows` role |
+| Effects                        | owning domain queue    | Activity-only domain role                |
+| Pre-cutover default Activities | `default`              | temporary `legacy` role                  |
+
+Schedules, programmatic roots, and child Workflows name
+`monorepo-workflows`. Continue-as-new inherits the current Workflow queue.
+Every Activity proxy explicitly names one of the domain queues and the source
+guard rejects missing queues or effects routed to `monorepo-workflows`.
+
 ## Repo upkeep
 
 | Workflow            | Trigger     | Brain                            | Output                                                                      |

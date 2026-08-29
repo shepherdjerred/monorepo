@@ -4,9 +4,11 @@ import type {
   ObserveReviewSignalsInput,
   ObserveReviewSignalsResult,
 } from "#activities/observe-review-signals.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { runObserveReviewSignals } =
   proxyActivities<ObserveReviewSignalsActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     startToCloseTimeout: "5 minutes",
     heartbeatTimeout: "30 seconds",
     retry: {

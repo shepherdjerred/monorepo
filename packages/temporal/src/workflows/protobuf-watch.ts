@@ -4,9 +4,11 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const { collectProtobufWatch } = proxyActivities<ProtobufWatchActivities>({
+  taskQueue: TASK_QUEUES.REPO_AUTOMATION,
   startToCloseTimeout: "1 minute",
   retry: { maximumAttempts: 3 },
 });

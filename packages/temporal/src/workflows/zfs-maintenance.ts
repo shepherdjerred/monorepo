@@ -1,7 +1,9 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { ZfsMaintenanceActivities } from "#activities/zfs-maintenance.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { runZfsMaintenance } = proxyActivities<ZfsMaintenanceActivities>({
+  taskQueue: TASK_QUEUES.INFRA,
   // Four `kubectl exec` calls (autotrim×2, scrub-status×2 / scrub-init×2);
   // each completes in seconds. Heartbeats fire between each — see
   // zfs-maintenance.ts.

@@ -7,6 +7,7 @@ import {
   runScoutWeeklyParlayCatchupWorkflow,
   runScoutWeeklyParlayWorkflow,
 } from "./scout-weekly-parlay.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const EMBEDDED_ACTIVITY_QUEUE = "scout-beta-background";
 const TASK_QUEUE = EMBEDDED_ACTIVITY_QUEUE;
@@ -28,22 +29,56 @@ const TIMELINE: ScoutWeeklyParlayTimeline = {
 
 let testEnvironment: TestWorkflowEnvironment;
 
-async function weeklyParlayWorker(
+type WeeklyParlayWorkers = {
+  workflow: Worker;
+  scoutActivities: Worker;
+  embeddedActivities: Worker;
+};
+
+async function weeklyParlayWorkers(
   activities: NonNullable<WorkerOptions["activities"]>,
-): Promise<Worker> {
-  return await Worker.create({
-    connection: testEnvironment.nativeConnection,
-    taskQueue: TASK_QUEUE,
-    workflowsPath: new URL("index.ts", import.meta.url).pathname,
-    activities,
-  });
+): Promise<WeeklyParlayWorkers> {
+  const [workflow, scoutActivities, embeddedActivities] = await Promise.all([
+    Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: TASK_QUEUE,
+      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+    }),
+    Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: TASK_QUEUES.SCOUT,
+      activities,
+    }),
+    Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: EMBEDDED_ACTIVITY_QUEUE,
+      activities,
+    }),
+  ]);
+  return { workflow, scoutActivities, embeddedActivities };
+}
+
+async function runWithWeeklyParlayWorkers<T>(
+  workers: WeeklyParlayWorkers,
+  result: Promise<T>,
+): Promise<T> {
+  const scoutActivitiesRun = workers.scoutActivities.run();
+  const embeddedActivitiesRun = workers.embeddedActivities.run();
+  try {
+    return await workers.workflow.runUntil(result);
+  } finally {
+    workers.scoutActivities.shutdown();
+    workers.embeddedActivities.shutdown();
+    await Promise.all([scoutActivitiesRun, embeddedActivitiesRun]);
+  }
 }
 
 async function runWeeklyParlayTestWorkflow(
-  worker: Worker,
+  workers: WeeklyParlayWorkers,
   workflowIdPrefix: string,
 ): Promise<void> {
-  await worker.runUntil(
+  await runWithWeeklyParlayWorkers(
+    workers,
     testEnvironment.client.workflow.execute(runScoutWeeklyParlayWorkflow, {
       args: [{}],
       taskQueue: TASK_QUEUE,
@@ -64,7 +99,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
   test("runs the frozen standard open, reminder, start, updates, and final action sequence", async () => {
     const actions: ScoutWeeklyParlayAction[] = [];
     let timelineAnchor: string | undefined;
-    const worker = await weeklyParlayWorker({
+    const workers = await weeklyParlayWorkers({
       resolveScoutWeeklyParlayTimeline: (scheduledStartAt: string) => {
         timelineAnchor = scheduledStartAt;
         return TIMELINE;
@@ -83,7 +118,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
         workflowId: `scout-weekly-parlay-${crypto.randomUUID()}`,
       },
     );
-    await worker.runUntil(handle.result());
+    await runWithWeeklyParlayWorkers(workers, handle.result());
 
     const description = await handle.describe();
     expect(timelineAnchor).toBe(description.startTime.toISOString());
@@ -111,7 +146,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
       updatesAt: [],
       finalizesAt: "2026-08-30T18:00:00.000Z",
     };
-    const worker = await weeklyParlayWorker({
+    const workers = await weeklyParlayWorkers({
       resolveScoutWeeklyParlayCatchupTimeline: (workflowStartAt: string) => {
         timelineAnchor = workflowStartAt;
         return catchupTimeline;
@@ -141,7 +176,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
         },
       ),
     ).rejects.toThrow();
-    await worker.runUntil(catchupHandle.result());
+    await runWithWeeklyParlayWorkers(workers, catchupHandle.result());
 
     const description = await catchupHandle.describe();
     expect(timelineAnchor).toBe(description.startTime.toISOString());
@@ -166,7 +201,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
   test("retries scoring start beyond the activity budget and continues after delivery failures", async () => {
     const actions: ScoutWeeklyParlayAction[] = [];
     let startAttempts = 0;
-    const worker = await weeklyParlayWorker({
+    const workers = await weeklyParlayWorkers({
       resolveScoutWeeklyParlayTimeline: () => TIMELINE,
       invokeScoutWeeklyParlayAction: (action: ScoutWeeklyParlayAction) => {
         actions.push(action);
@@ -186,7 +221,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
       },
     });
 
-    await runWeeklyParlayTestWorkflow(worker, "scout-weekly-parlay-failures");
+    await runWeeklyParlayTestWorkflow(workers, "scout-weekly-parlay-failures");
 
     expect(actions.at(-1)).toEqual({
       periodKey: TIMELINE.periodKey,
@@ -209,7 +244,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
   test("retries finalization beyond the activity budget until reconciliation succeeds", async () => {
     const actions: ScoutWeeklyParlayAction[] = [];
     let finalizationAttempts = 0;
-    const worker = await weeklyParlayWorker({
+    const workers = await weeklyParlayWorkers({
       resolveScoutWeeklyParlayTimeline: () => TIMELINE,
       invokeScoutWeeklyParlayAction: (action: ScoutWeeklyParlayAction) => {
         actions.push(action);
@@ -226,7 +261,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
       },
     });
 
-    await runWeeklyParlayTestWorkflow(worker, "scout-weekly-parlay-finalize");
+    await runWeeklyParlayTestWorkflow(workers, "scout-weekly-parlay-finalize");
 
     expect(
       actions.filter((action) => action.action === "finalize"),

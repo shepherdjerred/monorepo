@@ -24,7 +24,7 @@ describe("Home Assistant event routing", () => {
     expect(start).toHaveBeenCalledTimes(1);
     expect(start.mock.calls[0]?.[0]).toBe("goodNight");
     expect(start.mock.calls[0]?.[1]).toMatchObject({
-      taskQueue: TASK_QUEUES.HOME,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
     });
   });
 });

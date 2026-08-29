@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import type { Client } from "@temporalio/client";
 import { WorkflowIdConflictPolicy } from "@temporalio/client";
 import { buildSleepWebhookApp } from "./sleep-webhook.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const TOKEN = "test-sleep-webhook-token";
 
@@ -94,7 +95,7 @@ describe("sleep webhook", () => {
     expect(start.mock.calls[0]).toEqual([
       "sleepMusic",
       {
-        taskQueue: "home",
+        taskQueue: TASK_QUEUES.WORKFLOWS,
         workflowId: "sleep-music",
         workflowIdConflictPolicy: WorkflowIdConflictPolicy.TERMINATE_EXISTING,
         workflowExecutionTimeout: 12_600_000,

@@ -99,7 +99,7 @@ export async function startOrScheduleAgentTask(
           type: "startWorkflow",
           workflowType: "agentTaskWorkflow",
           args,
-          taskQueue: TASK_QUEUES.AGENT_TASK,
+          taskQueue: TASK_QUEUES.WORKFLOWS,
           workflowRunTimeout: agentTaskWorkflowRunTimeout(input),
         },
         policies: {
@@ -120,7 +120,7 @@ export async function startOrScheduleAgentTask(
           type: "startWorkflow",
           workflowType: "agentTaskWorkflow",
           args,
-          taskQueue: TASK_QUEUES.AGENT_TASK,
+          taskQueue: TASK_QUEUES.WORKFLOWS,
           workflowRunTimeout: agentTaskWorkflowRunTimeout(input),
         },
         policies: {
@@ -152,7 +152,7 @@ export async function startOrScheduleAgentTask(
   try {
     const handle = await client.workflow.start("agentTaskWorkflow", {
       args: [workflowArgsForOneOff(input)],
-      taskQueue: TASK_QUEUES.AGENT_TASK,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
       workflowId,
       ...(startDelay === undefined ? {} : { startDelay }),
       // `workflowRunTimeout` (per-run) rather than

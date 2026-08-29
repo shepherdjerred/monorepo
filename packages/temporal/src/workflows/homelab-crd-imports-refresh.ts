@@ -3,9 +3,11 @@ import type {
   HomelabCrdImportsRefreshActivities,
   HomelabCrdImportsRefreshResult,
 } from "#activities/homelab-crd-imports-refresh.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshHomelabCrdImports } =
   proxyActivities<HomelabCrdImportsRefreshActivities>({
+    taskQueue: TASK_QUEUES.INFRA,
     // Clones the monorepo, does the workspace install, runs the two cdk8s
     // imports (network + kubectl), and opens a PR on drift. Heartbeats fire
     // every 10s (see activities/homelab-crd-imports-refresh.ts) so worker

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { Worker } from "@temporalio/worker";
+import { Worker, type WorkerOptions } from "@temporalio/worker";
 import type { RunAgentTaskResultV2 } from "#shared/agent-task-result-types.ts";
 import type { SendAgentTaskFailureReportInput } from "#activities/agent-task-side-activities.ts";
 import { AgentTaskInputSchema } from "#shared/agent-task.ts";
@@ -98,6 +98,47 @@ afterAll(async () => {
   await testEnvironment.teardown();
 });
 
+async function runAgentTaskExpectingFailure(
+  activities: NonNullable<WorkerOptions["activities"]>,
+  workflowIdPrefix: string,
+): Promise<unknown> {
+  const workflowWorker = await Worker.create({
+    connection: testEnvironment.nativeConnection,
+    taskQueue: TASK_QUEUES.DEFAULT,
+    workflowsPath: new URL("index.ts", import.meta.url).pathname,
+  });
+  const agentWorker = await Worker.create({
+    connection: testEnvironment.nativeConnection,
+    taskQueue: TASK_QUEUES.AGENT_TASK,
+    activities,
+  });
+  const reportWorker = await Worker.create({
+    connection: testEnvironment.nativeConnection,
+    taskQueue: TASK_QUEUES.REPORTS,
+    activities,
+  });
+  const agentWorkerRun = agentWorker.run();
+  const reportWorkerRun = reportWorker.run();
+
+  try {
+    await workflowWorker.runUntil(
+      testEnvironment.client.workflow.execute(agentTaskWorkflow, {
+        args: [INPUT],
+        taskQueue: TASK_QUEUES.DEFAULT,
+        workflowId: `${workflowIdPrefix}-${crypto.randomUUID()}`,
+      }),
+    );
+    return undefined;
+  } catch (error: unknown) {
+    return error;
+  } finally {
+    agentWorker.shutdown();
+    reportWorker.shutdown();
+    await agentWorkerRun;
+    await reportWorkerRun;
+  }
+}
+
 describe("agentActivityRetryFor", () => {
   test("keeps the default retry policy for unbounded agent tasks", () => {
     expect(agentActivityRetryFor({})).toEqual({
@@ -179,34 +220,10 @@ describe("agent task post-report failure delivery", () => {
         events.push("cleanup");
       },
     };
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUES.DEFAULT,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+    const failure = await runAgentTaskExpectingFailure(
       activities,
-    });
-    const reportWorker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUES.REPORTS,
-      activities,
-    });
-    const reportWorkerRun = reportWorker.run();
-
-    let failure: unknown;
-    try {
-      await worker.runUntil(
-        testEnvironment.client.workflow.execute(agentTaskWorkflow, {
-          args: [INPUT],
-          taskQueue: TASK_QUEUES.DEFAULT,
-          workflowId: `agent-task-follow-up-failure-${crypto.randomUUID()}`,
-        }),
-      );
-    } catch (error: unknown) {
-      failure = error;
-    } finally {
-      reportWorker.shutdown();
-      await reportWorkerRun;
-    }
+      "agent-task-follow-up-failure",
+    );
 
     expect(failure).toBeInstanceOf(Error);
     expect(followUpAttempts).toBe(2);
@@ -264,34 +281,10 @@ describe("agent task post-report failure delivery", () => {
         throw new Error("workdir cleanup unavailable");
       },
     };
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUES.DEFAULT,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+    const failure = await runAgentTaskExpectingFailure(
       activities,
-    });
-    const reportWorker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: TASK_QUEUES.REPORTS,
-      activities,
-    });
-    const reportWorkerRun = reportWorker.run();
-
-    let failure: unknown;
-    try {
-      await worker.runUntil(
-        testEnvironment.client.workflow.execute(agentTaskWorkflow, {
-          args: [INPUT],
-          taskQueue: TASK_QUEUES.DEFAULT,
-          workflowId: `agent-task-cleanup-failure-${crypto.randomUUID()}`,
-        }),
-      );
-    } catch (error: unknown) {
-      failure = error;
-    } finally {
-      reportWorker.shutdown();
-      await reportWorkerRun;
-    }
+      "agent-task-cleanup-failure",
+    );
 
     expect(failure).toBeInstanceOf(Error);
     expect(cleanupAttempts).toBe(2);

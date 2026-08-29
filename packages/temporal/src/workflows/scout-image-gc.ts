@@ -4,8 +4,10 @@ import type {
   ScoutImageGcInput,
   ScoutImageGcResult,
 } from "#activities/scout-image-gc.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { pruneScoutImages } = proxyActivities<ScoutImageGcActivities>({
+  taskQueue: TASK_QUEUES.SCOUT,
   // The initial sweep lists ~110k objects across both buckets and deletes the
   // ~38k images older than the retention window; list + batched DeleteObjects
   // are fast, but the first run does the bulk of the work. Steady-state nightly

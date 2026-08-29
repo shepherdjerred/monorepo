@@ -18,6 +18,7 @@ const BOUNDED_AGENT_RETRY = {
 };
 
 const workdirActivities = proxyActivities<AgentTaskActivities>({
+  taskQueue: TASK_QUEUES.AGENT_TASK,
   startToCloseTimeout: "10 minutes",
   retry: RETRY,
 });
@@ -54,6 +55,7 @@ function agentActivitiesFor(
 > {
   const timeoutMinutes = input.agentTimeoutMinutes ?? 90;
   return proxyActivities<AgentTaskActivities>({
+    taskQueue: TASK_QUEUES.AGENT_TASK,
     startToCloseTimeout: timeoutMinutes * 60 * 1000,
     heartbeatTimeout: "60 seconds",
     retry: agentActivityRetryFor(input),
@@ -77,7 +79,7 @@ async function executeAgentTask(
 }
 
 const legacyEmailActivities = proxyActivities<AgentTaskActivities>({
-  taskQueue: TASK_QUEUES.DEFAULT,
+  taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
   retry: RETRY,
 });

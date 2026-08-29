@@ -3,20 +3,36 @@ import { agentActivities, reportActivities } from "./activities/index.ts";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
 import {
   getWorkerRoleContract,
+  LEGACY_WORKFLOW_TASK_QUEUES,
   QUEUE_WORKER_DEFINITIONS,
   type QueueWorkerRole,
 } from "./worker-config.ts";
 
-const DOMAIN_WORKER_QUEUES = Object.values(TASK_QUEUES).filter(
+const ACTIVITY_TASK_QUEUES = Object.values(TASK_QUEUES).filter(
   (taskQueue) =>
+    taskQueue !== TASK_QUEUES.WORKFLOWS &&
     taskQueue !== TASK_QUEUES.SCOUT_BETA &&
     taskQueue !== TASK_QUEUES.SCOUT_PROD,
 );
 
+function activityNamesFor(
+  role: Exclude<QueueWorkerRole, "workflows">,
+): string[] {
+  const definition = QUEUE_WORKER_DEFINITIONS.find(
+    (candidate) => candidate.role === role,
+  );
+  if (definition?.kind !== "activity") {
+    throw new Error(`Missing Activity Worker definition for ${role}`);
+  }
+  return Object.keys(definition.activities);
+}
+
 describe("Temporal worker role contracts", () => {
-  it("assigns every queue to exactly one canonical role", () => {
+  it("assigns every Activity queue to exactly one capability role", () => {
     const ownershipCounts = new Map<string, number>();
-    for (const definition of QUEUE_WORKER_DEFINITIONS) {
+    for (const definition of QUEUE_WORKER_DEFINITIONS.filter(
+      (candidate) => candidate.kind === "activity",
+    )) {
       ownershipCounts.set(
         definition.taskQueue,
         (ownershipCounts.get(definition.taskQueue) ?? 0) + 1,
@@ -28,10 +44,20 @@ describe("Temporal worker role contracts", () => {
         left.localeCompare(right),
       ),
     ).toEqual(
-      DOMAIN_WORKER_QUEUES.sort((left, right) => left.localeCompare(right)).map(
+      ACTIVITY_TASK_QUEUES.sort((left, right) => left.localeCompare(right)).map(
         (taskQueue) => [taskQueue, 1],
       ),
     );
+  });
+
+  it("polls the new and every legacy central Workflow queue", () => {
+    const workflowDefinitions = getWorkerRoleContract("workflows").workers;
+    expect(
+      workflowDefinitions.every((definition) => definition.kind === "workflow"),
+    ).toBe(true);
+    expect(
+      workflowDefinitions.map((definition) => definition.taskQueue),
+    ).toEqual([TASK_QUEUES.WORKFLOWS, ...LEGACY_WORKFLOW_TASK_QUEUES]);
   });
 
   it("preserves the production core and Glitter aliases", () => {
@@ -81,7 +107,9 @@ describe("Temporal worker role contracts", () => {
 
   it("runs every canonical queue and control surface locally", () => {
     const contract = getWorkerRoleContract("all");
-    expect(contract.workers).toHaveLength(DOMAIN_WORKER_QUEUES.length);
+    expect(contract.workers).toHaveLength(
+      ACTIVITY_TASK_QUEUES.length + LEGACY_WORKFLOW_TASK_QUEUES.length + 1,
+    );
     expect(contract.runsGateway).toBe(true);
     expect(contract.validatesScheduleEnvironmentLocally).toBe(true);
     expect(contract.runsEventBridge).toBe(true);
@@ -90,14 +118,16 @@ describe("Temporal worker role contracts", () => {
 
   it("applies the planned activity concurrency by domain", () => {
     const concurrency = new Map(
-      QUEUE_WORKER_DEFINITIONS.map((definition) => [
+      QUEUE_WORKER_DEFINITIONS.filter(
+        (definition) => definition.kind === "activity",
+      ).map((definition) => [
         definition.role,
         definition.maxConcurrentActivityTaskExecutions,
       ]),
     );
     expect(concurrency.get("home")).toBe(4);
     expect(concurrency.get("reports")).toBe(4);
-    const serialRoles: QueueWorkerRole[] = [
+    const serialRoles: Exclude<QueueWorkerRole, "workflows">[] = [
       "agent",
       "glitter-context",
       "glitter-corpus",
@@ -113,31 +143,13 @@ describe("Temporal worker role contracts", () => {
   });
 
   it("dispatches GoLink cluster reads only through infra", () => {
-    const infra = QUEUE_WORKER_DEFINITIONS.find(
-      (definition) => definition.role === "infra",
-    );
-    const repo = QUEUE_WORKER_DEFINITIONS.find(
-      (definition) => definition.role === "repo",
-    );
-    expect(Object.keys(infra?.activities ?? {})).toContain(
-      "listTailscaleIngresses",
-    );
-    expect(Object.keys(repo?.activities ?? {})).not.toContain(
-      "listTailscaleIngresses",
-    );
+    expect(activityNamesFor("infra")).toContain("listTailscaleIngresses");
+    expect(activityNamesFor("repo")).not.toContain("listTailscaleIngresses");
   });
 
   it("dispatches CI I/O observability only through infra", () => {
-    const infra = QUEUE_WORKER_DEFINITIONS.find(
-      (definition) => definition.role === "infra",
-    );
-    const repo = QUEUE_WORKER_DEFINITIONS.find(
-      (definition) => definition.role === "repo",
-    );
-    expect(Object.keys(infra?.activities ?? {})).toContain("collectCiIoImpact");
-    expect(Object.keys(repo?.activities ?? {})).not.toContain(
-      "collectCiIoImpact",
-    );
+    expect(activityNamesFor("infra")).toContain("collectCiIoImpact");
+    expect(activityNamesFor("repo")).not.toContain("collectCiIoImpact");
   });
 
   it("keeps report delivery capabilities separate from agent execution", () => {

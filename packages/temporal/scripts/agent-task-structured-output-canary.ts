@@ -13,6 +13,7 @@ import {
   AgentTaskInputV2Schema,
   type AgentTaskStartResult,
 } from "#shared/agent-task.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";
@@ -89,7 +90,7 @@ async function main(): Promise<void> {
     JSON.stringify({
       level: "info",
       msg: "Agent-task structured-output canary started",
-      taskQueue: "agent-task",
+      taskQueue: TASK_QUEUES.WORKFLOWS,
       workflowId: started.workflowId,
       runId: started.runId,
       emailSubjectPrefix: input.emailSubjectPrefix,

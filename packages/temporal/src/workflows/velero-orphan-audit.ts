@@ -1,7 +1,9 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { VeleroOrphanAuditActivities } from "#activities/velero-orphan-audit.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { runVeleroOrphanAudit } = proxyActivities<VeleroOrphanAuditActivities>({
+  taskQueue: TASK_QUEUES.INFRA,
   // The activity performs one zfs inventory command per Ready OpenEBS node.
   // Heartbeats fire per node so a worker death surfaces promptly.
   startToCloseTimeout: "10 minutes",

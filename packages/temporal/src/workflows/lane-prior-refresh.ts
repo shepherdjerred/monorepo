@@ -8,9 +8,11 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const { updateLanePriors } = proxyActivities<LanePriorActivities>({
+  taskQueue: TASK_QUEUES.SCOUT,
   startToCloseTimeout: "90 minutes",
   heartbeatTimeout: "60 seconds",
   retry: {

@@ -23,21 +23,22 @@ const RETRY = {
 // the warm Trivy DB PVC. Clone + scan of the repo fits well inside 20 minutes;
 // heartbeats fire every 15s, so worker death surfaces quickly.
 const { scanMainForVulnerabilities } = proxyActivities<MainVulnScanActivities>({
+  taskQueue: TASK_QUEUES.MAINTENANCE,
   startToCloseTimeout: "20 minutes",
   heartbeatTimeout: "90 seconds",
   retry: RETRY,
 });
 
-// Delivery and alert publication run on the core worker: Postal, report-state
+// Delivery and alert publication run on the reports worker: Postal, report-state
 // S3, and ALERTMANAGER_URL deliberately never reach the maintenance pod.
 const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
-  taskQueue: TASK_QUEUES.DEFAULT,
+  taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: "2 minutes",
   retry: RETRY,
 });
 const { publishMainVulnScanAlerts } =
   proxyActivities<MainVulnScanAlertActivities>({
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.REPORTS,
     startToCloseTimeout: "1 minute",
     retry: RETRY,
   });

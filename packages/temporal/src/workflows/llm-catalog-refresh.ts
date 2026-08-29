@@ -3,8 +3,10 @@ import type {
   LlmCatalogRefreshActivities,
   LlmCatalogRefreshResult,
 } from "#activities/llm-catalog-refresh.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshLlmCatalog } = proxyActivities<LlmCatalogRefreshActivities>({
+  taskQueue: TASK_QUEUES.REPO_AUTOMATION,
   // Long: clones the monorepo, installs the catalog package, runs the
   // deterministic upstream cross-check, and opens a PR on drift. Heartbeats
   // fire every 10s so worker death surfaces in <60s. 20 min leaves room for a

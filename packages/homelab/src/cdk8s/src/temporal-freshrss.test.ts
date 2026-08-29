@@ -1,45 +1,18 @@
 import { describe, expect, test } from "vitest";
-import { App } from "cdk8s";
-import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
+import {
+  findTemporalResource,
+  synthesizeTemporalResources,
+} from "./temporal-test-resources.ts";
 
-const ResourceSchema = z
-  .object({
-    kind: z.string(),
-    metadata: z.object({ name: z.string() }).loose(),
-    data: z.record(z.string(), z.string()).optional(),
-    spec: z.unknown().optional(),
-  })
-  .loose();
-
-function resources(): z.infer<typeof ResourceSchema>[] {
-  const app = new App({ outdir: ".test-synth-temporal-freshrss" });
-  createTemporalChart(app);
-  return parseAllDocuments(app.synthYaml()).flatMap((document) => {
-    const resource = ResourceSchema.safeParse(document.toJSON());
-    return resource.success ? [resource.data] : [];
-  });
-}
-
-function findResource(
-  synthesized: z.infer<typeof ResourceSchema>[],
-  kind: string,
-  name: string,
-): z.infer<typeof ResourceSchema> {
-  const resource = synthesized.find(
-    (candidate) => candidate.kind === kind && candidate.metadata.name === name,
-  );
-  if (resource === undefined) {
-    throw new Error(`Missing ${kind}/${name}`);
-  }
-  return resource;
+function resources() {
+  return synthesizeTemporalResources(".test-synth-temporal-freshrss");
 }
 
 describe("Temporal FreshRSS integration", () => {
   test("projects the canonical manifest and existing password item", () => {
     const synthesized = resources();
-    const manifest = findResource(
+    const manifest = findTemporalResource(
       synthesized,
       "ConfigMap",
       "temporal-freshrss-manifest",
@@ -48,7 +21,7 @@ describe("Temporal FreshRSS integration", () => {
       '"category": "Repo Stack"',
     );
 
-    const credential = findResource(
+    const credential = findTemporalResource(
       synthesized,
       "OnePasswordItem",
       "temporal-freshrss-sync",
@@ -59,7 +32,7 @@ describe("Temporal FreshRSS integration", () => {
 
   test("configures the repo worker and scoped FreshRSS network access", () => {
     const synthesized = resources();
-    const deployment = findResource(
+    const deployment = findTemporalResource(
       synthesized,
       "Deployment",
       "temporal-temporal-repo-worker",
@@ -142,7 +115,7 @@ describe("Temporal FreshRSS integration", () => {
       }),
     );
 
-    const policy = findResource(
+    const policy = findTemporalResource(
       synthesized,
       "NetworkPolicy",
       "temporal-worker-freshrss-netpol",
@@ -170,7 +143,7 @@ describe("Temporal FreshRSS integration", () => {
       ],
     });
 
-    const alertmanagerPolicy = findResource(
+    const alertmanagerPolicy = findTemporalResource(
       synthesized,
       "NetworkPolicy",
       "temporal-repo-alertmanager-netpol",
@@ -190,7 +163,7 @@ describe("Temporal FreshRSS integration", () => {
       ports: [{ port: 9093, protocol: "TCP" }],
     });
 
-    const fliptPolicy = findResource(
+    const fliptPolicy = findTemporalResource(
       synthesized,
       "NetworkPolicy",
       "temporal-repo-flipt-netpol",

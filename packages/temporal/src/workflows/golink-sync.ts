@@ -8,6 +8,7 @@ import type { GolinkEntry } from "#shared/types.ts";
 
 const { getExistingGolinks, createOrUpdateGolink, deleteStaleGolink } =
   proxyActivities<GolinkSyncActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     startToCloseTimeout: "1 minute",
     retry: {
       maximumAttempts: 5,

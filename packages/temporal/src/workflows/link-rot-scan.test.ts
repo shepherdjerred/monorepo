@@ -49,7 +49,7 @@ async function runWorkflow(
     taskQueue: TASK_QUEUES.MAINTENANCE,
     workers: [
       {
-        taskQueue: TASK_QUEUES.DEFAULT,
+        taskQueue: TASK_QUEUES.REPORTS,
         activities: {
           deliverActivityReport: scannerTest.deliverScannerReport(harness),
           publishLinkRotScanAlerts: scannerTest.publishScannerAlert(

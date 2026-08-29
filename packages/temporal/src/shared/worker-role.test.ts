@@ -27,6 +27,7 @@ describe("Temporal worker role", () => {
     "repo",
     "reports",
     "scout",
+    "workflows",
   ])("accepts the %s role", (role) => {
     expect(parseWorkerRole(role)).toBe(role);
   });

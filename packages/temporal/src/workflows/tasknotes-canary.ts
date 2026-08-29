@@ -7,9 +7,11 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 
 const activities = proxyActivities<TasknotesCanaryActivities>({
+  taskQueue: TASK_QUEUES.INFRA,
   startToCloseTimeout: "2 minutes",
   retry: { maximumAttempts: 3 },
 });

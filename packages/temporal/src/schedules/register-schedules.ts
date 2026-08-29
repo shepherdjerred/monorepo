@@ -1,9 +1,17 @@
-import type { Client, ScheduleOverlapPolicy } from "@temporalio/client";
+import type {
+  Client,
+  ScheduleOverlapPolicy,
+  ScheduleUpdateOptions,
+} from "@temporalio/client";
 import { ScheduleNotFoundError } from "@temporalio/client";
-import { detectOrphanSchedules } from "./orphan-detection.ts";
+import {
+  detectOrphanSchedules,
+  isDynamicAgentTaskSchedule,
+} from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
 import { CATCHUP_RELAXED, SCHEDULES } from "./schedule-definitions.ts";
 import type { CatchupWindow, ScheduleDefinition } from "./schedule-types.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 // SCHEDULES/CATCHUP_* live in ./schedule-definitions.ts and the shared types
 // live in ./schedule-types.ts (this file sits at the repo's max-lines cap).
@@ -105,6 +113,35 @@ function buildScheduleConfiguration(schedule: ScheduleDefinition) {
   };
 }
 
+export function routeDynamicAgentTaskSchedule(
+  schedule: ScheduleUpdateOptions,
+): ScheduleUpdateOptions {
+  if (schedule.action.workflowType !== "agentTaskWorkflow") {
+    throw new Error("Dynamic agent-task schedule must start agentTaskWorkflow");
+  }
+  return {
+    ...schedule,
+    action: {
+      ...schedule.action,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+    },
+  };
+}
+
+async function reconcileDynamicAgentTaskSchedules(
+  scheduleClient: Client["schedule"],
+): Promise<void> {
+  for await (const summary of scheduleClient.list()) {
+    if (!isDynamicAgentTaskSchedule(summary.scheduleId, summary.memo)) {
+      continue;
+    }
+    await scheduleClient
+      .getHandle(summary.scheduleId)
+      .update(routeDynamicAgentTaskSchedule);
+    console.warn(`Updated dynamic agent-task schedule: ${summary.scheduleId}`);
+  }
+}
+
 export async function registerSchedules(
   client: Client,
   options: { validateLocalEnvironment?: boolean } = {},
@@ -122,6 +159,11 @@ export async function registerSchedules(
       }
     }
   }
+
+  // Dynamic schedules are intentionally absent from SCHEDULES, but their next
+  // action must move with the deterministic Workflow Worker. Reconcile every
+  // owned schedule before evaluating whether legacy Workflow pollers can drain.
+  await reconcileDynamicAgentTaskSchedules(scheduleClient);
 
   for (const schedule of SCHEDULES) {
     const handle = scheduleClient.getHandle(schedule.id);

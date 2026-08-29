@@ -8,6 +8,7 @@ import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
   HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
 } from "#shared/ha-errors.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   goodMorningGetUp,
   goodMorningPreheat,
@@ -15,7 +16,7 @@ import {
   shouldHeatFloor,
 } from "./good-morning.ts";
 
-const TASK_QUEUE = "good-morning-test";
+const TASK_QUEUE = TASK_QUEUES.HOME;
 // Each integration case compiles and starts a native Temporal worker. The
 // default 5s Bun timeout is too short when the full repository test graph is
 // sharing the CI host, even though workflow time itself is skipped.

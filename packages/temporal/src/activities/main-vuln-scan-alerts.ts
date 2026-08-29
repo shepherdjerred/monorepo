@@ -6,7 +6,7 @@ import {
 
 /**
  * Publishes the scan's fire/resolve occurrence to Alertmanager. Runs on
- * TASK_QUEUES.DEFAULT — the core worker owns ALERTMANAGER_URL; the maintenance
+ * TASK_QUEUES.REPORTS — the reports worker owns ALERTMANAGER_URL; the maintenance
  * worker deliberately has no Alertmanager access.
  */
 export const mainVulnScanAlertActivities = {

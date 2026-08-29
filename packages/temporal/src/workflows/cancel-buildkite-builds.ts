@@ -1,9 +1,11 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { CancelBuildkiteBuildsActivities } from "#activities/cancel-buildkite-builds.ts";
 import type { CancelBuildkiteBuildsInput } from "#shared/schemas.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { cancelBuildkiteBuildsForBranch } =
   proxyActivities<CancelBuildkiteBuildsActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     startToCloseTimeout: "2 minutes",
     retry: {
       maximumAttempts: 5,

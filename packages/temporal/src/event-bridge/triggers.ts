@@ -65,7 +65,7 @@ const PRESENCE_CHANGED_SIGNAL = "presenceChanged";
 async function bumpLockReconciler(client: Client): Promise<void> {
   try {
     await client.workflow.signalWithStart("reconcileLock", {
-      taskQueue: TASK_QUEUES.HOME,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
       workflowId: RECONCILE_LOCK_WORKFLOW_ID,
       workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
       workflowExecutionTimeout: "30 minutes",
@@ -101,7 +101,7 @@ async function startWorkflow(
 ): Promise<void> {
   try {
     await client.workflow.start(workflowType, {
-      taskQueue: TASK_QUEUES.HOME,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
       workflowId,
       workflowIdReusePolicy:
         options.workflowIdReusePolicy ?? WorkflowIdReusePolicy.ALLOW_DUPLICATE,

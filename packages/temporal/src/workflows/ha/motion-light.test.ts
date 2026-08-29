@@ -3,9 +3,10 @@ import type { EntityState } from "@shepherdjerred/home-assistant";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { MOTION_LIGHT_ROOMS } from "#shared/motion-light.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { motionLight } from "./motion-light.ts";
 
-const TASK_QUEUE = "motion-light-test";
+const TASK_QUEUE = TASK_QUEUES.HOME;
 
 let testEnv: TestWorkflowEnvironment;
 
