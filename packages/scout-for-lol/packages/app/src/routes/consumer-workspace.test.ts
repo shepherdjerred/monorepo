@@ -6,21 +6,31 @@ describe("consumer navigation", () => {
     {
       exploreAvailable: true,
       profilesAvailable: true,
-      expected: ["Explore", "Players"],
+      bucksAvailable: true,
+      expected: ["Explore", "Players", "Bryan Bucks"],
     },
     {
       exploreAvailable: true,
       profilesAvailable: false,
+      bucksAvailable: false,
       expected: ["Explore"],
     },
     {
       exploreAvailable: false,
       profilesAvailable: true,
+      bucksAvailable: false,
       expected: ["Players"],
     },
     {
       exploreAvailable: false,
       profilesAvailable: false,
+      bucksAvailable: true,
+      expected: ["Bryan Bucks"],
+    },
+    {
+      exploreAvailable: false,
+      profilesAvailable: false,
+      bucksAvailable: false,
       expected: [],
     },
   ])("shows only enabled member features", (input) => {

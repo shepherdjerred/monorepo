@@ -25,6 +25,11 @@ import { ExploreShared } from "#src/routes/explore-shared.tsx";
 import { ConsumerPlayerSearch } from "#src/routes/consumer-player-search.tsx";
 import { ConsumerPlayerProfile } from "#src/routes/consumer-player-profile.tsx";
 import { ConsumerWorkspace } from "#src/routes/consumer-workspace.tsx";
+import { BucksWorkspace } from "#src/routes/bucks-workspace.tsx";
+import { BucksOverview } from "#src/routes/bucks-overview.tsx";
+import { BucksHistory } from "#src/routes/bucks-history.tsx";
+import { BucksLeaderboard } from "#src/routes/bucks-leaderboard.tsx";
+import { BucksSettings } from "#src/routes/bucks-settings.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
@@ -35,6 +40,7 @@ import {
   accessLoader,
   auditLoader,
   competitionDetailLoader,
+  bucksLoader,
   competitionsLoader,
   consumerPlayerLoader,
   consumerPlayersLoader,
@@ -204,6 +210,37 @@ export const routes: RouteObject[] = [
                 element: <ConsumerPlayerProfile />,
                 loader: consumerPlayerLoader,
                 errorElement: <RouteErrorPanel />,
+              },
+              {
+                // Bryan Bucks is server-side gated by the bucks.status probe;
+                // each child keeps its own errorElement so the section tabs
+                // survive a section failure.
+                path: "bucks",
+                element: <BucksWorkspace />,
+                loader: bucksLoader,
+                errorElement: <RouteErrorPanel />,
+                children: [
+                  {
+                    index: true,
+                    element: <BucksOverview />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                  {
+                    path: "history",
+                    element: <BucksHistory />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                  {
+                    path: "leaderboard",
+                    element: <BucksLeaderboard />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                  {
+                    path: "settings",
+                    element: <BucksSettings />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                ],
               },
             ],
           },

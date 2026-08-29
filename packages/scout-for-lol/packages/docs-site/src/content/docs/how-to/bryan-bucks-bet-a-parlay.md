@@ -5,6 +5,9 @@ sidebar:
   order: 12
 ---
 
+Parlays can also be bet from the
+[web dashboard](/docs/how-to/bryan-bucks-use-the-web-dashboard/).
+
 A parlay is a fixed-odds YES/NO market where every leg must hit for YES. Scout
 posts match parlays shortly after a pre-match card and weekly parlays before
 their scoring period begins.

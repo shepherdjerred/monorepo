@@ -7,10 +7,12 @@ import { useTRPC } from "#src/lib/trpc.ts";
 export function consumerNavigationItems(input: {
   exploreAvailable: boolean;
   profilesAvailable: boolean;
+  bucksAvailable: boolean;
 }): { label: string; to: string }[] {
   return [
     ...(input.exploreAvailable ? [{ label: "Explore", to: "/explore" }] : []),
     ...(input.profilesAvailable ? [{ label: "Players", to: "/players" }] : []),
+    ...(input.bucksAvailable ? [{ label: "Bryan Bucks", to: "/bucks" }] : []),
   ];
 }
 
@@ -20,9 +22,13 @@ export function ConsumerWorkspace() {
   const profilesQuery = useQuery(
     trpc.consumerPlayer.status.queryOptions(undefined, { retry: 2 }),
   );
+  const bucksQuery = useQuery(
+    trpc.bucks.status.queryOptions(undefined, { retry: 2 }),
+  );
   const items = consumerNavigationItems({
     exploreAvailable: exploreQuery.data?.enabled === true,
     profilesAvailable: profilesQuery.data?.state === "available",
+    bucksAvailable: bucksQuery.data?.state === "available",
   });
 
   return (
