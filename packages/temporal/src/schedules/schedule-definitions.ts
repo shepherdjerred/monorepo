@@ -374,6 +374,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowExecutionTimeout: "15 minutes",
     memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology.",
   },
+  {
     id: "golink-sync",
     workflowType: "syncGolinks",
     args: [],
