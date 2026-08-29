@@ -55,11 +55,19 @@ Notice also `"mode": "report-only"`. That is the only mode.
 
 ## 3. Dispatch it
 
-Port-forward Temporal, then run the scheduler against your document:
+Port-forward the homelab Temporal frontend, then run the scheduler against your
+document. The port-forward reaches the production control plane, so target its
+`prod` namespace:
+
+```bash
+kubectl -n temporal port-forward svc/temporal-temporal-server-service 7233:7233
+```
+
+In another terminal:
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
+TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=prod \
   bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task-tutorial-scratch.md
 ```
 
@@ -71,7 +79,8 @@ conflict, you have run the same input twice — change the title and try again.
 
 ## 4. Watch it in the Temporal UI
 
-Open the Temporal Web UI over the tailnet and find your execution by title.
+Open the Temporal Web UI over the tailnet, select the `prod` namespace, and find
+your execution by title.
 
 Because we set a future `runAt`, the workflow defers using Temporal's
 `startDelay`. It will sit waiting rather than running — that wait does not
