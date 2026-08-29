@@ -111,8 +111,12 @@ export function BucksBetForm(props: {
                 onClick={() => {
                   form.setFieldValue("stake", stake.toString());
                   // requestSubmit (never form.submit) so native validation and
-                  // submitter behaviour still run.
-                  formElement.current?.requestSubmit();
+                  // submitter behaviour still run — deferred a frame so the
+                  // programmatic stake value has flushed into the input first,
+                  // or the native `required` check would see it empty.
+                  requestAnimationFrame(() => {
+                    formElement.current?.requestSubmit();
+                  });
                 }}
               >
                 {formatInteger(stake)} BB
