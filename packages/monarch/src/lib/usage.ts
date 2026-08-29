@@ -1,4 +1,7 @@
-import { getPerTokenPricing } from "@shepherdjerred/llm-models";
+import {
+  costForTextUsage,
+  getPerTokenPricing,
+} from "@shepherdjerred/llm-models";
 
 export type UsageSummary = {
   calls: number;
@@ -30,17 +33,20 @@ export function createUsageTracker(model: string): UsageTracker {
   let cachedCalls = 0;
   let totalInput = 0;
   let totalOutput = 0;
+  const requests: { inputTokens: number; outputTokens: number }[] = [];
 
   return {
     record(inputTokens: number, outputTokens: number): void {
       calls++;
       totalInput += inputTokens;
       totalOutput += outputTokens;
+      requests.push({ inputTokens, outputTokens });
     },
     recordCached(inputTokens: number, outputTokens: number): void {
       cachedCalls++;
       totalInput += inputTokens;
       totalOutput += outputTokens;
+      requests.push({ inputTokens, outputTokens });
     },
     getSummary(): UsageSummary {
       return {
@@ -48,8 +54,14 @@ export function createUsageTracker(model: string): UsageTracker {
         cachedCalls,
         inputTokens: totalInput,
         outputTokens: totalOutput,
-        estimatedCost:
-          totalInput * pricing.input + totalOutput * pricing.output,
+        estimatedCost: requests.reduce(
+          (total, request) =>
+            total +
+            (costForTextUsage(model, request) ??
+              request.inputTokens * pricing.input +
+                request.outputTokens * pricing.output),
+          0,
+        ),
       };
     },
   };
