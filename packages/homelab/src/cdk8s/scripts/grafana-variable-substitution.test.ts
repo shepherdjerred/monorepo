@@ -45,4 +45,18 @@ describe("Grafana query-audit variable substitution", () => {
       "rate(metric[5m]) / 5m + avg_over_time(metric[1h]) and label_values(.*)",
     );
   });
+
+  it("substitutes numeric scalar interval/range variables with numbers, not durations", () => {
+    // $__interval_ms / $__range_s / $__range_ms are Grafana's numeric forms,
+    // used in scalar arithmetic — a duration string there is invalid PromQL.
+    expect(replaceGrafanaVariables("rate(metric[5m]) * $__interval_ms")).toBe(
+      "rate(metric[5m]) * 300000",
+    );
+    expect(replaceGrafanaVariables("metric / $__range_s")).toBe(
+      "metric / 3600",
+    );
+    expect(replaceGrafanaVariables("metric / $__range_ms")).toBe(
+      "metric / 3600000",
+    );
+  });
 });

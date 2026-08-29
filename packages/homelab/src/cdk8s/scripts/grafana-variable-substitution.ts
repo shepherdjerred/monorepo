@@ -14,7 +14,13 @@
  * - `label!="$var"` / `label!~"$var"` → `label!~"[^\s\S]"`. That regex can
  *   never match anything, so the negative matcher keeps every series.
  * - `$__rate_interval` / `$__interval` / `$interval` / `$resolution` → `5m`,
- *   and `$__range` → `1h`, so range selectors stay parseable.
+ *   and `$__range` → `1h`, so range-vector selectors (`[$__range]`) stay
+ *   parseable duration literals.
+ * - `$__interval_ms` / `$__range_s` / `$__range_ms` are Grafana's *numeric*
+ *   scalar forms (milliseconds or seconds), used in arithmetic like
+ *   `rate(x[5m]) * $__interval_ms` rather than inside a range selector.
+ *   Substituting a duration string there produces invalid PromQL, so these
+ *   get matching numeric literals instead (300000 / 3600 / 3600000).
  * - Any leftover `$var` (only reachable inside a regex value or function
  *   argument) → `.*`.
  */
@@ -40,10 +46,13 @@ export function replaceGrafanaVariables(expression: string): string {
       ),
       `$1!~"${NEVER_MATCH}"`,
     )
+    .replaceAll(/\$__interval_ms\b/g, "300000")
+    .replaceAll(/\$__range_ms\b/g, "3600000")
+    .replaceAll(/\$__range_s\b/g, "3600")
     .replaceAll(
-      /\$__rate_interval|\$__interval_ms|\$__interval|\$resolution|\$interval\b/g,
+      /\$__rate_interval|\$__interval\b|\$resolution\b|\$interval\b/g,
       "5m",
     )
-    .replaceAll(/\$__range_s|\$__range_ms|\$__range\b/g, "1h")
+    .replaceAll(/\$__range\b/g, "1h")
     .replaceAll(/\$\{?[a-z_]\w*\}?/gi, ".*");
 }
