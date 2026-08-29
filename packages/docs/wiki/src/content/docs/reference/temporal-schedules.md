@@ -75,7 +75,7 @@ review; the additive-only lanes (Scout's Data Dragon refresh, queue-windows)
 use `gh pr merge --auto` and land on green checks.
 
 One repo-artifact job is not deterministic: `scout-season-refresh` runs the
-Claude Agent SDK to derive season changes.
+OpenRouter-backed Codex SDK with Luna to derive season changes.
 
 The four Buildkite and Kometa maintenance activities run on the serial
 `maintenance` task queue in one persistent worker; they do not create Kubernetes

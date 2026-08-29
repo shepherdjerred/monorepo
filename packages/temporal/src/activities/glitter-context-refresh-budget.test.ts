@@ -29,12 +29,12 @@ describe("Glitter generation budget", () => {
 
   test("prices semantic retries at the raised truncation ceiling", () => {
     const flat = worstCaseGenerationCostUsd({
-      model: "gpt-5.6-sol",
+      model: "gpt-5.6-luna",
       inputTokenUpperBound: 50_000,
       outputTokenUpperBound: 28_000,
     });
     const raised = worstCaseGenerationCostUsd({
-      model: "gpt-5.6-sol",
+      model: "gpt-5.6-luna",
       inputTokenUpperBound: 50_000,
       outputTokenUpperBound: 28_000,
       semanticRetryOutputTokenUpperBound: 40_000,

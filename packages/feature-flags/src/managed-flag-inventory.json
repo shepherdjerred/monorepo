@@ -316,7 +316,7 @@
       "source": "scout-dynamic",
       "purpose": "Select the Scout parlay AI model.",
       "type": "variant",
-      "default": "gpt-5.6-sol",
+      "default": "gpt-5.6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -338,7 +338,7 @@
       "source": "scout-dynamic",
       "purpose": "Select the Scout Explore AI model.",
       "type": "variant",
-      "default": "gpt-5.6-sol",
+      "default": "gpt-5.6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -349,7 +349,7 @@
       "source": "scout-dynamic",
       "purpose": "Select the Scout report AI model.",
       "type": "variant",
-      "default": "gpt-5.6-sol",
+      "default": "gpt-5.6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -536,7 +536,7 @@
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel primary LLM model.",
       "type": "variant",
-      "default": "gpt-5.6-sol",
+      "default": "gpt-5.6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

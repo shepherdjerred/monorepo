@@ -77,13 +77,13 @@ const DEFINITION = {
   reportAiModel: {
     schema: z.string().trim().min(1),
     sources: ["flag", "env", "default"],
-    default: "gpt-5.6-sol",
+    default: "gpt-5.6-luna",
     names: { flag: "scout-report-ai-model", env: "REPORT_AI_MODEL" },
   },
   bettingParlayAiModel: {
     schema: z.string().trim().min(1),
     sources: ["flag", "env", "default"],
-    default: "gpt-5.6-sol",
+    default: "gpt-5.6-luna",
     names: {
       flag: "scout-betting-parlay-ai-model",
       env: "BETTING_PARLAY_AI_MODEL",
@@ -297,7 +297,7 @@ export function reportAiModel(): string {
   return (
     snapshot?.get("reportAiModel") ??
     configuration.reportAiModel ??
-    "gpt-5.6-sol"
+    "gpt-5.6-luna"
   );
 }
 
@@ -305,7 +305,7 @@ export function bettingParlayAiModel(): string {
   return (
     snapshot?.get("bettingParlayAiModel") ??
     configuration.bettingParlayAiModel ??
-    "gpt-5.6-sol"
+    "gpt-5.6-luna"
   );
 }
 

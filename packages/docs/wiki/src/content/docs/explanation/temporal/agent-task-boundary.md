@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-Agent tasks are scheduled Claude or Codex runs that inspect current state and
+Agent tasks are scheduled Codex runs that inspect current state and
 email a report. They do not run inside an OS-level command sandbox, so the
 provider can write inside its throwaway clone. External mutation is constrained
 separately through credentials, queues, and Kubernetes authorization.
@@ -22,8 +22,7 @@ flowchart TD
   DIS -->|runAt| WF[Workflow run]
   SCH --> WF
   WF --> I[Investigation agent<br>over a repo clone]
-  I -->|ephemeral bearer| BKR[Parent-owned<br>provider broker]
-  BKR -->|long-lived auth| PAPI[Fixed provider<br>inference API]
+  I -->|service-scoped key| OR[OpenRouter<br>exact model route]
   I --> R[Redacted evidence<br>receipt catalog]
   R --> FNL[Receipt-only<br>finalization agent]
   FNL --> CQ[Reports worker queue]
@@ -40,7 +39,7 @@ allowlisted environment. The runtime boundary consists of:
 - an ephemeral non-root pod and per-run clone,
 - `HOME` redirected into that clone so provider config is also disposable,
 - no GitHub credential, so the clone cannot push,
-- exactly one provider subscription credential and nothing else from the
+- exactly one service-scoped OpenRouter credential and nothing else from the
   worker's own environment,
 - no Postal, S3, ArgoCD, Grafana, Buildkite, Home Assistant, Bugsink, or
   Cloudflare credential,
@@ -103,9 +102,9 @@ alert ledger, and the Kubernetes API. The mounted service-account token is the
 only operational identity available to the provider, and Kubernetes enforces
 its read-only verbs. The environment the agent receives is an allowlist, not a
 filtered copy of the worker's: basic process and TLS settings, the read-only
-Kubernetes identity, the non-secret evidence endpoints, and the one
-subscription credential its own provider needs. A deviating run can spend that
-provider's quota, but there is no second credential in its environment to find.
+Kubernetes identity, the non-secret evidence endpoints, and its service-scoped
+OpenRouter credential. A deviating run can spend that key's capped budget, but
+there is no second inference credential in its environment to find.
 
 Investigations that need ArgoCD, Buildkite, Home Assistant, or another
 authenticated source must become a typed deterministic collector. Stable
@@ -117,8 +116,7 @@ The homelab audit and the Scout season refresh do inherit the worker's
 operational credentials, because their prompts are code rather than user input.
 Even there the same three categories are removed: the bot's own GitHub
 credentials, every report-delivery credential, and every inference credential
-other than the one their own provider needs — a Claude agent never sees the
-Codex subscription token, and vice versa.
+other than the service-scoped OpenRouter key passed explicitly to that agent.
 
 ## The blast radius, stated plainly
 
@@ -138,9 +136,10 @@ code, reviewed in a PR, not an agent asked nicely.
 
 ## Why the output contract is strict
 
-Claude and Codex outputs are treated as versioned provider contracts. The worker
-sends each native SDK its supported schema dialect and accepts **only** that
-SDK's structured result, validated with Zod.
+Codex outputs are treated as a versioned provider contract. The worker sends the
+pinned SDK its supported schema dialect and accepts **only** the SDK's structured
+result, validated with Zod. A legacy Claude decoder remains only for deterministic
+Temporal replay; fresh Claude execution is rejected before inference.
 
 A successful process without that field is a failure. Prose and fenced JSON are
 not fallback formats.

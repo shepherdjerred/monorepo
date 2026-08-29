@@ -49,7 +49,7 @@ function loadCoreConfig(environment: Environment) {
     },
     openRouter: {
       apiKey: environment["OPENROUTER_API_KEY"] ?? "",
-      model: environment["LLM_MODEL"] ?? "gpt-5.6-sol",
+      model: environment["LLM_MODEL"] ?? "gpt-5.6-luna",
       classifierModel: environment["LLM_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
       memoryModel: environment["LLM_MEMORY_MODEL"] ?? "gpt-5.4-nano",
       embeddingModel:

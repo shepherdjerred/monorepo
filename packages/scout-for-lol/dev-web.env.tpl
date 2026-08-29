@@ -51,7 +51,7 @@ SCOUT_DEV_CONSUMER_GUILD_ID=1337623164146155593
 # report-editor and Explore turn fails at the model call. Same BETA item as the
 # secrets above, and the same field the deployed beta backend reads.
 OPENROUTER_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENROUTER_API_KEY
-BETTING_PARLAY_AI_MODEL=gpt-5.6-sol
+BETTING_PARLAY_AI_MODEL=gpt-5.6-luna
 
 # dev:web derives DEV_USER_GUILDS and EXPLORE_GUILD_ALLOWLIST from the local
 # consumer guild above. Set SCOUT_DEV_CONSUMER_PREVIEW=false and provide those

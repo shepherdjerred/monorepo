@@ -21,7 +21,7 @@ import {
   useGlitterObjectArtifact,
 } from "./glitter-context-refresh-llm.ts";
 
-const RELATIONSHIP_MODEL = "gpt-5.6-sol";
+const RELATIONSHIP_MODEL = "gpt-5.6-luna";
 const RELATIONSHIP_MAX_OUTPUT_TOKENS = 6000;
 const DETERMINISTIC_SEED = 0;
 

@@ -491,6 +491,14 @@ filtered install provides the native runtime without a globally installed
 `codex` command or a subscription-auth volume. Keep the provider-neutral
 procedure in `scripts/prompts/refine-release-please.md`.
 
+### Pokémon goal provider
+
+The Discord Plays Pokémon goal agent intentionally stays on `gpt-5.6-sol`
+through the native Codex SDK and the existing subscription-backed credential.
+It accepts `CODEX_ACCESS_TOKEN` or a mounted Codex auth cache and is the sole
+deployed subscription-auth exception to the OpenRouter policy. Do not route
+this workload through OpenRouter when changing other agent defaults.
+
 ## GitHub CLI in Codex
 
 Use `toolkit gh` for monorepo GitHub work. The delegated `gh` process works

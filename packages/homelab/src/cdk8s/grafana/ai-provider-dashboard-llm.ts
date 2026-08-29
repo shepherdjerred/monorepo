@@ -22,7 +22,7 @@ export function addLlmPanels(
     createTimeseriesPanel({
       title: "LLM Requests",
       description:
-        "Logical requests across OpenRouter, Claude Agent SDK, and Codex SDK using stable catalog model ids and bounded workload labels.",
+        "Logical requests across OpenRouter AI SDK and Codex SDK paths using stable catalog model ids and bounded workload labels.",
       targets: [
         {
           query: `sum by (service, workload, provider, model, outcome) (rate(llm_requests_total{${llmFilter}}[5m])) or on() vector(0)`,
@@ -124,7 +124,7 @@ export function addLlmPanels(
     createTimeseriesPanel({
       title: "Resolved Upstream Providers",
       description:
-        "OpenRouter route attempts by resolved upstream provider and result. Error attempts followed by success are provider fallbacks.",
+        "OpenRouter route attempts by resolved upstream provider and result. Model fallback is disabled, so errors remain attached to the requested model.",
       targets: [
         {
           query: `sum by (service, model, upstream_provider, outcome) (rate(llm_router_attempts_total{${llmFilter}}[5m])) or on() vector(0)`,

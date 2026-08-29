@@ -33,6 +33,11 @@ directory outside that checkout: both the runner and target implementation
 fail preflight when their Git worktrees are dirty, and every output path must
 be new.
 
+The goal runner intentionally uses `gpt-5.6-sol` through the native Codex SDK
+with subscription authentication. It accepts `CODEX_ACCESS_TOKEN` or a mounted
+Codex auth cache. Do not route this workload through OpenRouter; it is the
+quality-sensitive exception to the repository default.
+
 The required inputs are:
 
 - `--save`: an immutable, exactly 131,072-byte Pokémon Emerald flash save.

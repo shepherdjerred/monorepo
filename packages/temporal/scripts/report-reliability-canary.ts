@@ -46,7 +46,7 @@ function canaryInput(
   const shared = {
     contractVersion: 2,
     title: `Report reliability ${name} canary`,
-    provider: "claude",
+    provider: "codex",
     mode: "report-only",
     repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
     maxTurns: 4,

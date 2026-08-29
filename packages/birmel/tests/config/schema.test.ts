@@ -50,7 +50,7 @@ describe("OpenRouterConfigSchema", () => {
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.model).toBe("gpt-5.6-sol");
+      expect(result.data.model).toBe("gpt-5.6-luna");
       expect(result.data.classifierModel).toBe("gpt-5.4-nano");
       expect(result.data.reasoningEffort).toBe("medium");
       expect(result.data.maxTokens).toBe(4096);

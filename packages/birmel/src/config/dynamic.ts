@@ -76,7 +76,7 @@ const DEFINITION = {
   llmModel: {
     schema: StringSchema,
     sources: ["flag", "env", "default"],
-    default: "gpt-5.6-sol",
+    default: "gpt-5.6-luna",
     names: { flag: "birmel-llm-model", env: "LLM_MODEL" },
   },
   classifierModel: {

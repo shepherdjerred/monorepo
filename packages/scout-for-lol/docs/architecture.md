@@ -309,7 +309,7 @@ Required environment variables by component:
 | `RIOT_API_KEY`            | Backend   | Yes                    |
 | `DATABASE_URL`            | Backend   | Yes                    |
 | `OPENROUTER_API_KEY`      | Backend   | No (disables AI)       |
-| `BETTING_PARLAY_AI_MODEL` | Backend   | No (`gpt-5.6-sol`)     |
+| `BETTING_PARLAY_AI_MODEL` | Backend   | No (`gpt-5.6-luna`)    |
 | `S3_BUCKET_NAME`          | Backend   | No (disables storage)  |
 | `SENTRY_DSN`              | Backend   | No (disables tracking) |
 

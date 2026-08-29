@@ -1,6 +1,6 @@
 ---
 title: LLM stack
-description: One ordinary-inference gateway, two native coding-agent exceptions, repository-owned model and eval contracts, and an observability boundary that keeps bodies out of Tempo.
+description: One OpenRouter gateway, one subscription-backed Codex exception, repository-owned model and eval contracts, and an observability boundary that keeps bodies out of Tempo.
 sidebar:
   order: 5
 ---
@@ -8,13 +8,17 @@ sidebar:
 Ordinary model inference in the monorepo goes through AI SDK 7 and the shared
 `@shepherdjerred/llm-runtime` package to OpenRouter. Text, structured output,
 tools, embeddings, images, and model-controlled web search all use that path.
-OpenRouter may change the upstream provider for availability, but it may not
-silently change the requested catalog model.
+Every route disables model fallback, so OpenRouter may select an upstream host
+for the exact requested model but may not silently substitute another model.
 
-Claude Agent SDK and Codex SDK are the two exceptions. They are reserved for
-general-purpose coding or computer-use agents where a model needs repository
-and command tools. They run in process through their native SDKs; active
-`claude` and `codex` subprocess integrations are forbidden.
+The Codex SDK is the tool-using exception. A shared adapter routes release,
+Temporal, and Birmel agents through OpenRouter while keeping stable catalog IDs
+on telemetry. The Pokémon goal agent remains on Sol with its existing Codex
+subscription authentication because goal quality matters more than its
+infrequent cost. Active `claude` and `codex` subprocess integrations are
+forbidden. Subscription authentication is forbidden outside that exact
+Pokémon path. Temporal retains a Claude input decoder only so existing workflow
+histories can replay; a legacy Claude task cannot start fresh inference.
 
 ## Repository-owned contracts
 
@@ -48,7 +52,8 @@ redeliver.
 
 Prometheus uses bounded service, workload, provider, model, outcome, token-type,
 and cost-type labels. Trace, generation, session, and user IDs are never
-labels. OpenRouter, Claude Agent SDK, and Codex SDK share:
+labels. OpenRouter AI SDK, OpenRouter-backed Codex SDK, and the Pokémon native
+Codex path share:
 
 - `llm_requests_total`
 - `llm_request_duration_seconds`
@@ -117,14 +122,14 @@ separate counters. Existing `ai_provider_errors_total` and
 
 ## Deployment acceptance
 
-The migration is deployed atomically. Create one OpenRouter key per service and
-stage, create the Broadcast bearer secret, publish the Broadcast image, and
-canary Broadcast before the consumers. For each transport, verify the
-application span, SDK child spans, correlated Broadcast span, Loki log,
-Prometheus usage and cost, private body archive, and body-free Tempo record.
-Only after text, structured output, tools, embeddings, images, web search,
-Claude SDK, Codex SDK, and the production Temporal canary pass may old provider
-secrets be revoked.
+Create one capped OpenRouter key per migrated service and stage. Preserve the
+Pokémon subscription credential separately. Canary Broadcast before the
+OpenRouter consumers, then canary the Pokémon Sol agent through its native
+subscription path. For each transport, verify the application span, SDK child
+spans, Loki log, Prometheus usage and cost, private body archive, and body-free
+Tempo record. OpenRouter calls also require a correlated Broadcast span. Old
+subscription credentials may be revoked only after every migrated Codex path
+passes; the Pokémon credential remains active.
 
 Repository configuration or a healthy pod is not production acceptance. The
 operator must observe the real archive, Tempo, metrics, logs, and consumer

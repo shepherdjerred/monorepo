@@ -14,7 +14,7 @@ import {
 } from "./glitter-context-refresh-style-schemas.ts";
 
 export const EXTRACTION_MODEL = "gpt-5.6-luna";
-export const SYNTHESIS_MODEL = "gpt-5.6-sol";
+export const SYNTHESIS_MODEL = "gpt-5.6-luna";
 export const EXTRACTION_MAX_OUTPUT_TOKENS = 4000;
 export const EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS = 8000;
 export const SYNTHESIS_MAX_OUTPUT_TOKENS = 28_000;

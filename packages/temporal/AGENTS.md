@@ -445,14 +445,13 @@ only.
 The generic agent's own environment is built by `envForProvider`
 (`src/activities/agent-task-env.ts`) as an **allowlist**: basic process/TLS
 settings, the read-only Kubernetes identity, the non-secret evidence endpoints,
-and exactly one provider subscription credential. Every other worker
+and exactly one service-scoped OpenRouter credential. Every other worker
 credential — Postal, S3, GitHub, Temporal, Talos, Grafana, ArgoCD — is absent,
 so a prompt-injected agent has nothing to exfiltrate from its own environment.
 Trusted, source-controlled agents (homelab audit, Scout season refresh) use
 `envForTrustedAgent` instead, which keeps the operational read-only credentials
 they need but still strips the bot's GitHub credentials, every report-delivery
-credential, and **every** inference credential — direct API keys and the other
-SDK's subscription token alike. These agents have Bash, so an unrelated
+credential, and **every** inference credential. These agents have Bash, so an unrelated
 provider credential left in reach would be exfiltratable; each receives only
 its own provider's credential, passed explicitly through `overrides`.
 

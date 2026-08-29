@@ -27,7 +27,7 @@ export function temporalOpenRouterRuntime(): ReturnType<
   return runtime;
 }
 
-const SYNTHESIS_MODEL = "gpt-5.6-sol";
+const SYNTHESIS_MODEL = "gpt-5.6-luna";
 const SYNTHESIS_MAX_OUTPUT_TOKENS = 300;
 
 function firstWords(value: string, maximum: number): string {

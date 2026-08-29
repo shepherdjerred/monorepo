@@ -101,18 +101,13 @@ for values that are usually a few hundred bytes.
 
 ## Release refinement has its own authentication boundary
 
-The main-only release refiner can use a ChatGPT subscription for Codex without
-placing a reusable credential in ordinary CI jobs. Its dedicated pod mounts a
-persistent auth bundle that Codex refreshes in place, while the other shared
-pod shapes do not mount that storage. The release lane is serialized, so a
-single-writer volume is sufficient. The bundle is deliberately excluded from
-backups because recovery means reauthenticating on a trusted operator machine.
+The main-only release refiner receives a release-scoped, spend-limited
+OpenRouter key through its explicit Buildkite secret grant. The Codex SDK uses
+that key only for GPT-5.6 Luna through the shared OpenRouter adapter; it has no
+subscription-auth volume and no provider fallback. Other Buildkite steps do not
+receive the release key.
 
-This separates a renewable login session from an extracted short-lived token.
-The distinction lets the release refiner recover normally when its Codex access
-token expires without broadening the rest of the Buildkite credential surface.
 The [release pod definition](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml),
-[PVC declaration](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts),
 and [refiner boundary](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/release-refiner.ts)
 define that separation.
 

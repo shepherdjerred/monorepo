@@ -49,7 +49,7 @@ describe("Birmel dynamic config", () => {
     });
 
     expect(config.persona.enabled).toBe(false);
-    expect(config.openRouter.model).toBe("gpt-5.6-sol");
+    expect(config.openRouter.model).toBe("gpt-5.6-luna");
   });
 
   test("keeps the seed when a flag has the wrong type", async () => {

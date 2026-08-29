@@ -1,12 +1,12 @@
 ---
 title: Run the agent task canary
-description: Verify the deployed Claude structured-output contract against the real production queue after a worker image rollout.
+description: Verify the deployed Codex and OpenRouter structured-output contract against the real production queue after a worker image rollout.
 sidebar:
   order: 4
 ---
 
 Run this after the worker image is live. It exercises the real `agent-task`
-queue, the deployed OAuth authentication, the real parser, and a tagged
+queue, the deployed OpenRouter authentication, the real parser, and a tagged
 contract-v2 report with a captured command receipt.
 
 A local dry run is not equivalent and does not satisfy the production check.
@@ -42,9 +42,9 @@ send `[FAILED]` before Temporal records the failure.
 
 ## 3. Check the contract held
 
-Claude's output is a versioned provider contract. The worker sends the v2
-draft-07 plain-optional schema through the Claude Agent SDK and accepts only
-its structured result.
+Codex output is a versioned provider contract. The worker sends the v2 output
+schema through the OpenRouter-backed Codex SDK and accepts only its structured
+result.
 
 A successful process that returns no `structured_output` is a failure. Prose and
 fenced JSON are not fallback formats.
@@ -58,7 +58,7 @@ labels only, so read the logs for the specific cause.
 | Symptom                               | Look at                                                                                                 |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | No workflow started                   | Temporal address, TLS flag, OAuth token                                                                 |
-| Workflow failed with a contract error | the schema fingerprint in logs; the pinned Claude Agent SDK contract                                    |
+| Workflow failed with a contract error | the schema fingerprint in logs; the pinned Codex SDK contract                                           |
 | Workflow succeeded, no email          | shared report delivery and S3 acceptance state                                                          |
 | Partial canary reports clean          | evidence normalization and required-check coverage                                                      |
 | Failure canary has no email           | failure-report-before-rethrow path                                                                      |

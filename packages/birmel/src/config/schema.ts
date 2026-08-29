@@ -43,7 +43,7 @@ export const DiscordConfigSchema = z.object({
 
 export const OpenRouterConfigSchema = z.object({
   apiKey: z.string().min(1, "OPENROUTER_API_KEY is required"),
-  model: z.string().trim().min(1).default("gpt-5.6-sol"),
+  model: z.string().trim().min(1).default("gpt-5.6-luna"),
   classifierModel: z.string().trim().min(1).default("gpt-5.4-nano"),
   memoryModel: z.string().trim().min(1).default("gpt-5.4-nano"),
   embeddingModel: z.string().trim().min(1).default("text-embedding-3-small"),

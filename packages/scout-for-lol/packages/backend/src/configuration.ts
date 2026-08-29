@@ -204,10 +204,10 @@ function computeConfiguration() {
       .default("512MB")
       .asString(),
     openRouterApiKey: getOptionalEnvVar("OPENROUTER_API_KEY"),
-    reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
+    reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-luna"),
     bettingParlayAiModel: getOptionalEnvVar(
       "BETTING_PARLAY_AI_MODEL",
-      "gpt-5.6-sol",
+      "gpt-5.6-luna",
     ),
     // Replay-only compatibility credential for weekly-parlay executions that
     // started before the embedded Scout Activity patch was recorded.

@@ -110,7 +110,8 @@ nondeterministic bytes for unchanged images and would otherwise open a churn PR
 every week.
 
 **One is agentic.** Season and act dates exist in no machine-readable feed, so
-`scout-season-refresh` runs a Claude subprocess with web search. The guardrails
+`scout-season-refresh` runs the OpenRouter-backed Codex SDK with Luna and web
+search. The guardrails
 matter more than the agent: it may touch only allowlisted files, must never run
 git, and its `NO_DRIFT`/`DRIFTED` sentinel is advisory — the activity computes
 real drift from `git status`. The activity also extracts every current,

@@ -78,7 +78,7 @@ Because we set a future `runAt`, the workflow defers using Temporal's
 consume the run's execution timeout.
 
 Watch it start when your time arrives. The run itself clones the repo, runs
-Codex read-only over that clone, and emails the result.
+Codex read-only over that clone through OpenRouter, and emails the result.
 
 ## 5. Read the report
 

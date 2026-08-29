@@ -155,7 +155,6 @@ export function createBirmelDeployment(chart: Chart) {
           ),
           key: "OPENROUTER_API_KEY",
         }),
-        LLM_MODEL: EnvValue.fromValue("gpt-5.6-sol"),
         LLM_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
         LLM_MEMORY_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
         LLM_EMBEDDING_MODEL: EnvValue.fromValue("text-embedding-3-small"),
