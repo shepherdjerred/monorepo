@@ -8,10 +8,12 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
 import { createTemporalPostgreSQLCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
+import { createTemporalBackupPreflightJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/backup-preflight.ts";
 import { createTemporalDynamicConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/dynamic-config.ts";
 import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/server.ts";
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
 import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/namespace-init.ts";
+import { createTemporalSchemaMigrationJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/schema-migration.ts";
 import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker.ts";
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker-network-policy.ts";
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker.ts";
@@ -73,6 +75,8 @@ export function createTemporalChart(app: App) {
 
   createTemporalPostgreSQLCertificate(chart);
   createTemporalPostgreSQLDatabase(chart);
+  createTemporalBackupPreflightJob(chart);
+  createTemporalSchemaMigrationJob(chart);
   const dynamicConfigMap = createTemporalDynamicConfig(chart);
   const server = createTemporalServerDeployment(chart, { dynamicConfigMap });
   createTemporalUiDeployment(chart, { serverService: server.service });
@@ -344,7 +348,7 @@ export function createTemporalChart(app: App) {
     },
   });
 
-  // NetworkPolicy for PostgreSQL - only allow Temporal Server
+  // NetworkPolicy for PostgreSQL - only allow the server and schema hook.
   new KubeNetworkPolicy(chart, "temporal-postgresql-netpol", {
     metadata: { name: "temporal-postgresql-netpol" },
     spec: {
@@ -360,9 +364,73 @@ export function createTemporalChart(app: App) {
                 matchLabels: { app: "temporal-server" },
               },
             },
+            {
+              podSelector: {
+                matchLabels: { app: "temporal-schema-migration" },
+              },
+            },
           ],
           ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
         },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-schema-migration-netpol", {
+    metadata: { name: "temporal-schema-migration-netpol" },
+    spec: {
+      podSelector: {
+        matchLabels: { app: "temporal-schema-migration" },
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {},
+              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+            },
+          ],
+          ports: [
+            { port: IntOrString.fromNumber(53), protocol: "UDP" },
+            { port: IntOrString.fromNumber(53), protocol: "TCP" },
+          ],
+        },
+        {
+          to: [
+            {
+              podSelector: {
+                matchLabels: { cluster_name: "temporal-postgresql" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-backup-preflight-netpol", {
+    metadata: { name: "temporal-backup-preflight-netpol" },
+    spec: {
+      podSelector: {
+        matchLabels: { app: "temporal-backup-preflight" },
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {},
+              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+            },
+          ],
+          ports: [
+            { port: IntOrString.fromNumber(53), protocol: "UDP" },
+            { port: IntOrString.fromNumber(53), protocol: "TCP" },
+          ],
+        },
+        { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
       ],
     },
   });

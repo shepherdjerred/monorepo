@@ -109,7 +109,7 @@ export const VersionMapSchema = z
     "shepherdjerred/caddy-s3proxy": z.string(),
     "shepherdjerred/tasknotes-server": z.string(),
     "shepherdjerred/obsidian-headless": z.string(),
-    "temporalio/auto-setup": z.string(),
+    "temporalio/server": z.string(),
     "temporalio/ui": z.string(),
     "temporalio/admin-tools": z.string(),
     "shepherdjerred/temporal-worker": z.string(),

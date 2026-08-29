@@ -1372,7 +1372,7 @@
       ]
     },
     {
-      "name": "temporalio/auto-setup",
+      "name": "temporalio/server",
       "category": "upstream",
       "artifactType": "image",
       "management": {
@@ -1381,7 +1381,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f"
+      "value": "1.30.6@sha256:c8ade0075f9d9da43c206de2b255c80be49db384045bd1ff76bd58d0f408a314"
     },
     {
       "name": "temporalio/ui",
@@ -1405,7 +1405,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.31.2@sha256:dbc5fcd6ee8f0f4d808bf765af9a87dea9d8a283abfdcfbd2fc148496ba66107"
+      "value": "1.30.6@sha256:d6218349ac4468ea97877dedaa5351b16364983946dbde49811d93011da649c6"
     },
     {
       "name": "shepherdjerred/temporal-worker",

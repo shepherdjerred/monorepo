@@ -1,7 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import type { Service } from "cdk8s-plus-31";
-import { Cpu, Job, Secret, Volume } from "cdk8s-plus-31";
+import { Cpu, Job } from "cdk8s-plus-31";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -49,22 +49,6 @@ export function createTemporalNamespaceInitJob(
     },
   });
 
-  // Mount postgres secret for admin-tools DB access
-  const postgresSecretName =
-    "temporal.temporal-postgresql.credentials.postgresql.acid.zalan.do";
-  const pgSecretVolume = Volume.fromSecret(
-    chart,
-    "namespace-init-pg-secret-volume",
-    Secret.fromSecretName(
-      chart,
-      "namespace-init-pg-secret",
-      postgresSecretName,
-    ),
-    {
-      name: "pg-secret",
-    },
-  );
-
   job.addContainer(
     withCommonProps({
       name: "namespace-init",
@@ -97,15 +81,8 @@ export function createTemporalNamespaceInitJob(
         user: UID,
         group: GID,
         ensureNonRoot: true,
-        readOnlyRootFilesystem: false,
+        readOnlyRootFilesystem: true,
       },
-      volumeMounts: [
-        {
-          path: "/pg-secret",
-          volume: pgSecretVolume,
-          readOnly: true,
-        },
-      ],
       resources: {
         cpu: {
           request: Cpu.millis(50),
