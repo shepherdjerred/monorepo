@@ -137,8 +137,7 @@ function countLifecycleEvent(
     if (usage.success) {
       result.inputTokens += usage.data.input_tokens ?? 0;
       result.cachedInputTokens += usage.data.cached_input_tokens ?? 0;
-      result.cacheWriteInputTokens +=
-        usage.data.cache_write_input_tokens ?? 0;
+      result.cacheWriteInputTokens += usage.data.cache_write_input_tokens ?? 0;
       result.outputTokens += usage.data.output_tokens ?? 0;
       result.reasoningOutputTokens += usage.data.reasoning_output_tokens ?? 0;
       result.turnUsages = [
