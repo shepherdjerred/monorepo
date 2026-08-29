@@ -2,7 +2,7 @@
  * Schedule one or more one-off or recurring generic agent tasks.
  *
  * Examples:
- *   TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task.md
+ *   TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task.md
  *   // --from-doc validates every temporal-agent-task block, then schedules them in document order.
  *   bun run scripts/schedule-agent-task.ts --json '{"title":"Check thing",...}'
  */

@@ -19,6 +19,7 @@ import {
 } from "./workflow-failure-watch-checkpoint.ts";
 import {
   parseLegacyTemporalNamespace,
+  parseTemporalNamespace,
   temporalNamespacesForMonitoring,
 } from "#shared/temporal-namespace.ts";
 
@@ -33,6 +34,7 @@ async function runPollWorkflowFailuresImpl(
     requiredEnv("ALERTMANAGER_URL"),
   );
   const namespaces = temporalNamespacesForMonitoring(
+    parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]),
     parseLegacyTemporalNamespace(Bun.env["TEMPORAL_LEGACY_NAMESPACE"]),
   );
   const aggregate: PollWorkflowFailuresResult = {

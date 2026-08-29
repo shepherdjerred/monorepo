@@ -4,6 +4,7 @@ import {
   classifyScheduleNamespace,
   decodeMigrationState,
   encodeMigrationState,
+  isRootWorkflowExecution,
   sourceStateAllowsCutover,
   targetPauseAction,
 } from "./namespace-migration.ts";
@@ -94,5 +95,20 @@ describe("Temporal namespace migration ownership", () => {
         sourceNote: "operator pause",
       }),
     ).toBeUndefined();
+  });
+
+  test("distinguishes drain continuations from new root executions", () => {
+    expect(
+      isRootWorkflowExecution({
+        runId: "root-run",
+        rootExecution: { runId: "root-run" },
+      }),
+    ).toBe(true);
+    expect(
+      isRootWorkflowExecution({
+        runId: "continued-run",
+        rootExecution: { runId: "root-run" },
+      }),
+    ).toBe(false);
   });
 });

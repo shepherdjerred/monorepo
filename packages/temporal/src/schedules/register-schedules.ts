@@ -162,7 +162,8 @@ export async function registerSchedules(
       options.namespace === "dev" || schedule.namespace === options.namespace,
   );
   const deletedSchedules = DELETED_SCHEDULES.filter(
-    (schedule) => schedule.namespace === options.namespace,
+    (schedule) =>
+      options.namespace === "dev" || schedule.namespace === options.namespace,
   );
 
   for (const { id: scheduleId } of deletedSchedules) {
