@@ -137,6 +137,8 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   const v2Reporting = patched("agent-task-report-v2");
   const twoPhaseV2 = patched("agent-task-two-phase-v2");
   const requireV2 = patched("agent-task-require-v2");
+  deprecatePatch("agent-task-core-email-delivery");
+  deprecatePatch("agent-task-reports-email-delivery-v1");
   const postDeliveryFailureReporting = patched(
     "agent-task-post-delivery-failure-report",
   );
