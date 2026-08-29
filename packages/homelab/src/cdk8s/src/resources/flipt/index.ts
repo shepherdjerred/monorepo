@@ -114,11 +114,18 @@ copy_environment() {
   destination="$1"
   if [ -e "$destination" ]; then
     validate_repo "$destination"
+    diff -qr "$source_repo" "$destination"
     return
   fi
 
-  cp -a "$source_repo" "$destination"
-  diff -qr "$source_repo" "$destination"
+  temporary="\${destination}.migrating"
+  if [ -e "$temporary" ]; then
+    echo "Flipt migration has an incomplete temporary repository: $temporary" >&2
+    exit 1
+  fi
+  cp -a "$source_repo" "$temporary"
+  diff -qr "$source_repo" "$temporary"
+  mv "$temporary" "$destination"
 }
 
 validate_repo "$source_repo"

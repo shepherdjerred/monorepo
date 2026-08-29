@@ -170,8 +170,11 @@ describe("Flipt chart", () => {
     const script = migration?.args?.[0] ?? "";
     expect(script).toContain('validate_repo "$source_repo"');
     expect(script).toContain('if [ -e "$destination" ]');
-    expect(script).toContain('cp -a "$source_repo" "$destination"');
     expect(script).toContain('diff -qr "$source_repo" "$destination"');
+    expect(script).toContain('temporary="${destination}.migrating"');
+    expect(script).toContain('cp -a "$source_repo" "$temporary"');
+    expect(script).toContain('diff -qr "$source_repo" "$temporary"');
+    expect(script).toContain('mv "$temporary" "$destination"');
     expect(script).toContain('copy_environment "/var/opt/flipt/data-beta"');
     expect(script).toContain('copy_environment "/var/opt/flipt/data-prod"');
     expect(migration?.volumeMounts?.map((mount) => mount.mountPath)).toContain(
