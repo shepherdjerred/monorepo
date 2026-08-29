@@ -26,6 +26,7 @@ import {
   createTemporalWorkerIngressReaderRbac,
   createTemporalWorkerServiceAccount,
 } from "./worker-rbac.ts";
+import { temporalFeatureFlagEnvironment } from "./feature-flags.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -132,6 +133,7 @@ export function createTemporalWorkerDeployment(
   const agentDeployment = createTemporalAgentWorker(chart, {
     serviceAccount: agentServiceAccount,
     envVariables: {
+      ...temporalFeatureFlagEnvironment(),
       TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("agent"),
@@ -171,6 +173,7 @@ export function createTemporalWorkerDeployment(
   });
 
   const glitterCommonEnv = {
+    ...temporalFeatureFlagEnvironment(),
     TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
     ENVIRONMENT: EnvValue.fromValue("production"),

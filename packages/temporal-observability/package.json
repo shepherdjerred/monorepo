@@ -1,0 +1,40 @@
+{
+  "name": "@shepherdjerred/temporal-observability",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./interceptors": "./src/interceptors.ts",
+    "./workflow-span-sink": "./src/workflow-span-sink.ts"
+  },
+  "scripts": {
+    "lint": "bunx eslint --cache .",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/core": "^2.7.1",
+    "@opentelemetry/resources": "^2.7.1",
+    "@opentelemetry/sdk-trace-base": "^2.9.0",
+    "@temporalio/activity": "1.22.0",
+    "@temporalio/interceptors-opentelemetry": "1.22.0",
+    "@temporalio/worker": "1.22.0",
+    "@temporalio/workflow": "1.22.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/recommended": "^1.0.13",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/bun": "1.4.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.0",
+    "vitest": "4.1.10"
+  }
+}

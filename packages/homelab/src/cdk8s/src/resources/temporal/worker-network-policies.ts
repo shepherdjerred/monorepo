@@ -45,6 +45,25 @@ function temporalServerEgress() {
   };
 }
 
+// Every domain worker built on createTemporalDomainWorker() (the component
+// loop below) now boots with temporalFeatureFlagEnvironment() so it can read
+// the temporal-call-graph-tracing flag. Flipt has no auth of its own —
+// reachability IS the authorization model — so this egress rule is what
+// actually scopes which workers may query it.
+function fliptEgress() {
+  return {
+    to: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+        },
+        podSelector: { matchLabels: { app: "flipt" } },
+      },
+    ],
+    ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+  };
+}
+
 export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
   new KubeNetworkPolicy(chart, "temporal-central-workflows-netpol", {
     metadata: { name: "temporal-central-workflows-netpol" },
@@ -88,6 +107,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         egress: [
           dnsEgress(),
           temporalServerEgress(),
+          fliptEgress(),
           { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
           { ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }] },
         ],

@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { log, proxyActivities } from "@temporalio/workflow";
 import type {
   ScoutImageGcActivities,
   ScoutImageGcInput,
@@ -26,8 +26,11 @@ export async function runScoutImageGcWorkflow(
   input: ScoutImageGcInput = {},
 ): Promise<ScoutImageGcResult> {
   const result = await pruneScoutImages(input);
-  console.warn(
-    `[scout-image-gc] complete: matched=${String(result.totalMatched)} deleted=${String(result.totalDeleted)} bytes=${String(result.totalBytesReclaimed)} dryRun=${String(result.dryRun)}`,
-  );
+  log.info("Scout image garbage collection complete", {
+    totalMatched: result.totalMatched,
+    totalDeleted: result.totalDeleted,
+    totalBytesReclaimed: result.totalBytesReclaimed,
+    dryRun: result.dryRun,
+  });
   return result;
 }

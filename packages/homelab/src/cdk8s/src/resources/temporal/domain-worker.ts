@@ -17,6 +17,7 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
+import { temporalFeatureFlagEnvironment } from "./feature-flags.ts";
 
 export type TemporalDomainWorkerProps = {
   name: string;
@@ -113,7 +114,10 @@ export function createTemporalDomainWorker(
         },
       },
       ...temporalWorkerHealthProbes(),
-      envVariables: props.envVariables,
+      envVariables: {
+        ...temporalFeatureFlagEnvironment(),
+        ...props.envVariables,
+      },
     }),
   );
   container.mount(

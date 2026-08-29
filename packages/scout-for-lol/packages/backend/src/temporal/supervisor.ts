@@ -1,5 +1,10 @@
 import { Client, Connection } from "@temporalio/client";
-import { NativeConnection, Worker } from "@temporalio/worker";
+import {
+  DefaultLogger,
+  NativeConnection,
+  Runtime,
+  Worker,
+} from "@temporalio/worker";
 import type { ScoutStage } from "@scout-for-lol/temporal";
 import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
@@ -13,9 +18,39 @@ import {
 import { setScoutTemporalHealth } from "./health.ts";
 import type { WeeklyParlayControlResult } from "#src/betting/weekly-parlay-control.ts";
 import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/weekly-parlay.ts";
+import {
+  createTemporalClientTracingInterceptor,
+  createTemporalWorkerTracing,
+} from "@shepherdjerred/temporal-observability/interceptors";
+import { createValidatedWorkflowSpanSink } from "@shepherdjerred/temporal-observability/workflow-span-sink";
+import { getTracingRuntime } from "#src/observability/tracing.ts";
 
 const logger = createLogger("temporal-supervisor");
 const RECONNECT_DELAY_MS = 5000;
+let runtimeInstalled = false;
+
+function installTemporalRuntime(): void {
+  if (runtimeInstalled) return;
+  Runtime.install({
+    logger: new DefaultLogger("INFO", (entry) => {
+      const fields = {
+        sdk: "temporal",
+        sdkLevel: entry.level,
+        metadata: entry.meta,
+      };
+      if (entry.level === "ERROR") logger.error(entry.message, fields);
+      else if (entry.level === "WARN") logger.warn(entry.message, fields);
+      else logger.info(entry.message, fields);
+    }),
+    telemetryOptions: {
+      logging: {
+        forward: {},
+        filter: { core: "INFO", other: "WARN" },
+      },
+    },
+  });
+  runtimeInstalled = true;
+}
 
 type RealtimeActivities = Pick<
   ScoutTemporalActivities,
@@ -64,6 +99,7 @@ export type ScoutTemporalSupervisorOptions = {
   readonly namespace: string;
   readonly stage: ScoutStage;
   readonly activities: ScoutTemporalActivityGroups;
+  readonly callGraphTracing: boolean;
 };
 
 type ConnectedRuntime = {
@@ -88,6 +124,7 @@ async function createConnectedRuntime(
   options: ScoutTemporalSupervisorOptions,
   discordWorkersEnabled: boolean,
 ): Promise<ConnectedRuntime> {
+  installTemporalRuntime();
   const nativeConnection =
     options.address === undefined
       ? await NativeConnection.connect()
@@ -99,14 +136,34 @@ async function createConnectedRuntime(
         ? await Connection.connect()
         : await Connection.connect({ address: options.address });
     const queues = scoutTaskQueues(options.stage);
+    const tracingRuntime = getTracingRuntime();
+    if (tracingRuntime === undefined && options.callGraphTracing) {
+      throw new Error(
+        "temporal-call-graph-tracing requires TELEMETRY_ENABLED=true",
+      );
+    }
+    const tracing =
+      tracingRuntime !== undefined && options.callGraphTracing
+        ? createTemporalWorkerTracing({
+            exporter: createValidatedWorkflowSpanSink(
+              tracingRuntime.processor,
+              tracingRuntime.resource,
+            ),
+          })
+        : undefined;
     const commonOptions = {
       connection: nativeConnection,
       namespace: options.namespace,
       shutdownGraceTime: 20_000,
       shutdownForceTime: 25_000,
       interceptors: {
-        workflowModules: [workflowUiInterceptorPath()],
+        workflowModules: [
+          workflowUiInterceptorPath(),
+          ...(tracing?.workflowModules ?? []),
+        ],
+        ...(tracing === undefined ? {} : { activity: tracing.activity }),
       },
+      ...(tracing === undefined ? {} : { sinks: tracing.sinks }),
     };
     const workers = [
       await Worker.create({
@@ -151,6 +208,13 @@ async function createConnectedRuntime(
       client: new Client({
         connection: clientConnection,
         namespace: options.namespace,
+        ...(options.callGraphTracing
+          ? {
+              interceptors: {
+                workflow: [createTemporalClientTracingInterceptor()],
+              },
+            }
+          : {}),
       }),
     };
   } catch (error: unknown) {

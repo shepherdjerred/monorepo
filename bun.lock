@@ -1213,9 +1213,11 @@
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
+        "@shepherdjerred/temporal-observability": "workspace:*",
         "@temporalio/activity": "1.22.0",
         "@temporalio/client": "1.22.0",
         "@temporalio/common": "1.22.0",
+        "@temporalio/interceptors-opentelemetry": "1.22.0",
         "@temporalio/worker": "1.22.0",
         "@trpc/server": "11",
         "ai": "^7.0.77",
@@ -1893,9 +1895,11 @@
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
+        "@shepherdjerred/temporal-observability": "workspace:*",
         "@temporalio/activity": "1.22.0",
         "@temporalio/client": "1.22.0",
         "@temporalio/common": "1.22.0",
+        "@temporalio/interceptors-opentelemetry": "1.22.0",
         "@temporalio/worker": "1.22.0",
         "@temporalio/workflow": "1.22.0",
         "@types/sanitize-html": "^2.16.1",
@@ -1927,6 +1931,33 @@
         "eslint": "^10.3.0",
         "jiti": "^2.7.0",
         "typescript": "^6.0.3",
+        "vitest": "4.1.10",
+      },
+    },
+    "packages/temporal-observability": {
+      "name": "@shepherdjerred/temporal-observability",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opentelemetry/api": "^1.9.1",
+        "@opentelemetry/core": "^2.7.1",
+        "@opentelemetry/resources": "^2.7.1",
+        "@opentelemetry/sdk-trace-base": "^2.9.0",
+        "@temporalio/activity": "1.22.0",
+        "@temporalio/interceptors-opentelemetry": "1.22.0",
+        "@temporalio/worker": "1.22.0",
+        "@temporalio/workflow": "1.22.0",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@tsconfig/node-lts": "^24.0.0",
+        "@tsconfig/recommended": "^1.0.13",
+        "@tsconfig/strictest": "^2.0.8",
+        "@types/bun": "1.4.0",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.0",
         "vitest": "4.1.10",
       },
     },
@@ -3858,6 +3889,8 @@
 
     "@shepherdjerred/temporal": ["@shepherdjerred/temporal@workspace:packages/temporal"],
 
+    "@shepherdjerred/temporal-observability": ["@shepherdjerred/temporal-observability@workspace:packages/temporal-observability"],
+
     "@shepherdjerred/terraform-provider-asuswrt": ["@shepherdjerred/terraform-provider-asuswrt@workspace:packages/terraform-provider-asuswrt"],
 
     "@shepherdjerred/toolkit": ["@shepherdjerred/toolkit@workspace:packages/toolkit"],
@@ -4130,7 +4163,11 @@
 
     "@temporalio/core-bridge": ["@temporalio/core-bridge@1.22.0", "", { "dependencies": { "@grpc/grpc-js": "^1.12.4", "@temporalio/common": "1.22.0" } }, "sha512-mJ5agqtfW+GBPYl+ivYLrBpKJ3oFOw8ogcoizNrxYCzwJeprGFiEgHDb/jzyvECR4HAy5s9zQFJYNyTruXXFMw=="],
 
+    "@temporalio/interceptors-opentelemetry": ["@temporalio/interceptors-opentelemetry@1.22.0", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/core": "^1.25.1", "@opentelemetry/resources": "^1.25.1", "@opentelemetry/sdk-trace-base": "^1.25.1", "@temporalio/plugin": "1.22.0" }, "peerDependencies": { "@temporalio/common": "1.22.0", "@temporalio/workflow": "1.22.0" }, "optionalPeers": ["@temporalio/workflow"] }, "sha512-edSklA6jOKsVr9zKkPxD9cwp8yBho1bRGaI6TBRjY39ezi48H9nUWHhDoi8rU5WvjAl64g1r9SEpQFIUnxCuRQ=="],
+
     "@temporalio/nexus": ["@temporalio/nexus@1.22.0", "", { "dependencies": { "@temporalio/client": "1.22.0", "@temporalio/common": "1.22.0", "@temporalio/proto": "1.22.0", "long": "^5.2.3", "nexus-rpc": "^0.0.2" } }, "sha512-4S1ZZdSNjrO9IUyhWxweIidvNn1X/ihEl+P2fOn/Ky38YRx9G+8wtV6g6lqG8zUrtEv//uqFw+HsRMziE2y4tg=="],
+
+    "@temporalio/plugin": ["@temporalio/plugin@1.22.0", "", {}, "sha512-7qp5mUTBMnCM8J9vJGIpO5uj57fWpbaJz4/lN0jSKg87aXhUlvkRHzSMVtBX27KFQdNtK9/ieCWyj7tTs6VF/Q=="],
 
     "@temporalio/proto": ["@temporalio/proto@1.22.0", "", { "dependencies": { "long": "^5.2.3", "protobufjs": "^7.6.4" } }, "sha512-X7NVa0Z6HK3l9irZR48FKwZ9w9YXetCdF2z2KCIRr0W7Kul64Wt9o5hwvSXShAtrZuCEEHH8WO/ffHTXxJieLg=="],
 
@@ -8406,6 +8443,10 @@
 
     "@temporalio/client/uuid": ["uuid@11.1.1", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ=="],
 
+    "@temporalio/interceptors-opentelemetry/@opentelemetry/resources": ["@opentelemetry/resources@1.30.1", "", { "dependencies": { "@opentelemetry/core": "1.30.1", "@opentelemetry/semantic-conventions": "1.28.0" }, "peerDependencies": { "@opentelemetry/api": ">=1.0.0 <1.10.0" } }, "sha512-5UxZqiAgLYGFjS4s9qm5mBVo433u+dSPUFWVWXmLAD4wB65oMCoXaJP1KJa9DIYYMeHu3z4BZcStG3LC593cWA=="],
+
+    "@temporalio/interceptors-opentelemetry/@opentelemetry/sdk-trace-base": ["@opentelemetry/sdk-trace-base@1.30.1", "", { "dependencies": { "@opentelemetry/core": "1.30.1", "@opentelemetry/resources": "1.30.1", "@opentelemetry/semantic-conventions": "1.28.0" }, "peerDependencies": { "@opentelemetry/api": ">=1.0.0 <1.10.0" } }, "sha512-jVPgBbH1gCy2Lb7X0AVQ8XAfgg0pJ4nvl8/IiQA6nxOsPvS+0zMJaFSs2ltXe0J6C8dqjcnpyqINDJmU30+uOg=="],
+
     "@types/babel__core/@babel/types": ["@babel/types@7.29.8", "", { "dependencies": { "@babel/helper-string-parser": "^7.29.7", "@babel/helper-validator-identifier": "^7.29.7" } }, "sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg=="],
 
     "@types/babel__generator/@babel/types": ["@babel/types@7.29.8", "", { "dependencies": { "@babel/helper-string-parser": "^7.29.7", "@babel/helper-validator-identifier": "^7.29.7" } }, "sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg=="],
@@ -10093,6 +10134,10 @@
     "@tailwindcss/node/lightningcss/lightningcss-win32-x64-msvc": ["lightningcss-win32-x64-msvc@1.32.0", "", { "os": "win32", "cpu": "x64" }, "sha512-Amq9B/SoZYdDi1kFrojnoqPLxYhQ4Wo5XiL8EVJrVsB8ARoC1PWW6VGtT0WKCemjy8aC+louJnjS7U18x3b06Q=="],
 
     "@tanstack/react-router/@tanstack/react-store/@tanstack/store": ["@tanstack/store@0.9.3", "", {}, "sha512-8reSzl/qGWGGVKhBoxXPMWzATSbZLZFWhwBAFO9NAyp0TxzfBP0mIrGb8CP8KrQTmvzXlR/vFPPUrHTLBGyFyw=="],
+
+    "@temporalio/interceptors-opentelemetry/@opentelemetry/resources/@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.28.0", "", {}, "sha512-lp4qAiMTD4sNWW4DbKLBkfiMZ4jbAboJIGOQr5DvciMRI494OapieI9qiODpOt0XBr1LjIDy1xAGAnVs5supTA=="],
+
+    "@temporalio/interceptors-opentelemetry/@opentelemetry/sdk-trace-base/@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.28.0", "", {}, "sha512-lp4qAiMTD4sNWW4DbKLBkfiMZ4jbAboJIGOQr5DvciMRI494OapieI9qiODpOt0XBr1LjIDy1xAGAnVs5supTA=="],
 
     "@types/babel__core/@babel/types/@babel/helper-string-parser": ["@babel/helper-string-parser@7.29.7", "", {}, "sha512-Pb5ijPrZ89GDH8223L4UP8i6QApWxs04RbPQJTeWDV0/keR2E36MeKnyr6LYmUUvqRRI+Iv87SuF1W6ErINzYw=="],
 

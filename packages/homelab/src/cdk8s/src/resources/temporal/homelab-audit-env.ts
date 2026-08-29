@@ -1,4 +1,5 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
+import { temporalFeatureFlagEnvironment } from "./feature-flags.ts";
 
 function requiredSecretEnv(
   secret: ISecret,
@@ -13,6 +14,7 @@ function requiredSecretEnv(
 
 export function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
   return {
+    ...temporalFeatureFlagEnvironment(),
     BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
     BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
     BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),

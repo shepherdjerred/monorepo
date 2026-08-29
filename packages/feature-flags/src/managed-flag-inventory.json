@@ -403,6 +403,15 @@
       "thresholdRollouts": []
     },
     {
+      "key": "temporal-call-graph-tracing",
+      "owner": "platform",
+      "source": "temporal-workers",
+      "purpose": "Enable Temporal client, Workflow, and Activity call-graph tracing on worker restart.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": []
+    },
+    {
       "key": "explore-guild-allowlist",
       "owner": "scout",
       "source": "scout-dynamic",

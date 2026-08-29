@@ -1,7 +1,10 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
-import { resourceFromAttributes } from "@opentelemetry/resources";
+import {
+  resourceFromAttributes,
+  type Resource,
+} from "@opentelemetry/resources";
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
@@ -40,6 +43,19 @@ let tracer: Tracer | undefined;
 let batchProcessor: BatchSpanProcessor | undefined;
 let loggerProvider: LoggerProvider | undefined;
 let logRecordProcessor: BatchLogRecordProcessor | undefined;
+let tracingRuntime: TracingRuntime | undefined;
+
+export type TracingRuntime = {
+  readonly processor: SpanProcessor;
+  readonly resource: Resource;
+};
+
+export type TracingResourceOptions = {
+  readonly environment?: string;
+  readonly namespace?: string;
+  readonly taskQueue?: string;
+  readonly workerRole?: string;
+};
 
 const jsonLog = createStructuredLogger("observability.tracing");
 
@@ -104,18 +120,28 @@ class LoggingSpanExporter implements SpanExporter {
   }
 }
 
-export function initializeTracing(): void {
+export function initializeTracing(
+  options: TracingResourceOptions = {},
+): TracingRuntime | undefined {
   const enabled = Bun.env["TELEMETRY_ENABLED"] === "true";
   if (!enabled) {
     jsonLog("info", "OpenTelemetry tracing disabled");
-    return;
+    return undefined;
   }
 
   diag.setLogger(diagLogger, DiagLogLevel.WARN);
 
   const otlpEndpoint = Bun.env["OTLP_ENDPOINT"] ?? DEFAULT_OTLP_ENDPOINT;
   const serviceName = Bun.env["TELEMETRY_SERVICE_NAME"] ?? DEFAULT_SERVICE_NAME;
-  const serviceVersion = Bun.env["VERSION"] ?? "dev";
+  const serviceVersion = Bun.env["GIT_SHA"] ?? Bun.env["VERSION"] ?? "dev";
+  const resource = resourceFromAttributes({
+    [ATTR_SERVICE_NAME]: serviceName,
+    [ATTR_SERVICE_VERSION]: serviceVersion,
+    "deployment.environment.name": options.environment ?? "dev",
+    "temporal.namespace": options.namespace ?? "default",
+    "temporal.task_queue": options.taskQueue ?? "unknown",
+    "temporal.worker.role": options.workerRole ?? "unknown",
+  });
 
   const exporter = new LoggingSpanExporter(
     new OTLPTraceExporter({
@@ -168,19 +194,13 @@ export function initializeTracing(): void {
     exportTimeoutMillis: 30_000,
   });
   loggerProvider = new LoggerProvider({
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: serviceName,
-      [ATTR_SERVICE_VERSION]: serviceVersion,
-    }),
+    resource,
     processors: [logRecordProcessor],
   });
   logsAPI.setGlobalLoggerProvider(loggerProvider);
 
   sdk = new NodeSDK({
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: serviceName,
-      [ATTR_SERVICE_VERSION]: serviceVersion,
-    }),
+    resource,
     spanProcessors: [rootProcessor],
   });
 
@@ -192,7 +212,17 @@ export function initializeTracing(): void {
     serviceVersion,
     otlpEndpoint,
     lokiOtlpLogsEndpoint,
+    environment: options.environment ?? "dev",
+    namespace: options.namespace ?? "default",
+    taskQueue: options.taskQueue ?? "unknown",
+    workerRole: options.workerRole ?? "unknown",
   });
+  tracingRuntime = { processor: rootProcessor, resource };
+  return tracingRuntime;
+}
+
+export function getTracingRuntime(): TracingRuntime | undefined {
+  return tracingRuntime;
 }
 
 export function getTracer(): Tracer | undefined {
@@ -232,6 +262,7 @@ export async function shutdownTracing(): Promise<void> {
   if (sdk !== undefined) {
     await sdk.shutdown();
   }
+  tracingRuntime = undefined;
 }
 
 /**

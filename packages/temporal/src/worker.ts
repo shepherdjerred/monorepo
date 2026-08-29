@@ -1,7 +1,12 @@
 import { Client, Connection } from "@temporalio/client";
 import { VersioningBehavior } from "@temporalio/common";
 import * as Sentry from "@sentry/bun";
-import { NativeConnection, Runtime, Worker } from "@temporalio/worker";
+import {
+  DefaultLogger,
+  NativeConnection,
+  Runtime,
+  Worker,
+} from "@temporalio/worker";
 import { registerSchedules } from "./schedules/register-schedules.ts";
 import {
   startEventBridge,
@@ -32,6 +37,15 @@ import {
 } from "./worker-config.ts";
 import { parseTemporalBootstrapMetadata } from "./shared/execution-metadata.ts";
 import { ExecutionMetadataClientInterceptor } from "./lib/execution-metadata-client-interceptor.ts";
+import {
+  createTemporalClientTracingInterceptor,
+  createTemporalWorkerTracing,
+} from "@shepherdjerred/temporal-observability/interceptors";
+import { createValidatedWorkflowSpanSink } from "@shepherdjerred/temporal-observability/workflow-span-sink";
+import {
+  initializeCallGraphTracing,
+  shutdownCallGraphTracing,
+} from "./config/call-graph-tracing.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -43,7 +57,24 @@ function installRuntime(role: WorkerRole, bootstrap: TemporalBootstrap): void {
     Bun.env["TEMPORAL_METRICS_ADDRESS"] ?? DEFAULT_METRICS_ADDRESS;
 
   Runtime.install({
+    logger: new DefaultLogger("INFO", (entry) => {
+      const level =
+        entry.level === "ERROR"
+          ? "error"
+          : entry.level === "WARN"
+            ? "warning"
+            : "info";
+      jsonLog(level, entry.message, {
+        sdk: "temporal",
+        sdkLevel: entry.level,
+        metadata: entry.meta,
+      });
+    }),
     telemetryOptions: {
+      logging: {
+        forward: {},
+        filter: { core: "INFO", other: "WARN" },
+      },
       metrics: {
         metricPrefix: "temporal_worker_",
         // The SDK already emits `namespace` and `task_queue` as per-metric
@@ -97,12 +128,15 @@ function initSentry(): void {
   jsonLog("info", "Sentry initialized");
 }
 
+type TemporalWorkerTracing = ReturnType<typeof createTemporalWorkerTracing>;
+
 async function createQueueWorker(
   definition: QueueWorkerDefinition,
   connection: NativeConnection,
   workflowsPath: string,
   workflowUiInterceptorPath: string,
   bootstrap: TemporalBootstrap,
+  temporalTracing: TemporalWorkerTracing | undefined,
 ): Promise<Worker> {
   if (definition.kind === "workflow") {
     const workerDeployment = bootstrap.workerDeployment;
@@ -110,7 +144,15 @@ async function createQueueWorker(
       connection,
       namespace: bootstrap.namespace,
       workflowsPath,
-      interceptors: { workflowModules: [workflowUiInterceptorPath] },
+      interceptors: {
+        workflowModules: [
+          workflowUiInterceptorPath,
+          ...(temporalTracing?.workflowModules ?? []),
+        ],
+      },
+      ...(temporalTracing === undefined
+        ? {}
+        : { sinks: temporalTracing.sinks }),
       workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
       taskQueue: definition.taskQueue,
       ...(workerDeployment === undefined
@@ -135,6 +177,9 @@ async function createQueueWorker(
     namespace: bootstrap.namespace,
     activities: definition.activities,
     taskQueue: definition.taskQueue,
+    ...(temporalTracing === undefined
+      ? {}
+      : { interceptors: { activity: temporalTracing.activity } }),
     ...(definition.maxConcurrentActivityTaskExecutions === undefined
       ? {}
       : {
@@ -205,6 +250,40 @@ type EventBridgeSupervisorState = {
   closed: boolean;
   currentHandle: EventBridgeHandle | undefined;
 };
+
+async function initializeTemporalTracing(
+  role: WorkerRole,
+  roleContract: ReturnType<typeof getWorkerRoleContract>,
+  namespace: string,
+  bootstrapMetadata: ReturnType<typeof parseTemporalBootstrapMetadata>,
+) {
+  const taskQueues = roleContract.workers.map((worker) => worker.taskQueue);
+  const callGraphTracing = await initializeCallGraphTracing({
+    environment: bootstrapMetadata.environment,
+    workerRole: role,
+  });
+  const tracingRuntime = initializeTracing({
+    environment: bootstrapMetadata.environment,
+    namespace,
+    taskQueue: taskQueues.join(","),
+    workerRole: role,
+  });
+  if (callGraphTracing && tracingRuntime === undefined) {
+    throw new Error(
+      "temporal-call-graph-tracing requires TELEMETRY_ENABLED=true",
+    );
+  }
+  const temporalTracing =
+    callGraphTracing && tracingRuntime !== undefined
+      ? createTemporalWorkerTracing({
+          exporter: createValidatedWorkflowSpanSink(
+            tracingRuntime.processor,
+            tracingRuntime.resource,
+          ),
+        })
+      : undefined;
+  return { callGraphTracing, temporalTracing };
+}
 
 function isEventBridgeSupervisorClosed(
   state: EventBridgeSupervisorState,
@@ -287,6 +366,55 @@ function startEventBridgeSupervisor(client: Client): EventBridgeHandle {
   };
 }
 
+async function startRoleServices(options: {
+  readonly address: string;
+  readonly bootstrapMetadata: ReturnType<typeof parseTemporalBootstrapMetadata>;
+  readonly callGraphTracing: boolean;
+  readonly namespace: string;
+  readonly roleContract: ReturnType<typeof getWorkerRoleContract>;
+}): Promise<{
+  readonly eventBridge?: EventBridgeHandle;
+  readonly httpServers?: EventBridgeHandle;
+}> {
+  if (
+    !options.roleContract.runsGateway &&
+    !options.roleContract.runsEventBridge
+  ) {
+    return {};
+  }
+  const clientConnection = await Connection.connect({
+    address: options.address,
+  });
+  const client = new Client({
+    connection: clientConnection,
+    namespace: options.namespace,
+    interceptors: {
+      workflow: [
+        new ExecutionMetadataClientInterceptor(options.bootstrapMetadata),
+        ...(options.callGraphTracing
+          ? [createTemporalClientTracingInterceptor()]
+          : []),
+      ],
+    },
+  });
+  let httpServers: EventBridgeHandle | undefined;
+  if (options.roleContract.runsGateway) {
+    await registerSchedules(client, {
+      bootstrap: options.bootstrapMetadata,
+      validateLocalEnvironment:
+        options.roleContract.validatesScheduleEnvironmentLocally,
+    });
+    jsonLog("info", "Schedules registered");
+    httpServers = startHttpServers(client);
+  }
+  return {
+    ...(httpServers === undefined ? {} : { httpServers }),
+    ...(options.roleContract.runsEventBridge
+      ? { eventBridge: startEventBridgeSupervisor(client) }
+      : {}),
+  };
+}
+
 async function main(): Promise<void> {
   const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
   const bootstrap = parseTemporalBootstrap(Bun.env);
@@ -294,27 +422,29 @@ async function main(): Promise<void> {
   if (role === "workflows") {
     requireWorkerDeployment(bootstrap);
   }
+  const bootstrapMetadata = parseTemporalBootstrapMetadata(
+    Bun.env["ENVIRONMENT"],
+    Bun.env["GIT_SHA"],
+  );
   installRuntime(role, bootstrap);
   initSentry();
-  initializeTracing();
+  const { callGraphTracing, temporalTracing } = await initializeTemporalTracing(
+    role,
+    roleContract,
+    bootstrap.namespace,
+    bootstrapMetadata,
+  );
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
   jsonLog("info", "Connecting to Temporal server", { address, role });
 
   const connection = await NativeConnection.connect({ address });
-  const bootstrapMetadata = parseTemporalBootstrapMetadata(
-    Bun.env["ENVIRONMENT"],
-    Bun.env["GIT_SHA"],
-  );
 
   const workflowsPath = new URL("workflows/index.ts", import.meta.url).pathname;
   const workflowUiInterceptorPath = new URL(
     import.meta.resolve("@scout-for-lol/temporal/workflow-ui-interceptor"),
   ).pathname;
   const workers: Worker[] = [];
-  let httpServers: EventBridgeHandle | undefined;
-  let eventBridge: EventBridgeHandle | undefined;
-
   for (const definition of roleContract.workers) {
     const worker = await createQueueWorker(
       definition,
@@ -322,6 +452,7 @@ async function main(): Promise<void> {
       workflowsPath,
       workflowUiInterceptorPath,
       bootstrap,
+      temporalTracing,
     );
     workers.push(worker);
     jsonLog("info", "Worker created", {
@@ -340,31 +471,13 @@ async function main(): Promise<void> {
     });
   }
 
-  if (roleContract.runsGateway || roleContract.runsEventBridge) {
-    const clientConnection = await Connection.connect({ address });
-    const client = new Client({
-      connection: clientConnection,
-      namespace: bootstrap.namespace,
-      interceptors: {
-        workflow: [new ExecutionMetadataClientInterceptor(bootstrapMetadata)],
-      },
-    });
-
-    if (roleContract.runsGateway) {
-      await registerSchedules(client, {
-        bootstrap: bootstrapMetadata,
-        validateLocalEnvironment:
-          roleContract.validatesScheduleEnvironmentLocally,
-      });
-      jsonLog("info", "Schedules registered");
-
-      httpServers = startHttpServers(client);
-    }
-
-    if (roleContract.runsEventBridge) {
-      eventBridge = startEventBridgeSupervisor(client);
-    }
-  }
+  const { httpServers, eventBridge } = await startRoleServices({
+    address,
+    bootstrapMetadata,
+    callGraphTracing,
+    namespace: bootstrap.namespace,
+    roleContract,
+  });
 
   // The event-loop-backed health endpoint starts only after every worker in
   // this role has been created and all role-specific startup has completed.
@@ -409,6 +522,7 @@ async function main(): Promise<void> {
     }
     await stopMetricsServer();
     await shutdownTracing();
+    await shutdownCallGraphTracing();
     finishControlLifecycle?.();
   };
 

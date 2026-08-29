@@ -91,6 +91,20 @@ export function createTemporalAgentWorkerNetworkPolicy(chart: Chart): void {
           ],
           ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
         },
+        {
+          // The agent worker now boots with temporalFeatureFlagEnvironment()
+          // to read the temporal-call-graph-tracing flag. Flipt has no auth
+          // of its own — reachability IS the authorization model.
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+              },
+              podSelector: { matchLabels: { app: "flipt" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+        },
         // Provider APIs, GitHub, registry metadata, and the Kubernetes API.
         { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
         { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
