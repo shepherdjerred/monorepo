@@ -279,6 +279,10 @@ function recordCodexMetrics(input: {
     { ...labels, type: "cached_input" },
     usage.cachedInputTokens,
   );
+  metrics.tokens.inc(
+    { ...labels, type: "cache_write_input" },
+    usage.cacheWriteInputTokens,
+  );
   metrics.tokens.inc({ ...labels, type: "output" }, usage.outputTokens);
   metrics.tokens.inc(
     { ...labels, type: "reasoning" },
