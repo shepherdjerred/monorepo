@@ -68,8 +68,11 @@ describe("Scout competition Temporal boundary", () => {
       })
       .parse(namespaceJob?.metadata);
     expect(namespaceJobMetadata.annotations["argocd.argoproj.io/hook"]).toBe(
-      "PreSync",
+      "Sync",
     );
+    expect(
+      namespaceJobMetadata.annotations["argocd.argoproj.io/sync-wave"],
+    ).toBe("1");
     const serialized = JSON.stringify(namespaceJob?.spec);
     expect(serialized).toContain("for namespace in prod beta");
     expect(serialized).toContain("--retention 720h");

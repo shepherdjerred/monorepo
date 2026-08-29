@@ -48,6 +48,9 @@ export function createTemporalDomainWorker(
   const deployment = new Deployment(chart, props.name, {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    metadata: {
+      annotations: { "argocd.argoproj.io/sync-wave": "2" },
+    },
     serviceAccount,
     automountServiceAccountToken: props.automountServiceAccountToken ?? false,
     securityContext: { fsGroup: 1000 },

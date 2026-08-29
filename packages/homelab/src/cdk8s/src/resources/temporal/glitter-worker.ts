@@ -40,6 +40,9 @@ function createGlitterWorker(
   const deployment = new Deployment(chart, definition.name, {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    metadata: {
+      annotations: { "argocd.argoproj.io/sync-wave": "2" },
+    },
     serviceAccount,
     automountServiceAccountToken: false,
     securityContext: { fsGroup: 1000 },

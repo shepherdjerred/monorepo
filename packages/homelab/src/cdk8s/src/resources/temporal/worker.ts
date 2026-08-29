@@ -150,6 +150,9 @@ export function createTemporalWorkerDeployment(
   const deployment = new Deployment(chart, "temporal-worker", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    metadata: {
+      annotations: { "argocd.argoproj.io/sync-wave": "2" },
+    },
     serviceAccount,
     automountServiceAccountToken: true,
     securityContext: {

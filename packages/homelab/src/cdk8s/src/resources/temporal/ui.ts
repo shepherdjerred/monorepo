@@ -30,6 +30,9 @@ export function createTemporalUiDeployment(
   const deployment = new Deployment(chart, "temporal-ui", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    metadata: {
+      annotations: { "argocd.argoproj.io/sync-wave": "2" },
+    },
     securityContext: {
       fsGroup: GID,
     },
