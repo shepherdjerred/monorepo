@@ -15,6 +15,7 @@ type TrackedKey =
   | "ENABLE_BACKGROUND_JOBS"
   | "TEMPORAL_ADDRESS"
   | "TEMPORAL_NAMESPACE"
+  | "TEMPORAL_SCHEDULE_RECONCILIATION"
   | "BB_ASK_MODEL"
   | "EXPLORE_MODEL";
 
@@ -26,6 +27,8 @@ function snapshotEnv(): Record<TrackedKey, string | undefined> {
     ENABLE_BACKGROUND_JOBS: Bun.env["ENABLE_BACKGROUND_JOBS"],
     TEMPORAL_ADDRESS: Bun.env["TEMPORAL_ADDRESS"],
     TEMPORAL_NAMESPACE: Bun.env["TEMPORAL_NAMESPACE"],
+    TEMPORAL_SCHEDULE_RECONCILIATION:
+      Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"],
     BB_ASK_MODEL: Bun.env["BB_ASK_MODEL"],
     EXPLORE_MODEL: Bun.env["EXPLORE_MODEL"],
   };
@@ -48,6 +51,7 @@ function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
       key === "ENABLE_BACKGROUND_JOBS" ||
       key === "TEMPORAL_ADDRESS" ||
       key === "TEMPORAL_NAMESPACE" ||
+      key === "TEMPORAL_SCHEDULE_RECONCILIATION" ||
       key === "BB_ASK_MODEL" ||
       key === "EXPLORE_MODEL"
     ) {
@@ -166,6 +170,16 @@ describe("local runtime flags", () => {
     expect(() => configuration.temporalNamespace).toThrow(
       /TEMPORAL_NAMESPACE=prod must match ENVIRONMENT=beta/,
     );
+  });
+
+  test("parses schedule reconciliation mode", () => {
+    Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"] = "disabled";
+    resetConfigurationForTests();
+    expect(configuration.temporalScheduleReconciliation).toBe("disabled");
+
+    Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"] = "invalid";
+    resetConfigurationForTests();
+    expect(() => configuration.temporalScheduleReconciliation).toThrow();
   });
 
   test("rejects disabled gateway or jobs outside development", () => {

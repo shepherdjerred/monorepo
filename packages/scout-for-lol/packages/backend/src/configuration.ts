@@ -47,6 +47,11 @@ function getOptionalEnvVar(
 const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 
+const TemporalScheduleReconciliationSchema = z.enum(["enabled", "disabled"]);
+export type TemporalScheduleReconciliation = z.infer<
+  typeof TemporalScheduleReconciliationSchema
+>;
+
 const ProductAnalyticsConfigurationSchema = z.object({
   projectToken: z.string().min(1),
   apiHost: z.url(),
@@ -126,6 +131,10 @@ function computeConfiguration() {
   const temporalNamespace = ScoutStageSchema.parse(
     env.get("TEMPORAL_NAMESPACE").required().asString(),
   );
+  const temporalScheduleReconciliation =
+    TemporalScheduleReconciliationSchema.parse(
+      getOptionalEnvVar("TEMPORAL_SCHEDULE_RECONCILIATION", "enabled"),
+    );
   const config = {
     version: getRequiredEnvVar("VERSION"),
     gitSha: getRequiredEnvVar("GIT_SHA"),
@@ -177,6 +186,7 @@ function computeConfiguration() {
     enableBackgroundJobs,
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
     temporalNamespace,
+    temporalScheduleReconciliation,
     temporalLegacyNamespace: TemporalLegacyNamespaceSchema.optional().parse(
       getOptionalEnvVar("TEMPORAL_LEGACY_NAMESPACE"),
     ),
@@ -322,6 +332,9 @@ const configuration: Configuration = {
   },
   get temporalLegacyNamespace() {
     return getConfiguration().temporalLegacyNamespace;
+  },
+  get temporalScheduleReconciliation() {
+    return getConfiguration().temporalScheduleReconciliation;
   },
   get discordToken() {
     return getConfiguration().discordToken;
