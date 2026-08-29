@@ -10,12 +10,40 @@ export function requiredArgument(
   return value;
 }
 
-export function optionalArgument(
+export function parseFlagArguments(
   args: readonly string[],
+  allowedFlags: ReadonlySet<string>,
+): ReadonlyMap<string, string> {
+  const parsed = new Map<string, string>();
+  for (let index = 0; index < args.length; index += 2) {
+    const flag = args[index];
+    if (flag?.startsWith("--") !== true) {
+      throw new Error(`Unexpected positional argument ${flag ?? "<missing>"}`);
+    }
+    if (!allowedFlags.has(flag)) {
+      throw new Error(`Unknown argument ${flag}`);
+    }
+    if (parsed.has(flag)) {
+      throw new Error(`Duplicate argument ${flag}`);
+    }
+    const value = args[index + 1];
+    if (value === undefined || value.startsWith("--")) {
+      throw new Error(`${flag} requires a value`);
+    }
+    parsed.set(flag, value);
+  }
+  return parsed;
+}
+
+export function requiredParsedArgument(
+  args: ReadonlyMap<string, string>,
   flag: string,
-): string | undefined {
-  const index = args.indexOf(flag);
-  return index === -1 ? undefined : requiredArgument(args, flag);
+): string {
+  const value = args.get(flag);
+  if (value === undefined) {
+    throw new Error(`${flag} requires a value`);
+  }
+  return value;
 }
 
 export function requiredEnvironment(

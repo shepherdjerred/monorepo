@@ -46,6 +46,17 @@ export function pinCandidatesForDigests(
         candidates[target] = candidate;
       }
     }
+    if (
+      key === "shepherdjerred/scout-for-lol/beta" &&
+      catalogImagePinsMatch(
+        versionCatalogSource,
+        "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+        "shepherdjerred/scout-for-lol/beta/workflows/stable",
+      )
+    ) {
+      candidates["shepherdjerred/scout-for-lol/beta/workflows/candidate"] =
+        candidate;
+    }
   }
   return candidates;
 }

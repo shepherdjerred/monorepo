@@ -709,6 +709,58 @@
       ]
     },
     {
+      "name": "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-12197@sha256:9acbf285a1fbe164deea3e2fe0a16a000a442cc0d269e74b2e4850f49e4946db",
+      "notes": [
+        "Candidate Scout beta Workflow Worker image - updated by version commit-back",
+        "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/scout-for-lol/beta/workflows/stable",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-12197@sha256:9acbf285a1fbe164deea3e2fe0a16a000a442cc0d269e74b2e4850f49e4946db",
+      "notes": [
+        "Stable Scout beta Workflow Worker image - promoted after a 24-hour clean soak",
+        "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/scout-for-lol/prod/workflows/candidate",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      "notes": [
+        "Candidate Scout prod Workflow Worker image - advanced explicitly after beta acceptance",
+        "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/scout-for-lol/prod/workflows/stable",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      "notes": [
+        "Stable Scout prod Workflow Worker image - promoted after a 24-hour clean soak",
+        "not managed by renovate"
+      ]
+    },
+    {
       "name": "shepherdjerred/starlight-karma-bot/beta",
       "category": "internal-image",
       "artifactType": "image",

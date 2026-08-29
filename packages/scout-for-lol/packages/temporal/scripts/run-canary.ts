@@ -52,6 +52,8 @@ const { values } = parseArgs({
     address: { type: "string", default: "127.0.0.1:7233" },
     namespace: { type: "string", default: "default" },
     "canary-id": { type: "string" },
+    "deployment-name": { type: "string" },
+    "build-id": { type: "string" },
   },
   strict: true,
 });
@@ -62,9 +64,19 @@ const options = z
     address: z.string().min(1),
     namespace: z.string().min(1),
     "canary-id": z.string().min(1).optional(),
+    "deployment-name": z.string().min(1).optional(),
+    "build-id": z
+      .string()
+      .regex(/^[0-9a-f]{40}$/)
+      .optional(),
   })
   .parse(values);
 const canaryId = options["canary-id"] ?? globalThis.crypto.randomUUID();
+const deploymentName = options["deployment-name"];
+const buildId = options["build-id"];
+if ((deploymentName === undefined) !== (buildId === undefined)) {
+  throw new Error("--deployment-name and --build-id must be supplied together");
+}
 const temporalTls = TemporalTlsSchema.parse(process.env["TEMPORAL_TLS"]);
 const connection = await Connection.connect({
   address: options.address,
@@ -78,6 +90,13 @@ try {
     workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
     taskQueue: scoutTaskQueues(options.stage).workflow,
     args: [{ stage: options.stage, canaryId }],
+    ...(deploymentName === undefined || buildId === undefined
+      ? {}
+      : {
+          versioningOverride: {
+            pinnedTo: { deploymentName, buildId },
+          },
+        }),
   });
   let rawResults: unknown;
   try {

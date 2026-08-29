@@ -58,14 +58,16 @@ function parseCatalog(raw: string): z.infer<typeof CatalogSchema> {
 export async function prepareStablePinPromotion(
   catalogPath: string,
   statePath: string,
+  candidatePinName = "shepherdjerred/temporal-worker/workflows/candidate",
+  stablePinName = "shepherdjerred/temporal-worker/workflows/stable",
+  imageRepository = "ghcr.io/shepherdjerred/temporal-worker",
+>>>>>>> c1591cf3d0 (feat(temporal): prepare Scout workflow deployments)
 ): Promise<StablePinPromotion> {
   const catalog = parseCatalog(await Bun.file(catalogPath).text());
-  const candidateName = "shepherdjerred/temporal-worker/workflows/candidate";
-  const stableName = "shepherdjerred/temporal-worker/workflows/stable";
   const candidate = catalog.entries.find(
-    (entry) => entry.name === candidateName,
+    (entry) => entry.name === candidatePinName,
   );
-  const stable = catalog.entries.find((entry) => entry.name === stableName);
+  const stable = catalog.entries.find((entry) => entry.name === stablePinName);
   if (candidate === undefined || stable === undefined) {
     throw new Error("Temporal workflow stable/candidate pins are missing");
   }
@@ -100,7 +102,7 @@ export async function prepareStablePinPromotion(
     },
   };
   return {
-    candidateImage: `ghcr.io/shepherdjerred/temporal-worker:${candidateValue}`,
+    candidateImage: `${imageRepository}:${candidateValue}`,
     contents: `${JSON.stringify(catalog, null, 2)}\n`,
     stateContents: `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`,
     alreadyPromoted,
