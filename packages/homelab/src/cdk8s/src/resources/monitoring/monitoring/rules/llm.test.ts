@@ -68,12 +68,31 @@ test("alerts on LLM spend and on a silent Broadcast webhook", () => {
     `> ${LLM_DAILY_SPEND_CRITICAL_USD.toString()}`,
   );
 
-  // BYOK routes bill nothing through OpenRouter, so an actual-only ceiling
-  // would miss them entirely. Both accounting sources must be in the ceiling.
-  for (const spendAlert of ["LlmDailySpendHigh", "LlmDailySpendCritical"]) {
-    const expr = alertNamed(spendAlert)?.expr?.value;
+  // Every cost alert must use the same billed-cost convention. BYOK routes bill
+  // nothing through OpenRouter and report `actual` of exactly zero, so an
+  // actual-only expression misses the largest line item in the fleet -- and for
+  // the spike alert would hold both the ratio and the floor at zero, making it
+  // structurally incapable of firing for that class of workload.
+  const costAlerts = [
+    "LlmDailySpendHigh",
+    "LlmDailySpendCritical",
+    "LlmWorkloadCostSpike",
+  ];
+  for (const costAlert of costAlerts) {
+    const expr = alertNamed(costAlert)?.expr?.value;
     expect(expr).toContain('type=~"actual|upstream"');
-    expect(expr).toContain("max by (service, workload, model)");
+    expect(expr).not.toContain('type="actual"');
+
+    // Ordering is the correctness property, not merely the presence of both
+    // aggregations. These series carry `pod`, so a deploy inside the window
+    // leaves two counter series per workload; selecting the maximum before
+    // summing them keeps only the longer-lived pod and silently understates
+    // spend. The per-type sum must therefore appear *inside* the max.
+    const maxAt = expr?.indexOf("max by (service, workload, model)") ?? -1;
+    const sumAt =
+      expr?.indexOf("sum by (service, workload, model, type)") ?? -1;
+    expect(maxAt).toBeGreaterThanOrEqual(0);
+    expect(sumAt).toBeGreaterThan(maxAt);
   }
 
   // The spike alert needs both halves: a ratio alone fires on any burst from a

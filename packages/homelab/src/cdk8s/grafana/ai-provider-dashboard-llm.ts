@@ -95,10 +95,10 @@ export function addLlmPanels(
     createTimeseriesPanel({
       title: "Top Cost by Feature (24h)",
       description:
-        "Rolling 24h billed spend per workload. Takes the per-series maximum of OpenRouter's charged cost and upstream inference cost so BYOK routes, which bill nothing through OpenRouter and would read as $0 under an actual-only query, are still counted.",
+        "Rolling 24h billed spend per workload. Sums each accounting type across pod lifetimes first, then takes the larger of OpenRouter's charged cost and upstream inference cost, so BYOK routes -- which bill nothing through OpenRouter and read as $0 under an actual-only query -- are counted, and a deploy inside the window does not discard the shorter pod's spend.",
       targets: [
         {
-          query: `topk(10, sum by (service, workload) (max by (service, workload, model) (increase(llm_cost_usd_total{${llmFilter},type=~"actual|upstream"}[24h])))) or on() vector(0)`,
+          query: `topk(10, sum by (service, workload) (max by (service, workload, model) (sum by (service, workload, model, type) (increase(llm_cost_usd_total{${llmFilter},type=~"actual|upstream"}[24h]))))) or on() vector(0)`,
           legend: "{{service}} {{workload}}",
         },
       ],

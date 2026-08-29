@@ -5,37 +5,72 @@ import { escapePrometheusTemplate } from "./shared.ts";
 /**
  * Daily spend ceilings for `llm_cost_usd_total`, in USD.
  *
- * Measured baseline at authoring time was ~$2.55/day summed across every
- * service and workload, so the warning tier is roughly 3x headroom and the
- * critical tier roughly 6x. Both are deliberately coarse: they exist to catch a
- * runaway agent loop or a model-pin change, not to police normal variance.
+ * Anchored on the measured distribution of `BILLED_COST_24H`, not on a guess:
+ * a 7-day mean of ~$8.20/day and a worst observed rolling 24h of ~$20.80.
+ * Warning sits at roughly 2x that worst real day and 5x the mean; critical at
+ * roughly 3.5x the worst day and 9x the mean.
+ *
+ * The headroom is deliberate. These exist to catch a runaway agent loop or a
+ * model-pin change -- an order-of-magnitude event -- not to police normal
+ * variance, and normal variance here is already a 4x spread between a quiet day
+ * and a busy one. Tightening them toward the mean would page on a busy Sunday.
+ *
+ * Re-derive rather than nudge these if the fleet's shape changes:
+ *   max_over_time(<BILLED_COST_24H>[7d:1h])
  */
-export const LLM_DAILY_SPEND_WARNING_USD = 8;
-export const LLM_DAILY_SPEND_CRITICAL_USD = 15;
+export const LLM_DAILY_SPEND_WARNING_USD = 40;
+export const LLM_DAILY_SPEND_CRITICAL_USD = 75;
 
 /**
  * A workload must both spike relative to its own daily rate AND clear this
  * hourly floor before it alerts. Without the floor, a workload that normally
  * costs fractions of a cent trips the ratio on any burst of ordinary traffic.
+ *
+ * Both sides of the comparison use `billedCost`, not `type="actual"` alone. A
+ * BYOK workload reports `actual` of exactly zero, so an actual-only ratio and
+ * floor would both stay at zero and the alert could never detect a runaway in
+ * precisely the class of workload the daily ceilings exist to catch.
  */
 export const LLM_WORKLOAD_SPIKE_RATIO = 5;
 export const LLM_WORKLOAD_SPIKE_FLOOR_USD_PER_HOUR = 0.5;
 
 /**
- * Cost accounting that reflects what we are actually billed.
+ * Billed LLM cost, as one expression every cost alert is built from.
  *
  * `actual` is what OpenRouter charged. For BYOK routes OpenRouter charges
  * nothing and the real money is in `upstream` (`upstream_inference_cost`), so an
- * `actual`-only ceiling would miss the largest single line item in the fleet.
- * Taking the per-series maximum covers both without double counting, because
- * the two are equal on ordinary non-BYOK routes.
+ * `actual`-only expression would miss the largest single line item in the fleet.
+ * Taking the per-model maximum of the two covers both without double counting,
+ * because they are equal on ordinary non-BYOK routes.
  *
- * This is deliberately conservative pending the OpenRouter Broadcast
- * comparison that will settle the `actual` vs `upstream` semantics: a spend
- * ceiling should err toward firing.
+ * The inner `sum` is load-bearing and must stay inside the `max`. These series
+ * carry `pod` and `instance`, so a deploy inside the window leaves two counter
+ * series per workload. Selecting the maximum first would keep only the larger
+ * pod lifetime -- $5 before a restart and $5 after would evaluate as $5, not
+ * $10, and silently understate spend after every deploy. Summing per accounting
+ * type first collapses those lifetimes, and only then is the larger of `actual`
+ * and `upstream` chosen.
+ *
+ * Conservative on purpose, pending the OpenRouter Broadcast comparison that
+ * will settle the `actual` vs `upstream` semantics: a spend alert should err
+ * toward firing.
  */
-const BILLED_COST_24H =
-  'sum(max by (service, workload, model) (increase(llm_cost_usd_total{type=~"actual|upstream"}[24h])))';
+function billedCost(input: {
+  aggregation: "increase" | "rate";
+  window: string;
+}): string {
+  const selector = `llm_cost_usd_total{type=~"actual|upstream"}`;
+  const perType = `sum by (service, workload, model, type) (${input.aggregation}(${selector}[${input.window}]))`;
+  return `max by (service, workload, model) (${perType})`;
+}
+
+/** Fleet-wide billed spend over 24h, for the daily ceilings. */
+const BILLED_COST_24H = `sum(${billedCost({ aggregation: "increase", window: "24h" })})`;
+
+/** Billed spend per workload, for the spike comparison. */
+function billedCostByWorkload(window: string): string {
+  return `sum by (service, workload) (${billedCost({ aggregation: "rate", window })})`;
+}
 
 export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
@@ -135,7 +170,7 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "LlmWorkloadCostSpike",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum by (service, workload) (rate(llm_cost_usd_total{type="actual"}[1h])) > ${LLM_WORKLOAD_SPIKE_RATIO.toString()} * sum by (service, workload) (rate(llm_cost_usd_total{type="actual"}[24h])) and sum by (service, workload) (rate(llm_cost_usd_total{type="actual"}[1h])) * 3600 > ${LLM_WORKLOAD_SPIKE_FLOOR_USD_PER_HOUR.toString()}`,
+            `${billedCostByWorkload("1h")} > ${LLM_WORKLOAD_SPIKE_RATIO.toString()} * ${billedCostByWorkload("24h")} and ${billedCostByWorkload("1h")} * 3600 > ${LLM_WORKLOAD_SPIKE_FLOOR_USD_PER_HOUR.toString()}`,
           ),
           for: "15m",
           labels: { severity: "warning", category: "llm" },
