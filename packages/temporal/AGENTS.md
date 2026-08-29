@@ -390,7 +390,7 @@ source-defined registry. The command never pauses, deletes, or updates a
 schedule:
 
 ```bash
-TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
   bun run inventory:report-schedules
 ```
 
