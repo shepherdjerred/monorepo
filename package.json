@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "verify": "bun scripts/verify.ts",
+    "check-flipt-flag-inventory": "bun scripts/check-flipt-flag-inventory.ts",
     "pr:fleet": "bunx turbo run build --filter=@shepherdjerred/pr-fleet-web && bun run --cwd packages/pr-fleet-controller start",
     "pr:fleet:inspect": "bun run --cwd packages/pr-fleet-controller inspect",
     "pr:fleet:replay": "bun run --cwd packages/pr-fleet-controller replay",

@@ -66,6 +66,8 @@ const ManagedFlagSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
+export type ManagedFlag = z.infer<typeof ManagedFlagSchema>;
+
 export const ManagedFlagInventorySchema = z
   .object({
     version: z.literal(1),

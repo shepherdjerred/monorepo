@@ -145,4 +145,28 @@ describe("Flipt chart", () => {
     // and update checks and telemetry are off, so nothing else is legitimate.
     expect(policy.spec.egress).toHaveLength(1);
   });
+
+  it("allows the Temporal repo worker to read the managed snapshot", () => {
+    const policy = z
+      .object({
+        spec: z.object({
+          ingress: z.array(z.unknown()),
+        }),
+      })
+      .loose()
+      .parse(
+        findManifest(synthesize(), "NetworkPolicy", "flipt-ingress-netpol"),
+      );
+    expect(policy.spec.ingress).toContainEqual(
+      expect.objectContaining({
+        from: expect.arrayContaining([
+          {
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+            },
+          },
+        ]),
+      }),
+    );
+  });
 });

@@ -162,6 +162,9 @@ export function createTemporalOperationsWorkers(
       ALERTMANAGER_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
       ),
+      FLIPT_URL: EnvValue.fromValue(
+        "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+      ),
       FRESHRSS_API_URL: EnvValue.fromValue(
         "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",
       ),

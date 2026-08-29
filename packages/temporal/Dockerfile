@@ -48,6 +48,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
+  packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
   packages/llm-models \
@@ -368,6 +369,7 @@ COPY --from=prod-deps /app/ /app/
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
+  packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
   packages/home-assistant \

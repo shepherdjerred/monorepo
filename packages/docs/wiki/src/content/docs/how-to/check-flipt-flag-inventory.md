@@ -6,7 +6,9 @@ sidebar:
 ---
 
 Run the operator-only inventory check when you change Flipt state or need to
-diagnose runtime flag drift.
+diagnose runtime flag drift. A daily Temporal workflow performs the same
+key-set check and publishes a `FliptManagedFlagDrift` warning to Alertmanager;
+the alert resolves after a later verified aligned snapshot.
 
 ## 1. Set the endpoint
 
@@ -41,6 +43,11 @@ The check fails when Flipt differs from the inventory in any of these areas:
 
 Fix the repository inventory or the audited Flipt state, then run the command
 again until it reports alignment.
+
+The scheduled alert is read-only. It never deletes Flipt flags or edits the
+inventory. A failed snapshot request does not resolve an existing alert; the
+workflow fails so the Temporal failure watcher can report the unavailable
+check separately.
 
 :::caution
 Flipt has no authentication. Network reachability is the authorization

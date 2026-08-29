@@ -47,6 +47,20 @@ export const EARLY_SCHEDULES: ScheduleDefinition[] = [
     memo: "Hourly FreshRSS Repo Stack reconciliation before feed refresh",
   },
   {
+    id: "flipt-flag-inventory-daily",
+    workflowType: "runFliptFlagInventory",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "15 6 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+    memo: "Daily Flipt managed-flag inventory drift check with Alertmanager fire/resolve",
+  },
+  {
     id: "buildkite-bun-cache-gc",
     workflowType: "runBunCacheGcWorkflow",
     args: [],

@@ -1894,6 +1894,7 @@
         "@scout-for-lol/temporal": "workspace:*",
         "@sentry/bun": "^10.70.0",
         "@shepherdjerred/code-review": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/glitter-context": "workspace:*",
         "@shepherdjerred/home-assistant": "workspace:*",
         "@shepherdjerred/llm-models": "workspace:*",

@@ -158,6 +158,26 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     },
   });
 
+  new KubeNetworkPolicy(chart, "temporal-repo-flipt-netpol", {
+    metadata: { name: "temporal-repo-flipt-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "repo-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+
   new KubeNetworkPolicy(chart, "temporal-infra-api-netpol", {
     metadata: { name: "temporal-infra-api-netpol" },
     spec: {
