@@ -193,7 +193,7 @@ describe("Temporal workflow outcome rules", () => {
     const expression = findFailureRule(
       "TemporalDefaultNamespaceStartAttempted",
     );
-    expect(expression).toContain('namespace="default"');
+    expect(expression).toContain('exported_namespace="default"');
     expect(expression).toContain("StartWorkflowExecution");
     expect(expression).toContain("SignalWithStartWorkflowExecution");
     expect(expression).not.toContain("poll");

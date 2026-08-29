@@ -180,6 +180,10 @@ describe("local runtime flags", () => {
     Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"] = "invalid";
     resetConfigurationForTests();
     expect(() => configuration.temporalScheduleReconciliation).toThrow();
+
+    Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"] = "auto";
+    resetConfigurationForTests();
+    expect(configuration.temporalScheduleReconciliation).toBe("auto");
   });
 
   test("rejects disabled gateway or jobs outside development", () => {
