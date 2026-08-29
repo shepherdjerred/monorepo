@@ -55,9 +55,12 @@ reconciles only `prod` and `beta` on its next restart. After the cutover
 command succeeds, restart the gateway so it observes the drained source.
 
 ```bash
-TEMPORAL_NAMESPACE=prod bun run migrate:namespaces -- prepare
-TEMPORAL_NAMESPACE=prod bun run migrate:namespaces -- prepare --confirm
-TEMPORAL_NAMESPACE=prod bun run migrate:namespaces -- cutover --confirm
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
+  bun run migrate:namespaces -- prepare
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
+  bun run migrate:namespaces -- prepare --confirm
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
+  bun run migrate:namespaces -- cutover --confirm
 ```
 
 Record the cutover timestamp and use it for the final audit. Rollback is

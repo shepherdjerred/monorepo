@@ -1,5 +1,6 @@
 const CONFIGURATION_PAUSE_NOTE =
   "Paused automatically until required Glitter corpus credentials are configured";
+const MIGRATION_NOTE_PREFIX = "temporal-namespace-migration:v1:";
 
 type ScheduleStateDefinition = {
   requiredEnvironment?: readonly string[];
@@ -44,6 +45,9 @@ export function buildScheduleState(
     return previous.note === undefined
       ? { paused: true }
       : { paused: true, note: previous.note };
+  }
+  if (previous?.note?.startsWith(MIGRATION_NOTE_PREFIX) === true) {
+    return { paused: false, note: previous.note };
   }
   if (previous === undefined && schedule.initialPauseNote !== undefined) {
     return { paused: true, note: schedule.initialPauseNote };
