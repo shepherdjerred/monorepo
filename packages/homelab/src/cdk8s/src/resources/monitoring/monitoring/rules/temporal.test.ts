@@ -117,6 +117,7 @@ describe("Temporal workflow outcome rules", () => {
       throw new Error("Missing TemporalWorkerMetricsDown alert");
     }
     expect(workerMetricsDown.for).toBe("5m");
+    expect(workerMetricsDown.expr.value).toContain("absent(up{");
 
     const workflowPollerExpressions = failuresGroup.rules
       .filter(

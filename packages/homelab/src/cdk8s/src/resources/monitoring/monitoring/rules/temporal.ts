@@ -277,7 +277,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           // chart name, so match the stable canonical worker suffixes and
           // require every endpoint to be present and up.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'count(up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) < 9 or min(up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) == 0',
+            'absent(up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) or count(up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) < 9 or min(up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) == 0',
           ),
           for: "5m",
           labels: {
