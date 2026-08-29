@@ -28,7 +28,7 @@ export function createTemporalIngressWorkers(
         "control",
         "temporal-gateway",
       ),
-      TEMPORAL_SCHEDULE_RECONCILIATION: EnvValue.fromValue("disabled"),
+      TEMPORAL_SCHEDULE_RECONCILIATION: EnvValue.fromValue("auto"),
       GITHUB_WEBHOOK_SECRET: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "GITHUB_WEBHOOK_SECRET",

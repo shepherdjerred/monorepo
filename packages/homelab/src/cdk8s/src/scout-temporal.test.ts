@@ -107,7 +107,7 @@ describe("Scout competition Temporal boundary", () => {
       );
       if (name === "temporal-temporal-gateway") {
         expect(serialized, name).toContain(
-          '"name":"TEMPORAL_SCHEDULE_RECONCILIATION","value":"disabled"',
+          '"name":"TEMPORAL_SCHEDULE_RECONCILIATION","value":"auto"',
         );
       }
     }

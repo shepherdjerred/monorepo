@@ -10,6 +10,10 @@ describe("schedule reconciliation mode", () => {
     expect(parseScheduleReconciliationMode("disabled")).toBe("disabled");
   });
 
+  test("accepts the migration-safe automatic mode", () => {
+    expect(parseScheduleReconciliationMode("auto")).toBe("auto");
+  });
+
   test("rejects unknown modes", () => {
     expect(() => parseScheduleReconciliationMode("paused")).toThrow();
   });

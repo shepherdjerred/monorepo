@@ -34,6 +34,7 @@ import {
 import type { QueueWorkerDefinition } from "./worker-config.ts";
 import {
   parseScheduleReconciliationMode,
+  isScheduleNamespaceDrained,
   type ScheduleReconciliationMode,
 } from "./shared/schedule-reconciliation.ts";
 
@@ -294,6 +295,7 @@ async function startControlSurfaces(input: {
   address: string;
   namespace: TemporalNamespace;
   scheduleReconciliation: ScheduleReconciliationMode;
+  legacyNamespace: LegacyTemporalNamespace | undefined;
   roleContract: ReturnType<typeof getWorkerRoleContract>;
 }): Promise<{
   httpServers: EventBridgeHandle | undefined;
@@ -309,11 +311,27 @@ async function startControlSurfaces(input: {
     namespace: input.namespace,
   });
 
+  let shouldReconcileSchedules = input.scheduleReconciliation === "enabled";
+  if (input.scheduleReconciliation === "auto") {
+    shouldReconcileSchedules =
+      input.legacyNamespace === undefined ||
+      (await isScheduleNamespaceDrained(
+        new Client({
+          connection,
+          namespace: input.legacyNamespace,
+        }),
+      ));
+    jsonLog(
+      "info",
+      shouldReconcileSchedules
+        ? "Legacy schedule namespace drained"
+        : "Legacy schedule namespace still active",
+      { namespace: input.legacyNamespace ?? "none" },
+    );
+  }
+
   let httpServers: EventBridgeHandle | undefined;
-  if (
-    input.roleContract.runsGateway &&
-    input.scheduleReconciliation === "enabled"
-  ) {
+  if (shouldReconcileSchedules && input.roleContract.runsGateway) {
     const scheduleNamespaces: readonly TemporalNamespace[] =
       input.namespace === "prod" ? ["prod", "beta"] : [input.namespace];
     for (const namespace of scheduleNamespaces) {
@@ -376,6 +394,7 @@ async function main(): Promise<void> {
     address,
     namespace,
     scheduleReconciliation,
+    legacyNamespace,
     roleContract,
   });
 
