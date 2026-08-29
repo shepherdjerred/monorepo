@@ -10,11 +10,6 @@ import {
 } from "#src/betting/constants.ts";
 import { EARNED_REWARDS } from "#src/betting/earnings.ts";
 import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
-import { PEEK_DELAY_MS } from "#src/betting/pool-open.ts";
-import {
-  MINIMUM_PRICE,
-  PEEK_PASS_DURATION_MS,
-} from "#src/betting/peek-pass.ts";
 import {
   WEEKLY_PARLAY_ELIGIBLE_QUEUES,
   WEEKLY_PARLAY_MAX_LEGS,
@@ -56,10 +51,6 @@ const BUCKS_COLOR = 0x2e_cc_71;
  */
 function minutes(milliseconds: number): string {
   return Math.floor(milliseconds / 60_000).toString();
-}
-
-function hours(milliseconds: number): string {
-  return Math.floor(milliseconds / 3_600_000).toString();
 }
 
 export function buildBbRulesEmbed(): EmbedBuilder {
@@ -128,14 +119,6 @@ export function buildBbRulesEmbed(): EmbedBuilder {
           `\`/bb transfer\` spends at least **${formatInteger(MINIMUM_BUCKS_TRANSFER)} BB** from your wallet. ` +
           "The recipient gets half, rounded down, and the house gets half, rounded up. " +
           "Both people need existing wallets in this server. Transfers are immediate, irreversible, and post a public receipt with the exact split but no balances.",
-      },
-      {
-        name: "Peek passes",
-        value:
-          `\`/bb pass\` buys **${hours(PEEK_PASS_DURATION_MS)} hours** of private pregame estimates. ` +
-          `The price scales with your balance and how long you have held it, minimum **${formatInteger(MINIMUM_PRICE)} BB**. ` +
-          `Then \`/bb peek game:<tracked player>\` once the game has been live for **${minutes(PEEK_DELAY_MS)} minutes**. ` +
-          "Estimates are experimental, frozen before the game, and disappear when the market resolves.",
       },
     );
 }

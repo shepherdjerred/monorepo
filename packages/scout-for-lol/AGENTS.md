@@ -969,8 +969,8 @@ value" while `/bb prizes` printed CAD figures to $1,000,000 with no
 cross-reference.
 
 **`/bb rules` is the only place a rule is stated.** Every other surface shows
-numbers and points at it. Market messages, confirmations, `/bb balance`,
-`/bb open`, and `/bb history` carry no fee, window, cap, or rounding
+numbers and points at it. Market messages, confirmations, `/bb balance`, and
+`/bb history` carry no fee, window, cap, or rounding
 explanation. The one deliberate exception is the bet confirmation's "Only
 matched BB are at risk", which changes what the number above it means.
 
@@ -983,15 +983,14 @@ time. So every number in `/bb rules` is interpolated from the constant that
 implements it, and `settlementHouseCut`/`cancellationHouseCut` derive from
 `HOUSE_CUT_PERCENT` rather than open-coding it. Do not hand-type one.
 
-`/bb balance`, `/bb history`, `/bb pass`, and `/bb peek` are private to the
+`/bb balance` and `/bb history` are private to the
 caller. History uses caller-bound `bbnav:` component IDs and a frozen maximum
-ledger ID so new entries cannot reshuffle pages. `/bb open` shows anonymous
-side totals, never bettor identities or inferred odds. `/bb pass` quotes a
-per-guild 24-hour entitlement and binds its confirmation to the caller and
-guild with a ten-minute `bbpass:` component. `/bb peek game:<alias>` reveals
-the frozen pregame estimate from that tracked player's team perspective,
-starting exactly two minutes after game start and ending when the pool settles
-or is voided. There is no on-demand leaderboard:
+ledger ID so new entries cannot reshuffle pages. Market digests show anonymous
+side totals, never bettor identities or inferred odds. Betting itself is
+button-only: there is no slash command to place, top up, or cancel a position,
+and the retired peek feature (`/bb pass`/`/bb peek`) no longer exists — the
+pregame estimate is visible only in the settlement recap. There is no
+on-demand leaderboard:
 the complete non-house wallet list is posted Fridays at 5 PM
 America/Los_Angeles in the shared Common Denominator channel. Both deployments
 run the cron, but only the Discord application in the one enabled guild posts;
@@ -1235,14 +1234,6 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   privately acknowledges the sender and posts one public Western Union receipt
   with restricted mentions and no balances. Delivery failure is observed and
   reported privately but never rolls back or retries the completed transfer.
-- **A peek pass spends aged balance, not pending stakes.** Remaining balance is
-  reconstructed from the ledger as FIFO credit lots after every debit consumes
-  the oldest lot. The price is
-  `max(5, ceil(balance × min(25%, 10% + full weighted weeks)))`. Confirmation's
-  first statement conditionally claims an inactive pass for 24 hours. Under
-  that write lock it rebuilds the lots and price; an expired or changed quote
-  rolls the claim back and returns a fresh quote. Matching `peek_pass` ledger
-  rows debit the buyer and credit the guild house in the same transaction.
 - **One pool per `(matchId, serverId)`; a bet stores a `predictedTeamId`.**
   Every 5v5 outcome is one binary event, so the prematch UI offers exactly two
   controls rather than repeating a pair for every tracked player. That
@@ -1256,12 +1247,6 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   `predictedTeamId` remains authoritative, `custom-id.ts` still encodes
   `"W"`/`"L"`, and `teamIdForSubjectOutcome`/`subjectWinsForTeam` are exact
   inverses, so the framing is lossless in both directions.
-- **`/bb bet` takes four static choices — Win, Lose, Blue, Red.**
-  Slash-command choices are frozen at registration and cannot vary per game, so
-  Blue/Red are what make a per-game distinction expressible at all. `win`/`lose`
-  on a mixed lobby resolves to `{ kind: "ambiguous" }` and is answered with an
-  explanation, never guessed. Its tracked-player `game` option identifies the
-  open pool and does not define the wagered outcome.
 - **Settlement idempotency is the `poolState` column, not a marker table.**
   Unlike `MatchAiAttempt` — marked _before_ its call because OpenAI spend cannot
   join a transaction — every side effect here is local, so the transition
@@ -1381,8 +1366,7 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   out with a silent `deferUpdate()` and counted as `bb/malformed`, never as
   `bb/success`.
 - **Pregame estimates are never public.** Prematch messages contain only market
-  controls. A pass holder sees the estimate ephemerally after the two-minute
-  delay. Settlement may reveal it after the result, except that
+  controls. Settlement may reveal the estimate after the result, except that
   calls displaying as 45–55% remain suppressed. `predictionVerdict` also
   returns nothing for those near-even rows because scoring them would claim a
   direction the stored estimate did not take.
@@ -1390,7 +1374,7 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   `src/metrics/betting.ts` holds the counters and gauges;
   `src/betting/transition-log.ts` holds `logBucksTransition`. Both fire
   **after** the owning `$transaction` resolves — `settleOnePool`,
-  `matchPoolAtClose`, `cancelBet`, `placeBet`, and `purchasePeekPass` all
+  `matchPoolAtClose`, `cancelBet`, and `placeBet` all
   return from inside their transaction, so their observations live at the
   call site or in a thin wrapper. A metric emitted inside a transaction that
   then rolls back is a lie that survives forever. `logBucksTransition` never

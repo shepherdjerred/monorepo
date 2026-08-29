@@ -1,19 +1,5 @@
-import { z } from "zod";
 import type { BucksPoolParticipant, RiotTeamId } from "@scout-for-lol/data";
 import { BLUE_TEAM_ID, RED_TEAM_ID } from "#src/betting/constants.ts";
-
-/**
- * What `/bb bet` accepts for the wagered outcome.
- *
- * `win`/`lose` are the ordinary framing, relative to the game's tracked
- * anchor. `blue`/`red` exist because slash-command choices are frozen at
- * registration time and cannot vary per game: they are the escape hatch for
- * the rare lobby with tracked players on both teams, where WIN/LOSE names no
- * single outcome.
- */
-export const BucksOutcomeChoiceSchema = z.enum(["win", "lose", "blue", "red"]);
-
-export type BucksOutcomeChoice = z.infer<typeof BucksOutcomeChoiceSchema>;
 
 export const BETTING_TEAM_IDS: readonly RiotTeamId[] = [
   BLUE_TEAM_ID,
@@ -35,9 +21,6 @@ export type OutcomeFraming = {
    */
   mixedTeams: boolean;
 };
-
-export type OutcomeChoiceResolution =
-  { kind: "resolved"; teamId: RiotTeamId } | { kind: "ambiguous" };
 
 /**
  * A roster participant Scout tracks and can name.
@@ -79,32 +62,6 @@ export function outcomeLabel(
     return shortTeamName(teamId);
   }
   return teamId === framing.anchorTeamId ? "WIN" : "LOSE";
-}
-
-/**
- * Resolve a `/bb bet` choice to the team it wagers on.
- *
- * `blue`/`red` resolve without framing, which is what lets four static choices
- * cover a per-game distinction. `win`/`lose` cannot be resolved for a mixed
- * lobby, and the caller must ask for a side instead of guessing.
- */
-export function resolveOutcomeChoice(
-  choice: BucksOutcomeChoice,
-  framing: OutcomeFraming,
-): OutcomeChoiceResolution {
-  if (choice === "blue") {
-    return { kind: "resolved", teamId: BLUE_TEAM_ID };
-  }
-  if (choice === "red") {
-    return { kind: "resolved", teamId: RED_TEAM_ID };
-  }
-  if (framing.mixedTeams) {
-    return { kind: "ambiguous" };
-  }
-  return {
-    kind: "resolved",
-    teamId: teamIdForSubjectOutcome(framing.anchorTeamId, choice === "win"),
-  };
 }
 
 export function teamIdForSubjectOutcome(

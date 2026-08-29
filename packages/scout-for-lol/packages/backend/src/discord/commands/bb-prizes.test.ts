@@ -35,22 +35,14 @@ describe("/bb prizes", () => {
     );
   });
 
-  test("registers uncapped outcome and parlay stake options", () => {
+  test("registers no slash-betting or peek subcommands", () => {
+    // Betting happens through the buttons on each market message, and the
+    // peek feature is retired. These names coming back is a product decision,
+    // not a refactor.
     const command = bbCommand.toJSON();
-    for (const name of ["bet", "parlay"]) {
-      const subcommand = command.options?.find(
-        (option) => option.name === name,
-      );
-      if (subcommand === undefined || !("options" in subcommand)) {
-        throw new Error(`${name} subcommand is missing its options`);
-      }
-      const amount = subcommand.options?.find(
-        (option) => option.name === "amount",
-      );
-      expect(amount).toEqual(
-        expect.objectContaining({ type: 4, required: true, min_value: 1 }),
-      );
-      expect(JSON.stringify(amount)).not.toContain("max_value");
+    const names = command.options?.map((option) => option.name) ?? [];
+    for (const absent of ["open", "bet", "parlay", "pass", "peek"]) {
+      expect(names).not.toContain(absent);
     }
   });
 
@@ -120,34 +112,12 @@ describe("/bb command contract", () => {
     );
   });
 
-  test("keeps personal and market views private", () => {
+  test("keeps personal views private", () => {
     expect(isPublicBbSubcommand("balance")).toBe(false);
     expect(isPublicBbSubcommand("history")).toBe(false);
-    expect(isPublicBbSubcommand("open")).toBe(false);
-    expect(isPublicBbSubcommand("bet")).toBe(false);
-    expect(isPublicBbSubcommand("pass")).toBe(false);
-    expect(isPublicBbSubcommand("peek")).toBe(false);
+    expect(isPublicBbSubcommand("notifications")).toBe(false);
     expect(isPublicBbSubcommand("rules")).toBe(true);
     expect(isPublicBbSubcommand("prizes")).toBe(true);
-  });
-
-  test("registers a private pass quote and required tracked-game peek", () => {
-    const command = bbCommand.toJSON();
-    const pass = command.options?.find((option) => option.name === "pass");
-    const peek = command.options?.find((option) => option.name === "peek");
-    expect(pass).toEqual(
-      expect.objectContaining({ type: 1, name: "pass", options: [] }),
-    );
-    if (peek === undefined || !("options" in peek)) {
-      throw new Error("expected /bb peek");
-    }
-    expect(peek.options).toEqual([
-      expect.objectContaining({ name: "game", required: true }),
-    ]);
-    // The two-minute delay is a rule, so it lives in /bb rules only.
-    expect(JSON.stringify(buildBbRulesEmbed().toJSON())).toContain(
-      "**2 minutes**",
-    );
   });
 
   test("keeps long pending-position aliases inside Discord's field limit", () => {
@@ -289,12 +259,10 @@ describe("/bb command contract", () => {
   // rules embed and the market copy once stated two different winner fees at
   // the same time because both were hand-typed.
   test("rules derive their numbers from the implementing constants", async () => {
-    const [{ HOUSE_CUT_PERCENT }, constants, { MINIMUM_PRICE }] =
-      await Promise.all([
-        import("#src/betting/house-cut.ts"),
-        import("#src/betting/constants.ts"),
-        import("#src/betting/peek-pass.ts"),
-      ]);
+    const [{ HOUSE_CUT_PERCENT }, constants] = await Promise.all([
+      import("#src/betting/house-cut.ts"),
+      import("#src/betting/constants.ts"),
+    ]);
     const rendered = JSON.stringify(buildBbRulesEmbed().toJSON());
 
     expect(rendered).toContain(`**${HOUSE_CUT_PERCENT.toString()}%**`);
@@ -302,7 +270,6 @@ describe("/bb command contract", () => {
     expect(rendered).toContain(
       `**${constants.HOUSE_MATCH_LIMIT.toString()} BB** per game`,
     );
-    expect(rendered).toContain(`minimum **${MINIMUM_PRICE.toString()} BB**`);
     expect(rendered).toContain(
       `${Math.floor(constants.BETTING_WINDOW_MS / 60_000).toString()} minutes`,
     );

@@ -1,6 +1,6 @@
 ---
 title: Place, top up, and cancel a Bryan Bucks bet
-description: Use the buttons or /bb bet, add to a position while the market is open, and back out before it closes.
+description: Use the buttons on the pre-match message, add to a position while the market is open, and back out before it closes.
 sidebar:
   order: 11
 ---
@@ -16,35 +16,13 @@ Click one of the four stake buttons on the pre-match card. They read **WIN** or
 The confirmation is private. The pre-match message itself is edited to show the
 new totals and your position.
 
-## Place a bet with `/bb bet`
-
-Use this for any amount the buttons do not offer:
-
-```text
-/bb bet game: <tracked player> outcome: Win amount: 25
-```
-
-- `game` picks _which_ open market — it names a tracked player in the game and
-  does not decide the wager.
-- `outcome` is `Win`, `Lose`, `Blue`, or `Red`.
-- `amount` is any positive whole number of BB your wallet can cover.
-
-### When to use Blue or Red
-
-Use them when the tracked players are on opposite teams. Scout will tell you:
-
-```text
-Both teams have a tracked player in this game, so `win` and `lose` are
-ambiguous — pick `Blue` or `Red`.
-```
-
-Slash-command choices cannot change per game, which is why all four are always
-listed even though most games only need Win and Lose.
+When the tracked players are on opposite teams, the buttons read **Blue** and
+**Red** instead — in that lobby "WIN" would not name a single outcome.
 
 ## Add to a position
 
-Run `/bb bet` or click a button again on the same game and the same side. The
-amounts add up into one position; the confirmation shows the new total.
+Click a button again on the same game and the same side. The amounts add up
+into one position; the confirmation shows the new total.
 
 You cannot hold both sides of the same game. Cancel first if you want to switch.
 

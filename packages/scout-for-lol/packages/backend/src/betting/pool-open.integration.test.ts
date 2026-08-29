@@ -16,9 +16,7 @@ import {
 } from "#src/testing/bucks-fixtures.ts";
 import {
   computeGameStartAt,
-  computePeekAvailableAt,
   openBettingPoolsForPrematch,
-  PEEK_DELAY_MS,
   recordPoolMessageRefs,
 } from "#src/betting/pool-open.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -80,12 +78,12 @@ describe("openBettingPoolsForPrematch", () => {
     const detectedAt = new Date("2026-08-19T00:01:00Z");
     const riotStart = new Date("2026-08-19T00:00:00Z").getTime();
     expect(
-      computePeekAvailableAt({
+      computeGameStartAt({
         detectedAt,
         gameStartTime: riotStart,
         gameLength: 60,
       }),
-    ).toEqual(new Date(riotStart + PEEK_DELAY_MS));
+    ).toEqual(new Date(riotStart));
     expect(
       computeGameStartAt({
         detectedAt,
@@ -94,12 +92,12 @@ describe("openBettingPoolsForPrematch", () => {
       }),
     ).toEqual(new Date("2026-08-19T00:00:00Z"));
     expect(
-      computePeekAvailableAt({
+      computeGameStartAt({
         detectedAt,
         gameStartTime: 0,
         gameLength: -30,
       }),
-    ).toEqual(new Date("2026-08-19T00:03:30Z"));
+    ).toEqual(new Date("2026-08-19T00:01:30Z"));
   });
 
   test("does not open a League Classic pool", async () => {

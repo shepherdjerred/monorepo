@@ -96,7 +96,6 @@ beforeAll(async () => {
       matchId: "NA1_BB_ASK_E2E",
       serverId: SERVER,
       detectedAt: SETTLED_AT,
-      peekAvailableAt: SETTLED_AT,
       closesAt: SETTLED_AT,
       roster: JSON.stringify({ participants: roster }),
       poolState: "settled",

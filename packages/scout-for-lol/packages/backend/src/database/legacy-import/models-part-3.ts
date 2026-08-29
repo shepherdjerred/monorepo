@@ -46,7 +46,8 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       // Synthetic house accounts were added after the promoted SQLite image.
       isHouse: row["isHouse"] === undefined ? false : toBool(row, "isHouse"),
       balance: toInt(row, "balance"),
-      peekPassExpiresAt: toDateOrNullIfMissing(row, "peekPassExpiresAt"),
+      // peekPassExpiresAt existed in some SQLite snapshots; the feature and
+      // its column are retired, so the value is deliberately dropped.
       createdAt: toDate(row, "createdAt"),
       updatedAt: toDate(row, "updatedAt"),
     }),
@@ -66,12 +67,8 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       matchId: toStr(row, "matchId"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
       detectedAt: toDate(row, "detectedAt"),
-      // Peek passes were added after the promoted image. Do not make an old
-      // pool peekable immediately; the betting window has already closed.
-      peekAvailableAt:
-        row["peekAvailableAt"] === undefined
-          ? toDate(row, "closesAt")
-          : toDate(row, "peekAvailableAt"),
+      // peekAvailableAt existed in some SQLite snapshots; the feature and its
+      // column are retired, so the value is deliberately dropped.
       closesAt: toDate(row, "closesAt"),
       queueType: toStrOrNull(row, "queueType"),
       roster: toStr(row, "roster"),

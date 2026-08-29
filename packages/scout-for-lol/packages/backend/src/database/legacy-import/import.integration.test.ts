@@ -318,7 +318,6 @@ function buildLegacySqlite(
       matchId: "NA1_pool_1",
       serverId: GUILD,
       detectedAt: NOW,
-      peekAvailableAt: NOW + 120_000,
       closesAt: NOW + 300_000,
       queueType: "RANKED_SOLO_5x5",
       roster: "{}",
@@ -578,11 +577,10 @@ describe("legacy sqlite import", () => {
     ).resolves.toMatchObject({ betId: 1, createdAt: new Date(NOW) });
     await expect(
       oldSchemaPrisma.bucksAccount.findUniqueOrThrow({ where: { id: 1 } }),
-    ).resolves.toMatchObject({ isHouse: false, peekPassExpiresAt: null });
+    ).resolves.toMatchObject({ isHouse: false });
     await expect(
       oldSchemaPrisma.bucksMatchPool.findUniqueOrThrow({ where: { id: 1 } }),
     ).resolves.toMatchObject({
-      peekAvailableAt: new Date(NOW + 300_000),
       prematchContentBase: null,
       matchedAt: null,
       matchingJson: null,

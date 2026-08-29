@@ -8,46 +8,19 @@ import {
   getPersonalBucksView,
   type PersonalBucksView,
 } from "#src/betting/accounts.ts";
-import { placeBet } from "#src/betting/place-bet.ts";
-import { describeResult } from "#src/betting/bet-button.ts";
-import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import {
   BUCKS_GUILD_ONLY,
   BUCKS_NOT_ENABLED,
   withRulesHint,
 } from "#src/betting/copy.ts";
-import { getOpenMarketAggregates } from "#src/betting/open-market.ts";
-import {
-  BucksOutcomeChoiceSchema,
-  subjectWinsForTeam,
-  outcomeLabel,
-  resolveOutcomeChoice,
-} from "#src/betting/team.ts";
-import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
-import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
-import { describeParlayResult } from "#src/betting/parlay-bet-button.ts";
-import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
-import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly-parlay-criteria.ts";
-import { placeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet.ts";
-import { describeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet-button.ts";
-import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-refresh.ts";
-import { selectParlayMarketForAlias } from "#src/betting/parlay-market-selection.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
 import {
   replyBucksAsk,
   type BucksAskAgentRunner,
 } from "#src/discord/commands/bb-ask.ts";
-import {
-  buildOpenMarketSections,
-  buildUnknownGameReplyChunks,
-  parseBettingRoster,
-  resolveOpenGameByAlias,
-  trackedGameAliases,
-} from "#src/discord/commands/bb-market.ts";
-import { replyBbPeekCommand } from "#src/discord/commands/bb-peek.ts";
+import { buildBbRulesEmbed as createBbRulesEmbed } from "#src/discord/commands/bb-rules.ts";
 import {
   replyBbNotifications,
   type BbNotificationCommandDependencies,
@@ -57,15 +30,11 @@ import {
   replyBbPrizes,
   replyBbRules,
 } from "#src/discord/commands/bb-overview.ts";
-import { buildBbRulesEmbed as createBbRulesEmbed } from "#src/discord/commands/bb-rules.ts";
 import {
   replyBbTransfer,
   type BbTransferCommandDependencies,
 } from "#src/discord/commands/bb-transfer.ts";
-import {
-  splitMessageIntoChunks,
-  truncateEmbedFieldValue,
-} from "#src/discord/utils/message.ts";
+import { truncateEmbedFieldValue } from "#src/discord/utils/message.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("command-bb");
@@ -90,8 +59,8 @@ export function buildBbRulesEmbed(): EmbedBuilder {
  * real case — the flag being switched off while a previously registered command
  * lingers — rather than the common path.
  *
- * `/bb bet` shares `placeBet` with the prematch buttons, so the two surfaces
- * cannot drift in what they accept or how they explain a refusal.
+ * Betting itself happens through the buttons on each market message; the
+ * command tree is read-only surfaces plus preferences.
  */
 
 const BUCKS_COLOR = 0x2e_cc_71;
@@ -175,252 +144,6 @@ async function replyBalance(
   });
 }
 
-async function editReplyInChunks(
-  interaction: BbCommandInteraction,
-  chunks: readonly string[],
-): Promise<void> {
-  const first = chunks[0];
-  if (first === undefined) {
-    throw new Error("Bryan Bucks reply produced no Discord content");
-  }
-  await interaction.editReply({ content: first });
-  for (const chunk of chunks.slice(1)) {
-    await interaction.followUp({ content: chunk, ephemeral: true });
-  }
-}
-
-async function replyOpen(
-  interaction: BbCommandInteraction,
-  serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
-): Promise<void> {
-  const pools = await getOpenMarketAggregates({ serverId });
-  const parlays = await prisma.bucksParlayMarket.findMany({
-    where: { serverId, marketState: "open", closesAt: { gt: new Date() } },
-    select: {
-      matchId: true,
-      closesAt: true,
-      definition: { select: { subjects: true } },
-    },
-    orderBy: { closesAt: "asc" },
-  });
-  const weeklyParlays = await prisma.bucksWeeklyParlayMarket.findMany({
-    where: {
-      serverId,
-      marketState: "open",
-      bettingClosesAt: { gt: new Date() },
-    },
-    select: {
-      id: true,
-      bettingClosesAt: true,
-      definition: { select: { subjects: true } },
-      bets: {
-        where: { betOutcome: "pending" },
-        select: { stake: true },
-      },
-    },
-    orderBy: { bettingClosesAt: "asc" },
-  });
-
-  if (
-    pools.length === 0 &&
-    parlays.length === 0 &&
-    weeklyParlays.length === 0
-  ) {
-    await interaction.editReply({
-      content: "Nothing open right now.",
-    });
-    return;
-  }
-
-  const sections = buildOpenMarketSections(pools);
-  for (const parlay of parlays) {
-    const aliases = ParlaySubjectsSchema.parse(
-      JSON.parse(parlay.definition.subjects),
-    ).map((subject) => subject.alias);
-    const closesAtUnix = Math.floor(parlay.closesAt.getTime() / 1000);
-    sections.push(
-      `**Parlay · ${aliases.join(", ")}** · closes <t:${closesAtUnix.toString()}:R> — \`/bb parlay player:${aliases[0] ?? ""}\``,
-    );
-  }
-  for (const parlay of weeklyParlays) {
-    const aliases = WeeklyParlaySubjectsSchema.parse(
-      JSON.parse(parlay.definition.subjects),
-    ).map((subject) => subject.alias);
-    const closesAtUnix = Math.floor(parlay.bettingClosesAt.getTime() / 1000);
-    const totalStaked = parlay.bets.reduce(
-      (total, bet) => total + bet.stake,
-      0,
-    );
-    sections.push(
-      `**Weekly parlay · ${aliases.join(", ")}** · ${parlay.bets.length.toString()} bettors · ${totalStaked.toString()} BB · closes <t:${closesAtUnix.toString()}:R> — use its message buttons`,
-    );
-  }
-  await editReplyInChunks(
-    interaction,
-    splitMessageIntoChunks(sections.join("\n\n")),
-  );
-}
-
-async function replyParlay(
-  interaction: BbCommandInteraction,
-  serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
-  discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
-): Promise<void> {
-  const requestedAlias = interaction.options.getString("player", true);
-  const side = interaction.options.getString("side", true);
-  const stake = interaction.options.getInteger("amount", true);
-  const markets = await prisma.bucksParlayMarket.findMany({
-    where: { serverId, marketState: "open", closesAt: { gt: new Date() } },
-    select: {
-      matchId: true,
-      definition: { select: { subjects: true } },
-    },
-  });
-  const weeklyMarkets = await prisma.bucksWeeklyParlayMarket.findMany({
-    where: {
-      serverId,
-      marketState: "open",
-      bettingClosesAt: { gt: new Date() },
-    },
-    select: { id: true, definition: { select: { subjects: true } } },
-  });
-  const normalizedAlias = requestedAlias.trim().toLocaleLowerCase();
-  const matchingWeekly = weeklyMarkets.filter((market) =>
-    WeeklyParlaySubjectsSchema.parse(
-      JSON.parse(market.definition.subjects),
-    ).some((subject) => subject.alias.toLocaleLowerCase() === normalizedAlias),
-  );
-  const selection = selectParlayMarketForAlias(markets, requestedAlias);
-  if (
-    selection.kind === "ambiguous" ||
-    matchingWeekly.length > 1 ||
-    (selection.kind === "selected" && matchingWeekly.length > 0)
-  ) {
-    await interaction.editReply({
-      content:
-        `Multiple open parlays include **${requestedAlias}**. ` +
-        "Use the buttons on the desired message so Scout can identify the market.",
-    });
-    return;
-  }
-  const weekly = matchingWeekly[0];
-  if (weekly !== undefined && selection.kind === "not_found") {
-    const parsedSide = side === "YES" ? "YES" : "NO";
-    const result = await placeWeeklyParlayBet({
-      marketId: weekly.id,
-      serverId,
-      discordId,
-      side: parsedSide,
-      stake,
-      surface: "command",
-    });
-    await interaction.editReply({ content: describeWeeklyParlayBet(result) });
-    if (result.kind === "placed") {
-      await refreshWeeklyParlayMessage(weekly.id);
-    }
-    return;
-  }
-  if (selection.kind === "not_found") {
-    await interaction.editReply({
-      content:
-        selection.availableAliases.length === 0
-          ? "No parlays are open right now."
-          : `No open parlay for **${requestedAlias}**. Try: ${selection.availableAliases.join(", ")}.`,
-    });
-    return;
-  }
-
-  const parsedSide = side === "YES" ? "YES" : "NO";
-  const result = await placeParlayBet({
-    matchId: selection.market.matchId,
-    serverId,
-    discordId,
-    side: parsedSide,
-    stake,
-    surface: "command",
-  });
-  await interaction.editReply({ content: describeParlayResult(result) });
-  if (result.kind === "placed") {
-    await refreshParlayMessages({
-      matchId: selection.market.matchId,
-      serverId,
-    });
-  }
-}
-
-async function replyBet(
-  interaction: BbCommandInteraction,
-  serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
-  discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
-): Promise<void> {
-  const requestedAlias = interaction.options.getString("game", true);
-  const choice = BucksOutcomeChoiceSchema.parse(
-    interaction.options.getString("outcome", true),
-  );
-  const stake = interaction.options.getInteger("amount", true);
-
-  // Free text rather than autocomplete: matching an alias against the open
-  // pools is a lookup the user can see the result of, and autocomplete would
-  // need a whole extra interaction-routing branch for v1.
-  const pools = await prisma.bucksMatchPool.findMany({
-    where: { serverId, poolState: "open", closesAt: { gt: new Date() } },
-    select: { matchId: true, roster: true },
-  });
-
-  const game = resolveOpenGameByAlias(pools, requestedAlias);
-  if (game !== undefined) {
-    const framing = {
-      anchorTeamId: game.subjectTeamId,
-      mixedTeams: game.mixedTeams,
-    };
-    const resolved = resolveOutcomeChoice(choice, framing);
-    if (resolved.kind === "ambiguous") {
-      // Slash-command choices are frozen at registration, so the rare lobby
-      // with tracked players on both teams has to be handled here rather than
-      // by varying the option list per game.
-      await interaction.editReply({
-        content:
-          "Both teams have a tracked player in this game, so `win` and `lose` are ambiguous — pick `Blue` or `Red`.",
-      });
-      return;
-    }
-    const selectedTeamId = resolved.teamId;
-    const subjectWins = subjectWinsForTeam(game.subjectTeamId, selectedTeamId);
-    const result = await placeBet({
-      matchId: game.matchId,
-      serverId,
-      discordId,
-      subjectPuuid: game.subjectPuuid,
-      subjectWins,
-      stake,
-      surface: "command",
-    });
-    await interaction.editReply({
-      content: describeResult(result, outcomeLabel(selectedTeamId, framing)),
-    });
-    if (result.kind === "placed") {
-      await refreshBucksMessages({ matchId: game.matchId, serverId });
-    }
-    return;
-  }
-
-  const available = pools.flatMap((pool) =>
-    trackedGameAliases(parseBettingRoster(pool.roster)),
-  );
-
-  if (available.length === 0) {
-    await interaction.editReply({
-      content: "Nothing open right now.",
-    });
-    return;
-  }
-
-  await editReplyInChunks(
-    interaction,
-    buildUnknownGameReplyChunks(requestedAlias, available),
-  );
-}
-
 export async function executeBb(
   interaction: BbCommandInteraction,
   dependencies: BbCommandDependencies = {},
@@ -474,9 +197,6 @@ export async function executeBb(
       case "transfer":
         await replyBbTransfer(interaction, serverId, discordId, dependencies);
         break;
-      case "open":
-        await replyOpen(interaction, serverId);
-        break;
       case "ask":
         await replyBucksAsk(
           interaction,
@@ -494,21 +214,6 @@ export async function executeBb(
           discordId,
           dependencies,
         );
-        break;
-      case "bet":
-        await replyBet(interaction, serverId, discordId);
-        break;
-      case "parlay":
-        await replyParlay(interaction, serverId, discordId);
-        break;
-      case "pass":
-      case "peek":
-        await replyBbPeekCommand({
-          subcommand,
-          interaction,
-          serverId,
-          discordId,
-        });
         break;
       default:
         await interaction.editReply({

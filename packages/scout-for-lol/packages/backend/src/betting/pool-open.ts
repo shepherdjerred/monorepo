@@ -29,8 +29,6 @@ function metricQueueType(queueType: string | undefined): string {
 
 const logger = createLogger("betting-pool-open");
 
-export const PEEK_DELAY_MS = 2 * 60 * 1000;
-
 /**
  * Opening a betting market when Scout notices a game.
  *
@@ -77,14 +75,6 @@ export function computeGameStartAt(input: {
   return new Date(input.detectedAt.getTime() - input.gameLength * 1000);
 }
 
-export function computePeekAvailableAt(input: {
-  detectedAt: Date;
-  gameStartTime: number;
-  gameLength: number;
-}): Date {
-  return new Date(computeGameStartAt(input).getTime() + PEEK_DELAY_MS);
-}
-
 function buildRoster(input: {
   gameInfo: RawCurrentGameInfo;
   trackedAliasByPuuid: ReadonlyMap<string, string>;
@@ -114,7 +104,7 @@ function buildRoster(input: {
  * Prediction capture is intentionally independent of this flag so every
  * eligible detected game can contribute a match-scoped v2 observation. This
  * helper remains the authoritative gate for the guild-scoped wallet, pool,
- * buttons, and peek-pass surfaces.
+ * and button surfaces.
  */
 export async function bettingEnabledGuilds(
   guildIds: readonly DiscordGuildId[],
@@ -176,11 +166,6 @@ export async function openBettingPoolsForPrematch(
       detectedAt: input.detectedAt,
       gameStartTime: input.gameInfo.gameStartTime,
     });
-    const peekAvailableAt = computePeekAvailableAt({
-      detectedAt: input.detectedAt,
-      gameStartTime: input.gameInfo.gameStartTime,
-      gameLength: input.gameInfo.gameLength,
-    });
     const predictionJson =
       input.prediction === undefined
         ? null
@@ -203,7 +188,6 @@ export async function openBettingPoolsForPrematch(
             serverId,
             detectedAt: input.detectedAt,
             closesAt,
-            peekAvailableAt,
             queueType: input.queueType ?? null,
             roster: JSON.stringify(roster),
             predictionJson,

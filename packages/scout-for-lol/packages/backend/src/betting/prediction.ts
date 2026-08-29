@@ -1,6 +1,5 @@
 import {
   type BucksPredictionFeature,
-  type BucksPrediction,
   type BucksPredictionQuality,
   type BucksPredictionV2,
   type QueueType,
@@ -253,20 +252,6 @@ export function predictWin(input: {
 
 export function shouldDisplayPrediction(winProbability: number): boolean {
   return Math.abs(Math.round(winProbability * 100) - 50) > COIN_FLIP_BAND * 100;
-}
-
-export function predictionProbabilityForTeam(
-  prediction: BucksPrediction,
-  teamId: RiotTeamId,
-): number {
-  if ("version" in prediction) {
-    return teamId === BLUE_TEAM_ID
-      ? prediction.blueWinProbability
-      : 1 - prediction.blueWinProbability;
-  }
-  return teamId === prediction.subjectTeamId
-    ? prediction.winProbability
-    : 1 - prediction.winProbability;
 }
 
 export function opposingTeam(teamId: RiotTeamId): RiotTeamId {

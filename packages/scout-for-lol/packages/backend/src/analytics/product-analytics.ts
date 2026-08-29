@@ -48,7 +48,6 @@ export type BucksMemberActivityKind =
   | "outcome_bet"
   | "parlay_bet"
   | "weekly_parlay_bet"
-  | "peek_pass"
   | "ask"
   | "navigation";
 export type BucksActivitySurface = "command" | "button" | "web" | "unknown";

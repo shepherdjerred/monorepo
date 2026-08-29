@@ -46,7 +46,6 @@ describe("logBucksTransition", () => {
       "bucks.bet.cancelled",
       "bucks.parlay.settled",
       "bucks.earning.awarded",
-      "bucks.peek_pass.purchased",
       "bucks.transfer.completed",
       "bucks.transfer.rejected",
     ] as const;
@@ -89,7 +88,6 @@ describe("BucksTransitionEvent coverage", () => {
       "bucks.parlay_bet.cancelled",
       "bucks.parlay_bet.settled",
       "bucks.earning.awarded",
-      "bucks.peek_pass.purchased",
       "bucks.transfer.completed",
       "bucks.transfer.rejected",
     ];

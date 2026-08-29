@@ -16,9 +16,8 @@ import { SlashCommandBuilder } from "discord.js";
  * `teamSize` is derived as max(blue, red) rather than being its own option:
  * two lists and a size field can disagree, and Riot accepts only one number.
  *
- * Free text rather than autocomplete, following `/bb peek` and pinned by
- * definitions.test.ts — matching an alias is a lookup the user can see the
- * result of.
+ * Free text rather than autocomplete, pinned by definitions.test.ts —
+ * matching an alias is a lookup the user can see the result of.
  */
 export const lobbyCommand = new SlashCommandBuilder()
   .setName("lobby")

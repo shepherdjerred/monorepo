@@ -57,7 +57,8 @@ export const BucksLedgerKindSchema = z.enum([
   "bet_void_refund",
   "winner_fee",
   "house_match",
-  // Legacy kinds retained so historical rows remain parseable.
+  // Legacy kinds retained so historical rows remain parseable. `peek_pass`
+  // belongs to the retired peek feature; nothing writes it any more.
   "bet_refund",
   "house_rake",
   "cancel_fee",
@@ -471,6 +472,7 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     credited: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
     voidReason: BucksWeeklyParlayVoidReasonSchema.optional(),
   }),
+  // Retired peek feature; the shape survives so historical rows still parse.
   z.strictObject({
     type: z.literal("peek_pass"),
     purchaserDiscordId: z.string(),

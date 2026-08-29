@@ -9,7 +9,6 @@ import { z } from "zod";
 import { getLedgerPage, type LedgerPage } from "#src/betting/accounts.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
-import { PEEK_PASS_DURATION_LABEL } from "#src/betting/peek-pass.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
 
@@ -43,7 +42,8 @@ const LEDGER_KIND_LABELS = {
   weekly_parlay_payout: "weekly parlay payout",
   weekly_parlay_refund: "weekly parlay refund",
   weekly_parlay_release: "weekly parlay reserve release",
-  peek_pass: `${PEEK_PASS_DURATION_LABEL} peek pass`,
+  // Retired feature; the label survives so historical rows stay readable.
+  peek_pass: "24-hour peek pass",
   transfer_sent: "transfer sent",
   transfer_received: "transfer received",
   transfer_fee: "transfer fee",

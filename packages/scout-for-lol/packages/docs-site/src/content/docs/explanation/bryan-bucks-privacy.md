@@ -17,14 +17,11 @@ everyone would take the favoured side, nobody would take the other, and every
 game would resolve as a house fill.
 
 So the pre-match message carries controls and totals, and nothing else. The
-estimate exists, and you can buy private access to it with a peek pass, but it
-is never broadcast while the market is open.
+estimate exists, but it is never shown while the market is open — the only
+place it can appear is the settlement recap, after the result is known.
 
-Two smaller rules follow from the same reasoning:
+One smaller rule follows from the same reasoning:
 
-- **A peek is delayed.** It becomes available a short time after the game goes
-  live, not the instant it is detected. That keeps the pass from being a way to
-  see the estimate before the market has had a chance to form.
 - **Near-even calls stay hidden even after settlement.** Settlement may reveal
   what Scout thought — but not for a call close to a coin flip. Scoring a
   50.4% call as "right" would claim a direction the estimate never took, and

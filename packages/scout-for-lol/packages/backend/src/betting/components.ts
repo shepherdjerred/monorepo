@@ -22,7 +22,8 @@ import {
  *
  * One row for the game's two possible outcomes. Each team gets the two fixed
  * stake denominations and the fifth component cancels the bettor's position.
- * Anything else goes through `/bb bet`.
+ * Repeat clicks stack onto the same offer, so larger positions are built from
+ * these two denominations.
  */
 
 export type BettableSubject = {
