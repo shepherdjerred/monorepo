@@ -64,7 +64,7 @@ export function createTemporalDashboard() {
         id: 2,
         title: "Temporal Worker Scrape",
         description: "Prometheus scrape health for Temporal worker SDK metrics",
-        expr: 'min(up{namespace="temporal", service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"})',
+        expr: 'min(up{namespace="temporal", service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"})',
         legend: "worker",
         x: 8,
         y: 0,

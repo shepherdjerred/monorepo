@@ -275,9 +275,11 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           // The nine canonical Temporal workers expose SDK metrics through
           // their per-worker metrics Services. cdk8s prefixes names with the
           // chart name, so match the stable canonical worker suffixes and
-          // require every endpoint to be present and up.
+          // require every endpoint to be present and up. Kubernetes truncates
+          // the long Glitter Service names at 63 characters, so the prefix
+          // must remain wildcarded rather than assuming the untruncated name.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'absent(up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) or count(up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) < 9 or min(up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) == 0',
+            'absent(up{namespace="temporal",service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) or count(up{namespace="temporal",service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) < 9 or min(up{namespace="temporal",service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) == 0',
           ),
           for: "5m",
           labels: {

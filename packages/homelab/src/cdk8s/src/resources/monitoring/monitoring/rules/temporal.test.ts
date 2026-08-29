@@ -118,6 +118,7 @@ describe("Temporal workflow outcome rules", () => {
     }
     expect(workerMetricsDown.for).toBe("5m");
     expect(workerMetricsDown.expr.value).toContain("absent(up{");
+    expect(workerMetricsDown.expr.value).toContain('service=~".*temporal-');
 
     const workflowPollerExpressions = failuresGroup.rules
       .filter(
