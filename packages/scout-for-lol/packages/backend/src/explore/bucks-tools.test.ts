@@ -4,13 +4,14 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 import type { BucksAskAnalyticsDataset } from "#src/betting/ask-analytics.ts";
+import type { LeaguePuuid } from "@scout-for-lol/data";
 import {
   addFlagOverride,
   clearFlagOverrides,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import {
-  createBucksExploreTools,
+  createBucksToolExecutors,
   resolveBucksCapability,
 } from "#src/explore/bucks-tools.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
@@ -30,7 +31,15 @@ function emptyDataset(): BucksAskAnalyticsDataset {
     ledger: [],
     bets: [],
     marketCount: 0,
-    aliasesByPuuid: new Map(),
+    aliasesByPuuid: new Map<
+      LeaguePuuid,
+      BucksAskAnalyticsDataset["aliasesByPuuid"] extends ReadonlyMap<
+        LeaguePuuid,
+        infer Value
+      >
+        ? Value
+        : never
+    >(),
   };
 }
 
@@ -73,7 +82,7 @@ describe("resolveBucksCapability", () => {
 describe("createBucksExploreTools", () => {
   test("loads the dataset lazily, exactly once, across tools", async () => {
     let loads = 0;
-    const tools = createBucksExploreTools({
+    const tools = createBucksToolExecutors({
       capability: { serverId: BETTING_GUILD },
       requesterId: REQUESTER,
       track: passthroughTracker,
@@ -87,26 +96,19 @@ describe("createBucksExploreTools", () => {
     // in the betting guild are still match questions.
     expect(loads).toBe(0);
 
-    const toolOptions = { toolCallId: "t1", messages: [] };
-    await tools.get_bucks_dataset.execute?.({}, toolOptions);
-    await tools.query_bucks_accounts.execute?.(
-      { measures: ["balance_bb"] },
-      toolOptions,
-    );
+    await tools.getDataset();
+    await tools.queryAccounts({ measures: ["balance_bb"] });
     expect(loads).toBe(1);
   });
 
   test("the account tool answers for the requester only", async () => {
-    const tools = createBucksExploreTools({
+    const tools = createBucksToolExecutors({
       capability: { serverId: BETTING_GUILD },
       requesterId: REQUESTER,
       track: passthroughTracker,
       loadDataset: () => Promise.resolve(emptyDataset()),
     });
-    const result = await tools.query_bucks_accounts.execute?.(
-      { measures: ["balance_bb"] },
-      { toolCallId: "t2", messages: [] },
-    );
+    const result = await tools.queryAccounts({ measures: ["balance_bb"] });
     // An empty guild snapshot means the requester has no wallet — the result
     // must say so rather than surface anyone else's row.
     expect(JSON.stringify(result)).not.toContain(OTHER_GUILD);
@@ -118,16 +120,13 @@ describe("createBucksExploreTools", () => {
       tracked.push(toolName);
       return await work();
     };
-    const tools = createBucksExploreTools({
+    const tools = createBucksToolExecutors({
       capability: { serverId: BETTING_GUILD },
       requesterId: REQUESTER,
       track: tracker,
       loadDataset: () => Promise.resolve(emptyDataset()),
     });
-    await tools.get_bucks_dataset.execute?.(
-      {},
-      { toolCallId: "t3", messages: [] },
-    );
+    await tools.getDataset();
     expect(tracked).toEqual(["get_bucks_dataset"]);
   });
 });

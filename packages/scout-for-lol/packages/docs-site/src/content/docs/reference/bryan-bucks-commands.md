@@ -52,8 +52,9 @@ this server, and you cannot transfer to yourself.
 
 Both options are optional. With neither option, Scout reports the current
 settings. New users default to receiving both categories.
-After your first eligible settlement DM, Scout shows a one-time reminder that
-you can manage these messages with `/bb notifications`.
+Your first eligible settlement DM carries a reminder that you can manage these
+messages with `/bb notifications`; after that the reminder repeats once every
+several delivered DMs so it stays discoverable without becoming noise.
 
 | Option        | Required | Values      |
 | ------------- | -------- | ----------- |

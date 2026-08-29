@@ -1,16 +1,24 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import {
+  BucksLedgerContextSchema,
+  BucksPoolRosterSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type BucksLedgerKind,
   formatInteger,
+  type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { getLedgerPage, type LedgerPage } from "#src/betting/accounts.ts";
+import {
+  getLedgerPage,
+  type LedgerPage,
+  type LedgerPageEntry,
+} from "#src/betting/accounts.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
+import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly-parlay-criteria.ts";
 
 export const BUCKS_NAVIGATION_NAMESPACE = "bbnav";
 export const BUCKS_NAVIGATION_VERSION = "1";
@@ -52,6 +60,161 @@ const LEDGER_KIND_LABELS = {
 
 export function ledgerKindLabel(kind: BucksLedgerKind): string {
   return LEDGER_KIND_LABELS[kind];
+}
+
+/** At most this many names per row, so ten rows fit Discord's 2000 chars. */
+const MAX_GAME_LABEL_ALIASES = 3;
+
+function formatGameLabel(aliases: readonly string[]): string | undefined {
+  const unique = [...new Set(aliases)];
+  if (unique.length === 0) {
+    return undefined;
+  }
+  const shown = unique.slice(0, MAX_GAME_LABEL_ALIASES);
+  const hidden = unique.length - shown.length;
+  return hidden > 0
+    ? `${shown.join(", ")} +${formatInteger(hidden)}`
+    : shown.join(", ");
+}
+
+function parsedContext(entry: LedgerPageEntry) {
+  try {
+    return BucksLedgerContextSchema.safeParse(JSON.parse(entry.context)).data;
+  } catch {
+    // Historical rows predate some context shapes; an unreadable one simply
+    // falls back to the match ID.
+    return undefined;
+  }
+}
+
+/**
+ * Who was in the game behind each ledger row, so `/bb history` reads
+ * "bet offer reserved · jerred, bryan" instead of a raw Riot match ID.
+ *
+ * Outcome-bet rows answer from their frozen context alone. Earn and parlay
+ * rows carry only a match ID, which resolves through the pool's frozen roster;
+ * weekly-parlay rows span matches and resolve through their definition's
+ * frozen subjects. Anything that cannot resolve keeps the match ID — a worse
+ * label beats a missing audit line.
+ */
+export async function resolveLedgerGameLabels(
+  serverId: DiscordGuildId,
+  entries: readonly LedgerPageEntry[],
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<ReadonlyMap<number, string>> {
+  const labels = new Map<number, string>();
+  const rosterMatchIds = new Set<string>();
+  const definitionIds = new Set<number>();
+
+  const contexts = new Map(
+    entries.map((entry) => [entry.id, parsedContext(entry)]),
+  );
+  for (const entry of entries) {
+    const context = contexts.get(entry.id);
+    if (context === undefined) {
+      continue;
+    }
+    if (
+      context.type === "stake" ||
+      context.type === "settlement" ||
+      context.type === "matching" ||
+      context.type === "cancellation"
+    ) {
+      const label = formatGameLabel([
+        ...context.backedAliases,
+        ...context.opposingAliases,
+      ]);
+      if (label !== undefined) {
+        labels.set(entry.id, label);
+      }
+      continue;
+    }
+    if (context.type === "earn" || context.type === "earn_prematch") {
+      if (entry.matchId !== null) {
+        rosterMatchIds.add(entry.matchId);
+      }
+      continue;
+    }
+    if (
+      context.type === "parlay_stake" ||
+      context.type === "parlay_reserve" ||
+      context.type === "parlay_settlement"
+    ) {
+      if (entry.matchId !== null) {
+        rosterMatchIds.add(entry.matchId);
+      }
+      continue;
+    }
+    if (
+      context.type === "weekly_parlay_stake" ||
+      context.type === "weekly_parlay_reserve" ||
+      context.type === "weekly_parlay_settlement"
+    ) {
+      definitionIds.add(context.definitionId);
+    }
+  }
+
+  const aliasesByMatchId = new Map<string, string | undefined>();
+  if (rosterMatchIds.size > 0) {
+    const pools = await prismaClient.bucksMatchPool.findMany({
+      where: { serverId, matchId: { in: [...rosterMatchIds] } },
+      select: { matchId: true, roster: true },
+    });
+    for (const pool of pools) {
+      const roster = BucksPoolRosterSchema.safeParse(JSON.parse(pool.roster));
+      const tracked =
+        roster.data?.participants.flatMap((participant) =>
+          participant.trackedAlias === undefined
+            ? []
+            : [participant.trackedAlias],
+        ) ?? [];
+      aliasesByMatchId.set(pool.matchId, formatGameLabel(tracked));
+    }
+  }
+
+  const subjectsByDefinitionId = new Map<number, string | undefined>();
+  if (definitionIds.size > 0) {
+    const definitions = await prismaClient.bucksWeeklyParlayDefinition.findMany(
+      {
+        where: { serverId, id: { in: [...definitionIds] } },
+        select: { id: true, subjects: true },
+      },
+    );
+    for (const definition of definitions) {
+      const subjects = WeeklyParlaySubjectsSchema.safeParse(
+        JSON.parse(definition.subjects),
+      );
+      subjectsByDefinitionId.set(
+        definition.id,
+        formatGameLabel(subjects.data?.map((subject) => subject.alias) ?? []),
+      );
+    }
+  }
+
+  for (const entry of entries) {
+    if (labels.has(entry.id)) {
+      continue;
+    }
+    const context = contexts.get(entry.id);
+    const fromRoster =
+      entry.matchId === null ? undefined : aliasesByMatchId.get(entry.matchId);
+    if (fromRoster !== undefined) {
+      labels.set(entry.id, fromRoster);
+      continue;
+    }
+    if (
+      context !== undefined &&
+      (context.type === "weekly_parlay_stake" ||
+        context.type === "weekly_parlay_reserve" ||
+        context.type === "weekly_parlay_settlement")
+    ) {
+      const fromDefinition = subjectsByDefinitionId.get(context.definitionId);
+      if (fromDefinition !== undefined) {
+        labels.set(entry.id, `weekly · ${fromDefinition}`);
+      }
+    }
+  }
+  return labels;
 }
 
 const BucksNavigationIdSchema = z.strictObject({
@@ -153,6 +316,7 @@ function navigationRow(
 export function renderBucksHistory(
   ownerId: ReturnType<typeof DiscordAccountIdSchema.parse>,
   page: LedgerPage,
+  gameLabels?: ReadonlyMap<number, string>,
 ): BucksButtonEditReplyOptions {
   if (page.entries.length === 0) {
     return {
@@ -163,7 +327,10 @@ export function renderBucksHistory(
 
   const lines = page.entries.map((entry) => {
     const sign = entry.delta > 0 ? "+" : "";
-    const where = entry.matchId === null ? "" : ` · ${entry.matchId}`;
+    // Tracked players in the game, falling back to the raw match ID for rows
+    // whose pool or definition is no longer resolvable.
+    const label = gameLabels?.get(entry.id) ?? entry.matchId;
+    const where = label === null || label === undefined ? "" : ` · ${label}`;
     return `\`${sign}${formatInteger(entry.delta)}\` ${ledgerKindLabel(entry.kind)}${where} → ${formatInteger(entry.balanceAfter)} BB`;
   });
   return {
@@ -232,5 +399,10 @@ export async function handleBucksNavigation(
     },
     prismaClient,
   );
-  await interaction.editReply(renderBucksHistory(clickerId, page));
+  const gameLabels = await resolveLedgerGameLabels(
+    serverId,
+    page.entries,
+    prismaClient,
+  );
+  await interaction.editReply(renderBucksHistory(clickerId, page, gameLabels));
 }

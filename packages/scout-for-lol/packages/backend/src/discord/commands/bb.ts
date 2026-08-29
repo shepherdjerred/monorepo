@@ -9,6 +9,10 @@ import {
   type PersonalBucksView,
 } from "#src/betting/accounts.ts";
 import {
+  BALANCE_CHART_ATTACHMENT_NAME,
+  buildBalanceChartAttachment,
+} from "#src/betting/balance-chart.ts";
+import {
   BUCKS_GUILD_ONLY,
   BUCKS_NOT_ENABLED,
   withRulesHint,
@@ -134,9 +138,15 @@ async function replyBalance(
     return;
   }
 
-  await interaction.editReply({
-    embeds: [buildPersonalBucksEmbed(view)],
-  });
+  const embed = buildPersonalBucksEmbed(view);
+  // Best-effort: a chart failure degrades to the numbers-only embed.
+  const chart = await buildBalanceChartAttachment({ serverId, discordId });
+  if (chart === null) {
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+  embed.setImage(`attachment://${BALANCE_CHART_ATTACHMENT_NAME}`);
+  await interaction.editReply({ embeds: [embed], files: [chart] });
 }
 
 export async function executeBb(

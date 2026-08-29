@@ -95,13 +95,19 @@ export async function resolveBucksCapability(
  * the shared `ToolTracker`, so they consume the same tool budget and metrics
  * as every other Explore tool.
  */
-export function createBucksExploreTools(input: {
+export type BucksExploreToolsInput = {
   capability: BucksExploreCapability;
   requesterId: DiscordAccountId;
   track: ToolTracker;
   /** Test seam; production always reads the real snapshot. */
   loadDataset?: (serverId: DiscordGuildId) => Promise<BucksAskAnalyticsDataset>;
-}) {
+};
+
+/**
+ * The tools' executors, separate from the AI-SDK `tool()` wrappers so tests
+ * can drive them without constructing a `ToolExecutionOptions`.
+ */
+export function createBucksToolExecutors(input: BucksExploreToolsInput) {
   const load = input.loadDataset ?? loadBucksAskAnalyticsDataset;
   let datasetPromise: Promise<BucksAskAnalyticsDataset> | null = null;
   const dataset = (): Promise<BucksAskAnalyticsDataset> => {
@@ -110,54 +116,64 @@ export function createBucksExploreTools(input: {
   };
 
   return {
+    getDataset: () =>
+      input.track("get_bucks_dataset", async () =>
+        BucksAskDatasetOverviewSchema.parse(
+          bucksAskDatasetOverview(await dataset()),
+        ),
+      ),
+    queryAccounts: (inputData: unknown) =>
+      input.track("query_bucks_accounts", async () =>
+        queryBucksAccounts(
+          await dataset(),
+          BucksAccountQuerySchema.parse(inputData),
+          input.requesterId,
+        ),
+      ),
+    queryLedger: (inputData: unknown) =>
+      input.track("query_bucks_ledger", async () =>
+        queryBucksLedger(
+          await dataset(),
+          BucksLedgerQuerySchema.parse(inputData),
+        ),
+      ),
+    queryBets: (inputData: unknown) =>
+      input.track("query_bucks_bets", async () =>
+        queryBucksBets(await dataset(), BucksBetQuerySchema.parse(inputData)),
+      ),
+  };
+}
+
+export function createBucksExploreTools(input: BucksExploreToolsInput) {
+  const executors = createBucksToolExecutors(input);
+  return {
     get_bucks_dataset: tool({
       description:
         "Describe the available Bryan Bucks dataset, overall date coverage, subjects, sample sizes, and important definitions. Its coverage is dataset-wide; never report it as a filtered query's matched coverage.",
       inputSchema: z.strictObject({}),
       outputSchema: BucksAskDatasetOverviewSchema,
-      execute: () =>
-        input.track("get_bucks_dataset", async () =>
-          BucksAskDatasetOverviewSchema.parse(
-            bucksAskDatasetOverview(await dataset()),
-          ),
-        ),
+      execute: () => executors.getDataset(),
     }),
     query_bucks_accounts: tool({
       description:
         "Read only the asker's current Bryan Bucks account balance. Use this for the asker's current balance, never for another member, a leaderboard, betting profit, or earnings.",
       inputSchema: BucksAccountQuerySchema,
       outputSchema: BucksAccountQueryResultSchema,
-      execute: (inputData) =>
-        input.track("query_bucks_accounts", async () =>
-          queryBucksAccounts(
-            await dataset(),
-            BucksAccountQuerySchema.parse(inputData),
-            input.requesterId,
-          ),
-        ),
+      execute: (inputData) => executors.queryAccounts(inputData),
     }),
     query_bucks_ledger: tool({
       description:
         "Aggregate guild-wide Bryan Bucks seed grants, non-betting earnings, and adjustments by entry kind or day. Bettor filters and grouping are deliberately unavailable so ledger results cannot be combined with betting P&L to reconstruct private balances. Never call ledger delta betting P&L.",
       inputSchema: BucksLedgerQuerySchema,
       outputSchema: BucksLedgerQueryResultSchema,
-      execute: (inputData) =>
-        input.track("query_bucks_ledger", async () =>
-          queryBucksLedger(
-            await dataset(),
-            BucksLedgerQuerySchema.parse(inputData),
-          ),
-        ),
+      execute: (inputData) => executors.queryLedger(inputData),
     }),
     query_bucks_bets: tool({
       description:
         "Aggregate human outcome and parlay positions by position type, bettor, subject, subject result, bet direction/side, outcome, or day. Use net_bb for gross-payout-minus-stake profit/loss and sort ascending for the largest loss. staked_bb covers every matched position; gross_payout_bb, win rate, and ROI use settled won/lost positions only. Player-subject attribution applies only to outcome positions; parlays appear as multi-player.",
       inputSchema: BucksBetQuerySchema,
       outputSchema: BucksBetQueryResultSchema,
-      execute: (inputData) =>
-        input.track("query_bucks_bets", async () =>
-          queryBucksBets(await dataset(), BucksBetQuerySchema.parse(inputData)),
-        ),
+      execute: (inputData) => executors.queryBets(inputData),
     }),
   };
 }

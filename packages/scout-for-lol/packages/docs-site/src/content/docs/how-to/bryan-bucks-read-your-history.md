@@ -72,5 +72,7 @@ the model's memory.
 ## The weekly leaderboard
 
 There is no leaderboard command. The full standings are posted once a week, on
-a schedule, in the shared channel. That is deliberate — see
+a schedule, in the shared channel, together with the week's superlatives —
+most gained, most lost, most bets won, and most parlays won. That is
+deliberate — see
 [why balances are private](/docs/explanation/bryan-bucks-privacy/).

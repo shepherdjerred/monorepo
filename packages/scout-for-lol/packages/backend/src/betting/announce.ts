@@ -444,6 +444,7 @@ export async function announceSettlements(
           messageRefs: true,
           predictionJson: true,
           roster: true,
+          queueType: true,
           bets: {
             where: {
               betOutcome: "refunded",
@@ -486,6 +487,10 @@ export async function announceSettlements(
         JSON.parse(pool.roster),
       ).participants;
       const anchor = bettingAnchor(roster);
+      const predictionVerdictLine = predictionVerdict(
+        prediction,
+        summary.winningTeamId,
+      );
       const message = buildSettlementMessage({
         summary,
         includeOutcome,
@@ -494,10 +499,7 @@ export async function announceSettlements(
         earnings: input.earnings,
         unmatchedPositions,
         predictionSentence,
-        predictionVerdictLine: predictionVerdict(
-          prediction,
-          summary.winningTeamId,
-        ),
+        predictionVerdictLine,
       });
       const poolRefs = BucksMessageRefsSchema.parse(
         JSON.parse(pool.messageRefs),
@@ -550,6 +552,13 @@ export async function announceSettlements(
           parlay,
           unmatchedPositions,
           roster,
+          queueType: pool.queueType,
+          earnings: input.earnings,
+          // The exact sentence the channel recap shows, verdict included.
+          predictionLine:
+            predictionSentence === undefined
+              ? undefined
+              : `${predictionSentence}${predictionVerdictLine === undefined ? "" : ` ${predictionVerdictLine}`}`,
           prismaClient,
         });
       } catch (error) {

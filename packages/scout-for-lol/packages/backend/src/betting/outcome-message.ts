@@ -46,7 +46,7 @@ type SettlementDisplay = {
   earningLines: string[];
 };
 
-function voidReasonText(reason: BucksVoidReason): string {
+export function voidReasonText(reason: BucksVoidReason): string {
   switch (reason) {
     case "remake":
       return "remake";

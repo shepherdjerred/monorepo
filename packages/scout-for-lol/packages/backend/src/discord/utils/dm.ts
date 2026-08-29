@@ -6,7 +6,7 @@
  * is therefore fully traceable. Do not call `user.send(...)` directly elsewhere.
  */
 
-import { type Client, DiscordAPIError } from "discord.js";
+import { type Client, DiscordAPIError, type EmbedBuilder } from "discord.js";
 import { z } from "zod";
 import {
   type DiscordAccountId,
@@ -120,6 +120,19 @@ export type SendDmOptions = {
   budget?: DmBudget;
   /** Keep rendered mentions informational instead of notifying other users. */
   suppressMentions?: boolean;
+  /**
+   * Rich embeds to send alongside (or instead of) plain content. `message`
+   * stays the audit-log rendering — the ledger is text — and is sent as the
+   * content above the embeds only when `contentWithEmbeds` says so. Embeds are
+   * core-output only: the budget footer is a content mutation, so a budgeted
+   * embed send is refused outright rather than half-applied.
+   */
+  embeds?: readonly EmbedBuilder[];
+  /**
+   * Content to render above the embeds. Without it, an embed send carries no
+   * plain content and `message` exists purely for the audit trail.
+   */
+  contentWithEmbeds?: string;
 };
 
 /**
@@ -330,6 +343,13 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
 
   let message = options.message;
 
+  if (options.embeds !== undefined && options.budget !== undefined) {
+    // The budget footer mutates content; an embed send has no content to
+    // mutate, and silently dropping the footer would falsify the printed
+    // message count. No budgeted DM currently needs an embed.
+    throw new Error("Budgeted DMs cannot carry embeds");
+  }
+
   // A non-core message without a budget would sit outside the cap and the
   // footer entirely — which is how the removal-time feedback DM could have
   // become a fourth message. Refuse rather than quietly over-send.
@@ -409,11 +429,23 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
   try {
     const user = await client.users.fetch(userId);
     recipientTag = recipientTag ?? user.tag;
-    await user.send(
-      options.suppressMentions
-        ? { content: message, allowedMentions: { parse: [] } }
-        : message,
-    );
+    if (options.embeds !== undefined) {
+      await user.send({
+        ...(options.contentWithEmbeds === undefined
+          ? {}
+          : { content: options.contentWithEmbeds }),
+        embeds: [...options.embeds],
+        ...(options.suppressMentions === true
+          ? { allowedMentions: { parse: [] } }
+          : {}),
+      });
+    } else {
+      await user.send(
+        options.suppressMentions
+          ? { content: message, allowedMentions: { parse: [] } }
+          : message,
+      );
+    }
     logger.info(`[DM] Successfully sent ${kind} DM to user ${userId}`);
     if (reservedRowId === null) {
       await recordDmAudit(db, {

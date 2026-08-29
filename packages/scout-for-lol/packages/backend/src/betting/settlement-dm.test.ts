@@ -123,7 +123,7 @@ describe("Bryan Bucks settlement DMs", () => {
       }),
     ]);
     expect(messages[0]?.content).toContain("**Your bets**");
-    expect(messages[0]?.content).toContain("Blue 10 BB → won 10 BB.");
+    expect(messages[0]?.content).toContain("Blue — 10 BB → won **10 BB**.");
     expect(messages[0]?.content).not.toContain("Bets on your team");
   });
   test("sends a player team-relative results for other human bettors", () => {
@@ -213,9 +213,7 @@ describe("Bryan Bucks settlement DMs", () => {
     const redMessage = messages.find(
       (message) => message.recipientId === redBettor,
     );
-    expect(redMessage?.content).toContain(
-      "10 BB → 10 BB matched and refunded.",
-    );
+    expect(redMessage?.content).toContain("10 BB matched and refunded.");
     expect(redMessage?.content).toContain("6 BB was unmatched and refunded.");
   });
 
@@ -256,7 +254,7 @@ describe("Bryan Bucks settlement DMs", () => {
     expect(messages).toEqual([
       expect.objectContaining({ recipientId: redBettor }),
     ]);
-    expect(messages[0]?.content).toContain("YES 5 BB → won 5 BB.");
+    expect(messages[0]?.content).toContain("Parlay YES — 5 BB → won **5 BB**.");
   });
 
   test("bounds a combined message to Discord's safe content limit", () => {
@@ -302,6 +300,57 @@ describe("Bryan Bucks settlement DMs", () => {
 
     expect(observed).toBe(1);
     expect(rejected).toBe(1);
+  });
+});
+
+describe("Bryan Bucks settlement DM embeds", () => {
+  test("carries the game, result, prediction, and earnings context", () => {
+    const messages = buildSettlementDmMessages({
+      summary: summary(
+        [bet({ id: 1, discordId: blueBettor, teamId: 100, won: true })],
+        "server-1",
+      ),
+      includeOutcome: true,
+      parlay: undefined,
+      unmatchedPositions: [],
+      framing,
+      receiptsEnabled: true,
+      playerBetOutcomesEnabled: false,
+      playerRecipients: [],
+      matchContext: {
+        gameLine: "ranked solo — jerred (Ahri), bryan (Lee Sin)",
+        resultLine: "jerred won (Blue).",
+        predictionLine:
+          "🔮 Scout's experimental estimate was Blue 62% / Red 38% · high data quality. Scout called it.",
+      },
+      subjectAliasByPuuid: new Map([[bucksTestPuuid(1), "jerred"]]),
+      earningLines: [
+        { discordId: blueBettor, line: "🪙 +2 BB (played, win)" },
+        // Earnings never create a DM on their own.
+        { discordId: redPlayer, line: "🪙 +1 BB (played)" },
+      ],
+    });
+
+    expect(messages).toHaveLength(1);
+    const embed = messages[0]?.embed.toJSON();
+    expect(embed?.title).toBe("💰 Bryan Bucks — game settled");
+    expect(embed?.description).toContain(
+      "ranked solo — jerred (Ahri), bryan (Lee Sin)",
+    );
+    expect(embed?.description).toContain("jerred won (Blue).");
+    expect(embed?.description).toContain("Scout called it.");
+    const fields = embed?.fields ?? [];
+    expect(fields.map((field) => field.name)).toEqual([
+      "Your bets",
+      "Bucks you earned",
+    ]);
+    expect(fields[0]?.value).toContain(
+      "Blue on jerred — 10 BB → won **10 BB**.",
+    );
+    expect(fields[1]?.value).toBe("🪙 +2 BB (played, win)");
+    // The plain rendering (the audit-log record) carries the same facts.
+    expect(messages[0]?.content).toContain("jerred won (Blue).");
+    expect(messages[0]?.content).toContain("🪙 +2 BB (played, win)");
   });
 });
 
@@ -360,6 +409,7 @@ describe("Bryan Bucks settlement DM notification hint", () => {
         markCount++;
         hintShownAt = new Date();
       },
+      countRecentSettlementDms: async () => 0,
       observeBucksDelivery: async (_input, run) => run(),
       sendDm: async ({ message }) => {
         sentMessages.push(message);
@@ -409,6 +459,7 @@ describe("Bryan Bucks settlement DM notification hint", () => {
       markNotificationHintShown: async () => {
         markCount++;
       },
+      countRecentSettlementDms: async () => 0,
       observeBucksDelivery: async (_input, run) => run(),
       sendDm: async () => "dm_disabled",
     };
