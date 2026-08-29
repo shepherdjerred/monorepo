@@ -223,6 +223,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
     TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
     TEMPORAL_LEGACY_NAMESPACE: EnvValue.fromValue("default"),
+    TEMPORAL_SCHEDULE_RECONCILIATION: EnvValue.fromValue("disabled"),
     FLIPT_URL: EnvValue.fromValue(
       "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
     ),

@@ -1,6 +1,7 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import { client } from "#src/discord/client.ts";
+import configuration from "#src/configuration.ts";
 import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import {
@@ -308,6 +309,20 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
       };
     },
     drainReportScheduleOutbox: async (input) => {
+      const activityNamespace = Context.current().info.namespace;
+      if (
+        activityNamespace === "default" ||
+        configuration.temporalScheduleReconciliation === "disabled"
+      ) {
+        Context.current().heartbeat({
+          phase: "skipped",
+          reason:
+            activityNamespace === "default"
+              ? "legacy-namespace-drain"
+              : "schedule-reconciliation-disabled",
+        });
+        return { processed: 0, remaining: 0 };
+      }
       const result = await heartbeatWhile(
         { phase: "reconciling-report-schedules" },
         async () => {
