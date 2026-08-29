@@ -6,6 +6,7 @@ import {
 } from "#src/betting/settlement-dm.ts";
 import {
   deliverSettlementDms,
+  SETTLEMENT_DM_HINT_EVERY,
   type SettlementDmDeliveryDependencies,
 } from "#src/betting/settlement-dm-delivery.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
@@ -474,6 +475,74 @@ describe("Bryan Bucks settlement DM notification hint", () => {
     );
 
     expect(markCount).toBe(0);
+  });
+
+  // Regression for the off-by-one Codex flagged: countRecentSettlementDms can
+  // only see deliveries that already landed in DmAuditLog, never the one this
+  // call is deciding for. Comparing that count against the raw
+  // SETTLEMENT_DM_HINT_EVERY threshold pushed the repeat to the 9th delivery
+  // instead of the 8th.
+  test("repeats the hint on exactly the SETTLEMENT_DM_HINT_EVERY-th delivery", async () => {
+    const dependenciesAt = (
+      priorDeliveries: number,
+    ): SettlementDmDeliveryDependencies => ({
+      client: mockClient(),
+      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+      getNotificationPreferencesForUsers: async () =>
+        new Map([
+          [
+            blueBettor,
+            {
+              ownBetSettlementDms: true,
+              betsOnPlayerSettlementDms: true,
+              settlementDmHintShownAt: new Date(0),
+            },
+          ],
+        ]),
+      markNotificationHintShown: async () => {
+        await Promise.resolve();
+      },
+      countRecentSettlementDms: async () => priorDeliveries,
+      observeBucksDelivery: async (_input, run) => run(),
+      sendDm: async () => "sent",
+    });
+
+    // One short of the boundary: 5 prior deliveries since the last hint.
+    const notYetDue: string[] = [];
+    await deliverSettlementDms(
+      deliveryInput("8", [
+        bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
+      ]),
+      {
+        ...dependenciesAt(SETTLEMENT_DM_HINT_EVERY - 2),
+        sendDm: async ({ message }) => {
+          notYetDue.push(message);
+          return "sent";
+        },
+      },
+    );
+    expect(notYetDue[0]).not.toContain(
+      "You can manage these DMs with `/bb notifications`.",
+    );
+
+    // At the boundary: SETTLEMENT_DM_HINT_EVERY - 1 prior deliveries plus this
+    // pending one make SETTLEMENT_DM_HINT_EVERY total — the 8th delivery.
+    const nowDue: string[] = [];
+    await deliverSettlementDms(
+      deliveryInput("9", [
+        bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
+      ]),
+      {
+        ...dependenciesAt(SETTLEMENT_DM_HINT_EVERY - 1),
+        sendDm: async ({ message }) => {
+          nowDue.push(message);
+          return "sent";
+        },
+      },
+    );
+    expect(nowDue[0]).toContain(
+      "You can manage these DMs with `/bb notifications`.",
+    );
   });
 });
 

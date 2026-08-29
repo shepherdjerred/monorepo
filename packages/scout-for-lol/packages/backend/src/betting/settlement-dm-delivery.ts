@@ -217,6 +217,13 @@ function buildEarningLines(
  * a recipient who has never seen the hint gets it now; afterwards it repeats
  * once every `SETTLEMENT_DM_HINT_EVERY` *delivered* settlement DMs, counted
  * from rows newer than the recorded `settlementDmHintShownAt` stamp.
+ *
+ * The count this reads is necessarily prior deliveries only — the DM this
+ * call is deciding for has not been sent yet, so it cannot appear in
+ * `DmAuditLog`. Comparing that count against the full `SETTLEMENT_DM_HINT_EVERY`
+ * threshold would therefore under-count by exactly one and push the repeat
+ * out to the (N+1)th delivery instead of the Nth. Subtracting one folds the
+ * pending delivery into the threshold instead.
  */
 async function resolveHintRecipients(input: {
   candidates: readonly string[];
@@ -236,7 +243,7 @@ async function resolveHintRecipients(input: {
       { recipientId: discordId, serverId: input.serverId, since: shownAt },
       input.prismaClient,
     );
-    if (sentSince >= SETTLEMENT_DM_HINT_EVERY) {
+    if (sentSince >= SETTLEMENT_DM_HINT_EVERY - 1) {
       due.add(discordId);
     }
   }
