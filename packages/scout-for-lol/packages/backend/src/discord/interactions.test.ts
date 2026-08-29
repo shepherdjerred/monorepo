@@ -1,15 +1,12 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import {
   routeButton,
   type RoutableButtonInteraction,
 } from "#src/discord/interactions.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
-import { formatBucksAskPublishCustomId } from "#src/betting/ask-custom-id.ts";
-import { resetBucksAskPublishClaimsForTests } from "#src/betting/ask-publish.ts";
 import { formatBucksNavigationId } from "#src/betting/navigation.ts";
 import { formatParlayCustomId } from "#src/betting/parlay-custom-id.ts";
-import { discordComponentsTotal } from "#src/metrics/index.ts";
 
 const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
 
@@ -18,26 +15,12 @@ const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
  * `bet-button.integration.test.ts` builds one: the router's parameter type is
  * structural, so a plain object needs no cast and no mock framework.
  */
-function fakeInteraction(
-  customId: string,
-  guildId: string | null = null,
-  options: {
-    failPublicSend?: boolean;
-    failConfirmationEdit?: boolean;
-  } = {},
-) {
+function fakeInteraction(customId: string, guildId: string | null = null) {
   const calls: string[] = [];
-  let editReplyCount = 0;
   const interaction: RoutableButtonInteraction = {
     customId,
     guildId,
     user: { id: USER_ID, username: "tester" },
-    client: { user: { id: "1311755320745394317" } },
-    message: {
-      id: "message-1",
-      author: { id: "1311755320745394317" },
-      embeds: [{ toJSON: () => ({ description: "answer" }) }],
-    },
     deferred: false,
     replied: false,
     deferUpdate: vi.fn(() => {
@@ -48,35 +31,17 @@ function fakeInteraction(
       calls.push("deferReply");
       return Promise.resolve(undefined);
     }),
-    reply: vi.fn(() => {
-      calls.push("reply");
-      return Promise.resolve(undefined);
-    }),
     editReply: vi.fn(() => {
       calls.push("editReply");
-      editReplyCount += 1;
-      if (editReplyCount === 1 && options.failConfirmationEdit === true) {
-        return Promise.reject(new Error("confirmation edit failed"));
-      }
       return Promise.resolve(undefined);
     }),
     followUp: vi.fn(() => {
       calls.push("followUp");
       return Promise.resolve({ delete: () => Promise.resolve(undefined) });
     }),
-    sendPublic: vi.fn(() => {
-      calls.push("sendPublic");
-      return options.failPublicSend
-        ? Promise.reject(new Error("missing send permission"))
-        : Promise.resolve(undefined);
-    }),
   };
   return { interaction, calls };
 }
-
-afterEach(() => {
-  resetBucksAskPublishClaimsForTests();
-});
 
 describe("routeButton", () => {
   test("leaves another feature's component entirely alone", async () => {
@@ -157,50 +122,6 @@ describe("routeButton", () => {
     expect(calls).toEqual([]);
   });
 
-  test("acknowledges malformed bbask IDs and routes valid publish IDs", async () => {
-    const malformed = fakeInteraction("bbask:1:p:not-a-user");
-    await routeButton(malformed.interaction);
-    expect(malformed.calls).toEqual(["deferUpdate"]);
-
-    const valid = fakeInteraction(
-      formatBucksAskPublishCustomId({ askerDiscordId: USER_ID }),
-    );
-    await routeButton(valid.interaction);
-    expect(valid.calls).toEqual(["deferUpdate", "sendPublic", "editReply"]);
-  });
-
-  test("records a handled Bryan Bucks publish failure as an error", async () => {
-    const customId = formatBucksAskPublishCustomId({
-      askerDiscordId: USER_ID,
-    });
-    const failed = fakeInteraction(customId, null, { failPublicSend: true });
-    const errorsBefore = await componentCount("error");
-    const successesBefore = await componentCount("success");
-
-    await routeButton(failed.interaction);
-
-    expect(failed.calls).toEqual(["deferUpdate", "sendPublic", "followUp"]);
-    expect(await componentCount("error")).toBe(errorsBefore + 1);
-    expect(await componentCount("success")).toBe(successesBefore);
-  });
-
-  test("records a completed public send as success when its confirmation edit fails", async () => {
-    const customId = formatBucksAskPublishCustomId({
-      askerDiscordId: USER_ID,
-    });
-    const published = fakeInteraction(customId, null, {
-      failConfirmationEdit: true,
-    });
-    const errorsBefore = await componentCount("error");
-    const successesBefore = await componentCount("success");
-
-    await routeButton(published.interaction);
-
-    expect(published.calls).toEqual(["deferUpdate", "sendPublic", "editReply"]);
-    expect(await componentCount("success")).toBe(successesBefore + 1);
-    expect(await componentCount("error")).toBe(errorsBefore);
-  });
-
   test("acknowledges a malformed Scout component with a private explanation", async () => {
     const { interaction, calls } = fakeInteraction("scout:1:publish:broken");
     await routeButton(interaction);
@@ -224,13 +145,3 @@ describe("routeButton", () => {
     expect(valid.calls).toEqual(["deferReply", "editReply"]);
   });
 });
-
-async function componentCount(status: string): Promise<number> {
-  const metric = await discordComponentsTotal.get();
-  return (
-    metric.values.find(
-      (value) =>
-        value.labels.namespace === "bbask" && value.labels.status === status,
-    )?.value ?? 0
-  );
-}

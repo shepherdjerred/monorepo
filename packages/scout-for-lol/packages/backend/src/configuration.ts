@@ -213,7 +213,6 @@ function computeConfiguration() {
     // started before the embedded Scout Activity patch was recorded.
     weeklyParlayControlToken: getOptionalEnvVar("WEEKLY_PARLAY_CONTROL_TOKEN"),
     exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-luna").asString(),
-    bucksAskModel: env.get("BB_ASK_MODEL").default("gpt-5.6-luna").asString(),
     // Beta Explore access is an explicit Discord server allowlist. Production
     // authorizes against the bot's live connected-guild set instead. Unset
     // still means nobody in beta.
@@ -361,9 +360,6 @@ const configuration: Configuration = {
   },
   get exploreModel() {
     return getConfiguration().exploreModel;
-  },
-  get bucksAskModel() {
-    return getConfiguration().bucksAskModel;
   },
   get exploreGuildAllowlist() {
     return getConfiguration().exploreGuildAllowlist;

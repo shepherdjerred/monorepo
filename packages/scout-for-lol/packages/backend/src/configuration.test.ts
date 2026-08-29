@@ -12,7 +12,6 @@ type TrackedKey =
   | "ENABLE_DISCORD_GATEWAY"
   | "ENABLE_BACKGROUND_JOBS"
   | "TEMPORAL_ADDRESS"
-  | "BB_ASK_MODEL"
   | "EXPLORE_MODEL";
 
 function snapshotEnv(): Record<TrackedKey, string | undefined> {
@@ -22,7 +21,6 @@ function snapshotEnv(): Record<TrackedKey, string | undefined> {
     ENABLE_DISCORD_GATEWAY: Bun.env["ENABLE_DISCORD_GATEWAY"],
     ENABLE_BACKGROUND_JOBS: Bun.env["ENABLE_BACKGROUND_JOBS"],
     TEMPORAL_ADDRESS: Bun.env["TEMPORAL_ADDRESS"],
-    BB_ASK_MODEL: Bun.env["BB_ASK_MODEL"],
     EXPLORE_MODEL: Bun.env["EXPLORE_MODEL"],
   };
 }
@@ -52,11 +50,6 @@ function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
     delete Bun.env["TEMPORAL_ADDRESS"];
   } else {
     Bun.env["TEMPORAL_ADDRESS"] = snapshot.TEMPORAL_ADDRESS;
-  }
-  if (snapshot.BB_ASK_MODEL === undefined) {
-    delete Bun.env["BB_ASK_MODEL"];
-  } else {
-    Bun.env["BB_ASK_MODEL"] = snapshot.BB_ASK_MODEL;
   }
   if (snapshot.EXPLORE_MODEL === undefined) {
     delete Bun.env["EXPLORE_MODEL"];
@@ -169,16 +162,6 @@ describe("local runtime flags", () => {
     expect(() => configuration.enableBackgroundJobs).toThrow(
       /ENABLE_BACKGROUND_JOBS requires ENABLE_DISCORD_GATEWAY/,
     );
-  });
-
-  test("defaults Bryan Bucks analysis to GPT-5.6 Luna and accepts an override", () => {
-    delete Bun.env["BB_ASK_MODEL"];
-    resetConfigurationForTests();
-    expect(configuration.bucksAskModel).toBe("gpt-5.6-luna");
-
-    Bun.env["BB_ASK_MODEL"] = "gpt-5.6-terra";
-    resetConfigurationForTests();
-    expect(configuration.bucksAskModel).toBe("gpt-5.6-terra");
   });
 
   test("defaults Scout Explore to GPT-5.6 Luna and accepts an override", () => {

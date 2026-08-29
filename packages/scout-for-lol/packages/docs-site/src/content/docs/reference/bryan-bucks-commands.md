@@ -12,15 +12,14 @@ Most of what `/bb` does — except `/bb ask` — is also available on the
 
 ## Subcommands
 
-| Command             | What it does                                          | Reply                             |
-| ------------------- | ----------------------------------------------------- | --------------------------------- |
-| `/bb balance`       | Available Bucks, Bucks at risk, and pending positions | Private                           |
-| `/bb history`       | Paged transaction ledger with running balances        | Private                           |
-| `/bb transfer`      | Send half of a total spend to another wallet          | Private result, public receipt    |
-| `/bb ask`           | One-shot analysis over this server's Bryan Bucks data | Private, publishable by the asker |
-| `/bb notifications` | Choose settlement DMs about your bets and bets on you | Private                           |
-| `/bb rules`         | The complete rulebook                                 | **Public**                        |
-| `/bb prizes`        | The joke prize catalogue                              | **Public**                        |
+| Command             | What it does                                          | Reply                          |
+| ------------------- | ----------------------------------------------------- | ------------------------------- |
+| `/bb balance`       | Available Bucks, Bucks at risk, and pending positions | Private                         |
+| `/bb history`       | Paged transaction ledger with running balances        | Private                         |
+| `/bb transfer`      | Send half of a total spend to another wallet          | Private result, public receipt  |
+| `/bb notifications` | Choose settlement DMs about your bets and bets on you | Private                         |
+| `/bb rules`         | The complete rulebook                                 | **Public**                      |
+| `/bb prizes`        | The joke prize catalogue                              | **Public**                      |
 
 Every command starts privately except `rules` and `prizes`. A successful
 `transfer` then posts its sender, recipient, total spend, received amount, and
@@ -29,6 +28,12 @@ Scout.
 
 Placing, topping up, and cancelling bets happens through the buttons on each
 market message — there is no slash command for it.
+
+AI analysis of this server's Bryan Bucks data lives in `/scout ask`: in this
+server the Explore agent also carries the bounded Bucks analytics tools, so a
+question like "how have I done on parlays this month?" is asked there. Answers
+are saved to your private Explore conversation in the web app, where you can
+continue, publish, or share them.
 
 ## Options
 
@@ -42,12 +47,6 @@ market message — there is no slash command for it.
 The recipient receives half rounded down; the house receives half rounded up.
 The transfer is immediate and irreversible. Both wallets must already exist in
 this server, and you cannot transfer to yourself.
-
-### `/bb ask`
-
-| Option     | Required | Values                                 |
-| ---------- | -------- | -------------------------------------- |
-| `question` | yes      | Free text, up to the documented length |
 
 ### `/bb notifications`
 
@@ -71,13 +70,12 @@ The pre-match message carries the outcome market's controls. Match and weekly
 parlay messages carry their own controls. All three mutate their message rather
 than posting a receipt for each bet.
 
-| Message          | Buttons                                                            |
-| ---------------- | ------------------------------------------------------------------ |
-| Pre-match card   | `WIN · 1 BB`, `WIN · 5 BB`, `LOSE · 1 BB`, `LOSE · 5 BB`, `Cancel` |
-| Match parlay     | `YES 1`, `YES 5`, `NO 1`, `NO 5`, `Cancel`                         |
-| Weekly parlay    | `YES · 1 BB`, `NO · 1 BB`, `Cancel`                                |
-| `/bb history`    | `Previous`, `Next`                                                 |
-| `/bb ask` answer | `Post publicly`                                                    |
+| Message        | Buttons                                                            |
+| -------------- | ------------------------------------------------------------------ |
+| Pre-match card | `WIN · 1 BB`, `WIN · 5 BB`, `LOSE · 1 BB`, `LOSE · 5 BB`, `Cancel` |
+| Match parlay   | `YES 1`, `YES 5`, `NO 1`, `NO 5`, `Cancel`                         |
+| Weekly parlay  | `YES · 1 BB`, `NO · 1 BB`, `Cancel`                                |
+| `/bb history`  | `Previous`, `Next`                                                 |
 
 On a mixed lobby the pre-match buttons read `Blue`/`Red` instead of
 `WIN`/`LOSE`.

@@ -95,12 +95,6 @@ const DEFINITION = {
     default: "gpt-5.6-luna",
     names: { flag: "scout-explore-model", env: "EXPLORE_MODEL" },
   },
-  bucksAskModel: {
-    schema: z.string().trim().min(1),
-    sources: ["flag", "env", "default"],
-    default: "gpt-5.6-luna",
-    names: { flag: "scout-bucks-ask-model", env: "BB_ASK_MODEL" },
-  },
   /**
    * Which tournament API the tournament client talks to.
    *
@@ -149,7 +143,6 @@ export type DynamicConfigSeed = {
   reportAiModel?: string;
   bettingParlayAiModel?: string;
   exploreModel?: string;
-  bucksAskModel?: string;
   tournamentApiMode?: TournamentApiMode;
   tournamentMaxOpenLobbies?: number;
 };
@@ -177,7 +170,6 @@ function buildSnapshot(
                 reportAiModel: "string",
                 bettingParlayAiModel: "string",
                 exploreModel: "string",
-                bucksAskModel: "string",
                 tournamentApiMode: "string",
                 tournamentMaxOpenLobbies: "number",
               },
@@ -311,10 +303,6 @@ export function bettingParlayAiModel(): string {
 
 export function exploreModel(): string {
   return snapshot?.get("exploreModel") ?? configuration.exploreModel;
-}
-
-export function bucksAskModel(): string {
-  return snapshot?.get("bucksAskModel") ?? configuration.bucksAskModel;
 }
 
 export async function refreshDynamicConfig(): Promise<void> {

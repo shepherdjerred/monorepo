@@ -125,22 +125,12 @@ describe("registered Discord commands", () => {
     expect(wirePayload).not.toContain('"integration_types"');
   });
 
-  test("registers a bounded one-shot /bb ask subcommand that starts private", () => {
-    const ask = bbCommand
-      .toJSON()
-      .options?.find((option) => option.name === "ask");
-    if (ask === undefined || !("options" in ask)) {
-      throw new Error("/bb ask should be a subcommand with a question option");
-    }
-    expect(ask.options).toContainEqual(
-      expect.objectContaining({
-        name: "question",
-        required: true,
-        min_length: 1,
-        max_length: 500,
-      }),
-    );
-    expect(isPublicBbSubcommand("ask")).toBe(false);
+  test("registers no /bb ask subcommand — analysis lives in /scout ask", () => {
+    // The Bryan Bucks analyst merged into the Explore agent; a second entry
+    // point coming back is a product decision, not a refactor.
+    const names =
+      bbCommand.toJSON().options?.map((option) => option.name) ?? [];
+    expect(names).not.toContain("ask");
     expect(isPublicBbSubcommand("rules")).toBe(true);
     expect(isPublicBbSubcommand("prizes")).toBe(true);
   });

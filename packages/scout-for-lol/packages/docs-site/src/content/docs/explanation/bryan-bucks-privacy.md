@@ -38,12 +38,19 @@ ranking. People start betting to defend a position rather than because they
 have a view on the game, and the person in last place stops playing. A weekly
 snapshot keeps the fun of comparing without the pressure of a live scoreboard.
 
-The same reasoning shapes `/bb ask`. It can analyse this server's betting data,
-but its account tool only ever exposes _your_ current balance, and its ledger
-queries cannot group by bettor. Those two limits exist together on purpose: if
-either were relaxed, the results could be combined to reconstruct somebody
-else's balance — which would rebuild the leaderboard the fixed commands
-deliberately omit.
+The same reasoning shapes AI analysis, which lives in `/scout ask`. The agent
+can analyse this server's betting data, but its account tool only ever exposes
+_your_ current balance, and its ledger queries cannot group by bettor. Those
+two limits exist together on purpose: if either were relaxed, the results
+could be combined to reconstruct somebody else's balance — which would rebuild
+the leaderboard the fixed commands deliberately omit.
+
+One honesty note about where those answers live: a `/scout ask` answer is
+saved into **your** private Explore conversation, including a trace of the tool
+calls it made and their results. If you later share or publish that
+conversation, the analysis — guild-wide betting aggregates, bettor labels, and
+your own balance if you asked for it — travels with it. The structural limits
+above still hold; sharing is your action, not Scout's.
 
 ## What is public
 

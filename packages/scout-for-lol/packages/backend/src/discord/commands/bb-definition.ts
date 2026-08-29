@@ -1,11 +1,12 @@
 import { SlashCommandBuilder } from "discord.js";
 import { BUCKS_INT32_MAX } from "@scout-for-lol/data";
 import { MINIMUM_BUCKS_TRANSFER } from "#src/betting/constants.ts";
-import { BB_ASK_MAX_QUESTION_LENGTH } from "#src/discord/commands/bb-ask.ts";
 
+// AI analysis of Bryan Bucks data lives in `/scout ask`, which carries the
+// betting tools in this guild; `/bb` keeps the fixed read-only surfaces.
 export const bbCommand = new SlashCommandBuilder()
   .setName("bb")
-  .setDescription("Bryan Bucks — betting, balances, prizes, and analysis")
+  .setDescription("Bryan Bucks — balances, history, rules, and prizes")
   .addSubcommand((sub) =>
     sub.setName("balance").setDescription("Check your Bryan Bucks balance"),
   )
@@ -37,19 +38,6 @@ export const bbCommand = new SlashCommandBuilder()
           .setRequired(true)
           .setMinValue(MINIMUM_BUCKS_TRANSFER)
           .setMaxValue(BUCKS_INT32_MAX),
-      ),
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("ask")
-      .setDescription("Ask a question about Bryan Bucks statistics")
-      .addStringOption((option) =>
-        option
-          .setName("question")
-          .setDescription("What you want to know about Bryan Bucks")
-          .setRequired(true)
-          .setMinLength(1)
-          .setMaxLength(BB_ASK_MAX_QUESTION_LENGTH),
       ),
   )
   .addSubcommand((sub) =>

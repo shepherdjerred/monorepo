@@ -16,10 +16,6 @@ import {
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
-import {
-  replyBucksAsk,
-  type BucksAskAgentRunner,
-} from "#src/discord/commands/bb-ask.ts";
 import { buildBbRulesEmbed as createBbRulesEmbed } from "#src/discord/commands/bb-rules.ts";
 import {
   replyBbNotifications,
@@ -66,7 +62,6 @@ export function buildBbRulesEmbed(): EmbedBuilder {
 const BUCKS_COLOR = 0x2e_cc_71;
 
 type BbCommandDependencies = {
-  runAskAgent?: BucksAskAgentRunner;
   isPolicyEnabled?: typeof isPolicyEnabled;
 } & BbNotificationCommandDependencies &
   BbTransferCommandDependencies;
@@ -175,8 +170,7 @@ export async function executeBb(
       return;
     }
 
-    // Only rules and the prize catalog are public. Analysis starts private and
-    // can be explicitly published by its asker.
+    // Only rules and the prize catalog are public.
     const ephemeral = !isPublicBbSubcommand(subcommand);
     await interaction.deferReply({ ephemeral });
     const discordId = DiscordAccountIdSchema.parse(interaction.user.id);
@@ -196,16 +190,6 @@ export async function executeBb(
         break;
       case "transfer":
         await replyBbTransfer(interaction, serverId, discordId, dependencies);
-        break;
-      case "ask":
-        await replyBucksAsk(
-          interaction,
-          serverId,
-          discordId,
-          dependencies.runAskAgent === undefined
-            ? {}
-            : { runAgent: dependencies.runAskAgent },
-        );
         break;
       case "notifications":
         await replyBbNotifications(

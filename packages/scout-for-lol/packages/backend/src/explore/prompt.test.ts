@@ -6,7 +6,7 @@ import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
 
 describe("exploreAgentInstructions", () => {
   test("includes the generated ScoutQL reference without requiring a tool call", () => {
-    const instructions = exploreAgentInstructions();
+    const instructions = exploreAgentInstructions({ bucks: null });
 
     expect(instructions).toContain("## ScoutQL reference");
     expect(instructions).toContain(JSON.stringify(scoutQlLanguageReference()));
@@ -19,8 +19,29 @@ describe("exploreAgentInstructions", () => {
     expect(instructions).not.toContain("sample size");
   });
 
+  test("appends the Bryan Bucks section only for a bucks-capable turn", () => {
+    const plain = exploreAgentInstructions({ bucks: null });
+    const withBucks = exploreAgentInstructions({
+      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
+    });
+
+    expect(plain).not.toContain("## Bryan Bucks");
+    expect(withBucks).toContain("## Bryan Bucks");
+    // The injected timestamp anchors relative-date questions.
+    expect(withBucks).toContain("2026-08-29T00:00:00.000Z");
+    // The load-bearing definitions ported from the retired /bb ask agent.
+    expect(withBucks).toContain(
+      "Current balance, ledger delta, and betting P&L are different measures.",
+    );
+    expect(withBucks).toContain("private to the asker");
+    // A bucks-only answer runs no ScoutQL.
+    expect(withBucks).toContain("set queryText to null");
+    // Both variants still carry the whole ScoutQL contract.
+    expect(withBucks).toContain("## ScoutQL reference");
+  });
+
   test("carries no v1 clause the language no longer has", () => {
-    const instructions = exploreAgentInstructions();
+    const instructions = exploreAgentInstructions({ bucks: null });
 
     for (const clause of ["DURING", "ANALYZE", "BUCKET BY", "COMPARE TO"]) {
       expect(instructions).not.toContain(clause);
@@ -37,7 +58,7 @@ describe("ScoutQL field guide", () => {
     const section = scoutQlFieldGuideSection();
 
     expect(section.length).toBeGreaterThan(0);
-    expect(exploreAgentInstructions()).toContain(section);
+    expect(exploreAgentInstructions({ bucks: null })).toContain(section);
     expect(reportAgentInstructions()).toContain(section);
   });
 });

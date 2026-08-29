@@ -162,6 +162,7 @@ export async function runPersistedExploreTurn(
       // that separately as its current turn, so replaying it duplicates it.
       history: input.history.slice(0, -1),
       guildIds: input.guildIds,
+      requesterId: input.identity.userId,
       abortSignal: abortController.signal,
       emit: record,
     });

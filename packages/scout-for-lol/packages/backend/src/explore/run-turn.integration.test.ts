@@ -132,6 +132,64 @@ describe("shared persisted Explore turn", () => {
     expect(getExploreQuotaStatus({ userId }).quota[0]?.used).toBe(1);
   });
 
+  test("persists a Bryan-Bucks-only answer with no ScoutQL, preview, or visualization", async () => {
+    // A bucks-tools turn runs no ScoutQL, so its answer carries queryText:
+    // null and nothing downstream may require a preview or a chart.
+    const bucksOnlyAgent = async (params: ExploreAgentParams) => {
+      await params.emit({
+        type: "tool_result",
+        toolCallId: "call-bb",
+        toolName: "query_bucks_bets",
+        status: "succeeded",
+        message: "Got Bryan Bucks results.",
+        durationMs: 3,
+        details: null,
+        rawOutput: null,
+      });
+      return {
+        answer: {
+          answer: "You are up 12 BB this month.",
+          title: "Monthly Bryan Bucks net",
+          queryText: null,
+          caveats: [],
+          followUps: [],
+        },
+        preview: null,
+        visualization: null,
+      };
+    };
+    const prepared = await preparedTurn();
+
+    const terminal = await runPersistedExploreTurn(
+      {
+        ...prepared,
+        identity: { userId },
+        guildIds: [],
+        emit: () => Promise.resolve(),
+      },
+      {
+        client: prisma,
+        executeAgent: bucksOnlyAgent,
+        now: Date.now,
+        timeoutMs: 10_000,
+      },
+    );
+
+    expect(terminal.type).toBe("final");
+    expect(terminal.outcome).toBe("succeeded");
+    const transcript = await loadExploreTranscript(
+      prisma,
+      prepared.started.conversationId,
+      userId,
+    );
+    expect(transcript?.messages[1]?.content).toBe(
+      "You are up 12 BB this month.",
+    );
+    expect(transcript?.messages[1]?.queryText).toBeNull();
+    expect(transcript?.messages[1]?.preview).toBeNull();
+    expect(transcript?.messages[1]?.visualization).toBeNull();
+  });
+
   test("salvages streamed prose after an agent failure and releases the slot", async () => {
     const prepared = await preparedTurn();
 

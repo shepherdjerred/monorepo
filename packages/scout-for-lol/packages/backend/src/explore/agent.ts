@@ -1,6 +1,7 @@
 import { Output, stepCountIs, tool, ToolLoopAgent } from "ai";
 import { z } from "zod";
 import {
+  type DiscordAccountId,
   EXPLORE_MAX_HISTORY_TURNS,
   EXPLORE_MAX_OUTPUT_TOKENS,
   EXPLORE_MAX_PREVIEW_CALLS,
@@ -20,6 +21,10 @@ import {
 import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/format-expr.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
+import {
+  createBucksExploreTools,
+  resolveBucksCapability,
+} from "#src/explore/bucks-tools.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { createLogger } from "#src/logger.ts";
@@ -68,6 +73,11 @@ export type ExploreAgentParams = {
    * data, so it stays bounded to servers this person belongs to.
    */
   guildIds: string[];
+  /**
+   * The asker. Only the Bryan Bucks account tool reads it — the tool is
+   * structurally scoped to the requester's own balance.
+   */
+  requesterId: DiscordAccountId;
   abortSignal: AbortSignal;
   emit: (event: ExploreStreamEvent) => void | Promise<void>;
 };
@@ -114,11 +124,21 @@ async function streamExploreAgentInternal(
     lastVisualization: null,
   };
 
+  // Derived per turn rather than persisted, so Temporal recovery and flag
+  // revocation both re-evaluate; a guild losing `betting_enabled` loses the
+  // tools on its very next turn.
+  const bucksCapability = await resolveBucksCapability(params.guildIds);
+
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
-    instructions: exploreAgentInstructions(),
+    instructions: exploreAgentInstructions({
+      bucks:
+        bucksCapability === null
+          ? null
+          : { currentTime: new Date().toISOString() },
+    }),
     model: runtime.languageModel(model, ["tools"]),
-    tools: createExploreTools(params, state),
+    tools: createExploreTools(params, state, bucksCapability),
     stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
     // Most current models (every GPT-5.x, most Claude) declare
     // supportsTemperature: false, and the runtime asks OpenRouter for
@@ -204,7 +224,11 @@ function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
   return [...messages, { role: "user", content: params.question }];
 }
 
-function createExploreTools(params: ExploreAgentParams, state: RunState) {
+function createExploreTools(
+  params: ExploreAgentParams,
+  state: RunState,
+  bucksCapability: Awaited<ReturnType<typeof resolveBucksCapability>>,
+) {
   const track: ToolTracker = async (toolName, work) => {
     state.toolCalls++;
     if (state.toolCalls > EXPLORE_MAX_TOOL_CALLS) {
@@ -338,5 +362,12 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
     validate_report_query: createValidateTool(track),
     run_report_query: runReportQuery,
     format_report_query: createFormatTool(track),
+    ...(bucksCapability === null
+      ? {}
+      : createBucksExploreTools({
+          capability: bucksCapability,
+          requesterId: params.requesterId,
+          track,
+        })),
   };
 }

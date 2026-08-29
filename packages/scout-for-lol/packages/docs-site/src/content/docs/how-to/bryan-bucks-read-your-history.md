@@ -61,12 +61,13 @@ totals only — never who bet what; see
 ## Ask a question instead
 
 ```text
-/bb ask question: how have I done on parlays this month?
+/scout ask question: how have I done on Bryan Bucks parlays this month?
 ```
 
-One-shot analysis over this server's Bryan Bucks data. The answer starts
-private; only you can post it to the channel. Every statistic it states comes
-from a real query, not from the model's memory.
+In this server, `/scout ask` carries the Bryan Bucks analytics tools alongside
+its match-data tools. The answer starts private, is saved to your Explore
+conversation, and every statistic it states comes from a real query, not from
+the model's memory.
 
 ## The weekly leaderboard
 

@@ -269,6 +269,18 @@ function toolLabel(toolName: string): string {
   if (toolName === "run_report_query") {
     return "Run ScoutQL";
   }
+  if (toolName === "get_bucks_dataset") {
+    return "Read Bryan Bucks dataset";
+  }
+  if (toolName === "query_bucks_accounts") {
+    return "Read Bryan Bucks balance";
+  }
+  if (toolName === "query_bucks_ledger") {
+    return "Query Bryan Bucks ledger";
+  }
+  if (toolName === "query_bucks_bets") {
+    return "Query Bryan Bucks bets";
+  }
   return toolName;
 }
 
