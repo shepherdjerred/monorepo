@@ -42,6 +42,23 @@ bun run --filter='./packages/scout-for-lol' dev:web -- \
 starts the backend with the BETA Discord bot token, starts the Vite SPA, and
 proxies `/api` and `/trpc` from `:5180` to `:3000`.
 
+For bot-command work, use the dedicated Derrej runtime instead of starting the
+BETA gateway or report lake:
+
+```bash
+SCOUT_DISCORD_SMOKE_GUILD_ID=<dedicated-guild-id> \
+bun run --filter='./packages/scout-for-lol' dev:discord -- --scenario gateway
+```
+
+This preset uses `DISCORD_BOT_TOKEN` with Derrej application
+`1542993271477899294`, keeps local Temporal, and disables background jobs,
+report-lake preparation, Vite, and backend watch. Scenario flags are applied by
+the dev-only backend entrypoint to the one explicit fixture guild. Use the
+operator-only `test:discord:smoke` command for repeatable acceptance; it
+preflights Discord and the `scout-discord-smoke` PinchTab profile before any
+database mutation and stores resumable evidence under `.context/discord-smoke/`.
+Never substitute the BETA token or guild for this workflow.
+
 Each copy can use isolated ports and an isolated Postgres database on the
 shared local dev server (port 5471, `SCOUT_PG_PORT` overrides):
 

@@ -7,6 +7,8 @@ export type DevWebOptions = {
   readonly temporalUiPort: number;
   readonly databaseUrl: string;
   readonly discordGatewayEnabled: boolean;
+  readonly backgroundJobsEnabled: boolean;
+  readonly webEnabled: boolean;
   readonly backendWatchEnabled: boolean;
   readonly marketingOrigin: string;
   readonly docsOrigin: string;
@@ -108,7 +110,11 @@ export function buildDevEnvironment(
     VITE_MARKETING_ORIGIN: options.marketingOrigin,
     VITE_DOCS_ORIGIN: options.docsOrigin,
     ENABLE_BACKGROUND_JOBS:
-      isDesignAuditBoot || !options.discordGatewayEnabled ? "false" : "true",
+      isDesignAuditBoot ||
+      !options.discordGatewayEnabled ||
+      !options.backgroundJobsEnabled
+        ? "false"
+        : "true",
     ENABLE_DISCORD_GATEWAY:
       isDesignAuditBoot || !options.discordGatewayEnabled ? "false" : "true",
     WEB_APP_ORIGIN: `http://localhost:${options.webPort.toString()}`,
