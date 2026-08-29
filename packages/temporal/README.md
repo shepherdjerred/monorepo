@@ -86,6 +86,16 @@ The migration command always reads its source from `default` and writes only to
 `prod` or `beta`; it intentionally ignores `TEMPORAL_NAMESPACE`. The other
 clients and operator scripts require `TEMPORAL_NAMESPACE=dev|beta|prod`.
 
+The migration command always inventories `default`. `prepare --confirm` writes
+paused copies to `prod` and `beta`; `cutover --confirm` also pauses the source
+schedules in `default` and activates their targets; `rollback --confirm` can
+restore source pause state in `default` and deletes the prepared targets, but
+only before any target workflow starts. `TEMPORAL_NAMESPACE` is ignored by the
+migration command itself, but is still exported above because the read-only
+inventory step shares the required namespace contract. The other clients and
+operator scripts require
+`TEMPORAL_NAMESPACE=dev|beta|prod`.
+
 ## Documentation
 
 The complete reference is [AGENTS.md](AGENTS.md):

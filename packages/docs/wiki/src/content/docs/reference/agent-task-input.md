@@ -57,11 +57,11 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
 
 ## Submission surfaces
 
-| Surface      | Entry point                                                | Auth                                          |
-| ------------ | ---------------------------------------------------------- | --------------------------------------------- |
-| Doc block    | `<!-- temporal-agent-task { … } -->` in any Markdown file  | none — operator runs the CLI                  |
-| Operator CLI | `bun run scripts/schedule-agent-task.ts --from-doc <path>` | port-forwarded Temporal                       |
-| HTTP API     | `POST /agent-tasks` on `temporal-agent-tasks.sjer.red`     | `Authorization: Bearer $AGENT_TASK_API_TOKEN` |
+| Surface      | Entry point                                                                       | Auth                                          |
+| ------------ | --------------------------------------------------------------------------------- | --------------------------------------------- |
+| Doc block    | `<!-- temporal-agent-task { … } -->` in any Markdown file                         | none — operator runs the CLI                  |
+| Operator CLI | `TEMPORAL_NAMESPACE=dev bun run scripts/schedule-agent-task.ts --from-doc <path>` | port-forwarded Temporal                       |
+| HTTP API     | `POST /agent-tasks` on `temporal-agent-tasks.sjer.red`                            | `Authorization: Bearer $AGENT_TASK_API_TOKEN` |
 
 One document may contain multiple task blocks. The CLI validates every block as
 v2 before connecting and schedules them in document order. It also accepts

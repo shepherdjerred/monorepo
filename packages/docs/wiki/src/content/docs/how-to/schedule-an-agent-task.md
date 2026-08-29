@@ -57,7 +57,7 @@ failed.
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=localhost:7233 \
+TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
   bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task.md
 ```
 

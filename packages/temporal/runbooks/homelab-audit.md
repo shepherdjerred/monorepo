@@ -375,7 +375,11 @@ The removed `agent-task-timeout-watch` aggregate alert must not be used as a
 health signal. Query the SDK metrics instead:
 
 ```bash
-for TEMPORAL_NAMESPACE in prod beta; do
+TEMPORAL_POLLING_NAMESPACES=prod
+if [ -n "${TEMPORAL_LEGACY_NAMESPACE:-}" ]; then
+  TEMPORAL_POLLING_NAMESPACES="${TEMPORAL_POLLING_NAMESPACES} default"
+fi
+for TEMPORAL_NAMESPACE in ${TEMPORAL_POLLING_NAMESPACES}; do
   toolkit prom query "temporal_worker_num_pollers{namespace=\"temporal\",exported_namespace=\"${TEMPORAL_NAMESPACE}\",task_queue=\"agent-task\",poller_type=\"workflow_task\"}"
   toolkit prom query "histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace=\"temporal\",exported_namespace=\"${TEMPORAL_NAMESPACE}\",task_queue=\"agent-task\"}[5m])))"
 done
