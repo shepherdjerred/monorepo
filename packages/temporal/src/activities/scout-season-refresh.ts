@@ -1,5 +1,3 @@
-import { Context } from "@temporalio/activity";
-import * as Sentry from "@sentry/bun";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import nodePath from "node:path";
@@ -8,15 +6,12 @@ import {
   scoutSeasonRefreshDurationSeconds,
   scoutSeasonRefreshRunsTotal,
 } from "#observability/metrics.ts";
-import { getTraceContext } from "#observability/tracing.ts";
-import { emitOtel } from "#observability/log.ts";
-import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { installScoutWorkspace, rootInstallWithoutHooks } from "./bot-clone.ts";
 import {
-  runClaude,
-  type ClaudeRunResult,
-} from "./scout-season-refresh-claude.ts";
+  runSeasonAgent,
+  type SeasonAgentRunResult,
+} from "./scout-season-refresh-codex.ts";
 import {
   changedFilesInPaths,
   getUnifiedDiff,
@@ -28,6 +23,7 @@ import {
   assessSeasonEvidence,
   type SeasonEvidenceAssessment,
 } from "./scout-season-evidence.ts";
+import { createActivityObservability } from "./activity-observability.ts";
 
 const COMPONENT = "scout-season-refresh";
 
@@ -47,6 +43,9 @@ const HEARTBEAT_INTERVAL_MS = 10_000;
 
 const NO_DRIFT_SENTINEL = "NO_DRIFT";
 const DRIFTED_SENTINEL = "DRIFTED";
+
+const { jsonLog, captureWithContext, safeHeartbeat } =
+  createActivityObservability(COMPONENT, "scoutSeasonRefresh");
 
 export type ScoutSeasonRefreshInput = {
   dryRun?: boolean;
@@ -77,62 +76,6 @@ export type ScoutSeasonRefreshResult = {
   validationPassed: boolean;
 };
 
-function jsonLog(
-  level: "info" | "warning" | "error",
-  message: string,
-  fields: Record<string, unknown> = {},
-): void {
-  const info = activityInfoOrUndefined();
-  const base: Record<string, unknown> = {
-    level,
-    msg: message,
-    component: COMPONENT,
-    ...getTraceContext(),
-    ...fields,
-  };
-  if (info !== undefined) Object.assign(base, info);
-  console.warn(JSON.stringify(base));
-  emitOtel(level, message, { module: COMPONENT, ...info, ...fields });
-}
-
-function activityInfoOrUndefined(): Record<string, unknown> | undefined {
-  try {
-    const info = Context.current().info;
-    return {
-      workflow: info.workflowType,
-      ...workflowExecutionContext(info),
-      activity: info.activityType,
-      attempt: info.attempt,
-    };
-  } catch {
-    return undefined;
-  }
-}
-
-function captureWithContext(
-  error: unknown,
-  extra: Record<string, unknown> = {},
-): void {
-  Sentry.withScope((scope) => {
-    scope.setTag("component", COMPONENT);
-    const info = activityInfoOrUndefined();
-    if (info !== undefined) {
-      scope.setTag("workflow", String(info["workflow"]));
-      scope.setTag("activity", String(info["activity"]));
-    }
-    scope.setContext("scoutSeasonRefresh", { ...info, ...extra });
-    Sentry.captureException(error);
-  });
-}
-
-function safeHeartbeat(payload: Record<string, unknown>): void {
-  try {
-    Context.current().heartbeat(payload);
-  } catch {
-    // Outside an activity (local dev script): heartbeats are a no-op.
-  }
-}
-
 function branchNameFor(id: string): string {
   const date = new Date().toISOString().slice(0, 10);
   return `scout-season-refresh/${date}-${id.slice(0, 8)}`;
@@ -155,7 +98,7 @@ function logSentinelDisagreement(
 }
 
 function noDriftResult(
-  claude: ClaudeRunResult,
+  agent: SeasonAgentRunResult,
   durationSeconds: number,
   assessment: SeasonEvidenceAssessment,
 ): ScoutSeasonRefreshResult {
@@ -166,8 +109,8 @@ function noDriftResult(
   );
   jsonLog("info", "Season refresh detected no drift", {
     durationSeconds,
-    costUsd: claude.costUsd,
-    numTurns: claude.numTurns,
+    costUsd: agent.costUsd,
+    numTurns: agent.numTurns,
   });
   return {
     ...assessment,
@@ -179,20 +122,20 @@ function noDriftResult(
     prUrl: undefined,
     diff: undefined,
     durationSeconds,
-    costUsd: claude.costUsd,
-    numTurns: claude.numTurns,
+    costUsd: agent.costUsd,
+    numTurns: agent.numTurns,
   };
 }
 
 async function dryRunResult(args: {
-  claude: ClaudeRunResult;
+  agent: SeasonAgentRunResult;
   files: string[];
   diff: string;
   id: string;
   durationSeconds: number;
   assessment: SeasonEvidenceAssessment;
 }): Promise<ScoutSeasonRefreshResult> {
-  const { claude, files, diff, id, durationSeconds, assessment } = args;
+  const { agent, files, diff, id, durationSeconds, assessment } = args;
   scoutSeasonRefreshRunsTotal.inc({ outcome: "pr-created" });
   scoutSeasonRefreshDurationSeconds.observe(
     { outcome: "pr-created" },
@@ -215,13 +158,13 @@ async function dryRunResult(args: {
     prUrl: undefined,
     diff,
     durationSeconds,
-    costUsd: claude.costUsd,
-    numTurns: claude.numTurns,
+    costUsd: agent.costUsd,
+    numTurns: agent.numTurns,
   };
 }
 
 async function realPrResult(args: {
-  claude: ClaudeRunResult;
+  agent: SeasonAgentRunResult;
   files: string[];
   diff: string;
   id: string;
@@ -240,7 +183,7 @@ async function realPrResult(args: {
     "",
     `Changed files: ${String(args.files.length)}`,
     "",
-    "## Claude's notes",
+    "## Agent notes",
     "",
     args.sentinelText.length > 0 ? args.sentinelText : "(no notes; see diff)",
   ].join("\n");
@@ -280,13 +223,13 @@ async function realPrResult(args: {
     prUrl,
     diff: args.diff,
     durationSeconds: args.durationSeconds,
-    costUsd: args.claude.costUsd,
-    numTurns: args.claude.numTurns,
+    costUsd: args.agent.costUsd,
+    numTurns: args.agent.numTurns,
   };
 }
 
 function partialResult(args: {
-  claude: ClaudeRunResult;
+  agent: SeasonAgentRunResult;
   files: string[];
   diff: string;
   durationSeconds: number;
@@ -307,8 +250,8 @@ function partialResult(args: {
     prUrl: undefined,
     diff: args.diff === "" ? undefined : args.diff,
     durationSeconds: args.durationSeconds,
-    costUsd: args.claude.costUsd,
-    numTurns: args.claude.numTurns,
+    costUsd: args.agent.costUsd,
+    numTurns: args.agent.numTurns,
   };
 }
 
@@ -332,15 +275,15 @@ async function prepareWorkdir(input: ScoutSeasonRefreshInput): Promise<{
     "1",
   ]);
   // Pre-install the scout workspace (with the llm-models producer built) so
-  // Claude's verification step (`bun run test -- src/seasons.test.ts`) works on the
-  // first try — otherwise Claude improvises its own installs, and a root
+  // the agent's verification step (`bun run test -- src/seasons.test.ts`) works on the
+  // first try — otherwise the agent improvises its own installs, and a root
   // install would arm lefthook hooks in the clone.
   await installScoutWorkspace(repoDir);
   return { tempDir, repoDir, ownedByUs: true };
 }
 
 async function dispatchOutcome(args: {
-  claude: ClaudeRunResult;
+  agent: SeasonAgentRunResult;
   files: string[];
   diff: string;
   id: string;
@@ -360,11 +303,11 @@ async function dispatchOutcome(args: {
     return partialResult(args);
   }
   if (args.files.length === 0) {
-    return noDriftResult(args.claude, args.durationSeconds, args.assessment);
+    return noDriftResult(args.agent, args.durationSeconds, args.assessment);
   }
   if (args.dryRun) {
     return await dryRunResult({
-      claude: args.claude,
+      agent: args.agent,
       files: args.files,
       diff: args.diff,
       id: args.id,
@@ -373,7 +316,7 @@ async function dispatchOutcome(args: {
     });
   }
   return await realPrResult({
-    claude: args.claude,
+    agent: args.agent,
     files: args.files,
     diff: args.diff,
     id: args.id,
@@ -400,9 +343,9 @@ async function run(
   const workdir = await prepareWorkdir(input);
 
   try {
-    const claude = await runClaude({
+    const agent = await runSeasonAgent({
       workdir: workdir.repoDir,
-      model: input.model ?? "claude-opus-5",
+      model: input.model ?? "gpt-5.6-luna",
       maxTurns: input.maxTurns ?? 40,
       seasonsFile: SEASONS_FILE,
       seasonsTestFile: SEASONS_TEST_FILE,
@@ -411,10 +354,10 @@ async function run(
       driftedSentinel: DRIFTED_SENTINEL,
     });
 
-    const sentinelText = claude.resultText.trim();
+    const sentinelText = agent.resultText.trim();
     let files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
     if (files.includes(CHANGELOG_FILE)) {
-      // The prettier gate covers changelog.tsx, so normalize Claude's edit or
+      // The prettier gate covers changelog.tsx, so normalize the agent's edit or
       // the PR fails CI (same pattern as llm-catalog-refresh.ts). Only
       // runs on the rare new-season drift, so the frozen install is negligible.
       // Hook-free: a plain root install would run `lefthook install` and arm
@@ -453,7 +396,7 @@ async function run(
     const ghToken = tokenResult?.token ?? "";
 
     return await dispatchOutcome({
-      claude,
+      agent,
       files,
       diff,
       id,

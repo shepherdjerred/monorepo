@@ -420,12 +420,6 @@ export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE: Record<string, unknown> = z
   .record(z.string(), z.unknown())
   .parse(agentTaskClaudeJsonSchema);
 
-const agentTaskClaudeJsonSchemaV2 = stripClaudeSchemaAnnotations(
-  z.toJSONSchema(AgentTaskResultPayloadV2Schema, { target: "draft-7" }),
-);
-export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2: Record<string, unknown> =
-  z.record(z.string(), z.unknown()).parse(agentTaskClaudeJsonSchemaV2);
-
 // buildAgentTaskSdkConfig fingerprints whichever schema a run actually sends,
 // so the value logged with a contract failure always matches the live request.
 export const AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT = jsonSchemaFingerprint(

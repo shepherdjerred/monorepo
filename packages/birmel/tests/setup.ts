@@ -4,7 +4,6 @@ import { beforeAll, afterAll, vi } from "vitest";
 beforeAll(() => {
   Bun.env["DISCORD_TOKEN"] = "test-discord-token";
   Bun.env["DISCORD_CLIENT_ID"] = "123456789012345678";
-  Bun.env["CLAUDE_CODE_OAUTH_TOKEN"] = "test-claude-oauth-token";
   Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-key";
 });
 

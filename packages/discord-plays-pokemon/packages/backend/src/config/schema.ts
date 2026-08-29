@@ -7,9 +7,9 @@ const ReasoningEffortSchema = z.enum(["low", "medium", "high", "xhigh"]);
 const GoalConfigSchema = z
   .strictObject({
     enabled: z.boolean().default(false),
-    model: z.string().min(1).default("gpt-5.6-luna"),
+    model: z.string().min(1).default("gpt-5.6-sol"),
     // Codex `model_reasoning_effort` — medium is the goal-mode default so
-    // navigation/vision turns get real chain-of-thought without flagship cost.
+    // navigation/vision turns retain the established reasoning baseline.
     reasoning_effort: ReasoningEffortSchema.default("medium"),
     runtime_directory: z.string().min(1).default("."),
     helper_dir: z.string().min(1).optional(),
@@ -51,7 +51,7 @@ const GoalConfigSchema = z
   })
   .default({
     enabled: false,
-    model: "gpt-5.6-luna",
+    model: "gpt-5.6-sol",
     reasoning_effort: "medium",
     runtime_directory: ".",
     screenshot_dir: "goal-screenshots",

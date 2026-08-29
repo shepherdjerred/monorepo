@@ -78,7 +78,7 @@ describe("ConfigSchema goal config", () => {
     const parsed = ConfigSchema.parse(validConfigWithoutGoal());
     expect(parsed.game.goal).toEqual({
       enabled: false,
-      model: "gpt-5.6-luna",
+      model: "gpt-5.6-sol",
       reasoning_effort: "medium",
       runtime_directory: ".",
       screenshot_dir: "goal-screenshots",

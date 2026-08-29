@@ -6,7 +6,7 @@
  * image, that the editor + music runtime dependencies are present, then boots
  * the bot with dummy creds and asserts the Discord login fails with the expected
  * auth error:
- *   - gh on PATH and the package-local Claude Agent SDK importable
+ *   - gh on PATH and the package-local Codex SDK importable
  *   - node + python3 (youtube-dl-exec)
  *   - ffmpeg-static resolves (audio transcode)
  *   - @snazzah/davey imports (discord-voip DAVE)
@@ -45,7 +45,7 @@ async function main(): Promise<void> {
     "cd /app/packages/birmel",
     // Editor + music runtime dependency checks (each hard-fails on absence).
     "command -v gh",
-    "bun -e 'await import(\"@anthropic-ai/claude-agent-sdk\");'",
+    "bun -e 'await import(\"@openai/codex-sdk\");'",
     "node --version",
     "python3 --version",
     String.raw`bun -e "const p = require(\"ffmpeg-static\"); if (typeof p !== \"string\" || p.length === 0) throw new Error(\"ffmpeg-static did not resolve\");"`,
@@ -70,8 +70,6 @@ async function main(): Promise<void> {
     "DISCORD_TOKEN=smoke-test-dummy",
     "-e",
     `DISCORD_CLIENT_ID=${"1".repeat(18)}`,
-    "-e",
-    "CLAUDE_CODE_OAUTH_TOKEN=smoke-test-dummy",
     "-e",
     "OPENROUTER_API_KEY=smoke-test-dummy",
     "-e",

@@ -145,7 +145,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // Two 30-minute research attempts, their 5-minute backoff, and both
     // possible three-attempt report deliveries fit inside this bound.
     workflowExecutionTimeout: "90 minutes",
-    memo: "Weekly LoL season-date drift check (Claude Agent SDK → PR if drifted)",
+    memo: "Weekly LoL season-date drift check (Codex SDK Luna through OpenRouter → PR if drifted)",
   },
   {
     id: "scout-showcase-refresh-weekly",

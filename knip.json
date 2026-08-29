@@ -285,7 +285,6 @@
     "scripts/observability/local-stack/**"
   ],
   "ignoreDependencies": [
-    "@anthropic-ai/claude-agent-sdk",
     "@commitlint/types",
     "@eslint-community/eslint-plugin-eslint-comments",
     "@eslint/compat",

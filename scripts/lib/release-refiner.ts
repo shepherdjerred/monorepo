@@ -1,13 +1,12 @@
-import { query } from "@anthropic-ai/claude-agent-sdk";
 import { Codex } from "@openai/codex-sdk";
+import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 
 import { runAllowExit, type RunOptions, type RunResult } from "./run.ts";
 
-const CODEX_MODEL = "gpt-5.6-sol";
+const CODEX_MODEL = "gpt-5.6-luna";
 // Every inference credential the release lane's environment may carry. The
-// refiner strips all of them and hands back only the one provider it is about
-// to launch, so neither agent can reach the other's subscription.
+// refiner strips all of them before independently verifying the agent result.
 const AGENT_CREDENTIAL_ENVIRONMENT = [
   "ANTHROPIC_API_KEY",
   "CLAUDE_CODE_OAUTH_TOKEN",
@@ -17,36 +16,11 @@ const AGENT_CREDENTIAL_ENVIRONMENT = [
   "CODEX_ID_TOKEN",
   "CODEX_REFRESH_TOKEN",
   "OPENAI_API_KEY",
+  "OPENROUTER_API_KEY",
 ];
 const OUTPUT_TAIL_LIMIT = 16_384;
-// Claude Code meters a subscription on more than one axis, and a release lane
-// that runs for minutes can exhaust any of them. `session` is the short-window
-// limit ("You've hit your session limit · resets 8:50pm (UTC)") — it exhausted
-// the refiner on builds 11022-11045 and, because it was absent here, was
-// classified as an unknown provider failure instead of a quota fallback.
-const CLAUDE_QUOTA_PATTERN =
-  /\b(?:hit|reached|exceeded) (?:your )?(?:weekly|monthly|session|usage)(?: usage)? limit\b/i;
-
-// The Agent SDK prefixes every error it surfaces from a terminal Claude Code
-// result with this. Requiring it keeps the thrown-error classifier as narrow as
-// the parsed-result one: a quota phrase alone (in a tool's output, a prompt, a
-// CHANGELOG line) is not enough — it has to be Claude Code's own verdict.
-const CLAUDE_SDK_ERROR_RESULT_PREFIX = "Claude Code returned an error result";
 const REFINER_RESULT_START = "<!-- release-refiner-result -->";
 const REFINER_RESULT_END = "<!-- /release-refiner-result -->";
-
-const ClaudeResultSchema = z
-  .object({
-    type: z.literal("result"),
-    subtype: z.string(),
-    is_error: z.boolean(),
-    api_error_status: z.number().nullish(),
-    result: z.string().optional(),
-    errors: z.array(z.string()).optional(),
-    total_cost_usd: z.number().optional(),
-    num_turns: z.number().int().nonnegative().optional(),
-  })
-  .loose();
 
 const ReleaseRefinerResultSchema = z.discriminatedUnion("status", [
   z
@@ -95,7 +69,7 @@ const RefinerCommitSchema = z
   })
   .loose();
 
-export type RefinerProvider = "claude" | "codex" | "none";
+export type RefinerProvider = "codex" | "none";
 
 export type RefinerCommandRunner = (
   command: string[],
@@ -106,16 +80,12 @@ export type RunReleaseRefinerInput = {
   root: string;
   prompt: string;
   env: Record<string, string>;
-  claudeToken: string;
-  codexHome: string;
+  openRouterApiKey: string;
   execute?: RefinerCommandRunner;
-  runClaude?: ReleaseAgentRunner;
   runCodex?: ReleaseAgentRunner;
 };
 
-export type ReleaseAgentOutcome =
-  | { kind: "completed"; output: string }
-  | { kind: "quota-exhausted"; detail: string };
+export type ReleaseAgentOutcome = { kind: "completed"; output: string };
 
 export type ReleaseAgentRunner = (
   input: RunReleaseRefinerInput,
@@ -143,43 +113,6 @@ function parseReleaseRefinerResult(
   } catch {
     return null;
   }
-}
-
-export function isClaudeQuotaExhaustion(result: unknown): boolean {
-  const parsed = ClaudeResultSchema.safeParse(result);
-  if (!parsed.success) return false;
-  const detail = [parsed.data.result, ...(parsed.data.errors ?? [])]
-    .filter((value) => value !== undefined)
-    .join("; ");
-  return (
-    parsed.data.is_error &&
-    parsed.data.api_error_status === 429 &&
-    CLAUDE_QUOTA_PATTERN.test(detail)
-  );
-}
-
-/**
- * Quota exhaustion the Agent SDK raises as a thrown error rather than a
- * `result` message.
- *
- * `isClaudeQuotaExhaustion` can only see a terminal result the async iterator
- * actually yielded. When Claude Code ends the turn on a subscription limit the
- * SDK instead rejects inside `readMessages`, so the loop throws, no result is
- * ever assigned, and the Codex fallback the release lane depends on is never
- * reached — the lane died on `Claude Code returned an error result: You've hit
- * your session limit` with both providers healthy.
- *
- * This stays a *validated* signature, matching the documented contract that
- * only a confirmed usage-quota error may fall back: it requires Claude Code's
- * own error-result envelope together with a quota phrase. Every other thrown
- * error is re-raised unchanged and remains a hard CI failure.
- */
-export function isClaudeQuotaExhaustionError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  return (
-    error.message.includes(CLAUDE_SDK_ERROR_RESULT_PREFIX) &&
-    CLAUDE_QUOTA_PATTERN.test(error.message)
-  );
 }
 
 function outputTail(value: string): string {
@@ -221,7 +154,7 @@ function commandFailure(provider: string, result: RunResult): Error {
 /**
  * Non-secret process and TLS settings the refiner agents inherit from the CI
  * image. This is an allowlist, not a denylist, for the same reason
- * `envForProvider` is one in packages/temporal: these agents run with Bash and
+ * `envForProvider` is one in packages/temporal: this agent runs with Bash and
  * network access, so anything reachable from their environment is exfiltratable
  * by a prompt-injected or merely mistaken command. The main-only release lane
  * runs with `GITHUB_APP_PRIVATE_KEY` set — `setupGitAuth()` requires it — so a
@@ -231,8 +164,7 @@ function commandFailure(provider: string, result: RunResult): Error {
  * askpass environment, and its own provider credential; nothing else.
  */
 const AGENT_PROCESS_ENVIRONMENT_KEYS = new Set([
-  // Claude is launched with `executable: "bun"`, resolvable only through the CI
-  // image's mise PATH. Without this the lane dies before refinement starts.
+  // Codex is launched from the CI image's mise-aware PATH.
   "PATH",
   "HOME",
   "SHELL",
@@ -255,11 +187,11 @@ const AGENT_PROCESS_ENVIRONMENT_KEYS = new Set([
 /**
  * Build a native SDK environment for the release refiner.
  *
- * Both SDKs replace the child environment wholesale rather than layering onto
+ * The SDK replaces the child environment wholesale rather than layering onto
  * `process.env` the way `run()` does, so passing only the git-auth env would
  * drop the CI image's mise `PATH`. Copy only the allowlisted process/TLS
- * settings, then add the git auth and the provider-specific auth boundary this
- * run needs.
+ * settings, then add the git auth this run needs. The OpenRouter key is passed
+ * through the Codex SDK constructor and never inherited by tool subprocesses.
  */
 export function refinerSdkEnv(
   input: Pick<RunReleaseRefinerInput, "env">,
@@ -275,77 +207,16 @@ export function refinerSdkEnv(
   return { ...env, ...input.env, ...credentials };
 }
 
-async function runClaudeAgentSdk(
-  input: RunReleaseRefinerInput,
-): Promise<ReleaseAgentOutcome> {
-  const messages = query({
-    prompt: input.prompt,
-    options: {
-      allowedTools: ["Bash", "Read", "Edit", "Write", "Grep", "Glob"],
-      allowDangerouslySkipPermissions: true,
-      cwd: input.root,
-      env: refinerSdkEnv(input, {
-        CLAUDE_CODE_OAUTH_TOKEN: input.claudeToken,
-        IS_SANDBOX: "1",
-      }),
-      executable: "bun",
-      maxTurns: 80,
-      model: "claude-opus-5",
-      permissionMode: "bypassPermissions",
-      persistSession: false,
-      tools: ["Bash", "Read", "Edit", "Write", "Grep", "Glob"],
-    },
-  });
-  let result: z.infer<typeof ClaudeResultSchema> | undefined;
-  try {
-    for await (const message of messages) {
-      if (message.type === "result") {
-        result = ClaudeResultSchema.parse(message);
-      }
-    }
-  } catch (error) {
-    // `instanceof` here rather than a type guard on the classifier: the repo
-    // bans predicate signatures (custom-rules/no-type-guards).
-    if (error instanceof Error && isClaudeQuotaExhaustionError(error)) {
-      return { kind: "quota-exhausted", detail: error.message };
-    }
-    throw error;
-  } finally {
-    messages.close();
-  }
-  if (result === undefined) {
-    throw new Error("Claude Agent SDK completed without a result event");
-  }
-  if (isClaudeQuotaExhaustion(result)) {
-    return {
-      kind: "quota-exhausted",
-      detail: result.result ?? result.errors?.join("; ") ?? "usage limit",
-    };
-  }
-  if (result.is_error || result.subtype !== "success") {
-    throw new Error(
-      `Claude release refiner failed: ${result.errors?.join("; ") ?? result.result ?? result.subtype}`,
-    );
-  }
-  if (result.result === undefined) {
-    throw new Error("Claude release refiner returned no result text");
-  }
-  console.log(
-    `Claude release refiner completed (${String(result.num_turns ?? 0)} turns, $${(result.total_cost_usd ?? 0).toFixed(4)}).`,
-  );
-  return { kind: "completed", output: result.result };
-}
-
 async function runCodexSdk(
   input: RunReleaseRefinerInput,
 ): Promise<ReleaseAgentOutcome> {
+  const openRouter = createOpenRouterCodexConfig({
+    apiKey: input.openRouterApiKey,
+    modelId: CODEX_MODEL,
+    env: refinerSdkEnv(input, {}),
+  });
   const codex = new Codex({
-    env: refinerSdkEnv(input, {
-      // Codex reads the full, ChatGPT-managed auth bundle from this isolated
-      // persistent directory and refreshes it in place. Do not extract its
-      // short-lived access token into an environment variable.
-      CODEX_HOME: input.codexHome,
-    }),
+    ...openRouter.codexOptions,
     config: {
       project_doc_max_bytes: 0,
       features: { apps: false, plugins: false, multi_agent: false },
@@ -353,7 +224,7 @@ async function runCodexSdk(
   });
   const thread = codex.startThread({
     approvalPolicy: "never",
-    model: CODEX_MODEL,
+    model: openRouter.routeModelId,
     modelReasoningEffort: "medium",
     networkAccessEnabled: true,
     sandboxMode: "danger-full-access",
@@ -363,7 +234,7 @@ async function runCodexSdk(
   });
   const result = await thread.run(input.prompt);
   console.log(
-    `Codex release refiner completed (${String(result.usage?.input_tokens ?? 0)} input tokens, ${String(result.usage?.output_tokens ?? 0)} output tokens).`,
+    `Codex release refiner completed (model=${openRouter.catalogModelId}, ${String(result.usage?.input_tokens ?? 0)} input tokens, ${String(result.usage?.output_tokens ?? 0)} output tokens).`,
   );
   return { kind: "completed", output: result.finalResponse };
 }
@@ -496,20 +367,7 @@ export async function runReleaseRefiner(
     return "none";
   }
 
-  const claude = await (input.runClaude ?? runClaudeAgentSdk)(input);
-  if (claude.kind === "completed") {
-    const result = requireSuccessfulResult("Claude", claude.output);
-    await verifyReleaseRefinerResult(input, result, execute);
-    return "claude";
-  }
-
-  console.warn(
-    `Claude release refiner quota is exhausted; falling back to Codex ${CODEX_MODEL}.`,
-  );
   const codex = await (input.runCodex ?? runCodexSdk)(input);
-  if (codex.kind !== "completed") {
-    throw new Error("Codex release refiner unexpectedly reported quota status");
-  }
   const result = requireSuccessfulResult("Codex", codex.output);
   await verifyReleaseRefinerResult(input, result, execute);
   return "codex";

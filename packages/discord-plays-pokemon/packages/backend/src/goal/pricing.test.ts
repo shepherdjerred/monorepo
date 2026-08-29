@@ -72,8 +72,8 @@ describe("computeCost", () => {
     expect(mini / nano).toBeCloseTo(3.71, 1);
   });
 
-  test("gpt-5.6-luna applies its long-context surcharge", () => {
-    // 1M exceeds Luna's 272k threshold: $0.20 × 2 input; $1.20 × 1.5 output.
+  test("gpt-5.6-luna applies published pricing and long-context surcharge", () => {
+    // 1M input crosses the 272K threshold, so the $0.20/M rate doubles.
     expect(
       computeCost("gpt-5.6-luna", usage({ inputTokens: 1_000_000 })),
     ).toBeCloseTo(0.4, 6);

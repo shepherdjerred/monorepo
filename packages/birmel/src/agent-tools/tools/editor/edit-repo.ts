@@ -34,8 +34,8 @@ import {
 } from "@shepherdjerred/birmel/editor/session-manager.ts";
 import {
   executeEdit,
-  checkClaudePrerequisites,
-} from "@shepherdjerred/birmel/editor/claude-client.ts";
+  checkCodexPrerequisites,
+} from "@shepherdjerred/birmel/editor/codex-client.ts";
 import {
   formatDiffForDiscord,
   formatChangeSummary,
@@ -73,18 +73,18 @@ async function validateEditPreflight(
   if (!isEditorEnabled()) {
     return { success: false, message: "File editing feature is not enabled." };
   }
-  const claudeCheck = checkClaudePrerequisites();
-  if (!claudeCheck.installed) {
+  const codexCheck = checkCodexPrerequisites();
+  if (!codexCheck.installed) {
     return {
       success: false,
-      message: "Claude Agent SDK is unavailable.",
+      message: "Codex Agent SDK is unavailable.",
     };
   }
-  if (!claudeCheck.hasApiKey) {
+  if (!codexCheck.hasApiKey) {
     return {
       success: false,
       message:
-        "CLAUDE_CODE_OAUTH_TOKEN is not set. Configure it for production or run `claude login` locally.",
+        "OPENROUTER_API_KEY is not set. Configure the editor OpenRouter key.",
     };
   }
   if (reqCtx == null) {

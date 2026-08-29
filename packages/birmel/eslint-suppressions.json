@@ -19,11 +19,6 @@
       "count": 1
     }
   },
-  "src/editor/claude-client.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/observability/tracing.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
