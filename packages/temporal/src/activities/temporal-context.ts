@@ -12,15 +12,3 @@ export function workflowExecutionContext(info: Info): Record<string, string> {
     runId: execution.runId,
   };
 }
-
-export function requiredRunId(info: Info): string {
-  const execution = info.workflowExecution;
-
-  if (execution === undefined) {
-    throw new Error(
-      "Temporal workflow execution is required for this activity",
-    );
-  }
-
-  return execution.runId;
-}

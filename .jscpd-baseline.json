@@ -1806,7 +1806,7 @@
     },
     "packages/temporal/src/activities/report-freshness.ts|packages/temporal/src/activities/tasknotes-canary.ts": {
       "clones": 1,
-      "tokens": 112
+      "tokens": 105
     },
     "packages/temporal/src/activities/scout-generated-preflight.test.ts|packages/temporal/src/activities/scout-generated-preflight.test.ts": {
       "clones": 2,
