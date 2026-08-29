@@ -40,7 +40,10 @@ const HttpProbeSchema = z.object({
 
 const DeploymentSchema = z.object({
   kind: z.literal("Deployment"),
-  metadata: z.object({ name: z.string() }),
+  metadata: z.object({
+    name: z.string(),
+    annotations: z.record(z.string(), z.string()).optional(),
+  }),
   spec: z.object({
     replicas: z.number(),
     strategy: z.object({ type: z.string() }),
@@ -196,6 +199,9 @@ describe("temporal homelab audit tooling worker topology", () => {
     expect(envValue(core, "TEMPORAL_WORKER_ROLE")).toBe("legacy");
     expect(envValue(gateway, "TEMPORAL_WORKER_ROLE")).toBe("control");
     expect(envValue(gateway, "SLEEP_WEBHOOK_PORT")).toBe("9469");
+    expect(gateway.metadata).toMatchObject({
+      annotations: { "argocd.argoproj.io/sync-wave": "-1" },
+    });
     expect(envValue(home, "TEMPORAL_WORKER_ROLE")).toBe("home");
     expect(envValue(reports, "TEMPORAL_WORKER_ROLE")).toBe("reports");
     expect(envValue(agent, "TEMPORAL_WORKER_ROLE")).toBe("agent");

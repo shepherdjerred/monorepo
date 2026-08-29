@@ -21,6 +21,7 @@ import { temporalWorkerHealthProbes } from "./worker-health.ts";
 export type TemporalDomainWorkerProps = {
   name: string;
   component: string;
+  syncWave?: number;
   envVariables: Record<string, EnvValue>;
   ports?: { number: number; name: string }[];
   cpuRequest: Cpu;
@@ -54,6 +55,14 @@ export function createTemporalDomainWorker(
     podMetadata: {
       labels: { app: "temporal-worker", component: props.component },
     },
+    metadata:
+      props.syncWave === undefined
+        ? undefined
+        : {
+            annotations: {
+              "argocd.argoproj.io/sync-wave": String(props.syncWave),
+            },
+          },
   });
   setRevisionHistoryLimit(deployment, 5);
 
