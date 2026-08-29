@@ -44,10 +44,34 @@ async function repository(): Promise<string> {
 describe("Codex editor", () => {
   test("resumes a persisted Codex thread ID", () => {
     expect(threadSelection(undefined)).toEqual({ kind: "start" });
-    expect(threadSelection("thread-123")).toEqual({
+    expect(threadSelection("codex:thread-123")).toEqual({
       kind: "resume",
       id: "thread-123",
     });
+    expect(threadSelection("legacy-claude-session")).toEqual({ kind: "start" });
+  });
+
+  test("uses the immutable baseline when the agent commits changes", async () => {
+    const directory = await repository();
+    const process = Bun.spawn(["git", "rev-parse", "HEAD"], {
+      cwd: directory,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const baseline = (await new Response(process.stdout).text()).trim();
+    if ((await process.exited) !== 0) throw new Error("git rev-parse failed");
+    await Bun.write(path.join(directory, "allowed.txt"), "committed\n");
+    await git(directory, "add", "allowed.txt");
+    await git(directory, "commit", "-m", "agent edit");
+
+    expect(await changesFromGitDiff(directory, ["*.txt"], baseline)).toEqual([
+      {
+        filePath: "allowed.txt",
+        oldContent: "before\n",
+        newContent: "committed\n",
+        changeType: "modify",
+      },
+    ]);
   });
 
   test("derives created and modified files from the resulting Git diff", async () => {
