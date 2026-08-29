@@ -104,6 +104,24 @@ test("the active subject lands on the span that carries usage", async () => {
         recordInputs: true,
         recordOutputs: true,
       });
+      telemetry.onEmbedStart({
+        callId: "call-subject",
+        embedCallId: "embed-subject",
+        operationId: "ai.embed.doEmbed",
+        provider: "openrouter.embedding",
+        modelId: "openai/text-embedding-3-small",
+        values: ["hello"],
+      });
+      telemetry.onEmbedEnd({
+        callId: "call-subject",
+        embedCallId: "embed-subject",
+        operationId: "ai.embed.doEmbed",
+        provider: "openrouter.embedding",
+        modelId: "openai/text-embedding-3-small",
+        values: ["hello"],
+        embeddings: [[0.1, 0.2]],
+        usage: { tokens: 1 },
+      });
       telemetry.onEnd({
         callId: "call-subject",
         operationId: "ai.embed",
@@ -120,16 +138,36 @@ test("the active subject lands on the span that carries usage", async () => {
     },
   );
 
-  const genAi = exporter
-    .getFinishedSpans()
-    .find((span) => span.name === "gen_ai.embeddings");
-  expect(genAi).toBeDefined();
+  const spans = exporter.getFinishedSpans();
+  const genAi = spans.find((span) => span.name === "gen_ai.embeddings");
+  // The base class's own descendant span is where usage actually lands, not
+  // the repository-owned wrapper selected above -- and not necessarily its
+  // direct child either: an embed operation nests an operation-level span
+  // between the wrapper and the per-value embed span that carries
+  // gen_ai.usage.*. Selecting on that property, rather than assuming a
+  // particular depth, is what the bug this guards against actually requires: a
+  // query grouping by subject and summing usage needs both on the same span,
+  // wherever in the hierarchy that span sits.
+  const sdkOperation = spans.find(
+    (span) => span.attributes["gen_ai.usage.input_tokens"] !== undefined,
+  );
+  expect(sdkOperation).toBeDefined();
+  expect(sdkOperation?.name).not.toBe("gen_ai.embeddings");
+  expect(sdkOperation?.attributes["gen_ai.usage.input_tokens"]).toBe(1);
+  expect(sdkOperation?.attributes[LLM_SUBJECT_KIND_ATTRIBUTE]).toBe(
+    "discord_user",
+  );
+  expect(sdkOperation?.attributes[LLM_SUBJECT_ID_ATTRIBUTE]).toBe(
+    "160509172704739328",
+  );
+
+  // The wrapper span carries the subject too, for queries keyed on span name
+  // rather than gen_ai.usage.*, and the feature dimension survives alongside
+  // it so one query can group by both what was called and who for.
   expect(genAi?.attributes[LLM_SUBJECT_KIND_ATTRIBUTE]).toBe("discord_user");
   expect(genAi?.attributes[LLM_SUBJECT_ID_ATTRIBUTE]).toBe(
     "160509172704739328",
   );
-  // The feature dimension must survive alongside it, so one query can group by
-  // both what was called and who it was called for.
   expect(genAi?.attributes["llm.call_site"]).toBe("scout.bucks-ask");
 });
 

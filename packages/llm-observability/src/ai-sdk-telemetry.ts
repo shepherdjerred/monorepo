@@ -46,7 +46,22 @@ export class RepositoryOpenTelemetry extends OpenTelemetry {
   readonly #parents = new Map<string, ParentState>();
 
   constructor(options: RepositoryOpenTelemetryOptions) {
-    super(options);
+    // The base class creates its own inference/tool/embed spans internally
+    // (this.tracer.startSpan(...) inside its own onStart/onEnd handlers) and
+    // that is where gen_ai.usage.* actually lands -- not on the repository-owned
+    // gen_ai.<operation> parent span created below. Wrapping the caller's
+    // enrichSpan is the base class's own extension point for exactly this: it
+    // runs on every span type the base class creates, so composing onto it is
+    // what gets the subject onto the same span as the usage, rather than only
+    // onto the parent that wraps it.
+    const callerEnrichSpan = options.enrichSpan;
+    super({
+      ...options,
+      enrichSpan: (input) => ({
+        ...callerEnrichSpan?.(input),
+        ...activeLlmSubjectAttributes(),
+      }),
+    });
     this.#service = options.service;
     this.#tracer =
       options.tracer ??
@@ -68,11 +83,10 @@ export class RepositoryOpenTelemetry extends OpenTelemetry {
         "gen_ai.request.model": model,
         "llm.service": this.#service,
         "llm.call_site": workload,
-        // Stamped here rather than inherited: OpenTelemetry does not propagate
-        // attributes down a trace, and usage lands on this span and its
-        // children. Putting the subject on the same span as the usage is what
-        // lets one query group spend by who it was spent for. Empty when the
-        // call site opened no attribution span.
+        // Also stamped on this repository-owned wrapper span, for queries that
+        // key on span name rather than gen_ai.usage.*. The span that actually
+        // carries usage is one of the base class's own inference/tool/embed
+        // spans, stamped via the enrichSpan composition in the constructor.
         ...activeLlmSubjectAttributes(),
       },
     });

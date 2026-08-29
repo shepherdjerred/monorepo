@@ -1,12 +1,18 @@
-import { context, trace } from "@opentelemetry/api";
+import { context, createContextKey, trace } from "@opentelemetry/api";
 import { expect, test } from "vitest";
 import {
+  activeLlmSubject,
   LLM_SUBJECT_ID_ATTRIBUTE,
   LLM_SUBJECT_KIND_ATTRIBUTE,
   llmSubjectAttributes,
   withLlmSubjectSpan,
 } from "#src/subject.ts";
 import { exporter } from "./otel-test-provider.ts";
+
+// Mirrors the private key in subject.ts; there is no public way to construct a
+// malformed context value, which is exactly the point -- only a bug reaching
+// past the module's own API surface could produce one.
+const SUBJECT_CONTEXT_KEY = createContextKey("shepherdjerred.llm.subject");
 
 test("withLlmSubjectSpan records the subject on the span", async () => {
   exporter.reset();
@@ -77,4 +83,26 @@ test("system is a first-class subject kind for workloads with no requester", () 
     [LLM_SUBJECT_KIND_ATTRIBUTE]: "system",
     [LLM_SUBJECT_ID_ATTRIBUTE]: "scout.betting.parlay",
   });
+});
+
+test("a present but malformed context value throws rather than reading as absent", () => {
+  // setLlmSubject is the only supported way to populate this key, and it only
+  // ever writes a valid LlmSubject. A malformed value can only mean a bug
+  // reached into the context by some other path, which is a contract
+  // violation between two pieces of our own code -- not a real boundary input
+  // -- and must fail loudly rather than silently rendering as unattributed.
+  const malformed = context.active().setValue(SUBJECT_CONTEXT_KEY, {
+    kind: "not-a-real-kind",
+    id: "42",
+  });
+
+  context.with(malformed, () => {
+    expect(() => activeLlmSubject()).toThrow();
+  });
+});
+
+test("no context value at all remains a legitimate absence", () => {
+  // Most calls open no attribution span, so this must stay `undefined`, not
+  // throw -- only a *present* malformed value is a bug.
+  expect(activeLlmSubject()).toBeUndefined();
 });

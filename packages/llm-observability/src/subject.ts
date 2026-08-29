@@ -5,6 +5,7 @@ import {
   type Context,
   type Span,
 } from "@opentelemetry/api";
+import { z } from "zod";
 import { getLlmTracer } from "./span-helpers.ts";
 
 /**
@@ -60,6 +61,11 @@ export function llmSubjectAttributes(
 
 const SUBJECT_CONTEXT_KEY = createContextKey("shepherdjerred.llm.subject");
 
+const LlmSubjectContextValueSchema = z.object({
+  kind: z.enum(LLM_SUBJECT_KINDS),
+  id: z.string(),
+});
+
 /** Attach `subject` to `ctx` so nested model calls can find it. */
 export function setLlmSubject(ctx: Context, subject: LlmSubject): Context {
   return ctx.setValue(SUBJECT_CONTEXT_KEY, subject);
@@ -75,17 +81,18 @@ export function setLlmSubject(ctx: Context, subject: LlmSubject): Context {
  * lets the telemetry layer stamp the subject onto the same span that carries
  * the usage, which is what makes per-subject token and cost queries answerable
  * at all.
+ *
+ * `undefined` from the context key never having been set is a legitimate,
+ * common case: most calls open no attribution span. A *present* value that
+ * fails to parse is not that -- it is a broken `setLlmSubject` caller, a
+ * contract violation between two pieces of our own code with no external
+ * boundary between them, and `.parse()` lets it fail loudly rather than
+ * silently rendering as unattributed.
  */
 export function activeLlmSubject(): LlmSubject | undefined {
-  const value: unknown = context.active().getValue(SUBJECT_CONTEXT_KEY);
-  if (value === null || typeof value !== "object") return undefined;
-  if (!("kind" in value) || !("id" in value)) return undefined;
-  const { kind, id } = value;
-  if (typeof id !== "string") return undefined;
-  // `find` both validates the kind and yields it already narrowed to the union,
-  // so no type assertion is needed to rebuild the subject.
-  const matched = LLM_SUBJECT_KINDS.find((known) => known === kind);
-  return matched === undefined ? undefined : { kind: matched, id };
+  const value = context.active().getValue(SUBJECT_CONTEXT_KEY);
+  if (value === undefined) return undefined;
+  return LlmSubjectContextValueSchema.parse(value);
 }
 
 /**
