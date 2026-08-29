@@ -75,7 +75,7 @@ await initializeDynamicConfig({
     llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
     llmDailyTokenBudget: configuration.llmDailyTokenBudget,
     reportAiModel: configuration.reportAiModel ?? "gpt-5.6-luna",
-    bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-luna",
+    bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
     exploreModel: configuration.exploreModel,
     bucksAskModel: configuration.bucksAskModel,
     tournamentApiMode: configuration.tournamentApiMode,

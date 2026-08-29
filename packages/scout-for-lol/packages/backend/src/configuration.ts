@@ -207,7 +207,7 @@ function computeConfiguration() {
     reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-luna"),
     bettingParlayAiModel: getOptionalEnvVar(
       "BETTING_PARLAY_AI_MODEL",
-      "gpt-5.6-luna",
+      "gpt-5.6-sol",
     ),
     // Replay-only compatibility credential for weekly-parlay executions that
     // started before the embedded Scout Activity patch was recorded.

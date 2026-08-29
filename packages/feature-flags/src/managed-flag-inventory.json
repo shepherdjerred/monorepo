@@ -316,7 +316,7 @@
       "source": "scout-dynamic",
       "purpose": "Select the Scout parlay AI model.",
       "type": "variant",
-      "default": "gpt-5.6-luna",
+      "default": "gpt-5.6-sol",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

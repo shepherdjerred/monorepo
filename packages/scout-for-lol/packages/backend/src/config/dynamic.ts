@@ -305,7 +305,7 @@ export function bettingParlayAiModel(): string {
   return (
     snapshot?.get("bettingParlayAiModel") ??
     configuration.bettingParlayAiModel ??
-    "gpt-5.6-luna"
+    "gpt-5.6-sol"
   );
 }
 
