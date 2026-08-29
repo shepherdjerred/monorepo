@@ -19,6 +19,7 @@ import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
 import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly-parlay-criteria.ts";
+import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 
 export const BUCKS_NAVIGATION_NAMESPACE = "bbnav";
 export const BUCKS_NAVIGATION_VERSION = "1";
@@ -62,8 +63,17 @@ export function ledgerKindLabel(kind: BucksLedgerKind): string {
   return LEDGER_KIND_LABELS[kind];
 }
 
-/** At most this many names per row, so ten rows fit Discord's 2000 chars. */
+/**
+ * At most this many names per row. Capping the *count* is not enough on its
+ * own: `PlayerAliasSchema` allows aliases up to 100 characters, so three of
+ * them can still run past a thousand characters on a single row. The
+ * character cap below is what actually keeps ten rows inside Discord's 2000-
+ * character content limit.
+ */
 const MAX_GAME_LABEL_ALIASES = 3;
+/** Character budget for one row's alias list, chosen so ten rows plus the
+ * kind label, amounts, and header stay comfortably under Discord's limit. */
+const MAX_GAME_LABEL_CHARS = 60;
 
 function formatGameLabel(aliases: readonly string[]): string | undefined {
   const unique = [...new Set(aliases)];
@@ -72,9 +82,13 @@ function formatGameLabel(aliases: readonly string[]): string | undefined {
   }
   const shown = unique.slice(0, MAX_GAME_LABEL_ALIASES);
   const hidden = unique.length - shown.length;
-  return hidden > 0
-    ? `${shown.join(", ")} +${formatInteger(hidden)}`
-    : shown.join(", ");
+  const label =
+    hidden > 0
+      ? `${shown.join(", ")} +${formatInteger(hidden)}`
+      : shown.join(", ");
+  return label.length > MAX_GAME_LABEL_CHARS
+    ? `${label.slice(0, MAX_GAME_LABEL_CHARS).trimEnd()}…`
+    : label;
 }
 
 function parsedContext(entry: LedgerPageEntry) {
@@ -395,10 +409,16 @@ export function renderBucksHistory(
     return `\`${sign}${formatInteger(entry.delta)}\` ${ledgerKindLabel(entry.kind)}${where} → ${formatInteger(entry.balanceAfter)} BB`;
   });
   return {
-    content: [
-      `**Bryan Bucks history** · Page ${formatInteger(page.page + 1)}/${formatInteger(page.totalPages)}`,
-      ...lines,
-    ].join("\n"),
+    // The per-row character cap above keeps this well under Discord's limit
+    // in the ordinary case; this is the backstop for the shape it doesn't
+    // cover — a match ID fallback or a wide kind label on every one of the
+    // page's ten rows.
+    content: truncateDiscordMessage(
+      [
+        `**Bryan Bucks history** · Page ${formatInteger(page.page + 1)}/${formatInteger(page.totalPages)}`,
+        ...lines,
+      ].join("\n"),
+    ),
     components: navigationRow(ownerId, page),
   };
 }

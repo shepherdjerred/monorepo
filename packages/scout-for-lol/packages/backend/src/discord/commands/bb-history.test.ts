@@ -107,4 +107,43 @@ describe("/bb history labels", () => {
     // a missing audit line.
     expect(rendered.content).toContain("game played · NA1_778");
   });
+
+  // Regression backstop: even a resolver that failed to bound its own labels
+  // (the real resolver is covered separately in
+  // navigation.integration.test.ts) must not produce a page over Discord's
+  // 2000-character content limit.
+  test("bounds the whole page even when a resolved label is unexpectedly long", () => {
+    const longAlias = "x".repeat(100);
+    const entries = Array.from({ length: 10 }, (_unused, index) => ({
+      id: index + 1,
+      delta: 1,
+      balanceAfter: index + 1,
+      kind: BucksLedgerKindSchema.parse("earn_game"),
+      matchId: `NA1_${index.toString()}`,
+      context: "{}",
+      createdAt: new Date(0),
+    }));
+    const gameLabels = new Map(
+      entries.map((entry) => [
+        entry.id,
+        `${longAlias}, ${longAlias}, ${longAlias}`,
+      ]),
+    );
+
+    const rendered = renderBucksHistory(
+      bucksTestDiscordId(1),
+      {
+        entries,
+        page: 0,
+        pageSize: 10,
+        totalEntries: 10,
+        totalPages: 1,
+        snapshotId: 10,
+      },
+      gameLabels,
+    );
+
+    expect(rendered.content.length).toBeLessThanOrEqual(2000);
+    expect(rendered.content.endsWith("...")).toBe(true);
+  });
 });

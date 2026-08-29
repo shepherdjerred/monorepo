@@ -301,4 +301,37 @@ describe("resolveLedgerGameLabels", () => {
     expect(labels.has(4)).toBe(false);
     expect(account.id).toBeGreaterThan(0);
   });
+
+  // Regression: PlayerAliasSchema allows aliases up to 100 characters, so
+  // three of them on one outcome-bet row could run past a thousand
+  // characters on their own. Capping only the alias *count* was not enough
+  // to keep a ten-row page under Discord's 2000-character content limit.
+  test("caps a resolved label by character length, not only alias count", async () => {
+    const longAlias = "x".repeat(100);
+    const entries = [
+      {
+        id: 1,
+        delta: -5,
+        balanceAfter: 35,
+        kind: BucksLedgerKindSchema.parse("bet_stake"),
+        matchId: "NA1_long",
+        context: JSON.stringify({
+          type: "stake",
+          subjectAlias: longAlias,
+          subjectPuuid: bucksTestPuuid(0),
+          backedAliases: [longAlias],
+          opposingAliases: [longAlias, `${longAlias}2`],
+        }),
+        createdAt: new Date(0),
+      },
+    ];
+
+    const labels = await resolveLedgerGameLabels(SERVER_ID, entries, db);
+    const label = labels.get(1);
+    if (label === undefined) {
+      throw new Error("expected a resolved label for the long-alias row");
+    }
+    expect(label.length).toBeLessThanOrEqual(61);
+    expect(label.endsWith("…")).toBe(true);
+  });
 });
