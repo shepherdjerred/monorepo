@@ -14,6 +14,8 @@ import type { HistorySourceResult } from "#lib/history/types.ts";
 
 let fixtureHome = "";
 let recordId = 0;
+const fixtureUpdatedAt = new Date().toISOString();
+const fixtureCreatedAt = new Date(Date.now() - 60_000).toISOString();
 
 function unavailable(
   source: "cursor" | "claude",
@@ -43,15 +45,31 @@ beforeAll(async () => {
       full_message TEXT, created_at TEXT
     );
   `);
-  database.run(
-    "INSERT INTO sessions VALUES ('current-session', 'Synthetic history', '2026-08-18T00:00:00Z', '2026-08-18T00:02:00Z', 'model', 'agent', '/fixture')",
-  );
-  database.run(
-    "INSERT INTO session_messages VALUES ('m1', 'current-session', 'user', 'Investigate synthetic history ranking', NULL, '2026-08-18T00:00:00Z')",
-  );
-  database.run(
-    "INSERT INTO session_messages VALUES ('m2', 'current-session', 'assistant', 'Synthetic history answer', NULL, '2026-08-18T00:01:00Z')",
-  );
+  database.run("INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?)", [
+    "current-session",
+    "Synthetic history",
+    fixtureCreatedAt,
+    fixtureUpdatedAt,
+    "model",
+    "agent",
+    "/fixture",
+  ]);
+  database.run("INSERT INTO session_messages VALUES (?, ?, ?, ?, ?, ?)", [
+    "m1",
+    "current-session",
+    "user",
+    "Investigate synthetic history ranking",
+    null,
+    fixtureCreatedAt,
+  ]);
+  database.run("INSERT INTO session_messages VALUES (?, ?, ?, ?, ?, ?)", [
+    "m2",
+    "current-session",
+    "assistant",
+    "Synthetic history answer",
+    null,
+    fixtureUpdatedAt,
+  ]);
   database.close();
 
   const conductor = createHistorySources().find(
@@ -77,8 +95,8 @@ beforeAll(async () => {
           path: "/fixture/codex-collision",
           workspace: "/fixture",
           agent: "fixture",
-          createdAt: "2026-08-18T00:00:00Z",
-          updatedAt: "2026-08-18T00:01:00Z",
+          createdAt: fixtureCreatedAt,
+          updatedAt: fixtureUpdatedAt,
           runtimeId: "current-session",
           openingPromptHash: null,
           dialogueText: "Unique collisionterm dialogue",

@@ -9,7 +9,7 @@ description: |
 
 Two ways to act on Discord, both verified live on 2026-08-29:
 
-1. **`toolkit discord`** (recommended for common ops) — a session daemon that logs in once, holds the gateway connections in memory, and exposes one-shot CLI commands. One `op` call per session; no boilerplate; voice presence persists between commands.
+1. **`toolkit discord`** (recommended for common ops) — use its session daemon for interactive work, or `discord slash --direct` for an isolated invocation that must not disturb a running daemon.
 2. **Write a Bun/TypeScript script** (escape hatch) — for anything the CLI doesn't cover. Same libraries underneath.
 
 ## Credentials
@@ -76,6 +76,21 @@ toolkit discord voice states <guildId>          # who's in VC + streaming/video 
 toolkit discord voice leave
 toolkit discord daemon stop
 ```
+
+For an isolated smoke test, skip the daemon entirely. Direct mode logs in only
+the user identity, subscribes before invoking, and destroys that gateway at the
+deadline even when login, invocation, or response waiting fails:
+
+```bash
+toolkit discord slash <channelId> <botId> bb transfer recipient:<userId> amount:3 \
+  --direct --wait-public --contains "Bryan Bucks Western Union" \
+  --timeout 45 --json
+```
+
+The JSON contains `reply` and `publicResponse` message objects. Each carries
+`mentionUserIds`, `mentionRoleIds`, and `mentionsEveryone`, so a smoke runner can
+verify allowed mentions exactly. Direct mode requires `DISCORD_USER_TOKEN`; it
+does not read `DISCORD_BOT_TOKEN` or connect to the shared daemon.
 
 All commands print markdown by default; add `--json` for machine-readable output. The streambot test loop is just: `voice states <guild>` and check whose `streaming` flag is set.
 

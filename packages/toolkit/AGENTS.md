@@ -188,6 +188,8 @@ export DISCORD_USER_TOKEN=$(op read "op://Personal/<item-id>/TOKEN")
 toolkit discord daemon start --ttl 30m      # also reads DISCORD_BOT_TOKEN if set
 toolkit discord send <channelId> "hello"
 toolkit discord slash <channelId> <botId> <command> [args...]   # userbot only
+toolkit discord slash <channelId> <botId> <command> [args...] \
+  --direct --wait-public --contains "receipt text" --timeout 45 --json
 toolkit discord voice join <channelId>      # presence persists between commands
 toolkit discord voice states <guildId>      # streaming flags (needs a bot token)
 toolkit discord daemon stop
@@ -198,6 +200,12 @@ Design notes encoded in the code:
 - **At least one of `DISCORD_BOT_TOKEN` / `DISCORD_USER_TOKEN`** must be set; each
   client is optional and commands route to the identity they need (slash + voice
   join are userbot-only; voice states is bot-only).
+- `discord slash --direct` is the isolated automation path. It never contacts or
+  disturbs the session daemon, logs in only `DISCORD_USER_TOKEN`, installs its
+  public-response listener before invoking, and always destroys the gateway at
+  its deadline. `--wait-public` filters to the target bot; `--contains` narrows
+  the response. JSON includes the immediate interaction reply, the public
+  response, and exact user, role, and everyone mentions for each message.
 - Tokens are passed to the detached daemon via **env, never argv** (not visible in
   `ps`) and never written to the state file or logs.
 - State dir `~/.toolkit/discord/`: `daemon.sock` (0600), `state.json` (pid +

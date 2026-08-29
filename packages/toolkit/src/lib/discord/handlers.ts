@@ -43,7 +43,19 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function mapBotMessage(message: BotMessage): IpcMessage {
+export function mapMessageMentions(
+  userIds: Iterable<string>,
+  roleIds: Iterable<string>,
+  everyone: boolean,
+): Pick<IpcMessage, "mentionUserIds" | "mentionRoleIds" | "mentionsEveryone"> {
+  return {
+    mentionUserIds: [...userIds].toSorted(),
+    mentionRoleIds: [...roleIds].toSorted(),
+    mentionsEveryone: everyone,
+  };
+}
+
+export function mapBotMessage(message: BotMessage): IpcMessage {
   return {
     id: message.id,
     channelId: message.channelId,
@@ -64,10 +76,15 @@ function mapBotMessage(message: BotMessage): IpcMessage {
       name: attachment.name,
       url: attachment.url,
     })),
+    ...mapMessageMentions(
+      message.mentions.users.keys(),
+      message.mentions.roles.keys(),
+      message.mentions.everyone,
+    ),
   };
 }
 
-function mapUserMessage(message: UserMessage): IpcMessage {
+export function mapUserMessage(message: UserMessage): IpcMessage {
   return {
     id: message.id,
     channelId: message.channelId,
@@ -88,6 +105,11 @@ function mapUserMessage(message: UserMessage): IpcMessage {
       name: attachment.name ?? "attachment",
       url: attachment.url,
     })),
+    ...mapMessageMentions(
+      message.mentions.users.keys(),
+      message.mentions.roles.keys(),
+      message.mentions.everyone,
+    ),
   };
 }
 
@@ -175,7 +197,7 @@ async function handleRead(ctx: DaemonContext, body: unknown): Promise<unknown> {
   return { messages };
 }
 
-function messageMatches(
+export function messageMatches(
   message: IpcMessage,
   request: {
     channelId: string;

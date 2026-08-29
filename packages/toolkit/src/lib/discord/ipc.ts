@@ -58,6 +58,11 @@ export const MessageSchema = z.object({
   createdAt: z.string(),
   embeds: z.array(EmbedSchema),
   attachments: z.array(z.object({ name: z.string(), url: z.string() })),
+  // Daemons started before direct slash support omit mention metadata. Defaults
+  // keep their read/wait/slash responses usable until their normal TTL restart.
+  mentionUserIds: z.array(z.string()).default([]),
+  mentionRoleIds: z.array(z.string()).default([]),
+  mentionsEveryone: z.boolean().default(false),
 });
 export type IpcMessage = z.infer<typeof MessageSchema>;
 
@@ -113,6 +118,15 @@ export const SlashResponseSchema = z.object({
   invoked: z.boolean(),
   reply: MessageSchema.nullable(),
 });
+
+export const DirectSlashResponseSchema = z.object({
+  invoked: z.boolean(),
+  invokingUserId: z.string(),
+  reply: MessageSchema.nullable(),
+  publicResponse: MessageSchema.nullable(),
+  publicResponseTimedOut: z.boolean(),
+});
+export type DirectSlashResponse = z.infer<typeof DirectSlashResponseSchema>;
 
 export const VoiceJoinRequestSchema = z.object({
   channelId: z.string(),
