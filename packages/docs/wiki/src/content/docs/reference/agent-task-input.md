@@ -154,8 +154,8 @@ inheriting the worker environment.
 
 | Input                                       | State in the SDK runtime                                 |
 | ------------------------------------------- | -------------------------------------------------------- |
-| Service-scoped OpenRouter API key            | present; it is the SDK's only inference credential      |
-| Other provider credentials                  | absent, including subscription credentials              |
+| Service-scoped OpenRouter API key           | present; it is the SDK's only inference credential       |
+| Other provider credentials                  | absent, including subscription credentials               |
 | Public GitHub repository credential         | absent; the throwaway clone is unauthenticated           |
 | `HOME`                                      | the throwaway workdir, not the worker image home         |
 | Prometheus and alert-dashboard URLs         | present without API credentials                          |
