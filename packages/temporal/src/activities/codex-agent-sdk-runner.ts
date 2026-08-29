@@ -1,6 +1,9 @@
 import { Codex, type ThreadEvent, type Usage } from "@openai/codex-sdk";
+import { attachCodexTrace } from "@shepherdjerred/llm-observability/wrappers/codex";
+import { createCodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
 import { redactSecrets } from "#shared/redact.ts";
+import { register } from "#observability/metrics.ts";
 
 export type CodexAgentSdkUsage = {
   inputTokens: number;
@@ -44,6 +47,7 @@ export type RunCodexAgentSdkInput = {
   callSite: string;
   prompt: string;
   model: string;
+  maxTurns: number;
   cwd: string;
   env: Record<string, string>;
   signal: AbortSignal;
@@ -117,6 +121,12 @@ async function handleEvent(
       }
       break;
     case "turn.started":
+      if (state.numTurns >= input.maxTurns) {
+        throw new Error(
+          `Codex agent exceeded maxTurns=${String(input.maxTurns)}`,
+        );
+      }
+      break;
     case "item.started":
     case "item.updated":
       break;
@@ -135,6 +145,17 @@ export async function runCodexAgentSdk(
     modelId: input.model,
     env: childEnvironment,
   });
+  const parser = createCodexJsonlParser();
+  const trace = attachCodexTrace(parser, {
+    service: input.service,
+    callSite: input.callSite,
+    model: input.model,
+    system: "codex_sdk",
+    initialPrompt: input.prompt,
+    metricsRegister: register,
+    workload: input.callSite,
+  });
+  let traceOutcome: "success" | "error" | "cancelled" = "success";
   const startedAtMs = Date.now();
   const state: CodexRunState = {
     generationStarted: false,
@@ -156,21 +177,30 @@ export async function runCodexAgentSdk(
       webSearchMode: "live",
       workingDirectory: input.cwd,
     });
-    const streamed = await thread.runStreamed(input.prompt, {
-      ...(input.outputSchema === undefined
-        ? {}
-        : { outputSchema: input.outputSchema }),
-      signal: input.signal,
-    });
+    const streamed = await trace.run(() =>
+      thread.runStreamed(input.prompt, {
+        ...(input.outputSchema === undefined
+          ? {}
+          : { outputSchema: input.outputSchema }),
+        signal: input.signal,
+      }),
+    );
     for await (const event of streamed.events) {
+      parser.push(
+        `${redactSecrets(JSON.stringify(event), input.redactTokens ?? [])}\n`,
+      );
       await handleEvent(input, event, startedAtMs, state);
     }
   } catch (error: unknown) {
+    traceOutcome = input.signal.aborted ? "cancelled" : "error";
     throw new CodexAgentSdkRunError(
       error,
       state.generationStarted,
       state.possiblyAppliedEffects,
     );
+  } finally {
+    parser.finish();
+    trace.end(traceOutcome);
   }
 
   return {

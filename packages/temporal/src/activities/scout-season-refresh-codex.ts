@@ -100,6 +100,7 @@ export async function runSeasonAgent(
       callSite: "scout-season-refresh",
       prompt,
       model: input.model,
+      maxTurns: input.maxTurns,
       cwd: input.workdir,
       env: envForTrustedAgent({ OPENROUTER_API_KEY: openRouterApiKey }),
       signal,

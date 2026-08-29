@@ -1,6 +1,11 @@
 import { Codex } from "@openai/codex-sdk";
+import { lstat } from "node:fs/promises";
+import { attachCodexTrace } from "@shepherdjerred/llm-observability/wrappers/codex";
+import { createCodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { metricsRegister } from "@shepherdjerred/birmel/observability/metrics.ts";
+import { redactSecrets } from "@shepherdjerred/llm-observability";
 import type { EditResult, FileChange } from "./types.ts";
 
 const MODEL = "gpt-5.6-luna";
@@ -80,7 +85,12 @@ async function newContent(
   path: string,
 ): Promise<string | null> {
   const file = Bun.file(`${workingDirectory}/${path}`);
-  return (await file.exists()) ? await file.text() : null;
+  if (!(await file.exists())) return null;
+  const stat = await lstat(`${workingDirectory}/${path}`);
+  if (!stat.isFile()) {
+    throw new Error(`Codex editor changed a non-regular file: ${path}`);
+  }
+  return await file.text();
 }
 
 export async function changesFromGitDiff(
@@ -157,12 +167,42 @@ export async function executeEdit(
     selection.kind === "start"
       ? codex.startThread(threadOptions)
       : codex.resumeThread(selection.id, threadOptions);
-  const turn = await thread.run(opts.prompt);
+  const parser = createCodexJsonlParser();
+  const trace = attachCodexTrace(parser, {
+    service: "birmel",
+    callSite: "editor-codex",
+    model: MODEL,
+    system: "codex_sdk",
+    initialPrompt: opts.prompt,
+    metricsRegister,
+    workload: "editor-codex",
+  });
+  let traceOutcome: "success" | "error" = "success";
+  let summary = "";
+  try {
+    const streamed = await trace.run(() => thread.runStreamed(opts.prompt));
+    for await (const event of streamed.events) {
+      const encodedEvent = JSON.stringify(redactSecrets(event));
+      parser.push(`${encodedEvent}\n`);
+      if (
+        event.type === "item.completed" &&
+        event.item.type === "agent_message"
+      ) {
+        summary = event.item.text;
+      }
+    }
+  } catch (error: unknown) {
+    traceOutcome = "error";
+    throw error;
+  } finally {
+    parser.finish();
+    trace.end(traceOutcome);
+  }
   const changes = await changesFromGitDiff(
     opts.workingDirectory,
     opts.allowedPaths,
   );
-  const summary = turn.finalResponse.trim();
+  summary = summary.trim();
   logger.info("Edit complete", {
     sessionId: thread.id,
     changeCount: changes.length,
