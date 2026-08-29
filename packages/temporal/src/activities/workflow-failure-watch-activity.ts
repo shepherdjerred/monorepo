@@ -13,22 +13,29 @@ import {
 } from "./workflow-failure-watch.ts";
 import {
   parseWorkflowFailureWatchCheckpoint,
+  parseWorkflowFailureWatchCheckpoints,
   parseWorkflowFailureWatchLookbackSince,
+  serializedCheckpoints,
   serializedCheckpoint,
+  type WorkflowFailureWatchCheckpoints,
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
 import {
   parseLegacyTemporalNamespace,
   parseTemporalNamespace,
   temporalNamespacesForMonitoring,
+  type AnyTemporalNamespace,
 } from "#shared/temporal-namespace.ts";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
 async function runPollWorkflowFailuresImpl(
-  checkpoint: WorkflowFailureWatchCheckpoint | undefined,
+  checkpoints: WorkflowFailureWatchCheckpoints,
   lookbackSince: Date,
-  onCheckpoint: (checkpoint: WorkflowFailureWatchCheckpoint) => void,
+  onCheckpoint: (
+    namespace: AnyTemporalNamespace,
+    checkpoint: WorkflowFailureWatchCheckpoint,
+  ) => void,
 ): Promise<PollWorkflowFailuresResult> {
   const poster: AlertPoster = createAlertmanagerPoster(
     requiredEnv("ALERTMANAGER_URL"),
@@ -44,18 +51,17 @@ async function runPollWorkflowFailuresImpl(
   };
   for (const namespace of namespaces) {
     const client = await createTemporalVisibilityClient(namespace);
+    const checkpoint = checkpoints[namespace];
     const result = await pollWorkflowFailuresOnce(client, poster, {
       namespace,
       now: new Date(),
       lookbackMs: DEFAULT_LOOKBACK_MS,
       lookbackSince,
       ttlMs: readTtlMs(),
-      ...(namespace === "prod"
-        ? {
-            onCheckpoint,
-            ...(checkpoint === undefined ? {} : { checkpoint }),
-          }
-        : {}),
+      onCheckpoint: (nextCheckpoint) => {
+        onCheckpoint(namespace, nextCheckpoint);
+      },
+      ...(checkpoint === undefined ? {} : { checkpoint }),
     });
     aggregate.scanned += result.scanned;
     aggregate.alerted += result.alerted;
@@ -71,7 +77,13 @@ export const workflowFailureWatchActivities = {
   async pollWorkflowFailures(): Promise<PollWorkflowFailuresResult> {
     const start = Date.now();
     const heartbeatDetails: unknown = Context.current().info.heartbeatDetails;
-    let checkpoint = parseWorkflowFailureWatchCheckpoint(heartbeatDetails);
+    const checkpoints: WorkflowFailureWatchCheckpoints =
+      parseWorkflowFailureWatchCheckpoints(heartbeatDetails);
+    const legacyCheckpoint =
+      parseWorkflowFailureWatchCheckpoint(heartbeatDetails);
+    if (legacyCheckpoint !== undefined && checkpoints.prod === undefined) {
+      checkpoints.prod = legacyCheckpoint;
+    }
     let lookbackSince =
       parseWorkflowFailureWatchLookbackSince(heartbeatDetails) ??
       new Date(start - DEFAULT_LOOKBACK_MS);
@@ -80,17 +92,18 @@ export const workflowFailureWatchActivities = {
         phase: "pollWorkflowFailures",
         elapsedMs: Date.now() - start,
         lookbackSince: lookbackSince.toISOString(),
-        checkpoint: serializedCheckpoint(checkpoint),
+        checkpoint: serializedCheckpoint(checkpoints.prod),
+        checkpoints: serializedCheckpoints(checkpoints),
       });
     };
     sendHeartbeat();
     const heartbeat = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
     try {
       return await runPollWorkflowFailuresImpl(
-        checkpoint,
+        checkpoints,
         lookbackSince,
-        (nextCheckpoint) => {
-          checkpoint = nextCheckpoint;
+        (namespace, nextCheckpoint) => {
+          checkpoints[namespace] = nextCheckpoint;
           lookbackSince = nextCheckpoint.lookbackSince ?? lookbackSince;
           sendHeartbeat();
         },

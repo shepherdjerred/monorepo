@@ -1,5 +1,6 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
+import { Client, Connection } from "@temporalio/client";
 import { client } from "#src/discord/client.ts";
 import configuration from "#src/configuration.ts";
 import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
@@ -13,6 +14,39 @@ import { invokeWeeklyParlayAction } from "./weekly-parlay-activity.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
 >[0];
+
+async function scheduleReconciliationEnabled(): Promise<boolean> {
+  const activityNamespace = Context.current().info.namespace;
+  if (activityNamespace === "default") return false;
+
+  const mode = configuration.temporalScheduleReconciliation;
+  if (mode === "enabled") return true;
+  if (mode === "disabled") return false;
+
+  const legacyNamespace = configuration.temporalLegacyNamespace;
+  if (legacyNamespace === undefined) return true;
+
+  const connection =
+    configuration.temporalAddress === undefined
+      ? await Connection.connect()
+      : await Connection.connect({ address: configuration.temporalAddress });
+  try {
+    const legacyClient = new Client({
+      connection,
+      namespace: legacyNamespace,
+    });
+    for await (const schedule of legacyClient.schedule.list()) {
+      const description = await legacyClient.schedule
+        .getHandle(schedule.scheduleId)
+        .describe();
+      if (!description.state.paused) return false;
+    }
+    return true;
+  } finally {
+    await connection.close();
+  }
+}
+
 async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
   await heartbeatWhile(
     { kind: input.kind, workId: input.workId, phase: "running" },
@@ -310,10 +344,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
     },
     drainReportScheduleOutbox: async (input) => {
       const activityNamespace = Context.current().info.namespace;
-      if (
-        activityNamespace === "default" ||
-        configuration.temporalScheduleReconciliation === "disabled"
-      ) {
+      if (!(await scheduleReconciliationEnabled())) {
         Context.current().heartbeat({
           phase: "skipped",
           reason:

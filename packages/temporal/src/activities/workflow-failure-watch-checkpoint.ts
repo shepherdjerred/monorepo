@@ -1,5 +1,9 @@
 import { z } from "zod/v4";
 import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts";
+import {
+  AnyTemporalNamespaceSchema,
+  type AnyTemporalNamespace,
+} from "#shared/temporal-namespace.ts";
 
 const WorkflowFailureWatchCheckpointSchema = z.object({
   closeTime: z.iso.datetime({ offset: true }),
@@ -26,6 +30,10 @@ export type WorkflowFailureWatchCheckpoint = {
   processedExecutionKeys?: string[];
 };
 
+export type WorkflowFailureWatchCheckpoints = Partial<
+  Record<AnyTemporalNamespace, WorkflowFailureWatchCheckpoint>
+>;
+
 export function workflowExecutionKey(
   workflowId: string,
   runId: string,
@@ -50,20 +58,7 @@ export function parseWorkflowFailureWatchCheckpoint(
   if (checkpoint === undefined || checkpoint === null) {
     return undefined;
   }
-  const parsed = WorkflowFailureWatchCheckpointSchema.parse(checkpoint);
-  return {
-    closeTime: new Date(parsed.closeTime),
-    startTime:
-      parsed.startTime === undefined ? undefined : new Date(parsed.startTime),
-    ...(parsed.lookbackSince === undefined
-      ? {}
-      : { lookbackSince: new Date(parsed.lookbackSince) }),
-    workflowId: parsed.workflowId,
-    runId: parsed.runId,
-    ...(parsed.processedExecutionKeys === undefined
-      ? {}
-      : { processedExecutionKeys: parsed.processedExecutionKeys }),
-  };
+  return parseCheckpointValue(checkpoint);
 }
 
 export function parseWorkflowFailureWatchLookbackSince(
@@ -99,6 +94,52 @@ export function serializedCheckpoint(
           ? {}
           : { processedExecutionKeys: checkpoint.processedExecutionKeys }),
       };
+}
+
+export function parseWorkflowFailureWatchCheckpoints(
+  details: unknown,
+): WorkflowFailureWatchCheckpoints {
+  if (details === undefined) return {};
+  const detailsRecord = z.record(z.string(), z.unknown()).parse(details);
+  const rawCheckpoints = detailsRecord["checkpoints"];
+  if (rawCheckpoints === undefined || rawCheckpoints === null) return {};
+  const checkpointsRecord = z
+    .record(z.string(), z.unknown())
+    .parse(rawCheckpoints);
+  return Object.fromEntries(
+    Object.entries(checkpointsRecord).map(([namespace, checkpoint]) => [
+      AnyTemporalNamespaceSchema.parse(namespace),
+      parseCheckpointValue(checkpoint),
+    ]),
+  );
+}
+
+function parseCheckpointValue(value: unknown): WorkflowFailureWatchCheckpoint {
+  const parsed = WorkflowFailureWatchCheckpointSchema.parse(value);
+  return {
+    closeTime: new Date(parsed.closeTime),
+    startTime:
+      parsed.startTime === undefined ? undefined : new Date(parsed.startTime),
+    ...(parsed.lookbackSince === undefined
+      ? {}
+      : { lookbackSince: new Date(parsed.lookbackSince) }),
+    workflowId: parsed.workflowId,
+    runId: parsed.runId,
+    ...(parsed.processedExecutionKeys === undefined
+      ? {}
+      : { processedExecutionKeys: parsed.processedExecutionKeys }),
+  };
+}
+
+export function serializedCheckpoints(
+  checkpoints: WorkflowFailureWatchCheckpoints,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(checkpoints).map(([namespace, checkpoint]) => [
+      namespace,
+      serializedCheckpoint(checkpoint),
+    ]),
+  );
 }
 
 export function checkpointForExecution(

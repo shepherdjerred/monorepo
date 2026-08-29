@@ -20,7 +20,7 @@ as an immutable object.
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
   bun run glitter:operate inventory
 ```
 
@@ -40,7 +40,7 @@ channel identifiers:
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
   bun run glitter:operate canary \
   --guild-id=<guild-id> \
   --guild-slug=<guild-slug> \
@@ -57,7 +57,7 @@ Use the exact key and SHA-256 printed by the inventory action:
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
   bun run glitter:operate backfill \
   --inventory-key=<inventory-key> \
   --inventory-sha=<inventory-sha256> \

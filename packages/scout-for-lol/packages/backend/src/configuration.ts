@@ -47,7 +47,11 @@ function getOptionalEnvVar(
 const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 
-const TemporalScheduleReconciliationSchema = z.enum(["enabled", "disabled"]);
+const TemporalScheduleReconciliationSchema = z.enum([
+  "enabled",
+  "disabled",
+  "auto",
+]);
 export type TemporalScheduleReconciliation = z.infer<
   typeof TemporalScheduleReconciliationSchema
 >;

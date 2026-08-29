@@ -207,7 +207,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(service_requests{namespace="default",operation=~"StartWorkflowExecution|SignalWithStartWorkflowExecution"}[15m]) > 0',
+            'increase(service_requests{exported_namespace="default",operation=~"StartWorkflowExecution|SignalWithStartWorkflowExecution"}[15m]) > 0',
           ),
           for: "1m",
           labels: {
