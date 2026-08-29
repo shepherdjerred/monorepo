@@ -297,6 +297,7 @@ const commands: Record<
     env: {
       TEMPORAL_ADDRESS: "127.0.0.1:7233",
       TEMPORAL_NAMESPACE: "prod",
+      TEMPORAL_WORKER_ROLE: "core",
       // BuildKit may reuse the smoke network namespace while another image
       // target is probing its worker. Ephemeral ports still exercise both
       // exporters without making the image smoke depend on host port state;
