@@ -103,6 +103,22 @@ export type OpenMarketsView = {
   weeklyParlays: OpenWeeklyParlayMarketView[];
 };
 
+/**
+ * The weekly copy renderers produce Discord markdown (`**bold**`, `• ` list
+ * bullets). The web renders plain text, so the shared wording is kept and the
+ * Discord syntax is stripped rather than forking the copy.
+ */
+function stripDiscordMarkdown(line: string): string {
+  return line.replaceAll("**", "").replace(/^• /, "");
+}
+
+function mapQualification(
+  criteria: Parameters<typeof weeklyParlayQualificationCopy>[0],
+): string | undefined {
+  const copy = weeklyParlayQualificationCopy(criteria);
+  return copy === undefined ? undefined : stripDiscordMarkdown(copy);
+}
+
 function decimalOdds(yesProbabilityBps: number): {
   yesOdds: string;
   noOdds: string;
@@ -300,9 +316,11 @@ async function loadWeeklyParlayMarkets(
       scoringEndsAt: market.definition.scoringEndsAt,
       subjects: subjects.map((subject) => subject.alias),
       legs: criteria.legs.map((leg) =>
-        legLine(leg, undefined, aliases.get(leg.subject) ?? leg.subject),
+        stripDiscordMarkdown(
+          legLine(leg, undefined, aliases.get(leg.subject) ?? leg.subject),
+        ),
       ),
-      qualification: weeklyParlayQualificationCopy(criteria),
+      qualification: mapQualification(criteria),
       yesProbabilityBps: market.definition.yesProbabilityBps,
       ...decimalOdds(market.definition.yesProbabilityBps),
       bettorCount: market.bets.length,
