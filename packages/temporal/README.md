@@ -56,6 +56,7 @@ bun run test         # unit tests, including the workflow-bundle smoke test
 bun run lint         # eslint
 export TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443
 export TEMPORAL_TLS=true
+export TEMPORAL_NAMESPACE=prod
 bun run migrate:namespaces -- prepare # read-only inventory
 bun run migrate:namespaces -- prepare --confirm # create paused targets
 bun run migrate:namespaces -- cutover --confirm # pause default, activate targets
