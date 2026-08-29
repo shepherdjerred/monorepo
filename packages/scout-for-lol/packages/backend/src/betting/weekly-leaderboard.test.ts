@@ -31,11 +31,13 @@ function dependencies(input: {
   member?: boolean;
   rows?: FullLeaderboardRow[];
   sendMessage?: WeeklyBucksLeaderboardDependencies["sendMessage"];
+  persistSnapshot?: WeeklyBucksLeaderboardDependencies["persistSnapshot"];
 }): WeeklyBucksLeaderboardDependencies {
   return {
     enabledGuilds: async () => input.guilds ?? [SERVER_ID],
     hasGuild: () => input.member ?? true,
     loadRows: () => Promise.resolve(input.rows ?? []),
+    persistSnapshot: input.persistSnapshot ?? (() => Promise.resolve()),
     sendMessage: input.sendMessage ?? (() => Promise.resolve(undefined)),
     sleep: () => Promise.resolve(),
   };
@@ -130,11 +132,16 @@ describe("weekly Bryan Bucks leaderboard", () => {
   test("does nothing when this Discord application is not in the guild", async () => {
     let loaded = false;
     let sent = false;
+    let persisted = false;
     const result = await runWeeklyBucksLeaderboard({
       ...dependencies({ member: false }),
       loadRows: () => {
         loaded = true;
         return Promise.resolve([]);
+      },
+      persistSnapshot: () => {
+        persisted = true;
+        return Promise.resolve();
       },
       sendMessage: () => {
         sent = true;
@@ -148,6 +155,7 @@ describe("weekly Bryan Bucks leaderboard", () => {
     });
     expect(loaded).toBe(false);
     expect(sent).toBe(false);
+    expect(persisted).toBe(false);
   });
 
   test("fails closed unless exactly one guild is enabled", async () => {
@@ -206,5 +214,48 @@ describe("weekly Bryan Bucks leaderboard", () => {
     ).rejects.toThrow("failed to deliver 1/");
     expect(attemptedContents.length).toBeGreaterThan(3);
     expect(attemptedContents.at(-1)).toContain(`<@${bucksTestDiscordId(80)}>`);
+  });
+});
+
+describe("weekly Bryan Bucks leaderboard snapshot", () => {
+  test("persists the exact ranked standings the post disclosed", async () => {
+    const snapshots: Parameters<
+      WeeklyBucksLeaderboardDependencies["persistSnapshot"]
+    >[0][] = [];
+    const result = await runWeeklyBucksLeaderboard(
+      dependencies({
+        rows: [row(1, 20), row(2, 20), row(3, 5)],
+        persistSnapshot: (input) => {
+          snapshots.push(input);
+          return Promise.resolve();
+        },
+      }),
+    );
+    expect(result.status).toBe("sent");
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0]?.serverId).toBe(SERVER_ID);
+    expect(Number.isInteger(snapshots[0]?.runWeek)).toBe(true);
+    expect(snapshots[0]?.entries).toEqual([
+      { rank: 1, discordId: bucksTestDiscordId(1), balance: 20 },
+      { rank: 1, discordId: bucksTestDiscordId(2), balance: 20 },
+      { rank: 3, discordId: bucksTestDiscordId(3), balance: 5 },
+    ]);
+  });
+
+  test("a snapshot failure never blocks the Discord post", async () => {
+    const sends: MessageCreateOptions[] = [];
+    const result = await runWeeklyBucksLeaderboard(
+      dependencies({
+        rows: [row(1, 10)],
+        persistSnapshot: () =>
+          Promise.reject(new Error("snapshot storage unavailable")),
+        sendMessage: (options) => {
+          sends.push(options);
+          return Promise.resolve(undefined);
+        },
+      }),
+    );
+    expect(result.status).toBe("sent");
+    expect(sends).toHaveLength(1);
   });
 });

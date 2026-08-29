@@ -1,7 +1,7 @@
+import { formatInteger } from "@scout-for-lol/data";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { BUTTON_STAKES } from "#src/betting/constants.ts";
 import { formatParlayCustomId } from "#src/betting/parlay-custom-id.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 export function buildParlayButtons(input: {
   matchId: string;

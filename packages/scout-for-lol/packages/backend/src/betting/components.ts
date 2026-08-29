@@ -1,3 +1,4 @@
+import { formatInteger } from "@scout-for-lol/data";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -8,7 +9,6 @@ import {
 import type { BucksPoolParticipant, RiotTeamId } from "@scout-for-lol/data";
 import { BLUE_TEAM_ID, BUTTON_STAKES } from "#src/betting/constants.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 import {
   BETTING_TEAM_IDS,
   hasTrackedPlayersOnBothTeams,

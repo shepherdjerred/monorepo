@@ -1,5 +1,5 @@
+import { formatInteger } from "@scout-for-lol/data";
 import { BUCKS_RULES_HINT } from "#src/betting/prematch-line.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 /**
  * User-facing Bryan Bucks strings shared by more than one surface.

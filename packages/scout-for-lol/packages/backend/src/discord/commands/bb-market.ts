@@ -3,6 +3,7 @@ import {
   type BucksPoolParticipant,
   type LeaguePuuid,
   type RiotTeamId,
+  formatInteger,
 } from "@scout-for-lol/data";
 import type { OpenMarketAggregate } from "#src/betting/open-market.ts";
 import { BLUE_TEAM_ID, RED_TEAM_ID } from "#src/betting/constants.ts";
@@ -12,7 +13,6 @@ import {
   type OutcomeFraming,
 } from "#src/betting/team.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 type OpenBettingPool = {
   matchId: string;

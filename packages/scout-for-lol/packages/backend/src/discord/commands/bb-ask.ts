@@ -1,3 +1,4 @@
+import { formatInteger } from "@scout-for-lol/data";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -12,7 +13,6 @@ import {
   runBucksAskAgent,
 } from "#src/betting/ask-agent.ts";
 import { BucksAskDatasetTooLargeError } from "#src/betting/ask-analytics.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 import { formatBucksAskPublishCustomId } from "#src/betting/ask-custom-id.ts";
 import { tryStartBucksAsk } from "#src/betting/ask-rate-limit.ts";
 import { classifyLlmProviderIssue } from "#src/alerts/provider-metrics.ts";

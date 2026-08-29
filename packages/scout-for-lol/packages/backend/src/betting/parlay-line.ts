@@ -1,3 +1,4 @@
+import { formatInteger } from "@scout-for-lol/data";
 import type {
   BucksParlayMarketState,
   BucksParlaySide,
@@ -10,7 +11,6 @@ import {
 } from "#src/betting/parlay-criteria.ts";
 import { formatDecimalOdds } from "#src/betting/parlay-odds.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 /**
  * The parlay market message.

@@ -1,6 +1,7 @@
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  formatInteger,
 } from "@scout-for-lol/data";
 import {
   cancelParlayBet,
@@ -24,7 +25,6 @@ import {
   BUCKS_STORAGE_LIMIT,
   bucksInsufficient,
 } from "#src/betting/copy.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 export function describeParlayResult(result: PlaceParlayBetResult): string {
   switch (result.kind) {

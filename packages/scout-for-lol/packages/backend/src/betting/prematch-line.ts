@@ -1,3 +1,4 @@
+import { formatInteger } from "@scout-for-lol/data";
 import type {
   BucksPoolState,
   BucksPrediction,
@@ -5,7 +6,6 @@ import type {
 } from "@scout-for-lol/data";
 import { BETTING_TEAM_IDS, outcomeLabel } from "#src/betting/team.ts";
 import type { OutcomeFraming } from "#src/betting/team.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 /**
  * The Bryan Bucks lines appended to a prematch message.

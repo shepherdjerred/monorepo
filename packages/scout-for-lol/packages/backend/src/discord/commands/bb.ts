@@ -1,3 +1,4 @@
+import { formatInteger } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 import {
   DiscordAccountIdSchema,
@@ -60,7 +61,6 @@ import {
   truncateEmbedFieldValue,
 } from "#src/discord/utils/message.ts";
 import { createLogger } from "#src/logger.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 const logger = createLogger("command-bb");
 export function buildBbRulesEmbed(): EmbedBuilder {

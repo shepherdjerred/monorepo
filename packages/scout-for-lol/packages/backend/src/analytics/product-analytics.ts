@@ -51,7 +51,7 @@ export type BucksMemberActivityKind =
   | "peek_pass"
   | "ask"
   | "navigation";
-export type BucksActivitySurface = "command" | "button" | "unknown";
+export type BucksActivitySurface = "command" | "button" | "web" | "unknown";
 
 export type ProductAnalyticsEventOptions = {
   timestamp?: Date | undefined;

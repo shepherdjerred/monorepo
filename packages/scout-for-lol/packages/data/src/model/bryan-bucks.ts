@@ -494,3 +494,25 @@ export const BucksMessageRefSchema = z.strictObject({
 
 export type BucksMessageRefs = z.infer<typeof BucksMessageRefsSchema>;
 export const BucksMessageRefsSchema = z.array(BucksMessageRefSchema);
+
+/**
+ * One row of the persisted weekly leaderboard snapshot — the standings exactly
+ * as the Friday 5 PM PT Discord post disclosed them. The web leaderboard reads
+ * only this stored JSON, never live balances, so the deliberate
+ * no-on-demand-leaderboard rule survives a second surface.
+ */
+export type BucksWeeklyLeaderboardEntry = z.infer<
+  typeof BucksWeeklyLeaderboardEntrySchema
+>;
+export const BucksWeeklyLeaderboardEntrySchema = z.strictObject({
+  rank: z.number().int().positive(),
+  discordId: z.string(),
+  balance: z.number().int(),
+});
+
+export type BucksWeeklyLeaderboardEntries = z.infer<
+  typeof BucksWeeklyLeaderboardEntriesSchema
+>;
+export const BucksWeeklyLeaderboardEntriesSchema = z.array(
+  BucksWeeklyLeaderboardEntrySchema,
+);

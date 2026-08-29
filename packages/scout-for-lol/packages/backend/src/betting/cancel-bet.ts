@@ -56,7 +56,7 @@ export async function cancelBet(
     matchId: string;
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
-    surface?: "button" | "command";
+    surface?: "button" | "command" | "web";
   },
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),

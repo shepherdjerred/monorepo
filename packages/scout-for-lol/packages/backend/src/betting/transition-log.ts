@@ -58,7 +58,8 @@ export type BucksTransitionFields = {
   payout?: number;
   balanceAfter?: number;
   reason?: string;
-  surface?: "button" | "command" | "sweep" | "postmatch" | "cron" | "prematch";
+  surface?:
+    "button" | "command" | "web" | "sweep" | "postmatch" | "cron" | "prematch";
   queueType?: string;
   isHouse?: boolean;
   contributionCount?: number;

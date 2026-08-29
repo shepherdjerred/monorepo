@@ -2,6 +2,8 @@ import { EmbedBuilder, type MessageCreateOptions } from "discord.js";
 import {
   type BucksPrediction,
   type BucksVoidReason,
+  formatInteger,
+  formatParlayNumericValue,
 } from "@scout-for-lol/data";
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
@@ -10,10 +12,6 @@ import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { SettlementBet } from "#src/betting/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/sweep-types.ts";
 import type { OutcomeFraming } from "#src/betting/team.ts";
-import {
-  formatInteger,
-  formatParlayNumericValue,
-} from "#src/betting/display-format.ts";
 
 /** Beyond this the message stops being readable, so the tail is summarised. */
 const MAX_BET_ROWS = 15;

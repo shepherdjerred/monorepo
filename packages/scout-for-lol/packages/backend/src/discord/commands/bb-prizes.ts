@@ -1,5 +1,5 @@
+import { formatInteger } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 const BUCKS_COLOR = 0x2e_cc_71;
 const CAD_PER_BB = 10;

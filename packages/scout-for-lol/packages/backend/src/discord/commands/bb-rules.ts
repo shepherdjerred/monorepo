@@ -1,3 +1,4 @@
+import { formatInteger } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 import {
   BETTING_WINDOW_MS,
@@ -7,7 +8,6 @@ import {
   SEED_GRANT,
 } from "#src/betting/constants.ts";
 import { EARNED_REWARDS } from "#src/betting/earnings.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
 import { PEEK_DELAY_MS } from "#src/betting/pool-open.ts";
 import {

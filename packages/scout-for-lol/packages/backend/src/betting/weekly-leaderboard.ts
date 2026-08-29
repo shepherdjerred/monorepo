@@ -1,12 +1,16 @@
+import * as Sentry from "@sentry/bun";
 import type { MessageCreateOptions } from "discord.js";
 import {
+  type BucksWeeklyLeaderboardEntries,
   type DiscordChannelId,
   type DiscordGuildId,
+  formatInteger,
 } from "@scout-for-lol/data";
 import {
   getFullLeaderboard,
   type FullLeaderboardRow,
 } from "#src/betting/accounts.ts";
+import { saveWeeklyLeaderboardSnapshot } from "#src/betting/weekly-leaderboard-snapshot.ts";
 import { isPolicyEnabled, MY_SERVER } from "#src/configuration/flags.ts";
 import { client } from "#src/discord/client.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
@@ -18,7 +22,6 @@ import {
 } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 const logger = createLogger("betting-weekly-leaderboard");
 const MAX_CHUNK_SEND_ATTEMPTS = 3;
@@ -75,6 +78,11 @@ export type WeeklyBucksLeaderboardDependencies = {
   enabledGuilds: () => Promise<DiscordGuildId[]>;
   hasGuild: (serverId: DiscordGuildId) => boolean;
   loadRows: (serverId: DiscordGuildId) => Promise<FullLeaderboardRow[]>;
+  persistSnapshot: (input: {
+    serverId: DiscordGuildId;
+    runWeek: number;
+    entries: BucksWeeklyLeaderboardEntries;
+  }) => Promise<void>;
   sendMessage: (
     options: MessageCreateOptions,
     channelId: DiscordChannelId,
@@ -90,6 +98,9 @@ const defaultDependencies: WeeklyBucksLeaderboardDependencies = {
       : [],
   hasGuild: (serverId) => client.guilds.cache.has(serverId),
   loadRows: async (serverId) => await getFullLeaderboard({ serverId }),
+  persistSnapshot: async (input) => {
+    await saveWeeklyLeaderboardSnapshot(input);
+  },
   sendMessage: async (options, channelId, serverId) =>
     await sendChannelMessage(options, channelId, serverId),
   sleep: async (milliseconds) => {
@@ -183,6 +194,26 @@ export async function runWeeklyBucksLeaderboard(
   );
 
   const runWeek = Math.floor(Date.now() / WEEK_MS);
+  // The rows are frozen into chunks above, so this is the moment the numbers
+  // the post will disclose exist — persist exactly them. The post is the
+  // product and the snapshot is derived disclosure, so a persist failure is
+  // reported but never blocks the send.
+  try {
+    await dependencies.persistSnapshot({
+      serverId,
+      runWeek,
+      entries: rankBucksLeaderboard(rows).map((row) => ({
+        rank: row.rank,
+        discordId: row.discordId,
+        balance: row.balance,
+      })),
+    });
+  } catch (error) {
+    Sentry.captureException(error);
+    logger.error(
+      `💰 Could not persist the weekly Bryan Bucks leaderboard snapshot: ${getErrorMessage(error)}`,
+    );
+  }
   const failures: unknown[] = [];
   for (const [chunkIndex, chunk] of chunks.entries()) {
     try {
