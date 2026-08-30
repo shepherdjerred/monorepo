@@ -1,4 +1,3 @@
-import { mkdir, rm } from "node:fs/promises";
 import { z } from "zod";
 import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
 import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
@@ -22,6 +21,7 @@ import {
   type RolloutCommandRunner,
   verifyCandidateImageBuildId,
 } from "./worker-deployment-proofs.ts";
+import { acquireWorkerDeploymentLock } from "./worker-deployment-lock.ts";
 export type WorkerDeploymentRolloutOptions = {
   action: "status" | "start" | "advance" | "promote" | "rollback";
   address: string;
@@ -65,22 +65,6 @@ function temporalPrefix(options: WorkerDeploymentRolloutOptions): string[] {
   ];
 }
 
-async function acquireRolloutLock(
-  catalogPath: string,
-): Promise<() => Promise<void>> {
-  const lockPath = `${catalogPath}.rollout-lock`;
-  try {
-    await mkdir(lockPath);
-  } catch (error: unknown) {
-    if (error instanceof Error && "code" in error && error.code === "EEXIST") {
-      throw new Error("Another Temporal Worker Deployment rollout is active");
-    }
-    throw error;
-  }
-  return async () => {
-    await rm(lockPath, { recursive: true, force: true });
-  };
-}
 async function describeDeployment(
   options: WorkerDeploymentRolloutOptions,
   run: RolloutCommandRunner,
@@ -473,7 +457,7 @@ export async function executeWorkerDeploymentRollout(
     requireCleanCandidate(status);
     return status;
   }
-  const releaseLock = await acquireRolloutLock(options.catalogPath);
+  const releaseLock = await acquireWorkerDeploymentLock(options.catalogPath);
   try {
     const status = await readWorkerDeploymentRolloutStatus(
       options,
