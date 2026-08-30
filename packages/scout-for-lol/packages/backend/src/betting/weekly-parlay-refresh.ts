@@ -1,23 +1,24 @@
 import * as Sentry from "@sentry/bun";
-import { BucksMessageRefsSchema, formatInteger } from "@scout-for-lol/data";
-import type { MessageEditOptions } from "discord.js";
+import {
+  BucksMessageRefsSchema,
+  DiscordGuildIdSchema,
+  type DiscordChannelId,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
+import type { MessageCreateOptions, MessageEditOptions } from "discord.js";
 import {
   WeeklyParlayDefinitionCriteriaSchema,
   WeeklyParlaySubjectsSchema,
 } from "#src/betting/weekly-parlay-criteria.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
-import {
-  countLabel,
-  deliveryTimeCopy,
-  deliveryTitle,
-  legLine,
-  weeklyParlayQualificationCopy,
-} from "#src/betting/weekly-parlay-discord-copy.ts";
-import { weeklyParlayButtons } from "#src/betting/weekly-parlay-discord.ts";
-import { isWeeklyParlayCatchupTimeline } from "#src/betting/weekly-parlay-period.ts";
+import { weeklyParlayDeliveryContent } from "#src/betting/weekly-parlay-discord-copy.ts";
+import { weeklyParlayMessageOptions } from "#src/betting/weekly-parlay-discord.ts";
+import type { WeeklyParlayDiscordSender } from "#src/betting/weekly-parlay-discord.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
+import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
+import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-weekly-parlay-refresh");
@@ -27,6 +28,52 @@ export type WeeklyParlayMessageEditor = (
   messageId: string,
   options: MessageEditOptions,
 ) => Promise<void>;
+
+type WeeklyParlayMessageRef = { channelId: string; messageId: string };
+
+type WeeklyParlayMessageDependencies = {
+  sender: WeeklyParlayDiscordSender;
+  deleter: (channelId: string, messageId: string) => Promise<void>;
+};
+
+type WeeklyParlayMessageDelivery = WeeklyParlayMessageDependencies & {
+  editor: WeeklyParlayMessageEditor;
+};
+
+type ReconcileWeeklyParlayMessageArgs = {
+  ref: WeeklyParlayMessageRef | undefined;
+  messageOptions: MessageCreateOptions | undefined;
+  marketIdentifier: string;
+  serverId: string;
+  editor: WeeklyParlayMessageEditor;
+  dependencies: WeeklyParlayMessageDependencies;
+};
+
+async function sendDiscordMessage(
+  options: MessageCreateOptions,
+  channelId: DiscordChannelId,
+  serverId: DiscordGuildId,
+): Promise<{ channelId: string; id: string }> {
+  const message = await send(
+    options,
+    channelId,
+    DiscordGuildIdSchema.parse(serverId),
+  );
+  return { channelId: message.channelId, id: message.id };
+}
+
+async function deleteDiscordMessage(
+  channelId: string,
+  messageId: string,
+): Promise<void> {
+  const channel = await client.channels.fetch(channelId);
+  if (channel?.isTextBased() !== true) {
+    throw new Error(
+      `Weekly parlay channel ${channelId} is unavailable or not text based`,
+    );
+  }
+  await channel.messages.delete(messageId);
+}
 
 async function editDiscordMessage(
   channelId: string,
@@ -42,35 +89,116 @@ async function editDiscordMessage(
   await channel.messages.edit(messageId, options);
 }
 
+async function reconcileWeeklyParlayMessage({
+  ref,
+  messageOptions,
+  marketIdentifier,
+  serverId,
+  editor,
+  dependencies,
+}: ReconcileWeeklyParlayMessageArgs): Promise<
+  WeeklyParlayMessageRef | undefined
+> {
+  if (messageOptions === undefined) {
+    if (ref === undefined) {
+      return undefined;
+    }
+    try {
+      await dependencies.deleter(ref.channelId, ref.messageId);
+      return undefined;
+    } catch (error) {
+      logger.warn(
+        `⚠️ Could not remove stale weekly Bryan Bucks parlay message ${ref.messageId} for ${marketIdentifier}:`,
+        error,
+      );
+      return ref;
+    }
+  }
+
+  const content = messageOptions.content;
+  if (content === undefined) {
+    throw new Error("Weekly parlay message content is required for refresh");
+  }
+  const editOptions: MessageEditOptions = { content };
+  if (messageOptions.allowedMentions !== undefined) {
+    editOptions.allowedMentions = messageOptions.allowedMentions;
+  }
+  if (messageOptions.components !== undefined) {
+    editOptions.components = messageOptions.components;
+  }
+  try {
+    if (ref === undefined) {
+      const message = await observeBucksDelivery(
+        {
+          surface: "weekly_parlay",
+          operation: "send",
+          matchId: marketIdentifier,
+          channelId: COMMON_DENOMINATOR_CHANNEL_ID,
+        },
+        () =>
+          dependencies.sender(
+            messageOptions,
+            COMMON_DENOMINATOR_CHANNEL_ID,
+            DiscordGuildIdSchema.parse(serverId),
+          ),
+      );
+      return { channelId: message.channelId, messageId: message.id };
+    }
+    await observeBucksDelivery(
+      {
+        surface: "weekly_parlay",
+        operation: "edit",
+        matchId: marketIdentifier,
+        channelId: ref.channelId,
+      },
+      () => editor(ref.channelId, ref.messageId, editOptions),
+    );
+    return ref;
+  } catch (error) {
+    logger.warn(
+      `⚠️ Could not refresh weekly Bryan Bucks parlay message ${ref?.messageId ?? "new chunk"} for ${marketIdentifier}:`,
+      error,
+    );
+    return ref;
+  }
+}
+
+const defaultWeeklyParlayMessageDependencies: WeeklyParlayMessageDependencies =
+  {
+    sender: sendDiscordMessage,
+    deleter: deleteDiscordMessage,
+  };
+
 async function editWeeklyParlayMessage(
   marketId: number,
   mode: "open" | "operator_cancelled",
   prismaClient: ExtendedPrismaClient,
-  editor: WeeklyParlayMessageEditor,
+  delivery: WeeklyParlayMessageDelivery,
 ): Promise<void> {
   await runSerialized(`weekly:${marketId.toString()}`, async () => {
     const market = await prismaClient.bucksWeeklyParlayMarket.findUnique({
       where: { id: marketId },
       select: {
+        serverId: true,
         messageRefs: true,
         marketState: true,
         voidReason: true,
-        periodKey: true,
         bettingClosesAt: true,
         scoringEndsAt: true,
         definition: {
           select: {
             subjects: true,
             criteria: true,
-            yesProbabilityBps: true,
-            openAt: true,
-            bettingClosesAt: true,
             scoringStartsAt: true,
             scoringEndsAt: true,
           },
         },
         bets: {
-          select: { stake: true, betOutcome: true },
+          select: {
+            stake: true,
+            betOutcome: true,
+            bucksAccount: { select: { discordId: true } },
+          },
           orderBy: { id: "asc" },
         },
         deliveries: {
@@ -109,17 +237,6 @@ async function editWeeklyParlayMessage(
     const aliases = new Map(
       subjects.map((subject) => [subject.key, subject.alias]),
     );
-    const catchup = isWeeklyParlayCatchupTimeline({
-      periodKey: market.periodKey,
-      openAt: market.definition.openAt,
-      bettingClosesAt: market.definition.bettingClosesAt,
-      scoringStartsAt: market.definition.scoringStartsAt,
-      scoringEndsAt: market.definition.scoringEndsAt,
-    });
-    const legs = criteria.legs.map((leg) =>
-      legLine(leg, undefined, aliases.get(leg.subject) ?? leg.subject),
-    );
-    const qualification = weeklyParlayQualificationCopy(criteria) ?? "";
     const relevantBets = market.bets.filter((bet) =>
       mode === "open"
         ? bet.betOutcome === "pending"
@@ -129,70 +246,57 @@ async function editWeeklyParlayMessage(
       (total, bet) => total + bet.stake,
       0,
     );
-    const content =
-      mode === "open"
-        ? [
-            deliveryTitle({
-              kind: "open",
-              marketState: market.marketState,
-              yesResult: null,
-              catchup,
-            }),
-            `Period: **${market.periodKey}** · ${(market.definition.yesProbabilityBps / 100).toFixed(1)}% YES`,
-            ...legs,
-            qualification,
-            `**${formatInteger(relevantBets.length)} ${countLabel(relevantBets.length, "bettor")} · ${formatInteger(totalStaked)} BB staked**`,
-            deliveryTimeCopy({
-              kind: "open",
-              bettingClosesAt: market.bettingClosesAt,
-              scoringEndsAt: market.scoringEndsAt,
-              scoringStartsAt: market.definition.scoringStartsAt,
-              catchup,
-            }),
-          ]
-            .filter((line) => line.length > 0)
-            .join("\n")
-        : [
-            deliveryTitle({
-              kind: "settlement",
-              marketState: market.marketState,
-              yesResult: null,
-              catchup,
-              voidReason: market.voidReason,
-            }),
-            `Period: **${market.periodKey}**`,
-            ...legs,
-            qualification,
-            `**${formatInteger(relevantBets.length)} ${countLabel(relevantBets.length, "bettor")} refunded · ${formatInteger(totalStaked)} BB returned**`,
-            "This market was cancelled by an operator.",
-          ]
-            .filter((line) => line.length > 0)
-            .join("\n");
+    const content = weeklyParlayDeliveryContent({
+      kind: mode === "open" ? "open" : "settlement",
+      marketState: market.marketState,
+      yesResult: null,
+      voidReason: market.voidReason,
+      bettingClosesAt: market.bettingClosesAt,
+      scoringStartsAt: market.definition.scoringStartsAt,
+      scoringEndsAt: market.scoringEndsAt,
+      criteria,
+      evaluation: undefined,
+      aliases,
+      bettorCount: relevantBets.length,
+      totalStaked,
+    });
+    const bettorIds = relevantBets.map((bet) => bet.bucksAccount.discordId);
+    const mentionIds = [
+      ...new Set([
+        ...subjects.map((subject) => subject.discordId),
+        ...bettorIds,
+      ]),
+    ];
+    const messageOptions = weeklyParlayMessageOptions({
+      marketId,
+      actionKey: `refresh:${mode}`,
+      kind: mode === "open" ? "open" : "settlement",
+      content,
+      mentionIds,
+    });
     const marketIdentifier = `weekly:${marketId.toString()}`;
-    for (const ref of refs) {
-      try {
-        await observeBucksDelivery(
-          {
-            surface: "weekly_parlay",
-            operation: "edit",
-            matchId: marketIdentifier,
-            channelId: ref.channelId,
-          },
-          () =>
-            editor(ref.channelId, ref.messageId, {
-              content,
-              allowedMentions: { parse: [] },
-              components:
-                mode === "open" ? weeklyParlayButtons("open", marketId) : [],
-            }),
-        );
-      } catch (error) {
-        logger.warn(
-          `⚠️ Could not refresh weekly Bryan Bucks parlay message ${ref.messageId} for ${marketIdentifier}:`,
-          error,
-        );
+    const updatedRefs: WeeklyParlayMessageRef[] = [];
+    const operationCount = Math.max(refs.length, messageOptions.length);
+    for (const index of Array.from(
+      { length: operationCount },
+      (_, value) => value,
+    )) {
+      const updatedRef = await reconcileWeeklyParlayMessage({
+        ref: refs[index],
+        messageOptions: messageOptions[index],
+        marketIdentifier,
+        serverId: market.serverId,
+        editor: delivery.editor,
+        dependencies: delivery,
+      });
+      if (updatedRef !== undefined) {
+        updatedRefs.push(updatedRef);
       }
     }
+    await prismaClient.bucksWeeklyParlayMarket.update({
+      where: { id: marketId },
+      data: { messageRefs: JSON.stringify(updatedRefs) },
+    });
   });
 }
 
@@ -208,9 +312,13 @@ export async function refreshWeeklyParlayMessage(
   marketId: number,
   prismaClient: ExtendedPrismaClient = prisma,
   editor: WeeklyParlayMessageEditor = editDiscordMessage,
+  dependencies: WeeklyParlayMessageDependencies = defaultWeeklyParlayMessageDependencies,
 ): Promise<void> {
   try {
-    await editWeeklyParlayMessage(marketId, "open", prismaClient, editor);
+    await editWeeklyParlayMessage(marketId, "open", prismaClient, {
+      editor,
+      ...dependencies,
+    });
   } catch (error) {
     logger.error(
       `❌ Could not prepare weekly Bryan Bucks parlay refresh for market ${marketId.toString()}:`,
@@ -228,13 +336,14 @@ export async function cancelWeeklyParlayMessage(
   marketId: number,
   prismaClient: ExtendedPrismaClient = prisma,
   editor: WeeklyParlayMessageEditor = editDiscordMessage,
+  dependencies: WeeklyParlayMessageDependencies = defaultWeeklyParlayMessageDependencies,
 ): Promise<void> {
   try {
     await editWeeklyParlayMessage(
       marketId,
       "operator_cancelled",
       prismaClient,
-      editor,
+      { editor, ...dependencies },
     );
   } catch (error) {
     logger.error(
