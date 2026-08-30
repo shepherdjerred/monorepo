@@ -1,5 +1,6 @@
 import { asRecord } from "../../scripts/lib/json.ts";
 import { ALL_IMAGE_TARGETS } from "./image-targets.ts";
+import { nativeLanePaths } from "./macos-native-selection.ts";
 
 const infrastructureTargets = [
   "caddy-s3proxy",
@@ -175,6 +176,8 @@ export function parseLastPassedStepsCommit(
 
 export const summarySteps = [
   "verify",
+  "quotabar-macos-main",
+  "tasknotes-native-main",
   "playwright-e2e-main",
   "resume-build-main",
   "docker-e2e-main",
@@ -201,6 +204,8 @@ export const summarySteps = [
 ] as const;
 
 export const summaryLanes = [
+  "quotabar-macos",
+  "tasknotes-native",
   "playwright",
   "resume",
   "docker-e2e",
@@ -245,6 +250,7 @@ export const globalPaths = [
   ".buildkite/scripts/prepare-ci-changed-base.ts",
   ".buildkite/scripts/read-buildkite-handoff.ts",
   ".buildkite/scripts/select-main-pipeline.ts",
+  ".buildkite/scripts/select-main-pipeline-selection.ts",
   ".buildkite/scripts/upload-pipeline.sh",
 ] as const;
 
@@ -330,6 +336,7 @@ const sitePaths = {
 } as const;
 
 export const lanePaths: Readonly<Record<string, readonly string[]>> = {
+  ...nativeLanePaths,
   playwright: [
     ...workspacePaths,
     "packages/alert-dashboard",

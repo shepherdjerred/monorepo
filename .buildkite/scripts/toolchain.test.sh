@@ -6,7 +6,10 @@ TOOLCHAIN="${SCRIPT_DIR}/toolchain.sh"
 CI_IMAGE="${SCRIPT_DIR}/../ci-image/Dockerfile"
 CI_PLAYWRIGHT_IMAGE="${SCRIPT_DIR}/../ci-playwright/Dockerfile"
 BUN_INSTALL_WRAPPER="${SCRIPT_DIR}/bun-install.sh"
+MACOS_NATIVE_ENV="${SCRIPT_DIR}/macos-native-env.sh"
+REVIEW_GATE="${SCRIPT_DIR}/review-gate.sh"
 BUN_CACHE_GC="${SCRIPT_DIR}/../../packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite-bun-cache-gc.sh"
+MAC_CI_BOOTSTRAP="${SCRIPT_DIR}/../../packages/homelab/mac-ci/bootstrap.sh"
 
 if ! awk '
   $0 ~ /^[[:space:]]*mise_ci install --yes[[:space:]]*$/ { install_line = NR }
@@ -76,9 +79,37 @@ if ! rg -Fq 'flock --shared 9' "$BUN_INSTALL_WRAPPER" ||
   exit 1
 fi
 
+if ! rg -Fq 'BUN_INSTALL_LOCK_MODE=shared "$GATE_DIR/.buildkite/scripts/bun-install.sh"' "$REVIEW_GATE"; then
+  echo "main-sourced review gate must select shared locking for older PR pipelines" >&2
+  exit 1
+fi
+
 if ! rg -Fq 'flock --exclusive 9' "$BUN_CACHE_GC" ||
   ! rg -Fq 'find "$CACHE_DIR" -mindepth 1 -depth -delete' "$BUN_CACHE_GC"; then
   echo "bun cache collector must clear only while holding the exclusive cache lock" >&2
+  exit 1
+fi
+
+if ! rg -Fq 'shell="/bin/bash -e -c"' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS agent config must pin bash for the native steps that source macos-native-env.sh" >&2
+  exit 1
+fi
+if ! rg -Fq 'AGENT_BUILD_PATH="$HOME/.buildkite-agent/builds"' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'mise settings set trusted_config_paths "$AGENT_BUILD_PATH"' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'build-path="$AGENT_BUILD_PATH"' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS bootstrap must trust the same Buildkite checkout root it configures" >&2
+  exit 1
+fi
+if ! rg -Fq 'mise exec --cd "$REPO_ROOT" -- rustup target add' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'aarch64-apple-darwin' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'x86_64-apple-darwin' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS bootstrap must install both TaskNotes universal Rust targets" >&2
+  exit 1
+fi
+if ! rg -Fq 'displaysleep 0' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'com.apple.screensaver idleTime -int 0' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'sysadminctl -screenLock off -password -' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS bootstrap must keep the accepted CI GUI session unlocked" >&2
   exit 1
 fi
 
@@ -134,11 +165,76 @@ fi
 
 : >"$TEST_ROOT/bun.log"
 BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_INSTALL_LOCK_MODE=shared \
   BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
   PATH="$TEST_ROOT/bin:$PATH" \
   "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter example
 if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter example" ]]; then
   echo "bun install wrapper must preserve every install argument" >&2
+  exit 1
+fi
+
+: >"$TEST_ROOT/bun.log"
+BUN_INSTALL_LOCK_MODE=local \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter native-example
+if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter native-example" ]]; then
+  echo "local Bun install mode must preserve every install argument" >&2
+  exit 1
+fi
+
+if BUN_INSTALL_LOCK_MODE=local \
+  BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile; then
+  echo "local Bun install mode must reject a shared lock path" >&2
+  exit 1
+fi
+
+if BUN_INSTALL_LOCK_MODE=unknown \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile; then
+  echo "Bun install wrapper must reject an unknown lock mode" >&2
+  exit 1
+fi
+
+mkdir -p "$TEST_ROOT/home"
+HOME="$TEST_ROOT/home" \
+  BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  TURBO_API=http://linux-cache.invalid \
+  TURBO_CACHE=remote:rw \
+  TURBO_SCM_BASE=origin/main \
+  TURBO_TEAM=monorepo \
+  TURBO_TELEMETRY_DISABLED=1 \
+  TURBO_TOKEN=secret \
+  bash -c '
+    set -euo pipefail
+    source "$1"
+    [[ "$BUN_INSTALL_LOCK_MODE" == "local" ]]
+    [[ "$MISE_AUTO_INSTALL" == "0" ]]
+    [[ "$MISE_NOT_FOUND_AUTO_INSTALL" == "0" ]]
+    [[ "$BUN_INSTALL_CACHE_DIR" == "$HOME/Library/Caches/Bun/install/cache" ]]
+    [[ -z "${BUN_CACHE_LOCK_FILE+x}" ]]
+    [[ -z "${TURBO_API+x}" ]]
+    [[ -z "${TURBO_CACHE+x}" ]]
+    [[ -z "${TURBO_SCM_BASE+x}" ]]
+    [[ -z "${TURBO_TEAM+x}" ]]
+    [[ -z "${TURBO_TELEMETRY_DISABLED+x}" ]]
+    [[ -z "${TURBO_TOKEN+x}" ]]
+  ' _ "$MACOS_NATIVE_ENV"
+
+# A non-bash shell is simulated by unsetting BASH_VERSION rather than invoking
+# /bin/sh, which is bash in POSIX mode on macOS and would still define it.
+if bash -c 'unset BASH_VERSION; . "$1"' _ "$MACOS_NATIVE_ENV" \
+  >"$TEST_ROOT/native-env-shell.log" 2>&1; then
+  echo "macos-native-env.sh must refuse a shell that is not bash" >&2
+  exit 1
+fi
+if ! rg -Fq 'requires bash' "$TEST_ROOT/native-env-shell.log"; then
+  echo "macos-native-env.sh must name the bash requirement when it refuses" >&2
   exit 1
 fi
 

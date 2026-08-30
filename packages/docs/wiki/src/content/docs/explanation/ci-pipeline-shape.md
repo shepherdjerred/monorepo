@@ -41,6 +41,28 @@ any two of them would lose information the pipeline is built to preserve.
   three stages of one release, not three independent Scout test suites. The
   `scout-*` steps are ordered in [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
 
+## Native Apple checks are a separate execution surface
+
+Linux `verify` remains the first hard correctness gate, but it cannot exercise
+Xcode, code signing, or macOS UI automation. Changed QuotaBar and TaskNotes
+paths therefore add native phases after `verify`: QuotaBar runs its complete
+macOS verification suite, while TaskNotes verifies the Rust-to-Swift boundary,
+the native app, static analysis, and six signed UI flows.
+
+Those phases target a dedicated `macos` queue and serialize in one global
+concurrency group. They do not inherit the Kubernetes plugin, pod metadata, or
+cluster-secret environment. This is an intentional trust boundary: affected PR
+code runs directly in an unlocked macOS user session, so the host contains only
+the development certificate and permissions required by those tests. Release
+signing, notarization, iOS simulators, devices, CocoaPods, and Maestro remain
+outside that surface.
+
+The native steps are hard on both PRs and `main`, declare bounded timeouts, and
+wait for Linux `verify`. Pipeline validation treats native and Kubernetes steps
+as different classes so a future edit cannot accidentally route native work to
+Linux, attach Kubernetes secrets to the Mac, make the gates soft, or allow the
+single host to run them concurrently.
+
 ## Optional scans fail differently on purpose
 
 **Trivy** and **Semgrep** are finding scans. Their finding exit statuses are

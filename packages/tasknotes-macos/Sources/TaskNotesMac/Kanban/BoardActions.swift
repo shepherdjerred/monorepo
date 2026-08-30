@@ -31,9 +31,6 @@ internal import TaskNotesKit
 /// act on the window in front of the user and be **disabled, never hidden**
 /// when no window can service it.
 struct BoardActions {
-    /// Whether a card is selected at all — what makes the items applicable.
-    let hasSelection: Bool
-
     /// Whether there is a column that way. Deliberately `false` at the ends
     /// rather than wrapping: a card in the last column pressed rightwards
     /// should stay put, because a wrap silently turns "advance this" into "send

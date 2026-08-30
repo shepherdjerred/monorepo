@@ -34,6 +34,7 @@ import XCTest
 /// A test that calls `XCUIApplication().launch()` directly bypasses both. That
 /// is why every flow goes through here, and why this is a function rather than
 /// a documented convention.
+@MainActor
 enum TestApp {
     /// An address nothing can be listening on.
     ///
@@ -57,7 +58,7 @@ enum TestApp {
         serverAddress: String = unreachableServer,
         file: StaticString = #filePath,
         line: UInt = #line,
-        teardown: (@escaping @Sendable () -> Void) -> Void
+        teardown: (@escaping @Sendable () async -> Void) -> Void
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
@@ -73,7 +74,7 @@ enum TestApp {
             file: file,
             line: line
         )
-        teardown { app.terminate() }
+        teardown { @MainActor in app.terminate() }
         return app
     }
 }

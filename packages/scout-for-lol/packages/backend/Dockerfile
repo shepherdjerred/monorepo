@@ -168,6 +168,9 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
-RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
+# This stage needs only its local Unix-socket Postgres. An isolated network
+# namespace prevents its fixed HTTP health port from colliding with another
+# concurrent Scout smoke on the shared remote BuildKit workers.
+RUN --network=none bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
 FROM runtime AS image

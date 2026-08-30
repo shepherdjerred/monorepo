@@ -220,7 +220,10 @@ final class ModelTests: XCTestCase {
   func testEnablingProviderDuringRefreshSchedulesFollowUp() async {
     let codex = FakeProvider(
       id: .codex,
-      results: [.success(snapshot(provider: .codex, remaining: 75))],
+      results: [
+        .success(snapshot(provider: .codex, remaining: 75)),
+        .success(snapshot(provider: .codex, remaining: 70)),
+      ],
       delay: .milliseconds(80)
     )
     let kimi = FakeProvider(
@@ -244,6 +247,9 @@ final class ModelTests: XCTestCase {
 
     await initialRefresh.value
     await waitUntil { await kimi.fetchCount == 1 }
+    await waitUntil { model.overallStatus == .healthy }
+    let codexFetchCount = await codex.fetchCount
+    XCTAssertEqual(codexFetchCount, 2)
     XCTAssertEqual(model.overallStatus, .healthy)
   }
 

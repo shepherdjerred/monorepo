@@ -19,6 +19,7 @@ import XCTest
 /// being seen when the app is **not** the one receiving keystrokes, so a
 /// per-application send would pass whether or not the feature worked. Posting to
 /// the HID event tap is the only way to ask the real question.
+@MainActor
 final class QuickAddPanelUITests: XCTestCase {
     /// The virtual keycode for Space. `kVK_Space` from `Carbon.HIToolbox`,
     /// spelled literally so this file does not import Carbon for one constant.
@@ -33,7 +34,6 @@ final class QuickAddPanelUITests: XCTestCase {
 
     override func setUp() {
         continueAfterFailure = false
-        requestAccessibilityTrustIfNeeded()
     }
 
     /// Ask for Accessibility trust, with the system prompt, if we do not have it.
@@ -73,6 +73,7 @@ final class QuickAddPanelUITests: XCTestCase {
     /// can be attributed: if this passes and that fails, the hotkey works and
     /// the activation behaviour does not.
     func testTheGlobalHotkeyOpensTheQuickAddPanel() throws {
+        requestAccessibilityTrustIfNeeded()
         let app = launchedApp()
         let panel = app.windows[AccessibilityIdentifier.QuickAdd.panel]
         XCTAssertFalse(panel.exists, "the panel was already open before the hotkey")
@@ -136,6 +137,7 @@ final class QuickAddPanelUITests: XCTestCase {
     /// Finder is the other application: it is always running, it cannot fail to
     /// launch, and activating it costs nothing.
     func testThePanelOpensOverAnotherAppWithoutActivatingTaskNotes() throws {
+        requestAccessibilityTrustIfNeeded()
         let app = launchedApp()
         let finder = XCUIApplication(bundleIdentifier: "com.apple.finder")
         finder.activate()
@@ -177,18 +179,20 @@ final class QuickAddPanelUITests: XCTestCase {
         // accuses a feature that has been verified by hand to work. Naming the
         // real cause, and the remedy, is the difference between a five-minute
         // fix and the afternoon this cost.
-        try XCTSkipUnless(
-            AXIsProcessTrusted(),
-            """
-            The test runner does not hold Accessibility trust, so synthetic key \
-            events are discarded and no global hotkey can be exercised. Approve \
-            TaskNotesUITests-Runner in System Settings ▸ Privacy & Security ▸ \
-            Accessibility. This is a one-time grant *provided* the runner is \
-            built with a stable signature — see AGENTS.md › Running the \
-            end-to-end tests; an ad-hoc runner is re-hashed on every build and \
-            the grant will not survive.
-            """
-        )
+        guard AXIsProcessTrusted() else {
+            XCTFail(
+                """
+                The test runner does not hold Accessibility trust, so synthetic key \
+                events are discarded and no global hotkey can be exercised. Approve \
+                TaskNotesUITests-Runner in System Settings ▸ Privacy & Security ▸ \
+                Accessibility. This is a one-time grant *provided* the runner is \
+                built with a stable signature — see AGENTS.md › Running the \
+                end-to-end tests; an ad-hoc runner is re-hashed on every build and \
+                the grant will not survive.
+                """
+            )
+            throw AccessibilityTrustError.missing
+        }
         let source = try XCTUnwrap(
             CGEventSource(stateID: .hidSystemState),
             "could not create a HID event source"
@@ -216,6 +220,10 @@ final class QuickAddPanelUITests: XCTestCase {
         )
         up.flags = flags
         up.post(tap: .cghidEventTap)
+    }
+
+    private enum AccessibilityTrustError: Error {
+        case missing
     }
 
     /// Poll until the frontmost application matches, or give up.

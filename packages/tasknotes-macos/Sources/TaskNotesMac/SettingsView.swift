@@ -1,6 +1,6 @@
 public import SwiftUI
-public import TaskNotesKit
-public import TaskNotesUniFFI
+import TaskNotesKit
+import TaskNotesUniFFI
 
 /// The `Settings` scene's content, reached at `⌘,`.
 ///

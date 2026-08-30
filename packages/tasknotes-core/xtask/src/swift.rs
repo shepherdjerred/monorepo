@@ -587,6 +587,7 @@ struct HostState {
     var tasks: [TaskNotesCore.Task] = []
     var idAliases: String?
     var idCounters: String?
+    var completionRestores: String?
     var lastSyncTime: Int64?
     var schemaVersion: UInt32 = 0
     var legacyQueue: String?
@@ -640,6 +641,13 @@ final class MemoryHost: QueueStorage, TaskCacheStorage, MigrationStorage, RetryS
     func writeIdCounters(data: String) throws {
         try guardWrites()
         state.withLock { $0.idCounters = data }
+    }
+    func readCompletionRestores() throws -> String? {
+        state.withLock { $0.completionRestores }
+    }
+    func writeCompletionRestores(data: String) throws {
+        try guardWrites()
+        state.withLock { $0.completionRestores = data }
     }
     func readLastSyncTime() throws -> Int64? { state.withLock { $0.lastSyncTime } }
     func writeLastSyncTime(millis: Int64) throws {
@@ -1573,6 +1581,15 @@ mod tests {
             assert!(
                 HOSTS_SOURCE.contains(host),
                 "the smoke test no longer implements {host}"
+            );
+        }
+        for method in [
+            "func readCompletionRestores()",
+            "func writeCompletionRestores(data: String)",
+        ] {
+            assert!(
+                HOSTS_SOURCE.contains(method),
+                "the smoke test no longer implements {method}"
             );
         }
         // The engine has to actually be driven, not merely constructed.
