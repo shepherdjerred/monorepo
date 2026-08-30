@@ -137,14 +137,16 @@ export async function prepareCandidatePinReset(
     candidatePinName,
     stablePinName,
   );
-  TemporalWorkflowImageValueSchema.parse(candidate.value);
+  const candidateValue = TemporalWorkflowImageValueSchema.parse(
+    candidate.value,
+  );
   const stableValue = TemporalWorkflowImageValueSchema.parse(stable.value);
   const changed = candidate.value !== stableValue;
   candidate.value = stableValue;
   return {
     contents: `${JSON.stringify(catalog, null, 2)}\n`,
     changed,
-    candidateValue: candidate.value,
+    candidateValue,
   };
 }
 
