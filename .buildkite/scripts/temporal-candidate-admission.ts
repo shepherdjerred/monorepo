@@ -6,6 +6,8 @@ const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 const CENTRAL_WORKFLOW_STABLE =
   "shepherdjerred/temporal-worker/workflows/stable";
+const CENTRAL_WORKFLOW_CANDIDATE =
+  "shepherdjerred/temporal-worker/workflows/candidate";
 const LAST_IMAGE_WITHOUT_WORKFLOW_WORKER = 12_197;
 export const TEMPORAL_WORKFLOW_PIN_PAIRS: readonly (readonly [
   string,
@@ -100,6 +102,18 @@ export async function assertTemporalCandidatePinsConverged(
   return catalog.source;
 }
 
+function willPublishTemporalWorkflowCandidate(
+  catalog: LiveVersionCatalog,
+): boolean {
+  const stable = catalog.values.get(CENTRAL_WORKFLOW_STABLE);
+  const candidate = catalog.values.get(CENTRAL_WORKFLOW_CANDIDATE);
+  if (stable === undefined || candidate === undefined) return true;
+  return (
+    stable === candidate ||
+    (!isLegacyWorkflowPin(stable) && isLegacyWorkflowPin(candidate))
+  );
+}
+
 export async function assertNoPendingVersionBump(
   executor: CandidateAdmissionExecutor,
   enforceTemporalCandidateAdmission = true,
@@ -120,9 +134,12 @@ export async function assertNoPendingVersionBump(
       `${VERSION_BUMP_BRANCH} is still pending; retry after its catalog update merges`,
     );
   }
-  if (enforceTemporalCandidateAdmission) {
+  const catalog = await readLiveVersionCatalog(executor);
+  if (
+    enforceTemporalCandidateAdmission &&
+    willPublishTemporalWorkflowCandidate(catalog)
+  ) {
     return assertTemporalCandidatePinsConverged(executor);
   }
-  const catalog = await readLiveVersionCatalog(executor);
   return catalog.source;
 }

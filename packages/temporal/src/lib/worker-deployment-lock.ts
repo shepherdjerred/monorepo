@@ -8,7 +8,9 @@ export async function acquireWorkerDeploymentLock(
     await mkdir(lockPath);
   } catch (error: unknown) {
     if (error instanceof Error && "code" in error && error.code === "EEXIST") {
-      throw new Error("Another Temporal Worker Deployment rollout is active");
+      throw new Error("Another Temporal Worker Deployment rollout is active", {
+        cause: error,
+      });
     }
     throw new Error("Unable to acquire Temporal Worker Deployment lock", {
       cause: error,
