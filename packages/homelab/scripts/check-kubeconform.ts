@@ -26,8 +26,10 @@ import path from "node:path";
 const SKIPPED_CRD_KINDS = [
   "AppProject",
   "Application",
+  "Certificate",
   "ClusterQueue",
   "ClusterTunnel",
+  "Issuer",
   "LocalQueue",
   "OnePasswordItem",
   "PodMonitor",

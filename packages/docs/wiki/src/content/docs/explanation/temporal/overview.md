@@ -131,3 +131,4 @@ it be deployed and restarted independently of everything it automates.
 - [Workflow families](/explanation/temporal/workflow-families/) — what actually runs
 - [Event-driven surfaces](/explanation/temporal/event-surfaces/)
 - [Temporal workflow inventory](/reference/temporal-workflows/)
+- [Temporal PostgreSQL's TLS identity](/explanation/temporal/postgresql-tls-identity/)

@@ -1,40 +1,29 @@
 import { describe, expect, test } from "vitest";
-import { App } from "cdk8s";
-import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
-
-const ResourceSchema = z
-  .object({
-    kind: z.string(),
-    metadata: z.object({ name: z.string() }).loose(),
-    spec: z.unknown().optional(),
-  })
-  .loose();
+import {
+  findTemporalResource,
+  synthesizeTemporalResources,
+} from "./temporal-test-resources.ts";
 
 function resources() {
-  const app = new App({ outdir: ".test-synth-temporal-postgres-tls" });
-  createTemporalChart(app);
-  return parseAllDocuments(app.synthYaml()).flatMap((document) => {
-    const parsed = ResourceSchema.safeParse(document.toJSON());
-    return parsed.success ? [parsed.data] : [];
-  });
+  return synthesizeTemporalResources(".test-synth-temporal-postgres-tls");
 }
 
 describe("Temporal PostgreSQL TLS", () => {
-  test("issues a rotating certificate for service and pod DNS names", () => {
-    const certificate = resources().find(
-      (resource) =>
-        resource.kind === "Certificate" &&
-        resource.metadata.name === "temporal-postgresql",
+  test("issues a rotating leaf certificate for service and pod DNS names", () => {
+    const certificate = findTemporalResource(
+      resources(),
+      "Certificate",
+      "temporal-postgresql",
     );
     const spec = z
       .object({
         secretName: z.literal("temporal-postgresql-tls"),
         dnsNames: z.array(z.string()),
+        issuerRef: z.object({ name: z.string(), kind: z.literal("Issuer") }),
         privateKey: z.object({ rotationPolicy: z.literal("Always") }),
       })
-      .parse(certificate?.spec);
+      .parse(certificate.spec);
 
     expect(spec.dnsNames).toContain(
       "temporal-postgresql.temporal.svc.cluster.local",
@@ -42,13 +31,54 @@ describe("Temporal PostgreSQL TLS", () => {
     expect(spec.dnsNames).toContain(
       "temporal-postgresql-0.temporal-postgresql.temporal.svc.cluster.local",
     );
+
+    // The leaf must be issued by the stable CA issuer, not directly by the
+    // self-signed issuer — otherwise every key rotation replaces the trust
+    // anchor clients rely on.
+    expect(spec.issuerRef.name).toBe("temporal-postgresql-ca-issuer");
   });
 
-  test("configures the Zalando cluster to present the managed certificate", () => {
-    const postgres = resources().find(
-      (resource) =>
-        resource.kind === "postgresql" &&
-        resource.metadata.name === "temporal-postgresql",
+  test("keeps the CA certificate's key stable across leaf renewals", () => {
+    const synthesized = resources();
+    const ca = findTemporalResource(
+      synthesized,
+      "Certificate",
+      "temporal-postgresql-ca",
+    );
+    const caSpec = z
+      .object({
+        secretName: z.literal("temporal-postgresql-ca"),
+        isCA: z.literal(true),
+        issuerRef: z.object({
+          name: z.literal("temporal-postgresql-self-signed"),
+          kind: z.literal("Issuer"),
+        }),
+        privateKey: z
+          .object({ rotationPolicy: z.string().optional() })
+          .optional(),
+      })
+      .parse(ca.spec);
+
+    // Never rotate the CA's key: rotationPolicy defaults to Never when
+    // unset, which is what keeps this certificate a stable trust anchor.
+    expect(caSpec.privateKey?.rotationPolicy).not.toBe("Always");
+
+    const caIssuer = findTemporalResource(
+      synthesized,
+      "Issuer",
+      "temporal-postgresql-ca-issuer",
+    );
+    const caIssuerSpec = z
+      .object({ ca: z.object({ secretName: z.literal(caSpec.secretName) }) })
+      .parse(caIssuer.spec);
+    expect(caIssuerSpec.ca.secretName).toBe(caSpec.secretName);
+  });
+
+  test("configures the Zalando cluster to present the managed certificate and trust the stable CA", () => {
+    const postgres = findTemporalResource(
+      resources(),
+      "postgresql",
+      "temporal-postgresql",
     );
     const spec = z
       .object({
@@ -57,10 +87,12 @@ describe("Temporal PostgreSQL TLS", () => {
           certificateFile: z.literal("tls.crt"),
           privateKeyFile: z.literal("tls.key"),
           caSecretName: z.literal("temporal-postgresql-tls"),
-          caFile: z.literal("tls.crt"),
+          // Clients must trust cert-manager's injected ca.crt (the stable
+          // CA), never the leaf's own tls.crt, which rotates.
+          caFile: z.literal("ca.crt"),
         }),
       })
-      .parse(postgres?.spec);
+      .parse(postgres.spec);
 
     expect(spec.tls).toBeDefined();
   });

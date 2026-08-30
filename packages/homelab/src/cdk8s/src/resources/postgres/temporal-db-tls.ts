@@ -10,8 +10,18 @@ import {
 export const TEMPORAL_POSTGRES_TLS_SECRET = "temporal-postgresql-tls";
 export const TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE = "tls.crt";
 export const TEMPORAL_POSTGRES_TLS_PRIVATE_KEY_FILE = "tls.key";
+// cert-manager populates `ca.crt` in every Certificate issued by a `ca`-typed
+// Issuer with that issuer's (stable) CA certificate — not the leaf's own
+// certificate. Clients must trust THIS file, not
+// TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE: the leaf rotates its key on every
+// renewal (rotationPolicy: Always), so a client trusting the leaf cert itself
+// would lose its trust anchor the moment the leaf rotates, with no
+// coordinated reload between the PostgreSQL and Temporal pods.
+export const TEMPORAL_POSTGRES_TLS_CA_FILE = "ca.crt";
 export const TEMPORAL_POSTGRES_TLS_SERVER_NAME =
   "temporal-postgresql.temporal.svc.cluster.local";
+
+const TEMPORAL_POSTGRES_CA_SECRET = "temporal-postgresql-ca";
 
 const POSTGRES_DNS_NAMES = [
   "temporal-postgresql",
@@ -25,14 +35,49 @@ const POSTGRES_DNS_NAMES = [
 ];
 
 export function createTemporalPostgreSQLCertificate(chart: Chart) {
-  const issuerName = "temporal-postgresql-self-signed";
+  const selfSignedIssuerName = "temporal-postgresql-self-signed";
+  const caIssuerName = "temporal-postgresql-ca-issuer";
 
   new Issuer(chart, "temporal-postgresql-issuer", {
     metadata: {
-      name: issuerName,
+      name: selfSignedIssuerName,
       annotations: { "argocd.argoproj.io/sync-wave": "-4" },
     },
     spec: { selfSigned: {} },
+  });
+
+  // A stable, long-lived root CA: its private key never rotates
+  // (rotationPolicy defaults to Never), so it stays the same trust anchor
+  // across every leaf renewal below. This is the only certificate the
+  // self-signed Issuer directly issues.
+  new Certificate(chart, "temporal-postgresql-ca-certificate", {
+    metadata: {
+      name: TEMPORAL_POSTGRES_CA_SECRET,
+      annotations: { "argocd.argoproj.io/sync-wave": "-4" },
+    },
+    spec: {
+      secretName: TEMPORAL_POSTGRES_CA_SECRET,
+      commonName: "temporal-postgresql-ca",
+      isCa: true,
+      duration: "87600h", // 10 years
+      renewBefore: "720h",
+      issuerRef: { name: selfSignedIssuerName, kind: "Issuer" },
+      privateKey: {
+        algorithm: CertificateSpecPrivateKeyAlgorithm.ECDSA,
+        size: 256,
+      },
+      usages: [CertificateSpecUsages.CERT_SIGN, CertificateSpecUsages.CRL_SIGN],
+    },
+  });
+
+  // Signs leaf certificates from the stable CA above, so rotating a leaf's
+  // key never changes what clients need to trust.
+  new Issuer(chart, "temporal-postgresql-ca-issuer", {
+    metadata: {
+      name: caIssuerName,
+      annotations: { "argocd.argoproj.io/sync-wave": "-3" },
+    },
+    spec: { ca: { secretName: TEMPORAL_POSTGRES_CA_SECRET } },
   });
 
   return new Certificate(chart, "temporal-postgresql-certificate", {
@@ -46,7 +91,7 @@ export function createTemporalPostgreSQLCertificate(chart: Chart) {
       dnsNames: POSTGRES_DNS_NAMES,
       duration: "8760h",
       renewBefore: "720h",
-      issuerRef: { name: issuerName, kind: "Issuer" },
+      issuerRef: { name: caIssuerName, kind: "Issuer" },
       privateKey: {
         algorithm: CertificateSpecPrivateKeyAlgorithm.ECDSA,
         size: 256,
