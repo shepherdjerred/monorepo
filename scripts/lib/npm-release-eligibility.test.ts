@@ -111,6 +111,17 @@ describe("consumer file classification", () => {
     ).toBe(true);
   });
 
+  test("recognizes deleted published files", () => {
+    expect(
+      classifyConsumerChanges(
+        astroPath,
+        [`${astroPath}/dist/index.js`],
+        false,
+        ["dist", "src", "package.json", "README.md", "LICENSE"],
+      ).eligible,
+    ).toBe(true);
+  });
+
   test("ignores repository-only, tests, examples, and lockfiles", () => {
     expect(
       classifyConsumerChanges(
