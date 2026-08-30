@@ -26,7 +26,7 @@ flowchart TD
   BKR -->|long-lived auth| PAPI[Fixed provider<br>inference API]
   I --> R[Redacted evidence<br>receipt catalog]
   R --> FNL[Receipt-only<br>finalization agent]
-  FNL --> CQ[Core worker queue]
+  FNL --> CQ[Reports worker queue]
   CQ --> E[Shared email report]
   E -.-> F[Optional follow-up task]
 ```
@@ -49,7 +49,7 @@ allowlisted environment. The runtime boundary consists of:
 - a provider-only uid, for the deterministic evidence collectors, whose
   pod-local firewall rejects Temporal gRPC and UI traffic while leaving the
   worker poller connected,
-- email delivery dispatched to the core worker queue, outside the agent pod.
+- email delivery dispatched to the reports worker queue, outside the agent pod.
 
 What does **not** constrain it is a schema that makes mutation unrepresentable,
 or a filesystem that refuses writes. Codex investigation threads run with
@@ -89,13 +89,13 @@ So local filesystem writes are still possible. A sufficiently confused or
 prompt-injected run can corrupt only its disposable workdir; it does not receive
 credentials that can publish that change or mutate the operational APIs.
 
-Report delivery crosses back into the credentialed core queue. New workflow
+Report delivery crosses back into the credentialed reports queue. New workflow
 histories schedule their email activity there directly. Histories replayed from
 before that queue migration must preserve the original agent-queue activity for
 Temporal determinism; the activity contains no Postal or S3 credentials and
-delegates a fixed `deliverReportWorkflow` to the core queue instead. Both paths
-therefore use the shared sender without restoring delivery secrets to the agent
-pod.
+delegates a fixed `deliverReportWorkflow` to the default queue until retention
+expires. Both paths therefore use the shared sender without restoring delivery
+secrets to the agent pod.
 
 ## Why it is built this way anyway
 
