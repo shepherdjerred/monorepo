@@ -162,6 +162,10 @@ async function validationEnvironment(definition: StackDefinition): Promise<{
     env["TF_VAR_tofu_state_encryption_passphrase"] =
       "ci-validation-only-passphrase";
   }
+  if (definition.validationPassphraseVariable !== undefined) {
+    env[`TF_VAR_${definition.validationPassphraseVariable}`] =
+      "ci-validation-only-passphrase";
+  }
   if (definition.secretObject !== undefined) {
     env[definition.secretObject.target] = JSON.stringify(
       Object.fromEntries(

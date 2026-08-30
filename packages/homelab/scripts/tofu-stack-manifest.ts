@@ -13,6 +13,7 @@ export type StackDefinition = {
   };
   platform?: PlatformStack;
   encrypted?: true;
+  validationPassphraseVariable?: "state_passphrase";
   localProvider?: "asuswrt";
 };
 
@@ -174,6 +175,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   posthog: {
+    validationPassphraseVariable: "state_passphrase",
     credentials: [
       { source: "POSTHOG_CLI_API_KEY", target: "POSTHOG_API_KEY" },
       {

@@ -108,6 +108,12 @@ describe("Buildkite OpenTofu credential contracts", () => {
     );
   });
 
+  test("provides the legacy PostHog validation passphrase", () => {
+    expect(STACK_MANIFEST.posthog.validationPassphraseVariable).toBe(
+      "state_passphrase",
+    );
+  });
+
   test("synthesizes one dummy value per OpenRouter BYOK credential", () => {
     const environment: Record<string, string> = {};
     addValidationOnlySecrets(
