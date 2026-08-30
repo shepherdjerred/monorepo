@@ -7,6 +7,8 @@ import SwiftUI
     states: PreviewData.states([
       .claudeCode: .available(PreviewData.snapshot(.claudeCode, remaining: 58)),
       .codex: .available(PreviewData.codexWithResets),
+      .antigravity: .available(PreviewData.shippingAntigravity),
+      .cursor: .available(PreviewData.shippingCursor),
       .kimi: .available(PreviewData.snapshot(.kimi, remaining: 18)),
       .grok: .available(PreviewData.snapshot(.grok, remaining: 3)),
     ])
@@ -18,8 +20,8 @@ import SwiftUI
     states: PreviewData.states([
       .claudeCode: .available(PreviewData.shippingClaude),
       .codex: .available(PreviewData.shippingCodex),
-      .kimi: .available(PreviewData.shippingKimi),
-      .grok: .available(PreviewData.shippingGrok),
+      .antigravity: .available(PreviewData.shippingAntigravity),
+      .cursor: .available(PreviewData.shippingCursor),
     ])
   )
 }
@@ -223,6 +225,38 @@ private enum PreviewData {
     )
   }
 
+  static var shippingAntigravity: UsageSnapshot {
+    UsageSnapshot(
+      provider: .antigravity,
+      windows: [
+        window(label: "Gemini 5-hour", remaining: 64, kind: .modelScoped(model: "Gemini")),
+        window(label: "Gemini weekly", remaining: 78, kind: .modelScoped(model: "Gemini")),
+        window(
+          label: "Claude/GPT 5-hour",
+          remaining: 43,
+          kind: .modelScoped(model: "Claude/GPT")
+        ),
+        window(
+          label: "Claude/GPT weekly",
+          remaining: 71,
+          kind: .modelScoped(model: "Claude/GPT")
+        ),
+      ],
+      sourceTimestamp: now
+    )
+  }
+
+  static var shippingCursor: UsageSnapshot {
+    UsageSnapshot(
+      provider: .cursor,
+      windows: [
+        window(label: "Cursor Models", remaining: 68, kind: .monthly),
+        window(label: "Other Models", remaining: 82, kind: .monthly),
+      ],
+      sourceTimestamp: now
+    )
+  }
+
   static var shippingKimi: UsageSnapshot {
     snapshot(.kimi, remaining: 42)
       .withSourceTimestamp(now.addingTimeInterval(-5 * 86_400))
@@ -244,11 +278,6 @@ private enum PreviewData {
       windows: [
         window(label: "5-hour", remaining: 90, kind: .rolling(durationSeconds: 18_000)),
         window(label: "Weekly", remaining: 64),
-        window(
-          label: "Nimbus Quill extended model quota",
-          remaining: 52,
-          kind: .modelScoped(model: "Nimbus Quill")
-        ),
         window(label: "Fable 5 policy", remaining: nil, kind: .entitlement),
       ],
       notes: ["Fable 5 may use up to 50% of the weekly allowance."],

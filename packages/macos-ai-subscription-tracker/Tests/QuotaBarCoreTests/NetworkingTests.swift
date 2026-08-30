@@ -354,7 +354,7 @@ final class NetworkingTests: XCTestCase {
     let credentials = StubCredentialStore(tokens: ["token"])
     XCTAssertEqual(
       try Providers.live(credentials: credentials).map(\.id),
-      [.claudeCode, .codex]
+      [.claudeCode, .codex, .antigravity, .cursor]
     )
     XCTAssertEqual(
       try Providers.live(credentials: credentials, providerIDs: Set(ProviderID.allCases)).map(\.id),

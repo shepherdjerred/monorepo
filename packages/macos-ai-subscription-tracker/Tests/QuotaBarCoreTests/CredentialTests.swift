@@ -394,6 +394,7 @@ final class CredentialTests: XCTestCase {
       throw QuotaError.commandFailed("SQLite test fixture")
     }
   }
+
 }
 
 func XCTAssertThrowsErrorAsync<Value>(

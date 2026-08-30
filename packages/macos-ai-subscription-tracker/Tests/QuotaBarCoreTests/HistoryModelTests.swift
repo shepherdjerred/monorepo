@@ -64,6 +64,7 @@ import XCTest
     return QuotaBarModel(
       providers: providers,
       settings: settings,
+      store: HistoryModelSnapshotStore(),
       historyStore: historyStore,
       providerTimeout: .seconds(1)
     )
@@ -76,6 +77,13 @@ import XCTest
       sourceTimestamp: .now
     )
   }
+}
+
+private final class HistoryModelSnapshotStore: SnapshotPersisting, @unchecked Sendable {
+  private var snapshots: [ProviderID: UsageSnapshot] = [:]
+
+  func load() throws -> [ProviderID: UsageSnapshot] { snapshots }
+  func save(_ snapshots: [ProviderID: UsageSnapshot]) throws { self.snapshots = snapshots }
 }
 
 private final class HistoryModelSettingsStore: SettingsPersisting, @unchecked Sendable {

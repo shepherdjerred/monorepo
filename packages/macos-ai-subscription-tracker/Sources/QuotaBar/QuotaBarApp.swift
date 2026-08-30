@@ -37,6 +37,8 @@ struct QuotaBarApp: App {
     let model = QuotaBarModel(
       providers: providers,
       settings: settings,
+      store: JSONSnapshotStore(),
+      historyStore: JSONUsageHistoryStore(),
       providerFactory: providerFactory
     )
     let apiModel = APIPlatformModel(settings: settings, credentials: openRouterCredentials)

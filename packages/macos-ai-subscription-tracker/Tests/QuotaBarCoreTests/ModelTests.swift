@@ -124,6 +124,7 @@ final class ModelTests: XCTestCase {
       providers: [claude, codex],
       settings: settings,
       store: MemorySnapshotStore(),
+      historyStore: MemoryHistoryStore(),
       providerTimeout: .seconds(1)
     )
     XCTAssertEqual(model.overallStatus, .unavailable)
@@ -208,6 +209,7 @@ final class ModelTests: XCTestCase {
       providers: [provider],
       settings: settings,
       store: MemorySnapshotStore(),
+      historyStore: MemoryHistoryStore(),
       providerTimeout: .seconds(1)
     )
 
@@ -238,6 +240,7 @@ final class ModelTests: XCTestCase {
       providers: [codex, kimi],
       settings: settings,
       store: MemorySnapshotStore(),
+      historyStore: MemoryHistoryStore(),
       providerTimeout: .seconds(1)
     )
     let initialRefresh = Task { await model.refresh() }

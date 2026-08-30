@@ -4,6 +4,7 @@ public struct ProviderEndpoints: Sendable {
   public let claudeUsage: URL
   public let codexUsage: URL
   public let codexResets: URL
+  public let cursorUsage: URL
   public let kimiUsage: URL
   public let grokUser: URL
   public let grokBilling: URL
@@ -13,6 +14,7 @@ public struct ProviderEndpoints: Sendable {
     claudeUsage: URL,
     codexUsage: URL,
     codexResets: URL,
+    cursorUsage: URL,
     kimiUsage: URL,
     grokUser: URL,
     grokBilling: URL,
@@ -21,6 +23,7 @@ public struct ProviderEndpoints: Sendable {
     self.claudeUsage = claudeUsage
     self.codexUsage = codexUsage
     self.codexResets = codexResets
+    self.cursorUsage = cursorUsage
     self.kimiUsage = kimiUsage
     self.grokUser = grokUser
     self.grokBilling = grokBilling
@@ -58,6 +61,10 @@ public struct ProviderEndpoints: Sendable {
       codexResets: url(
         "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits",
         provider: .codex
+      ),
+      cursorUsage: url(
+        "https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage",
+        provider: .cursor
       ),
       kimiUsage: url(
         environment["QUOTABAR_KIMI_USAGE_URL"] ?? "https://api.kimi.com/coding/v1/usages",

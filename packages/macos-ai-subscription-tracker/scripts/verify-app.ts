@@ -53,7 +53,14 @@ const resourceDirectory = (await Bun.file(
 ).exists())
   ? structuredResourceDirectory
   : resourceBundle;
-for (const logo of ["claude.svg", "codex.svg", "kimi.svg", "grok.svg"]) {
+for (const logo of [
+  "claude.svg",
+  "codex.svg",
+  "antigravity.svg",
+  "cursor.svg",
+  "kimi.svg",
+  "grok.svg",
+]) {
   await access(join(resourceDirectory, logo));
 }
 for (const asset of [

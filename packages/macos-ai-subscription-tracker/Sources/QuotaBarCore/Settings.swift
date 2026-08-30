@@ -13,6 +13,7 @@ public protocol SettingsPersisting: Sendable {
 }
 
 public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sendable {
+  private static let standardProvidersVersion = 1
   private let defaults: UserDefaults
 
   public init(defaults: UserDefaults = .standard) {
@@ -28,6 +29,12 @@ public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sen
         throw QuotaError.settingsCorrupt
       }
       providers.insert(provider)
+    }
+    let storedVersion = defaults.integer(forKey: "standardProvidersVersion")
+    if storedVersion < Self.standardProvidersVersion {
+      providers.formUnion([.antigravity, .cursor])
+      defaults.set(providers.map(\.rawValue).sorted(), forKey: "enabledProviders")
+      defaults.set(Self.standardProvidersVersion, forKey: "standardProvidersVersion")
     }
     return providers
   }
@@ -55,6 +62,7 @@ public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sen
       .filter { ProviderID(rawValue: $0) == nil }
     let knownIdentifiers = enabledProviders.map(\.rawValue)
     defaults.set(Set(knownIdentifiers + unknownIdentifiers).sorted(), forKey: "enabledProviders")
+    defaults.set(Self.standardProvidersVersion, forKey: "standardProvidersVersion")
     defaults.set(showsLegacyProviders, forKey: "showsLegacyProviders")
     defaults.set(pollingInterval, forKey: "pollingInterval")
   }

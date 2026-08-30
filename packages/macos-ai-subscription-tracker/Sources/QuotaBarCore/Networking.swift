@@ -31,9 +31,16 @@ public protocol CredentialStore: Sendable {
 }
 
 public struct ProviderRequest: Equatable, Sendable, CustomStringConvertible {
+  public enum Method: String, Equatable, Sendable {
+    case get = "GET"
+    case post = "POST"
+  }
+
   public let provider: ProviderID
   public let url: URL
   public let bearerToken: String
+  public let method: Method
+  public let body: Data?
   public let headers: [String: String]
   public let timeout: TimeInterval
 
@@ -41,18 +48,24 @@ public struct ProviderRequest: Equatable, Sendable, CustomStringConvertible {
     provider: ProviderID,
     url: URL,
     bearerToken: String,
+    method: Method = .get,
+    body: Data? = nil,
     headers: [String: String] = [:],
     timeout: TimeInterval = 20
   ) {
     self.provider = provider
     self.url = url
     self.bearerToken = bearerToken
+    self.method = method
+    self.body = body
     self.headers = headers
     self.timeout = timeout
   }
 
   public var description: String {
-    "ProviderRequest(provider: \(provider.rawValue), url: \(url.absoluteString), bearerToken: <redacted>)"
+    "ProviderRequest(provider: \(provider.rawValue), url: \(url.absoluteString), "
+      + "method: \(method.rawValue), bearerToken: <redacted>, body: "
+      + (body == nil ? "nil" : "<redacted>") + ")"
   }
 }
 
@@ -86,12 +99,13 @@ public final class URLSessionTransport: HTTPTransport, @unchecked Sendable {
 
   public func send(_ request: ProviderRequest) async throws -> ProviderResponse {
     var urlRequest = URLRequest(url: request.url, timeoutInterval: request.timeout)
-    urlRequest.httpMethod = "GET"
-    urlRequest.setValue("Bearer \(request.bearerToken)", forHTTPHeaderField: "Authorization")
-    urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
+    urlRequest.httpMethod = request.method.rawValue
+    urlRequest.httpBody = request.body
     for (name, value) in request.headers {
       urlRequest.setValue(value, forHTTPHeaderField: name)
     }
+    urlRequest.setValue("Bearer \(request.bearerToken)", forHTTPHeaderField: "Authorization")
+    urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
     do {
       let (data, response) = try await session.data(for: urlRequest)
@@ -142,14 +156,50 @@ public struct ProviderHTTPClient: Sendable {
     headers: [String: String] = [:],
     timeout: TimeInterval = 20
   ) async throws -> Data {
-    let initialCredential = try await resolveCredential(for: provider)
-    let first = try await send(
+    try await request(
+      method: .get,
       provider: provider,
       url: url,
       headers: headers,
-      timeout: timeout,
-      credential: initialCredential
+      timeout: timeout
     )
+  }
+
+  public func post(
+    provider: ProviderID,
+    url: URL,
+    body: Data,
+    headers: [String: String] = [:],
+    timeout: TimeInterval = 20
+  ) async throws -> Data {
+    try await request(
+      method: .post,
+      provider: provider,
+      url: url,
+      body: body,
+      headers: headers,
+      timeout: timeout
+    )
+  }
+
+  private func request(
+    method: ProviderRequest.Method,
+    provider: ProviderID,
+    url: URL,
+    body: Data? = nil,
+    headers: [String: String],
+    timeout: TimeInterval
+  ) async throws -> Data {
+    let request = ProviderRequestTemplate(
+      method: method,
+      provider: provider,
+      url: url,
+      body: body,
+      headers: headers,
+      timeout: timeout
+    )
+    let initialCredential = try await resolveCredential(for: provider)
+    let first = try await send(request, credential: initialCredential)
     if first.statusCode == 401 {
       let reloaded: ProviderCredential?
       do {
@@ -160,13 +210,7 @@ public struct ProviderHTTPClient: Sendable {
         reloaded = nil
       }
       guard let reloaded else { return try validate(first, provider: provider) }
-      let retry = try await send(
-        provider: provider,
-        url: url,
-        headers: headers,
-        timeout: timeout,
-        credential: reloaded
-      )
+      let retry = try await send(request, credential: reloaded)
       return try validate(retry, provider: provider)
     }
     return try validate(first, provider: provider)
@@ -184,30 +228,31 @@ public struct ProviderHTTPClient: Sendable {
     headers: [String: String] = [:],
     timeout: TimeInterval = 20
   ) async throws -> Data {
-    let response = try await send(
+    let request = ProviderRequestTemplate(
+      method: .get,
       provider: provider,
       url: url,
+      body: nil,
       headers: headers,
-      timeout: timeout,
-      credential: credential
+      timeout: timeout
     )
+    let response = try await send(request, credential: credential)
     return try validate(response, provider: provider)
   }
 
   private func send(
-    provider: ProviderID,
-    url: URL,
-    headers: [String: String],
-    timeout: TimeInterval,
+    _ request: ProviderRequestTemplate,
     credential: ProviderCredential
   ) async throws -> ProviderResponse {
     try await transport.send(
       ProviderRequest(
-        provider: provider,
-        url: url,
+        provider: request.provider,
+        url: request.url,
         bearerToken: credential.accessToken,
-        headers: headers,
-        timeout: timeout
+        method: request.method,
+        body: request.body,
+        headers: request.headers,
+        timeout: request.timeout
       )
     )
   }
@@ -220,4 +265,13 @@ public struct ProviderHTTPClient: Sendable {
     default: throw QuotaError.network(provider)
     }
   }
+}
+
+private struct ProviderRequestTemplate: Sendable {
+  let method: ProviderRequest.Method
+  let provider: ProviderID
+  let url: URL
+  let body: Data?
+  let headers: [String: String]
+  let timeout: TimeInterval
 }

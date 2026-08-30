@@ -124,11 +124,16 @@ struct SettingsView: View {
   private var credentialSection: some View {
     Section("Credential overrides") {
       Text(
-        "Optional. Stored only in your login Keychain; local CLI and OpenCode credentials remain unchanged."
+        "Optional. Stored only in your login Keychain; local CLI and OpenCode credentials remain unchanged. "
+          + "Google Antigravity and Cursor reuse their own local app sign-ins and cannot be overridden."
       )
       .font(.caption)
       .foregroundStyle(.secondary)
-      ForEach(ProviderID.allCases.filter(model.settings.visibleProviderIDs.contains)) { provider in
+      ForEach(
+        ProviderID.allCases.filter {
+          model.settings.visibleProviderIDs.contains($0) && $0.supportsManualCredentialOverride
+        }
+      ) { provider in
         VStack(alignment: .leading, spacing: 5) {
           HStack {
             SecureField("\(provider.displayName) token", text: draftBinding(provider))
@@ -213,7 +218,8 @@ struct SettingsView: View {
   }
 
   private func loadCredentialStatus() async {
-    for provider in model.settings.visibleProviderIDs {
+    for provider in model.settings.visibleProviderIDs
+    where provider.supportsManualCredentialOverride {
       do {
         if try await manualCredentials.credentialIfPresent(for: provider) != nil {
           overriddenProviders.insert(provider)
