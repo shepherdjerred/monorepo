@@ -1,4 +1,4 @@
-import { run, runAllowExit, optionalEnv, requireEnv, tmpBase } from "./run.ts";
+import { run, runAllowExit, tmpBase } from "./run.ts";
 import {
   assertS3ObjectsMatchSource,
   assertStaticSiteComplete,
@@ -18,6 +18,15 @@ import {
   siteReleaseIdentity,
   type ScoutReleaseState,
 } from "./scout-release-state.ts";
+import { assertScoutCustomsArtifactPolicy } from "./scout-customs-artifact.ts";
+import {
+  archiveEntrypoints,
+  requiredReleaseEntrypoints,
+} from "./scout-release-entrypoints.ts";
+import {
+  requireScoutStorageCredentials as requireCreds,
+  scoutStorageRoot as root,
+} from "./scout-storage-runtime.ts";
 
 export const SCOUT_RELEASES_BUCKET = "scout-site-releases";
 export const SCOUT_RELEASE_WORK_DIR = ".scout-release";
@@ -30,54 +39,6 @@ const IMMUTABLE_PREFIXES = [
   "docs/_astro/",
   "assets/scout/game/",
 ];
-/** Every entrypoint a bundle built from the current tree must contain. */
-const RELEASE_ENTRYPOINTS = [
-  "index.html",
-  "app/index.html",
-  "docs/index.html",
-] as const;
-
-/**
- * The entrypoints present in an already-materialized archive.
- *
- * Releases minted before the docs site have no `docs/index.html`, so verifying
- * or reconciling one against {@link RELEASE_ENTRYPOINTS} would read a source
- * file that does not exist and throw before the release marker advances —
- * blocking rollback to any pre-docs release. Deriving the list from the archive
- * keeps the check as strict as the bundle allows without inventing files.
- */
-type ReleaseEntrypoint = (typeof RELEASE_ENTRYPOINTS)[number];
-
-async function archiveEntrypoints(
-  directory: string,
-): Promise<ReleaseEntrypoint[]> {
-  const present: ReleaseEntrypoint[] = [];
-  for (const path of RELEASE_ENTRYPOINTS) {
-    if (await Bun.file(`${directory}/${path}`).exists()) {
-      present.push(path);
-    }
-  }
-  return present;
-}
-
-function root(): string {
-  return new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
-}
-
-function haveCreds(): boolean {
-  return (
-    optionalEnv("AWS_ACCESS_KEY_ID") !== null &&
-    optionalEnv("AWS_SECRET_ACCESS_KEY") !== null
-  );
-}
-
-function requireCreds(dryRun: boolean): void {
-  if (!dryRun && !haveCreds()) {
-    requireEnv("AWS_ACCESS_KEY_ID");
-    requireEnv("AWS_SECRET_ACCESS_KEY");
-  }
-}
-
 async function writeMarker(bucket: string, identity: string): Promise<void> {
   const file = `${tmpBase()}/scout-site-marker-${process.pid.toString()}`;
   try {
@@ -283,12 +244,15 @@ async function downloadAndVerifyArchiveBytes(
     ],
     { env: SEAWEEDFS_AWS_ENV },
   );
-  // Deliberately the default entrypoints, not RELEASE_ENTRYPOINTS: archives
+  // Deliberately the default entrypoints, not current release entrypoints: archives
   // minted before the docs site existed legitimately have no `docs/index.html`,
   // and requiring it here would make rolling back to one impossible. Byte
   // fidelity of whatever the archive does contain is still guaranteed by the
   // digest comparison below.
   await assertStaticSiteComplete(destination, `verify-${flavor}-archive`);
+  if (flavor === "prod") {
+    await assertScoutCustomsArtifactPolicy(destination, flavor);
+  }
   const actual = await hashSiteArchive(destination);
   if (actual !== expected) {
     throw new Error(
@@ -336,8 +300,9 @@ async function archiveFlavor(
   await assertStaticSiteComplete(
     source,
     `archive-${flavor}`,
-    RELEASE_ENTRYPOINTS,
+    requiredReleaseEntrypoints(flavor),
   );
+  await assertScoutCustomsArtifactPolicy(source, flavor);
   const actual = await hashSiteArchive(source);
   if (actual !== expected) {
     throw new Error(

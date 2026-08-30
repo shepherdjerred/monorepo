@@ -19,17 +19,36 @@
  */
 
 import { $ } from "bun";
+import { cp, rm } from "node:fs/promises";
 import { verifyScoutAssetBucket } from "@scout-for-lol/design-system/build";
+import {
+  assertScoutCustomsArtifactPolicy,
+  type ScoutSiteFlavor,
+} from "../../../scripts/lib/scout-customs-artifact.ts";
+
+function siteFlavor(): ScoutSiteFlavor {
+  const flavor = process.env["PUBLIC_SCOUT_SITE_FLAVOR"];
+  if (flavor !== "prod" && flavor !== "beta") {
+    throw new Error("PUBLIC_SCOUT_SITE_FLAVOR must be prod or beta");
+  }
+  return flavor;
+}
+
+const flavor = siteFlavor();
 
 await $`bun --no-install run --filter='./packages/frontend' build`;
 await $`bun --no-install run --filter='./packages/app' build`;
 await $`bun --no-install run --filter='./packages/docs-site' build`;
+if (flavor === "beta") {
+  await $`bun --no-install run --filter='./packages/activity' build`;
+}
 
 const appDist = "packages/app/dist";
 const docsDist = "packages/docs-site/dist";
 const frontendDist = "packages/frontend/dist";
 const target = `${frontendDist}/app`;
 const docsTarget = `${frontendDist}/docs`;
+const customsTarget = `${frontendDist}/customs`;
 
 const appIndex = `${appDist}/index.html`;
 const appIndexFile = Bun.file(appIndex);
@@ -62,6 +81,11 @@ await $`rm -rf ${target}`;
 await $`cp -R ${appDist} ${target}`;
 await $`rm -rf ${docsTarget}`;
 await $`cp -R ${docsDist} ${docsTarget}`;
+await rm(customsTarget, { recursive: true, force: true });
+if (flavor === "beta") {
+  await cp("packages/activity/dist", customsTarget, { recursive: true });
+}
+await assertScoutCustomsArtifactPolicy(frontendDist, flavor);
 
 const copiedIndex = `${target}/index.html`;
 if (!(await Bun.file(copiedIndex).exists())) {

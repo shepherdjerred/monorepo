@@ -54,6 +54,41 @@ bun run temporal:requeue-work -- \
 `db:generate` must run after schema changes and before typecheck/test; from the
 Scout root, `mise run generate` does the same thing.
 
+## Beta Customs operations
+
+Scout Customs reuses this process's Discord gateway client, OAuth client
+secret, JWT signing secret, Tournament lobby service, Match-V5 cursor, and S3
+ingest boundary. It has no second bot, callback result mutation, or manual
+winner endpoint.
+
+Before enabling `custom_nights_enabled`, configure the existing beta Discord
+Activity at `/customs/`, grant the beta install Manage Channels and Move
+Members, and persist the live Tournament registration:
+
+```bash
+bun run scripts/register-tournament-provider.ts \
+  --mode=live \
+  --region=AMERICA_NORTH
+```
+
+Keep `tournament_lobbies_enabled` off until `/lobby create` proves the Riot key
+can create a real code. Production hard-disables both flags and its site
+archive rejects any `/customs/index.html` artifact.
+
+The beta `custom-nights-expiry` Temporal schedule closes unfinished nights
+after their 12-hour database deadline, writes an audit event, and releases the
+active-night pointer. It does not verify a game or synthesize a Riot result.
+
+The scoped privacy command refuses an active night or pending voice work:
+
+```bash
+bun run customs:anonymize -- \
+  --guild-id <guild-id> \
+  --discord-id <participant-id> \
+  --operator-id <operator-id> \
+  --confirm yes
+```
+
 ## Configuration
 
 Environment variables are validated with `env-var`/Zod at startup. Discord and

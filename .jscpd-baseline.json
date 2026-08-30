@@ -775,10 +775,6 @@
       "clones": 1,
       "tokens": 70
     },
-    "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts|packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts": {
-      "clones": 1,
-      "tokens": 79
-    },
     "packages/homelab/src/cdk8s/src/resources/temporal/ingress-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/operations-workers.ts": {
       "clones": 1,
       "tokens": 100

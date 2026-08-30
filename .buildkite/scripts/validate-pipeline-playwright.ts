@@ -13,11 +13,11 @@ export function validatePlaywrightLanes(
     const block = stepBlocks.get(key);
     // The Scout flat config lives in the parent workspace, so isolated installs
     // must select that config owner (scout-for-lol), every shipped Scout web
-    // surface, the design-system catalog, and the eval package that invokes it
-    // (@scout-for-lol/evals). Alerts contributes its own browser suite and
-    // remains in the install closure.
+    // surface (including the Customs Activity), the design-system catalog, and
+    // the eval package that invokes it (@scout-for-lol/evals). Alerts
+    // contributes its own browser suite and remains in the install closure.
     const install =
-      ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'";
+      ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/activity' --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'";
     if (!hasTrimmedLine(block, install)) {
       fail(
         `Playwright lane ${key} is missing exact filtered install ${install}`,
@@ -42,6 +42,11 @@ export function validatePlaywrightLanes(
       block,
       "bun x --no-install turbo run test:e2e",
       `Playwright lane ${key} is missing its lower-level browser test closure`,
+    );
+    requireIncludes(
+      block,
+      "--filter='@scout-for-lol/activity'",
+      `Playwright lane ${key} does not run the Customs Activity`,
     );
     requireIncludes(
       block,

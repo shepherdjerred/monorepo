@@ -25,6 +25,12 @@ Tournament-code custom games are a permanent **beta-only** Scout feature. The
 production command surface hard-disables them before any beta flag or operator
 override is evaluated.
 
+The beta Customs Activity uses the same foundation. Its draft produces the
+two locked teams, then calls the same retry-safe lobby service that backs
+`/lobby create`. Tournament-V5 owns `PLAYING` and `RESULT_PENDING`; only the
+ordinary Match-V5 ingest, after the canonical S3 write, can produce `VERIFIED`
+and open intermission. The Activity has no manual winner path.
+
 That single constraint explains almost every other decision in the feature.
 
 ## An open code is more useful than a predeclared roster
@@ -122,3 +128,5 @@ first real tournament-enabled key is also the first evidence for how often
 spectator enriches a custom card, how long champ select actually takes, and
 whether `platformId + gameId` composes a valid Match-V5 ID — which is the
 assumption the entire linkage rests on.
+
+The setup and recovery procedure is in [Operate Scout custom nights](/how-to/operate-scout-custom-nights/).

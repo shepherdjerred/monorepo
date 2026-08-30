@@ -27,6 +27,27 @@ describe("Scout static sites", () => {
       expect(csp).toContain("frame-src https://ct.pinterest.com");
     });
   }
+
+  test("beta serves Customs with Discord-only framing policy", () => {
+    const beta = staticSites.find(
+      (candidate) => candidate.hostname === "beta.scout-for-lol.com",
+    );
+    if (beta === undefined)
+      throw new Error("beta Scout static site is missing");
+    const customs = beta.spaFallbacks?.find(
+      (fallback) => fallback.pathPrefix === "/customs/*",
+    );
+    expect(customs?.fallbackPath).toBe("/customs/index.html");
+    expect(customs?.responseHeaders?.["X-Frame-Options"]).toBeNull();
+    expect(customs?.responseHeaders?.["Content-Security-Policy"]).toContain(
+      "frame-ancestors https://discord.com https://*.discord.com https://*.discordsays.com",
+    );
+    expect(beta.probes).toContainEqual({
+      endpoint: "customs",
+      module: "http_2xx",
+      path: "/customs/",
+    });
+  });
 });
 
 describe("human wiki static site", () => {

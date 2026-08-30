@@ -51,6 +51,8 @@ export type StaticSiteReverseProxy = {
 export type StaticSiteSpaFallback = {
   pathPrefix: string;
   fallbackPath: string;
+  /** Headers applied only inside this routed prefix. */
+  responseHeaders?: Record<string, string | null>;
 };
 
 export type StaticSiteConfig = {
@@ -101,6 +103,32 @@ export const defaultResponseHeaders: Record<string, string> = {
  * overwrites any upstream-provided value. `null` overrides emit a `-Name`
  * delete directive instead.
  */
+function renderHeaderValues(
+  values: ReadonlyMap<string, string | null>,
+  indentation: number,
+  stripServer: boolean,
+): string {
+  const lines: string[] = [];
+  const valueIndent = "\t".repeat(indentation + 1);
+  for (const [name, value] of values) {
+    if (value === null) {
+      lines.push(`${valueIndent}-${name}`);
+    } else {
+      // Caddy requires quoting whenever the value contains spaces or special
+      // chars. Always quote to keep the rendering deterministic.
+      const escaped = value
+        .replaceAll(`\\`, `\\\\`)
+        .replaceAll(`"`, String.raw`\"`);
+      lines.push(`${valueIndent}${name} "${escaped}"`);
+    }
+  }
+  if (stripServer) lines.push(`${valueIndent}-Server`);
+
+  if (lines.length === 0) return "";
+  const blockIndent = "\t".repeat(indentation);
+  return `${blockIndent}header {\n${lines.join("\n")}\n${blockIndent}}`;
+}
+
 export function renderHeaderBlock(
   overrides: Record<string, string | null> | undefined,
 ): string {
@@ -111,25 +139,7 @@ export function renderHeaderBlock(
   for (const [name, value] of Object.entries(overrides ?? {})) {
     merged.set(name, value);
   }
-
-  const lines: string[] = [];
-  for (const [name, value] of merged) {
-    if (value === null) {
-      lines.push(`\t\t-${name}`);
-    } else {
-      // Caddy requires quoting whenever the value contains spaces or special
-      // chars. Always quote to keep the rendering deterministic.
-      const escaped = value
-        .replaceAll(`\\`, `\\\\`)
-        .replaceAll(`"`, String.raw`\"`);
-      lines.push(`\t\t${name} "${escaped}"`);
-    }
-  }
-  // Strip Caddy's own Server header so we don't advertise the proxy.
-  lines.push(`\t\t-Server`);
-
-  if (lines.length === 0) return "";
-  return `\theader {\n${lines.join("\n")}\n\t}`;
+  return renderHeaderValues(merged, 1, true);
 }
 
 export type S3StaticSitesProps = {
@@ -199,11 +209,16 @@ ${rewriteLine}\t\treverse_proxy ${proxy.upstream} {
 \t\t}`;
 
     const spaBlocks = (site.spaFallbacks ?? [])
-      .map(
-        (spa) => `\thandle ${spa.pathPrefix} {
-${renderS3Proxy(spa.fallbackPath)}
-\t}`,
-      )
+      .map((spa) => {
+        const routeHeaders = renderHeaderValues(
+          new Map(Object.entries(spa.responseHeaders ?? {})),
+          2,
+          false,
+        );
+        return `\thandle ${spa.pathPrefix} {
+${routeHeaders ? `${routeHeaders}\n` : ""}${renderS3Proxy(spa.fallbackPath)}
+\t}`;
+      })
       .join("\n\n");
 
     // Caddy's `redir` directive has a lower ordinal than `handle`, so without
