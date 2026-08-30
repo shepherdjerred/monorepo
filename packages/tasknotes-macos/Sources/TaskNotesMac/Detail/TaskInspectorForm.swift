@@ -456,8 +456,31 @@ extension TaskInspectorForm {
     }
 
     private func performAndWait(_ offers: [BufferedOffer]) async {
+        var acceptedTitle = false
+        var acceptedEstimate = false
+        var acceptedDetails = false
         for offer in offers {
-            resolve(offer, accepted: await attempt(offer.outcome))
+            let accepted = await attempt(offer.outcome)
+            resolve(offer, accepted: accepted)
+            guard accepted else { continue }
+            switch offer.field {
+            case .title: acceptedTitle = true
+            case .estimate: acceptedEstimate = true
+            case .details: acceptedDetails = true
+            }
+        }
+
+        // A user can type again while the store is accepting the first offer.
+        // `EditedText.offer()` intentionally returns nil during that round
+        // trip, so capture each field that succeeded once more before this
+        // tracked operation completes. Failed validation is not retried here:
+        // the invalid value must remain visible for the user to correct.
+        var retries: [BufferedOffer] = []
+        if acceptedTitle, let offer = titleOffer() { retries.append(offer) }
+        if acceptedEstimate, let offer = estimateOffer() { retries.append(offer) }
+        if acceptedDetails, let offer = detailsOffer() { retries.append(offer) }
+        if !retries.isEmpty {
+            await performAndWait(retries)
         }
     }
 
