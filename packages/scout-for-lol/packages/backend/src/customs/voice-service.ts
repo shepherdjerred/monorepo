@@ -121,6 +121,10 @@ async function createTeamChannel(
         id: guild.roles.everyone.id,
         deny: [PermissionFlagsBits.Connect],
       },
+      {
+        id: guild.client.user.id,
+        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
+      },
       ...memberIds.map((id) => ({
         id,
         allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],

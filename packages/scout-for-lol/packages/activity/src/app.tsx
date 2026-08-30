@@ -139,6 +139,10 @@ function ActivityContent() {
             Recruit, draft, move into team voice, and play Riot-verified custom
             games.
           </p>
+          <p>
+            Starting records consent to private game participation, account,
+            champion, and Riot result history for this server.
+          </p>
           {error === null ? null : <p className="error-banner">{error}</p>}
           <button
             className="button primary"
@@ -147,7 +151,7 @@ function ActivityContent() {
             }}
             type="button"
           >
-            Start a custom night
+            Accept and start a custom night
           </button>
         </section>
       </main>
