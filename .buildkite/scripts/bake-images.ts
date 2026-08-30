@@ -454,12 +454,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  const liveVersionCatalog =
-    options.push &&
-    (bakeTargets.includes("temporal-worker") ||
-      bakeTargets.includes("scout-for-lol"))
-      ? await assertNoPendingVersionBump(execute)
-      : undefined;
+  const liveVersionCatalog = options.push
+    ? await assertNoPendingVersionBump(execute)
+    : undefined;
   if (options.push) {
     await setVersionCatalogMetadata(
       liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),

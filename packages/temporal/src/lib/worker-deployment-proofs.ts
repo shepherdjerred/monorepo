@@ -154,7 +154,7 @@ export async function requireCleanAlertWindow(
 ): Promise<void> {
   const requiredHistorySamples = REQUIRED_PROMETHEUS_HISTORY_SAMPLES[duration];
   const historySamples = await queryRolloutMetric(
-    `sum(count_over_time(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[${duration}]))`,
+    `min(min by (rule_group) (count_over_time(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[${duration}])))`,
     `${duration} Temporal rule evaluation history query`,
     run,
   );

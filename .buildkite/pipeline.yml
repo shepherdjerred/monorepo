@@ -2031,6 +2031,11 @@ steps:
         jq -cn --arg build "$BUILDKITE_BUILD_NUMBER" \
           '{schema:"pin-candidates/v1",buildNumber:($$build|tonumber),candidates:{}}' |
           buildkite-agent meta-data set pin-candidates
+        git fetch origin main
+        version_catalog_artifact="version-catalog.$$BUILDKITE_JOB_ID.json"
+        git show origin/main:packages/version-catalog/src/catalog.json > "$$version_catalog_artifact"
+        buildkite-agent artifact upload "$$version_catalog_artifact"
+        buildkite-agent meta-data set version-catalog "artifact:$$BUILDKITE_JOB_ID:$$version_catalog_artifact"
         # bake-images.ts never runs on this path, so it never produces
         # image-push-outcomes.json — write the empty array ourselves; an
         # unmatched artifact_paths entry fails the step even though the skip
