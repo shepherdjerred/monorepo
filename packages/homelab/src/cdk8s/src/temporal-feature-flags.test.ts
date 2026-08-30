@@ -4,6 +4,7 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
 import { createFliptChart } from "./cdk8s-charts/flipt.ts";
+import { ContainerEnvSchema } from "./testing/container-env-schema.ts";
 
 const DeploymentSchema = z.object({
   kind: z.literal("Deployment"),
@@ -15,9 +16,7 @@ const DeploymentSchema = z.object({
       spec: z.object({
         containers: z.array(
           z.object({
-            env: z.array(
-              z.object({ name: z.string(), value: z.string().optional() }),
-            ),
+            env: ContainerEnvSchema,
           }),
         ),
       }),

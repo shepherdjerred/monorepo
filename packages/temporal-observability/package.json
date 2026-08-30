@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     "./interceptors": "./src/interceptors.ts",
-    "./workflow-span-sink": "./src/workflow-span-sink.ts"
+    "./workflow-span-sink": "./src/workflow-span-sink.ts",
+    "./tracing-resource": "./src/tracing-resource.ts"
   },
   "scripts": {
     "lint": "bunx eslint --cache .",
@@ -19,6 +20,7 @@
     "@opentelemetry/core": "^2.7.1",
     "@opentelemetry/resources": "^2.7.1",
     "@opentelemetry/sdk-trace-base": "^2.9.0",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
     "@temporalio/activity": "1.22.0",
     "@temporalio/interceptors-opentelemetry": "1.22.0",
     "@temporalio/worker": "1.22.0",

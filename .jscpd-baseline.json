@@ -144,10 +144,6 @@
       "clones": 1,
       "tokens": 110
     },
-    "packages/birmel/src/observability/tracing.ts|packages/scout-for-lol/packages/backend/src/observability/tracing.ts": {
-      "clones": 1,
-      "tokens": 100
-    },
     "packages/birmel/tests/context/context-bundle.test.ts|packages/birmel/tests/context/context-bundle.test.ts": {
       "clones": 1,
       "tokens": 103
@@ -1286,7 +1282,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/observability/tracing.ts|packages/temporal/src/observability/tracing.ts": {
       "clones": 3,
-      "tokens": 457
+      "tokens": 347
     },
     "packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts|packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts": {
       "clones": 2,
