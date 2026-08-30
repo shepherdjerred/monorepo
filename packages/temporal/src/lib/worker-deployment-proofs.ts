@@ -62,7 +62,6 @@ export async function requireHealthyWorkflowPoller(
     deploymentName: string;
     buildId: string;
     taskQueue: string;
-    taskQueue: string;
   },
   run: RolloutCommandRunner,
   label: string,
@@ -104,6 +103,7 @@ export function rolloutPoller(
     namespace: string;
     deploymentName: string;
     buildId: string;
+    taskQueue: string;
   },
   currentBuildId?: string,
 ): {
