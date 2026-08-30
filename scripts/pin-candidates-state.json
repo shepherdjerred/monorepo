@@ -7,9 +7,9 @@
       "buildNumber": 12157
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-12609",
-      "digest": "sha256:a861db9aacbf5178bafcfeab2a0331965a9b6d4cfbff91b1b2dfc1843df89c6d",
-      "buildNumber": 12609
+      "buildNumber": 12965,
+      "version": "2.0.0-12965",
+      "digest": "sha256:dd419aae2aa7663736efff7ef1cb51d8357daa0afd56f1e1fcb9efb974e07c02"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-10989",
@@ -42,24 +42,24 @@
       "buildNumber": 11934
     },
     "shepherdjerred/scout-evals": {
-      "buildNumber": 12789,
       "version": "2.0.0-12789",
-      "digest": "sha256:3afbf11259e972312604ed84af11d624c569ca978a8d50e4a19dd4db6d35e880"
+      "digest": "sha256:3afbf11259e972312604ed84af11d624c569ca978a8d50e4a19dd4db6d35e880",
+      "buildNumber": 12789
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 12789,
-      "version": "2.0.0-12789",
-      "digest": "sha256:ea1a01ff306b2d9d184f511dfac5db492b8531d509cf2bcc49dff5fbe4bd06ac"
+      "buildNumber": 12965,
+      "version": "2.0.0-12965",
+      "digest": "sha256:23e11f8835aab768c37869fc00366a11c7866e07bf990b0a5856f6b858a9d6a3"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "version": "2.0.0-12609",
-      "digest": "sha256:13b55b22a32ddd1b886a61a700dedbc451ba3b75e10c7b7157ff1011bbe37cbd",
-      "buildNumber": 12609
+      "buildNumber": 12965,
+      "version": "2.0.0-12965",
+      "digest": "sha256:040bff2e000687c21dece67ef4a0eb87d98e6be71e72c095b06a6afdacecb606"
     },
     "shepherdjerred/streambot": {
-      "version": "2.0.0-12609",
-      "digest": "sha256:2368f508b2ab6c64930896f37a3404edc5b677e0979c151410f20baf423714e7",
-      "buildNumber": 12609
+      "buildNumber": 12965,
+      "version": "2.0.0-12965",
+      "digest": "sha256:9ea162f96fa1a15ae06e1dc8ab45df00a453b376722820354c23a4f516c3aeb2"
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-12157",
@@ -67,9 +67,9 @@
       "buildNumber": 12157
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 12806,
-      "version": "2.0.0-12806",
-      "digest": "sha256:845da0ee8ca4874100bbb24c333a0b1a4705e42c427ae6e17e21737691645713"
+      "buildNumber": 12965,
+      "version": "2.0.0-12965",
+      "digest": "sha256:e629eba8d3c9e61041f26f69bf12d339f61eca7b6709be606f8f504ce6c8f136"
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-12157",
