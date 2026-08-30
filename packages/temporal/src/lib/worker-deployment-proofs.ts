@@ -177,7 +177,7 @@ async function requireHealthyRuleEvaluations(
   run: RolloutCommandRunner,
 ): Promise<void> {
   const evaluationProgress = await queryRolloutMetric(
-    `min(min by (rule_group) (max_over_time(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[${duration}]) - min_over_time(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[${duration}])))`,
+    `min(min_over_time((changes(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[5m]) > bool 0)[${duration}:5m]))`,
     `${duration} Temporal rule evaluation progression query`,
     run,
   );
