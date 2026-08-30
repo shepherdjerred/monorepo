@@ -438,6 +438,12 @@ async function main(): Promise<void> {
     rm(pushOutcomes, { force: true }),
   ]);
 
+  // Refresh before selecting targets so the no-target path publishes the same
+  // live catalog that Helm synthesis will consume. A queued release can reach
+  // this path after a newer catalog commit has merged.
+  const liveVersionCatalog = options.push
+    ? await assertNoPendingVersionBump(execute)
+    : undefined;
   const selection = await selectedTargets(options, commit);
   const bakeTargets = expandTargets(selection.targets);
   if (bakeTargets.length === 0) {
@@ -445,7 +451,7 @@ async function main(): Promise<void> {
     await annotate(["--report", selectionReport]);
     if (options.push) {
       await setVersionCatalogMetadata(
-        await Bun.file(VERSION_CATALOG_URL).text(),
+        liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
       );
       await setDigestMetadata({});
       await setPinCandidatesMetadata({}, buildNumber);
@@ -454,9 +460,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  const liveVersionCatalog = options.push
-    ? await assertNoPendingVersionBump(execute)
-    : undefined;
   if (options.push) {
     await setVersionCatalogMetadata(
       liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
