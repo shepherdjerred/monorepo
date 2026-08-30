@@ -63,10 +63,13 @@ export function targetPauseAction(
 export function cutoverTimestampForRetry(
   targets: readonly { migrationState: MigrationState }[],
   now: Date,
+  sourcePauseStarted: boolean,
 ): Date {
   let persisted: string | undefined;
   for (const { migrationState } of targets) {
-    const boundary = migrationState.cutoverAt ?? migrationState.attemptedAt;
+    const boundary = sourcePauseStarted
+      ? (migrationState.cutoverAt ?? migrationState.attemptedAt)
+      : undefined;
     if (boundary === undefined) continue;
     if (persisted !== undefined && persisted !== boundary) {
       throw new Error("Prepared targets disagree about the cutover boundary");

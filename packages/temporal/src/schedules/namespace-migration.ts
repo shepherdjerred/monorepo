@@ -210,6 +210,7 @@ type PreparedTarget = {
   migration: MigrationSchedule;
   target: ScheduleDescription;
   migrationState: MigrationState;
+  source: ScheduleDescription;
 };
 async function validatePreparedTargets(input: {
   sourceClient: Client;
@@ -254,7 +255,7 @@ async function validatePreparedTargets(input: {
         `Source default/${migration.source.scheduleId} pause state drifted after prepare`,
       );
     }
-    targets.push({ migration, target, migrationState });
+    targets.push({ migration, target, migrationState, source: currentSource });
   }
   return targets;
 }
@@ -348,30 +349,24 @@ async function activateTargetSchedules(
     }
   }
 }
-function scheduleIdQuery(scheduleId: string): string {
-  return `TemporalScheduledById = ${JSON.stringify(scheduleId)}`;
-}
-async function assertNoTargetWorkflowStarts(
+async function assertNoTargetActions(
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
   schedules: readonly MigrationSchedule[],
 ): Promise<void> {
   for (const migration of schedules) {
     const client = targetClient(targetClients, migration.targetNamespace);
-    const query = scheduleIdQuery(migration.source.scheduleId);
-    for await (const execution of client.workflow.list({ query })) {
+    const target = await client.schedule
+      .getHandle(migration.source.scheduleId)
+      .describe();
+    if (
+      target.info.numActionsTaken !== 0 ||
+      target.info.recentActions.length > 0 ||
+      target.info.runningActions.length > 0
+    ) {
       throw new Error(
-        `Rollback forbidden: ${migration.targetNamespace}/${execution.workflowId} has already started`,
+        `Migration forbidden: ${migration.targetNamespace}/${migration.source.scheduleId} has already started an action`,
       );
     }
-  }
-}
-async function waitForNoTargetWorkflowStarts(
-  targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
-  schedules: readonly MigrationSchedule[],
-): Promise<void> {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    await assertNoTargetWorkflowStarts(targetClients, schedules);
-    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }
 export async function cutoverNamespaceMigration(input: {
@@ -385,9 +380,17 @@ export async function cutoverNamespaceMigration(input: {
   }
 
   const targets = await validatePreparedTargets(input);
-  const pauseStartedAt = cutoverTimestampForRetry(targets, new Date());
+  const sourcePauseStarted = targets.some(
+    ({ source }) =>
+      source.state.paused && source.state.note === SOURCE_MIGRATION_NOTE,
+  );
+  const pauseStartedAt = cutoverTimestampForRetry(
+    targets,
+    new Date(),
+    sourcePauseStarted,
+  );
   await persistMigrationAttempt(input.targetClients, targets, pauseStartedAt);
-  await assertNoTargetWorkflowStarts(input.targetClients, input.schedules);
+  await assertNoTargetActions(input.targetClients, input.schedules);
   const cutoverAt = await pauseSourceSchedules(
     input.sourceClient,
     input.targetClients,
@@ -428,6 +431,7 @@ export async function rollbackNamespaceMigration(input: {
         migration,
         target,
         migrationState: decodeMigrationState(target.state.note),
+        source: migration.source,
       });
     }
   }
@@ -445,7 +449,7 @@ export async function rollbackNamespaceMigration(input: {
         pausedTargets.push(preparedTarget);
       }
     }
-    await waitForNoTargetWorkflowStarts(input.targetClients, input.schedules);
+    await assertNoTargetActions(input.targetClients, input.schedules);
   } catch (error: unknown) {
     for (const { migration, target } of pausedTargets) {
       await targetClient(input.targetClients, migration.targetNamespace)
