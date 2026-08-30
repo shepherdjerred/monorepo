@@ -47,6 +47,7 @@ export type WorkerDeploymentRolloutOptions = {
   rolloutLockName?: string;
   buildId: string;
   stableBuildId?: string;
+  rolloutLockName?: string;
   catalogPath: string;
   candidateStatePath: string;
   taskQueue: string;
@@ -463,7 +464,7 @@ export async function executeWorkerDeploymentRollout(
   }
   const releaseLock = await acquireWorkerDeploymentLock(
     options.catalogPath,
-    options.deploymentName,
+    options.rolloutLockName ?? options.deploymentName,
     run,
   );
   try {

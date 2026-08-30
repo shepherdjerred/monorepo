@@ -10,6 +10,7 @@ export const WorkerDeploymentRolloutTargetSchema = z.enum([
 export type WorkerDeploymentRolloutTargetConfiguration = Pick<
   WorkerDeploymentRolloutOptions,
   | "deploymentName"
+  | "rolloutLockName"
   | "taskQueue"
   | "candidatePinName"
   | "stablePinName"
@@ -27,6 +28,7 @@ export function resolveWorkerDeploymentRolloutTarget(
   if (target === "central") {
     return {
       deploymentName: "monorepo-central-workflows",
+      rolloutLockName: "monorepo-central-workflows",
       taskQueue: "monorepo-workflows",
       candidatePinName: "shepherdjerred/temporal-worker/workflows/candidate",
       stablePinName: "shepherdjerred/temporal-worker/workflows/stable",
@@ -42,6 +44,7 @@ export function resolveWorkerDeploymentRolloutTarget(
   const scoutTemporalDirectory = "../scout-for-lol/packages/temporal";
   return {
     deploymentName: `scout-${stage}-workflows`,
+    rolloutLockName: "scout-workflows",
     taskQueue: `scout-${stage}`,
     candidatePinName: `shepherdjerred/scout-for-lol/${stage}/workflows/candidate`,
     stablePinName: `shepherdjerred/scout-for-lol/${stage}/workflows/stable`,
