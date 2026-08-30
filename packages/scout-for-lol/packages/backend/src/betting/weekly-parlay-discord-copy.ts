@@ -1,4 +1,4 @@
-import { formatInteger } from "#src/betting/display-format.ts";
+import { formatInteger } from "@scout-for-lol/data";
 import type {
   WeeklyParlayDefinitionCriteria,
   WeeklyParlayLeg,

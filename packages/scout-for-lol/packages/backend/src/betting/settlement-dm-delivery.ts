@@ -3,6 +3,7 @@ import type { Client } from "discord.js";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  formatInteger,
   getChampionDisplayNameById,
   queueTypeToDisplayString,
   QueueTypeSchema,
@@ -11,7 +12,6 @@ import {
 } from "@scout-for-lol/data";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import { voidReasonText } from "#src/betting/outcome-message.ts";
 import {

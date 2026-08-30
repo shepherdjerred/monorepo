@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/bun";
-import { BucksMessageRefsSchema } from "@scout-for-lol/data";
-import { formatInteger } from "#src/betting/display-format.ts";
+import { BucksMessageRefsSchema, formatInteger } from "@scout-for-lol/data";
 import type { MessageEditOptions } from "discord.js";
 import {
   WeeklyParlayDefinitionCriteriaSchema,

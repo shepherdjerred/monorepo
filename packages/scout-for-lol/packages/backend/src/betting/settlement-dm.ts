@@ -1,6 +1,9 @@
 import { EmbedBuilder } from "discord.js";
-import { RiotTeamIdSchema, type RiotTeamId } from "@scout-for-lol/data";
-import { formatInteger } from "#src/betting/display-format.ts";
+import {
+  RiotTeamIdSchema,
+  type RiotTeamId,
+  formatInteger,
+} from "@scout-for-lol/data";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPosition } from "#src/betting/sweep-types.ts";

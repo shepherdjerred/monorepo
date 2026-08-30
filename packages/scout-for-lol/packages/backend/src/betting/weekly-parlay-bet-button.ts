@@ -1,6 +1,7 @@
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  formatInteger,
 } from "@scout-for-lol/data";
 import {
   cancelWeeklyParlayBet,
@@ -19,7 +20,6 @@ import {
   BUCKS_STORAGE_LIMIT,
   bucksInsufficient,
 } from "#src/betting/copy.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 
 export function describeWeeklyParlayBet(
