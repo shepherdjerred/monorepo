@@ -11,7 +11,9 @@ export type BbCommandInteraction = {
   options: Pick<
     ChatInputCommandInteraction["options"],
     "getSubcommand" | "getString" | "getInteger"
-  >;
+  > & {
+    getUser: (name: string, required: true) => { id: string; bot: boolean };
+  };
   replied: boolean;
   deferred: boolean;
   reply: CommandReply;

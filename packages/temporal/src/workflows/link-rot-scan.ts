@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   LinkRotScanActivities,
   LinkRotScanResult,
@@ -35,19 +35,31 @@ const { scanMainForLinkRot } = proxyActivities<LinkRotScanActivities>({
   heartbeatTimeout: "90 seconds",
   retry: RETRY,
 });
-// Delivery and alert publication stay on the reports queue, which owns Postal,
-// report-state S3, and ALERTMANAGER_URL credentials.
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+// Delivery and alert publication run on the reports queue, which owns the
+// Postal, report-state S3, and ALERTMANAGER_URL credentials. The legacy branch
+// is retained only for histories created before this queue migration.
+const legacyDeliveryActivities = proxyActivities<ReportDeliveryActivities>({
+  taskQueue: TASK_QUEUES.DEFAULT,
+  startToCloseTimeout: "2 minutes",
+  retry: RETRY,
+});
+const reportsDeliveryActivities = proxyActivities<ReportDeliveryActivities>({
   taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: "2 minutes",
   retry: RETRY,
 });
-const { publishLinkRotScanAlerts } =
-  proxyActivities<LinkRotScanAlertActivities>({
-    taskQueue: TASK_QUEUES.REPORTS,
-    startToCloseTimeout: "1 minute",
-    retry: RETRY,
-  });
+const legacyAlertActivities = proxyActivities<LinkRotScanAlertActivities>({
+  taskQueue: TASK_QUEUES.DEFAULT,
+  startToCloseTimeout: "1 minute",
+  retry: RETRY,
+});
+const reportsAlertActivities = proxyActivities<LinkRotScanAlertActivities>({
+  taskQueue: TASK_QUEUES.REPORTS,
+  startToCloseTimeout: "1 minute",
+  retry: RETRY,
+});
+
+const REPORTS_QUEUE_PATCH = "link-rot-scan-reports-queue-v1";
 
 /**
  * Weekly lychee link-rot scan of current `main`.
@@ -58,6 +70,13 @@ const { publishLinkRotScanAlerts } =
  * vulnerability scan and pages only if a critical finding ever appears.
  */
 export async function runLinkRotScanWorkflow(): Promise<void> {
+  const useReportsQueue = patched(REPORTS_QUEUE_PATCH);
+  const deliveryActivities = useReportsQueue
+    ? reportsDeliveryActivities
+    : legacyDeliveryActivities;
+  const alertActivities = useReportsQueue
+    ? reportsAlertActivities
+    : legacyAlertActivities;
   const startedAt = new Date().toISOString();
   // Only a clone/scan failure produces the failure report. Wrapping the
   // delivery and alert calls too would let an Alertmanager outage — after the
@@ -69,12 +88,14 @@ export async function runLinkRotScanWorkflow(): Promise<void> {
   try {
     result = await scanMainForLinkRot();
   } catch (error) {
-    await deliverActivityReport(buildLinkRotFailureReport(startedAt, error));
+    await deliveryActivities.deliverActivityReport(
+      buildLinkRotFailureReport(startedAt, error),
+    );
     throw error;
   }
   const report = buildLinkRotReport(startedAt, result);
-  await deliverActivityReport(report);
-  await publishLinkRotScanAlerts({
+  await deliveryActivities.deliverActivityReport(report);
+  await alertActivities.publishLinkRotScanAlerts({
     criticalCount: countCriticalReportFindings(report),
     repoSha: result.repoSha,
   });

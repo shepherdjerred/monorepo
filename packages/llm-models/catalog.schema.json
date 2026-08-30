@@ -87,7 +87,10 @@
                 "output": { "type": "number", "minimum": 0 },
                 "cachedInput": { "type": "number", "minimum": 0 },
                 "cacheRead": { "type": "number", "minimum": 0 },
-                "cacheWrite": { "type": "number", "minimum": 0 }
+                "cacheWrite": { "type": "number", "minimum": 0 },
+                "longContextSurcharge": {
+                  "$ref": "#/$defs/longContextSurcharge"
+                }
               }
             },
             {
@@ -134,6 +137,21 @@
             "effortTiers": { "type": "array", "items": { "type": "string" } }
           }
         }
+      }
+    },
+    "longContextSurcharge": {
+      "type": "object",
+      "description": "Multipliers applied to the full request when its complete input exceeds the provider threshold.",
+      "required": [
+        "thresholdInputTokens",
+        "inputMultiplier",
+        "outputMultiplier"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "thresholdInputTokens": { "type": "integer", "minimum": 0 },
+        "inputMultiplier": { "type": "number", "exclusiveMinimum": 0 },
+        "outputMultiplier": { "type": "number", "exclusiveMinimum": 0 }
       }
     },
     "acceptedPrice": {

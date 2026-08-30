@@ -1,11 +1,15 @@
 // Cost estimation for Codex goal runs. Pricing comes from the central catalog
 // (@shepherdjerred/llm-models); if the model isn't in the catalog we still
 // surface the raw token counts but skip the price line.
-import { costForTextUsage } from "@shepherdjerred/llm-models";
+import {
+  costForTextUsage,
+  costForTextUsageByTurn,
+} from "@shepherdjerred/llm-models";
 
 export type TurnUsage = {
   inputTokens: number;
   cachedInputTokens: number;
+  cacheWriteInputTokens?: number;
   outputTokens: number;
   reasoningOutputTokens: number;
 };
@@ -13,6 +17,7 @@ export type TurnUsage = {
 export const EMPTY_USAGE: TurnUsage = {
   inputTokens: 0,
   cachedInputTokens: 0,
+  cacheWriteInputTokens: 0,
   outputTokens: 0,
   reasoningOutputTokens: 0,
 };
@@ -21,6 +26,8 @@ export function addUsage(left: TurnUsage, right: TurnUsage): TurnUsage {
   return {
     inputTokens: left.inputTokens + right.inputTokens,
     cachedInputTokens: left.cachedInputTokens + right.cachedInputTokens,
+    cacheWriteInputTokens:
+      (left.cacheWriteInputTokens ?? 0) + (right.cacheWriteInputTokens ?? 0),
     outputTokens: left.outputTokens + right.outputTokens,
     reasoningOutputTokens:
       left.reasoningOutputTokens + right.reasoningOutputTokens,
@@ -30,14 +37,29 @@ export function addUsage(left: TurnUsage, right: TurnUsage): TurnUsage {
 // Returns dollars, or null if the model isn't in the catalog (or isn't a text
 // model). Reasoning output is billed at the output rate (OpenAI bills reasoning
 // as output), so it is folded into outputTokens.
-export function computeCost(model: string, usage: TurnUsage): number | null {
-  return (
-    costForTextUsage(model, {
-      inputTokens: usage.inputTokens,
-      cachedInputTokens: usage.cachedInputTokens,
-      outputTokens: usage.outputTokens + usage.reasoningOutputTokens,
-    }) ?? null
-  );
+export function computeCost(
+  model: string,
+  usage: TurnUsage,
+  turns: readonly TurnUsage[] = [],
+): number | null {
+  const cost =
+    turns.length > 0
+      ? costForTextUsageByTurn(
+          model,
+          turns.map((turn) => ({
+            inputTokens: turn.inputTokens,
+            cachedInputTokens: turn.cachedInputTokens,
+            cacheWriteTokens: turn.cacheWriteInputTokens ?? 0,
+            outputTokens: turn.outputTokens + turn.reasoningOutputTokens,
+          })),
+        )
+      : costForTextUsage(model, {
+          inputTokens: usage.inputTokens,
+          cachedInputTokens: usage.cachedInputTokens,
+          cacheWriteTokens: usage.cacheWriteInputTokens ?? 0,
+          outputTokens: usage.outputTokens + usage.reasoningOutputTokens,
+        });
+  return cost ?? null;
 }
 
 // Renders the trailing line(s) appended to the final Discord report.

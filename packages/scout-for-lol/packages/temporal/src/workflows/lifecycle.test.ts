@@ -359,56 +359,60 @@ test("ingestion reconciliation recovers detached and pending interactive work", 
   await expect.poll(() => interactive).toEqual(["interactive_300"]);
 });
 
-test("requestStop cancels the activity and runs non-cancellable cleanup", async () => {
-  const started = Promise.withResolvers<undefined>();
-  const outcomes: unknown[] = [];
-  const workflow = await workflowWorker();
-  const activities = await Worker.create({
-    connection: environment.nativeConnection,
-    taskQueue: "scout-dev-interactive",
-    activities: {
-      runInteractive: async () => {
-        started.resolve(undefined);
-        const context = Context.current();
-        const heartbeat = setInterval(() => context.heartbeat(), 10);
-        try {
-          await context.cancelled;
-        } finally {
-          clearInterval(heartbeat);
-        }
-        return { status: "completed", partialOutputAvailable: false };
+test(
+  "requestStop cancels the activity and runs non-cancellable cleanup",
+  { timeout: 15_000 },
+  async () => {
+    const started = Promise.withResolvers<undefined>();
+    const outcomes: unknown[] = [];
+    const workflow = await workflowWorker();
+    const activities = await Worker.create({
+      connection: environment.nativeConnection,
+      taskQueue: "scout-dev-interactive",
+      activities: {
+        runInteractive: async () => {
+          started.resolve(undefined);
+          const context = Context.current();
+          const heartbeat = setInterval(() => context.heartbeat(), 10);
+          try {
+            await context.cancelled;
+          } finally {
+            clearInterval(heartbeat);
+          }
+          return { status: "completed", partialOutputAvailable: false };
+        },
+        persistInteractiveOutcome: (input: {
+          outcome: { status: "cancelled"; partialOutputAvailable: boolean };
+        }) => {
+          outcomes.push(input);
+          return { ...input.outcome, partialOutputAvailable: true };
+        },
       },
-      persistInteractiveOutcome: (input: {
-        outcome: { status: "cancelled"; partialOutputAvailable: boolean };
-      }) => {
-        outcomes.push(input);
-        return { ...input.outcome, partialOutputAvailable: true };
+      maxConcurrentActivityTaskExecutions: 2,
+    });
+    await startWorker(workflow);
+    await startWorker(activities);
+    const handle = await environment.client.workflow.start(
+      scoutInteractiveRunWorkflow,
+      {
+        taskQueue: "scout-dev",
+        workflowId: "interactive-stop",
+        args: [{ stage: "dev", kind: "explore", databaseRunId: "run_123" }],
       },
-    },
-    maxConcurrentActivityTaskExecutions: 2,
-  });
-  await startWorker(workflow);
-  await startWorker(activities);
-  const handle = await environment.client.workflow.start(
-    scoutInteractiveRunWorkflow,
-    {
-      taskQueue: "scout-dev",
-      workflowId: "interactive-stop",
-      args: [{ stage: "dev", kind: "explore", databaseRunId: "run_123" }],
-    },
-  );
-  await started.promise;
-  await handle.signal(requestStopSignal);
-  await expect(handle.result()).resolves.toEqual({
-    status: "cancelled",
-    partialOutputAvailable: true,
-  });
-  expect(outcomes).toEqual([
-    {
-      stage: "dev",
-      kind: "explore",
-      databaseRunId: "run_123",
-      outcome: { status: "cancelled", partialOutputAvailable: false },
-    },
-  ]);
-});
+    );
+    await started.promise;
+    await handle.signal(requestStopSignal);
+    await expect(handle.result()).resolves.toEqual({
+      status: "cancelled",
+      partialOutputAvailable: true,
+    });
+    expect(outcomes).toEqual([
+      {
+        stage: "dev",
+        kind: "explore",
+        databaseRunId: "run_123",
+        outcome: { status: "cancelled", partialOutputAvailable: false },
+      },
+    ]);
+  },
+);

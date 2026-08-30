@@ -190,9 +190,7 @@ export class GoalManager {
     try {
       return await startPromise;
     } finally {
-      if (this.startPromise === startPromise) {
-        this.startPromise = undefined;
-      }
+      if (this.startPromise === startPromise) this.startPromise = undefined;
     }
   }
 
@@ -384,11 +382,17 @@ export class GoalManager {
     return saveOnGoalEnd(this.checkpointGame, status, this.checkpointRetry);
   }
 
+  private recordUsage(active: ActiveGoal): void {
+    const usage = active.jsonl.total();
+    recordGoalUsage(
+      usage,
+      computeCost(this.config.model, usage, active.jsonl.turns()),
+    );
+  }
+
   private async observeProcess(id: string): Promise<void> {
     const active = this.active;
-    if (active?.state.id !== id) {
-      return;
-    }
+    if (active?.state.id !== id) return;
 
     await active.process.exited;
     const claimed = this.claimActive(id);
@@ -407,7 +411,7 @@ export class GoalManager {
       await this.persistState(claimed.state);
       await this.saveCheckpoint(claimed.state.status);
       const usage = claimed.jsonl.total();
-      const cost = computeCost(this.config.model, usage);
+      const cost = computeCost(this.config.model, usage, claimed.jsonl.turns());
       recordGoalUsage(usage, cost);
       const costLine = formatCostLine(this.config.model, cost, usage);
       await this.sendMessage({
@@ -431,8 +435,7 @@ export class GoalManager {
     if (active === undefined) return;
     try {
       await settleGoalProcess(active, true, () => this.controlGate.drain());
-      const usage = active.jsonl.total();
-      recordGoalUsage(usage, computeCost(this.config.model, usage));
+      this.recordUsage(active);
       active.state.status = "timeout";
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport = "Goal timed out before Codex finished.";
@@ -456,13 +459,10 @@ export class GoalManager {
 
   private async stopActive(status: "replaced" | "shutdown"): Promise<void> {
     const active = this.claimActive();
-    if (active === undefined) {
-      return;
-    }
+    if (active === undefined) return;
     try {
       await settleGoalProcess(active, true, () => this.controlGate.drain());
-      const usage = active.jsonl.total();
-      recordGoalUsage(usage, computeCost(this.config.model, usage));
+      this.recordUsage(active);
       active.state.status = status;
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport =
@@ -486,9 +486,8 @@ export class GoalManager {
 
   private claimActive(id?: string): ActiveGoal | undefined {
     const active = this.active;
-    if (active === undefined || (id !== undefined && active.state.id !== id)) {
+    if (active === undefined || (id !== undefined && active.state.id !== id))
       return undefined;
-    }
     // Claim synchronously before any terminal-path await. SIGTERM resolves the
     // process exit promise, so stop/timeout and observeProcess can otherwise
     // race through teardown and release the same lease twice.

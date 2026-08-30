@@ -50,13 +50,19 @@ deliberately omit.
 
 ## What is public
 
-Three things, all of them about the market rather than about people:
+Four things are public. Three are about the market:
 
 - **Side totals while the market is open**, plus the names of who is on each
   side. Positions are not secret — they are part of the market.
 - **The final matched amounts at close**, on the same message, which becomes
   the receipt.
 - **The settlement**, with each bettor's gross, fee, and net.
+
+The fourth is an explicit social action: a successful `/bb transfer` posts a
+Western Union-style receipt that names and mentions the sender and recipient.
+It shows the sender's total spend, the recipient's share, and the house fee so
+the movement is transparent. It never shows either person's balance. Failed
+transfers remain private.
 
 Cancelled bets disappear from the public digest, though they remain in
 `/bb history`. A withdrawn offer is not a position, and leaving it on screen

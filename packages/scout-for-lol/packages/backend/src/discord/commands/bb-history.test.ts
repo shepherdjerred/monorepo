@@ -20,6 +20,15 @@ describe("/bb history labels", () => {
     expect(ledgerKindLabel(BucksLedgerKindSchema.parse("peek_pass"))).toBe(
       "24-hour peek pass",
     );
+    expect(ledgerKindLabel(BucksLedgerKindSchema.parse("transfer_sent"))).toBe(
+      "transfer sent",
+    );
+    expect(
+      ledgerKindLabel(BucksLedgerKindSchema.parse("transfer_received")),
+    ).toBe("transfer received");
+    expect(ledgerKindLabel(BucksLedgerKindSchema.parse("transfer_fee"))).toBe(
+      "transfer fee",
+    );
 
     const rendered = renderBucksHistory(bucksTestDiscordId(1), {
       entries: [

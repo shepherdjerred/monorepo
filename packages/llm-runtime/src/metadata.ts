@@ -219,15 +219,14 @@ function routingFields(input: {
  * back to `pricing.input` — a 10x overcharge on Claude cache reads — and would
  * silently drop cache-creation cost entirely.
  *
- * Cache writes are omitted on the OpenAI path on purpose: OpenAI's prompt cache
- * has no separately billed write, so those entries declare no `cacheWrite`
- * rate and upstream reports no `cache_write_tokens` for them.
+ * OpenAI entries may additionally declare a separately billed cache write
+ * (currently Luna), while ordinary OpenAI prompt caching has no write rate.
  */
 function textUsageForPricing(
   pricing: TextPricing,
   tokens: OpenRouterTokenBreakdown,
 ): TextUsage {
-  if (pricing.cacheRead !== undefined || pricing.cacheWrite !== undefined) {
+  if (pricing.cacheRead !== undefined) {
     return {
       inputTokens: Math.max(0, tokens.input - tokens.cachedInput),
       outputTokens: tokens.output,
@@ -239,6 +238,7 @@ function textUsageForPricing(
     inputTokens: tokens.input,
     outputTokens: tokens.output,
     cachedInputTokens: tokens.cachedInput,
+    cacheWriteTokens: tokens.cacheWrite,
   };
 }
 

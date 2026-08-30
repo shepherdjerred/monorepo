@@ -6,6 +6,7 @@ import {
   preflightDiscordSmoke,
   raceRuntimeOperation,
   waitForRuntimeReadiness,
+  waitForDiscordCommand,
 } from "./discord-smoke-core.ts";
 
 const fixture = DiscordSmokeFixtureSchema.parse({
@@ -103,6 +104,7 @@ describe("invocation guard", () => {
     createdAt: "2026-08-29T00:00:00.000Z",
     databaseName: null,
     databaseUrl: null,
+    seededAccounts: null,
     invocationStartedAt: null,
     privateReplyId: null,
     publicMessageId: null,
@@ -173,4 +175,35 @@ describe("runtime readiness", () => {
       ),
     ).rejects.toThrow("before command registration");
   });
+});
+
+test("waits for the exact registered subcommand", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(
+      response([{ id: "100000000000000010", name: "bb", options: [] }]),
+    )
+    .mockResolvedValueOnce(
+      response([
+        {
+          id: "100000000000000010",
+          name: "bb",
+          options: [{ type: 1, name: "transfer" }],
+        },
+      ]),
+    );
+
+  await waitForDiscordCommand(
+    {
+      fixture,
+      botToken: "bot",
+      commandName: "bb",
+      subcommandName: "transfer",
+      guildScoped: true,
+      timeoutMilliseconds: 2000,
+    },
+    fetcher,
+  );
+
+  expect(fetcher).toHaveBeenCalledTimes(2);
 });

@@ -54,10 +54,21 @@ This preset uses `DISCORD_BOT_TOKEN` with Derrej application
 `1542993271477899294`, keeps local Temporal, and disables background jobs,
 report-lake preparation, Vite, and backend watch. Scenario flags are applied by
 the dev-only backend entrypoint to the one explicit fixture guild. Use the
-operator-only `test:discord:smoke` command for repeatable acceptance; it
-preflights Discord and the `scout-discord-smoke` PinchTab profile before any
-database mutation and stores resumable evidence under `.context/discord-smoke/`.
-Never substitute the BETA token or guild for this workflow.
+operator-only `test:discord:smoke` command for repeatable acceptance:
+
+```bash
+bun run --filter='./packages/scout-for-lol' test:discord:smoke -- \
+  --scenario bb-transfer
+```
+
+It preflights Discord, recipient membership, and the signed-in
+`scout-discord-smoke` PinchTab profile before any database mutation. The
+transfer scenario seeds an isolated local database, verifies the exact 3 BB
+Western Union receipt and `-3/+1/+2` ledger/outbox state, saves real-client
+evidence under `.context/discord-smoke/`, and drops only successful databases.
+If a failure happens after invocation starts, use `--resume <run-id>`; the
+manifest forbids reinvocation. Never substitute the BETA token or guild for
+this workflow.
 
 Each copy can use isolated ports and an isolated Postgres database on the
 shared local dev server (port 5471, `SCOUT_PG_PORT` overrides):

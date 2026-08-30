@@ -21,6 +21,7 @@ import {
 import {
   claimLobbiesToPoll,
   countLobbiesByState,
+  expireResolvedLobbies,
   updateLobby,
   type TournamentLobbyRecord,
 } from "#src/league/tournament/lobby-store.ts";
@@ -245,6 +246,11 @@ export async function checkTournamentLobbies(): Promise<void> {
   try {
     const mode = tournamentApiMode();
     tournamentApiModeGauge.set(mode === "live" ? 1 : 0);
+
+    const expiredResolved = await expireResolvedLobbies(prisma, new Date());
+    if (expiredResolved > 0) {
+      tournamentLobbiesTotal.inc({ action: "expired" }, expiredResolved);
+    }
 
     const lobbies = await claimLobbiesToPoll(
       prisma,

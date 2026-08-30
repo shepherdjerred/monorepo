@@ -302,6 +302,7 @@ function fakeAskCommand() {
       getSubcommand: () => "ask",
       getString: () => QUESTION,
       getInteger: () => 10,
+      getUser: () => ({ id: ASKER, bot: false }),
     },
     replied: false,
     deferred: false,

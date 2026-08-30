@@ -432,7 +432,7 @@ describe("generateValidatedObject", () => {
     expect(bodies).toHaveLength(2);
     expect(bodies[0]?.model).toBe("openai/gpt-5.6-luna");
     expect(bodies[0]?.provider).toEqual({
-      allow_fallbacks: true,
+      allow_fallbacks: false,
       data_collection: "deny",
       require_parameters: true,
     });

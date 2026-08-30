@@ -2,6 +2,7 @@ import { afterAll, beforeAll, expect } from "vitest";
 import { z } from "zod/v4";
 import { Worker } from "@temporalio/worker";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
+import type { PatchActivationCallback } from "@temporalio/worker";
 import type { TaskQueue } from "#shared/task-queues.ts";
 
 const DeliveredReportSchema = z.object({
@@ -80,30 +81,66 @@ export async function runScannerWorkflow(
     workflowId: string;
     taskQueue: TaskQueue;
     workers: readonly ScannerWorkerDefinition[];
+    patchActivationCallback?: PatchActivationCallback;
   },
 ): Promise<unknown> {
   const workers = await Promise.all(
-    input.workers.map(async (definition) =>
-      Worker.create({
+    input.workers.map(async (definition) => ({
+      definition,
+      worker: await Worker.create({
         connection: testEnv.nativeConnection,
         taskQueue: definition.taskQueue,
         activities: definition.activities,
         ...(definition.runsWorkflow === true
           ? { workflowsPath: new URL("index.ts", import.meta.url).pathname }
           : {}),
+        ...(input.patchActivationCallback === undefined
+          ? {}
+          : { patchActivationCallback: input.patchActivationCallback }),
       }),
-    ),
+    })),
   );
+  const workflowWorker = workers.find(
+    ({ definition }) => definition.runsWorkflow === true,
+  );
+  if (workflowWorker === undefined) {
+    throw new Error("scanner workflow harness requires a workflow worker");
+  }
+  const activityWorkers = workers.filter(
+    ({ definition }) => definition.runsWorkflow !== true,
+  );
+  const activityRuns = activityWorkers.map(({ worker }) => worker.run());
   const execution = testEnv.client.workflow.execute(input.workflow, {
     args: [],
     taskQueue: input.taskQueue,
     workflowId: input.workflowId,
   });
+  const workflowState: { outcome: "pending" | "fulfilled" | "rejected" } = {
+    outcome: "pending",
+  };
+  const observedExecution = (async () => {
+    try {
+      await execution;
+      workflowState.outcome = "fulfilled";
+    } catch (error: unknown) {
+      workflowState.outcome = "rejected";
+      throw error;
+    }
+  })();
   try {
-    await Promise.all(workers.map((worker) => worker.runUntil(execution)));
+    await workflowWorker.worker.runUntil(observedExecution);
     return undefined;
   } catch (error: unknown) {
+    if (workflowState.outcome === "fulfilled") {
+      await observedExecution;
+      return undefined;
+    }
     return error;
+  } finally {
+    for (const { worker } of activityWorkers) {
+      worker.shutdown();
+    }
+    await Promise.all(activityRuns);
   }
 }
 

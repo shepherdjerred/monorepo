@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   MainVulnScanActivities,
   MainVulnScanResult,
@@ -29,19 +29,32 @@ const { scanMainForVulnerabilities } = proxyActivities<MainVulnScanActivities>({
   retry: RETRY,
 });
 
-// Delivery and alert publication run on the reports worker: Postal, report-state
-// S3, and ALERTMANAGER_URL deliberately never reach the maintenance pod.
-const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+// Delivery and alert publication run on the reports worker: Postal,
+// report-state S3, and ALERTMANAGER_URL deliberately never reach the
+// maintenance pod. The legacy branch is retained only for histories created
+// before the reports queue migration.
+const legacyDeliveryActivities = proxyActivities<ReportDeliveryActivities>({
+  taskQueue: TASK_QUEUES.DEFAULT,
+  startToCloseTimeout: "2 minutes",
+  retry: RETRY,
+});
+const reportsDeliveryActivities = proxyActivities<ReportDeliveryActivities>({
   taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: "2 minutes",
   retry: RETRY,
 });
-const { publishMainVulnScanAlerts } =
-  proxyActivities<MainVulnScanAlertActivities>({
-    taskQueue: TASK_QUEUES.REPORTS,
-    startToCloseTimeout: "1 minute",
-    retry: RETRY,
-  });
+const legacyAlertActivities = proxyActivities<MainVulnScanAlertActivities>({
+  taskQueue: TASK_QUEUES.DEFAULT,
+  startToCloseTimeout: "1 minute",
+  retry: RETRY,
+});
+const reportsAlertActivities = proxyActivities<MainVulnScanAlertActivities>({
+  taskQueue: TASK_QUEUES.REPORTS,
+  startToCloseTimeout: "1 minute",
+  retry: RETRY,
+});
+
+const REPORTS_QUEUE_PATCH = "main-vuln-scan-reports-queue-v1";
 
 /**
  * Weekly Trivy HIGH/CRITICAL scan of current `main`.
@@ -51,6 +64,13 @@ const { publishMainVulnScanAlerts } =
  * CRITICAL finding exists, resolving as soon as a run comes back clean.
  */
 export async function runMainVulnScanWorkflow(): Promise<void> {
+  const useReportsQueue = patched(REPORTS_QUEUE_PATCH);
+  const deliveryActivities = useReportsQueue
+    ? reportsDeliveryActivities
+    : legacyDeliveryActivities;
+  const alertActivities = useReportsQueue
+    ? reportsAlertActivities
+    : legacyAlertActivities;
   const startedAt = new Date().toISOString();
   // Only a clone/scan failure produces the failure report. Wrapping the
   // delivery and alert calls too would let an Alertmanager outage — after the
@@ -62,13 +82,15 @@ export async function runMainVulnScanWorkflow(): Promise<void> {
   try {
     result = await scanMainForVulnerabilities();
   } catch (error) {
-    await deliverActivityReport(
+    await deliveryActivities.deliverActivityReport(
       buildMainVulnScanFailureReport(startedAt, error),
     );
     throw error;
   }
-  await deliverActivityReport(buildMainVulnScanReport(startedAt, result));
-  await publishMainVulnScanAlerts({
+  await deliveryActivities.deliverActivityReport(
+    buildMainVulnScanReport(startedAt, result),
+  );
+  await alertActivities.publishMainVulnScanAlerts({
     criticalCount: countCriticalVulnerabilities(result),
     repoSha: result.repoSha,
   });

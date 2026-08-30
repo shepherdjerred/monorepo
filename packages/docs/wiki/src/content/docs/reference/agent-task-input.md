@@ -159,7 +159,7 @@ inheriting the worker environment.
 | `HOME`                                      | the throwaway workdir, not the worker image home         |
 | Prometheus and alert-dashboard URLs         | present without API credentials                          |
 | Kubernetes service address and mounted SA   | present; the dedicated identity has read-only audit RBAC |
-| Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the core worker queue       |
+| Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the reports worker queue    |
 | ArgoCD, Grafana, Buildkite, HA, Cloudflare  | absent                                                   |
 
 The trusted, source-controlled agents are the exception. The homelab audit and

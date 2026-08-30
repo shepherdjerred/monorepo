@@ -23,6 +23,7 @@ import {
 } from "./benchmark-runtime-overlay.ts";
 import {
   artifactPaths,
+  benchmarkTelemetryCost,
   evaluateWorkerCatch,
   harnessErrorLifecycle,
   harnessRunOutcome,
@@ -34,7 +35,6 @@ import {
   validRunOutcome,
 } from "./benchmark-result.ts";
 import { decodePersistedCatchState } from "./benchmark-save-oracle.ts";
-import { computeCost } from "./pricing.ts";
 export type BenchmarkImplementation = {
   packageRoot: string;
   backendRoot: string;
@@ -415,7 +415,7 @@ export async function runBenchmarkOnce(
     const finalSaveSha256 = (await finalSave.exists())
       ? await sha256File(persistedSavePath)
       : null;
-    const cost = computeCost(args.model, telemetryInput.raw);
+    const cost = benchmarkTelemetryCost(args.model, telemetryInput.raw);
     const outcome = harnessRunOutcome(providerFailure);
     await writeBenchmarkJson(resultPath, {
       schemaVersion: 1,

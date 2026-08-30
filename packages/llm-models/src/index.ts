@@ -15,7 +15,15 @@ import catalogJson from "./catalog.json" with { type: "json" };
 export const ProviderSchema = z.enum(["openai", "anthropic", "google"]);
 export type Provider = z.infer<typeof ProviderSchema>;
 
-/** USD per 1M tokens. `cachedInput` is OpenAI prompt-cache hits; `cacheRead`/`cacheWrite` are Anthropic cache reads/creations. */
+export const LongContextSurchargeSchema = z.strictObject({
+  /** The surcharge applies only when the complete request exceeds this input-token count. */
+  thresholdInputTokens: z.number().int().nonnegative(),
+  inputMultiplier: z.number().positive(),
+  outputMultiplier: z.number().positive(),
+});
+export type LongContextSurcharge = z.infer<typeof LongContextSurchargeSchema>;
+
+/** USD per 1M tokens. Cache fields describe provider-specific discounted reads and billed writes. */
 export const TextPricingSchema = z.strictObject({
   modality: z.literal("text"),
   input: z.number().nonnegative(),
@@ -23,6 +31,7 @@ export const TextPricingSchema = z.strictObject({
   cachedInput: z.number().nonnegative().optional(),
   cacheRead: z.number().nonnegative().optional(),
   cacheWrite: z.number().nonnegative().optional(),
+  longContextSurcharge: LongContextSurchargeSchema.optional(),
 });
 export type TextPricing = z.infer<typeof TextPricingSchema>;
 
@@ -291,13 +300,35 @@ export function costForTextUsage(
   const cacheRead = usage.cacheReadTokens ?? 0;
   const cacheWrite = usage.cacheWriteTokens ?? 0;
   const uncachedInput = Math.max(0, usage.inputTokens - cachedInput);
+  const billedInputTokens = usage.inputTokens + cacheRead + cacheWrite;
+  const longContext = pricing.longContextSurcharge;
+  const surchargeApplies =
+    longContext !== undefined &&
+    billedInputTokens > longContext.thresholdInputTokens;
+  const inputMultiplier = surchargeApplies ? longContext.inputMultiplier : 1;
+  const outputMultiplier = surchargeApplies ? longContext.outputMultiplier : 1;
   const total =
-    uncachedInput * pricing.input +
-    cachedInput * (pricing.cachedInput ?? pricing.input) +
-    cacheRead * (pricing.cacheRead ?? pricing.input) +
-    cacheWrite * (pricing.cacheWrite ?? pricing.input) +
-    usage.outputTokens * pricing.output;
+    (uncachedInput * pricing.input +
+      cachedInput * (pricing.cachedInput ?? pricing.input) +
+      cacheRead * (pricing.cacheRead ?? pricing.input) +
+      cacheWrite * (pricing.cacheWrite ?? pricing.input)) *
+      inputMultiplier +
+    usage.outputTokens * pricing.output * outputMultiplier;
   return total / 1_000_000;
+}
+
+/** Price independent requests without combining their context lengths. */
+export function costForTextUsageByTurn(
+  id: string,
+  usages: readonly TextUsage[],
+): number | undefined {
+  let total = 0;
+  for (const usage of usages) {
+    const cost = costForTextUsage(id, usage);
+    if (cost === undefined) return undefined;
+    total += cost;
+  }
+  return total;
 }
 
 export function allModelIds(): string[] {

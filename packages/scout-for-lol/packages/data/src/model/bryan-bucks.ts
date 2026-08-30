@@ -72,6 +72,9 @@ export const BucksLedgerKindSchema = z.enum([
   "weekly_parlay_refund",
   "weekly_parlay_release",
   "peek_pass",
+  "transfer_sent",
+  "transfer_received",
+  "transfer_fee",
   "adjustment",
 ]);
 
@@ -475,6 +478,17 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     balanceBefore: z.number().int().nonnegative(),
     weightedAgeWeeks: z.number().int().nonnegative(),
     expiresAt: z.iso.datetime(),
+  }),
+  z.strictObject({
+    type: z.literal("transfer"),
+    transferId: z.uuid(),
+    senderAccountId: z.number().int().positive(),
+    recipientAccountId: z.number().int().positive(),
+    houseAccountId: z.number().int().positive(),
+    totalAmount: BucksStakeSchema,
+    recipientAmount: BucksStakeSchema,
+    feeAmount: BucksStakeSchema,
+    role: z.enum(["sender", "recipient", "house"]),
   }),
   z.strictObject({
     type: z.literal("adjustment"),

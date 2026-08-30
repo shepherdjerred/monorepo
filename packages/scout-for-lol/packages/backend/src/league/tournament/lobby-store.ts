@@ -119,7 +119,7 @@ export async function claimLobbiesToPoll(
   limit: number,
 ): Promise<TournamentLobbyRecord[]> {
   const active = TournamentLobbyStateSchema.options.filter(
-    (state) => !isTerminal(state),
+    (state) => !isTerminal(state) && state !== "resolved",
   );
   const rows = await client.tournamentLobby.findMany({
     where: { state: { in: active } },
@@ -127,6 +127,21 @@ export async function claimLobbiesToPoll(
     take: limit,
   });
   return rows.map((row) => parseLobbyRow(row));
+}
+
+/**
+ * Resolve-state lobbies wait for Match-V5, not Tournament-V5. Sweep their
+ * recovery deadline without placing them back on the Tournament API poll path.
+ */
+export async function expireResolvedLobbies(
+  client: ExtendedPrismaClient,
+  now: Date,
+): Promise<number> {
+  const result = await client.tournamentLobby.updateMany({
+    where: { state: "resolved", expiresAt: { lte: now } },
+    data: { state: "expired" },
+  });
+  return result.count;
 }
 
 export async function countOpenLobbiesForGuild(
@@ -192,37 +207,65 @@ export type CreateLobbyInput = {
   expiresAt: Date;
 };
 
+export function lobbyCreateData(input: CreateLobbyInput) {
+  return {
+    code: input.code,
+    apiMode: input.apiMode,
+    providerId: input.providerId,
+    tournamentId: input.tournamentId,
+    region: input.region,
+    platformId: input.platformId,
+    serverId: input.serverId,
+    channelId: input.channelId,
+    creatorDiscordId: input.creatorDiscordId,
+    bluePuuids: JSON.stringify(input.bluePuuids),
+    redPuuids: JSON.stringify(input.redPuuids),
+    blueAliases: JSON.stringify(input.blueAliases),
+    redAliases: JSON.stringify(input.redAliases),
+    teamSize: input.teamSize,
+    pickType: input.pickType,
+    mapType: input.mapType,
+    spectatorType: input.spectatorType,
+    lobbyName: input.lobbyName ?? null,
+    password: input.password ?? null,
+    state: "created",
+    joinedPuuids: "[]",
+    expiresAt: input.expiresAt,
+  };
+}
+
 export async function createLobby(
   client: ExtendedPrismaClient,
   input: CreateLobbyInput,
 ): Promise<TournamentLobbyRecord> {
   const row = await client.tournamentLobby.create({
-    data: {
-      code: input.code,
-      apiMode: input.apiMode,
-      providerId: input.providerId,
-      tournamentId: input.tournamentId,
-      region: input.region,
-      platformId: input.platformId,
-      serverId: input.serverId,
-      channelId: input.channelId,
-      creatorDiscordId: input.creatorDiscordId,
-      bluePuuids: JSON.stringify(input.bluePuuids),
-      redPuuids: JSON.stringify(input.redPuuids),
-      blueAliases: JSON.stringify(input.blueAliases),
-      redAliases: JSON.stringify(input.redAliases),
-      teamSize: input.teamSize,
-      pickType: input.pickType,
-      mapType: input.mapType,
-      spectatorType: input.spectatorType,
-      lobbyName: input.lobbyName ?? null,
-      password: input.password ?? null,
-      state: "created",
-      joinedPuuids: "[]",
-      expiresAt: input.expiresAt,
-    },
+    data: lobbyCreateData(input),
   });
   return parseLobbyRow(row);
+}
+
+/**
+ * Marks the Tournament handoff complete at the same boundary that allows
+ * player cursors to advance. Match-V5 plus the authoritative S3 write is the
+ * result authority; Discord delivery is deliberately not part of this state.
+ */
+export async function completeTournamentLobbyForMatch(
+  client: ExtendedPrismaClient,
+  matchId: string,
+  tournamentCode: string | undefined,
+): Promise<number> {
+  const identity =
+    tournamentCode === undefined || tournamentCode.length === 0
+      ? { matchId }
+      : { code: tournamentCode };
+  const result = await client.tournamentLobby.updateMany({
+    where: { ...identity, state: { not: "reported" } },
+    data: { matchId, state: "reported" },
+  });
+  if (result.count > 1) {
+    throw new Error(`Multiple Tournament lobbies resolved to match ${matchId}`);
+  }
+  return result.count;
 }
 
 export type LobbyUpdate = {

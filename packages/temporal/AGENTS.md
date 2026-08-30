@@ -185,7 +185,7 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
-- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `core`, `agent`, `glitter`, or `maintenance`. Invalid values fail startup.
+- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `control`, `core`, `agent`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `legacy`, `maintenance`, `repo`, `reports`, or `scout`. Invalid values fail startup.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
@@ -274,7 +274,7 @@ Do not add this workflow to `SCHEDULES`. The ordinary
 ## Homelab audit (daily)
 
 `homelab-audit-daily` (cron `30 6 * * *` PT) runs the deterministic
-`runHomelabAuditWorkflow` on the default queue. Typed collectors own the six
+`runHomelabAuditWorkflow` on the infra queue. Typed collectors own the six
 required checks: Prometheus alerts, durable alert occurrences, Temporal
 failures/stalls, Kubernetes workload health, ArgoCD state, and Buildkite main
 failures with failed-job logs. An optional OpenRouter call may write only the
@@ -286,7 +286,7 @@ delivered through the shared reporter as partial.
 
 ## Temporal workflow failure → Alerts occurrences
 
-`temporal-failure-watch` (cron `*/5 * * * *`, `pollWorkflowFailuresWorkflow` on `TASK_QUEUES.DEFAULT`) sends an Alerts occurrence through Alertmanager with the specific error for **every** Temporal workflow execution that fails or times out — not just the workflows/thresholds covered by the hand-maintained Prometheus rules in `packages/homelab/.../monitoring/rules/temporal.ts`. The activity (`src/activities/workflow-failure-watch.ts`) heartbeats a best-effort batch checkpoint and conservatively rescans the full lookback on retry so the public visibility iterator cannot skip failures:
+`temporal-failure-watch` (cron `*/5 * * * *`, `pollWorkflowFailuresWorkflow` on `TASK_QUEUES.REPORTS`) sends an Alerts occurrence through Alertmanager with the specific error for **every** Temporal workflow execution that fails or times out — not just the workflows/thresholds covered by the hand-maintained Prometheus rules in `packages/homelab/.../monitoring/rules/temporal.ts`. The activity (`src/activities/workflow-failure-watch.ts`) heartbeats a best-effort batch checkpoint and conservatively rescans the full lookback on retry so the public visibility iterator cannot skip failures:
 
 1. Queries the Temporal visibility API for `ExecutionStatus IN ("Failed", "TimedOut")` closed in the last 24 hours so a worker outage can be recovered by the next poll (safe to overlap because Alertmanager dedups alerts by label set and each alert expires from the execution's close time, not from the latest poll).
 2. For each match, calls `getHandle(workflowId, runId).fetchHistory()` and then `.result()`, with bounded concurrency and Alertmanager batches so recovery can page partial progress before the activity deadline. The history classifies timeouts as `workflow-task`, `activity`, `execution`, or `unknown`; an agent-task timeout before any `ACTIVITY_TASK_STARTED` event is explicitly a worker/task-queue availability failure, including scheduled-but-undispatched activities. The closed `result()` rejects immediately with `WorkflowFailedError`, whose `.cause` carries the same failure type/message/stack the Temporal UI shows.
@@ -423,10 +423,10 @@ Artifacts are cached by request digest rather than by run, so this re-reads
 whatever a production run already paid for instead of re-billing it — which is
 also why pinning a snapshot reuses more cache than reading the latest one.
 
-**Cluster RBAC** — the core and agent worker SAs get the cluster-wide read-only
+**Cluster RBAC** — the infra and agent worker SAs get the cluster-wide read-only
 `temporal-worker-audit-reader` ClusterRole (see
 `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). A separate
-TaskNotes namespace Role grants `pods/exec` only to the core worker so the
+TaskNotes namespace Role grants `pods/exec` only to the infra worker so the
 engine-status token never leaves that pod. The agent worker is intentionally
 absent from every pod-exec RoleBinding; the agent therefore cannot
 exec into TaskNotes or deterministic maintenance targets even if it disregards
@@ -461,11 +461,11 @@ policy-capable CNI but is not treated as current enforcement. Restoring uid and
 credential isolation for the native SDK agent itself is tracked in
 `packages/docs/todos/agent-sdk-provider-isolation.md`. Generic agent
 clones of this public repository are unauthenticated, and
-new agent email delivery activities execute on `TASK_QUEUES.DEFAULT`. Replayed
+new agent email delivery activities execute on `TASK_QUEUES.REPORTS`. Replayed
 histories preserve their original agent-queue activity command for Temporal
 determinism; that credential-free compatibility activity delegates a fixed
-`deliverReportWorkflow` to `TASK_QUEUES.DEFAULT`. Postal and report-state S3
-credentials therefore remain in the core worker in both paths. The outer email
+`deliverReportWorkflow` to `TASK_QUEUES.REPORTS`. Postal and report-state S3
+credentials therefore remain in the reports worker in both paths. The outer email
 activity budget must exceed the complete delegated delivery retry window; both
 durations are defined in `src/shared/report-delivery-policy.ts`.
 
@@ -647,7 +647,7 @@ PR-closed build cancellation.
 
 ### Durable review-signal collector (`review-signals-collect`)
 
-Separate from the CI gate above: `review-signals-collect` (cron `0 */6 * * *` PT, `observeReviewSignalsWorkflow` on `TASK_QUEUES.DEFAULT`) is a scheduled job, not a per-PR gate. Every 6 hours it lists the most-recently-updated PRs (`GET /repos/{repo}/pulls?state=all&sort=updated&direction=desc`, `ObserveReviewSignalsInput.limit`, default 30) and, for each, builds the same provider-neutral `ReviewSignalEvent` the gate computes (`src/activities/observe-review-signals.ts`, mirroring `scripts/probe-review-signal.ts` / `scripts/wait-for-review.ts` including the head-commit latency guard). It records `review_*` Prometheus metrics (`src/observability/metrics.ts`) and writes the batch as NDJSON to S3 at `review-signals/<temporal-run-id>.ndjson` in `REVIEW_SIGNAL_ARCHIVE_BUCKET` (default `llm-archive`; same shared `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`S3_ENDPOINT` credentials as every other S3 writer in this package — see `homelab-audit-archive.ts` for the pattern this follows) — a durable, queryable "what did the review bot do and when" dataset independent of ephemeral CI logs. The object is keyed by the workflow run id (not a wall-clock timestamp) so an activity retry overwrites the same object idempotently; each event carries its own `ts` for time-filtering. A single PR's fetch failing is logged + skipped (`errored` in the result); a token-mint or PR-listing failure fails the whole run. The pure aggregation helper (`src/shared/review-signals.ts`, `summarizeReviewSignals`) is unit-tested and safe to import from workflow code — no I/O, no Sentry.
+Separate from the CI gate above: `review-signals-collect` (cron `0 */6 * * *` PT, `observeReviewSignalsWorkflow` on `TASK_QUEUES.REPO_AUTOMATION`) is a scheduled job, not a per-PR gate. Every 6 hours it lists the most-recently-updated PRs (`GET /repos/{repo}/pulls?state=all&sort=updated&direction=desc`, `ObserveReviewSignalsInput.limit`, default 30) and, for each, builds the same provider-neutral `ReviewSignalEvent` the gate computes (`src/activities/observe-review-signals.ts`, mirroring `scripts/probe-review-signal.ts` / `scripts/wait-for-review.ts` including the head-commit latency guard). It records `review_*` Prometheus metrics (`src/observability/metrics.ts`) and writes the batch as NDJSON to S3 at `review-signals/<temporal-run-id>.ndjson` in `REVIEW_SIGNAL_ARCHIVE_BUCKET` (default `llm-archive`; same shared `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` credentials as every other S3 writer in this package — see `homelab-audit-archive.ts` for the pattern this follows) — a durable, queryable "what did the review bot do and when" dataset independent of ephemeral CI logs. The object is keyed by the workflow run id (not a wall-clock timestamp) so an activity retry overwrites the same object idempotently; each NDJSON event carries its own `ts` for time-filtering. A single PR's fetch failing is logged + skipped (`errored` in the result); a token-mint or PR-listing failure fails the whole run. The pure aggregation helper (`src/shared/review-signals.ts`, `summarizeReviewSignals`) is unit-tested and safe to import from workflow code — no I/O, no Sentry.
 
 ## GitHub webhook (merge-conflict check + PR-closed build cancel)
 

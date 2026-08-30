@@ -13,6 +13,7 @@ import { z } from "zod";
 export type CodexTurnUsage = {
   inputTokens: number;
   cachedInputTokens: number;
+  cacheWriteInputTokens: number;
   outputTokens: number;
   reasoningOutputTokens: number;
 };
@@ -20,6 +21,7 @@ export type CodexTurnUsage = {
 export const EMPTY_CODEX_USAGE: CodexTurnUsage = {
   inputTokens: 0,
   cachedInputTokens: 0,
+  cacheWriteInputTokens: 0,
   outputTokens: 0,
   reasoningOutputTokens: 0,
 };
@@ -31,6 +33,8 @@ export function addCodexUsage(
   return {
     inputTokens: left.inputTokens + right.inputTokens,
     cachedInputTokens: left.cachedInputTokens + right.cachedInputTokens,
+    cacheWriteInputTokens:
+      left.cacheWriteInputTokens + right.cacheWriteInputTokens,
     outputTokens: left.outputTokens + right.outputTokens,
     reasoningOutputTokens:
       left.reasoningOutputTokens + right.reasoningOutputTokens,
@@ -60,6 +64,7 @@ const TurnUsageSchema = z
   .object({
     input_tokens: z.number().int().nonnegative(),
     cached_input_tokens: z.number().int().nonnegative(),
+    cache_write_input_tokens: z.number().int().nonnegative(),
     output_tokens: z.number().int().nonnegative(),
     reasoning_output_tokens: z.number().int().nonnegative(),
   })
@@ -94,6 +99,7 @@ export type CodexEventListener = (event: CodexEvent) => void;
 
 type ParserState = {
   total: CodexTurnUsage;
+  turns: CodexTurnUsage[];
   listeners: CodexEventListener[];
 };
 
@@ -101,6 +107,7 @@ export type CodexJsonlParser = {
   push: (chunk: string) => void;
   finish: () => void;
   total: () => CodexTurnUsage;
+  turns: () => CodexTurnUsage[];
   subscribe: (listener: CodexEventListener) => () => void;
 };
 
@@ -109,6 +116,7 @@ export function createCodexJsonlParser(
 ): CodexJsonlParser {
   const state: ParserState = {
     total: { ...EMPTY_CODEX_USAGE },
+    turns: [],
     listeners: [],
   };
   let buffer = "";
@@ -150,6 +158,7 @@ export function createCodexJsonlParser(
         const usage = normalizeUsage(
           completed.success ? completed.data.usage : undefined,
         );
+        state.turns.push(usage);
         state.total = addCodexUsage(state.total, usage);
         emit({ kind: "turn.completed", usage, raw: parsed });
         return;
@@ -194,6 +203,9 @@ export function createCodexJsonlParser(
     total(): CodexTurnUsage {
       return { ...state.total };
     },
+    turns(): CodexTurnUsage[] {
+      return state.turns.map((usage) => ({ ...usage }));
+    },
     subscribe(listener: CodexEventListener): () => void {
       state.listeners.push(listener);
       return () => {
@@ -210,6 +222,7 @@ function normalizeUsage(
   return {
     inputTokens: raw?.input_tokens ?? 0,
     cachedInputTokens: raw?.cached_input_tokens ?? 0,
+    cacheWriteInputTokens: raw?.cache_write_input_tokens ?? 0,
     outputTokens: raw?.output_tokens ?? 0,
     reasoningOutputTokens: raw?.reasoning_output_tokens ?? 0,
   };

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
-import { MIN_STAKE } from "#src/betting/constants.ts";
+import { BUCKS_INT32_MAX } from "@scout-for-lol/data";
+import { MINIMUM_BUCKS_TRANSFER, MIN_STAKE } from "#src/betting/constants.ts";
 import { BB_ASK_MAX_QUESTION_LENGTH } from "#src/discord/commands/bb-ask.ts";
 import { addBbPeekSubcommands } from "#src/discord/commands/bb-peek.ts";
 
@@ -20,6 +21,25 @@ export const bbCommand = addBbPeekSubcommands(
       sub
         .setName("history")
         .setDescription("How you earned and spent your Bryan Bucks"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("transfer")
+        .setDescription("Send Bryan Bucks through Western Union")
+        .addUserOption((option) =>
+          option
+            .setName("recipient")
+            .setDescription("Who receives half of the amount")
+            .setRequired(true),
+        )
+        .addIntegerOption((option) =>
+          option
+            .setName("amount")
+            .setDescription("Your total whole-BB spend")
+            .setRequired(true)
+            .setMinValue(MINIMUM_BUCKS_TRANSFER)
+            .setMaxValue(BUCKS_INT32_MAX),
+        ),
     )
     .addSubcommand((sub) =>
       sub.setName("open").setDescription("Games you can still bet on"),
