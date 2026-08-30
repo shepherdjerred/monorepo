@@ -3,6 +3,11 @@ import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
 import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
 import { prepareStablePinPromotion } from "./worker-deployment-catalog.ts";
 import {
+  DeploymentDescriptionSchema,
+  DeploymentNameSchema,
+  VersionDescriptionSchema,
+} from "./worker-deployment-schemas.ts";
+import {
   executeWorkerDeploymentRollback,
   removeWorkerDeploymentRampingVersion,
 } from "./worker-deployment-rollback.ts";
@@ -16,37 +21,6 @@ import {
   type RolloutCommandRunner,
   verifyCandidateImageBuildId,
 } from "./worker-deployment-proofs.ts";
-const DeploymentNameSchema = z
-  .string()
-  .regex(/^[a-z0-9](?:[a-z0-9-]{0,125}[a-z0-9])?$/);
-const TimestampSchema = z.iso.datetime({ offset: true });
-const RoutingSchema = z.object({
-  currentVersionBuildID: z.string(),
-  rampingVersionBuildID: z.string(),
-  rampingVersionPercentage: z.number().min(0).max(100),
-  currentVersionChangedTime: TimestampSchema,
-  rampingVersionChangedTime: TimestampSchema,
-  rampingVersionPercentageChangedTime: TimestampSchema,
-});
-const DeploymentDescriptionSchema = z.object({
-  name: DeploymentNameSchema,
-  routingConfig: RoutingSchema,
-  versionSummaries: z.array(
-    z.object({
-      BuildID: WorkerBuildIdSchema,
-      createTime: TimestampSchema,
-    }),
-  ),
-});
-const VersionDescriptionSchema = z.object({
-  BuildID: WorkerBuildIdSchema,
-  taskQueuesInfos: z.array(
-    z.object({
-      name: z.string().min(1),
-      type: z.enum(["workflow", "activity", "nexus"]),
-    }),
-  ),
-});
 export type WorkerDeploymentRolloutOptions = {
   action: "status" | "start" | "advance" | "promote" | "rollback";
   address: string;
