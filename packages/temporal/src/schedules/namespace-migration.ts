@@ -466,6 +466,16 @@ export async function auditNamespaceMigration(input: {
       );
     }
     const state = decodeMigrationState(target.state.note);
+    if (state.cutoverAt === undefined) {
+      throw new Error(
+        `Target ${migration.targetNamespace}/${source.scheduleId} has no persisted cutover boundary`,
+      );
+    }
+    if (state.cutoverAt !== input.cutoverAt.toISOString()) {
+      throw new Error(
+        `Target ${migration.targetNamespace}/${source.scheduleId} has a persisted cutover boundary that differs from the audit boundary`,
+      );
+    }
     if (target.state.paused !== state.sourcePaused) {
       throw new Error(
         `Target ${migration.targetNamespace}/${source.scheduleId} pause state differs from its pre-cutover source state`,

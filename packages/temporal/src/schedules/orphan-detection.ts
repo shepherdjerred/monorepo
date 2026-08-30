@@ -84,7 +84,7 @@ export function isOrphanSchedule(input: {
   if (input.declaredIds.has(input.scheduleId)) return false;
   if (input.deletedIds.has(input.scheduleId)) return false;
   if (
-    input.namespace === "prod" &&
+    (input.namespace === "prod" || input.namespace === "dev") &&
     isDynamicAgentTaskSchedule(input.scheduleId, input.memo)
   ) {
     return false;

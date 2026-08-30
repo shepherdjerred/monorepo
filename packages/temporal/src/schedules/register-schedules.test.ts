@@ -878,6 +878,15 @@ describe("orphan schedule detection", () => {
         deletedIds,
       }),
     ).toBe(true);
+    expect(
+      isOrphanSchedule({
+        scheduleId: "agent-task-foo-abc123",
+        memo: DYNAMIC_AGENT_TASK_MEMO,
+        namespace: "dev",
+        declaredIds,
+        deletedIds,
+      }),
+    ).toBe(false);
   });
 
   test("a declared agent-task schedule removed from SCHEDULES is still flagged", () => {
