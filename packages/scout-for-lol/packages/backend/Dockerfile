@@ -90,6 +90,7 @@ COPY --parents \
   packages/llm-models \
   packages/llm-observability \
   packages/llm-runtime \
+  packages/temporal-observability \
   ./
 # Bake the Prisma engines into the production tree. prod-deps installs
 # without lifecycle scripts, so @prisma/engines ships empty and the CLI
