@@ -49,7 +49,6 @@ export type PairBudget = z.infer<typeof PairBudgetSchema>;
 
 export const BaselineSchema = z.object({
   pairs: z.record(z.string(), PairBudgetSchema),
-  updated: z.string(),
 });
 export type Baseline = z.infer<typeof BaselineSchema>;
 
@@ -103,7 +102,7 @@ export function countByPair(clones: Clone[]): Map<string, PairBudget> {
 }
 
 /** Rebuild the committed baseline object from the current scan. */
-export function buildBaseline(clones: Clone[], updated: string): Baseline {
+export function buildBaseline(clones: Clone[]): Baseline {
   const counts = countByPair(clones);
   const pairs: Record<string, PairBudget> = {};
   for (const key of [...counts.keys()].sort((a, b) => a.localeCompare(b))) {
@@ -113,7 +112,7 @@ export function buildBaseline(clones: Clone[], updated: string): Baseline {
     }
     pairs[key] = budget;
   }
-  return { pairs, updated };
+  return { pairs };
 }
 
 function describeClones(clones: Clone[], pair: string): string[] {
@@ -218,7 +217,7 @@ async function main(): Promise<void> {
 
   const baselinePath = path.join(repoRoot, BASELINE_FILE);
   if (update) {
-    const baseline = buildBaseline(clones, new Date().toISOString());
+    const baseline = buildBaseline(clones);
     await Bun.write(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`);
     console.log(
       `${BASELINE_FILE} updated: ${String(Object.keys(baseline.pairs).length)} pairs, ${String(clones.length)} clones`,
