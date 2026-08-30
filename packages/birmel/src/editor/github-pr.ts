@@ -2,6 +2,7 @@ import { lstat, mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getAuth } from "./github-oauth.ts";
+import { runGitCommand } from "./git-command.ts";
 import type { FileChange } from "./types.ts";
 
 const logger = loggers.editor.child("github-pr");
@@ -128,25 +129,6 @@ async function verifyChangesAgainstBase(
       );
     }
   }
-}
-
-async function runGitCommand(cwd: string, args: string[]): Promise<string> {
-  const proc = Bun.spawn(["git", ...args], {
-    cwd,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-
-  if (exitCode === 0) {
-    return stdout.trim();
-  }
-  throw new Error(`git ${args.join(" ")} failed: ${stderr}`);
 }
 
 async function getRemoteUrl(cwd: string): Promise<string> {

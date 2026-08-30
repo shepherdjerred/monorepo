@@ -291,30 +291,7 @@ export const AgentTaskWireResultPayloadSchema = z.object({
   cancelReason: z.string().min(1).nullable(),
 });
 
-const AgentTaskWireFollowUpV2Schema = z
-  .object({
-    title: z.string().min(1),
-    prompt: z.string().min(1),
-    // New generated follow-ups execute through the Codex/OpenRouter path.
-    // Claude remains accepted only by the legacy result schema for replay.
-    provider: z.literal("codex").nullable(),
-    runAt: z.iso.datetime({ offset: true }).nullable(),
-    cron: z.string().min(1).nullable(),
-    model: z.string().min(1).nullable(),
-    maxTurns: z.number().int().positive().nullable(),
-    agentTimeoutMinutes: z.number().int().positive().max(90).nullable(),
-  })
-  .superRefine((value, ctx) => {
-    const scheduleFieldCount =
-      Number(value.runAt !== null) + Number(value.cron !== null);
-    if (scheduleFieldCount !== 1) {
-      ctx.addIssue({
-        code: "custom",
-        message: "followUp must set exactly one of runAt or cron",
-        path: ["runAt"],
-      });
-    }
-  });
+const AgentTaskWireFollowUpV2Schema = AgentTaskWireFollowUpSchema;
 
 export const AgentTaskWireResultPayloadV2Schema = z.object({
   headline: z.string().min(1),
