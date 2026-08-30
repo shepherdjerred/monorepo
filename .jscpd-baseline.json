@@ -1868,8 +1868,8 @@
       "tokens": 182
     },
     "scripts/lib/scout-legacy-site-storage.ts|scripts/lib/scout-site-storage.ts": {
-      "clones": 3,
-      "tokens": 238
+      "clones": 2,
+      "tokens": 148
     }
   }
 }
