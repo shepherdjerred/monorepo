@@ -8,7 +8,11 @@ describe("Temporal dashboard", () => {
     expect(dashboard).toContain('"name":"environment"');
     expect(dashboard).toContain('"name":"domain"');
     expect(dashboard).toContain("resource.deployment.environment.name");
-    expect(dashboard).toContain("resource.temporal.domain");
+    // Unscoped, not `resource.`: the shared central Workflow process cannot
+    // hold a single domain as a process-wide Resource attribute, so
+    // workflow-domain-interceptor.ts stamps it onto each RunWorkflow span
+    // instead — see createTemporalTracePanel's comment.
+    expect(dashboard).toContain(".temporal.domain");
     expect(dashboard).toContain("deployment_environment_name");
     expect(dashboard).toContain("temporal_domain");
   });
@@ -28,7 +32,7 @@ describe("Temporal dashboard", () => {
     expect(dashboard).toContain(
       "temporal_worker_workflow_task_execution_failed",
     );
-    expect(dashboard).toContain("activity_fail");
+    expect(dashboard).toContain("activity_task_fail");
     expect(dashboard).toContain("Schedule to Workflow to Activity traces");
   });
 });

@@ -61,8 +61,12 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
             "Activity {{ $labels.activityType }} in {{ $labels.workflowType }} reached a terminal failure on {{ $labels.taskqueue }}. Inspect its execution, trace, and Activity logs.",
           ),
         },
+        // activity_task_fail (not activity_fail) is the series every other
+        // Temporal/Scout failure rule in this repo queries (temporal.ts,
+        // scout.ts), and it carries a plain `namespace` label rather than
+        // the temporal_worker_*-prefixed metrics' `exported_namespace`.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase(activity_fail{exported_namespace="default"}[15m]) > 0',
+          'increase(activity_task_fail{namespace="default"}[15m]) > 0',
         ),
         for: "1m",
         labels: { severity: "warning" },

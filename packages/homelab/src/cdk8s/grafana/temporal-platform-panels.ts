@@ -35,8 +35,21 @@ function createTemporalTracePanel() {
     targets: [
       {
         refId: "A",
+        // Span names come from the official Temporal OpenTelemetry
+        // interceptors (@temporalio/interceptors-opentelemetry), which are
+        // PascalCase (StartWorkflow, RunWorkflow, StartChildWorkflow,
+        // ContinueAsNew, RunActivity) — not the lowercase/snake_case
+        // predicate this started with, which matched nothing.
+        //
+        // `.temporal.domain` is deliberately unscoped (not `resource.`):
+        // most worker roles set it once as a process-wide Resource
+        // attribute, but the shared central Workflow process (worker.ts's
+        // "workflows" role, which drains every legacy per-domain queue) has
+        // no single domain for that attribute to hold — that role's own
+        // workflow-domain-interceptor.ts stamps the real domain onto each
+        // RunWorkflow span instead. Unscoped `.` matches either.
         query:
-          '{ resource.deployment.environment.name =~ "$environment" && resource.temporal.domain =~ "$domain" && name =~ "(workflow|activity|child_workflow|continue_as_new).*" }',
+          '{ resource.deployment.environment.name =~ "$environment" && .temporal.domain =~ "$domain" && name =~ "(StartWorkflow|RunWorkflow|StartChildWorkflow|ContinueAsNew|RunActivity).*" }',
         queryType: "traceql",
         tableType: "traces",
       },
@@ -77,7 +90,7 @@ function createTemporalLogPanel() {
     targets: [
       {
         refId: "A",
-        expr: '{service_name=~"temporal-worker|scout-backend"} | deployment_environment_name =~ "$environment" | temporal_domain =~ "$domain"',
+        expr: '{service_name=~"temporal-.*|scout-backend"} | deployment_environment_name =~ "$environment" | temporal_domain =~ "$domain"',
         maxLines: 200,
       },
     ],
@@ -98,7 +111,7 @@ export function temporalDashboardLinks() {
       type: "link",
       url: exploreUrl("tempo", {
         query:
-          '{ resource.deployment.environment.name =~ "$environment" && resource.temporal.domain =~ "$domain" }',
+          '{ resource.deployment.environment.name =~ "$environment" && .temporal.domain =~ "$domain" }',
         queryType: "traceql",
       }),
       targetBlank: true,
@@ -108,7 +121,7 @@ export function temporalDashboardLinks() {
       title: "Loki Explore",
       type: "link",
       url: exploreUrl("loki", {
-        expr: '{service_name=~"temporal-worker|scout-backend"}',
+        expr: '{service_name=~"temporal-.*|scout-backend"}',
       }),
       targetBlank: true,
       keepTime: true,
@@ -188,7 +201,9 @@ export function createTemporalPlatformPanels() {
         "Activities that reached a terminal failure after retry policy exhaustion.",
       targets: [
         {
-          expr: 'sum by (taskqueue, workflowType, activityType) (increase(activity_fail{exported_namespace="default"}[15m])) or on() vector(0)',
+          // activity_task_fail, not activity_fail — see
+          // TemporalActivityRetriesExhausted in temporal-platform-health.ts.
+          expr: 'sum by (taskqueue, workflowType, activityType) (increase(activity_task_fail{namespace="default"}[15m])) or on() vector(0)',
           legend: "{{taskqueue}} {{workflowType}} {{activityType}}",
         },
       ],

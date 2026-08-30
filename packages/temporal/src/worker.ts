@@ -137,6 +137,7 @@ type CreateQueueWorkerOptions = {
   readonly connection: NativeConnection;
   readonly workflowsPath: string;
   readonly workflowUiInterceptorPath: string;
+  readonly domainTaggingInterceptorPath: string;
   readonly bootstrap: TemporalBootstrap;
   readonly temporalTracing: TemporalWorkerTracing | undefined;
 };
@@ -149,6 +150,7 @@ async function createQueueWorker(
     connection,
     workflowsPath,
     workflowUiInterceptorPath,
+    domainTaggingInterceptorPath,
     bootstrap,
     temporalTracing,
   } = options;
@@ -159,9 +161,14 @@ async function createQueueWorker(
       namespace: bootstrap.namespace,
       workflowsPath,
       interceptors: {
+        // domainTaggingInterceptorPath must stay after every tracing module:
+        // it tags the RunWorkflow span the official OpenTelemetry interceptor
+        // just opened (see workflow-domain-interceptor.ts), so it needs that
+        // span to already be active in context when its execute() runs.
         workflowModules: [
           workflowUiInterceptorPath,
           ...(temporalTracing?.workflowModules ?? []),
+          domainTaggingInterceptorPath,
         ],
       },
       ...(temporalTracing === undefined
@@ -370,6 +377,12 @@ async function main(): Promise<void> {
     bootstrap.namespace,
     bootstrapMetadata,
   );
+  // Boot-time-only, resolved once here rather than re-queried per call:
+  // client.ts's createTemporalClient() (used by Activities that start other
+  // workflows, e.g. deliverAgentTaskReport) reads this so its client carries
+  // the same tracing interceptor decision as this process's own Worker,
+  // instead of silently never tracing the workflows it starts.
+  Bun.env["TEMPORAL_CALL_GRAPH_TRACING"] = callGraphTracing ? "true" : "false";
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
   jsonLog("info", "Connecting to Temporal server", { address, role });
@@ -380,12 +393,17 @@ async function main(): Promise<void> {
   const workflowUiInterceptorPath = new URL(
     import.meta.resolve("@scout-for-lol/temporal/workflow-ui-interceptor"),
   ).pathname;
+  const domainTaggingInterceptorPath = new URL(
+    "lib/workflow-domain-interceptor.ts",
+    import.meta.url,
+  ).pathname;
   const workers: Worker[] = [];
   for (const definition of roleContract.workers) {
     const worker = await createQueueWorker(definition, {
       connection,
       workflowsPath,
       workflowUiInterceptorPath,
+      domainTaggingInterceptorPath,
       bootstrap,
       temporalTracing,
     });

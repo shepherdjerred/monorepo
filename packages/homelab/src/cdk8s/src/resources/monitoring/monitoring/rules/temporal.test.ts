@@ -40,11 +40,14 @@ describe("Temporal workflow outcome rules", () => {
     expect(expressions.get("TemporalWorkflowNondeterministic")).toContain(
       'failure_reason="NonDeterminismError"',
     );
+    // activity_task_fail, not activity_fail — the metric every other
+    // Temporal/Scout failure rule in this file queries, and it carries
+    // `namespace`, not the temporal_worker_*-prefixed metrics' `exported_namespace`.
     expect(expressions.get("TemporalActivityRetriesExhausted")).toContain(
-      "activity_fail",
-    );
-    expect(expressions.get("TemporalActivityRetriesExhausted")).not.toContain(
       "activity_task_fail",
+    );
+    expect(expressions.get("TemporalActivityRetriesExhausted")).toContain(
+      'namespace="default"',
     );
   });
 
