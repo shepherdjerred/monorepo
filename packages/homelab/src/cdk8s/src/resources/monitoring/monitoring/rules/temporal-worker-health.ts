@@ -124,6 +124,13 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       activityPoller: true,
     },
     {
+      queue: "backup",
+      metricsNamespace: "temporal",
+      deploymentPattern: "temporal-temporal-backup-worker",
+      servicePattern: ".*temporal-backup-worker.*metrics.*",
+      activityPoller: true,
+    },
+    {
       queue: "maintenance",
       metricsNamespace: "buildkite",
       deploymentPattern: "temporal-maintenance-worker",

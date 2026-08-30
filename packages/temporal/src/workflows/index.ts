@@ -119,6 +119,12 @@ import {
   type WorkerDeploymentCanaryInput,
 } from "./worker-deployment-canary.ts";
 
+import {
+  runSeaweedFsBackupRetentionAndGcWorkflow as _runSeaweedFsBackupRetentionAndGcWorkflow,
+  runSeaweedFsBackupWorkflow as _runSeaweedFsBackupWorkflow,
+} from "./seaweedfs-backup.ts";
+import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
+
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
 ): Promise<void> {
@@ -390,4 +396,18 @@ export async function runGlitterCorpusChannelOverlap(
 
 export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResult> {
   return _runGlitterCorpusDaily();
+}
+
+export async function runSeaweedFsBackupWorkflow(input: {
+  cadence: BackupCadence;
+}): Promise<{ snapshotId: string; buckets: number }> {
+  return _runSeaweedFsBackupWorkflow(input);
+}
+
+export async function runSeaweedFsBackupRetentionAndGcWorkflow(): Promise<{
+  deletedSnapshots: number;
+  deletedObjects: number;
+  candidateObjects: number;
+}> {
+  return _runSeaweedFsBackupRetentionAndGcWorkflow();
 }

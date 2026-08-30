@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sjer.red/schemas/seaweedfs-backup-policy.schema.json",
+  "title": "SeaweedFS backup policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "retention", "buckets"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sixHourly",
+        "daily",
+        "weekly",
+        "monthly",
+        "candidateMinimumAgeDays",
+        "candidateDelayDays",
+        "objectLockDays"
+      ],
+      "properties": {
+        "sixHourly": { "type": "integer", "minimum": 1 },
+        "daily": { "type": "integer", "minimum": 1 },
+        "weekly": { "type": "integer", "minimum": 1 },
+        "monthly": { "type": "integer", "minimum": 1 },
+        "candidateMinimumAgeDays": { "type": "integer", "minimum": 1 },
+        "candidateDelayDays": { "type": "integer", "minimum": 1 },
+        "objectLockDays": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "buckets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "mode", "cadences", "excludeSuffixes", "reason"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "mode": { "enum": ["protected", "excluded"] },
+          "cadences": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "enum": ["six-hourly", "daily"] }
+          },
+          "excludeSuffixes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

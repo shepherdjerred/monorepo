@@ -14,6 +14,7 @@ describe("Temporal worker role", () => {
   it.each([
     "all",
     "agent",
+    "backup",
     "control",
     "glitter",
     "glitter-context",

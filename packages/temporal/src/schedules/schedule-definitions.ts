@@ -7,6 +7,7 @@ import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
 import { SECURITY_SCHEDULES } from "./security-schedule-definitions.ts";
 import type { ScheduleDefinition } from "./schedule-types.ts";
 import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
+import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -50,6 +51,7 @@ export const WEEKLY_PARLAY_CRON_EXPRESSION = `0 ${WEEKLY_PARLAY_LIFECYCLE.openHo
 export const SCHEDULES: ScheduleDefinition[] = [
   ...EARLY_SCHEDULES,
   ...SCOUT_SCHEDULES,
+  ...BACKUP_SCHEDULES,
   {
     id: "kometa-daily",
     workflowType: "runKometaWorkflow",

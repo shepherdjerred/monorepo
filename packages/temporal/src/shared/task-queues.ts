@@ -15,6 +15,8 @@ export const TASK_QUEUES = {
   SCOUT: "scout",
   /** Serial direct subprocess maintenance against the Buildkite PVCs. */
   MAINTENANCE: "maintenance",
+  /** Serial object-level SeaweedFS backup and retention work. */
+  BACKUP: "backup",
   /** Scout beta activity worker, co-located with its database and Discord bot. */
   SCOUT_BETA: "scout-beta",
   /** Scout production activity worker, co-located with its database and Discord bot. */

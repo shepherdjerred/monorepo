@@ -97,7 +97,10 @@ Persistent volumes are ZFS on OpenEBS, across an NVMe pool and an HDD pool. They
 are scrubbed weekly and covered by an explicit Velero backup inventory.
 
 Object storage is SeaweedFS, which backs S3 buckets for Scout images, Glitter's
-corpus, LLM observability archives, and public PR artifacts.
+corpus, LLM observability archives, and public PR artifacts. Protected objects
+are copied incrementally to immutable recovery points in Cloudflare R2; derived
+and ephemeral buckets remain explicitly excluded. See the
+[SeaweedFS backup reference](/reference/seaweedfs-backups/).
 
 Secrets come from 1Password. Backup coverage is an explicit list, not an
 inference — a volume nobody added is a volume nobody is backing up, and the

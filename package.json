@@ -124,6 +124,7 @@
     "packages/pr-fleet-controller/packages/web",
     "packages/release-tools",
     "packages/resume",
+    "packages/seaweedfs-backup",
     "packages/scout-for-lol",
     "packages/scout-for-lol/packages/app",
     "packages/scout-for-lol/packages/backend",

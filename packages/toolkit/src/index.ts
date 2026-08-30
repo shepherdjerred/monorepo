@@ -39,6 +39,7 @@ Monorepo workflows:
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
   history <SUBCOMMAND>         Search private local agent history
+  backup seaweedfs <ACTION>    Inspect, verify, or restore off-site snapshots
 
 Global options:
   --version                    Print toolkit version
@@ -125,6 +126,11 @@ async function main(): Promise<void> {
     case "history": {
       const { handleHistoryCommand } = await import("./handlers/history.ts");
       await handleHistoryCommand(subcommand, args.slice(2));
+      return;
+    }
+    case "backup": {
+      const { handleBackupCommand } = await import("./handlers/backup.ts");
+      await handleBackupCommand(subcommand, args.slice(2));
       return;
     }
     default:

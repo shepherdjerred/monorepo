@@ -78,6 +78,7 @@ export type TemporalOperationsWorkerProps = {
   talosConfigVolume: Volume;
   freshRssManifestVolume: Volume;
   freshRssCredentialVolume: Volume;
+  backupSecret: ISecret;
 };
 
 export function createTemporalOperationsWorkers(
@@ -216,5 +217,58 @@ export function createTemporalOperationsWorkers(
     },
   });
 
-  return { infraDeployment, repoDeployment, scoutDeployment };
+  const backupDeployment = createTemporalDomainWorker(chart, {
+    name: "temporal-backup-worker",
+    component: "backup-worker",
+    cpuRequest: Cpu.millis(250),
+    cpuLimit: Cpu.millis(1000),
+    memoryRequest: Size.mebibytes(512),
+    memoryLimit: Size.gibibytes(2),
+    envVariables: {
+      TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+      TEMPORAL_WORKER_ROLE: EnvValue.fromValue("backup"),
+      ENVIRONMENT: EnvValue.fromValue("production"),
+      TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+      OTLP_ENDPOINT: EnvValue.fromValue(
+        "http://tempo.tempo.svc.cluster.local:4318",
+      ),
+      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-backup-worker"),
+      SENTRY_DSN: EnvValue.fromSecretValue({
+        secret: props.secret,
+        key: "SENTRY_DSN",
+      }),
+      SEAWEEDFS_BACKUP_SOURCE_ENDPOINT: EnvValue.fromValue(
+        "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      ),
+      SEAWEEDFS_BACKUP_SOURCE_ACCESS_KEY_ID: EnvValue.fromSecretValue({
+        secret: props.backupSecret,
+        key: "SEAWEEDFS_BACKUP_SOURCE_ACCESS_KEY_ID",
+      }),
+      SEAWEEDFS_BACKUP_SOURCE_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
+        secret: props.backupSecret,
+        key: "SEAWEEDFS_BACKUP_SOURCE_SECRET_ACCESS_KEY",
+      }),
+      R2_BACKUP_ENDPOINT: EnvValue.fromSecretValue({
+        secret: props.backupSecret,
+        key: "R2_BACKUP_ENDPOINT",
+      }),
+      R2_BACKUP_ACCESS_KEY_ID: EnvValue.fromSecretValue({
+        secret: props.backupSecret,
+        key: "R2_BACKUP_ACCESS_KEY_ID",
+      }),
+      R2_BACKUP_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
+        secret: props.backupSecret,
+        key: "R2_BACKUP_SECRET_ACCESS_KEY",
+      }),
+      R2_BACKUP_BUCKET: EnvValue.fromValue("seaweedfs-backups"),
+    },
+  });
+
+  return {
+    infraDeployment,
+    repoDeployment,
+    scoutDeployment,
+    backupDeployment,
+  };
 }

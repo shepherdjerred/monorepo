@@ -1,0 +1,169 @@
+{
+  "$schema": "./policy.schema.json",
+  "version": 1,
+  "retention": {
+    "sixHourly": 28,
+    "daily": 30,
+    "weekly": 8,
+    "monthly": 12,
+    "candidateMinimumAgeDays": 35,
+    "candidateDelayDays": 7,
+    "objectLockDays": 30
+  },
+  "buckets": [
+    {
+      "name": "better-skill-capped",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "clauderon",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Retired static site"
+    },
+    {
+      "name": "resume",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "scout-frontend",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "scout-frontend-beta",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "sjer-red",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "ts-mc",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "webring",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "cook",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "stocks-sjer-red",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "wiki-sjer-red",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "glitter-boys-ppl",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable public asset"
+    },
+    {
+      "name": "glitter-discord-corpus",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Loss-intolerant Discord history"
+    },
+    {
+      "name": "relay-docs",
+      "mode": "protected",
+      "cadences": ["six-hourly", "daily"],
+      "excludeSuffixes": [],
+      "reason": "Relay CRDT documents and attachments"
+    },
+    {
+      "name": "public-sjer-red",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Public review artifacts with source-controlled producers"
+    },
+    {
+      "name": "scout-beta",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [".png", ".svg"],
+      "reason": "Scout source data; rendered images are derived"
+    },
+    {
+      "name": "scout-prod",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [".png", ".svg"],
+      "reason": "Scout source data; rendered images are derived"
+    },
+    {
+      "name": "llm-archive",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "LLM request and response archive"
+    },
+    {
+      "name": "streambot-voice-captures",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Ephemeral voice diagnostics with independent expiry"
+    },
+    {
+      "name": "scout-site-releases",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable release artifacts"
+    },
+    {
+      "name": "homelab-tofu-state",
+      "mode": "protected",
+      "cadences": ["six-hourly", "daily"],
+      "excludeSuffixes": [],
+      "reason": "OpenTofu state"
+    },
+    {
+      "name": "temporal-worker",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Temporal worker durable object state"
+    }
+  ]
+}

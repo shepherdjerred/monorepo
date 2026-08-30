@@ -86,6 +86,19 @@ export function createTemporalWorkerDeployment(
     "temporal-freshrss-sync-secret",
     freshRssCredentialItem.name,
   );
+  const backupCredentialItem = new OnePasswordItem(
+    chart,
+    "temporal-seaweedfs-backup-1p",
+    {
+      metadata: { name: "temporal-seaweedfs-backup" },
+      spec: { itemPath: vaultItemPath("seaweedfs-backup") },
+    },
+  );
+  const backupSecret = Secret.fromSecretName(
+    chart,
+    "temporal-seaweedfs-backup-secret",
+    backupCredentialItem.name,
+  );
   const freshRssManifest = new ConfigMap(chart, "temporal-freshrss-manifest", {
     metadata: { name: "temporal-freshrss-manifest" },
     data: { "desired.json": FRESHRSS_DESIRED_JSON },
@@ -244,7 +257,7 @@ export function createTemporalWorkerDeployment(
       defaultMode: 0o400,
     },
   );
-  const { infraDeployment, repoDeployment, scoutDeployment } =
+  const { infraDeployment, repoDeployment, scoutDeployment, backupDeployment } =
     createTemporalOperationsWorkers(chart, {
       serverServiceName: props.serverServiceName,
       secret,
@@ -254,6 +267,7 @@ export function createTemporalWorkerDeployment(
       talosConfigVolume,
       freshRssManifestVolume,
       freshRssCredentialVolume,
+      backupSecret,
     });
 
   return {
@@ -266,6 +280,7 @@ export function createTemporalWorkerDeployment(
     infraDeployment,
     repoDeployment,
     scoutDeployment,
+    backupDeployment,
     glitterCorpusDeployment: corpusDeployment,
     glitterContextDeployment: contextDeployment,
   };
