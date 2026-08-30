@@ -49,7 +49,7 @@ function commandResult(
   return { exitCode, stdout, stderr };
 }
 
-test("publishes a central Workflow candidate without changing stable", () => {
+test("seeds a legacy central Workflow stable pin atomically", () => {
   const digest = `sha256:${"a".repeat(64)}`;
   const workflowPin = `2.0.0-12300@sha256:${"c".repeat(64)}`;
   expect(
@@ -76,6 +76,10 @@ test("publishes a central Workflow candidate without changing stable", () => {
       digest,
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
+      version: "2.0.0-42",
+      digest,
+    },
+    "shepherdjerred/temporal-worker/workflows/stable": {
       version: "2.0.0-42",
       digest,
     },
@@ -329,7 +333,7 @@ test("does not publish nonexistent Scout Workflow catalog pins", () => {
   ).toThrow("No internal image pin exists");
 });
 
-test("publishes the Scout beta Workflow candidate without changing stable", () => {
+test("seeds a legacy Scout beta Workflow stable pin atomically", () => {
   const digest = `sha256:${"b".repeat(64)}`;
   const workflowPin = `2.0.0-42@sha256:${"c".repeat(64)}`;
   expect(
@@ -353,6 +357,10 @@ test("publishes the Scout beta Workflow candidate without changing stable", () =
       digest,
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
+      version: "2.0.0-43",
+      digest,
+    },
+    "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       version: "2.0.0-43",
       digest,
     },
@@ -383,6 +391,10 @@ test("does not advance the Scout prod candidate before beta acceptance", () => {
       digest,
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
+      version: "2.0.0-43",
+      digest,
+    },
+    "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       version: "2.0.0-43",
       digest,
     },
