@@ -20,19 +20,10 @@ export function createTemporalNamespaceInitJob(
     metadata: {
       name: "temporal-namespace-init",
       annotations: {
-        // This job registers the Environment/Domain/Trigger/ReleaseCommit
-        // typed Search Attributes registerSchedules() needs on every gateway
-        // boot. A "Sync" hook (not PostSync) runs during the normal sync
-        // phase, ordered by sync-wave alongside regular resources -- unlike
-        // PreSync/PostSync, which run strictly before/after every wave. That
-        // lets this job's wave (below) sit ahead of temporal-gateway's
-        // (syncWave: -1 in ingress-workers.ts): PostSync would run only
-        // after every wave-resource, including the gateway, is Healthy --
-        // but the gateway can't become healthy until these attributes exist,
-        // deadlocking the release. The job's own retry loop
-        // (`until temporal operator cluster health`) tolerates starting
-        // before temporal-server (implicit wave 0) is up.
-        "argocd.argoproj.io/hook": "Sync",
+        // Create the application namespaces before namespace-scoped clients
+        // and workers become healthy. The job waits for the server below, so
+        // it is safe to run before the ordinary Temporal resources finish.
+        "argocd.argoproj.io/hook": "PreSync",
         "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation",
         "argocd.argoproj.io/sync-wave": "-2",
       },
