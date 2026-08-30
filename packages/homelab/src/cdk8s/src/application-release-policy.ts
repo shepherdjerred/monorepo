@@ -17,6 +17,7 @@ export const APPLICATION_SYNC_WAVES = {
   provider: "-18",
   certificateIssuer: "-4",
   certificate: "-3",
+  temporal: "-17",
   structural: "0",
   kueue: "1",
   dependentConfiguration: "2",
@@ -67,6 +68,9 @@ function applicationSyncWave(name: string): string {
   }
   if (PROVIDER_APPLICATIONS.has(name)) {
     return APPLICATION_SYNC_WAVES.provider;
+  }
+  if (name === "temporal") {
+    return APPLICATION_SYNC_WAVES.temporal;
   }
   if (name === "kueue") {
     return APPLICATION_SYNC_WAVES.kueue;
