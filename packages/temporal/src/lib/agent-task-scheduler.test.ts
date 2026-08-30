@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ScheduleNotFoundError,
   WorkflowExecutionAlreadyStartedError,
@@ -191,6 +191,20 @@ describe("startOrScheduleAgentTask — one-off runAt", () => {
 });
 
 describe("startOrScheduleAgentTask — cron", () => {
+  // The cron/Schedule path builds execution metadata directly from Bun.env
+  // (Schedule creation is a distinct client surface from WorkflowClient.start,
+  // so ExecutionMetadataClientInterceptor never sees it — see
+  // agent-task-scheduler.ts), unlike the one-off client.workflow.start path
+  // exercised by the other describe blocks in this file.
+  beforeEach(() => {
+    Bun.env["ENVIRONMENT"] = "dev";
+    Bun.env["GIT_SHA"] = "0123456789abcdef0123456789abcdef01234567";
+  });
+  afterEach(() => {
+    delete Bun.env["ENVIRONMENT"];
+    delete Bun.env["GIT_SHA"];
+  });
+
   it("creates a Schedule with a per-run timeout and runAt stripped", async () => {
     const captured: Captured = {};
     const client = fakeClient(captured);

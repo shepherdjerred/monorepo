@@ -45,15 +45,30 @@ function temporalServerEgress() {
   };
 }
 
+function fliptEgress() {
+  return {
+    to: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+        },
+        podSelector: { matchLabels: { app: "flipt" } },
+      },
+    ],
+    ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+  };
+}
+
 // Every domain worker built on createTemporalDomainWorker() with
 // featureFlagsEnabled left at its default (i.e. every one of these
 // components) boots with temporalFeatureFlagEnvironment() so it can read the
 // temporal-call-graph-tracing flag. Flipt has no auth of its own —
 // reachability IS the authorization model — so this single, explicitly
 // named policy is what actually scopes which workers may query it. The
-// credentialless central-workflows track is deliberately excluded: it opts
-// out of temporalFeatureFlagEnvironment() entirely (workflow-worker.ts) and
-// its own NetworkPolicy asserts no Flipt/443 egress at all.
+// credentialless central-workflows track resolves the same flag itself (it
+// is the only role that actually hosts workflow code) but keeps its own,
+// narrower NetworkPolicy — see temporal-central-workflows-netpol below —
+// rather than joining this component-label selector.
 const FLIPT_CONSUMER_COMPONENTS = [
   "gateway",
   "home-worker",
@@ -80,19 +95,7 @@ function createTemporalWorkersFliptEgressPolicy(chart: Chart): void {
         ],
       },
       policyTypes: ["Egress"],
-      egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
-              },
-              podSelector: { matchLabels: { app: "flipt" } },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
-        },
-      ],
+      egress: [fliptEgress()],
     },
   });
 }
@@ -109,6 +112,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       egress: [
         dnsEgress(),
         temporalServerEgress(),
+        fliptEgress(),
         {
           to: [
             {

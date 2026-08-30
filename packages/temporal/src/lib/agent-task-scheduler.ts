@@ -18,6 +18,10 @@ import {
   agentTaskScheduleId,
   agentTaskWorkflowId,
 } from "#shared/agent-task-identifiers.ts";
+import {
+  buildExecutionStartMetadata,
+  parseTemporalBootstrapMetadata,
+} from "#shared/execution-metadata.ts";
 
 const DEFAULT_AGENT_TIMEOUT_MINUTES = 90;
 const WORKFLOW_OVERHEAD_MINUTES = 60;
@@ -91,6 +95,23 @@ export async function startOrScheduleAgentTask(
     const scheduleId = await agentTaskScheduleId(input);
     const args = [workflowArgsForSchedule(input, scheduleId)];
     const scheduleClient = client.schedule;
+    // Schedule creation/update is a distinct client surface from
+    // WorkflowClient.start, so ExecutionMetadataClientInterceptor (installed
+    // on the shared client for ordinary workflow starts) never sees these
+    // calls. Build the same Environment/Domain/Trigger/ReleaseCommit search
+    // attributes and UI summary/details explicitly, matching every
+    // declarative Schedule in schedule-definitions.ts.
+    const bootstrapMetadata = parseTemporalBootstrapMetadata(
+      Bun.env["ENVIRONMENT"],
+      Bun.env["GIT_SHA"],
+    );
+    const executionMetadata = buildExecutionStartMetadata({
+      bootstrap: bootstrapMetadata,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      trigger: "schedule",
+      summary: `Run agent task: ${input.title}`,
+      description: "Recurring agent task scheduled via the agent-task API.",
+    });
 
     try {
       const handle = scheduleClient.getHandle(scheduleId);
@@ -106,6 +127,7 @@ export async function startOrScheduleAgentTask(
           args,
           taskQueue: TASK_QUEUES.WORKFLOWS,
           workflowRunTimeout: agentTaskWorkflowRunTimeout(input),
+          ...executionMetadata,
         },
         policies: {
           overlap: ScheduleOverlapPolicy.SKIP,
@@ -127,6 +149,7 @@ export async function startOrScheduleAgentTask(
           args,
           taskQueue: TASK_QUEUES.WORKFLOWS,
           workflowRunTimeout: agentTaskWorkflowRunTimeout(input),
+          ...executionMetadata,
         },
         policies: {
           overlap: ScheduleOverlapPolicy.SKIP,

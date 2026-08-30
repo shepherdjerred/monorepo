@@ -66,6 +66,11 @@ describe("Temporal feature-flag boundary", () => {
       "glitter-corpus-worker",
       "glitter-context-worker",
       "agent-worker",
+      // The credentialless central-workflows track resolves the flag itself
+      // (see temporal-workflow-boundary.test.ts) — it is the only role that
+      // actually hosts workflow code, so it cannot skip this check.
+      "central-workflows-stable",
+      "central-workflows-candidate",
     ]);
     const deployments = synthesizeTemporal().flatMap((resource) => {
       const parsed = DeploymentSchema.safeParse(resource);

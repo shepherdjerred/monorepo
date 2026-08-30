@@ -22,10 +22,13 @@ function createWorkflowWorker(
     memoryRequest: Size.mebibytes(512),
     memoryLimit: Size.gibibytes(2),
     automountServiceAccountToken: false,
-    // Credentialless by design (see the class doc on
-    // TemporalDomainWorkerProps.featureFlagsEnabled) — this role never talks
-    // to Flipt.
-    featureFlagsEnabled: false,
+    // Unlike application secrets, Flipt reachability is not a credential —
+    // there is no auth on Flipt, reachability IS the authorization model
+    // (see worker-network-policies.ts). This role's worker.ts main() calls
+    // initializeCallGraphTracing() unconditionally, and it is the only role
+    // that actually hosts workflow code, so it must resolve
+    // temporal-call-graph-tracing itself or the PR's namesake feature never
+    // turns on for a single real workflow execution.
     envVariables: {
       TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("default"),

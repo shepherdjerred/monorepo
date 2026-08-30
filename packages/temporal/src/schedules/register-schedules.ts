@@ -201,15 +201,29 @@ function buildScheduleConfiguration(
 
 export function routeDynamicAgentTaskSchedule(
   schedule: ScheduleUpdateOptions,
+  bootstrap: TemporalBootstrapMetadata,
 ): ScheduleUpdateOptions {
   if (schedule.action.workflowType !== "agentTaskWorkflow") {
     throw new Error("Dynamic agent-task schedule must start agentTaskWorkflow");
   }
+  // Reconciliation is the only place an existing (pre-metadata) dynamic
+  // agent-task schedule is rewritten, so stamp the same
+  // Environment/Domain/Trigger/ReleaseCommit attributes and UI summary/details
+  // that agent-task-scheduler.ts now gives newly created ones — otherwise a
+  // schedule created before this rollout keeps missing metadata forever.
+  const executionMetadata = buildExecutionStartMetadata({
+    bootstrap,
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    trigger: "schedule",
+    summary: "Run agentTaskWorkflow",
+    description: "Recurring agent task scheduled via the agent-task API.",
+  });
   return {
     ...schedule,
     action: {
       ...schedule.action,
       taskQueue: TASK_QUEUES.WORKFLOWS,
+      ...executionMetadata,
     },
   };
 }
@@ -217,6 +231,7 @@ export function routeDynamicAgentTaskSchedule(
 async function reconcileDynamicAgentTaskSchedules(
   scheduleClient: Client["schedule"],
   declaredIds: ReadonlySet<string>,
+  bootstrap: TemporalBootstrapMetadata,
 ): Promise<void> {
   for await (const summary of scheduleClient.list()) {
     if (
@@ -230,7 +245,7 @@ async function reconcileDynamicAgentTaskSchedules(
     }
     await scheduleClient
       .getHandle(summary.scheduleId)
-      .update(routeDynamicAgentTaskSchedule);
+      .update((prev) => routeDynamicAgentTaskSchedule(prev, bootstrap));
     console.warn(`Updated dynamic agent-task schedule: ${summary.scheduleId}`);
   }
 }
@@ -263,7 +278,11 @@ export async function registerSchedules(
   // declaredIds is passed so a schedule that was promoted out of the dynamic
   // set and into SCHEDULES is skipped despite its immutable creation-time memo
   // marker — see isReconcilableDynamicAgentTaskSchedule.
-  await reconcileDynamicAgentTaskSchedules(scheduleClient, declaredIds);
+  await reconcileDynamicAgentTaskSchedules(
+    scheduleClient,
+    declaredIds,
+    options.bootstrap,
+  );
   await terminateRetiredWorkflowExecutions(client);
 
   for (const schedule of SCHEDULES) {

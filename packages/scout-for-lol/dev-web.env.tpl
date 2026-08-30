@@ -12,7 +12,11 @@
 
 # ── Build / process identity ──────────────────────────────────────────
 VERSION=local-dev
-GIT_SHA=local-dev
+# Temporal's ReleaseCommit search attribute (execution-metadata.ts) requires
+# an exact 40-character lowercase hex Git SHA, so a non-hex placeholder like
+# "local-dev" makes every Scout Temporal workflow start throw before any
+# report-editor, weekly-parlay, or schedule flow can run locally.
+GIT_SHA=0000000000000000000000000000000000000000
 CONTRACT_HASH=local-dev
 ENVIRONMENT=dev
 PORT=3000
