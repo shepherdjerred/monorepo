@@ -822,6 +822,11 @@ model BucksAccount {
   // ledger-audited but excluded from user-facing balances and leaderboards.
   isHouse           Boolean   @default(false)
   balance           Int       @default(0)
+  // Retired with the peek feature; no code reads or writes this anymore.
+  // Kept for one compatibility release so a rollback to the pre-removal
+  // image (which still writes it) doesn't hit a missing column. Drop in a
+  // follow-up migration once this release is no longer a rollback target.
+  peekPassExpiresAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -1019,6 +1024,13 @@ model BucksMatchPool {
   // Copied from ActiveGame so the window does not depend on a row the TTL
   // sweep deletes.
   detectedAt DateTime
+
+  // Retired with the peek feature; no code reads or writes this anymore.
+  // Kept nullable for one compatibility release so a rollback to the
+  // pre-removal image (which still inserts it) doesn't hit a missing
+  // column. Drop in a follow-up migration once this release is no longer a
+  // rollback target.
+  peekAvailableAt DateTime?
 
   // STORED rather than computed, so changing BETTING_WINDOW_MS cannot
   // retroactively move a window a user was already shown.

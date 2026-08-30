@@ -38,7 +38,7 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     model: "BucksAccount",
     idColumns: ["id"],
     resetIdSequence: true,
-    digestIgnoreColumns: new Set(["analyticsUserId"]),
+    digestIgnoreColumns: new Set(["analyticsUserId", "peekPassExpiresAt"]),
     transform: (row): Prisma.BucksAccountCreateManyInput => ({
       id: toInt(row, "id"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
@@ -47,7 +47,9 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       isHouse: row["isHouse"] === undefined ? false : toBool(row, "isHouse"),
       balance: toInt(row, "balance"),
       // peekPassExpiresAt existed in some SQLite snapshots; the feature and
-      // its column are retired, so the value is deliberately dropped.
+      // its column are retired, so the value is deliberately dropped. The
+      // Postgres column itself is kept nullable for one compatibility
+      // release (see prisma/schema.prisma).
       createdAt: toDate(row, "createdAt"),
       updatedAt: toDate(row, "updatedAt"),
     }),
@@ -62,13 +64,16 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     model: "BucksMatchPool",
     idColumns: ["id"],
     resetIdSequence: true,
+    digestIgnoreColumns: new Set(["peekAvailableAt"]),
     transform: (row): Prisma.BucksMatchPoolCreateManyInput => ({
       id: toInt(row, "id"),
       matchId: toStr(row, "matchId"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
       detectedAt: toDate(row, "detectedAt"),
       // peekAvailableAt existed in some SQLite snapshots; the feature and its
-      // column are retired, so the value is deliberately dropped.
+      // column are retired, so the value is deliberately dropped. The
+      // Postgres column itself is kept nullable for one compatibility
+      // release (see prisma/schema.prisma).
       closesAt: toDate(row, "closesAt"),
       queueType: toStrOrNull(row, "queueType"),
       roster: toStr(row, "roster"),
