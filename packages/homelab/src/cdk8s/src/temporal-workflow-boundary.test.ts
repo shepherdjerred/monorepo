@@ -4,13 +4,14 @@ import {
   findTemporalResource,
   synthesizeTemporalResources,
 } from "./temporal-test-resources.ts";
+import versions from "./versions.ts";
 
 function resources() {
   return synthesizeTemporalResources(".test-synth-temporal-workflow-boundary");
 }
 
 describe("central Temporal Workflow boundary", () => {
-  test.each(["stable", "candidate"])(
+  test.each(["stable", "candidate"] as const)(
     "runs a credentialless %s Workflow-only role",
     (track) => {
       const deployment = findTemporalResource(
@@ -82,8 +83,13 @@ describe("central Temporal Workflow boundary", () => {
         name: "TEMPORAL_WORKER_DEPLOYMENT_NAME",
         value: "monorepo-central-workflows",
       });
-      expect(container.image).toContain(
-        `shepherdjerred/temporal-worker:2.0.0-12197@sha256:eba46d136c350a2c98324d4d385fb13076bc142e86bbea27c66bd7e676882313`,
+      // Read the expected pin from the catalog rather than freezing a literal:
+      // each track has its own entry (candidate follows CI, stable is promoted
+      // separately), and the deployment resolves the very same key, so a
+      // hardcoded version made every image bump fail this test without
+      // indicating anything was actually wrong.
+      expect(container.image).toBe(
+        `ghcr.io/shepherdjerred/temporal-worker:${versions[`shepherdjerred/temporal-worker/workflows/${track}`]}`,
       );
       expect(container.volumeMounts).toEqual([
         { mountPath: "/tmp", name: `central-workflows-${track}-tmp` },
