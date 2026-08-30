@@ -2027,6 +2027,11 @@ steps:
     concurrency_group: monorepo/image-push
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts images; then
+        pending_version_bump=$$(git ls-remote origin refs/heads/chore/version-bump-pending)
+        if [ -n "$$pending_version_bump" ]; then
+          echo "chore/version-bump-pending is still active; retry after its catalog update merges"
+          exit 1
+        fi
         jq -n '{}' | buildkite-agent meta-data set image-digests
         jq -cn --arg build "$BUILDKITE_BUILD_NUMBER" \
           '{schema:"pin-candidates/v1",buildNumber:($$build|tonumber),candidates:{}}' |
