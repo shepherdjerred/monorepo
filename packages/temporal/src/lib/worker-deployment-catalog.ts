@@ -31,11 +31,12 @@ const PinStateSchema = z
   .strict();
 
 type PinStateEntry = z.infer<typeof PinStateSchema>["pins"][string];
+type PinState = z.infer<typeof PinStateSchema>;
+type CatalogEntry = z.infer<typeof CatalogSchema>["entries"][number];
 
 export type StablePinPromotion = {
   candidateImage: string;
   contents: string;
-  stateContents: string;
   alreadyPromoted: boolean;
 };
 
@@ -74,15 +75,21 @@ function pinStateEntriesEqual(
   );
 }
 
-export async function prepareStablePinPromotion(
-  catalogPath: string,
-  statePath: string,
-  candidatePinName = "shepherdjerred/temporal-worker/workflows/candidate",
-  stablePinName = "shepherdjerred/temporal-worker/workflows/stable",
-  imageRepository = "ghcr.io/shepherdjerred/temporal-worker",
->>>>>>> c1591cf3d0 (feat(temporal): prepare Scout workflow deployments)
-): Promise<StablePinPromotion> {
-  const catalog = parseCatalog(await Bun.file(catalogPath).text());
+async function readPinState(statePath: string): Promise<PinState> {
+  try {
+    return PinStateSchema.parse(JSON.parse(await Bun.file(statePath).text()));
+  } catch (error: unknown) {
+    throw new Error("Temporal pin candidate state is invalid", {
+      cause: error,
+    });
+  }
+}
+
+function findWorkflowPins(
+  catalog: z.infer<typeof CatalogSchema>,
+  candidatePinName: string,
+  stablePinName: string,
+): { candidate: CatalogEntry; stable: CatalogEntry } {
   const candidate = catalog.entries.find(
     (entry) => entry.name === candidatePinName,
   );
@@ -90,40 +97,30 @@ export async function prepareStablePinPromotion(
   if (candidate === undefined || stable === undefined) {
     throw new Error("Temporal workflow stable/candidate pins are missing");
   }
+  return { candidate, stable };
+}
+
+export async function prepareStablePinPromotion(
+  catalogPath: string,
+  candidatePinName = "shepherdjerred/temporal-worker/workflows/candidate",
+  stablePinName = "shepherdjerred/temporal-worker/workflows/stable",
+  imageRepository = "ghcr.io/shepherdjerred/temporal-worker",
+): Promise<StablePinPromotion> {
+  const catalog = parseCatalog(await Bun.file(catalogPath).text());
+  const { candidate, stable } = findWorkflowPins(
+    catalog,
+    candidatePinName,
+    stablePinName,
+  );
   const candidateValue = TemporalWorkflowImageValueSchema.parse(
     candidate.value,
   );
   const stableValue = TemporalWorkflowImageValueSchema.parse(stable.value);
   const alreadyPromoted = candidateValue === stableValue;
   stable.value = candidate.value;
-  let state: z.infer<typeof PinStateSchema>;
-  try {
-    state = PinStateSchema.parse(JSON.parse(await Bun.file(statePath).text()));
-  } catch (error: unknown) {
-    throw new Error("Temporal pin candidate state is invalid", {
-      cause: error,
-    });
-  }
-  const candidateVersion = candidateValue.slice(
-    0,
-    candidateValue.lastIndexOf("@"),
-  );
-  const buildNumberText = /-(\d+)$/.exec(candidateVersion)?.[1];
-  if (buildNumberText === undefined) {
-    throw new Error("Temporal workflow candidate pin has no build number");
-  }
-  const pins = {
-    ...state.pins,
-    [stableName]: {
-      version: candidateVersion,
-      digest: candidateValue.slice(candidateValue.lastIndexOf("@") + 1),
-      buildNumber: Number.parseInt(buildNumberText, 10),
-    },
-  };
   return {
     candidateImage: `${imageRepository}:${candidateValue}`,
     contents: `${JSON.stringify(catalog, null, 2)}\n`,
-    stateContents: `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`,
     alreadyPromoted,
   };
 }
@@ -134,13 +131,11 @@ export async function prepareCandidatePinReset(
   stablePinName = "shepherdjerred/temporal-worker/workflows/stable",
 ): Promise<CandidatePinReset> {
   const catalog = parseCatalog(await Bun.file(catalogPath).text());
-  const candidate = catalog.entries.find(
-    (entry) => entry.name === candidatePinName,
+  const { candidate, stable } = findWorkflowPins(
+    catalog,
+    candidatePinName,
+    stablePinName,
   );
-  const stable = catalog.entries.find((entry) => entry.name === stablePinName);
-  if (candidate === undefined || stable === undefined) {
-    throw new Error("Temporal workflow stable/candidate pins are missing");
-  }
   TemporalWorkflowImageValueSchema.parse(candidate.value);
   const stableValue = TemporalWorkflowImageValueSchema.parse(stable.value);
   const changed = candidate.value !== stableValue;
@@ -155,14 +150,7 @@ export async function prepareCandidatePinStateReset(
   statePath: string,
   candidatePinName: string,
 ): Promise<CandidatePinStateReset> {
-  let state: z.infer<typeof PinStateSchema>;
-  try {
-    state = PinStateSchema.parse(JSON.parse(await Bun.file(statePath).text()));
-  } catch (error: unknown) {
-    throw new Error("Temporal pin candidate state is invalid", {
-      cause: error,
-    });
-  }
+  const state = await readPinState(statePath);
   if (!(candidatePinName in state.pins)) {
     return { contents: `${JSON.stringify(state, null, 2)}\n`, changed: false };
   }
@@ -182,14 +170,7 @@ export async function prepareStablePinStatePromotion(
   candidatePinName: string,
   stablePinName: string,
 ): Promise<StablePinStatePromotion> {
-  let state: z.infer<typeof PinStateSchema>;
-  try {
-    state = PinStateSchema.parse(JSON.parse(await Bun.file(statePath).text()));
-  } catch (error: unknown) {
-    throw new Error("Temporal pin candidate state is invalid", {
-      cause: error,
-    });
-  }
+  const state = await readPinState(statePath);
   const candidate = state.pins[candidatePinName];
   if (candidate === undefined) {
     return { contents: `${JSON.stringify(state, null, 2)}\n`, changed: false };
