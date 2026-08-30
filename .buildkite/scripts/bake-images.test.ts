@@ -133,14 +133,35 @@ test("blocks admission when live main has a divergent Temporal candidate", async
   );
 });
 
-test("allows image admission while a workflow candidate is soaking", async () => {
-  const catalog = JSON.stringify({ entries: [] });
+test("blocks image admission while a workflow candidate is soaking", async () => {
+  const catalog = JSON.stringify({
+    entries: [
+      {
+        name: "shepherdjerred/temporal-worker/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/temporal-worker/workflows/candidate",
+        value: "2.0.0-42@sha256:candidate",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+        value: "2.0.0-41@sha256:stable",
+      },
+    ],
+  });
   const executor: CommandExecutor = async (command) => {
     if (command[1] === "ls-remote") return commandResult();
     if (command[1] === "fetch") return commandResult();
     return commandResult(0, catalog);
   };
-  await expect(assertNoPendingVersionBump(executor)).resolves.toBe(catalog);
+  await expect(assertNoPendingVersionBump(executor)).rejects.toThrow(
+    TransientError,
+  );
 });
 
 test("allows admission when all live Temporal candidates match stable", async () => {

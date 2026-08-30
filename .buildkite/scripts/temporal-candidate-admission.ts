@@ -103,6 +103,5 @@ export async function assertNoPendingVersionBump(
       `${VERSION_BUMP_BRANCH} is still pending; retry after its catalog update merges`,
     );
   }
-  const catalog = await readLiveVersionCatalog(executor);
-  return catalog.source;
+  return assertTemporalCandidatePinsConverged(executor);
 }
