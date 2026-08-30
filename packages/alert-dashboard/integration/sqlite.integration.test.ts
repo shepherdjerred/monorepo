@@ -137,6 +137,56 @@ describe("SQLite email cancellation", () => {
       }),
     ).resolves.toMatchObject({ matched: 0, canceled: 0 });
   });
+
+  it("reclaims expired claims and rejects the stale sender", async () => {
+    const base = webhook("fingerprint-reclaim", "firing");
+    const incident = AlertmanagerWebhookSchema.parse({
+      ...base,
+      groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
+      groupLabels: { alertname: "TemporalWorkflowFailed" },
+      commonLabels: {
+        alertname: "TemporalWorkflowFailed",
+        severity: "warning",
+      },
+      alerts: base.alerts.map((alert) => ({
+        ...alert,
+        labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
+      })),
+    });
+    await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
+    const first = await repository.claimPendingEmails(
+      nanoseconds("2026-08-08T18:01:00Z"),
+      10,
+      nanoseconds("2026-08-08T18:01:00Z"),
+    );
+    const firstClaim = first[0];
+    if (firstClaim === undefined) throw new Error("expected initial claim");
+    await prisma.emailOutbox.update({
+      where: { id: firstClaim.id },
+      data: { sendingAtNs: nanoseconds("2026-08-08T17:54:00Z") },
+    });
+
+    const reclaimed = await repository.claimPendingEmails(
+      nanoseconds("2026-08-08T18:06:00Z"),
+      10,
+      nanoseconds("2026-08-08T18:06:00Z"),
+    );
+    const reclaimedClaim = reclaimed[0];
+    if (reclaimedClaim === undefined) throw new Error("expected reclaim");
+    expect(reclaimedClaim.sendClaimId).not.toBe(firstClaim.sendClaimId);
+    await expect(
+      repository.markEmailSent({
+        id: firstClaim.id,
+        sendClaimId: firstClaim.sendClaimId,
+        sentAtNs: nanoseconds("2026-08-08T18:00:01Z"),
+      }),
+    ).rejects.toThrow("Email send claim changed before success");
+    await repository.markEmailSent({
+      id: reclaimedClaim.id,
+      sendClaimId: reclaimedClaim.sendClaimId,
+      sentAtNs: nanoseconds("2026-08-08T18:00:02Z"),
+    });
+  });
 });
 
 describe("SQLite alert ledger", () => {
@@ -501,8 +551,8 @@ describe("SQLite queries and outbox", () => {
       nanoseconds("2026-08-08T20:00:01Z"),
     );
     expect(claimed).toHaveLength(1);
-    const pendingId = claimed[0]?.id;
-    if (pendingId === undefined) throw new Error("expected pending email");
+    const claimedEmail = claimed[0];
+    if (claimedEmail === undefined) throw new Error("expected pending email");
     const pendingStatus = await repository.systemStatus(
       true,
       nanoseconds("2026-08-08T20:00:00Z"),
@@ -510,10 +560,11 @@ describe("SQLite queries and outbox", () => {
     expect(pendingStatus.oldestPendingEmailAt).toBe(
       InstantTextSchema.parse("2026-08-08T18:00:01Z"),
     );
-    await repository.markEmailSent(
-      pendingId,
-      nanoseconds("2026-08-08T20:01:00Z"),
-    );
+    await repository.markEmailSent({
+      id: claimedEmail.id,
+      sendClaimId: claimedEmail.sendClaimId,
+      sentAtNs: nanoseconds("2026-08-08T20:01:00Z"),
+    });
     expect(
       await repository.pendingEmails(nanoseconds("2026-08-08T20:02:00Z"), 10),
     ).toHaveLength(1);

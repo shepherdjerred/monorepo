@@ -3,6 +3,9 @@ import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { Prisma, PrismaClient } from "#generated/prisma/client/index.js";
 import type {
   AlertLedgerRepository,
+  ClaimedPendingEmail,
+  EmailSendFailureInput,
+  EmailSendSuccessInput,
   IngestWebhookInput,
   IngestWebhookResult,
   PendingEmail,
@@ -25,7 +28,11 @@ import { AsyncMutex } from "#infrastructure/async-mutex";
 import { replaceOccurrenceLabels } from "#infrastructure/prisma-labels";
 import { findObservedOccurrence } from "#infrastructure/prisma-occurrence";
 import { ingestWebhookAlert } from "#infrastructure/prisma-webhook-ingest";
-import { claimPendingEmailRows } from "#infrastructure/prisma-email-claim";
+import {
+  claimPendingEmailRows,
+  markEmailFailedRow,
+  markEmailSentRow,
+} from "#infrastructure/prisma-email-claim";
 import {
   cancelPendingEmails,
   type CancelPendingEmailsInput,
@@ -44,7 +51,6 @@ import {
   type Summary,
   type SystemStatus,
 } from "#shared/schema";
-import { epochNanosecondsToInstantText } from "#shared/time";
 
 const RECONCILIATION_TRANSACTION_MAX_WAIT_MS = 15_000;
 const RECONCILIATION_TRANSACTION_TIMEOUT_MS = 60_000;
@@ -416,7 +422,7 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     nowNs: bigint,
     limit: number,
     sendingAtNs: bigint,
-  ): Promise<readonly PendingEmail[]> {
+  ): Promise<readonly ClaimedPendingEmail[]> {
     return this.#writeMutex.runExclusive(() =>
       this.#prisma.$transaction((transaction) =>
         claimPendingEmailRows(transaction, nowNs, limit, sendingAtNs),
@@ -434,43 +440,20 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     );
   }
 
-  async markEmailSent(id: string, sentAtNs: bigint): Promise<void> {
-    await this.#writeMutex.runExclusive(async () => {
-      const result = await this.#prisma.emailOutbox.updateMany({
-        where: { id, sentAtNs: null, sendingAtNs: { not: null } },
-        data: {
-          sentAtNs,
-          sendingAtNs: null,
-          attemptCount: { increment: 1 },
-          lastError: null,
-        },
-      });
-      if (result.count !== 1) {
-        throw new Error(`Email send claim changed before success: ${id}`);
-      }
-    });
+  async markEmailSent(input: EmailSendSuccessInput): Promise<void> {
+    await this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        markEmailSentRow(transaction, input),
+      ),
+    );
   }
 
-  async markEmailFailed(
-    id: string,
-    failedAtNs: bigint,
-    nextAttemptAtNs: bigint,
-    error: string,
-  ): Promise<void> {
-    await this.#writeMutex.runExclusive(async () => {
-      const result = await this.#prisma.emailOutbox.updateMany({
-        where: { id, sentAtNs: null, sendingAtNs: { not: null } },
-        data: {
-          nextAttemptAtNs,
-          sendingAtNs: null,
-          attemptCount: { increment: 1 },
-          lastError: `${epochNanosecondsToInstantText(failedAtNs)} ${error}`,
-        },
-      });
-      if (result.count !== 1) {
-        throw new Error(`Email send claim changed before failure: ${id}`);
-      }
-    });
+  async markEmailFailed(input: EmailSendFailureInput): Promise<void> {
+    await this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        markEmailFailedRow(transaction, input),
+      ),
+    );
   }
 
   async purgeExpiredRawPayloads(nowNs: bigint): Promise<number> {

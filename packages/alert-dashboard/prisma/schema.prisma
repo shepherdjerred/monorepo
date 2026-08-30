@@ -111,6 +111,7 @@ model EmailOutbox {
   nextAttemptAtNs    BigInt
   sentAtNs           BigInt?
   sendingAtNs        BigInt?
+  sendClaimId        String?
   canceledAtNs       BigInt?
   canceledBy         String?
   cancellationReason String?

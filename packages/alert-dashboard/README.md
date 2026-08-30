@@ -71,7 +71,11 @@ occurrence is `TemporalWorkflowFailed`. Confirmed cancellations atomically
 record their time, operator, and reason; they do not delete ledger evidence.
 The email worker atomically claims an outbox row before calling Postal, and
 cancellation only matches unclaimed rows, so an in-flight send cannot race
-the cancellation.
+the cancellation. Claims expire after five minutes and are reclaimable after a
+process restart. Delivery is therefore at-least-once: reclaiming a claim can
+duplicate a Postal message if the original worker was still alive, but the
+claim token prevents that stale worker from recording the reclaimed row's
+result.
 
 ```bash
 bun run email:cancel-incident -- \
