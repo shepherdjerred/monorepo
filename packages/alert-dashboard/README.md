@@ -70,12 +70,12 @@ uncanceled outbox messages created in the explicit window where every linked
 occurrence is `TemporalWorkflowFailed`. Confirmed cancellations atomically
 record their time, operator, and reason; they do not delete ledger evidence.
 The email worker atomically claims an outbox row before calling Postal, and
-cancellation only matches unclaimed rows, so an in-flight send cannot race
-the cancellation. Claims expire after five minutes and are reclaimable after a
-process restart. Delivery is therefore at-least-once: reclaiming a claim can
-duplicate a Postal message if the original worker was still alive, but the
-claim token prevents that stale worker from recording the reclaimed row's
-result.
+cancellation matches active unclaimed rows plus claims expired for five
+minutes, so an in-flight send cannot race cancellation while an abandoned
+claim can still be cleaned up. Claims are reclaimable after a process restart.
+Delivery is therefore at-least-once: reclaiming a claim can duplicate a Postal
+message if the original worker was still alive, but the claim token prevents
+that stale worker from recording the reclaimed row's result.
 
 ```bash
 bun run email:cancel-incident -- \

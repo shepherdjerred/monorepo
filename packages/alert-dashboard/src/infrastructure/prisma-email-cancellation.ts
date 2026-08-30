@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { AlertOccurrenceIdSchema } from "#shared/schema";
+import { EMAIL_SEND_CLAIM_LEASE_NS } from "#infrastructure/prisma-email-claim";
 
 const OccurrenceIdsSchema = z.array(AlertOccurrenceIdSchema).min(1);
 
@@ -25,12 +26,16 @@ export async function cancelPendingEmails(
   transaction: Prisma.TransactionClient,
   input: CancelPendingEmailsInput,
 ): Promise<CancelPendingEmailsResult> {
+  const expiredClaimBeforeNs = input.canceledAtNs - EMAIL_SEND_CLAIM_LEASE_NS;
   const pending = await transaction.emailOutbox.findMany({
     where: {
       sentAtNs: null,
-      sendingAtNs: null,
       canceledAtNs: null,
       createdAtNs: { gte: input.fromNs, lte: input.toNs },
+      OR: [
+        { sendingAtNs: null },
+        { sendingAtNs: { lte: expiredClaimBeforeNs } },
+      ],
     },
     select: { id: true, occurrenceIds: true },
     orderBy: { createdAtNs: "asc" },
@@ -67,9 +72,12 @@ export async function cancelPendingEmails(
       where: {
         id,
         sentAtNs: null,
-        sendingAtNs: null,
         canceledAtNs: null,
         createdAtNs: { gte: input.fromNs, lte: input.toNs },
+        OR: [
+          { sendingAtNs: null },
+          { sendingAtNs: { lte: expiredClaimBeforeNs } },
+        ],
       },
       data: {
         canceledAtNs: input.canceledAtNs,

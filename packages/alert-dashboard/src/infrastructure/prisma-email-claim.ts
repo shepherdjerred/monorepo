@@ -6,7 +6,7 @@ import type {
 } from "#application/ports";
 import { epochNanosecondsToInstantText } from "#shared/time";
 
-const EMAIL_SEND_CLAIM_LEASE_NS = 5n * 60n * 1_000_000_000n;
+export const EMAIL_SEND_CLAIM_LEASE_NS = 5n * 60n * 1_000_000_000n;
 
 export async function claimPendingEmailRows(
   transaction: Prisma.TransactionClient,
