@@ -32,6 +32,7 @@ import { placeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet.ts";
 import { getLatestWeeklyLeaderboardSnapshot } from "#src/betting/weekly-leaderboard-snapshot.ts";
 import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-refresh.ts";
 import {
+  assertBucksGuildMembership,
   assertBucksScope,
   resolveBucksScope,
 } from "#src/consumer/bucks-access.ts";
@@ -288,7 +289,11 @@ export const bucksRouter = router({
   cancelOutcomeBet: webMutationProcedure
     .input(MatchInput)
     .mutation(async ({ ctx, input }) => {
-      await assertBucksScope(ctx.user, input.guildId);
+      // Cancellation must survive the guild's flag being revoked mid-match —
+      // see assertBucksGuildMembership. Membership alone still stops an
+      // arbitrary guildId; cancelBet itself further requires the caller own
+      // an open position in that exact pool.
+      await assertBucksGuildMembership(ctx.user, input.guildId);
       const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
       const result = await cancelBet({
         matchId: input.matchId,

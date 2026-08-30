@@ -81,3 +81,28 @@ export async function assertBucksScope(
   }
   return guild;
 }
+
+/**
+ * Authorize a cancellation without requiring the feature to still be enabled.
+ *
+ * `betting_enabled` gates taking new stakes only; `cancelBet` itself is
+ * deliberately ungated so a guild removed from the allowlist mid-match can
+ * still return stakes already taken — the same reason Discord's persistent
+ * cancel buttons keep working after `/bb` is deregistered from a guild (button
+ * routing is not gated by command registration). `assertBucksScope`'s flag
+ * check would otherwise block exactly that on the web. This still requires
+ * real Discord membership, so a caller cannot target an arbitrary guildId.
+ */
+export async function assertBucksGuildMembership(
+  user: User,
+  guildId: DiscordGuildId,
+): Promise<void> {
+  const memberGuilds = await fetchUserGuildsForRequest(user);
+  const isMember = memberGuilds.some((guild) => guild.id === guildId);
+  if (!isMember) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You are not a member of that server.",
+    });
+  }
+}

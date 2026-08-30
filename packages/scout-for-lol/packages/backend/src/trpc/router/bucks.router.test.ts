@@ -679,6 +679,40 @@ describe("bucks mutations", () => {
     expect(again).toEqual({ kind: "no_bet" });
   });
 
+  test("cancelOutcomeBet still returns a stake after betting_enabled is revoked", async () => {
+    // cancelBet is deliberately ungated by the flag: a guild removed from the
+    // allowlist mid-match must still be able to return stakes already taken,
+    // the same way Discord's persistent cancel buttons keep working after
+    // /bb is deregistered. The web mutation must not re-impose the flag gate.
+    await seedTrackedPlayer();
+    await seedPool();
+    await caller().bucks.placeOutcomeBet({
+      guildId,
+      matchId: MATCH_ID,
+      teamId: 100,
+      stake: 5,
+    });
+    resetFlagOverrides("betting_enabled");
+    addFlagOverride("betting_enabled", false, { server: guildId });
+
+    const cancelled = await caller().bucks.cancelOutcomeBet({
+      guildId,
+      matchId: MATCH_ID,
+    });
+    expect(cancelled.kind).toBe("cancelled");
+  });
+
+  test("cancelOutcomeBet still rejects a guild the caller does not belong to", async () => {
+    await expect(
+      caller().bucks.cancelOutcomeBet({
+        guildId: otherGuildId,
+        matchId: MATCH_ID,
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+});
+
+describe("bucks parlay mutations", () => {
   test("placeParlayBet places through the domain and refuses the other side", async () => {
     await seedTrackedPlayer();
     const poolId = await seedPool();
