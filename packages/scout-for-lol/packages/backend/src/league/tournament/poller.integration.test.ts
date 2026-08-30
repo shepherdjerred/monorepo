@@ -10,6 +10,7 @@ import {
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data/index.ts";
+import { openLobbySettings } from "#src/league/tournament/open-lobby-fixture.ts";
 
 const { prisma: testPrisma } = createTestDatabase("tournament-poller");
 
@@ -88,6 +89,28 @@ function event(
   return { timestamp: "1", eventType, puuid: playerPuuid };
 }
 
+function startedGameEvents(
+  playerPuuid: ReturnType<typeof LeaguePuuidSchema.parse>,
+  playerQuit = false,
+): RawLobbyEvent[] {
+  return [
+    event("PlayerJoinedGameEvent", playerPuuid),
+    ...(playerQuit ? [event("PlayerQuitGameEvent", playerPuuid)] : []),
+    event("PracticeGameCreatedEvent"),
+    event("ChampSelectStartedEvent"),
+    event("GameAllocatedToLsmEvent"),
+  ];
+}
+
+async function expectResolvedGame(trackedPuuids: string[]): Promise<void> {
+  const lobby = await findLobbyByCode(testPrisma, "TEST-CODE");
+  expect(lobby?.state).toBe("resolved");
+  expect(lobby?.matchId).toBe("NA1_5421167767");
+  expect(activeGameUpserts).toEqual([
+    { matchId: "NA1_5421167767", trackedPuuids },
+  ]);
+}
+
 async function trackJoinedPlayer(
   playerPuuid: ReturnType<typeof LeaguePuuidSchema.parse>,
 ): Promise<void> {
@@ -118,22 +141,7 @@ async function trackJoinedPlayer(
 async function seedLobby() {
   return createLobby(testPrisma, {
     code: "TEST-CODE",
-    apiMode: "live",
-    providerId: 1,
-    tournamentId: 2,
-    region: "AMERICA_NORTH",
-    platformId: "NA1",
-    serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
-    channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
-    creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
-    bluePuuids: [],
-    redPuuids: [],
-    blueAliases: [],
-    redAliases: [],
-    teamSize: 5,
-    pickType: "TOURNAMENT_DRAFT",
-    mapType: "SUMMONERS_RIFT",
-    spectatorType: "ALL",
+    ...openLobbySettings,
     lobbyName: "lobby",
     password: "hunter2",
     expiresAt: new Date(Date.now() + 60 * 60 * 1000),
@@ -188,23 +196,13 @@ describe("checkTournamentLobbies", () => {
     const joinedPlayer = puuid("joined");
     await trackJoinedPlayer(joinedPlayer);
     gamePuuids = [joinedPlayer];
-    lobbyEvents = [
-      event("PlayerJoinedGameEvent", joinedPlayer),
-      event("PracticeGameCreatedEvent"),
-      event("ChampSelectStartedEvent"),
-      event("GameAllocatedToLsmEvent"),
-    ];
+    lobbyEvents = startedGameEvents(joinedPlayer);
 
     await checkTournamentLobbies();
 
-    const lobby = await findLobbyByCode(testPrisma, "TEST-CODE");
-    expect(lobby?.state).toBe("resolved");
-    expect(lobby?.matchId).toBe("NA1_5421167767");
     // Linkage only — the poller writes the ActiveGame row so the post-match
     // report can reply, and never ingests the match itself.
-    expect(activeGameUpserts).toEqual([
-      { matchId: "NA1_5421167767", trackedPuuids: [joinedPlayer] },
-    ]);
+    await expectResolvedGame([joinedPlayer]);
   });
 
   test("does not link an open lobby until a tracked player joins", async () => {
@@ -229,22 +227,11 @@ describe("checkTournamentLobbies", () => {
     const trackedPlayer = puuid("left");
     await trackJoinedPlayer(trackedPlayer);
     gamePuuids = [trackedPlayer];
-    lobbyEvents = [
-      event("PlayerJoinedGameEvent", trackedPlayer),
-      event("PlayerQuitGameEvent", trackedPlayer),
-      event("PracticeGameCreatedEvent"),
-      event("ChampSelectStartedEvent"),
-      event("GameAllocatedToLsmEvent"),
-    ];
+    lobbyEvents = startedGameEvents(trackedPlayer, true);
 
     await checkTournamentLobbies();
 
-    const lobby = await findLobbyByCode(testPrisma, "TEST-CODE");
-    expect(lobby?.state).toBe("resolved");
-    expect(lobby?.matchId).toBe("NA1_5421167767");
-    expect(activeGameUpserts).toEqual([
-      { matchId: "NA1_5421167767", trackedPuuids: [trackedPlayer] },
-    ]);
+    await expectResolvedGame([trackedPlayer]);
   });
 
   test("a failed poll leaves the lobby untouched", async () => {
