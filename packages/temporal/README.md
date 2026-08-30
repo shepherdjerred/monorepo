@@ -48,6 +48,7 @@ bun run start        # start the worker (connects to the Temporal server)
 bun run typecheck    # tsc --noEmit (stubs the HA schema first)
 bun run test         # unit tests, including the workflow-bundle smoke test
 bun run lint         # eslint
+bun run worker-deployment inspect --build-id <image-git-sha>
 bun run worker-deployment status --build-id <image-git-sha>
 ```
 
@@ -68,6 +69,9 @@ ramp. After rollback and candidate-history drain, rerun `rollback` with no
 active ramp to reset the rejected candidate to the stable catalog value, then
 review and commit that catalog change through the normal pull-request flow
 before the next candidate.
+If an operator host dies, use `inspect` before removing a stale lease: it is a
+read-only routing and lease query that remains usable when candidate health
+checks or alert windows are failing.
 
 ## Documentation
 

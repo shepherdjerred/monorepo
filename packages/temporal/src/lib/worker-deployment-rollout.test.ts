@@ -35,6 +35,7 @@ type Fixture = {
   checkoutBuildId?: string;
   imageBuildId?: string;
   dirtyCheckout?: boolean;
+  remoteLockObject?: string;
 };
 
 function jsonResult(value: unknown): { stdout: string; stderr: string } {
@@ -188,6 +189,15 @@ function gitFixtureResult(
   args: string[],
   fixture: Fixture,
 ): { stdout: string; stderr: string } {
+  if (args.includes("ls-remote")) {
+    return {
+      stdout:
+        fixture.remoteLockObject === undefined
+          ? ""
+          : `${fixture.remoteLockObject}\trefs/temporal-worker-deployment-locks/${DEPLOYMENT}\n`,
+      stderr: "",
+    };
+  }
   if (args.includes("status")) {
     return {
       stdout:
@@ -255,6 +265,39 @@ afterEach(async () => {
       .splice(0)
       .map((directory) => rm(directory, { recursive: true, force: true })),
   );
+});
+
+describe("Worker Deployment inspection", () => {
+  test("inspects routing and lease state without health checks", async () => {
+    const commands: string[][] = [];
+    const lockObject = "d".repeat(40);
+    const inspection = await executeWorkerDeploymentRollout(
+      await options("inspect"),
+      fixtureRunner(
+        { workflowPollers: 0, alerts: 2, remoteLockObject: lockObject },
+        commands,
+      ),
+    );
+    expect(inspection).toEqual({
+      deploymentName: DEPLOYMENT,
+      currentBuildId: STABLE,
+      rampingBuildId: undefined,
+      rampPercentage: 0,
+      lastRampChange: "2026-08-28T00:00:00Z",
+      rolloutLockObject: lockObject,
+    });
+    expect(commands).toContainEqual([
+      "git",
+      "ls-remote",
+      "origin",
+      `refs/temporal-worker-deployment-locks/${DEPLOYMENT}`,
+    ]);
+    expect(
+      commands.some(
+        (command) => command[0] === "toolkit" && command[1] === "prom",
+      ),
+    ).toBe(false);
+  });
 });
 
 describe("Worker Deployment rollout", () => {

@@ -11,7 +11,14 @@ import {
   requiredEnvironment,
 } from "./cli-arguments.ts";
 
-const ACTIONS = new Set(["status", "start", "advance", "promote", "rollback"]);
+const ACTIONS = new Set([
+  "inspect",
+  "status",
+  "start",
+  "advance",
+  "promote",
+  "rollback",
+]);
 const TemporalTlsSchema = z.enum(["true", "false"]).optional();
 
 const runCommand: RolloutCommandRunner = async (command) => {
@@ -38,10 +45,11 @@ function actionFrom(args: string[]): WorkerDeploymentRolloutOptions["action"] {
   const action = args[0];
   if (action === undefined || !ACTIONS.has(action)) {
     throw new Error(
-      "Usage: bun run worker-deployment <status|start|advance|promote|rollback> --build-id <image-git-sha>",
+      "Usage: bun run worker-deployment <inspect|status|start|advance|promote|rollback> --build-id <image-git-sha>",
     );
   }
   if (
+    action !== "inspect" &&
     action !== "status" &&
     action !== "start" &&
     action !== "advance" &&

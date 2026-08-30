@@ -67,10 +67,11 @@ rejected candidate pin when rerun with no active ramp. It refuses to reset a
 candidate that is already current. Other actions refuse stale Build IDs and
 out-of-order transitions.
 Rollout leases are shared through the `refs/temporal-worker-deployment-locks/`
-namespace. If an operator host dies, first use `status` to confirm that no
-ramp or routing mutation is active, then remove only the named stale lease
-with `git push origin :refs/temporal-worker-deployment-locks/<lock-name>`;
-never force-delete a lease while a rollout is running.
+namespace. If an operator host dies, first use the read-only `inspect` command
+to confirm routing and lease state; it does not require healthy candidate
+pollers or a clean alert window. Then remove only the named stale lease with
+`git push origin :refs/temporal-worker-deployment-locks/<lock-name>`; never
+force-delete a lease while a rollout is running.
 
 ## Structure
 

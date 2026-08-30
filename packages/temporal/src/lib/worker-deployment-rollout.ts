@@ -22,8 +22,12 @@ import {
   verifyCandidateImageBuildId,
 } from "./worker-deployment-proofs.ts";
 import { acquireWorkerDeploymentLock } from "./worker-deployment-lock.ts";
+import {
+  inspectWorkerDeploymentRollout,
+  type WorkerDeploymentRolloutInspection,
+} from "./worker-deployment-inspect.ts";
 export type WorkerDeploymentRolloutOptions = {
-  action: "status" | "start" | "advance" | "promote" | "rollback";
+  action: "inspect" | "status" | "start" | "advance" | "promote" | "rollback";
   address: string;
   namespace: string;
   tls?: boolean;
@@ -450,8 +454,10 @@ async function executePromotion(
 export async function executeWorkerDeploymentRollout(
   rawOptions: WorkerDeploymentRolloutOptions,
   run: RolloutCommandRunner,
-): Promise<WorkerDeploymentRolloutStatus> {
+): Promise<WorkerDeploymentRolloutStatus | WorkerDeploymentRolloutInspection> {
   const options = validateOptions(rawOptions);
+  if (options.action === "inspect")
+    return await inspectWorkerDeploymentRollout(options, run);
   if (options.action === "status") {
     const status = await readWorkerDeploymentRolloutStatus(options, run);
     requireCleanCandidate(status);
