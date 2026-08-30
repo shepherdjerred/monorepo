@@ -69,8 +69,9 @@ second credentialless process runs all deterministic central Workflow code.
 Every new start, schedule, and child goes to `monorepo-workflows`. Ten
 Activity-only roles own `default`, `home`, `reports`, `infra`,
 `repo-automation`, `scout`, `agent-task`, `glitter-corpus`, `glitter-context`,
-and `maintenance`. The `default` Activity Worker exists only to drain commands
-already scheduled by pre-cutover histories; no new root targets it.
+and `maintenance`. The bounded `default` Activity Worker drains commands
+already scheduled by pre-cutover histories and serves the compatibility email
+delivery path; no new root targets it, and it is removed after the drain.
 
 Temporal executions cannot move to another Workflow task queue after they
 start. The Workflow-only process therefore polls `monorepo-workflows` plus all
@@ -90,11 +91,15 @@ provide. Scout beta and prod keep identical queue contracts without consuming
 each other's work. Shared and cross-stage jobs belong to the `prod` control
 plane. Local servers use `dev`, which never exists in the cluster.
 
-The central `scout` queue has one deliberate exception: its worker polls both
-`prod` and `beta` because the beta-owned weekly parlay and Bryan Bucks
-analytics workflows remain in the central workflow bundle. This behavior is
-implemented by [`worker-namespaces.ts`](https://github.com/shepherdjerred/monorepo/blob/2b612ab307be00ee7bbf30aba24a9e0665defb7c/packages/temporal/src/shared/worker-namespaces.ts)
-and wired at [`worker.ts`](https://github.com/shepherdjerred/monorepo/blob/2b612ab307be00ee7bbf30aba24a9e0665defb7c/packages/temporal/src/worker.ts). Clients and shared Scout schedules still start only in `prod`.
+The central `workflows` and `scout` roles have one deliberate exception: both
+poll `prod` and `beta` because the beta-owned weekly parlay and Bryan Bucks
+analytics workflows remain in the central workflow bundle while their Scout
+activities use the Scout queue. This behavior is implemented by
+[`worker-namespaces.ts`](https://github.com/shepherdjerred/monorepo/blob/2b612ab307be00ee7bbf30aba24a9e0665defb7c/packages/temporal/src/shared/worker-namespaces.ts),
+selected by the central definitions in
+[`worker-config.ts`](https://github.com/shepherdjerred/monorepo/blob/2b612ab307be00ee7bbf30aba24a9e0665defb7c/packages/temporal/src/worker-config.ts),
+and wired at [`worker.ts`](https://github.com/shepherdjerred/monorepo/blob/2b612ab307be00ee7bbf30aba24a9e0665defb7c/packages/temporal/src/worker.ts).
+Clients and shared Scout schedules still start only in `prod`.
 
 Existing histories cannot move between namespaces. The migration therefore
 keeps bounded worker-only pollers in `default` until those histories close.
