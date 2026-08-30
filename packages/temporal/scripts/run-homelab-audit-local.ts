@@ -9,12 +9,9 @@ import { collectHomelabAuditEvidence } from "#activities/homelab-audit-collector
 import { buildHomelabAuditReport } from "#activities/homelab-audit-report.ts";
 import { synthesizeHomelabAuditEvidence } from "#activities/homelab-audit-synthesis.ts";
 import { deliverReport } from "#activities/report-delivery.ts";
-import {
-  renderReportHtml,
-  renderReportText,
-  reportSubject,
-  ReportEnvelopeV1Schema,
-} from "#shared/report.ts";
+import { reportSubject } from "#shared/report-presentation.ts";
+import { renderReportHtml, renderReportText } from "#shared/report-renderer.ts";
+import { ReportEnvelopeV1Schema } from "#shared/report.ts";
 
 function parseDate(argv: readonly string[]): string {
   let date = new Date().toISOString().slice(0, 10);

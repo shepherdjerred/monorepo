@@ -84,4 +84,5 @@ Jobs.
 ## Related
 
 - [How to pause or debug a schedule](/how-to/pause-or-debug-a-schedule/)
+- [Temporal report emails](/reference/temporal-report-emails/)
 - [Why Temporal](/explanation/temporal/overview/)

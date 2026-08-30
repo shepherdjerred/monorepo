@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest";
 import {
-  renderReportHtml,
-  renderReportText,
+  hasTailoredReportPresentation,
+  presentReport,
   reportSubject,
-  ReportEnvelopeV1Schema,
-  type ReportEnvelopeV1,
-} from "./report.ts";
+  TAILORED_REPORT_TYPES,
+} from "./report-presentation.ts";
+import { renderReportHtml, renderReportText } from "./report-renderer.ts";
+import { ReportEnvelopeV1Schema, type ReportEnvelopeV1 } from "./report.ts";
 
 function validReport(): ReportEnvelopeV1 {
   return {
@@ -54,33 +55,327 @@ function validReport(): ReportEnvelopeV1 {
   };
 }
 
+type SubjectCase = {
+  reportType: string;
+  title: string;
+  execution: ReportEnvelopeV1["execution"];
+  verdict: ReportEnvelopeV1["verdict"];
+  expected: string;
+};
+
+const SUBJECT_CASES = [
+  {
+    reportType: "agent-task",
+    title: "Agent Task: Inspect production",
+    execution: "complete",
+    verdict: "clear",
+    expected: "Inspect production: report ready",
+  },
+  {
+    reportType: "agent-task",
+    title: "Agent Task: Inspect production",
+    execution: "complete",
+    verdict: "attention",
+    expected: "Action needed: Inspect production",
+  },
+  {
+    reportType: "agent-task",
+    title: "Agent Task: Inspect production",
+    execution: "failed",
+    verdict: "attention",
+    expected: "Inspect production could not finish",
+  },
+  {
+    reportType: "agent-task",
+    title: "Production audit: Inspect production",
+    execution: "complete",
+    verdict: "clear",
+    expected: "Inspect production: report ready",
+  },
+  {
+    reportType: "ci-io-impact",
+    title: "CI I/O optimization impact",
+    execution: "complete",
+    verdict: "clear",
+    expected: "CI I/O report is ready",
+  },
+  {
+    reportType: "ci-io-impact",
+    title: "CI I/O optimization impact",
+    execution: "complete",
+    verdict: "pending",
+    expected: "CI I/O report is still pending",
+  },
+  {
+    reportType: "ci-io-impact",
+    title: "CI I/O optimization impact",
+    execution: "complete",
+    verdict: "attention",
+    expected: "Action needed: CI I/O target missed",
+  },
+  {
+    reportType: "dependency-summary",
+    title: "Weekly dependency summary",
+    execution: "complete",
+    verdict: "clear",
+    expected: "Dependencies are up to date",
+  },
+  {
+    reportType: "dependency-summary",
+    title: "Weekly dependency summary",
+    execution: "complete",
+    verdict: "changed",
+    expected: "Dependency changes found",
+  },
+  {
+    reportType: "dependency-summary",
+    title: "Weekly dependency summary",
+    execution: "partial",
+    verdict: "changed",
+    expected: "Dependency report could not finish",
+  },
+  {
+    reportType: "homelab-audit",
+    title: "Daily homelab audit",
+    execution: "complete",
+    verdict: "clear",
+    expected: "Your homelab looks healthy",
+  },
+  {
+    reportType: "homelab-audit",
+    title: "Daily homelab audit",
+    execution: "complete",
+    verdict: "attention",
+    expected: "Action needed: homelab issues found",
+  },
+  {
+    reportType: "homelab-audit",
+    title: "Daily homelab audit",
+    execution: "failed",
+    verdict: "inconclusive",
+    expected: "Homelab check failed",
+  },
+  {
+    reportType: "link-rot-scan",
+    title: "Weekly link-rot scan of main",
+    execution: "complete",
+    verdict: "clear",
+    expected: "No broken links found",
+  },
+  {
+    reportType: "link-rot-scan",
+    title: "Weekly link-rot scan of main",
+    execution: "complete",
+    verdict: "attention",
+    expected: "Broken or unreachable links found",
+  },
+  {
+    reportType: "link-rot-scan",
+    title: "Weekly link-rot scan of main",
+    execution: "failed",
+    verdict: "inconclusive",
+    expected: "Link check failed",
+  },
+  {
+    reportType: "main-vuln-scan",
+    title: "Weekly Trivy vulnerability scan of main",
+    execution: "complete",
+    verdict: "clear",
+    expected: "No high-risk vulnerabilities found",
+  },
+  {
+    reportType: "main-vuln-scan",
+    title: "Weekly Trivy vulnerability scan of main",
+    execution: "complete",
+    verdict: "attention",
+    expected: "Action needed: vulnerabilities found",
+  },
+  {
+    reportType: "main-vuln-scan",
+    title: "Weekly Trivy vulnerability scan of main",
+    execution: "failed",
+    verdict: "inconclusive",
+    expected: "Vulnerability scan failed",
+  },
+  {
+    reportType: "protobufjs-v8-watch",
+    title: "Temporal protobufjs v8 compatibility",
+    execution: "complete",
+    verdict: "pending",
+    expected: "Temporal still uses protobufjs v7",
+  },
+  {
+    reportType: "protobufjs-v8-watch",
+    title: "Temporal protobufjs v8 compatibility",
+    execution: "complete",
+    verdict: "attention",
+    expected: "Temporal can move to protobufjs v8",
+  },
+  {
+    reportType: "protobufjs-v8-watch",
+    title: "Temporal protobufjs v8 compatibility",
+    execution: "failed",
+    verdict: "inconclusive",
+    expected: "protobufjs compatibility check failed",
+  },
+  {
+    reportType: "scout-data-dragon",
+    title: "Scout Data Dragon version-check",
+    execution: "complete",
+    verdict: "clear",
+    expected: "Scout data is up to date",
+  },
+  {
+    reportType: "scout-data-dragon",
+    title: "Scout Data Dragon weekly-refresh",
+    execution: "complete",
+    verdict: "changed",
+    expected: "Scout Data Dragon update created",
+  },
+  {
+    reportType: "scout-data-dragon",
+    title: "Scout Data Dragon weekly-refresh",
+    execution: "partial",
+    verdict: "attention",
+    expected: "Scout Data Dragon update needs attention",
+  },
+  {
+    reportType: "scout-lane-priors",
+    title: "Scout lane-prior refresh",
+    execution: "complete",
+    verdict: "clear",
+    expected: "Scout lane data is up to date",
+  },
+  {
+    reportType: "scout-lane-priors",
+    title: "Scout lane-prior refresh",
+    execution: "complete",
+    verdict: "changed",
+    expected: "Scout lane-data update created",
+  },
+  {
+    reportType: "scout-lane-priors",
+    title: "Scout lane-prior refresh",
+    execution: "failed",
+    verdict: "inconclusive",
+    expected: "Scout lane-data update failed",
+  },
+  {
+    reportType: "scout-queue-windows",
+    title: "Scout queue windows",
+    execution: "complete",
+    verdict: "clear",
+    expected: "Scout queue windows are up to date",
+  },
+  {
+    reportType: "scout-queue-windows",
+    title: "Scout queue windows",
+    execution: "complete",
+    verdict: "changed",
+    expected: "Scout queue-window changes found",
+  },
+  {
+    reportType: "scout-queue-windows",
+    title: "Scout queue windows",
+    execution: "complete",
+    verdict: "attention",
+    expected: "Action needed: Scout queue-window warnings",
+  },
+  {
+    reportType: "scout-season-refresh",
+    title: "Scout season schedule",
+    execution: "complete",
+    verdict: "clear",
+    expected: "Scout season dates are up to date",
+  },
+  {
+    reportType: "scout-season-refresh",
+    title: "Scout season schedule",
+    execution: "complete",
+    verdict: "changed",
+    expected: "Scout season-date update created",
+  },
+  {
+    reportType: "scout-season-refresh",
+    title: "Scout season schedule",
+    execution: "failed",
+    verdict: "inconclusive",
+    expected: "Scout season-date update failed",
+  },
+  {
+    reportType: "tasknotes-canary",
+    title: "TaskNotes skipped-files canary",
+    execution: "complete",
+    verdict: "clear",
+    expected: "TaskNotes looks healthy",
+  },
+  {
+    reportType: "tasknotes-canary",
+    title: "TaskNotes skipped-files canary",
+    execution: "complete",
+    verdict: "attention",
+    expected: "Action needed: TaskNotes problem found",
+  },
+  {
+    reportType: "tasknotes-canary",
+    title: "TaskNotes skipped-files canary",
+    execution: "failed",
+    verdict: "inconclusive",
+    expected: "TaskNotes check failed",
+  },
+] satisfies SubjectCase[];
+
 describe("ReportEnvelopeV1", () => {
-  test("derives deterministic subjects", () => {
-    expect(reportSubject(validReport())).toBe("[OK] Dependency summary");
+  test("derives tailored human subjects for every report type", () => {
+    for (const subjectCase of SUBJECT_CASES) {
+      expect(
+        reportSubject({
+          ...validReport(),
+          reportType: subjectCase.reportType,
+          title: subjectCase.title,
+          execution: subjectCase.execution,
+          verdict: subjectCase.verdict,
+        }),
+      ).toBe(subjectCase.expected);
+    }
+    expect(TAILORED_REPORT_TYPES).toHaveLength(12);
+    expect(TAILORED_REPORT_TYPES.every(hasTailoredReportPresentation)).toBe(
+      true,
+    );
+  });
+
+  test("keeps unknown report types readable", () => {
     expect(
       reportSubject({
         ...validReport(),
-        execution: "partial",
-        verdict: "inconclusive",
-      }),
-    ).toBe("[PARTIAL] Dependency summary");
-    expect(
-      reportSubject({
-        ...validReport(),
-        execution: "failed",
+        reportType: "future-report",
+        title: "Future check",
         verdict: "attention",
       }),
-    ).toBe("[FAILED] Dependency summary");
-    for (const [verdict, prefix] of [
-      ["changed", "CHANGED"],
-      ["attention", "ATTENTION"],
-      ["pending", "PENDING"],
-      ["inconclusive", "INCONCLUSIVE"],
-    ] as const) {
-      expect(reportSubject({ ...validReport(), verdict })).toBe(
-        `[${prefix}] Dependency summary`,
-      );
-    }
+    ).toBe("Action needed: Future check");
+  });
+
+  test("translates internal states into human status labels", () => {
+    expect(
+      presentReport({
+        ...validReport(),
+        reportType: "ci-io-impact",
+        verdict: "pending",
+      }).statusLabel,
+    ).toBe("Check incomplete");
+    expect(
+      presentReport({
+        ...validReport(),
+        reportType: "protobufjs-v8-watch",
+        verdict: "pending",
+      }).statusLabel,
+    ).toBe("No action needed");
+    expect(
+      presentReport({
+        ...validReport(),
+        verdict: "attention",
+      }).statusLabel,
+    ).toBe("Review needed");
   });
 
   test("rejects a clean claim without complete required evidence", () => {
@@ -176,7 +471,9 @@ describe("ReportEnvelopeV1", () => {
       "synthesis must contain at most 80 words",
     );
   });
+});
 
+describe("Human report email rendering", () => {
   test("renders facts first and escapes HTML", () => {
     const report = validReport();
     report.headline = "No <unsafe> changes";
@@ -185,10 +482,12 @@ describe("ReportEnvelopeV1", () => {
     expect(html).toContain("No &lt;unsafe&gt; changes");
     expect(html).not.toContain("<unsafe>");
     expect(
-      text.startsWith("[OK] Dependency summary\nNo <unsafe> changes"),
+      text.startsWith(
+        "Dependencies are up to date\nNo action needed\nNo <unsafe> changes",
+      ),
     ).toBe(true);
-    expect(text).toContain("[passed] Catalog diff");
-    expect(text).toContain("[evidence: git-diff]");
+    expect(text).toContain("Passed · Catalog diff");
+    expect(text).not.toContain("git-diff");
   });
 
   test("renders finding sections and evidence links", () => {
@@ -209,12 +508,12 @@ describe("ReportEnvelopeV1", () => {
     ];
     const html = renderReportHtml(report);
     const text = renderReportText(report);
-    expect(html).toContain("<h2>Upstream upgrades</h2>");
-    expect(html).toContain(
-      '<a href="https://example.com/evidence">git-diff</a>',
-    );
+    expect(html).toContain("Upstream upgrades");
+    expect(html).toContain('href="https://example.com/evidence"');
+    expect(html).toContain("View source");
     expect(text).toContain("Upstream upgrades");
     expect(text).toContain("https://example.com/evidence");
+    expect(text).not.toContain("git-diff");
   });
 
   test("restricts and sanitizes evidence links", () => {
@@ -228,7 +527,7 @@ describe("ReportEnvelopeV1", () => {
 
     const html = renderReportHtml(report);
     expect(html).toContain(
-      '<a href="https://example.com/%22%20onmouseover=%22alert(1)">git-diff</a>',
+      'href="https://example.com/%22%20onmouseover=%22alert(1)"',
     );
     expect(html).not.toContain('" onmouseover="');
     expect(() =>
@@ -237,6 +536,87 @@ describe("ReportEnvelopeV1", () => {
         evidence: [{ ...receipt, url: "javascript:alert(1)" }],
       }),
     ).toThrow();
+  });
+
+  test("puts human actions before findings and checks", () => {
+    const report = validReport();
+    report.verdict = "attention";
+    report.actions = ["Review the dependency update."];
+    report.findings = [
+      {
+        severity: "warning",
+        summary: "An update needs review.",
+        evidenceReceiptIds: ["git-diff"],
+      },
+    ];
+    const html = renderReportHtml(report);
+    const text = renderReportText(report);
+    expect(html.indexOf("What you need to do")).toBeLessThan(
+      html.indexOf("What was found"),
+    );
+    expect(html.indexOf("What was found")).toBeLessThan(
+      html.indexOf("What was checked"),
+    );
+    expect(text.indexOf("What you need to do")).toBeLessThan(
+      text.indexOf("What was found"),
+    );
+    expect(text.indexOf("What was found")).toBeLessThan(
+      text.indexOf("What was checked"),
+    );
+  });
+
+  test("orders findings from critical to informational", () => {
+    const report = validReport();
+    report.verdict = "attention";
+    report.findings = [
+      {
+        severity: "info",
+        summary: "Informational finding",
+        evidenceReceiptIds: ["git-diff"],
+      },
+      {
+        severity: "critical",
+        summary: "Critical finding",
+        evidenceReceiptIds: ["git-diff"],
+      },
+      {
+        severity: "warning",
+        summary: "Warning finding",
+        evidenceReceiptIds: ["git-diff"],
+      },
+    ];
+
+    const text = renderReportText(report);
+    expect(text.indexOf("Critical finding")).toBeLessThan(
+      text.indexOf("Warning finding"),
+    );
+    expect(text.indexOf("Warning finding")).toBeLessThan(
+      text.indexOf("Informational finding"),
+    );
+  });
+
+  test("omits delivery internals and raw commands", () => {
+    const html = renderReportHtml(validReport());
+    const text = renderReportText(validReport());
+    for (const rendered of [html, text]) {
+      expect(rendered).not.toContain("dependency-summary:run-1");
+      expect(rendered).not.toContain("deps-summary-weekly-2026-08-10");
+      expect(rendered).not.toContain("run-1");
+      expect(rendered).not.toContain("git diff old new");
+      expect(rendered).not.toContain("git-diff");
+      expect(rendered).not.toContain("required");
+      expect(rendered).not.toContain("optional");
+    }
+  });
+
+  test("renders an email-safe responsive shell", () => {
+    const html = renderReportHtml(validReport());
+    expect(html).toContain('lang="en"');
+    expect(html).toContain('<meta charset="utf-8">');
+    expect(html).toContain('name="viewport"');
+    expect(html).toContain('role="presentation"');
+    expect(html).toContain("max-width:640px");
+    expect(html).not.toContain("<script");
   });
 
   test("keeps compact HTML and plain-text snapshots stable", () => {

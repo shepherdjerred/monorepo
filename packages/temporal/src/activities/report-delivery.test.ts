@@ -435,7 +435,7 @@ describe("report send ownership", () => {
           reportRunId: report().reportRunId,
           reportType: report().reportType,
           scheduleId: report().scheduleId,
-          subject: "[OK] Test report",
+          subject: "Test report: no action needed",
           messageId: "postal-successor",
           recipientId: 42,
           acceptedAt: NOW,
