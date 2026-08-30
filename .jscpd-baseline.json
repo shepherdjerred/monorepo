@@ -800,10 +800,6 @@
       "clones": 1,
       "tokens": 79
     },
-    "packages/homelab/src/cdk8s/src/resources/temporal/agent-worker-network-policy.ts|packages/homelab/src/cdk8s/src/resources/temporal/worker-network-policies.ts": {
-      "clones": 1,
-      "tokens": 156
-    },
     "packages/homelab/src/cdk8s/src/resources/temporal/ingress-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/operations-workers.ts": {
       "clones": 1,
       "tokens": 100
@@ -1859,14 +1855,6 @@
     "packages/temporal/src/workflows/glitter-corpus.test.ts|packages/temporal/src/workflows/glitter-corpus.test.ts": {
       "clones": 1,
       "tokens": 78
-    },
-    "packages/temporal/src/workflows/link-rot-scan.test.ts|packages/temporal/src/workflows/main-vuln-scan.test.ts": {
-      "clones": 1,
-      "tokens": 132
-    },
-    "packages/temporal/src/workflows/link-rot-scan.ts|packages/temporal/src/workflows/main-vuln-scan.ts": {
-      "clones": 1,
-      "tokens": 81
     },
     "packages/toolkit/src/commands/history/history.ts|packages/toolkit/src/commands/history/history.ts": {
       "clones": 1,

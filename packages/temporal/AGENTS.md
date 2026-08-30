@@ -184,7 +184,7 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
-- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `control`, `core`, `agent`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `legacy`, `maintenance`, `repo`, `reports`, or `scout`. Invalid values fail startup.
+- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `control`, `workflows`, `agent`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `maintenance`, `repo`, `reports`, or `scout`. Invalid values fail startup.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
