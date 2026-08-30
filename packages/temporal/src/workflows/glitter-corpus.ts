@@ -7,6 +7,10 @@ import type {
   InventoryResult,
 } from "#shared/glitter-corpus-activity-types.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import {
+  glitterCorpusActivityRetry,
+  glitterCorpusFinalizerActivityOptions,
+} from "./glitter-corpus-activity-options.ts";
 import * as glitterFailures from "./glitter-corpus-failures.ts";
 import {
   largestSnowflake,
@@ -26,17 +30,18 @@ const {
   captureGlitterCorpusPage,
   verifyGlitterCorpusChannel,
   applyGlitterCorpusOverlap,
-  finalizeGlitterCorpusSnapshot,
   loadGlitterCorpusDailyBaseline,
 } = proxyActivities<typeof glitterCorpusActivities>({
   taskQueue: TASK_QUEUES.GLITTER_CORPUS,
   startToCloseTimeout: "1 hour",
-  retry: {
-    maximumAttempts: 3,
-    initialInterval: "10 seconds",
-    backoffCoefficient: 2,
-    maximumInterval: "2 minutes",
-  },
+  retry: glitterCorpusActivityRetry,
+});
+
+const { finalizeGlitterCorpusSnapshot } = proxyActivities<
+  typeof glitterCorpusActivities
+>({
+  ...glitterCorpusFinalizerActivityOptions,
+  taskQueue: glitterCorpusFinalizerActivityOptions.taskQueue,
 });
 
 export type GlitterCorpusBackfillInput = {

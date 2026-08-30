@@ -18,7 +18,7 @@ import {
   assertDiscordPageOrder,
   nextTraversalCursor,
 } from "./glitter-corpus-page-order.ts";
-import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
+import type { CorpusStore } from "./glitter-corpus-store.ts";
 import {
   putImmutableObject,
   readObject,
@@ -36,12 +36,11 @@ export function requireGlitterCorpusEnv(name: string): string {
 }
 
 function parseDenylist(value: string): string[] {
-  if (value.trim() === "") {
-    return [];
-  }
-  return z
-    .array(z.string().regex(/^\d+$/))
-    .parse(value.split(",").map((entry) => entry.trim()));
+  return value.trim() === ""
+    ? []
+    : z
+        .array(z.string().regex(/^\d+$/))
+        .parse(value.split(",").map((entry) => entry.trim()));
 }
 
 export function glitterCorpusRuntimeConfig(): {
@@ -83,28 +82,28 @@ function parseNdjson(
 }
 
 export async function readCorpusJson<T>(
+  store: CorpusStore,
   key: string,
   schema: z.ZodType<T>,
 ): Promise<T> {
-  const store = createCorpusStoreFromEnv();
   const bytes = await readRequiredObject({ store, key });
   return schema.parse(JSON.parse(new TextDecoder().decode(bytes)));
 }
 
 export async function readCorpusPage(
+  store: CorpusStore,
   key: string,
   expectedDirection: "backward" | "forward" | "daily-overlap",
 ): Promise<{
   manifest: PageManifest;
   messages: z.infer<typeof DiscordApiMessageSchema>[];
 }> {
-  const manifest = await readCorpusJson(key, PageManifestSchema);
+  const manifest = await readCorpusJson(store, key, PageManifestSchema);
   if (manifest.direction !== expectedDirection) {
     throw new Error(
       `page manifest ${key} has direction ${manifest.direction}, expected ${expectedDirection}`,
     );
   }
-  const store = createCorpusStoreFromEnv();
   const bytes = await readVerifiedObject({
     store,
     key: manifest.rawObjectKey,
@@ -196,6 +195,7 @@ function traversalTerminalReason(input: {
 }
 
 export async function readTraversal(input: {
+  store: CorpusStore;
   guildId: string;
   guildSlug: string;
   channelId: string;
@@ -222,7 +222,7 @@ export async function readTraversal(input: {
   let reachedUpperBound = false;
   let expectedCursor = input.initialAfter;
   for (const key of input.pageManifestKeys) {
-    const page = await readCorpusPage(key, input.direction);
+    const page = await readCorpusPage(input.store, key, input.direction);
     assertTraversalPage({
       key,
       page,
@@ -291,6 +291,7 @@ export async function readTraversal(input: {
 }
 
 export async function readOverlapTraversal(input: {
+  store: CorpusStore;
   guildId: string;
   guildSlug: string;
   channelId: string;
@@ -307,7 +308,7 @@ export async function readOverlapTraversal(input: {
   let terminal: PageManifest | undefined;
   let expectedBefore: string | undefined;
   for (const key of input.pageManifestKeys) {
-    const page = await readCorpusPage(key, "daily-overlap");
+    const page = await readCorpusPage(input.store, key, "daily-overlap");
     if (
       page.manifest.guildId !== input.guildId ||
       page.manifest.channelId !== input.channelId
@@ -343,16 +344,16 @@ export async function readOverlapTraversal(input: {
 }
 
 export async function readSeedChannelObservations(input: {
+  store: CorpusStore;
   seedPrefix: string | undefined;
   channelId: string;
 }): Promise<CorpusObservation[]> {
   if (input.seedPrefix === undefined) {
     return [];
   }
-  const store = createCorpusStoreFromEnv();
   const manifestKey = `${input.seedPrefix}/manifest.json`;
   const manifestBytes = await readRequiredObject({
-    store,
+    store: input.store,
     key: manifestKey,
   });
   const manifest = SeedImportManifestSchema.parse(
@@ -366,8 +367,8 @@ export async function readSeedChannelObservations(input: {
   const key = `${input.seedPrefix}/channels/${input.channelId}/observations.ndjson`;
   const shouldExist = manifest.channelIds.includes(input.channelId);
   const bytes = shouldExist
-    ? await readRequiredObject({ store, key })
-    : await readObject({ store, key });
+    ? await readRequiredObject({ store: input.store, key })
+    : await readObject({ store: input.store, key });
   if (!shouldExist && bytes !== undefined) {
     throw new Error(
       `seed channel partition presence disagrees with ${manifestKey}: ${key}`,
@@ -392,12 +393,14 @@ export async function readSeedChannelObservations(input: {
 }
 
 export async function validateSeedForApprovedInventory(input: {
+  store: CorpusStore;
   seedPrefix: string;
   guildId: string;
   guildSlug: string;
   approvedChannelIds: readonly string[];
 }): Promise<void> {
   const manifest = await readCorpusJson(
+    input.store,
     `${input.seedPrefix}/manifest.json`,
     SeedImportManifestSchema,
   );
@@ -414,9 +417,8 @@ export async function validateSeedForApprovedInventory(input: {
       `trusted seed guild ${manifest.guildId}/${manifest.guildSlug} does not match approved inventory ${input.guildId}/${input.guildSlug}`,
     );
   }
-  const store = createCorpusStoreFromEnv();
   const archiveBytes = await readVerifiedObject({
-    store,
+    store: input.store,
     key: `${input.seedPrefix}/archive.zip`,
     expectedSha256: manifest.archiveSha256,
   });
@@ -426,7 +428,7 @@ export async function validateSeedForApprovedInventory(input: {
     );
   }
   await readVerifiedObject({
-    store,
+    store: input.store,
     key: `${input.seedPrefix}/projection.ndjson`,
     expectedSha256: manifest.projectionSha256,
   });
@@ -442,12 +444,14 @@ export async function validateSeedForApprovedInventory(input: {
 }
 
 export async function loadStateManifest(
+  store: CorpusStore,
   key: string,
 ): Promise<ChannelStateManifest> {
-  return await readCorpusJson(key, ChannelStateManifestSchema);
+  return await readCorpusJson(store, key, ChannelStateManifestSchema);
 }
 
 export async function writeChannelProjection(input: {
+  store: CorpusStore;
   guildId: string;
   channelId: string;
   snapshotId: string;
@@ -459,7 +463,7 @@ export async function writeChannelProjection(input: {
     `${input.snapshotId}.ndjson`;
   const body = new TextEncoder().encode(input.projectionNdjson);
   await putImmutableObject({
-    store: createCorpusStoreFromEnv(),
+    store: input.store,
     key,
     body,
     contentType: "application/x-ndjson",
@@ -469,6 +473,7 @@ export async function writeChannelProjection(input: {
 }
 
 export async function writeChannelState(input: {
+  store: CorpusStore;
   guildId: string;
   channelId: string;
   snapshotId: string;
@@ -480,7 +485,7 @@ export async function writeChannelState(input: {
     `guilds/${input.guildId}/channels/${input.channelId}/states/` +
     `${input.snapshotId}.json`;
   const manifestObject = await putImmutableObject({
-    store: createCorpusStoreFromEnv(),
+    store: input.store,
     key: manifestKey,
     body: jsonBytes(input.manifest),
     contentType: "application/json",

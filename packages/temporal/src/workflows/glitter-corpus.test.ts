@@ -18,6 +18,10 @@ import {
 } from "#shared/glitter-corpus.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
+  glitterCorpusActivityRetry,
+  glitterCorpusFinalizerActivityOptions,
+} from "./glitter-corpus-activity-options.ts";
+import {
   runGlitterCorpusBackfill,
   runGlitterCorpusChannelBackfill,
   runGlitterCorpusDaily,
@@ -27,6 +31,23 @@ const GUILD_ID = "1000";
 const CREATED_AT = "2026-07-26T12:00:00.000Z";
 const SHA256 = "a".repeat(64);
 let testEnvironment: TestWorkflowEnvironment;
+
+describe("Glitter corpus activity policy", () => {
+  it("gives finalization a heartbeat timeout without changing retries", () => {
+    expect(glitterCorpusFinalizerActivityOptions.heartbeatTimeout).toBe(
+      "60 seconds",
+    );
+    expect(glitterCorpusFinalizerActivityOptions.retry).toEqual(
+      glitterCorpusActivityRetry,
+    );
+    expect(glitterCorpusActivityRetry).toEqual({
+      maximumAttempts: 3,
+      initialInterval: "10 seconds",
+      backoffCoefficient: 2,
+      maximumInterval: "2 minutes",
+    });
+  });
+});
 
 beforeAll(async () => {
   testEnvironment = await TestWorkflowEnvironment.createTimeSkipping();

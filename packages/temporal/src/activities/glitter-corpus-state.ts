@@ -5,6 +5,7 @@ import type {
 import { projectionChecksum } from "#shared/glitter-corpus-projection.ts";
 import type { ChannelStateResult } from "#shared/glitter-corpus-activity-types.ts";
 import { writeChannelState } from "./glitter-corpus-io.ts";
+import type { CorpusStore } from "./glitter-corpus-store.ts";
 
 export function projectionStateFields(input: {
   projection: readonly CurrentMessage[];
@@ -28,6 +29,7 @@ export function projectionStateFields(input: {
 }
 
 export async function persistProjectionState(input: {
+  store: CorpusStore;
   identity: {
     guildId: string;
     channelId: string;
@@ -38,6 +40,7 @@ export async function persistProjectionState(input: {
   projection: readonly CurrentMessage[];
 }): Promise<ChannelStateResult> {
   return await writeChannelState({
+    store: input.store,
     guildId: input.identity.guildId,
     channelId: input.identity.channelId,
     snapshotId: input.identity.snapshotId,
