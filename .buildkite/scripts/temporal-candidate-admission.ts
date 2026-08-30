@@ -7,17 +7,16 @@ const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 const CENTRAL_WORKFLOW_STABLE =
   "shepherdjerred/temporal-worker/workflows/stable";
 const LAST_IMAGE_WITHOUT_WORKFLOW_WORKER = 12_197;
-export const TEMPORAL_WORKFLOW_PIN_PAIRS = [
+export const TEMPORAL_WORKFLOW_PIN_PAIRS: readonly (readonly [
+  string,
+  string,
+])[] = [
   [
     "shepherdjerred/temporal-worker/workflows/stable",
     "shepherdjerred/temporal-worker/workflows/candidate",
   ],
-  [
-    "shepherdjerred/scout-for-lol/beta/workflows/stable",
-    "shepherdjerred/scout-for-lol/beta/workflows/candidate",
-  ],
-] as const;
-type TemporalWorkflowPinPair = (typeof TEMPORAL_WORKFLOW_PIN_PAIRS)[number];
+];
+type TemporalWorkflowPinPair = readonly [string, string];
 type LiveVersionCatalog = {
   readonly source: string;
   readonly values: ReadonlyMap<string, string>;
