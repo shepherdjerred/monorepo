@@ -2781,7 +2781,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --production
       bun --no-install run --cwd packages/llm-models build
       bun --no-install scripts/release.ts
     # Safe to retry: release-please upserts its PR and skips already-cut

@@ -245,7 +245,7 @@ function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
 
   const releasePlease = stepBlocks.get("release-please");
   const releaseInstall =
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production";
+    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --production";
   if (!hasTrimmedLine(releasePlease, releaseInstall)) {
     fail(
       `release-please lane is missing exact filtered install ${releaseInstall}`,
