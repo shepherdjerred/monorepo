@@ -81,6 +81,7 @@ rollout is running.
 Roll out Scout beta before Scout production. Mutating Scout production actions
 verify that the same Build ID is already the current, unramped beta version with
 a healthy beta Workflow poller; rollback remains available independently.
+
 ## Structure
 
 ```

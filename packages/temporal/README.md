@@ -73,6 +73,7 @@ checks or alert windows are failing.
 The target defaults to `central`; `--target scout-beta` and `--target
 scout-prod` select the stage-local Scout deployment, queue, replay bundle,
 pinned canary, image repository, and catalog pins.
+
 ## Documentation
 
 The complete reference is [AGENTS.md](AGENTS.md):

@@ -130,30 +130,6 @@ export async function requireReplayCheckout(
   }
 }
 
-export async function runWorkerDeploymentPreflightProofs(
-  options: {
-    namespace: string;
-    deploymentName: string;
-    buildId: string;
-  },
-  run: RolloutCommandRunner,
-): Promise<void> {
-  await requireReplayCheckout(options.buildId, run);
-  await run(["bun", "run", "test:workflows"]);
-  await run(["bun", "run", "replay:candidate-histories"]);
-  await run([
-    "bun",
-    "run",
-    "scripts/worker-deployment-canary.ts",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    options.buildId,
-    "--namespace",
-    options.namespace,
-  ]);
-}
-
 export function rolloutPoller(
   options: {
     namespace: string;
