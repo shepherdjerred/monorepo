@@ -15,10 +15,11 @@ final class InspectorCommitCoordinator {
 
     private typealias Commit = @MainActor () async -> Void
     private var commits: [UUID: Commit] = [:]
+    private var inFlight: [UUID: _Concurrency.Task<Void, Never>] = [:]
 
     init() {}
 
-    var isEmpty: Bool { commits.isEmpty }
+    var isEmpty: Bool { commits.isEmpty && inFlight.isEmpty }
 
     func register(_ id: UUID, commit: @escaping @MainActor () async -> Void) {
         commits[id] = commit
@@ -28,12 +29,30 @@ final class InspectorCommitCoordinator {
         commits[id] = nil
     }
 
+    /// Start work that application termination must wait for even if its
+    /// inspector disappears before the engine accepts the queued mutation.
+    func perform(_ operation: @escaping @MainActor () async -> Void) {
+        let id = UUID()
+        let task = _Concurrency.Task { @MainActor in
+            await operation()
+            inFlight[id] = nil
+        }
+        inFlight[id] = task
+    }
+
     func commitAll() async {
         // Snapshot first: a successful commit can redraw or dismiss an
         // inspector, which unregisters it while this loop is suspended.
         let current = Array(commits.values)
         for commit in current {
             await commit()
+        }
+
+        // A blur or Done action may already have offered a value, in which case
+        // the registered commit above correctly has nothing new to do. Await
+        // the tracked offer itself before allowing AppKit to end the process.
+        while let task = inFlight.values.first {
+            await task.value
         }
     }
 }

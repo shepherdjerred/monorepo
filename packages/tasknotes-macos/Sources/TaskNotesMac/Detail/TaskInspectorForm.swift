@@ -450,7 +450,7 @@ extension TaskInspectorForm {
     /// Dispatch values captured before this asynchronous work began.
     private func perform(_ offers: [BufferedOffer]) {
         guard !offers.isEmpty else { return }
-        _Concurrency.Task {
+        InspectorCommitCoordinator.shared.perform {
             await performAndWait(offers)
         }
     }

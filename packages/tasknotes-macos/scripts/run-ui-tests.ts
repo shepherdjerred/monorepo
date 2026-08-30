@@ -77,10 +77,17 @@ async function seedTask(
   }
 }
 
+function localCivilDate(now: Date): string {
+  const year = now.getFullYear().toString().padStart(4, "0");
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  const day = now.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 let testExitCode = 1;
 try {
   await waitUntilHealthy();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localCivilDate(new Date());
   await seedTask("Inspector journey", today, "Original markdown.");
   await seedTask("Selection target", today, "Second note.");
 
