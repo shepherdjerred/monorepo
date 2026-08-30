@@ -724,10 +724,6 @@
       "clones": 2,
       "tokens": 180
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts|packages/homelab/src/cdk8s/src/resources/temporal/worker-network-policies.ts": {
-      "clones": 1,
-      "tokens": 93
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout-evals.ts": {
       "clones": 1,
       "tokens": 75
@@ -815,10 +811,6 @@
     "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts|packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts": {
       "clones": 1,
       "tokens": 79
-    },
-    "packages/homelab/src/cdk8s/src/resources/temporal/agent-worker-network-policy.ts|packages/homelab/src/cdk8s/src/resources/temporal/worker-network-policies.ts": {
-      "clones": 1,
-      "tokens": 213
     },
     "packages/homelab/src/cdk8s/src/resources/temporal/operations-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/worker.ts": {
       "clones": 1,
@@ -1864,10 +1856,6 @@
       "clones": 1,
       "tokens": 91
     },
-    "packages/temporal/src/workflows/agent-task.test.ts|packages/temporal/src/workflows/agent-task.test.ts": {
-      "clones": 1,
-      "tokens": 120
-    },
     "packages/temporal/src/workflows/data-dragon.test.ts|packages/temporal/src/workflows/data-dragon.test.ts": {
       "clones": 1,
       "tokens": 75
@@ -1878,7 +1866,7 @@
     },
     "packages/temporal/src/workflows/glitter-corpus.test.ts|packages/temporal/src/workflows/glitter-corpus.test.ts": {
       "clones": 1,
-      "tokens": 81
+      "tokens": 78
     },
     "packages/toolkit/src/commands/history/history.ts|packages/toolkit/src/commands/history/history.ts": {
       "clones": 1,
@@ -1937,5 +1925,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-29T21:34:46.948Z"
+  "updated": "2026-08-30T00:41:58.485Z"
 }

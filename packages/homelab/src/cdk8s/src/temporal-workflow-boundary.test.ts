@@ -64,7 +64,9 @@ describe("central Temporal Workflow boundary", () => {
       "TELEMETRY_ENABLED",
       "TELEMETRY_SERVICE_NAME",
       "TEMPORAL_ADDRESS",
+      "TEMPORAL_LEGACY_NAMESPACE",
       "TEMPORAL_METRICS_ADDRESS",
+      "TEMPORAL_NAMESPACE",
       "TEMPORAL_WORKER_ROLE",
       "TZ",
     ]);
