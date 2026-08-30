@@ -95,7 +95,7 @@ Per eligible game, at most:
 Weekly parlays are separate from this per-game sequence. Scout publishes a new
 message for the market, the betting reminder, every progress update, and the
 settlement. Each message puts its current status or result first, then shows
-the conditions, activity qualification, bets, and relevant timing. A settlement
+applicable conditions, activity qualification, bets, and relevant timing. A settlement
 explicitly says whether it resolved YES, resolved NO, or was voided and
 refunded. Public updates mention the frozen featured players and people who
 placed bets, with duplicates removed. They expose only aggregate YES/NO totals—

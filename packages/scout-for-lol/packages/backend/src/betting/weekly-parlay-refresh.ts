@@ -7,7 +7,11 @@ import {
 } from "#src/betting/weekly-parlay-criteria.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { weeklyParlayDeliveryContent } from "#src/betting/weekly-parlay-discord-copy.ts";
-import { weeklyParlayButtons } from "#src/betting/weekly-parlay-discord.ts";
+import {
+  weeklyParlayButtons,
+  WEEKLY_PARLAY_DISCORD_CONTENT_MAX_LENGTH,
+} from "#src/betting/weekly-parlay-discord.ts";
+import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
@@ -121,8 +125,16 @@ async function editWeeklyParlayMessage(
       bettorCount: relevantBets.length,
       totalStaked,
     });
+    const contentChunks = splitMessageIntoChunks(
+      content,
+      WEEKLY_PARLAY_DISCORD_CONTENT_MAX_LENGTH,
+    );
     const marketIdentifier = `weekly:${marketId.toString()}`;
-    for (const ref of refs) {
+    for (const [index, ref] of refs.entries()) {
+      const contentChunk = contentChunks[index];
+      if (contentChunk === undefined) {
+        continue;
+      }
       try {
         await observeBucksDelivery(
           {
@@ -133,7 +145,7 @@ async function editWeeklyParlayMessage(
           },
           () =>
             editor(ref.channelId, ref.messageId, {
-              content,
+              content: contentChunk,
               allowedMentions: { parse: [] },
               components:
                 mode === "open" ? weeklyParlayButtons("open", marketId) : [],

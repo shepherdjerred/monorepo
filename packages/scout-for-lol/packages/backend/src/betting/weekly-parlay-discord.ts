@@ -51,7 +51,7 @@ function stableNonce(
 }
 
 const MENTIONS_PER_MESSAGE = 20;
-const DISCORD_SAFE_MESSAGE_LENGTH = 1900;
+export const WEEKLY_PARLAY_DISCORD_CONTENT_MAX_LENGTH = 1400;
 
 function mentionChunks(mentionIds: readonly string[]): string[][] {
   return Array.from(
@@ -76,15 +76,10 @@ function weeklyParlayMessageOptions(input: {
   const mentions = mentionChunks(input.mentionIds);
   const firstMentionIds = mentions[0] ?? [];
   const mentionPrefix = firstMentionIds.map((id) => `<@${id}>`).join(" ");
-  const contentMaxLength =
-    DISCORD_SAFE_MESSAGE_LENGTH -
-    (mentionPrefix.length > 0 ? mentionPrefix.length + 1 : 0);
-  if (contentMaxLength <= 0) {
-    throw new Error(
-      "Weekly parlay mentions leave no room for message content.",
-    );
-  }
-  const contentChunks = splitMessageIntoChunks(input.content, contentMaxLength);
+  const contentChunks = splitMessageIntoChunks(
+    input.content,
+    WEEKLY_PARLAY_DISCORD_CONTENT_MAX_LENGTH,
+  );
   const options: MessageCreateOptions[] = contentChunks.map(
     (contentChunk, messageIndex) => ({
       content:
@@ -230,17 +225,19 @@ export async function deliverWeeklyParlayDiscord(
   }
   const isVoidedSettlement =
     input.kind === "settlement" && market.marketState === "voided";
+  const isOperatorCancelledSettlement =
+    isVoidedSettlement && market.voidReason === "operator_cancelled";
   const subjects = WeeklyParlaySubjectsSchema.parse(
     JSON.parse(market.definition.subjects),
   );
   const criteria =
-    isVoidedSettlement && market.voidReason !== "operator_cancelled"
+    isVoidedSettlement && !isOperatorCancelledSettlement
       ? undefined
       : WeeklyParlayDefinitionCriteriaSchema.parse(
           JSON.parse(market.definition.criteria),
         );
   const evaluation =
-    criteria === undefined
+    criteria === undefined || isOperatorCancelledSettlement
       ? undefined
       : evaluateWeeklyParlay(
           criteria,

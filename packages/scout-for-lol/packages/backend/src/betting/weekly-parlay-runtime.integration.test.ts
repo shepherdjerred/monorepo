@@ -712,6 +712,8 @@ describe("weekly parlay operator cancellation", () => {
       "Weekly Bryan Bucks parlay: CANCELLED — BETS REFUNDED",
     );
     expect(edits[0]?.[2].content).toContain("**Conditions**");
+    expect(edits[0]?.[2].content).toContain("• **jerred**");
+    expect(edits[0]?.[2].content).not.toContain("❌ **jerred**");
     expect(edits[0]?.[2].components).toEqual([]);
   });
 });
