@@ -224,31 +224,6 @@ test("retains a central Workflow candidate until its pin converges with stable",
     },
   });
 });
-test("leaves the legacy Scout beta stable pin untouched", () => {
-  const digest = `sha256:${"b".repeat(64)}`;
-  const workflowPin = `2.0.0-42@sha256:${"c".repeat(64)}`;
-  expect(
-    pinCandidatesForDigests(
-      { "shepherdjerred/scout-for-lol/beta": digest },
-      "43",
-      versionCatalogSource([
-        {
-          name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
-          value: workflowPin,
-        },
-        {
-          name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
-          value: workflowPin,
-        },
-      ]),
-    ),
-  ).toEqual({
-    "shepherdjerred/scout-for-lol/beta": {
-      version: "2.0.0-43",
-      digest,
-    },
-  });
-});
 test("bootstraps the legacy Scout beta stable and candidate pins", () => {
   const digest = `sha256:${"b".repeat(64)}`;
   const legacy = `2.0.0-12197@sha256:${"c".repeat(64)}`;
@@ -264,39 +239,6 @@ test("bootstraps the legacy Scout beta stable and candidate pins", () => {
         {
           name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
           value: legacy,
-        },
-      ]),
-    ),
-  ).toEqual({
-    "shepherdjerred/scout-for-lol/beta": {
-      version: "2.0.0-43",
-      digest,
-    },
-    "shepherdjerred/scout-for-lol/beta/workflows/stable": {
-      version: "2.0.0-43",
-      digest,
-    },
-    "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
-      version: "2.0.0-43",
-      digest,
-    },
-  });
-});
-test("bootstraps the legacy Scout beta stable and candidate pins", () => {
-  const digest = `sha256:${"b".repeat(64)}`;
-  const workflowPin = `2.0.0-42@sha256:${"c".repeat(64)}`;
-  expect(
-    pinCandidatesForDigests(
-      { "shepherdjerred/scout-for-lol/beta": digest },
-      "43",
-      versionCatalogSource([
-        {
-          name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
-          value: workflowPin,
-        },
-        {
-          name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
-          value: workflowPin,
         },
       ]),
     ),
