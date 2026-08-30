@@ -11,7 +11,8 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
  *   Pinterest and Reddit marketing pixels.
  * - `connect-src` allows PostHog Cloud's US ingestion host for pageviews,
  *   autocapture, typed events, and session replay, plus Bugsink Sentry
- *   envelopes and the production Pinterest/Reddit pixels.
+ *   envelopes and the production Pinterest/Reddit pixels, including Reddit's
+ *   event-ingestion host.
  * - `img-src` allows Data Dragon champion/item art, the Pinterest conversion
  *   beacon, `https://cdn.discordapp.com` for guild icons, `data:` for inlined
  *   icons + SVG report-query previews, and `blob:` for chart PNGs fetched with
@@ -32,7 +33,7 @@ const scoutCsp = [
   "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' https://cdn.discordapp.com https://ddragon.leagueoflegends.com https://ct.pinterest.com data: blob:",
-  "connect-src 'self' https://us.i.posthog.com https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com",
+  "connect-src 'self' https://us.i.posthog.com https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
   "frame-src https://ct.pinterest.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",

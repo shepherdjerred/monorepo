@@ -11,7 +11,7 @@ const origin = new URL(Bun.argv[2] ?? "https://beta.scout-for-lol.com");
 origin.pathname = origin.pathname.replace(/\/$/, "");
 
 const EXPECTED_CSP_PARTS = [
-  "connect-src 'self' https://us.i.posthog.com https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com",
+  "connect-src 'self' https://us.i.posthog.com https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
   "img-src 'self' https://cdn.discordapp.com https://ddragon.leagueoflegends.com https://ct.pinterest.com data: blob:",
 ];
 
