@@ -7,6 +7,20 @@ import {
   inputTokenUpperBound,
   worstCaseGenerationCostUsd,
 } from "./glitter-context-refresh-budget.ts";
+import {
+  SYNTHESIS_MAX_OUTPUT_TOKENS,
+  SYNTHESIS_MODEL,
+  SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+} from "./glitter-context-refresh-style-generation-cost.ts";
+import { SYNTHESIS_INPUT_BYTE_LIMIT } from "./glitter-context-refresh-synthesis-limit.ts";
+import {
+  buildBoundedRelationshipInput,
+  estimateRelationshipGenerationCost,
+  RELATIONSHIP_INPUT_BYTE_LIMIT,
+  RELATIONSHIP_MAX_OUTPUT_TOKENS,
+  RELATIONSHIP_MODEL,
+} from "./glitter-context-refresh-generate.ts";
+import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
 
 describe("Glitter generation budget", () => {
   test("reserves every semantic attempt a single generation may bill", () => {
@@ -42,7 +56,98 @@ describe("Glitter generation budget", () => {
 
     expect(raised).toBeGreaterThan(flat);
   });
+});
 
+describe("Glitter capped requests", () => {
+  test("admits a bounded synthesis reservation under the weekly cap", () => {
+    const reservation = worstCaseGenerationCostUsd({
+      model: SYNTHESIS_MODEL,
+      inputTokenUpperBound: SYNTHESIS_INPUT_BYTE_LIMIT,
+      outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
+      semanticRetryOutputTokenUpperBound:
+        SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+    });
+    const weeklyBudget = new GenerationBudget(1);
+
+    expect(SYNTHESIS_MODEL).toBe("gpt-5.6-luna");
+    expect(() => {
+      weeklyBudget.authorizeUncachedCall(reservation);
+    }).not.toThrow();
+  });
+
+  test("admits a normal relationship reservation under the weekly cap", () => {
+    const reservation = worstCaseGenerationCostUsd({
+      model: RELATIONSHIP_MODEL,
+      // Conservatively covers the serialized 500-message evidence window
+      // while staying below Luna's context limit at ordinary message sizes.
+      inputTokenUpperBound: 250_000,
+      outputTokenUpperBound: RELATIONSHIP_MAX_OUTPUT_TOKENS,
+    });
+    const weeklyBudget = new GenerationBudget(1);
+
+    expect(RELATIONSHIP_MODEL).toBe("gpt-5.6-luna");
+    expect(() => {
+      weeklyBudget.authorizeUncachedCall(reservation);
+    }).not.toThrow();
+  });
+
+  test("bounds max-length multibyte relationship evidence under the weekly cap", () => {
+    const evidence = Array.from({ length: 500 }, (_, index) => ({
+      personId: index % 2 === 0 ? "caitlyn" : "richard",
+      message: CurrentMessageSchema.parse({
+        schemaVersion: 1,
+        source: "discord-rest",
+        guildId: "12345678901234567",
+        guildSlug: "glitter-boys",
+        channelId: "22345678901234567",
+        messageId: String(60_000_000_000_000_000n + BigInt(index)),
+        author: {
+          id: "32345678901234567",
+          username: "person",
+          globalName: "Person",
+          discriminator: "0",
+          bot: false,
+          avatar: null,
+        },
+        content: "界".repeat(500),
+        timestamp: "2026-07-01T00:00:00.000Z",
+        editedTimestamp: null,
+        type: 0,
+        flags: "0",
+        pinned: false,
+        tts: false,
+        attachments: [],
+        referencedMessageId: null,
+        selectedObservationKey: `observation-${String(index)}`,
+        selectedObservedAt: "2026-07-01T00:00:01.000Z",
+        rawSha256: index.toString(16).padStart(64, "0"),
+      }),
+    }));
+    const input = {
+      people: [
+        { id: "caitlyn", displayName: "Caitlyn" },
+        { id: "richard", displayName: "Richard" },
+      ],
+      currentRelationships: [],
+      evidence,
+    };
+    const bounded = buildBoundedRelationshipInput(input);
+    const weeklyBudget = new GenerationBudget(1);
+
+    expect(bounded.inputBytes).toBeLessThanOrEqual(
+      RELATIONSHIP_INPUT_BYTE_LIMIT,
+    );
+    expect(bounded.evidence.length).toBeLessThan(evidence.length);
+    expect(bounded.evidence[0]).toEqual(evidence[0]);
+    expect(() => {
+      weeklyBudget.authorizeUncachedCall(
+        estimateRelationshipGenerationCost(input),
+      );
+    }).not.toThrow();
+  });
+});
+
+describe("Glitter generation budget accounting", () => {
   test("a run that exhausts its semantic retries stays inside the reservation", () => {
     const reserved = worstCaseGenerationCostUsd({
       model: "gpt-5.6-luna",

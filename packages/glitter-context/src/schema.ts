@@ -186,8 +186,14 @@ export const StyleCardCoverageV2Schema = z.strictObject({
     summarized_messages: z.number().int().nonnegative(),
     chunks: z.number().int().nonnegative(),
     direct_recent_messages: z.number().int().nonnegative(),
+    omitted_summarized_messages: z.number().int().nonnegative().optional(),
+    omitted_chunks: z.number().int().nonnegative().optional(),
+    omitted_direct_recent_messages: z.number().int().nonnegative().optional(),
     date_range: StyleDateRangeSchema,
-    strategy: z.literal("all-safe-monthly-chunks-plus-latest-500"),
+    strategy: z.enum([
+      "all-safe-monthly-chunks-plus-latest-500",
+      "bounded-safe-monthly-chunks-plus-latest-direct",
+    ]),
   }),
   notes: z.string(),
 });
@@ -251,6 +257,12 @@ export const GenerationStateDocumentSchema = z.strictObject({
     .regex(/^[a-f0-9]{64}$/u)
     .nullable(),
   relationshipRefreshedAt: IsoInstantSchema.nullable(),
+  relationshipEvaluationSnapshotChecksum: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/u)
+    .nullable()
+    .default(null),
+  relationshipEvaluationCursor: DiscordIdSchema.nullable().default(null),
   people: z.array(GenerationStateEntrySchema),
 });
 export type GenerationStateDocument = z.infer<

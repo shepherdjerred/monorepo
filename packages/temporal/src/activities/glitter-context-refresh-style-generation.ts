@@ -42,17 +42,15 @@ import {
   sanitizeChunkSummary,
   validateChunkSummary,
 } from "./glitter-context-refresh-style-validation.ts";
+import { finalizeStyleSynthesis } from "./glitter-context-refresh-style-finalize.ts";
 import {
-  finalizeStyleSynthesis,
-  priorFieldValues,
-} from "./glitter-context-refresh-style-finalize.ts";
-import {
-  STYLE_ARRAY_FIELDS,
   StyleChunkSummarySchema,
   StyleSynthesisSchema,
   type StyleChunkSummary,
   type StyleSynthesis,
 } from "./glitter-context-refresh-style-schemas.ts";
+import { buildBoundedSynthesisInput } from "./glitter-context-refresh-synthesis-limit.ts";
+import { synthesisPrompt } from "./glitter-context-refresh-synthesis-prompt.ts";
 
 // Names the chunk, like the exhaustion error beside it at the same call site.
 // Without the key, a run killed by one truncating chunk says only that *some*
@@ -60,14 +58,14 @@ import {
 // generation artifact out of the corpus bucket.
 const extractionTruncationError = (chunkKey: string): string =>
   `GPT-5.6 Luna extraction reached the completion-token limit for ${chunkKey}`;
-// gpt-5.6-sol is a reasoning model at `reasoning_effort: "medium"`, so its
+// gpt-5.6-luna is a reasoning model at `reasoning_effort: "medium"`, so its
 // hidden reasoning tokens share `max_completion_tokens` with the (large) style
 // synthesis output. Observed live: reasoning + output crossed the former 15k cap
 // and truncated (finish_reason=length → unparseable).
 // 28k gives comfortable headroom over the observed ~15k usage; if a call still
 // truncates, it is retried once at the ceiling below.
 const SYNTHESIS_TRUNCATION_ERROR =
-  "GPT-5.6 Sol synthesis reached the completion-token limit";
+  "GPT-5.6 Luna synthesis reached the completion-token limit";
 const EMPTY_CHUNK_SUMMARY: StyleChunkSummary = {
   observations: [],
   representativeMessages: [],
@@ -308,70 +306,6 @@ async function summarizeChunk(input: {
   return best;
 }
 
-function synthesisPrompt(input: {
-  candidate: StyleRefreshCandidate;
-  existingCard: StyleCard;
-  chunks: readonly SummarizedChunk[];
-  repair: {
-    previous: StyleSynthesis;
-    error: string;
-  } | null;
-}): string {
-  const base = [
-    "Patch this human-reviewed style card from complete safe-corpus evidence.",
-    "Return one patch for every listed array field and one decision for every prior index.",
-    "Also patch every prior summary item and every prior League entry by index.",
-    "Retain prior observations unless contradicted or explicitly judged low-confidence.",
-    "Retained observations are copied by the application; do not rewrite them.",
-    "Contradicted removals require corpus evidence. Low-confidence removals must use",
-    "confidence <= 0.3 and explain the judgment.",
-    "Additions require confidence >= 0.7 and cited message IDs.",
-    "Choose 20 unique quote IDs and 30 unique sample IDs from the safe evidence.",
-    "Situational examples are synthetic and must contain exactly three per mood.",
-    "Keep descriptive prose close to the prior card; application validation enforces 85-115%.",
-    "Do not infer sensitive traits, diagnoses, identity, or private facts.",
-    "",
-    JSON.stringify({
-      person: {
-        id: input.candidate.person.id,
-        displayName: input.candidate.person.displayName,
-      },
-      patchFields: STYLE_ARRAY_FIELDS.map((field) => ({
-        field,
-        prior: priorFieldValues(input.existingCard, field).map(
-          (value, priorIndex) => ({ priorIndex, value }),
-        ),
-      })),
-      summaryPatch: {
-        prior:
-          typeof input.existingCard.summary === "string"
-            ? [{ priorIndex: 0, value: input.existingCard.summary }]
-            : input.existingCard.summary.map((value, priorIndex) => ({
-                priorIndex,
-                value,
-              })),
-      },
-      leaguePatch: {
-        prior: Object.entries(input.existingCard.league).map(
-          ([key, value], priorIndex) => ({ priorIndex, key, value }),
-        ),
-      },
-      chunkSummaries: input.chunks,
-      directRecentMessages: input.candidate.directRecentMessages.map(
-        (message) => messageEvidence(message),
-      ),
-    }),
-  ].join("\n");
-  return input.repair === null
-    ? base
-    : [
-        base,
-        "",
-        "Repair the prior structured output so it passes deterministic validation.",
-        JSON.stringify(input.repair),
-      ].join("\n");
-}
-
 async function runSynthesis(input: {
   candidate: StyleRefreshCandidate;
   existingCard: StyleCard;
@@ -383,16 +317,32 @@ async function runSynthesis(input: {
     previous: StyleSynthesis;
     error: string;
   } | null;
-}): Promise<StyleSynthesis> {
-  const prompt = synthesisPrompt(input);
+}): Promise<{
+  synthesis: StyleSynthesis;
+  chunks: readonly SummarizedChunk[];
+  directRecentMessages: readonly CurrentMessage[];
+}> {
+  const bounded = buildBoundedSynthesisInput({
+    chunks: input.chunks,
+    directRecentMessages: input.candidate.directRecentMessages,
+    hasRepairPrevious: input.repair !== null,
+    buildMessages: ({ chunks, directRecentMessages, includeRepairPrevious }) =>
+      glitterPrompt(
+        "You synthesize evidence-grounded writing-style patches for human review.",
+        synthesisPrompt({
+          ...input,
+          chunks,
+          directRecentMessages,
+          includeRepairPrevious,
+        }),
+      ),
+    serializeMessages: JSON.stringify,
+  });
   const callSite =
     input.repair === null
       ? "glitter-style-synthesis"
       : "glitter-style-synthesis-repair";
-  const messages = glitterPrompt(
-    "You synthesize evidence-grounded writing-style patches for human review.",
-    prompt,
-  );
+  const messages = bounded.messages;
   const seed = DETERMINISTIC_SEED + input.attempt;
   const CompletionArtifactSchema =
     glitterObjectArtifactSchema(StyleSynthesisSchema);
@@ -434,11 +384,15 @@ async function runSynthesis(input: {
         reasoningEffort: "medium",
         seed,
         truncationError: SYNTHESIS_TRUNCATION_ERROR,
-        exhaustionError: `GPT-5.6 Sol did not return a parsed synthesis for ${input.candidate.person.id}`,
+        exhaustionError: `GPT-5.6 Luna did not return a parsed synthesis for ${input.candidate.person.id}`,
       });
     },
   });
-  return useGlitterObjectArtifact({ artifact, budget: input.budget });
+  return {
+    synthesis: useGlitterObjectArtifact({ artifact, budget: input.budget }),
+    chunks: bounded.chunks,
+    directRecentMessages: bounded.directRecentMessages,
+  };
 }
 
 export function estimateStyleGenerationCost(input: {
@@ -467,9 +421,16 @@ export async function generateStyleCard(input: {
       artifactStore: input.artifactStore,
       budget: input.budget,
     });
+    const firstMessage = chunk.messages[0];
+    const lastMessage = chunk.messages.at(-1);
+    if (firstMessage === undefined || lastMessage === undefined) {
+      throw new Error(`style evidence chunk ${chunk.key} is empty`);
+    }
     summarizedChunks.push({
       key: chunk.key,
       month: chunk.month,
+      startTimestamp: firstMessage.timestamp,
+      endTimestamp: lastMessage.timestamp,
       summary,
       summarizedMessageCount: summarizedMessageCount(chunk, summary),
     });
@@ -492,40 +453,51 @@ export async function generateStyleCard(input: {
       `no evidence for ${input.candidate.person.id}: ${String(chunks.length)} chunks yielded nothing and there are no direct recent messages`,
     );
   }
-  let previous = await runSynthesis({
+  const finalizeGenerated = (
+    result: Awaited<ReturnType<typeof runSynthesis>>,
+    synthesis: StyleSynthesis,
+  ): StyleCardV2 =>
+    finalizeStyleSynthesis({
+      ...input,
+      chunks: result.chunks,
+      directRecentMessages: result.directRecentMessages,
+      omittedChunks: summarizedChunks.length - result.chunks.length,
+      omittedSummarizedMessages:
+        summarizedMessages -
+        result.chunks.reduce(
+          (total, chunk) => total + chunk.summarizedMessageCount,
+          0,
+        ),
+      omittedDirectRecentMessages:
+        input.candidate.directRecentMessages.length -
+        result.directRecentMessages.length,
+      synthesis,
+    });
+  let generated = await runSynthesis({
     ...input,
     chunks: summarizedChunks,
     attempt: 0,
     repair: null,
   });
+  let previous = generated.synthesis;
   let lastError: Error;
   try {
-    return finalizeStyleSynthesis({
-      ...input,
-      chunkCount: chunks.length,
-      summarizedMessages,
-      synthesis: previous,
-    });
+    return finalizeGenerated(generated, previous);
   } catch (error: unknown) {
     lastError = z.instanceof(Error).parse(error);
   }
   for (let attempt = 1; attempt <= MAX_SYNTHESIS_REPAIR_ATTEMPTS; attempt++) {
-    const repaired = await runSynthesis({
+    generated = await runSynthesis({
       ...input,
       chunks: summarizedChunks,
       attempt,
       repair: { previous, error: lastError.message },
     });
     try {
-      return finalizeStyleSynthesis({
-        ...input,
-        chunkCount: chunks.length,
-        summarizedMessages,
-        synthesis: repaired,
-      });
+      return finalizeGenerated(generated, generated.synthesis);
     } catch (error: unknown) {
       lastError = z.instanceof(Error).parse(error);
-      previous = repaired;
+      previous = generated.synthesis;
     }
   }
   // Every bounded synthesis repair produced a card the contract rejects. That is

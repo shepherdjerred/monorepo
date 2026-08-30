@@ -49,6 +49,13 @@ export function selectRelationshipEvidence(input: {
   people: readonly Person[];
   messages: readonly CurrentMessage[];
 }): { personId: string; message: CurrentMessage }[] {
+  return selectAllRelationshipEvidence(input).slice(-MAX_RELATIONSHIP_EVIDENCE);
+}
+
+function selectAllRelationshipEvidence(input: {
+  people: readonly Person[];
+  messages: readonly CurrentMessage[];
+}): { personId: string; message: CurrentMessage }[] {
   const personByDiscordId = new Map<string, string>();
   for (const person of input.people) {
     for (const discordId of person.discordUserIds) {
@@ -64,8 +71,34 @@ export function selectRelationshipEvidence(input: {
     })
     .toSorted((first, second) =>
       compareSnowflakes(first.message.messageId, second.message.messageId),
-    )
-    .slice(-MAX_RELATIONSHIP_EVIDENCE);
+    );
+}
+
+export function selectRelationshipEvidenceBatch(input: {
+  people: readonly Person[];
+  messages: readonly CurrentMessage[];
+  snapshotSha256: string;
+  evaluationSnapshotChecksum: string | null | undefined;
+  evaluationCursor: string | null | undefined;
+}): {
+  evidence: { personId: string; message: CurrentMessage }[];
+  complete: boolean;
+} {
+  if (input.evaluationCursor === null || input.evaluationCursor === undefined) {
+    const evidence = selectRelationshipEvidence(input);
+    return { evidence, complete: evidence.length === 0 };
+  }
+  const evidence = selectAllRelationshipEvidence(input);
+  const cursorIndex = evidence.findIndex(
+    (entry) => entry.message.messageId === input.evaluationCursor,
+  );
+  if (cursorIndex === -1) {
+    throw new Error(
+      `relationship evaluation cursor ${input.evaluationCursor} from snapshot ${input.evaluationSnapshotChecksum ?? "unknown"} is not present in snapshot ${input.snapshotSha256}`,
+    );
+  }
+  const remaining = evidence.slice(cursorIndex + 1);
+  return { evidence: remaining, complete: remaining.length === 0 };
 }
 
 function proposalId(proposal: RelationshipProposal): string {

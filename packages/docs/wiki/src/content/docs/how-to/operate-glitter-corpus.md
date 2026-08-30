@@ -110,8 +110,25 @@ request digest rather than by run, so a local run reuses everything a production
 run already paid for. Pin `--snapshot-id`/`--snapshot-sha256` to reuse the most
 cache; omit both to read the latest verified snapshot.
 
-The weekly schedule passes a $40 uncached-cost kill switch. Operator
-invocations that omit `maxEstimatedCostUsd` still default to $10. A
+The weekly schedule passes a $1 uncached-cost kill switch. Extraction and
+synthesis use Luna so one bounded generation reservation can fit under that
+cap while retaining the existing semantic retries and completion-token
+headroom. Budget exhaustion is expected bounded progress: exact current v3
+request artifacts remain available to later weekly runs, but no PR is opened
+until one run completes. Older or legacy-key artifacts are not reused unless
+their current request hash is an exact match.
+
+Each synthesis request is also capped at 600,000 serialized UTF-8 bytes, whose
+full three-attempt Luna reservation remains below $1. If all monthly summaries
+do not fit, generation deterministically omits the oldest summaries until the
+request fits, then omits the oldest direct messages while retaining at least the
+newest 30 required by the response contract. An oversized invalid repair output
+may be omitted while its validation error remains. Cards record the bounded
+strategy, actual evidence date range, and omitted chunk/message counts. If the
+reviewed card plus that minimum evidence still cannot fit, that person is
+reported as a non-retryable evidence failure instead of retrying the activity.
+
+Operator invocations that omit `maxEstimatedCostUsd` still default to $10. A
 preflight estimate, per-call authorization, and post-call ceiling enforce
 the cap. A completion that returns without usage data fails non-retryably
 rather than risk re-charging.

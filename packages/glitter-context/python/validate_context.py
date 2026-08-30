@@ -192,8 +192,14 @@ class EvidenceCoverage(BaseModel):
     summarized_messages: int = Field(ge=0)
     chunks: int = Field(ge=0)
     direct_recent_messages: int = Field(ge=0)
+    omitted_summarized_messages: int = Field(default=0, ge=0)
+    omitted_chunks: int = Field(default=0, ge=0)
+    omitted_direct_recent_messages: int = Field(default=0, ge=0)
     date_range: StyleDateRange
-    strategy: Literal["all-safe-monthly-chunks-plus-latest-500"]
+    strategy: Literal[
+        "all-safe-monthly-chunks-plus-latest-500",
+        "bounded-safe-monthly-chunks-plus-latest-direct",
+    ]
 
 
 class StyleCardCoverageV2(BaseModel):

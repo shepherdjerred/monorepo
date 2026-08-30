@@ -14,12 +14,15 @@ export function shouldEvaluateRelationships(
 
 export function shouldPersistRelationshipEvaluation(input: {
   evaluated: boolean;
+  relationshipEvaluationProgressed: boolean;
   refreshedPeopleCount: number;
   relationshipProposalCount: number;
 }): boolean {
   return (
     input.evaluated &&
-    (input.refreshedPeopleCount > 0 || input.relationshipProposalCount > 0)
+    (input.relationshipEvaluationProgressed ||
+      input.refreshedPeopleCount > 0 ||
+      input.relationshipProposalCount > 0)
   );
 }
 
@@ -43,6 +46,9 @@ export function updateGenerationState(input: {
   snapshotSha256: string;
   refreshedAt: string;
   relationshipsEvaluated: boolean;
+  relationshipEvaluationComplete: boolean;
+  relationshipEvaluationProgressed: boolean;
+  relationshipEvaluationCursor: string | null;
 }): GenerationStateDocument {
   const candidateByPerson = new Map(
     input.candidates.map((candidate) => [candidate.person.id, candidate]),
@@ -79,12 +85,26 @@ export function updateGenerationState(input: {
     .map((personId) => refreshedEntryFor(personId));
   return GenerationStateDocumentSchema.parse({
     ...input.state,
-    relationshipSourceSnapshotChecksum: input.relationshipsEvaluated
-      ? input.snapshotSha256
-      : input.state.relationshipSourceSnapshotChecksum,
-    relationshipRefreshedAt: input.relationshipsEvaluated
-      ? input.refreshedAt
-      : input.state.relationshipRefreshedAt,
+    relationshipSourceSnapshotChecksum:
+      input.relationshipsEvaluated && input.relationshipEvaluationComplete
+        ? input.snapshotSha256
+        : input.state.relationshipSourceSnapshotChecksum,
+    relationshipRefreshedAt:
+      input.relationshipsEvaluated && input.relationshipEvaluationComplete
+        ? input.refreshedAt
+        : input.state.relationshipRefreshedAt,
+    relationshipEvaluationSnapshotChecksum:
+      input.relationshipsEvaluated && input.relationshipEvaluationProgressed
+        ? input.relationshipEvaluationComplete
+          ? null
+          : input.snapshotSha256
+        : input.state.relationshipEvaluationSnapshotChecksum,
+    relationshipEvaluationCursor:
+      input.relationshipsEvaluated && input.relationshipEvaluationProgressed
+        ? input.relationshipEvaluationComplete
+          ? null
+          : input.relationshipEvaluationCursor
+        : input.state.relationshipEvaluationCursor,
     people: [...updatedExisting, ...appended],
   });
 }
