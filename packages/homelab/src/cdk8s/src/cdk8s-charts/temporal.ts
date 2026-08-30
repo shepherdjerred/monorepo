@@ -4,6 +4,7 @@ import { Namespace } from "cdk8s-plus-31";
 import {
   IntOrString,
   KubeNetworkPolicy,
+  type NetworkPolicyEgressRule,
   type NetworkPolicyIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
@@ -18,6 +19,23 @@ import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker-network-policy.ts";
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker.ts";
 import { createTemporalWorkerNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-network-policies.ts";
+
+// Every Temporal-namespace workload egresses to cluster DNS the same way;
+// shared here so it is declared once instead of drifting per-policy.
+function dnsEgressRule(): NetworkPolicyEgressRule {
+  return {
+    to: [
+      {
+        namespaceSelector: {},
+        podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+      },
+    ],
+    ports: [
+      { port: IntOrString.fromNumber(53), protocol: "UDP" },
+      { port: IntOrString.fromNumber(53), protocol: "TCP" },
+    ],
+  };
+}
 
 function scoutCompetitionActivityIngress(): NetworkPolicyIngressRule {
   return {
@@ -250,19 +268,7 @@ export function createTemporalChart(app: App) {
         },
       ],
       egress: [
-        // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         // PostgreSQL within namespace
         {
           to: [
@@ -320,19 +326,7 @@ export function createTemporalChart(app: App) {
         },
       ],
       egress: [
-        // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         // Temporal Server gRPC
         {
           to: [
@@ -384,18 +378,7 @@ export function createTemporalChart(app: App) {
       },
       policyTypes: ["Egress"],
       egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         {
           to: [
             {
@@ -418,18 +401,7 @@ export function createTemporalChart(app: App) {
       },
       policyTypes: ["Egress"],
       egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
       ],
     },
@@ -444,19 +416,7 @@ export function createTemporalChart(app: App) {
       },
       policyTypes: ["Egress"],
       egress: [
-        // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         // Temporal Server gRPC
         {
           to: [

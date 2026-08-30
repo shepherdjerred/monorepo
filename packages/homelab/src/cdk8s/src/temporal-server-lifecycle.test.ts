@@ -56,6 +56,23 @@ const ContainerSchema = z.object({
     .optional(),
 });
 
+// Every synthesized Job/Deployment here has exactly one container; find it
+// and fail with a resource-specific message if the shape ever changes.
+function firstContainer(resourceSpec: unknown, description: string) {
+  const spec = z
+    .object({
+      template: z.object({
+        spec: z.object({ containers: z.array(ContainerSchema) }),
+      }),
+    })
+    .parse(resourceSpec);
+  const container = spec.template.spec.containers[0];
+  if (container === undefined) {
+    throw new Error(`${description} container was not synthesized`);
+  }
+  return container;
+}
+
 describe("Temporal server lifecycle", () => {
   test("requires a fresh successful volume backup before migration", () => {
     const job = findResource("Job", "temporal-backup-preflight");
@@ -64,17 +81,7 @@ describe("Temporal server lifecycle", () => {
       "argocd.argoproj.io/sync-wave": "-2",
     });
 
-    const spec = z
-      .object({
-        template: z.object({
-          spec: z.object({ containers: z.array(ContainerSchema) }),
-        }),
-      })
-      .parse(job.spec);
-    const container = spec.template.spec.containers[0];
-    if (container === undefined) {
-      throw new Error("Backup preflight container was not synthesized");
-    }
+    const container = firstContainer(job.spec, "Backup preflight");
     const command = container.args?.join("\n") ?? "";
 
     expect(container.image).toContain("bitnamilegacy/kubectl:1.33.4@sha256:");
@@ -93,17 +100,7 @@ describe("Temporal server lifecycle", () => {
         "BeforeHookCreation,HookSucceeded",
     });
 
-    const spec = z
-      .object({
-        template: z.object({
-          spec: z.object({ containers: z.array(ContainerSchema) }),
-        }),
-      })
-      .parse(job.spec);
-    const container = spec.template.spec.containers[0];
-    if (container === undefined) {
-      throw new Error("Schema migration container was not synthesized");
-    }
+    const container = firstContainer(job.spec, "Schema migration");
     const command = container.args?.join("\n") ?? "";
 
     expect(container.image).toContain("temporalio/admin-tools:1.30.6@sha256:");
@@ -120,17 +117,7 @@ describe("Temporal server lifecycle", () => {
 
   test("starts the server without schema setup and verifies PostgreSQL identity", () => {
     const deployment = findResource("Deployment", "temporal-temporal-server");
-    const spec = z
-      .object({
-        template: z.object({
-          spec: z.object({ containers: z.array(ContainerSchema) }),
-        }),
-      })
-      .parse(deployment.spec);
-    const container = spec.template.spec.containers[0];
-    if (container === undefined) {
-      throw new Error("Temporal server container was not synthesized");
-    }
+    const container = firstContainer(deployment.spec, "Temporal server");
     const env = new Map(
       (container.env ?? []).map((entry) => [entry.name, entry.value]),
     );
