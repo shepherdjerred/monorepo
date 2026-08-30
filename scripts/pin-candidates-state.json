@@ -7,9 +7,9 @@
       "buildNumber": 12157
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-12197",
-      "digest": "sha256:451e678ecfccf9ea13bd2a588160a4156517ef4f8bdb56e691521bd94367773b",
-      "buildNumber": 12197
+      "buildNumber": 12365,
+      "version": "2.0.0-12365",
+      "digest": "sha256:280b90e3973841224ffdd1e35909dae0f0abe8cb6eddde84b7be7bec501d4aa5"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-10989",
@@ -22,9 +22,9 @@
       "buildNumber": 12157
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "version": "2.0.0-12157",
-      "digest": "sha256:6cc92dfed5134c508de88e29922797c50be192564c9384f7872a630636f40e88",
-      "buildNumber": 12157
+      "buildNumber": 12365,
+      "version": "2.0.0-12365",
+      "digest": "sha256:0d0c3db2fe2d2a2cbc9a625ff581d194bb129baf7b19d2a2e707fab2809fc24e"
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-10760",
@@ -32,9 +32,9 @@
       "buildNumber": 10760
     },
     "shepherdjerred/openrouter-broadcast-ingest": {
-      "version": "2.0.0-12157",
-      "digest": "sha256:1bab8759f89d739313a2df8f4b7b3bd568d3ab82e1dbd6e22002790af22523e3",
-      "buildNumber": 12157
+      "buildNumber": 12365,
+      "version": "2.0.0-12365",
+      "digest": "sha256:14881f47a5c41bd6121d3ed728b80c7212704e76e93e16fbbeb03a52d77faae1"
     },
     "shepherdjerred/redlib": {
       "version": "2.0.0-11934",
@@ -42,24 +42,24 @@
       "buildNumber": 11934
     },
     "shepherdjerred/scout-evals": {
-      "version": "2.0.0-12157",
-      "digest": "sha256:700f246daf0fd2e1c51d0c61d2d947736ce14f742eb805803b1cd29a726901a0",
-      "buildNumber": 12157
+      "buildNumber": 12365,
+      "version": "2.0.0-12365",
+      "digest": "sha256:c986b8954275e86df4063c83217b6678d43d2aea196f262e21e332d1089d99ea"
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "version": "2.0.0-12197",
-      "digest": "sha256:9acbf285a1fbe164deea3e2fe0a16a000a442cc0d269e74b2e4850f49e4946db",
-      "buildNumber": 12197
+      "buildNumber": 12365,
+      "version": "2.0.0-12365",
+      "digest": "sha256:49a122c90e44b387042ac491613cfcbcc94f6587e3fa82fcfceea2734128f750"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "version": "2.0.0-12197",
-      "digest": "sha256:fd38bebac48020b2ad2894af0c1d5960ed4595c38a15ae217d1fbc6396ae9ea6",
-      "buildNumber": 12197
+      "buildNumber": 12365,
+      "version": "2.0.0-12365",
+      "digest": "sha256:bb4619d0ec28c1a8d318461e47a7d2af6ce999fa0854f9e4e0bc828d3369aae5"
     },
     "shepherdjerred/streambot": {
-      "version": "2.0.0-12197",
-      "digest": "sha256:65e829ba116e22f80be32d60c4b2c481198be1c2502ee645179f32a930775bd1",
-      "buildNumber": 12197
+      "buildNumber": 12365,
+      "version": "2.0.0-12365",
+      "digest": "sha256:0e39d3ab7f7fef52f23382a78aea40c78f99e9fd0a7d3cb54cbd48b1d2ebb97c"
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-12157",
@@ -67,9 +67,9 @@
       "buildNumber": 12157
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 12214,
-      "version": "2.0.0-12214",
-      "digest": "sha256:73aafb764c9c46b2f518fe0265e11f012aaa833dcb36203f4403a1bbcd07c8a1"
+      "buildNumber": 12368,
+      "version": "2.0.0-12368",
+      "digest": "sha256:366ef6264064e2ce27744d48acbb19c7758e4d575a930da1441c25ffb6e983f5"
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-12157",
