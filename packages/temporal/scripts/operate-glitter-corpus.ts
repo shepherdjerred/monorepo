@@ -4,6 +4,7 @@ import {
   ChannelStateResultSchema,
   InventoryResultSchema,
 } from "#shared/glitter-corpus-activity-types.ts";
+import { GlitterContextAuditResultSchema } from "#activities/glitter-context-audit-schema.ts";
 import { GlitterCorpusSnapshotPinSchema } from "#activities/glitter-context-refresh-corpus.ts";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { GuildSnapshotSchema } from "#shared/glitter-corpus.ts";
@@ -21,6 +22,7 @@ function usage(): never {
       "  bun run glitter:operate backfill --inventory-key=<key> --inventory-sha=<sha256> [--seed-prefix=<prefix>] [--max-pages=<n>] [--wait=true]",
       "  bun run glitter:operate daily [--wait=true]",
       "  bun run glitter:operate context-refresh --dry-run=<true|false> --max-estimated-cost-usd=<usd> [--now=<iso>] [--snapshot-id=<uuid> --snapshot-sha256=<sha256>] [--wait=true]",
+      "  bun run glitter:operate context-audit [--now=<iso>] [--snapshot-id=<uuid> --snapshot-sha256=<sha256>] [--wait=true]",
     ].join("\n"),
   );
   process.exit(2);
@@ -278,6 +280,52 @@ async function runContextRefresh(
   }
 }
 
+async function runContextAudit(
+  client: Client,
+  argv: readonly string[],
+): Promise<void> {
+  const parsed = z
+    .object({
+      now: z.iso.datetime({ offset: true }).optional(),
+      "snapshot-id": z.uuid().optional(),
+      "snapshot-sha256": z
+        .string()
+        .regex(/^[0-9a-f]{64}$/)
+        .optional(),
+      wait: z.enum(["true", "false"]).default("false"),
+    })
+    .strict()
+    .parse(flags(argv));
+  const snapshot =
+    parsed["snapshot-id"] === undefined &&
+    parsed["snapshot-sha256"] === undefined
+      ? undefined
+      : GlitterCorpusSnapshotPinSchema.parse({
+          snapshotId: parsed["snapshot-id"],
+          snapshotSha256: parsed["snapshot-sha256"],
+        });
+  const handle = await startWorkflow({
+    client,
+    workflowType: "runGlitterContextAudit",
+    workflowId: `glitter-context-audit-${crypto.randomUUID()}`,
+    args: [
+      {
+        ...(parsed.now === undefined ? {} : { now: parsed.now }),
+        ...(snapshot === undefined ? {} : { snapshot }),
+      },
+    ],
+  });
+  if (parsed.wait === "true") {
+    console.warn(
+      JSON.stringify(
+        GlitterContextAuditResultSchema.parse(await handle.result()),
+        null,
+        2,
+      ),
+    );
+  }
+}
+
 async function main(): Promise<void> {
   const [command, ...argv] = process.argv.slice(2);
   if (command === undefined) {
@@ -313,6 +361,11 @@ async function main(): Promise<void> {
     }
     case "context-refresh": {
       await runContextRefresh(client, argv);
+
+      break;
+    }
+    case "context-audit": {
+      await runContextAudit(client, argv);
 
       break;
     }

@@ -102,6 +102,11 @@ import type {
   GlitterContextRefreshInput,
   GlitterContextRefreshResult,
 } from "#activities/glitter-context-refresh.ts";
+import { runGlitterContextAudit as _runGlitterContextAudit } from "./glitter-context-audit.ts";
+import type {
+  GlitterContextAuditInput,
+  GlitterContextAuditResult,
+} from "#activities/glitter-context-audit-schema.ts";
 import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./main-vuln-scan.ts";
 import { runLinkRotScanWorkflow as runLinkRotScanWorkflowImplementation } from "./link-rot-scan.ts";
 import {
@@ -368,6 +373,12 @@ export async function runGlitterContextRefresh(
   input: GlitterContextRefreshInput = {},
 ): Promise<GlitterContextRefreshResult> {
   return _runGlitterContextRefresh(input);
+}
+
+export async function runGlitterContextAudit(
+  input: GlitterContextAuditInput = {},
+): Promise<GlitterContextAuditResult> {
+  return _runGlitterContextAudit(input);
 }
 
 export async function runGlitterCorpusBackfill(

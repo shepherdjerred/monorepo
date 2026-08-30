@@ -59,9 +59,12 @@ const GenerationSpendReceiptSchema = z.strictObject({
   usage: GenerationUsageSchema,
 });
 
-export type GenerationArtifactStore = {
-  ownerRunId: string;
+export type GenerationArtifactReader = {
   read: (key: string) => Promise<unknown>;
+};
+
+export type GenerationArtifactStore = GenerationArtifactReader & {
+  ownerRunId: string;
   create: (key: string, value: unknown) => Promise<void>;
 };
 
@@ -175,6 +178,55 @@ function parseStoredResponse<Response>(input: {
     cacheStatus: input.cacheStatus,
     billedToCurrentRun: artifact.ownerRunId === input.ownerRunId,
     usage: artifact.usage,
+  };
+}
+
+export type GenerationArtifactProbe<Response> =
+  | {
+      status: "hit";
+      key: string;
+      requestSha256: string;
+      response: Response;
+      usage: GenerationUsage;
+    }
+  | {
+      status: "miss";
+      key: string;
+      requestSha256: string;
+    };
+
+export async function probeGenerationArtifact<Response>(input: {
+  store: GenerationArtifactReader;
+  model: string;
+  callSite: string;
+  request: unknown;
+  responseSchema: z.ZodType<Response>;
+}): Promise<GenerationArtifactProbe<Response>> {
+  const requestSha256 = generationRequestSha256(input.request);
+  const key = generationArtifactKey({
+    callSite: input.callSite,
+    requestSha256,
+  });
+  const stored = await input.store.read(key);
+  if (stored === undefined) {
+    return { status: "miss", key, requestSha256 };
+  }
+  const parsed = parseStoredResponse({
+    stored,
+    key,
+    cacheStatus: "hit",
+    model: input.model,
+    callSite: input.callSite,
+    ownerRunId: "00000000-0000-4000-8000-000000000000",
+    requestSha256,
+    responseSchema: input.responseSchema,
+  });
+  return {
+    status: "hit",
+    key,
+    requestSha256,
+    response: parsed.response,
+    usage: parsed.usage,
   };
 }
 
@@ -405,6 +457,23 @@ export function createCorpusGenerationArtifactStore(
           throw error;
         }
       }
+    },
+  };
+}
+
+export function createCorpusGenerationArtifactReader(
+  store: CorpusStore,
+): GenerationArtifactReader {
+  const guildId = z
+    .string()
+    .regex(/^\d+$/u)
+    .parse(Bun.env["GLITTER_DISCORD_GUILD_ID"]);
+  return {
+    read: async (key) => {
+      const bytes = await getObjectBytes(store, `guilds/${guildId}/${key}`);
+      return bytes === undefined
+        ? undefined
+        : (JSON.parse(new TextDecoder().decode(bytes)) as unknown);
     },
   };
 }

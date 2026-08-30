@@ -4,7 +4,7 @@ import {
   type RelationshipsDocument,
 } from "@shepherdjerred/glitter-context/schema";
 import type { CurrentMessage } from "#shared/glitter-corpus.ts";
-import { buildBoundedRelationshipInput } from "./glitter-context-refresh-generate.ts";
+import { buildBoundedRelationshipInput } from "./glitter-context-refresh-requests.ts";
 import { selectRelationshipEvidenceBatch } from "./glitter-context-refresh-relationships.ts";
 
 type RelationshipEvidence = ReturnType<

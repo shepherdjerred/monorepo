@@ -27,6 +27,7 @@ import { scoutShowcaseRefreshActivities } from "./scout-showcase-refresh.ts";
 import { scoutQueueWindowsActivities } from "./scout-queue-windows.ts";
 import { glitterCorpusActivities } from "./glitter-corpus.ts";
 import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
+import { glitterContextAuditActivities } from "./glitter-context-audit.ts";
 import { weatherActivities } from "./weather.ts";
 import { workflowFailureWatchActivities } from "./workflow-failure-watch-activity.ts";
 import { maintenanceActivities } from "./maintenance.ts";
@@ -108,6 +109,7 @@ export const glitterCorpusWorkerActivities = {
 
 export const glitterContextWorkerActivities = {
   ...glitterContextRefreshActivities,
+  ...glitterContextAuditActivities,
 };
 
 export const maintenanceWorkerActivities = {

@@ -248,6 +248,8 @@ class GenerationStateEntry(BaseModel):
 class GenerationStateDocument(DocumentModel):
     relationshipSourceSnapshotChecksum: Checksum | None
     relationshipRefreshedAt: AwareDatetime | None
+    relationshipEvaluationSnapshotChecksum: Checksum | None = None
+    relationshipEvaluationCursor: DiscordId | None = None
     people: list[GenerationStateEntry]
 
 

@@ -136,6 +136,7 @@ recurring schedule.
 | ------------------------- | ---------------------------- | ----------------- | -------------------- |
 | corpus capture            | daily 04:15                  | deterministic     | immutable S3 corpus  |
 | context-refresh           | Mon 11:00                    | LLM (cost-capped) | PR                   |
+| context cache audit       | operator (`glitter:operate`) | deterministic     | cache report         |
 | corpus inventory          | operator (`glitter:operate`) | deterministic     | channel-scope object |
 | corpus backfill           | operator (`glitter:operate`) | deterministic     | immutable S3 corpus  |
 | channel backfill (canary) | operator (`glitter:operate`) | deterministic     | immutable S3 corpus  |

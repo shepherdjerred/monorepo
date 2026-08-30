@@ -5,7 +5,9 @@ import {
   generationArtifactKey,
   generationRequestSha256,
   generationSpendReceiptKey,
+  probeGenerationArtifact,
   readOrCreateGenerationArtifact,
+  type GenerationArtifactReader,
   type GenerationArtifactStore,
 } from "./glitter-context-refresh-cache.ts";
 import { GenerationBudget } from "./glitter-context-refresh-budget.ts";
@@ -222,6 +224,79 @@ describe("Glitter context generation artifacts", () => {
     expect(failure.type).toBe("BilledGenerationFinalizationError");
     expect(failure.nonRetryable).toBe(true);
     expect(createCount).toBe(1);
+  });
+});
+
+describe("Glitter context generation artifact probes", () => {
+  test("fully validates an exact current artifact without writes or generation", async () => {
+    const request = { prompt: "stable prompt", seed: 0 };
+    const response = { value: "cached" };
+    const key = generationArtifactKey({
+      callSite: "style-card",
+      requestSha256: generationRequestSha256(request),
+    });
+    const reader: GenerationArtifactReader = {
+      read: async (receivedKey) =>
+        receivedKey === key
+          ? {
+              schemaVersion: 3,
+              ownerRunId: OTHER_RUN_ID,
+              model: "test-model",
+              callSite: "style-card",
+              requestSha256: generationRequestSha256(request),
+              responseSha256: generationRequestSha256(response),
+              response,
+              usage: {
+                inputTokens: 10,
+                outputTokens: 2,
+                cachedInputTokens: 0,
+                costUsd: 0.01,
+              },
+            }
+          : undefined,
+    };
+
+    await expect(
+      probeGenerationArtifact({
+        store: reader,
+        model: "test-model",
+        callSite: "style-card",
+        request,
+        responseSchema: ResponseSchema,
+      }),
+    ).resolves.toMatchObject({ status: "hit", key, response });
+  });
+
+  test("reports a changed request hash as a miss", async () => {
+    const reader: GenerationArtifactReader = {
+      read: () => Promise.resolve(),
+    };
+    const probe = await probeGenerationArtifact({
+      store: reader,
+      model: "test-model",
+      callSite: "style-card",
+      request: { prompt: "changed" },
+      responseSchema: ResponseSchema,
+    });
+    expect(probe.status).toBe("miss");
+    expect(probe.requestSha256).toBe(
+      generationRequestSha256({ prompt: "changed" }),
+    );
+  });
+
+  test("rejects malformed current artifacts", async () => {
+    const reader: GenerationArtifactReader = {
+      read: async () => ({ schemaVersion: 3, response: { value: "bad" } }),
+    };
+    await expect(
+      probeGenerationArtifact({
+        store: reader,
+        model: "test-model",
+        callSite: "style-card",
+        request: { prompt: "stable" },
+        responseSchema: ResponseSchema,
+      }),
+    ).rejects.toThrow();
   });
 });
 
