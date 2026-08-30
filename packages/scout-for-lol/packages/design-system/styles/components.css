@@ -8,7 +8,6 @@
   border: var(--scout-border-width) solid transparent;
   border-radius: var(--scout-radius-medium);
   font: 600 0.875rem/1 var(--scout-font-body);
-  text-decoration: none;
   cursor: pointer;
   transition:
     color var(--scout-motion-duration-fast) var(--scout-motion-easing),
