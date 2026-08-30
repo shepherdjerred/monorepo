@@ -194,62 +194,61 @@ function fixtureRunner(
   return (command) => {
     const args = [...command];
     commands.push(args);
-    if (args.includes("describe-version")) {
-      const buildId = args[args.indexOf("--build-id") + 1];
-      return Promise.resolve(
-        jsonResult({
-          deploymentName: fixture.deploymentName ?? DEPLOYMENT,
-          BuildID: buildId,
-          taskQueuesInfos: fixture.omitWorkflowQueue
-            ? []
-            : fixture.workflowQueue === undefined
-              ? RETAINED_WORKFLOW_TASK_QUEUES.map((name) => ({
-                  name,
-                  type: "workflow" as const,
-                }))
-              : [
-                  {
-                    name: fixture.workflowQueue,
-                    type: "workflow",
-                  },
-                ],
-        }),
-      );
-    }
-    if (args.includes("describe")) {
-      if (
-        fixture.deploymentName === "scout-prod-workflows" &&
-        args.includes("scout-beta-workflows")
-      ) {
-        return Promise.resolve(
-          jsonResult(prerequisiteDeploymentDescription(fixture)),
-        );
-      }
-      return Promise.resolve(jsonResult(deploymentDescription(fixture)));
-    }
-    if (args[0] === "toolkit" && args[1] === "prom") {
-      const expression = args[3] ?? "";
-      return Promise.resolve(
-        jsonResult(prometheus(metricValue(expression, fixture))),
-      );
-    }
-    if (args[0] === "git") {
-      return Promise.resolve(gitFixtureResult(fixture, args));
-    }
-    if (args[0] === "docker") {
-      return Promise.resolve(
-        jsonResult([`GIT_SHA=${fixture.imageBuildId ?? CANDIDATE}`]),
-      );
-    }
-    if (args.includes("set-current-version")) {
-      const buildId = args[args.indexOf("--build-id") + 1];
-      if (buildId === undefined) {
-        throw new Error("fixture set-current-version is missing a build ID");
-      }
-      fixture.currentBuildId = buildId;
-    }
-    return Promise.resolve(jsonResult({ outcome: "ok" }));
+    return Promise.resolve(fixtureCommandResult(fixture, args));
   };
+}
+
+function fixtureCommandResult(
+  fixture: Fixture,
+  args: string[],
+): { stdout: string; stderr: string } {
+  if (args.includes("describe-version"))
+    return describeVersionFixture(fixture, args);
+  if (args.includes("describe")) return describeFixture(fixture, args);
+  if (args[0] === "toolkit" && args[1] === "prom")
+    return jsonResult(prometheus(metricValue(args[3] ?? "", fixture)));
+  if (args[0] === "git") return gitFixtureResult(fixture, args);
+  if (args[0] === "docker")
+    return jsonResult([`GIT_SHA=${fixture.imageBuildId ?? CANDIDATE}`]);
+  if (args.includes("set-current-version")) {
+    const buildId = args[args.indexOf("--build-id") + 1];
+    if (buildId === undefined) {
+      throw new Error("fixture set-current-version is missing a build ID");
+    }
+    fixture.currentBuildId = buildId;
+  }
+  return jsonResult({ outcome: "ok" });
+}
+
+function describeVersionFixture(
+  fixture: Fixture,
+  args: readonly string[],
+): { stdout: string; stderr: string } {
+  const buildId = args[args.indexOf("--build-id") + 1];
+  return jsonResult({
+    deploymentName: fixture.deploymentName ?? DEPLOYMENT,
+    BuildID: buildId,
+    taskQueuesInfos: fixture.omitWorkflowQueue
+      ? []
+      : fixture.workflowQueue === undefined
+        ? RETAINED_WORKFLOW_TASK_QUEUES.map((name) => ({
+            name,
+            type: "workflow" as const,
+          }))
+        : [{ name: fixture.workflowQueue, type: "workflow" }],
+  });
+}
+
+function describeFixture(
+  fixture: Fixture,
+  args: readonly string[],
+): { stdout: string; stderr: string } {
+  const description =
+    fixture.deploymentName === "scout-prod-workflows" &&
+    args.includes("scout-beta-workflows")
+      ? prerequisiteDeploymentDescription(fixture)
+      : deploymentDescription(fixture);
+  return jsonResult(description);
 }
 
 function gitFixtureResult(

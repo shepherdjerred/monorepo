@@ -12,11 +12,6 @@ import {
   VersionDescriptionSchema,
 } from "./worker-deployment-schemas.ts";
 import {
-  DeploymentDescriptionSchema,
-  DeploymentNameSchema,
-  VersionDescriptionSchema,
-} from "./worker-deployment-schemas.ts";
-import {
   executeWorkerDeploymentRollback,
   removeWorkerDeploymentRampingVersion,
 } from "./worker-deployment-rollback.ts";
@@ -37,6 +32,11 @@ import {
   inspectWorkerDeploymentRollout,
   type WorkerDeploymentRolloutInspection,
 } from "./worker-deployment-inspect.ts";
+import {
+  setCurrentVersion,
+  setRampingVersion,
+  temporalPrefix,
+} from "./worker-deployment-commands.ts";
 export type WorkerDeploymentRolloutOptions = {
   action: "inspect" | "status" | "start" | "advance" | "promote" | "rollback";
   address: string;
@@ -78,18 +78,6 @@ function parseJson(raw: string, label: string): unknown {
     throw new Error(`${label} returned invalid JSON`, { cause: error });
   }
 }
-function temporalPrefix(options: WorkerDeploymentRolloutOptions): string[] {
-  return [
-    "toolkit",
-    "temporal",
-    "--address",
-    options.address,
-    "--namespace",
-    options.namespace,
-    ...(options.tls === true ? ["--tls"] : []),
-  ];
-}
-
 async function describeDeployment(
   options: WorkerDeploymentRolloutOptions,
   run: RolloutCommandRunner,
@@ -280,46 +268,6 @@ function validateOptions(
 function elapsedMilliseconds(timestamp: string, now: Date): number {
   return now.getTime() - new Date(timestamp).getTime();
 }
-async function setRampingVersion(
-  options: WorkerDeploymentRolloutOptions,
-  percentage: number,
-  run: RolloutCommandRunner,
-): Promise<void> {
-  await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "set-ramping-version",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    options.buildId,
-    "--percentage",
-    String(percentage),
-    "--yes",
-    "--output",
-    "json",
-  ]);
-}
-async function setCurrentVersion(
-  options: WorkerDeploymentRolloutOptions,
-  buildId: string,
-  run: RolloutCommandRunner,
-): Promise<void> {
-  await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "set-current-version",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    buildId,
-    "--yes",
-    "--output",
-    "json",
-  ]);
-}
 async function requireRegisteredWorkflowVersion(
   options: WorkerDeploymentRolloutOptions,
   buildId: string,
@@ -409,7 +357,6 @@ async function executeStart(
   await requireAcceptancePrerequisite(options, run);
   await setRampingVersion(options, 10, run);
 }
-
 function requireCandidateRamp(
   options: WorkerDeploymentRolloutOptions,
   status: WorkerDeploymentRolloutStatus,
