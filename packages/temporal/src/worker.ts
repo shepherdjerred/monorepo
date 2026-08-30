@@ -32,7 +32,6 @@ import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus
 import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
 import { retryUntilReady } from "./shared/startup-retry.ts";
-import { formatError } from "./shared/format-error.ts";
 import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
 import {
   parseTemporalBootstrap,
