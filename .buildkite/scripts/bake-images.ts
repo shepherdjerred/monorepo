@@ -29,25 +29,20 @@ import {
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../scripts/lib/transient.ts";
-import { TransientError } from "../../scripts/lib/transient-error.ts";
 import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
+import {
+  assertNoPendingVersionBump,
+  TEMPORAL_WORKFLOW_PIN_PAIRS,
+} from "./temporal-candidate-admission.ts";
+import { TransientError } from "../../scripts/lib/transient-error.ts";
+import {
+  writeFallbackReport,
+  type TextWriter,
+} from "./image-selection-report.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
-const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
-const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
-const TEMPORAL_WORKFLOW_PIN_PAIRS = [
-  [
-    "shepherdjerred/temporal-worker/workflows/stable",
-    "shepherdjerred/temporal-worker/workflows/candidate",
-  ],
-  [
-    "shepherdjerred/scout-for-lol/beta/workflows/stable",
-    "shepherdjerred/scout-for-lol/beta/workflows/candidate",
-  ],
-] as const;
-type TemporalWorkflowPinPair = (typeof TEMPORAL_WORKFLOW_PIN_PAIRS)[number];
 export const VERSION_CATALOG_URL = new URL(
   "../../packages/version-catalog/src/catalog.json",
   import.meta.url,
@@ -58,8 +53,6 @@ export type CommandExecutor = (
   command: readonly string[],
   environment?: Readonly<Record<string, string | undefined>>,
 ) => Promise<BuildxCommandResult>;
-
-export type TextWriter = (path: string, contents: string) => Promise<unknown>;
 
 export async function execute(
   command: readonly string[],
@@ -92,92 +85,6 @@ export async function annotate(
   ]);
   if (result.exitCode !== 0) {
     console.error("WARN: image summary annotation failed (non-fatal)");
-  }
-}
-
-/**
- * Candidate admission is serialized with the version commit-back step, but
- * that step opens an auto-merge PR and can finish before GitHub merges it.
- * Refuse to publish another candidate while that durable pin branch exists;
- * the retry will re-read origin after the catalog PR has landed.
- */
-export async function assertNoPendingVersionBump(
-  executor: CommandExecutor = execute,
-  pinPairs: readonly TemporalWorkflowPinPair[] = TEMPORAL_WORKFLOW_PIN_PAIRS,
-): Promise<void> {
-  const result = await executor([
-    "git",
-    "ls-remote",
-    "origin",
-    `refs/heads/${VERSION_BUMP_BRANCH}`,
-  ]);
-  if (result.exitCode !== 0) {
-    throw new TransientError(
-      `Unable to check ${VERSION_BUMP_BRANCH} before candidate admission`,
-    );
-  }
-  if (result.stdout.trim() !== "") {
-    throw new TransientError(
-      `${VERSION_BUMP_BRANCH} is still pending; retry after its catalog update merges`,
-    );
-  }
-  await assertTemporalCandidatePinsConverged(executor, pinPairs);
-}
-
-/**
- * A merged version-bump PR removes the branch before every Buildkite checkout
- * observes the new main commit. Read the live catalog after fetching main so a
- * stale checkout cannot replace a candidate that is already being ramped.
- */
-export async function assertTemporalCandidatePinsConverged(
-  executor: CommandExecutor = execute,
-  pinPairs: readonly TemporalWorkflowPinPair[] = TEMPORAL_WORKFLOW_PIN_PAIRS,
-): Promise<void> {
-  const fetched = await executor(["git", "fetch", "origin", "main"]);
-  if (fetched.exitCode !== 0) {
-    throw new TransientError(
-      "Unable to refresh origin/main before Temporal candidate admission",
-    );
-  }
-  const catalog = await executor([
-    "git",
-    "show",
-    `origin/main:${VERSION_CATALOG_PATH}`,
-  ]);
-  if (catalog.exitCode !== 0) {
-    throw new TransientError(
-      "Unable to read the live version catalog before Temporal candidate admission",
-    );
-  }
-  const parsed = asRecord(JSON.parse(catalog.stdout));
-  if (parsed === null || !Array.isArray(parsed.entries)) {
-    throw new Error("Live version catalog has an invalid shape");
-  }
-  const values = new Map<string, string>();
-  for (const entryValue of parsed.entries) {
-    const entry = asRecord(entryValue);
-    if (
-      entry === null ||
-      typeof entry.name !== "string" ||
-      typeof entry.value !== "string"
-    ) {
-      throw new Error("Live version catalog has an invalid entry");
-    }
-    values.set(entry.name, entry.value);
-  }
-  for (const [stable, candidate] of pinPairs) {
-    const stableValue = values.get(stable);
-    const candidateValue = values.get(candidate);
-    if (stableValue === undefined || candidateValue === undefined) {
-      throw new Error(
-        `Version catalog is missing Temporal workflow pins for ${stable}`,
-      );
-    }
-    if (stableValue !== candidateValue) {
-      throw new TransientError(
-        `Temporal candidate ${candidate} is active in origin/main; wait for its ramp or promotion before publishing another candidate`,
-      );
-    }
   }
 }
 
@@ -505,26 +412,6 @@ export async function pushImages(
   await writeMetadata(digests);
   await writeCandidates(digests, buildNumber);
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
-}
-
-export async function writeFallbackReport(
-  targets: readonly string[],
-  reason: string,
-  writeText: TextWriter = Bun.write,
-): Promise<void> {
-  const targetReasons = Object.fromEntries(
-    targets.map((target) => [target, [reason]]),
-  );
-  await writeText(
-    selectionReport,
-    `${JSON.stringify({
-      base: null,
-      changedPaths: [],
-      mode: "all",
-      globalReason: reason,
-      targets: targetReasons,
-    })}\n`,
-  );
 }
 
 async function main(): Promise<void> {

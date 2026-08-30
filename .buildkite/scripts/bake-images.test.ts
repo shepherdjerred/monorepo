@@ -1,8 +1,6 @@
 import { expect, test } from "vitest";
 import {
   annotate,
-  assertNoPendingVersionBump,
-  assertTemporalCandidatePinsConverged,
   ensureBuilder,
   execute,
   lastSuccessfulImageReleaseCommit,
@@ -12,8 +10,12 @@ import {
   selectedTargets,
   type CommandExecutor,
   VERSION_CATALOG_URL,
-  writeFallbackReport,
 } from "./bake-images.ts";
+import {
+  assertNoPendingVersionBump,
+  assertTemporalCandidatePinsConverged,
+} from "./temporal-candidate-admission.ts";
+import { writeFallbackReport } from "./image-selection-report.ts";
 import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
 import { ensureAnonymousGhcrPull } from "./ghcr-public-access.ts";
 import {
@@ -129,6 +131,62 @@ test("blocks admission when live main has a divergent Temporal candidate", async
   await expect(assertTemporalCandidatePinsConverged(executor)).rejects.toThrow(
     TransientError,
   );
+});
+
+test("allows admission when all live Temporal candidates match stable", async () => {
+  const catalog = JSON.stringify({
+    entries: [
+      {
+        name: "shepherdjerred/temporal-worker/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/temporal-worker/workflows/candidate",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+        value: "2.0.0-41@sha256:stable",
+      },
+    ],
+  });
+  const executor: CommandExecutor = async (command) =>
+    command[1] === "fetch" ? commandResult() : commandResult(0, catalog);
+  await expect(
+    assertTemporalCandidatePinsConverged(executor),
+  ).resolves.toBeUndefined();
+});
+
+test("fails transiently when origin main cannot be refreshed", async () => {
+  await expect(
+    assertTemporalCandidatePinsConverged(async () => commandResult(1)),
+  ).rejects.toThrow(TransientError);
+});
+
+test("fails transiently when the live version catalog cannot be read", async () => {
+  await expect(
+    assertTemporalCandidatePinsConverged(async (command) =>
+      command[1] === "fetch" ? commandResult() : commandResult(1),
+    ),
+  ).rejects.toThrow(TransientError);
+});
+
+test("rejects malformed live version catalogs", async () => {
+  const malformedCatalogs = [
+    JSON.stringify({ entries: "invalid" }),
+    JSON.stringify({ entries: ["invalid"] }),
+  ];
+  for (const catalog of malformedCatalogs) {
+    const executor: CommandExecutor = async (command) =>
+      command[1] === "fetch" ? commandResult() : commandResult(0, catalog);
+    await expect(
+      assertTemporalCandidatePinsConverged(executor),
+    ).rejects.toThrow(Error);
+  }
 });
 
 test("retains a central Workflow candidate until its pin converges with stable", () => {

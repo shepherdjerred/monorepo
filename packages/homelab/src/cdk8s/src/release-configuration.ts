@@ -121,6 +121,9 @@ function applyDigestOverride(
     const nextVersion = `${releaseVersion}@${digest}`;
     const stableKey = workflowStableKey(candidate);
     const previousVersion = versions[candidate];
+    if (previousVersion === undefined) {
+      throw new Error(`Missing image pin for ${candidate}`);
+    }
     applyImagePin(versions, candidate, nextVersion);
     if (
       stableKey !== undefined &&
