@@ -90,9 +90,11 @@ bun run worker-deployment rollback --build-id <candidate-image-git-sha>
 
 Rollback removes only an active ramp for that exact candidate, including when a
 newer candidate registered after the ramp began. The prior
-current version remains current. After the ramp is gone, rerun the command to
-reset a divergent rejected candidate pin to the stable catalog value; it refuses
-to reset a candidate that is already current.
+current version remains current. Keep the rejected candidate available while
+any executions pinned to it drain. Only after that drain is verified, rerun the
+command with the same Build ID to reset a divergent rejected candidate pin to
+the stable catalog value; it refuses to reset a candidate that is already
+current.
 
 After rollback, verify schedule health, Workflow task failures, queue latency,
 and representative executions. Keep the rejected candidate pod available until

@@ -479,7 +479,10 @@ export async function executeWorkerDeploymentRollout(
     options.action === "rollback",
     options.action !== "rollback",
   );
-  if (options.action === "status") return status;
+  if (options.action === "status") {
+    requireCleanCandidate(status);
+    return status;
+  }
   if (options.action === "rollback") {
     await executeWorkerDeploymentRollback(options, status, run);
     return await readWorkerDeploymentRolloutStatus(options, run, true, false);
