@@ -29,6 +29,7 @@ function scanResult(deadLinks: DeadLink[]): LinkRotScanResult {
     totalLinks: 120,
     successfulLinks: 120 - deadLinks.length,
     excludedLinks: 2,
+    ignoredRootRelativeLinks: 0,
     deadLinks,
     timedOutLinks: [],
     excerpt: "fixture",

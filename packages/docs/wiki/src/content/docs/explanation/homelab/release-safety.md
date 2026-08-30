@@ -121,9 +121,8 @@ while the missing-Secret Ready condition can remain unchanged. A different
 false Ready reason or failed issuance stays `Degraded`. The
 [five-minute release operation timeout](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml#L1547-L1556)
 still fails a Certificate that never becomes ready. Ignoring Certificate health
-would let the
-[later CA, database, and workload waves](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/postgres/alert-dashboard-tls.ts)
-race a missing trust Secret, so the release does not use that shortcut.
+would let later CA and workload waves race a missing trust Secret, so the
+release does not use that shortcut.
 
 Both request shapes remain isolated by numeric sync wave and exact resource
 identity. After explicit child reconciliation completes, the

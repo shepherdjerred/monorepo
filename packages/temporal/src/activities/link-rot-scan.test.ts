@@ -45,6 +45,15 @@ const LYCHEE_FIXTURE = JSON.stringify({
         span: { line: 3, column: 1 },
         duration: { secs: 2, nanos: 0 },
       },
+      {
+        url: "error:",
+        status: {
+          text: "Error building URL for \"/docs/overview/\": Cannot resolve root-relative link '/docs/overview/'",
+          details:
+            "Cannot resolve root-relative link '/docs/overview/': To resolve root-relative links in local files, provide a root dir",
+        },
+        span: { line: 8, column: 1 },
+      },
     ],
   },
   timeout_map: {
@@ -70,6 +79,7 @@ describe("parseLycheeReport", () => {
     expect(parsed.totalLinks).toBe(120);
     expect(parsed.successfulLinks).toBe(115);
     expect(parsed.excludedLinks).toBe(2);
+    expect(parsed.ignoredRootRelativeLinks).toBe(1);
     expect(parsed.deadLinks).toEqual([
       {
         url: "https://github.com/shepherdjerred/definitely-missing",
@@ -108,6 +118,7 @@ describe("parseLycheeReport", () => {
       }),
     );
     expect(parsed.deadLinks).toEqual([]);
+    expect(parsed.ignoredRootRelativeLinks).toBe(0);
     expect(parsed.timedOutLinks).toEqual([]);
   });
 
@@ -143,6 +154,7 @@ describe("buildLinkRotReport", () => {
         totalLinks: 10,
         successfulLinks: 10,
         excludedLinks: 0,
+        ignoredRootRelativeLinks: 0,
         deadLinks: [],
         timedOutLinks: [],
       }),
@@ -172,6 +184,9 @@ describe("buildLinkRotReport", () => {
     expect(report.findings[0]?.detail).toContain(
       "packages/docs/wiki/src/content/docs/reference/homelab.md:12",
     );
+    expect(report.checks[0]?.summary).toContain(
+      "1 site-root-relative link was delegated",
+    );
     expect(report.findings[2]?.section).toBe("Timed-out links");
     expect(report.findings[2]?.detail).toContain(
       "Retry the link or investigate its reachability",
@@ -197,6 +212,7 @@ describe("buildLinkRotReport", () => {
         totalLinks: 1,
         successfulLinks: 0,
         excludedLinks: 0,
+        ignoredRootRelativeLinks: 0,
         deadLinks: [],
         timedOutLinks: [
           {
