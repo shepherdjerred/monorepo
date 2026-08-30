@@ -13,7 +13,8 @@
     "#observability/*": "./src/observability/*",
     "#lib/*": "./src/lib/*",
     "#db/*": "./src/db/*",
-    "#schedules/*": "./src/schedules/*"
+    "#schedules/*": "./src/schedules/*",
+    "#worker-config": "./src/worker-config.ts"
   },
   "scripts": {
     "start": "bun run src/worker.ts",

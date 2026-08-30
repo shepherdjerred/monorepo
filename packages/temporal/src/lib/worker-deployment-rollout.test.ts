@@ -7,7 +7,7 @@ import {
   type WorkerDeploymentRolloutOptions,
 } from "./worker-deployment-rollout.ts";
 import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
-import { RETAINED_WORKFLOW_TASK_QUEUES } from "../worker-config.ts";
+import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
 
 const CANDIDATE = "b".repeat(40);
 const STABLE = "a".repeat(40);

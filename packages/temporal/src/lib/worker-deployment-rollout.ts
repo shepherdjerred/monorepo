@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
-import { RETAINED_WORKFLOW_TASK_QUEUES } from "../worker-config.ts";
+import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
 import { prepareStablePinPromotion } from "./worker-deployment-catalog.ts";
 import {
   executeWorkerDeploymentRollback,
@@ -12,7 +12,7 @@ import {
   requireCleanAlertWindow,
   rolloutPoller,
   rolloutAdvanceTransition,
-  requireReplayCheckout,
+  runWorkerDeploymentPreflightProofs,
   type RolloutCommandRunner,
   verifyCandidateImageBuildId,
 } from "./worker-deployment-proofs.ts";
@@ -129,9 +129,6 @@ async function describeVersion(
     parseJson(result.stdout, "worker deployment describe-version"),
   );
 }
-function optionalNonEmpty(value: string): string | undefined {
-  return value === "" ? undefined : value;
-}
 export async function readWorkerDeploymentRolloutStatus(
   rawOptions: WorkerDeploymentRolloutOptions,
   run: RolloutCommandRunner,
@@ -182,12 +179,14 @@ export async function readWorkerDeploymentRolloutStatus(
   const newest = deployment.versionSummaries.toSorted((left, right) =>
     right.createTime.localeCompare(left.createTime),
   )[0];
-  const currentBuildId = optionalNonEmpty(
-    deployment.routingConfig.currentVersionBuildID,
-  );
-  const rampingBuildId = optionalNonEmpty(
-    deployment.routingConfig.rampingVersionBuildID,
-  );
+  const currentBuildId =
+    deployment.routingConfig.currentVersionBuildID === ""
+      ? undefined
+      : deployment.routingConfig.currentVersionBuildID;
+  const rampingBuildId =
+    deployment.routingConfig.rampingVersionBuildID === ""
+      ? undefined
+      : deployment.routingConfig.rampingVersionBuildID;
   if (
     !allowStaleCandidate &&
     options.action !== "rollback" &&
@@ -296,25 +295,6 @@ async function setCurrentVersion(
     "json",
   ]);
 }
-async function runPreflightProofs(
-  options: WorkerDeploymentRolloutOptions,
-  run: RolloutCommandRunner,
-): Promise<void> {
-  await requireReplayCheckout(options.buildId, run);
-  await run(["bun", "run", "test:workflows"]);
-  await run(["bun", "run", "replay:candidate-histories"]);
-  await run([
-    "bun",
-    "run",
-    "scripts/worker-deployment-canary.ts",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    options.buildId,
-    "--namespace",
-    options.namespace,
-  ]);
-}
 async function requireRegisteredWorkflowVersion(
   options: WorkerDeploymentRolloutOptions,
   buildId: string,
@@ -361,7 +341,7 @@ async function executeStart(
   if (status.currentBuildId === options.buildId) {
     throw new Error("Candidate is already the current version");
   }
-  await runPreflightProofs(options, run);
+  await runWorkerDeploymentPreflightProofs(options, run);
   if (status.currentBuildId === undefined) {
     if (
       options.stableBuildId === undefined ||
