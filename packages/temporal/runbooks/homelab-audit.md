@@ -334,7 +334,7 @@ Flag: schedules with empty recent actions (never fired), paused without a docume
 toolkit prom query 'rate(temporal_workflow_execution_failed_total[15m])'
 toolkit prom query 'temporal_workflow_task_timeout_count'
 toolkit prom query 'up{namespace="temporal"}'
-toolkit prom query 'up{namespace="temporal",service=~"temporal-temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}'
+toolkit prom query 'up{namespace="temporal",service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}'
 ```
 
 Flag: non-zero failure rate, scrape target down.

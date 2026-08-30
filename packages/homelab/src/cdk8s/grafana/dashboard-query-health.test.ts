@@ -100,6 +100,16 @@ describe("dashboard query health", () => {
     );
   });
 
+  test("Temporal worker scrape status detects missing canonical targets", () => {
+    expect(dashboardJson).toContain(
+      String.raw`absent(up{namespace=\"temporal\"`,
+    );
+    expect(dashboardJson).toContain(
+      String.raw`count(up{namespace=\"temporal\"`,
+    );
+    expect(dashboardJson).toContain(") < 9 or min(up{");
+  });
+
   test("AI provider health renders zero while provider issues are quiet", () => {
     expect(dashboardJson).toContain(
       String.raw`ai_provider_issue_active{app=~\"$app\",provider=~\"$provider\",kind=~\"$kind\",source=~\"$source\"})) or on() vector(0)`,
