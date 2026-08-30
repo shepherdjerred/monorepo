@@ -35,7 +35,7 @@ const LYCHEE_FIXTURE = JSON.stringify({
         duration: { secs: 0, nanos: 5 },
       },
     ],
-    "README.md": [
+    "packages/docs/wiki/src/content/docs/index.md": [
       {
         url: "https://gone.example-registry.dev/pkg",
         status: {
@@ -90,7 +90,7 @@ describe("parseLycheeReport", () => {
       },
       {
         url: "https://gone.example-registry.dev/pkg",
-        source: "README.md",
+        source: "packages/docs/wiki/src/content/docs/index.md",
         status: "Network error: Connection failed.",
         line: 3,
       },
@@ -120,6 +120,40 @@ describe("parseLycheeReport", () => {
     expect(parsed.deadLinks).toEqual([]);
     expect(parsed.ignoredRootRelativeLinks).toBe(0);
     expect(parsed.timedOutLinks).toEqual([]);
+  });
+
+  test("keeps root-relative diagnostics from unchecked sources actionable", () => {
+    const source =
+      "packages/dotfiles/dot_agents/skills/apple-hig-helper/markdown/action-sheets.md";
+    const status =
+      "Error building URL for \"/design/human-interface-guidelines/action-sheets\": Cannot resolve root-relative link '/design/human-interface-guidelines/action-sheets'";
+    const parsed = parseLycheeReport(
+      JSON.stringify({
+        total: 1,
+        successful: 0,
+        errors: 1,
+        timeouts: 0,
+        excludes: 0,
+        error_map: {
+          [source]: [
+            {
+              url: "error:",
+              status: { text: status },
+            },
+          ],
+        },
+        timeout_map: {},
+      }),
+    );
+
+    expect(parsed.ignoredRootRelativeLinks).toBe(0);
+    expect(parsed.deadLinks).toEqual([
+      {
+        url: "error:",
+        source,
+        status,
+      },
+    ]);
   });
 
   test("rejects non-JSON output instead of returning empty", () => {
