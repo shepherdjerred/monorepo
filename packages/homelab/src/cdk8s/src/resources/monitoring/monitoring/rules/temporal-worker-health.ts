@@ -17,27 +17,43 @@ type TemporalDomainQueueDefinition = {
 // Do not install these rules until both tracks can render. A capable
 // candidate alone is insufficient: Scout's chart bootstraps the stable worker
 // first, so candidate-only alerts would fire on absent pods.
-const scoutBetaWorkflowQueue: TemporalDomainQueueDefinition[] =
-  scoutWorkflowWorkerImageIsCapable(
+function scoutWorkflowQueue(
+  stage: "beta" | "prod",
+  stableImage: string,
+  candidateImage: string,
+): TemporalDomainQueueDefinition[] {
+  if (
+    !scoutWorkflowWorkerImageIsCapable(stableImage) ||
+    !scoutWorkflowWorkerImageIsCapable(candidateImage)
+  ) {
+    return [];
+  }
+  const queue = `scout-${stage}`;
+  return [
+    {
+      queue,
+      metricsNamespace: queue,
+      deploymentPattern: `${queue}-scout-workflow-worker.*`,
+      servicePattern: ".*scout-workflow-worker.*metrics.*",
+      candidateDeploymentPattern: `${queue}-scout-workflow-worker-candidate`,
+      candidateServicePattern: ".*scout-workflow-worker-candidate.*metrics.*",
+      activityPoller: false,
+    },
+  ];
+}
+
+const scoutWorkflowQueues = [
+  ...scoutWorkflowQueue(
+    "beta",
     versions["shepherdjerred/scout-for-lol/beta/workflows/stable"],
-  ) &&
-  scoutWorkflowWorkerImageIsCapable(
     versions["shepherdjerred/scout-for-lol/beta/workflows/candidate"],
-  )
-    ? [
-        {
-          queue: "scout-beta",
-          metricsNamespace: "scout-beta",
-          deploymentPattern: "scout-beta-scout-workflow-worker.*",
-          servicePattern: ".*scout-workflow-worker.*metrics.*",
-          candidateDeploymentPattern:
-            "scout-beta-scout-workflow-worker-candidate",
-          candidateServicePattern:
-            ".*scout-workflow-worker-candidate.*metrics.*",
-          activityPoller: false,
-        },
-      ]
-    : [];
+  ),
+  ...scoutWorkflowQueue(
+    "prod",
+    versions["shepherdjerred/scout-for-lol/prod/workflows/stable"],
+    versions["shepherdjerred/scout-for-lol/prod/workflows/candidate"],
+  ),
+];
 
 export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
   [
@@ -50,7 +66,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       candidateServicePattern: ".*temporal-workflows-candidate.*metrics.*",
       activityPoller: false,
     },
-    ...scoutBetaWorkflowQueue,
+    ...scoutWorkflowQueues,
     {
       queue: "home",
       metricsNamespace: "temporal",
