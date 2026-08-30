@@ -11,6 +11,7 @@ import {
   scoutTaskQueues,
   type ScoutStage,
 } from "@scout-for-lol/temporal";
+import type { TemporalExecutionStartMetadata } from "@scout-for-lol/temporal/execution-metadata";
 
 const MONTHS = [
   "JANUARY",
@@ -164,13 +165,27 @@ function calendarMatchesCron(
   );
 }
 
-function isEmptyRecord(value: unknown): boolean {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    Object.keys(value).length === 0
-  );
+// The server backfills the deprecated untyped `searchAttributes` record from
+// whatever typed search attributes are set (single-element value arrays), so
+// a schedule started with execution metadata never actually describes back
+// with an empty legacy record — only a schedule with NO typed attributes at
+// all does.
+function legacySearchAttributesMatch(
+  value: unknown,
+  expected: TemporalExecutionStartMetadata["typedSearchAttributes"],
+): boolean {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  if (Object.keys(value).length !== expected.length) return false;
+  return expected.every((pair) => {
+    const actualValue: unknown = Reflect.get(value, pair.key.name);
+    return (
+      Array.isArray(actualValue) &&
+      actualValue.length === 1 &&
+      actualValue[0] === pair.value
+    );
+  });
 }
 
 function isDefaultPriority(value: unknown): boolean {
@@ -201,28 +216,53 @@ function argumentMatches(
   );
 }
 
-function actionDefaultsMatch(action: ScheduleDescription["action"]): boolean {
-  const typedSearchAttributes = action.typedSearchAttributes;
+function typedSearchAttributesMatch(
+  actual: ScheduleDescription["action"]["typedSearchAttributes"],
+  expected: TemporalExecutionStartMetadata["typedSearchAttributes"],
+): boolean {
+  if (actual === undefined) return expected.length === 0;
+  const actualPairs = Array.isArray(actual) ? actual : actual.getAll();
+  if (actualPairs.length !== expected.length) return false;
+  const actualByName = new Map(
+    actualPairs.map((pair) => [pair.key.name, pair.value]),
+  );
+  return expected.every(
+    (pair) => actualByName.get(pair.key.name) === pair.value,
+  );
+}
+
+function actionDefaultsMatch(
+  action: ScheduleDescription["action"],
+  executionMetadata: TemporalExecutionStartMetadata,
+): boolean {
   return (
     action.memo === undefined &&
-    isEmptyRecord(Reflect.get(action, "searchAttributes")) &&
-    typedSearchAttributes !== undefined &&
-    (Array.isArray(typedSearchAttributes)
-      ? typedSearchAttributes.length === 0
-      : typedSearchAttributes.getAll().length === 0) &&
+    legacySearchAttributesMatch(
+      Reflect.get(action, "searchAttributes"),
+      executionMetadata.typedSearchAttributes,
+    ) &&
+    typedSearchAttributesMatch(
+      action.typedSearchAttributes,
+      executionMetadata.typedSearchAttributes,
+    ) &&
     action.retry === undefined &&
     action.workflowExecutionTimeout === 15 * 60 * 1000 &&
     action.workflowRunTimeout === undefined &&
     action.workflowTaskTimeout === undefined &&
-    action.staticSummary === undefined &&
-    action.staticDetails === undefined &&
+    action.staticSummary === executionMetadata.staticSummary &&
+    action.staticDetails === executionMetadata.staticDetails &&
     isDefaultPriority(action.priority)
   );
 }
 
 function actionMatches(
   description: ScheduleDescription,
-  input: { stage: ScoutStage; reportId: number; revision: number },
+  input: {
+    stage: ScoutStage;
+    reportId: number;
+    revision: number;
+    executionMetadata: TemporalExecutionStartMetadata;
+  },
 ): boolean {
   const args = description.action.args ?? [];
   return (
@@ -231,7 +271,7 @@ function actionMatches(
     description.action.workflowType === SCOUT_WORKFLOW_NAMES.reportRun &&
     description.action.taskQueue === scoutTaskQueues(input.stage).workflow &&
     argumentMatches(args, input) &&
-    actionDefaultsMatch(description.action)
+    actionDefaultsMatch(description.action, input.executionMetadata)
   );
 }
 
@@ -243,6 +283,7 @@ export function scheduleMatchesReport(
     revision: number;
     cronExpression: string;
     timezone: string;
+    executionMetadata: TemporalExecutionStartMetadata;
   },
 ): boolean {
   const memo = ScoutScheduleOwnershipMemoSchema.safeParse(description.memo);

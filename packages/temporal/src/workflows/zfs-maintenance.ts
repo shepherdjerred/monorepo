@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { log, proxyActivities } from "@temporalio/workflow";
 import type { ZfsMaintenanceActivities } from "#activities/zfs-maintenance.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
@@ -19,5 +19,5 @@ const { runZfsMaintenance } = proxyActivities<ZfsMaintenanceActivities>({
 
 export async function runZfsMaintenanceWorkflow(): Promise<void> {
   const result = await runZfsMaintenance();
-  console.warn("ZFS maintenance complete:\n", result);
+  log.info("ZFS maintenance complete", { result });
 }

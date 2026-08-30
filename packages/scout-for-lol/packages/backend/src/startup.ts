@@ -1,5 +1,6 @@
 import { validateChampionAssets } from "#src/league/data-dragon/validate-assets.ts";
 import configuration from "#src/configuration.ts";
+import { temporalCallGraphTracing } from "#src/config/dynamic.ts";
 import { createLogger } from "#src/logger.ts";
 import type { ScoutTemporalSupervisor } from "#src/temporal/supervisor.ts";
 
@@ -73,6 +74,7 @@ export async function startBackendRuntime(): Promise<
         namespace: configuration.temporalNamespace,
         stage: configuration.environment,
         activities: createScoutTemporalActivityGroups(),
+        callGraphTracing: temporalCallGraphTracing(),
       });
       const { setScoutTemporalSupervisor } =
         await import("#src/temporal/runtime.ts");

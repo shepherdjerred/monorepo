@@ -1,4 +1,4 @@
-import { condition, defineSignal, setHandler } from "@temporalio/workflow";
+import { condition, defineSignal, log, setHandler } from "@temporalio/workflow";
 import { callServiceUnchecked, getEntityStateUnchecked } from "./util.ts";
 import { PRESENCE_COOLDOWN_SECONDS, shouldLock } from "#shared/presence.ts";
 
@@ -63,7 +63,7 @@ export async function reconcileLock(): Promise<void> {
     const currentLocked = lock.state === "locked";
 
     if (currentLocked === desiredLocked) {
-      console.warn(
+      log.info(
         JSON.stringify({
           level: "info",
           msg: "reconcileLock: already in desired state",
@@ -77,7 +77,7 @@ export async function reconcileLock(): Promise<void> {
       await callServiceUnchecked("lock", desiredLocked ? "lock" : "unlock", {
         entity_id: FRONT_DOOR_LOCK,
       });
-      console.warn(
+      log.info(
         JSON.stringify({
           level: "info",
           msg: `reconcileLock: ${desiredLocked ? "locked" : "unlocked"} front door`,

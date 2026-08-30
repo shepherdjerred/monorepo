@@ -1,4 +1,4 @@
-import { sleep } from "@temporalio/workflow";
+import { log, sleep } from "@temporalio/workflow";
 import {
   callServiceUnchecked,
   everyoneAway,
@@ -16,15 +16,10 @@ export async function leavingHome(): Promise<void> {
   // stationary; wait and reconfirm before any side-effects.
   await sleep(PRESENCE_COOLDOWN_SECONDS * 1000);
   if (!(await everyoneAway())) {
-    console.warn(
-      JSON.stringify({
-        level: "info",
-        msg: "leavingHome debounced: someone is still home",
-        component: "ha-presence",
-        workflow: "leavingHome",
-        phase: "debounced",
-      }),
-    );
+    log.info("Leaving-home presence event debounced", {
+      reason: "someone-still-home",
+      phase: "debounced",
+    });
     return;
   }
 

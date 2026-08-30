@@ -130,6 +130,12 @@ const DEFINITION = {
       env: "TOURNAMENT_MAX_OPEN_LOBBIES",
     },
   },
+  temporalCallGraphTracing: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: false,
+    names: { flag: "temporal-call-graph-tracing" },
+  },
 } as const;
 
 /**
@@ -145,6 +151,7 @@ export type DynamicConfigSeed = {
   exploreModel?: string;
   tournamentApiMode?: TournamentApiMode;
   tournamentMaxOpenLobbies?: number;
+  temporalCallGraphTracing?: boolean;
 };
 
 const REFRESH_INTERVAL_MS = 60_000;
@@ -172,6 +179,7 @@ function buildSnapshot(
                 exploreModel: "string",
                 tournamentApiMode: "string",
                 tournamentMaxOpenLobbies: "number",
+                temporalCallGraphTracing: "boolean",
               },
             }),
           }
@@ -322,6 +330,11 @@ export function tournamentMaxOpenLobbies(): number {
     snapshot?.get("tournamentMaxOpenLobbies") ??
     configuration.tournamentMaxOpenLobbies
   );
+}
+
+/** Boot-wired: a changed value takes effect only after the worker restarts. */
+export function temporalCallGraphTracing(): boolean {
+  return snapshot?.get("temporalCallGraphTracing") ?? false;
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {

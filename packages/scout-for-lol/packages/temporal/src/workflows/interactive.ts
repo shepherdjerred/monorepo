@@ -10,6 +10,7 @@ import {
 } from "#src/contracts.ts";
 import { requestStopSignal } from "#src/signals.ts";
 import { interactiveActivities } from "./activity-options.ts";
+import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
 
 export async function scoutInteractiveRunWorkflow(
   rawInput: ScoutInteractiveRunInput,
@@ -31,6 +32,7 @@ export async function scoutInteractiveRunWorkflow(
   });
 
   try {
+    setWorkflowPhase("**Phase:** running interactive analysis");
     outcome = await CancellationScope.cancellable(async () => {
       const scope = CancellationScope.current();
       cancelActivity = () => {
@@ -47,6 +49,7 @@ export async function scoutInteractiveRunWorkflow(
       failure = error;
     }
   } finally {
+    setWorkflowPhase("**Phase:** persisting the interactive outcome");
     await CancellationScope.nonCancellable(async () => {
       outcome = await activities.persistInteractiveOutcome({
         ...input,

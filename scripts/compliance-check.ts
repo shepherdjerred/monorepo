@@ -366,6 +366,7 @@ packages/release-tools:build
 packages/release-tools:lint
 packages/release-tools:typecheck
 packages/temporal:build
+packages/temporal-observability:build
 packages/homelab:build
 packages/homelab:test
 packages/homelab:lint

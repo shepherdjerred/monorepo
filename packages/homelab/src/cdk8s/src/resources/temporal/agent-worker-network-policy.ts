@@ -91,6 +91,10 @@ export function createTemporalAgentWorkerNetworkPolicy(chart: Chart): void {
           ],
           ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
         },
+        // Flipt egress (8080, for temporalFeatureFlagEnvironment()'s
+        // temporal-call-graph-tracing check) is granted by the shared
+        // temporal-workers-flipt-egress policy in worker-network-policies.ts,
+        // which already selects component=agent-worker.
         // Provider APIs, GitHub, registry metadata, and the Kubernetes API.
         { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
         { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },

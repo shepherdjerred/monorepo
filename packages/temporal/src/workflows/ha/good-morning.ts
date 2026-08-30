@@ -1,6 +1,7 @@
 import {
   ActivityFailure,
   ApplicationFailure,
+  log,
   patched,
   proxyActivities,
   sleep,
@@ -142,7 +143,7 @@ async function tryOptionalMediaPlayerService(
     if (!isOptionalMediaPlayerFailure(error)) {
       throw error;
     }
-    console.warn(
+    log.warn(
       `good_morning_get_up: optional media_player.${service} unavailable; continuing without that speaker`,
     );
     return false;
@@ -202,7 +203,7 @@ async function floorHeatDecision(): Promise<{
 // presence every chunk and aborts early if the house empties mid-preheat.
 export async function goodMorningPreheat(): Promise<void> {
   if (!(await anyoneHome())) {
-    console.warn("good_morning_preheat: no one home, skipping");
+    log.info("Good-morning preheat skipped", { reason: "no-one-home" });
     await setOutcome("skipped", "no-one-home");
     return;
   }
@@ -211,7 +212,7 @@ export async function goodMorningPreheat(): Promise<void> {
   if (useConditionalFloorHeat) {
     const decision = await floorHeatDecision();
     if (!decision.heat) {
-      console.warn(
+      log.info(
         `good_morning_preheat: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), skipping heat`,
       );
       await setOutcome("skipped", "not-cold");
@@ -230,7 +231,9 @@ export async function goodMorningPreheat(): Promise<void> {
   for (let chunk = 0; chunk < PREHEAT_HOLD_CHUNKS; chunk += 1) {
     await sleep(PREHEAT_HOLD_CHUNK);
     if (!(await anyoneHome())) {
-      console.warn("good_morning_preheat: everyone left mid-hold, turning off");
+      log.info("Good-morning preheat stopped", {
+        reason: "everyone-left-mid-hold",
+      });
       await callServiceUnchecked("climate", "turn_off", {
         entity_id: MASTER_BATHROOM_HEAT,
       });
@@ -247,7 +250,7 @@ export async function goodMorningPreheat(): Promise<void> {
 
 export async function goodMorningWakeUp(): Promise<void> {
   if (!(await anyoneHome())) {
-    console.warn("good_morning_wake_up: no one home, skipping");
+    log.info("Good-morning wake-up skipped", { reason: "no-one-home" });
     await setOutcome("skipped", "no-one-home");
     return;
   }
@@ -269,7 +272,7 @@ export async function goodMorningWakeUp(): Promise<void> {
           hvac_mode: "heat",
         });
       } else {
-        console.warn(
+        log.info(
           `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
         );
       }
@@ -283,7 +286,7 @@ export async function goodMorningWakeUp(): Promise<void> {
       }
       sensorUnavailable = true;
       heat = false;
-      console.warn(
+      log.warn(
         "good_morning_wake_up: bathroom temperature unavailable, skipping heat activation and continuing wake routine",
       );
     }
@@ -342,7 +345,7 @@ export async function goodMorningWakeUp(): Promise<void> {
 
 export async function goodMorningGetUp(): Promise<void> {
   if (!(await anyoneHome())) {
-    console.warn("good_morning_get_up: no one home, skipping");
+    log.info("Good-morning get-up skipped", { reason: "no-one-home" });
     await setOutcome("skipped", "no-one-home");
     return;
   }

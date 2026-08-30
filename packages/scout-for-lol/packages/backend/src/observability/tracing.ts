@@ -1,10 +1,5 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import {
-  ATTR_SERVICE_NAME,
-  ATTR_SERVICE_VERSION,
-} from "@opentelemetry/semantic-conventions";
 import {
   diag,
   DiagLogLevel,
@@ -15,12 +10,15 @@ import {
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import {
   BatchSpanProcessor,
-  type ReadableSpan,
-  type SpanExporter,
   type SpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
-import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
+import {
+  buildTracingResource,
+  LoggingSpanExporter,
+  type TracingResourceOptions,
+  type TracingRuntime,
+} from "@shepherdjerred/temporal-observability/tracing-resource";
 import { createLogger } from "#src/logger.ts";
 
 const log = createLogger("observability.tracing");
@@ -31,6 +29,7 @@ const DEFAULT_SERVICE_NAME = "scout-backend";
 let sdk: NodeSDK | undefined;
 let tracer: Tracer | undefined;
 let batchProcessor: BatchSpanProcessor | undefined;
+let tracingRuntime: TracingRuntime | undefined;
 
 function jsonLog(
   level: "info" | "warning" | "error",
@@ -66,60 +65,21 @@ const diagLogger: DiagLogger = {
   },
 };
 
-class LoggingSpanExporter implements SpanExporter {
-  private readonly inner: SpanExporter;
-  private firstSuccessLogged = false;
-
-  constructor(inner: SpanExporter) {
-    this.inner = inner;
-  }
-
-  export(
-    spans: ReadableSpan[],
-    resultCallback: (result: ExportResult) => void,
-  ): void {
-    this.inner.export(spans, (result) => {
-      if (result.code === ExportResultCode.SUCCESS) {
-        if (!this.firstSuccessLogged) {
-          this.firstSuccessLogged = true;
-          jsonLog("info", "OTLP trace export succeeded (first batch)", {
-            spanCount: spans.length,
-          });
-        }
-      } else {
-        jsonLog("error", "OTLP trace export failed", {
-          spanCount: spans.length,
-          error:
-            result.error instanceof Error
-              ? result.error.message
-              : "unknown export error",
-        });
-      }
-      resultCallback(result);
-    });
-  }
-
-  shutdown(): Promise<void> {
-    return this.inner.shutdown();
-  }
-
-  forceFlush(): Promise<void> {
-    return this.inner.forceFlush?.() ?? Promise.resolve();
-  }
-}
-
-export function initializeTracing(): void {
+export function initializeTracing(
+  options: TracingResourceOptions = {},
+): TracingRuntime | undefined {
   const enabled = Bun.env["TELEMETRY_ENABLED"] === "true";
   if (!enabled) {
     jsonLog("info", "OpenTelemetry tracing disabled");
-    return;
+    return undefined;
   }
 
   diag.setLogger(diagLogger, DiagLogLevel.WARN);
 
   const otlpEndpoint = Bun.env["OTLP_ENDPOINT"] ?? DEFAULT_OTLP_ENDPOINT;
   const serviceName = Bun.env["TELEMETRY_SERVICE_NAME"] ?? DEFAULT_SERVICE_NAME;
-  const serviceVersion = Bun.env["VERSION"] ?? "dev";
+  const serviceVersion = Bun.env["GIT_SHA"] ?? Bun.env["VERSION"] ?? "dev";
+  const resource = buildTracingResource(serviceName, serviceVersion, options);
 
   // AsyncLocalStorage-backed context manager so OTel active span propagates
   // across awaits — required for the LLM wrappers to see the current span.
@@ -132,6 +92,7 @@ export function initializeTracing(): void {
     new OTLPTraceExporter({
       url: `${otlpEndpoint}/v1/traces`,
     }),
+    jsonLog,
   );
 
   batchProcessor = new BatchSpanProcessor(exporter, {
@@ -150,10 +111,7 @@ export function initializeTracing(): void {
 
   sdk = new NodeSDK({
     contextManager,
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: serviceName,
-      [ATTR_SERVICE_VERSION]: serviceVersion,
-    }),
+    resource,
     spanProcessors: [rootProcessor],
   });
 
@@ -164,7 +122,17 @@ export function initializeTracing(): void {
     serviceName,
     serviceVersion,
     otlpEndpoint,
+    environment: options.environment ?? "dev",
+    namespace: options.namespace ?? "default",
+    taskQueue: options.taskQueue ?? "unknown",
+    workerRole: options.workerRole ?? "unknown",
   });
+  tracingRuntime = { processor: rootProcessor, resource };
+  return tracingRuntime;
+}
+
+export function getTracingRuntime(): TracingRuntime | undefined {
+  return tracingRuntime;
 }
 
 export function getTracer(): Tracer | undefined {
@@ -184,4 +152,5 @@ export async function shutdownTracing(): Promise<void> {
   if (sdk !== undefined) {
     await sdk.shutdown();
   }
+  tracingRuntime = undefined;
 }

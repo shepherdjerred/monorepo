@@ -59,4 +59,14 @@ if (process.cwd() === import.meta.dir) {
 Bun.env["JWT_SIGNING_SECRET"] =
   Bun.env["JWT_SIGNING_SECRET"] ?? "test-jwt-signing-secret-0123456789abcdef";
 
+// Temporal execution metadata's ReleaseCommit search attribute requires an
+// exact 40-character lowercase hex Git SHA (execution-metadata.ts). In test
+// mode configuration.ts falls back missing required env vars to the generic
+// "TEST PLACEHOLDER" sentinel, which fails that format check the moment code
+// (e.g. schedule-reconciler.ts) reads appConfiguration.gitSha. Give GIT_SHA a
+// syntactically valid, obviously-fake placeholder by default; tests that care
+// about a specific value (http/version.test.ts) still set/delete their own.
+Bun.env["GIT_SHA"] =
+  Bun.env["GIT_SHA"] ?? "0000000000000000000000000000000000000000";
+
 // Any global test configuration can go here

@@ -9,7 +9,10 @@ import {
   enqueueReportScheduleDeletion,
   enqueueReportScheduleUpsert,
 } from "#src/reports/temporal-schedules.ts";
-import { drainReportScheduleOutbox } from "#src/reports/schedule-reconciler.ts";
+import {
+  drainReportScheduleOutbox,
+  reportScheduleExecutionMetadata,
+} from "#src/reports/schedule-reconciler.ts";
 import { scheduleMatchesReport } from "#src/reports/report-schedule-drift.ts";
 import {
   testAccountId,
@@ -68,6 +71,19 @@ beforeAll(async () => {
       port.toString(),
       "--db-filename",
       path.join(directory, "temporal.db"),
+      // Match the cluster's namespace-init job (homelab cdk8s
+      // createTemporalNamespaceInitJob): buildExecutionStartMetadata
+      // (execution-metadata.ts) attaches these as typed search attributes on
+      // every schedule-started workflow, and the server rejects an unmapped
+      // attribute rather than silently dropping it.
+      "--search-attribute",
+      "Environment=Keyword",
+      "--search-attribute",
+      "Domain=Keyword",
+      "--search-attribute",
+      "Trigger=Keyword",
+      "--search-attribute",
+      "ReleaseCommit=Keyword",
     ],
     { stdout: "ignore", stderr: "pipe" },
   );
@@ -214,6 +230,7 @@ test("reconciles report Schedules closed-world while preserving a human pause", 
     revision: updated.revision,
     cronExpression: "30 9 * * *",
     timezone: "America/Los_Angeles",
+    executionMetadata: reportScheduleExecutionMetadata("dev"),
   };
   expect(scheduleMatchesReport(drifted, desired)).toBe(false);
   await drainReportScheduleOutbox(temporal, "dev", prisma);

@@ -20,9 +20,21 @@ export function createTemporalNamespaceInitJob(
     metadata: {
       name: "temporal-namespace-init",
       annotations: {
-        // Run after the temporal-server deployment is synced
-        "argocd.argoproj.io/hook": "PostSync",
+        // This job registers the Environment/Domain/Trigger/ReleaseCommit
+        // typed Search Attributes registerSchedules() needs on every gateway
+        // boot. A "Sync" hook (not PostSync) runs during the normal sync
+        // phase, ordered by sync-wave alongside regular resources -- unlike
+        // PreSync/PostSync, which run strictly before/after every wave. That
+        // lets this job's wave (below) sit ahead of temporal-gateway's
+        // (syncWave: -1 in ingress-workers.ts): PostSync would run only
+        // after every wave-resource, including the gateway, is Healthy --
+        // but the gateway can't become healthy until these attributes exist,
+        // deadlocking the release. The job's own retry loop
+        // (`until temporal operator cluster health`) tolerates starting
+        // before temporal-server (implicit wave 0) is up.
+        "argocd.argoproj.io/hook": "Sync",
         "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation",
+        "argocd.argoproj.io/sync-wave": "-2",
       },
     },
     securityContext: {
@@ -68,6 +80,8 @@ export function createTemporalNamespaceInitJob(
           // Create default namespace if needed, then enforce current retention.
           'if temporal operator namespace describe --namespace default; then echo "Temporal default namespace already exists"; else temporal operator namespace create --namespace default --retention 720h; fi',
           "temporal operator namespace update --namespace default --retention 720h",
+          'SEARCH_ATTRIBUTES="$(temporal operator search-attribute list --namespace default --output json)"',
+          String.raw`for ATTRIBUTE in Environment Domain Trigger ReleaseCommit; do if printf "%s" "$SEARCH_ATTRIBUTES" | grep -q "\"$ATTRIBUTE\": \"INDEXED_VALUE_TYPE_KEYWORD\""; then echo "Temporal Search Attribute $ATTRIBUTE already exists"; else temporal operator search-attribute create --namespace default --name "$ATTRIBUTE" --type Keyword; fi; done`,
           'echo "Namespace init complete"',
         ].join(" && "),
       ],

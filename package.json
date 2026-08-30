@@ -150,6 +150,7 @@
     "packages/tasknotes-types",
     "packages/tasks-for-obsidian",
     "packages/temporal",
+    "packages/temporal-observability",
     "packages/terraform-provider-asuswrt",
     "packages/toolkit",
     "packages/trmnl-dashboard",

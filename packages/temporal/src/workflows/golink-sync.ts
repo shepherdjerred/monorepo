@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { log, proxyActivities } from "@temporalio/workflow";
 import type {
   GolinkClusterActivities,
   GolinkSyncActivities,
@@ -62,7 +62,7 @@ export async function syncGolinks(): Promise<void> {
   const ingresses = await listTailscaleIngresses();
 
   if (ingresses.length === 0) {
-    console.warn("No Tailscale ingresses found");
+    log.warn("No Tailscale ingresses found");
     return;
   }
 
@@ -116,7 +116,7 @@ export async function syncGolinks(): Promise<void> {
   }
 
   if (created > 0 || deleted > 0) {
-    console.warn(
+    log.info(
       `Golink sync complete: ${String(created)} created/updated, ${String(deleted)} deleted, ${String(skippedOwnership)} skipped (different owner)`,
     );
   }
@@ -128,7 +128,7 @@ export async function syncGolinks(): Promise<void> {
       !expectedLinks.has(link.short),
   );
   if (staleForeign.length > 0) {
-    console.warn(
+    log.warn(
       `Golink sync: ${String(staleForeign.length)} stale tailnet links owned by another identity (skipped): ${staleForeign.map((l) => l.short).join(", ")}`,
     );
   }

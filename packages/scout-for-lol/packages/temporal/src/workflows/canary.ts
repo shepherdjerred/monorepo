@@ -11,11 +11,13 @@ import {
   realtimeActivities,
 } from "./activity-options.ts";
 import { scoutTaskQueues } from "#src/identifiers.ts";
+import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
 
 export async function scoutQueueCanaryWorkflow(
   rawInput: ScoutQueueCanaryInput,
 ): Promise<ScoutQueueCanaryProbeResult[]> {
   const input = ScoutQueueCanaryInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** probing every Scout Activity queue");
   const expectedQueues = scoutTaskQueues(input.stage);
   const results = await Promise.all([
     realtimeActivities(input.stage).probeQueue({

@@ -10,8 +10,10 @@
     ".": "./src/index.ts",
     "./activities": "./src/activities.ts",
     "./contracts": "./src/contracts.ts",
+    "./execution-metadata": "./src/execution-metadata.ts",
     "./identifiers": "./src/identifiers.ts",
     "./signals": "./src/signals.ts",
+    "./workflow-ui-interceptor": "./src/workflow-ui-interceptor.ts",
     "./workflows": "./src/workflows/index.ts"
   },
   "scripts": {

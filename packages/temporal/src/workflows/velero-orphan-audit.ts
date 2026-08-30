@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { log, proxyActivities } from "@temporalio/workflow";
 import type { VeleroOrphanAuditActivities } from "#activities/velero-orphan-audit.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
@@ -22,30 +22,19 @@ export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   // Log a structured summary for Loki / Bugsink ingestion. The Prometheus
   // gauges are emitted directly by the activity via the prom-client registry
   // (see src/observability/metrics.ts).
-  console.warn(
-    JSON.stringify({
-      level: "info",
-      msg: "Velero orphan audit complete",
-      component: "temporal-worker",
-      module: "velero-orphan-audit",
-      liveBackupCount: result.liveBackupCount,
-      totalSnapshotCount: result.totalSnapshotCount,
-      totalOrphanCount: result.totalOrphanCount,
-      totalOrphanBytes: result.totalOrphanBytes,
-      orphansByDataset: result.datasets
-        .filter((d) => d.orphanCount > 0)
-        .map((d) => ({
-          node: d.node,
-          dataset: d.dataset,
-          orphanCount: d.orphanCount,
-          orphanBytes: d.orphanBytes,
-        })),
-      durationSeconds: result.workflowDurationSeconds,
-    }),
-  );
+  log.info("Velero orphan audit complete", {
+    liveBackupCount: result.liveBackupCount,
+    totalSnapshotCount: result.totalSnapshotCount,
+    totalOrphanCount: result.totalOrphanCount,
+    totalOrphanBytes: result.totalOrphanBytes,
+    orphanDatasetCount: result.datasets.filter(
+      (dataset) => dataset.orphanCount > 0,
+    ).length,
+    durationSeconds: result.workflowDurationSeconds,
+  });
 
   if (result.totalOrphanCount > 0) {
-    console.warn(
+    log.warn(
       `Velero orphan audit: ${String(result.totalOrphanCount)} orphan snapshots ` +
         `(${String(Math.round(result.totalOrphanBytes / 1024 / 1024))} MiB) across ` +
         `${String(result.datasets.filter((d) => d.orphanCount > 0).length)} datasets. ` +
