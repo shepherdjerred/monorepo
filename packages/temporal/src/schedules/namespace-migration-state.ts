@@ -7,12 +7,14 @@ export const SOURCE_MIGRATION_NOTE =
 export type MigrationState = {
   sourcePaused: boolean;
   sourceNote: string | undefined;
+  attemptedAt?: string;
   cutoverAt?: string;
 };
 
 const MigrationStateSchema = z.object({
   sourcePaused: z.boolean(),
   sourceNote: z.string().optional(),
+  attemptedAt: z.iso.datetime().optional(),
   cutoverAt: z.iso.datetime().optional(),
 });
 
@@ -31,6 +33,9 @@ export function decodeMigrationState(note: string | undefined): MigrationState {
   return {
     sourcePaused: state.sourcePaused,
     sourceNote: state.sourceNote,
+    ...(state.attemptedAt === undefined
+      ? {}
+      : { attemptedAt: state.attemptedAt }),
     ...(state.cutoverAt === undefined ? {} : { cutoverAt: state.cutoverAt }),
   };
 }
@@ -61,11 +66,12 @@ export function cutoverTimestampForRetry(
 ): Date {
   let persisted: string | undefined;
   for (const { migrationState } of targets) {
-    if (migrationState.cutoverAt === undefined) continue;
-    if (persisted !== undefined && persisted !== migrationState.cutoverAt) {
+    const boundary = migrationState.cutoverAt ?? migrationState.attemptedAt;
+    if (boundary === undefined) continue;
+    if (persisted !== undefined && persisted !== boundary) {
       throw new Error("Prepared targets disagree about the cutover boundary");
     }
-    persisted = migrationState.cutoverAt;
+    persisted = boundary;
   }
   return persisted === undefined ? now : new Date(persisted);
 }

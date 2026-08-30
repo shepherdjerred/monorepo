@@ -12,20 +12,21 @@ import {
   cutoverTimestampForRetry,
   decodeMigrationState,
   encodeMigrationState,
-  migrationAuditQueries,
   SOURCE_MIGRATION_NOTE,
   sourceStateAllowsCutover,
   targetPauseAction,
   type MigrationState,
 } from "./namespace-migration-state.ts";
-
+import {
+  auditNamespaceMigration as auditNamespaceMigrationImpl,
+  type NamespaceMigrationAuditInput,
+} from "./namespace-migration-audit.ts";
 export type MigrationTargetNamespace = Exclude<TemporalNamespace, "dev">;
 
 export type MigrationSchedule = {
   source: ScheduleDescription;
   targetNamespace: MigrationTargetNamespace;
 };
-
 const SearchAttributesSchema = z
   .record(
     z.string(),
@@ -37,7 +38,6 @@ const SearchAttributesSchema = z
     ]),
   )
   .optional();
-
 export function isRootWorkflowExecution(execution: {
   runId: string;
   rootExecution?: { runId: string | null } | null;
@@ -48,7 +48,6 @@ export function isRootWorkflowExecution(execution: {
     execution.rootExecution.runId === execution.runId
   );
 }
-
 export function classifyScheduleNamespace(
   scheduleId: string,
   memo: Record<string, unknown> | undefined,
@@ -82,7 +81,6 @@ export function classifyScheduleNamespace(
 
   throw new Error(`Unknown schedule ownership for ${scheduleId}`);
 }
-
 function comparableSchedule(description: ScheduleDescription): string {
   return JSON.stringify({
     spec: description.spec,
@@ -93,13 +91,11 @@ function comparableSchedule(description: ScheduleDescription): string {
     typedSearchAttributes: description.typedSearchAttributes,
   });
 }
-
 function readSearchAttributes(description: ScheduleDescription) {
   return SearchAttributesSchema.parse(
     Reflect.get(description, "searchAttributes"),
   );
 }
-
 export async function inventoryMigrationSchedules(
   sourceClient: Client,
 ): Promise<MigrationSchedule[]> {
@@ -120,7 +116,6 @@ export async function inventoryMigrationSchedules(
     left.source.scheduleId.localeCompare(right.source.scheduleId),
   );
 }
-
 async function describeIfPresent(
   client: Client,
   scheduleId: string,
@@ -132,7 +127,6 @@ async function describeIfPresent(
     throw error;
   }
 }
-
 function targetClient(
   clients: ReadonlyMap<MigrationTargetNamespace, Client>,
   namespace: MigrationTargetNamespace,
@@ -143,7 +137,6 @@ function targetClient(
   }
   return client;
 }
-
 function validateExistingPreparedTarget(
   existing: ScheduleDescription,
   schedule: MigrationSchedule,
@@ -160,7 +153,6 @@ function validateExistingPreparedTarget(
     );
   }
 }
-
 export async function prepareNamespaceMigration(input: {
   schedules: readonly MigrationSchedule[];
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>;
@@ -201,13 +193,11 @@ export async function prepareNamespaceMigration(input: {
     });
   }
 }
-
 type PreparedTarget = {
   migration: MigrationSchedule;
   target: ScheduleDescription;
   migrationState: MigrationState;
 };
-
 async function validatePreparedTargets(input: {
   sourceClient: Client;
   schedules: readonly MigrationSchedule[];
@@ -254,7 +244,6 @@ async function validatePreparedTargets(input: {
   }
   return targets;
 }
-
 async function persistCutoverBoundary(
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
   targets: readonly PreparedTarget[],
@@ -277,13 +266,37 @@ async function persistCutoverBoundary(
       }));
   }
 }
-
+async function persistMigrationAttempt(
+  targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
+  targets: readonly PreparedTarget[],
+  attemptedAt: Date,
+): Promise<void> {
+  const attemptedAtIso = attemptedAt.toISOString();
+  for (const { migration, migrationState } of targets) {
+    if (migrationState.attemptedAt !== undefined) continue;
+    const handle = targetClient(
+      targetClients,
+      migration.targetNamespace,
+    ).schedule.getHandle(migration.source.scheduleId);
+    await handle.update((previous) => ({
+      ...previous,
+      state: {
+        ...previous.state,
+        note: encodeMigrationState({
+          ...migrationState,
+          attemptedAt: attemptedAtIso,
+        }),
+      },
+    }));
+  }
+}
 async function pauseSourceSchedules(
   sourceClient: Client,
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
   targets: readonly PreparedTarget[],
 ): Promise<Date> {
   const pauseStartedAt = cutoverTimestampForRetry(targets, new Date());
+  await persistMigrationAttempt(targetClients, targets, pauseStartedAt);
   let persistedBoundary = targets.some(
     ({ migrationState }) => migrationState.cutoverAt !== undefined,
   );
@@ -299,13 +312,10 @@ async function pauseSourceSchedules(
     }
   }
   if (!persistedBoundary) {
-    throw new Error(
-      "Source schedules are already migration-paused but have no persisted cutover boundary; refusing to cut over without an auditable boundary",
-    );
+    await persistCutoverBoundary(targetClients, targets, pauseStartedAt);
   }
   return pauseStartedAt;
 }
-
 async function activateTargetSchedules(
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
   targets: readonly PreparedTarget[],
@@ -325,11 +335,9 @@ async function activateTargetSchedules(
     }
   }
 }
-
 function scheduleIdQuery(scheduleId: string): string {
   return `TemporalScheduledById = ${JSON.stringify(scheduleId)}`;
 }
-
 async function assertNoTargetWorkflowStarts(
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
   schedules: readonly MigrationSchedule[],
@@ -344,7 +352,15 @@ async function assertNoTargetWorkflowStarts(
     }
   }
 }
-
+async function waitForNoTargetWorkflowStarts(
+  targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
+  schedules: readonly MigrationSchedule[],
+): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await assertNoTargetWorkflowStarts(targetClients, schedules);
+    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+}
 export async function cutoverNamespaceMigration(input: {
   sourceClient: Client;
   schedules: readonly MigrationSchedule[];
@@ -356,6 +372,7 @@ export async function cutoverNamespaceMigration(input: {
   }
 
   const targets = await validatePreparedTargets(input);
+  await assertNoTargetWorkflowStarts(input.targetClients, input.schedules);
   const pauseStartedAt = await pauseSourceSchedules(
     input.sourceClient,
     input.targetClients,
@@ -375,7 +392,6 @@ export async function cutoverNamespaceMigration(input: {
   await activateTargetSchedules(input.targetClients, targetsWithBoundary);
   return cutoverAt;
 }
-
 export async function rollbackNamespaceMigration(input: {
   sourceClient: Client;
   schedules: readonly MigrationSchedule[];
@@ -414,7 +430,7 @@ export async function rollbackNamespaceMigration(input: {
         pausedTargets.push(preparedTarget);
       }
     }
-    await assertNoTargetWorkflowStarts(input.targetClients, input.schedules);
+    await waitForNoTargetWorkflowStarts(input.targetClients, input.schedules);
   } catch (error: unknown) {
     for (const { migration, target } of pausedTargets) {
       await targetClient(input.targetClients, migration.targetNamespace)
@@ -441,62 +457,12 @@ export async function rollbackNamespaceMigration(input: {
   }
 }
 
-export async function auditNamespaceMigration(input: {
-  sourceClient: Client;
-  schedules: readonly MigrationSchedule[];
-  targetClients: ReadonlyMap<MigrationTargetNamespace, Client>;
-  cutoverAt: Date;
-}): Promise<void> {
-  for (const migration of input.schedules) {
-    const source = await input.sourceClient.schedule
-      .getHandle(migration.source.scheduleId)
-      .describe();
-    if (!source.state.paused) {
-      throw new Error(`Source default/${source.scheduleId} is active`);
-    }
-    const target = await targetClient(
-      input.targetClients,
-      migration.targetNamespace,
-    )
-      .schedule.getHandle(source.scheduleId)
-      .describe();
-    if (comparableSchedule(source) !== comparableSchedule(target)) {
-      throw new Error(
-        `Target ${migration.targetNamespace}/${source.scheduleId} does not match source`,
-      );
-    }
-    const state = decodeMigrationState(target.state.note);
-    if (state.cutoverAt === undefined) {
-      throw new Error(
-        `Target ${migration.targetNamespace}/${source.scheduleId} has no persisted cutover boundary`,
-      );
-    }
-    if (state.cutoverAt !== input.cutoverAt.toISOString()) {
-      throw new Error(
-        `Target ${migration.targetNamespace}/${source.scheduleId} has a persisted cutover boundary that differs from the audit boundary`,
-      );
-    }
-    if (target.state.paused !== state.sourcePaused) {
-      throw new Error(
-        `Target ${migration.targetNamespace}/${source.scheduleId} pause state differs from its pre-cutover source state`,
-      );
-    }
-  }
-
-  const queries = migrationAuditQueries(input.cutoverAt);
-  for await (const execution of input.sourceClient.workflow.list({
-    query: queries.open,
-  })) {
-    throw new Error(
-      `Workflow ${execution.workflowId} remains open in default during drain audit`,
-    );
-  }
-  for await (const execution of input.sourceClient.workflow.list({
-    query: queries.startedAfterCutover,
-  })) {
-    if (!isRootWorkflowExecution(execution)) continue;
-    throw new Error(
-      `Workflow ${execution.workflowId} started in default after cutover`,
-    );
-  }
+export async function auditNamespaceMigration(
+  input: NamespaceMigrationAuditInput,
+): Promise<void> {
+  return auditNamespaceMigrationImpl(input, {
+    targetClient,
+    comparableSchedule,
+    isRootWorkflowExecution,
+  });
 }
