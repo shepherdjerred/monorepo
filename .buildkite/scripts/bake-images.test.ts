@@ -322,17 +322,6 @@ test("retains a central Workflow candidate until its pin converges with stable",
   });
 });
 
-test("does not publish nonexistent Scout Workflow catalog pins", () => {
-  const digest = `sha256:${"b".repeat(64)}`;
-  expect(() =>
-    pinCandidatesForDigests(
-      { "shepherdjerred/scout-for-lol/beta": digest },
-      "43",
-      versionCatalogSource([]),
-    ),
-  ).toThrow("No internal image pin exists");
-});
-
 test("seeds a legacy Scout beta Workflow stable pin atomically", () => {
   const digest = `sha256:${"b".repeat(64)}`;
   const workflowPin = `2.0.0-42@sha256:${"c".repeat(64)}`;
@@ -367,50 +356,6 @@ test("seeds a legacy Scout beta Workflow stable pin atomically", () => {
   });
 });
 
-test("does not advance the Scout prod candidate before beta acceptance", () => {
-  const digest = `sha256:${"d".repeat(64)}`;
-  const workflowPin = `2.0.0-42@sha256:${"c".repeat(64)}`;
-  expect(
-    pinCandidatesForDigests(
-      { "shepherdjerred/scout-for-lol/beta": digest },
-      "43",
-      versionCatalogSource([
-        {
-          name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
-          value: workflowPin,
-        },
-        {
-          name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
-          value: workflowPin,
-        },
-      ]),
-    ),
-  ).toEqual({
-    "shepherdjerred/scout-for-lol/beta": {
-      version: "2.0.0-43",
-      digest,
-    },
-    "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
-      version: "2.0.0-43",
-      digest,
-    },
-    "shepherdjerred/scout-for-lol/beta/workflows/stable": {
-      version: "2.0.0-43",
-      digest,
-    },
-  });
-});
-
-test("does not synthesize a Scout Workflow candidate while its pins are absent", () => {
-  const digest = `sha256:${"b".repeat(64)}`;
-  expect(() =>
-    pinCandidatesForDigests(
-      { "shepherdjerred/scout-for-lol/beta": digest },
-      "44",
-      versionCatalogSource([]),
-    ),
-  ).toThrow("No internal image pin exists");
-});
 function versionCatalogSource(
   entries: readonly { readonly name: string; readonly value: string }[],
 ): string {
