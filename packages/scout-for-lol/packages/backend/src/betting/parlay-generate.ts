@@ -277,6 +277,12 @@ async function generateAndPersistDefinition(
     }),
     "bryan_bucks_parlay",
   );
+  resolveProviderIssue({
+    app: "scout-for-lol",
+    provider: "openrouter",
+    kind: "quota",
+    source: "betting_parlay",
+  });
   const filledParlay = generatedParlaySchemaFor(setup.subjects).parse(
     filled.object,
   );
@@ -430,12 +436,6 @@ async function runParlayGenerationInternal(
       throw new ParlayPersistenceError(error);
     }
     recordGeneration(published > 0 ? "success" : "no_market", startedAt);
-    resolveProviderIssue({
-      app: "scout-for-lol",
-      provider: "openrouter",
-      kind: "quota",
-      source: "betting_parlay",
-    });
   } catch (error) {
     const status = generationStatusForError(deadline, error);
     recordGeneration(status, startedAt);

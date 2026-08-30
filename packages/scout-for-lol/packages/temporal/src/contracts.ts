@@ -3,6 +3,8 @@ import { z } from "zod";
 export const ScoutStageSchema = z.enum(["dev", "beta", "prod"]);
 export type ScoutStage = z.infer<typeof ScoutStageSchema>;
 
+export const DETACHED_WORK_MAX_ATTEMPTS = 4;
+
 const OpaqueIdentifierSchema = z
   .string()
   .min(1)

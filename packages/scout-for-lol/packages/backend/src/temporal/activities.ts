@@ -40,7 +40,7 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
       async () => {
         const { executeScoutTemporalWork } =
           await import("#src/temporal/work-store.ts");
-        await executeScoutTemporalWork(input);
+        await executeScoutTemporalWork(input, Context.current().info.attempt);
       },
     );
   } catch (error) {

@@ -7,7 +7,11 @@ import {
   RawCurrentGameInfoSchema,
   type BucksPredictionObservation,
 } from "@scout-for-lol/data";
-import type { ScoutDetachedWorkInput } from "@scout-for-lol/temporal";
+import {
+  DETACHED_WORK_MAX_ATTEMPTS,
+  type ScoutDetachedWorkInput,
+} from "@scout-for-lol/temporal";
+import { classifyLlmProviderIssue } from "#src/alerts/provider-metrics.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
@@ -148,6 +152,7 @@ export async function findQueuedScoutTemporalWork(
 
 export async function executeScoutTemporalWork(
   input: ScoutDetachedWorkInput,
+  attempt = 1,
 ): Promise<void> {
   const work = await prisma.scoutTemporalWork.findUniqueOrThrow({
     where: { id: input.workId },
@@ -197,11 +202,15 @@ export async function executeScoutTemporalWork(
       data: { state: "completed", completedAt: new Date() },
     });
   } catch (error) {
+    const terminalFailure =
+      attempt >= DETACHED_WORK_MAX_ATTEMPTS ||
+      (input.kind === "parlay-generation" &&
+        classifyLlmProviderIssue(error) === "quota");
     await prisma.scoutTemporalWork.update({
       where: { id: input.workId },
       data: {
-        state: "failed",
-        failedAt: new Date(),
+        state: terminalFailure ? "failed" : "queued",
+        failedAt: terminalFailure ? new Date() : null,
         lastError: error instanceof Error ? error.message : String(error),
       },
     });

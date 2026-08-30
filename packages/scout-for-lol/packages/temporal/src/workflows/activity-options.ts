@@ -5,6 +5,7 @@ import {
 import type { RetryPolicy } from "@temporalio/common";
 import type { ScoutTemporalActivities } from "#src/activities.ts";
 import type { ScoutStage } from "#src/contracts.ts";
+import { DETACHED_WORK_MAX_ATTEMPTS } from "#src/contracts.ts";
 import { scoutTaskQueues } from "#src/identifiers.ts";
 
 const NON_RETRYABLE_FAILURES = [
@@ -17,7 +18,7 @@ const NON_RETRYABLE_FAILURES = [
 ] as const;
 
 export const BACKGROUND_ACTIVITY_RETRY_POLICY = {
-  maximumAttempts: 4,
+  maximumAttempts: DETACHED_WORK_MAX_ATTEMPTS,
   initialInterval: "10 seconds",
   backoffCoefficient: 2,
   maximumInterval: "5 minutes",
