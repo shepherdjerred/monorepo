@@ -3,7 +3,7 @@ import { Duration, Size } from "cdk8s";
 import { Cpu, EnvValue, Job, Secret, Volume } from "cdk8s-plus-31";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import {
-  TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE,
+  TEMPORAL_POSTGRES_TLS_CA_FILE,
   TEMPORAL_POSTGRES_TLS_SECRET,
   TEMPORAL_POSTGRES_TLS_SERVER_NAME,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
@@ -12,7 +12,11 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 const POSTGRES_SECRET_NAME =
   "temporal.temporal-postgresql.credentials.postgresql.acid.zalan.do";
 const POSTGRES_TLS_DIRECTORY = "/etc/temporal/postgres-tls";
-const POSTGRES_TLS_CA_FILE = `${POSTGRES_TLS_DIRECTORY}/${TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE}`;
+// Trust the stable CA (see temporal-db-tls.ts), not the rotating leaf's own
+// tls.crt — this Job is short-lived and re-reads the mounted secret fresh on
+// every run, but a leaf rotation between runs would still make tls.crt
+// untrustworthy the moment cert-manager regenerates it.
+const POSTGRES_TLS_CA_FILE_PATH = `${POSTGRES_TLS_DIRECTORY}/${TEMPORAL_POSTGRES_TLS_CA_FILE}`;
 
 const SCHEMA_MIGRATION_SCRIPT = String.raw`
 set -eu -o pipefail
@@ -110,7 +114,7 @@ export function createTemporalSchemaMigrationJob(chart: Chart) {
           secret: postgresSecret,
           key: "password",
         }),
-        POSTGRES_TLS_CA_FILE: EnvValue.fromValue(POSTGRES_TLS_CA_FILE),
+        POSTGRES_TLS_CA_FILE: EnvValue.fromValue(POSTGRES_TLS_CA_FILE_PATH),
         POSTGRES_TLS_SERVER_NAME: EnvValue.fromValue(
           TEMPORAL_POSTGRES_TLS_SERVER_NAME,
         ),

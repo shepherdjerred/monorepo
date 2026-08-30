@@ -343,8 +343,25 @@ export function createTemporalChart(app: App) {
   });
 
   // NetworkPolicy for PostgreSQL - only allow the server and schema hook.
+  //
+  // This must itself be a PreSync hook, staged ahead of the schema-migration
+  // Job's own PreSync wave (-1): PreSync hooks run in a phase that completes
+  // in full before ANY ordinary (non-hook) resource is applied, regardless of
+  // sync-wave. Left as a plain resource, ArgoCD would only add the
+  // temporal-schema-migration ingress rule below during the later Sync
+  // phase — after the schema-migration Job has already run (and had its
+  // PostgreSQL connection dropped by the netpol that predates this rule).
+  // No hook-delete-policy is set, so this persists as an ordinary tracked
+  // resource after creation and simply keeps being reconciled in PreSync on
+  // every subsequent sync.
   new KubeNetworkPolicy(chart, "temporal-postgresql-netpol", {
-    metadata: { name: "temporal-postgresql-netpol" },
+    metadata: {
+      name: "temporal-postgresql-netpol",
+      annotations: {
+        "argocd.argoproj.io/hook": "PreSync",
+        "argocd.argoproj.io/sync-wave": "-3",
+      },
+    },
     spec: {
       podSelector: {
         matchLabels: { cluster_name: "temporal-postgresql" },

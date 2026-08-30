@@ -18,7 +18,7 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import {
-  TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE,
+  TEMPORAL_POSTGRES_TLS_CA_FILE,
   TEMPORAL_POSTGRES_TLS_SECRET,
   TEMPORAL_POSTGRES_TLS_SERVER_NAME,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
@@ -88,10 +88,41 @@ export function createTemporalServerDeployment(
     },
   );
 
+  // The image's own entrypoint renders /etc/temporal/config/docker.yaml from
+  // /etc/temporal/config/config_template.yaml (baked into the image) via
+  // `dockerize`. Mounting configVolume straight onto /etc/temporal/config in
+  // the main container would completely shadow that directory — including
+  // the template the entrypoint depends on — leaving nothing for dockerize
+  // to render and crash-looping every pod before port 7233 ever opens. Copy
+  // the template into the (still-empty) shared volume first, from the same
+  // image, so the main container's mount already contains it.
+  const configTemplateImage = `temporalio/server:${versions["temporalio/server"]}`;
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "temporal-server-config-template",
+      image: configTemplateImage,
+      command: ["/bin/sh", "-c"],
+      args: [
+        "cp /etc/temporal/config/config_template.yaml /new-config/config_template.yaml",
+      ],
+      securityContext: {
+        user: UID,
+        group: GID,
+        ensureNonRoot: true,
+        readOnlyRootFilesystem: true,
+      },
+      volumeMounts: [{ path: "/new-config", volume: configVolume }],
+      resources: {
+        cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
+        memory: { request: Size.mebibytes(16), limit: Size.mebibytes(64) },
+      },
+    }),
+  );
+
   deployment.addContainer(
     withCommonProps({
       name: "temporal-server",
-      image: `temporalio/server:${versions["temporalio/server"]}`,
+      image: configTemplateImage,
       ports: [
         { name: "grpc", number: 7233 },
         { name: "metrics", number: 9090 },
@@ -112,15 +143,20 @@ export function createTemporalServerDeployment(
         DBNAME: EnvValue.fromValue("temporal"),
         VISIBILITY_DBNAME: EnvValue.fromValue("temporal_visibility"),
         POSTGRES_TLS_ENABLED: EnvValue.fromValue("true"),
+        // Trust the stable CA (see temporal-db-tls.ts), not the rotating
+        // leaf's own tls.crt: the leaf's key rotates on every cert-manager
+        // renewal, but this long-running server only re-reads its trust
+        // file on pod restart. Trusting tls.crt would work until the first
+        // rotation, then silently break every new connection.
         POSTGRES_TLS_CA_FILE: EnvValue.fromValue(
-          `/etc/temporal/postgres-tls/${TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE}`,
+          `/etc/temporal/postgres-tls/${TEMPORAL_POSTGRES_TLS_CA_FILE}`,
         ),
         POSTGRES_TLS_SERVER_NAME: EnvValue.fromValue(
           TEMPORAL_POSTGRES_TLS_SERVER_NAME,
         ),
         SQL_TLS_ENABLED: EnvValue.fromValue("true"),
         SQL_CA: EnvValue.fromValue(
-          `/etc/temporal/postgres-tls/${TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE}`,
+          `/etc/temporal/postgres-tls/${TEMPORAL_POSTGRES_TLS_CA_FILE}`,
         ),
         SQL_HOST_VERIFICATION: EnvValue.fromValue("true"),
         SQL_HOST_NAME: EnvValue.fromValue(TEMPORAL_POSTGRES_TLS_SERVER_NAME),
