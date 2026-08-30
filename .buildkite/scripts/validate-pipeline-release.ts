@@ -251,10 +251,13 @@ function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
       `release-please lane is missing exact filtered install ${releaseInstall}`,
     );
   }
+  const releaseCatalogBuildCommands = [
+    "bun --no-install run --cwd packages/llm-models build",
+    "bun --no-install run --cwd packages/llm-models build:runtime",
+  ];
   if (
-    !hasTrimmedLine(
-      releasePlease,
-      "bun --no-install run --cwd packages/llm-models build",
+    !releaseCatalogBuildCommands.some((command) =>
+      hasTrimmedLine(releasePlease, command),
     )
   ) {
     fail("release-please must build the model catalog before release scripts");
