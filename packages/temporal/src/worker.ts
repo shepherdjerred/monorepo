@@ -9,14 +9,12 @@ import {
 } from "@temporalio/worker";
 import { registerSchedules } from "./schedules/register-schedules.ts";
 import {
-  startEventBridge,
   startHttpServers,
   type EventBridgeHandle,
 } from "./event-bridge/index.ts";
+import { startEventBridgeSupervisor } from "./event-bridge/supervisor.ts";
 import { initializeTracing, shutdownTracing } from "./observability/tracing.ts";
 import {
-  haEventBridgeConnected,
-  haEventBridgeStartFailuresTotal,
   startMetricsServer,
   stopMetricsServer,
 } from "./observability/metrics.ts";
@@ -24,7 +22,8 @@ import { createStructuredLogger } from "./observability/logging.ts";
 import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
 import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
-import { retryUntilReady, sleepUnlessClosed } from "./shared/startup-retry.ts";
+import { retryUntilReady } from "./shared/startup-retry.ts";
+import { formatError } from "./shared/format-error.ts";
 import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
 import {
   parseTemporalBootstrap,
@@ -130,14 +129,25 @@ function initSentry(): void {
 
 type TemporalWorkerTracing = ReturnType<typeof createTemporalWorkerTracing>;
 
+type CreateQueueWorkerOptions = {
+  readonly connection: NativeConnection;
+  readonly workflowsPath: string;
+  readonly workflowUiInterceptorPath: string;
+  readonly bootstrap: TemporalBootstrap;
+  readonly temporalTracing: TemporalWorkerTracing | undefined;
+};
+
 async function createQueueWorker(
   definition: QueueWorkerDefinition,
-  connection: NativeConnection,
-  workflowsPath: string,
-  workflowUiInterceptorPath: string,
-  bootstrap: TemporalBootstrap,
-  temporalTracing: TemporalWorkerTracing | undefined,
+  options: CreateQueueWorkerOptions,
 ): Promise<Worker> {
+  const {
+    connection,
+    workflowsPath,
+    workflowUiInterceptorPath,
+    bootstrap,
+    temporalTracing,
+  } = options;
   if (definition.kind === "workflow") {
     const workerDeployment = bootstrap.workerDeployment;
     return await Worker.create({
@@ -189,10 +199,6 @@ async function createQueueWorker(
   });
 }
 
-function formatError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 async function restoreGlitterCorpusMetricsAfterWorkerStart(
   isClosed: () => boolean,
 ): Promise<void> {
@@ -232,25 +238,6 @@ async function restoreGlitterCorpusMetricsAfterWorkerStart(
   }
 }
 
-function classifyEventBridgeStartFailure(error: unknown): string {
-  const message = formatError(error).toLowerCase();
-  if (message.includes("websocket") || message.includes("web socket")) {
-    return "websocket";
-  }
-  if (message.includes("ha_url") || message.includes("ha_token")) {
-    return "config";
-  }
-  if (message.includes("401") || message.includes("unauthorized")) {
-    return "auth";
-  }
-  return "unknown";
-}
-
-type EventBridgeSupervisorState = {
-  closed: boolean;
-  currentHandle: EventBridgeHandle | undefined;
-};
-
 async function initializeTemporalTracing(
   role: WorkerRole,
   roleContract: ReturnType<typeof getWorkerRoleContract>,
@@ -283,87 +270,6 @@ async function initializeTemporalTracing(
         })
       : undefined;
   return { callGraphTracing, temporalTracing };
-}
-
-function isEventBridgeSupervisorClosed(
-  state: EventBridgeSupervisorState,
-): boolean {
-  return state.closed;
-}
-
-/** Consecutive start failures before escalating the outage to Sentry. */
-const EVENT_BRIDGE_ESCALATION_ATTEMPTS = 10;
-
-async function runEventBridgeSupervisor(
-  client: Client,
-  state: EventBridgeSupervisorState,
-): Promise<void> {
-  try {
-    let attempt = 0;
-    while (!isEventBridgeSupervisorClosed(state)) {
-      try {
-        const handle = await startEventBridge(client);
-        if (isEventBridgeSupervisorClosed(state)) {
-          await handle.close();
-          return;
-        }
-        state.currentHandle = handle;
-        haEventBridgeConnected.set(1);
-        jsonLog("info", "Event bridge started");
-        return;
-      } catch (error: unknown) {
-        attempt += 1;
-        const retryDelayMs = Math.min(300_000, 10_000 * attempt);
-        const reason = classifyEventBridgeStartFailure(error);
-        haEventBridgeConnected.set(0);
-        haEventBridgeStartFailuresTotal.inc({ reason });
-        // Escalate once per outage: the retry loop is intentionally eternal,
-        // which previously meant a permanently-down bridge (no HA presence
-        // signals, no webhooks) only ever showed up as stderr lines and a
-        // gauge nobody was alerting on. Ten consecutive failures ≈ 9 minutes
-        // of outage — loud enough for Sentry, once (attempt only grows
-        // within a single outage; success exits the loop).
-        if (attempt === EVENT_BRIDGE_ESCALATION_ATTEMPTS) {
-          Sentry.captureMessage(
-            `Event bridge has failed to start ${String(attempt)} consecutive times (latest reason: ${reason}); still retrying`,
-            "warning",
-          );
-        }
-        jsonLog("error", "Event bridge failed to start; retrying", {
-          attempt,
-          reason,
-          retryDelayMs,
-          error: formatError(error),
-        });
-        await sleepUnlessClosed(retryDelayMs, () =>
-          isEventBridgeSupervisorClosed(state),
-        );
-      }
-    }
-  } catch (error: unknown) {
-    Sentry.captureException(error);
-    jsonLog("error", "Event bridge supervisor stopped unexpectedly", {
-      error: formatError(error),
-    });
-  }
-}
-
-function startEventBridgeSupervisor(client: Client): EventBridgeHandle {
-  const state: EventBridgeSupervisorState = {
-    closed: false,
-    currentHandle: undefined,
-  };
-
-  void runEventBridgeSupervisor(client, state);
-
-  return {
-    async close() {
-      state.closed = true;
-      if (state.currentHandle !== undefined) {
-        await state.currentHandle.close();
-      }
-    },
-  };
 }
 
 async function startRoleServices(options: {
@@ -446,14 +352,13 @@ async function main(): Promise<void> {
   ).pathname;
   const workers: Worker[] = [];
   for (const definition of roleContract.workers) {
-    const worker = await createQueueWorker(
-      definition,
+    const worker = await createQueueWorker(definition, {
       connection,
       workflowsPath,
       workflowUiInterceptorPath,
       bootstrap,
       temporalTracing,
-    );
+    });
     workers.push(worker);
     jsonLog("info", "Worker created", {
       workerKind: definition.kind,

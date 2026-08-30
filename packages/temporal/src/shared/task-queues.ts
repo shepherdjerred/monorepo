@@ -39,7 +39,7 @@ export const TASK_QUEUES = {
 export type TaskQueue = (typeof TASK_QUEUES)[keyof typeof TASK_QUEUES];
 
 export const TaskQueueSchema = z.enum([
-  TASK_QUEUES.DEFAULT,
+  TASK_QUEUES.WORKFLOWS,
   TASK_QUEUES.HOME,
   TASK_QUEUES.REPORTS,
   TASK_QUEUES.INFRA,

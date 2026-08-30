@@ -51,7 +51,7 @@ export function executionDomainForTaskQueue(
       return "glitter";
     case TASK_QUEUES.MAINTENANCE:
       return "maintenance";
-    case TASK_QUEUES.DEFAULT:
+    case TASK_QUEUES.WORKFLOWS:
       return "platform";
   }
 }

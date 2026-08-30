@@ -57,7 +57,6 @@ function synthesizeTemporal(): unknown[] {
 describe("Temporal feature-flag boundary", () => {
   test("configures every central worker for Flipt", () => {
     const expectedComponents = new Set([
-      "legacy-worker",
       "gateway",
       "home-worker",
       "reports-worker",
@@ -111,7 +110,6 @@ describe("Temporal feature-flag boundary", () => {
         key: "component",
         operator: "In",
         values: [
-          "legacy-worker",
           "gateway",
           "home-worker",
           "reports-worker",

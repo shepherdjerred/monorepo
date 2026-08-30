@@ -409,7 +409,9 @@
       "purpose": "Enable Temporal client, Workflow, and Activity call-graph tracing on worker restart.",
       "type": "boolean",
       "default": false,
-      "rollouts": []
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "explore-guild-allowlist",

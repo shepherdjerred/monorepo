@@ -22,6 +22,10 @@ function createWorkflowWorker(
     memoryRequest: Size.mebibytes(512),
     memoryLimit: Size.gibibytes(2),
     automountServiceAccountToken: false,
+    // Credentialless by design (see the class doc on
+    // TemporalDomainWorkerProps.featureFlagsEnabled) — this role never talks
+    // to Flipt.
+    featureFlagsEnabled: false,
     envVariables: {
       TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("default"),

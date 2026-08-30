@@ -45,26 +45,61 @@ function temporalServerEgress() {
   };
 }
 
-// Every domain worker built on createTemporalDomainWorker() (the component
-// loop below) now boots with temporalFeatureFlagEnvironment() so it can read
-// the temporal-call-graph-tracing flag. Flipt has no auth of its own —
-// reachability IS the authorization model — so this egress rule is what
-// actually scopes which workers may query it.
-function fliptEgress() {
-  return {
-    to: [
-      {
-        namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "flipt" },
-        },
-        podSelector: { matchLabels: { app: "flipt" } },
+// Every domain worker built on createTemporalDomainWorker() with
+// featureFlagsEnabled left at its default (i.e. every one of these
+// components) boots with temporalFeatureFlagEnvironment() so it can read the
+// temporal-call-graph-tracing flag. Flipt has no auth of its own —
+// reachability IS the authorization model — so this single, explicitly
+// named policy is what actually scopes which workers may query it. The
+// credentialless central-workflows track is deliberately excluded: it opts
+// out of temporalFeatureFlagEnvironment() entirely (workflow-worker.ts) and
+// its own NetworkPolicy asserts no Flipt/443 egress at all.
+const FLIPT_CONSUMER_COMPONENTS = [
+  "gateway",
+  "home-worker",
+  "reports-worker",
+  "infra-worker",
+  "repo-worker",
+  "scout-worker",
+  "glitter-corpus-worker",
+  "glitter-context-worker",
+  "agent-worker",
+] as const;
+
+function createTemporalWorkersFliptEgressPolicy(chart: Chart): void {
+  new KubeNetworkPolicy(chart, "temporal-workers-flipt-egress", {
+    metadata: { name: "temporal-workers-flipt-egress" },
+    spec: {
+      podSelector: {
+        matchExpressions: [
+          {
+            key: "component",
+            operator: "In",
+            values: [...FLIPT_CONSUMER_COMPONENTS],
+          },
+        ],
       },
-    ],
-    ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
-  };
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+              },
+              podSelector: { matchLabels: { app: "flipt" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
 }
 
 export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
+  createTemporalWorkersFliptEgressPolicy(chart);
+
   new KubeNetworkPolicy(chart, "temporal-central-workflows-netpol", {
     metadata: { name: "temporal-central-workflows-netpol" },
     spec: {
@@ -107,7 +142,6 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         egress: [
           dnsEgress(),
           temporalServerEgress(),
-          fliptEgress(),
           { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
           { ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }] },
         ],

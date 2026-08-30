@@ -20,6 +20,7 @@ import appConfiguration from "#src/configuration.ts";
 import {
   buildTemporalExecutionStartMetadata,
   ExecutionMetadataSchema,
+  type TemporalExecutionStartMetadata,
 } from "@scout-for-lol/temporal/execution-metadata";
 import { scheduleMatchesReport } from "#src/reports/report-schedule-drift.ts";
 
@@ -43,16 +44,17 @@ function ownershipMemo(stage: ScoutStage, reportId: number) {
   });
 }
 
-function scheduleConfiguration(input: {
-  stage: ScoutStage;
-  reportId: number;
-  revision: number;
-  cronExpression: string;
-  timezone: string;
-}) {
-  const executionMetadata = buildTemporalExecutionStartMetadata({
+// Shared with report-schedule-drift.ts's scheduleMatchesReport: the drift
+// detector must compare a live schedule's action against these exact values
+// rather than assuming (as it did before execution metadata existed) that a
+// correctly configured schedule carries none, or every reconciliation cycle
+// would see permanent drift and re-upsert every schedule forever.
+export function reportScheduleExecutionMetadata(
+  stage: ScoutStage,
+): TemporalExecutionStartMetadata {
+  return buildTemporalExecutionStartMetadata({
     metadata: ExecutionMetadataSchema.parse({
-      Environment: input.stage,
+      Environment: stage,
       Domain: "reports",
       Trigger: "schedule",
       ReleaseCommit: appConfiguration.gitSha,
@@ -60,6 +62,16 @@ function scheduleConfiguration(input: {
     summary: "Run scheduled Scout report",
     description: "Generates one database-configured Scout report.",
   });
+}
+
+function scheduleConfiguration(input: {
+  stage: ScoutStage;
+  reportId: number;
+  revision: number;
+  cronExpression: string;
+  timezone: string;
+}) {
+  const executionMetadata = reportScheduleExecutionMetadata(input.stage);
   return {
     spec: {
       cronExpressions: [input.cronExpression],
@@ -297,6 +309,7 @@ async function reconcileDesiredReportSchedules(input: {
         revision: report.revision,
         cronExpression: report.cronExpression,
         timezone: report.scheduleTimezone,
+        executionMetadata: reportScheduleExecutionMetadata(input.stage),
       })
     ) {
       drift += 1;

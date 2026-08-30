@@ -24,7 +24,7 @@ describe("central Temporal execution metadata", () => {
     expect(executionDomainForTaskQueue(TASK_QUEUES.MAINTENANCE)).toBe(
       "maintenance",
     );
-    expect(executionDomainForTaskQueue(TASK_QUEUES.DEFAULT)).toBe("platform");
+    expect(executionDomainForTaskQueue(TASK_QUEUES.WORKFLOWS)).toBe("platform");
   });
 
   test("uses a Scout stage as the execution environment", () => {

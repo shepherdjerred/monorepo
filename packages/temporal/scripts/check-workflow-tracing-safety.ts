@@ -16,7 +16,16 @@ export async function findTracingSafetyViolations(
       cwd: root,
       onlyFiles: true,
     })) {
-      if (relativePath.endsWith(".test.ts")) continue;
+      // *.test.ts and *-test-support.ts (e.g. scanner-workflow-test-support.ts,
+      // test-support.ts) never ship in the workflow bundle — they exist to spin
+      // up @temporalio/testing environments from the vitest process — so they
+      // are exempt from workflow-replay determinism rules.
+      if (
+        relativePath.endsWith(".test.ts") ||
+        relativePath.includes("test-support.ts")
+      ) {
+        continue;
+      }
       const file = `${root}/${relativePath}`;
       const source = await Bun.file(file).text();
       if (FORBIDDEN_HANDLER_PATTERN.test(source)) {

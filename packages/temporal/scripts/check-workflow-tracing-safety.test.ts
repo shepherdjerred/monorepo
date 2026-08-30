@@ -12,13 +12,17 @@ afterEach(async () => {
   }
 });
 
-async function fixture(source: string): Promise<string> {
+async function fixtureNamed(fileName: string, source: string): Promise<string> {
   const directory = await mkdtemp(
     path.join(tmpdir(), "temporal-tracing-safety-"),
   );
-  await Bun.write(`${directory}/workflow.ts`, source);
+  await Bun.write(`${directory}/${fileName}`, source);
   temporaryDirectories.push(directory);
   return directory;
+}
+
+async function fixture(source: string): Promise<string> {
+  return fixtureNamed("workflow.ts", source);
 }
 
 describe("findTracingSafetyViolations", () => {
@@ -41,6 +45,14 @@ describe("findTracingSafetyViolations", () => {
   test("allows Temporal's deterministic uuid4", async () => {
     const root = await fixture(
       'import { uuid4 } from "@temporalio/workflow"; export const id = uuid4();',
+    );
+    await expect(findTracingSafetyViolations([root])).resolves.toEqual([]);
+  });
+
+  test("exempts *-test-support.ts helpers that never ship in the workflow bundle", async () => {
+    const root = await fixtureNamed(
+      "scanner-workflow-test-support.ts",
+      'import { TestWorkflowEnvironment } from "@temporalio/testing"; export const id = crypto.randomUUID();',
     );
     await expect(findTracingSafetyViolations([root])).resolves.toEqual([]);
   });
