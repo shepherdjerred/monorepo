@@ -1,3 +1,4 @@
+import { mkdir, rm } from "node:fs/promises";
 import { z } from "zod";
 import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
 import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
@@ -62,6 +63,23 @@ function temporalPrefix(options: WorkerDeploymentRolloutOptions): string[] {
     options.namespace,
     ...(options.tls === true ? ["--tls"] : []),
   ];
+}
+
+async function acquireRolloutLock(
+  catalogPath: string,
+): Promise<() => Promise<void>> {
+  const lockPath = `${catalogPath}.rollout-lock`;
+  try {
+    await mkdir(lockPath);
+  } catch (error: unknown) {
+    if (error instanceof Error && "code" in error && error.code === "EEXIST") {
+      throw new Error("Another Temporal Worker Deployment rollout is active");
+    }
+    throw error;
+  }
+  return async () => {
+    await rm(lockPath, { recursive: true, force: true });
+  };
 }
 async function describeDeployment(
   options: WorkerDeploymentRolloutOptions,
@@ -450,29 +468,35 @@ export async function executeWorkerDeploymentRollout(
   run: RolloutCommandRunner,
 ): Promise<WorkerDeploymentRolloutStatus> {
   const options = validateOptions(rawOptions);
-  const status = await readWorkerDeploymentRolloutStatus(
-    options,
-    run,
-    options.action === "rollback",
-    options.action !== "rollback",
-  );
   if (options.action === "status") {
+    const status = await readWorkerDeploymentRolloutStatus(options, run);
     requireCleanCandidate(status);
     return status;
   }
-  if (options.action === "rollback") {
-    await executeWorkerDeploymentRollback(options, status, run);
-    return await readWorkerDeploymentRolloutStatus(options, run, true, false);
-  }
-  requireCleanCandidate(status);
-  if (options.action === "start") {
-    await executeStart(options, status, run);
+  const releaseLock = await acquireRolloutLock(options.catalogPath);
+  try {
+    const status = await readWorkerDeploymentRolloutStatus(
+      options,
+      run,
+      options.action === "rollback",
+      options.action !== "rollback",
+    );
+    if (options.action === "rollback") {
+      await executeWorkerDeploymentRollback(options, status, run);
+      return await readWorkerDeploymentRolloutStatus(options, run, true, false);
+    }
+    requireCleanCandidate(status);
+    if (options.action === "start") {
+      await executeStart(options, status, run);
+      return await readWorkerDeploymentRolloutStatus(options, run);
+    }
+    if (options.action === "advance") {
+      await executeAdvance(options, status, run);
+      return await readWorkerDeploymentRolloutStatus(options, run);
+    }
+    await executePromotion(options, status, run);
     return await readWorkerDeploymentRolloutStatus(options, run);
+  } finally {
+    await releaseLock();
   }
-  if (options.action === "advance") {
-    await executeAdvance(options, status, run);
-    return await readWorkerDeploymentRolloutStatus(options, run);
-  }
-  await executePromotion(options, status, run);
-  return await readWorkerDeploymentRolloutStatus(options, run);
 }
