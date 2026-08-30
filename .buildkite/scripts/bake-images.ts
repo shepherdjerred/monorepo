@@ -454,11 +454,7 @@ async function main(): Promise<void> {
         liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
       );
       await setDigestMetadata({});
-      await setPinCandidatesMetadata(
-        {},
-        buildNumber,
-        liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
-      );
+      await setPinCandidatesMetadata({}, buildNumber);
       await Bun.write(pushOutcomes, "[]\n");
     }
     return;

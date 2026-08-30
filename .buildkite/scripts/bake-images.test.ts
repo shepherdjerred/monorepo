@@ -166,6 +166,24 @@ test("allows admission when all live Temporal candidates match stable", async ()
   await expect(assertNoPendingVersionBump(executor)).resolves.toBe(catalog);
 });
 
+test("rejects admission when a live Temporal workflow pin is missing", async () => {
+  const catalog = JSON.stringify({
+    entries: [
+      {
+        name: "shepherdjerred/temporal-worker/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+    ],
+  });
+  const executor: CommandExecutor = async (command) =>
+    command[1] === "fetch" || command[1] === "ls-remote"
+      ? commandResult()
+      : commandResult(0, catalog);
+  await expect(assertTemporalCandidatePinsConverged(executor)).rejects.toThrow(
+    "missing Temporal workflow pins",
+  );
+});
+
 test("fails transiently when origin main cannot be refreshed", async () => {
   await expect(
     assertTemporalCandidatePinsConverged(async () => commandResult(1)),
@@ -664,6 +682,34 @@ test("validates structured pins before starting a production push", async () => 
     "No managed image pin exists for ghcr.io/shepherdjerred/birmel",
   );
   expect(commands).toEqual([]);
+});
+
+test("runs the default application candidate smoke check", async () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  const commands: string[][] = [];
+  await pushImages(
+    {
+      targets: ["birmel"],
+      commit: "commit",
+      buildNumber: "42",
+      contractHash: "contract",
+    },
+    {
+      executor: async (command) => {
+        commands.push([...command]);
+        return commandResult();
+      },
+      environment: {},
+      getManifestDigest: async () => digest,
+      verifyAnonymousPull: async () => {},
+      verifySourceLabel: async () => {},
+      getRuntimeFingerprint: async () => "new",
+      writeMetadata: async () => {},
+      writeCandidates: async () => {},
+      writeText: async () => {},
+    },
+  );
+  expect(commands.some((command) => command.includes("--file"))).toBe(true);
 });
 
 test("only accepts documented flags", () => {
