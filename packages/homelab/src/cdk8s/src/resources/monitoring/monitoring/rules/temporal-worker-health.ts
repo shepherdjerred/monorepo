@@ -14,6 +14,9 @@ type TemporalDomainQueueDefinition = {
   activityPoller: boolean;
 };
 
+// Do not install these rules until both tracks can render. A capable
+// candidate alone is insufficient: Scout's chart bootstraps the stable worker
+// first, so candidate-only alerts would fire on absent pods.
 const scoutBetaWorkflowQueue: TemporalDomainQueueDefinition[] =
   scoutWorkflowWorkerImageIsCapable(
     versions["shepherdjerred/scout-for-lol/beta/workflows/stable"],
