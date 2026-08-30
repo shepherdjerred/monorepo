@@ -2,6 +2,7 @@ import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import { z } from "zod";
 import {
+  DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TIMEOUT_MS,
@@ -172,6 +173,10 @@ export async function executeRecoveredReportAi(
   };
   const draft = await streamReportQueryAgent({
     runId: run.id,
+    subject: {
+      kind: "discord_user",
+      id: DiscordAccountIdSchema.parse(run.ownerId),
+    },
     input: payload.edit,
     abortSignal,
     emit,

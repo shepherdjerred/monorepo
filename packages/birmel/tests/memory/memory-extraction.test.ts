@@ -7,8 +7,10 @@ import { attachExtractionProvenance } from "@shepherdjerred/birmel/agent-runtime
 import {
   attachSelfMemoryProvenance,
   buildExtractionTranscript,
+  ExtractionSchema,
   SelfMemorySchema,
 } from "@shepherdjerred/birmel/agent-runtime/memory-extraction.ts";
+import { z } from "zod";
 
 const turn = TurnInputSchema.parse({
   discordMessageId: "3000",
@@ -562,5 +564,54 @@ describe("verified tool self-memory", () => {
 
     expect(rejectedSelfMemory).toEqual({ candidates: [], rejectedCount: 1 });
     expect([...humanClaims, ...rejectedSelfMemory.candidates]).toHaveLength(1);
+  });
+});
+
+describe("structured-output compatibility", () => {
+  test("the extraction schema emits no oneOf", () => {
+    // Azure rejects `oneOf` in a strict response_format and returns a 400 before
+    // any tokens are billed, which took down post-response memory extraction on
+    // every delivered turn. Zod emits `oneOf` for z.discriminatedUnion and
+    // `anyOf` for z.union, so this asserts the union stays plain.
+    //
+    // A unit test is the only place this can be caught. The failure is
+    // routing-dependent -- providers that tolerate `oneOf` accept the identical
+    // schema -- so it does not reproduce until OpenRouter happens to pick Azure.
+    const jsonSchema = JSON.stringify(
+      z.toJSONSchema(ExtractionSchema, { io: "output" }),
+    );
+
+    expect(jsonSchema).not.toContain('"oneOf"');
+    expect(jsonSchema).toContain('"anyOf"');
+  });
+
+  test("every self-memory variant still parses through the union", () => {
+    // Swapping discriminatedUnion for union must not change what validates.
+    const variants = [
+      {
+        kind: "accepted-alias",
+        alias: "jerred",
+        confidence: 0.9,
+        salience: 0.8,
+      },
+      {
+        kind: "commitment",
+        scope: "guild",
+        targetUserId: null,
+        commitment: "I will start the stream at 8",
+        topic: "stream",
+        confidence: 0.9,
+        salience: 0.8,
+        validFrom: null,
+        validUntil: null,
+      },
+    ];
+
+    for (const variant of variants) {
+      expect(SelfMemorySchema.parse(variant)).toMatchObject({
+        kind: variant.kind,
+      });
+    }
+    expect(() => SelfMemorySchema.parse({ kind: "not-a-variant" })).toThrow();
   });
 });

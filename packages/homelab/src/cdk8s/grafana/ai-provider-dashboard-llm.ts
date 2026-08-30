@@ -1,5 +1,9 @@
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
+import * as tempo from "@grafana/grafana-foundation-sdk/tempo";
+import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
 import { createTimeseriesPanel } from "./ai-provider-dashboard-panels.ts";
+
+const TEMPO_DATASOURCE = { type: "tempo", uid: "tempo" };
 
 export function addLlmPanels(
   builder: dashboard.DashboardBuilder,
@@ -244,4 +248,74 @@ export function addLlmPanels(
       unit: "s",
     }),
   );
+
+  builder.withRow(
+    new dashboard.RowBuilder("Attribution").gridPos({
+      x: 0,
+      y: 91,
+      w: 24,
+      h: 1,
+    }),
+  );
+
+  builder.withPanel(createSubjectTokenPanel());
+  builder.withPanel(createSubjectCallPanel());
+}
+
+/**
+ * Attribution reads from Tempo, not Prometheus, and that is deliberate.
+ *
+ * Subject ids are unbounded -- Discord snowflakes, PUUIDs -- so they are span
+ * attributes and never metric labels. That puts a hard 30-day horizon on every
+ * per-subject question, because Tempo's retention is 30 days while Loki keeps
+ * per-call cost for 90 days and Prometheus keeps per-feature cost for 365.
+ *
+ * Tempo also caps a metrics query at a 3h range server-side, so these panels
+ * answer "who is spending right now", not "who spent this month". For a longer
+ * window, query Loki for `llm.openrouter.response` records carrying
+ * `actualCostUsd` and join them to these spans on `traceId`.
+ */
+const ATTRIBUTION_NOTE =
+  "Selects gen_ai.* spans, which carry both the subject and the usage: OpenTelemetry does not inherit attributes down a trace, so a query matching the attribution span above them would find no tokens to sum, and would count one span per interaction rather than one per model call. Subject ids are span attributes, never metric labels, so this panel reads Tempo and inherits Tempo's 30-day retention and 3h metrics-query cap. For spend over a longer window, join Loki's llm.openrouter.response cost records to these spans on traceId.";
+
+function createSubjectTokenPanel() {
+  return new timeseries.PanelBuilder()
+    .title("Output Tokens by Subject")
+    .description(
+      `Output tokens per model call, grouped by who the call was made on behalf of. ${ATTRIBUTION_NOTE}`,
+    )
+    .datasource(TEMPO_DATASOURCE)
+    .withTarget(
+      new tempo.TempoQueryBuilder()
+        .queryType("traceql")
+        .metricsQueryType(tempo.MetricsQueryType.Range)
+        .query(
+          '{span.gen_ai.operation.name != "" && span.llm.subject.id != ""} | sum_over_time(span.gen_ai.usage.output_tokens) by (span.llm.subject.kind, span.llm.subject.id)',
+        ),
+    )
+    .unit("short")
+    .lineWidth(2)
+    .fillOpacity(10)
+    .gridPos({ x: 0, y: 92, w: 12, h: 8 });
+}
+
+function createSubjectCallPanel() {
+  return new timeseries.PanelBuilder()
+    .title("Attributed Calls by Subject Kind")
+    .description(
+      `Model calls by subject kind. A rising \`system\` share means spend is shifting to scheduled work with no requester, which is expected for match reviews and betting but not for interactive features. ${ATTRIBUTION_NOTE}`,
+    )
+    .datasource(TEMPO_DATASOURCE)
+    .withTarget(
+      new tempo.TempoQueryBuilder()
+        .queryType("traceql")
+        .metricsQueryType(tempo.MetricsQueryType.Range)
+        .query(
+          '{span.gen_ai.operation.name != "" && span.llm.subject.kind != ""} | count_over_time() by (span.llm.subject.kind)',
+        ),
+    )
+    .unit("short")
+    .lineWidth(2)
+    .fillOpacity(10)
+    .gridPos({ x: 12, y: 92, w: 12, h: 8 });
 }

@@ -44,11 +44,21 @@ import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-
 import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
+import {
+  withLlmSubjectSpan,
+  type LlmSubject,
+} from "@shepherdjerred/llm-observability/subject";
 
 const logger = createLogger("explore-agent");
 
 export type ExploreAgentParams = {
   runId: string;
+  /**
+   * Who this turn is being answered for. Required rather than optional: an
+   * Explore turn always has an asker, and an optional field would quietly
+   * produce unattributed spend the first time a caller forgot it.
+   */
+  subject: LlmSubject;
   question: string;
   /** Prior turns of this conversation, oldest first. */
   history: ExploreMessage[];
@@ -78,6 +88,16 @@ type RunState = {
 };
 
 export async function streamExploreAgent(
+  params: ExploreAgentParams,
+): Promise<ExploreAgentResult> {
+  // Wraps the whole turn so the nested report-query agent, which opens no span
+  // of its own, is attributed to the same asker as its parent explore turn.
+  return await withLlmSubjectSpan("scout.explore", params.subject, () =>
+    streamExploreAgentInternal(params),
+  );
+}
+
+async function streamExploreAgentInternal(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
   const model = exploreModel();

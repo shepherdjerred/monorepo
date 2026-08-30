@@ -72,6 +72,45 @@ question, waiting on the correlated OpenRouter Broadcast record to settle it;
 until then the spend ceilings take the per-series maximum of `actual` and
 `upstream`, because an alert should err toward firing.
 
+## Attribution
+
+Spans carry who a call was made on behalf of, as a `(kind, id)` pair over
+`discord_user`, `guild`, `tracked_player`, and `system`. A bare user ID would
+not have fitted: match reviews are generated for a tracked player nobody asked
+on behalf of, and the betting workloads run on a schedule across players tracked
+in different servers, so they belong to no single guild. Those workloads declare
+`system` rather than borrowing an arbitrary user, which keeps unattributed spend
+visible as unattributed rather than misfiled.
+
+The attribution span must be _active_, not merely created. The runtime reads the
+ambient span when it builds a call's attribution headers, so a call made outside
+one reaches OpenRouter with no trace ID, and its cost log can never be joined
+back to the span naming the subject. This is why Scout's cost logs carried a null
+trace ID before the call sites were wrapped: its `gen_ai.chat` spans were trace
+roots with no enclosing application span.
+
+The subject then travels through OpenTelemetry context onto each `gen_ai.*`
+span. Attributes are not inherited down a trace and usage is recorded on those
+spans rather than on the attribution span above them, so without that hop a
+query grouping by subject and summing tokens would be reading two different
+spans and would find nothing.
+
+Because subject IDs are unbounded they stay span attributes and never become
+metric labels. That choice sets the horizon on every per-subject question:
+
+| Store      | Retention | Answers                      |
+| ---------- | --------- | ---------------------------- |
+| Prometheus | 365 days  | per-feature cost             |
+| Loki       | 90 days   | per-call cost, generation ID |
+| Tempo      | 30 days   | per-subject attribution      |
+
+Tempo is the binding constraint, and Tempo additionally caps a metrics query at
+a three-hour range. Per-subject spend is therefore a recent-window question
+answered by a join rather than a long-range aggregate; see
+[Attribute LLM spend](/how-to/attribute-llm-spend/). A durable per-user ledger
+would need its own store, which is deliberately not built until a chargeback or
+quota requirement justifies it.
+
 Structured-output attempts, router attempts, and missing router metadata have
 separate counters. Existing `ai_provider_errors_total` and
 `ai_provider_issue_active` series remain queryable across the cutover.

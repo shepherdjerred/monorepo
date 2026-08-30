@@ -33,6 +33,7 @@ import {
   scoutBucksAskTokensUsedTotal,
   scoutBucksAskToolCallsTotal,
 } from "#src/metrics/bucks-ask.ts";
+import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
 
 export const BUCKS_ASK_MODEL_LIMITS = {
   steps: 4,
@@ -131,7 +132,14 @@ export async function runBucksAskAgent(
   },
   dependencies: BucksAskAgentDependencies = {},
 ): Promise<BucksAskAgentResult> {
-  return await runBucksAskAgentInternal(params, dependencies);
+  // The span wraps the whole run, not just the model call, so every OpenRouter
+  // request the agent makes -- including tool-loop steps -- is a descendant and
+  // inherits the trace id that the cost log needs to be joinable to this asker.
+  return await withLlmSubjectSpan(
+    "scout.bucks-ask",
+    { kind: "discord_user", id: params.discordId },
+    () => runBucksAskAgentInternal(params, dependencies),
+  );
 }
 
 async function runBucksAskAgentInternal(

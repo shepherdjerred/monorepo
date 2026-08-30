@@ -40,9 +40,20 @@ import {
   validateQuery,
   type ToolTracker,
 } from "#src/reports/ai/scoutql-tools.ts";
+import {
+  withLlmSubjectSpan,
+  type LlmSubject,
+} from "@shepherdjerred/llm-observability/subject";
 
 export type ReportQueryAgentParams = {
   runId: string;
+  /**
+   * Who this edit is being drafted for. Explore invokes the report-query agent
+   * inside its own subject span and would inherit it through context, but the
+   * Temporal interactive-run paths enter here directly with no ambient span, so
+   * the subject is a parameter rather than something assumed from the caller.
+   */
+  subject: LlmSubject;
   input: ReportAiEditRequest;
   abortSignal: AbortSignal;
   emit: (event: ReportAiStreamEvent) => void | Promise<void>;
@@ -54,6 +65,14 @@ type RunState = {
 };
 
 export async function streamReportQueryAgent(
+  params: ReportQueryAgentParams,
+): Promise<ReportAiFinalDraft> {
+  return await withLlmSubjectSpan("scout.report-query", params.subject, () =>
+    streamReportQueryAgentInternal(params),
+  );
+}
+
+async function streamReportQueryAgentInternal(
   params: ReportQueryAgentParams,
 ): Promise<ReportAiFinalDraft> {
   const model = reportAiModel();

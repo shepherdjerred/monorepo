@@ -156,6 +156,7 @@ export async function runPersistedExploreTurn(
     throwIfAborted(abortController.signal);
     const result = await dependencies.executeAgent({
       runId: input.ticket.runId,
+      subject: { kind: "discord_user", id: input.identity.userId },
       question: input.started.question,
       // The last history item is the question being answered. The agent gets
       // that separately as its current turn, so replaying it duplicates it.
