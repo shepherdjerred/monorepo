@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
+import { RETAINED_WORKFLOW_TASK_QUEUES } from "../worker-config.ts";
 
 const PrometheusResponseSchema = z.object({
   status: z.literal("success"),
@@ -117,11 +118,17 @@ export function rolloutPoller(
   buildId: string;
   currentBuildId?: string;
   taskQueue: string;
+  taskQueues?: readonly string[];
 } {
   return {
     ...options,
     ...(currentBuildId === undefined ? {} : { currentBuildId }),
     taskQueue: options.taskQueue,
+    ...(options.taskQueue === RETAINED_WORKFLOW_TASK_QUEUES[0]
+      ? {
+          taskQueues: RETAINED_WORKFLOW_TASK_QUEUES,
+        }
+      : {}),
   };
 }
 
@@ -186,6 +193,7 @@ export async function requireCleanAlertWindow(
     buildId: string;
     currentBuildId?: string;
     taskQueue: string;
+    taskQueues?: readonly string[];
   },
 ): Promise<void> {
   const requiredHistorySamples = REQUIRED_PROMETHEUS_HISTORY_SAMPLES[duration];
@@ -219,26 +227,28 @@ export async function requireCleanAlertWindow(
       buildIds.push(poller.currentBuildId);
     }
     for (const buildId of buildIds) {
-      const pollerSelector = `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(buildId)},task_queue=${JSON.stringify(poller.taskQueue)},poller_type="workflow_task"})`;
-      const pollerHistorySamples = await queryRolloutMetric(
-        `count_over_time((${pollerSelector})[${duration}:])`,
-        `${duration} ${buildId} Workflow poller coverage query`,
-        run,
-      );
-      if (pollerHistorySamples < requiredHistorySamples) {
-        throw new Error(
-          `Workflow poller history for ${buildId} covered only ${String(pollerHistorySamples)} samples during the required ${duration} clean window`,
+      for (const taskQueue of poller.taskQueues ?? [poller.taskQueue]) {
+        const pollerSelector = `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(buildId)},task_queue=${JSON.stringify(taskQueue)},poller_type="workflow_task"})`;
+        const pollerHistorySamples = await queryRolloutMetric(
+          `count_over_time((${pollerSelector})[${duration}:])`,
+          `${duration} ${buildId} ${taskQueue} Workflow poller coverage query`,
+          run,
         );
-      }
-      const pollerSamples = await queryRolloutMetric(
-        `min_over_time((${pollerSelector})[${duration}:])`,
-        `${duration} ${buildId} Workflow poller history query`,
-        run,
-      );
-      if (pollerSamples < 1) {
-        throw new Error(
-          `Workflow poller for ${buildId} was unavailable during the required ${duration} clean window`,
+        if (pollerHistorySamples < requiredHistorySamples) {
+          throw new Error(
+            `Workflow poller history for ${buildId} on ${taskQueue} covered only ${String(pollerHistorySamples)} samples during the required ${duration} clean window`,
+          );
+        }
+        const pollerSamples = await queryRolloutMetric(
+          `min_over_time((${pollerSelector})[${duration}:])`,
+          `${duration} ${buildId} ${taskQueue} Workflow poller history query`,
+          run,
         );
+        if (pollerSamples < 1) {
+          throw new Error(
+            `Workflow poller for ${buildId} on ${taskQueue} was unavailable during the required ${duration} clean window`,
+          );
+        }
       }
     }
   }

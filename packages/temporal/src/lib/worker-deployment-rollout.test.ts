@@ -7,6 +7,7 @@ import {
   type WorkerDeploymentRolloutOptions,
 } from "./worker-deployment-rollout.ts";
 import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
+import { RETAINED_WORKFLOW_TASK_QUEUES } from "../worker-config.ts";
 
 const CANDIDATE = "b".repeat(40);
 const STABLE = "a".repeat(40);
@@ -145,7 +146,10 @@ function fixtureCommandResult(
       BuildID: buildId,
       taskQueuesInfos: fixture.omitWorkflowQueue
         ? []
-        : [{ name: "monorepo-workflows", type: "workflow" }],
+        : RETAINED_WORKFLOW_TASK_QUEUES.map((name) => ({
+            name,
+            type: "workflow" as const,
+          })),
     });
   }
   if (args.includes("describe")) {
@@ -257,7 +261,7 @@ describe("Worker Deployment rollout", () => {
       rampPercentage: 0,
       workflowPollers: 1,
       activeTemporalAlerts: 0,
-      candidateWorkflowQueues: ["monorepo-workflows"],
+      candidateWorkflowQueues: RETAINED_WORKFLOW_TASK_QUEUES.toSorted(),
     });
     expect(
       commands.some((command) => command.includes("describe-version")),
@@ -597,7 +601,7 @@ describe("Worker Deployment rollback and rejection", () => {
     [{ staleCandidate: true }, "stale"],
     [{ workflowPollers: 0 }, "healthy Workflow pollers"],
     [{ alerts: 2 }, "active Temporal alerts"],
-    [{ omitWorkflowQueue: true }, "no registered monorepo-workflows"],
+    [{ omitWorkflowQueue: true }, "missing registered Workflow pollers"],
   ])("refuses unsafe state %o", async (fixture, message) => {
     await expect(
       executeWorkerDeploymentRollout(

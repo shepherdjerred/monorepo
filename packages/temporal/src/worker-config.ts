@@ -125,6 +125,11 @@ export const LEGACY_WORKFLOW_TASK_QUEUES = [
   TASK_QUEUES.MAINTENANCE,
 ] as const;
 
+export const RETAINED_WORKFLOW_TASK_QUEUES = [
+  TASK_QUEUES.WORKFLOWS,
+  ...LEGACY_WORKFLOW_TASK_QUEUES,
+] as const;
+
 const WORKFLOW_WORKER_DEFINITIONS: readonly WorkflowWorkerDefinition[] = [
   {
     kind: "workflow",

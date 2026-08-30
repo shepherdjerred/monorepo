@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
-import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { RETAINED_WORKFLOW_TASK_QUEUES } from "../worker-config.ts";
 import { prepareStablePinPromotion } from "./worker-deployment-catalog.ts";
 import {
   executeWorkerDeploymentRollback,
@@ -146,11 +146,15 @@ export async function readWorkerDeploymentRolloutStatus(
   let workflowPollers: number | undefined;
   let activeTemporalAlerts: number | undefined;
   if (includeMetrics) {
-    [workflowPollers, activeTemporalAlerts] = await Promise.all([
-      queryRolloutMetric(
-        `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(options.namespace)},worker_deployment_name=${JSON.stringify(options.deploymentName)},worker_build_id=${JSON.stringify(options.buildId)},task_queue=${JSON.stringify(TASK_QUEUES.WORKFLOWS)},poller_type="workflow_task"}) or vector(0)`,
-        "workflow poller query",
-        run,
+    const [workflowPollerCounts, temporalAlerts] = await Promise.all([
+      Promise.all(
+        RETAINED_WORKFLOW_TASK_QUEUES.map((taskQueue) =>
+          queryRolloutMetric(
+            `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(options.namespace)},worker_deployment_name=${JSON.stringify(options.deploymentName)},worker_build_id=${JSON.stringify(options.buildId)},task_queue=${JSON.stringify(taskQueue)},poller_type="workflow_task"}) or vector(0)`,
+            `${taskQueue} workflow poller query`,
+            run,
+          ),
+        ),
       ),
       queryRolloutMetric(
         'count(ALERTS{alertstate="firing",alertname=~"Temporal.*"}) or vector(0)',
@@ -158,6 +162,16 @@ export async function readWorkerDeploymentRolloutStatus(
         run,
       ),
     ]);
+    workflowPollers = workflowPollerCounts[0];
+    activeTemporalAlerts = temporalAlerts;
+    const unhealthyQueue = RETAINED_WORKFLOW_TASK_QUEUES.find(
+      (_, index) => (workflowPollerCounts[index] ?? 0) < 1,
+    );
+    if (unhealthyQueue !== undefined) {
+      throw new Error(
+        `Candidate build ${options.buildId} has no healthy Workflow pollers on ${unhealthyQueue}`,
+      );
+    }
   }
   const candidate = deployment.versionSummaries.find(
     (versionSummary) => versionSummary.BuildID === options.buildId,
@@ -190,9 +204,12 @@ export async function readWorkerDeploymentRolloutStatus(
     .filter((queue) => queue.type === "workflow")
     .map((queue) => queue.name)
     .toSorted();
-  if (!workflowQueues.includes(TASK_QUEUES.WORKFLOWS)) {
+  const missingQueues = RETAINED_WORKFLOW_TASK_QUEUES.filter(
+    (taskQueue) => !workflowQueues.includes(taskQueue),
+  );
+  if (missingQueues.length > 0) {
     throw new Error(
-      `Candidate build ${options.buildId} has no registered ${TASK_QUEUES.WORKFLOWS} Workflow poller`,
+      `Candidate build ${options.buildId} is missing registered Workflow pollers for ${missingQueues.join(", ")}`,
     );
   }
   return {
@@ -304,24 +321,33 @@ async function requireRegisteredWorkflowVersion(
   run: RolloutCommandRunner,
 ): Promise<void> {
   const version = await describeVersion(options, buildId, run);
-  const hasWorkflowQueue = version.taskQueuesInfos.some(
-    (queue) =>
-      queue.type === "workflow" && queue.name === TASK_QUEUES.WORKFLOWS,
+  const workflowQueues = new Set(
+    version.taskQueuesInfos
+      .filter((queue) => queue.type === "workflow")
+      .map((queue) => queue.name),
   );
-  if (!hasWorkflowQueue) {
+  const requiredQueues = RETAINED_WORKFLOW_TASK_QUEUES;
+  const missingQueues = requiredQueues.filter(
+    (taskQueue) => !workflowQueues.has(taskQueue),
+  );
+  if (missingQueues.length > 0) {
     throw new Error(
-      `Stable build ${buildId} has no registered ${TASK_QUEUES.WORKFLOWS} Workflow poller`,
+      `Stable build ${buildId} is missing registered Workflow pollers for ${missingQueues.join(", ")}`,
     );
   }
-  await requireHealthyWorkflowPoller(
-    {
-      namespace: options.namespace,
-      deploymentName: options.deploymentName,
-      buildId,
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-    },
-    run,
-    "stable",
+  await Promise.all(
+    requiredQueues.map((taskQueue) =>
+      requireHealthyWorkflowPoller(
+        {
+          namespace: options.namespace,
+          deploymentName: options.deploymentName,
+          buildId,
+          taskQueue,
+        },
+        run,
+        `stable ${taskQueue}`,
+      ),
+    ),
   );
 }
 async function executeStart(
@@ -359,15 +385,20 @@ async function executeStart(
   }
   requireCleanCandidate(latestStatus);
   if (latestStatus.currentBuildId !== undefined) {
-    await requireHealthyWorkflowPoller(
-      {
-        namespace: options.namespace,
-        deploymentName: options.deploymentName,
-        buildId: latestStatus.currentBuildId,
-        taskQueue: TASK_QUEUES.WORKFLOWS,
-      },
-      run,
-      "current",
+    const currentBuildId = latestStatus.currentBuildId;
+    await Promise.all(
+      RETAINED_WORKFLOW_TASK_QUEUES.map((taskQueue) =>
+        requireHealthyWorkflowPoller(
+          {
+            namespace: options.namespace,
+            deploymentName: options.deploymentName,
+            buildId: currentBuildId,
+            taskQueue,
+          },
+          run,
+          `current ${taskQueue}`,
+        ),
+      ),
     );
   }
   await setRampingVersion(options, 10, run);
