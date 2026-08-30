@@ -94,8 +94,12 @@ Per eligible game, at most:
 
 Weekly parlays are separate from this per-game sequence. Scout publishes a new
 message for the market, the betting reminder, every progress update, and the
-settlement. Updates mention featured players and current bettors but expose
-only aggregate YES/NO totals—never a person's side or stake.
+settlement. Each message puts its current status or result first, then shows
+the conditions, activity qualification, bets, and relevant timing. A settlement
+explicitly says whether it resolved YES, resolved NO, or was voided and
+refunded. Public updates mention people who placed bets, not featured players
+who did not bet, and expose only aggregate YES/NO totals—never a person's side
+or stake.
 
 Bets never add messages. Placing, topping up, and cancelling all edit the
 market message in place. A successful `/bb transfer` is the exception: it adds

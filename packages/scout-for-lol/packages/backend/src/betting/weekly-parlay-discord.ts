@@ -30,7 +30,6 @@ import {
 } from "#src/metrics/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
-import { isWeeklyParlayCatchupTimeline } from "#src/betting/weekly-parlay-period.ts";
 
 export function weeklyParlaySettlementActionKey(marketId: number): string {
   return `settlement:${marketId.toString()}`;
@@ -124,11 +123,7 @@ export async function deliverWeeklyParlayDiscord(
         select: {
           subjects: true,
           criteria: true,
-          yesProbabilityBps: true,
-          openAt: true,
-          bettingClosesAt: true,
           scoringStartsAt: true,
-          scoringEndsAt: true,
           contributions: { select: { snapshot: true } },
         },
       },
@@ -198,25 +193,13 @@ export async function deliverWeeklyParlayDiscord(
     subjects.map((subject) => [subject.key, subject.alias]),
   );
   const bettorIds = market.bets.map((bet) => bet.bucksAccount.discordId);
-  const mentionIds = [
-    ...new Set([...subjects.map((subject) => subject.discordId), ...bettorIds]),
-  ];
+  const mentionIds = [...new Set(bettorIds)];
   const totalStaked = market.bets.reduce((total, bet) => total + bet.stake, 0);
-  const catchup = isWeeklyParlayCatchupTimeline({
-    periodKey: market.periodKey,
-    openAt: market.definition.openAt,
-    bettingClosesAt: market.definition.bettingClosesAt,
-    scoringStartsAt: market.definition.scoringStartsAt,
-    scoringEndsAt: market.definition.scoringEndsAt,
-  });
   const content = weeklyParlayDeliveryContent({
     kind: input.kind,
     marketState: market.marketState,
     yesResult: market.yesResult,
     voidReason: market.voidReason,
-    catchup,
-    periodKey: market.periodKey,
-    yesProbabilityBps: market.definition.yesProbabilityBps,
     bettingClosesAt: market.bettingClosesAt,
     scoringStartsAt: market.definition.scoringStartsAt,
     scoringEndsAt: market.scoringEndsAt,
@@ -243,7 +226,7 @@ export async function deliverWeeklyParlayDiscord(
           ? [chunk.map((id) => `<@${id}>`).join(" "), content]
               .filter((line) => line.length > 0)
               .join("\n")
-          : `Weekly parlay update mentions (continued): ${chunk.map((id) => `<@${id}>`).join(" ")}`,
+          : `Weekly Bryan Bucks parlay — additional mentions: ${chunk.map((id) => `<@${id}>`).join(" ")}`,
       allowedMentions: { users: chunk },
       nonce: stableNonce(market.id, input.actionKey, messageIndex),
       enforceNonce: true,
