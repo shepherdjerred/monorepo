@@ -88,7 +88,8 @@ export function cutoverTimestampForRetry(
 
   const cutoverBoundaries = targets
     .map(({ migrationState }) => migrationState.cutoverAt)
-    .filter((boundary): boundary is string => boundary !== undefined);
+    .filter((boundary) => boundary !== undefined)
+    .map((boundary) => z.string().parse(boundary));
   const persistedCutover = cutoverBoundaries[0];
   if (persistedCutover !== undefined) {
     if (cutoverBoundaries.some((boundary) => boundary !== persistedCutover)) {
@@ -99,7 +100,8 @@ export function cutoverTimestampForRetry(
 
   const attemptedBoundaries = targets
     .map(({ migrationState }) => migrationState.attemptedAt)
-    .filter((boundary): boundary is string => boundary !== undefined);
+    .filter((boundary) => boundary !== undefined)
+    .map((boundary) => z.string().parse(boundary));
   const persistedAttempt = attemptedBoundaries[0];
   if (
     persistedAttempt !== undefined &&

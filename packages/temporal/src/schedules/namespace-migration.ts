@@ -6,8 +6,12 @@ import {
 } from "@scout-for-lol/temporal";
 import { z } from "zod";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
-import type { TemporalNamespace } from "#shared/temporal-namespace.ts";
 import { SCHEDULES } from "./schedule-definitions.ts";
+import type {
+  MigrationSchedule,
+  MigrationTargetNamespace,
+  NamespaceMigrationAuditInput,
+} from "./namespace-migration-types.ts";
 import {
   cutoverTimestampForRetry,
   decodeMigrationState,
@@ -20,17 +24,6 @@ import {
   type MigrationState,
 } from "./namespace-migration-state.ts";
 import { auditNamespaceMigration as auditNamespaceMigrationImpl } from "./namespace-migration-audit.ts";
-export type MigrationTargetNamespace = Exclude<TemporalNamespace, "dev">;
-export type MigrationSchedule = {
-  source: ScheduleDescription;
-  targetNamespace: MigrationTargetNamespace;
-};
-export type NamespaceMigrationAuditInput = {
-  sourceClient: Client;
-  schedules: readonly MigrationSchedule[];
-  targetClients: ReadonlyMap<MigrationTargetNamespace, Client>;
-  cutoverAt: Date;
-};
 const SearchAttributesSchema = z
   .record(
     z.string(),

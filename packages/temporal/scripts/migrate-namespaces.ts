@@ -5,9 +5,9 @@ import {
   inventoryMigrationSchedules,
   prepareNamespaceMigration,
   rollbackNamespaceMigration,
-  type MigrationTargetNamespace,
 } from "#schedules/namespace-migration.ts";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
+import type { MigrationTargetNamespace } from "#schedules/namespace-migration-types.ts";
 
 const DEFAULT_ADDRESS = "127.0.0.1:7233";
 
