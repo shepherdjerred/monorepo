@@ -5,6 +5,7 @@ import {
 } from "#lib/worker-deployment-rollout.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
 import { resolveWorkerDeploymentRolloutTarget } from "#lib/worker-deployment-target.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 import {
   parseFlagArguments,
   requiredEnvironment,
@@ -85,7 +86,9 @@ async function main(): Promise<void> {
       action,
       address,
       tls,
-      namespace: Bun.env["TEMPORAL_NAMESPACE"] ?? "default",
+      namespace: parseTemporalNamespace(
+        requiredEnvironment(Bun.env, "TEMPORAL_NAMESPACE"),
+      ),
       ...target,
       buildId: requiredParsedArgument(flags, "--build-id"),
       ...(stableBuildId === undefined ? {} : { stableBuildId }),

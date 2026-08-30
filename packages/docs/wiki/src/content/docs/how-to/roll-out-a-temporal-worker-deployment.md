@@ -46,7 +46,7 @@ stable image SHA with `--stable-build-id` on the first `start` command.
 Inspect the candidate without changing routing:
 
 ```bash
-bun run worker-deployment status [--target <target>] --build-id <candidate-image-git-sha>
+TEMPORAL_NAMESPACE=prod bun run worker-deployment status --build-id <candidate-image-git-sha>
 ```
 
 The command fails when the Build ID is stale, the candidate has not registered
@@ -58,7 +58,7 @@ data.
 ## Start the ramp
 
 ```bash
-bun run worker-deployment start [--target <target>] --build-id <candidate-image-git-sha>
+TEMPORAL_NAMESPACE=prod bun run worker-deployment start --build-id <candidate-image-git-sha>
 ```
 
 `start` refuses an existing ramp or firing `Temporal.*` alert. It verifies that
@@ -70,7 +70,7 @@ complete. For an empty Worker Deployment, pass the already registered stable
 Build ID so the deployment has a rollback target before candidate traffic:
 
 ```bash
-bun run worker-deployment start \
+TEMPORAL_NAMESPACE=prod bun run worker-deployment start \
   --build-id <candidate-image-git-sha> \
   --stable-build-id <stable-image-git-sha>
 ```
@@ -83,7 +83,7 @@ ramp. Later releases need only `--build-id`.
 After at least 30 clean minutes at 10%:
 
 ```bash
-bun run worker-deployment advance [--target <target>] --build-id <candidate-image-git-sha>
+TEMPORAL_NAMESPACE=prod bun run worker-deployment advance --build-id <candidate-image-git-sha>
 ```
 
 After at least two clean hours at 50%, run the same command again. It advances
@@ -97,7 +97,7 @@ repeated, or out-of-order command fails without changing routing.
 After at least 24 clean hours at 100%:
 
 ```bash
-bun run worker-deployment promote [--target <target>] --build-id <candidate-image-git-sha>
+TEMPORAL_NAMESPACE=prod bun run worker-deployment promote --build-id <candidate-image-git-sha>
 ```
 
 Promotion verifies that the candidate catalog image contains the requested
@@ -112,7 +112,7 @@ poller tracks are healthy.
 ## Roll back a ramp
 
 ```bash
-bun run worker-deployment rollback [--target <target>] --build-id <candidate-image-git-sha>
+TEMPORAL_NAMESPACE=prod bun run worker-deployment rollback --build-id <candidate-image-git-sha>
 ```
 
 Rollback removes only an active ramp for that exact candidate, including when a
@@ -140,8 +140,8 @@ Use the existing passthroughs for deeper inspection; there is no rollout
 toolkit subcommand:
 
 ```bash
-toolkit temporal worker deployment describe --name monorepo-central-workflows
-toolkit temporal worker deployment describe-version \
+toolkit temporal --namespace prod worker deployment describe --name monorepo-central-workflows
+toolkit temporal --namespace prod worker deployment describe-version \
   --deployment-name monorepo-central-workflows \
   --build-id <candidate-image-git-sha> \
   --report-task-queue-stats
