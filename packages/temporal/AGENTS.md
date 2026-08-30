@@ -70,8 +70,10 @@ Rollout leases are shared through the `refs/temporal-worker-deployment-locks/`
 namespace. If an operator host dies, first use the read-only `inspect` command
 to confirm routing and lease state; it does not require healthy candidate
 pollers or a clean alert window. Then remove only the named stale lease with
-`git push origin :refs/temporal-worker-deployment-locks/<lock-name>`; never
-force-delete a lease while a rollout is running.
+the inspected object as a compare-and-swap expectation:
+`git push --force-with-lease=refs/temporal-worker-deployment-locks/<lock-name>:<rolloutLockObject> origin :refs/temporal-worker-deployment-locks/<lock-name>`.
+If that push is rejected, inspect again; never force-delete a lease while a
+rollout is running.
 
 ## Structure
 

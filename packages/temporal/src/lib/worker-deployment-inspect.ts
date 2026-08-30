@@ -4,7 +4,13 @@ import {
   DeploymentNameSchema,
 } from "./worker-deployment-schemas.ts";
 import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
-import type { WorkerDeploymentRolloutOptions } from "./worker-deployment-rollout.ts";
+
+type WorkerDeploymentInspectionOptions = {
+  address: string;
+  namespace: string;
+  tls?: boolean;
+  deploymentName: string;
+};
 
 export type WorkerDeploymentRolloutInspection = {
   deploymentName: string;
@@ -26,7 +32,7 @@ function parseJson(raw: string): unknown {
 }
 
 export async function inspectWorkerDeploymentRollout(
-  options: WorkerDeploymentRolloutOptions,
+  options: WorkerDeploymentInspectionOptions,
   run: RolloutCommandRunner,
 ): Promise<WorkerDeploymentRolloutInspection> {
   const deploymentName = DeploymentNameSchema.parse(options.deploymentName);
