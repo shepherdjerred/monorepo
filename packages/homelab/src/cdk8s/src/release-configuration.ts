@@ -12,6 +12,7 @@ const ScoutImageVersionSchema = z
 const ImageDigestsSchema = z.record(z.string().min(1), DigestSchema);
 const ChartRevisionsSchema = z.record(z.string().min(1), BuildVersionSchema);
 const ScoutImageDigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/);
+const LAST_IMAGE_WITHOUT_WORKFLOW_WORKER = 12_197;
 
 /**
  * A version is PostgreSQL-backed only when its immutable digest is present in
@@ -70,6 +71,13 @@ function workflowStableKey(candidate: string): string | undefined {
     : undefined;
 }
 
+function isLegacyWorkflowPin(value: string): boolean {
+  const match = /^2\.0\.0-(\d+)@sha256:[a-f\d]{64}$/.exec(value);
+  if (match === null) return false;
+  const build = Number(match[1]);
+  return Number.isInteger(build) && build <= LAST_IMAGE_WITHOUT_WORKFLOW_WORKER;
+}
+
 function canUpdateImagePin(
   versions: Readonly<Record<string, string>>,
   candidate: string,
@@ -110,7 +118,20 @@ function applyDigestOverride(
     if (!canUpdateImagePin(versions, candidate)) {
       continue;
     }
-    applyImagePin(versions, candidate, `${releaseVersion}@${digest}`);
+    const nextVersion = `${releaseVersion}@${digest}`;
+    const stableKey = workflowStableKey(candidate);
+    const previousVersion = versions[candidate];
+    applyImagePin(versions, candidate, nextVersion);
+    if (
+      stableKey !== undefined &&
+      Object.hasOwn(versions, stableKey) &&
+      versions[stableKey] === previousVersion &&
+      isLegacyWorkflowPin(previousVersion)
+    ) {
+      // The first capable release must seed both tracks atomically; otherwise
+      // the stable track remains an image that cannot start a versioned worker.
+      applyImagePin(versions, stableKey, nextVersion);
+    }
     matched = true;
   }
   return matched;

@@ -66,6 +66,25 @@ describe("applyCurrentBuildImageOverrides", () => {
     );
   });
 
+  test("seeds both workflow tracks on the first capable release", () => {
+    const legacy = `2.0.0-12197@sha256:${"a".repeat(64)}`;
+    const versions: Record<string, string> = {
+      "shepherdjerred/worker/workflows/stable": legacy,
+      "shepherdjerred/worker/workflows/candidate": legacy,
+    };
+    applyCurrentBuildImageOverrides(
+      versions,
+      JSON.stringify({ "shepherdjerred/worker": `sha256:${"b".repeat(64)}` }),
+      "2.0.0-12369",
+    );
+    expect(versions["shepherdjerred/worker/workflows/stable"]).toBe(
+      `2.0.0-12369@sha256:${"b".repeat(64)}`,
+    );
+    expect(versions["shepherdjerred/worker/workflows/candidate"]).toBe(
+      `2.0.0-12369@sha256:${"b".repeat(64)}`,
+    );
+  });
+
   test("fails on an unknown image key", () => {
     expect(() =>
       applyCurrentBuildImageOverrides(
