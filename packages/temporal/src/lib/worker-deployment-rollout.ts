@@ -356,9 +356,7 @@ function requireCandidateRamp(
   status: WorkerDeploymentRolloutStatus,
 ): void {
   if (status.rampingBuildId !== options.buildId) {
-    throw new Error(
-      "Transition requires the candidate to be the ramping version",
-    );
+    throw new Error("Candidate is not the ramping version");
   }
 }
 async function executeAdvance(
@@ -440,9 +438,7 @@ async function executePromotion(
     latestStatus.rampingBuildId !== options.buildId ||
     latestStatus.rampPercentage !== 100
   ) {
-    throw new Error(
-      "Promotion requires the candidate to still be ramping at 100%",
-    );
+    throw new Error("Candidate is not still ramping at 100%");
   }
   requireCleanCandidate(latestStatus);
   await requireAcceptancePrerequisite(options, run);
