@@ -6,7 +6,7 @@ import type {
 import { ScheduleNotFoundError } from "@temporalio/client";
 import {
   detectOrphanSchedules,
-  isDynamicAgentTaskSchedule,
+  isReconcilableDynamicAgentTaskSchedule,
 } from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
 import { CATCHUP_RELAXED, SCHEDULES } from "./schedule-definitions.ts";
@@ -130,9 +130,16 @@ export function routeDynamicAgentTaskSchedule(
 
 async function reconcileDynamicAgentTaskSchedules(
   scheduleClient: Client["schedule"],
+  declaredIds: ReadonlySet<string>,
 ): Promise<void> {
   for await (const summary of scheduleClient.list()) {
-    if (!isDynamicAgentTaskSchedule(summary.scheduleId, summary.memo)) {
+    if (
+      !isReconcilableDynamicAgentTaskSchedule(
+        summary.scheduleId,
+        summary.memo,
+        declaredIds,
+      )
+    ) {
       continue;
     }
     await scheduleClient
@@ -148,6 +155,7 @@ export async function registerSchedules(
 ): Promise<void> {
   const scheduleClient = client.schedule;
   const validateLocalEnvironment = options.validateLocalEnvironment ?? true;
+  const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
 
   for (const scheduleId of DELETED_SCHEDULE_IDS) {
     try {
@@ -163,7 +171,10 @@ export async function registerSchedules(
   // Dynamic schedules are intentionally absent from SCHEDULES, but their next
   // action must move with the deterministic Workflow Worker. Reconcile every
   // owned schedule before evaluating whether legacy Workflow pollers can drain.
-  await reconcileDynamicAgentTaskSchedules(scheduleClient);
+  // declaredIds is passed so a schedule that was promoted out of the dynamic
+  // set and into SCHEDULES is skipped despite its immutable creation-time memo
+  // marker — see isReconcilableDynamicAgentTaskSchedule.
+  await reconcileDynamicAgentTaskSchedules(scheduleClient, declaredIds);
 
   for (const schedule of SCHEDULES) {
     const handle = scheduleClient.getHandle(schedule.id);
@@ -206,7 +217,7 @@ export async function registerSchedules(
   // list). Non-fatal — see detectOrphanSchedules.
   await detectOrphanSchedules(
     scheduleClient,
-    new Set(SCHEDULES.map((schedule) => schedule.id)),
+    declaredIds,
     new Set(DELETED_SCHEDULE_IDS),
   );
 }

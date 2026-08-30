@@ -15,6 +15,7 @@ import { SCHEDULES } from "./schedule-definitions.ts";
 import {
   isOrphanSchedule,
   isOwnedScoutReportSchedule,
+  isReconcilableDynamicAgentTaskSchedule,
 } from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
@@ -154,6 +155,71 @@ test("dynamic schedule reconciliation rejects a forged ownership marker", () => 
   expect(() => routeDynamicAgentTaskSchedule(unrelated)).toThrow(
     "must start agentTaskWorkflow",
   );
+});
+
+describe("declared schedules are never reconciled as dynamic agent tasks", () => {
+  const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
+
+  test("an undeclared schedule carrying the marker is still reconciled", () => {
+    expect(
+      isReconcilableDynamicAgentTaskSchedule(
+        "agent-task-adhoc-1",
+        DYNAMIC_AGENT_TASK_MEMO,
+        declaredIds,
+      ),
+    ).toBe(true);
+    expect(
+      isReconcilableDynamicAgentTaskSchedule(
+        "some-agent-created-id",
+        DYNAMIC_AGENT_TASK_MEMO,
+        declaredIds,
+      ),
+    ).toBe(true);
+  });
+
+  // Regression: ci-io-post-merge-impact was created as a dynamic agent task and
+  // later promoted into SCHEDULES. Temporal memos are immutable after creation,
+  // so its live memo still carries the marker while its action starts
+  // runCiIoImpact. Reconciling it threw "must start agentTaskWorkflow" and
+  // crash-looped the worker before it could register any schedule.
+  test("a declared schedule with a stale marker is skipped", () => {
+    expect(declaredIds.has("ci-io-post-merge-impact")).toBe(true);
+    expect(
+      isReconcilableDynamicAgentTaskSchedule(
+        "ci-io-post-merge-impact",
+        {
+          ...DYNAMIC_AGENT_TASK_MEMO,
+          description: "Agent task: Measure CI I/O optimization impact",
+        },
+        declaredIds,
+      ),
+    ).toBe(false);
+  });
+
+  test("every declared schedule is skipped even if it looks dynamic", () => {
+    for (const schedule of SCHEDULES) {
+      expect(
+        isReconcilableDynamicAgentTaskSchedule(
+          schedule.id,
+          DYNAMIC_AGENT_TASK_MEMO,
+          declaredIds,
+        ),
+      ).toBe(false);
+    }
+  });
+
+  // The precedence must match isOrphanSchedule's, which already resolves
+  // declared-vs-dynamic the same way.
+  test("declared precedence matches orphan detection", () => {
+    expect(
+      isOrphanSchedule(
+        "ci-io-post-merge-impact",
+        DYNAMIC_AGENT_TASK_MEMO,
+        declaredIds,
+        new Set(DELETED_SCHEDULE_IDS),
+      ),
+    ).toBe(false);
+  });
 });
 
 test("dependency summary timeout covers every retried report phase", () => {

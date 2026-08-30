@@ -45,6 +45,27 @@ export function isOwnedScoutReportSchedule(
   );
 }
 
+// A declared schedule is never a dynamic agent-task schedule, whatever its memo
+// says. Promoting an agent-task schedule into SCHEDULES (as
+// `ci-io-post-merge-impact` was) leaves the creation-time
+// DYNAMIC_AGENT_TASK_MEMO_KEY marker on the live schedule forever: Temporal
+// memos are immutable after creation — `ScheduleUpdateOptions` omits `memo`
+// and `temporal schedule update` refuses it outright — so the marker cannot be
+// rewritten in place, and the declared registration below cannot clear it.
+// Without this precedence the reconciler routes the declared schedule through
+// routeDynamicAgentTaskSchedule, which throws on its non-agentTaskWorkflow
+// action and crash-loops the worker *before* it registers anything — a
+// deadlock, because the only code that could correct the schedule never runs.
+// isOrphanSchedule already gives declared ids exactly this precedence.
+export function isReconcilableDynamicAgentTaskSchedule(
+  scheduleId: string,
+  memo: Record<string, unknown> | undefined,
+  declaredIds: ReadonlySet<string>,
+): boolean {
+  if (declaredIds.has(scheduleId)) return false;
+  return isDynamicAgentTaskSchedule(scheduleId, memo);
+}
+
 // A live schedule is an orphan when it is neither declared in SCHEDULES, nor in
 // the DELETED_SCHEDULE_IDS allow-list, nor a dynamic agent-task schedule — i.e.
 // a renamed/removed schedule that was never added to the delete list and keeps
