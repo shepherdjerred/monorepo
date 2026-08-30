@@ -20,6 +20,7 @@ const PinStateSchema = z
   .object({
     schema: z.literal("pin-candidates-state/v1"),
     pins: z.record(
+      z.string(),
       z.object({
         version: z.string().min(1),
         digest: z.string().regex(/^sha256:[0-9a-f]{64}$/),
