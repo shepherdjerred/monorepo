@@ -13,6 +13,7 @@ import {
   applyBucksDelta,
   BucksStorageOverflowError,
   InsufficientBucksError,
+  lockBucksAccountsForCredit,
 } from "#src/betting/ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
@@ -222,6 +223,7 @@ export async function transferBucks(
             role: "sender",
           }),
         });
+        await lockBucksAccountsForCredit(tx, [recipient.id, house.id]);
         await applyBucksDelta(tx, {
           bucksAccountId: recipient.id,
           delta: recipientAmount,

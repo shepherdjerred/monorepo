@@ -154,7 +154,9 @@
           ],
           "result": true
         }
-      ]
+      ],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "betting_settlement_dm_enabled",

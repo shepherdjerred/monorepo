@@ -7,9 +7,14 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
+import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { transferBucks } from "#src/betting/transfer.ts";
 import type { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
+import {
+  bucksTestDiscordId,
+  bucksTestPuuid,
+  bucksTestRoster,
+} from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
 const { prisma: db } = createTestDatabase("bucks-transfer");
@@ -102,6 +107,9 @@ function runTransfer(input: {
 beforeEach(async () => {
   await db.bucksAnalyticsLedgerOutbox.deleteMany();
   await db.bucksLedgerEntry.deleteMany();
+  await db.bucksOpenPosition.deleteMany();
+  await db.bucksBet.deleteMany();
+  await db.bucksMatchPool.deleteMany();
   await db.bucksAccount.deleteMany();
 });
 
@@ -329,5 +337,84 @@ describe("transferBucks policy and transaction safety", () => {
         where: { kind: { startsWith: "transfer_" } },
       }),
     ).toBe(3);
+  });
+
+  test("waits for a concurrent stake before calculating recipient headroom", async () => {
+    const { senderId, recipientId } = await createStandardWallets(2);
+    await db.bucksAccount.update({
+      where: { id: recipientId },
+      data: { balance: BUCKS_INT32_MAX },
+    });
+    const pool = await db.bucksMatchPool.create({
+      data: {
+        matchId: "NA1_5000009082",
+        serverId: SERVER,
+        detectedAt: new Date(Date.now() - 60_000),
+        peekAvailableAt: new Date(Date.now() + 60_000),
+        closesAt: new Date(Date.now() + 5 * 60_000),
+        queueType: "solo",
+        roster: JSON.stringify({ participants: bucksTestRoster() }),
+      },
+    });
+    const recipientLocked = Promise.withResolvers<undefined>();
+    const allowStakeCommit = Promise.withResolvers<undefined>();
+    const stake = db.$transaction(async (tx) => {
+      const bet = await tx.bucksBet.create({
+        data: {
+          poolId: pool.id,
+          bucksAccountId: recipientId,
+          predictedTeamId: 100,
+          subjectPuuid: bucksTestPuuid(0),
+          stake: 1,
+        },
+      });
+      await applyBucksDelta(tx, {
+        bucksAccountId: recipientId,
+        delta: -1,
+        kind: "bet_stake",
+        matchId: pool.matchId,
+        betId: bet.id,
+        predictedTeamId: 100,
+        context: {
+          type: "stake",
+          subjectAlias: "Aaron",
+          subjectPuuid: bucksTestPuuid(0),
+          backedAliases: ["Aaron"],
+          opposingAliases: ["Bryan"],
+        },
+      });
+      recipientLocked.resolve(undefined);
+      await allowStakeCommit.promise;
+    });
+    await recipientLocked.promise;
+
+    const transfer = runTransfer({ amount: 2 });
+    try {
+      const statusBeforeStakeCommit = await Promise.race([
+        transfer.then(
+          () => "finished",
+          () => "finished",
+        ),
+        Bun.sleep(250).then(() => "blocked"),
+      ]);
+      expect(statusBeforeStakeCommit).toBe("blocked");
+    } finally {
+      allowStakeCommit.resolve(undefined);
+      await stake;
+    }
+    await expect(transfer).resolves.toEqual({ kind: "storage_limit" });
+    await expect(
+      db.bucksAccount.findUniqueOrThrow({ where: { id: recipientId } }),
+    ).resolves.toEqual(
+      expect.objectContaining({ balance: BUCKS_INT32_MAX - 1 }),
+    );
+    await expect(
+      db.bucksAccount.findUniqueOrThrow({ where: { id: senderId } }),
+    ).resolves.toEqual(expect.objectContaining({ balance: 2 }));
+    expect(
+      await db.bucksLedgerEntry.count({
+        where: { kind: { startsWith: "transfer_" } },
+      }),
+    ).toBe(0);
   });
 });

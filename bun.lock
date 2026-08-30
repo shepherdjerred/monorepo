@@ -1123,7 +1123,10 @@
       "devDependencies": {
         "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
         "@eslint/js": "^10.0.1",
+        "@scout-for-lol/backend": "workspace:*",
+        "@scout-for-lol/data": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/toolkit": "workspace:*",
         "@total-typescript/ts-reset": "^0.6.1",
         "@types/bun": "1.4.0",
         "@types/eslint-plugin-jsx-a11y": "^6.10.1",
