@@ -457,7 +457,11 @@ export async function executeWorkerDeploymentRollout(
     requireCleanCandidate(status);
     return status;
   }
-  const releaseLock = await acquireWorkerDeploymentLock(options.catalogPath);
+  const releaseLock = await acquireWorkerDeploymentLock(
+    options.catalogPath,
+    options.deploymentName,
+    run,
+  );
   try {
     const status = await readWorkerDeploymentRolloutStatus(
       options,
