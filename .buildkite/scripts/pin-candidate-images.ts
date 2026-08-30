@@ -1,13 +1,14 @@
-import {
-  catalogImagePinsMatch,
-  requireCatalogImageValue,
-} from "../../scripts/lib/image-pin-catalog.ts";
+import { requireCatalogImageValue } from "../../scripts/lib/image-pin-catalog.ts";
 
 const LAST_IMAGE_WITHOUT_WORKFLOW_WORKER = 12_197;
 const CENTRAL_WORKFLOW_STABLE =
   "shepherdjerred/temporal-worker/workflows/stable";
 const CENTRAL_WORKFLOW_CANDIDATE =
   "shepherdjerred/temporal-worker/workflows/candidate";
+const SCOUT_BETA_WORKFLOW_STABLE =
+  "shepherdjerred/scout-for-lol/beta/workflows/stable";
+const SCOUT_BETA_WORKFLOW_CANDIDATE =
+  "shepherdjerred/scout-for-lol/beta/workflows/candidate";
 
 function isLegacyWorkflowPin(value: string): boolean {
   const match = /^2\.0\.0-(\d+)@sha256:[a-f\d]{64}$/.exec(value);
@@ -39,6 +40,29 @@ function centralWorkflowPinTargets(
   return [];
 }
 
+function scoutBetaWorkflowPinTargets(
+  versionCatalogSource: string,
+): readonly string[] {
+  const stable = requireCatalogImageValue(
+    versionCatalogSource,
+    SCOUT_BETA_WORKFLOW_STABLE,
+  );
+  const candidate = requireCatalogImageValue(
+    versionCatalogSource,
+    SCOUT_BETA_WORKFLOW_CANDIDATE,
+  );
+  if (stable === candidate && isLegacyWorkflowPin(stable)) {
+    return [SCOUT_BETA_WORKFLOW_STABLE, SCOUT_BETA_WORKFLOW_CANDIDATE];
+  }
+  if (
+    stable === candidate ||
+    (!isLegacyWorkflowPin(stable) && isLegacyWorkflowPin(candidate))
+  ) {
+    return [SCOUT_BETA_WORKFLOW_CANDIDATE];
+  }
+  return [];
+}
+
 export function pinCandidatesForDigests(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
@@ -53,16 +77,10 @@ export function pinCandidatesForDigests(
         candidates[target] = candidate;
       }
     }
-    if (
-      key === "shepherdjerred/scout-for-lol/beta" &&
-      catalogImagePinsMatch(
-        versionCatalogSource,
-        "shepherdjerred/scout-for-lol/beta/workflows/candidate",
-        "shepherdjerred/scout-for-lol/beta/workflows/stable",
-      )
-    ) {
-      candidates["shepherdjerred/scout-for-lol/beta/workflows/candidate"] =
-        candidate;
+    if (key === "shepherdjerred/scout-for-lol/beta") {
+      for (const target of scoutBetaWorkflowPinTargets(versionCatalogSource)) {
+        candidates[target] = candidate;
+      }
     }
   }
   return candidates;

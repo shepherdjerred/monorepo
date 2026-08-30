@@ -18,10 +18,6 @@ type TemporalDomainQueueDefinition = {
 // candidate alone is insufficient: Scout's chart bootstraps the stable worker
 // first, so candidate-only alerts would fire on absent pods.
 const scoutBetaWorkflowQueue: TemporalDomainQueueDefinition[] =
-  versions["shepherdjerred/scout-for-lol/beta/workflows/stable"] !==
-    undefined &&
-  versions["shepherdjerred/scout-for-lol/beta/workflows/candidate"] !==
-    undefined &&
   scoutWorkflowWorkerImageIsCapable(
     versions["shepherdjerred/scout-for-lol/beta/workflows/stable"],
   ) &&

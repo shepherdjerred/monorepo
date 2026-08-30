@@ -20,6 +20,15 @@ function betaResourcesWithWorkflowCandidate() {
   return resourcesFor(app);
 }
 
+function prodResourcesWithWorkflowCandidate() {
+  const app = new App();
+  createScoutChart(app, "prod", {
+    stable: CAPABLE_STABLE_IMAGE,
+    candidate: CAPABLE_CANDIDATE_IMAGE,
+  });
+  return resourcesFor(app);
+}
+
 const WorkflowDeploymentSpecSchema = z.object({
   template: z.object({
     spec: z.object({
@@ -186,7 +195,6 @@ describe("Scout competition Temporal boundary", () => {
     expect(serialized).not.toContain('"port":5432');
     expect(serialized).not.toContain('"port":443');
   });
-
   test("does not boot the pre-entrypoint candidate pin", () => {
     expect(
       scoutWorkflowWorkerImageIsCapable(`2.0.0-12197@sha256:${"a".repeat(64)}`),
@@ -200,7 +208,6 @@ describe("Scout competition Temporal boundary", () => {
       ),
     ).toBe(false);
   });
-
   test("requires a stable capable build before creating the candidate", () => {
     const onlyCandidateApp = new App();
     createScoutChart(onlyCandidateApp, "beta", {
@@ -227,4 +234,30 @@ describe("Scout competition Temporal boundary", () => {
       "scout-beta-scout-workflow-worker-candidate",
     ]);
   });
+});
+
+test("renders capable production Workflow tracks", () => {
+  const synthesized = prodResourcesWithWorkflowCandidate();
+  expect(
+    synthesized.some(
+      (resource) =>
+        resource.kind === "Deployment" &&
+        resource.metadata.name === "scout-prod-scout-workflow-worker-stable",
+    ),
+  ).toBe(true);
+  expect(
+    synthesized.some(
+      (resource) =>
+        resource.kind === "Deployment" &&
+        resource.metadata.name === "scout-prod-scout-workflow-worker-candidate",
+    ),
+  ).toBe(true);
+  const workerPolicy = synthesized.find(
+    (resource) =>
+      resource.kind === "NetworkPolicy" &&
+      resource.metadata.name === "scout-workflow-worker-netpol",
+  );
+  expect(JSON.stringify(workerPolicy?.spec)).toContain(
+    '"worker-family":"scout-prod-workflows"',
+  );
 });

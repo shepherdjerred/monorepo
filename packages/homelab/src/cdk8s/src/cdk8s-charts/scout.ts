@@ -42,18 +42,20 @@ export function createScoutChart(
   const candidateImage =
     workflowWorkerImageOverrides?.candidate ??
     versions[`shepherdjerred/scout-for-lol/${stage}/workflows/candidate`];
-  const stableWorkflowWorker =
-    stage === "beta"
-      ? createScoutWorkflowWorker(chart, stage, "stable", stableImage)
-      : undefined;
+  const stableWorkflowWorker = createScoutWorkflowWorker(
+    chart,
+    stage,
+    "stable",
+    stableImage,
+  );
   // The embedded backend poller is unversioned and cannot be a rollback target.
   // Bootstrap a capable stable version first. Keep the candidate Deployment
   // rendered even when its pin equals stable so promotion does not leave
   // unmanaged candidate resources behind when pruning is disabled.
   const candidateWorkflowWorker =
-    stage === "beta" && stableWorkflowWorker !== undefined
-      ? createScoutWorkflowWorker(chart, stage, "candidate", candidateImage)
-      : undefined;
+    stableWorkflowWorker === undefined
+      ? undefined
+      : createScoutWorkflowWorker(chart, stage, "candidate", candidateImage);
   const workflowWorkerCreated =
     stableWorkflowWorker !== undefined || candidateWorkflowWorker !== undefined;
 
@@ -186,7 +188,7 @@ export function createScoutChart(
       },
       spec: {
         podSelector: {
-          matchLabels: { "worker-family": "scout-beta-workflows" },
+          matchLabels: { "worker-family": `scout-${stage}-workflows` },
         },
         policyTypes: ["Ingress", "Egress"],
         ingress: [

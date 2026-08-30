@@ -124,3 +124,34 @@ test("publishes a central Workflow candidate after stable bootstrap", () => {
     },
   });
 });
+
+test("bootstraps stable and candidate before the first Scout beta rollout", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  const legacy = `2.0.0-12197@sha256:${"b".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/scout-for-lol/beta": digest },
+      "42",
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+          value: legacy,
+        },
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+          value: legacy,
+        },
+      ]),
+    ),
+  ).toEqual({
+    "shepherdjerred/scout-for-lol/beta": { version: "2.0.0-42", digest },
+    "shepherdjerred/scout-for-lol/beta/workflows/stable": {
+      version: "2.0.0-42",
+      digest,
+    },
+    "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
+      version: "2.0.0-42",
+      digest,
+    },
+  });
+});
