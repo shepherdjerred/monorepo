@@ -23,6 +23,8 @@ type Fixture = {
   workflowPollers?: number;
   alerts?: number;
   historicalAlerts?: number;
+  historicalAlertSamples?: number;
+  historicalPollerSamples?: number;
   omitWorkflowQueue?: boolean;
   staleCandidate?: boolean;
   checkoutBuildId?: string;
@@ -88,6 +90,11 @@ function deploymentDescription(fixture: Fixture): unknown {
 }
 
 function metricValue(expression: string, fixture: Fixture): number {
+  if (expression.includes("count_over_time")) {
+    return expression.includes("prometheus_rule_group")
+      ? (fixture.historicalAlertSamples ?? 10_000)
+      : (fixture.historicalPollerSamples ?? 10_000);
+  }
   if (expression.includes("max_over_time")) {
     return fixture.historicalAlerts ?? 0;
   }
@@ -514,6 +521,40 @@ describe("Worker Deployment rollback and rejection", () => {
         ),
       ),
     ).rejects.toThrow("alerts fired during the required 30m clean window");
+  });
+
+  test("rejects a ramp without a complete Prometheus history window", async () => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("advance", new Date("2026-08-29T00:31:00Z")),
+        fixtureRunner(
+          {
+            rampingBuildId: CANDIDATE,
+            rampPercentage: 10,
+            rampChangedTime: "2026-08-29T00:00:00Z",
+            historicalAlertSamples: 5,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow("Prometheus history covered only 5 samples");
+  });
+
+  test("rejects a ramp when poller history is incomplete", async () => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("advance", new Date("2026-08-29T00:31:00Z")),
+        fixtureRunner(
+          {
+            rampingBuildId: CANDIDATE,
+            rampPercentage: 10,
+            rampChangedTime: "2026-08-29T00:00:00Z",
+            historicalPollerSamples: 5,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow("Workflow poller history for");
   });
 
   test("rejects promotion when the candidate pin was built from another commit", async () => {

@@ -133,6 +133,8 @@ function validateReleaseSteps({
       [
         "read-buildkite-handoff.ts image-digests",
         "HOMELAB_IMAGE_DIGESTS_JSON",
+        "read-buildkite-handoff.ts version-catalog",
+        "HOMELAB_VERSION_CATALOG_JSON",
         "--filter homelab --filter '@homelab/cdk8s'",
         "suspend-auto-sync apps",
         "concurrency_group: monorepo/homelab-release",

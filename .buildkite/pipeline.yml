@@ -2303,6 +2303,7 @@ steps:
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun --no-install packages/homelab/scripts/argocd.ts suspend-auto-sync apps --timeout 300
       export HOMELAB_IMAGE_DIGESTS_JSON="$$image_digests"
+      export HOMELAB_VERSION_CATALOG_JSON="$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts version-catalog)"
       export HOMELAB_RELEASE_VERSION="2.0.0-$BUILDKITE_BUILD_NUMBER"
       bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
       buildkite-agent artifact upload "helm-release-plan.json"

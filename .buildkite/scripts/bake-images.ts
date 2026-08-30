@@ -199,6 +199,18 @@ async function setDigestMetadata(
   await writeJsonHandoff("image-digests", "image-digests.json", digests);
 }
 
+async function setVersionCatalogMetadata(source: string): Promise<void> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(source);
+  } catch (error) {
+    throw new Error("Version catalog handoff is not valid JSON", {
+      cause: error,
+    });
+  }
+  await writeJsonHandoff("version-catalog", "version-catalog.json", parsed);
+}
+
 async function setPinCandidatesMetadata(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
@@ -432,6 +444,9 @@ async function main(): Promise<void> {
     console.log("no image-owning packages affected — nothing to build");
     await annotate(["--report", selectionReport]);
     if (options.push) {
+      await setVersionCatalogMetadata(
+        await Bun.file(VERSION_CATALOG_URL).text(),
+      );
       await setDigestMetadata({});
       await setPinCandidatesMetadata({}, buildNumber);
       await Bun.write(pushOutcomes, "[]\n");
@@ -445,6 +460,11 @@ async function main(): Promise<void> {
       bakeTargets.includes("scout-for-lol"))
       ? await assertNoPendingVersionBump(execute)
       : undefined;
+  if (options.push) {
+    await setVersionCatalogMetadata(
+      liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
+    );
+  }
 
   await ensureBuilder();
   const contractHashResult = await execute([

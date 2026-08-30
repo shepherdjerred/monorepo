@@ -13,6 +13,11 @@ const PrometheusResponseSchema = z.object({
   }),
 });
 const ImageEnvironmentSchema = z.array(z.string());
+const REQUIRED_PROMETHEUS_HISTORY_SAMPLES = {
+  "30m": 60,
+  "2h": 240,
+  "24h": 2880,
+} as const;
 
 export type RolloutCommandResult = { stdout: string; stderr: string };
 export type RolloutCommandRunner = (
@@ -147,6 +152,17 @@ export async function requireCleanAlertWindow(
     taskQueue: string;
   },
 ): Promise<void> {
+  const requiredHistorySamples = REQUIRED_PROMETHEUS_HISTORY_SAMPLES[duration];
+  const historySamples = await queryRolloutMetric(
+    `sum(count_over_time(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[${duration}]))`,
+    `${duration} Temporal rule evaluation history query`,
+    run,
+  );
+  if (historySamples < requiredHistorySamples) {
+    throw new Error(
+      `Temporal Prometheus history covered only ${String(historySamples)} samples during the required ${duration} clean window`,
+    );
+  }
   const alertSamples = await queryRolloutMetric(
     `sum(max_over_time(ALERTS{alertstate="firing",alertname=~"Temporal.*"}[${duration}])) or vector(0)`,
     `${duration} Temporal alert history query`,
@@ -166,8 +182,19 @@ export async function requireCleanAlertWindow(
       buildIds.push(poller.currentBuildId);
     }
     for (const buildId of buildIds) {
+      const pollerSelector = `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(buildId)},task_queue=${JSON.stringify(poller.taskQueue)},poller_type="workflow_task"})`;
+      const pollerHistorySamples = await queryRolloutMetric(
+        `count_over_time((${pollerSelector})[${duration}:])`,
+        `${duration} ${buildId} Workflow poller coverage query`,
+        run,
+      );
+      if (pollerHistorySamples < requiredHistorySamples) {
+        throw new Error(
+          `Workflow poller history for ${buildId} covered only ${String(pollerHistorySamples)} samples during the required ${duration} clean window`,
+        );
+      }
       const pollerSamples = await queryRolloutMetric(
-        `min_over_time((sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(buildId)},task_queue=${JSON.stringify(poller.taskQueue)},poller_type="workflow_task"}) or vector(0))[${duration}:])`,
+        `min_over_time((${pollerSelector})[${duration}:])`,
         `${duration} ${buildId} Workflow poller history query`,
         run,
       );
