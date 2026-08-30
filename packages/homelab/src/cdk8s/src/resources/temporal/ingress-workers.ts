@@ -13,10 +13,10 @@ export function createTemporalIngressWorkers(
   const gatewayDeployment = createTemporalDomainWorker(chart, {
     name: "temporal-gateway",
     component: "gateway",
-    // The gateway removes retired schedules during startup. Run that
-    // reconciliation before the default-wave worker Deployments receive the
-    // new image, so a removed workflow cannot be started in the rollout gap.
-    syncWave: -1,
+    // The namespace initializer must create prod and beta before this control
+    // worker starts. Keep the gateway with the other namespace-scoped workers
+    // in wave 2, after the initializer's wave 1 hook completes.
+    syncWave: 2,
     cpuRequest: Cpu.millis(100),
     memoryRequest: Size.mebibytes(256),
     ports: [

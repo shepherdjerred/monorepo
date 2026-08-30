@@ -155,7 +155,7 @@ async function main(): Promise<void> {
     "-e",
     "TEMPORAL_NAMESPACE=prod",
     "-e",
-    "TEMPORAL_WORKER_ROLE=core",
+    "TEMPORAL_WORKER_ROLE=control",
     "-e",
     "SENTRY_DSN=",
     IMAGE,
