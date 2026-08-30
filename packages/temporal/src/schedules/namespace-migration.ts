@@ -153,6 +153,19 @@ function validateExistingPreparedTarget(
     );
   }
 }
+function assertTargetHasNotFired(
+  target: ScheduleDescription,
+  migration: MigrationSchedule,
+): void {
+  if (
+    target.info.numActionsTaken !== 0 ||
+    target.info.recentActions.length > 0
+  ) {
+    throw new Error(
+      `Prepared target ${migration.targetNamespace}/${migration.source.scheduleId} has already started an action`,
+    );
+  }
+}
 export async function prepareNamespaceMigration(input: {
   schedules: readonly MigrationSchedule[];
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>;
@@ -219,6 +232,7 @@ async function validatePreparedTargets(input: {
         `Target ${migration.targetNamespace}/${migration.source.scheduleId} drifted after prepare`,
       );
     }
+    assertTargetHasNotFired(target, migration);
     const migrationState = decodeMigrationState(target.state.note);
     if (migrationState.cutoverAt === undefined && !target.state.paused) {
       throw new Error(
@@ -294,9 +308,8 @@ async function pauseSourceSchedules(
   sourceClient: Client,
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
   targets: readonly PreparedTarget[],
+  cutoverAt: Date,
 ): Promise<Date> {
-  const pauseStartedAt = cutoverTimestampForRetry(targets, new Date());
-  await persistMigrationAttempt(targetClients, targets, pauseStartedAt);
   let persistedBoundary = targets.some(
     ({ migrationState }) => migrationState.cutoverAt !== undefined,
   );
@@ -306,15 +319,15 @@ async function pauseSourceSchedules(
     if (!current.state.paused) {
       await handle.pause(SOURCE_MIGRATION_NOTE);
       if (!persistedBoundary) {
-        await persistCutoverBoundary(targetClients, targets, pauseStartedAt);
+        await persistCutoverBoundary(targetClients, targets, cutoverAt);
         persistedBoundary = true;
       }
     }
   }
   if (!persistedBoundary) {
-    await persistCutoverBoundary(targetClients, targets, pauseStartedAt);
+    await persistCutoverBoundary(targetClients, targets, cutoverAt);
   }
-  return pauseStartedAt;
+  return cutoverAt;
 }
 async function activateTargetSchedules(
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
@@ -372,13 +385,15 @@ export async function cutoverNamespaceMigration(input: {
   }
 
   const targets = await validatePreparedTargets(input);
+  const pauseStartedAt = cutoverTimestampForRetry(targets, new Date());
+  await persistMigrationAttempt(input.targetClients, targets, pauseStartedAt);
   await assertNoTargetWorkflowStarts(input.targetClients, input.schedules);
-  const pauseStartedAt = await pauseSourceSchedules(
+  const cutoverAt = await pauseSourceSchedules(
     input.sourceClient,
     input.targetClients,
     targets,
+    pauseStartedAt,
   );
-  const cutoverAt = pauseStartedAt;
   // The first successful source pause persists the boundary immediately. If a
   // retry follows a partial pause, the durable boundary is reused.
   await persistCutoverBoundary(input.targetClients, targets, cutoverAt);

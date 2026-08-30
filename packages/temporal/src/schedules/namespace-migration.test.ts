@@ -79,6 +79,24 @@ describe("Temporal namespace migration ownership", () => {
     ).toEqual(firstBoundary);
   });
 
+  test("uses an incomplete attempt boundary until cutover is complete", () => {
+    const attemptedAt = new Date("2026-08-30T03:00:00.000Z");
+    expect(
+      cutoverTimestampForRetry(
+        [
+          {
+            migrationState: {
+              sourcePaused: false,
+              sourceNote: undefined,
+              attemptedAt: attemptedAt.toISOString(),
+            },
+          },
+        ],
+        new Date("2026-08-30T03:05:00.000Z"),
+      ),
+    ).toEqual(attemptedAt);
+  });
+
   test("audits open default executions and post-cutover starts separately", () => {
     expect(migrationAuditQueries(new Date("2026-08-30T03:00:00.000Z"))).toEqual(
       {
