@@ -258,7 +258,9 @@ const AgentTaskWireFollowUpSchema = z
   .object({
     title: z.string().min(1),
     prompt: z.string().min(1),
-    provider: AgentTaskProviderSchema.nullable(),
+    // New generated follow-ups execute through the Codex/OpenRouter path.
+    // Claude remains accepted only by the legacy result schema for replay.
+    provider: z.literal("codex").nullable(),
     runAt: z.iso.datetime({ offset: true }).nullable(),
     cron: z.string().min(1).nullable(),
     model: z.string().min(1).nullable(),
@@ -293,7 +295,9 @@ const AgentTaskWireFollowUpV2Schema = z
   .object({
     title: z.string().min(1),
     prompt: z.string().min(1),
-    provider: AgentTaskProviderSchema.nullable(),
+    // New generated follow-ups execute through the Codex/OpenRouter path.
+    // Claude remains accepted only by the legacy result schema for replay.
+    provider: z.literal("codex").nullable(),
     runAt: z.iso.datetime({ offset: true }).nullable(),
     cron: z.string().min(1).nullable(),
     model: z.string().min(1).nullable(),

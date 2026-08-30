@@ -1,4 +1,4 @@
-import { mkdir, writeFile, unlink } from "node:fs/promises";
+import { lstat, mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getAuth } from "./github-oauth.ts";
@@ -38,6 +38,8 @@ export async function createPullRequest(
   }
 
   try {
+    await verifyChangesAgainstBase(repoPath, changes);
+
     // Create branch
     await runGitCommand(repoPath, ["checkout", "-b", branchName]);
 
@@ -90,6 +92,41 @@ export async function createPullRequest(
     }
 
     return { success: false, error: message };
+  }
+}
+
+async function verifyChangesAgainstBase(
+  cwd: string,
+  changes: readonly FileChange[],
+): Promise<void> {
+  for (const change of changes) {
+    const fullPath = path.join(cwd, change.filePath);
+    const exists = await Bun.file(fullPath).exists();
+    if (change.oldContent === null) {
+      if (exists) {
+        throw new Error(
+          `Editor base changed for ${change.filePath}; refusing to overwrite a new file`,
+        );
+      }
+      continue;
+    }
+    if (!exists) {
+      throw new Error(
+        `Editor base changed for ${change.filePath}; expected the previewed file to exist`,
+      );
+    }
+    const stat = await lstat(fullPath);
+    if (!stat.isFile()) {
+      throw new Error(
+        `Editor base changed for ${change.filePath}; expected a regular file`,
+      );
+    }
+    const current = await Bun.file(fullPath).text();
+    if (current !== change.oldContent) {
+      throw new Error(
+        `Editor base changed for ${change.filePath}; review the latest file before approving`,
+      );
+    }
   }
 }
 

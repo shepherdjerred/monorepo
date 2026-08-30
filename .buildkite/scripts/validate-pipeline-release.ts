@@ -251,6 +251,14 @@ function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
       `release-please lane is missing exact filtered install ${releaseInstall}`,
     );
   }
+  if (
+    !hasTrimmedLine(
+      releasePlease,
+      "bun --no-install run --cwd packages/llm-models build",
+    )
+  ) {
+    fail("release-please must build the model catalog before release scripts");
+  }
   requireIncludes(
     releasePlease,
     "<<: *pod_light_kubernetes",

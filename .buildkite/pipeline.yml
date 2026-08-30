@@ -1558,6 +1558,7 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --filter homelab --filter '@homelab/cdk8s'
+      bun --no-install run --cwd packages/llm-models build
       # Merge-base for section gating; unresolvable → empty → ci-changed.ts
       # fails open and every section runs (extra work, never lost coverage).
       if ! CI_CHANGED_BASE=$(git merge-base origin/main HEAD); then
@@ -2781,6 +2782,7 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production
+      bun --no-install run --cwd packages/llm-models build
       bun --no-install scripts/release.ts
     # Safe to retry: release-please upserts its PR and skips already-cut
     # releases; a GitHub GraphQL 500 (build 5809) exits 34 via transient.ts.

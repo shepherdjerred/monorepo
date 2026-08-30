@@ -192,6 +192,14 @@ const prDryrunInstall =
 if (!hasTrimmedLine(prDryrun, prDryrunInstall)) {
   fail(`pr-dryrun is missing exact filtered install ${prDryrunInstall}`);
 }
+if (
+  !hasTrimmedLine(
+    prDryrun,
+    "bun --no-install run --cwd packages/llm-models build",
+  )
+) {
+  fail("pr-dryrun must build the model catalog before release dry-run");
+}
 for (const required of [
   '- "packages/homelab/src/cdk8s/**"',
   '- "packages/homelab/src/helm-types/**"',
