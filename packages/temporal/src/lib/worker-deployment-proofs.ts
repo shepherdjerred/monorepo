@@ -19,6 +19,7 @@ const REQUIRED_PROMETHEUS_HISTORY_SAMPLES = {
   "2h": 240,
   "24h": 2880,
 } as const;
+const MAX_RULE_EVALUATION_AGE_SECONDS = 300;
 
 export type RolloutCommandResult = { stdout: string; stderr: string };
 export type RolloutCommandRunner = (
@@ -186,12 +187,22 @@ async function requireHealthyRuleEvaluations(
       `Temporal rule evaluations did not advance during the required ${duration} clean window`,
     );
   }
+  const historicalEvaluationAgeSeconds = await queryRolloutMetric(
+    `max(max_over_time((time() - prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"})[${duration}:1m]))`,
+    `${duration} Temporal rule evaluation historical age query`,
+    run,
+  );
+  if (historicalEvaluationAgeSeconds > MAX_RULE_EVALUATION_AGE_SECONDS) {
+    throw new Error(
+      `Temporal rule evaluations reached ${String(historicalEvaluationAgeSeconds)} seconds old during the required ${duration} clean window`,
+    );
+  }
   const evaluationAgeSeconds = await queryRolloutMetric(
     `max(time() - max by (rule_group) (prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}))`,
     `${duration} Temporal rule evaluation freshness query`,
     run,
   );
-  if (evaluationAgeSeconds > 300) {
+  if (evaluationAgeSeconds > MAX_RULE_EVALUATION_AGE_SECONDS) {
     throw new Error(
       `Temporal rule evaluations are ${String(evaluationAgeSeconds)} seconds old`,
     );

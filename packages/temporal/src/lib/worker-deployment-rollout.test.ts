@@ -27,6 +27,7 @@ type Fixture = {
   historicalAlertSamples?: number;
   historicalPollerSamples?: number;
   historicalEvaluationProgress?: number;
+  historicalEvaluationAgeSeconds?: number;
   evaluationAgeSeconds?: number;
   ruleEvaluationFailures?: number;
   omitWorkflowQueue?: boolean;
@@ -109,6 +110,14 @@ function metricValue(expression: string, fixture: Fixture): number {
     expression.includes("min_over_time")
   ) {
     return fixture.historicalEvaluationProgress ?? 1;
+  }
+  if (
+    expression.includes(
+      "prometheus_rule_group_last_evaluation_timestamp_seconds",
+    ) &&
+    expression.includes("max_over_time")
+  ) {
+    return fixture.historicalEvaluationAgeSeconds ?? 1;
   }
   if (expression.includes("count_over_time")) {
     return expression.includes("prometheus_rule_group")
@@ -661,6 +670,23 @@ describe("Worker Deployment rule health proofs", () => {
         ),
       ),
     ).rejects.toThrow("seconds old");
+  });
+
+  test("rejects a ramp when Temporal rule evaluations were historically stale", async () => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("advance", new Date("2026-08-29T00:31:00Z")),
+        fixtureRunner(
+          {
+            rampingBuildId: CANDIDATE,
+            rampPercentage: 10,
+            rampChangedTime: "2026-08-29T00:00:00Z",
+            historicalEvaluationAgeSeconds: 301,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow("reached 301 seconds old");
   });
 
   test("rejects a ramp when Temporal rule evaluations fail", async () => {
