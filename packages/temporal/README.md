@@ -16,11 +16,13 @@ roles own only Activity Workers, with separate registries, credentials, service
 accounts, and concurrency budgets. The default `all` role composes every role in
 one process for local development.
 
-Production and beta use separate Temporal namespaces. Set `TEMPORAL_NAMESPACE`
-to `prod` or `beta`; local development uses `dev`. During the migration,
-`TEMPORAL_LEGACY_NAMESPACE=default` enables bounded legacy pollers so existing
-default executions can drain. New workflows and schedules must never target
-`default`.
+Temporal namespaces are environment-scoped: local servers use `dev`, Scout
+beta uses `beta`, and production plus shared control-plane jobs use `prod`.
+During migration, `TEMPORAL_LEGACY_NAMESPACE=default` adds bounded worker-only
+pollers so existing histories can finish without allowing new starts there.
+The central Scout worker also polls its unchanged `scout` queue in `beta` for
+the beta-owned weekly parlay and Bryan Bucks analytics schedules; all other
+central queues remain `prod` plus the temporary `default` drain.
 
 | Role              | Queue or surface        | Activity concurrency |
 | ----------------- | ----------------------- | -------------------: |
@@ -34,6 +36,8 @@ default executions can drain. New workflows and schedules must never target
 | `glitter-corpus`  | `glitter-corpus`        |                    1 |
 | `glitter-context` | `glitter-context`       |                    1 |
 | `maintenance`     | `maintenance`           |                    1 |
+| `workflows`       | `workflows`             |                 none |
+| `legacy`          | `default` drain         |                    1 |
 
 The production manifests land in layers. In the Glitter layer, the existing
 legacy core and agent Deployments remain in place while the combined Glitter
