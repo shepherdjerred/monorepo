@@ -364,7 +364,7 @@
       "source": "scout-dynamic",
       "purpose": "Select the Scout Explore AI model.",
       "type": "variant",
-      "default": "gpt-5.6-sol",
+      "default": "gpt-5.6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -835,7 +835,16 @@
   "environments": [
     {
       "key": "default",
-      "overrides": []
+      "overrides": [
+        {
+          "key": "scout-explore-model",
+          "type": "variant",
+          "default": "gpt-5.6-sol",
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        }
+      ]
     },
     {
       "key": "beta",

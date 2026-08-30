@@ -36,6 +36,15 @@ describe("loadFeatureFlagConfiguration", () => {
     ).toThrow(/FLIPT_URL is required/);
   });
 
+  test("flipt mode requires an explicit environment", () => {
+    expect(() =>
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flipt",
+        FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
+      }),
+    ).toThrow(/FLIPT_ENVIRONMENT is required/);
+  });
+
   test("flipt mode rejects a malformed URL as a config error", () => {
     expect(() =>
       loadFeatureFlagConfiguration({
@@ -53,12 +62,13 @@ describe("loadFeatureFlagConfiguration", () => {
       loadFeatureFlagConfiguration({
         FEATURE_FLAGS_MODE: "flipt",
         FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
+        FLIPT_ENVIRONMENT: "beta",
       }),
     ).toEqual({
       mode: "flipt",
       url: "http://flipt.flipt.svc.cluster.local:8080",
       namespace: "default",
-      environment: "default",
+      environment: "beta",
       pollIntervalSeconds: 300,
     });
   });
@@ -68,6 +78,7 @@ describe("loadFeatureFlagConfiguration", () => {
       loadFeatureFlagConfiguration({
         FEATURE_FLAGS_MODE: "flipt",
         FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
+        FLIPT_ENVIRONMENT: "beta",
         FLIPT_POLL_INTERVAL_SECONDS: "0",
       }),
     ).toThrow();

@@ -187,7 +187,7 @@ describe("createFliptFetcher", () => {
         // Trailing slash must be normalised away.
         url: "http://flipt.flipt.svc.cluster.local:8080/",
         namespace: "default",
-        environment: "default",
+        environment: "beta",
       });
       await fetcher({ etag: "previous-etag" });
     } finally {
@@ -204,7 +204,7 @@ describe("createFliptFetcher", () => {
     expect(calls[0]?.headers).toEqual({
       Accept: "application/json",
       "x-flipt-accept-server-version": "1.47.0",
-      "x-flipt-environment": "default",
+      "x-flipt-environment": "beta",
       "If-None-Match": "previous-etag",
     });
   });

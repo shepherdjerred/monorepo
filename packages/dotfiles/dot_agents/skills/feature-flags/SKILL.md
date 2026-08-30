@@ -24,7 +24,10 @@ ramp, then remove the flag. That is the default path, not an exception.
 
 1. Is it a secret? → 1Password → Kubernetes Secret.
 2. Is it needed before the flag client exists? → **bootstrap env**
-   (`FLIPT_URL`, `ENVIRONMENT`, `PORT`, `DATABASE_URL`, `TEMPORAL_WORKER_ROLE`).
+   (`FLIPT_URL`, `FLIPT_ENVIRONMENT`, application `ENVIRONMENT`, `PORT`,
+   `DATABASE_URL`, `TEMPORAL_WORKER_ROLE`). `ENVIRONMENT` describes the
+   application deployment; `FLIPT_ENVIRONMENT` selects Flipt's isolated
+   storage environment and is required whenever `FEATURE_FLAGS_MODE=flipt`.
 3. Does an end user own it? → a database row.
 4. Shared across packages or languages? → JSON catalog + JSON Schema.
 5. Changes only when code changes? → a constant.
@@ -58,7 +61,8 @@ Flags of your own also need:
 - the consuming namespace added to `CONSUMER_NAMESPACES` in
   `packages/homelab/src/cdk8s/src/cdk8s-charts/flipt.ts` — Flipt has no auth, so
   that list is the access control;
-- `FEATURE_FLAGS_MODE` and `FLIPT_URL` on the service's cdk8s Deployment;
+- `FEATURE_FLAGS_MODE`, `FLIPT_URL`, and `FLIPT_ENVIRONMENT` on the service's
+  cdk8s Deployment when the mode is `flipt`;
 - `FEATURE_FLAGS_MODE=disabled` wherever tests run.
 
 ## Rules

@@ -21,10 +21,14 @@ layered resolver in front of it.
 > and bootstrap**. Everything else is a **feature flag**.
 
 Bootstrap is the part that cannot be a flag because it is needed to construct
-the thing that reads flags: `FLIPT_URL` obviously, but also `ENVIRONMENT` (it is
-the attribute Flipt targets _on_), `PORT` (it binds a listener), `DATABASE_URL`,
-and `TEMPORAL_WORKER_ROLE` (bound one-to-one to a ServiceAccount, so a running
-process cannot rebind).
+the thing that reads flags. `FLIPT_URL` locates the provider, while
+`FLIPT_ENVIRONMENT` selects its isolated storage environment. Every Flipt client
+sets that selector explicitly so a missing deployment value fails loudly.
+
+The application `ENVIRONMENT` remains separate. It describes the application
+stage and may be passed as a targeting attribute. It does not choose where Flipt
+stores or reads flags. Other bootstrap values include `PORT`, `DATABASE_URL`,
+and `TEMPORAL_WORKER_ROLE`.
 
 ## Which layer?
 
@@ -106,10 +110,12 @@ If Flipt ever gains authentication, both of those are worth revisiting.
 ## Durability
 
 Flipt v2 defaults to **in-memory storage**. It accepts flag writes, serves them
-back, and silently loses every one on restart. The deployment therefore
-configures an explicit local git backend on a ZFS PVC, which is backed up by
-Velero. A regression test asserts that configuration is present, because losing
-it produces a service that looks like it works.
+back, and silently loses every one on restart. The deployment therefore gives
+beta and production separate local git backends on a ZFS PVC backed up by
+Velero. Environment isolation prevents a beta model or rollout change from
+altering production. Regression tests assert the storage and client selectors,
+because either omission produces a service that looks healthy while reading the
+wrong contract.
 
 ## Analytics has a different ownership boundary
 

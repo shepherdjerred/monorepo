@@ -60,7 +60,7 @@ export function loadFeatureFlagConfiguration(
     mode,
     url: requireVariable(environment, "FLIPT_URL"),
     namespace: environment["FLIPT_NAMESPACE"] ?? "default",
-    environment: environment["FLIPT_ENVIRONMENT"] ?? "default",
+    environment: requireVariable(environment, "FLIPT_ENVIRONMENT"),
     pollIntervalSeconds:
       rawPoll === undefined || rawPoll.length === 0
         ? DEFAULT_POLL_INTERVAL_SECONDS

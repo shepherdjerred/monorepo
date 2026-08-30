@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   ManagedFlagInventorySchema,
+  managedFlagInventory,
   materializeManagedEnvironment,
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 
@@ -38,7 +39,19 @@ const fullOverride = {
   thresholdRollouts: [],
 };
 
+function exploreModel(environment: string) {
+  return materializeManagedEnvironment(managedFlagInventory, environment).find(
+    (flag) => flag.key === "scout-explore-model",
+  )?.default;
+}
+
 describe("ManagedFlagInventorySchema", () => {
+  test("keeps legacy default on Sol while beta and prod use Luna", () => {
+    expect(exploreModel("default")).toBe("gpt-5.6-sol");
+    expect(exploreModel("beta")).toBe("gpt-5.6-luna");
+    expect(exploreModel("prod")).toBe("gpt-5.6-luna");
+  });
+
   test("materializes a full-state environment override", () => {
     const parsed = ManagedFlagInventorySchema.parse(inventory([fullOverride]));
     expect(materializeManagedEnvironment(parsed, "beta")[0]?.default).toBe(
