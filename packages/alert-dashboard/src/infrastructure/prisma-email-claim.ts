@@ -59,6 +59,7 @@ export async function markEmailSentRow(
       id: input.id,
       sendClaimId: input.sendClaimId,
       sentAtNs: null,
+      canceledAtNs: null,
     },
     data: {
       sentAtNs: input.sentAtNs,
@@ -82,6 +83,7 @@ export async function markEmailFailedRow(
       id: input.id,
       sendClaimId: input.sendClaimId,
       sentAtNs: null,
+      canceledAtNs: null,
     },
     data: {
       nextAttemptAtNs: input.nextAttemptAtNs,

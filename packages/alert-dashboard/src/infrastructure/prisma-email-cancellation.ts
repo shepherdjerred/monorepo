@@ -83,6 +83,7 @@ export async function cancelPendingEmails(
         canceledAtNs: input.canceledAtNs,
         canceledBy: input.canceledBy,
         cancellationReason: input.reason,
+        sendClaimId: null,
       },
     });
     if (result.count !== 1) {
