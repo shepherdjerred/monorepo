@@ -445,6 +445,37 @@ export function appRoutes(): AuditRoute[] {
       authenticated: true,
       golden: false,
     },
+    // Bryan Bucks is server-side gated (beta-only, one guild). The audit's
+    // dev-login fixture guild is the flag registry's own enabled guild, so
+    // the routes render their real content locally.
+    {
+      name: "bucks",
+      surface: "app",
+      path: "/app/bucks",
+      authenticated: true,
+      golden: false,
+    },
+    {
+      name: "bucks-history",
+      surface: "app",
+      path: "/app/bucks/history",
+      authenticated: true,
+      golden: false,
+    },
+    {
+      name: "bucks-leaderboard",
+      surface: "app",
+      path: "/app/bucks/leaderboard",
+      authenticated: true,
+      golden: false,
+    },
+    {
+      name: "bucks-settings",
+      surface: "app",
+      path: "/app/bucks/settings",
+      authenticated: true,
+      golden: false,
+    },
   ];
 }
 

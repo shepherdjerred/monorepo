@@ -435,6 +435,9 @@ describe("route analytics context", () => {
   test("identifies the routes that carry context beyond identity", () => {
     expect(analyticsContextRoute("/g/123")).toBe("/g/123");
     expect(analyticsContextRoute("/g/123/players/Someone")).toBe("/g/123");
+    expect(analyticsContextRoute("/bucks")).toBe("/bucks");
+    expect(analyticsContextRoute("/bucks/history")).toBe("/bucks");
+    expect(analyticsContextRoute("/bucksomething")).toBeUndefined();
     expect(analyticsContextRoute("/")).toBeUndefined();
     expect(analyticsContextRoute("/login")).toBeUndefined();
   });

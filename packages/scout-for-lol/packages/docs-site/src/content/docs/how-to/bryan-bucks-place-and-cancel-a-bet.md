@@ -5,6 +5,9 @@ sidebar:
   order: 11
 ---
 
+You can also place, top up, and cancel bets from the
+[web dashboard](/docs/how-to/bryan-bucks-use-the-web-dashboard/).
+
 ## Place a bet from the pre-match message
 
 Click one of the four stake buttons on the pre-match card. They read **WIN** or

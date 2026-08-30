@@ -7,6 +7,8 @@ sidebar:
 
 `/bb` is registered per server, not globally. It only appears in servers where
 Bryan Bucks is enabled.
+Most of what `/bb` does — except peek passes and `/bb ask` — is also available
+on the [web dashboard](/docs/how-to/bryan-bucks-use-the-web-dashboard/).
 
 ## Subcommands
 

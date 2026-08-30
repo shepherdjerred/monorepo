@@ -18,25 +18,7 @@ import { useAnalyticsIdentity } from "#src/hooks/use-analytics-identity.ts";
 import { FeedbackPrompt } from "#src/components/feedback-prompt.tsx";
 import { UserMenu } from "#src/components/user-menu.tsx";
 import { buildInfo } from "#src/lib/build-info.ts";
-
-function localSurfaceOrigin(
-  configured: unknown,
-  developmentFallback: string,
-): string | undefined {
-  if (typeof configured === "string" && configured.length > 0) {
-    return configured;
-  }
-  return import.meta.env.DEV ? developmentFallback : undefined;
-}
-
-const marketingOrigin = localSurfaceOrigin(
-  import.meta.env.VITE_MARKETING_ORIGIN,
-  "http://localhost:4321",
-);
-const docsOrigin = localSurfaceOrigin(
-  import.meta.env.VITE_DOCS_ORIGIN,
-  "http://localhost:4322",
-);
+import { docsOrigin, marketingOrigin } from "#src/lib/surface-origins.ts";
 
 export function appGlobalPath(pathname: string): string {
   return `/app${pathname}`;

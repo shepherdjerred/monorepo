@@ -5,6 +5,9 @@ sidebar:
   order: 14
 ---
 
+Your history is also available on the
+[web dashboard](/docs/how-to/bryan-bucks-use-the-web-dashboard/).
+
 ## What you hold right now
 
 ```text

@@ -75,6 +75,12 @@ const SCOUT_ANALYTICS_EVENTS = [
   "login_click",
   "sign_out",
   "theme_changed",
+  // Bryan Bucks
+  "bucks_bet_placed",
+  "bucks_bet_cancelled",
+  "bucks_parlay_bet_placed",
+  "bucks_weekly_parlay_bet_placed",
+  "bucks_notification_prefs_updated",
   // Feedback prompt
   "feedback_shown",
   "feedback_submitted",
