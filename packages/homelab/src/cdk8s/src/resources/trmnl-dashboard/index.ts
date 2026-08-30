@@ -17,6 +17,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -172,8 +173,17 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
   setRevisionHistoryLimit(deployment, 5);
 
   const service = new Service(chart, "trmnl-dashboard-service", {
+    metadata: { labels: { app: "trmnl-dashboard" } },
     selector: deployment,
     ports: [{ port: 3000, name: "http" }],
+  });
+
+  createServiceMonitor(chart, {
+    name: "trmnl-dashboard",
+    namespace: "trmnl-dashboard",
+    port: "http",
+    interval: "30s",
+    matchLabels: { app: "trmnl-dashboard" },
   });
 
   createCloudflareTunnelBinding(chart, "trmnl-dashboard-cf-tunnel", {

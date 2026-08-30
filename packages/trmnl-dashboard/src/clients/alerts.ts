@@ -30,9 +30,9 @@ export class AlertsClient {
     return SummarySchema.parse(response);
   }
 
-  async listOpen(): Promise<AlertSummaryItem[]> {
+  async listOpen(limit = 6): Promise<AlertSummaryItem[]> {
     const response = await this.fetchJson(
-      "/api/v1/alerts?lifecycleState=open&limit=6",
+      `/api/v1/alerts?lifecycleState=open&limit=${limit.toString()}`,
     );
     return AlertListSchema.parse(response).items;
   }
