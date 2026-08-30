@@ -715,6 +715,15 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: macos-native-dispatch
+          podSpecPatch:
+            <<: *pod_light_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_light_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_buildkite_read
 
   - label: ":apple: QuotaBar macOS (PR)"
     key: quotabar-macos-pr

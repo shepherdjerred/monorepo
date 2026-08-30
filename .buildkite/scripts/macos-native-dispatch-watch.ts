@@ -214,7 +214,7 @@ async function fetchDispatchState(): Promise<{
   readonly jobs: readonly NativeJob[];
   readonly otherRunning: readonly RunningNativeJob[];
 }> {
-  const token = requireEnv("BUILDKITE_API_TOKEN");
+  const token = requireEnv("BUILDKITE_READ_TOKEN");
   const organization = requireEnv("BUILDKITE_ORGANIZATION_SLUG");
   const pipeline = requireEnv("BUILDKITE_PIPELINE_SLUG");
   const buildNumber = requireEnv("BUILDKITE_BUILD_NUMBER");
