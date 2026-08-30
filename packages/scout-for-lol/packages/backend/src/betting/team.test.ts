@@ -4,10 +4,8 @@ import {
   type BucksPoolParticipant,
 } from "@scout-for-lol/data";
 import {
-  BucksOutcomeChoiceSchema,
   hasTrackedPlayersOnBothTeams,
   outcomeLabel,
-  resolveOutcomeChoice,
   shortTeamName,
   subjectWinsForTeam,
   teamIdForSubjectOutcome,
@@ -82,45 +80,6 @@ describe("Bryan Bucks outcome framing", () => {
         participant(200, true, true),
       ]),
     ).toBe(false);
-  });
-});
-
-describe("Bryan Bucks outcome choices", () => {
-  test("resolves win and lose against the anchor", () => {
-    expect(
-      resolveOutcomeChoice(BucksOutcomeChoiceSchema.parse("win"), BLUE_ANCHOR),
-    ).toEqual({ kind: "resolved", teamId: 100 });
-    expect(
-      resolveOutcomeChoice(BucksOutcomeChoiceSchema.parse("lose"), BLUE_ANCHOR),
-    ).toEqual({ kind: "resolved", teamId: 200 });
-    expect(
-      resolveOutcomeChoice(BucksOutcomeChoiceSchema.parse("win"), RED_ANCHOR),
-    ).toEqual({ kind: "resolved", teamId: 200 });
-  });
-
-  // The whole reason four static choices work: blue/red need no framing, so
-  // they still resolve for the lobby where win/lose cannot.
-  test("resolves blue and red without framing, even when mixed", () => {
-    expect(
-      resolveOutcomeChoice(BucksOutcomeChoiceSchema.parse("blue"), MIXED),
-    ).toEqual({ kind: "resolved", teamId: 100 });
-    expect(
-      resolveOutcomeChoice(BucksOutcomeChoiceSchema.parse("red"), MIXED),
-    ).toEqual({ kind: "resolved", teamId: 200 });
-  });
-
-  test("refuses win and lose for a mixed lobby instead of guessing", () => {
-    expect(
-      resolveOutcomeChoice(BucksOutcomeChoiceSchema.parse("win"), MIXED),
-    ).toEqual({ kind: "ambiguous" });
-    expect(
-      resolveOutcomeChoice(BucksOutcomeChoiceSchema.parse("lose"), MIXED),
-    ).toEqual({ kind: "ambiguous" });
-  });
-
-  test("rejects an unknown choice", () => {
-    expect(BucksOutcomeChoiceSchema.safeParse("green").success).toBe(false);
-    expect(BucksOutcomeChoiceSchema.safeParse("team").success).toBe(false);
   });
 });
 

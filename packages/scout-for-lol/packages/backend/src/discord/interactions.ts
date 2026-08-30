@@ -1,9 +1,4 @@
-import {
-  MessageFlags,
-  type ButtonInteraction,
-  type Client,
-  type Interaction,
-} from "discord.js";
+import { MessageFlags, type Client, type Interaction } from "discord.js";
 import { captureBucksMemberActivity } from "#src/analytics/bryan-bucks.ts";
 import { handleChatInputCommand } from "#src/discord/commands/index.ts";
 import {
@@ -11,15 +6,6 @@ import {
   type BetButtonInteraction,
 } from "#src/betting/bet-button.ts";
 import { isBucksCustomId, parseBucksCustomId } from "#src/betting/custom-id.ts";
-import {
-  isBucksAskCustomId,
-  parseBucksAskPublishCustomId,
-} from "#src/betting/ask-custom-id.ts";
-import {
-  handleBucksAskPublish,
-  type BucksAskPublicMessage,
-  type BucksAskPublishInteraction,
-} from "#src/betting/ask-publish.ts";
 import {
   handleBucksNavigation,
   isBucksNavigationId,
@@ -36,14 +22,6 @@ import {
   parseWeeklyParlayCustomId,
 } from "#src/betting/weekly-parlay-custom-id.ts";
 import { handleWeeklyParlayBetButton } from "#src/betting/weekly-parlay-bet-button.ts";
-import {
-  handlePeekPassButton,
-  type PeekPassButtonInteraction,
-} from "#src/betting/peek-pass-button.ts";
-import {
-  isPeekPassCustomId,
-  parsePeekPassCustomId,
-} from "#src/betting/peek-pass-custom-id.ts";
 import { createLogger } from "#src/logger.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
 import {
@@ -54,19 +32,13 @@ import {
   isScoutCustomId,
   parseScoutPublishCustomId,
 } from "#src/discord/scout/custom-id.ts";
-import { asTextChannel } from "#src/discord/utils/channel.ts";
 
 const logger = createLogger("discord-interactions");
 
 async function captureButtonActivity(
   interaction: RoutableButtonInteraction,
   activityKind:
-    | "outcome_bet"
-    | "parlay_bet"
-    | "weekly_parlay_bet"
-    | "peek_pass"
-    | "ask"
-    | "navigation",
+    "outcome_bet" | "parlay_bet" | "weekly_parlay_bet" | "navigation",
   status: "success" | "error",
 ): Promise<void> {
   await captureBucksMemberActivity({
@@ -99,35 +71,14 @@ export function handleInteractions(client: Client): void {
 
 async function routeInteraction(interaction: Interaction): Promise<void> {
   if (interaction.isButton()) {
-    await routeButton(toRoutableButton(interaction));
+    // discord.js's ButtonInteraction structurally satisfies the router's
+    // parameter type, so this passes the live object with no cast.
+    await routeButton(interaction);
     return;
   }
   if (interaction.isChatInputCommand()) {
     await handleChatInputCommand(interaction);
   }
-}
-
-function toRoutableButton(
-  interaction: ButtonInteraction,
-): RoutableButtonInteraction {
-  return Object.assign(interaction, {
-    sendPublic: async (message: BucksAskPublicMessage) =>
-      await sendBucksAskPublicMessage(interaction, message),
-  });
-}
-
-async function sendBucksAskPublicMessage(
-  interaction: ButtonInteraction,
-  message: BucksAskPublicMessage,
-): Promise<unknown> {
-  if (interaction.channel === null) {
-    throw new Error("The Bryan Bucks answer has no channel to post in");
-  }
-  const channel = asTextChannel(interaction.channel);
-  if (channel === undefined) {
-    throw new Error("The Bryan Bucks answer's channel is not sendable");
-  }
-  return await channel.send(message);
 }
 
 /**
@@ -140,9 +91,7 @@ async function sendBucksAskPublicMessage(
  */
 export type RoutableButtonInteraction = BetButtonInteraction &
   BucksNavigationInteraction &
-  ScoutPublishButtonInteraction &
-  BucksAskPublishInteraction &
-  PeekPassButtonInteraction & {
+  ScoutPublishButtonInteraction & {
     deferUpdate: () => Promise<unknown>;
     deferred: boolean;
     replied: boolean;
@@ -166,7 +115,8 @@ async function routeWeeklyParlayButton(
     discordComponentsTotal.inc({ namespace: "bbw", status: "error" });
     if (interaction.deferred && !interaction.replied) {
       await interaction.editReply({
-        content: "😵 Weekly bet failed. Try again shortly.",
+        content:
+          "😵 Something went wrong placing that weekly parlay bet. Try again shortly.",
       });
     }
   }
@@ -175,15 +125,6 @@ async function routeWeeklyParlayButton(
 export async function routeButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
-  if (isPeekPassCustomId(interaction.customId)) {
-    await routePeekPassButton(interaction);
-    return;
-  }
-  if (isBucksAskCustomId(interaction.customId)) {
-    await routeBucksAskButton(interaction);
-    return;
-  }
-
   if (isParlayCustomId(interaction.customId)) {
     try {
       if (parseParlayCustomId(interaction.customId) === undefined) {
@@ -284,63 +225,6 @@ export async function routeButton(
     if (interaction.deferred && !interaction.replied) {
       await interaction.editReply({
         content: "😵 Something went wrong placing that bet. Try again shortly.",
-      });
-    }
-  }
-}
-
-async function routePeekPassButton(
-  interaction: RoutableButtonInteraction,
-): Promise<void> {
-  try {
-    if (parsePeekPassCustomId(interaction.customId) === undefined) {
-      discordComponentsTotal.inc({ namespace: "bbpass", status: "malformed" });
-      await interaction.deferUpdate();
-      return;
-    }
-    await handlePeekPassButton(interaction);
-    await captureButtonActivity(interaction, "peek_pass", "success");
-    discordComponentsTotal.inc({ namespace: "bbpass", status: "success" });
-  } catch (error) {
-    await captureButtonActivity(interaction, "peek_pass", "error");
-    logger.error("❌ Error handling a Bryan Bucks peek pass:", error);
-    discordComponentsTotal.inc({ namespace: "bbpass", status: "error" });
-    if (interaction.deferred && !interaction.replied) {
-      await interaction.editReply({
-        content:
-          "😵 Something went wrong buying that pass. Request a fresh quote with `/bb pass`.",
-        components: [],
-      });
-    }
-  }
-}
-
-async function routeBucksAskButton(
-  interaction: RoutableButtonInteraction,
-): Promise<void> {
-  try {
-    if (parseBucksAskPublishCustomId(interaction.customId) === undefined) {
-      discordComponentsTotal.inc({ namespace: "bbask", status: "malformed" });
-      await interaction.deferUpdate();
-      return;
-    }
-    const outcome = await handleBucksAskPublish(interaction);
-    await captureButtonActivity(
-      interaction,
-      "ask",
-      outcome === "failed" ? "error" : "success",
-    );
-    discordComponentsTotal.inc({
-      namespace: "bbask",
-      status: outcome === "failed" ? "error" : "success",
-    });
-  } catch (error) {
-    await captureButtonActivity(interaction, "ask", "error");
-    logger.error("❌ Error publishing a Bryan Bucks answer:", error);
-    discordComponentsTotal.inc({ namespace: "bbask", status: "error" });
-    if (interaction.deferred && !interaction.replied) {
-      await interaction.editReply({
-        content: "I couldn't finish publishing that Bryan Bucks answer.",
       });
     }
   }

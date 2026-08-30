@@ -36,15 +36,8 @@ Three things matter, and all three are on the message:
 
 ## Take a side
 
-Click `YES 1`, `YES 5`, `NO 1`, or `NO 5`, or use the command for any amount:
-
-```text
-/bb parlay player: <tracked player> side: YES amount: 20
-```
-
-Use the message buttons whenever the same player appears in more than one open
-market. The slash command refuses that ambiguity instead of choosing the wrong
-market.
+Click `YES 1`, `YES 5`, `NO 1`, or `NO 5` on the parlay message. Repeat clicks
+stack into one position.
 
 The confirmation is private and tells you the payout you locked in:
 

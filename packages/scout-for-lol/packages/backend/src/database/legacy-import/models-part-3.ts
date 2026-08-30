@@ -38,7 +38,7 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     model: "BucksAccount",
     idColumns: ["id"],
     resetIdSequence: true,
-    digestIgnoreColumns: new Set(["analyticsUserId"]),
+    digestIgnoreColumns: new Set(["analyticsUserId", "peekPassExpiresAt"]),
     transform: (row): Prisma.BucksAccountCreateManyInput => ({
       id: toInt(row, "id"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
@@ -46,7 +46,10 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       // Synthetic house accounts were added after the promoted SQLite image.
       isHouse: row["isHouse"] === undefined ? false : toBool(row, "isHouse"),
       balance: toInt(row, "balance"),
-      peekPassExpiresAt: toDateOrNullIfMissing(row, "peekPassExpiresAt"),
+      // peekPassExpiresAt existed in some SQLite snapshots; the feature and
+      // its column are retired, so the value is deliberately dropped. The
+      // Postgres column itself is kept nullable for one compatibility
+      // release (see prisma/schema.prisma).
       createdAt: toDate(row, "createdAt"),
       updatedAt: toDate(row, "updatedAt"),
     }),
@@ -61,17 +64,16 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     model: "BucksMatchPool",
     idColumns: ["id"],
     resetIdSequence: true,
+    digestIgnoreColumns: new Set(["peekAvailableAt"]),
     transform: (row): Prisma.BucksMatchPoolCreateManyInput => ({
       id: toInt(row, "id"),
       matchId: toStr(row, "matchId"),
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
       detectedAt: toDate(row, "detectedAt"),
-      // Peek passes were added after the promoted image. Do not make an old
-      // pool peekable immediately; the betting window has already closed.
-      peekAvailableAt:
-        row["peekAvailableAt"] === undefined
-          ? toDate(row, "closesAt")
-          : toDate(row, "peekAvailableAt"),
+      // peekAvailableAt existed in some SQLite snapshots; the feature and its
+      // column are retired, so the value is deliberately dropped. The
+      // Postgres column itself is kept nullable for one compatibility
+      // release (see prisma/schema.prisma).
       closesAt: toDate(row, "closesAt"),
       queueType: toStrOrNull(row, "queueType"),
       roster: toStr(row, "roster"),

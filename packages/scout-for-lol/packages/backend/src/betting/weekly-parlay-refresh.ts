@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/bun";
-import { BucksMessageRefsSchema } from "@scout-for-lol/data";
+import { BucksMessageRefsSchema, formatInteger } from "@scout-for-lol/data";
 import type { MessageEditOptions } from "discord.js";
 import {
   WeeklyParlayDefinitionCriteriaSchema,
@@ -141,7 +141,7 @@ async function editWeeklyParlayMessage(
             `Period: **${market.periodKey}** · ${(market.definition.yesProbabilityBps / 100).toFixed(1)}% YES`,
             ...legs,
             qualification,
-            `**${relevantBets.length.toString()} ${countLabel(relevantBets.length, "bettor")} · ${totalStaked.toString()} BB staked**`,
+            `**${formatInteger(relevantBets.length)} ${countLabel(relevantBets.length, "bettor")} · ${formatInteger(totalStaked)} BB staked**`,
             deliveryTimeCopy({
               kind: "open",
               bettingClosesAt: market.bettingClosesAt,
@@ -163,7 +163,7 @@ async function editWeeklyParlayMessage(
             `Period: **${market.periodKey}**`,
             ...legs,
             qualification,
-            `**${relevantBets.length.toString()} ${countLabel(relevantBets.length, "bettor")} refunded · ${totalStaked.toString()} BB returned**`,
+            `**${formatInteger(relevantBets.length)} ${countLabel(relevantBets.length, "bettor")} refunded · ${formatInteger(totalStaked)} BB returned**`,
             "This market was cancelled by an operator.",
           ]
             .filter((line) => line.length > 0)

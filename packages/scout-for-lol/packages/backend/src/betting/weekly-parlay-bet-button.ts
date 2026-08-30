@@ -1,6 +1,7 @@
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  formatInteger,
 } from "@scout-for-lol/data";
 import {
   cancelWeeklyParlayBet,
@@ -11,50 +12,60 @@ import {
 import { parseWeeklyParlayCustomId } from "#src/betting/weekly-parlay-custom-id.ts";
 import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-refresh.ts";
 import type { BetButtonInteraction } from "#src/betting/bet-button.ts";
+import {
+  BUCKS_GUILD_ONLY,
+  BUCKS_INVALID_STAKE,
+  BUCKS_NOT_ELIGIBLE,
+  BUCKS_NOT_ENABLED,
+  BUCKS_STORAGE_LIMIT,
+  bucksInsufficient,
+} from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 
 export function describeWeeklyParlayBet(
   result: PlaceWeeklyParlayBetResult,
 ): string {
+  // Shares the match-parlay handler's copy (and the copy.ts constants) with a
+  // "Weekly" qualifier where it disambiguates, so the two twins cannot drift.
   switch (result.kind) {
     case "placed":
-      return `✅ Weekly **${result.side}** position: **${result.totalStake.toString()} BB**, paying **${result.grossPayout.toString()} BB** if it wins. Balance: **${result.balanceAfter.toString()} BB**.`;
+      return `✅ Weekly parlay **${result.side}** position is now **${formatInteger(result.totalStake)} BB**, paying **${formatInteger(result.grossPayout)} BB** if it wins. Balance: **${formatInteger(result.balanceAfter)} BB**.`;
     case "window_closed":
       return "⏰ Weekly parlay betting has closed.";
     case "no_market":
-      return "No matching weekly parlay exists.";
+      return "🚫 There's no open weekly parlay market for this message.";
     case "feature_disabled":
-      return "Weekly parlays are not accepting new positions.";
+      return BUCKS_NOT_ENABLED;
     case "not_eligible":
-      return "Link a tracked player before betting Bryan Bucks.";
+      return BUCKS_NOT_ELIGIBLE;
     case "invalid_stake":
-      return "Use a positive whole-BB stake.";
+      return BUCKS_INVALID_STAKE;
     case "storage_limit":
-      return "That position exceeds Bryan Bucks storage limits.";
+      return BUCKS_STORAGE_LIMIT;
     case "insufficient":
-      return `You have ${result.balance.toString()} BB but need ${result.needed.toString()} BB.`;
+      return bucksInsufficient(result.balance, result.needed);
     case "wallet_house_insufficient":
     case "house_insufficient":
-      return "🏦 The Bryan Bucks house cannot reserve that payout. No Bucks moved.";
+      return "🏦 The Bryan Bucks house can't fully reserve that payout. No Bucks moved.";
     case "side_conflict":
-      return `You already backed ${result.existingSide}. Cancel from this message first.`;
+      return `↔️ You already backed ${result.existingSide}. Cancel that position first.`;
   }
 }
 
 function describeCancel(result: CancelWeeklyParlayBetResult): string {
   switch (result.kind) {
     case "cancelled":
-      return `↩️ Cancelled: **${result.refunded.toString()} BB** back, no fee · balance **${result.balanceAfter.toString()} BB**.`;
+      return `↩️ Cancelled: **${formatInteger(result.refunded)} BB** back, no fee · balance **${formatInteger(result.balanceAfter)} BB**.`;
     case "no_market":
-      return "No matching weekly parlay exists.";
+      return "🚫 There's no open weekly parlay market for this message.";
     case "no_bet":
-      return "You do not have a position on this weekly parlay.";
+      return "🤷 You don't have a position on this weekly parlay.";
     case "window_closed":
-      return "⏰ Betting has closed, so the position is locked.";
+      return "⏰ Weekly parlay betting has closed, so your position is locked in.";
     case "already_resolved":
       return result.marketState === "settled"
-        ? "This weekly parlay already settled."
-        : "This weekly parlay was already refunded.";
+        ? "✅ This weekly parlay has already settled."
+        : "🚫 This weekly parlay was voided and already refunded.";
   }
 }
 
@@ -69,7 +80,7 @@ export async function handleWeeklyParlayBetButton(
   await interaction.deferReply({ ephemeral: true });
   if (interaction.guildId === null) {
     await interaction.editReply({
-      content: "Bryan Bucks only works in a server.",
+      content: BUCKS_GUILD_ONLY,
     });
     return;
   }

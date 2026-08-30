@@ -52,33 +52,27 @@ is unavailable, or when your memory disagrees, this is the record.
 
 ## What is open right now
 
-```text
-/bb open
-```
-
-Shows every market still taking bets in this server, with side totals and a
-copyable selector:
-
-```text
-**jerred, friend** · closes in 6 minutes
-WIN 6 BB (2) · LOSE 5 BB (1) — `/bb bet game:jerred`
-```
-
-Totals only. It never shows who bet what — see
+Every market still taking bets keeps its controls on its own message: the
+pre-match card for outcome bets, and the parlay messages for YES/NO positions.
+A market that has closed shows its receipt in place. Public digests show side
+totals only — never who bet what; see
 [why balances are private](/docs/explanation/bryan-bucks-privacy/).
 
 ## Ask a question instead
 
 ```text
-/bb ask question: how have I done on parlays this month?
+/scout ask question: how have I done on Bryan Bucks parlays this month?
 ```
 
-One-shot analysis over this server's Bryan Bucks data. The answer starts
-private; only you can post it to the channel. Every statistic it states comes
-from a real query, not from the model's memory.
+In this server, `/scout ask` carries the Bryan Bucks analytics tools alongside
+its match-data tools. The answer starts private, is saved to your Explore
+conversation, and every statistic it states comes from a real query, not from
+the model's memory.
 
 ## The weekly leaderboard
 
 There is no leaderboard command. The full standings are posted once a week, on
-a schedule, in the shared channel. That is deliberate — see
+a schedule, in the shared channel, together with the week's superlatives —
+most gained, most lost, most bets won, and most parlays won. That is
+deliberate — see
 [why balances are private](/docs/explanation/bryan-bucks-privacy/).

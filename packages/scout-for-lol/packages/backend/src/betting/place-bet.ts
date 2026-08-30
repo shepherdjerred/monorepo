@@ -34,8 +34,8 @@ const logger = createLogger("betting-place-bet");
 /**
  * Placing (or adding to) a position on a live game.
  *
- * Shared verbatim by the prematch buttons and `/bb bet`, so the two surfaces
- * cannot drift apart in what they accept or how they report a refusal.
+ * The single placement path behind the prematch buttons, so every surface
+ * agrees on what is accepted and how a refusal is explained.
  *
  * Results are a discriminated union rather than thrown errors: every one of
  * these is ordinary user input at a system boundary, which the repo's
@@ -149,8 +149,8 @@ async function placeBetInner(
 
   // The allowlist is re-checked here, not just at pool creation. A guild that
   // is removed from it still has live pools, and without this those pools would
-  // keep taking new stakes. Both entry points — the prematch buttons and
-  // `/bb bet` — route through this function, so one check covers them.
+  // keep taking new stakes. Every entry point routes through this function,
+  // so one check covers them.
   //
   // Note the deliberate asymmetry with settlement and the refund sweeps, which
   // are NOT gated: the flag governs taking Bucks, never returning them.

@@ -77,7 +77,6 @@ await initializeDynamicConfig({
     reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
     bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
     exploreModel: configuration.exploreModel,
-    bucksAskModel: configuration.bucksAskModel,
     tournamentApiMode: configuration.tournamentApiMode,
     tournamentMaxOpenLobbies: configuration.tournamentMaxOpenLobbies,
   },

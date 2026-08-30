@@ -224,6 +224,16 @@ function toolCallMessage(toolName: string): string {
   if (toolName === "resolve_player") {
     return "Looking up who that is.";
   }
+  if (toolName === "get_bucks_dataset") {
+    return "Reading the Bryan Bucks dataset.";
+  }
+  if (
+    toolName === "query_bucks_accounts" ||
+    toolName === "query_bucks_ledger" ||
+    toolName === "query_bucks_bets"
+  ) {
+    return "Querying Bryan Bucks records.";
+  }
   return `Running ${toolName}.`;
 }
 
@@ -242,6 +252,14 @@ function toolResultMessage(toolName: string, ok: boolean): string {
   // holders of a share link.
   if (toolName === "resolve_player") {
     return "Identified the player.";
+  }
+  if (
+    toolName === "get_bucks_dataset" ||
+    toolName === "query_bucks_accounts" ||
+    toolName === "query_bucks_ledger" ||
+    toolName === "query_bucks_bets"
+  ) {
+    return "Got Bryan Bucks results.";
   }
   return `${toolName} completed.`;
 }

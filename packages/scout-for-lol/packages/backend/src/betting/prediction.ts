@@ -1,6 +1,6 @@
 import {
+  BucksPredictionSchema,
   type BucksPredictionFeature,
-  type BucksPrediction,
   type BucksPredictionQuality,
   type BucksPredictionV2,
   type QueueType,
@@ -251,22 +251,32 @@ export function predictWin(input: {
   };
 }
 
-export function shouldDisplayPrediction(winProbability: number): boolean {
-  return Math.abs(Math.round(winProbability * 100) - 50) > COIN_FLIP_BAND * 100;
+/**
+ * The settlement-time reveal sentence for a pool's stored estimate, or nothing
+ * when the stored call was inside the near-even suppression band.
+ */
+export function formatStoredPrediction(raw: string | null): string | undefined {
+  if (raw === null) {
+    return undefined;
+  }
+  const parsed = BucksPredictionSchema.safeParse(JSON.parse(raw));
+  if (!parsed.success) {
+    return undefined;
+  }
+  if (!("version" in parsed.data)) {
+    return shouldDisplayPrediction(parsed.data.winProbability)
+      ? parsed.data.sentence
+      : undefined;
+  }
+  if (!shouldDisplayPrediction(parsed.data.blueWinProbability)) {
+    return undefined;
+  }
+  const blue = Math.round(parsed.data.blueWinProbability * 100);
+  return `🔮 Scout's experimental estimate was Blue ${blue.toString()}% / Red ${(100 - blue).toString()}% · ${parsed.data.dataQuality} data quality.`;
 }
 
-export function predictionProbabilityForTeam(
-  prediction: BucksPrediction,
-  teamId: RiotTeamId,
-): number {
-  if ("version" in prediction) {
-    return teamId === BLUE_TEAM_ID
-      ? prediction.blueWinProbability
-      : 1 - prediction.blueWinProbability;
-  }
-  return teamId === prediction.subjectTeamId
-    ? prediction.winProbability
-    : 1 - prediction.winProbability;
+export function shouldDisplayPrediction(winProbability: number): boolean {
+  return Math.abs(Math.round(winProbability * 100) - 50) > COIN_FLIP_BAND * 100;
 }
 
 export function opposingTeam(teamId: RiotTeamId): RiotTeamId {

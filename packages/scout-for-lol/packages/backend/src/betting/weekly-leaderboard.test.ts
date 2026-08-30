@@ -7,10 +7,12 @@ import {
 import type { FullLeaderboardRow } from "#src/betting/accounts.ts";
 import {
   formatWeeklyBucksLeaderboard,
+  formatWeeklyBucksStats,
   rankBucksLeaderboard,
   runWeeklyBucksLeaderboard,
   WEEKLY_BUCKS_CRON,
   type WeeklyBucksLeaderboardDependencies,
+  type WeeklyBucksStats,
 } from "#src/betting/weekly-leaderboard.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
@@ -26,10 +28,18 @@ function row(index: number, balance: number): FullLeaderboardRow {
   };
 }
 
+const NO_STATS: WeeklyBucksStats = {
+  mostGained: null,
+  mostLost: null,
+  mostBetsWon: null,
+  mostParlaysWon: null,
+};
+
 function dependencies(input: {
   guilds?: ReturnType<typeof DiscordGuildIdSchema.parse>[];
   member?: boolean;
   rows?: FullLeaderboardRow[];
+  stats?: WeeklyBucksStats;
   sendMessage?: WeeklyBucksLeaderboardDependencies["sendMessage"];
   persistSnapshot?: WeeklyBucksLeaderboardDependencies["persistSnapshot"];
 }): WeeklyBucksLeaderboardDependencies {
@@ -37,6 +47,7 @@ function dependencies(input: {
     enabledGuilds: async () => input.guilds ?? [SERVER_ID],
     hasGuild: () => input.member ?? true,
     loadRows: () => Promise.resolve(input.rows ?? []),
+    loadStats: () => Promise.resolve(input.stats ?? NO_STATS),
     persistSnapshot: input.persistSnapshot ?? (() => Promise.resolve()),
     sendMessage: input.sendMessage ?? (() => Promise.resolve(undefined)),
     sleep: () => Promise.resolve(),
@@ -71,13 +82,38 @@ describe("weekly Bryan Bucks leaderboard", () => {
     const rows = Array.from({ length: 20 }, (_unused, index) =>
       row(index + 1, 100 - index),
     );
-    const chunks = formatWeeklyBucksLeaderboard(rows, 160);
+    const chunks = formatWeeklyBucksLeaderboard(rows, undefined, 160);
     expect(chunks.length).toBeGreaterThan(1);
     expect(chunks.every((chunk) => chunk.length <= 160)).toBe(true);
     const combined = chunks.join("\n");
     for (const entry of rows) {
       expect(combined).toContain(`<@${entry.discordId}>`);
     }
+  });
+
+  test("appends the weekly superlatives and omits empty lines", () => {
+    const stats: WeeklyBucksStats = {
+      mostGained: { discordId: bucksTestDiscordId(1), amount: 42 },
+      mostLost: { discordId: bucksTestDiscordId(2), amount: -1250 },
+      mostBetsWon: { discordId: bucksTestDiscordId(3), amount: 4 },
+      mostParlaysWon: null,
+    };
+    const chunks = formatWeeklyBucksLeaderboard([row(1, 20)], stats);
+    const combined = chunks.join("\n");
+    expect(combined).toContain("📊 **This week**");
+    expect(combined).toContain(
+      `📈 Most gained: <@${bucksTestDiscordId(1)}> +42 BB`,
+    );
+    // Losses render as a positive magnitude with comma grouping.
+    expect(combined).toContain(
+      `📉 Most lost: <@${bucksTestDiscordId(2)}> −1,250 BB`,
+    );
+    expect(combined).toContain(
+      `🎯 Most bets won: <@${bucksTestDiscordId(3)}> (4)`,
+    );
+    expect(combined).not.toContain("Most parlays won");
+    // A week where nothing qualified adds no section at all.
+    expect(formatWeeklyBucksStats(NO_STATS)).toEqual([]);
   });
 
   test("posts every chunk to the exact channel with mentions disabled", async () => {

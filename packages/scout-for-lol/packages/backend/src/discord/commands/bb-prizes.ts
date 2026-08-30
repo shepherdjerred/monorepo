@@ -107,7 +107,7 @@ export function buildBbPrizesEmbed(): EmbedBuilder {
     value: BB_PRIZES.filter((prize) => prize.category === category)
       .map(
         (prize) =>
-          `${prize.emoji} **${prize.name}** — **${formatInteger(prize.bbCost)} BB** / CAD $${formatInteger(prize.bbCost * CAD_PER_BB)}`,
+          `${prize.emoji} **${prize.name}** — **${formatInteger(prize.bbCost)} BB**`,
       )
       .join("\n"),
   }));
@@ -115,7 +115,9 @@ export function buildBbPrizesEmbed(): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle("💰 Bryan Bucks prizes")
     .setColor(BUCKS_COLOR)
-    .setDescription("Exchange rate: **1 BB = CAD $10**")
+    .setDescription(
+      `Exchange rate: **1 BB = CAD $${formatInteger(CAD_PER_BB)}**`,
+    )
     .addFields(fields)
     .setFooter({ text: "Prizes can be redeemed in person with Bryan." });
 }

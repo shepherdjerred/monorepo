@@ -822,7 +822,10 @@ model BucksAccount {
   // ledger-audited but excluded from user-facing balances and leaderboards.
   isHouse           Boolean   @default(false)
   balance           Int       @default(0)
-  // Per-guild 24-hour entitlement purchased through the audited ledger.
+  // Retired with the peek feature; no code reads or writes this anymore.
+  // Kept for one compatibility release so a rollback to the pre-removal
+  // image (which still writes it) doesn't hit a missing column. Drop in a
+  // follow-up migration once this release is no longer a rollback target.
   peekPassExpiresAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -885,8 +888,8 @@ model BucksLedgerEntry {
   // BucksLedgerKind (@scout-for-lol/data): seed | earn_* | bet_stake |
   // bet_payout | bet_*_refund | winner_fee | house_match | cancel_fee |
   // parlay_stake | parlay_reserve | parlay_payout | parlay_refund |
-  // parlay_release | peek_pass | transfer_sent | transfer_received |
-  // transfer_fee | legacy bet_refund/house_rake | adjustment.
+  // parlay_release | transfer_sent | transfer_received | transfer_fee |
+  // legacy bet_refund/house_rake/peek_pass | adjustment.
   // Not a Prisma enum (kept a plain string through the Postgres migration).
   // Zod-validated on write
   // and on read.
@@ -1022,9 +1025,14 @@ model BucksMatchPool {
   // sweep deletes.
   detectedAt DateTime
 
-  // Frozen pregame estimate becomes privately visible two minutes after the
-  // game starts (or the reconstructed start when Riot omits it).
-  peekAvailableAt DateTime
+  // Retired with the peek feature; no code reads this anymore, but
+  // pool-open.ts still computes and writes a compatibility value (see its
+  // computeLegacyPeekAvailableAt) so a rollback to the pre-removal image —
+  // whose Prisma schema still declares this NOT NULL and whose peek.ts
+  // candidate query decodes it unconditionally — can still read pools this
+  // code creates. Stop writing it and drop the column in a follow-up
+  // migration once this release is no longer a rollback target.
+  peekAvailableAt DateTime?
 
   // STORED rather than computed, so changing BETTING_WINDOW_MS cannot
   // retroactively move a window a user was already shown.
@@ -1085,7 +1093,6 @@ model BucksMatchPool {
 
   @@unique([matchId, serverId])
   @@index([poolState, closesAt])
-  @@index([serverId, poolState, peekAvailableAt])
   @@index([serverId, poolState, settledAt])
   @@index([matchId])
 }

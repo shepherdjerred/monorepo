@@ -1,6 +1,15 @@
 import { z } from "zod";
 import type { ExploreTraceDetails } from "@scout-for-lol/data";
 import {
+  BucksAccountQueryResultSchema,
+  BucksAccountQuerySchema,
+  BucksAskDatasetOverviewSchema,
+  BucksBetQueryResultSchema,
+  BucksBetQuerySchema,
+  BucksLedgerQueryResultSchema,
+  BucksLedgerQuerySchema,
+} from "#src/betting/ask-analytics-schema.ts";
+import {
   EmptyToolInputSchema,
   FormatToolOutputSchema,
   LanguageToolOutputSchema,
@@ -8,6 +17,34 @@ import {
   ScoutQlQueryToolInputSchema,
   ValidationToolOutputSchema,
 } from "#src/reports/ai/scoutql-tools.ts";
+
+/**
+ * The Bryan Bucks tools' validated shapes, keyed by tool name. They carry no
+ * curated `details` — the closed `ExploreTraceDetails` union is persisted data
+ * and extending it buys little for a one-guild feature — but their raw values
+ * are validated before entering the trace like every other tool's.
+ */
+const BUCKS_TOOL_SCHEMAS = new Map<
+  string,
+  { input: z.ZodType; output: z.ZodType }
+>([
+  [
+    "get_bucks_dataset",
+    { input: EmptyToolInputSchema, output: BucksAskDatasetOverviewSchema },
+  ],
+  [
+    "query_bucks_accounts",
+    { input: BucksAccountQuerySchema, output: BucksAccountQueryResultSchema },
+  ],
+  [
+    "query_bucks_ledger",
+    { input: BucksLedgerQuerySchema, output: BucksLedgerQueryResultSchema },
+  ],
+  [
+    "query_bucks_bets",
+    { input: BucksBetQuerySchema, output: BucksBetQueryResultSchema },
+  ],
+]);
 
 const JsonValueSchema = z.json();
 type JsonValue = z.infer<typeof JsonValueSchema>;
@@ -73,6 +110,13 @@ export function inspectExploreToolCall(
       },
     };
   }
+  const bucks = BUCKS_TOOL_SCHEMAS.get(toolName);
+  if (bucks !== undefined) {
+    return {
+      rawInput: JsonValueSchema.parse(bucks.input.parse(input)),
+      details: null,
+    };
+  }
   return { details: null, rawInput: null };
 }
 
@@ -133,6 +177,16 @@ export function inspectExploreToolResult(
         rowsScanned: parsedOutput.preview?.rowsScanned ?? null,
         renderKind: parsedOutput.preview?.renderKind ?? null,
       },
+    };
+  }
+  const bucks = BUCKS_TOOL_SCHEMAS.get(toolName);
+  if (bucks !== undefined) {
+    bucks.input.parse(input);
+    // These tools throw on failure, so a delivered result is a success.
+    return {
+      succeeded: true,
+      rawOutput: JsonValueSchema.parse(bucks.output.parse(output)),
+      details: null,
     };
   }
   return { succeeded: true, details: null, rawOutput: null };

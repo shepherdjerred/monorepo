@@ -17,14 +17,11 @@ everyone would take the favoured side, nobody would take the other, and every
 game would resolve as a house fill.
 
 So the pre-match message carries controls and totals, and nothing else. The
-estimate exists, and you can buy private access to it with a peek pass, but it
-is never broadcast while the market is open.
+estimate exists, but it is never shown while the market is open — the only
+place it can appear is the settlement recap, after the result is known.
 
-Two smaller rules follow from the same reasoning:
+One smaller rule follows from the same reasoning:
 
-- **A peek is delayed.** It becomes available a short time after the game goes
-  live, not the instant it is detected. That keeps the pass from being a way to
-  see the estimate before the market has had a chance to form.
 - **Near-even calls stay hidden even after settlement.** Settlement may reveal
   what Scout thought — but not for a call close to a coin flip. Scoring a
   50.4% call as "right" would claim a direction the estimate never took, and
@@ -41,12 +38,19 @@ ranking. People start betting to defend a position rather than because they
 have a view on the game, and the person in last place stops playing. A weekly
 snapshot keeps the fun of comparing without the pressure of a live scoreboard.
 
-The same reasoning shapes `/bb ask`. It can analyse this server's betting data,
-but its account tool only ever exposes _your_ current balance, and its ledger
-queries cannot group by bettor. Those two limits exist together on purpose: if
-either were relaxed, the results could be combined to reconstruct somebody
-else's balance — which would rebuild the leaderboard the fixed commands
-deliberately omit.
+The same reasoning shapes AI analysis, which lives in `/scout ask`. The agent
+can analyse this server's betting data, but its account tool only ever exposes
+_your_ current balance, and its ledger queries cannot group by bettor. Those
+two limits exist together on purpose: if either were relaxed, the results
+could be combined to reconstruct somebody else's balance — which would rebuild
+the leaderboard the fixed commands deliberately omit.
+
+One honesty note about where those answers live: a `/scout ask` answer is
+saved into **your** private Explore conversation, including a trace of the tool
+calls it made and their results. If you later share or publish that
+conversation, the analysis — guild-wide betting aggregates, bettor labels, and
+your own balance if you asked for it — travels with it. The structural limits
+above still hold; sharing is your action, not Scout's.
 
 ## What is public
 

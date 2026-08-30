@@ -7,59 +7,35 @@ sidebar:
 
 `/bb` is registered per server, not globally. It only appears in servers where
 Bryan Bucks is enabled.
-Most of what `/bb` does — except peek passes and `/bb ask` — is also available
-on the [web dashboard](/docs/how-to/bryan-bucks-use-the-web-dashboard/).
+Most of what `/bb` does — except `/bb ask` — is also available on the
+[web dashboard](/docs/how-to/bryan-bucks-use-the-web-dashboard/).
 
 ## Subcommands
 
-| Command             | What it does                                          | Reply                             |
-| ------------------- | ----------------------------------------------------- | --------------------------------- |
-| `/bb balance`       | Available Bucks, Bucks at risk, and pending positions | Private                           |
-| `/bb history`       | Paged transaction ledger with running balances        | Private                           |
-| `/bb transfer`      | Send half of a total spend to another wallet          | Private result, public receipt    |
-| `/bb open`          | Match and weekly markets still taking bets            | Private                           |
-| `/bb bet`           | Place or top up an outcome bet                        | Private                           |
-| `/bb parlay`        | Place or top up a match or weekly parlay bet          | Private                           |
-| `/bb pass`          | Quote and buy a 24-hour peek pass                     | Private                           |
-| `/bb peek`          | Reveal one live game's pre-game estimate              | Private                           |
-| `/bb ask`           | One-shot analysis over this server's Bryan Bucks data | Private, publishable by the asker |
-| `/bb notifications` | Choose settlement DMs about your bets and bets on you | Private                           |
-| `/bb rules`         | The complete rulebook                                 | **Public**                        |
-| `/bb prizes`        | The joke prize catalogue                              | **Public**                        |
+| Command             | What it does                                          | Reply                          |
+| ------------------- | ----------------------------------------------------- | ------------------------------ |
+| `/bb balance`       | Available Bucks, Bucks at risk, and pending positions | Private                        |
+| `/bb history`       | Paged transaction ledger with running balances        | Private                        |
+| `/bb transfer`      | Send half of a total spend to another wallet          | Private result, public receipt |
+| `/bb notifications` | Choose settlement DMs about your bets and bets on you | Private                        |
+| `/bb rules`         | The complete rulebook                                 | **Public**                     |
+| `/bb prizes`        | The joke prize catalogue                              | **Public**                     |
 
 Every command starts privately except `rules` and `prizes`. A successful
 `transfer` then posts its sender, recipient, total spend, received amount, and
-house fee publicly. Balances, positions, and estimates are never posted to the
-channel by Scout.
+house fee publicly. Balances and positions are never posted to the channel by
+Scout.
+
+Placing, topping up, and cancelling bets happens through the buttons on each
+market message — there is no slash command for it.
+
+AI analysis of this server's Bryan Bucks data lives in `/scout ask`: in this
+server the Explore agent also carries the bounded Bucks analytics tools, so a
+question like "how have I done on parlays this month?" is asked there. Answers
+are saved to your private Explore conversation in the web app, where you can
+continue, publish, or share them.
 
 ## Options
-
-### `/bb bet`
-
-| Option    | Required | Values                                                             |
-| --------- | -------- | ------------------------------------------------------------------ |
-| `game`    | yes      | A tracked player in the game. Picks _which_ market, not the wager. |
-| `outcome` | yes      | `Win`, `Lose`, `Blue`, `Red`                                       |
-| `amount`  | yes      | Whole BB, at least the minimum stake                               |
-
-`Win` and `Lose` are relative to the tracked player's team. `Blue` and `Red`
-exist because slash-command choices are frozen when the command is registered
-and cannot vary per game — they are the only way to express a side in the rare
-lobby where tracked players sit on both teams. Asking for `Win` in that lobby
-is refused with an explanation rather than guessed.
-
-### `/bb parlay`
-
-| Option   | Required | Values                         |
-| -------- | -------- | ------------------------------ |
-| `player` | yes      | A tracked player in the parlay |
-| `side`   | yes      | `YES`, `NO`                    |
-| `amount` | yes      | Whole BB                       |
-
-If one player appears in several open parlays, the alias is intentionally
-ambiguous. Use the buttons on the specific market message you want instead of
-letting Scout guess. The same rule lets weekly parlays support several subjects
-and several concurrent markets without changing the command.
 
 ### `/bb transfer`
 
@@ -72,24 +48,13 @@ The recipient receives half rounded down; the house receives half rounded up.
 The transfer is immediate and irreversible. Both wallets must already exist in
 this server, and you cannot transfer to yourself.
 
-### `/bb peek`
-
-| Option | Required | Values                       |
-| ------ | -------- | ---------------------------- |
-| `game` | yes      | A tracked player in the game |
-
-### `/bb ask`
-
-| Option     | Required | Values                                 |
-| ---------- | -------- | -------------------------------------- |
-| `question` | yes      | Free text, up to the documented length |
-
 ### `/bb notifications`
 
 Both options are optional. With neither option, Scout reports the current
 settings. New users default to receiving both categories.
-After your first eligible settlement DM, Scout shows a one-time reminder that
-you can manage these messages with `/bb notifications`.
+Your first eligible settlement DM carries a reminder that you can manage these
+messages with `/bb notifications`; after that the reminder repeats once every
+several delivered DMs so it stays discoverable without becoming noise.
 
 | Option        | Required | Values      |
 | ------------- | -------- | ----------- |
@@ -106,14 +71,12 @@ The pre-match message carries the outcome market's controls. Match and weekly
 parlay messages carry their own controls. All three mutate their message rather
 than posting a receipt for each bet.
 
-| Message          | Buttons                                                            |
-| ---------------- | ------------------------------------------------------------------ |
-| Pre-match card   | `WIN · 1 BB`, `WIN · 5 BB`, `LOSE · 1 BB`, `LOSE · 5 BB`, `Cancel` |
-| Match parlay     | `YES 1`, `YES 5`, `NO 1`, `NO 5`, `Cancel`                         |
-| Weekly parlay    | `YES · 1 BB`, `NO · 1 BB`, `Cancel`                                |
-| `/bb pass` quote | `Buy for N BB`                                                     |
-| `/bb history`    | `Previous`, `Next`                                                 |
-| `/bb ask` answer | `Post publicly`                                                    |
+| Message        | Buttons                                                            |
+| -------------- | ------------------------------------------------------------------ |
+| Pre-match card | `WIN · 1 BB`, `WIN · 5 BB`, `LOSE · 1 BB`, `LOSE · 5 BB`, `Cancel` |
+| Match parlay   | `YES 1`, `YES 5`, `NO 1`, `NO 5`, `Cancel`                         |
+| Weekly parlay  | `YES · 1 BB`, `NO · 1 BB`, `Cancel`                                |
+| `/bb history`  | `Previous`, `Next`                                                 |
 
 On a mixed lobby the pre-match buttons read `Blue`/`Red` instead of
 `WIN`/`LOSE`.

@@ -122,15 +122,6 @@ export const bettingEarningsBucksTotal = new Counter({
   registers: [registry],
 });
 
-/* --------------------------------------------------------- peek passes -- */
-
-export const bettingPeekPassesTotal = new Counter({
-  name: "betting_peek_passes_total",
-  help: "Bryan Bucks peek-pass purchase attempts, by result.",
-  labelNames: ["result"] as const,
-  registers: [registry],
-});
-
 /* ----------------------------------------------------------- transfers -- */
 
 export const bettingTransfersTotal = new Counter({

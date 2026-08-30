@@ -29,8 +29,6 @@ function metricQueueType(queueType: string | undefined): string {
 
 const logger = createLogger("betting-pool-open");
 
-export const PEEK_DELAY_MS = 2 * 60 * 1000;
-
 /**
  * Opening a betting market when Scout notices a game.
  *
@@ -77,12 +75,24 @@ export function computeGameStartAt(input: {
   return new Date(input.detectedAt.getTime() - input.gameLength * 1000);
 }
 
-export function computePeekAvailableAt(input: {
+// Peek is retired and this value is never read by current code. It is still
+// computed and written for one compatibility release: BucksMatchPool.peekAvailableAt
+// is now nullable so a rollback to the pre-removal image doesn't hit a missing
+// column, but that old image's Prisma schema still declares the field
+// non-null and its peek.ts candidate query decodes it unconditionally — a
+// pool this code creates with a null value would fail to decode there. Stop
+// computing this once this release is no longer a rollback target, and drop
+// the column in the same follow-up migration (see prisma/schema.prisma).
+const LEGACY_PEEK_AVAILABLE_DELAY_MS = 2 * 60 * 1000;
+
+function computeLegacyPeekAvailableAt(input: {
   detectedAt: Date;
   gameStartTime: number;
   gameLength: number;
 }): Date {
-  return new Date(computeGameStartAt(input).getTime() + PEEK_DELAY_MS);
+  return new Date(
+    computeGameStartAt(input).getTime() + LEGACY_PEEK_AVAILABLE_DELAY_MS,
+  );
 }
 
 function buildRoster(input: {
@@ -114,7 +124,7 @@ function buildRoster(input: {
  * Prediction capture is intentionally independent of this flag so every
  * eligible detected game can contribute a match-scoped v2 observation. This
  * helper remains the authoritative gate for the guild-scoped wallet, pool,
- * buttons, and peek-pass surfaces.
+ * and button surfaces.
  */
 export async function bettingEnabledGuilds(
   guildIds: readonly DiscordGuildId[],
@@ -176,7 +186,7 @@ export async function openBettingPoolsForPrematch(
       detectedAt: input.detectedAt,
       gameStartTime: input.gameInfo.gameStartTime,
     });
-    const peekAvailableAt = computePeekAvailableAt({
+    const legacyPeekAvailableAt = computeLegacyPeekAvailableAt({
       detectedAt: input.detectedAt,
       gameStartTime: input.gameInfo.gameStartTime,
       gameLength: input.gameInfo.gameLength,
@@ -203,7 +213,7 @@ export async function openBettingPoolsForPrematch(
             serverId,
             detectedAt: input.detectedAt,
             closesAt,
-            peekAvailableAt,
+            peekAvailableAt: legacyPeekAvailableAt,
             queueType: input.queueType ?? null,
             roster: JSON.stringify(roster),
             predictionJson,

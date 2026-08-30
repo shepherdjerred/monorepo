@@ -16,9 +16,7 @@ import {
 } from "#src/testing/bucks-fixtures.ts";
 import {
   computeGameStartAt,
-  computePeekAvailableAt,
   openBettingPoolsForPrematch,
-  PEEK_DELAY_MS,
   recordPoolMessageRefs,
 } from "#src/betting/pool-open.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -80,12 +78,12 @@ describe("openBettingPoolsForPrematch", () => {
     const detectedAt = new Date("2026-08-19T00:01:00Z");
     const riotStart = new Date("2026-08-19T00:00:00Z").getTime();
     expect(
-      computePeekAvailableAt({
+      computeGameStartAt({
         detectedAt,
         gameStartTime: riotStart,
         gameLength: 60,
       }),
-    ).toEqual(new Date(riotStart + PEEK_DELAY_MS));
+    ).toEqual(new Date(riotStart));
     expect(
       computeGameStartAt({
         detectedAt,
@@ -94,12 +92,12 @@ describe("openBettingPoolsForPrematch", () => {
       }),
     ).toEqual(new Date("2026-08-19T00:00:00Z"));
     expect(
-      computePeekAvailableAt({
+      computeGameStartAt({
         detectedAt,
         gameStartTime: 0,
         gameLength: -30,
       }),
-    ).toEqual(new Date("2026-08-19T00:03:30Z"));
+    ).toEqual(new Date("2026-08-19T00:01:30Z"));
   });
 
   test("does not open a League Classic pool", async () => {
@@ -184,6 +182,38 @@ describe("openBettingPoolsForPrematch", () => {
     expect(JSON.parse(pool.messageRefs)).toEqual([
       { channelId: "1337623164146155594", messageId: "prematch" },
     ]);
+  });
+
+  // Regression: peekAvailableAt is nullable now (the peek feature is gone),
+  // but a rollback to the pre-removal image still reads it unconditionally.
+  // A pool this code creates must still carry a value or that rollback path
+  // breaks — see prisma/schema.prisma's comment on the column.
+  test("still writes a compatibility peekAvailableAt for rollback safety", async () => {
+    const detectedAt = new Date();
+    await openBettingPoolsForPrematch(
+      {
+        matchId: "NA1_5000000004",
+        gameInfo: gameInfo(),
+        queueType: "solo",
+        guildIds: [SERVER_ID],
+        detectedAt,
+        trackedAliasByPuuid: new Map(),
+      },
+      db,
+    );
+
+    const pool = await db.bucksMatchPool.findUniqueOrThrow({
+      where: {
+        matchId_serverId: {
+          matchId: "NA1_5000000004",
+          serverId: SERVER_ID,
+        },
+      },
+    });
+    expect(pool.peekAvailableAt).not.toBeNull();
+    expect(pool.peekAvailableAt?.getTime()).toBeGreaterThan(
+      detectedAt.getTime(),
+    );
   });
 });
 

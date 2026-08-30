@@ -12,6 +12,7 @@ import {
 } from "#src/betting/accounts.ts";
 import { saveWeeklyLeaderboardSnapshot } from "#src/betting/weekly-leaderboard-snapshot.ts";
 import { isPolicyEnabled, MY_SERVER } from "#src/configuration/flags.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
@@ -38,6 +39,164 @@ export const WEEKLY_BUCKS_CRON = {
 
 export type RankedLeaderboardRow = FullLeaderboardRow & { rank: number };
 
+/** One member's superlative for the trailing week; `null` when nobody qualifies. */
+export type WeeklyBucksSuperlative = {
+  discordId: string;
+  amount: number;
+};
+
+export type WeeklyBucksStats = {
+  mostGained: WeeklyBucksSuperlative | null;
+  mostLost: WeeklyBucksSuperlative | null;
+  mostBetsWon: WeeklyBucksSuperlative | null;
+  mostParlaysWon: WeeklyBucksSuperlative | null;
+};
+
+function pickSuperlative(
+  totals: ReadonlyMap<number, number>,
+  discordIdByAccountId: ReadonlyMap<number, string>,
+  direction: "max" | "min",
+): WeeklyBucksSuperlative | null {
+  let best: { accountId: number; amount: number } | null = null;
+  for (const [accountId, amount] of totals) {
+    if (discordIdByAccountId.get(accountId) === undefined) {
+      continue;
+    }
+    const better =
+      best === null ||
+      (direction === "max" ? amount > best.amount : amount < best.amount) ||
+      // Ties break on account id so a rerun cannot swap the winner.
+      (amount === best.amount && accountId < best.accountId);
+    if (better) {
+      best = { accountId, amount };
+    }
+  }
+  if (best === null) {
+    return null;
+  }
+  const discordId = discordIdByAccountId.get(best.accountId);
+  return discordId === undefined ? null : { discordId, amount: best.amount };
+}
+
+/**
+ * Trailing-week superlatives for the Friday post.
+ *
+ * Gained/lost read the ledger (every movement, earnings included), so "most
+ * gained" answers "whose wallet moved up the most", not "who won the most
+ * bets" — that is the third line's job. All four exclude the house and are
+ * scans without supporting indexes, which is fine at one guild's scale.
+ */
+export async function loadWeeklyBucksStats(
+  input: { serverId: DiscordGuildId; windowStart: Date },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<WeeklyBucksStats> {
+  const accounts = await prismaClient.bucksAccount.findMany({
+    where: { serverId: input.serverId, isHouse: false },
+    select: { id: true, discordId: true },
+  });
+  const discordIdByAccountId = new Map(
+    accounts.map((account) => [account.id, account.discordId]),
+  );
+  const accountIds = [...discordIdByAccountId.keys()];
+  if (accountIds.length === 0) {
+    return {
+      mostGained: null,
+      mostLost: null,
+      mostBetsWon: null,
+      mostParlaysWon: null,
+    };
+  }
+
+  const ledgerTotals = await prismaClient.bucksLedgerEntry.groupBy({
+    by: ["bucksAccountId"],
+    where: {
+      bucksAccountId: { in: accountIds },
+      createdAt: { gte: input.windowStart },
+    },
+    _sum: { delta: true },
+  });
+  const deltaByAccount = new Map(
+    ledgerTotals.map((row) => [row.bucksAccountId, row._sum.delta ?? 0]),
+  );
+  const gains = new Map([...deltaByAccount].filter(([, amount]) => amount > 0));
+  const losses = new Map(
+    [...deltaByAccount].filter(([, amount]) => amount < 0),
+  );
+
+  const betsWon = await prismaClient.bucksBet.groupBy({
+    by: ["bucksAccountId"],
+    where: {
+      bucksAccountId: { in: accountIds },
+      betOutcome: "won",
+      settledAt: { gte: input.windowStart },
+    },
+    _count: { _all: true },
+  });
+  const betWins = new Map(
+    betsWon.map((row) => [row.bucksAccountId, row._count._all]),
+  );
+
+  // Match and weekly parlays live in two tables with no combined view; the
+  // union happens here.
+  const parlayWon = await prismaClient.bucksParlayBet.groupBy({
+    by: ["bucksAccountId"],
+    where: {
+      bucksAccountId: { in: accountIds },
+      betOutcome: "won",
+      settledAt: { gte: input.windowStart },
+    },
+    _count: { _all: true },
+  });
+  const weeklyParlayWon = await prismaClient.bucksWeeklyParlayBet.groupBy({
+    by: ["bucksAccountId"],
+    where: {
+      bucksAccountId: { in: accountIds },
+      betOutcome: "won",
+      settledAt: { gte: input.windowStart },
+    },
+    _count: { _all: true },
+  });
+  const parlayWins = new Map<number, number>();
+  for (const row of [...parlayWon, ...weeklyParlayWon]) {
+    parlayWins.set(
+      row.bucksAccountId,
+      (parlayWins.get(row.bucksAccountId) ?? 0) + row._count._all,
+    );
+  }
+
+  return {
+    mostGained: pickSuperlative(gains, discordIdByAccountId, "max"),
+    mostLost: pickSuperlative(losses, discordIdByAccountId, "min"),
+    mostBetsWon: pickSuperlative(betWins, discordIdByAccountId, "max"),
+    mostParlaysWon: pickSuperlative(parlayWins, discordIdByAccountId, "max"),
+  };
+}
+
+export function formatWeeklyBucksStats(stats: WeeklyBucksStats): string[] {
+  const lines: string[] = [];
+  if (stats.mostGained !== null) {
+    lines.push(
+      `📈 Most gained: <@${stats.mostGained.discordId}> +${formatInteger(stats.mostGained.amount)} BB`,
+    );
+  }
+  if (stats.mostLost !== null) {
+    lines.push(
+      `📉 Most lost: <@${stats.mostLost.discordId}> −${formatInteger(Math.abs(stats.mostLost.amount))} BB`,
+    );
+  }
+  if (stats.mostBetsWon !== null) {
+    lines.push(
+      `🎯 Most bets won: <@${stats.mostBetsWon.discordId}> (${formatInteger(stats.mostBetsWon.amount)})`,
+    );
+  }
+  if (stats.mostParlaysWon !== null) {
+    lines.push(
+      `🎲 Most parlays won: <@${stats.mostParlaysWon.discordId}> (${formatInteger(stats.mostParlaysWon.amount)})`,
+    );
+  }
+  return lines.length === 0 ? [] : ["📊 **This week**", ...lines];
+}
+
 export function rankBucksLeaderboard(
   rows: readonly FullLeaderboardRow[],
 ): RankedLeaderboardRow[] {
@@ -54,6 +213,7 @@ export function rankBucksLeaderboard(
 
 export function formatWeeklyBucksLeaderboard(
   rows: readonly FullLeaderboardRow[],
+  stats?: WeeklyBucksStats,
   maxLength?: number,
 ): string[] {
   if (rows.length === 0) {
@@ -68,8 +228,11 @@ export function formatWeeklyBucksLeaderboard(
         `**${formatInteger(row.rank)}.** <@${row.discordId}> — **${formatInteger(row.balance)} BB**`,
     )
     .join("\n");
+  const statsSection = stats === undefined ? [] : formatWeeklyBucksStats(stats);
+  const statsSuffix =
+    statsSection.length === 0 ? "" : `\n\n${statsSection.join("\n")}`;
   return splitMessageIntoChunks(
-    `💰 **Weekly Bryan Bucks leaderboard**\n${body}`,
+    `💰 **Weekly Bryan Bucks leaderboard**\n${body}${statsSuffix}`,
     maxLength,
   );
 }
@@ -78,6 +241,10 @@ export type WeeklyBucksLeaderboardDependencies = {
   enabledGuilds: () => Promise<DiscordGuildId[]>;
   hasGuild: (serverId: DiscordGuildId) => boolean;
   loadRows: (serverId: DiscordGuildId) => Promise<FullLeaderboardRow[]>;
+  loadStats: (
+    serverId: DiscordGuildId,
+    windowStart: Date,
+  ) => Promise<WeeklyBucksStats>;
   persistSnapshot: (input: {
     serverId: DiscordGuildId;
     runWeek: number;
@@ -98,6 +265,8 @@ const defaultDependencies: WeeklyBucksLeaderboardDependencies = {
       : [],
   hasGuild: (serverId) => client.guilds.cache.has(serverId),
   loadRows: async (serverId) => await getFullLeaderboard({ serverId }),
+  loadStats: async (serverId, windowStart) =>
+    await loadWeeklyBucksStats({ serverId, windowStart }),
   persistSnapshot: async (input) => {
     await saveWeeklyLeaderboardSnapshot(input);
   },
@@ -188,7 +357,11 @@ export async function runWeeklyBucksLeaderboard(
   }
 
   const rows = await dependencies.loadRows(serverId);
-  const chunks = formatWeeklyBucksLeaderboard(rows);
+  const stats = await dependencies.loadStats(
+    serverId,
+    new Date(Date.now() - WEEK_MS),
+  );
+  const chunks = formatWeeklyBucksLeaderboard(rows, stats);
   logger.info(
     `💰 Weekly Bryan Bucks leaderboard contains ${rows.length.toString()} entries across ${chunks.length.toString()} chunk(s)`,
   );

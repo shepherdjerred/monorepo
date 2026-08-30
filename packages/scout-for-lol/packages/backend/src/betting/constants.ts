@@ -75,7 +75,8 @@ export const HOUSE_ACCOUNT_DISCORD_ID =
  *
  * Two values, because a row holds at most five components and the fifth is
  * Cancel. Small against `SEED_GRANT` and against the three-Bucks-per-game
- * earning ceiling; anything larger goes through `/bb bet`.
+ * earning ceiling; larger positions are built by clicking again — top-ups
+ * stack onto the same offer.
  */
 export const BUTTON_STAKES = [1, 5] as const;
 

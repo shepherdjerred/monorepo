@@ -6,7 +6,12 @@
  * is therefore fully traceable. Do not call `user.send(...)` directly elsewhere.
  */
 
-import { type Client, DiscordAPIError } from "discord.js";
+import {
+  type Client,
+  DiscordAPIError,
+  type EmbedBuilder,
+  type User,
+} from "discord.js";
 import { z } from "zod";
 import {
   type DiscordAccountId,
@@ -120,6 +125,19 @@ export type SendDmOptions = {
   budget?: DmBudget;
   /** Keep rendered mentions informational instead of notifying other users. */
   suppressMentions?: boolean;
+  /**
+   * Rich embeds to send alongside (or instead of) plain content. `message`
+   * stays the audit-log rendering — the ledger is text — and is sent as the
+   * content above the embeds only when `contentWithEmbeds` says so. Embeds are
+   * core-output only: the budget footer is a content mutation, so a budgeted
+   * embed send is refused outright rather than half-applied.
+   */
+  embeds?: readonly EmbedBuilder[];
+  /**
+   * Content to render above the embeds. Without it, an embed send carries no
+   * plain content and `message` exists purely for the audit trail.
+   */
+  contentWithEmbeds?: string;
 };
 
 /**
@@ -324,11 +342,82 @@ export async function sendDM(options: SendDmOptions): Promise<DmStatus> {
     : runExclusively(() => sendDmUnsynchronized(options));
 }
 
+/** The one place a DM's wire shape is decided: embeds, content, mentions. */
+async function deliverToUser(
+  user: { send: (payload: Parameters<User["send"]>[0]) => Promise<unknown> },
+  options: SendDmOptions,
+  message: string,
+): Promise<void> {
+  if (options.embeds !== undefined) {
+    await user.send({
+      ...(options.contentWithEmbeds === undefined
+        ? {}
+        : { content: options.contentWithEmbeds }),
+      embeds: [...options.embeds],
+      ...(options.suppressMentions === true
+        ? { allowedMentions: { parse: [] } }
+        : {}),
+    });
+    return;
+  }
+  await user.send(
+    options.suppressMentions
+      ? { content: message, allowedMentions: { parse: [] } }
+      : message,
+  );
+}
+
+/**
+ * Persist a send attempt's outcome: finalize the reserved budget row when one
+ * exists, otherwise write a fresh audit row.
+ */
+async function recordSendOutcome(
+  db: ExtendedPrismaClient,
+  input: {
+    reservedRowId: number | null;
+    recipientId: string;
+    recipientTag: string | undefined;
+    guildId: string | undefined;
+    kind: DmKind;
+    content: string;
+    status: DmStatus;
+    errorMessage?: string | undefined;
+  },
+): Promise<void> {
+  if (input.reservedRowId === null) {
+    await recordDmAudit(db, {
+      recipientId: input.recipientId,
+      recipientTag: input.recipientTag,
+      guildId: input.guildId,
+      kind: input.kind,
+      content: input.content,
+      status: input.status,
+      errorMessage: input.errorMessage,
+    });
+    return;
+  }
+  // Finalizing a bounced reservation releases it, so a bounced DM charges
+  // nothing.
+  await finalizeDeliveryRow(db, {
+    id: input.reservedRowId,
+    status: input.status,
+    recipientTag: input.recipientTag,
+    errorMessage: input.errorMessage,
+  });
+}
+
 async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
   const { client, userId, kind, guildId } = options;
   const db = options.prisma ?? prisma;
 
   let message = options.message;
+
+  if (options.embeds !== undefined && options.budget !== undefined) {
+    // The budget footer mutates content; an embed send has no content to
+    // mutate, and silently dropping the footer would falsify the printed
+    // message count. No budgeted DM currently needs an embed.
+    throw new Error("Budgeted DMs cannot carry embeds");
+  }
 
   // A non-core message without a budget would sit outside the cap and the
   // footer entirely — which is how the removal-time feedback DM could have
@@ -409,28 +498,17 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
   try {
     const user = await client.users.fetch(userId);
     recipientTag = recipientTag ?? user.tag;
-    await user.send(
-      options.suppressMentions
-        ? { content: message, allowedMentions: { parse: [] } }
-        : message,
-    );
+    await deliverToUser(user, options, message);
     logger.info(`[DM] Successfully sent ${kind} DM to user ${userId}`);
-    if (reservedRowId === null) {
-      await recordDmAudit(db, {
-        recipientId: userId,
-        recipientTag,
-        guildId,
-        kind,
-        content: message,
-        status: "sent",
-      });
-    } else {
-      await finalizeDeliveryRow(db, {
-        id: reservedRowId,
-        status: "sent",
-        recipientTag,
-      });
-    }
+    await recordSendOutcome(db, {
+      reservedRowId,
+      recipientId: userId,
+      recipientTag,
+      guildId,
+      kind,
+      content: message,
+      status: "sent",
+    });
     return "sent";
   } catch (error) {
     const dmDisabled =
@@ -449,25 +527,16 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
     }
 
     const status: DmStatus = dmDisabled ? "dm_disabled" : "failed";
-    if (reservedRowId === null) {
-      await recordDmAudit(db, {
-        recipientId: userId,
-        recipientTag,
-        guildId,
-        kind,
-        content: message,
-        status,
-        errorMessage: errorMsg,
-      });
-    } else {
-      // Release the reservation so a bounced DM charges nothing.
-      await finalizeDeliveryRow(db, {
-        id: reservedRowId,
-        status,
-        recipientTag,
-        errorMessage: errorMsg,
-      });
-    }
+    await recordSendOutcome(db, {
+      reservedRowId,
+      recipientId: userId,
+      recipientTag,
+      guildId,
+      kind,
+      content: message,
+      status,
+      errorMessage: errorMsg,
+    });
     return status;
   }
 }
