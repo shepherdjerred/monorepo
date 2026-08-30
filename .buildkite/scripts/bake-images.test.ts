@@ -10,8 +10,13 @@ import {
   selectedTargets,
   type CommandExecutor,
   VERSION_CATALOG_URL,
-  writeFallbackReport,
 } from "./bake-images.ts";
+import {
+  assertNoPendingVersionBump,
+  assertTemporalCandidatePinsConverged,
+} from "./temporal-candidate-admission.ts";
+import { writeFallbackReport } from "./image-selection-report.ts";
+import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
 import { ensureAnonymousGhcrPull } from "./ghcr-public-access.ts";
 import {
   assertImageSourceLabel,
@@ -35,7 +40,6 @@ import {
   parseStringArray,
 } from "./migration-core.ts";
 import { findManagedImagePin } from "../../scripts/lib/image-pin-catalog.ts";
-
 function commandResult(
   exitCode = 0,
   stdout = "",
@@ -43,7 +47,213 @@ function commandResult(
 ): BuildxCommandResult {
   return { exitCode, stdout, stderr };
 }
-
+test("blocks candidate admission while the durable version branch exists", async () => {
+  await expect(
+    assertNoPendingVersionBump(async () =>
+      commandResult(0, "abc123\trefs/heads/chore/version-bump-pending\n"),
+    ),
+  ).rejects.toThrow(TransientError);
+});
+test("fails transiently when the durable version branch cannot be checked", async () => {
+  await expect(
+    assertNoPendingVersionBump(async () => commandResult(1, "", "network")),
+  ).rejects.toThrow(TransientError);
+});
+test("blocks admission when live main has a divergent Temporal candidate", async () => {
+  const catalog = JSON.stringify({
+    entries: [
+      {
+        name: "shepherdjerred/temporal-worker/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/temporal-worker/workflows/candidate",
+        value: "2.0.0-42@sha256:candidate",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/prod/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/prod/workflows/candidate",
+        value: "2.0.0-41@sha256:stable",
+      },
+    ],
+  });
+  const executor: CommandExecutor = async (command) =>
+    command[1] === "fetch" || command[1] === "ls-remote"
+      ? commandResult()
+      : commandResult(0, catalog);
+  await expect(assertTemporalCandidatePinsConverged(executor)).rejects.toThrow(
+    TransientError,
+  );
+  await expect(assertNoPendingVersionBump(executor)).resolves.toBe(catalog);
+});
+test("allows the one-time central stable bootstrap transition", async () => {
+  const legacy = `2.0.0-12197@sha256:${"a".repeat(64)}`;
+  const stable = `2.0.0-12369@sha256:${"b".repeat(64)}`;
+  const catalog = JSON.stringify({
+    entries: [
+      {
+        name: "shepherdjerred/temporal-worker/workflows/stable",
+        value: stable,
+      },
+      {
+        name: "shepherdjerred/temporal-worker/workflows/candidate",
+        value: legacy,
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+        value: stable,
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+        value: stable,
+      },
+    ],
+  });
+  const executor: CommandExecutor = async (command) =>
+    command[1] === "fetch" || command[1] === "ls-remote"
+      ? commandResult()
+      : commandResult(0, catalog);
+  await expect(assertTemporalCandidatePinsConverged(executor)).resolves.toBe(
+    catalog,
+  );
+});
+test("allows admission when all live Temporal candidates match stable", async () => {
+  const catalog = JSON.stringify({
+    entries: [
+      {
+        name: "shepherdjerred/temporal-worker/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/temporal-worker/workflows/candidate",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+        value: "2.0.0-41@sha256:stable",
+      },
+    ],
+  });
+  const executor: CommandExecutor = async (command) =>
+    command[1] === "ls-remote" || command[1] === "fetch"
+      ? commandResult()
+      : commandResult(0, catalog);
+  await expect(assertTemporalCandidatePinsConverged(executor)).resolves.toBe(
+    catalog,
+  );
+  await expect(assertNoPendingVersionBump(executor)).resolves.toBe(catalog);
+});
+test("rejects admission when a live Temporal workflow pin is missing", async () => {
+  const catalog = JSON.stringify({
+    entries: [
+      {
+        name: "shepherdjerred/temporal-worker/workflows/stable",
+        value: "2.0.0-41@sha256:stable",
+      },
+    ],
+  });
+  const executor: CommandExecutor = async (command) =>
+    command[1] === "fetch" || command[1] === "ls-remote"
+      ? commandResult()
+      : commandResult(0, catalog);
+  await expect(assertTemporalCandidatePinsConverged(executor)).rejects.toThrow(
+    "missing Temporal workflow pins",
+  );
+});
+test("fails transiently when origin main cannot be refreshed", async () => {
+  await expect(
+    assertTemporalCandidatePinsConverged(async () => commandResult(1)),
+  ).rejects.toThrow(TransientError);
+});
+test("fails transiently when the live version catalog cannot be read", async () => {
+  await expect(
+    assertTemporalCandidatePinsConverged(async (command) =>
+      command[1] === "fetch" ? commandResult() : commandResult(1),
+    ),
+  ).rejects.toThrow(TransientError);
+});
+test("rejects malformed live version catalogs", async () => {
+  const malformedCatalogs = [
+    JSON.stringify({ entries: "invalid" }),
+    JSON.stringify({ entries: ["invalid"] }),
+  ];
+  for (const catalog of malformedCatalogs) {
+    const executor: CommandExecutor = async (command) =>
+      command[1] === "fetch" ? commandResult() : commandResult(0, catalog);
+    await expect(
+      assertTemporalCandidatePinsConverged(executor),
+    ).rejects.toThrow(Error);
+  }
+});
+test("retains a central Workflow candidate until its pin converges with stable", () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/temporal-worker": digest },
+      "44",
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/temporal-worker/workflows/candidate",
+          value: `2.0.0-43@sha256:${"c".repeat(64)}`,
+        },
+        {
+          name: "shepherdjerred/temporal-worker/workflows/stable",
+          value: `2.0.0-42@sha256:${"d".repeat(64)}`,
+        },
+      ]),
+    ),
+  ).toEqual({
+    "shepherdjerred/temporal-worker": {
+      version: "2.0.0-44",
+      digest,
+    },
+  });
+});
+test("does not publish nonexistent Scout Workflow catalog pins", () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/scout-for-lol/beta": digest },
+      "43",
+      versionCatalogSource([]),
+    ),
+  ).toEqual({
+    "shepherdjerred/scout-for-lol/beta": {
+      version: "2.0.0-43",
+      digest,
+    },
+  });
+});
+test("does not synthesize a Scout Workflow candidate while its pins are absent", () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/scout-for-lol/beta": digest },
+      "44",
+      versionCatalogSource([]),
+    ),
+  ).toEqual({
+    "shepherdjerred/scout-for-lol/beta": {
+      version: "2.0.0-44",
+      digest,
+    },
+  });
+});
 function versionCatalogSource(
   entries: readonly { readonly name: string; readonly value: string }[],
 ): string {
@@ -59,7 +269,6 @@ function versionCatalogSource(
     })),
   });
 }
-
 async function targetSelectionFailureExecutor(
   command: readonly string[],
 ): Promise<BuildxCommandResult> {
@@ -67,27 +276,21 @@ async function targetSelectionFailureExecutor(
     ? commandResult(0, "base\n")
     : commandResult(1);
 }
-
 async function scopedPushExecutor(): Promise<BuildxCommandResult> {
   return commandResult(0, '["scout-for-lol"]');
 }
-
 async function greenCommit(): Promise<string> {
   return "green";
 }
-
 async function currentGreenCommit(): Promise<string> {
   return "current";
 }
-
 async function invalidManifestExecutor(): Promise<BuildxCommandResult> {
   return commandResult(0, JSON.stringify({ digest: "latest" }));
 }
-
 async function failingExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1);
 }
-
 async function transientInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -95,7 +298,6 @@ async function transientInspectExecutor(): Promise<BuildxCommandResult> {
     "error: failed to do request: connection reset by peer",
   );
 }
-
 async function notFoundInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -103,11 +305,9 @@ async function notFoundInspectExecutor(): Promise<BuildxCommandResult> {
     `ghcr.io/example@sha256:${"a".repeat(64)}: not found`,
   );
 }
-
 async function manifestUnknownInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "MANIFEST_UNKNOWN: manifest unknown");
 }
-
 async function httpNotFoundInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -115,11 +315,9 @@ async function httpNotFoundInspectExecutor(): Promise<BuildxCommandResult> {
     "unexpected status from HEAD request: 404 Not Found",
   );
 }
-
 async function rateLimitedInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "429 Too Many Requests");
 }
-
 async function credentialErrorInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -127,7 +325,6 @@ async function credentialErrorInspectExecutor(): Promise<BuildxCommandResult> {
     "error getting credentials: docker-credential-desktop: executable file not found in $PATH",
   );
 }
-
 async function unclassifiedInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "unauthorized: authentication required");
 }
@@ -458,6 +655,34 @@ test("validates structured pins before starting a production push", async () => 
     "No managed image pin exists for ghcr.io/shepherdjerred/birmel",
   );
   expect(commands).toEqual([]);
+});
+
+test("runs the default application candidate smoke check", async () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  const commands: string[][] = [];
+  await pushImages(
+    {
+      targets: ["birmel"],
+      commit: "commit",
+      buildNumber: "42",
+      contractHash: "contract",
+    },
+    {
+      executor: async (command) => {
+        commands.push([...command]);
+        return commandResult();
+      },
+      environment: {},
+      getManifestDigest: async () => digest,
+      verifyAnonymousPull: () => Promise.resolve(),
+      verifySourceLabel: () => Promise.resolve(),
+      getRuntimeFingerprint: async () => "new",
+      writeMetadata: () => Promise.resolve(),
+      writeCandidates: () => Promise.resolve(),
+      writeText: () => Promise.resolve(),
+    },
+  );
+  expect(commands.some((command) => command.includes("--file"))).toBe(true);
 });
 
 test("only accepts documented flags", () => {
@@ -1002,6 +1227,28 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     digests: Readonly<Record<string, string>>;
     buildNumber: string;
   }[] = [];
+  const catalog = versionCatalogSource([
+    {
+      name: "shepherdjerred/birmel",
+      value: `2.0.0-1@${pinned}`,
+    },
+    {
+      name: "shepherdjerred/scout-for-lol/beta",
+      value: `2.0.0-2@${pinned}`,
+    },
+    {
+      name: "shepherdjerred/scout-for-lol/prod",
+      value: `2.0.0-1@${pinned}`,
+    },
+    {
+      name: "shepherdjerred/starlight-karma-bot/beta",
+      value: `2.0.0-2@${pinned}`,
+    },
+    {
+      name: "shepherdjerred/starlight-karma-bot/prod",
+      value: `2.0.0-1@${pinned}`,
+    },
+  ]);
   const writes: { path: string; contents: string }[] = [];
   const executor: CommandExecutor = async (command) => {
     commands.push([...command]);
@@ -1018,29 +1265,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     {
       executor,
       environment: {},
-      readVersionCatalog: async () =>
-        versionCatalogSource([
-          {
-            name: "shepherdjerred/birmel",
-            value: `2.0.0-1@${pinned}`,
-          },
-          {
-            name: "shepherdjerred/scout-for-lol/beta",
-            value: `2.0.0-2@${pinned}`,
-          },
-          {
-            name: "shepherdjerred/scout-for-lol/prod",
-            value: `2.0.0-1@${pinned}`,
-          },
-          {
-            name: "shepherdjerred/starlight-karma-bot/beta",
-            value: `2.0.0-2@${pinned}`,
-          },
-          {
-            name: "shepherdjerred/starlight-karma-bot/prod",
-            value: `2.0.0-1@${pinned}`,
-          },
-        ]),
+      readVersionCatalog: async () => catalog,
       getManifestDigest: async (image) => {
         manifestReferences.push(image);
         events.push(`resolve:${image}`);

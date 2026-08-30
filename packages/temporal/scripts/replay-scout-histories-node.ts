@@ -25,6 +25,7 @@ async function main(): Promise<void> {
       "Pass at least one beta Workflow ID for weekly parlay or Bryan Bucks replay",
     workflowsPath: new URL("../src/workflows/index.ts", import.meta.url)
       .pathname,
+    environment: globalThis.process.env,
   });
 }
 

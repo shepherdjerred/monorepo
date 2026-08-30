@@ -2027,10 +2027,20 @@ steps:
     concurrency_group: monorepo/image-push
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts images; then
+        pending_version_bump=$$(git ls-remote origin refs/heads/chore/version-bump-pending)
+        if [ -n "$$pending_version_bump" ]; then
+          echo "chore/version-bump-pending is still active; retry after its catalog update merges"
+          exit 1
+        fi
         jq -n '{}' | buildkite-agent meta-data set image-digests
         jq -cn --arg build "$BUILDKITE_BUILD_NUMBER" \
           '{schema:"pin-candidates/v1",buildNumber:($$build|tonumber),candidates:{}}' |
           buildkite-agent meta-data set pin-candidates
+        git fetch origin main
+        version_catalog_artifact="version-catalog.$$BUILDKITE_JOB_ID.json"
+        git show origin/main:packages/version-catalog/src/catalog.json > "$$version_catalog_artifact"
+        buildkite-agent artifact upload "$$version_catalog_artifact"
+        buildkite-agent meta-data set version-catalog "artifact:$$BUILDKITE_JOB_ID:$$version_catalog_artifact"
         # bake-images.ts never runs on this path, so it never produces
         # image-push-outcomes.json — write the empty array ourselves; an
         # unmatched artifact_paths entry fails the step even though the skip
@@ -2303,6 +2313,7 @@ steps:
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun --no-install packages/homelab/scripts/argocd.ts suspend-auto-sync apps --timeout 300
       export HOMELAB_IMAGE_DIGESTS_JSON="$$image_digests"
+      export HOMELAB_VERSION_CATALOG_JSON="$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts version-catalog)"
       export HOMELAB_RELEASE_VERSION="2.0.0-$BUILDKITE_BUILD_NUMBER"
       bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
       buildkite-agent artifact upload "helm-release-plan.json"
@@ -2856,7 +2867,11 @@ steps:
     depends_on: images
     cancel_on_build_failing: true
     concurrency: 1
-    concurrency_group: monorepo/version-commit-back
+    # Serialize commit-back with image publication. A later image build must
+    # not evaluate converged pins from its stale checkout while an earlier
+    # release's candidate ramp is being committed.
+    concurrency_group: monorepo/image-push
+    concurrency_method: ordered
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production

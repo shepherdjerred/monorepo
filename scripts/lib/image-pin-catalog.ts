@@ -98,6 +98,28 @@ export function findManagedImagePin(
   return undefined;
 }
 
+export function requireCatalogImageValue(
+  versionCatalogSource: string,
+  key: string,
+): string {
+  const entry = entriesByName(versionCatalogSource).get(key);
+  if (entry?.category !== "internal-image" || entry.artifactType !== "image") {
+    throw new Error(`No internal image pin exists for ${key}`);
+  }
+  return entry.value;
+}
+
+export function catalogImagePinsMatch(
+  versionCatalogSource: string,
+  leftKey: string,
+  rightKey: string,
+): boolean {
+  return (
+    requireCatalogImageValue(versionCatalogSource, leftKey) ===
+    requireCatalogImageValue(versionCatalogSource, rightKey)
+  );
+}
+
 export function resolveManagedImagePins(
   versionCatalogSource: string,
   imageNames: readonly string[],

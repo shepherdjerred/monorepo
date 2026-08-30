@@ -29,7 +29,13 @@ import {
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../scripts/lib/transient.ts";
+import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
+import { assertNoPendingVersionBump } from "./temporal-candidate-admission.ts";
 import { TransientError } from "../../scripts/lib/transient-error.ts";
+import {
+  writeFallbackReport,
+  type TextWriter,
+} from "./image-selection-report.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
@@ -44,8 +50,6 @@ export type CommandExecutor = (
   command: readonly string[],
   environment?: Readonly<Record<string, string | undefined>>,
 ) => Promise<BuildxCommandResult>;
-
-export type TextWriter = (path: string, contents: string) => Promise<unknown>;
 
 export async function execute(
   command: readonly string[],
@@ -195,19 +199,33 @@ async function setDigestMetadata(
   await writeJsonHandoff("image-digests", "image-digests.json", digests);
 }
 
+async function setVersionCatalogMetadata(source: string): Promise<void> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(source);
+  } catch (error) {
+    throw new Error("Version catalog handoff is not valid JSON", {
+      cause: error,
+    });
+  }
+  await writeJsonHandoff("version-catalog", "version-catalog.json", parsed);
+}
+
 async function setPinCandidatesMetadata(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
+  versionCatalogSource?: string,
 ): Promise<void> {
   const parsedBuildNumber = Number(buildNumber);
   if (!Number.isSafeInteger(parsedBuildNumber) || parsedBuildNumber <= 0) {
     throw new Error("Build number must be a positive safe integer");
   }
-  const candidates = Object.fromEntries(
-    Object.entries(digests).map(([key, digest]) => [
-      key,
-      { version: `2.0.0-${buildNumber}`, digest },
-    ]),
+  const catalogSource =
+    versionCatalogSource ?? (await Bun.file(VERSION_CATALOG_URL).text());
+  const candidates = pinCandidatesForDigests(
+    digests,
+    buildNumber,
+    catalogSource,
   );
   await writeJsonHandoff("pin-candidates", "pin-candidates.json", {
     schema: "pin-candidates/v1",
@@ -298,6 +316,7 @@ export async function pushImages(
     readonly writeCandidates?: (
       digests: Readonly<Record<string, string>>,
       buildNumber: string,
+      versionCatalogSource: string,
     ) => Promise<void>;
     readonly writeText?: TextWriter;
   } = {},
@@ -403,28 +422,8 @@ export async function pushImages(
     digests[managedPin.key] = digest;
   }
   await writeMetadata(digests);
-  await writeCandidates(digests, buildNumber);
+  await writeCandidates(digests, buildNumber, versionCatalog);
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
-}
-
-export async function writeFallbackReport(
-  targets: readonly string[],
-  reason: string,
-  writeText: TextWriter = Bun.write,
-): Promise<void> {
-  const targetReasons = Object.fromEntries(
-    targets.map((target) => [target, [reason]]),
-  );
-  await writeText(
-    selectionReport,
-    `${JSON.stringify({
-      base: null,
-      changedPaths: [],
-      mode: "all",
-      globalReason: reason,
-      targets: targetReasons,
-    })}\n`,
-  );
 }
 
 async function main(): Promise<void> {
@@ -441,15 +440,33 @@ async function main(): Promise<void> {
 
   const selection = await selectedTargets(options, commit);
   const bakeTargets = expandTargets(selection.targets);
+  // Refresh after selecting targets so convergence admission only blocks a
+  // release that would publish a Temporal Workflow candidate. Every push still
+  // uses the live catalog for Helm and the no-target metadata path.
+  const liveVersionCatalog = options.push
+    ? await assertNoPendingVersionBump(
+        execute,
+        bakeTargets.includes("temporal-worker"),
+      )
+    : undefined;
   if (bakeTargets.length === 0) {
     console.log("no image-owning packages affected — nothing to build");
     await annotate(["--report", selectionReport]);
     if (options.push) {
+      await setVersionCatalogMetadata(
+        liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
+      );
       await setDigestMetadata({});
       await setPinCandidatesMetadata({}, buildNumber);
       await Bun.write(pushOutcomes, "[]\n");
     }
     return;
+  }
+
+  if (options.push) {
+    await setVersionCatalogMetadata(
+      liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
+    );
   }
 
   await ensureBuilder();
@@ -463,12 +480,19 @@ async function main(): Promise<void> {
   const contractHash = contractHashResult.stdout.trim();
   await runSmoke(bakeTargets, contractHash);
   if (options.push) {
-    await pushImages({
-      targets: bakeTargets,
-      commit,
-      buildNumber,
-      contractHash,
-    });
+    await pushImages(
+      {
+        targets: bakeTargets,
+        commit,
+        buildNumber,
+        contractHash,
+      },
+      {
+        ...(liveVersionCatalog === undefined
+          ? {}
+          : { readVersionCatalog: () => Promise.resolve(liveVersionCatalog) }),
+      },
+    );
   }
 
   if (!(await Bun.file(selectionReport).exists())) {

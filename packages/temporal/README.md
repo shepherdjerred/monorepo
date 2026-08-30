@@ -7,12 +7,15 @@ generic report-only agent tasks (Claude/Codex subprocesses) including the daily
 homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 (GitHub merge-conflict check and build cancel, Xcode Cloud, iOS sleep).
 
-Production runs one image in twelve single-replica Kubernetes Deployments. The
+Production runs one image in thirteen single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
-without a task queue. The credentialless `workflows` role owns deterministic
-Workflow execution on `monorepo-workflows` and temporarily polls the remaining
-legacy central queues so open histories can finish where they started. The domain
-roles own only Activity Workers, with separate registries, credentials, service
+without a task queue. Stable and candidate credentialless `workflows`
+Deployments own deterministic Workflow execution on `monorepo-workflows` and
+temporarily poll every legacy central queue so open histories can finish where
+they started. Both register under the `monorepo-central-workflows` Worker
+Deployment with the image's exact Git SHA as Build ID and `AUTO_UPGRADE` as the
+default behavior. The domain roles
+own only Activity Workers, with separate registries, credentials, service
 accounts, and concurrency budgets. The default `all` role composes every role in
 one process for local development.
 
@@ -45,7 +48,30 @@ bun run start        # start the worker (connects to the Temporal server)
 bun run typecheck    # tsc --noEmit (stubs the HA schema first)
 bun run test         # unit tests, including the workflow-bundle smoke test
 bun run lint         # eslint
+bun run worker-deployment inspect --build-id <image-git-sha>
+bun run worker-deployment status --build-id <image-git-sha>
 ```
+
+Worker Deployment rollouts use the package-local `worker-deployment` command;
+no toolkit wrapper is added. `start` runs the real workflow replay suite,
+replays retained IDs listed in `TEMPORAL_REPLAY_WORKFLOW_IDS` against the
+candidate bundle, and runs an exact-version canary before opening a 10% ramp.
+Set `TEMPORAL_ADDRESS` to an
+operator-reachable endpoint; native calls use the existing `toolkit temporal`
+passthrough. The first ramp also requires `--stable-build-id <sha>` so an empty
+deployment has a rollback target. `advance` checks alert history across its
+clean windows. `promote` checks the 24-hour history, verifies the candidate
+pin's baked `GIT_SHA`, and writes the stable pin before changing routing so an
+interrupted command is safe to retry. `rollback` removes the exact active ramp,
+even if a newer build registered. CI retains a Workflow candidate whenever its
+pin differs from stable, so a later image release cannot evict an in-flight
+ramp. After rollback and candidate-history drain, rerun `rollback` with no
+active ramp to reset the rejected candidate to the stable catalog value, then
+review and commit both the catalog and `scripts/pin-candidates-state.json`
+changes through the normal pull-request flow before the next candidate.
+If an operator host dies, use `inspect` before removing a stale lease: it is a
+read-only routing and lease query that remains usable when candidate health
+checks or alert windows are failing.
 
 ## Documentation
 

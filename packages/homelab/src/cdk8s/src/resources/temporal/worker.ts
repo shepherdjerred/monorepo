@@ -19,7 +19,7 @@ import { createTemporalGlitterWorkers } from "./glitter-worker.ts";
 import { createTemporalIngressWorkers } from "./ingress-workers.ts";
 import { homelabAuditEnv } from "./homelab-audit-env.ts";
 import { createTemporalOperationsWorkers } from "./operations-workers.ts";
-import { createTemporalWorkflowWorker } from "./workflow-worker.ts";
+import { createTemporalWorkflowWorkers } from "./workflow-worker.ts";
 import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
@@ -172,7 +172,7 @@ export function createTemporalWorkerDeployment(
       secret,
     });
 
-  const workflowDeployment = createTemporalWorkflowWorker(chart, {
+  const workflowDeployments = createTemporalWorkflowWorkers(chart, {
     serverServiceName: props.serverServiceName,
   });
 
@@ -264,7 +264,8 @@ export function createTemporalWorkerDeployment(
     gatewayDeployment,
     homeDeployment,
     reportsDeployment,
-    workflowDeployment,
+    workflowDeployment: workflowDeployments.stable,
+    workflowCandidateDeployment: workflowDeployments.candidate,
     infraDeployment,
     repoDeployment,
     scoutDeployment,

@@ -1,4 +1,5 @@
 import { Client, Connection } from "@temporalio/client";
+import { VersioningBehavior } from "@temporalio/common";
 import * as Sentry from "@sentry/bun";
 import { NativeConnection, Runtime, Worker } from "@temporalio/worker";
 import { registerSchedules } from "./schedules/register-schedules.ts";
@@ -21,6 +22,11 @@ import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
 import { retryUntilReady, sleepUnlessClosed } from "./shared/startup-retry.ts";
 import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
 import {
+  parseTemporalBootstrap,
+  requireWorkerDeployment,
+  type TemporalBootstrap,
+} from "./shared/temporal-bootstrap.ts";
+import {
   getWorkerRoleContract,
   type QueueWorkerDefinition,
 } from "./worker-config.ts";
@@ -30,7 +36,7 @@ const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
 
 const jsonLog = createStructuredLogger();
 
-function installRuntime(role: WorkerRole): void {
+function installRuntime(role: WorkerRole, bootstrap: TemporalBootstrap): void {
   const metricsAddress =
     Bun.env["TEMPORAL_METRICS_ADDRESS"] ?? DEFAULT_METRICS_ADDRESS;
 
@@ -47,6 +53,14 @@ function installRuntime(role: WorkerRole): void {
         globalTags: {
           worker: `temporal-worker-${role}`,
           worker_role: role,
+          temporal_namespace: bootstrap.namespace,
+          ...(bootstrap.workerDeployment === undefined
+            ? {}
+            : {
+                worker_deployment_name:
+                  bootstrap.workerDeployment.deploymentName,
+                worker_build_id: bootstrap.workerDeployment.buildId,
+              }),
         },
         prometheus: {
           bindAddress: metricsAddress,
@@ -85,14 +99,25 @@ async function createQueueWorker(
   definition: QueueWorkerDefinition,
   connection: NativeConnection,
   workflowsPath: string,
+  bootstrap: TemporalBootstrap,
 ): Promise<Worker> {
   if (definition.kind === "workflow") {
+    const workerDeployment = bootstrap.workerDeployment;
     return await Worker.create({
       connection,
-      namespace: "default",
+      namespace: bootstrap.namespace,
       workflowsPath,
       workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
       taskQueue: definition.taskQueue,
+      ...(workerDeployment === undefined
+        ? {}
+        : {
+            workerDeploymentOptions: {
+              version: workerDeployment,
+              useWorkerVersioning: true,
+              defaultVersioningBehavior: VersioningBehavior.AUTO_UPGRADE,
+            },
+          }),
       ...(definition.maxConcurrentWorkflowTaskExecutions === undefined
         ? {}
         : {
@@ -103,7 +128,7 @@ async function createQueueWorker(
   }
   return await Worker.create({
     connection,
-    namespace: "default",
+    namespace: bootstrap.namespace,
     activities: definition.activities,
     taskQueue: definition.taskQueue,
     ...(definition.maxConcurrentActivityTaskExecutions === undefined
@@ -260,8 +285,12 @@ function startEventBridgeSupervisor(client: Client): EventBridgeHandle {
 
 async function main(): Promise<void> {
   const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
+  const bootstrap = parseTemporalBootstrap(Bun.env);
   const roleContract = getWorkerRoleContract(role);
-  installRuntime(role);
+  if (role === "workflows") {
+    requireWorkerDeployment(bootstrap);
+  }
+  installRuntime(role, bootstrap);
   initSentry();
   initializeTracing();
 
@@ -280,6 +309,7 @@ async function main(): Promise<void> {
       definition,
       connection,
       workflowsPath,
+      bootstrap,
     );
     workers.push(worker);
     jsonLog("info", "Worker created", {
@@ -300,7 +330,10 @@ async function main(): Promise<void> {
 
   if (roleContract.runsGateway || roleContract.runsEventBridge) {
     const clientConnection = await Connection.connect({ address });
-    const client = new Client({ connection: clientConnection });
+    const client = new Client({
+      connection: clientConnection,
+      namespace: bootstrap.namespace,
+    });
 
     if (roleContract.runsGateway) {
       await registerSchedules(client, {

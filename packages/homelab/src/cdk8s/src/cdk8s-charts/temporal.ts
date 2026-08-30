@@ -137,6 +137,18 @@ export function createTemporalChart(app: App) {
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
         {
+          // Stable and candidate Workflow-only workers share a family label
+          // while their component labels identify the active track.
+          from: [
+            {
+              podSelector: {
+                matchLabels: { "worker-family": "central-workflows" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
+        {
           // The agent poller has a dedicated pod label and egress policy. Its
           // provider subprocess runs under a uid that the pod-local firewall
           // rejects on this port, so only the SDK poller can use this ingress.

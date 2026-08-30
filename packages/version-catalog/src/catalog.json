@@ -1367,6 +1367,32 @@
       ]
     },
     {
+      "name": "shepherdjerred/temporal-worker/workflows/candidate",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-12197@sha256:eba46d136c350a2c98324d4d385fb13076bc142e86bbea27c66bd7e676882313",
+      "notes": [
+        "Candidate central Workflow Worker image - updated by CI pipeline",
+        "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/temporal-worker/workflows/stable",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-12197@sha256:eba46d136c350a2c98324d4d385fb13076bc142e86bbea27c66bd7e676882313",
+      "notes": [
+        "Stable central Workflow Worker image - promoted after a 24-hour clean soak",
+        "not managed by renovate"
+      ]
+    },
+    {
       "name": "shepherdjerred/trmnl-dashboard",
       "category": "internal-image",
       "artifactType": "image",

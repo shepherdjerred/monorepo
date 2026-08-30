@@ -1,6 +1,7 @@
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import {
   parseVersionCatalog,
+  parseVersionCatalogText,
   versionCatalogMap,
 } from "@shepherdjerred/version-catalog";
 import { VersionMapSchema } from "./version-map.generated.ts";
@@ -9,7 +10,11 @@ import {
   catalogScoutPostgresImageDigests,
 } from "./release-configuration.ts";
 
-export const versionCatalog = parseVersionCatalog(rawCatalog);
+const catalogOverride = Bun.env["HOMELAB_VERSION_CATALOG_JSON"];
+export const versionCatalog =
+  catalogOverride === undefined
+    ? parseVersionCatalog(rawCatalog)
+    : parseVersionCatalogText(catalogOverride);
 const versions = VersionMapSchema.parse(versionCatalogMap(versionCatalog));
 
 export const postgresImageDigests = new Set([

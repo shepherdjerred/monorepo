@@ -4,6 +4,7 @@ export async function runTemporalNodeScript(input: {
   packageRoot: string;
   repositoryRoot: string;
   scriptPath: string;
+  scriptArgs?: readonly string[];
 }): Promise<void> {
   await runTemporalNodeCommand({
     packageRoot: input.packageRoot,
@@ -11,7 +12,7 @@ export async function runTemporalNodeScript(input: {
     nodeArgs: [
       "--experimental-strip-types",
       input.scriptPath,
-      ...Bun.argv.slice(2),
+      ...(input.scriptArgs ?? Bun.argv.slice(2)),
     ],
   });
 }

@@ -49,7 +49,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
   new KubeNetworkPolicy(chart, "temporal-central-workflows-netpol", {
     metadata: { name: "temporal-central-workflows-netpol" },
     spec: {
-      podSelector: { matchLabels: { component: "central-workflows" } },
+      podSelector: { matchLabels: { "worker-family": "central-workflows" } },
       policyTypes: ["Ingress", "Egress"],
       ingress: metricsIngress([9464, 9465]),
       egress: [
