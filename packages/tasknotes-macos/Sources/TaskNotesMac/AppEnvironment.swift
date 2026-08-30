@@ -112,7 +112,11 @@ public final class AppEnvironment {
         // one passed in, and shadowing would hide exactly that.
         let resolvedTokenStore =
             tokenStore ?? (Self.isUITesting ? InMemoryTokenStore() : KeychainTokenStore())
-        let container = TaskNotesStore.containerDefault()
+        let storageFolder =
+            Self.isUITesting
+            ? defaults.string(forKey: UITesting.storageFolderDefaultsKey) ?? "TaskNotes-UITests"
+            : "TaskNotes"
+        let container = TaskNotesStore.containerDefault(folder: storageFolder)
         self.store = container
         self.quickAdd = QuickAddPanelController(store: container)
         self.pomodoro = PomodoroTimer()

@@ -2,6 +2,8 @@ internal import SwiftUI
 internal import TaskNotesKit
 internal import TaskNotesUniFFI
 
+internal import struct Foundation.UUID
+
 /// The editable fields, for exactly one task.
 ///
 /// ## Commit per field. There is no Save button, and that is the safe design
@@ -41,6 +43,9 @@ struct TaskInspectorForm: View {
     /// Record a field change.
     let apply: (TaskFieldEdit) -> Void
 
+    /// Record a recurrence rule, anchor, and any newly required start together.
+    let applyRecurrence: (TaskRecurrenceEdit) -> Void
+
     /// Record a field change that may be a no-op or a validation failure, and
     /// answer whether the core is now holding it.
     ///
@@ -56,6 +61,7 @@ struct TaskInspectorForm: View {
     @State private var title: EditedText
     @State private var estimate: EditedText
     @State private var details: EditedText
+    @State private var commitRegistrationID = UUID()
 
     @FocusState private var focus: Field?
 
@@ -74,12 +80,14 @@ struct TaskInspectorForm: View {
         detail: TaskDetail,
         vocabulary: TaskVocabulary,
         apply: @escaping (TaskFieldEdit) -> Void,
+        applyRecurrence: @escaping (TaskRecurrenceEdit) -> Void,
         attempt: @escaping (Result<TaskFieldEdit?, CoreError>) async -> Bool,
         dispatch: @escaping (CommandInput) -> Void
     ) {
         self.detail = detail
         self.vocabulary = vocabulary
         self.apply = apply
+        self.applyRecurrence = applyRecurrence
         self.attempt = attempt
         self.dispatch = dispatch
         _title = State(initialValue: EditedText(stored: detail.task.title))
@@ -117,7 +125,13 @@ struct TaskInspectorForm: View {
                     onPick: { apply(.scheduled($0)) },
                     onFail: report
                 )
-                InspectorRecurrenceRow(summary: detail.recurrence, apply: apply)
+                InspectorRecurrenceRow(
+                    summary: detail.recurrence,
+                    task: detail.task,
+                    calendar: detail.calendar,
+                    apply: apply,
+                    applyRecurrence: applyRecurrence
+                )
             }
 
             Section("Organize") {
@@ -179,7 +193,7 @@ struct TaskInspectorForm: View {
                 InspectorDetailsSection(
                     detail: detail,
                     source: $details.text,
-                    onCommit: committing(commitDetails)
+                    onCommit: commitDetails
                 )
             }
         }
@@ -199,7 +213,15 @@ struct TaskInspectorForm: View {
         // Committing on disappear as well as on blur is not belt-and-braces: a
         // panel closed with ⌥⌘I while a field still has focus never fires a
         // blur, and the edit would be lost with no indication it had been.
-        .onDisappear(perform: committing(commitText))
+        .onAppear {
+            InspectorCommitCoordinator.shared.register(commitRegistrationID) {
+                await commitTextAndWait()
+            }
+        }
+        .onDisappear {
+            InspectorCommitCoordinator.shared.unregister(commitRegistrationID)
+            commitText()
+        }
     }
 
     // ── Fields ─────────────────────────────────────────────────────────────
@@ -214,7 +236,7 @@ struct TaskInspectorForm: View {
         PlainTextField(
             text: $title.text,
             prompt: "Title",
-            onSubmit: committing(commitTitle),
+            onSubmit: commitTitle,
             // Escape restores what is stored rather than committing. The field
             // is the one place in this panel where "never mind" has to mean
             // something, because it is the only field that can be made invalid.
@@ -233,7 +255,7 @@ struct TaskInspectorForm: View {
         .font(.title3)
         .focused($focus, equals: .title)
         .onChange(of: focus) { previous, _ in
-            if previous == .title { _Concurrency.Task { await commitTitle() } }
+            if previous == .title { commitTitle() }
         }
         .accessibilityIdentifier(AccessibilityIdentifier.Inspector.title)
         .accessibilityLabel("Title")
@@ -279,13 +301,13 @@ struct TaskInspectorForm: View {
                 PlainTextField(
                     text: $estimate.text,
                     prompt: "—",
-                    onSubmit: committing(commitEstimate),
+                    onSubmit: commitEstimate,
                     onCancel: { estimate.revert(to: TaskTextEdit.estimateText(of: detail.task)) }
                 )
                 .help("Whole minutes")
                 .focused($focus, equals: .estimate)
                 .onChange(of: focus) { previous, _ in
-                    if previous == .estimate { _Concurrency.Task { await commitEstimate() } }
+                    if previous == .estimate { commitEstimate() }
                 }
                 .frame(width: 72)
                 .accessibilityIdentifier(AccessibilityIdentifier.Inspector.timeEstimate)
@@ -298,7 +320,9 @@ struct TaskInspectorForm: View {
             }
         }
     }
+}
 
+extension TaskInspectorForm {
     /// Surface a failure that never had an edit behind it.
     ///
     /// The date pickers can only fail — a date the core refuses never becomes a
@@ -353,28 +377,58 @@ struct TaskInspectorForm: View {
     /// next refresh replaced what the user typed with the stored value. The
     /// baseline becomes the text that was **offered**, so anything typed during
     /// the round trip is still an edit.
-    private func commitTitle() async {
-        guard title.isEdited else { return }
-        let offered = title.text
-        if await attempt(TaskTextEdit.retitling(offered, of: detail.task)) {
-            title.commit(offered)
-        }
+    private enum BufferedField: Sendable {
+        case title
+        case estimate
+        case details
     }
 
-    private func commitEstimate() async {
-        guard estimate.isEdited else { return }
-        let offered = estimate.text
-        if await attempt(TaskTextEdit.estimating(offered, of: detail.task)) {
-            estimate.commit(offered)
-        }
+    private struct BufferedOffer: Sendable {
+        let field: BufferedField
+        let text: String
+        let outcome: Result<TaskFieldEdit?, CoreError>
     }
 
-    private func commitDetails() async {
-        guard details.isEdited else { return }
-        let offered = details.text
-        if await attempt(.success(TaskTextEdit.rewriting(details: offered, of: detail.task))) {
-            details.commit(offered)
-        }
+    private func titleOffer() -> BufferedOffer? {
+        guard let offered = title.offer() else { return nil }
+        return BufferedOffer(
+            field: .title,
+            text: offered,
+            outcome: TaskTextEdit.retitling(offered, of: detail.task)
+        )
+    }
+
+    private func estimateOffer() -> BufferedOffer? {
+        guard let offered = estimate.offer() else { return nil }
+        return BufferedOffer(
+            field: .estimate,
+            text: offered,
+            outcome: TaskTextEdit.estimating(offered, of: detail.task)
+        )
+    }
+
+    private func detailsOffer() -> BufferedOffer? {
+        guard let offered = details.offer() else { return nil }
+        return BufferedOffer(
+            field: .details,
+            text: offered,
+            outcome: .success(TaskTextEdit.rewriting(details: offered, of: detail.task))
+        )
+    }
+
+    private func commitTitle() {
+        guard let offer = titleOffer() else { return }
+        perform([offer])
+    }
+
+    private func commitEstimate() {
+        guard let offer = estimateOffer() else { return }
+        perform([offer])
+    }
+
+    private func commitDetails() {
+        guard let offer = detailsOffer() else { return }
+        perform([offer])
     }
 
     /// Commit every buffered field, one after another.
@@ -382,17 +436,39 @@ struct TaskInspectorForm: View {
     /// Safe to call unconditionally: each one is a no-op for a field the user
     /// did not edit. Sequential rather than concurrent so a panel closed with
     /// three edits in it enqueues them in the order they appear.
-    private func commitText() async {
-        await commitTitle()
-        await commitEstimate()
-        await commitDetails()
+    private func commitText() {
+        let offers = [titleOffer(), estimateOffer(), detailsOffer()].compactMap { $0 }
+        perform(offers)
     }
 
-    /// Drive an awaited commit from one of SwiftUI's synchronous callbacks.
-    ///
-    /// Blur, Return, and disappear are all `() -> Void`, and the commit they
-    /// start now outlives them.
-    private func committing(_ commit: @escaping () async -> Void) -> () -> Void {
-        { _Concurrency.Task { await commit() } }
+    /// The termination path, which must not outlive the process that launched it.
+    private func commitTextAndWait() async {
+        let offers = [titleOffer(), estimateOffer(), detailsOffer()].compactMap { $0 }
+        await performAndWait(offers)
+    }
+
+    /// Dispatch values captured before this asynchronous work began.
+    private func perform(_ offers: [BufferedOffer]) {
+        guard !offers.isEmpty else { return }
+        _Concurrency.Task {
+            await performAndWait(offers)
+        }
+    }
+
+    private func performAndWait(_ offers: [BufferedOffer]) async {
+        for offer in offers {
+            resolve(offer, accepted: await attempt(offer.outcome))
+        }
+    }
+
+    private func resolve(_ offer: BufferedOffer, accepted: Bool) {
+        switch (offer.field, accepted) {
+        case (.title, true): title.accept(offer.text)
+        case (.title, false): title.reject(offer.text)
+        case (.estimate, true): estimate.accept(offer.text)
+        case (.estimate, false): estimate.reject(offer.text)
+        case (.details, true): details.accept(offer.text)
+        case (.details, false): details.reject(offer.text)
+        }
     }
 }

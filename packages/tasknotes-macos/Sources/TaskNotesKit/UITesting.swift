@@ -39,4 +39,7 @@ public enum UITesting {
     /// redirect the app and does not — which is precisely the failure this whole
     /// type exists to prevent.
     public static let serverAddressDefaultsKey = "red.sjer.tasknotes.serverAddress"
+
+    /// An isolated Application Support folder supplied by each UI-test launch.
+    public static let storageFolderDefaultsKey = "red.sjer.tasknotes.uiTesting.storageFolder"
 }

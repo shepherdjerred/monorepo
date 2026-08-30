@@ -22,7 +22,18 @@ struct SchedulePopover: View {
     /// An arbitrary date from the calendar, as `YYYY-MM-DD`.
     let onPick: (String?) -> Void
 
-    @State private var picked = Date()
+    @State private var picked: Date
+
+    init(
+        current: String?,
+        onChoose: @escaping (ScheduleChoice) -> Void,
+        onPick: @escaping (String?) -> Void
+    ) {
+        self.current = current
+        self.onChoose = onChoose
+        self.onPick = onPick
+        _picked = State(initialValue: Self.initialDate(current: current))
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -48,7 +59,8 @@ struct SchedulePopover: View {
             .labelsHidden()
             .accessibilityIdentifier(AccessibilityIdentifier.Schedule.picker)
             .onChange(of: picked) { _, chosen in
-                onPick(CivilDay.iso(of: chosen))
+                guard let selected = Self.changedDate(chosen, from: current) else { return }
+                onPick(selected)
             }
         }
         .padding(12)
@@ -59,11 +71,15 @@ struct SchedulePopover: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Schedule")
         .accessibilityIdentifier(AccessibilityIdentifier.Schedule.popover)
-        .onAppear {
-            if let current, let start = CivilDay.date(of: current) {
-                picked = start
-            }
-        }
+    }
+
+    static func initialDate(current: String?, now: Date = Date()) -> Date {
+        current.flatMap(CivilDay.date(of:)) ?? now
+    }
+
+    static func changedDate(_ chosen: Date, from current: String?) -> String? {
+        let selected = CivilDay.iso(of: chosen)
+        return selected == current ? nil : selected
     }
 }
 
@@ -78,7 +94,7 @@ struct SchedulePopover: View {
 ///
 /// The zone is read per call rather than captured, so a user who changes zone
 /// mid-session picks dates in the zone they are actually in.
-private enum CivilDay {
+enum CivilDay {
     private static var iso: Date.ISO8601FormatStyle {
         Date.ISO8601FormatStyle(timeZone: .current).year().month().day()
     }

@@ -36,7 +36,10 @@
 
 use tasknotes_core::{
     domain::RecurrenceAnchor,
-    recurrence::{DateWindow, Frequency, Recurrence, completion_target_date},
+    recurrence::{
+        CommonRecurrenceDraft, DateWindow, Frequency, Recurrence, build_common_recurrence,
+        completion_target_date, parse_common_recurrence,
+    },
 };
 
 use crate::{
@@ -55,6 +58,37 @@ struct Fallbacks {
     scheduled: Option<String>,
     /// The task's `dateCreated` field, exactly as stored.
     date_created: Option<String>,
+}
+
+/// Parse a rule into the closed common-pattern editor model.
+///
+/// `None` means the rule cannot be represented losslessly. The host must keep
+/// the raw rule authoritative until the user explicitly replaces it.
+#[uniffi::export]
+#[must_use]
+pub fn recurrence_parse_common(text: &str, start: &str) -> Option<CommonRecurrenceDraft> {
+    parse_common_recurrence(text, start)
+}
+
+/// Validate and canonically serialize the common-pattern editor model.
+///
+/// # Errors
+///
+/// Returns [`CoreError::Validation`] when any date or numeric constraint is
+/// invalid.
+#[uniffi::export]
+pub fn recurrence_build_common(
+    draft: CommonRecurrenceDraft,
+    start: &str,
+) -> Result<String, CoreError> {
+    Ok(build_common_recurrence(
+        &CommonRecurrenceDraft {
+            interval: draft.interval,
+            pattern: draft.pattern,
+            ending: draft.ending,
+        },
+        start,
+    )?)
 }
 
 impl Fallbacks {

@@ -72,7 +72,7 @@ struct TaskDetailTests {
     }
 }
 
-/// The recurrence row, which is deliberately read-only.
+/// The recurrence row's projection from the shared core.
 @Suite("Recurrence summary")
 struct RecurrenceSummaryTests {
     @Test("a task that does not repeat has no summary")

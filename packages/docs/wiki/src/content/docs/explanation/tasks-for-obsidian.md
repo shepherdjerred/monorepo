@@ -23,6 +23,14 @@ The native macOS and Windows clients therefore call one Rust core through
 generated UniFFI bindings. Their shells provide storage, HTTP, time, randomness,
 and retry timers. They do not reinterpret domain or wire rules.
 
+That boundary covers writing recurrence rules as well as reading them. The
+shared core parses only the common patterns a native editor can reproduce
+without loss, validates recurrence drafts, and serializes their canonical
+RRULE form. A shell may collect an interval, weekdays, calendar pattern, ending,
+and anchor, but it does not assemble rule text. Existing rules outside that
+closed editor model remain authoritative until a person explicitly replaces
+them.
+
 Windows adds a portable Presentation layer between WinUI and the host. Focused
 view models own navigation, validation, command state, and screen projections.
 This keeps Windows UI code testable without loading WinUI or the generated

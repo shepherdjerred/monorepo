@@ -95,6 +95,7 @@ struct TaskInspector: View {
                     // an edit that re-read the selection would write the text
                     // somebody typed into one task onto a different one.
                     apply: { apply($0, to: detail.id) },
+                    applyRecurrence: { apply($0, to: detail.id) },
                     attempt: { await attempt($0, to: detail.id) },
                     dispatch: dispatch
                 )
@@ -157,6 +158,10 @@ struct TaskInspector: View {
     /// snapshot — which is what makes it survive being offline, retried, and
     /// reconciled against a server that changed the task underneath.
     private func apply(_ edit: TaskFieldEdit, to taskId: TaskId) {
+        dispatch(edit.command(for: taskId))
+    }
+
+    private func apply(_ edit: TaskRecurrenceEdit, to taskId: TaskId) {
         dispatch(edit.command(for: taskId))
     }
 

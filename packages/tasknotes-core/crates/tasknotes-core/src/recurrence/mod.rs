@@ -57,6 +57,7 @@
 //! The corpus excludes the two hanging rules through its own guard, so there is
 //! no reference answer to diverge from.
 
+mod common;
 mod describe;
 mod expand;
 mod instant;
@@ -73,6 +74,10 @@ use self::instant::{MS_PER_DAY, MS_PER_DAY_END};
 use self::options::Options;
 use self::text::{EasterOffset, Unparsable};
 
+pub use self::common::{
+    CommonRecurrenceDraft, CommonRecurrenceEnd, CommonRecurrencePattern, CommonWeekday,
+    MonthlyOrdinal, build_common_recurrence, parse_common_recurrence,
+};
 pub use self::text::Frequency;
 
 /// `getFiniteRecurringInstanceCount`'s own ceiling: past this many instances it

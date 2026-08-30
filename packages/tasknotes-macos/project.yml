@@ -221,9 +221,9 @@ targets:
         # inherited initialisers — a "different actor isolation from nonisolated
         # overridden declaration" error. Measured, not assumed: it was set to
         # MainActor first and produced exactly that, seven times.
-        # ⚠️ The runner is deliberately **not** sandboxed. It spawns a real
-        # `tasknotes-server` over a temporary vault so a flow can assert on the
-        # markdown bytes a user would open in Obsidian, and it inspects
+        # ⚠️ The runner is deliberately **not** sandboxed. The e2e launcher
+        # starts a real `tasknotes-server` over a temporary vault outside the
+        # testmanager process, then the runner reads those markdown bytes and inspects
         # `NSWorkspace.frontmostApplication` to prove the quick-add panel does
         # not steal activation. Both are outside what the shipped app's own
         # entitlements permit — correctly, since neither is something the app

@@ -75,6 +75,12 @@ public struct RecurrenceSummary: Sendable, Equatable {
     /// reading rather than the user's choice.
     public let anchorIsImplied: Bool
 
+    /// The common-pattern draft when the editor can preserve this rule exactly.
+    ///
+    /// `nil` keeps the stored rule authoritative. The presentation must require
+    /// an explicit replacement before it constructs a different one.
+    public let editableDraft: CommonRecurrenceDraft?
+
     /// Derive the summary for a task, or `nil` when it does not repeat.
     ///
     /// An **empty** `recurrence` is not a rule: the core reads it as the no-rule
@@ -118,7 +124,11 @@ public struct RecurrenceSummary: Sendable, Equatable {
                 try DateBadge.of(occurrence: date, calendar: calendar, text: text)
             },
             anchor: measuredFrom,
-            anchorIsImplied: task.recurrenceAnchor == nil
+            anchorIsImplied: task.recurrenceAnchor == nil,
+            editableDraft: recurrenceParseCommon(
+                text: stored,
+                start: task.scheduled.map { String($0.prefix(10)) } ?? calendar.today
+            )
         )
     }
 

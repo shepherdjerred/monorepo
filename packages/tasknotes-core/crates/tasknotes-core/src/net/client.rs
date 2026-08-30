@@ -289,7 +289,19 @@ impl TaskNotesClient {
             let has_more = page.pagination.has_more;
             let received = page.tasks.len();
             for wire in page.tasks {
-                let task = Task::try_from(wire)?;
+                let listed_details = wire.details.is_some();
+                let mut task = Task::try_from(wire)?;
+                // Older TaskNotes servers omit note bodies from collection
+                // pages even though the single-task endpoint carries them.
+                // A pull replaces the store's whole base, so accepting that
+                // omission would erase a body that a preceding PUT had just
+                // acknowledged. Hydrate only those legacy rows; current
+                // servers include `details` (including an empty string) and
+                // stay at one request per page.
+                if !listed_details {
+                    let path = endpoints::task(&task.id);
+                    task = Self::task(self.request(HttpMethod::Get, &path, None, None)?)?;
+                }
                 // The server lists a vault path once, so a repeat is an item
                 // that moved across a page boundary rather than a duplicate
                 // task — and wherever one repeated, another was skipped.
@@ -1144,7 +1156,13 @@ mod tests {
         let tasks: Vec<Value> = paths
             .iter()
             .map(|path| {
-                json!({ "path": path, "title": "A task", "status": "open", "priority": "normal" })
+                json!({
+                    "path": path,
+                    "title": "A task",
+                    "status": "open",
+                    "priority": "normal",
+                    "details": ""
+                })
             })
             .collect();
         Recorder::ok(&json!({
@@ -1179,6 +1197,43 @@ mod tests {
             offsets(&recorder),
             ["0", "1"],
             "the offset advances by what arrived, not by the declared limit"
+        );
+    }
+
+    #[test]
+    fn a_legacy_list_without_details_hydrates_the_body_before_returning() {
+        let recorder = Recorder::new(vec![
+            Ok(Recorder::ok(&json!({
+                "tasks": [{
+                    "path": "TaskNotes/a.md",
+                    "title": "A task",
+                    "status": "open",
+                    "priority": "normal"
+                }],
+                "pagination": {
+                    "total": 1,
+                    "offset": 0,
+                    "limit": 200,
+                    "hasMore": false
+                }
+            }))),
+            Ok(Recorder::ok(&json!({
+                "path": "TaskNotes/a.md",
+                "title": "A task",
+                "status": "open",
+                "priority": "normal",
+                "details": "Saved from Facet."
+            }))),
+        ]);
+
+        let tasks = client(&recorder).list_tasks().unwrap();
+        assert_eq!(
+            tasks.first().and_then(|task| task.details.as_deref()),
+            Some("Saved from Facet.")
+        );
+        assert_eq!(
+            recorder.requests()[1].url,
+            "http://vault.test:8080/api/tasks/TaskNotes%2Fa.md"
         );
     }
 
