@@ -36,6 +36,7 @@ describe("webhook evidence", () => {
       checkDatabase: unexpected,
       systemStatus: unexpected,
       pendingEmails: unexpected,
+      claimPendingEmails: unexpected,
       markEmailSent: unexpected,
       markEmailFailed: unexpected,
       purgeExpiredRawPayloads: unexpected,

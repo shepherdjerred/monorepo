@@ -25,6 +25,7 @@ import { AsyncMutex } from "#infrastructure/async-mutex";
 import { replaceOccurrenceLabels } from "#infrastructure/prisma-labels";
 import { findObservedOccurrence } from "#infrastructure/prisma-occurrence";
 import { ingestWebhookAlert } from "#infrastructure/prisma-webhook-ingest";
+import { claimPendingEmailRows } from "#infrastructure/prisma-email-claim";
 import {
   cancelPendingEmails,
   type CancelPendingEmailsInput,
@@ -411,6 +412,18 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     });
   }
 
+  async claimPendingEmails(
+    nowNs: bigint,
+    limit: number,
+    sendingAtNs: bigint,
+  ): Promise<readonly PendingEmail[]> {
+    return this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        claimPendingEmailRows(transaction, nowNs, limit, sendingAtNs),
+      ),
+    );
+  }
+
   async cancelPendingEmails(
     input: CancelPendingEmailsInput,
   ): Promise<CancelPendingEmailsResult> {
@@ -422,12 +435,20 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
   }
 
   async markEmailSent(id: string, sentAtNs: bigint): Promise<void> {
-    await this.#writeMutex.runExclusive(() =>
-      this.#prisma.emailOutbox.update({
-        where: { id },
-        data: { sentAtNs, attemptCount: { increment: 1 }, lastError: null },
-      }),
-    );
+    await this.#writeMutex.runExclusive(async () => {
+      const result = await this.#prisma.emailOutbox.updateMany({
+        where: { id, sentAtNs: null, sendingAtNs: { not: null } },
+        data: {
+          sentAtNs,
+          sendingAtNs: null,
+          attemptCount: { increment: 1 },
+          lastError: null,
+        },
+      });
+      if (result.count !== 1) {
+        throw new Error(`Email send claim changed before success: ${id}`);
+      }
+    });
   }
 
   async markEmailFailed(
@@ -436,16 +457,20 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     nextAttemptAtNs: bigint,
     error: string,
   ): Promise<void> {
-    await this.#writeMutex.runExclusive(() =>
-      this.#prisma.emailOutbox.update({
-        where: { id },
+    await this.#writeMutex.runExclusive(async () => {
+      const result = await this.#prisma.emailOutbox.updateMany({
+        where: { id, sentAtNs: null, sendingAtNs: { not: null } },
         data: {
           nextAttemptAtNs,
+          sendingAtNs: null,
           attemptCount: { increment: 1 },
           lastError: `${epochNanosecondsToInstantText(failedAtNs)} ${error}`,
         },
-      }),
-    );
+      });
+      if (result.count !== 1) {
+        throw new Error(`Email send claim changed before failure: ${id}`);
+      }
+    });
   }
 
   async purgeExpiredRawPayloads(nowNs: bigint): Promise<number> {

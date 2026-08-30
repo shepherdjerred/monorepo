@@ -101,6 +101,42 @@ describe("SQLite email cancellation", () => {
       "Scout retry amplification incident",
     );
   });
+
+  it("does not cancel an email after the sender claims it", async () => {
+    const base = webhook("fingerprint-claimed", "firing");
+    const incident = AlertmanagerWebhookSchema.parse({
+      ...base,
+      groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
+      groupLabels: { alertname: "TemporalWorkflowFailed" },
+      commonLabels: {
+        alertname: "TemporalWorkflowFailed",
+        severity: "warning",
+      },
+      alerts: base.alerts.map((alert) => ({
+        ...alert,
+        labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
+      })),
+    });
+    await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
+    const claimed = await repository.claimPendingEmails(
+      nanoseconds("2026-08-08T18:01:00Z"),
+      10,
+      nanoseconds("2026-08-08T18:01:00Z"),
+    );
+    expect(claimed).toHaveLength(1);
+
+    await expect(
+      repository.cancelPendingEmails({
+        alertname: "TemporalWorkflowFailed",
+        fromNs: nanoseconds("2026-08-08T18:00:00Z"),
+        toNs: nanoseconds("2026-08-08T18:01:00Z"),
+        canceledAtNs: nanoseconds("2026-08-08T18:02:00Z"),
+        canceledBy: "incident-operator",
+        reason: "sender claim wins",
+        confirm: true,
+      }),
+    ).resolves.toMatchObject({ matched: 0, canceled: 0 });
+  });
 });
 
 describe("SQLite alert ledger", () => {
@@ -458,7 +494,14 @@ describe("SQLite queries and outbox", () => {
       nanoseconds("2026-08-08T20:00:00Z"),
       10,
     );
-    const pendingId = pending[0]?.id;
+    expect(pending).toHaveLength(2);
+    const claimed = await repository.claimPendingEmails(
+      nanoseconds("2026-08-08T20:00:00Z"),
+      1,
+      nanoseconds("2026-08-08T20:00:01Z"),
+    );
+    expect(claimed).toHaveLength(1);
+    const pendingId = claimed[0]?.id;
     if (pendingId === undefined) throw new Error("expected pending email");
     const pendingStatus = await repository.systemStatus(
       true,

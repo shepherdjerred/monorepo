@@ -71,6 +71,11 @@ export type AlertLedgerRepository = {
     nowNs: bigint,
     limit: number,
   ) => Promise<readonly PendingEmail[]>;
+  claimPendingEmails: (
+    nowNs: bigint,
+    limit: number,
+    sendingAtNs: bigint,
+  ) => Promise<readonly PendingEmail[]>;
   markEmailSent: (id: string, sentAtNs: bigint) => Promise<void>;
   markEmailFailed: (
     id: string,

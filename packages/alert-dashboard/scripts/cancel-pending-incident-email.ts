@@ -15,22 +15,16 @@ const ArgsSchema = z.object({
   operator: z.string().min(1),
   reason: z.string().min(10),
   confirm: z.boolean(),
-  workerStopped: z.boolean(),
 });
 
 function parseArgs(argv: readonly string[]): z.infer<typeof ArgsSchema> {
   const raw: Record<string, unknown> = {
     confirm: false,
-    workerStopped: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--confirm") {
       raw["confirm"] = true;
-      continue;
-    }
-    if (arg === "--worker-stopped") {
-      raw["workerStopped"] = true;
       continue;
     }
     if (arg?.startsWith("--") !== true) {
@@ -49,11 +43,6 @@ function parseArgs(argv: readonly string[]): z.infer<typeof ArgsSchema> {
 }
 
 const args = parseArgs(Bun.argv.slice(2));
-if (args.confirm && !args.workerStopped) {
-  throw new Error(
-    "Confirmed cancellation requires --worker-stopped after stopping the email worker",
-  );
-}
 const repository = await createPrismaRepository(args.database);
 try {
   const result = await repository.cancelPendingEmails({

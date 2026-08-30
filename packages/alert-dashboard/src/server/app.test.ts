@@ -31,6 +31,7 @@ function createTestService(): AlertService {
     checkDatabase: () => Promise.resolve(),
     systemStatus: unexpected,
     pendingEmails: unexpected,
+    claimPendingEmails: unexpected,
     markEmailSent: unexpected,
     markEmailFailed: unexpected,
     purgeExpiredRawPayloads: unexpected,

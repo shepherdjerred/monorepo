@@ -28,6 +28,7 @@ export async function cancelPendingEmails(
   const pending = await transaction.emailOutbox.findMany({
     where: {
       sentAtNs: null,
+      sendingAtNs: null,
       canceledAtNs: null,
       createdAtNs: { gte: input.fromNs, lte: input.toNs },
     },
@@ -66,6 +67,7 @@ export async function cancelPendingEmails(
       where: {
         id,
         sentAtNs: null,
+        sendingAtNs: null,
         canceledAtNs: null,
         createdAtNs: { gte: input.fromNs, lte: input.toNs },
       },

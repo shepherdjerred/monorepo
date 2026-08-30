@@ -69,9 +69,9 @@ process in production (`bun run start`).
 uncanceled outbox messages created in the explicit window where every linked
 occurrence is `TemporalWorkflowFailed`. Confirmed cancellations atomically
 record their time, operator, and reason; they do not delete ledger evidence.
-Stop the alert-dashboard email worker before a confirmed cancellation so an
-in-flight Postal send cannot race the cancellation. The command requires
-`--worker-stopped` as an operator acknowledgement of that quiescence.
+The email worker atomically claims an outbox row before calling Postal, and
+cancellation only matches unclaimed rows, so an in-flight send cannot race
+the cancellation.
 
 ```bash
 bun run email:cancel-incident -- \
@@ -81,8 +81,8 @@ bun run email:cancel-incident -- \
   --operator <operator> \
   --reason "Scout retry amplification incident"
 
-# Stop the alert-dashboard email worker, then repeat the reviewed command with
-# --confirm --worker-stopped to apply it.
+# Repeat the reviewed command with --confirm to apply it. A claimed row is
+# excluded and remains owned by the sender.
 ```
 
 ## Architecture

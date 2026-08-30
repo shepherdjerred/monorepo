@@ -209,6 +209,7 @@ class FixtureRepository implements AlertLedgerRepository {
       }),
     );
   pendingEmails = () => Promise.resolve([]);
+  claimPendingEmails = () => Promise.resolve([]);
   markEmailSent = () => Promise.resolve();
   markEmailFailed = () => Promise.resolve();
   purgeExpiredRawPayloads = () => Promise.resolve(0);

@@ -110,6 +110,7 @@ model EmailOutbox {
   createdAtNs        BigInt
   nextAttemptAtNs    BigInt
   sentAtNs           BigInt?
+  sendingAtNs        BigInt?
   canceledAtNs       BigInt?
   canceledBy         String?
   cancellationReason String?
@@ -121,5 +122,5 @@ model EmailOutbox {
   htmlBody           String
   lastError          String?
 
-  @@index([sentAtNs, canceledAtNs, nextAttemptAtNs])
+  @@index([sentAtNs, canceledAtNs, sendingAtNs, nextAttemptAtNs])
 }

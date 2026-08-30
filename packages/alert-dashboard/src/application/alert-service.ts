@@ -163,7 +163,11 @@ export class AlertService {
   async drainEmailOutbox(limit = 10): Promise<number> {
     if (!this.#emailEnabled) return 0;
     const nowNs = this.#clock.now().epochNanoseconds;
-    const messages = await this.#repository.pendingEmails(nowNs, limit);
+    const messages = await this.#repository.claimPendingEmails(
+      nowNs,
+      limit,
+      nowNs,
+    );
     for (const message of messages) {
       try {
         await this.#postal.send(message);
