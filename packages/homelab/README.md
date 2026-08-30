@@ -72,6 +72,8 @@ ArgoCD, which reverts direct mutations.
 ```bash
 talosctl gen config \
   --with-secrets secrets.yaml \
+  --talos-version v1.13.9 \
+  --kubernetes-version 1.36.4 \
   --config-patch-control-plane @torvalds/patches/scheduling.yaml \
   --config-patch-control-plane @torvalds/patches/certsans.yaml \
   --config-patch-control-plane @torvalds/patches/etcd-metrics.yaml \
