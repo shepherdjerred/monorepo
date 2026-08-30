@@ -32,6 +32,7 @@ export type WorkerDeploymentRolloutOptions = {
   namespace: string;
   tls?: boolean;
   deploymentName: string;
+  rolloutLockName?: string;
   buildId: string;
   taskQueue: string;
   stableBuildId?: string;
@@ -210,6 +211,11 @@ function validateOptions(
   return {
     ...options,
     deploymentName: DeploymentNameSchema.parse(options.deploymentName),
+    ...(options.rolloutLockName === undefined
+      ? {}
+      : {
+          rolloutLockName: DeploymentNameSchema.parse(options.rolloutLockName),
+        }),
     buildId: WorkerBuildIdSchema.parse(options.buildId),
     ...(options.stableBuildId === undefined
       ? {}

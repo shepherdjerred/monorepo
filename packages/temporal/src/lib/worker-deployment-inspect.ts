@@ -10,6 +10,7 @@ type WorkerDeploymentInspectionOptions = {
   namespace: string;
   tls?: boolean;
   deploymentName: string;
+  rolloutLockName?: string;
 };
 
 export type WorkerDeploymentRolloutInspection = {
@@ -56,7 +57,7 @@ export async function inspectWorkerDeploymentRollout(
       "--output",
       "json",
     ]),
-    readWorkerDeploymentLock(deploymentName, run),
+    readWorkerDeploymentLock(options.rolloutLockName ?? deploymentName, run),
   ]);
   const deployment = DeploymentDescriptionSchema.parse(
     parseJson(deploymentResult.stdout),
