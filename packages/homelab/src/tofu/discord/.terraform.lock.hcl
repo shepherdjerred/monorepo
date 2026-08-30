@@ -3,8 +3,9 @@
 
 provider "registry.terraform.io/alpaca744/discord" {
   version     = "0.1.3"
-  constraints = "~> 0.1.3"
+  constraints = "0.1.3"
   hashes = [
+    "h1:/ov74vV+bZzJZJaV5gPVRfR3tJ0izIwMdemcPJeCuVo=",
     "h1:viuloQqB2fVX/gK6SrtWMhk5b3o5RnLfctAA7uTEP9U=",
     "zh:03e803cc3d1b71d550ed08d631c177ca3fa4e6de014681df399abce403e66d7b",
     "zh:46c2679bc12467a3209e42b6e3e8ff9697fd8b62f0db4f5f984e9e30731ed12e",
