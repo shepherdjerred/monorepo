@@ -156,6 +156,10 @@ async function validationEnvironment(definition: StackDefinition): Promise<{
   dataRoot: string;
 }> {
   const env = ambientEnvironment();
+  // PR validation is already isolated by TF_DATA_DIR. Do not reuse the shared
+  // persistent provider cache here: a stale or partially-written cached
+  // package must not turn a read-only schema check into a false failure.
+  delete env["TF_PLUGIN_CACHE_DIR"];
   const dataRoot = await temporaryDirectory("tofu-validation", env);
   env["TF_DATA_DIR"] = dataRoot;
   if (definition.encrypted === true) {
