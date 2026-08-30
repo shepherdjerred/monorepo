@@ -183,6 +183,38 @@ describe("openBettingPoolsForPrematch", () => {
       { channelId: "1337623164146155594", messageId: "prematch" },
     ]);
   });
+
+  // Regression: peekAvailableAt is nullable now (the peek feature is gone),
+  // but a rollback to the pre-removal image still reads it unconditionally.
+  // A pool this code creates must still carry a value or that rollback path
+  // breaks — see prisma/schema.prisma's comment on the column.
+  test("still writes a compatibility peekAvailableAt for rollback safety", async () => {
+    const detectedAt = new Date();
+    await openBettingPoolsForPrematch(
+      {
+        matchId: "NA1_5000000004",
+        gameInfo: gameInfo(),
+        queueType: "solo",
+        guildIds: [SERVER_ID],
+        detectedAt,
+        trackedAliasByPuuid: new Map(),
+      },
+      db,
+    );
+
+    const pool = await db.bucksMatchPool.findUniqueOrThrow({
+      where: {
+        matchId_serverId: {
+          matchId: "NA1_5000000004",
+          serverId: SERVER_ID,
+        },
+      },
+    });
+    expect(pool.peekAvailableAt).not.toBeNull();
+    expect(pool.peekAvailableAt?.getTime()).toBeGreaterThan(
+      detectedAt.getTime(),
+    );
+  });
 });
 
 describe("openBettingPoolsForPrematch metrics", () => {

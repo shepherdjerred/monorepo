@@ -75,6 +75,26 @@ export function computeGameStartAt(input: {
   return new Date(input.detectedAt.getTime() - input.gameLength * 1000);
 }
 
+// Peek is retired and this value is never read by current code. It is still
+// computed and written for one compatibility release: BucksMatchPool.peekAvailableAt
+// is now nullable so a rollback to the pre-removal image doesn't hit a missing
+// column, but that old image's Prisma schema still declares the field
+// non-null and its peek.ts candidate query decodes it unconditionally — a
+// pool this code creates with a null value would fail to decode there. Stop
+// computing this once this release is no longer a rollback target, and drop
+// the column in the same follow-up migration (see prisma/schema.prisma).
+const LEGACY_PEEK_AVAILABLE_DELAY_MS = 2 * 60 * 1000;
+
+function computeLegacyPeekAvailableAt(input: {
+  detectedAt: Date;
+  gameStartTime: number;
+  gameLength: number;
+}): Date {
+  return new Date(
+    computeGameStartAt(input).getTime() + LEGACY_PEEK_AVAILABLE_DELAY_MS,
+  );
+}
+
 function buildRoster(input: {
   gameInfo: RawCurrentGameInfo;
   trackedAliasByPuuid: ReadonlyMap<string, string>;
@@ -166,6 +186,11 @@ export async function openBettingPoolsForPrematch(
       detectedAt: input.detectedAt,
       gameStartTime: input.gameInfo.gameStartTime,
     });
+    const legacyPeekAvailableAt = computeLegacyPeekAvailableAt({
+      detectedAt: input.detectedAt,
+      gameStartTime: input.gameInfo.gameStartTime,
+      gameLength: input.gameInfo.gameLength,
+    });
     const predictionJson =
       input.prediction === undefined
         ? null
@@ -188,6 +213,7 @@ export async function openBettingPoolsForPrematch(
             serverId,
             detectedAt: input.detectedAt,
             closesAt,
+            peekAvailableAt: legacyPeekAvailableAt,
             queueType: input.queueType ?? null,
             roster: JSON.stringify(roster),
             predictionJson,

@@ -1025,11 +1025,13 @@ model BucksMatchPool {
   // sweep deletes.
   detectedAt DateTime
 
-  // Retired with the peek feature; no code reads or writes this anymore.
-  // Kept nullable for one compatibility release so a rollback to the
-  // pre-removal image (which still inserts it) doesn't hit a missing
-  // column. Drop in a follow-up migration once this release is no longer a
-  // rollback target.
+  // Retired with the peek feature; no code reads this anymore, but
+  // pool-open.ts still computes and writes a compatibility value (see its
+  // computeLegacyPeekAvailableAt) so a rollback to the pre-removal image —
+  // whose Prisma schema still declares this NOT NULL and whose peek.ts
+  // candidate query decodes it unconditionally — can still read pools this
+  // code creates. Stop writing it and drop the column in a follow-up
+  // migration once this release is no longer a rollback target.
   peekAvailableAt DateTime?
 
   // STORED rather than computed, so changing BETTING_WINDOW_MS cannot
