@@ -24,7 +24,7 @@ import { verifyScoutAssetBucket } from "@scout-for-lol/design-system/build";
 import {
   assertScoutCustomsArtifactPolicy,
   type ScoutSiteFlavor,
-} from "../../../scripts/lib/scout-customs-artifact.ts";
+} from "@shepherdjerred/root-scripts/lib/scout-customs-artifact.ts";
 
 function siteFlavor(): ScoutSiteFlavor {
   const flavor = process.env["PUBLIC_SCOUT_SITE_FLAVOR"];

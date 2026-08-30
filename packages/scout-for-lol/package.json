@@ -21,6 +21,7 @@
   "devDependencies": {
     "@scout-for-lol/backend": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
+    "@shepherdjerred/root-scripts": "workspace:*",
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
     "@eslint/js": "^10.0.1",
     "@shepherdjerred/eslint-config": "workspace:*",

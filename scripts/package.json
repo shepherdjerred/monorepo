@@ -55,6 +55,10 @@
     "./lib/run.ts": "./lib/run.ts",
     "./lib/transient.ts": "./lib/transient.ts",
     "./lib/transient-error.ts": "./lib/transient-error.ts",
-    "./lib/test-git.ts": "./lib/test-git.ts"
+    "./lib/test-git.ts": "./lib/test-git.ts",
+    "./lib/scout-customs-artifact.ts": {
+      "types": "./lib/scout-customs-artifact.ts",
+      "default": "./lib/scout-customs-artifact.ts"
+    }
   }
 }
