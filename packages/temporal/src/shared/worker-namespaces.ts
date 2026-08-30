@@ -23,15 +23,6 @@ export function workerNamespaces(input: {
   activeNamespace: TemporalNamespace;
   legacyNamespace: LegacyTemporalNamespace | undefined;
 }): readonly (TemporalNamespace | LegacyTemporalNamespace)[] {
-  if (input.queueRole === "legacy") {
-    const namespaces: (TemporalNamespace | LegacyTemporalNamespace)[] = [
-      input.activeNamespace,
-    ];
-    if (input.legacyNamespace !== undefined) {
-      namespaces.push(input.legacyNamespace);
-    }
-    return namespaces;
-  }
   const activeNamespaces: readonly TemporalNamespace[] =
     (input.queueRole === "scout" ||
       (input.queueRole === "workflows" &&

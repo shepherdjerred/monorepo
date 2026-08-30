@@ -3,6 +3,7 @@ import {
   assertCentralWorkerNamespace,
   workerNamespaces,
 } from "./worker-namespaces.ts";
+import { TASK_QUEUES } from "./task-queues.ts";
 
 describe("workerNamespaces", () => {
   test("binds local all-in-one workers to dev and deployed roles to prod", () => {
@@ -25,25 +26,6 @@ describe("workerNamespaces", () => {
         legacyNamespace: "default",
       }),
     ).toEqual(["prod", "default"]);
-  });
-
-  test("keeps the compatibility queue available in active and legacy namespaces", () => {
-    expect(
-      workerNamespaces({
-        queueRole: "legacy",
-        taskQueue: "default",
-        activeNamespace: "prod",
-        legacyNamespace: "default",
-      }),
-    ).toEqual(["prod", "default"]);
-    expect(
-      workerNamespaces({
-        queueRole: "legacy",
-        taskQueue: "default",
-        activeNamespace: "prod",
-        legacyNamespace: undefined,
-      }),
-    ).toEqual(["prod"]);
   });
 
   test("uses only the active namespace after the drain", () => {
@@ -83,7 +65,7 @@ describe("workerNamespaces", () => {
     expect(
       workerNamespaces({
         queueRole: "workflows",
-        taskQueue: "default",
+        taskQueue: TASK_QUEUES.HOME,
         activeNamespace: "prod",
         legacyNamespace: "default",
       }),
