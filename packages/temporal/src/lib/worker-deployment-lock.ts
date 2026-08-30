@@ -8,18 +8,29 @@ export async function acquireWorkerDeploymentLock(
 ): Promise<() => Promise<void>> {
   const lockPath = `${catalogPath}.rollout-lock`;
   const remoteLockRef = `refs/temporal-worker-deployment-locks/${lockName}`;
-  await run(["git", "push", "origin", `HEAD:${remoteLockRef}`]);
   try {
     await mkdir(lockPath);
   } catch (error: unknown) {
     if (error instanceof Error && "code" in error && error.code === "EEXIST") {
-      await run(["git", "push", "origin", `:${remoteLockRef}`]);
       throw new Error("Another Temporal Worker Deployment rollout is active", {
         cause: error,
       });
     }
-    await run(["git", "push", "origin", `:${remoteLockRef}`]);
     throw new Error("Unable to acquire Temporal Worker Deployment lock", {
+      cause: error,
+    });
+  }
+  try {
+    await run([
+      "git",
+      "push",
+      `--force-with-lease=${remoteLockRef}:`,
+      "origin",
+      `HEAD:${remoteLockRef}`,
+    ]);
+  } catch (error: unknown) {
+    await rm(lockPath, { recursive: true, force: true });
+    throw new Error("Another Temporal Worker Deployment rollout is active", {
       cause: error,
     });
   }
