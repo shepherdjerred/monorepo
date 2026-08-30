@@ -77,7 +77,7 @@ export function createTemporalDomainWorker(
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
-        "argocd.argoproj.io/sync-wave": String(props.syncWave ?? 2),
+        "argocd.argoproj.io/sync-wave": String(props.syncWave ?? 3),
       },
     },
     serviceAccount,

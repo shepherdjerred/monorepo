@@ -238,8 +238,10 @@ async function validatePreparedTargets(input: {
         `Target ${migration.targetNamespace}/${migration.source.scheduleId} drifted after prepare`,
       );
     }
-    assertTargetHasNotFired(target, migration);
     const migrationState = decodeMigrationState(target.state.note);
+    if (migrationState.cutoverAt === undefined) {
+      assertTargetHasNotFired(target, migration);
+    }
     if (migrationState.cutoverAt === undefined && !target.state.paused) {
       throw new Error(
         `Prepared target ${migration.targetNamespace}/${migration.source.scheduleId} must remain paused until cutover`,
@@ -395,7 +397,9 @@ export async function cutoverNamespaceMigration(input: {
     sourcePauseStarted,
   );
   await persistMigrationAttempt(input.targetClients, targets, pauseStartedAt);
-  await assertNoTargetActions(input.targetClients, input.schedules);
+  if (!sourcePauseStarted) {
+    await assertNoTargetActions(input.targetClients, input.schedules);
+  }
   const cutoverAt = await pauseSourceSchedules(
     input.sourceClient,
     input.targetClients,
