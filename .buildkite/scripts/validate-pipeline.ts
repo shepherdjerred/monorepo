@@ -188,7 +188,7 @@ for (const [key, lane, candidate] of [
 // receive only its own provider identity.
 const prDryrun = stepBlocks.get("pr-dryrun");
 const prDryrunInstall =
-  ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter homelab --filter '@homelab/cdk8s'";
+  ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --filter homelab --filter '@homelab/cdk8s'";
 if (!hasTrimmedLine(prDryrun, prDryrunInstall)) {
   fail(`pr-dryrun is missing exact filtered install ${prDryrunInstall}`);
 }
