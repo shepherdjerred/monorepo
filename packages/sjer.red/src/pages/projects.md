@@ -170,7 +170,7 @@ A Discord bot that tracks your friends' League of Legends matches. I've learnt a
 
 ## 2023
 
-### [macOS cross compiler](https://github.com/shepherdjerred/monorepo/tree/main/archive/macos-cross-compiler)
+### [macOS cross compiler](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/macos-cross-compiler)
 
 A C/C++/Fortran/Rust cross-compiler targeting amd64/aarch64 macOS from a Linux host.
 
@@ -188,8 +188,8 @@ Multi-player Pokémon (or any Gameboy game) via Discord w/ video streaming & gam
 
 Start/stop an EC2 instance. I created this to host game servers on EC2 while allowing friends to start/stop the server as needed, so that on-demand costs could be kept down.
 
-- <https://github.com/shepherdjerred/monorepo/tree/main/ec2-instance-restart>
-- <https://github.com/shepherdjerred/monorepo/tree/main/ec2-instance-restart-frontend>
+- <https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/ec2-instance-restart>
+- <https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/ec2-instance-restart-frontend>
 
 ## 2020
 
@@ -205,7 +205,7 @@ In my first two years of college I was running a Minecraft server. I shut it dow
 
 ### 2018/2019 (senior year)
 
-#### [Castle Casters](https://github.com/shepherdjerred/monorepo/tree/main/archive/castle-casters)
+#### [Castle Casters](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/castle-casters)
 
 A game/game engine I wrote from scratch.
 
@@ -213,35 +213,35 @@ A game/game engine I wrote from scratch.
 
 I wrote a paper over 3D Graphics Rendering with OpenGL. I also published it as a [blog post on OpenGL rendering](/blog/2019/opengl/).
 
-#### [Hue Saber](https://github.com/shepherdjerred/monorepo/tree/main/hue-saber)
+#### [Hue Saber](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/hue-saber)
 
 Synchronize Hue lights to the game Beat Saber. The latency was, surprisingly, quite okay.
 
-#### [Usher](https://github.com/shepherdjerred/monorepo/tree/main/usher)
+#### [Usher](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/usher)
 
 Sign up for a chapel seat before selection opens.
 
-#### [Cashly](https://github.com/shepherdjerred/monorepo/tree/main/cashly)
+#### [Cashly](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/cashly)
 
 A personal finance simulator. [ProjectionLab](https://projectionlab.com/) does it better than I ever could.
 
 ### 2017/2018 (junior year)
 
-#### [Easely](https://github.com/shepherdjerred/monorepo/tree/main/easely)
+#### [Easely](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/easely)
 
 Alternative interface for Harding's computer science grading platform.
 
-#### [Siphon](https://github.com/shepherdjerred/monorepo/tree/main/siphon)
+#### [Siphon](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/siphon)
 
 Alternative interface for Harding's Pipeline web portal.
 
-#### [Funsheet](https://github.com/shepherdjerred/monorepo/tree/main/funsheet)
+#### [Funsheet](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/funsheet)
 
 Track and find fun things to do.
 
 ### 2016/2017 (sophomore year)
 
-#### [Raspastat](https://github.com/shepherdjerred/monorepo/tree/main/raspastat)
+#### [Raspastat](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/raspastat)
 
 A thermostat for my dorm using a Raspberry Pi. It looked like a bomb stuck to the wall.
 
@@ -261,15 +261,15 @@ Responsive homepage for Minecraft servers
 
 Allow players to fairly teleport around
 
-#### [The Button](https://github.com/shepherdjerred/monorepo/tree/main/the-button)
+#### [The Button](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/the-button)
 
 Press a button and make a counter go up.
 
-#### [Maze Game](https://github.com/shepherdjerred/monorepo/tree/main/practice/maze-game)
+#### [Maze Game](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/practice/maze-game)
 
 Pacman-esque game.
 
-#### [RSI Hackathon](https://github.com/shepherdjerred/monorepo/tree/main/rsi-hackathon-2016)
+#### [RSI Hackathon](https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/rsi-hackathon-2016)
 
 I have no idea how, but my team won this.
 
@@ -340,7 +340,7 @@ My Minecraft server that taught me everything I know from server administration,
 My surviving code is in a few places:
 
 - <https://github.com/ShepherdJerred-minecraft>
-- <https://github.com/shepherdjerred/monorepo/tree/main/ts-mc>
+- <https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/ts-mc>
 - <https://github.com/the-storm-mc>
 - <https://www.spigotmc.org/resources/authors/riotshielder.51/>
 

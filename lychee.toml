@@ -5,7 +5,8 @@
 #
 # Scope: tracked Markdown documentation. This automates the rot-detection half
 # of the root AGENTS.md "Verify link liveness" rule; the commit-time check for
-# NEW URLs remains manual.
+# NEW URLs remains manual. Site-root-relative links are validated by the
+# owning site's build checks because this repository contains multiple sites.
 
 # The scheduled activity is non-interactive; keep local runs identical.
 no_progress = true

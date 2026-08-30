@@ -171,5 +171,5 @@ Upload your `.json`, `.sig`, and installer files to GitHub Releases.
 ## References
 
 - [Tauri Updater Documentation](https://v2.tauri.app/plugin/updater/)
-- [Tauri Signing Guide](https://v2.tauri.app/distribute/sign/)
+- [Tauri Distribution and Signing](https://v2.tauri.app/distribute/)
 - [Update Server Setup](https://v2.tauri.app/plugin/updater/#update-server)
