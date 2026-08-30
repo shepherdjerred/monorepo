@@ -6,7 +6,6 @@ export const MAX_DETAILED_FAILURE_ALERTS = 100;
 export function buildWorkflowFailureOverflowAlert(
   executions: readonly FailedWorkflowExecution[],
   since: Date,
-  now: Date,
   ttlMs: number,
 ): AlertmanagerAlert {
   const counts = new Map<string, number>();
@@ -19,6 +18,9 @@ export function buildWorkflowFailureOverflowAlert(
     .map(([key, count]) => `${key}: ${count.toString()}`)
     .join("\n");
   const omitted = executions.length;
+  const newestOmittedCloseTime = executions.reduce((latest, execution) =>
+    execution.closeTime > latest.closeTime ? execution : latest,
+  ).closeTime;
   const description = [
     `${omitted.toString()} failed Temporal workflow executions were omitted after the ${MAX_DETAILED_FAILURE_ALERTS.toString()}-execution detail budget was consumed.`,
     `lookbackSince ${since.toISOString()}`,
@@ -37,6 +39,6 @@ export function buildWorkflowFailureOverflowAlert(
       message: description,
     },
     startsAt: since.toISOString(),
-    endsAt: new Date(now.getTime() + ttlMs).toISOString(),
+    endsAt: new Date(newestOmittedCloseTime.getTime() + ttlMs).toISOString(),
   };
 }
