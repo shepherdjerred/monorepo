@@ -1,4 +1,5 @@
 import { mkdir, rm } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
 
 export async function acquireWorkerDeploymentLock(
@@ -8,6 +9,23 @@ export async function acquireWorkerDeploymentLock(
 ): Promise<() => Promise<void>> {
   const lockPath = `${catalogPath}.rollout-lock`;
   const remoteLockRef = `refs/temporal-worker-deployment-locks/${lockName}`;
+  const lockCommit = await run([
+    "git",
+    "-c",
+    "user.name=Temporal Rollout Lock",
+    "-c",
+    "user.email=temporal-rollout@localhost",
+    "commit-tree",
+    "HEAD^{tree}",
+    "-p",
+    "HEAD",
+    "-m",
+    `Temporal rollout lock ${lockName} ${randomUUID()}`,
+  ]);
+  const lockObject = lockCommit.stdout.trim();
+  if (!/^[a-f0-9]{40}$/u.test(lockObject)) {
+    throw new Error("Temporal rollout lock returned an invalid commit");
+  }
   try {
     await mkdir(lockPath);
   } catch (error: unknown) {
@@ -26,7 +44,7 @@ export async function acquireWorkerDeploymentLock(
       "push",
       `--force-with-lease=${remoteLockRef}:`,
       "origin",
-      `HEAD:${remoteLockRef}`,
+      `${lockObject}:${remoteLockRef}`,
     ]);
   } catch (error: unknown) {
     await rm(lockPath, { recursive: true, force: true });
@@ -38,7 +56,13 @@ export async function acquireWorkerDeploymentLock(
     try {
       await rm(lockPath, { recursive: true, force: true });
     } finally {
-      await run(["git", "push", "origin", `:${remoteLockRef}`]);
+      await run([
+        "git",
+        "push",
+        `--force-with-lease=${remoteLockRef}:${lockObject}`,
+        "origin",
+        `:${remoteLockRef}`,
+      ]);
     }
   };
 }
