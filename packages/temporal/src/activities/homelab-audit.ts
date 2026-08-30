@@ -1,14 +1,10 @@
-import { ApplicationFailure, Context } from "@temporalio/activity";
-import * as Sentry from "@sentry/bun";
+import { ApplicationFailure } from "@temporalio/activity";
 import {
   homelabAuditEmailSentTotal,
   homelabAuditSubprocessDurationSeconds,
   homelabAuditSubprocessExitTotal,
   homelabAuditTokensTotal,
 } from "#observability/metrics.ts";
-import { getTraceContext } from "#observability/tracing.ts";
-import { emitOtel } from "#observability/log.ts";
-import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import {
   buildAuditPrompt,
   loadRunbook,
@@ -30,9 +26,11 @@ import {
   startToCloseTimeoutMsOrUndefined,
 } from "./agent-task-runtime.ts";
 import {
-  ClaudeAgentSdkRunError,
-  runClaudeAgentSdk,
-} from "./claude-agent-sdk-runner.ts";
+  createCodexAgentEventHandler,
+  createCodexSecretRefreshHandler,
+  CodexAgentSdkRunError,
+  runCodexAgentSdk,
+} from "./codex-agent-sdk-runner.ts";
 import {
   archiveAuditBody,
   archiveAuditMetadata,
@@ -50,30 +48,24 @@ import {
   runAuditPreflight,
   type HomelabAuditPreflightResult,
 } from "./homelab-audit-preflight.ts";
+import { createActivityObservability } from "./activity-observability.ts";
 
 const COMPONENT = "homelab-audit";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
-const DEFAULT_MODEL = "claude-opus-5";
+const DEFAULT_MODEL = "gpt-5.6-luna";
 const DEFAULT_MAX_TURNS = 80;
 
-// Audit hits a wide tool surface (kubectl, talosctl, toolkit, tofu, gh) so we
-// allow Bash + Read + Grep + Glob + the GitHub MCP namespace if it's wired up
-// later. The actual security bound is layered:
-//   1. The Agent SDK env (subscription OAuth + audit creds, no direct API key).
+const { jsonLog, captureWithContext, safeHeartbeat } =
+  createActivityObservability(COMPONENT, "homelabAudit");
+
+// Audit hits a wide tool surface (kubectl, talosctl, toolkit, tofu, gh). The
+// actual security bound is layered:
+//   1. The Agent SDK env (OpenRouter + audit creds).
 //   2. The cluster RBAC bound to the temporal-worker SA — strict read-only via
 //      `temporal-worker-audit-reader` (see homelab/.../audit-rbac.ts).
 //   3. The prompt itself, which forbids state-mutating commands.
-const ALLOWED_TOOLS = [
-  "Bash",
-  "Read",
-  "Grep",
-  "Glob",
-  "WebFetch",
-  "mcp__github__*",
-] as const;
-
 export type HomelabAuditAgentInput = {
   /** ISO date for the audit. Defaults to today (UTC) when undefined. */
   date?: string;
@@ -81,77 +73,18 @@ export type HomelabAuditAgentInput = {
   sections?: SectionsFilter;
   /** Preflight result block to inject before the output requirements. */
   toolingPreflightMarkdown?: string | undefined;
-  /** Override the model (e.g. "claude-haiku-4-5-20251001" for cheap iteration). */
+  /** Override the stable catalog model ID for local iteration. */
   model?: string;
   /** Override max-turns budget. */
   maxTurns?: number;
 };
 
-function jsonLog(
-  level: "info" | "warning" | "error",
-  message: string,
-  fields: Record<string, unknown> = {},
-): void {
-  const info = activityInfoOrUndefined();
-  const base: Record<string, unknown> = {
-    level,
-    msg: message,
-    component: COMPONENT,
-    ...getTraceContext(),
-    ...fields,
-  };
-  if (info !== undefined) {
-    Object.assign(base, info);
-  }
-  console.warn(JSON.stringify(base));
-  emitOtel(level, message, { module: COMPONENT, ...info, ...fields });
-}
-
-function activityInfoOrUndefined(): Record<string, unknown> | undefined {
-  try {
-    const info = Context.current().info;
-    return {
-      workflow: info.workflowType,
-      ...workflowExecutionContext(info),
-      activity: info.activityType,
-      attempt: info.attempt,
-    };
-  } catch {
-    // Outside an activity (local dev script): no Temporal context to attach.
-    return undefined;
-  }
-}
-
-function captureWithContext(
-  error: unknown,
-  extra: Record<string, unknown> = {},
-): void {
-  Sentry.withScope((scope) => {
-    scope.setTag("component", COMPONENT);
-    const info = activityInfoOrUndefined();
-    if (info !== undefined) {
-      scope.setTag("workflow", String(info["workflow"]));
-      scope.setTag("activity", String(info["activity"]));
-    }
-    scope.setContext("homelabAudit", { ...info, ...extra });
-    Sentry.captureException(error);
-  });
-}
-
-function safeHeartbeat(payload: Record<string, unknown>): void {
-  try {
-    Context.current().heartbeat(payload);
-  } catch {
-    // Outside an activity (local dev script): heartbeats are a no-op.
-  }
-}
-
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function nonRetryableClaudeFailure(
-  error: ClaudeAgentSdkRunError,
+function nonRetryableCodexFailure(
+  error: CodexAgentSdkRunError,
 ): ApplicationFailure {
   return ApplicationFailure.create({
     message: error.message,
@@ -166,9 +99,9 @@ function nonRetryableClaudeFailure(
 async function runAuditAgent(
   input: HomelabAuditAgentInput,
 ): Promise<HomelabAuditAgentResult> {
-  const claudeToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
-  if (claudeToken === undefined || claudeToken === "") {
-    throw new Error("CLAUDE_CODE_OAUTH_TOKEN is required");
+  const openRouterApiKey = Bun.env["OPENROUTER_API_KEY"];
+  if (openRouterApiKey === undefined || openRouterApiKey === "") {
+    throw new Error("OPENROUTER_API_KEY is required");
   }
 
   const date = input.date ?? todayIsoDate();
@@ -183,7 +116,7 @@ async function runAuditAgent(
     toolingPreflightMarkdown: input.toolingPreflightMarkdown,
   });
 
-  jsonLog("info", "Invoking Claude Agent SDK for homelab audit", {
+  jsonLog("info", "Invoking Codex Agent SDK for homelab audit", {
     date,
     sections,
     model,
@@ -218,7 +151,7 @@ async function runAuditAgent(
   let eventCount = 0;
   const heartbeat = setInterval(() => {
     safeHeartbeat({
-      phase: "claude-agent-sdk",
+      phase: "codex-agent-sdk",
       elapsedMs: Date.now() - startMs,
       eventCount,
     });
@@ -226,58 +159,50 @@ async function runAuditAgent(
 
   let result;
   try {
-    result = await runClaudeAgentSdk({
+    result = await runCodexAgentSdk({
       service: "temporal",
       callSite: "homelab-audit",
       prompt,
       model,
       maxTurns,
       cwd: process.cwd(),
-      allowedTools: ALLOWED_TOOLS,
       env: envForTrustedAgent({
-        CLAUDE_CODE_OAUTH_TOKEN: claudeToken,
+        OPENROUTER_API_KEY: openRouterApiKey,
         GH_TOKEN: githubTokenResult.token,
       }),
       signal,
       redactTokens: secretState.tokens,
-      beforeEvent: async () => {
-        try {
-          await secretState.refresh();
-          return true;
-        } catch {
-          return false;
-        }
-      },
-      onEvent: (event) => {
-        eventCount += 1;
-        safeHeartbeat({
-          phase: "claude-agent-sdk",
-          elapsedMs: event.elapsedMs,
-          eventCount,
-          eventType: event.type,
-        });
-        jsonLog("info", "homelab audit agent event", {
-          eventType: event.type,
-          elapsedMs: event.elapsedMs,
-        });
-      },
+      beforeEvent: createCodexSecretRefreshHandler(secretState.refresh),
+      onEvent: createCodexAgentEventHandler({
+        nextEventCount: () => {
+          eventCount += 1;
+          return eventCount;
+        },
+        heartbeat: safeHeartbeat,
+        logEvent: (event) => {
+          jsonLog("info", "homelab audit agent event", {
+            eventType: event.type,
+            elapsedMs: event.elapsedMs,
+          });
+        },
+      }),
     });
   } catch (error: unknown) {
     homelabAuditSubprocessExitTotal.inc({ exit_code: "sdk_failed" });
     const classified =
-      error instanceof ClaudeAgentSdkRunError && error.generationStarted
-        ? nonRetryableClaudeFailure(error)
+      error instanceof CodexAgentSdkRunError && error.generationStarted
+        ? nonRetryableCodexFailure(error)
         : error;
     captureWithContext(classified, {
       model,
       durationMs: Date.now() - startMs,
-      runtime: "claude_agent_sdk",
+      runtime: "codex_sdk",
       generationStarted:
-        error instanceof ClaudeAgentSdkRunError
+        error instanceof CodexAgentSdkRunError
           ? error.generationStarted
           : undefined,
       possiblyAppliedEffects:
-        error instanceof ClaudeAgentSdkRunError
+        error instanceof CodexAgentSdkRunError
           ? error.possiblyAppliedEffects
           : undefined,
     });
@@ -292,7 +217,7 @@ async function runAuditAgent(
   const markdown = result.resultText.trim();
   if (markdown.length === 0) {
     const error = ApplicationFailure.nonRetryable(
-      "Claude Agent SDK returned an empty homelab audit after a completed generation",
+      "Codex Agent SDK returned an empty homelab audit after a completed generation",
       "HomelabAuditOutputContractFailure",
     );
     captureWithContext(error, {
@@ -325,7 +250,7 @@ async function runAuditAgent(
   );
 
   jsonLog("info", "homelab audit agent completed", {
-    runtime: "claude_agent_sdk",
+    runtime: "codex_sdk",
     durationMs: result.durationMs,
     costUsd: result.costUsd,
     numTurns: result.numTurns,

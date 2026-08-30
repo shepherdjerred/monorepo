@@ -96,12 +96,12 @@ common:
         secretKeyRef:
           name: buildkite-npm-credentials
           key: NPM_TOKEN
-  - grant_claude: &grant_claude
-      name: CLAUDE_CODE_OAUTH_TOKEN
+  - grant_release_openrouter: &grant_release_openrouter
+      name: OPENROUTER_API_KEY
       valueFrom:
         secretKeyRef:
-          name: buildkite-claude-credentials
-          key: CLAUDE_CODE_OAUTH_TOKEN
+          name: buildkite-release-openrouter-credentials
+          key: OPENROUTER_API_KEY
   - grant_chartmuseum_username: &grant_chartmuseum_username
       name: CHARTMUSEUM_USERNAME
       valueFrom:
@@ -381,43 +381,6 @@ common:
                 - name: buildkite-git-mirrors
                   mountPath: /buildkite/git-mirrors
                   readOnly: true
-  # The Codex fallback authenticates with its refreshable ChatGPT auth bundle,
-  # never an extracted access token. This private claim is absent from the
-  # default agent-stack pod volumes and appears only in this main-only lane.
-  - pod_release_codex_auth: &pod_release_codex_auth
-      kubernetes: &pod_release_codex_auth_kubernetes
-        checkout:
-          cloneFlags: "--no-tags"
-        podSpecPatch: &pod_release_codex_auth_pod_spec
-          serviceAccountName: buildkite-job
-          automountServiceAccountToken: false
-          volumes:
-            - name: buildkite-codex-auth
-              persistentVolumeClaim:
-                claimName: buildkite-codex-auth
-          containers:
-            - *checkout_container
-            - &pod_release_codex_auth_container
-              name: container-0
-              image: "${CI_BASE_IMAGE}"
-              imagePullPolicy: IfNotPresent
-              securityContext:
-                allowPrivilegeEscalation: false
-              env:
-                - name: BUILDKITE_SHELL
-                  value: "/bin/bash -e -c"
-                - name: CODEX_HOME
-                  value: /buildkite/codex-auth
-              resources:
-                requests:
-                  { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
-                limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
-              volumeMounts:
-                - name: buildkite-git-mirrors
-                  mountPath: /buildkite/git-mirrors
-                  readOnly: true
-                - name: buildkite-codex-auth
-                  mountPath: /buildkite/codex-auth
   # OpenTofu's provider cache is shared across the selected CI jobs on Liskov.
   # Those commands use `flock` around Terraform itself: OpenTofu explicitly
   # does not guarantee concurrent writes to TF_PLUGIN_CACHE_DIR are safe.
@@ -1594,7 +1557,8 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter homelab --filter '@homelab/cdk8s'
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --filter homelab --filter '@homelab/cdk8s'
+      bun --no-install run --cwd packages/llm-models build
       # Merge-base for section gating; unresolvable → empty → ci-changed.ts
       # fails open and every section runs (extra work, never lost coverage).
       if ! CI_CHANGED_BASE=$(git merge-base origin/main HEAD); then
@@ -2828,31 +2792,30 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --production
+      bun --no-install run --cwd packages/llm-models build:runtime
       bun --no-install scripts/release.ts
     # Safe to retry: release-please upserts its PR and skips already-cut
     # releases; a GitHub GraphQL 500 (build 5809) exits 34 via transient.ts.
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_release_codex_auth_kubernetes
+          <<: *pod_light_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: release-please
           podSpecPatch:
-            <<: *pod_release_codex_auth_pod_spec
+            <<: *pod_light_pod_spec
             containers:
               - *checkout_container
-              - <<: *pod_release_codex_auth_container
+              - <<: *pod_light_container
                 env:
                   - *env_buildkite_shell
-                  - name: CODEX_HOME
-                    value: /buildkite/codex-auth
                   - *grant_github_download
                   - *grant_github_app_id
                   - *grant_github_app_installation_id
                   - *grant_github_app_private_key
-                  - *grant_claude
+                  - *grant_release_openrouter
 
   # Version commit-back: rewrites versions.ts tag@digest pins from the digests
   # the images step recorded in build meta-data, and opens the auto-merge bump

@@ -120,10 +120,6 @@
       "clones": 1,
       "tokens": 86
     },
-    "packages/birmel/src/editor/github-pr.ts|packages/birmel/src/editor/repo-clone.ts": {
-      "clones": 1,
-      "tokens": 129
-    },
     "packages/birmel/src/health/server.ts|packages/starlight-karma-bot/src/server/index.ts": {
       "clones": 1,
       "tokens": 93
@@ -1740,10 +1736,6 @@
       "clones": 1,
       "tokens": 90
     },
-    "packages/temporal/src/activities/agent-task-runtime.ts|packages/temporal/src/activities/homelab-audit.ts": {
-      "clones": 2,
-      "tokens": 188
-    },
     "packages/temporal/src/activities/agent-task.test.ts|packages/temporal/src/activities/agent-task.test.ts": {
       "clones": 1,
       "tokens": 75
@@ -1792,14 +1784,6 @@
       "clones": 1,
       "tokens": 127
     },
-    "packages/temporal/src/activities/homelab-audit.ts|packages/temporal/src/activities/scout-season-refresh-claude.ts": {
-      "clones": 4,
-      "tokens": 457
-    },
-    "packages/temporal/src/activities/homelab-audit.ts|packages/temporal/src/activities/scout-season-refresh.ts": {
-      "clones": 1,
-      "tokens": 328
-    },
     "packages/temporal/src/activities/homelab-crd-imports-refresh.ts|packages/temporal/src/activities/scout-showcase-refresh.ts": {
       "clones": 1,
       "tokens": 95
@@ -1841,8 +1825,8 @@
       "tokens": 141
     },
     "packages/temporal/src/shared/agent-task.ts|packages/temporal/src/shared/agent-task.ts": {
-      "clones": 2,
-      "tokens": 349
+      "clones": 1,
+      "tokens": 143
     },
     "packages/temporal/src/shared/llm-catalog-alert.test.ts|packages/temporal/src/shared/llm-catalog-alert.test.ts": {
       "clones": 1,

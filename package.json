@@ -158,7 +158,6 @@
     "scripts"
   ],
   "overrides": {
-    "@anthropic-ai/claude-agent-sdk": "0.3.241",
     "@grpc/grpc-js": "1.14.4",
     "@opentelemetry/api": "1.9.1",
     "@typescript-eslint/eslint-plugin": "8.67.0",

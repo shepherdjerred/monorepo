@@ -6,22 +6,19 @@
  * a real PR (DRY_RUN=0).
  *
  * Usage:
- *   # Pure dry-run against a fresh clone (slow: shallow clone + Claude Agent SDK):
+ *   # Pure dry-run against a fresh clone (slow: shallow clone + Codex SDK):
  *   op run --env-file=.env.season-refresh -- DRY_RUN=1 bun run scripts/run-scout-season-refresh-local.ts
  *
  *   # Faster iteration: point at an existing checkout (skips clone):
  *   op run --env-file=.env.season-refresh -- DRY_RUN=1 \
  *     bun run scripts/run-scout-season-refresh-local.ts --repo=/tmp/some-monorepo-checkout
  *
- *   # Cheap-model iteration:
- *   op run --env-file=.env.season-refresh -- DRY_RUN=1 --haiku ...
- *
  *   # Real PR run (use a throwaway branch — workflow opens PR and exits):
  *   op run --env-file=.env.season-refresh -- bun run scripts/run-scout-season-refresh-local.ts
  *
  * Notes:
  *   - This bypasses Temporal entirely. No worker bundle, no schedule. The
- *     activity body uses the Claude Agent SDK plus git/gh commands.
+ *     activity body uses Codex SDK through OpenRouter plus git/gh commands.
  *   - When using --repo=PATH, the harness assumes PATH is a clean checkout
  *     of the monorepo. The activity mutates files there in-place; reset
  *     between runs with `git checkout -- packages/scout-for-lol/.../seasons*`.
@@ -42,8 +39,6 @@ function parseArgs(argv: readonly string[]): Args {
   for (const arg of argv) {
     if (arg.startsWith("--repo=")) {
       repo = arg.slice("--repo=".length);
-    } else if (arg === "--haiku") {
-      model = "claude-haiku-4-5-20251001";
     } else if (arg.startsWith("--model=")) {
       model = arg.slice("--model=".length);
     } else if (arg.startsWith("--max-turns=")) {

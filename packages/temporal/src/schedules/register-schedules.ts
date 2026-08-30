@@ -7,12 +7,14 @@ import { ScheduleNotFoundError } from "@temporalio/client";
 import { WorkflowNotFoundError } from "@temporalio/common";
 import {
   detectOrphanSchedules,
+  isDynamicAgentTaskSchedule,
   isReconcilableDynamicAgentTaskSchedule,
 } from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
 import { CATCHUP_RELAXED, SCHEDULES } from "./schedule-definitions.ts";
 import type { CatchupWindow, ScheduleDefinition } from "./schedule-types.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { AgentTaskInputSchema } from "#shared/agent-task.ts";
 
 // SCHEDULES/CATCHUP_* live in ./schedule-definitions.ts and the shared types
 // live in ./schedule-types.ts (this file sits at the repo's max-lines cap).
@@ -109,6 +111,31 @@ export async function terminateRetiredWorkflowExecutions(client: {
         }
       }
     }
+  }
+}
+
+async function pauseLegacyClaudeSchedules(client: Client): Promise<void> {
+  for await (const schedule of client.schedule.list()) {
+    if (!isDynamicAgentTaskSchedule(schedule.scheduleId, schedule.memo)) {
+      continue;
+    }
+    const action = schedule.action;
+    if (action?.type !== "startWorkflow") continue;
+    if (action.workflowType !== "agentTaskWorkflow") continue;
+    const description = await client.schedule
+      .getHandle(schedule.scheduleId)
+      .describe();
+    if (description.action.workflowType !== "agentTaskWorkflow") continue;
+    const input = AgentTaskInputSchema.safeParse(description.action.args?.[0]);
+    if (!input.success || input.data.provider !== "claude") continue;
+    await client.schedule
+      .getHandle(schedule.scheduleId)
+      .pause(
+        "Paused during the OpenRouter migration; resubmit this task with provider codex",
+      );
+    console.warn(
+      `Paused legacy Claude agent-task schedule: ${schedule.scheduleId}`,
+    );
   }
 }
 
@@ -257,6 +284,7 @@ export async function registerSchedules(
       console.warn(`Created schedule: ${schedule.id}`);
     }
   }
+  await pauseLegacyClaudeSchedules(client);
   // After reconciling the declared set, surface any live schedule that is no
   // longer represented in source (renamed/removed but not added to the delete
   // list). Non-fatal — see detectOrphanSchedules.

@@ -550,14 +550,10 @@ describe("Temporal operations worker isolation", () => {
       expect(repoEnv).not.toContain(required);
       expect(scoutEnv).not.toContain(required);
     }
-    for (const required of [
-      "FRESHRSS_API_PASSWORD_FILE",
-      "BUILDKITE_API_TOKEN",
-      "OPENROUTER_API_KEY",
-    ]) {
-      expect(repoEnv).toContain(required);
-      expect(scoutEnv).not.toContain(required);
-    }
+    expect(repoEnv).toContain("FRESHRSS_API_PASSWORD_FILE");
+    expect(repoEnv).toContain("BUILDKITE_API_TOKEN");
+    expect(repoEnv).toContain("OPENROUTER_API_KEY");
+    expect(scoutEnv).toContain("OPENROUTER_API_KEY");
     for (const replayOnly of [
       "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
       "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
@@ -658,8 +654,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
     for (const required of [
       "TEMPORAL_ADDRESS",
       "TEMPORAL_WORKER_ROLE",
-      "CLAUDE_CODE_OAUTH_TOKEN",
-      "CODEX_ACCESS_TOKEN",
+      "OPENROUTER_API_KEY",
       "PROMETHEUS_URL",
       "ALERT_DASHBOARD_URL",
     ]) {
@@ -675,6 +670,8 @@ describe("temporal homelab audit tooling access boundaries", () => {
       "BUILDKITE_API_TOKEN",
       "CLOUDFLARE_API_TOKEN",
       "CODEX_API_KEY",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "CODEX_ACCESS_TOKEN",
       "GITHUB_APP_ID",
       "GITHUB_APP_INSTALLATION_ID",
       "GITHUB_APP_PRIVATE_KEY",
@@ -682,7 +679,6 @@ describe("temporal homelab audit tooling access boundaries", () => {
       "GRAFANA_API_KEY",
       "HA_TOKEN",
       "OPENAI_API_KEY",
-      "OPENROUTER_API_KEY",
       "POSTAL_API_KEY",
       "RECIPIENT_EMAIL",
       "SENDER_EMAIL",

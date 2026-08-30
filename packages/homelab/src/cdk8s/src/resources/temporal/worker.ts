@@ -137,7 +137,6 @@ export function createTemporalWorkerDeployment(
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("agent"),
       AGENT_PROVIDER_UID: EnvValue.fromValue("1001"),
       ENVIRONMENT: EnvValue.fromValue("production"),
-      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
       DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
       TELEMETRY_ENABLED: EnvValue.fromValue("true"),
       OTLP_ENDPOINT: EnvValue.fromValue(
@@ -147,15 +146,10 @@ export function createTemporalWorkerDeployment(
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
       ),
-      CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
+      // Codex SDK receives the service-scoped OpenRouter key directly.
+      OPENROUTER_API_KEY: EnvValue.fromSecretValue({
         secret,
-        key: "CLAUDE_CODE_OAUTH_TOKEN",
-      }),
-      // Codex SDK subscription token. The agent worker holds one credential
-      // per provider and no direct-provider inference key.
-      CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
-        secret,
-        key: "CODEX_ACCESS_TOKEN",
+        key: "OPENROUTER_API_KEY",
       }),
       PROMETHEUS_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-prometheus.prometheus:9090",

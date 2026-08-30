@@ -50,7 +50,7 @@ function validInput(): AgentTaskInput {
         ],
       },
     ],
-    provider: "claude",
+    provider: "codex",
     mode: "report-only",
     repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
     runAt: "2026-05-31T09:00:00-07:00",

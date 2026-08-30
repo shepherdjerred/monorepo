@@ -44,9 +44,9 @@ const RULES: readonly ArchitectureRule[] = [
   {
     id: "provider-api-key",
     description:
-      "deployed inference credentials are OpenRouter or native agent SDK credentials",
+      "deployed inference credentials use OpenRouter except for the explicit Pokémon Codex subscription workload",
     pattern:
-      /\b(?:ANTHROPIC_API_KEY|CODEX_API_KEY|GEMINI_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|GROQ_API_KEY|OPENAI_API_KEY|XAI_API_KEY)\b/,
+      /\b(?:ANTHROPIC_API_KEY|CLAUDE_CODE_OAUTH_TOKEN|CODEX_ACCESS_TOKEN|CODEX_API_KEY|GEMINI_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|GROQ_API_KEY|OPENAI_API_KEY|XAI_API_KEY)\b/,
   },
   {
     id: "direct-provider-endpoint",
@@ -56,8 +56,15 @@ const RULES: readonly ArchitectureRule[] = [
       /(?:\b(?:ANTHROPIC|GEMINI|GOOGLE_GENERATIVE_AI|GROQ|OPENAI|XAI)_BASE_URL\b|https:\/\/(?:api\.(?:anthropic|groq|openai|x\.ai)\.com|generativelanguage\.googleapis\.com))/,
   },
   {
+    id: "legacy-agent-sdk",
+    description:
+      "deployed coding agents use the Codex SDK through OpenRouter, not the Claude Agent SDK",
+    pattern:
+      /(?:(?:from|import\s*\(|require\s*\()\s*["']@anthropic-ai\/claude-agent-sdk["']|["']@anthropic-ai\/claude-agent-sdk["']\s*:)/,
+  },
+  {
     id: "agent-cli-dependency",
-    description: "Claude and Codex integrations use their native SDK packages",
+    description: "Codex integrations use the native SDK package",
     pattern: /@(?:anthropic-ai\/claude-code|openai\/codex)(?:["'@\s]|$)/,
   },
   {
@@ -83,6 +90,13 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
   "packages/scout-for-lol/packages/data/scripts/patch-analysis.ts",
   "packages/temporal/src/activities/agent-task-env.ts",
   "scripts/lib/release-refiner.ts",
+]);
+const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
+  "packages/discord-plays-pokemon/config.example.toml",
+  "packages/discord-plays-pokemon/packages/backend/src/goal/codex-auth.ts",
+  "packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.ts",
+  "packages/discord-plays-pokemon/packages/backend/src/goal/goal-runtime-env.ts",
+  "packages/homelab/src/cdk8s/src/resources/pokemon.ts",
 ]);
 
 const WHISPER_TRANSCRIPTION_ADAPTER =
@@ -125,6 +139,7 @@ function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
     return (
       isTestOrFixture(filePath) ||
       CREDENTIAL_SANITIZER_PATHS.has(filePath) ||
+      POKEMON_CODEX_SUBSCRIPTION_PATHS.has(filePath) ||
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
       STREAMBOT_VOICE_REALTIME_PATHS.has(filePath)
     );
@@ -132,6 +147,10 @@ function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
 
   if (rule.id === "direct-provider-sdk") {
     return STREAMBOT_VOICE_TTS_PATHS.has(filePath);
+  }
+
+  if (rule.id === "legacy-agent-sdk") {
+    return isTestOrFixture(filePath);
   }
 
   if (rule.id === "direct-provider-endpoint") {

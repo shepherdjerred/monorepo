@@ -3,7 +3,7 @@
 Temporal workflow worker for the monorepo. It consolidates what used to be K8s
 CronJobs, in-process cron, and custom job queues into one durable, observable
 scheduler: declarative schedules (home automation, reports, maintenance),
-generic report-only agent tasks (Claude/Codex subprocesses) including the daily
+generic report-only Codex SDK agent tasks through OpenRouter, including the daily
 homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 (GitHub merge-conflict check and build cancel, Xcode Cloud, iOS sleep).
 

@@ -247,16 +247,27 @@ function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
 
   const releasePlease = stepBlocks.get("release-please");
   const releaseInstall =
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production";
+    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --production";
   if (!hasTrimmedLine(releasePlease, releaseInstall)) {
     fail(
       `release-please lane is missing exact filtered install ${releaseInstall}`,
     );
   }
+  const releaseCatalogBuildCommands = [
+    "bun --no-install run --cwd packages/llm-models build",
+    "bun --no-install run --cwd packages/llm-models build:runtime",
+  ];
+  if (
+    !releaseCatalogBuildCommands.some((command) =>
+      hasTrimmedLine(releasePlease, command),
+    )
+  ) {
+    fail("release-please must build the model catalog before release scripts");
+  }
   requireIncludes(
     releasePlease,
-    "<<: *pod_release_codex_auth_kubernetes",
-    "release-please is missing the managed Codex auth pod",
+    "<<: *pod_light_kubernetes",
+    "release-please is missing the light pod",
   );
 
   validateVersionCommitBackInstall(stepBlocks.get("version-commit-back"));

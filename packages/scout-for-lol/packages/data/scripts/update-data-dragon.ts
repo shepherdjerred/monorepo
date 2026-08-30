@@ -28,7 +28,7 @@ import {
   selectPatchByMinor,
   type RiotPatch,
 } from "./riot-patch.ts";
-import { analyzePatch } from "./patch-analysis.ts";
+import { analyzePatch, fetchOfficialPatchNotes } from "./patch-analysis.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
@@ -1313,29 +1313,15 @@ async function readPreviousVersion(): Promise<string | undefined> {
  * fetch failure is logged and skipped (the structured changeset is what reviews
  * actually consume). Committed but excluded from formatting and never imported.
  */
-async function saveRawPatchNotes(patch: RiotPatch): Promise<void> {
-  try {
-    const response = await fetch(patch.url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; ScoutForLoL/1.0; +https://scout-for-lol.com)",
-        Accept: "text/html",
-      },
-    });
-    if (!response.ok) {
-      console.warn(
-        `⚠ Could not archive raw patch notes: HTTP ${String(response.status)} ${response.statusText}`,
-      );
-      return;
-    }
-    await Bun.write(
-      `${PATCH_NOTES_ARCHIVE_DIR}/${patch.patch}.html`,
-      await response.text(),
-    );
-    console.log(`✓ Archived raw patch ${patch.patch} notes`);
-  } catch (error) {
-    console.warn(`⚠ Could not archive raw patch notes: ${String(error)}`);
-  }
+async function saveRawPatchNotes(
+  patch: RiotPatch,
+  officialPatchContent: string,
+): Promise<void> {
+  await Bun.write(
+    `${PATCH_NOTES_ARCHIVE_DIR}/${patch.patch}.html`,
+    officialPatchContent,
+  );
+  console.log(`✓ Archived raw patch ${patch.patch} notes`);
 }
 
 async function maybeAppendChangelogEntry(
@@ -1369,16 +1355,19 @@ async function maybeAppendChangelogEntry(
     return;
   }
 
-  // Ask Claude to read the real patch notes and produce a structured changeset
+  // Ask Opus through OpenRouter to analyze deterministically fetched patch notes
   // (`summary` + per-change data feed the AI review) plus the Scout-focused
   // `changelogHighlights` consumed here for the "What's New" entry.
-  // Best-effort: a failure (no claude, timeout, bad output) falls back to just
+  // Best-effort: a failure (no credential, timeout, bad output) falls back to just
   // the data-refresh line and leaves the committed changeset untouched, rather
   // than blocking the asset PR or shipping a garbage changeset.
   let highlights: string[] = [];
   try {
-    console.log(`🤖 Analyzing patch ${patch.patch} notes via Claude...`);
-    const changeset = await analyzePatch(patch);
+    console.log(
+      `🤖 Analyzing patch ${patch.patch} notes via OpenRouter Opus...`,
+    );
+    const officialPatchContent = await fetchOfficialPatchNotes(patch);
+    const changeset = await analyzePatch(patch, officialPatchContent);
     await Bun.write(
       PATCH_NOTES_ASSET,
       `${JSON.stringify(changeset, null, 2)}\n`,
@@ -1394,10 +1383,10 @@ async function maybeAppendChangelogEntry(
       `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
     );
     highlights = changeset.changelogHighlights;
-    await saveRawPatchNotes(patch);
+    await saveRawPatchNotes(patch, officialPatchContent);
   } catch (error) {
     console.warn(
-      `⚠ Claude patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
+      `⚠ OpenRouter patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
     );
   }
 

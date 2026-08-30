@@ -132,7 +132,7 @@ async function runAgent(
       "agent.provider": provider,
       "agent.title": parsed.title,
       "agent.model": config.model,
-      "agent.runtime": provider === "claude" ? "claude_agent_sdk" : "codex_sdk",
+      "agent.runtime": "codex_sdk",
       "agent.workdir": input.workdir,
       "agent.timeout_minutes": parsed.agentTimeoutMinutes ?? 0,
       "agent.max_turns": config.maxTurns,

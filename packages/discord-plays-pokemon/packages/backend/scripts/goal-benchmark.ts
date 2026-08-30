@@ -55,7 +55,7 @@ Required:
 Options:
   --runs <n>                    Sequential fresh-save runs (default: 1)
   --goal <text>                 Objective (default: "get me a pokeman")
-  --model <id>                  Codex model (default: gpt-5.6-luna)
+  --model <id>                  Codex model (default: gpt-5.6-sol)
   --reasoning <effort>          low|medium|high|xhigh (default: medium)
   --runtime <minutes>           Per-run model deadline, 1-30 (default: 30)
   --control-host <host>         Control server host (default: 127.0.0.1)

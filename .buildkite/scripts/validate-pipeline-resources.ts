@@ -25,26 +25,6 @@ export function validateExhaustiveGraphCapacity(
   }
 }
 
-function validateReleaseCodexAuthPod(pipeline: string): void {
-  const releaseAuthPod = sharedPodAnchorBlock(
-    pipeline,
-    "pod_release_codex_auth_kubernetes",
-  );
-  for (const required of [
-    "name: buildkite-codex-auth",
-    "claimName: buildkite-codex-auth",
-    "mountPath: /buildkite/codex-auth",
-    "name: CODEX_HOME",
-    "value: /buildkite/codex-auth",
-  ]) {
-    requireIncludes(
-      releaseAuthPod,
-      required,
-      `release Codex auth pod is missing ${required}`,
-    );
-  }
-}
-
 export function validatePipelineResourceContracts(
   pipeline: string,
   stepBlocks: ReadonlyMap<string, string>,
@@ -106,10 +86,6 @@ export function validatePipelineResourceContracts(
       '{ cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }',
     ],
     [
-      "pod_release_codex_auth_kubernetes",
-      '{ cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }',
-    ],
-    [
       "pod_tofu_kubernetes",
       '{ cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }',
     ],
@@ -127,7 +103,7 @@ export function validatePipelineResourceContracts(
     ["verify", "pod_verify_kubernetes"],
     ["pr-dryrun", "pod_pr_dryrun_kubernetes"],
     ["argocd-sync", "pod_light_kubernetes"],
-    ["release-please", "pod_release_codex_auth_kubernetes"],
+    ["release-please", "pod_light_kubernetes"],
     ["images-pr", "pod_buildkit_kubernetes"],
     ["images", "pod_buildkit_kubernetes"],
   ] satisfies readonly (readonly [string, string])[]) {
@@ -145,8 +121,6 @@ export function validatePipelineResourceContracts(
   if (!hasTrimmedLine(prDryrunAnchor, "allowPrivilegeEscalation: false")) {
     fail("pr-dryrun command container permits privilege escalation");
   }
-
-  validateReleaseCodexAuthPod(pipeline);
 
   for (const step of ["playwright-e2e-pr", "playwright-e2e-main"]) {
     const command = containerBlock(step, stepBlocks.get(step), "container-0");

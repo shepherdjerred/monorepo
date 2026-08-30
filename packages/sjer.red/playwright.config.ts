@@ -111,9 +111,12 @@ export default defineConfig({
     ...(includeBrandedBrowsers ? brandedBrowserDarkProjects : []),
   ],
   webServer: {
-    // Use bun for both local and CI (CI container now has Bun installed)
-    // Add --host in CI to bind to all interfaces (not just localhost)
-    command: isCI ? "bun run preview -- --host --port 4321" : "bun run preview",
+    // Astro 7 detects agent environments and daemonizes preview automatically.
+    // Disable that behavior so Playwright owns the server process and can
+    // observe startup failures and tear it down with the test run.
+    command: isCI
+      ? "ASTRO_PREVIEW_BACKGROUND=0 bun run preview --host 127.0.0.1 --port 4321"
+      : "bun run preview",
     url: "http://localhost:4321",
     timeout: 120 * 1000,
     reuseExistingServer: !isCI,

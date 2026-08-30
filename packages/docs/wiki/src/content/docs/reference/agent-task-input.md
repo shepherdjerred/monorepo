@@ -20,7 +20,7 @@ Schema and dispatcher:
 | --------------------- | -------- | --------------------------------------------------------------- |
 | `contractVersion`     | yes      | `2`                                                             |
 | `title`               | yes      | human label; also part of the workflow ID                       |
-| `provider`            | yes      | `claude` or `codex`                                             |
+| `provider`            | yes      | `codex`                                                         |
 | `mode`                | no       | defaults to `report-only`; that is the only accepted value      |
 | `prompt`              | yes      | investigation instructions                                      |
 | `checks`              | yes      | one or more declared check definitions                          |
@@ -42,7 +42,7 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
 {
   "contractVersion": 2,
   "title": "Recheck Birmel post-deploy metrics",
-  "provider": "claude",
+  "provider": "codex",
   "mode": "report-only",
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
@@ -126,18 +126,19 @@ consume the run's execution timeout.
 
 ## Provider settings
 
-|                | Claude Agent SDK                    | Codex SDK                        |
-| -------------- | ----------------------------------- | -------------------------------- |
-| Default model  | `claude-opus-5`                     | `gpt-5.6-sol`                    |
-| Schema         | draft-07 plain-optional JSON schema | Codex SDK output-schema dialect  |
-| Tools          | `Bash, Read, Grep, Glob, WebFetch`  | danger-full-access agent sandbox |
-| Pinned package | `@anthropic-ai/claude-agent-sdk`    | `@openai/codex-sdk`              |
+|                | Codex SDK                        |
+| -------------- | -------------------------------- |
+| Default model  | `gpt-5.6-luna`                   |
+| Schema         | Codex SDK output-schema dialect  |
+| Tools          | danger-full-access agent sandbox |
+| Pinned package | `@openai/codex-sdk`              |
 
-Both native SDK paths stream progress events, preserve usage and cost metadata,
-and validate their structured result with Zod. A successful SDK run without the
+The native SDK path streams progress events, preserves usage and cost metadata,
+and validates its structured result with Zod. A successful SDK run without the
 required structured value is a failure; prose and fenced JSON are not fallback
 formats. An effectful run is not replayed solely because final schema validation
-failed.
+failed. The legacy Claude decoder remains only for deterministic replay of old
+histories; new submissions cannot execute it.
 
 Evidence receipts are extracted from each SDK's own redacted event stream — real
 tool or command events, not claims — and a separate finalization pass then runs
@@ -153,8 +154,8 @@ inheriting the worker environment.
 
 | Input                                       | State in the SDK runtime                                 |
 | ------------------------------------------- | -------------------------------------------------------- |
-| Selected provider subscription credential   | present; it is the SDK's only way to authenticate        |
-| Other provider credentials                  | absent, including every direct inference-provider key    |
+| Service-scoped OpenRouter API key           | present; it is the SDK's only inference credential       |
+| Other provider credentials                  | absent, including subscription credentials               |
 | Public GitHub repository credential         | absent; the throwaway clone is unauthenticated           |
 | `HOME`                                      | the throwaway workdir, not the worker image home         |
 | Prometheus and alert-dashboard URLs         | present without API credentials                          |

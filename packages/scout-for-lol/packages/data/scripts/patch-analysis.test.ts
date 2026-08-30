@@ -40,14 +40,15 @@ const VALID_ANALYSIS = {
 
 describe("buildAnalysisPrompt", () => {
   test("includes the patch url and structured-output instruction", () => {
-    const prompt = buildAnalysisPrompt(PATCH);
+    const prompt = buildAnalysisPrompt(PATCH, "Lee Sin: Q damage increased.");
     expect(prompt).toContain(PATCH.url);
     expect(prompt).toContain("champions");
+    expect(prompt).toContain("Lee Sin: Q damage increased.");
     expect(prompt).toContain("Output ONLY the JSON object");
   });
 
   test("asks for changelogHighlights separate from the balance summary", () => {
-    const prompt = buildAnalysisPrompt(PATCH);
+    const prompt = buildAnalysisPrompt(PATCH, "official notes");
     expect(prompt).toContain("changelogHighlights");
     // The changelog field must be steered toward Scout capabilities, not balance.
     expect(prompt).toContain("new champion");

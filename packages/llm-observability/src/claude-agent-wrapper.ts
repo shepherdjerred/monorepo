@@ -166,12 +166,10 @@ function recordMetrics(
     { ...labels, type: "cache_write_input" },
     acc.cacheCreationInputTokens ?? 0,
   );
-  // Deliberately no `metrics.cost.inc` here. The Claude Agent SDK runs against
-  // a subscription (CLAUDE_CODE_OAUTH_TOKEN), so no money moves per call and the
-  // SDK's own `total_cost_usd` is an API-equivalent price, not cash. Summing it
-  // into `llm_cost_usd_total` alongside real OpenRouter charges would make the
-  // fleet-wide spend figure -- and the ceilings that alert on it -- wrong.
-  // Tokens are recorded above and remain the usage signal for this transport.
+  // Deliberately no `metrics.cost.inc` here. The SDK's `total_cost_usd` is an
+  // API-equivalent estimate rather than a cash charge for this transport.
+  // Publishing it alongside real provider charges would make fleet spend
+  // figures misleading; tokens remain the usage signal.
 }
 
 function newAccumulator(): Accumulator {

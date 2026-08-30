@@ -5,13 +5,10 @@ import {
 } from "@openai/codex-sdk";
 import { attachCodexTrace } from "@shepherdjerred/llm-observability/wrappers/codex";
 import { createCodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
+import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
 import { type AgentTaskSdkConfig } from "./agent-task-sdk-config.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { register } from "#observability/metrics.ts";
-import {
-  ClaudeAgentSdkRunError,
-  runClaudeAgentSdk,
-} from "./claude-agent-sdk-runner.ts";
 
 export type AgentTaskSdkUsage = {
   inputTokens: number;
@@ -180,71 +177,6 @@ function createProgress(
   };
 }
 
-async function runClaudeSdk(
-  input: AgentTaskSdkRunInput,
-): Promise<AgentTaskSdkResult> {
-  const startedAtMs = Date.now();
-  const progress = createProgress(startedAtMs, input.onEvent);
-  const evidenceEvents: unknown[] = [];
-  try {
-    const result = await runClaudeAgentSdk({
-      service: "temporal",
-      callSite: "agent-task",
-      prompt: input.config.prompt,
-      model: input.config.model,
-      maxTurns: input.config.maxTurns,
-      cwd: input.config.workdir,
-      allowedTools: input.config.allowedTools,
-      env: input.env,
-      signal: input.signal,
-      outputSchema: input.config.outputSchema,
-      redactTokens: input.redactTokens,
-      beforeEvent: input.beforeEvent,
-      onEvent: (event) => {
-        // stream_event carries token-level deltas, never a tool_use or
-        // tool_result block, so retaining them would only grow memory.
-        if (event.type !== "stream_event") {
-          evidenceEvents.push(event.message);
-        }
-        progress.observe(event.type);
-      },
-    });
-    return {
-      output: result.output,
-      finalText: result.resultText,
-      evidenceEvents,
-      provider: "claude",
-      model: input.config.model,
-      sessionId: result.sessionId,
-      usage: {
-        inputTokens: result.usage.inputTokens,
-        cachedInputTokens: result.usage.cacheReadInputTokens,
-        cacheWriteInputTokens: result.usage.cacheCreationInputTokens,
-        outputTokens: result.usage.outputTokens,
-        reasoningTokens: 0,
-      },
-      costUsd: result.costUsd,
-      generationStarted: result.generationStarted,
-      possiblyAppliedEffects: result.possiblyAppliedEffects,
-      ...progress.summary(),
-    };
-  } catch (error: unknown) {
-    const state =
-      error instanceof ClaudeAgentSdkRunError
-        ? error
-        : {
-            generationStarted: false,
-            possiblyAppliedEffects: false,
-          };
-    throw sdkExecutionError(
-      "claude",
-      error,
-      state.generationStarted,
-      state.possiblyAppliedEffects,
-    );
-  }
-}
-
 function codexUsage(usage: CodexUsage | undefined): AgentTaskSdkUsage {
   if (usage === undefined) {
     return emptyUsage();
@@ -296,6 +228,45 @@ const CODEX_TOOL_ITEM_TYPES = new Set([
 ]);
 
 /**
+ * Codex calls the whole prompt a single turn, but tool iterations are emitted
+ * as item events inside that turn. Count those actual agent steps so the
+ * activity's maxTurns safety budget cannot be bypassed by a long tool loop.
+ */
+export function codexAgentStepViolation(input: {
+  maxTurns: number;
+  stepsStarted: number;
+  event: ThreadEvent;
+}): { stepsStarted: number; violation: string | undefined } {
+  if (
+    input.event.type !== "item.started" ||
+    !CODEX_TOOL_ITEM_TYPES.has(input.event.item.type)
+  ) {
+    return { stepsStarted: input.stepsStarted, violation: undefined };
+  }
+
+  const stepsStarted = input.stepsStarted + 1;
+  return {
+    stepsStarted,
+    violation:
+      stepsStarted > input.maxTurns
+        ? `Codex SDK exceeded maxTurns (${String(input.maxTurns)}) after ${String(stepsStarted)} tool steps`
+        : undefined,
+  };
+}
+
+function enforceCodexAgentStepBudget(input: {
+  maxTurns: number;
+  stepsStarted: number;
+  event: ThreadEvent;
+}): number {
+  const result = codexAgentStepViolation(input);
+  if (result.violation !== undefined) {
+    throw new Error(result.violation);
+  }
+  return result.stepsStarted;
+}
+
+/**
  * The Codex SDK has no tool allow-list, so a read-only finalization thread can
  * still shell out and read the checkout. The phase contract is therefore
  * enforced on the event stream: any tool use during finalization would put
@@ -330,6 +301,7 @@ async function runCodexSdk(
   let usage: CodexUsage | undefined;
   let traceOutcome: "success" | "error" | "cancelled" = "success";
   let sessionId: string | undefined;
+  let stepsStarted = 0;
   const parser = createCodexJsonlParser({ warn: input.warn });
   const trace = attachCodexTrace(parser, {
     service: "temporal",
@@ -343,10 +315,21 @@ async function runCodexSdk(
   });
   try {
     const streamed = await trace.run(async () => {
-      const codex = new Codex({ env: input.env });
+      const openRouterApiKey = input.env["OPENROUTER_API_KEY"];
+      const childEnvironment = Object.fromEntries(
+        Object.entries(input.env).filter(
+          ([key]) => key !== "OPENROUTER_API_KEY",
+        ),
+      );
+      const openRouter = createOpenRouterCodexConfig({
+        apiKey: openRouterApiKey ?? "",
+        modelId: input.config.model,
+        env: childEnvironment,
+      });
+      const codex = new Codex(openRouter.codexOptions);
       const thread = codex.startThread({
         approvalPolicy: "never",
-        model: input.config.model,
+        model: openRouter.routeModelId,
         modelReasoningEffort: "high",
         networkAccessEnabled: !finalizing,
         sandboxMode: finalizing ? "read-only" : "danger-full-access",
@@ -365,6 +348,11 @@ async function runCodexSdk(
         );
       }
       const redactedEvent = redactUnknown(event, input.redactTokens);
+      stepsStarted = enforceCodexAgentStepBudget({
+        maxTurns: input.config.maxTurns,
+        stepsStarted,
+        event,
+      });
       parser.push(`${JSON.stringify(redactedEvent)}\n`);
       generationStarted ||= event.type !== "thread.started";
       possiblyAppliedEffects ||= codexEventMayApplyEffect(event);
@@ -442,7 +430,15 @@ async function runCodexSdk(
 export async function runAgentTaskSdk(
   input: AgentTaskSdkRunInput,
 ): Promise<AgentTaskSdkResult> {
-  return input.config.provider === "claude"
-    ? runClaudeSdk(input)
-    : runCodexSdk(input);
+  if (input.config.provider === "claude") {
+    throw sdkExecutionError(
+      "claude",
+      new Error(
+        "Legacy Claude agent tasks can be decoded for replay but cannot execute after the OpenRouter migration",
+      ),
+      false,
+      false,
+    );
+  }
+  return runCodexSdk(input);
 }

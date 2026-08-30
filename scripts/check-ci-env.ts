@@ -196,15 +196,14 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
     step: "pr-dryrun",
     script: "scripts/release.ts",
     names: [
-      "CODEX_HOME",
-      "CLAUDE_CODE_OAUTH_TOKEN",
+      "OPENROUTER_API_KEY",
       "GITHUB_APP_ID",
       "GITHUB_APP_INSTALLATION_ID",
       "GITHUB_APP_PRIVATE_KEY",
     ],
     reason:
       "The step runs release.ts with --dry-run, which returns before provider " +
-      "selection, GitHub App authentication, and the Codex auth-volume " +
+      "inference, GitHub App authentication, and the OpenRouter credential " +
       "preflight. The release-please step supplies them and is checked normally.",
   },
   {

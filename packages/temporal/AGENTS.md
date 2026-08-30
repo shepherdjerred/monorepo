@@ -191,14 +191,13 @@ bodies to S3 (`llm-archive` bucket) and forwards a slim span to Tempo.
   telemetry, OpenRouter attribution, aggregate usage/cost metrics, and private
   body archival. `generateBoundedSynthesis` in that module is the shared entry
   point for the short evidence syntheses the audit and dependency reports use.
-- **Claude Agent SDK** — run through
-  `src/activities/claude-agent-sdk-runner.ts`; it wraps every streamed SDK run
-  with `traceClaudeAgent`, captures subscription cost and token usage, and
-  redacts events before progress handling.
-- **Codex SDK** — run through `src/activities/agent-task-sdk.ts`; it normalizes
-  SDK events into the shared Codex JSONL reader and attaches the SDK run to the
-  repository-owned parent span. No activity may launch a `claude` or `codex`
-  subprocess; `scripts/check-ai-architecture.ts` enforces that repo-wide.
+- **Codex SDK** — generic agent tasks run through
+  `src/activities/agent-task-sdk.ts`; trusted source-controlled agents run
+  through `src/activities/codex-agent-sdk-runner.ts`. Both resolve stable
+  catalog IDs to OpenRouter routes, pass the service-scoped OpenRouter key to
+  the SDK constructor, and keep stable IDs in activity telemetry. No activity
+  may launch a `claude` or `codex` subprocess; `scripts/check-ai-architecture.ts`
+  enforces that repo-wide.
 
 Emit the span before cancellation, validation, or effect-reconciliation failure
 checks: failed runs spent tokens and must remain visible for billing. Never
@@ -235,8 +234,10 @@ Workflow:
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
 - `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for GitHub automation so GitHub attributes those actions to the app bot.
 - `OPENROUTER_API_KEY` — service-scoped OpenRouter key for every ordinary text, tool, embedding, image, and structured-output call.
-- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Agent SDK subscription token for homelab-audit, generic Claude agent tasks, and scout-season-refresh.
-- `CODEX_ACCESS_TOKEN` — Codex SDK subscription token for generic Codex agent tasks and README summaries. Agent environments are built by `src/activities/agent-task-env.ts`, which never forwards a direct-provider inference key to any agent.
+- Agent environments are built by `src/activities/agent-task-env.ts`. The
+  OpenRouter key is passed to Codex itself and removed from tool subprocess
+  environments; legacy Claude subscription fields are scrubbed and never used
+  for fresh execution.
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary and homelab audit
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
@@ -320,9 +321,9 @@ failures/stalls, Kubernetes workload health, ArgoCD state, and Buildkite main
 failures with failed-job logs. An optional OpenRouter call may write only the
 80-word synthesis over those collector results; it cannot choose the verdict.
 Pre-versioned legacy executions still replay through the old agent activity,
-which now runs on the Claude Agent SDK (streamed redacted progress, 10 s
-heartbeats, cancellation, Sentry capture, Prometheus usage/cost metrics) and is
-delivered through the shared reporter as partial.
+which now runs Codex SDK Luna through OpenRouter (streamed redacted progress,
+10 s heartbeats, cancellation, Sentry capture, and Prometheus token metrics)
+and is delivered through the shared reporter as partial.
 
 ## Temporal workflow failure → Alerts occurrences
 
@@ -337,7 +338,12 @@ No exclusion list — every workflow type produces an occurrence on any failure.
 
 ## Generic agent tasks
 
-`agentTaskWorkflow` supports explicit one-off and cron-based report-only Claude/Codex tasks. It runs on `TASK_QUEUES.AGENT_TASK` so long native SDK agents do not block HA or event-cron work.
+`agentTaskWorkflow` supports explicit one-off and cron-based report-only Codex
+tasks. New submissions must use `provider: "codex"`; `provider: "claude"`
+remains in the decoder only so existing Temporal histories replay
+deterministically, and fresh Claude execution fails explicitly. It runs on
+`TASK_QUEUES.AGENT_TASK` so long native SDK agents do not block HA or event-cron
+work.
 
 Create/update a task from a doc block locally as an operator:
 
@@ -379,9 +385,9 @@ history replay, and its undeclared output is always reported as partial.
 **A v2 run is two bounded SDK phases, not one.** `investigateAgentTask` runs the
 agent with its normal tool set and returns a preliminary assessment; the
 declared collectors then run independently, and `finalizeAgentTask` re-runs the
-agent over the merged receipt catalog with **no tools at all**. Claude enforces
-that at configuration time — `buildAgentTaskSdkConfig` empties `allowedTools`.
-The Codex SDK exposes no tool allow-list, so a Codex finalization thread drops
+agent over the merged receipt catalog with **no tools at all**.
+`buildAgentTaskSdkConfig` empties `allowedTools`, but the Codex SDK exposes no
+tool allow-list, so a Codex finalization thread drops
 network, web search, and write access **and** `runCodexSdk` fails the run on the
 first `command_execution`, `file_change`, `mcp_tool_call`, or `web_search` item
 it observes during finalization; the phase contract is enforced on the event
@@ -389,17 +395,19 @@ stream rather than trusted to the sandbox. Provider evidence receipts are
 extracted from the SDK's own redacted event stream, so a tool call the agent
 only claims to have made cannot be cited.
 
-**Claude structured output is an SDK result contract.** Pass the draft-07
-schema through `query({ options: { outputFormat } })`, read only the final
-result event's `structured_output`, and Zod-validate it. A successful stream
-without structured output is a contract failure; never parse prose or fenced
-JSON. Keep partial SDK events enabled so heartbeats and cancellation remain
-live throughout a long run.
-
-**Claude and Codex need different schema dialects — never share one constant.** `AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE` (`shared/agent-task.ts`) is a versioned draft-07 **plain** JSON Schema: optional fields simply absent from `required`, no nullable unions, with a logged schema fingerprint. `AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX` is strict JSON Schema: every field in `required`, optional fields modeled as nullable. Each has a `_V2` counterpart for the evidence contract, and `buildAgentTaskSdkConfig` picks the pair by provider and `contractVersion`. Claude Agent SDK receives the plain dialect through `outputFormat`; Codex SDK receives the strict one through `thread.runStreamed({ outputSchema })`. Contract failures log the schema fingerprint and a bounded redacted final-text excerpt while metric labels remain low-cardinality.
+**Codex structured output is an SDK result contract.** Pass the strict JSON
+Schema through `thread.runStreamed({ outputSchema })`, read only the resulting
+structured output, and Zod-validate it. Every field is required; optional
+values are nullable. A successful stream without structured output is a
+contract failure; never parse prose or fenced JSON. The legacy Claude schema
+constants and provider decoder remain solely for replaying existing histories;
+no new activity may select them. Contract failures log the schema fingerprint
+and a bounded redacted final-text excerpt while metric labels remain
+low-cardinality.
 
 Run the post-deploy canary only after the worker image containing the change is
-live and the production worker has its `CLAUDE_CODE_OAUTH_TOKEN` configured.
+live and the production worker has its service-scoped `OPENROUTER_API_KEY`
+configured.
 From an operator machine, use the externally reachable Temporal TLS endpoint;
 the in-cluster service name is only resolvable inside Kubernetes:
 
@@ -411,9 +419,9 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
 
 This production-only contract check starts one real `agentTaskWorkflow` on the
 `agent-task` queue and
-must complete through the deployed Claude parser and deliver the tagged
+must complete through the deployed Codex structured-output parser and deliver the tagged
 `[agent-task-canary]` report-only email. It does not accept or forward a local
-OAuth token; authentication is verified in the deployed worker. Keep
+OpenRouter key; authentication is verified in the deployed worker.
 Do not consider production acceptance complete until the canary and independent
 seven-day agent-task queue bake pass; the
 deterministic daily homelab audit no longer exercises this provider contract.

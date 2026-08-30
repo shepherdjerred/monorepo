@@ -7,8 +7,8 @@
  * minted from env creds.
  *
  * Pipeline order (matches the old helper): release-pr → refine → github-release.
- * The refine step runs an agent (Claude primary, Codex fallback on validated
- * Claude quota exhaustion) using scripts/prompts/refine-release-please.md. It
+ * The refine step runs Codex SDK with GPT-5.6 Luna through OpenRouter using
+ * scripts/prompts/refine-release-please.md. It
  * rewrites the just-generated CHANGELOG entries into a consumer-focused view
  * and pushes a cleanup commit to the release PR. It exits 0 with a status
  * envelope when there is no open release PR or nothing to refine.
@@ -17,10 +17,9 @@
  *   bun scripts/release.ts [--dry-run]
  *
  * Env: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY,
- *      CLAUDE_CODE_OAUTH_TOKEN, CODEX_HOME (refine step)
+ *      OPENROUTER_API_KEY (refine step)
  */
 
-import path from "node:path";
 import { requireEnv, run } from "./lib/run.ts";
 import { setupGitAuth } from "./lib/github-auth.ts";
 import {
@@ -100,19 +99,6 @@ function usage(): never {
   process.exit(1);
 }
 
-async function requireCodexAuthHome(): Promise<string> {
-  const codexHome = requireEnv("CODEX_HOME");
-  const authPath = path.join(codexHome, "auth.json");
-  const authFile = Bun.file(authPath);
-  if (!(await authFile.exists())) {
-    throw new Error(
-      `CODEX_HOME does not contain auth.json at ${authPath}; ` +
-        "seed the trusted, persistent Codex auth volume before running release-please",
-    );
-  }
-  return codexHome;
-}
-
 async function main(): Promise<void> {
   const argv = new Set(Bun.argv.slice(2));
   if (argv.has("--help") || argv.has("-h")) {
@@ -123,8 +109,8 @@ async function main(): Promise<void> {
   console.log(`--- release-please${dryRun ? " (dry run)" : ""}`);
   if (dryRun) {
     console.log(
-      "DRYRUN: would run `release-please release-pr`, the dual-provider " +
-        "CHANGELOG refinement (Claude primary, Codex quota fallback; " +
+      "DRYRUN: would run `release-please release-pr`, the Codex SDK Luna " +
+        "CHANGELOG refinement through OpenRouter (" +
         "scripts/prompts/refine-release-please.md), then " +
         "`release-please github-release` against " +
         `${MONOREPO_REPO} (target-branch=main).`,
@@ -142,10 +128,8 @@ async function main(): Promise<void> {
     await fetchNpmPackageTags(root, env);
     const releasePrTarget = await resolveReleaseTarget(root, env);
 
-    // Validate both providers before release-please mutates the release PR.
-    // Codex is an intentional quota fallback, not an optional best-effort path.
-    const claudeToken = requireEnv("CLAUDE_CODE_OAUTH_TOKEN");
-    const codexHome = await requireCodexAuthHome();
+    // Validate the inference credential before release-please mutates the PR.
+    const openRouterApiKey = requireEnv("OPENROUTER_API_KEY");
     // Codex runs tool calls through a login shell. Verify that exact boundary,
     // not only this process's mise-aware PATH, before release-please mutates a PR.
     await run(["/bin/bash", "-lc", "gh --version"], {
@@ -165,11 +149,10 @@ async function main(): Promise<void> {
     // Refine the just-generated CHANGELOGs. The prompt is the source of truth
     // for the agent's behavior; it exits 0 with a status envelope when there
     // is no open release PR, no bumped packages, or nothing to refine.
-    // Both agents run arbitrary git/gh commands non-interactively. Their write
+    // The agent runs arbitrary git/gh commands non-interactively. Its write
     // access is bounded by the fixed, code-reviewed prompt, the GitHub App
     // token's repo scope, and the externally isolated ephemeral CI pod.
-    // Unknown Claude failures remain hard failures; only a parsed 429
-    // usage-quota result selects Codex.
+    // There is no provider or model fallback.
     console.log("--- refine CHANGELOGs");
     const prompt = await Bun.file(
       new URL("prompts/refine-release-please.md", import.meta.url).pathname,
@@ -180,8 +163,7 @@ async function main(): Promise<void> {
       // auth.env carries GH_TOKEN + the GIT_ASKPASS helper the agent's
       // git clone/push needs (the old helper's withAskpass: true).
       env,
-      claudeToken,
-      codexHome,
+      openRouterApiKey,
     });
     console.log(`--- CHANGELOG refinement complete (provider=${provider})`);
 
