@@ -14,6 +14,7 @@ async function main(): Promise<void> {
     emptyMessage: "Pass at least one beta or production Scout Workflow ID",
     workflowsPath: new URL("../src/workflows/index.ts", import.meta.url)
       .pathname,
+    environment: globalThis.process.env,
   });
 }
 
