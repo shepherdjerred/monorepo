@@ -151,6 +151,56 @@ describe("HomeAssistantRestClient", () => {
       "http://ha.local:8123/api/services/weather/get_forecast?return_response",
     );
   });
+
+  it("fetches and validates config-entry diagnostics with a caller schema", async () => {
+    const DiagnosticsData = z.object({
+      device: z.object({ status: z.literal("ready") }),
+    });
+    const { fn, calls } = makeFetch(() =>
+      Response.json({
+        home_assistant: {},
+        custom_components: {},
+        integration_manifest: {},
+        setup_times: {},
+        data: { device: { status: "ready" } },
+        issues: [],
+      }),
+    );
+    globalThis.fetch = fn;
+
+    const client = new HomeAssistantRestClient({
+      baseUrl: "http://ha.local:8123",
+      token: "secret",
+    });
+
+    const result = await client.getConfigEntryDiagnostics(
+      "entry-123",
+      DiagnosticsData,
+    );
+
+    expect(result.device.status).toBe("ready");
+    expect(calls[0]?.args.url).toBe(
+      "http://ha.local:8123/api/diagnostics/config_entry/entry-123",
+    );
+  });
+
+  it("rejects malformed diagnostics envelopes", async () => {
+    const { fn } = makeFetch(() =>
+      Response.json({
+        data: {},
+      }),
+    );
+    globalThis.fetch = fn;
+
+    const client = new HomeAssistantRestClient({
+      baseUrl: "http://ha.local:8123",
+      token: "secret",
+    });
+
+    await expect(
+      client.getConfigEntryDiagnostics("entry-123", z.object({})),
+    ).rejects.toThrow();
+  });
 });
 
 describe("HomeAssistantRestClient service-response mode", () => {

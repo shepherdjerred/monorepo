@@ -84,6 +84,22 @@ export type StateChangedEvent = {
   old_state: unknown;
 };
 
+export const EntityRegistryEntry = z
+  .object({
+    entity_id: z.string().min(1),
+    unique_id: z.string().min(1),
+    platform: z.string().min(1),
+    config_entry_id: z.string().min(1).nullable(),
+    device_id: z.string().min(1).nullable(),
+    area_id: z.string().min(1).nullable(),
+    name: z.string().nullable(),
+    original_name: z.string().nullable(),
+    disabled_by: z.string().nullable(),
+  })
+  .loose();
+
+export type EntityRegistryEntry = z.infer<typeof EntityRegistryEntry>;
+
 export const StateChangedEventData = z
   .object({
     entity_id: z.string(),

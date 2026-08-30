@@ -144,6 +144,57 @@ describe("HomeAssistantEventClient", () => {
     await client.close();
   });
 
+  it("lists and validates entity-registry entries", async () => {
+    const { Impl, instances } = createFakeWebSocketFactory();
+    const client = new HomeAssistantEventClient(
+      { baseUrl: "http://ha.local:8123", token: "t" },
+      { webSocketImpl: Impl, reconnect: false },
+    );
+
+    const connectPromise = client.connect();
+    await flush();
+    const socket = instances[0];
+    expect(socket).toBeDefined();
+    if (socket === undefined) {
+      return;
+    }
+    socket.pushServerMessage({ type: "auth_required" });
+    await flush();
+    socket.pushServerMessage({ type: "auth_ok" });
+    await connectPromise;
+
+    const registryPromise = client.getEntityRegistry();
+    await flush();
+    const message = parseSent(socket.sent[1], GenericMessage);
+    expect(message.type).toBe("config/entity_registry/list");
+    socket.pushServerMessage({
+      id: message.id,
+      type: "result",
+      success: true,
+      result: [
+        {
+          entity_id: "vacuum.storage_litter_box",
+          unique_id: "robot-123",
+          platform: "litterrobot",
+          config_entry_id: "entry-123",
+          device_id: "device-123",
+          area_id: "storage",
+          name: null,
+          original_name: "Litter Box",
+          disabled_by: null,
+        },
+      ],
+    });
+
+    await expect(registryPromise).resolves.toEqual([
+      expect.objectContaining({
+        entity_id: "vacuum.storage_litter_box",
+        config_entry_id: "entry-123",
+      }),
+    ]);
+    await client.close();
+  });
+
   it("callService resolves with the result payload and rejects on error", async () => {
     const { Impl, instances } = createFakeWebSocketFactory();
     const client = new HomeAssistantEventClient(

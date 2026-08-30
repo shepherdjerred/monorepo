@@ -9,6 +9,7 @@ export type {
   ServiceCallWithResponse,
   HistoryResponse,
   FireEventResponse,
+  ConfigEntryDiagnostics,
 } from "./rest/schemas.ts";
 export {
   EntityState as EntityStateSchema,
@@ -18,6 +19,7 @@ export {
   ServiceCallWithResponse as ServiceCallWithResponseSchema,
   HistoryResponse as HistoryResponseSchema,
   FireEventResponse as FireEventResponseSchema,
+  ConfigEntryDiagnostics as ConfigEntryDiagnosticsSchema,
 } from "./rest/schemas.ts";
 export { HomeAssistantEventClient } from "./ws/client.ts";
 export type {
@@ -30,8 +32,15 @@ export {
   HaWebSocketClosedError,
   HaWebSocketResultError,
 } from "./ws/errors.ts";
-export type { EventEnvelope, EventMessage } from "./ws/messages.ts";
-export { StateChangedEventData as StateChangedEventDataSchema } from "./ws/messages.ts";
+export type {
+  EntityRegistryEntry,
+  EventEnvelope,
+  EventMessage,
+} from "./ws/messages.ts";
+export {
+  EntityRegistryEntry as EntityRegistryEntrySchema,
+  StateChangedEventData as StateChangedEventDataSchema,
+} from "./ws/messages.ts";
 export type { EventHandler, Subscription } from "./ws/subscriptions.ts";
 export type { HomeAssistantConfig } from "./shared/config.ts";
 export type {

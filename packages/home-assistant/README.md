@@ -2,6 +2,11 @@
 
 TypeScript client for the [Home Assistant](https://www.home-assistant.io/) REST and WebSocket APIs. Zod-validated responses, works under both Bun and Node.js (standard global `fetch` and `WebSocket`). Workspace-internal package — consumed by other packages in this monorepo via `"@shepherdjerred/home-assistant": "workspace:*"`; not published to npm.
 
+The REST client also exposes authenticated config-entry diagnostics with a
+caller-supplied Zod schema. The event client can list the entity registry, which
+lets consumers discover a config-entry ID from an entity instead of persisting
+Home Assistant's internal identifier.
+
 ## Quick start
 
 Everything exports from `src/index.ts`:
