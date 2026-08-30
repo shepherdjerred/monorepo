@@ -103,8 +103,9 @@ After rollback, verify schedule health, Workflow task failures, queue latency,
 and representative executions. Keep the rejected candidate pod available until
 executions pinned by the canary or operator override have closed. Then copy the
 stable catalog value back to candidate by rerunning `rollback` with the same
-Build ID while no ramp is active, then review and commit the resulting catalog
-change through the normal pull-request flow.
+Build ID while no ramp is active, then review and commit both the resulting
+catalog and `scripts/pin-candidates-state.json` changes through the normal
+pull-request flow.
 Image commit-back retains a Workflow candidate whenever stable and candidate
 differ, so a new build cannot replace an in-flight candidate and will not
 advance the track again until this post-rollback reset lands.
