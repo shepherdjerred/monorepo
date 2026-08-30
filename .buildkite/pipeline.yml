@@ -698,6 +698,7 @@ steps:
         - "package.json"
         - "patches/**"
         - "packages/homelab/mac-ci/**"
+        - "packages/hkctl/**"
         - "packages/macos-ai-subscription-tracker/**"
         - "packages/tasknotes-core/**"
         - "packages/tasknotes-macos/**"
@@ -778,6 +779,61 @@ steps:
       . .buildkite/scripts/macos-native-env.sh
       bun --no-install .buildkite/scripts/macos-native-preflight.ts quotabar
       bun --no-install run --cwd packages/macos-ai-subscription-tracker verify:macos
+    retry: *retry
+    agents:
+      queue: macos
+
+  - label: ":apple: hkctl Swift tests (PR)"
+    key: hkctl-native-pr
+    timeout_in_minutes: 20
+    if: build.pull_request.id != null && !build.pull_request.repository.fork && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/scripts/buildkite-handoff.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/scripts/bun-install.sh"
+        - ".buildkite/scripts/macos-native-dispatch-watch.ts"
+        - ".buildkite/scripts/macos-native-dispatch-watch.test.ts"
+        - ".buildkite/scripts/macos-native-env.sh"
+        - ".buildkite/scripts/macos-native-preflight.ts"
+        - ".buildkite/scripts/macos-native-preflight.test.ts"
+        - ".buildkite/scripts/macos-native-selection.ts"
+        - ".buildkite/scripts/toolchain.test.sh"
+        - ".buildkite/scripts/validate-pipeline*.ts"
+        - ".mise.toml"
+        - ".xcode-version"
+        - "packages/homelab/mac-ci/**"
+        - "packages/hkctl/**"
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/macos-native
+    command: |
+      . .buildkite/scripts/macos-native-env.sh
+      bun --no-install run --cwd packages/hkctl mac:test
+    retry: *retry
+    agents:
+      queue: macos
+
+  - label: ":apple: hkctl Swift tests (main)"
+    key: hkctl-native-main
+    timeout_in_minutes: 20
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/macos-native
+    command: |
+      . .buildkite/scripts/macos-native-env.sh
+      bun --no-install run --cwd packages/hkctl mac:test
     retry: *retry
     agents:
       queue: macos
@@ -3149,6 +3205,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on:
       - verify
+      - hkctl-native-main
       - quotabar-macos-main
       - tasknotes-native-main
       - playwright-e2e-main

@@ -176,6 +176,7 @@ export function parseLastPassedStepsCommit(
 
 export const summarySteps = [
   "verify",
+  "hkctl-native-main",
   "quotabar-macos-main",
   "tasknotes-native-main",
   "playwright-e2e-main",
@@ -204,6 +205,7 @@ export const summarySteps = [
 ] as const;
 
 export const summaryLanes = [
+  "hkctl-native",
   "quotabar-macos",
   "tasknotes-native",
   "playwright",

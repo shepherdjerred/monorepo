@@ -16,8 +16,11 @@ test("all expected deployment lanes are modeled", () => {
 });
 
 test("native lanes separate product changes and share infrastructure changes", () => {
+  const hkctlPaths = selectorPathsForLane("hkctl-native");
   const quotaPaths = selectorPathsForLane("quotabar-macos");
   const taskNotesPaths = selectorPathsForLane("tasknotes-native");
+  expect(hkctlPaths).toContain("packages/hkctl");
+  expect(hkctlPaths).not.toContain("packages/tasknotes-macos");
   expect(quotaPaths).toContain("packages/macos-ai-subscription-tracker");
   expect(quotaPaths).not.toContain("packages/tasknotes-macos");
   expect(taskNotesPaths).toContain("packages/tasknotes-macos");
@@ -31,6 +34,7 @@ test("native lanes separate product changes and share infrastructure changes", (
     ".xcode-version",
     "packages/homelab/mac-ci",
   ]) {
+    expect(hkctlPaths).toContain(sharedPath);
     expect(quotaPaths).toContain(sharedPath);
     expect(taskNotesPaths).toContain(sharedPath);
   }

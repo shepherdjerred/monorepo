@@ -73,6 +73,7 @@ One line per package. Each package's own README has the details; `AGENTS.md` fil
 | Package                                                   | Description                                                              |
 | --------------------------------------------------------- | ------------------------------------------------------------------------ |
 | [homelab](homelab/)                                       | Kubernetes homelab: Talos, cdk8s, OpenTofu, ArgoCD                       |
+| [hkctl](hkctl/)                                           | Development-signed Apple HomeKit command-line app (Mac Catalyst)         |
 | [terraform-provider-asuswrt](terraform-provider-asuswrt/) | Terraform/OpenTofu provider for Asuswrt-Merlin routers                   |
 | [toolkit](toolkit/)                                       | CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …) |
 | [pr-fleet-controller](pr-fleet-controller/)               | AI SDK controller that drives the open-PR fleet with a live dashboard    |

@@ -328,6 +328,11 @@
       "reason": "Reverts bootstrap.sh's pmset power profile via sudo on the Mac Mini, before Bun is guaranteed"
     },
     {
+      "source": "packages/hkctl/ci/verify-launch.sh",
+      "disposition": "retain",
+      "reason": "Small developer-local macOS smoke harness coordinates Xcode, LaunchServices, and signed HomeKit entitlement verification"
+    },
+    {
       "source": "packages/homelab/scripts/helm-set-version.sh",
       "disposition": "port",
       "reason": "Homelab tooling already requires Bun",

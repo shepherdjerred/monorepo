@@ -4,11 +4,13 @@ import { requireEnv } from "../../scripts/lib/run.ts";
 import { asRecord } from "../../scripts/lib/json.ts";
 
 const NATIVE_PR_STEP_KEYS = new Set([
+  "hkctl-native-pr",
   "quotabar-macos-pr",
   "tasknotes-native-pr",
 ]);
 const ALL_NATIVE_STEP_KEYS = new Set([
   ...NATIVE_PR_STEP_KEYS,
+  "hkctl-native-main",
   "quotabar-macos-main",
   "tasknotes-native-main",
 ]);

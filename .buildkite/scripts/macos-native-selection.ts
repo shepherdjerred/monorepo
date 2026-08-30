@@ -16,6 +16,7 @@ const nativeInfrastructurePaths = [
 ] as const;
 
 export const nativeLanePaths: Readonly<Record<string, readonly string[]>> = {
+  "hkctl-native": [...nativeInfrastructurePaths, "packages/hkctl"],
   "quotabar-macos": [
     ...nativeInfrastructurePaths,
     "packages/macos-ai-subscription-tracker",

@@ -197,10 +197,23 @@ test("keeps browser, resume, and Docker E2E lanes independently selectable", () 
   expect(selected.has("docker-e2e-main")).toBe(true);
 });
 
-test("keeps QuotaBar and TaskNotes native lanes independently selectable", () => {
+test("keeps native macOS lanes independently selectable", () => {
+  const hkctlOnly = selectedKeys(
+    steps,
+    new Map([
+      ["hkctl-native", true],
+      ["quotabar-macos", false],
+      ["tasknotes-native", false],
+    ]),
+  );
+  expect(hkctlOnly.has("hkctl-native-main")).toBe(true);
+  expect(hkctlOnly.has("quotabar-macos-main")).toBe(false);
+  expect(hkctlOnly.has("tasknotes-native-main")).toBe(false);
+
   const quotaOnly = selectedKeys(
     steps,
     new Map([
+      ["hkctl-native", false],
       ["quotabar-macos", true],
       ["tasknotes-native", false],
     ]),
@@ -212,6 +225,7 @@ test("keeps QuotaBar and TaskNotes native lanes independently selectable", () =>
   const taskNotesOnly = selectedKeys(
     steps,
     new Map([
+      ["hkctl-native", false],
       ["quotabar-macos", false],
       ["tasknotes-native", true],
     ]),

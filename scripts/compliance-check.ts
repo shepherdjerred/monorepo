@@ -361,6 +361,9 @@ packages/scout-for-lol:test
 packages/scout-for-lol:lint
 packages/scout-for-lol:typecheck
 packages/home-assistant:build
+packages/hkctl:build
+packages/hkctl:test
+packages/hkctl:typecheck
 packages/sjer.red:test
 packages/release-tools:build
 packages/release-tools:lint
