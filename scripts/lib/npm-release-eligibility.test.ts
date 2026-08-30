@@ -166,6 +166,21 @@ describe("consumer file classification", () => {
     ).toBe(false);
   });
 
+  test("matches glob and negated package files entries", () => {
+    expect(
+      classifyConsumerChanges(
+        astroPath,
+        [
+          `${astroPath}/dist/index.js`,
+          `${astroPath}/dist/index.test.js`,
+          `${astroPath}/src/internal/generated.ts`,
+        ],
+        false,
+        ["dist/*.js", "src", "!src/internal/**"],
+      ).reasons,
+    ).toEqual(["published source changed: dist/index.js"]);
+  });
+
   test("fails closed on an unknown package file", () => {
     expect(() =>
       classifyConsumerChanges(astroPath, [`${astroPath}/unknown.yaml`], false),

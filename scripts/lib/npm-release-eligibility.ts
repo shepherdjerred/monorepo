@@ -1,5 +1,7 @@
-import { run } from "./run.ts";
+import { minimatch } from "minimatch";
 import { z } from "zod";
+
+import { run } from "./run.ts";
 
 export type NpmPackagePolicy = {
   readonly name: string;
@@ -169,11 +171,23 @@ function isIncludedByPackageFiles(
   relativePath: string,
   publishedFiles: readonly string[],
 ): boolean {
-  return publishedFiles.some(
-    (publishedPath) =>
-      relativePath === publishedPath ||
-      relativePath.startsWith(`${publishedPath}/`),
+  const patterns = publishedFiles.map((pattern) => {
+    const isNegative = pattern.startsWith("!");
+    const value = (isNegative ? pattern.slice(1) : pattern).replace(/\/+$/, "");
+    return { isNegative, value };
+  });
+  const matches = (pattern: string): boolean => {
+    if (minimatch(relativePath, pattern, { dot: true })) return true;
+    if (/[!*?[\]{}()]/.test(pattern)) return false;
+    return minimatch(relativePath, `${pattern}/**`, { dot: true });
+  };
+  const included = patterns.some(
+    ({ isNegative, value }) => !isNegative && matches(value),
   );
+  const excluded = patterns.some(
+    ({ isNegative, value }) => isNegative && matches(value),
+  );
+  return included && !excluded;
 }
 
 function isTestOrExamplePath(relativePath: string): boolean {
