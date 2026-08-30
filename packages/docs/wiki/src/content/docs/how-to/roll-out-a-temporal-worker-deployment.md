@@ -79,8 +79,9 @@ bun run worker-deployment promote --build-id <candidate-image-git-sha>
 Promotion verifies that the candidate catalog image contains the requested
 Build ID as its baked `GIT_SHA`, copies that exact value into the stable pin,
 makes the candidate current, and removes the ramp. Catalog-first ordering makes
-an interrupted promotion safe to retry. Review and commit that single catalog
-change through the normal pull-request flow. Do not claim
+an interrupted promotion safe to retry. Review and commit both the catalog and
+`scripts/pin-candidates-state.json` changes through the normal pull-request
+flow. Do not claim
 promotion complete until GitOps has deployed the resulting stable pin and both
 poller tracks are healthy.
 
