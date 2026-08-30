@@ -47,7 +47,7 @@ function commandResult(
 ): BuildxCommandResult {
   return { exitCode, stdout, stderr };
 }
-test("seeds a legacy central Workflow stable pin atomically", () => {
+test("leaves the legacy central stable pin untouched", () => {
   const digest = `sha256:${"a".repeat(64)}`;
   const workflowPin = `2.0.0-12300@sha256:${"c".repeat(64)}`;
   expect(
@@ -74,10 +74,6 @@ test("seeds a legacy central Workflow stable pin atomically", () => {
       digest,
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
-      version: "2.0.0-42",
-      digest,
-    },
-    "shepherdjerred/temporal-worker/workflows/stable": {
       version: "2.0.0-42",
       digest,
     },
@@ -312,7 +308,7 @@ test("retains a central Workflow candidate until its pin converges with stable",
     },
   });
 });
-test("seeds a legacy Scout beta Workflow stable pin atomically", () => {
+test("leaves the legacy Scout beta stable pin untouched", () => {
   const digest = `sha256:${"b".repeat(64)}`;
   const workflowPin = `2.0.0-42@sha256:${"c".repeat(64)}`;
   expect(
@@ -336,10 +332,6 @@ test("seeds a legacy Scout beta Workflow stable pin atomically", () => {
       digest,
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
-      version: "2.0.0-43",
-      digest,
-    },
-    "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       version: "2.0.0-43",
       digest,
     },

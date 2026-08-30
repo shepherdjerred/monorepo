@@ -63,17 +63,6 @@ export function pinCandidatesForDigests(
     ) {
       candidates["shepherdjerred/scout-for-lol/beta/workflows/candidate"] =
         candidate;
-      if (
-        isLegacyWorkflowPin(
-          requireCatalogImageValue(
-            versionCatalogSource,
-            "shepherdjerred/scout-for-lol/beta/workflows/stable",
-          ),
-        )
-      ) {
-        candidates["shepherdjerred/scout-for-lol/beta/workflows/stable"] =
-          candidate;
-      }
     }
   }
   return candidates;
