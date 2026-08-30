@@ -393,4 +393,31 @@ describe("custom-night privacy", () => {
       }),
     ).rejects.toThrow("voice work is pending");
   });
+
+  test("anonymization merges consent recorded again after an earlier anonymization", async () => {
+    const firstNight = await createCustomNight(testPrisma, CREATE_INPUT);
+    await endNight(firstNight.id, 0);
+    const firstResult = await anonymizeCustomParticipant(testPrisma, {
+      guildId: CREATE_INPUT.guildId,
+      discordId: CREATE_INPUT.hostDiscordId,
+      operatorId: "operator",
+      now: NOW,
+    });
+
+    const secondNight = await createCustomNight(testPrisma, CREATE_INPUT);
+    await endNight(secondNight.id, 0);
+    const secondResult = await anonymizeCustomParticipant(testPrisma, {
+      guildId: CREATE_INPUT.guildId,
+      discordId: CREATE_INPUT.hostDiscordId,
+      operatorId: "operator",
+      now: new Date(NOW.getTime() + 1000),
+    });
+
+    expect(secondResult.pseudonym).toBe(firstResult.pseudonym);
+    await expect(
+      testPrisma.customConsent.findMany({
+        where: { guildId: CREATE_INPUT.guildId },
+      }),
+    ).resolves.toHaveLength(1);
+  });
 });

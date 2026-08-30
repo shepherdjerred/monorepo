@@ -171,10 +171,46 @@ export async function anonymizeCustomParticipant(
       );
     }
     const auditEvents = nights.flatMap((night) => night.auditEvents);
-    await transaction.customConsent.updateMany({
+    const consents = await transaction.customConsent.findMany({
       where: { guildId: input.guildId, discordId: input.discordId },
-      data: { discordId: pseudonym, anonymizedAt: now },
+      select: {
+        id: true,
+        disclosureVersion: true,
+        acceptedAt: true,
+      },
     });
+    for (const consent of consents) {
+      const pseudonymousConsent = await transaction.customConsent.findUnique({
+        where: {
+          guildId_discordId_disclosureVersion: {
+            guildId: input.guildId,
+            discordId: pseudonym,
+            disclosureVersion: consent.disclosureVersion,
+          },
+        },
+        select: { id: true, acceptedAt: true },
+      });
+      if (pseudonymousConsent === null) {
+        await transaction.customConsent.update({
+          where: { id: consent.id },
+          data: { discordId: pseudonym, anonymizedAt: now },
+        });
+        continue;
+      }
+      await transaction.customConsent.update({
+        where: { id: pseudonymousConsent.id },
+        data: {
+          acceptedAt: new Date(
+            Math.min(
+              pseudonymousConsent.acceptedAt.getTime(),
+              consent.acceptedAt.getTime(),
+            ),
+          ),
+          anonymizedAt: now,
+        },
+      });
+      await transaction.customConsent.delete({ where: { id: consent.id } });
+    }
     await transaction.customNightParticipant.updateMany({
       where: {
         discordId: input.discordId,
