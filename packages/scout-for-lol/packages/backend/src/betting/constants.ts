@@ -80,6 +80,7 @@ export const HOUSE_ACCOUNT_DISCORD_ID =
 export const BUTTON_STAKES = [1, 5] as const;
 
 export const MIN_STAKE = 1;
+export const MINIMUM_BUCKS_TRANSFER = 2;
 
 /**
  * Below this, a game is a remake: no Bucks are earned and every stake is

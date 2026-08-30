@@ -47,6 +47,8 @@ describe("logBucksTransition", () => {
       "bucks.parlay.settled",
       "bucks.earning.awarded",
       "bucks.peek_pass.purchased",
+      "bucks.transfer.completed",
+      "bucks.transfer.rejected",
     ] as const;
     for (const event of events) {
       expect(() => {
@@ -88,6 +90,8 @@ describe("BucksTransitionEvent coverage", () => {
       "bucks.parlay_bet.settled",
       "bucks.earning.awarded",
       "bucks.peek_pass.purchased",
+      "bucks.transfer.completed",
+      "bucks.transfer.rejected",
     ];
 
     const glob = new Bun.Glob("*.ts");

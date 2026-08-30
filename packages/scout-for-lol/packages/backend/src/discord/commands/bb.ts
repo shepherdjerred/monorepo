@@ -4,7 +4,6 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import {
-  getLedgerPage,
   getPersonalBucksView,
   type PersonalBucksView,
 } from "#src/betting/accounts.ts";
@@ -16,7 +15,6 @@ import {
   BUCKS_NOT_ENABLED,
   withRulesHint,
 } from "#src/betting/copy.ts";
-import { renderBucksHistory } from "#src/betting/navigation.ts";
 import { getOpenMarketAggregates } from "#src/betting/open-market.ts";
 import {
   BucksOutcomeChoiceSchema,
@@ -36,7 +34,6 @@ import { selectParlayMarketForAlias } from "#src/betting/parlay-market-selection
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
-import { buildBbPrizesEmbed } from "#src/discord/commands/bb-prizes.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
 import {
   replyBucksAsk,
@@ -49,12 +46,21 @@ import {
   resolveOpenGameByAlias,
   trackedGameAliases,
 } from "#src/discord/commands/bb-market.ts";
-import { buildBbRulesEmbed as createBbRulesEmbed } from "#src/discord/commands/bb-rules.ts";
 import { replyBbPeekCommand } from "#src/discord/commands/bb-peek.ts";
 import {
   replyBbNotifications,
   type BbNotificationCommandDependencies,
 } from "#src/discord/commands/bb-notifications.ts";
+import {
+  replyBbHistory,
+  replyBbPrizes,
+  replyBbRules,
+} from "#src/discord/commands/bb-overview.ts";
+import { buildBbRulesEmbed as createBbRulesEmbed } from "#src/discord/commands/bb-rules.ts";
+import {
+  replyBbTransfer,
+  type BbTransferCommandDependencies,
+} from "#src/discord/commands/bb-transfer.ts";
 import {
   splitMessageIntoChunks,
   truncateEmbedFieldValue,
@@ -93,7 +99,8 @@ const BUCKS_COLOR = 0x2e_cc_71;
 type BbCommandDependencies = {
   runAskAgent?: BucksAskAgentRunner;
   isPolicyEnabled?: typeof isPolicyEnabled;
-} & BbNotificationCommandDependencies;
+} & BbNotificationCommandDependencies &
+  BbTransferCommandDependencies;
 
 export function isPublicBbSubcommand(subcommand: string): boolean {
   return subcommand === "rules" || subcommand === "prizes";
@@ -166,23 +173,6 @@ async function replyBalance(
   await interaction.editReply({
     embeds: [buildPersonalBucksEmbed(view)],
   });
-}
-
-async function replyPrizes(interaction: BbCommandInteraction): Promise<void> {
-  await interaction.editReply({ embeds: [buildBbPrizesEmbed()] });
-}
-
-async function replyRules(interaction: BbCommandInteraction): Promise<void> {
-  await interaction.editReply({ embeds: [buildBbRulesEmbed()] });
-}
-
-async function replyHistory(
-  interaction: BbCommandInteraction,
-  serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
-  discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
-): Promise<void> {
-  const page = await getLedgerPage({ serverId, discordId, page: 0 });
-  await interaction.editReply(renderBucksHistory(discordId, page));
 }
 
 async function editReplyInChunks(
@@ -473,13 +463,16 @@ export async function executeBb(
         await replyBalance(interaction, serverId, discordId);
         break;
       case "prizes":
-        await replyPrizes(interaction);
+        await replyBbPrizes(interaction);
         break;
       case "rules":
-        await replyRules(interaction);
+        await replyBbRules(interaction);
         break;
       case "history":
-        await replyHistory(interaction, serverId, discordId);
+        await replyBbHistory(interaction, serverId, discordId);
+        break;
+      case "transfer":
+        await replyBbTransfer(interaction, serverId, discordId, dependencies);
         break;
       case "open":
         await replyOpen(interaction, serverId);

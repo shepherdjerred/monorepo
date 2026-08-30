@@ -27,6 +27,7 @@ const PRODUCTION_DENIED_FLAGS = [
   "ai_reports_unlimited",
   "ai_reviews_enabled",
   "betting_enabled",
+  "bucks_transfers_enabled",
   "betting_player_bet_outcome_dm_enabled",
   "betting_settlement_dm_enabled",
   "competition_builder_v2_enabled",
@@ -76,6 +77,7 @@ describe("production hard-disable policy", () => {
         ai_reports_unlimited: true,
         ai_reviews_enabled: true,
         betting_enabled: true,
+        bucks_transfers_enabled: true,
         betting_player_bet_outcome_dm_enabled: true,
         betting_settlement_dm_enabled: true,
         tournament_lobbies_enabled: true,
@@ -107,6 +109,17 @@ describe("Bryan Bucks settlement DM flags", () => {
     expect(
       getFlag("betting_player_bet_outcome_dm_enabled", { server: MY_SERVER }),
     ).toBe(true);
+  });
+});
+
+describe("Bryan Bucks transfer flag", () => {
+  test("is off by default and enabled only for the beta guild", () => {
+    expect(getFlag("bucks_transfers_enabled", { server: OTHER_GUILD })).toBe(
+      false,
+    );
+    expect(getFlag("bucks_transfers_enabled", { server: MY_SERVER })).toBe(
+      true,
+    );
   });
 });
 

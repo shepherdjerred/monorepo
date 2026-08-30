@@ -158,6 +158,7 @@ function fakeNotificationsInteraction(input: {
       getString: (name: string) =>
         name === "your_bets" ? input.yourBets : input.betsOnYou,
       getInteger: () => 1,
+      getUser: () => ({ id: USER, bot: false }),
     },
     replied: false,
     deferred: false,

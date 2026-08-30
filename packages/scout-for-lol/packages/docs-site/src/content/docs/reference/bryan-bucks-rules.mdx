@@ -11,6 +11,7 @@ import {
   BUTTON_STAKES,
   HOUSE_BANKROLL,
   HOUSE_MATCH_LIMIT,
+  MINIMUM_BUCKS_TRANSFER,
   MIN_STAKE,
   PARLAY_BETTING_WINDOW_MS,
   REMAKE_MAX_DURATION_SECONDS,
@@ -155,10 +156,24 @@ for a new wallet is transferred from the house bankroll, not created.
 | Cancelling an outcome bet      | {HOUSE_CUT_PERCENT}% of the **offer**, rounded to the nearest BB |
 | Cancelling a parlay            | none                                                             |
 | Any void or remake refund      | none                                                             |
+| Western Union transfer         | Half the total spend, rounded up                                 |
 
 The two {HOUSE_CUT_PERCENT}% figures use different bases and different
 rounding, and that is deliberate: the winner fee rounds down so a winning 1 BB
 match still profits.
+
+## Transfers
+
+`/bb transfer` is the only user-to-user Bryan Bucks movement. The sender spends
+at least {MINIMUM_BUCKS_TRANSFER} whole BB. The recipient receives half rounded
+down, and the house receives half rounded up, so an odd amount favors the house
+by one BB. Both people must already have non-house wallets in the same server;
+bots and self-transfers are refused.
+
+Transfers commit immediately with no confirmation and cannot be reversed. A
+successful transfer posts a public receipt naming both people and showing the
+total, recipient share, and house fee, but never either balance. There is no
+free donation, redemption, burn, or claim path.
 
 ## Matching
 

@@ -72,6 +72,26 @@ export type RefundableBucksAccount = {
 };
 
 /**
+ * Lock credit targets before loading their refundable headroom.
+ *
+ * Callers must perform their guarded first mutation before using this helper.
+ * Sorting keeps multi-account credit flows from taking these locks in different
+ * orders. A concurrent stake that already owns one of the rows must commit its
+ * pending position before the following headroom query can observe it.
+ */
+export async function lockBucksAccountsForCredit(
+  tx: Db,
+  bucksAccountIds: readonly number[],
+): Promise<void> {
+  const sortedAccountIds = [...new Set(bucksAccountIds)].toSorted(
+    (left, right) => left - right,
+  );
+  for (const bucksAccountId of sortedAccountIds) {
+    await tx.$queryRaw`SELECT "id" FROM "BucksAccount" WHERE "id" = ${bucksAccountId} FOR UPDATE`;
+  }
+}
+
+/**
  * Load refundable headroom for many accounts with a fixed number of queries.
  * Human accounts hold their own pending stakes. A guild house instead holds
  * every pending fixed-odds reserve in that guild.

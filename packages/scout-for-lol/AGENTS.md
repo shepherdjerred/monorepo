@@ -209,15 +209,22 @@ The operator-only smoke command is never a CI task:
 
 ```bash
 bun run --filter='./packages/scout-for-lol' test:discord:smoke -- \
-  --scenario gateway
+  --scenario bb-transfer
 ```
 
 It validates the tracked public fixture, both Discord credentials, guild and
-channel membership, application identity, and the dedicated running PinchTab
-profile before creating an isolated `scout_test_*` database. Runs write an
-atomic manifest under the workspace `.context/discord-smoke/<run-id>/`; failed
-databases are preserved, successful databases are dropped, and `--resume`
-never invokes Discord again. Stop every local gateway process after testing.
+channel membership (including the recipient), application identity, and the
+dedicated signed-in PinchTab profile before creating an isolated
+`scout_test_*` database. The `bb-transfer` scenario seeds both wallets through
+`ensureBucksAccount`, registers `/bb` only in the fixture guild, invokes a 3 BB
+transfer, and asserts the exact private reply, public receipt, two-user mention
+allowlist, `-3/+1/+2` ledger split, stored balances, conservation, and three
+analytics outbox rows. Runs write an atomic manifest under the workspace
+`.context/discord-smoke/<run-id>/`; the invocation timestamp is durable before
+the slash command begins, so a failed post-commit run must use `--resume
+<run-id>` for database verification and real-client screenshot capture without
+another transfer. Failed databases are preserved and successful databases are
+dropped. Stop every local gateway process after testing.
 
 ### Shared report-lake seed (multiple checkouts / parallel agents)
 
@@ -953,9 +960,11 @@ fatal during startup.
 The feature scope remains enforced by the flag and guild-scoped registration;
 user-facing betting surfaces should not advertise the allowlist. `/bb prizes`
 is the deliberate exception: it displays the existing 1:10 catalog and
-in-person-with-Bryan footer as joke copy only. There is no command or accounting
-path to redeem, donate, burn, or claim Bucks, and nothing transfers to real
-goods. `/bb rules` says so explicitly, because for a while it claimed "no cash
+in-person-with-Bryan footer as joke copy only. `/bb transfer` is the sole
+user-to-user movement: an immediate, irreversible, fee-bearing transfer between
+existing wallets in the same guild. There is no command or accounting path to
+redeem, freely donate, burn, or claim Bucks, and nothing transfers to real goods.
+`/bb rules` says so explicitly, because for a while it claimed "no cash
 value" while `/bb prizes` printed CAD figures to $1,000,000 with no
 cross-reference.
 
@@ -1216,6 +1225,16 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   The stored `BucksBet.payout` is net; settlement summaries retain gross
   payout, cut, net payout, and net winnings so Discord copy never has to
   reconstruct the arithmetic from ledger rows.
+- **Western Union transfers conserve one debit across two credits.** The domain
+  requires both `betting_enabled` and `bucks_transfers_enabled`, resolves the
+  sender, recipient, and guild house before opening the transaction, and makes
+  the guarded sender debit its first statement. It then credits the recipient
+  `floor(amount / 2)` and the house `ceil(amount / 2)` through
+  `applyBucksDelta`; all three rows carry one UUID and the full split. Any later
+  credit failure rolls the whole transaction back. After commit, `/bb transfer`
+  privately acknowledges the sender and posts one public Western Union receipt
+  with restricted mentions and no balances. Delivery failure is observed and
+  reported privately but never rolls back or retries the completed transfer.
 - **A peek pass spends aged balance, not pending stakes.** Remaining balance is
   reconstructed from the ledger as FIFO credit lots after every debit consumes
   the oldest lot. The price is
@@ -1279,7 +1298,8 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
     extra post-match message, and it beats the old chunked send that could
     deliver chunk 1 and drop chunk 2.
 - **Successful mutations refresh the prematch message instead of posting a
-  receipt.** Button and `/bb` placement or cancellation confirmations remain
+  receipt.** `/bb transfer` is the explicit exception described above. Button
+  and `/bb` placement or cancellation confirmations remain
   ephemeral. After the ledger transaction commits, a queue serialized per market
   (`refresh-queue.ts`, keyed `pool:` or `parlay:`) re-reads current offers and
   best-effort edits every stored message. At close the same message becomes the

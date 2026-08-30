@@ -46,6 +46,7 @@ export type BucksTransitionFields = {
   slot?: number;
   bucksAccountId?: number;
   actorDiscordId?: string;
+  recipientDiscordId?: string;
   fromState?: string;
   toState?: string;
   teamId?: number;
@@ -56,6 +57,7 @@ export type BucksTransitionFields = {
   grossPayout?: number;
   houseCut?: number;
   payout?: number;
+  fee?: number;
   balanceAfter?: number;
   reason?: string;
   surface?: "button" | "command" | "sweep" | "postmatch" | "cron" | "prematch";

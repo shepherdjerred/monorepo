@@ -3,6 +3,7 @@ import {
   BETTING_WINDOW_MS,
   BUCKS_EARNING_QUEUES,
   HOUSE_MATCH_LIMIT,
+  MINIMUM_BUCKS_TRANSFER,
   PARLAY_BETTING_WINDOW_MS,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
@@ -120,6 +121,13 @@ export function buildBbRulesEmbed(): EmbedBuilder {
         value:
           "Remakes, unsupported modes, and games that never resolve return every matched stake with no fee. " +
           "Unmatched BB are always refunded free. Parlay voids also release the reserved house payout.",
+      },
+      {
+        name: "Western Union transfers",
+        value:
+          `\`/bb transfer\` spends at least **${formatInteger(MINIMUM_BUCKS_TRANSFER)} BB** from your wallet. ` +
+          "The recipient gets half, rounded down, and the house gets half, rounded up. " +
+          "Both people need existing wallets in this server. Transfers are immediate, irreversible, and post a public receipt with the exact split but no balances.",
       },
       {
         name: "Peek passes",

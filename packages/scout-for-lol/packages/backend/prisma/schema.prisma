@@ -885,7 +885,8 @@ model BucksLedgerEntry {
   // BucksLedgerKind (@scout-for-lol/data): seed | earn_* | bet_stake |
   // bet_payout | bet_*_refund | winner_fee | house_match | cancel_fee |
   // parlay_stake | parlay_reserve | parlay_payout | parlay_refund |
-  // parlay_release | peek_pass | legacy bet_refund/house_rake | adjustment.
+  // parlay_release | peek_pass | transfer_sent | transfer_received |
+  // transfer_fee | legacy bet_refund/house_rake | adjustment.
   // Not a Prisma enum (kept a plain string through the Postgres migration).
   // Zod-validated on write
   // and on read.

@@ -26,6 +26,16 @@ export const DiscordSmokeManifestSchema = z.object({
     .regex(/^scout_test_[a-z0-9_]+$/u)
     .nullable(),
   databaseUrl: z.url().nullable(),
+  seededAccounts: z
+    .object({
+      senderId: z.number().int().positive(),
+      senderBalance: z.number().int(),
+      recipientId: z.number().int().positive(),
+      recipientBalance: z.number().int(),
+      houseId: z.number().int().positive(),
+      houseBalance: z.number().int(),
+    })
+    .nullable(),
   invocationStartedAt: z.iso.datetime().nullable(),
   privateReplyId: SnowflakeSchema.nullable(),
   publicMessageId: SnowflakeSchema.nullable(),
@@ -47,7 +57,14 @@ const DiscordGuildMemberSchema = z.object({
 const DiscordCommandSchema = z.object({
   id: SnowflakeSchema,
   name: z.string(),
-  options: z.array(z.unknown()).optional(),
+  options: z
+    .array(
+      z.object({
+        type: z.number().int(),
+        name: z.string(),
+      }),
+    )
+    .optional(),
 });
 
 export type DiscordSmokePreflightDependencies = {
@@ -257,6 +274,7 @@ export async function waitForDiscordCommand(
     readonly fixture: DiscordSmokeFixture;
     readonly botToken: string;
     readonly commandName: string;
+    readonly subcommandName?: string | undefined;
     readonly guildScoped: boolean;
     readonly timeoutMilliseconds?: number | undefined;
   },
@@ -273,13 +291,23 @@ export async function waitForDiscordCommand(
       .array(DiscordCommandSchema)
       .parse(await discordJson(fetcher, pathname, `Bot ${params.botToken}`));
     lastNames = commands.map((command) => command.name);
-    if (commands.some((command) => command.name === params.commandName)) {
+    if (
+      commands.some(
+        (command) =>
+          command.name === params.commandName &&
+          (params.subcommandName === undefined ||
+            command.options?.some(
+              (option) =>
+                option.type === 1 && option.name === params.subcommandName,
+            ) === true),
+      )
+    ) {
       return;
     }
     await Bun.sleep(500);
   }
   throw new Error(
-    `Discord did not expose /${params.commandName} before timeout; observed [${lastNames.join(", ")}]`,
+    `Discord did not expose /${params.commandName}${params.subcommandName === undefined ? "" : ` ${params.subcommandName}`} before timeout; observed [${lastNames.join(", ")}]`,
   );
 }
 
