@@ -62,6 +62,7 @@ export async function requireHealthyWorkflowPoller(
     deploymentName: string;
     buildId: string;
     taskQueue: string;
+    taskQueue: string;
   },
   run: RolloutCommandRunner,
   label: string,
@@ -115,7 +116,7 @@ export function rolloutPoller(
   return {
     ...options,
     ...(currentBuildId === undefined ? {} : { currentBuildId }),
-    taskQueue: "monorepo-workflows",
+    taskQueue: options.taskQueue,
   };
 }
 
