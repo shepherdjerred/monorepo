@@ -155,3 +155,53 @@ test("bootstraps stable and candidate before the first Scout beta rollout", () =
     },
   });
 });
+
+test("publishes only a Scout beta candidate after stable bootstrap", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  const legacy = `2.0.0-12197@sha256:${"b".repeat(64)}`;
+  const stable = `2.0.0-12300@sha256:${"c".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/scout-for-lol/beta": digest },
+      "43",
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+          value: stable,
+        },
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+          value: legacy,
+        },
+      ]),
+    ),
+  ).toEqual({
+    "shepherdjerred/scout-for-lol/beta": { version: "2.0.0-43", digest },
+    "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
+      version: "2.0.0-43",
+      digest,
+    },
+  });
+});
+
+test("does not publish a Scout beta pin while tracks diverge", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/scout-for-lol/beta": digest },
+      "44",
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+          value: `2.0.0-12300@sha256:${"b".repeat(64)}`,
+        },
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+          value: `2.0.0-12301@sha256:${"c".repeat(64)}`,
+        },
+      ]),
+    ),
+  ).toEqual({
+    "shepherdjerred/scout-for-lol/beta": { version: "2.0.0-44", digest },
+  });
+});
