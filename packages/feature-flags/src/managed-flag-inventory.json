@@ -689,6 +689,17 @@
       "thresholdRollouts": []
     },
     {
+      "key": "pet-dashboard-enabled",
+      "owner": "trmnl-dashboard",
+      "source": "trmnl-dashboard",
+      "purpose": "Expose the authenticated pet-care TRMNL dashboard payload after deployment verification.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-idle-timeout-seconds",
       "owner": "streambot",
       "source": "streambot-dynamic",

@@ -12,8 +12,8 @@ FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f
 WORKDIR /app
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
-# The trmnl-dashboard filter includes home-assistant through its workspace
-# dependency closure. `--frozen-lockfile` requires every workspace member's
+# The trmnl-dashboard filter includes config, feature-flags, and home-assistant
+# through its workspace dependency closure. `--frozen-lockfile` requires every workspace member's
 # package.json present, so the globs enumerate every member (top-level, nested
 # packages/*/packages/*, homelab/src/*, the desktop src-tauri crate, and the
 # `scripts` dir).
@@ -39,6 +39,8 @@ COPY --from=prod-deps /app/ /app/
 COPY --parents \
   tsconfig.base.json \
   packages/trmnl-dashboard \
+  packages/config \
+  packages/feature-flags \
   packages/home-assistant \
   ./
 

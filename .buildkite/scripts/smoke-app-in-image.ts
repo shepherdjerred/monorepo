@@ -323,6 +323,7 @@ const commands: Record<
       TRMNL_API_KEY: "smoke-test-dummy",
       HA_TOKEN: "smoke-test-dummy",
       HA_URL: "http://127.0.0.1:9999",
+      FEATURE_FLAGS_MODE: "disabled",
       PORT: "18790",
     },
   },

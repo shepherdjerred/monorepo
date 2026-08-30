@@ -22,6 +22,8 @@
   },
   "dependencies": {
     "@sentry/bun": "^10.70.0",
+    "@shepherdjerred/config": "workspace:*",
+    "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/home-assistant": "workspace:*",
     "zod": "^4.4.3"
   },
@@ -30,6 +32,7 @@
     "@types/bun": "1.4.0",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
+    "liquidjs": "^10.29.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
     "vitest": "4.1.10",

@@ -11,7 +11,7 @@ import type { PetCarePayload, PetProblem } from "../types.ts";
 
 const FOUNTAIN = "dockstream_2_smart_fountain";
 const FEEDER = "granary_smart_camera_feeder";
-const PET_ALERT_PATTERN = /^(?:PetLibro|LitterRobot|Roborock)/;
+const PET_ALERT_PATTERN = /^(?:PetCare|PetLibro|LitterRobot|Roborock)/;
 
 const VACUUMS = [
   { id: "1st-floor", label: "1st Floor", prefix: "1st_floor" },
@@ -168,8 +168,11 @@ function buildFountain(
     ),
   };
   return {
-    status: componentStatus(alerts, (alert) =>
-      alert.alertname.startsWith("PetLibroFountain"),
+    status: componentStatus(
+      alerts,
+      (alert) =>
+        alert.alertname.startsWith("PetLibroFountain") ||
+        isAvailabilityAlertFor(alert, "dockstream_2_smart_fountain"),
     ),
     ...fields,
   };
@@ -181,11 +184,22 @@ function buildFeeder(
   feeder: (typeof FEEDERS)[number],
 ): PetCarePayload["feeders"][number] {
   const alertToken = feeder.id === "living-room" ? "LivingRoom" : "GuestRoom";
+  const feederEntities = [
+    `binary_sensor.${FEEDER}_battery_status${feeder.suffix}`,
+    `binary_sensor.${FEEDER}_food_dispenser${feeder.suffix}`,
+    `binary_sensor.${FEEDER}_food_status${feeder.suffix}`,
+    `binary_sensor.${FEEDER}_wi_fi${feeder.suffix}`,
+    `sensor.${FEEDER}_desiccant_remaining_days${feeder.suffix}`,
+    `sensor.${FEEDER}_last_feed_time${feeder.suffix}`,
+  ];
   return {
     id: feeder.id,
     label: feeder.label,
-    status: componentStatus(alerts, (alert) =>
-      alert.alertname.includes(`Feeder${alertToken}`),
+    status: componentStatus(
+      alerts,
+      (alert) =>
+        alert.alertname.includes(`Feeder${alertToken}`) ||
+        feederEntities.some((entity) => isAvailabilityAlertFor(alert, entity)),
     ),
     food_low: booleanState(
       states,
@@ -262,8 +276,9 @@ function buildVacuum(
     status: componentStatus(
       alerts,
       (alert) =>
-        alert.alertname.startsWith("Roborock") &&
-        alert.summary.toLowerCase().includes(vacuum.label.toLowerCase()),
+        (alert.alertname.startsWith("Roborock") &&
+          alert.summary.toLowerCase().includes(vacuum.label.toLowerCase())) ||
+        isAvailabilityAlertFor(alert, vacuum.prefix),
     ),
     state: stringState(states, `vacuum.${vacuum.prefix}`),
     battery_percent: numberState(states, `sensor.${vacuum.prefix}_battery`),
@@ -363,6 +378,16 @@ function componentStatus(
     return "error";
   }
   return matching.length > 0 ? "warning" : "ok";
+}
+
+function isAvailabilityAlertFor(
+  alert: AlertSummaryItem,
+  entityToken: string,
+): boolean {
+  return (
+    alert.alertname === "PetCareEntityUnavailable" &&
+    alert.summary.includes(entityToken)
+  );
 }
 
 function stateValue(
