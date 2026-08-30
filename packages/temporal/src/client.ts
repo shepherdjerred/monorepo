@@ -2,8 +2,7 @@ import { Client, Connection } from "@temporalio/client";
 import { createTemporalClientTracingInterceptor } from "@shepherdjerred/temporal-observability/interceptors";
 import {
   type AnyTemporalNamespace,
-  parseTemporalNamespace,
-  type TemporalNamespace,
+  parseAnyTemporalNamespace,
 } from "#shared/temporal-namespace.ts";
 import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 import { parseTemporalBootstrapMetadata } from "./shared/execution-metadata.ts";
@@ -11,11 +10,11 @@ import { ExecutionMetadataClientInterceptor } from "./lib/execution-metadata-cli
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 
-const cachedClients = new Map<TemporalNamespace, Client>();
+const cachedClients = new Map<AnyTemporalNamespace, Client>();
 const cachedVisibilityClients = new Map<AnyTemporalNamespace, Client>();
 
 export async function createTemporalClient(
-  namespace: TemporalNamespace = parseTemporalNamespace(
+  namespace: AnyTemporalNamespace = parseAnyTemporalNamespace(
     Bun.env["TEMPORAL_NAMESPACE"],
   ),
 ): Promise<Client> {

@@ -3,6 +3,7 @@ import {
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
+import { activityInfo } from "@temporalio/activity";
 import { z } from "zod/v4";
 import { createTemporalClient } from "#client";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
@@ -39,6 +40,7 @@ import {
   type ReportEnvelopeV1,
 } from "#shared/report.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { parseAnyTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 const COMPONENT = "agent-task";
 
@@ -440,7 +442,9 @@ export function agentTaskFollowUpInput(
 export async function pauseSchedule(
   input: PauseAgentTaskScheduleInput,
 ): Promise<void> {
-  const client = await createTemporalClient();
+  const client = await createTemporalClient(
+    parseAnyTemporalNamespace(activityInfo().namespace),
+  );
   const handle = client.schedule.getHandle(input.scheduleId);
   await handle.pause(input.reason);
   console.warn(

@@ -227,7 +227,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{namespace=~"prod|beta"}[30m]) > 5',
+            'increase(activity_task_fail{exported_namespace=~"prod|beta"}[30m]) > 5',
           ),
           for: "15m",
           labels: {
@@ -243,7 +243,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{namespace="prod",workflowType="syncGolinks"}[30m]) > 3',
+            'increase(activity_task_fail{exported_namespace="prod",workflowType="syncGolinks"}[30m]) > 3',
           ),
           for: "15m",
           labels: {
@@ -259,7 +259,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{namespace="prod",workflowType="syncGolinks"}[2h]) > 20',
+            'increase(activity_task_fail{exported_namespace="prod",workflowType="syncGolinks"}[2h]) > 20',
           ),
           for: "30m",
           labels: {
@@ -275,7 +275,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{namespace="prod",workflowType="runZfsMaintenanceWorkflow"}[24h]) > 0',
+            'increase(activity_task_fail{exported_namespace="prod",workflowType="runZfsMaintenanceWorkflow"}[24h]) > 0',
           ),
           for: "1h",
           labels: {
@@ -399,7 +399,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             [
               "increase(activity_task_fail{",
-              'namespace=~"prod|beta",',
+              'exported_namespace=~"prod|beta",',
               `workflowType!~"${["welcomeHome", "leavingHome", "goodNight"].join("|")}"`,
               "}[48h]) >= 2",
             ].join(""),

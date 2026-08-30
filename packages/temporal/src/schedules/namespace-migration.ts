@@ -280,18 +280,30 @@ async function persistCutoverBoundary(
 
 async function pauseSourceSchedules(
   sourceClient: Client,
+  targetClients: ReadonlyMap<MigrationTargetNamespace, Client>,
   targets: readonly PreparedTarget[],
 ): Promise<Date> {
-  let pauseStartedAt: Date | undefined;
+  const pauseStartedAt = cutoverTimestampForRetry(targets, new Date());
+  let persistedBoundary = targets.some(
+    ({ migrationState }) => migrationState.cutoverAt !== undefined,
+  );
   for (const { migration } of targets) {
     const handle = sourceClient.schedule.getHandle(migration.source.scheduleId);
     const current = await handle.describe();
     if (!current.state.paused) {
-      pauseStartedAt ??= new Date();
       await handle.pause(SOURCE_MIGRATION_NOTE);
+      if (!persistedBoundary) {
+        await persistCutoverBoundary(targetClients, targets, pauseStartedAt);
+        persistedBoundary = true;
+      }
     }
   }
-  return pauseStartedAt ?? new Date();
+  if (!persistedBoundary) {
+    throw new Error(
+      "Source schedules are already migration-paused but have no persisted cutover boundary; refusing to cut over without an auditable boundary",
+    );
+  }
+  return pauseStartedAt;
 }
 
 async function activateTargetSchedules(
@@ -315,10 +327,7 @@ async function activateTargetSchedules(
 }
 
 function scheduleIdQuery(scheduleId: string): string {
-  if (!/^[\w.-]+$/.test(scheduleId)) {
-    throw new Error(`Schedule id cannot be queried safely: ${scheduleId}`);
-  }
-  return `TemporalScheduledById = "${scheduleId}"`;
+  return `TemporalScheduledById = ${JSON.stringify(scheduleId)}`;
 }
 
 async function assertNoTargetWorkflowStarts(
@@ -349,12 +358,12 @@ export async function cutoverNamespaceMigration(input: {
   const targets = await validatePreparedTargets(input);
   const pauseStartedAt = await pauseSourceSchedules(
     input.sourceClient,
+    input.targetClients,
     targets,
   );
-  const cutoverAt = cutoverTimestampForRetry(targets, pauseStartedAt);
-  // Persist after source pausing begins. If a retry follows a partial pause,
-  // any existing boundary is reused; otherwise this timestamp is tied to the
-  // first source pause rather than a metadata-only preparation attempt.
+  const cutoverAt = pauseStartedAt;
+  // The first successful source pause persists the boundary immediately. If a
+  // retry follows a partial pause, the durable boundary is reused.
   await persistCutoverBoundary(input.targetClients, targets, cutoverAt);
   const targetsWithBoundary = targets.map((target) => ({
     ...target,
