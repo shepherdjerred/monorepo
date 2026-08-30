@@ -231,6 +231,17 @@ impl Recurrence {
         }
     }
 
+    /// The effective Gregorian start date used by the recurrence engine.
+    ///
+    /// This exposes the same embedded-`DTSTART`, `scheduled`, and
+    /// `dateCreated` resolution used for expansion so native editors can seed
+    /// implicit weekly, monthly, and yearly selectors without changing a
+    /// stored series when it is reopened.
+    #[must_use]
+    pub fn resolved_start(&self) -> Option<NaiveDate> {
+        self.dtstart.and_then(date_of)
+    }
+
     /// Whether the task has an occurrence on `date`.
     ///
     /// This is the parity surface: it answers exactly what

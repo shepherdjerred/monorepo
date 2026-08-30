@@ -240,7 +240,11 @@ struct InspectorRecurrenceRow: View {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
-    private var start: String { task.scheduled.map { String($0.prefix(10)) } ?? calendar.today }
+    private var start: String {
+        summary?.effectiveStart
+            ?? task.scheduled.map { String($0.prefix(10)) }
+            ?? calendar.today
+    }
 }
 
 /// The note body: rendered markdown, or the source that produced it.

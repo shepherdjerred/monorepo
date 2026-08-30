@@ -105,6 +105,13 @@ struct RecurrenceEndingSeed {
 }
 
 extension RecurrenceEditorSheet {
+    private static var recurrenceCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = .current
+        calendar.timeZone = .current
+        return calendar
+    }
+
     static let allWeekdays: [CommonWeekday] = [
         .monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday,
     ]
@@ -115,18 +122,18 @@ extension RecurrenceEditorSheet {
 
     static func weekday(of civil: String) -> CommonWeekday {
         guard let date = CivilDay.date(of: civil) else { return .monday }
-        return weekdayByFoundationIndex[Calendar.current.component(.weekday, from: date)]
+        return weekdayByFoundationIndex[recurrenceCalendar.component(.weekday, from: date)]
             ?? .monday
     }
 
     static func month(of civil: String) -> UInt8 {
         guard let date = CivilDay.date(of: civil) else { return 1 }
-        return UInt8(Calendar.current.component(.month, from: date))
+        return UInt8(recurrenceCalendar.component(.month, from: date))
     }
 
     static func day(of civil: String) -> UInt8 {
         guard let date = CivilDay.date(of: civil) else { return 1 }
-        return UInt8(Calendar.current.component(.day, from: date))
+        return UInt8(recurrenceCalendar.component(.day, from: date))
     }
 
     static func shortLabel(_ value: CommonWeekday) -> String {
@@ -157,7 +164,7 @@ extension RecurrenceEditorSheet {
     }
 
     static func monthLabel(_ month: UInt8) -> String {
-        let symbols = Calendar.current.monthSymbols
+        let symbols = recurrenceCalendar.monthSymbols
         let index = Int(month) - 1
         guard symbols.indices.contains(index) else { return "Month \(month)" }
         return symbols[index]

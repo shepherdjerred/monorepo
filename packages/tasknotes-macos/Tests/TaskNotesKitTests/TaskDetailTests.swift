@@ -112,6 +112,20 @@ struct RecurrenceSummaryTests {
         #expect(summary.description == "Every 2 weeks on Mon, Wed")
     }
 
+    @Test("an implicit rule uses dateCreated as its effective start")
+    func implicitRuleUsesDateCreated() throws {
+        let task = detailTask(
+            id: "Tasks/A.md",
+            title: "A",
+            recurrence: "FREQ=WEEKLY",
+            dateCreated: "2026-08-04T12:00:00Z")
+        let summary = try #require(
+            try RecurrenceSummary.of(task: task, calendar: detailCalendar))
+        #expect(summary.effectiveStart == "2026-08-04")
+        let draft = try #require(summary.editableDraft)
+        #expect(draft.pattern == .weekly(weekdays: [.tuesday]))
+    }
+
     /// A rule the core will not describe leaves ``RecurrenceSummary/description``
     /// absent, which the panel draws as the raw `RRULE`.
     ///

@@ -1279,6 +1279,11 @@ int8_t uniffi_tasknotes_core_ffi_fn_func_recurrence_occurs_on(RustBuffer text, R
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_parse_common(RustBuffer text, RustBuffer start, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_RESOLVED_START
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_RESOLVED_START
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_resolved_start(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_SUMMARY
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_SUMMARY
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_summary(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustCallStatus *_Nonnull out_status
@@ -1979,6 +1984,12 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_PARSE_COMMON
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_PARSE_COMMON
 uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_parse_common(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_RESOLVED_START
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_RESOLVED_START
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_resolved_start(void
     
 );
 #endif

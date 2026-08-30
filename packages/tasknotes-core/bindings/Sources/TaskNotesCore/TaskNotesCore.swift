@@ -13395,6 +13395,23 @@ public func recurrenceParseCommon(text: String, start: String) -> CommonRecurren
 })
 }
 /**
+ * Return the effective Gregorian start date used to interpret a task rule.
+ *
+ * Native editors use this for implicit calendar selectors. It follows the
+ * same embedded `DTSTART`, `scheduled`, and `dateCreated` precedence as every
+ * other recurrence operation in the core.
+ */
+public func recurrenceResolvedStart(text: String, scheduled: String?, dateCreated: String?) -> String?  {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_recurrence_resolved_start(
+        FfiConverterString.lower(text),
+        FfiConverterOptionString.lower(scheduled),
+        FfiConverterOptionString.lower(dateCreated),uniffiCallStatus
+    )
+})
+}
+/**
  * The rule as a sentence — `"Every 2 weeks on Mon, Wed"`.
  *
  * The one recurrence question a shell cannot answer for itself.
@@ -13667,6 +13684,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_parse_common() != 4270) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_resolved_start() != 30042) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary() != 42582) {

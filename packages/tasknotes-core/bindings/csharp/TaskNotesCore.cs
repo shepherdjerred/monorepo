@@ -1212,6 +1212,8 @@ static class _UniFFILib {
     
     
     
+    
+    
 
     static _UniFFILib() {
         _UniFFILib.uniffiCheckContractApiVersion();
@@ -2895,6 +2897,17 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_resolved_start(RustBuffer @text,RustBuffer @scheduled,RustBuffer @dateCreated,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
      RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_summary(RustBuffer @text,RustBuffer @scheduled,RustBuffer @dateCreated,ref UniffiRustCallStatus _uniffi_out_err
     );
 
@@ -4281,6 +4294,17 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
+     ushort uniffi_tasknotes_core_ffi_checksum_func_recurrence_resolved_start(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
      ushort uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary(
     );
 
@@ -5323,6 +5347,12 @@ static class _UniFFILib {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_parse_common();
             if (checksum != 4270) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_parse_common` checksum `4270`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_resolved_start();
+            if (checksum != 30042) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_resolved_start` checksum `30042`, library returned `{checksum}`");
             }
         }
         {
@@ -17935,6 +17965,21 @@ internal static class TaskNotesCoreMethods {
         return FfiConverterOptionalTypeCommonRecurrenceDraft.INSTANCE.Lift(
     _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
     _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_recurrence_parse_common(FfiConverterString.INSTANCE.Lower(@text), FfiConverterString.INSTANCE.Lower(@start), ref _status)
+));
+    }
+
+
+    /// <summary>
+    /// Return the effective Gregorian start date used to interpret a task rule.
+    ///
+    /// Native editors use this for implicit calendar selectors. It follows the
+    /// same embedded `DTSTART`, `scheduled`, and `dateCreated` precedence as every
+    /// other recurrence operation in the core.
+    /// </summary>
+    public static string? RecurrenceResolvedStart(string @text, string? @scheduled, string? @dateCreated) {
+        return FfiConverterOptionalString.INSTANCE.Lift(
+    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_recurrence_resolved_start(FfiConverterString.INSTANCE.Lower(@text), FfiConverterOptionalString.INSTANCE.Lower(@scheduled), FfiConverterOptionalString.INSTANCE.Lower(@dateCreated), ref _status)
 ));
     }
 

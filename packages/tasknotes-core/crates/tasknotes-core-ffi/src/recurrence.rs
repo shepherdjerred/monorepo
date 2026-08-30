@@ -70,6 +70,27 @@ pub fn recurrence_parse_common(text: &str, start: &str) -> Option<CommonRecurren
     parse_common_recurrence(text, start)
 }
 
+/// Return the effective Gregorian start date used to interpret a task rule.
+///
+/// Native editors use this for implicit calendar selectors. It follows the
+/// same embedded `DTSTART`, `scheduled`, and `dateCreated` precedence as every
+/// other recurrence operation in the core.
+#[uniffi::export]
+#[must_use]
+pub fn recurrence_resolved_start(
+    text: &str,
+    scheduled: Option<String>,
+    date_created: Option<String>,
+) -> Option<String> {
+    Fallbacks {
+        scheduled,
+        date_created,
+    }
+    .rule(text)
+    .resolved_start()
+    .map(render_iso_date)
+}
+
 /// Validate and canonically serialize the common-pattern editor model.
 ///
 /// # Errors
@@ -407,7 +428,7 @@ mod tests {
     use super::{
         recurrence_completion_target_date, recurrence_finite_instance_count, recurrence_frequency,
         recurrence_is_expandable, recurrence_next_uncompleted_occurrence, recurrence_occurrences,
-        recurrence_occurs_on, recurrence_summary,
+        recurrence_occurs_on, recurrence_resolved_start, recurrence_summary,
     };
     use crate::error::CoreError;
 
@@ -495,6 +516,24 @@ mod tests {
             recurrence_summary("FREQ=YEARLY;BYWEEKNO=20", Some(scheduled()), None),
             None,
             "a part with no honest one-line reading declines rather than guessing"
+        );
+    }
+
+    #[test]
+    fn a_common_editor_uses_the_core_effective_start() {
+        assert_eq!(
+            recurrence_resolved_start("FREQ=WEEKLY", None, Some("2026-08-04T12:00:00Z".to_owned()))
+                .as_deref(),
+            Some("2026-08-04")
+        );
+        assert_eq!(
+            recurrence_resolved_start(
+                "FREQ=WEEKLY",
+                Some("2026-08-05".to_owned()),
+                Some("2026-08-04".to_owned())
+            )
+            .as_deref(),
+            Some("2026-08-05")
         );
     }
 

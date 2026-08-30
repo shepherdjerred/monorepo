@@ -24,12 +24,13 @@ generated UniFFI bindings. Their shells provide storage, HTTP, time, randomness,
 and retry timers. They do not reinterpret domain or wire rules.
 
 That boundary covers writing recurrence rules as well as reading them. The
-shared core parses only the common patterns a native editor can reproduce
-without loss, validates recurrence drafts, and serializes their canonical
-RRULE form. A shell may collect an interval, weekdays, calendar pattern, ending,
-and anchor, but it does not assemble rule text. Existing rules outside that
-closed editor model remain authoritative until a person explicitly replaces
-them.
+[shared recurrence implementation](https://github.com/shepherdjerred/monorepo/blob/4741dca55f0a2c7d57948a6f1775240916247c3d/packages/tasknotes-core/crates/tasknotes-core/src/recurrence/common.rs)
+parses only the common patterns a native editor can reproduce without loss,
+validates recurrence drafts, and serializes their canonical RRULE form. The
+[macOS shell integration](https://github.com/shepherdjerred/monorepo/blob/4741dca55f0a2c7d57948a6f1775240916247c3d/packages/tasknotes-macos/Sources/TaskNotesKit/Detail/RecurrenceSummary.swift)
+collects presentation state but does not assemble rule text. Existing rules
+outside that closed editor model remain authoritative until a person explicitly
+replaces them.
 
 Windows adds a portable Presentation layer between WinUI and the host. Focused
 view models own navigation, validation, command state, and screen projections.

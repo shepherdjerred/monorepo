@@ -22,7 +22,8 @@ func detailTask(
     contexts: [ContextName] = [],
     tags: [TagName] = [],
     timeEstimate: UInt32? = nil,
-    details: String? = nil
+    details: String? = nil,
+    dateCreated: String? = nil
 ) -> CoreTask {
     CoreTask(
         id: id,
@@ -40,7 +41,7 @@ func detailTask(
         completeInstances: completeInstances,
         skippedInstances: skippedInstances,
         completedDate: nil,
-        dateCreated: nil,
+        dateCreated: dateCreated,
         dateModified: nil,
         timeEstimate: timeEstimate,
         timeEntries: [],
