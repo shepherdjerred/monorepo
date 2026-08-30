@@ -66,7 +66,7 @@ function mentionChunks(mentionIds: readonly string[]): string[][] {
   );
 }
 
-function weeklyParlayMessageOptions(input: {
+export function weeklyParlayMessageOptions(input: {
   marketId: number;
   actionKey: string;
   kind: WeeklyParlayDiscordKind;
