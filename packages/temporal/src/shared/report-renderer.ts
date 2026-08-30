@@ -116,7 +116,15 @@ function checkColor(status: "Passed" | "Problem" | "Not checked"): string {
 }
 
 function formatReportTime(value: string): string {
-  return REPORT_TIME_FORMAT.format(new Date(value));
+  const parts = REPORT_TIME_FORMAT.formatToParts(new Date(value));
+  const part = (type: Intl.DateTimeFormatPartTypes): string => {
+    const match = parts.find((candidate) => candidate.type === type);
+    if (match === undefined) {
+      throw new Error(`missing date-time part: ${type}`);
+    }
+    return match.value;
+  };
+  return `${part("month")} ${part("day")}, ${part("year")} at ${part("hour")}:${part("minute")} ${part("dayPeriod")} ${part("timeZoneName")}`;
 }
 
 function technicalDetails(report: ReportEnvelopeV1): TechnicalDetail[] {
