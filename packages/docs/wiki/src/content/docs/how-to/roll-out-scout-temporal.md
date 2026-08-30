@@ -110,7 +110,39 @@ four families enabled for at least 24 hours. The soak passes only when:
 
 Record the end time and evidence before promoting the same image to production.
 Repeat the queue canary and representative manual triggers after production is
-deployed.
+deployed, using `--stage prod --namespace prod`.
+
+During the namespace drain, verify that new beta starts appear only in `beta`
+and new production starts appear only in `prod`. Existing `default` executions
+must keep pollers until they close; do not cancel or replay them merely to
+finish the migration.
+
+## Retire the drain namespace
+
+After the last `default` execution closes, wait the additional 30-day retention
+window. Re-read live state immediately before cleanup and run the migration
+audit with the recorded cutover timestamp while the source inventory still
+exists. The audit must show schedule parity, no active source schedules, no
+`default` workflow starts after cutover, and no remaining `default` executions.
+This is the final `migrate:namespaces -- audit` run; it must happen before the
+source schedules are deleted because the command inventories its source
+schedules on every invocation.
+
+Only after those checks pass, delete every paused source schedule from the
+drain namespace. List the schedules first, then delete each exact ID; do not
+use a wildcard or delete a target schedule in `prod` or `beta`:
+
+```bash
+toolkit temporal --namespace default schedule list
+toolkit temporal --namespace default schedule delete --schedule-id <SCHED_ID>
+```
+
+Remove `TEMPORAL_LEGACY_NAMESPACE` from the worker and client deployment
+configuration in the same reviewed GitOps change and restart the affected
+deployments. Verify the target schedules directly in `prod` and `beta` after
+that change; do not rerun the source-inventory audit after deleting the source
+schedules. Keep the built-in `default` namespace present but guarded and empty;
+this is the only post-drain operation that targets it.
 
 ## Roll back a family
 
