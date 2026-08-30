@@ -62,4 +62,14 @@ describe("workerNamespaces", () => {
       }),
     ).toEqual(["prod", "beta", "default"]);
   });
+
+  test("keeps the central Workflow queue available to beta-owned schedules", () => {
+    expect(
+      workerNamespaces({
+        queueRole: "workflows",
+        activeNamespace: "prod",
+        legacyNamespace: "default",
+      }),
+    ).toEqual(["prod", "beta", "default"]);
+  });
 });

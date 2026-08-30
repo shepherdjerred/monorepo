@@ -153,6 +153,10 @@ async function main(): Promise<void> {
     "-e",
     "TEMPORAL_ADDRESS=127.0.0.1:7233",
     "-e",
+    "TEMPORAL_NAMESPACE=prod",
+    "-e",
+    "TEMPORAL_WORKER_ROLE=core",
+    "-e",
     "SENTRY_DSN=",
     IMAGE,
   ]);
