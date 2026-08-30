@@ -28,7 +28,7 @@ async function main(): Promise<void> {
   const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
   const client = new Client({ connection, namespace });
   const sourceSchedules = SCHEDULES.filter(
-    (schedule) => schedule.namespace === namespace,
+    (schedule) => namespace === "dev" || schedule.namespace === namespace,
   );
   const sourceById = new Map(
     sourceSchedules.map((schedule) => [schedule.id, schedule]),

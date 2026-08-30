@@ -2,12 +2,16 @@ import { describe, expect, test } from "vitest";
 import { SCHEDULES } from "./schedule-definitions.ts";
 import {
   classifyScheduleNamespace,
+  isRootWorkflowExecution,
+} from "./namespace-migration.ts";
+import {
+  cutoverTimestampForRetry,
   decodeMigrationState,
   encodeMigrationState,
-  isRootWorkflowExecution,
+  migrationAuditQueries,
   sourceStateAllowsCutover,
   targetPauseAction,
-} from "./namespace-migration.ts";
+} from "./namespace-migration-state.ts";
 
 describe("Temporal namespace migration ownership", () => {
   test("classifies every declared schedule by its source-owned namespace", () => {
@@ -55,6 +59,33 @@ describe("Temporal namespace migration ownership", () => {
     { sourcePaused: false, sourceNote: undefined },
   ])("round-trips original pause state", (state) => {
     expect(decodeMigrationState(encodeMigrationState(state))).toEqual(state);
+  });
+
+  test("preserves a persisted cutover boundary across retries", () => {
+    const firstBoundary = new Date("2026-08-30T03:00:00.000Z");
+    expect(
+      cutoverTimestampForRetry(
+        [
+          {
+            migrationState: {
+              sourcePaused: false,
+              sourceNote: undefined,
+              cutoverAt: firstBoundary.toISOString(),
+            },
+          },
+        ],
+        new Date("2026-08-30T03:05:00.000Z"),
+      ),
+    ).toEqual(firstBoundary);
+  });
+
+  test("audits open default executions and post-cutover starts separately", () => {
+    expect(migrationAuditQueries(new Date("2026-08-30T03:00:00.000Z"))).toEqual(
+      {
+        open: 'ExecutionStatus = "Running"',
+        startedAfterCutover: 'StartTime >= "2026-08-30T03:00:00.000Z"',
+      },
+    );
   });
 
   test("accepts a cutover retry after sources were migration-paused", () => {
