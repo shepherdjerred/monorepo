@@ -9,6 +9,7 @@ import {
 } from "@scout-for-lol/data";
 import { BETTING_TEAM_IDS, outcomeLabel } from "#src/betting/team.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
+import { marketSide } from "#src/betting/open-market.ts";
 import { cancellationHouseCut } from "#src/betting/house-cut.ts";
 import {
   GeneratedParlaySchema,
@@ -169,15 +170,7 @@ async function loadOutcomeMarkets(
       return {
         teamId,
         label: outcomeLabel(teamId, framing),
-        trackedPlayers: roster
-          .filter(
-            (participant) =>
-              participant.teamId === teamId && participant.puuid !== null,
-          )
-          .map((participant) => participant.trackedAlias)
-          .filter((alias) => alias !== undefined),
-        totalStake: sideBets.reduce((total, bet) => total + bet.stake, 0),
-        betCount: sideBets.length,
+        ...marketSide(teamId, roster, pool.bets),
         positions: sideBets.map((bet) => ({
           discordId: bet.bucksAccount.discordId,
           stake: bet.stake,
