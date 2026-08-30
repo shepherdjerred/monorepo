@@ -33,6 +33,7 @@ struct RecurrenceEditorSheet: View {
     @State private var endDate: Date
     @State private var anchor: RecurrenceAnchor
     @State private var validationMessage: String?
+    @State private var invalidInitialStart: Bool
 
     private let unsupported: Bool
 
@@ -59,8 +60,9 @@ struct RecurrenceEditorSheet: View {
                 ending: .never
             )
         let pattern = RecurrencePatternSeed(pattern: seedDraft.pattern, start: start)
-        let parsedStartDate = CivilDay.date(of: start) ?? Date()
-        let end = RecurrenceEndingSeed(ending: seedDraft.ending, startDate: parsedStartDate)
+        let parsedStartDate = CivilDay.date(of: start)
+        let initialStartDate = parsedStartDate ?? Date(timeIntervalSince1970: 0)
+        let end = RecurrenceEndingSeed(ending: seedDraft.ending, startDate: initialStartDate)
         _interval = State(initialValue: seedDraft.interval)
         _cadence = State(initialValue: pattern.cadence)
         _weekdays = State(initialValue: pattern.weekdays)
@@ -70,11 +72,16 @@ struct RecurrenceEditorSheet: View {
         _ordinalWeekday = State(initialValue: pattern.ordinalWeekday)
         _yearlyMonth = State(initialValue: pattern.yearlyMonth)
         _yearlyDay = State(initialValue: pattern.yearlyDay)
-        _startDate = State(initialValue: parsedStartDate)
+        _startDate = State(initialValue: initialStartDate)
         _anchor = State(initialValue: anchor)
         _ending = State(initialValue: end.ending)
         _endDate = State(initialValue: end.date)
         _occurrenceCount = State(initialValue: end.count)
+        _invalidInitialStart = State(initialValue: parsedStartDate == nil)
+        _validationMessage = State(
+            initialValue: parsedStartDate == nil
+                ? "The stored Scheduled date is invalid. Choose a valid date before applying."
+                : nil)
     }
 
     var body: some View {
@@ -108,7 +115,7 @@ struct RecurrenceEditorSheet: View {
                 Spacer()
                 Button("Apply", action: apply)
                     .keyboardShortcut(.defaultAction)
-                    .disabled(!isReplacingUnsupported)
+                    .disabled(!isReplacingUnsupported || invalidInitialStart)
                     .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceApply)
             }
             .padding()
@@ -124,6 +131,12 @@ extension RecurrenceEditorSheet {
     fileprivate var recurrenceFields: some View {
         Section("Starts") {
             DatePicker("Scheduled", selection: $startDate, displayedComponents: .date)
+                .onChange(of: startDate) { _, _ in
+                    invalidInitialStart = false
+                    if validationMessage?.hasPrefix("The stored Scheduled date") == true {
+                        validationMessage = nil
+                    }
+                }
             Picker("Measured From", selection: $anchor) {
                 Text("Scheduled Date")
                     .tag(RecurrenceAnchor.scheduled)
@@ -292,6 +305,11 @@ extension RecurrenceEditorSheet {
     }
 
     fileprivate func apply() {
+        guard !invalidInitialStart else {
+            validationMessage =
+                "The stored Scheduled date is invalid. Choose a valid date before applying."
+            return
+        }
         let selectedStart = CivilDay.iso(of: startDate)
         switch TaskRecurrenceEdit.build(
             draft: draft,
