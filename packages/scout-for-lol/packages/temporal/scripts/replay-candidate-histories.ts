@@ -4,7 +4,10 @@ import { z } from "zod";
 
 const packageRoot = path.resolve(import.meta.dir, "..");
 const repositoryRoot = path.resolve(packageRoot, "../../../..");
-const stage = z.enum(["beta", "prod"]).parse(process.argv[2]);
+if (process.argv[2] !== "--stage") {
+  throw new Error("--stage is required");
+}
+const stage = z.enum(["beta", "prod"]).parse(process.argv[3]);
 const workflowIds = (Bun.env["TEMPORAL_REPLAY_WORKFLOW_IDS"] ?? "")
   .split(",")
   .map((value) => value.trim());
