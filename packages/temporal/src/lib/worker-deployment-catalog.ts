@@ -70,7 +70,8 @@ export async function prepareStablePinPromotion(
   const candidateValue = TemporalWorkflowImageValueSchema.parse(
     candidate.value,
   );
-  const alreadyPromoted = candidateValue === stable.value;
+  const stableValue = TemporalWorkflowImageValueSchema.parse(stable.value);
+  const alreadyPromoted = candidateValue === stableValue;
   stable.value = candidate.value;
   return {
     candidateImage: `ghcr.io/shepherdjerred/temporal-worker:${candidateValue}`,

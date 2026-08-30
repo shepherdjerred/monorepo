@@ -34,6 +34,7 @@ async function main(): Promise<void> {
       workflowId,
       taskQueue: TASK_QUEUES.WORKFLOWS,
       args: [input],
+      workflowExecutionTimeout: "5 minutes",
       versioningOverride: {
         pinnedTo: {
           deploymentName: input.deploymentName,

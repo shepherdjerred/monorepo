@@ -11,9 +11,11 @@ routing. They do not deploy images or commit the promoted pin.
 ## Before starting
 
 Confirm that the candidate image pin is deployed and copy the exact 40-character
-Git SHA baked into that image. Keep the stable and candidate Kubernetes
-Deployments healthy. Do not remove legacy queue pollers while visibility still
-shows open executions on those queues.
+Git SHA baked into that image. Keep the [stable and candidate Kubernetes
+Deployments](https://github.com/shepherdjerred/monorepo/blob/95a219ec8fca805e0cfccf6a2ebd0dcfebc3e63a/packages/homelab/src/cdk8s/src/resources/temporal/workflow-worker.ts)
+healthy. Do not remove legacy queue pollers while visibility still shows open
+executions on those queues; the [rollout preflight](https://github.com/shepherdjerred/monorepo/blob/95a219ec8fca805e0cfccf6a2ebd0dcfebc3e63a/packages/temporal/src/lib/worker-deployment-proofs.ts)
+checks the candidate poller before changing routing.
 
 Set `TEMPORAL_ADDRESS` (and `TEMPORAL_TLS=true` for the private TLS endpoint) in
 the operator shell. The package command uses the existing `toolkit temporal`
