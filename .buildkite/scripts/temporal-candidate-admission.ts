@@ -6,8 +6,6 @@ const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 const CENTRAL_WORKFLOW_STABLE =
   "shepherdjerred/temporal-worker/workflows/stable";
-const CENTRAL_WORKFLOW_CANDIDATE =
-  "shepherdjerred/temporal-worker/workflows/candidate";
 const LAST_IMAGE_WITHOUT_WORKFLOW_WORKER = 12_197;
 export const TEMPORAL_WORKFLOW_PIN_PAIRS = [
   [
@@ -91,7 +89,6 @@ export async function assertTemporalCandidatePinsConverged(
       stableValue !== candidateValue &&
       !(
         stable === CENTRAL_WORKFLOW_STABLE &&
-        candidate === CENTRAL_WORKFLOW_CANDIDATE &&
         !isLegacyWorkflowPin(stableValue) &&
         isLegacyWorkflowPin(candidateValue)
       )

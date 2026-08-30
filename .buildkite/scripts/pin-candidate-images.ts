@@ -21,7 +21,7 @@ function workflowPinTargets(versionCatalogSource: string): readonly string[] {
     WORKFLOW_CANDIDATE,
   );
   if (stable === candidate && isLegacyWorkflowPin(stable)) {
-    return [WORKFLOW_STABLE];
+    return [WORKFLOW_STABLE, WORKFLOW_CANDIDATE];
   }
   if (
     stable === candidate ||
