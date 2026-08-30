@@ -1714,15 +1714,20 @@ model CustomAuditEvent {
 /// has accepted the Workflow start. Payloads are validated by the activity and
 /// never enter Workflow history.
 model ScoutTemporalWork {
-  id          String    @id
-  kind        String
-  payload     String
-  state       String    @default("queued")
-  lastError   String?
-  createdAt   DateTime  @default(now())
-  startedAt   DateTime?
-  completedAt DateTime?
-  updatedAt   DateTime  @updatedAt
+  id                String    @id
+  kind              String
+  payload           String
+  state             String    @default("queued")
+  attemptCount      Int       @default(0)
+  requeueCount      Int       @default(0)
+  lastError         String?
+  lastRequeueReason String?
+  createdAt         DateTime  @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
+  failedAt          DateTime?
+  lastRequeuedAt    DateTime?
+  updatedAt         DateTime  @updatedAt
 
   @@index([state, createdAt])
   @@index([kind, state])

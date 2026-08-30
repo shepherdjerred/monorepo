@@ -82,6 +82,9 @@ function isQuotaIssue(status: number | undefined, lowerMessage: string) {
     status === 402 ||
     lowerMessage.includes("insufficient credits") ||
     lowerMessage.includes("credit balance") ||
+    ((status === 403 || lowerMessage.includes("403")) &&
+      lowerMessage.includes("weekly") &&
+      (lowerMessage.includes("limit") || lowerMessage.includes("quota"))) ||
     ((status === 429 || lowerMessage.includes("429")) &&
       (lowerMessage.includes("quota") ||
         lowerMessage.includes("billing") ||

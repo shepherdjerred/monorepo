@@ -4,6 +4,10 @@ import { client } from "#src/discord/client.ts";
 import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import {
+  classifyLlmProviderIssue,
+  recordProviderIssue,
+} from "#src/alerts/provider-metrics.ts";
+import {
   isFeatureHardDisabled,
   type FlagName,
 } from "#src/configuration/flags.ts";
@@ -12,15 +16,46 @@ import { invokeWeeklyParlayAction } from "./weekly-parlay-activity.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
 >[0];
-async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
-  await heartbeatWhile(
-    { kind: input.kind, workId: input.workId, phase: "running" },
-    async () => {
-      const { executeScoutTemporalWork } =
-        await import("#src/temporal/work-store.ts");
-      await executeScoutTemporalWork(input);
-    },
+
+export function providerQuotaApplicationFailure(
+  input: DetachedWorkInput,
+  error: unknown,
+): ApplicationFailure | null {
+  if (
+    input.kind !== "parlay-generation" ||
+    classifyLlmProviderIssue(error) !== "quota"
+  ) {
+    return null;
+  }
+  return ApplicationFailure.nonRetryable(
+    error instanceof Error ? error.message : String(error),
+    "ProviderQuotaExhausted",
   );
+}
+
+async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
+  try {
+    await heartbeatWhile(
+      { kind: input.kind, workId: input.workId, phase: "running" },
+      async () => {
+        const { executeScoutTemporalWork } =
+          await import("#src/temporal/work-store.ts");
+        await executeScoutTemporalWork(input);
+      },
+    );
+  } catch (error) {
+    const quotaFailure = providerQuotaApplicationFailure(input, error);
+    if (quotaFailure !== null) {
+      recordProviderIssue({
+        app: "scout-for-lol",
+        provider: "openrouter",
+        kind: "quota",
+        source: "betting_parlay",
+      });
+      throw quotaFailure;
+    }
+    throw error;
+  }
   Context.current().heartbeat({
     kind: input.kind,
     workId: input.workId,
@@ -155,6 +190,8 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await import("#src/league/tasks/recovery/ingestion-reconciliation.ts");
           await runIngestionReconciliation();
           const { prisma } = await import("#src/database/index.ts");
+          const { findQueuedScoutTemporalWork } =
+            await import("#src/temporal/work-store.ts");
           const jobs = await prisma.initialMatchHistoryImport.findMany({
             where: {
               phase: { in: ["queued", "matches", "rank", "publish"] },
@@ -163,12 +200,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             orderBy: { requestedAt: "asc" },
             take: 100,
           });
-          const detachedWorks = await prisma.scoutTemporalWork.findMany({
-            where: { state: { in: ["queued", "failed"] } },
-            select: { id: true, kind: true },
-            orderBy: { createdAt: "asc" },
-            take: 100,
-          });
+          const detachedWorks = await findQueuedScoutTemporalWork();
           const interactiveRuns = await prisma.scoutInteractiveRun.findMany({
             where: {
               state: "PENDING",

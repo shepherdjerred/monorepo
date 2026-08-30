@@ -61,6 +61,7 @@ import { createLogger } from "#src/logger.ts";
 import { enqueueParlayGeneration } from "#src/temporal/work-store.ts";
 import type { StartParlayGenerationInput } from "#src/betting/parlay-generation-types.ts";
 import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
+import { resolveProviderIssue } from "#src/alerts/provider-metrics.ts";
 
 const logger = createLogger("betting-parlay-generate");
 
@@ -429,6 +430,12 @@ async function runParlayGenerationInternal(
       throw new ParlayPersistenceError(error);
     }
     recordGeneration(published > 0 ? "success" : "no_market", startedAt);
+    resolveProviderIssue({
+      app: "scout-for-lol",
+      provider: "openrouter",
+      kind: "quota",
+      source: "betting_parlay",
+    });
   } catch (error) {
     const status = generationStatusForError(deadline, error);
     recordGeneration(status, startedAt);
