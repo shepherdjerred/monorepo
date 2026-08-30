@@ -3,10 +3,11 @@ import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
 
 export async function acquireWorkerDeploymentLock(
   catalogPath: string,
+  lockName: string,
   run: RolloutCommandRunner,
 ): Promise<() => Promise<void>> {
   const lockPath = `${catalogPath}.rollout-lock`;
-  const remoteLockRef = "refs/temporal-worker-deployment-lock";
+  const remoteLockRef = `refs/temporal-worker-deployment-locks/${lockName}`;
   await run(["git", "push", "origin", `HEAD:${remoteLockRef}`]);
   try {
     await mkdir(lockPath);
