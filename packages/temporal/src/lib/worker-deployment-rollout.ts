@@ -20,7 +20,6 @@ import {
   requireHealthyWorkflowPoller,
   requireCleanCandidate,
   requireAcceptancePrerequisite,
-  requireCleanCandidate,
   requireCleanAlertWindow,
   rolloutPoller,
   rolloutAdvanceTransition,
@@ -48,7 +47,6 @@ export type WorkerDeploymentRolloutOptions = {
   rolloutLockName?: string;
   buildId: string;
   stableBuildId?: string;
-  rolloutLockName?: string;
   catalogPath: string;
   candidateStatePath: string;
   taskQueue: string;
