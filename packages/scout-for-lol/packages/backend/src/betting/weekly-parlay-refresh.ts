@@ -92,12 +92,9 @@ async function editWeeklyParlayMessage(
     const subjects = WeeklyParlaySubjectsSchema.parse(
       JSON.parse(market.definition.subjects),
     );
-    const criteria =
-      mode === "open"
-        ? WeeklyParlayDefinitionCriteriaSchema.parse(
-            JSON.parse(market.definition.criteria),
-          )
-        : undefined;
+    const criteria = WeeklyParlayDefinitionCriteriaSchema.parse(
+      JSON.parse(market.definition.criteria),
+    );
     const aliases = new Map(
       subjects.map((subject) => [subject.key, subject.alias]),
     );

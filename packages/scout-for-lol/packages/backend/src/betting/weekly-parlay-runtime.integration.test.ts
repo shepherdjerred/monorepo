@@ -696,9 +696,9 @@ describe("weekly parlay operator cancellation", () => {
     ).toHaveLength(3);
     expect(ledger.reduce((total, entry) => total + entry.delta, 0)).toBe(0);
     expect(sent).toHaveLength(1);
-    expect(sent[0]?.content).not.toContain(`<@${featuredDiscordId}>`);
+    expect(sent[0]?.content).toContain(`<@${featuredDiscordId}>`);
     expect(sent[0]?.allowedMentions).toEqual({
-      users: [BETTOR, ...otherBettors],
+      users: [featuredDiscordId, BETTOR, ...otherBettors],
     });
     expect(sent[0]?.content).toContain(
       "Weekly Bryan Bucks parlay: CANCELLED — BETS REFUNDED",
@@ -711,6 +711,7 @@ describe("weekly parlay operator cancellation", () => {
     expect(edits[0]?.[2].content).toContain(
       "Weekly Bryan Bucks parlay: CANCELLED — BETS REFUNDED",
     );
+    expect(edits[0]?.[2].content).toContain("**Conditions**");
     expect(edits[0]?.[2].components).toEqual([]);
   });
 });

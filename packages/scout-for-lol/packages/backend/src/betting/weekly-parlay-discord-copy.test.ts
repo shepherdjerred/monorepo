@@ -27,6 +27,56 @@ function contribution(input: { completedAt: string; win: boolean }) {
 }
 
 describe("weekly parlay Discord copy", () => {
+  test("keeps mutable progress legs pending until settlement", () => {
+    const criteria = WeeklyParlayDefinitionCriteriaSchema.parse({
+      version: 1,
+      legs: [
+        {
+          kind: "aggregate",
+          subject: "P1",
+          metric: "wins",
+          operator: "gte",
+          threshold: 1,
+        },
+        {
+          kind: "rate",
+          subject: "P1",
+          metric: "win_rate_bps",
+          operator: "gte",
+          threshold: 5000,
+        },
+        {
+          kind: "aggregate",
+          subject: "P1",
+          metric: "kills",
+          operator: "gte",
+          threshold: 1,
+        },
+      ],
+    });
+    const evaluation = evaluateWeeklyParlay(criteria, [
+      contribution({ completedAt: "2026-08-24T10:00:00.000Z", win: true }),
+    ]);
+
+    const content = weeklyParlayDeliveryContent({
+      kind: "progress",
+      marketState: "active",
+      yesResult: null,
+      voidReason: null,
+      bettingClosesAt: new Date("2026-08-24T07:00:00.000Z"),
+      scoringStartsAt: new Date("2026-08-24T07:00:00.000Z"),
+      scoringEndsAt: new Date("2026-08-31T18:00:00.000Z"),
+      criteria,
+      evaluation,
+      aliases: new Map([["P1", "Zhi"]]),
+      bettorCount: 1,
+      totalStaked: 1,
+    });
+
+    expect(content).toContain("⏳ **Zhi** — at least **50.0% win rate");
+    expect(content).not.toContain("✅ **Zhi** — at least **50.0% win rate");
+  });
+
   test("makes a NO settlement and its reason explicit", () => {
     const criteria = WeeklyParlayDefinitionCriteriaSchema.parse({
       version: 2,

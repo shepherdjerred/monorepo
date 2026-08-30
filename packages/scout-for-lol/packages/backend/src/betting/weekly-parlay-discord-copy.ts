@@ -96,8 +96,10 @@ export function legLine(input: {
   subjectAlias: string;
   kind?: WeeklyParlayDiscordKind;
   passed?: boolean;
+  irreversiblyPassed?: boolean;
 }): string {
   const kind = input.kind ?? "open";
+  const progressPassed = input.irreversiblyPassed === true;
   const status =
     input.current === undefined
       ? "•"
@@ -105,7 +107,7 @@ export function legLine(input: {
         ? input.passed === true
           ? "✅"
           : "❌"
-        : input.passed === true
+        : progressPassed
           ? "✅"
           : "⏳";
   const progress =
@@ -290,6 +292,7 @@ export function weeklyParlayDeliveryContent(input: {
               input.aliases.get(result.leg.subject) ?? result.leg.subject,
             kind: input.kind,
             passed: result.passed,
+            irreversiblyPassed: result.irreversiblyPassed,
           }),
         );
   const sections = [

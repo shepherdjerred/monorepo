@@ -30,6 +30,7 @@ import {
 } from "#src/metrics/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 
 export function weeklyParlaySettlementActionKey(marketId: number): string {
   return `settlement:${marketId.toString()}`;
@@ -50,6 +51,69 @@ function stableNonce(
 }
 
 const MENTIONS_PER_MESSAGE = 20;
+const DISCORD_SAFE_MESSAGE_LENGTH = 1900;
+
+function mentionChunks(mentionIds: readonly string[]): string[][] {
+  return Array.from(
+    {
+      length: Math.max(1, Math.ceil(mentionIds.length / MENTIONS_PER_MESSAGE)),
+    },
+    (_, index) =>
+      mentionIds.slice(
+        index * MENTIONS_PER_MESSAGE,
+        (index + 1) * MENTIONS_PER_MESSAGE,
+      ),
+  );
+}
+
+function weeklyParlayMessageOptions(input: {
+  marketId: number;
+  actionKey: string;
+  kind: WeeklyParlayDiscordKind;
+  content: string;
+  mentionIds: readonly string[];
+}): MessageCreateOptions[] {
+  const mentions = mentionChunks(input.mentionIds);
+  const firstMentionIds = mentions[0] ?? [];
+  const mentionPrefix = firstMentionIds.map((id) => `<@${id}>`).join(" ");
+  const contentMaxLength =
+    DISCORD_SAFE_MESSAGE_LENGTH -
+    (mentionPrefix.length > 0 ? mentionPrefix.length + 1 : 0);
+  if (contentMaxLength <= 0) {
+    throw new Error(
+      "Weekly parlay mentions leave no room for message content.",
+    );
+  }
+  const contentChunks = splitMessageIntoChunks(input.content, contentMaxLength);
+  const options: MessageCreateOptions[] = contentChunks.map(
+    (contentChunk, messageIndex) => ({
+      content:
+        messageIndex === 0 && mentionPrefix.length > 0
+          ? `${mentionPrefix}\n${contentChunk}`
+          : contentChunk,
+      allowedMentions: {
+        users: messageIndex === 0 ? firstMentionIds : [],
+      },
+      nonce: stableNonce(input.marketId, input.actionKey, messageIndex),
+      enforceNonce: true,
+      components:
+        messageIndex === 0
+          ? weeklyParlayButtons(input.kind, input.marketId)
+          : [],
+    }),
+  );
+  for (const [chunkIndex, chunk] of mentions.slice(1).entries()) {
+    const messageIndex = options.length + chunkIndex;
+    options.push({
+      content: `Weekly Bryan Bucks parlay — additional mentions: ${chunk.map((id) => `<@${id}>`).join(" ")}`,
+      allowedMentions: { users: chunk },
+      nonce: stableNonce(input.marketId, input.actionKey, messageIndex),
+      enforceNonce: true,
+      components: [],
+    });
+  }
+  return options;
+}
 
 export function weeklyParlayButtons(
   kind: WeeklyParlayDiscordKind,
@@ -166,16 +230,15 @@ export async function deliverWeeklyParlayDiscord(
   }
   const isVoidedSettlement =
     input.kind === "settlement" && market.marketState === "voided";
-  const includeFrozenSubjects =
-    !isVoidedSettlement || market.voidReason === "operator_cancelled";
-  const subjects = includeFrozenSubjects
-    ? WeeklyParlaySubjectsSchema.parse(JSON.parse(market.definition.subjects))
-    : [];
-  const criteria = isVoidedSettlement
-    ? undefined
-    : WeeklyParlayDefinitionCriteriaSchema.parse(
-        JSON.parse(market.definition.criteria),
-      );
+  const subjects = WeeklyParlaySubjectsSchema.parse(
+    JSON.parse(market.definition.subjects),
+  );
+  const criteria =
+    isVoidedSettlement && market.voidReason !== "operator_cancelled"
+      ? undefined
+      : WeeklyParlayDefinitionCriteriaSchema.parse(
+          JSON.parse(market.definition.criteria),
+        );
   const evaluation =
     criteria === undefined
       ? undefined
@@ -193,7 +256,9 @@ export async function deliverWeeklyParlayDiscord(
     subjects.map((subject) => [subject.key, subject.alias]),
   );
   const bettorIds = market.bets.map((bet) => bet.bucksAccount.discordId);
-  const mentionIds = [...new Set(bettorIds)];
+  const mentionIds = [
+    ...new Set([...subjects.map((subject) => subject.discordId), ...bettorIds]),
+  ];
   const totalStaked = market.bets.reduce((total, bet) => total + bet.stake, 0);
   const content = weeklyParlayDeliveryContent({
     kind: input.kind,
@@ -209,31 +274,13 @@ export async function deliverWeeklyParlayDiscord(
     bettorCount: market.bets.length,
     totalStaked,
   });
-  const mentionChunks = Array.from(
-    {
-      length: Math.max(1, Math.ceil(mentionIds.length / MENTIONS_PER_MESSAGE)),
-    },
-    (_, index) =>
-      mentionIds.slice(
-        index * MENTIONS_PER_MESSAGE,
-        (index + 1) * MENTIONS_PER_MESSAGE,
-      ),
-  );
-  const options: MessageCreateOptions[] = mentionChunks.map(
-    (chunk, messageIndex) => ({
-      content:
-        messageIndex === 0
-          ? [chunk.map((id) => `<@${id}>`).join(" "), content]
-              .filter((line) => line.length > 0)
-              .join("\n")
-          : `Weekly Bryan Bucks parlay — additional mentions: ${chunk.map((id) => `<@${id}>`).join(" ")}`,
-      allowedMentions: { users: chunk },
-      nonce: stableNonce(market.id, input.actionKey, messageIndex),
-      enforceNonce: true,
-      components:
-        messageIndex === 0 ? weeklyParlayButtons(input.kind, market.id) : [],
-    }),
-  );
+  const options = weeklyParlayMessageOptions({
+    marketId: market.id,
+    actionKey: input.actionKey,
+    kind: input.kind,
+    content,
+    mentionIds,
+  });
   await prismaClient.bucksWeeklyParlayDelivery.upsert({
     where: {
       marketId_actionKey: { marketId: market.id, actionKey: input.actionKey },
