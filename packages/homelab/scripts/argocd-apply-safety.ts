@@ -286,18 +286,23 @@ function arrayEntrySegments(entries: readonly unknown[]): readonly string[] {
   return names.map((name) => `[name=${name}]`);
 }
 
-function collectProbeHandlers(
+/**
+ * Walks a manifest and calls `visit` for every key it contains, keyed by the
+ * name-stable path arrayEntrySegments produces, so a path identifies the same
+ * container on both sides of a live-versus-target comparison.
+ */
+function walkManifest(
   value: unknown,
   path: string,
-  output: Map<string, string>,
+  visit: (key: string, entry: unknown, entryPath: string) => void,
 ): void {
   if (Array.isArray(value)) {
     const segments = arrayEntrySegments(value);
     for (const [index, entry] of value.entries()) {
-      collectProbeHandlers(
+      walkManifest(
         entry,
         `${path}/${segments[index] ?? index.toString()}`,
-        output,
+        visit,
       );
     }
     return;
@@ -308,21 +313,33 @@ function collectProbeHandlers(
   }
   for (const [key, entry] of Object.entries(parsed.data)) {
     const entryPath = `${path}/${key}`;
-    if (
-      key === "livenessProbe" ||
-      key === "readinessProbe" ||
-      key === "startupProbe"
-    ) {
-      const probe = JsonObjectSchema.safeParse(entry);
-      if (probe.success) {
-        const handler = activeProbeHandler(probe.data);
-        if (handler !== null) {
-          output.set(entryPath, handler);
-        }
-      }
-    }
-    collectProbeHandlers(entry, entryPath, output);
+    visit(key, entry, entryPath);
+    walkManifest(entry, entryPath, visit);
   }
+}
+
+function collectProbeHandlers(
+  value: unknown,
+  path: string,
+  output: Map<string, string>,
+): void {
+  walkManifest(value, path, (key, entry, entryPath) => {
+    if (
+      key !== "livenessProbe" &&
+      key !== "readinessProbe" &&
+      key !== "startupProbe"
+    ) {
+      return;
+    }
+    const probe = JsonObjectSchema.safeParse(entry);
+    if (!probe.success) {
+      return;
+    }
+    const handler = activeProbeHandler(probe.data);
+    if (handler !== null) {
+      output.set(entryPath, handler);
+    }
+  });
 }
 
 /**
@@ -348,40 +365,20 @@ function parseReleaseImage(value: unknown): ReleaseImage | null {
   return { repository, build: Number.parseInt(build, 10) };
 }
 
-/**
- * Walks every `image` field, keyed by the same name-stable path the probe walk
- * uses, so a container is compared against itself on both sides.
- */
 function collectReleaseImages(
   value: unknown,
   path: string,
   output: Map<string, ReleaseImage>,
 ): void {
-  if (Array.isArray(value)) {
-    const segments = arrayEntrySegments(value);
-    for (const [index, entry] of value.entries()) {
-      collectReleaseImages(
-        entry,
-        `${path}/${segments[index] ?? index.toString()}`,
-        output,
-      );
+  walkManifest(value, path, (key, entry, entryPath) => {
+    if (key !== "image") {
+      return;
     }
-    return;
-  }
-  const parsed = JsonObjectSchema.safeParse(value);
-  if (!parsed.success) {
-    return;
-  }
-  for (const [key, entry] of Object.entries(parsed.data)) {
-    const entryPath = `${path}/${key}`;
-    if (key === "image") {
-      const image = parseReleaseImage(entry);
-      if (image !== null) {
-        output.set(entryPath, image);
-      }
+    const image = parseReleaseImage(entry);
+    if (image !== null) {
+      output.set(entryPath, image);
     }
-    collectReleaseImages(entry, entryPath, output);
-  }
+  });
 }
 
 /**
