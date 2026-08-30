@@ -262,9 +262,13 @@ export function presentReport(
   ];
   const tone = presentationTone(report, actions.length);
   const humanActions =
-    tone === "incomplete" && actions.length === 0
-      ? ["Open the workflow run and review the reported problem."]
-      : actions;
+    actions.length > 0
+      ? actions
+      : tone === "incomplete"
+        ? ["Open the workflow run and review the reported problem."]
+        : tone === "review"
+          ? ["Open the workflow run and review the reported issue."]
+          : actions;
   return {
     subject: reportSubject(report),
     heading: reportSubject(report),

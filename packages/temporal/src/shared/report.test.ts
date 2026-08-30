@@ -601,6 +601,21 @@ describe("Human report email rendering", () => {
     expect(text).not.toContain("No action is needed.");
   });
 
+  test("gives attention reports a review path when actions are absent", () => {
+    const report = validReport();
+    report.verdict = "attention";
+    report.actions = [];
+
+    const presentation = presentReport(report);
+    const text = renderReportText(report);
+
+    expect(presentation.actions).toEqual([
+      "Open the workflow run and review the reported issue.",
+    ]);
+    expect(text).toContain("What you need to do");
+    expect(text).not.toContain("No action is needed.");
+  });
+
   test("orders findings from critical to informational", () => {
     const report = validReport();
     report.verdict = "attention";
