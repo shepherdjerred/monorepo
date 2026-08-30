@@ -17,15 +17,20 @@ import {
   targetPauseAction,
   type MigrationState,
 } from "./namespace-migration-state.ts";
-import {
-  auditNamespaceMigration as auditNamespaceMigrationImpl,
-  type NamespaceMigrationAuditInput,
-} from "./namespace-migration-audit.ts";
+import { auditNamespaceMigration as auditNamespaceMigrationImpl } from "./namespace-migration-audit.ts";
+
 export type MigrationTargetNamespace = Exclude<TemporalNamespace, "dev">;
 
 export type MigrationSchedule = {
   source: ScheduleDescription;
   targetNamespace: MigrationTargetNamespace;
+};
+
+export type NamespaceMigrationAuditInput = {
+  sourceClient: Client;
+  schedules: readonly MigrationSchedule[];
+  targetClients: ReadonlyMap<MigrationTargetNamespace, Client>;
+  cutoverAt: Date;
 };
 const SearchAttributesSchema = z
   .record(

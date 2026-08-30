@@ -4,16 +4,9 @@ import {
   migrationAuditQueries,
 } from "./namespace-migration-state.ts";
 import type {
-  MigrationSchedule,
   MigrationTargetNamespace,
-} from "./namespace-migration.ts";
-
-export type NamespaceMigrationAuditInput = {
-  sourceClient: Client;
-  schedules: readonly MigrationSchedule[];
-  targetClients: ReadonlyMap<MigrationTargetNamespace, Client>;
-  cutoverAt: Date;
-};
+  NamespaceMigrationAuditInput,
+} from "./namespace-migration-types.ts";
 
 type AuditDependencies = {
   targetClient: (
