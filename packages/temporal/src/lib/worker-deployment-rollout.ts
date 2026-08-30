@@ -14,6 +14,7 @@ import {
 import {
   queryRolloutMetric,
   requireHealthyWorkflowPoller,
+  requireCleanCandidate,
   requireCleanAlertWindow,
   rolloutPoller,
   rolloutAdvanceTransition,
@@ -224,19 +225,6 @@ function validateOptions(
     address: z.string().min(1).parse(options.address),
     taskQueue: z.string().min(1).parse(options.taskQueue),
   };
-}
-function requireCleanCandidate(status: WorkerDeploymentRolloutStatus): void {
-  if (status.workflowPollers !== undefined && status.workflowPollers < 1) {
-    throw new Error("Candidate has no healthy Workflow pollers");
-  }
-  if (
-    status.activeTemporalAlerts !== undefined &&
-    status.activeTemporalAlerts !== 0
-  ) {
-    throw new Error(
-      `Refusing rollout with ${String(status.activeTemporalAlerts)} active Temporal alerts`,
-    );
-  }
 }
 function elapsedMilliseconds(timestamp: string, now: Date): number {
   return now.getTime() - new Date(timestamp).getTime();

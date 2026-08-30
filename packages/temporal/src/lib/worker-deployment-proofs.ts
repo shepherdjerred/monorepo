@@ -83,6 +83,23 @@ export async function requireHealthyWorkflowPoller(
   }
 }
 
+export function requireCleanCandidate(status: {
+  workflowPollers: number | undefined;
+  activeTemporalAlerts: number | undefined;
+}): void {
+  if (status.workflowPollers !== undefined && status.workflowPollers < 1) {
+    throw new Error("Candidate has no healthy Workflow pollers");
+  }
+  if (
+    status.activeTemporalAlerts !== undefined &&
+    status.activeTemporalAlerts !== 0
+  ) {
+    throw new Error(
+      `Refusing rollout with ${String(status.activeTemporalAlerts)} active Temporal alerts`,
+    );
+  }
+}
+
 export async function requireReplayCheckout(
   buildId: string,
   run: RolloutCommandRunner,
