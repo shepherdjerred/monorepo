@@ -189,11 +189,50 @@ describe("temporal homelab audit tooling configuration", () => {
 });
 
 describe("temporal homelab audit tooling worker topology", () => {
-  it("isolates core, agent, and both Glitter queues behind event-loop health probes", async () => {
+  it("does not synthesize retired default-worker resources", async () => {
+    const yaml = await synthesizeApp();
+    const resources = parseResources(yaml);
+    const names = resources.flatMap((resource) =>
+      resource.metadata?.name === undefined ? [] : [resource.metadata.name],
+    );
+
+    expect(names).not.toContain("temporal-worker");
+    expect(names).not.toContain("temporal-worker-metrics");
+    expect(names).not.toContain("temporal-worker-app-metrics");
+    expect(names).not.toContain("temporal-worker-netpol");
+    expect(names).not.toContain("temporal-legacy-worker-scout-beta-netpol");
+    expect(
+      names.some(
+        (name) =>
+          name.includes("legacy-worker") || name.includes("core-worker"),
+      ),
+    ).toBe(false);
+
+    const deployments = parseDeployments(yaml);
+    expect(
+      deployments.some(
+        (deployment) =>
+          deployment.spec.template.metadata.labels["component"] ===
+          "legacy-worker",
+      ),
+    ).toBe(false);
+    expect(
+      deployments.some(
+        (deployment) =>
+          deployment.spec.template.metadata.labels["component"] ===
+          "core-worker",
+      ),
+    ).toBe(false);
+  });
+
+  it("isolates infra, agent, and both Glitter queues behind event-loop health probes", async () => {
     const yaml = await synthesizeApp();
     const deployments = parseDeployments(yaml);
     const resources = parseResources(yaml);
-    const core = requireDeployment(deployments, "temporal-temporal-worker");
+    const infra = requireDeployment(
+      deployments,
+      "temporal-temporal-infra-worker",
+    );
     const gateway = requireDeployment(deployments, "temporal-temporal-gateway");
     const home = requireDeployment(
       deployments,
@@ -216,7 +255,7 @@ describe("temporal homelab audit tooling worker topology", () => {
       "temporal-temporal-glitter-context-worker",
     );
 
-    expect(envValue(core, "TEMPORAL_WORKER_ROLE")).toBe("legacy");
+    expect(envValue(infra, "TEMPORAL_WORKER_ROLE")).toBe("infra");
     expect(envValue(gateway, "TEMPORAL_WORKER_ROLE")).toBe("control");
     expect(envValue(gateway, "SLEEP_WEBHOOK_PORT")).toBe("9469");
     expect(gateway.metadata).toMatchObject({
@@ -237,7 +276,7 @@ describe("temporal homelab audit tooling worker topology", () => {
       "glitter-context",
     );
 
-    const coreContainer = core.spec.template.spec.containers[0];
+    const infraContainer = infra.spec.template.spec.containers[0];
     const gatewayContainer = gateway.spec.template.spec.containers[0];
     const homeContainer = home.spec.template.spec.containers[0];
     const reportsContainer = reports.spec.template.spec.containers[0];
@@ -247,7 +286,7 @@ describe("temporal homelab audit tooling worker topology", () => {
     const glitterContextContainer =
       glitterContext.spec.template.spec.containers[0];
     if (
-      coreContainer === undefined ||
+      infraContainer === undefined ||
       gatewayContainer === undefined ||
       homeContainer === undefined ||
       reportsContainer === undefined ||
@@ -259,9 +298,9 @@ describe("temporal homelab audit tooling worker topology", () => {
     }
 
     for (const probe of [
-      coreContainer.startupProbe,
-      coreContainer.livenessProbe,
-      coreContainer.readinessProbe,
+      infraContainer.startupProbe,
+      infraContainer.livenessProbe,
+      infraContainer.readinessProbe,
       gatewayContainer.startupProbe,
       gatewayContainer.livenessProbe,
       gatewayContainer.readinessProbe,
@@ -284,7 +323,7 @@ describe("temporal homelab audit tooling worker topology", () => {
       expect(probe.httpGet).toEqual({ path: "/healthz", port: 9465 });
     }
 
-    expect(coreContainer.ports.map((port) => port.containerPort)).toEqual([
+    expect(infraContainer.ports.map((port) => port.containerPort)).toEqual([
       9464, 9465,
     ]);
     expect(gatewayContainer.ports.map((port) => port.containerPort)).toEqual([
@@ -308,12 +347,9 @@ describe("temporal homelab audit tooling worker topology", () => {
       ]);
     }
 
-    const sleepWebhookYaml = await synthesizeApp();
-    expect(sleepWebhookYaml).toContain("name: temporal-worker-sleep-webhook");
-    expect(sleepWebhookYaml).toContain(
-      "https://temporal-sleep.sjer.red/healthz",
-    );
-    expect(sleepWebhookYaml).toContain("name: SLEEP_WEBHOOK_TOKEN");
+    expect(yaml).toContain("name: temporal-worker-sleep-webhook");
+    expect(yaml).toContain("https://temporal-sleep.sjer.red/healthz");
+    expect(yaml).toContain("name: SLEEP_WEBHOOK_TOKEN");
   });
 });
 
@@ -606,7 +642,6 @@ describe("temporal homelab audit tooling access boundaries", () => {
         resource.metadata?.name === "temporal-worker-audit-reader",
     );
     expect(auditBinding?.subjects?.map((subject) => subject.name)).toEqual([
-      "temporal-worker",
       "temporal-infra-worker",
       "temporal-agent-worker",
     ]);
@@ -657,10 +692,13 @@ describe("temporal homelab audit tooling access boundaries", () => {
     }
   });
 
-  it("gives the core worker the Grafana credentials and gcx configuration the audit needs", async () => {
+  it("gives the infra worker the Grafana credentials and gcx configuration the audit needs", async () => {
     const deployments = parseDeployments(await synthesizeApp());
-    const core = requireDeployment(deployments, "temporal-temporal-worker");
-    const names = envNames(core);
+    const infra = requireDeployment(
+      deployments,
+      "temporal-temporal-infra-worker",
+    );
+    const names = envNames(infra);
 
     // ensureGcxContext() (packages/temporal/src/activities/gcx-context.ts) reads
     // these two to provision the gcx `homelab` context; GCX_CONFIG pins where
@@ -679,7 +717,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
     // directories under it before `gcx login` runs, so the config path must
     // stay one level deep. A nested path would need an mkdir that does not
     // exist, and gcx would fail on every fresh pod.
-    const gcxConfig = envValue(core, "GCX_CONFIG");
+    const gcxConfig = envValue(infra, "GCX_CONFIG");
     expect(gcxConfig).toBe("/tmp/gcx-config.yaml");
     expect(gcxConfig?.split("/").filter(Boolean)).toHaveLength(2);
 

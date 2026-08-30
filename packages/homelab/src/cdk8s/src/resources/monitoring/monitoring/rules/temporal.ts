@@ -272,11 +272,14 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             description:
               "Prometheus is not successfully scraping the Temporal worker metrics endpoint.",
           },
-          // Service name is `temporal-temporal-worker-metrics-service` —
-          // cdk8s prefixes the construct id with the chart name. Match as a
-          // substring so the regex is robust to either naming.
+          // The nine canonical Temporal workers expose SDK metrics through
+          // their per-worker metrics Services. cdk8s prefixes names with the
+          // chart name, so match the stable canonical worker suffixes and
+          // require every endpoint to be present and up. Kubernetes truncates
+          // the long Glitter Service names at 63 characters, so the prefix
+          // must remain wildcarded rather than assuming the untruncated name.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'absent(up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}) or max(up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}) == 0',
+            'absent(up{namespace="temporal",service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) or count(up{namespace="temporal",service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) < 9 or min(up{namespace="temporal",service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) == 0',
           ),
           for: "5m",
           labels: {
@@ -291,7 +294,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
               "Prometheus is not successfully scraping the Temporal server metrics endpoint.",
           },
           // Service name is `temporal-temporal-server-metrics-service`. See
-          // TemporalWorkerMetricsDown above for the same regex caveat.
+          // TemporalWorkerMetricsDown above for the same canonical-name rule.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'absent(up{namespace="temporal",service=~".*temporal.*server.*metrics.*"}) or max(up{namespace="temporal",service=~".*temporal.*server.*metrics.*"}) == 0',
           ),

@@ -5,7 +5,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
 /**
- * Record the agent worker's narrow topology independently from the broad core
+ * Record the agent worker's narrow topology independently from the broad infra
  * worker policy. The current Flannel cluster does not enforce NetworkPolicy;
  * provider-to-Temporal denial is enforced by the pod-local uid firewall.
  */

@@ -148,7 +148,7 @@ describe("FreshRSS chart", () => {
     ).toHaveLength(0);
   });
 
-  test("admits only the core Temporal worker through the namespace policy rule", async () => {
+  test("admits only the repo Temporal worker through the namespace policy rule", async () => {
     const policy = z
       .object({
         spec: z.object({ ingress: z.array(z.unknown()) }),

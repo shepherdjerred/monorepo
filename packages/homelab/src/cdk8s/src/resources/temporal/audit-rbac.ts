@@ -107,7 +107,7 @@ export function createTemporalWorkerAuditRbac(
 /**
  * Namespace-scoped exec access for the fixed deterministic TaskNotes canary.
  *
- * This binding must only target the core worker service account. Generic
+ * This binding must only target the infra worker service account. Generic
  * agent tasks run under a separate read-only account so provider subprocesses
  * cannot read TaskNotes environment variables or mutate pods through exec.
  */

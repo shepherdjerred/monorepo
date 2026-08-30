@@ -1,5 +1,4 @@
 import {
-  activities,
   agentActivities,
   glitterContextWorkerActivities,
   glitterCorpusWorkerActivities,
@@ -19,7 +18,6 @@ export type QueueWorkerRole =
   | "glitter-corpus"
   | "home"
   | "infra"
-  | "legacy"
   | "maintenance"
   | "repo"
   | "reports"
@@ -45,13 +43,6 @@ export type QueueWorkerDefinition =
   ActivityWorkerDefinition | WorkflowWorkerDefinition;
 
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
-  {
-    kind: "activity",
-    role: "legacy",
-    taskQueue: TASK_QUEUES.DEFAULT,
-    activities,
-    maxConcurrentActivityTaskExecutions: 1,
-  },
   {
     kind: "activity",
     role: "home",
@@ -123,7 +114,6 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
  * executions, while every new execution starts on WORKFLOWS.
  */
 export const LEGACY_WORKFLOW_TASK_QUEUES = [
-  TASK_QUEUES.DEFAULT,
   TASK_QUEUES.HOME,
   TASK_QUEUES.REPORTS,
   TASK_QUEUES.INFRA,
@@ -172,9 +162,6 @@ function roleOwnsDefinition(
   if (definition.kind === "workflow") {
     return false;
   }
-  if (role === "core") {
-    return definition.role === "legacy";
-  }
   if (role === "glitter") {
     return (
       definition.role === "glitter-corpus" ||
@@ -197,9 +184,9 @@ export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
     workers: QUEUE_WORKER_DEFINITIONS.filter((definition) =>
       roleOwnsDefinition(role, definition),
     ),
-    runsGateway: role === "all" || role === "control" || role === "core",
-    validatesScheduleEnvironmentLocally: role === "all" || role === "core",
-    runsEventBridge: role === "all" || role === "core" || role === "home",
+    runsGateway: role === "all" || role === "control",
+    validatesScheduleEnvironmentLocally: role === "all",
+    runsEventBridge: role === "all" || role === "home",
     restoresGlitterCorpusMetrics:
       role === "all" || role === "glitter" || role === "glitter-corpus",
   };

@@ -20,21 +20,20 @@ Production uses the same Bun image in twelve single-replica Kubernetes
 Deployments selected by `TEMPORAL_WORKER_ROLE`. `control` owns schedule
 reconciliation and public HTTP/event surfaces without a task queue. The
 credentialless `workflows` role runs deterministic Workflow code on
-`monorepo-workflows` and keeps temporary pollers on every legacy central queue.
-Domain roles are Activity-only and own their registries in the typed contract
-in `src/worker-config.ts`; the `legacy` role drains old `default` Activity
-tasks. The default `all` role preserves the single-process local development
-behavior. Keep new queue ownership and capabilities in that contract so a
-provider subprocess, heavy Glitter failure, or maintenance subprocess cannot
-take down another domain or inherit its Kubernetes permissions.
+`monorepo-workflows` and keeps temporary pollers on every remaining legacy
+central queue. Domain roles are Activity-only and own their registries in the
+typed contract in `src/worker-config.ts`. The default `all` role preserves the
+single-process local development behavior. Keep new queue ownership and
+capabilities in that contract so a provider subprocess, heavy Glitter failure,
+or maintenance subprocess cannot take down another domain or inherit its
+Kubernetes permissions.
 
 Every new central start, schedule, and child must target
 `TASK_QUEUES.WORKFLOWS`. Every Activity proxy must name the domain queue that
 owns the effect and must never use the Workflow queue. Continue-as-new inherits
 the current Workflow task queue; this keeps new chains on `monorepo-workflows`
-and lets pre-cutover chains finish on their original queue. Remove a legacy
-Workflow poller only after live visibility reports zero open executions on that
-queue.
+and lets remaining pre-cutover chains finish on their original queue. The
+pre-retirement default queue is no longer supported.
 
 ## Structure
 
@@ -185,7 +184,7 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
-- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `control`, `core`, `agent`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `legacy`, `maintenance`, `repo`, `reports`, or `scout`. Invalid values fail startup.
+- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `control`, `workflows`, `agent`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `maintenance`, `repo`, `reports`, or `scout`. Invalid values fail startup.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL

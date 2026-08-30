@@ -50,7 +50,7 @@ describe("Temporal worker role contracts", () => {
     );
   });
 
-  it("polls the new and every legacy central Workflow queue", () => {
+  it("polls the canonical and remaining legacy Workflow queues", () => {
     const workflowDefinitions = getWorkerRoleContract("workflows").workers;
     expect(
       workflowDefinitions.every((definition) => definition.kind === "workflow"),
@@ -60,12 +60,7 @@ describe("Temporal worker role contracts", () => {
     ).toEqual([TASK_QUEUES.WORKFLOWS, ...LEGACY_WORKFLOW_TASK_QUEUES]);
   });
 
-  it("preserves the production core and Glitter aliases", () => {
-    expect(
-      getWorkerRoleContract("core").workers.map(
-        (definition) => definition.taskQueue,
-      ),
-    ).toEqual([TASK_QUEUES.DEFAULT]);
+  it("preserves the Glitter alias", () => {
     expect(
       getWorkerRoleContract("glitter").workers.map(
         (definition) => definition.taskQueue,
@@ -98,10 +93,6 @@ describe("Temporal worker role contracts", () => {
     expect(getWorkerRoleContract("home")).toMatchObject({
       runsGateway: false,
       runsEventBridge: true,
-    });
-    expect(getWorkerRoleContract("legacy")).toMatchObject({
-      runsGateway: false,
-      runsEventBridge: false,
     });
   });
 
@@ -139,7 +130,6 @@ describe("Temporal worker role contracts", () => {
     for (const serialRole of serialRoles) {
       expect(concurrency.get(serialRole)).toBe(1);
     }
-    expect(concurrency.get("legacy")).toBe(1);
   });
 
   it("dispatches GoLink cluster reads only through infra", () => {

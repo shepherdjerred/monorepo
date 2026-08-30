@@ -1860,14 +1860,6 @@
       "clones": 1,
       "tokens": 78
     },
-    "packages/temporal/src/workflows/link-rot-scan.test.ts|packages/temporal/src/workflows/main-vuln-scan.test.ts": {
-      "clones": 1,
-      "tokens": 132
-    },
-    "packages/temporal/src/workflows/link-rot-scan.ts|packages/temporal/src/workflows/main-vuln-scan.ts": {
-      "clones": 1,
-      "tokens": 81
-    },
     "packages/toolkit/src/commands/history/history.ts|packages/toolkit/src/commands/history/history.ts": {
       "clones": 1,
       "tokens": 107

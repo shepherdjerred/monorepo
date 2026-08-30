@@ -66,16 +66,6 @@ export function createScoutChart(app: App, stage: Stage) {
                       matchLabels: { component: "scout-worker" },
                     },
                   },
-                  {
-                    namespaceSelector: {
-                      matchLabels: {
-                        "kubernetes.io/metadata.name": "temporal",
-                      },
-                    },
-                    podSelector: {
-                      matchLabels: { component: "legacy-worker" },
-                    },
-                  },
                 ]
               : []),
           ],

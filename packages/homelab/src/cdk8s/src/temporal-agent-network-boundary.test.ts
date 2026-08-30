@@ -181,13 +181,13 @@ describe("Temporal agent provider network boundary", () => {
     expect(rules).toContain("--reject-with tcp-reset");
   });
 
-  test("keeps agent pods out of the broad core policy", () => {
+  test("keeps agent pods out of the broad infra policy", () => {
     const policies = resources().flatMap((resource) => {
       const parsed = NetworkPolicySchema.safeParse(resource);
       return parsed.success ? [parsed.data] : [];
     });
-    const core = policies.find(
-      (policy) => policy.metadata.name === "temporal-worker-netpol",
+    const infra = policies.find(
+      (policy) => policy.metadata.name === "temporal-infra-worker-netpol",
     );
     const agent = policies.find(
       (policy) => policy.metadata.name === "temporal-agent-worker-netpol",
@@ -195,12 +195,12 @@ describe("Temporal agent provider network boundary", () => {
     const server = policies.find(
       (policy) => policy.metadata.name === "temporal-server-netpol",
     );
-    if (core === undefined || agent === undefined || server === undefined) {
+    if (infra === undefined || agent === undefined || server === undefined) {
       throw new Error("Temporal worker network policies were not synthesized");
     }
 
-    expect(core.spec.podSelector.matchLabels["component"]).toBe(
-      "legacy-worker",
+    expect(infra.spec.podSelector.matchLabels["component"]).toBe(
+      "infra-worker",
     );
     expect(agent.spec.podSelector.matchLabels["component"]).toBe(
       "agent-worker",

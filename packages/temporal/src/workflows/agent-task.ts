@@ -78,12 +78,6 @@ async function executeAgentTask(
   return activities.finalizeAgentTask({ input, workdir, investigation });
 }
 
-const legacyEmailActivities = proxyActivities<AgentTaskActivities>({
-  taskQueue: TASK_QUEUES.REPORTS,
-  startToCloseTimeout: AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
-  retry: RETRY,
-});
-
 const reportEmailActivities = proxyActivities<AgentTaskActivities>({
   taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
@@ -141,15 +135,10 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   const v2Reporting = patched("agent-task-report-v2");
   const twoPhaseV2 = patched("agent-task-two-phase-v2");
   const requireV2 = patched("agent-task-require-v2");
-  const coreEmailDelivery = patched("agent-task-core-email-delivery");
-  const reportsEmailDelivery =
-    coreEmailDelivery && patched("agent-task-reports-email-delivery-v1");
   const postDeliveryFailureReporting = patched(
     "agent-task-post-delivery-failure-report",
   );
-  const emailActivities = reportsEmailDelivery
-    ? reportEmailActivities
-    : legacyEmailActivities;
+  const emailActivities = reportEmailActivities;
   await waitUntilRunAt(input.runAt);
   const startedAt = new Date().toISOString();
   let workdir:
