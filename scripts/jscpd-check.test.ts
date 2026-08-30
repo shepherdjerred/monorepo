@@ -33,7 +33,7 @@ function clone(
 function baseline(
   pairs: Record<string, { clones: number; tokens: number }>,
 ): Baseline {
-  return { pairs, updated: "2026-01-01T00:00:00.000Z" };
+  return { pairs };
 }
 
 describe("pairKey", () => {
@@ -148,14 +148,19 @@ describe("buildBaseline (--update)", () => {
       clone("a.ts", "b.ts"),
       clone("a.ts", "b.ts"),
     ];
-    const rebuilt = buildBaseline(clones, "2026-02-02T00:00:00.000Z");
+    const rebuilt = buildBaseline(clones);
 
     expect(Object.keys(rebuilt.pairs)).toEqual(["a.ts|b.ts", "y.ts|z.ts"]);
     expect(rebuilt.pairs).toEqual({
       "a.ts|b.ts": { clones: 2, tokens: 200 },
       "y.ts|z.ts": { clones: 1, tokens: 100 },
     });
-    expect(rebuilt.updated).toBe("2026-02-02T00:00:00.000Z");
+    expect(rebuilt).toEqual({
+      pairs: {
+        "a.ts|b.ts": { clones: 2, tokens: 200 },
+        "y.ts|z.ts": { clones: 1, tokens: 100 },
+      },
+    });
 
     // The rewritten baseline is exactly what a subsequent check passes on.
     expect(compareToBaseline(clones, rebuilt)).toEqual([]);
@@ -175,7 +180,7 @@ describe("duplicated size ratchet", () => {
         tokens: 700,
       }),
     ];
-    const pinned = buildBaseline(before, "2026-01-01T00:00:00.000Z");
+    const pinned = buildBaseline(before);
 
     expect(compareToBaseline(before, pinned)).toEqual([]);
 

@@ -18,12 +18,11 @@ const BaselineSchema = z.object({
   "prettier-ignore": countMap,
   "test-skips": countMap,
   "placeholder-assertions": countMap,
-  updated: z.string(),
 });
 type Baseline = z.infer<typeof BaselineSchema>;
 
 type GrepRule = {
-  key: keyof Omit<Baseline, "updated">;
+  key: keyof Baseline;
   pattern: string;
   searchPaths: string[];
   includes: string[];
