@@ -33,7 +33,7 @@ describe("Scout design audit matrix", () => {
       6,
     );
     expect(routes.filter((route) => route.surface === "docs")).toHaveLength(29);
-    expect(routes.filter((route) => route.surface === "app")).toHaveLength(23);
+    expect(routes.filter((route) => route.surface === "app")).toHaveLength(27);
     expect(routes.filter((route) => route.golden)).toHaveLength(16);
   });
 
@@ -43,7 +43,7 @@ describe("Scout design audit matrix", () => {
       ({ project, route, theme }) =>
         `${project.name}/${route.name}/${theme.name}`,
     );
-    expect(cases).toHaveLength(624);
+    expect(cases).toHaveLength(656);
     expect(new Set(keys).size).toBe(cases.length);
 
     for (const project of auditProjects) {
