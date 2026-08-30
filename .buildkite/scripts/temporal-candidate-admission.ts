@@ -4,6 +4,11 @@ import { TransientError } from "../../scripts/lib/transient-error.ts";
 
 const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
+const CENTRAL_WORKFLOW_STABLE =
+  "shepherdjerred/temporal-worker/workflows/stable";
+const CENTRAL_WORKFLOW_CANDIDATE =
+  "shepherdjerred/temporal-worker/workflows/candidate";
+const LAST_IMAGE_WITHOUT_WORKFLOW_WORKER = 12_197;
 export const TEMPORAL_WORKFLOW_PIN_PAIRS = [
   [
     "shepherdjerred/temporal-worker/workflows/stable",
@@ -19,6 +24,13 @@ type LiveVersionCatalog = {
   readonly source: string;
   readonly values: ReadonlyMap<string, string>;
 };
+
+function isLegacyWorkflowPin(value: string): boolean {
+  const match = /^2\.0\.0-(\d+)@sha256:[a-f\d]{64}$/.exec(value);
+  if (match === null) return false;
+  const build = Number(match[1]);
+  return Number.isInteger(build) && build <= LAST_IMAGE_WITHOUT_WORKFLOW_WORKER;
+}
 
 export type CandidateAdmissionExecutor = (
   command: readonly string[],
@@ -75,7 +87,15 @@ export async function assertTemporalCandidatePinsConverged(
         `Version catalog is missing Temporal workflow pins for ${stable}`,
       );
     }
-    if (stableValue !== candidateValue) {
+    if (
+      stableValue !== candidateValue &&
+      !(
+        stable === CENTRAL_WORKFLOW_STABLE &&
+        candidate === CENTRAL_WORKFLOW_CANDIDATE &&
+        !isLegacyWorkflowPin(stableValue) &&
+        isLegacyWorkflowPin(candidateValue)
+      )
+    ) {
       throw new TransientError(
         `Temporal candidate ${candidate} is active in origin/main; wait for its ramp or promotion before publishing another candidate`,
       );

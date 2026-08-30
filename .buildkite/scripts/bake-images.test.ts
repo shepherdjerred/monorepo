@@ -49,7 +49,7 @@ function commandResult(
 }
 test("publishes a central Workflow candidate without changing stable", () => {
   const digest = `sha256:${"a".repeat(64)}`;
-  const workflowPin = `2.0.0-41@sha256:${"c".repeat(64)}`;
+  const workflowPin = `2.0.0-12300@sha256:${"c".repeat(64)}`;
   expect(
     pinCandidatesForDigests(
       {
@@ -78,6 +78,57 @@ test("publishes a central Workflow candidate without changing stable", () => {
       digest,
     },
     "shepherdjerred/other": { version: "2.0.0-42", digest },
+  });
+});
+test("bootstraps stable before the first central Workflow rollout", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  const legacy = `2.0.0-12197@sha256:${"b".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/temporal-worker": digest },
+      "42",
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/temporal-worker/workflows/stable",
+          value: legacy,
+        },
+        {
+          name: "shepherdjerred/temporal-worker/workflows/candidate",
+          value: legacy,
+        },
+      ]),
+    ),
+  ).toEqual({
+    "shepherdjerred/temporal-worker": { version: "2.0.0-42", digest },
+    "shepherdjerred/temporal-worker/workflows/stable": {
+      version: "2.0.0-42",
+      digest,
+    },
+  });
+});
+test("publishes a central Workflow candidate after stable bootstrap", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/temporal-worker": digest },
+      "43",
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/temporal-worker/workflows/stable",
+          value: `2.0.0-12300@sha256:${"b".repeat(64)}`,
+        },
+        {
+          name: "shepherdjerred/temporal-worker/workflows/candidate",
+          value: `2.0.0-12197@sha256:${"c".repeat(64)}`,
+        },
+      ]),
+    ),
+  ).toEqual({
+    "shepherdjerred/temporal-worker": { version: "2.0.0-43", digest },
+    "shepherdjerred/temporal-worker/workflows/candidate": {
+      version: "2.0.0-43",
+      digest,
+    },
   });
 });
 test("blocks candidate admission while the durable version branch exists", async () => {
@@ -127,6 +178,37 @@ test("blocks admission when live main has a divergent Temporal candidate", async
       : commandResult(0, catalog);
   await expect(assertTemporalCandidatePinsConverged(executor)).rejects.toThrow(
     TransientError,
+  );
+});
+test("allows the one-time central stable bootstrap transition", async () => {
+  const legacy = `2.0.0-12197@sha256:${"a".repeat(64)}`;
+  const stable = `2.0.0-12369@sha256:${"b".repeat(64)}`;
+  const catalog = JSON.stringify({
+    entries: [
+      {
+        name: "shepherdjerred/temporal-worker/workflows/stable",
+        value: stable,
+      },
+      {
+        name: "shepherdjerred/temporal-worker/workflows/candidate",
+        value: legacy,
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+        value: stable,
+      },
+      {
+        name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+        value: stable,
+      },
+    ],
+  });
+  const executor: CommandExecutor = async (command) =>
+    command[1] === "fetch" || command[1] === "ls-remote"
+      ? commandResult()
+      : commandResult(0, catalog);
+  await expect(assertTemporalCandidatePinsConverged(executor)).resolves.toBe(
+    catalog,
   );
 });
 test("allows admission when all live Temporal candidates match stable", async () => {

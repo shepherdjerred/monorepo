@@ -80,8 +80,24 @@ describe("applyCurrentBuildImageOverrides", () => {
     expect(versions["shepherdjerred/worker/workflows/stable"]).toBe(
       `2.0.0-12369@sha256:${"b".repeat(64)}`,
     );
+    expect(versions["shepherdjerred/worker/workflows/candidate"]).toBe(legacy);
+  });
+
+  test("publishes the candidate after stable has been bootstrapped", () => {
+    const versions: Record<string, string> = {
+      "shepherdjerred/worker/workflows/stable": `2.0.0-12369@sha256:${"b".repeat(64)}`,
+      "shepherdjerred/worker/workflows/candidate": `2.0.0-12197@sha256:${"a".repeat(64)}`,
+    };
+    applyCurrentBuildImageOverrides(
+      versions,
+      JSON.stringify({ "shepherdjerred/worker": `sha256:${"c".repeat(64)}` }),
+      "2.0.0-12370",
+    );
+    expect(versions["shepherdjerred/worker/workflows/stable"]).toContain(
+      "2.0.0-12369",
+    );
     expect(versions["shepherdjerred/worker/workflows/candidate"]).toBe(
-      `2.0.0-12369@sha256:${"b".repeat(64)}`,
+      `2.0.0-12370@sha256:${"c".repeat(64)}`,
     );
   });
 

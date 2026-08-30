@@ -83,10 +83,17 @@ function canUpdateImagePin(
   candidate: string,
 ): boolean {
   const stableKey = workflowStableKey(candidate);
+  if (stableKey === undefined || !Object.hasOwn(versions, stableKey)) {
+    return true;
+  }
+  const stableVersion = versions[stableKey];
+  const candidateVersion = versions[candidate];
   return (
-    stableKey === undefined ||
-    !Object.hasOwn(versions, stableKey) ||
-    versions[stableKey] === versions[candidate]
+    stableVersion === candidateVersion ||
+    (stableVersion !== undefined &&
+      candidateVersion !== undefined &&
+      isLegacyWorkflowPin(candidateVersion) &&
+      !isLegacyWorkflowPin(stableVersion))
   );
 }
 
@@ -124,7 +131,6 @@ function applyDigestOverride(
     if (previousVersion === undefined) {
       throw new Error(`Missing image pin for ${candidate}`);
     }
-    applyImagePin(versions, candidate, nextVersion);
     if (
       stableKey !== undefined &&
       Object.hasOwn(versions, stableKey) &&
@@ -132,7 +138,10 @@ function applyDigestOverride(
       isLegacyWorkflowPin(previousVersion)
     ) {
       applyImagePin(versions, stableKey, nextVersion);
+      matched = true;
+      continue;
     }
+    applyImagePin(versions, candidate, nextVersion);
     matched = true;
   }
   return matched;
