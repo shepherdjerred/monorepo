@@ -4,6 +4,7 @@ import {
   DiscordGuildIdSchema,
   type DiscordAccountId,
   type DiscordGuildId,
+  formatInteger,
 } from "@scout-for-lol/data";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
@@ -21,7 +22,6 @@ import {
   type PeekPassPrice,
   type PeekPassQuoteResult,
 } from "#src/betting/peek-pass.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 export type PeekPassButtonInteraction = {
   customId: string;

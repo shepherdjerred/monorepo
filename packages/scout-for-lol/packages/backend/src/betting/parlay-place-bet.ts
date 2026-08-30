@@ -104,7 +104,7 @@ export async function placeParlayBet(
     stake: number;
     now?: Date;
     /** Which surface asked, so the two cannot drift apart unnoticed. */
-    surface?: "button" | "command";
+    surface?: "button" | "command" | "web";
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<PlaceParlayBetResult> {

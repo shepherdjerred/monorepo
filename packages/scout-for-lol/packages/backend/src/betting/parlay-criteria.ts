@@ -3,6 +3,7 @@ import {
   LeaguePuuidSchema,
   RiotTeamIdSchema,
   type BucksPoolParticipant,
+  formatParlayNumericValue,
 } from "@scout-for-lol/data";
 import {
   MATCH_NUMERIC_CATALOG,
@@ -18,7 +19,6 @@ import {
   TeamBooleanFieldSchema,
   TeamObjectiveSchema,
 } from "#src/betting/parlay-catalog.ts";
-import { formatParlayNumericValue } from "#src/betting/display-format.ts";
 
 export const PARLAY_SCHEMA_VERSION = 1;
 export const PARLAY_CATALOG_VERSION = "2026-08-23";

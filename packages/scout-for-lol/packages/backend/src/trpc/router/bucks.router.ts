@@ -1,0 +1,370 @@
+import { z } from "zod";
+import {
+  BucksParlaySideSchema,
+  BucksPoolRosterSchema,
+  BucksStakeSchema,
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+  RiotTeamIdSchema,
+} from "@scout-for-lol/data";
+import { captureBucksMemberActivity } from "#src/analytics/bryan-bucks.ts";
+import type { BucksMemberActivityKind } from "#src/analytics/product-analytics.ts";
+import {
+  findEligiblePlayer,
+  getLedgerPage,
+  getPersonalBucksView,
+} from "#src/betting/accounts.ts";
+import { cancelBet } from "#src/betting/cancel-bet.ts";
+import { bettingAnchor } from "#src/betting/components.ts";
+import { cancellationHouseCut } from "#src/betting/house-cut.ts";
+import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
+import { ledgerKindLabel } from "#src/betting/navigation.ts";
+import {
+  getBucksNotificationPreferences,
+  updateBucksNotificationPreferences,
+} from "#src/betting/notification-preferences.ts";
+import { getOpenMarketsView } from "#src/betting/open-market-view.ts";
+import { placeBet } from "#src/betting/place-bet.ts";
+import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
+import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
+import { subjectWinsForTeam } from "#src/betting/team.ts";
+import { placeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet.ts";
+import { getLatestWeeklyLeaderboardSnapshot } from "#src/betting/weekly-leaderboard-snapshot.ts";
+import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-refresh.ts";
+import {
+  assertBucksGuildMembership,
+  assertBucksScope,
+  resolveBucksScope,
+} from "#src/consumer/bucks-access.ts";
+import { prisma } from "#src/database/index.ts";
+import { router, webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
+
+const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
+const MatchInput = GuildInput.extend({
+  matchId: z.string().min(1).max(64),
+});
+
+/**
+ * Best-effort member-activity analytics for a completed web mutation.
+ *
+ * The domain result unions treat refusals (window closed, insufficient
+ * balance) as ordinary answers, so they are captured as `success` handling —
+ * exactly as the Discord button surface does. Auth/infra failures throw before
+ * this runs and are deliberately not captured.
+ */
+async function captureWebActivity(
+  serverId: string,
+  discordId: string,
+  activityKind: BucksMemberActivityKind,
+): Promise<void> {
+  await captureBucksMemberActivity({
+    serverId,
+    discordId,
+    activityKind,
+    surface: "web",
+    status: "success",
+  });
+}
+
+/**
+ * The Bryan Bucks web surface.
+ *
+ * Every read model and mutation delegates to the existing `src/betting/`
+ * domain functions — the guarded-conditional-write transactions, post-commit
+ * metrics, and ledger chokepoint all live there and are shared verbatim with
+ * the Discord surface. Mutations additionally enqueue the same serialized
+ * Discord market-message refresh the `/bb` handlers use, so the channel copy
+ * never goes stale because a Buck moved from a browser.
+ *
+ * Every procedure except `status` takes an explicit `guildId` validated
+ * against the caller's resolved scope; none of them trusts the client.
+ */
+export const bucksRouter = router({
+  status: webProcedure.query(async ({ ctx }) => {
+    const scope = await resolveBucksScope(ctx.user);
+    if (scope.kind === "forbidden") {
+      return { state: scope.reason } as const;
+    }
+    return {
+      state: "available",
+      guilds: scope.guilds.map((guild) => ({
+        id: guild.id,
+        name: guild.name,
+      })),
+    } as const;
+  }),
+
+  wallet: webProcedure.input(GuildInput).query(async ({ ctx, input }) => {
+    await assertBucksScope(ctx.user, input.guildId);
+    const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
+    const [eligible, view] = await Promise.all([
+      findEligiblePlayer({ serverId: input.guildId, discordId }),
+      getPersonalBucksView({ serverId: input.guildId, discordId }),
+    ]);
+    return {
+      eligible: eligible !== undefined,
+      wallet:
+        view === undefined
+          ? null
+          : {
+              ...view,
+              pendingPositions: view.pendingPositions.map((position) =>
+                position.marketType === "outcome"
+                  ? {
+                      ...position,
+                      // Cancellation exists only while the window is open AND
+                      // still before its deadline — `poolState` alone can lag
+                      // a passed `closesAt` until the sweep runs, and
+                      // `cancelBet` itself requires `closesAt > now`. A locked
+                      // position carries no fee quote.
+                      cancellationFee:
+                        position.poolState === "open" &&
+                        position.closesAt.getTime() > Date.now()
+                          ? cancellationHouseCut(position.offeredStake)
+                          : null,
+                    }
+                  : position,
+              ),
+            },
+    };
+  }),
+
+  ledger: webProcedure
+    .input(
+      GuildInput.extend({
+        page: z.number().int().nonnegative().max(100_000),
+        snapshotId: z.number().int().positive().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
+      const page = await getLedgerPage({
+        serverId: input.guildId,
+        discordId,
+        page: input.page,
+        ...(input.snapshotId === undefined
+          ? {}
+          : { snapshotId: input.snapshotId }),
+      });
+      return {
+        ...page,
+        // The raw `context` JSON stays server-side: the history list renders
+        // kind label, delta, balance and date, and the self-describing context
+        // union includes legacy shapes the SPA has no business re-validating.
+        entries: page.entries.map(({ context: _context, ...entry }) => ({
+          ...entry,
+          label: ledgerKindLabel(entry.kind),
+        })),
+      };
+    }),
+
+  openMarkets: webProcedure.input(GuildInput).query(async ({ ctx, input }) => {
+    await assertBucksScope(ctx.user, input.guildId);
+    const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
+    return await getOpenMarketsView({ serverId: input.guildId, discordId });
+  }),
+
+  leaderboard: webProcedure.input(GuildInput).query(async ({ ctx, input }) => {
+    await assertBucksScope(ctx.user, input.guildId);
+    const snapshot = await getLatestWeeklyLeaderboardSnapshot({
+      serverId: input.guildId,
+    });
+    if (snapshot === undefined) {
+      return { kind: "none" } as const;
+    }
+    return {
+      kind: "snapshot",
+      postedAt: snapshot.postedAt,
+      entries: snapshot.entries,
+    } as const;
+  }),
+
+  notificationPreferences: webProcedure
+    .input(GuildInput)
+    .query(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
+      const preferences = await getBucksNotificationPreferences({
+        serverId: input.guildId,
+        discordId,
+      });
+      return {
+        ownBetSettlementDms: preferences.ownBetSettlementDms,
+        betsOnPlayerSettlementDms: preferences.betsOnPlayerSettlementDms,
+      };
+    }),
+
+  setNotificationPreferences: webMutationProcedure
+    .input(
+      GuildInput.extend({
+        ownBetSettlementDms: z.boolean().optional(),
+        betsOnPlayerSettlementDms: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
+      const preferences = await updateBucksNotificationPreferences({
+        serverId: input.guildId,
+        discordId,
+        updates: {
+          ...(input.ownBetSettlementDms === undefined
+            ? {}
+            : { ownBetSettlementDms: input.ownBetSettlementDms }),
+          ...(input.betsOnPlayerSettlementDms === undefined
+            ? {}
+            : {
+                betsOnPlayerSettlementDms: input.betsOnPlayerSettlementDms,
+              }),
+        },
+      });
+      return {
+        ownBetSettlementDms: preferences.ownBetSettlementDms,
+        betsOnPlayerSettlementDms: preferences.betsOnPlayerSettlementDms,
+      };
+    }),
+
+  placeOutcomeBet: webMutationProcedure
+    .input(
+      MatchInput.extend({
+        teamId: RiotTeamIdSchema,
+        stake: BucksStakeSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
+
+      // The web names Blue/Red directly, while `placeBet` speaks the v1
+      // subject-relative contract — so the anchor is resolved from the pool's
+      // frozen roster exactly as the market message's buttons do.
+      const pool = await prisma.bucksMatchPool.findUnique({
+        where: {
+          matchId_serverId: {
+            matchId: input.matchId,
+            serverId: input.guildId,
+          },
+        },
+        select: { roster: true },
+      });
+      if (pool === null) {
+        return { kind: "no_pool" } as const;
+      }
+      const roster = BucksPoolRosterSchema.parse(
+        JSON.parse(pool.roster),
+      ).participants;
+      const anchor = bettingAnchor(roster);
+      if (anchor === undefined) {
+        // A pool exists only for a tracked game, so a roster with no bettable
+        // anchor behaves like the pool being gone rather than a new refusal.
+        return { kind: "no_pool" } as const;
+      }
+      const anchorPuuid = roster[anchor.index]?.puuid ?? null;
+      if (anchorPuuid === null) {
+        throw new Error(
+          `Bryan Bucks betting anchor for ${input.matchId} disappeared from its frozen roster`,
+        );
+      }
+
+      const result = await placeBet({
+        matchId: input.matchId,
+        serverId: input.guildId,
+        discordId,
+        subjectPuuid: anchorPuuid,
+        subjectWins: subjectWinsForTeam(anchor.teamId, input.teamId),
+        stake: input.stake,
+        surface: "web",
+      });
+      if (result.kind === "placed") {
+        await refreshBucksMessages({
+          matchId: input.matchId,
+          serverId: input.guildId,
+        });
+      }
+      await captureWebActivity(input.guildId, discordId, "outcome_bet");
+      return result;
+    }),
+
+  cancelOutcomeBet: webMutationProcedure
+    .input(MatchInput)
+    .mutation(async ({ ctx, input }) => {
+      // Cancellation must survive the guild's flag being revoked mid-match —
+      // see assertBucksGuildMembership. Membership alone still stops an
+      // arbitrary guildId; cancelBet itself further requires the caller own
+      // an open position in that exact pool.
+      await assertBucksGuildMembership(ctx.user, input.guildId);
+      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
+      const result = await cancelBet({
+        matchId: input.matchId,
+        serverId: input.guildId,
+        discordId,
+        surface: "web",
+      });
+      if (result.kind === "cancelled") {
+        // A withdrawn offer must disappear from the public market digest.
+        await refreshBucksMessages({
+          matchId: input.matchId,
+          serverId: input.guildId,
+        });
+      }
+      await captureWebActivity(input.guildId, discordId, "outcome_bet");
+      return result;
+    }),
+
+  placeParlayBet: webMutationProcedure
+    .input(
+      MatchInput.extend({
+        side: BucksParlaySideSchema,
+        stake: BucksStakeSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
+      const result = await placeParlayBet({
+        matchId: input.matchId,
+        serverId: input.guildId,
+        discordId,
+        side: input.side,
+        stake: input.stake,
+        surface: "web",
+      });
+      if (result.kind === "placed") {
+        await refreshParlayMessages({
+          matchId: input.matchId,
+          serverId: input.guildId,
+        });
+      }
+      await captureWebActivity(input.guildId, discordId, "parlay_bet");
+      return result;
+    }),
+
+  placeWeeklyParlayBet: webMutationProcedure
+    .input(
+      GuildInput.extend({
+        marketId: z.number().int().positive(),
+        side: BucksParlaySideSchema,
+        stake: BucksStakeSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
+      // `placeWeeklyParlayBet` validates that the market belongs to this guild
+      // and requires both betting flags internally.
+      const result = await placeWeeklyParlayBet({
+        marketId: input.marketId,
+        serverId: input.guildId,
+        discordId,
+        side: input.side,
+        stake: input.stake,
+        surface: "web",
+      });
+      if (result.kind === "placed") {
+        await refreshWeeklyParlayMessage(input.marketId);
+      }
+      await captureWebActivity(input.guildId, discordId, "weekly_parlay_bet");
+      return result;
+    }),
+});

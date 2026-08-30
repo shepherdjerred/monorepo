@@ -3,6 +3,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type BucksLedgerKind,
+  formatInteger,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { getLedgerPage, type LedgerPage } from "#src/betting/accounts.ts";
@@ -11,7 +12,6 @@ import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { PEEK_PASS_DURATION_LABEL } from "#src/betting/peek-pass.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 export const BUCKS_NAVIGATION_NAMESPACE = "bbnav";
 export const BUCKS_NAVIGATION_VERSION = "1";

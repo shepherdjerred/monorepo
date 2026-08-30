@@ -64,7 +64,7 @@ export type PlaceBetResult =
 
 export type PlaceBetInput = {
   /** Which surface asked, so the two cannot drift apart unnoticed. */
-  surface?: "button" | "command";
+  surface?: "button" | "command" | "web";
   matchId: string;
   serverId: DiscordGuildId;
   discordId: DiscordAccountId;

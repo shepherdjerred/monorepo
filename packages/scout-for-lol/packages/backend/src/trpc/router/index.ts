@@ -22,6 +22,7 @@ import { discordRouter } from "#src/trpc/router/discord.router.ts";
 import { riotRouter } from "#src/trpc/router/riot.router.ts";
 import { rolesRouter } from "#src/trpc/router/roles.router.ts";
 import { consumerPlayerRouter } from "#src/trpc/router/consumer-player.router.ts";
+import { bucksRouter } from "#src/trpc/router/bucks.router.ts";
 
 export const appRouter = router({
   auth: authRouter,
@@ -41,6 +42,7 @@ export const appRouter = router({
   riot: riotRouter,
   roles: rolesRouter,
   consumerPlayer: consumerPlayerRouter,
+  bucks: bucksRouter,
 });
 
 export type AppRouter = typeof appRouter;

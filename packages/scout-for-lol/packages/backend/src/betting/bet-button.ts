@@ -3,6 +3,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type BucksPoolParticipant,
+  formatInteger,
 } from "@scout-for-lol/data";
 import type { InteractionEditReplyOptions } from "discord.js";
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
@@ -23,7 +24,6 @@ import {
 } from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 const logger = createLogger("betting-bet-button");
 

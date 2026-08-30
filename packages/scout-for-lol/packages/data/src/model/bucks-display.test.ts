@@ -3,7 +3,7 @@ import {
   formatDurationSeconds,
   formatInteger,
   formatParlayNumericValue,
-} from "#src/betting/display-format.ts";
+} from "./bucks-display.ts";
 
 describe("Bryan Bucks display formatting", () => {
   test.each([

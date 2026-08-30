@@ -35,6 +35,7 @@ export * from "./tier.ts";
 export * from "./voice-notification.ts";
 export * from "./pairing-stats.ts";
 export * from "./bryan-bucks.ts";
+export * from "./bucks-display.ts";
 export * from "./weekly-parlay.ts";
 export * from "./permissions/catalog.ts";
 export * from "./permissions/permission-set.ts";

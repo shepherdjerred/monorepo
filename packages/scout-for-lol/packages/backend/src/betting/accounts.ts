@@ -9,7 +9,6 @@ import {
   type BucksLedgerKind,
   type DiscordAccountId,
   type DiscordGuildId,
-  type RiotTeamId,
 } from "@scout-for-lol/data";
 import { SEED_GRANT } from "#src/betting/constants.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
@@ -18,6 +17,7 @@ import {
   InsufficientBucksError,
 } from "#src/betting/ledger.ts";
 import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
+import type { PendingPosition } from "#src/betting/pending-position.ts";
 import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly-parlay-criteria.ts";
 import {
   hasTrackedPlayersOnBothTeams,
@@ -306,30 +306,6 @@ export async function getLedgerPage(
   };
 }
 
-type PendingPositionBase = {
-  matchId: string;
-  closesAt: Date;
-  poolState: string;
-};
-
-export type PendingPosition =
-  | (PendingPositionBase & {
-      marketType: "outcome";
-      gameAlias: string;
-      teamId: RiotTeamId;
-      /** WIN/LOSE for this game, or Blue/Red when both teams are tracked. */
-      sideLabel: string;
-      offeredStake: number;
-      matchedStake: number | null;
-      unmatchedStake: number | null;
-    })
-  | (PendingPositionBase & {
-      marketType: "parlay";
-      subjectAlias: string;
-      side: "YES" | "NO";
-      stake: number;
-    });
-
 export type PersonalBucksView = {
   balance: number;
   totalAtRisk: number;
@@ -422,6 +398,7 @@ export async function getPersonalBucksView(
           createdAt: true,
           stake: true,
           side: true,
+          marketId: true,
           market: {
             select: {
               periodKey: true,
@@ -484,7 +461,8 @@ export async function getPersonalBucksView(
       id: bet.id,
       createdAt: bet.createdAt,
       marketType: "parlay" as const,
-      matchId: `weekly:${bet.market.periodKey}`,
+      // Period key alone isn't unique across two slots in the same period.
+      matchId: `weekly:${bet.market.periodKey}:${bet.marketId.toString()}`,
       subjectAlias: `Weekly (${WeeklyParlaySubjectsSchema.parse(
         JSON.parse(bet.market.definition.subjects),
       )

@@ -55,7 +55,7 @@ async function placeWeeklyParlayBetInternal(
     side: BucksParlaySide;
     stake: number;
     now?: Date;
-    surface?: "button" | "command";
+    surface?: "button" | "command" | "web";
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<PlaceWeeklyParlayBetResult> {
@@ -256,7 +256,7 @@ export async function placeWeeklyParlayBet(
     side: BucksParlaySide;
     stake: number;
     now?: Date;
-    surface?: "button" | "command";
+    surface?: "button" | "command" | "web";
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<PlaceWeeklyParlayBetResult> {
@@ -292,7 +292,7 @@ async function cancelWeeklyParlayBetInternal(
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
     now?: Date;
-    surface?: "button" | "command";
+    surface?: "button" | "command" | "web";
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<CancelWeeklyParlayBetResult> {
@@ -403,7 +403,7 @@ export async function cancelWeeklyParlayBet(
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
     now?: Date;
-    surface?: "button" | "command";
+    surface?: "button" | "command" | "web";
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<CancelWeeklyParlayBetResult> {

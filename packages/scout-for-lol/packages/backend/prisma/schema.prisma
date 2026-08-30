@@ -1369,6 +1369,26 @@ model BucksMatchEarning {
   @@index([state, retryAt])
 }
 
+// The complete non-house standings exactly as one Friday 5 PM PT leaderboard
+// post disclosed them. The web leaderboard reads only this table — never live
+// balances — so the deliberate no-on-demand-leaderboard rule survives a second
+// surface, and the table doubles as an audit of exactly what was disclosed
+// each week. `runWeek` shares the weekly post's chunk-nonce clock, so a cron
+// retry upserts its own week instead of duplicating it.
+model BucksWeeklyLeaderboardSnapshot {
+  id         Int      @id @default(autoincrement())
+  serverId   String
+  runWeek    Int
+  postedAt   DateTime @default(now())
+  entryCount Int
+  // JSON, BucksWeeklyLeaderboardEntriesSchema
+  entries    String
+  createdAt  DateTime @default(now())
+
+  @@unique([serverId, runWeek])
+  @@index([serverId, postedAt])
+}
+
 // =============================================================================
 // Tournament-code custom lobbies
 //

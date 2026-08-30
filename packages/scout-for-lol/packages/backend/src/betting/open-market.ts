@@ -19,7 +19,7 @@ export type OpenMarketAggregate = {
   red: OpenMarketSide;
 };
 
-function marketSide(
+export function marketSide(
   teamId: RiotTeamId,
   roster: ReturnType<typeof BucksPoolRosterSchema.parse>["participants"],
   bets: readonly { predictedTeamId: number; stake: number }[],
