@@ -72,3 +72,16 @@ export type FireEventResponse = z.infer<typeof FireEventResponse>;
 export const HistoryResponse = z.array(z.array(EntityState));
 
 export type HistoryResponse = z.infer<typeof HistoryResponse>;
+
+export const ConfigEntryDiagnostics = z
+  .object({
+    home_assistant: z.record(z.string(), z.unknown()),
+    custom_components: z.record(z.string(), z.unknown()),
+    integration_manifest: z.record(z.string(), z.unknown()),
+    setup_times: z.record(z.string(), z.unknown()),
+    data: z.unknown(),
+    issues: z.array(z.unknown()),
+  })
+  .loose();
+
+export type ConfigEntryDiagnostics = z.infer<typeof ConfigEntryDiagnostics>;

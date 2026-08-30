@@ -14,6 +14,7 @@ import { normalizeBaseUrl } from "#shared/config.ts";
 import { HaApiError, HaAuthError, HaNotFoundError } from "./errors.ts";
 import {
   EntityState,
+  ConfigEntryDiagnostics,
   FireEventResponse,
   HaConfig,
   HistoryResponse,
@@ -122,6 +123,15 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     const path = `/api/history/period/${start.toISOString()}?${params.toString()}`;
     const body = await this.request("GET", path);
     return HistoryResponse.parse(body);
+  }
+
+  public async getConfigEntryDiagnostics<T>(
+    configEntryId: string,
+    dataSchema: z.ZodType<T>,
+  ): Promise<T> {
+    const path = `/api/diagnostics/config_entry/${encodeURIComponent(configEntryId)}`;
+    const body = ConfigEntryDiagnostics.parse(await this.request("GET", path));
+    return dataSchema.parse(body.data);
   }
 
   private buildServicePath(
