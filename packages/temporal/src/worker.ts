@@ -321,6 +321,24 @@ async function startRoleServices(options: {
   };
 }
 
+// `bun run start` (the documented local command, no env file) and a manual
+// `docker build` without --build-arg GIT_SHA (which bakes the Dockerfile's
+// ARG GIT_SHA=unknown default) both leave these unset or "unknown".
+// ReleaseCommitSchema requires an exact 40-character hex SHA and
+// ExecutionEnvironmentSchema has no default of its own, so without this the
+// worker throws in parseTemporalBootstrapMetadata before it ever connects.
+// Kubernetes deployments always set both explicitly, so this never masks a
+// real deploy-config bug — only the two local paths above.
+function localBootstrapEnvironment(value: string | undefined): string {
+  return value ?? "dev";
+}
+
+function localReleaseCommit(value: string | undefined): string {
+  return value === undefined || value === "unknown"
+    ? "0000000000000000000000000000000000000000"
+    : value;
+}
+
 async function main(): Promise<void> {
   const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
   const bootstrap = parseTemporalBootstrap(Bun.env);
@@ -329,8 +347,8 @@ async function main(): Promise<void> {
     requireWorkerDeployment(bootstrap);
   }
   const bootstrapMetadata = parseTemporalBootstrapMetadata(
-    Bun.env["ENVIRONMENT"],
-    Bun.env["GIT_SHA"],
+    localBootstrapEnvironment(Bun.env["ENVIRONMENT"]),
+    localReleaseCommit(Bun.env["GIT_SHA"]),
   );
   installRuntime(role, bootstrap);
   initSentry();

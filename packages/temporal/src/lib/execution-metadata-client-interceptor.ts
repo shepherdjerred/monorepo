@@ -33,6 +33,7 @@ function enrichOptions(
     ...options,
     ...buildExecutionStartMetadata({
       bootstrap,
+      workflowType,
       taskQueue,
       trigger: triggerForWorkflowType(workflowType),
       summary: `Run ${workflowType}`,

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   buildExecutionMetadata,
   executionDomainForTaskQueue,
+  executionDomainForWorkflow,
   parseTemporalBootstrapMetadata,
 } from "./execution-metadata.ts";
 import { TASK_QUEUES } from "./task-queues.ts";
@@ -27,11 +28,41 @@ describe("central Temporal execution metadata", () => {
     expect(executionDomainForTaskQueue(TASK_QUEUES.WORKFLOWS)).toBe("platform");
   });
 
+  describe("executionDomainForWorkflow", () => {
+    test("resolves a known workflowType regardless of the shared WORKFLOWS queue", () => {
+      // Every new central execution targets TASK_QUEUES.WORKFLOWS, so
+      // taskQueue alone can no longer distinguish home/reports/repo/etc. —
+      // the workflowType lookup is what actually differentiates them.
+      expect(
+        executionDomainForWorkflow("goodMorningWakeUp", TASK_QUEUES.WORKFLOWS),
+      ).toBe("home");
+      expect(
+        executionDomainForWorkflow(
+          "runHomelabAuditWorkflow",
+          TASK_QUEUES.WORKFLOWS,
+        ),
+      ).toBe("infra");
+      expect(
+        executionDomainForWorkflow("agentTaskWorkflow", TASK_QUEUES.WORKFLOWS),
+      ).toBe("agent");
+    });
+
+    test("falls back to the taskQueue mapping for an unlisted workflowType", () => {
+      expect(
+        executionDomainForWorkflow("someFutureWorkflow", TASK_QUEUES.HOME),
+      ).toBe("home");
+      expect(
+        executionDomainForWorkflow("someFutureWorkflow", TASK_QUEUES.WORKFLOWS),
+      ).toBe("platform");
+    });
+  });
+
   test("uses a Scout stage as the execution environment", () => {
     const bootstrap = parseTemporalBootstrapMetadata("prod", RELEASE_COMMIT);
     expect(
       buildExecutionMetadata({
         bootstrap,
+        workflowType: "runScoutDataDragonVersionCheck",
         taskQueue: TASK_QUEUES.SCOUT_BETA,
         trigger: "schedule",
       }).Environment,

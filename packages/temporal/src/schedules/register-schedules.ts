@@ -162,6 +162,7 @@ function buildScheduleConfiguration(
 ) {
   const executionMetadata = buildExecutionStartMetadata({
     bootstrap,
+    workflowType: schedule.workflowType,
     taskQueue: schedule.taskQueue,
     trigger: "schedule",
     summary: `Run ${schedule.workflowType}`,
@@ -213,6 +214,7 @@ export function routeDynamicAgentTaskSchedule(
   // schedule created before this rollout keeps missing metadata forever.
   const executionMetadata = buildExecutionStartMetadata({
     bootstrap,
+    workflowType: "agentTaskWorkflow",
     taskQueue: TASK_QUEUES.WORKFLOWS,
     trigger: "schedule",
     summary: "Run agentTaskWorkflow",

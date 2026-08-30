@@ -135,4 +135,16 @@ describe("Temporal feature-flag boundary", () => {
     const manifest = app.synthYaml();
     expect(manifest).toContain("kubernetes.io/metadata.name: temporal");
   });
+
+  test("allows the Buildkite namespace through Flipt ingress", () => {
+    // The maintenance worker (buildkite-maintenance-worker.ts) runs the
+    // shared temporal-worker image but lives in the `buildkite` namespace,
+    // not `temporal` — without its own consumer entry, Flipt's own ingress
+    // NetworkPolicy rejects it and temporal-call-graph-tracing silently
+    // degrades to the default false for that worker.
+    const app = new App({ outdir: ".test-synth-flipt-buildkite-consumer" });
+    createFliptChart(app);
+    const manifest = app.synthYaml();
+    expect(manifest).toContain("kubernetes.io/metadata.name: buildkite");
+  });
 });

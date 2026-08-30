@@ -143,6 +143,7 @@ test("dynamic agent schedules preserve state while moving future runs", () => {
 
   const executionMetadata = buildExecutionStartMetadata({
     bootstrap: TEST_BOOTSTRAP,
+    workflowType: "agentTaskWorkflow",
     taskQueue: TASK_QUEUES.WORKFLOWS,
     trigger: "schedule",
     summary: "Run agentTaskWorkflow",

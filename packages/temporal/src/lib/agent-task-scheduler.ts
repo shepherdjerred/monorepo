@@ -107,6 +107,7 @@ export async function startOrScheduleAgentTask(
     );
     const executionMetadata = buildExecutionStartMetadata({
       bootstrap: bootstrapMetadata,
+      workflowType: "agentTaskWorkflow",
       taskQueue: TASK_QUEUES.WORKFLOWS,
       trigger: "schedule",
       summary: `Run agent task: ${input.title}`,

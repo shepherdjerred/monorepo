@@ -27,6 +27,11 @@ const CONSUMER_NAMESPACES = [
   "temporal",
   // streambot is deployed inside the `media` chart, not its own namespace.
   "media",
+  // The Buildkite maintenance worker runs the shared temporal-worker image
+  // (component: maintenance-worker) but lives in its own `buildkite`
+  // namespace, not `temporal` — it needs its own entry here or its
+  // temporal-call-graph-tracing check silently degrades to the default false.
+  "buildkite",
 ] as const;
 
 export function createFliptChart(app: App) {
