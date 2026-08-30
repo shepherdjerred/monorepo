@@ -1,0 +1,2 @@
+ALTER TABLE "WebhookDelivery"
+ADD COLUMN "truncatedAlerts" INTEGER NOT NULL DEFAULT 0;

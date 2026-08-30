@@ -42,7 +42,6 @@ type ExecutionInfo = {
   status: { name: string };
 };
 
-/** Fake satisfying `WorkflowVisibilityClient`'s structural shape. */
 function fakeClient(
   executions: ExecutionInfo[],
   results: Record<string, () => Promise<unknown>>,
@@ -91,12 +90,6 @@ function rejectWithApplicationFailure(message: string): () => Promise<unknown> {
     );
 }
 
-/**
- * A workflow that failed because a proxied activity threw: the outer cause is
- * an ActivityFailure carrying a generic message, with the real ApplicationFailure
- * nested at `.cause.cause`. Mirrors the shape asserted in
- * workflows/glitter-context-refresh.test.ts.
- */
 function rejectWithActivityWrappedFailure(
   innerType: string,
   innerMessage: string,
@@ -807,15 +800,20 @@ describe("failed execution timeout diagnostics", () => {
 describe("workflow failure watch checkpoints", () => {
   it("resumes after a heartbeat checkpoint without assuming iterator order", async () => {
     const checkpoint: WorkflowFailureWatchCheckpoint = {
-      closeTime: new Date("2026-07-30T17:40:00.000Z"),
-      startTime: new Date("2026-07-30T17:35:00.000Z"),
-      workflowId: "wf-newest",
-      runId: "run-newest",
+      detailedAlertsConsumed: 0,
+      cursor: {
+        closeTime: new Date("2026-07-30T17:40:00.000Z"),
+        startTime: new Date("2026-07-30T17:35:00.000Z"),
+        workflowId: "wf-newest",
+        runId: "run-newest",
+      },
     };
+    const checkpointCursor = checkpoint.cursor;
+    if (checkpointCursor === undefined) throw new Error("expected cursor");
     const executions: ExecutionInfo[] = [
       {
-        workflowId: checkpoint.workflowId,
-        runId: checkpoint.runId,
+        workflowId: checkpointCursor.workflowId,
+        runId: checkpointCursor.runId,
         type: "syncGolinks",
         taskQueue: "default",
         startTime: new Date("2026-07-30T17:35:00.000Z"),
@@ -828,7 +826,7 @@ describe("workflow failure watch checkpoints", () => {
         type: "syncGolinks",
         taskQueue: "default",
         startTime: new Date("2026-07-30T17:20:00.000Z"),
-        closeTime: checkpoint.closeTime,
+        closeTime: checkpointCursor.closeTime,
         status: { name: "FAILED" },
       },
       {
@@ -870,7 +868,12 @@ describe("workflow failure watch checkpoints", () => {
       onCheckpoint: (nextCheckpoint) => checkpoints.push(nextCheckpoint),
     });
 
-    expect(result).toEqual({ scanned: 2, alerted: 2, errored: 0 });
+    expect(result).toEqual({
+      scanned: 2,
+      alerted: 2,
+      errored: 0,
+      overflowed: false,
+    });
     expect(query).toContain('CloseTime > "2026-07-29T17:00:00.000Z"');
     expect(query).not.toContain("StartTime");
     expect(query).not.toContain("RunId");
@@ -879,12 +882,15 @@ describe("workflow failure watch checkpoints", () => {
       ["wf-same-millisecond", "wf-old"],
     );
     expect(checkpoints.at(-1)).toEqual({
-      closeTime: new Date("2026-07-30T17:00:00.000Z"),
-      startTime: new Date("2026-07-30T16:55:00.000Z"),
-      lookbackSince: new Date("2026-07-29T17:00:00.000Z"),
-      workflowId: "wf-old",
-      runId: "run-old",
-      processedExecutionKeys: [workflowExecutionKey("wf-old", "run-old")],
+      detailedAlertsConsumed: 2,
+      cursor: {
+        closeTime: new Date("2026-07-30T17:00:00.000Z"),
+        startTime: new Date("2026-07-30T16:55:00.000Z"),
+        lookbackSince: new Date("2026-07-29T17:00:00.000Z"),
+        workflowId: "wf-old",
+        runId: "run-old",
+        processedExecutionKeys: [workflowExecutionKey("wf-old", "run-old")],
+      },
     });
   });
 
@@ -901,15 +907,18 @@ describe("workflow failure watch checkpoints", () => {
       status: { name: "FAILED" },
     }));
     const checkpoint: WorkflowFailureWatchCheckpoint = {
-      closeTime,
-      startTime,
-      workflowId: "wf-cohort-15",
-      runId: "run-15",
-      processedExecutionKeys: executions
-        .slice(0, 16)
-        .map((execution) =>
-          workflowExecutionKey(execution.workflowId, execution.runId),
-        ),
+      detailedAlertsConsumed: 16,
+      cursor: {
+        closeTime,
+        startTime,
+        workflowId: "wf-cohort-15",
+        runId: "run-15",
+        processedExecutionKeys: executions
+          .slice(0, 16)
+          .map((execution) =>
+            workflowExecutionKey(execution.workflowId, execution.runId),
+          ),
+      },
     };
     const client = fakeClient(
       executions,
@@ -930,7 +939,12 @@ describe("workflow failure watch checkpoints", () => {
       checkpoint,
     });
 
-    expect(result).toEqual({ scanned: 9, alerted: 9, errored: 0 });
+    expect(result).toEqual({
+      scanned: 9,
+      alerted: 9,
+      errored: 0,
+      overflowed: false,
+    });
     expect(calls[0]?.alerts.map((alert) => alert.labels["runId"])).toEqual(
       Array.from(
         { length: 9 },
@@ -979,7 +993,12 @@ describe("pollWorkflowFailuresOnce", () => {
       ttlMs: TTL_MS,
     });
 
-    expect(result).toEqual({ scanned: 2, alerted: 2, errored: 0 });
+    expect(result).toEqual({
+      scanned: 2,
+      alerted: 2,
+      errored: 0,
+      overflowed: false,
+    });
     expect(calls.length).toBe(1);
     expect(calls[0]?.alerts.length).toBe(2);
     const workflowIds = calls[0]?.alerts.map((a) => a.labels["workflowId"]);
@@ -1016,9 +1035,13 @@ describe("pollWorkflowFailuresOnce", () => {
       ttlMs: TTL_MS,
     });
 
-    expect(result).toEqual({ scanned: 1, alerted: 1, errored: 0 });
+    expect(result).toEqual({
+      scanned: 1,
+      alerted: 1,
+      errored: 0,
+      overflowed: false,
+    });
     const alert = calls[0]?.alerts[0];
-    // The inner ApplicationFailure — not the outer "Activity task failed".
     expect(alert?.annotations["summary"]).toContain(
       "BilledGenerationFinalizationError",
     );
@@ -1057,10 +1080,17 @@ describe("pollWorkflowFailuresOnce", () => {
       ttlMs: TTL_MS,
     });
 
-    expect(result).toEqual({ scanned: 0, alerted: 0, errored: 0 });
+    expect(result).toEqual({
+      scanned: 0,
+      alerted: 0,
+      errored: 0,
+      overflowed: false,
+    });
     expect(calls.length).toBe(0);
   });
+});
 
+describe("pollWorkflowFailuresOnce failure handling", () => {
   it("skips a single execution whose detail extraction fails and still posts the rest", async () => {
     const client = fakeClient(
       [
@@ -1094,7 +1124,12 @@ describe("pollWorkflowFailuresOnce", () => {
       ttlMs: TTL_MS,
     });
 
-    expect(result).toEqual({ scanned: 2, alerted: 1, errored: 1 });
+    expect(result).toEqual({
+      scanned: 2,
+      alerted: 1,
+      errored: 1,
+      overflowed: false,
+    });
     expect(calls[0]?.alerts.length).toBe(1);
     expect(calls[0]?.alerts[0]?.labels["workflowId"]).toBe("wf-2");
   });
@@ -1137,8 +1172,143 @@ describe("pollWorkflowFailuresOnce", () => {
       ttlMs: TTL_MS,
     });
 
-    expect(result).toEqual({ scanned: 0, alerted: 0, errored: 0 });
+    expect(result).toEqual({
+      scanned: 0,
+      alerted: 0,
+      errored: 0,
+      overflowed: false,
+    });
     expect(calls.length).toBe(0);
+  });
+});
+
+describe("workflow failure overflow", () => {
+  it("emits 100 details and one aggregate without fetching omitted histories", async () => {
+    const executions = Array.from({ length: 101 }, (_, index) => ({
+      workflowId: `wf-overflow-${index.toString()}`,
+      runId: `run-overflow-${index.toString()}`,
+      type: index % 2 === 0 ? "syncGolinks" : "agentTaskWorkflow",
+      taskQueue: "default",
+      closeTime: new Date(NOW.getTime() - index * 1000),
+      status: { name: "TIMED_OUT" },
+    }));
+    const client = fakeClient(
+      executions,
+      Object.fromEntries(
+        executions.map((execution) => [
+          `${execution.workflowId}/${execution.runId}`,
+          rejectWithApplicationFailure("timed out"),
+        ]),
+      ),
+    );
+    const originalGetHandle = client.workflow.getHandle;
+    let historyFetches = 0;
+    client.workflow.getHandle = (workflowId, runId) => {
+      const handle = originalGetHandle(workflowId, runId);
+      return {
+        result: handle.result,
+        fetchHistory: async () => {
+          historyFetches += 1;
+          return await handle.fetchHistory();
+        },
+      };
+    };
+    const { poster: capturePoster, calls } = capturingPoster();
+    const events: string[] = [];
+    const poster: AlertPoster = async (alerts) => {
+      events.push(
+        alerts[0]?.labels["alertname"] === "TemporalWorkflowFailureOverflow"
+          ? "overflow"
+          : "details",
+      );
+      await capturePoster(alerts);
+    };
+    const checkpoints: WorkflowFailureWatchCheckpoint[] = [];
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+      onCheckpoint: (checkpoint) => {
+        checkpoints.push(checkpoint);
+        events.push("checkpoint");
+      },
+    });
+
+    const posted = calls.flatMap((call) => call.alerts);
+    expect(result).toEqual({
+      scanned: 101,
+      alerted: 100,
+      errored: 0,
+      overflowed: true,
+    });
+    expect(
+      posted.filter(
+        (alert) => alert.labels["alertname"] === "TemporalWorkflowFailed",
+      ),
+    ).toHaveLength(100);
+    const overflow = posted.find(
+      (alert) =>
+        alert.labels["alertname"] === "TemporalWorkflowFailureOverflow",
+    );
+    expect(overflow?.labels).toMatchObject({
+      namespace: "temporal",
+      severity: "critical",
+    });
+    expect(overflow?.annotations["description"]).toContain(
+      "syncGolinks / TIMED_OUT: 1",
+    );
+    expect(historyFetches).toBe(100);
+    expect(events.at(-2)).toBe("overflow");
+    expect(events.at(-1)).toBe("checkpoint");
+    expect(checkpoints.at(-1)?.detailedAlertsConsumed).toBe(100);
+  });
+
+  it("does not reset the detail budget on an activity retry", async () => {
+    const executions = Array.from({ length: 10 }, (_, index) => ({
+      workflowId: `wf-retry-${index.toString()}`,
+      runId: `run-retry-${index.toString()}`,
+      type: "syncGolinks",
+      taskQueue: "default",
+      closeTime: new Date(NOW.getTime() - index * 1000),
+      status: { name: "FAILED" },
+    }));
+    const client = fakeClient(
+      executions,
+      Object.fromEntries(
+        executions.map((execution) => [
+          `${execution.workflowId}/${execution.runId}`,
+          rejectWithApplicationFailure("retry failure"),
+        ]),
+      ),
+    );
+    const { poster, calls } = capturingPoster();
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+      checkpoint: { detailedAlertsConsumed: 96 },
+    });
+
+    const posted = calls.flatMap((call) => call.alerts);
+    expect(result).toEqual({
+      scanned: 10,
+      alerted: 4,
+      errored: 0,
+      overflowed: true,
+    });
+    expect(
+      posted.filter(
+        (alert) => alert.labels["alertname"] === "TemporalWorkflowFailed",
+      ),
+    ).toHaveLength(4);
+    expect(
+      posted.filter(
+        (alert) =>
+          alert.labels["alertname"] === "TemporalWorkflowFailureOverflow",
+      ),
+    ).toHaveLength(1);
   });
 });
 
@@ -1254,9 +1424,14 @@ describe("bounded workflow failure recovery", () => {
       onCheckpoint: (checkpoint) => checkpoints.push(checkpoint),
     });
 
-    expect(result).toEqual({ scanned: 26, alerted: 25, errored: 1 });
+    expect(result).toEqual({
+      scanned: 26,
+      alerted: 25,
+      errored: 1,
+      overflowed: false,
+    });
     expect(calls.map((call) => call.alerts.length)).toEqual([15, 9, 1]);
-    expect(checkpoints).toHaveLength(0);
+    expect(checkpoints.at(-1)).toEqual({ detailedAlertsConsumed: 26 });
   });
 
   it("checkpoints each posted detail chunk before continuing the scan", async () => {
@@ -1289,10 +1464,19 @@ describe("bounded workflow failure recovery", () => {
       onCheckpoint: (checkpoint) => checkpoints.push(checkpoint),
     });
 
-    expect(result).toEqual({ scanned: 25, alerted: 24, errored: 1 });
+    expect(result).toEqual({
+      scanned: 25,
+      alerted: 24,
+      errored: 1,
+      overflowed: false,
+    });
     expect(calls.map((call) => call.alerts.length)).toEqual([16, 8]);
-    expect(checkpoints).toHaveLength(1);
-    expect(checkpoints[0]?.workflowId).toBe("wf-chunk-15");
+    expect(checkpoints).toHaveLength(2);
+    expect(checkpoints[0]?.cursor?.workflowId).toBe("wf-chunk-15");
+    expect(checkpoints[1]).toMatchObject({
+      detailedAlertsConsumed: 25,
+      cursor: { workflowId: "wf-chunk-15" },
+    });
   });
 });
 

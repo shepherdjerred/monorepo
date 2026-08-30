@@ -155,6 +155,7 @@ describe("rendered Alerts receiver", () => {
       .array(
         z.object({
           send_resolved: z.boolean(),
+          max_alerts: z.number().int().positive(),
           url: z.string(),
           http_config: z.object({
             authorization: z.object({
@@ -168,6 +169,7 @@ describe("rendered Alerts receiver", () => {
     expect(configs).toEqual([
       {
         send_resolved: true,
+        max_alerts: 100,
         url: "http://alert-dashboard-alert-dashboard-service.alert-dashboard.svc.cluster.local:7341/internal/v1/alertmanager/events",
         http_config: {
           authorization: {
@@ -307,18 +309,20 @@ describe("Alerts route selection", () => {
     ).toBe("null");
   });
 
-  it("keeps Temporal failures grouped by execution while using Alerts", () => {
+  it("groups Temporal failures through the normal namespace and alertname route", () => {
     const temporalRoute = (route.routes ?? []).find((candidate) =>
       (candidate.matchers ?? []).includes(
         'alertname = "TemporalWorkflowFailed"',
       ),
     );
-    expect(temporalRoute?.receiver).toBe("alerts");
-    expect(temporalRoute?.group_by).toEqual([
-      "alertname",
-      "workflowId",
-      "runId",
-    ]);
+    expect(temporalRoute).toBeUndefined();
+    expect(route.group_by).toEqual(["namespace", "alertname"]);
+    expect(
+      resolveReceiver(route, {
+        alertname: "TemporalWorkflowFailed",
+        severity: "warning",
+      }),
+    ).toBe("alerts");
   });
 
   it("does not notify on removed aggregate timeout alerts", () => {

@@ -67,7 +67,7 @@ export const workflowFailureWatchActivities = {
         lookbackSince,
         (nextCheckpoint) => {
           checkpoint = nextCheckpoint;
-          lookbackSince = nextCheckpoint.lookbackSince ?? lookbackSince;
+          lookbackSince = nextCheckpoint.cursor?.lookbackSince ?? lookbackSince;
           sendHeartbeat();
         },
       );
