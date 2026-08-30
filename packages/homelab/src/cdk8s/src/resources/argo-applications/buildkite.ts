@@ -109,6 +109,26 @@ const BUILDKITE_CREDENTIAL_ITEMS = [
     itemId: "vkzv5jm2euzb7727x6uxdpwu5y",
   },
   {
+    secretName: "openai-tofu-credentials",
+    itemId: "jkqhgshctzikhed3vwgogtkmuy",
+  },
+  {
+    secretName: "anthropic-tofu-credentials",
+    itemId: "a3limlclcej76wmf3kftiqex4u",
+  },
+  {
+    secretName: "discord-tofu-credentials",
+    itemId: "z2tt5eswusadzfsztg4uwr6vay",
+  },
+  {
+    secretName: "openrouter-tofu-credentials",
+    itemId: "msklmk7gk2r3rq4kyeywpuafny",
+  },
+  {
+    secretName: "cloudflare-tokens-tofu-credentials",
+    itemId: "rzxdklctncniksfcywoypt3fs4",
+  },
+  {
     secretName: "discord-birmel-credentials",
     itemId: "w5c27dzybxor3j6dzl7lub2soe",
   },
