@@ -782,11 +782,7 @@
     },
     "packages/homelab/src/cdk8s/src/resources/postgres/bugsink-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/temporal-db.ts": {
       "clones": 1,
-      "tokens": 128
-    },
-    "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/temporal-db.ts": {
-      "clones": 1,
-      "tokens": 107
+      "tokens": 117
     },
     "packages/homelab/src/cdk8s/src/resources/relay/index.ts|packages/homelab/src/cdk8s/src/resources/temporal/ui.ts": {
       "clones": 1,
