@@ -58,6 +58,18 @@ export function isSourceMigrationPaused(current: {
   return current.paused && current.note === SOURCE_MIGRATION_NOTE;
 }
 
+export function isSourceQuiescent(
+  current: { paused: boolean; note?: string },
+  prepared: MigrationState,
+): boolean {
+  return (
+    isSourceMigrationPaused(current) ||
+    (prepared.sourcePaused &&
+      current.paused &&
+      current.note === prepared.sourceNote)
+  );
+}
+
 export function targetPauseAction(
   currentPaused: boolean,
   prepared: MigrationState,

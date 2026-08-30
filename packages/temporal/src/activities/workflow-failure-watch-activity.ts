@@ -91,8 +91,8 @@ export const workflowFailureWatchActivities = {
       parseWorkflowFailureWatchCheckpoints(heartbeatDetails);
     const legacyCheckpoint =
       parseWorkflowFailureWatchCheckpoint(heartbeatDetails);
-    if (legacyCheckpoint !== undefined && checkpoints.prod === undefined) {
-      checkpoints.prod = legacyCheckpoint;
+    if (legacyCheckpoint !== undefined && checkpoints.default === undefined) {
+      checkpoints.default = legacyCheckpoint;
     }
     let lookbackSince =
       parseWorkflowFailureWatchLookbackSince(heartbeatDetails) ??

@@ -8,6 +8,7 @@ import {
   cutoverTimestampForRetry,
   decodeMigrationState,
   encodeMigrationState,
+  isSourceQuiescent,
   migrationAuditQueries,
   sourceStateAllowsCutover,
   targetPauseAction,
@@ -142,6 +143,21 @@ describe("Temporal namespace migration ownership", () => {
       sourceStateAllowsCutover(
         { paused: true, note: "unexpected operator pause" },
         prepared,
+      ),
+    ).toBe(false);
+  });
+
+  test("recognizes a source that was already operator-paused as quiescent", () => {
+    expect(
+      isSourceQuiescent(
+        { paused: true, note: "operator pause" },
+        { sourcePaused: true, sourceNote: "operator pause" },
+      ),
+    ).toBe(true);
+    expect(
+      isSourceQuiescent(
+        { paused: true, note: "different pause" },
+        { sourcePaused: true, sourceNote: "operator pause" },
       ),
     ).toBe(false);
   });
