@@ -75,6 +75,17 @@ describe("createHandler", () => {
     expect(await response.text()).toBe("ok");
   });
 
+  it("serves Prometheus pet metrics without public API authentication", async () => {
+    const handler = createHandler(config, {
+      getPetMetrics: async () => "trmnl_petcare_source_up 1\n",
+    });
+    const response = await handler(new Request("http://localhost/metrics"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/plain");
+    expect(await response.text()).toBe("trmnl_petcare_source_up 1\n");
+  });
+
   it("rejects protected routes without an API key", async () => {
     const handler = createHandler(config, {
       collectHome: async () => homePayload,

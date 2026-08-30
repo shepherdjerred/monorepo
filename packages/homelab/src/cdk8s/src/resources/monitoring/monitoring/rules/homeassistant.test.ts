@@ -31,6 +31,81 @@ async function collectWorkflowEntityIds(): Promise<Set<string>> {
 }
 
 describe("Home Assistant rules", () => {
+  test("uses the requested pet-care threshold boundaries without overlap", () => {
+    const groups = getHomeAssistantRuleGroups();
+    const litterRules = groups.find(
+      (group) => group.name === "homeassistant-litter-robot",
+    )?.rules;
+    const fountainRules = groups.find(
+      (group) => group.name === "homeassistant-petlibro-fountain",
+    )?.rules;
+    if (litterRules === undefined || fountainRules === undefined) {
+      throw new Error("Missing pet-care rule groups");
+    }
+
+    expect(
+      fountainRules.find((rule) => rule.alert === "PetLibroFountainWaterLow")
+        ?.expr.value,
+    ).toContain(" < 60");
+    expect(
+      litterRules.find((rule) => rule.alert === "LitterRobotLitterLow")?.expr
+        .value,
+    ).toBe("trmnl_petcare_litter_percent < 60");
+    expect(
+      litterRules.find((rule) => rule.alert === "LitterRobotWasteHigh")?.expr
+        .value,
+    ).toBe(
+      "trmnl_petcare_litter_waste_percent > 60 and trmnl_petcare_litter_waste_percent <= 80",
+    );
+    expect(
+      litterRules.find((rule) => rule.alert === "LitterRobotWasteCritical")
+        ?.expr.value,
+    ).toBe("trmnl_petcare_litter_waste_percent > 80");
+  });
+
+  test("monitors both PetLibro feeders and all three Roborocks for missing entities", () => {
+    const groups = getHomeAssistantRuleGroups();
+    const feederRules = groups.find(
+      (group) => group.name === "homeassistant-petlibro-feeders",
+    )?.rules;
+    const availabilityRules = groups.find(
+      (group) => group.name === "homeassistant-availability",
+    )?.rules;
+    if (feederRules === undefined || availabilityRules === undefined) {
+      throw new Error("Missing feeder or availability rules");
+    }
+
+    expect(
+      feederRules.some((rule) =>
+        rule.alert?.startsWith("PetLibroFeederLivingRoom"),
+      ),
+    ).toBe(true);
+    expect(
+      feederRules.some((rule) =>
+        rule.alert?.startsWith("PetLibroFeederGuestRoom"),
+      ),
+    ).toBe(true);
+    const petAvailability = availabilityRules.filter(
+      (rule) => rule.alert === "PetCareEntityUnavailable",
+    );
+    for (const floor of ["1st", "2nd", "3rd"]) {
+      expect(
+        petAvailability.some(
+          (rule) => rule.labels?.["entity"] === `vacuum.${floor}_floor`,
+        ),
+      ).toBe(true);
+    }
+  });
+
+  test("uses diagnostics metrics for LR5 and never retains LR4 or PetKit rules", () => {
+    const serialized = JSON.stringify(getHomeAssistantRuleGroups());
+
+    expect(serialized).toContain("trmnl_petcare_litter_hopper_status");
+    expect(serialized).toContain("trmnl_petcare_litter_ha_mismatch");
+    expect(serialized).not.toContain("litter_robot_4");
+    expect(serialized).not.toContain("Eversweet");
+  });
+
   test("alerts when the master bathroom temperature is unavailable or absent", () => {
     const availabilityGroup = getHomeAssistantRuleGroups().find(
       (group) => group.name === "homeassistant-availability",
@@ -145,6 +220,7 @@ describe("Home Assistant rules", () => {
     }
     expect(expression).toContain("delta(");
     expect(expression).not.toContain("increase(");
+    expect(rule.annotations?.["summary"]).toContain("$labels.friendly_name");
   });
 
   test("treats every missing Roborock template dependency as a problem", async () => {
@@ -169,5 +245,8 @@ describe("Home Assistant rules", () => {
         `states('sensor.${floor}_floor_dock_dock_error') != 'ok'`,
       );
     }
+    expect(configuration).toContain(
+      "select.dockstream_2_smart_fountain_water_dispensing_mode') != 'Flowing Water (Constant)'",
+    );
   });
 });

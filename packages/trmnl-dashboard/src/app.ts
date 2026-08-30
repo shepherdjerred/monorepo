@@ -1,18 +1,23 @@
 import type { AppConfig } from "./config.ts";
 import { collectHomePayload } from "./collectors/home.ts";
 import { collectHomelabPayload } from "./collectors/homelab.ts";
+import { PetCareService } from "./pet-care-service.ts";
 import { worstStatus } from "./status.ts";
 import type { HomePayload, HomelabPayload } from "./types.ts";
 
 export type AppDeps = {
   collectHome?: () => Promise<HomePayload>;
   collectHomelab?: () => Promise<HomelabPayload>;
+  getPetMetrics?: () => Promise<string>;
 };
 
 export function createHandler(config: AppConfig, deps: AppDeps = {}) {
   const collectHome = deps.collectHome ?? (() => collectHomePayload(config));
   const collectHomelab =
     deps.collectHomelab ?? (() => collectHomelabPayload(config));
+  const petCareService = new PetCareService(config);
+  const getPetMetrics =
+    deps.getPetMetrics ?? (() => petCareService.getMetrics());
 
   return async function handleRequest(request: Request): Promise<Response> {
     const url = new URL(request.url);
@@ -27,6 +32,12 @@ export function createHandler(config: AppConfig, deps: AppDeps = {}) {
 
     if (url.pathname === "/healthz") {
       return json({ status: "ok" });
+    }
+
+    if (url.pathname === "/metrics") {
+      return new Response(await getPetMetrics(), {
+        headers: { "Content-Type": "text/plain; version=0.0.4; charset=utf-8" },
+      });
     }
 
     if (!isAuthorized(request, config.trmnlApiKey)) {
