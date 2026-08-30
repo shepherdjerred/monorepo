@@ -253,6 +253,9 @@ test("beta release does not manufacture ad-pixel identifiers", async () => {
   ).text();
   expect(source).not.toContain("beta-placeholder-pinterest-tag-id");
   expect(source).not.toContain("beta-placeholder-reddit-pixel-id");
+  expect(source).toContain(
+    'unsetEnv: flavor === "beta" ? [...MARKETING_ENV_NAMES] : [],',
+  );
 });
 
 test("release state output creates its parent directory", async () => {

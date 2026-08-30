@@ -37,6 +37,10 @@ const DIST_DIR = "packages/scout-for-lol/packages/frontend/dist";
 const IMAGE_REPO = "ghcr.io/shepherdjerred/scout-for-lol";
 const PLACEHOLDER_DIGEST =
   "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+const MARKETING_ENV_NAMES = [
+  "PUBLIC_PINTEREST_TAG_ID",
+  "PUBLIC_REDDIT_PIXEL_ID",
+] as const;
 const ANALYTICS_REGISTRY_PATH = "config/analytics-sites.json";
 const RELEASE_INPUT_PATHS = [
   "bun.lock",
@@ -210,6 +214,7 @@ async function buildSite(
   await run(["bun", "--no-install", "run", "scripts/build-bucket.ts"], {
     cwd: `${repoRoot()}/${SITE_PACKAGE_DIR}`,
     env,
+    unsetEnv: flavor === "beta" ? [...MARKETING_ENV_NAMES] : [],
   });
 }
 
