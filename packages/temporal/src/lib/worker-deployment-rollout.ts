@@ -459,7 +459,6 @@ export async function executeWorkerDeploymentRollout(
   }
   const releaseLock = await acquireWorkerDeploymentLock(
     options.catalogPath,
-    options.deploymentName,
     run,
   );
   try {
