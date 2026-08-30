@@ -5,6 +5,7 @@ provider "registry.terraform.io/openrouterteam/openrouter" {
   version     = "0.2.79"
   constraints = "0.2.79"
   hashes = [
+    "h1:LEQG/3Hxvo0M3oaQP3Zyzg6ZPfZ3TobFJXwhqlOTh44=",
     "h1:iIjuk0dN3n2xM/BNMYbZTeUEtc07iavZ01lYECueHkY=",
     "zh:0365961ea0eec0871e00b374279bcb3289cc54fb713d195283bdfe345c8e28ec",
     "zh:38b4ae7c09bfc4cbe53994baaa6c56da00f8f8991b562e5da86bb2f5b9d5d7bf",
