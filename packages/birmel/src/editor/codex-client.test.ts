@@ -58,7 +58,8 @@ describe("Codex editor", () => {
       stdout: "pipe",
       stderr: "pipe",
     });
-    const baseline = (await new Response(process.stdout).text()).trim();
+    const baselineOutput = await new Response(process.stdout).text();
+    const baseline = baselineOutput.trim();
     if ((await process.exited) !== 0) throw new Error("git rev-parse failed");
     await Bun.write(path.join(directory, "allowed.txt"), "committed\n");
     await git(directory, "add", "allowed.txt");

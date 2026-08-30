@@ -57,6 +57,38 @@ export type RunCodexAgentSdkInput = {
   onEvent: (event: { type: string; elapsedMs: number }) => void;
 };
 
+export type CodexAgentSdkEvent = { type: string; elapsedMs: number };
+
+export function createCodexSecretRefreshHandler(
+  refresh: () => Promise<void>,
+): () => Promise<boolean> {
+  return async () => {
+    try {
+      await refresh();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+}
+
+export function createCodexAgentEventHandler(options: {
+  nextEventCount: () => number;
+  heartbeat: (payload: Record<string, unknown>) => void;
+  logEvent?: (event: CodexAgentSdkEvent) => void;
+}): (event: CodexAgentSdkEvent) => void {
+  return (event) => {
+    const eventCount = options.nextEventCount();
+    options.heartbeat({
+      phase: "codex-agent-sdk",
+      elapsedMs: event.elapsedMs,
+      eventCount,
+      eventType: event.type,
+    });
+    options.logEvent?.(event);
+  };
+}
+
 function addUsage(left: Usage | undefined, right: Usage): Usage {
   if (left === undefined) return right;
   return {
