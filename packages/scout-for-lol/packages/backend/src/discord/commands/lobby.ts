@@ -4,8 +4,10 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  RegionSchema,
   TournamentMapTypeSchema,
   TournamentPickTypeSchema,
+  TournamentTeamSizeSchema,
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -14,7 +16,6 @@ import {
   tournamentApiMode,
   tournamentMaxOpenLobbies,
 } from "#src/config/dynamic.ts";
-import { resolveLobbyRosters } from "#src/league/tournament/roster-resolution.ts";
 import {
   countOpenLobbiesForGuild,
   findLobbyByCode,
@@ -48,8 +49,12 @@ async function executeCreate(
   interaction: ChatInputCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
 ): Promise<void> {
-  const blueRaw = z.string().parse(interaction.options.getString("blue", true));
-  const redRaw = z.string().parse(interaction.options.getString("red", true));
+  const teamSize = TournamentTeamSizeSchema.parse(
+    interaction.options.getInteger("size") ?? 5,
+  );
+  const region = RegionSchema.parse(
+    interaction.options.getString("region") ?? "AMERICA_NORTH",
+  );
   const pickType = TournamentPickTypeSchema.parse(
     interaction.options.getString("pick") ?? "TOURNAMENT_DRAFT",
   );
@@ -66,28 +71,18 @@ async function executeCreate(
     return;
   }
 
-  const rosters = await resolveLobbyRosters(prisma, serverId, blueRaw, redRaw);
-  if (!rosters.ok) {
-    await replyPrivate(interaction, rosters.reason);
-    return;
-  }
-
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-  const teamSize = Math.max(
-    rosters.blue.puuids.length,
-    rosters.red.puuids.length,
-  );
 
   const mode = tournamentApiMode();
   const lobby = await provisionTournamentLobby(prisma, {
+    kind: "open",
     requestId: `discord:${interaction.id}`,
     mode,
     serverId,
     channelId: DiscordChannelIdSchema.parse(interaction.channelId),
     creatorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
-    blue: rosters.blue,
-    red: rosters.red,
+    region,
+    teamSize,
     pickType,
     mapType,
     spectatorType: "ALL",
@@ -103,10 +98,10 @@ async function executeCreate(
     interaction,
     [
       `**Tournament code:** \`${code}\``,
-      `${rosters.blue.aliases.join(", ")} vs ${rosters.red.aliases.join(", ")}`,
       `${teamSize.toString()}v${teamSize.toString()} · ${mapType} · ${pickType}`,
       "",
-      "Paste the code into the League client to create the lobby.",
+      "Paste the code into the League client and invite whoever you want.",
+      "Scout will link a report when a player tracked in this server joins.",
       mode === "stub"
         ? "⚠️ Scout is in stub mode, so this code will not create a real lobby."
         : "",

@@ -6,16 +6,18 @@ import {
 } from "#src/testing/test-database.ts";
 import {
   DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  LeaguePuuidSchema,
 } from "@scout-for-lol/data/index.ts";
+import { openLobbySettings } from "#src/league/tournament/open-lobby-fixture.ts";
 
 const { prisma: testPrisma } = createTestDatabase("tournament-poller");
 
 let lobbyEvents: RawLobbyEvent[] | undefined = [];
 let lobbyEventCalls = 0;
 let prematchSends = 0;
-let activeGameUpserts: string[] = [];
+let activeGameUpserts: { matchId: string; trackedPuuids: string[] }[] = [];
+let gamePuuids: ReturnType<typeof LeaguePuuidSchema.parse>[] = [];
 
 vi.doMock("#src/database/index.ts", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -31,7 +33,9 @@ vi.doMock("#src/league/api/tournament/client.ts", () => ({
     Promise.resolve([
       {
         startTime: 1,
-        winningTeam: [],
+        winningTeam: gamePuuids.map((participantPuuid) => ({
+          puuid: participantPuuid,
+        })),
         losingTeam: [],
         shortCode: "TEST-CODE",
         gameId: 5_421_167_767,
@@ -52,8 +56,12 @@ vi.doMock("#src/league/tournament/prematch-delivery.ts", () => ({
 }));
 
 vi.doMock("#src/league/tasks/prematch/active-game-queries.ts", () => ({
-  upsertActiveGame: (matchId: string) => {
-    activeGameUpserts.push(matchId);
+  upsertActiveGame: (
+    matchId: string,
+    _gameId: number,
+    trackedPuuids: string[],
+  ) => {
+    activeGameUpserts.push({ matchId, trackedPuuids });
     return Promise.resolve();
   },
   recordPrematchMessageIds: () => Promise.resolve(),
@@ -69,29 +77,70 @@ const { checkTournamentLobbies } =
 const { createLobby, findLobbyByCode } =
   await import("#src/league/tournament/lobby-store.ts");
 
-function event(eventType: string, puuid = "player-one"): RawLobbyEvent {
-  return { timestamp: "1", eventType, puuid };
+function puuid(seed: string) {
+  return LeaguePuuidSchema.parse(`puuid-${seed}`.padEnd(78, "0"));
+}
+
+function event(
+  eventType: string,
+  playerPuuid = puuid("player-one"),
+): RawLobbyEvent {
+  return { timestamp: "1", eventType, puuid: playerPuuid };
+}
+
+function startedGameEvents(
+  playerPuuid: ReturnType<typeof LeaguePuuidSchema.parse>,
+  playerQuit = false,
+): RawLobbyEvent[] {
+  return [
+    event("PlayerJoinedGameEvent", playerPuuid),
+    ...(playerQuit ? [event("PlayerQuitGameEvent", playerPuuid)] : []),
+    event("PracticeGameCreatedEvent"),
+    event("ChampSelectStartedEvent"),
+    event("GameAllocatedToLsmEvent"),
+  ];
+}
+
+async function expectResolvedGame(trackedPuuids: string[]): Promise<void> {
+  const lobby = await findLobbyByCode(testPrisma, "TEST-CODE");
+  expect(lobby?.state).toBe("resolved");
+  expect(lobby?.matchId).toBe("NA1_5421167767");
+  expect(activeGameUpserts).toEqual([
+    { matchId: "NA1_5421167767", trackedPuuids },
+  ]);
+}
+
+async function trackJoinedPlayer(
+  playerPuuid: ReturnType<typeof LeaguePuuidSchema.parse>,
+): Promise<void> {
+  const now = new Date();
+  const player = await testPrisma.player.create({
+    data: {
+      alias: "Joined player",
+      serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
+      creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+  await testPrisma.account.create({
+    data: {
+      alias: "Joined player",
+      puuid: playerPuuid,
+      region: "AMERICA_NORTH",
+      playerId: player.id,
+      serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
+      creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
 }
 
 async function seedLobby() {
   return createLobby(testPrisma, {
     code: "TEST-CODE",
-    apiMode: "live",
-    providerId: 1,
-    tournamentId: 2,
-    region: "AMERICA_NORTH",
-    platformId: "NA1",
-    serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
-    channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
-    creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
-    bluePuuids: ["blue-one"],
-    redPuuids: ["red-one"],
-    blueAliases: ["Blue One"],
-    redAliases: ["Red One"],
-    teamSize: 1,
-    pickType: "TOURNAMENT_DRAFT",
-    mapType: "SUMMONERS_RIFT",
-    spectatorType: "ALL",
+    ...openLobbySettings,
     lobbyName: "lobby",
     password: "hunter2",
     expiresAt: new Date(Date.now() + 60 * 60 * 1000),
@@ -100,10 +149,13 @@ async function seedLobby() {
 
 beforeEach(async () => {
   await deleteIfExists(() => testPrisma.tournamentLobby.deleteMany());
+  await deleteIfExists(() => testPrisma.account.deleteMany());
+  await deleteIfExists(() => testPrisma.player.deleteMany());
   lobbyEvents = [];
   lobbyEventCalls = 0;
   prematchSends = 0;
   activeGameUpserts = [];
+  gamePuuids = [];
 });
 
 afterAll(async () => {
@@ -140,7 +192,22 @@ describe("checkTournamentLobbies", () => {
 
   test("a started game is linked to its match id", async () => {
     await seedLobby();
+    const joinedPlayer = puuid("joined");
+    await trackJoinedPlayer(joinedPlayer);
+    gamePuuids = [joinedPlayer];
+    lobbyEvents = startedGameEvents(joinedPlayer);
+
+    await checkTournamentLobbies();
+
+    // Linkage only — the poller writes the ActiveGame row so the post-match
+    // report can reply, and never ingests the match itself.
+    await expectResolvedGame([joinedPlayer]);
+  });
+
+  test("does not link an open lobby until a tracked player joins", async () => {
+    await seedLobby();
     lobbyEvents = [
+      event("PlayerJoinedGameEvent", puuid("untracked")),
       event("PracticeGameCreatedEvent"),
       event("ChampSelectStartedEvent"),
       event("GameAllocatedToLsmEvent"),
@@ -149,11 +216,21 @@ describe("checkTournamentLobbies", () => {
     await checkTournamentLobbies();
 
     const lobby = await findLobbyByCode(testPrisma, "TEST-CODE");
-    expect(lobby?.state).toBe("resolved");
-    expect(lobby?.matchId).toBe("NA1_5421167767");
-    // Linkage only — the poller writes the ActiveGame row so the post-match
-    // report can reply, and never ingests the match itself.
-    expect(activeGameUpserts).toEqual(["NA1_5421167767"]);
+    expect(lobby?.state).toBe("in_game");
+    expect(lobby?.matchId).toBeUndefined();
+    expect(activeGameUpserts).toEqual([]);
+  });
+
+  test("links a tracked participant who left the lobby before the game started", async () => {
+    await seedLobby();
+    const trackedPlayer = puuid("left");
+    await trackJoinedPlayer(trackedPlayer);
+    gamePuuids = [trackedPlayer];
+    lobbyEvents = startedGameEvents(trackedPlayer, true);
+
+    await checkTournamentLobbies();
+
+    await expectResolvedGame([trackedPlayer]);
   });
 
   test("a failed poll leaves the lobby untouched", async () => {
@@ -170,15 +247,15 @@ describe("checkTournamentLobbies", () => {
   test("membership is replayed onto the row", async () => {
     await seedLobby();
     lobbyEvents = [
-      event("PlayerJoinedGameEvent", "blue-one"),
-      event("PlayerJoinedGameEvent", "red-one"),
-      event("PlayerQuitGameEvent", "red-one"),
+      event("PlayerJoinedGameEvent", puuid("blue-one")),
+      event("PlayerJoinedGameEvent", puuid("red-one")),
+      event("PlayerQuitGameEvent", puuid("red-one")),
     ];
 
     await checkTournamentLobbies();
 
     const polled = await findLobbyByCode(testPrisma, "TEST-CODE");
-    expect(polled?.joinedPuuids).toEqual(["blue-one"]);
+    expect(polled?.joinedPuuids).toEqual([puuid("blue-one")]);
   });
 
   test("an expired lobby nobody played is abandoned", async () => {

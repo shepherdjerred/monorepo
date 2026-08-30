@@ -159,10 +159,9 @@ export type FlagName =
 export type PolicyFlagName = FlagName;
 
 /**
- * Experiments that may run in beta but are never part of the production
- * product. This policy sits above both the local registry and Flipt so an
- * operator override cannot accidentally expose a forbidden production
- * surface.
+ * Beta-only product surfaces that are permanently excluded from production.
+ * This policy sits above both the local registry and Flipt so an operator
+ * override cannot accidentally expose a forbidden production surface.
  */
 const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
   [
@@ -214,8 +213,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   /**
    * Tournament-code custom lobbies (`/lobby`).
    *
-   * The local override enables the beta test guild. Production's hard-disable
-   * policy wins before this registry or Flipt is evaluated.
+   * The local override enables the beta test guild. This is permanently
+   * beta-only: production's hard-disable policy wins before this registry or
+   * Flipt is evaluated.
    */
   tournament_lobbies_enabled: {
     default: false,

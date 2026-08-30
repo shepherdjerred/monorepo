@@ -1430,8 +1430,8 @@ sees them only unreliably, and Match-V5 does not carry them at all. The one
 sanctioned exception is the **Tournament API** — a game created from a
 _tournament code_ IS recorded in Match-V5 with `info.tournamentCode`
 populated. `/lobby` mints such a code so a custom game gets the whole Scout
-feature set. It is beta-only via `tournament_lobbies_enabled`, with the
-centralized production policy winning before local or Flipt overrides.
+feature set. It is permanently beta-only via `tournament_lobbies_enabled`,
+with the centralized production policy winning before local or Flipt overrides.
 
 Code lives in `backend/src/league/tournament/` and
 `backend/src/league/api/tournament/`.
@@ -1459,14 +1459,18 @@ Code lives in `backend/src/league/tournament/` and
   `processedEventCount` and `lastEventTimestamp` are observability only —
   correctness must never depend on them, because multiple events can share a
   millisecond and `timestamp` arrives as a string.
-- **Teams come from the command, not from Riot.** Lobby events carry a PUUID
-  per join and never a side, and spectator is unreliable for customs, so
-  `/lobby create` takes `blue:` and `red:` lists. That is what makes the
-  prematch card and the Bryan Bucks market possible at all. `teamSize` is
-  derived as `max(blue, red)`; two lists and a size option could disagree.
-- **Every participant must be tracked in the calling guild.** Not gatekeeping:
-  the per-player match-history cursor is the only ingest path, so an untracked
-  lobby would produce a code, a game, and no report.
+- **A code is open by default.** `/lobby create` takes a team size and region,
+  then deliberately omits Tournament API `allowedParticipants`. The person who
+  receives the code chooses who joins in the League client; they do not have
+  to make Scout aliases or preassign teams first.
+- **Joined players are the report anchor.** Lobby events carry a PUUID per join
+  but never a side. The prematch card resolves those PUUIDs to a team-neutral
+  Riot-ID list, or shows the exact joined count when enrichment is unavailable;
+  it never exposes a PUUID or invents Blue and Red teams. Once a player tracked
+  in the calling guild appears in those events, the poller writes the ActiveGame
+  row using that actual participant so the normal match-history cursor can
+  ingest and report the game. A lobby with no tracked participant remains
+  unlinked by design.
 - **The poller links, it never ingests.** It writes the `ActiveGame` row so the
   post-match report replies to the card, through the unchanged
   `getPrematchMessageIdsForMatchIdOrEmpty` path. The match-history cursor still
@@ -1484,10 +1488,11 @@ Code lives in `backend/src/league/tournament/` and
 - **Never fabricate a `RawCurrentGameInfo`** from lobby events. That value is
   the canonical S3 match record the report lake rebuilds from; invented
   champion IDs would permanently corrupt ScoutQL, Explore, and AI review.
-- **Bryan Bucks needs a Scout-minted code, not `queueType === "custom"`.**
-  `"custom"` is deliberately absent from `BUCKS_EARNING_QUEUES`: an arbitrary
-  custom is trivially farmable and `earn_game` moves real balance. 5v5 only —
-  the MVP formula normalizes against a hardcoded five-man baseline.
+- **Open lobbies have no pregame Bryan Bucks market.** The API cannot reveal
+  sides, so a fair Blue/Red market cannot be made from an open code. `"custom"`
+  is deliberately absent from `BUCKS_EARNING_QUEUES`: an arbitrary custom is
+  trivially farmable and `earn_game` moves real balance. A recognised Scout
+  tournament code can still settle eligible 5v5 participation after the match.
 - **The provider callback acknowledges and discards.** tournament-v5 has no
   shared secret, so the URL is the only credential; a mutating handler would be
   an unauthenticated injection path into the S3 match store.

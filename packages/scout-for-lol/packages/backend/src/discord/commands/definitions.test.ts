@@ -9,6 +9,7 @@ import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { isPublicBbSubcommand } from "#src/discord/commands/bb.ts";
 import { bbCommand } from "#src/discord/commands/bb-definition.ts";
+import { lobbyCommand } from "#src/discord/commands/lobby-definition.ts";
 
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
 const originalEnvironment = Bun.env["ENVIRONMENT"];
@@ -168,6 +169,34 @@ describe("registered Discord commands", () => {
       }),
     ]);
     expect(isPublicBbSubcommand("notifications")).toBe(false);
+  });
+
+  test("defines an open /lobby create without a player roster", () => {
+    const create = lobbyCommand
+      .toJSON()
+      .options?.find((option) => option.name === "create");
+    if (create === undefined || !("options" in create)) {
+      throw new Error("/lobby create should be a subcommand");
+    }
+
+    expect(create.options).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "size",
+          required: false,
+          choices: expect.arrayContaining([{ name: "5v5", value: 5 }]),
+        }),
+        expect.objectContaining({
+          name: "region",
+          required: false,
+          choices: expect.arrayContaining([
+            { name: "North America", value: "AMERICA_NORTH" },
+          ]),
+        }),
+      ]),
+    );
+    expect(create.options?.map((option) => option.name)).not.toContain("blue");
+    expect(create.options?.map((option) => option.name)).not.toContain("red");
   });
 
   test("does not register autocomplete options", () => {

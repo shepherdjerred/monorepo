@@ -4,6 +4,7 @@ import type {
   DiscordChannelId,
   DiscordGuildId,
   RawTournamentCodeParameters,
+  Region,
   TournamentMapType,
   TournamentPickType,
   TournamentSpectatorType,
@@ -16,7 +17,6 @@ import {
   toTournamentRegion,
 } from "#src/league/api/tournament/regions.ts";
 import { requireTournamentRegistration } from "#src/league/tournament/registration.ts";
-import type { ResolvedSide } from "#src/league/tournament/roster-resolution.ts";
 import {
   LOBBY_ABANDON_TTL_MS,
   lobbyCreateData,
@@ -34,20 +34,39 @@ const ProvisionStateSchema = z.enum(["PENDING", "AMBIGUOUS", "COMPLETED"]);
  */
 export const PROVISION_PENDING_TTL_MS = 5 * 60 * 1000;
 
-export type ProvisionTournamentLobbyInput = {
+type ResolvedSide = {
+  readonly aliases: string[];
+  readonly puuids: string[];
+  readonly region: Region;
+};
+
+type ProvisionTournamentLobbyBase = {
   readonly requestId: string;
   readonly mode: TournamentApiMode;
   readonly serverId: DiscordGuildId;
   readonly channelId: DiscordChannelId;
   readonly creatorDiscordId: DiscordAccountId;
-  readonly blue: ResolvedSide;
-  readonly red: ResolvedSide;
   readonly pickType: TournamentPickType;
   readonly mapType: TournamentMapType;
   readonly spectatorType: TournamentSpectatorType;
   readonly lobbyName?: string;
   readonly password?: string;
 };
+
+type DeclaredRosterProvision = {
+  readonly kind: "declared";
+  readonly blue: ResolvedSide;
+  readonly red: ResolvedSide;
+};
+
+type OpenProvision = {
+  readonly kind: "open";
+  readonly region: Region;
+  readonly teamSize: number;
+};
+
+export type ProvisionTournamentLobbyInput = ProvisionTournamentLobbyBase &
+  (DeclaredRosterProvision | OpenProvision);
 
 type ProvisionDependencies = {
   readonly createCodes: typeof createTournamentCodes;
@@ -67,8 +86,10 @@ function requestHash(input: ProvisionTournamentLobbyInput): string {
       serverId: input.serverId,
       channelId: input.channelId,
       creatorDiscordId: input.creatorDiscordId,
-      blue: input.blue,
-      red: input.red,
+      region: input.kind === "declared" ? input.blue.region : input.region,
+      teamSize: input.kind === "open" ? input.teamSize : undefined,
+      blue: input.kind === "declared" ? input.blue : undefined,
+      red: input.kind === "declared" ? input.red : undefined,
       pickType: input.pickType,
       mapType: input.mapType,
       spectatorType: input.spectatorType,
@@ -171,11 +192,14 @@ export async function provisionTournamentLobby(
   input: ProvisionTournamentLobbyInput,
   dependencies: ProvisionDependencies = DEFAULT_DEPENDENCIES,
 ): Promise<TournamentLobbyRecord> {
-  if (input.blue.region !== input.red.region) {
+  const declaredRoster = input.kind === "declared";
+  const region = declaredRoster ? input.blue.region : input.region;
+
+  if (input.kind === "declared" && input.blue.region !== input.red.region) {
     throw new Error("Tournament lobby teams must use the same Riot region");
   }
 
-  const tournamentRegion = toTournamentRegion(input.blue.region);
+  const tournamentRegion = toTournamentRegion(region);
   const registration = await requireTournamentRegistration(
     client,
     input.mode,
@@ -190,14 +214,21 @@ export async function provisionTournamentLobby(
   );
   if (existing !== undefined) return existing;
 
-  const teamSize = Math.max(input.blue.puuids.length, input.red.puuids.length);
+  const teamSize =
+    input.kind === "declared"
+      ? Math.max(input.blue.puuids.length, input.red.puuids.length)
+      : input.teamSize;
   const parameters: RawTournamentCodeParameters = {
     teamSize,
     pickType: input.pickType,
     mapType: input.mapType,
     spectatorType: input.spectatorType,
     enoughPlayers: false,
-    allowedParticipants: [...input.blue.puuids, ...input.red.puuids],
+    ...(input.kind === "declared"
+      ? {
+          allowedParticipants: [...input.blue.puuids, ...input.red.puuids],
+        }
+      : {}),
   };
 
   let code: string;
@@ -226,15 +257,15 @@ export async function provisionTournamentLobby(
           apiMode: input.mode,
           providerId: registration.providerId,
           tournamentId: registration.tournamentId,
-          region: input.blue.region,
-          platformId: toPlatformId(input.blue.region),
+          region,
+          platformId: toPlatformId(region),
           serverId: input.serverId,
           channelId: input.channelId,
           creatorDiscordId: input.creatorDiscordId,
-          bluePuuids: [...input.blue.puuids],
-          redPuuids: [...input.red.puuids],
-          blueAliases: [...input.blue.aliases],
-          redAliases: [...input.red.aliases],
+          bluePuuids: input.kind === "declared" ? [...input.blue.puuids] : [],
+          redPuuids: input.kind === "declared" ? [...input.red.puuids] : [],
+          blueAliases: input.kind === "declared" ? [...input.blue.aliases] : [],
+          redAliases: input.kind === "declared" ? [...input.red.aliases] : [],
           teamSize,
           pickType: input.pickType,
           mapType: input.mapType,

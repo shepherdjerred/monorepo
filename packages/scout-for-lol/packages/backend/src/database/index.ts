@@ -90,7 +90,6 @@ export async function getChannelsSubscribedToPlayers(
   logger.info(
     `🔍 Fetching channels subscribed to ${puuids.length.toString()} players`,
   );
-  logger.info(`📋 PUUIDs: ${puuids.join(", ")}`);
 
   try {
     const startTime = Date.now();

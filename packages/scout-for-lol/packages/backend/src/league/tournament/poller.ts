@@ -1,4 +1,8 @@
-import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import {
+  LeaguePuuidSchema,
+  MatchIdSchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
@@ -82,7 +86,10 @@ function shouldSkipCheck(): boolean {
 async function resolveMatchId(
   lobby: TournamentLobbyRecord,
   mode: TournamentApiMode,
-): Promise<{ matchId: string; gameId: number } | undefined> {
+): Promise<
+  | { matchId: string; gameId: number; participantPuuids: LeaguePuuid[] }
+  | undefined
+> {
   if (supportsGamesByCode(mode)) {
     const games = await getGamesByCode({ mode }, lobby.code);
     const game = games?.[0];
@@ -90,6 +97,9 @@ async function resolveMatchId(
       return {
         matchId: `${lobby.platformId}_${game.gameId.toString()}`,
         gameId: game.gameId,
+        participantPuuids: [...game.winningTeam, ...game.losingTeam].map(
+          (participant) => LeaguePuuidSchema.parse(participant.puuid),
+        ),
       };
     }
   }
@@ -109,6 +119,11 @@ async function resolveMatchId(
   return {
     matchId: `${game.platformId}_${game.gameId.toString()}`,
     gameId: game.gameId,
+    participantPuuids: game.participants.flatMap((participant) =>
+      participant.puuid === null
+        ? []
+        : [LeaguePuuidSchema.parse(participant.puuid)],
+    ),
   };
 }
 
@@ -133,8 +148,20 @@ async function linkMatch(
     return undefined;
   }
 
+  const trackedAccounts = await prisma.account.findMany({
+    where: {
+      serverId: lobby.serverId,
+      puuid: { in: resolved.participantPuuids },
+    },
+    select: { puuid: true },
+  });
+  const trackedPuuids = trackedAccounts.map((account) => account.puuid);
+  if (trackedPuuids.length === 0) {
+    tournamentMatchLinkTotal.inc({ status: "no_tracked_player" });
+    return undefined;
+  }
+
   const matchId = MatchIdSchema.parse(resolved.matchId);
-  const trackedPuuids = [...lobby.bluePuuids, ...lobby.redPuuids];
   await upsertActiveGame(matchId, resolved.gameId, trackedPuuids);
 
   await updateLobby(prisma, lobby.id, {
@@ -197,14 +224,15 @@ async function pollLobby(
 
   // Entering champ select is what sends the card, and a state is only ever
   // entered once — that is the whole no-duplicate-notification guarantee.
+  const currentLobby = { ...lobby, joinedPuuids: [...result.joinedPuuids] };
   const messageIds = entersChampSelect(result.transitions)
-    ? await deliverLobbyPrematch(lobby)
+    ? await deliverLobbyPrematch(currentLobby)
     : lobby.prematchMessageIds;
 
   let state = result.state;
   if (state === "in_game" || state === "resolved") {
     const linked = await linkMatch(
-      { ...lobby, prematchMessageIds: messageIds, state },
+      { ...currentLobby, prematchMessageIds: messageIds, state },
       mode,
     );
     if (linked !== undefined) state = linked;

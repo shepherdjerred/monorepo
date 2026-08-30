@@ -59,8 +59,8 @@ export async function getRiotIdByPuuid(
       gameName: account.gameName,
       tagLine: account.tagLine,
     };
-  } catch (error) {
-    logger.warn("Failed to resolve Riot ID by PUUID", { puuid, region, error });
+  } catch {
+    logger.warn("Failed to resolve Riot ID by PUUID", { region });
     return null;
   }
 }
