@@ -74,7 +74,6 @@ export async function assertTemporalCandidatePinsConverged(
 
 export async function assertNoPendingVersionBump(
   executor: CandidateAdmissionExecutor,
-  pinPairs: readonly TemporalWorkflowPinPair[] = TEMPORAL_WORKFLOW_PIN_PAIRS,
 ): Promise<void> {
   const result = await executor([
     "git",
@@ -92,5 +91,4 @@ export async function assertNoPendingVersionBump(
       `${VERSION_BUMP_BRANCH} is still pending; retry after its catalog update merges`,
     );
   }
-  await assertTemporalCandidatePinsConverged(executor, pinPairs);
 }

@@ -133,6 +133,12 @@ test("blocks admission when live main has a divergent Temporal candidate", async
   );
 });
 
+test("allows image admission while a workflow candidate is soaking", async () => {
+  await expect(
+    assertNoPendingVersionBump(async () => commandResult()),
+  ).resolves.toBeUndefined();
+});
+
 test("allows admission when all live Temporal candidates match stable", async () => {
   const catalog = JSON.stringify({
     entries: [

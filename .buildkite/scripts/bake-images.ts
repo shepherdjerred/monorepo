@@ -30,10 +30,7 @@ import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../scripts/lib/transient.ts";
 import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
-import {
-  assertNoPendingVersionBump,
-  TEMPORAL_WORKFLOW_PIN_PAIRS,
-} from "./temporal-candidate-admission.ts";
+import { assertNoPendingVersionBump } from "./temporal-candidate-admission.ts";
 import { TransientError } from "../../scripts/lib/transient-error.ts";
 import {
   writeFallbackReport,
@@ -444,15 +441,7 @@ async function main(): Promise<void> {
     (bakeTargets.includes("temporal-worker") ||
       bakeTargets.includes("scout-for-lol"))
   ) {
-    const pinPairs = [
-      ...(bakeTargets.includes("temporal-worker")
-        ? [TEMPORAL_WORKFLOW_PIN_PAIRS[0]]
-        : []),
-      ...(bakeTargets.includes("scout-for-lol")
-        ? [TEMPORAL_WORKFLOW_PIN_PAIRS[1]]
-        : []),
-    ];
-    await assertNoPendingVersionBump(execute, pinPairs);
+    await assertNoPendingVersionBump(execute);
   }
 
   await ensureBuilder();
