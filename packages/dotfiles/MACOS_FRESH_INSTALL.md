@@ -54,7 +54,12 @@ the static desktop TTF files, not OTF, WOFF2, or variable fonts.
 7. Approve the Fastmail Contacts profile in **System Settings > General >
    Device Management**, then enter a dedicated Fastmail Contacts app password
    when macOS requests it.
-8. Complete the privacy checklist below, then test each affected feature.
+8. Run `sudo touch /private/var/tmp/.metadata_never_index`. Every other
+   Spotlight exclusion is placed automatically on each `chezmoi apply` from
+   `.chezmoidata/spotlight.yaml`, but this one is root-owned, so the apply
+   script skips it rather than blocking on a password prompt and prints a
+   reminder until it exists.
+9. Complete the privacy checklist below, then test each affected feature.
 
 Syncthing and OrbStack are launched automatically and configured to start at
 login. Syncthing still requires explicit authorization from another device and

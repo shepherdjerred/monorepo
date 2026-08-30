@@ -153,6 +153,28 @@ print(doc.export_to_markdown())
   or `cargo install` them — the dump records the duplicate, and the mise shim wins
   PATH, so you get a shadowed second copy that silently drifts.
 
+## Spotlight exclusions — declared in data, placed by a script
+
+- The excluded directories live in `.chezmoidata/spotlight.yaml`; the markers are
+  placed by `run_after_configure-spotlight-exclusions.sh.tmpl`. **Edit the YAML,
+  never the marker files** — add a path relative to `$HOME` and it takes effect
+  on the next `chezmoi apply`.
+- The markers are **not** chezmoi-managed files, deliberately. Tracking
+  `git/.metadata_never_index` as a target would make chezmoi create `~/git`,
+  `~/go`, `~/.gradle` and friends on a fresh machine for toolchains that may
+  never be installed. The script only marks directories that already exist.
+- It is a plain `run_after_` (every apply), not `run_once_`/`run_onchange_`,
+  because package managers delete and recreate their own cache roots and take
+  the marker with them. A state-tracked script would not notice, and the
+  exclusion would silently decay. Expect it to always show as a pending "new
+  file" in `chezmoi diff`, same as `sync-theme.sh`.
+- **Do not exclude anything you want to find in Spotlight or Finder search.**
+  Source trees are safe to exclude here only because code search goes through
+  `rg`/`fd`, which ignore the Spotlight index entirely.
+- Adding a large directory to the list does not shrink an already-built index.
+  After a significant addition, rebuild once with
+  `sudo mdutil -E /System/Volumes/Data`.
+
 ## CLI tool boundaries
 
 ### Linear and PostHog

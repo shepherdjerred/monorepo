@@ -1,7 +1,0 @@
-{{- if eq .chezmoi.os "darwin" -}}
-#!/bin/bash
-set -euo pipefail
-
-# Exclude the shared temp directory from Spotlight indexing
-sudo touch /private/var/tmp/.metadata_never_index
-{{- end -}}

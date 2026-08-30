@@ -1,0 +1,71 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+set -euo pipefail
+
+# Place `.metadata_never_index` markers so Spotlight skips the high-churn,
+# high-count directories listed in .chezmoidata/spotlight.yaml. See that file
+# for why each entry is there.
+#
+# This is a plain `run_after_` — it runs on EVERY apply, not `run_once_` or
+# `run_onchange_`, and that is the whole point. Package managers routinely
+# delete and recreate their own cache roots (`bun pm cache rm`, `cargo` cache
+# clears, `rm -rf ~/.cache`), which takes the marker file with them. A
+# state-tracked script would not notice, and the exclusion would silently decay
+# back to a fully-indexed home directory. Re-touching a few dozen paths is
+# effectively free, so correctness wins over the tracked-state optimization.
+#
+# The tradeoff: `run_after_` scripts are not state-tracked, so this always shows
+# as a pending "new file" in `chezmoi diff`. That matches the existing
+# run_after_sync-theme.sh and run_after_set-default-apps.sh.
+
+marker_dirs=(
+{{- range .spotlight.excludedHomeDirs }}
+    {{ . | quote }}
+{{- end }}
+)
+
+created=0
+for dir in "${marker_dirs[@]}"; do
+    target="$HOME/$dir"
+    marker="$target/.metadata_never_index"
+
+    # Only mark directories that already exist. Creating them here would
+    # scatter empty ~/.gradle, ~/go, ~/.nuget stubs across a fresh machine for
+    # toolchains that may never be installed.
+    if [ ! -d "$target" ]; then
+        continue
+    fi
+
+    if [ -e "$marker" ]; then
+        continue
+    fi
+
+    touch "$marker"
+    created=$((created + 1))
+done
+
+if [ "$created" -gt 0 ]; then
+    echo "spotlight: placed ${created} exclusion marker(s)"
+fi
+
+{{ range .spotlight.excludedSystemDirs -}}
+# Root-owned, so it needs sudo. `-n` goes on the touch itself rather than on a
+# separate probe command: sudoers rules are per-command, so a NOPASSWD entry
+# covering the probe but not `touch` would let the probe pass and then leave the
+# real command prompting for a password in an unattended `chezmoi apply` — the
+# exact hang this is meant to avoid. One non-interactive command, whose own
+# failure is the signal.
+#
+# Its stderr is captured and reported rather than discarded: "no cached
+# credential" is the ordinary case, but a revoked admin account or a broken
+# sudoers file produces a different message, and swallowing it would make the
+# two indistinguishable.
+if [ ! -e {{ . | quote }}/.metadata_never_index ]; then
+    if sudo_error=$(sudo -n touch {{ . | quote }}/.metadata_never_index 2>&1); then
+        echo "spotlight: placed exclusion marker in {{ . }}"
+    else
+        echo "spotlight: skipped {{ . }} (${sudo_error:-sudo unavailable}); run 'sudo touch {{ . }}/.metadata_never_index'" >&2
+    fi
+fi
+{{ end -}}
+{{- end -}}
