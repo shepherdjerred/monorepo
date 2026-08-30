@@ -51,6 +51,13 @@ export function sourceStateAllowsCutover(
   );
 }
 
+export function isSourceMigrationPaused(current: {
+  paused: boolean;
+  note?: string;
+}): boolean {
+  return current.paused && current.note === SOURCE_MIGRATION_NOTE;
+}
+
 export function targetPauseAction(
   currentPaused: boolean,
   prepared: MigrationState,

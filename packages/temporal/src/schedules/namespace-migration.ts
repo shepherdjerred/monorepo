@@ -12,20 +12,18 @@ import {
   cutoverTimestampForRetry,
   decodeMigrationState,
   encodeMigrationState,
+  isSourceMigrationPaused,
   SOURCE_MIGRATION_NOTE,
   sourceStateAllowsCutover,
   targetPauseAction,
   type MigrationState,
 } from "./namespace-migration-state.ts";
 import { auditNamespaceMigration as auditNamespaceMigrationImpl } from "./namespace-migration-audit.ts";
-
 export type MigrationTargetNamespace = Exclude<TemporalNamespace, "dev">;
-
 export type MigrationSchedule = {
   source: ScheduleDescription;
   targetNamespace: MigrationTargetNamespace;
 };
-
 export type NamespaceMigrationAuditInput = {
   sourceClient: Client;
   schedules: readonly MigrationSchedule[];
@@ -239,9 +237,6 @@ async function validatePreparedTargets(input: {
       );
     }
     const migrationState = decodeMigrationState(target.state.note);
-    if (migrationState.cutoverAt === undefined) {
-      assertTargetHasNotFired(target, migration);
-    }
     if (migrationState.cutoverAt === undefined && !target.state.paused) {
       throw new Error(
         `Prepared target ${migration.targetNamespace}/${migration.source.scheduleId} must remain paused until cutover`,
@@ -256,6 +251,12 @@ async function validatePreparedTargets(input: {
       throw new Error(
         `Source default/${migration.source.scheduleId} drifted after inventory`,
       );
+    }
+    if (
+      migrationState.cutoverAt === undefined ||
+      !isSourceMigrationPaused(currentSource.state)
+    ) {
+      assertTargetHasNotFired(target, migration);
     }
     if (!sourceStateAllowsCutover(currentSource.state, migrationState)) {
       throw new Error(
@@ -295,7 +296,11 @@ async function persistMigrationAttempt(
 ): Promise<void> {
   const attemptedAtIso = attemptedAt.toISOString();
   for (const { migration, migrationState } of targets) {
-    if (migrationState.attemptedAt !== undefined) continue;
+    if (
+      migrationState.cutoverAt !== undefined ||
+      migrationState.attemptedAt === attemptedAtIso
+    )
+      continue;
     const handle = targetClient(
       targetClients,
       migration.targetNamespace,
@@ -385,11 +390,12 @@ export async function cutoverNamespaceMigration(input: {
   if (!input.confirm) {
     throw new Error("cutover requires --confirm");
   }
-
   const targets = await validatePreparedTargets(input);
-  const sourcePauseStarted = targets.some(
-    ({ source }) =>
-      source.state.paused && source.state.note === SOURCE_MIGRATION_NOTE,
+  const sourcePauseStarted = targets.some(({ source }) =>
+    isSourceMigrationPaused(source.state),
+  );
+  const allSourcesMigrationPaused = targets.every(({ source }) =>
+    isSourceMigrationPaused(source.state),
   );
   const pauseStartedAt = cutoverTimestampForRetry(
     targets,
@@ -397,7 +403,7 @@ export async function cutoverNamespaceMigration(input: {
     sourcePauseStarted,
   );
   await persistMigrationAttempt(input.targetClients, targets, pauseStartedAt);
-  if (!sourcePauseStarted) {
+  if (!allSourcesMigrationPaused) {
     await assertNoTargetActions(input.targetClients, input.schedules);
   }
   const cutoverAt = await pauseSourceSchedules(

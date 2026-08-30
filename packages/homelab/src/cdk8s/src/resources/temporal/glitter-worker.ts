@@ -41,7 +41,7 @@ function createGlitterWorker(
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     metadata: {
-      annotations: { "argocd.argoproj.io/sync-wave": "2" },
+      annotations: { "argocd.argoproj.io/sync-wave": "3" },
     },
     serviceAccount,
     automountServiceAccountToken: false,
