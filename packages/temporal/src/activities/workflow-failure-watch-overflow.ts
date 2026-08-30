@@ -6,6 +6,7 @@ export const MAX_DETAILED_FAILURE_ALERTS = 100;
 export function buildWorkflowFailureOverflowAlert(
   executions: readonly FailedWorkflowExecution[],
   since: Date,
+  observedAt: Date,
   ttlMs: number,
 ): AlertmanagerAlert {
   const counts = new Map<string, number>();
@@ -38,7 +39,7 @@ export function buildWorkflowFailureOverflowAlert(
       description,
       message: description,
     },
-    startsAt: since.toISOString(),
+    startsAt: observedAt.toISOString(),
     endsAt: new Date(newestOmittedCloseTime.getTime() + ttlMs).toISOString(),
   };
 }

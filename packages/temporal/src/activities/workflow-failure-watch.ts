@@ -413,7 +413,12 @@ export async function pollWorkflowFailuresOnce(
   const overflowed = scan.omitted.length > 0;
   if (overflowed) {
     await poster([
-      buildWorkflowFailureOverflowAlert(scan.omitted, since, options.ttlMs),
+      buildWorkflowFailureOverflowAlert(
+        scan.omitted,
+        since,
+        options.now,
+        options.ttlMs,
+      ),
     ]);
     temporalFailureWatcherAlertsTotal.inc({ workflowType: "overflow" });
     advanceRecoveryCheckpoint({

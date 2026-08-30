@@ -1258,6 +1258,7 @@ describe("workflow failure overflow", () => {
     expect(overflow?.annotations["description"]).toContain(
       "syncGolinks / TIMED_OUT: 1",
     );
+    expect(overflow?.startsAt).toBe(NOW.toISOString());
     expect(overflow?.endsAt).toBe(
       new Date(NOW.getTime() - 100 * 1000 + TTL_MS).toISOString(),
     );
