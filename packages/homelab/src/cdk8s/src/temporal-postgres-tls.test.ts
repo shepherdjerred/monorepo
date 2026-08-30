@@ -53,15 +53,13 @@ describe("Temporal PostgreSQL TLS", () => {
           name: z.literal("temporal-postgresql-self-signed"),
           kind: z.literal("Issuer"),
         }),
-        privateKey: z
-          .object({ rotationPolicy: z.string().optional() })
-          .optional(),
+        // Must be the explicit literal "Never", not merely absent: leaving
+        // rotationPolicy unset defaults to "Always" on cert-manager >=v1.18,
+        // which would silently regenerate this key (and the certificate
+        // every leaf's ca.crt points at) on every renewal.
+        privateKey: z.object({ rotationPolicy: z.literal("Never") }),
       })
       .parse(ca.spec);
-
-    // Never rotate the CA's key: rotationPolicy defaults to Never when
-    // unset, which is what keeps this certificate a stable trust anchor.
-    expect(caSpec.privateKey?.rotationPolicy).not.toBe("Always");
 
     const caIssuer = findTemporalResource(
       synthesized,

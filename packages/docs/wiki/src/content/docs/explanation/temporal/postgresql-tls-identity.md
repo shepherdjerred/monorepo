@@ -47,9 +47,12 @@ flowchart LR
 ```
 
 - **`temporal-postgresql-ca`** — a `Certificate` with `isCA: true`, issued by
-  the bootstrap self-signed `Issuer`. Its private key does not rotate
-  (`rotationPolicy` is left at cert-manager's default, `Never`), and its
-  duration is ten years. This is the actual trust anchor.
+  the bootstrap self-signed `Issuer`. Its private key is pinned to
+  `rotationPolicy: Never` and its duration is ten years. This is the actual
+  trust anchor. The policy must be explicit: cert-manager's default flipped
+  from `Never` to `Always` in v1.18, so an unset `rotationPolicy` here would
+  silently regenerate this key — and therefore the certificate every leaf's
+  `ca.crt` points at — on every renewal.
 - **`temporal-postgresql-ca-issuer`** — an `Issuer` of kind `ca`, pointed at
   the CA certificate's secret. cert-manager signs every certificate it issues
   with that CA's key.

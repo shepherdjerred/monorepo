@@ -46,9 +46,11 @@ export function createTemporalPostgreSQLCertificate(chart: Chart) {
     spec: { selfSigned: {} },
   });
 
-  // A stable, long-lived root CA: its private key never rotates
-  // (rotationPolicy defaults to Never), so it stays the same trust anchor
-  // across every leaf renewal below. This is the only certificate the
+  // A stable, long-lived root CA: rotationPolicy is pinned to Never so its
+  // private key is only (re)generated if the secret doesn't already hold one
+  // — the default flipped to Always in cert-manager >=v1.18, which would
+  // silently regenerate this key (and therefore the certificate clients
+  // trust) on every renewal if left unset. This is the only certificate the
   // self-signed Issuer directly issues.
   new Certificate(chart, "temporal-postgresql-ca-certificate", {
     metadata: {
@@ -65,6 +67,7 @@ export function createTemporalPostgreSQLCertificate(chart: Chart) {
       privateKey: {
         algorithm: CertificateSpecPrivateKeyAlgorithm.ECDSA,
         size: 256,
+        rotationPolicy: CertificateSpecPrivateKeyRotationPolicy.NEVER,
       },
       usages: [CertificateSpecUsages.CERT_SIGN, CertificateSpecUsages.CRL_SIGN],
     },
