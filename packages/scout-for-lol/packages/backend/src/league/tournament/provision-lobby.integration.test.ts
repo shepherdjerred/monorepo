@@ -43,6 +43,7 @@ const createSecondCode: typeof createTournamentCodes = () => {
 };
 
 const BASE_INPUT: ProvisionTournamentLobbyInput = {
+  kind: "declared",
   requestId: "discord:interaction-1",
   mode: "live",
   serverId: DiscordGuildIdSchema.parse("1337623164146155593"),

@@ -54,27 +54,19 @@ type ProvisionTournamentLobbyBase = {
 };
 
 type DeclaredRosterProvision = {
+  readonly kind: "declared";
   readonly blue: ResolvedSide;
   readonly red: ResolvedSide;
-  readonly teamSize?: never;
-  readonly region?: never;
 };
 
 type OpenProvision = {
+  readonly kind: "open";
   readonly region: Region;
   readonly teamSize: number;
-  readonly blue?: never;
-  readonly red?: never;
 };
 
 export type ProvisionTournamentLobbyInput = ProvisionTournamentLobbyBase &
   (DeclaredRosterProvision | OpenProvision);
-
-function hasDeclaredRoster(
-  input: ProvisionTournamentLobbyInput,
-): input is ProvisionTournamentLobbyBase & DeclaredRosterProvision {
-  return input.blue !== undefined && input.red !== undefined;
-}
 
 type ProvisionDependencies = {
   readonly createCodes: typeof createTournamentCodes;
@@ -94,10 +86,10 @@ function requestHash(input: ProvisionTournamentLobbyInput): string {
       serverId: input.serverId,
       channelId: input.channelId,
       creatorDiscordId: input.creatorDiscordId,
-      region: hasDeclaredRoster(input) ? input.blue.region : input.region,
-      teamSize: hasDeclaredRoster(input) ? undefined : input.teamSize,
-      blue: hasDeclaredRoster(input) ? input.blue : undefined,
-      red: hasDeclaredRoster(input) ? input.red : undefined,
+      region: input.kind === "declared" ? input.blue.region : input.region,
+      teamSize: input.kind === "open" ? input.teamSize : undefined,
+      blue: input.kind === "declared" ? input.blue : undefined,
+      red: input.kind === "declared" ? input.red : undefined,
       pickType: input.pickType,
       mapType: input.mapType,
       spectatorType: input.spectatorType,
@@ -200,10 +192,10 @@ export async function provisionTournamentLobby(
   input: ProvisionTournamentLobbyInput,
   dependencies: ProvisionDependencies = DEFAULT_DEPENDENCIES,
 ): Promise<TournamentLobbyRecord> {
-  const declaredRoster = hasDeclaredRoster(input);
+  const declaredRoster = input.kind === "declared";
   const region = declaredRoster ? input.blue.region : input.region;
 
-  if (declaredRoster && input.blue.region !== input.red.region) {
+  if (input.kind === "declared" && input.blue.region !== input.red.region) {
     throw new Error("Tournament lobby teams must use the same Riot region");
   }
 
@@ -222,16 +214,17 @@ export async function provisionTournamentLobby(
   );
   if (existing !== undefined) return existing;
 
-  const teamSize = declaredRoster
-    ? Math.max(input.blue.puuids.length, input.red.puuids.length)
-    : input.teamSize;
+  const teamSize =
+    input.kind === "declared"
+      ? Math.max(input.blue.puuids.length, input.red.puuids.length)
+      : input.teamSize;
   const parameters: RawTournamentCodeParameters = {
     teamSize,
     pickType: input.pickType,
     mapType: input.mapType,
     spectatorType: input.spectatorType,
     enoughPlayers: false,
-    ...(declaredRoster
+    ...(input.kind === "declared"
       ? {
           allowedParticipants: [...input.blue.puuids, ...input.red.puuids],
         }
@@ -269,10 +262,10 @@ export async function provisionTournamentLobby(
           serverId: input.serverId,
           channelId: input.channelId,
           creatorDiscordId: input.creatorDiscordId,
-          bluePuuids: declaredRoster ? [...input.blue.puuids] : [],
-          redPuuids: declaredRoster ? [...input.red.puuids] : [],
-          blueAliases: declaredRoster ? [...input.blue.aliases] : [],
-          redAliases: declaredRoster ? [...input.red.aliases] : [],
+          bluePuuids: input.kind === "declared" ? [...input.blue.puuids] : [],
+          redPuuids: input.kind === "declared" ? [...input.red.puuids] : [],
+          blueAliases: input.kind === "declared" ? [...input.blue.aliases] : [],
+          redAliases: input.kind === "declared" ? [...input.red.aliases] : [],
           teamSize,
           pickType: input.pickType,
           mapType: input.mapType,

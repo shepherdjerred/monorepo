@@ -75,6 +75,7 @@ async function executeCreate(
 
   const mode = tournamentApiMode();
   const lobby = await provisionTournamentLobby(prisma, {
+    kind: "open",
     requestId: `discord:${interaction.id}`,
     mode,
     serverId,
