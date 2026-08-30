@@ -355,6 +355,7 @@ async function classifyPackageReleaseFromTag(
     [
       "git",
       "diff",
+      "--no-renames",
       "--name-only",
       "--diff-filter=ACDMRTUXB",
       tag,
