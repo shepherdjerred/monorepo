@@ -20,6 +20,7 @@ import {
   requireHealthyWorkflowPoller,
   requireCleanCandidate,
   requireAcceptancePrerequisite,
+  requireCleanCandidate,
   requireCleanAlertWindow,
   rolloutPoller,
   rolloutAdvanceTransition,

@@ -134,20 +134,6 @@ function prerequisiteDeploymentDescription(fixture: Fixture): unknown {
   };
 }
 
-function gitFixtureResult(fixture: Fixture, args: readonly string[]) {
-  if (args.includes("status")) {
-    return {
-      stdout:
-        fixture.dirtyCheckout === true ? " M src/workflows/test.ts\n" : "",
-      stderr: "",
-    };
-  }
-  return {
-    stdout: `${fixture.checkoutBuildId ?? CANDIDATE}\n`,
-    stderr: "",
-  };
-}
-
 function metricValue(expression: string, fixture: Fixture): number {
   if (
     expression.includes("increase(prometheus_rule_evaluation_failures_total")
