@@ -319,7 +319,7 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
   toolkit temporal --namespace beta workflow start \
     --workflow-id scout-weekly-parlay-catchup-2026-08-24-0 \
     --type runScoutWeeklyParlayCatchupWorkflow \
-    --task-queue default \
+    --task-queue monorepo-workflows \
     --input '{"periodKey":"2026-08-24","slot":0}' \
     --id-conflict-policy Fail \
     --id-reuse-policy RejectDuplicate

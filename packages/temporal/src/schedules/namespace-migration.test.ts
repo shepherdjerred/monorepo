@@ -100,6 +100,32 @@ describe("Temporal namespace migration ownership", () => {
     ).toEqual(attemptedAt);
   });
 
+  test("prefers a persisted cutover over stale attempt metadata", () => {
+    const cutoverAt = new Date("2026-08-30T03:05:00.000Z");
+    expect(
+      cutoverTimestampForRetry(
+        [
+          {
+            migrationState: {
+              sourcePaused: false,
+              sourceNote: undefined,
+              cutoverAt: cutoverAt.toISOString(),
+            },
+          },
+          {
+            migrationState: {
+              sourcePaused: false,
+              sourceNote: undefined,
+              attemptedAt: "2026-08-30T03:00:00.000Z",
+            },
+          },
+        ],
+        new Date("2026-08-30T03:10:00.000Z"),
+        true,
+      ),
+    ).toEqual(cutoverAt);
+  });
+
   test("ignores an attempt boundary when no source was paused", () => {
     const retryAt = new Date("2026-08-30T03:05:00.000Z");
     expect(

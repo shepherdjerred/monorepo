@@ -12,6 +12,7 @@ import {
   cutoverTimestampForRetry,
   decodeMigrationState,
   encodeMigrationState,
+  isSourceMigrationPaused,
   isSourceQuiescent,
   SOURCE_MIGRATION_NOTE,
   sourceStateAllowsCutover,
@@ -391,8 +392,8 @@ export async function cutoverNamespaceMigration(input: {
     throw new Error("cutover requires --confirm");
   }
   const targets = await validatePreparedTargets(input);
-  const sourcePauseStarted = targets.some(({ source, migrationState }) =>
-    isSourceQuiescent(source.state, migrationState),
+  const sourcePauseStarted = targets.some(({ source }) =>
+    isSourceMigrationPaused(source.state),
   );
   const allSourcesQuiescent = targets.every(({ source, migrationState }) =>
     isSourceQuiescent(source.state, migrationState),
@@ -464,7 +465,10 @@ export async function rollbackNamespaceMigration(input: {
         pausedTargets.push(preparedTarget);
       }
     }
-    await assertNoTargetActions(input.targetClients, input.schedules);
+    await assertNoTargetActions(
+      input.targetClients,
+      prepared.map(({ migration }) => migration),
+    );
   } catch (error: unknown) {
     for (const { migration, target } of pausedTargets) {
       await targetClient(input.targetClients, migration.targetNamespace)

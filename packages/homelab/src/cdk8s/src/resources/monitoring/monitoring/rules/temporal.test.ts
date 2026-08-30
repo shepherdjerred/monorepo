@@ -156,7 +156,7 @@ describe("Temporal workflow outcome rules", () => {
       )
       .map((rule) => rule.expr.value);
     expect(workflowPollerExpressions).toContain(
-      'absent(temporal_worker_num_pollers{namespace="buildkite",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) or max(temporal_worker_num_pollers{namespace="buildkite",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) < 1',
+      'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="buildkite",exported_namespace=~"prod|default",task_queue="maintenance",poller_type="workflow_task"})) < 2',
     );
     const scoutBetaExpression = workflowPollerExpressions.find(
       (expression) =>
@@ -165,7 +165,7 @@ describe("Temporal workflow outcome rules", () => {
     );
     if (scoutBetaExpression !== undefined) {
       expect(scoutBetaExpression).toBe(
-        'absent(temporal_worker_num_pollers{namespace="scout-beta",exported_namespace="default",task_queue="scout-beta",poller_type="workflow_task"}) or max(temporal_worker_num_pollers{namespace="scout-beta",exported_namespace="default",task_queue="scout-beta",poller_type="workflow_task"}) < 1',
+        'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="temporal",exported_namespace=~"beta",task_queue="scout-beta",poller_type="workflow_task"})) < 1',
       );
     }
 

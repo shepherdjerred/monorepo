@@ -84,18 +84,30 @@ export function cutoverTimestampForRetry(
   now: Date,
   sourcePauseStarted: boolean,
 ): Date {
-  let persisted: string | undefined;
-  for (const { migrationState } of targets) {
-    const boundary = sourcePauseStarted
-      ? (migrationState.cutoverAt ?? migrationState.attemptedAt)
-      : undefined;
-    if (boundary === undefined) continue;
-    if (persisted !== undefined && persisted !== boundary) {
+  if (!sourcePauseStarted) return now;
+
+  const cutoverBoundaries = targets
+    .map(({ migrationState }) => migrationState.cutoverAt)
+    .filter((boundary): boundary is string => boundary !== undefined);
+  const persistedCutover = cutoverBoundaries[0];
+  if (persistedCutover !== undefined) {
+    if (cutoverBoundaries.some((boundary) => boundary !== persistedCutover)) {
       throw new Error("Prepared targets disagree about the cutover boundary");
     }
-    persisted = boundary;
+    return new Date(persistedCutover);
   }
-  return persisted === undefined ? now : new Date(persisted);
+
+  const attemptedBoundaries = targets
+    .map(({ migrationState }) => migrationState.attemptedAt)
+    .filter((boundary): boundary is string => boundary !== undefined);
+  const persistedAttempt = attemptedBoundaries[0];
+  if (
+    persistedAttempt !== undefined &&
+    attemptedBoundaries.some((boundary) => boundary !== persistedAttempt)
+  ) {
+    throw new Error("Prepared targets disagree about the cutover boundary");
+  }
+  return persistedAttempt === undefined ? now : new Date(persistedAttempt);
 }
 
 export function migrationAuditQueries(cutoverAt: Date): {
