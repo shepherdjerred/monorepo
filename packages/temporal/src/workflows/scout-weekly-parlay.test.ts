@@ -2,7 +2,10 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker, type WorkerOptions } from "@temporalio/worker";
 import type { WeeklyParlayControlAction as ScoutWeeklyParlayAction } from "@scout-for-lol/data/model/weekly-parlay.ts";
-import type { ScoutWeeklyParlayTimeline } from "#activities/scout-weekly-parlay.ts";
+import {
+  buildScoutWeeklyParlayCatchupTimeline,
+  type ScoutWeeklyParlayTimeline,
+} from "#activities/scout-weekly-parlay.ts";
 import {
   runScoutWeeklyParlayCatchupWorkflow,
   runScoutWeeklyParlayWorkflow,
@@ -139,17 +142,47 @@ describe("runScoutWeeklyParlayWorkflow", () => {
   test("runs a frozen catch-up timeline and rejects a duplicate workflow ID", async () => {
     const actions: ScoutWeeklyParlayAction[] = [];
     let timelineAnchor: string | undefined;
-    const catchupFinalizesAt = new Date(Date.now() + 60_000).toISOString();
-    const catchupTimeline: ScoutWeeklyParlayTimeline = {
-      periodKey: "2026-08-24",
-      openAt: "2026-08-29T23:00:00.000Z",
-      startsAt: "2026-08-30T07:00:00.000Z",
-      updatesAt: [],
-      finalizesAt: catchupFinalizesAt,
-    };
+    let catchupTimeline: ScoutWeeklyParlayTimeline | undefined;
+
+    // Advance the time-skipping environment's SIMULATED clock to a fixed
+    // instant deep in the future before starting the workflow, rather than
+    // hardcoding absolute timestamps or deriving them from real wall-clock
+    // Date.now(). Two independent fixes for the same underlying bug landed
+    // here previously and both had gaps this closes:
+    //  - A hardcoded literal finalizesAt broke permanently once real time
+    //    crossed it: reconcileStartUntilFinalization only reconciles the
+    //    "start" action while `Date.now() < finalizesAt`.
+    //  - Deriving openAt/startsAt/finalizesAt from Date.now() fixed that,
+    //    but produced a periodKey/window that could never occur in
+    //    production: buildScoutWeeklyParlayCatchupTimeline requires
+    //    periodKey to be a Monday and finalizesAt to be that period's
+    //    standard Sunday finalization (packages/temporal/AGENTS.md).
+    // testEnvironment.sleep() advances the simulated clock only — it
+    // resolves immediately regardless of how far ahead the target is — so
+    // anchoring to a fixed future instant costs nothing and never drifts
+    // back into the past.
+    const periodKey = "2027-03-08"; // a Monday; matches TIMELINE above
+    // Late enough in the period that no progress updates remain — validated
+    // against buildScoutWeeklyParlayCatchupTimeline directly (see this
+    // commit's PR description) rather than guessed.
+    const workflowStartAt = new Date("2027-03-13T02:00:00.000Z");
+    const currentTimeMs = await testEnvironment.currentTimeMs();
+    const sleepMs = workflowStartAt.getTime() - currentTimeMs;
+    if (sleepMs > 0) {
+      await testEnvironment.sleep(sleepMs);
+    }
+
     const workers = await weeklyParlayWorkers({
-      resolveScoutWeeklyParlayCatchupTimeline: (workflowStartAt: string) => {
-        timelineAnchor = workflowStartAt;
+      resolveScoutWeeklyParlayCatchupTimeline: (workflowStartAtArg: string) => {
+        timelineAnchor = workflowStartAtArg;
+        // Use the real production builder (the actual
+        // resolveScoutWeeklyParlayCatchupTimeline activity is a thin
+        // wrapper around it) so this fixture can never drift from the
+        // Monday/Sunday contract it must satisfy in production.
+        catchupTimeline = buildScoutWeeklyParlayCatchupTimeline(
+          workflowStartAtArg,
+          periodKey,
+        );
         return catchupTimeline;
       },
       invokeScoutWeeklyParlayAction: (action: ScoutWeeklyParlayAction) => {
@@ -158,11 +191,11 @@ describe("runScoutWeeklyParlayWorkflow", () => {
       },
     });
 
-    const catchupWorkflowId = "scout-weekly-parlay-catchup-2026-08-24-3";
+    const catchupWorkflowId = `scout-weekly-parlay-catchup-${periodKey}-3`;
     const catchupHandle = await testEnvironment.client.workflow.start(
       runScoutWeeklyParlayCatchupWorkflow,
       {
-        args: [{ periodKey: catchupTimeline.periodKey, slot: 3 }],
+        args: [{ periodKey, slot: 3 }],
         taskQueue: TASK_QUEUE,
         workflowId: catchupWorkflowId,
       },
@@ -171,7 +204,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
       testEnvironment.client.workflow.start(
         runScoutWeeklyParlayCatchupWorkflow,
         {
-          args: [{ periodKey: catchupTimeline.periodKey, slot: 3 }],
+          args: [{ periodKey, slot: 3 }],
           taskQueue: TASK_QUEUE,
           workflowId: catchupWorkflowId,
         },
@@ -179,23 +212,37 @@ describe("runScoutWeeklyParlayWorkflow", () => {
     ).rejects.toThrow();
     await runWithWeeklyParlayWorkers(workers, catchupHandle.result());
 
+    if (catchupTimeline === undefined) {
+      throw new Error("Catch-up timeline was never resolved");
+    }
+    const resolvedTimeline = catchupTimeline;
+
     const description = await catchupHandle.describe();
     expect(timelineAnchor).toBe(description.startTime.toISOString());
     expect(actions).toEqual([
       {
-        periodKey: catchupTimeline.periodKey,
+        periodKey,
         slot: 3,
         action: "open",
         window: {
           kind: "catch_up",
-          openAt: catchupTimeline.openAt,
-          bettingClosesAt: catchupTimeline.startsAt,
-          scoringStartsAt: catchupTimeline.startsAt,
-          scoringEndsAt: catchupTimeline.finalizesAt,
+          openAt: resolvedTimeline.openAt,
+          bettingClosesAt: resolvedTimeline.startsAt,
+          scoringStartsAt: resolvedTimeline.startsAt,
+          scoringEndsAt: resolvedTimeline.finalizesAt,
         },
       },
-      { periodKey: catchupTimeline.periodKey, slot: 3, action: "start" },
-      { periodKey: catchupTimeline.periodKey, slot: 3, action: "finalize" },
+      ...(resolvedTimeline.reminderAt === undefined
+        ? []
+        : [{ periodKey, slot: 3, action: "reminder" as const }]),
+      { periodKey, slot: 3, action: "start" },
+      ...resolvedTimeline.updatesAt.map((_, updateIndex) => ({
+        periodKey,
+        slot: 3,
+        action: "progress" as const,
+        updateIndex,
+      })),
+      { periodKey, slot: 3, action: "finalize" },
     ]);
   }, 30_000);
 
