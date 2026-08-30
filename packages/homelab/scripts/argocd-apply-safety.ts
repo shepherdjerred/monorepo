@@ -325,6 +325,111 @@ function collectProbeHandlers(
   }
 }
 
+/**
+ * Internal images are tagged `2.0.0-<buildNumber>` by the release, so their
+ * build numbers are directly comparable. Third-party images use their upstream
+ * versioning and are deliberately not matched here.
+ */
+const RELEASE_IMAGE_PATTERN =
+  /^(?<repository>.+):2\.0\.0-(?<build>\d+)(?:@sha256:[a-f\d]{64})?$/;
+
+type ReleaseImage = { repository: string; build: number };
+
+function parseReleaseImage(value: unknown): ReleaseImage | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const match = RELEASE_IMAGE_PATTERN.exec(value);
+  const repository = match?.groups?.["repository"];
+  const build = match?.groups?.["build"];
+  if (repository === undefined || build === undefined) {
+    return null;
+  }
+  return { repository, build: Number.parseInt(build, 10) };
+}
+
+/**
+ * Walks every `image` field, keyed by the same name-stable path the probe walk
+ * uses, so a container is compared against itself on both sides.
+ */
+function collectReleaseImages(
+  value: unknown,
+  path: string,
+  output: Map<string, ReleaseImage>,
+): void {
+  if (Array.isArray(value)) {
+    const segments = arrayEntrySegments(value);
+    for (const [index, entry] of value.entries()) {
+      collectReleaseImages(
+        entry,
+        `${path}/${segments[index] ?? index.toString()}`,
+        output,
+      );
+    }
+    return;
+  }
+  const parsed = JsonObjectSchema.safeParse(value);
+  if (!parsed.success) {
+    return;
+  }
+  for (const [key, entry] of Object.entries(parsed.data)) {
+    const entryPath = `${path}/${key}`;
+    if (key === "image") {
+      const image = parseReleaseImage(entry);
+      if (image !== null) {
+        output.set(entryPath, image);
+      }
+    }
+    collectReleaseImages(entry, entryPath, output);
+  }
+}
+
+/**
+ * Refuses a sync that would move an internal image *backwards*.
+ *
+ * The release renders internal image pins from the version catalog and then
+ * overlays the digests this build actually pushed
+ * (applyCurrentBuildImageOverrides). When a build pushes nothing — a re-run of
+ * an already-published commit makes `ci-changed.ts images` skip the step, which
+ * sets the handoff to `{}` — the overlay is empty and the chart falls back to
+ * the catalog alone. The catalog only advances when the `version commit-back`
+ * bump PR merges, so a bump PR left unmerged silently rolls production back to
+ * whatever it last recorded. On 2026-08-30 that reverted all 13 temporal
+ * workers roughly 300 builds, and one crash-looped because the chart set a
+ * worker role its resurrected image predated.
+ *
+ * A rollback is legitimate sometimes, but it must be deliberate. Every path
+ * that produces one accidentally routes through here, so this is the one place
+ * that can catch the whole class rather than the single cause above.
+ */
+function imageDowngradeFindings(
+  live: Record<string, unknown>,
+  target: Record<string, unknown>,
+  resourceIdentity: string,
+): readonly string[] {
+  const liveImages = new Map<string, ReleaseImage>();
+  const targetImages = new Map<string, ReleaseImage>();
+  collectReleaseImages(live, "", liveImages);
+  collectReleaseImages(target, "", targetImages);
+  const findings: string[] = [];
+  for (const [path, liveImage] of liveImages) {
+    const targetImage = targetImages.get(path);
+    if (targetImage === undefined) {
+      continue;
+    }
+    if (targetImage.repository !== liveImage.repository) {
+      continue;
+    }
+    if (targetImage.build >= liveImage.build) {
+      continue;
+    }
+    findings.push(
+      `${resourceIdentity} downgrades ${path} from 2.0.0-${liveImage.build.toString()} to 2.0.0-${targetImage.build.toString()}; the version catalog is behind the running release`,
+    );
+  }
+  return findings;
+}
+
 function identity(resource: ManagedResource): string {
   return `${resource.group ?? ""}/${resource.kind} ${resource.namespace ?? "_cluster"}/${resource.name}`;
 }
@@ -464,6 +569,7 @@ export function analyzeApplySafety(
         ...embeddedListFindings(live, target, list, identity(resource)),
       );
     }
+    findings.push(...imageDowngradeFindings(live, target, identity(resource)));
     const liveProbes = new Map<string, string>();
     const targetProbes = new Map<string, string>();
     collectProbeHandlers(live, "", liveProbes);

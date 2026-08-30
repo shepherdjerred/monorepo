@@ -577,3 +577,185 @@ describe("ArgoCD probe handler safety", () => {
     ]);
   });
 });
+
+// An internal image pin moving backwards is how an unmerged `version
+// commit-back` bump PR silently rolls production back: the release renders from
+// the version catalog whenever a build pushes no digests of its own.
+function workload(image: string): string {
+  return state({
+    spec: {
+      template: {
+        spec: { containers: [{ name: "worker", image }] },
+      },
+    },
+  });
+}
+
+function deployment(liveImage: string, targetImage: string) {
+  return {
+    group: "apps",
+    kind: "Deployment",
+    namespace: "temporal",
+    name: "worker",
+    liveState: workload(liveImage),
+    targetState: workload(targetImage),
+  };
+}
+
+describe("ArgoCD internal image downgrades", () => {
+  const repo = "ghcr.io/shepherdjerred/temporal-worker";
+  const digestA = `@sha256:${"a".repeat(64)}`;
+  const digestB = `@sha256:${"b".repeat(64)}`;
+
+  test("refuses a build-number rollback", () => {
+    expect(
+      analyzeApplySafety([
+        deployment(
+          `${repo}:2.0.0-12684${digestA}`,
+          `${repo}:2.0.0-12368${digestB}`,
+        ),
+      ]),
+    ).toEqual([
+      "apps/Deployment temporal/worker downgrades /spec/template/spec/containers/[name=worker]/image from 2.0.0-12684 to 2.0.0-12368; the version catalog is behind the running release",
+    ]);
+  });
+
+  test("allows an upgrade, a rebuild of the same build, and a digest-only change", () => {
+    expect(
+      analyzeApplySafety([
+        deployment(
+          `${repo}:2.0.0-12368${digestA}`,
+          `${repo}:2.0.0-12684${digestB}`,
+        ),
+        deployment(
+          `${repo}:2.0.0-12684${digestA}`,
+          `${repo}:2.0.0-12684${digestB}`,
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
+  // Third-party images use upstream versioning, so their tags are not
+  // comparable build numbers and must not be judged here.
+  test("ignores images that are not release-tagged", () => {
+    expect(
+      analyzeApplySafety([
+        deployment("postgres:17.2", "postgres:16.1"),
+        deployment("temporalio/server:1.29.7", "temporalio/server:1.28.0"),
+      ]),
+    ).toEqual([]);
+  });
+
+  // A repository swap is a different change with different review questions;
+  // comparing build numbers across two images would be meaningless.
+  test("ignores a repository change", () => {
+    expect(
+      analyzeApplySafety([
+        deployment(
+          `${repo}:2.0.0-12684${digestA}`,
+          `ghcr.io/shepherdjerred/birmel:2.0.0-12368${digestB}`,
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
+  // Containers merge by name, so a chart that reorders or inserts one must not
+  // produce a phantom downgrade from comparing mismatched positions.
+  test("compares containers by name, not position", () => {
+    const live = state({
+      spec: {
+        template: {
+          spec: {
+            containers: [
+              { name: "worker", image: `${repo}:2.0.0-12684${digestA}` },
+              { name: "sidecar", image: `${repo}:2.0.0-12684${digestA}` },
+            ],
+          },
+        },
+      },
+    });
+    const target = state({
+      spec: {
+        template: {
+          spec: {
+            containers: [
+              { name: "sidecar", image: `${repo}:2.0.0-12684${digestB}` },
+              { name: "worker", image: `${repo}:2.0.0-12684${digestB}` },
+            ],
+          },
+        },
+      },
+    });
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "Deployment",
+          namespace: "temporal",
+          name: "worker",
+          liveState: live,
+          targetState: target,
+        },
+      ]),
+    ).toEqual([]);
+  });
+
+  test("catches a rollback in an init container", () => {
+    const live = state({
+      spec: {
+        template: {
+          spec: {
+            initContainers: [
+              { name: "install", image: `${repo}:2.0.0-12684${digestA}` },
+            ],
+          },
+        },
+      },
+    });
+    const target = state({
+      spec: {
+        template: {
+          spec: {
+            initContainers: [
+              { name: "install", image: `${repo}:2.0.0-12368${digestA}` },
+            ],
+          },
+        },
+      },
+    });
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "Deployment",
+          namespace: "temporal",
+          name: "agent",
+          liveState: live,
+          targetState: target,
+        },
+      ]),
+    ).toEqual([
+      "apps/Deployment temporal/agent downgrades /spec/template/spec/initContainers/[name=install]/image from 2.0.0-12684 to 2.0.0-12368; the version catalog is behind the running release",
+    ]);
+  });
+
+  // A container that does not exist live yet cannot be a downgrade.
+  test("ignores a container that is only in the target", () => {
+    const live = state({
+      spec: { template: { spec: { containers: [] } } },
+    });
+    const target = workload(`${repo}:2.0.0-12368${digestA}`);
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "Deployment",
+          namespace: "temporal",
+          name: "new",
+          liveState: live,
+          targetState: target,
+        },
+      ]),
+    ).toEqual([]);
+  });
+});
