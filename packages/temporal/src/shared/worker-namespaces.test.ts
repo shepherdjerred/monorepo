@@ -20,6 +20,7 @@ describe("workerNamespaces", () => {
     expect(
       workerNamespaces({
         queueRole: "reports",
+        taskQueue: "reports",
         activeNamespace: "prod",
         legacyNamespace: "default",
       }),
@@ -30,6 +31,7 @@ describe("workerNamespaces", () => {
     expect(
       workerNamespaces({
         queueRole: "legacy",
+        taskQueue: "default",
         activeNamespace: "prod",
         legacyNamespace: "default",
       }),
@@ -37,6 +39,7 @@ describe("workerNamespaces", () => {
     expect(
       workerNamespaces({
         queueRole: "legacy",
+        taskQueue: "default",
         activeNamespace: "prod",
         legacyNamespace: undefined,
       }),
@@ -47,6 +50,7 @@ describe("workerNamespaces", () => {
     expect(
       workerNamespaces({
         queueRole: "reports",
+        taskQueue: "reports",
         activeNamespace: "beta",
         legacyNamespace: undefined,
       }),
@@ -57,6 +61,7 @@ describe("workerNamespaces", () => {
     expect(
       workerNamespaces({
         queueRole: "scout",
+        taskQueue: "scout",
         activeNamespace: "prod",
         legacyNamespace: "default",
       }),
@@ -67,9 +72,21 @@ describe("workerNamespaces", () => {
     expect(
       workerNamespaces({
         queueRole: "workflows",
+        taskQueue: "monorepo-workflows",
         activeNamespace: "prod",
         legacyNamespace: "default",
       }),
     ).toEqual(["prod", "beta", "default"]);
+  });
+
+  test("does not add beta pollers for legacy workflow queues", () => {
+    expect(
+      workerNamespaces({
+        queueRole: "workflows",
+        taskQueue: "default",
+        activeNamespace: "prod",
+        legacyNamespace: "default",
+      }),
+    ).toEqual(["prod", "default"]);
   });
 });

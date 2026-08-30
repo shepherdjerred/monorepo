@@ -489,6 +489,7 @@ async function main(): Promise<void> {
   for (const definition of roleContract.workers) {
     const namespaces = workerNamespaces({
       queueRole: definition.role,
+      taskQueue: definition.taskQueue,
       activeNamespace: namespace,
       legacyNamespace,
     });

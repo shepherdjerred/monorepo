@@ -2,6 +2,7 @@ import type {
   LegacyTemporalNamespace,
   TemporalNamespace,
 } from "./temporal-namespace.ts";
+import { TASK_QUEUES, type TaskQueue } from "./task-queues.ts";
 import type { WorkerRole } from "./worker-role.ts";
 
 export function assertCentralWorkerNamespace(
@@ -18,6 +19,7 @@ export function assertCentralWorkerNamespace(
 
 export function workerNamespaces(input: {
   queueRole: WorkerRole;
+  taskQueue: TaskQueue;
   activeNamespace: TemporalNamespace;
   legacyNamespace: LegacyTemporalNamespace | undefined;
 }): readonly (TemporalNamespace | LegacyTemporalNamespace)[] {
@@ -31,7 +33,9 @@ export function workerNamespaces(input: {
     return namespaces;
   }
   const activeNamespaces: readonly TemporalNamespace[] =
-    (input.queueRole === "scout" || input.queueRole === "workflows") &&
+    (input.queueRole === "scout" ||
+      (input.queueRole === "workflows" &&
+        input.taskQueue === TASK_QUEUES.WORKFLOWS)) &&
     input.activeNamespace === "prod"
       ? ["prod", "beta"]
       : [input.activeNamespace];

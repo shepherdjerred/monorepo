@@ -245,12 +245,13 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
   // declared-vs-dynamic the same way.
   test("declared precedence matches orphan detection", () => {
     expect(
-      isOrphanSchedule(
-        "ci-io-post-merge-impact",
-        DYNAMIC_AGENT_TASK_MEMO,
+      isOrphanSchedule({
+        scheduleId: "ci-io-post-merge-impact",
+        memo: DYNAMIC_AGENT_TASK_MEMO,
+        namespace: "prod",
         declaredIds,
-        new Set(DELETED_SCHEDULE_IDS),
-      ),
+        deletedIds: new Set(DELETED_SCHEDULE_IDS),
+      }),
     ).toBe(false);
   });
 });

@@ -230,6 +230,11 @@ async function validatePreparedTargets(input: {
       );
     }
     const migrationState = decodeMigrationState(target.state.note);
+    if (migrationState.cutoverAt === undefined && !target.state.paused) {
+      throw new Error(
+        `Prepared target ${migration.targetNamespace}/${migration.source.scheduleId} must remain paused until cutover`,
+      );
+    }
     const currentSource = await input.sourceClient.schedule
       .getHandle(migration.source.scheduleId)
       .describe();
@@ -276,14 +281,17 @@ async function persistCutoverBoundary(
 async function pauseSourceSchedules(
   sourceClient: Client,
   targets: readonly PreparedTarget[],
-): Promise<void> {
+): Promise<Date> {
+  let pauseStartedAt: Date | undefined;
   for (const { migration } of targets) {
     const handle = sourceClient.schedule.getHandle(migration.source.scheduleId);
     const current = await handle.describe();
     if (!current.state.paused) {
+      pauseStartedAt ??= new Date();
       await handle.pause(SOURCE_MIGRATION_NOTE);
     }
   }
+  return pauseStartedAt ?? new Date();
 }
 
 async function activateTargetSchedules(
@@ -339,10 +347,14 @@ export async function cutoverNamespaceMigration(input: {
   }
 
   const targets = await validatePreparedTargets(input);
-  const cutoverAt = cutoverTimestampForRetry(targets, new Date());
-  // Persist before pausing sources. If a retry follows a partial pause, the
-  // first boundary is already durable in the target schedule notes, so audit
-  // cannot accidentally move the cutover window forward.
+  const pauseStartedAt = await pauseSourceSchedules(
+    input.sourceClient,
+    targets,
+  );
+  const cutoverAt = cutoverTimestampForRetry(targets, pauseStartedAt);
+  // Persist after source pausing begins. If a retry follows a partial pause,
+  // any existing boundary is reused; otherwise this timestamp is tied to the
+  // first source pause rather than a metadata-only preparation attempt.
   await persistCutoverBoundary(input.targetClients, targets, cutoverAt);
   const targetsWithBoundary = targets.map((target) => ({
     ...target,
@@ -351,7 +363,6 @@ export async function cutoverNamespaceMigration(input: {
       cutoverAt: cutoverAt.toISOString(),
     },
   }));
-  await pauseSourceSchedules(input.sourceClient, targets);
   await activateTargetSchedules(input.targetClients, targetsWithBoundary);
   return cutoverAt;
 }
@@ -381,14 +392,27 @@ export async function rollbackNamespaceMigration(input: {
     }
   }
 
-  await assertNoTargetWorkflowStarts(input.targetClients, input.schedules);
-
-  for (const { migration, target } of prepared) {
-    if (!target.state.paused) {
+  const pausedTargets: PreparedTarget[] = [];
+  try {
+    for (const preparedTarget of prepared) {
+      if (!preparedTarget.target.state.paused) {
+        await targetClient(
+          input.targetClients,
+          preparedTarget.migration.targetNamespace,
+        )
+          .schedule.getHandle(preparedTarget.migration.source.scheduleId)
+          .pause(preparedTarget.target.state.note);
+        pausedTargets.push(preparedTarget);
+      }
+    }
+    await assertNoTargetWorkflowStarts(input.targetClients, input.schedules);
+  } catch (error: unknown) {
+    for (const { migration, target } of pausedTargets) {
       await targetClient(input.targetClients, migration.targetNamespace)
         .schedule.getHandle(migration.source.scheduleId)
-        .pause(target.state.note);
+        .unpause(target.state.note);
     }
+    throw error;
   }
   for (const { migration, target } of prepared) {
     const state = decodeMigrationState(target.state.note);
