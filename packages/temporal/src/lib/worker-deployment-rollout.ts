@@ -11,6 +11,7 @@ import {
   requireHealthyWorkflowPoller,
   requireCleanAlertWindow,
   rolloutPoller,
+  rolloutAdvanceTransition,
   requireReplayCheckout,
   type RolloutCommandRunner,
   verifyCandidateImageBuildId,
@@ -53,6 +54,7 @@ export type WorkerDeploymentRolloutOptions = {
   tls?: boolean;
   deploymentName: string;
   buildId: string;
+  taskQueue: string;
   stableBuildId?: string;
   catalogPath: string;
   candidateStatePath: string;
@@ -218,6 +220,7 @@ function validateOptions(
       : { stableBuildId: WorkerBuildIdSchema.parse(options.stableBuildId) }),
     namespace: z.string().min(1).parse(options.namespace),
     address: z.string().min(1).parse(options.address),
+    taskQueue: z.string().min(1).parse(options.taskQueue),
   };
 }
 function requireCleanCandidate(status: WorkerDeploymentRolloutStatus): void {
@@ -379,28 +382,13 @@ function requireCandidateRamp(
     );
   }
 }
-function advanceTransition(rampPercentage: number): {
-  minimumMilliseconds: number;
-  targetPercentage: number;
-} {
-  if (rampPercentage === 10) {
-    return { minimumMilliseconds: 30 * 60 * 1000, targetPercentage: 50 };
-  }
-  if (rampPercentage === 50) {
-    return {
-      minimumMilliseconds: 2 * 60 * 60 * 1000,
-      targetPercentage: 100,
-    };
-  }
-  throw new Error("Advance requires a 10% or 50% ramp");
-}
 async function executeAdvance(
   options: WorkerDeploymentRolloutOptions,
   status: WorkerDeploymentRolloutStatus,
   run: RolloutCommandRunner,
 ): Promise<void> {
   requireCandidateRamp(options, status);
-  const transition = advanceTransition(status.rampPercentage);
+  const transition = rolloutAdvanceTransition(status.rampPercentage);
   const now = options.now ?? new Date();
   if (
     elapsedMilliseconds(status.lastRampChange, now) <

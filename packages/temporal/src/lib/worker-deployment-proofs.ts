@@ -120,6 +120,22 @@ export function rolloutPoller(
   };
 }
 
+export function rolloutAdvanceTransition(rampPercentage: number): {
+  minimumMilliseconds: number;
+  targetPercentage: number;
+} {
+  if (rampPercentage === 10) {
+    return { minimumMilliseconds: 30 * 60 * 1000, targetPercentage: 50 };
+  }
+  if (rampPercentage === 50) {
+    return {
+      minimumMilliseconds: 2 * 60 * 60 * 1000,
+      targetPercentage: 100,
+    };
+  }
+  throw new Error("Advance requires a 10% or 50% ramp");
+}
+
 export async function requireCleanAlertWindow(
   duration: "30m" | "2h" | "24h",
   run: RolloutCommandRunner,

@@ -203,6 +203,7 @@ async function options(
     namespace: "default",
     deploymentName: DEPLOYMENT,
     buildId: CANDIDATE,
+    taskQueue: "monorepo-workflows",
     catalogPath: catalogFile,
     candidateStatePath,
     now,

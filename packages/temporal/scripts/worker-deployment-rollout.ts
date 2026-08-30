@@ -4,6 +4,7 @@ import {
   type WorkerDeploymentRolloutOptions,
 } from "#lib/worker-deployment-rollout.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   optionalArgument,
   requiredArgument,
@@ -65,6 +66,7 @@ async function main(): Promise<void> {
         Bun.env["TEMPORAL_WORKER_DEPLOYMENT_NAME"] ??
         "monorepo-central-workflows",
       buildId: requiredArgument(args, "--build-id"),
+      taskQueue: TASK_QUEUES.WORKFLOWS,
       ...(optionalArgument(args, "--stable-build-id") === undefined
         ? {}
         : {
