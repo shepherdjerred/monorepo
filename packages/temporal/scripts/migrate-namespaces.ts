@@ -101,8 +101,7 @@ async function main(): Promise<void> {
         });
         break;
       case "cutover":
-        cutoverAt = new Date();
-        await cutoverNamespaceMigration({
+        cutoverAt = await cutoverNamespaceMigration({
           sourceClient,
           schedules,
           targetClients,

@@ -348,14 +348,16 @@ export async function cutoverNamespaceMigration(input: {
   schedules: readonly MigrationSchedule[];
   targetClients: ReadonlyMap<MigrationTargetNamespace, Client>;
   confirm: boolean;
-}): Promise<void> {
+}): Promise<Date> {
   if (!input.confirm) {
     throw new Error("cutover requires --confirm");
   }
 
   const targets = await validatePreparedTargets(input);
   await pauseSourceSchedules(input.sourceClient, targets);
+  const cutoverAt = new Date();
   await activateTargetSchedules(input.targetClients, targets);
+  return cutoverAt;
 }
 
 export async function rollbackNamespaceMigration(input: {

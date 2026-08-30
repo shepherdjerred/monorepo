@@ -68,6 +68,10 @@ import {
   assertCentralWorkerNamespace,
   workerNamespaces,
 } from "./shared/worker-namespaces.ts";
+import {
+  parseScheduleReconciliationMode,
+  type ScheduleReconciliationMode,
+} from "./shared/schedule-reconciliation.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -174,7 +178,9 @@ async function createQueueWorker(
     temporalTracing,
   } = options;
   if (definition.kind === "workflow") {
-    const workerDeployment = legacyDrain ? undefined : bootstrap.workerDeployment;
+    const workerDeployment = legacyDrain
+      ? undefined
+      : bootstrap.workerDeployment;
     return await Worker.create({
       connection,
       namespace,
@@ -229,6 +235,9 @@ async function createQueueWorker(
             definition.maxConcurrentActivityTaskExecutions ?? 1,
         }),
   });
+}
+function formatError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 async function restoreGlitterCorpusMetricsAfterWorkerStart(
@@ -316,7 +325,8 @@ async function startRoleServices(options: {
   readonly address: string;
   readonly bootstrapMetadata: ReturnType<typeof parseTemporalBootstrapMetadata>;
   readonly callGraphTracing: boolean;
-  readonly namespace: string;
+  readonly namespace: TemporalNamespace;
+  readonly scheduleReconciliation: ScheduleReconciliationMode;
   readonly roleContract: ReturnType<typeof getWorkerRoleContract>;
 }): Promise<{
   readonly eventBridge?: EventBridgeHandle;
@@ -344,7 +354,10 @@ async function startRoleServices(options: {
     },
   });
   let httpServers: EventBridgeHandle | undefined;
-  if (options.roleContract.runsGateway) {
+  if (
+    options.roleContract.runsGateway &&
+    options.scheduleReconciliation === "enabled"
+  ) {
     const scheduleNamespaces: readonly TemporalNamespace[] =
       options.namespace === "prod" ? ["prod", "beta"] : [options.namespace];
     for (const scheduleNamespace of scheduleNamespaces) {
@@ -370,6 +383,11 @@ async function startRoleServices(options: {
         namespace: scheduleNamespace,
       });
     }
+    httpServers = startHttpServers(client);
+  } else if (options.roleContract.runsGateway) {
+    jsonLog("info", "Schedule reconciliation disabled", {
+      namespace: options.namespace,
+    });
     httpServers = startHttpServers(client);
   }
   return {
@@ -427,6 +445,9 @@ async function main(): Promise<void> {
   Bun.env["TEMPORAL_CALL_GRAPH_TRACING"] = callGraphTracing ? "true" : "false";
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
+  const scheduleReconciliation = parseScheduleReconciliationMode(
+    Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"],
+  );
   const legacyNamespace = parseLegacyTemporalNamespace(
     Bun.env["TEMPORAL_LEGACY_NAMESPACE"],
   );
@@ -494,6 +515,7 @@ async function main(): Promise<void> {
     bootstrapMetadata,
     callGraphTracing,
     namespace,
+    scheduleReconciliation,
     roleContract,
   });
 

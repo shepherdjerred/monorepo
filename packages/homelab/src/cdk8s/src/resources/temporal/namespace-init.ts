@@ -1,9 +1,9 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
 import type { Service } from "cdk8s-plus-31";
-import { Cpu, Job } from "cdk8s-plus-31";
+import { Job } from "cdk8s-plus-31";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { temporalUtilityContainerDefaults } from "./container-defaults.ts";
 
 export type CreateTemporalNamespaceInitJobProps = {
   serverService: Service;
@@ -13,7 +13,6 @@ export function createTemporalNamespaceInitJob(
   chart: Chart,
   props: CreateTemporalNamespaceInitJobProps,
 ) {
-  const UID = 1000;
   const GID = 1000;
 
   const job = new Job(chart, "temporal-namespace-init", {
@@ -67,22 +66,7 @@ export function createTemporalNamespaceInitJob(
           value: `${props.serverService.name}:7233`,
         },
       },
-      securityContext: {
-        user: UID,
-        group: GID,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-      },
-      resources: {
-        cpu: {
-          request: Cpu.millis(50),
-          limit: Cpu.millis(250),
-        },
-        memory: {
-          request: Size.mebibytes(64),
-          limit: Size.mebibytes(256),
-        },
-      },
+      ...temporalUtilityContainerDefaults(),
     }),
   );
 
