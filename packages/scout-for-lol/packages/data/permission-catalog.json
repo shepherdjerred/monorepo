@@ -66,6 +66,13 @@
     "label": "Channels",
     "actions": [{ "name": "read", "label": "List postable channels" }]
   },
+  "customs": {
+    "label": "Custom nights",
+    "actions": [
+      { "name": "read", "label": "View custom-night history" },
+      { "name": "manage", "label": "Manage custom nights" }
+    ]
+  },
   "audit": {
     "label": "Audit log",
     "actions": [{ "name": "read", "label": "View the audit log" }]

@@ -1,4 +1,5 @@
 export * from "./model/index.ts";
+export * from "./customs/customs.schema.ts";
 export {
   friendGroupHistory,
   getPerson,

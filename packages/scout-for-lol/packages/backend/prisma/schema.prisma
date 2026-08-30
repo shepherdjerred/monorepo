@@ -152,13 +152,13 @@ model InitialMatchHistoryImport {
 // Current rank is not a per-match observation. Keeping it separate prevents
 // imported games from fabricating historical LP deltas.
 model CurrentRankSnapshot {
-  puuid         String   @id
-  soloRank      String?
-  flexRank      String?
-  ranked5sRank  String?
-  fetchedAt     DateTime
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  puuid        String   @id
+  soloRank     String?
+  flexRank     String?
+  ranked5sRank String?
+  fetchedAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Report {
@@ -227,14 +227,14 @@ model ReportRun {
   querySnapshot         String?
   visualizationS3Key    String?
   visualizationByteSize Int?
-  deliveryState         String                  @default("NOT_REQUESTED")
+  deliveryState         String    @default("NOT_REQUESTED")
   // Snapshot the destination selected for this occurrence. Report edits must
   // not redirect an already-rendered delivery during replay/reconciliation.
   deliveryChannelId     String?
   deliveryServerId      String?
   deliveryError         String?
   deliveredAt           DateTime?
-  temporalWorkflowRunId String?                 @unique
+  temporalWorkflowRunId String?   @unique
   createdAt             DateTime  @default(now())
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
@@ -844,14 +844,14 @@ model BucksAccount {
 // resolve to both settings enabled so adding this table preserves the existing
 // beta behavior for users who have not visited `/bb notifications` yet.
 model BucksNotificationPreference {
-  id                        Int      @id @default(autoincrement())
+  id                        Int       @id @default(autoincrement())
   serverId                  String
   discordId                 String
-  ownBetSettlementDms       Boolean  @default(true)
-  betsOnPlayerSettlementDms Boolean  @default(true)
+  ownBetSettlementDms       Boolean   @default(true)
+  betsOnPlayerSettlementDms Boolean   @default(true)
   settlementDmHintShownAt   DateTime?
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   @@unique([serverId, discordId])
 }
@@ -927,11 +927,11 @@ model BucksLedgerEntry {
 // Created atomically with each live ledger entry. Temporal consumes the
 // committed ledger row after the transaction and sends the PostHog event.
 model BucksAnalyticsLedgerOutbox {
-  id            Int             @id @default(autoincrement())
-  ledgerEntryId Int             @unique
+  id            Int              @id @default(autoincrement())
+  ledgerEntryId Int              @unique
   ledgerEntry   BucksLedgerEntry @relation(fields: [ledgerEntryId], references: [id], onDelete: Cascade)
-  eventId       String          @unique
-  createdAt     DateTime        @default(now())
+  eventId       String           @unique
+  createdAt     DateTime         @default(now())
 
   @@index([createdAt])
 }
@@ -1511,7 +1511,8 @@ model TournamentLobby {
   /// The durable request claim that minted this credential. A lobby can be
   /// created by `/lobby` or by Customs, but every path goes through the same
   /// claim-before-Riot provisioning service.
-  provision TournamentLobbyProvision?
+  provision  TournamentLobbyProvision?
+  customGame CustomGame?
 
   @@index([state, expiresAt])
   @@index([serverId, state])
@@ -1525,19 +1526,188 @@ model TournamentLobby {
 /// request hash also prevents an idempotency key from being reused for a
 /// different roster or lobby policy.
 model TournamentLobbyProvision {
-  id          String   @id
+  id          String           @id
   requestHash String
-  state       String   @default("PENDING")
-  lobbyId     Int?     @unique
+  state       String           @default("PENDING")
+  lobbyId     Int?             @unique
   lobby       TournamentLobby? @relation(fields: [lobbyId], references: [id], onDelete: Restrict)
   lastError   String?
-  claimedAt   DateTime @default(now())
+  claimedAt   DateTime         @default(now())
   completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@index([state, claimedAt])
   @@index([requestHash, state])
+}
+
+// =============================================================================
+// Scout Customs — beta-only, guild-scoped custom-game nights
+// =============================================================================
+
+/// A separate pointer makes the one-active-night constraint a PostgreSQL
+/// invariant while ended nights remain immutable history.
+model CustomActiveNight {
+  guildId   String      @id
+  nightId   String      @unique
+  night     CustomNight @relation(fields: [nightId], references: [id], onDelete: Restrict)
+  createdAt DateTime    @default(now())
+}
+
+model CustomNight {
+  id                   String    @id @default(uuid())
+  guildId              String
+  guildName            String
+  launchChannelId      String
+  voiceLobbyChannelId  String
+  hostDiscordId        String
+  state                String
+  revision             Int       @default(0)
+  recruitmentMessageId String?
+  teamAVoiceChannelId  String?
+  teamBVoiceChannelId  String?
+  lastActivityAt       DateTime
+  expiresAt            DateTime
+  endedAt              DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  activePointer CustomActiveNight?
+  cohosts       CustomNightCohost[]
+  participants  CustomNightParticipant[]
+  games         CustomGame[]
+  auditEvents   CustomAuditEvent[]
+
+  @@index([guildId, createdAt])
+  @@index([state, expiresAt])
+}
+
+model CustomNightCohost {
+  nightId   String
+  discordId String
+  createdAt DateTime    @default(now())
+  night     CustomNight @relation(fields: [nightId], references: [id], onDelete: Cascade)
+
+  @@id([nightId, discordId])
+}
+
+/// Consent is append-preserving and guild-scoped. Operator anonymization
+/// replaces identifiers; it never deletes the fact that consent was recorded.
+model CustomConsent {
+  id                String    @id @default(uuid())
+  guildId           String
+  discordId         String
+  disclosureVersion String
+  acceptedAt        DateTime
+  anonymizedAt      DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@unique([guildId, discordId, disclosureVersion])
+  @@index([discordId, acceptedAt])
+}
+
+model CustomNightParticipant {
+  id                String    @id @default(uuid())
+  nightId           String
+  discordId         String
+  displayName       String
+  avatarUrl         String?
+  role              String
+  availability      String
+  readyAt           DateTime?
+  awayUntil         DateTime?
+  held              Boolean   @default(false)
+  consentedAt       DateTime
+  playerId          Int?
+  playerAlias       String?
+  selectedAccountId Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  night CustomNight @relation(fields: [nightId], references: [id], onDelete: Cascade)
+
+  @@unique([nightId, discordId])
+  @@index([nightId, availability, readyAt])
+}
+
+model CustomGame {
+  id                String    @id @default(uuid())
+  nightId           String
+  sequence          Int
+  state             String
+  rosterMode        String
+  map               String
+  pickMode          String
+  activeCaptain     String?
+  tournamentLobbyId Int?      @unique
+  voiceState        String    @default("IDLE")
+  voiceReady        Boolean   @default(false)
+  voiceOverride     Boolean   @default(false)
+  voiceError        String?
+  winner            String?
+  createdAt         DateTime  @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
+  updatedAt         DateTime  @updatedAt
+
+  night           CustomNight             @relation(fields: [nightId], references: [id], onDelete: Cascade)
+  tournamentLobby TournamentLobby?        @relation(fields: [tournamentLobbyId], references: [id], onDelete: Restrict)
+  participants    CustomGameParticipant[]
+  auditEvents     CustomAuditEvent[]
+
+  @@unique([nightId, sequence])
+  @@index([nightId, state])
+  @@index([voiceState, updatedAt])
+}
+
+model CustomGameParticipant {
+  id           String   @id @default(uuid())
+  gameId       String
+  discordId    String
+  displayName  String
+  playerId     Int
+  playerAlias  String
+  accountId    Int
+  puuid        String
+  riotGameName String?
+  riotTagLine  String?
+  rosterOrder  Int
+  benchOrder   Int?
+  team         String?
+  side         String?
+  captain      Boolean  @default(false)
+  pickOrder    Int?
+  championId   Int?
+  won          Boolean?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  game CustomGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, discordId])
+  @@index([gameId, team, pickOrder])
+  @@index([puuid])
+}
+
+/// Append-only command and integration ledger. Random choices are recorded in
+/// payload at the same revision as the mutation that accepted them.
+model CustomAuditEvent {
+  id        String   @id @default(uuid())
+  nightId   String
+  gameId    String?
+  revision  Int
+  actorId   String
+  action    String
+  payload   String
+  source    String   @default("ACTIVITY")
+  createdAt DateTime @default(now())
+
+  night CustomNight @relation(fields: [nightId], references: [id], onDelete: Restrict)
+  game  CustomGame? @relation(fields: [gameId], references: [id], onDelete: Restrict)
+
+  @@index([nightId, revision])
+  @@index([gameId, createdAt])
+  @@index([actorId, createdAt])
 }
 
 /// Durable handoff for work created by request/gateway code before Temporal

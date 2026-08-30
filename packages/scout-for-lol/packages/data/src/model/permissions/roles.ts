@@ -34,6 +34,7 @@ const VIEWER = reads(
   "competitions",
   "reports",
   "channels",
+  "customs",
 );
 const MANAGER = everythingExcept("roles");
 const ADMIN = [...ALL_PERMISSIONS];
