@@ -4,6 +4,7 @@ import { z } from "zod";
 export const VersionMapSchema = z
   .object({
     "stashapp/stash": z.string(),
+    "trmnl/trmnlp": z.string(),
     connect: z.string(),
     "argo-cd": z.string(),
     "cert-manager": z.string(),

@@ -1,0 +1,28 @@
+<div class="layout layout--col gap--small">
+  <div class="grid grid--cols-2 gap--small">
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">K8s Nodes</span><span class="value value--small">{{ kubernetes.ready_nodes }}/{{ kubernetes.total_nodes }}</span></div></div>
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">Alerts</span><span class="value">{{ alerts.open }}</span></div></div>
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">Bugsink</span><span class="value">{{ bugsink.unresolved }}</span></div></div>
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">Disk</span><span class="value value--small">{{ disk_usage }}</span></div></div>
+  </div>
+
+  <div>
+    <span class="label label--underline">Recent Alert</span>
+    {% for alert in alerts.recent limit: 2 %}
+      <div>{{ alert.alertname }} · {{ alert.summary }}</div>
+    {% else %}
+      <div>No open alerts</div>
+    {% endfor %}
+  </div>
+
+  <div>
+    <span class="label label--underline">Hardware</span>
+    <table class="table table--condensed"><tbody>
+      <tr><td>CPU</td><td class="text--right">{{ cpu_usage }}</td></tr>
+      <tr><td>Memory</td><td class="text--right">{{ memory_usage }}</td></tr>
+      <tr><td>Unhealthy Pods</td><td class="text--right">{{ kubernetes.unhealthy_pods }}</td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+{{ dashboard_title_bar }}

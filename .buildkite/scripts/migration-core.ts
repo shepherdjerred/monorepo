@@ -171,6 +171,7 @@ export const summarySteps = [
   "tasknotes-native-main",
   "playwright-e2e-main",
   "resume-build-main",
+  "trmnl-publish",
   "docker-e2e-main",
   "images",
   "sites",
@@ -205,6 +206,7 @@ export const summaryLanes = [
   "tasknotes-native",
   "playwright",
   "resume",
+  "trmnl",
   "docker-e2e",
   "images",
   "sites",
@@ -359,6 +361,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     ...deployScripts,
   ],
   resume: ["packages/resume", ...deployScripts],
+  trmnl: ["packages/trmnl-dashboard", "packages/version-catalog"],
   "docker-e2e": [
     ...workspacePaths,
     "packages/llm-observability",

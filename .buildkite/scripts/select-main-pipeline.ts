@@ -62,6 +62,7 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "homelab-release-admission": [],
   "playwright-e2e-main": ["playwright"],
   "resume-build-main": ["resume"],
+  "trmnl-publish": ["trmnl"],
   "docker-e2e-main": ["docker-e2e"],
   images: ["images"],
   sites: ["sites"],

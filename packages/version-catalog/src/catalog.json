@@ -15,6 +15,18 @@
       "value": "v0.31.1@sha256:df744af5a0c976e2ec671052ecc1f8a9aa757fa12b8f9930b59910b7295f0da6"
     },
     {
+      "name": "trmnl/trmnlp",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v0.11.0@sha256:4ac6d7f35ff30665b6c3b2634c2ba830488b2ee38783acc2ce953b652cb1c973"
+    },
+    {
       "name": "connect",
       "category": "upstream",
       "artifactType": "helm-chart",

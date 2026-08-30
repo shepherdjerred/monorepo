@@ -11,6 +11,7 @@ test("all expected deployment lanes are modeled", () => {
   expect(Object.keys(lanePaths)).toContain("sites");
   expect(Object.keys(lanePaths)).toContain("ci-base");
   expect(Object.keys(lanePaths)).toContain("ci-playwright");
+  expect(Object.keys(lanePaths)).toContain("trmnl");
   expect(lanePaths["sites"]?.length).toBeGreaterThan(
     lanePaths["site-resume"]?.length ?? 0,
   );

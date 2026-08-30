@@ -12,7 +12,7 @@
     <div class="item">
       <div class="meta"></div>
       <div class="content">
-        <span class="title">Alerts</span>
+        <span class="title">Open</span>
         <span class="value">
           {% if alerts.status == "unknown" %}
             ERR
@@ -38,7 +38,7 @@
     <div class="item">
       <div class="meta"></div>
       <div class="content">
-        <span class="title">Alerts</span>
+        <span class="title">Severity</span>
         <span class="value value--small">{{ alerts.critical }} crit · {{ alerts.warning }} warn</span>
       </div>
     </div>
@@ -52,21 +52,13 @@
           <tr>
             <td>CPU</td>
             <td class="text--right">
-              {% if hardware.cpu_used_percent %}
-                {{ hardware.cpu_used_percent }}%
-              {% else %}
-                n/a
-              {% endif %}
+              {{ cpu_usage }}
             </td>
           </tr>
           <tr>
             <td>Memory</td>
             <td class="text--right">
-              {% if hardware.memory_used_percent %}
-                {{ hardware.memory_used_percent }}%
-              {% else %}
-                n/a
-              {% endif %}
+              {{ memory_usage }}
             </td>
           </tr>
           <tr>
@@ -142,7 +134,4 @@
   {% endif %}
 </div>
 
-<div class="title_bar">
-  <span class="title">Homelab</span>
-  <span class="instance">{{ status | upcase }} · {{ generated_time }}</span>
-</div>
+{{ dashboard_title_bar }}

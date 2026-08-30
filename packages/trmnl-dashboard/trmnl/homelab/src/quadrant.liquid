@@ -1,0 +1,14 @@
+<div class="layout layout--col gap--small">
+  <div class="grid grid--cols-2 gap--small">
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">K8s</span><span class="value value--small">{{ kubernetes.ready_nodes }}/{{ kubernetes.total_nodes }}</span></div></div>
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">Alerts</span><span class="value">{{ alerts.open }}</span></div></div>
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">Bugsink</span><span class="value">{{ bugsink.unresolved }}</span></div></div>
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">CPU</span><span class="value value--small">{{ cpu_usage }}</span></div></div>
+  </div>
+  <div>
+    <span class="label label--underline">Attention</span>
+    {% for alert in alerts.recent limit: 1 %}<div>{{ alert.alertname }} · {{ alert.severity }}</div>{% else %}<div>All clear</div>{% endfor %}
+  </div>
+</div>
+
+{{ dashboard_title_bar }}
