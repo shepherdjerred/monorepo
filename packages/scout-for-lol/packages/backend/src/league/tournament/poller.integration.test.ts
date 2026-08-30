@@ -6,7 +6,6 @@ import {
 } from "#src/testing/test-database.ts";
 import {
   DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data/index.ts";
