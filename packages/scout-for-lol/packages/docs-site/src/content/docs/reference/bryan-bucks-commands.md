@@ -13,13 +13,13 @@ Most of what `/bb` does — except `/bb ask` — is also available on the
 ## Subcommands
 
 | Command             | What it does                                          | Reply                          |
-| ------------------- | ----------------------------------------------------- | ------------------------------- |
-| `/bb balance`       | Available Bucks, Bucks at risk, and pending positions | Private                         |
-| `/bb history`       | Paged transaction ledger with running balances        | Private                         |
-| `/bb transfer`      | Send half of a total spend to another wallet          | Private result, public receipt  |
-| `/bb notifications` | Choose settlement DMs about your bets and bets on you | Private                         |
-| `/bb rules`         | The complete rulebook                                 | **Public**                      |
-| `/bb prizes`        | The joke prize catalogue                              | **Public**                      |
+| ------------------- | ----------------------------------------------------- | ------------------------------ |
+| `/bb balance`       | Available Bucks, Bucks at risk, and pending positions | Private                        |
+| `/bb history`       | Paged transaction ledger with running balances        | Private                        |
+| `/bb transfer`      | Send half of a total spend to another wallet          | Private result, public receipt |
+| `/bb notifications` | Choose settlement DMs about your bets and bets on you | Private                        |
+| `/bb rules`         | The complete rulebook                                 | **Public**                     |
+| `/bb prizes`        | The joke prize catalogue                              | **Public**                     |
 
 Every command starts privately except `rules` and `prizes`. A successful
 `transfer` then posts its sender, recipient, total spend, received amount, and
@@ -40,7 +40,7 @@ continue, publish, or share them.
 ### `/bb transfer`
 
 | Option      | Required | Values                                   |
-| ----------- | -------- | ----------------------------------------- |
+| ----------- | -------- | ---------------------------------------- |
 | `recipient` | yes      | A non-bot member with an existing wallet |
 | `amount`    | yes      | Your total whole-BB spend, at least 2 BB |
 

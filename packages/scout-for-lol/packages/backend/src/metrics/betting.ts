@@ -131,7 +131,6 @@ export const bettingTransfersTotal = new Counter({
   registers: [registry],
 });
 
-
 /* --------------------------------------------------- message delivery -- */
 
 export const bettingMessageOperationsTotal = new Counter({
