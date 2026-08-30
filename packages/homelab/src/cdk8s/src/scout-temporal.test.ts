@@ -134,7 +134,8 @@ describe("Scout competition Temporal boundary", () => {
   test("gives every central worker its active and drain namespaces", () => {
     const synthesized = allScoutTemporalResources();
     const workerNames = [
-      "temporal-temporal-workflows",
+      "temporal-temporal-workflows-stable",
+      "temporal-temporal-workflows-candidate",
       "temporal-temporal-agent-worker",
       "temporal-temporal-gateway",
       "temporal-temporal-home-worker",
