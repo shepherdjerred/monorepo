@@ -13,6 +13,8 @@ import {
   startToCloseTimeoutMsOrUndefined,
 } from "./agent-task-runtime.ts";
 import {
+  createCodexAgentEventHandler,
+  createCodexSecretRefreshHandler,
   CodexAgentSdkRunError,
   runCodexAgentSdk,
 } from "./codex-agent-sdk-runner.ts";
@@ -105,23 +107,14 @@ export async function runSeasonAgent(
       env: envForTrustedAgent({ OPENROUTER_API_KEY: openRouterApiKey }),
       signal,
       redactTokens: secretState.tokens,
-      beforeEvent: async () => {
-        try {
-          await secretState.refresh();
-          return true;
-        } catch {
-          return false;
-        }
-      },
-      onEvent: (event) => {
-        eventCount += 1;
-        safeHeartbeat({
-          phase: "codex-agent-sdk",
-          elapsedMs: event.elapsedMs,
-          eventCount,
-          eventType: event.type,
-        });
-      },
+      beforeEvent: createCodexSecretRefreshHandler(secretState.refresh),
+      onEvent: createCodexAgentEventHandler({
+        nextEventCount: () => {
+          eventCount += 1;
+          return eventCount;
+        },
+        heartbeat: safeHeartbeat,
+      }),
     });
   } catch (error: unknown) {
     scoutSeasonRefreshSubprocessExitTotal.inc({ exit_code: "sdk_failed" });

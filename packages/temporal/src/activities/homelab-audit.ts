@@ -26,6 +26,8 @@ import {
   startToCloseTimeoutMsOrUndefined,
 } from "./agent-task-runtime.ts";
 import {
+  createCodexAgentEventHandler,
+  createCodexSecretRefreshHandler,
   CodexAgentSdkRunError,
   runCodexAgentSdk,
 } from "./codex-agent-sdk-runner.ts";
@@ -170,27 +172,20 @@ async function runAuditAgent(
       }),
       signal,
       redactTokens: secretState.tokens,
-      beforeEvent: async () => {
-        try {
-          await secretState.refresh();
-          return true;
-        } catch {
-          return false;
-        }
-      },
-      onEvent: (event) => {
-        eventCount += 1;
-        safeHeartbeat({
-          phase: "codex-agent-sdk",
-          elapsedMs: event.elapsedMs,
-          eventCount,
-          eventType: event.type,
-        });
-        jsonLog("info", "homelab audit agent event", {
-          eventType: event.type,
-          elapsedMs: event.elapsedMs,
-        });
-      },
+      beforeEvent: createCodexSecretRefreshHandler(secretState.refresh),
+      onEvent: createCodexAgentEventHandler({
+        nextEventCount: () => {
+          eventCount += 1;
+          return eventCount;
+        },
+        heartbeat: safeHeartbeat,
+        logEvent: (event) => {
+          jsonLog("info", "homelab audit agent event", {
+            eventType: event.type,
+            elapsedMs: event.elapsedMs,
+          });
+        },
+      }),
     });
   } catch (error: unknown) {
     homelabAuditSubprocessExitTotal.inc({ exit_code: "sdk_failed" });

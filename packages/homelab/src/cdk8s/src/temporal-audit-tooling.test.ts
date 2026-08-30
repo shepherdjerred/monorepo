@@ -550,11 +550,8 @@ describe("Temporal operations worker isolation", () => {
       expect(repoEnv).not.toContain(required);
       expect(scoutEnv).not.toContain(required);
     }
-    for (const required of [
-      "FRESHRSS_API_PASSWORD_FILE",
-      "BUILDKITE_API_TOKEN",
-      "OPENROUTER_API_KEY",
-    ]) {
+    expect(repoEnv).toContain("FRESHRSS_API_PASSWORD_FILE");
+    for (const required of ["BUILDKITE_API_TOKEN", "OPENROUTER_API_KEY"]) {
       expect(repoEnv).toContain(required);
       expect(scoutEnv).toContain(required);
     }

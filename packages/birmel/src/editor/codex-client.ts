@@ -244,6 +244,9 @@ export async function executeEdit(
     baselineCommit,
   );
   summary = summary.trim();
+  if (thread.id === null) {
+    throw new Error("Codex thread did not return an ID");
+  }
   logger.info("Edit complete", {
     sessionId: thread.id,
     changeCount: changes.length,
