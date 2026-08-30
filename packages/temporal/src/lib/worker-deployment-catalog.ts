@@ -33,6 +33,7 @@ const PinStateSchema = z
 export type StablePinPromotion = {
   candidateImage: string;
   contents: string;
+  stateContents: string;
   alreadyPromoted: boolean;
 };
 
@@ -56,6 +57,7 @@ function parseCatalog(raw: string): z.infer<typeof CatalogSchema> {
 
 export async function prepareStablePinPromotion(
   catalogPath: string,
+  statePath: string,
 ): Promise<StablePinPromotion> {
   const catalog = parseCatalog(await Bun.file(catalogPath).text());
   const candidateName = "shepherdjerred/temporal-worker/workflows/candidate";
@@ -73,9 +75,34 @@ export async function prepareStablePinPromotion(
   const stableValue = TemporalWorkflowImageValueSchema.parse(stable.value);
   const alreadyPromoted = candidateValue === stableValue;
   stable.value = candidate.value;
+  let state: z.infer<typeof PinStateSchema>;
+  try {
+    state = PinStateSchema.parse(JSON.parse(await Bun.file(statePath).text()));
+  } catch (error: unknown) {
+    throw new Error("Temporal pin candidate state is invalid", {
+      cause: error,
+    });
+  }
+  const candidateVersion = candidateValue.slice(
+    0,
+    candidateValue.lastIndexOf("@"),
+  );
+  const buildNumberText = /-(\d+)$/.exec(candidateVersion)?.[1];
+  if (buildNumberText === undefined) {
+    throw new Error("Temporal workflow candidate pin has no build number");
+  }
+  const pins = {
+    ...state.pins,
+    [stableName]: {
+      version: candidateVersion,
+      digest: candidateValue.slice(candidateValue.lastIndexOf("@") + 1),
+      buildNumber: Number.parseInt(buildNumberText, 10),
+    },
+  };
   return {
     candidateImage: `ghcr.io/shepherdjerred/temporal-worker:${candidateValue}`,
     contents: `${JSON.stringify(catalog, null, 2)}\n`,
+    stateContents: `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`,
     alreadyPromoted,
   };
 }

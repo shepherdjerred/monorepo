@@ -427,7 +427,10 @@ async function executePromotion(
   status: WorkerDeploymentRolloutStatus,
   run: RolloutCommandRunner,
 ): Promise<void> {
-  const promotedCatalog = await prepareStablePinPromotion(options.catalogPath);
+  const promotedCatalog = await prepareStablePinPromotion(
+    options.catalogPath,
+    options.candidateStatePath,
+  );
   if (
     status.currentBuildId === options.buildId &&
     status.rampingBuildId === undefined &&
@@ -464,6 +467,7 @@ async function executePromotion(
   }
   requireCleanCandidate(latestStatus);
   await Bun.write(options.catalogPath, promotedCatalog.contents);
+  await Bun.write(options.candidateStatePath, promotedCatalog.stateContents);
   await setCurrentVersion(options, options.buildId, run);
   await removeWorkerDeploymentRampingVersion(options, run);
 }

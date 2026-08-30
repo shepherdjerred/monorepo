@@ -422,6 +422,12 @@ describe("Worker Deployment rollout", () => {
     expect(await Bun.file(rolloutOptions.catalogPath).text()).not.toContain(
       `"value": "2.0.0-1@sha256:${STABLE_DIGEST}"`,
     );
+    expect(await Bun.file(rolloutOptions.candidateStatePath).text()).toContain(
+      `"version": "2.0.0-2"`,
+    );
+    expect(await Bun.file(rolloutOptions.candidateStatePath).text()).toContain(
+      `"digest": "sha256:${CANDIDATE_DIGEST}"`,
+    );
   });
 
   test("validates the stable image pin before mutating live routing", async () => {
