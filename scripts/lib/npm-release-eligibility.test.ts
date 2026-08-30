@@ -144,6 +144,17 @@ describe("consumer file classification", () => {
     ).toBe(true);
   });
 
+  test("ignores files excluded by the package files list", () => {
+    expect(
+      classifyConsumerChanges(
+        webringPath,
+        [`${webringPath}/legacy-entrypoint.js`],
+        false,
+        ["dist", "src", "package.json", "README.md", "LICENSE"],
+      ).eligible,
+    ).toBe(false);
+  });
+
   test("fails closed on an unknown package file", () => {
     expect(() =>
       classifyConsumerChanges(astroPath, [`${astroPath}/unknown.yaml`], false),

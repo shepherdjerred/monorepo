@@ -165,6 +165,17 @@ function relativePackagePath(file: string, packagePath: string): string {
   return file.slice(prefix.length);
 }
 
+function isIncludedByPackageFiles(
+  relativePath: string,
+  publishedFiles: readonly string[],
+): boolean {
+  return publishedFiles.some(
+    (publishedPath) =>
+      relativePath === publishedPath ||
+      relativePath.startsWith(`${publishedPath}/`),
+  );
+}
+
 function isTestOrExamplePath(relativePath: string): boolean {
   return (
     /(?:^|\/)(?:[^/]+\.(?:test|spec)\.[^/]+|__tests__|__snapshots__|tests?|testdata|fixtures?|__fixtures__)(?:\/|$)/.test(
@@ -192,9 +203,7 @@ function isKnownRepositoryOnlyPath(relativePath: string): boolean {
     "generate-readme-core.ts",
     "generate-readme-smoke.test.ts",
     "generate-readme.ts",
-    "matomo.js",
     "mise.toml",
-    "plausible.js",
     "posthog.js",
     "tsconfig.scripts.json",
     "tsconfig.json",
@@ -211,6 +220,7 @@ export function classifyConsumerChanges(
   packagePath: string,
   changedFiles: readonly string[],
   packageJsonChange: boolean,
+  publishedFiles?: readonly string[],
 ): ConsumerChangeResult {
   const reasons: string[] = [];
   for (const file of changedFiles) {
@@ -225,6 +235,12 @@ export function classifyConsumerChanges(
     }
     if (relativePath === "LICENSE") {
       reasons.push("published license changed");
+      continue;
+    }
+    if (
+      publishedFiles !== undefined &&
+      !isIncludedByPackageFiles(relativePath, publishedFiles)
+    ) {
       continue;
     }
     if (isTestOrExamplePath(relativePath)) continue;
@@ -336,7 +352,16 @@ async function classifyPackageReleaseFromTag(
   headRef = "HEAD",
 ): Promise<PackageReleaseDecision> {
   const changed = await run(
-    ["git", "diff", "--name-only", tag, headRef, "--", policy.path],
+    [
+      "git",
+      "diff",
+      "--name-only",
+      "--diff-filter=ACMRTUXB",
+      tag,
+      headRef,
+      "--",
+      policy.path,
+    ],
     { cwd: root, capture: true, echoCapturedStdout: false },
   );
   const changedFiles = changed.stdout
@@ -344,18 +369,28 @@ async function classifyPackageReleaseFromTag(
     .map((line) => line.trim())
     .filter(Boolean);
 
+  const headPackageJson = await packageJsonAtTag(
+    root,
+    headRef,
+    policy.packageJsonPath,
+  );
   const packageJsonChange = changedFiles.includes(policy.packageJsonPath)
     ? packageJsonHasConsumerChange(
         await packageJsonAtTag(root, tag, policy.packageJsonPath),
-        await packageJsonAtTag(root, headRef, policy.packageJsonPath),
+        headPackageJson,
         policy.packageJsonPath,
       )
     : false;
+  const publishedFiles = z
+    .array(z.string())
+    .optional()
+    .parse(parsePackageJson(headPackageJson, policy.packageJsonPath)["files"]);
 
   const result = classifyConsumerChanges(
     policy.path,
     changedFiles,
     packageJsonChange,
+    publishedFiles,
   );
   return {
     packageName: policy.name,
