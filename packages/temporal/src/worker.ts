@@ -70,6 +70,7 @@ import {
 } from "./shared/worker-namespaces.ts";
 import {
   parseScheduleReconciliationMode,
+  isScheduleNamespaceDrained,
   type ScheduleReconciliationMode,
 } from "./shared/schedule-reconciliation.ts";
 
@@ -327,6 +328,7 @@ async function startRoleServices(options: {
   readonly callGraphTracing: boolean;
   readonly namespace: TemporalNamespace;
   readonly scheduleReconciliation: ScheduleReconciliationMode;
+  readonly legacyNamespace: LegacyTemporalNamespace | undefined;
   readonly roleContract: ReturnType<typeof getWorkerRoleContract>;
 }): Promise<{
   readonly eventBridge?: EventBridgeHandle;
@@ -353,11 +355,26 @@ async function startRoleServices(options: {
       ],
     },
   });
+  let shouldReconcileSchedules = options.scheduleReconciliation === "enabled";
+  if (options.scheduleReconciliation === "auto") {
+    shouldReconcileSchedules =
+      options.legacyNamespace === undefined ||
+      (await isScheduleNamespaceDrained(
+        new Client({
+          connection: clientConnection,
+          namespace: options.legacyNamespace,
+        }),
+      ));
+    jsonLog(
+      "info",
+      shouldReconcileSchedules
+        ? "Legacy schedule namespace drained"
+        : "Legacy schedule namespace still active",
+      { namespace: options.legacyNamespace ?? "none" },
+    );
+  }
   let httpServers: EventBridgeHandle | undefined;
-  if (
-    options.roleContract.runsGateway &&
-    options.scheduleReconciliation === "enabled"
-  ) {
+  if (options.roleContract.runsGateway && shouldReconcileSchedules) {
     const scheduleNamespaces: readonly TemporalNamespace[] =
       options.namespace === "prod" ? ["prod", "beta"] : [options.namespace];
     for (const scheduleNamespace of scheduleNamespaces) {
@@ -516,6 +533,7 @@ async function main(): Promise<void> {
     callGraphTracing,
     namespace,
     scheduleReconciliation,
+    legacyNamespace,
     roleContract,
   });
 

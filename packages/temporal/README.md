@@ -86,6 +86,21 @@ target, and `start --stable-build-id` establishes stable before sending 10% to
 candidate. The embedded poller remains only to drain old unversioned histories.
 Production remains embedded until beta acceptance completes.
 
+During the namespace migration, inventory and prepare schedules before
+cutover. The gateway uses `TEMPORAL_SCHEDULE_RECONCILIATION=auto`: it checks
+that all schedules in the legacy `default` namespace are paused, then
+reconciles only `prod` and `beta` on its next restart. After the cutover
+command succeeds, restart the gateway so it observes the drained source.
+
+```bash
+TEMPORAL_NAMESPACE=prod bun run migrate:namespaces -- prepare
+TEMPORAL_NAMESPACE=prod bun run migrate:namespaces -- prepare --confirm
+TEMPORAL_NAMESPACE=prod bun run migrate:namespaces -- cutover --confirm
+```
+
+Record the cutover timestamp and use it for the final audit. Rollback is
+allowed only before a target workflow starts; after that, recover forward.
+
 ## Documentation
 
 The complete reference is [AGENTS.md](AGENTS.md):
