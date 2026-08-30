@@ -6,6 +6,7 @@ import {
 } from "./tofu-stack.ts";
 import { STACK_MANIFEST, type TofuStack } from "./tofu-stack-manifest.ts";
 import {
+  collectOnePasswordTargets,
   loadPlatformDesiredState,
   type PlatformStack,
 } from "./platform-desired-state.ts";
@@ -90,6 +91,13 @@ describe("Buildkite OpenTofu credential contracts", () => {
     expect(provider).toMatch(
       /source\s*=\s*"shepherdjerred\/asuswrt"[\s\S]*?version\s*=\s*"0\.1\.0"/u,
     );
+  });
+
+  test("requires the Cloudflare token registry for direct OpenTofu runs", async () => {
+    const variables = await Bun.file(
+      new URL("../src/tofu/cloudflare-tokens/variables.tf", import.meta.url),
+    ).text();
+    expect(variables).not.toContain("default = {}");
   });
 
   test("keeps validation lockfiles read-only without requiring an AsusWRT lockfile", () => {
@@ -217,5 +225,32 @@ describe("committed platform desired state", () => {
     await expect(
       loadPlatformDesiredState(stackDir, "openrouter"),
     ).rejects.toThrow("vault_field");
+  });
+
+  test("collects handoffs nested in resource objects", () => {
+    expect(
+      collectOnePasswordTargets({
+        direct: {
+          vault_item_id: "direct-item",
+          vault_field: "direct-field",
+          name: "resource metadata",
+        },
+        nested: [
+          {
+            vault_item_id: "nested-item",
+            vault_field: "nested-field",
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        vault_item_id: "direct-item",
+        vault_field: "direct-field",
+      },
+      {
+        vault_item_id: "nested-item",
+        vault_field: "nested-field",
+      },
+    ]);
   });
 });

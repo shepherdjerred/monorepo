@@ -24,7 +24,6 @@ variable "cloudflare_api_tokens" {
     vault_field     = string
     vault_json_path = optional(string)
   }))
-  default = {}
 }
 
 variable "tofu_state_encryption_passphrase" {

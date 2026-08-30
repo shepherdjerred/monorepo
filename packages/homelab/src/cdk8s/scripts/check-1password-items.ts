@@ -22,6 +22,12 @@ import { App } from "cdk8s";
 import { z } from "zod";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
 import {
+  collectOnePasswordTargets,
+  loadPlatformDesiredState,
+  type OnePasswordTarget,
+  type PlatformStack,
+} from "../../../scripts/platform-desired-state.ts";
+import {
   hash,
   SnapshotSchema,
   SNAPSHOT_PATH,
@@ -37,6 +43,14 @@ const ITEM_PATH_RE = /^vaults\/([^/]+)\/items\/(.+)$/;
  * before a credential change is called out.
  */
 const SNAPSHOT_MAX_AGE_DAYS = 45;
+
+const PLATFORM_STACKS: readonly PlatformStack[] = [
+  "openai",
+  "anthropic",
+  "discord",
+  "openrouter",
+  "cloudflare-tokens",
+];
 
 type OpItemRef = { namespace: string; name: string; itemPath: string };
 /** ns -> secretName -> specific data keys read from that secret. */
@@ -278,6 +292,53 @@ function validateFields(
   return checked;
 }
 
+type DesiredStateTarget = {
+  platform: PlatformStack;
+  target: OnePasswordTarget;
+};
+
+async function collectDesiredStateTargets(): Promise<
+  readonly DesiredStateTarget[]
+> {
+  const targets: DesiredStateTarget[] = [];
+  for (const platform of PLATFORM_STACKS) {
+    const stackDir = new URL(`../../tofu/${platform}/`, import.meta.url)
+      .pathname;
+    const desiredState = await loadPlatformDesiredState(stackDir, platform);
+    for (const target of collectOnePasswordTargets(desiredState)) {
+      targets.push({ platform, target });
+    }
+  }
+  return targets;
+}
+
+/** Verify desired-state rotation units against the same hashed vault snapshot. */
+function validateDesiredStateTargets(
+  targets: readonly DesiredStateTarget[],
+  byHash: Map<string, SnapshotItem>,
+  errors: string[],
+): number {
+  let checked = 0;
+  for (const { platform, target } of targets) {
+    checked += 1;
+    const entry = byHash.get(hash(target.vault_item_id));
+    if (entry === undefined) {
+      errors.push(
+        `1Password handoff item not found in ${platform} desired state: "${target.vault_item_id}". ` +
+          `If it was just added or renamed, refresh the snapshot.`,
+      );
+      continue;
+    }
+    if (!entry.fields.includes(hash(target.vault_field))) {
+      errors.push(
+        `1Password handoff field "${target.vault_field}" not found on item "${target.vault_item_id}" in ${platform} desired state. ` +
+          `If it was just added or renamed, refresh the snapshot.`,
+      );
+    }
+  }
+  return checked;
+}
+
 async function main(): Promise<void> {
   let manifests: unknown[];
   try {
@@ -290,6 +351,17 @@ async function main(): Promise<void> {
 
   const { opItems, consumption } = collectReferences(manifests);
   const snapshot = await loadSnapshot();
+  let desiredStateTargets: readonly DesiredStateTarget[];
+  try {
+    desiredStateTargets = await collectDesiredStateTargets();
+  } catch (error) {
+    const message =
+      error instanceof Error ? (error.stack ?? error.message) : String(error);
+    fail(
+      `check-1password-items: desired-state validation failed:\n${message}`,
+      2,
+    );
+  }
 
   // An itemPath may reference an item by id OR by human-readable title; index both.
   const byHash = new Map<string, SnapshotItem>();
@@ -301,6 +373,11 @@ async function main(): Promise<void> {
   const errors: string[] = [];
   const resolved = validateItems(opItems, byHash, errors);
   const fieldsChecked = validateFields(consumption, resolved, errors);
+  const desiredStateTargetsChecked = validateDesiredStateTargets(
+    desiredStateTargets,
+    byHash,
+    errors,
+  );
 
   if (errors.length > 0) {
     console.error(
@@ -315,7 +392,8 @@ async function main(): Promise<void> {
 
   console.log(
     `check-1password-items: OK — ${String(opItems.length)} item references and ${String(fieldsChecked)} ` +
-      `field references verified against the vault snapshot (${String(snapshot.items.length)} items).`,
+      `field references plus ${String(desiredStateTargetsChecked)} desired-state handoffs ` +
+      `verified against the vault snapshot (${String(snapshot.items.length)} items).`,
   );
   warnIfSnapshotIsStale(snapshot.generatedAt);
 }

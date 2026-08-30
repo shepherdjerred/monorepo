@@ -13,6 +13,12 @@ const onePasswordTarget = z.strictObject({
   vault_field: nonEmptyString,
   vault_json_path: optionalNonEmptyString,
 });
+const onePasswordTargetReference = z.looseObject({
+  vault_item_id: nonEmptyString,
+  vault_field: nonEmptyString,
+  vault_json_path: optionalNonEmptyString,
+});
+export type OnePasswordTarget = z.infer<typeof onePasswordTarget>;
 
 const openAiProject = z.strictObject({
   project_id: optionalNonEmptyString,
@@ -338,6 +344,41 @@ function variablesFromDesiredState(
       ([name]) => name !== "$schema" && name !== "platform",
     ),
   );
+}
+
+/**
+ * Collect the 1Password rotation-unit references embedded in a parsed desired
+ * state. The platform schemas intentionally keep these references in several
+ * resource shapes, so walk the validated value instead of maintaining a
+ * second, easy-to-forget list of paths.
+ */
+export function collectOnePasswordTargets(
+  value: unknown,
+): readonly OnePasswordTarget[] {
+  const targets: OnePasswordTarget[] = [];
+  const visit = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      for (const child of node) visit(child);
+      return;
+    }
+    const record = z.record(z.string(), z.unknown()).safeParse(node);
+    if (!record.success) return;
+
+    const target = onePasswordTargetReference.safeParse(record.data);
+    if (target.success) {
+      const normalizedTarget: OnePasswordTarget = {
+        vault_item_id: target.data.vault_item_id,
+        vault_field: target.data.vault_field,
+      };
+      if (target.data.vault_json_path !== undefined) {
+        normalizedTarget.vault_json_path = target.data.vault_json_path;
+      }
+      targets.push(normalizedTarget);
+    }
+    for (const child of Object.values(record.data)) visit(child);
+  };
+  visit(value);
+  return targets;
 }
 
 export async function loadPlatformDesiredState(
