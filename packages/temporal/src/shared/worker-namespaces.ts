@@ -31,7 +31,8 @@ export function workerNamespaces(input: {
     return namespaces;
   }
   const activeNamespaces: readonly TemporalNamespace[] =
-    input.queueRole === "scout" && input.activeNamespace === "prod"
+    (input.queueRole === "scout" || input.queueRole === "workflows") &&
+    input.activeNamespace === "prod"
       ? ["prod", "beta"]
       : [input.activeNamespace];
   return input.legacyNamespace === undefined
