@@ -42,6 +42,8 @@ async function main(): Promise<void> {
     "HA_TOKEN=smoke-test-dummy",
     "-e",
     "HA_URL=http://127.0.0.1:9999",
+    "-e",
+    "FEATURE_FLAGS_MODE=disabled",
     IMAGE,
   ]);
   if (run.code !== 0) {

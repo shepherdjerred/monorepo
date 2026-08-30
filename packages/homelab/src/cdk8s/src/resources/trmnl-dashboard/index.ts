@@ -98,6 +98,11 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           key: "HA_TOKEN",
         }),
         DISPLAY_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
+        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
         BUGSINK_URL: EnvValue.fromValue(
           "http://bugsink-bugsink-service.bugsink:8000/api/canonical/0",
         ),
@@ -199,9 +204,9 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
   return { deployment, service };
 }
 
-export const trmnlDashboardPorts = [53, 80, 443, 8000, 8123, 9090, 9093].map(
-  (port) => ({
-    port: IntOrString.fromNumber(port),
-    protocol: port === 53 ? "UDP" : "TCP",
-  }),
-);
+export const trmnlDashboardPorts = [
+  53, 80, 443, 8000, 8080, 8123, 9090, 9093,
+].map((port) => ({
+  port: IntOrString.fromNumber(port),
+  protocol: port === 53 ? "UDP" : "TCP",
+}));
