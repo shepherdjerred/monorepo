@@ -1481,9 +1481,36 @@ model TournamentLobby {
   expiresAt    DateTime
   updatedAt    DateTime  @updatedAt
 
+  /// The durable request claim that minted this credential. A lobby can be
+  /// created by `/lobby` or by Customs, but every path goes through the same
+  /// claim-before-Riot provisioning service.
+  provision TournamentLobbyProvision?
+
   @@index([state, expiresAt])
   @@index([serverId, state])
   @@index([matchId])
+}
+
+/// Claim for one Tournament-V5 code-creation request.
+///
+/// A timeout after the POST may mean Riot minted a credential, so any request
+/// that did not durably reach COMPLETED is intentionally not retried. The
+/// request hash also prevents an idempotency key from being reused for a
+/// different roster or lobby policy.
+model TournamentLobbyProvision {
+  id          String   @id
+  requestHash String
+  state       String   @default("PENDING")
+  lobbyId     Int?     @unique
+  lobby       TournamentLobby? @relation(fields: [lobbyId], references: [id], onDelete: Restrict)
+  lastError   String?
+  claimedAt   DateTime @default(now())
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([state, claimedAt])
+  @@index([requestHash, state])
 }
 
 /// Durable handoff for work created by request/gateway code before Temporal
