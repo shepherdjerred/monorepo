@@ -3,11 +3,8 @@
 // lane must use the exact filtered install, consume the committed image pin,
 // run only the no-install test closure, restore no runtime bootstrap, and carry
 // the reporting collector contract that matches each lane's skip semantics.
-import {
-  fail,
-  hasTrimmedLine,
-  requireIncludes,
-} from "./validate-pipeline-lib.ts";
+import { fail, hasTrimmedLine } from "./validate-pipeline-parse.ts";
+import { requireIncludes } from "./validate-pipeline-lib.ts";
 
 export function validatePlaywrightLanes(
   stepBlocks: ReadonlyMap<string, string>,

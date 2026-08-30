@@ -1,4 +1,4 @@
-import { fail } from "./validate-pipeline-lib.ts";
+import { fail } from "./validate-pipeline-parse.ts";
 import { validateExhaustiveGraphCapacity } from "./validate-pipeline-resources.ts";
 
 export function validateReportingPipeline(pipeline: string): void {

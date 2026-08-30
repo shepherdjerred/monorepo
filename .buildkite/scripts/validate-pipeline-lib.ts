@@ -3,6 +3,12 @@
 // invariant checks stay in validate-pipeline.ts; this file only holds the
 // mechanical text parsing and per-step structural checks it drives.
 
+import { fail, scalar } from "./validate-pipeline-parse.ts";
+import {
+  checkStepStructure,
+  type StepStructureConfig,
+} from "./validate-pipeline-step-structure.ts";
+
 export const SHARED_POD_ANCHORS = [
   "pod_kubernetes",
   "pod_buildkit_kubernetes",
@@ -20,28 +26,6 @@ export const FORBIDDEN_DOCKER_IN_DOCKER_PATTERNS = [
   /DOCKER_HOST/,
   /docker:(?:dind|\S+-dind)/,
 ] as const;
-
-export function fail(message: string): never {
-  throw new Error(`[validate-pipeline] ${message}`);
-}
-
-export function scalar(value: string): string {
-  const trimmed = value.trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
-}
-
-export function hasTrimmedLine(
-  block: string | undefined,
-  expected: string,
-): boolean {
-  return block?.split("\n").some((line) => line.trim() === expected) ?? false;
-}
 
 // Assert every install uses the shared-lock wrapper and exactly one unfiltered
 // invocation belongs to verify, so no lane can bypass cache collection
@@ -276,84 +260,6 @@ export function containerBlock(
     blockStart,
     nextContainer === -1 ? step.length : nextContainer,
   );
-}
-
-export type StepStructureConfig = {
-  sharedPodAnchors: readonly string[];
-  checkoutContainerAlias: string;
-  pathGatedPrKeys: ReadonlySet<string>;
-  nativeStepKeys: ReadonlySet<string>;
-  globalIfChanged: readonly string[];
-};
-
-function checkStepStructure(
-  key: string,
-  block: string,
-  blockLines: string[],
-  config: StepStructureConfig,
-): void {
-  const {
-    sharedPodAnchors,
-    checkoutContainerAlias,
-    pathGatedPrKeys,
-    nativeStepKeys,
-  } = config;
-
-  if (!blockLines.some((line) => line.startsWith("    if:"))) {
-    fail(`step ${key} has no condition`);
-  }
-
-  const labels = blockLines
-    .filter((line) => /^\s+ci\.sjer\.red\/step-key:/.test(line))
-    .map((line) => scalar(line.replace(/^\s+ci\.sjer\.red\/step-key:\s*/, "")));
-  if (nativeStepKeys.has(key)) {
-    if (labels.length > 0) {
-      fail(`native step ${key} must not declare Kubernetes pod metadata`);
-    }
-    if (!/^ {4}agents:\n {6}queue: macos$/mu.test(block)) {
-      fail(`native step ${key} must target queue macos`);
-    }
-    if (
-      /^ {4}(?:plugins|soft_fail):/mu.test(block) ||
-      block.includes("kubernetes:")
-    ) {
-      fail(`native step ${key} must be a hard step without plugins`);
-    }
-    if (!/^ {4}depends_on: verify$/mu.test(block)) {
-      fail(`native step ${key} must wait for verify`);
-    }
-    if (
-      !/^ {4}concurrency: 1$/mu.test(block) ||
-      !/^ {4}concurrency_group: monorepo\/macos-native$/mu.test(block)
-    ) {
-      fail(`native step ${key} must serialize in monorepo/macos-native`);
-    }
-  } else {
-    if (labels.length !== 1 || labels[0] !== key) {
-      fail(
-        `step ${key} must have exactly one ci.sjer.red/step-key label equal to its key`,
-      );
-    }
-
-    const inheritedCheckoutPatch = sharedPodAnchors.some((anchorName) =>
-      block.includes(`<<: *${anchorName}`),
-    );
-    const directCheckoutPatch = hasTrimmedLine(block, checkoutContainerAlias);
-    if (!inheritedCheckoutPatch && !directCheckoutPatch) {
-      fail(`step ${key} does not patch checkout to 1Gi/2Gi`);
-    }
-  }
-
-  if (pathGatedPrKeys.has(key)) {
-    if (!/^ {4}if_changed:/m.test(block)) {
-      fail(`PR lane ${key} has no native if_changed gate`);
-    }
-    for (const globalPath of config.globalIfChanged) {
-      if (!block.includes(`- ${globalPath}`)) {
-        fail(`PR lane ${key} is missing global if_changed path ${globalPath}`);
-      }
-    }
-  }
 }
 
 export type StepIndex = {

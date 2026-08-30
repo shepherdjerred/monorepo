@@ -14,6 +14,7 @@
  * file keeps the content-specific invariant checks about particular lanes.
  */
 
+import { fail, hasTrimmedLine } from "./validate-pipeline-parse.ts";
 import {
   assertInstallFreeEntrypointsHaveNoBareImports,
   assertNoImplicitBunRuntime,
@@ -22,8 +23,6 @@ import {
   assertUnfilteredInstallBelongsToVerify,
   collectStepBlocks,
   containerBlock,
-  fail,
-  hasTrimmedLine,
   requireIncludes,
   SHARED_POD_ANCHORS,
   CHECKOUT_CONTAINER_ALIAS,

@@ -94,6 +94,30 @@ export function parseNativeJobs(value: unknown): NativeJob[] {
   return nativeJobs;
 }
 
+function collectRunningNativeJobs(
+  jobs: readonly unknown[],
+  buildNumber: number,
+  running: RunningNativeJob[],
+): void {
+  for (const valueJob of jobs) {
+    const buildJob = asRecord(valueJob);
+    if (buildJob === null) continue;
+    const stepKey = buildJob["step_key"];
+    if (
+      typeof stepKey !== "string" ||
+      !ALL_NATIVE_STEP_KEYS.has(stepKey) ||
+      buildJob["state"] !== "running"
+    ) {
+      continue;
+    }
+    running.push({
+      buildNumber,
+      name: requiredString(buildJob["name"], `${stepKey}.name`),
+      stepKey,
+    });
+  }
+}
+
 export function parseOtherRunningNativeJobs(
   value: unknown,
   currentBuildNumber: number,
@@ -115,23 +139,7 @@ export function parseOtherRunningNativeJobs(
     }
     if (buildNumber === currentBuildNumber) continue;
 
-    for (const valueJob of jobs) {
-      const buildJob = asRecord(valueJob);
-      if (buildJob === null) continue;
-      const stepKey = buildJob["step_key"];
-      if (
-        typeof stepKey !== "string" ||
-        !ALL_NATIVE_STEP_KEYS.has(stepKey) ||
-        buildJob["state"] !== "running"
-      ) {
-        continue;
-      }
-      running.push({
-        buildNumber,
-        name: requiredString(buildJob["name"], `${stepKey}.name`),
-        stepKey,
-      });
-    }
+    collectRunningNativeJobs(jobs, buildNumber, running);
   }
   return running;
 }

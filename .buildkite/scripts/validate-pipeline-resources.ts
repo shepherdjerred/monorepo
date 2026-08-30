@@ -1,8 +1,7 @@
+import { fail, hasTrimmedLine } from "./validate-pipeline-parse.ts";
 import {
   CHECKOUT_CONTAINER_ALIAS,
   containerBlock,
-  fail,
-  hasTrimmedLine,
   requireIncludes,
   sharedPodAnchorBlock,
   SHARED_POD_ANCHORS,
