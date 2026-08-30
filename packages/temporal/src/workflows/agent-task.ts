@@ -19,7 +19,6 @@ const BOUNDED_AGENT_RETRY = {
 
 const workdirActivities = proxyActivities<AgentTaskActivities>({
   taskQueue: TASK_QUEUES.AGENT_TASK,
-  taskQueue: TASK_QUEUES.AGENT_TASK,
   startToCloseTimeout: "10 minutes",
   retry: RETRY,
 });
@@ -56,7 +55,6 @@ function agentActivitiesFor(
 > {
   const timeoutMinutes = input.agentTimeoutMinutes ?? 90;
   return proxyActivities<AgentTaskActivities>({
-    taskQueue: TASK_QUEUES.AGENT_TASK,
     taskQueue: TASK_QUEUES.AGENT_TASK,
     startToCloseTimeout: timeoutMinutes * 60 * 1000,
     heartbeatTimeout: "60 seconds",
@@ -137,8 +135,6 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   const v2Reporting = patched("agent-task-report-v2");
   const twoPhaseV2 = patched("agent-task-two-phase-v2");
   const requireV2 = patched("agent-task-require-v2");
-  deprecatePatch("agent-task-core-email-delivery");
-  deprecatePatch("agent-task-reports-email-delivery-v1");
   const postDeliveryFailureReporting = patched(
     "agent-task-post-delivery-failure-report",
   );
