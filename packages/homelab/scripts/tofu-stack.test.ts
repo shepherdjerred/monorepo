@@ -259,4 +259,18 @@ describe("committed platform desired state", () => {
       },
     ]);
   });
+
+  test("collects Discord item-only handoffs", () => {
+    expect(
+      collectOnePasswordTargets({
+        discord_bots: {
+          birmel: {
+            application_name: "Birmel",
+            expected_application_id: "123",
+            vault_item_id: "birmel-item",
+          },
+        },
+      }),
+    ).toEqual([{ vault_item_id: "birmel-item" }]);
+  });
 });

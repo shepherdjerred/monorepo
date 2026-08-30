@@ -329,7 +329,10 @@ function validateDesiredStateTargets(
       );
       continue;
     }
-    if (!entry.fields.includes(hash(target.vault_field))) {
+    if (
+      target.vault_field !== undefined &&
+      !entry.fields.includes(hash(target.vault_field))
+    ) {
       errors.push(
         `1Password handoff field "${target.vault_field}" not found on item "${target.vault_item_id}" in ${platform} desired state. ` +
           `If it was just added or renamed, refresh the snapshot.`,

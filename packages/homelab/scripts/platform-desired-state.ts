@@ -15,10 +15,14 @@ const onePasswordTarget = z.strictObject({
 });
 const onePasswordTargetReference = z.looseObject({
   vault_item_id: nonEmptyString,
-  vault_field: nonEmptyString,
+  vault_field: optionalNonEmptyString,
   vault_json_path: optionalNonEmptyString,
 });
-export type OnePasswordTarget = z.infer<typeof onePasswordTarget>;
+export type OnePasswordTarget = {
+  vault_item_id: string;
+  vault_field?: string;
+  vault_json_path?: string;
+};
 
 const openAiProject = z.strictObject({
   project_id: optionalNonEmptyString,
@@ -368,8 +372,10 @@ export function collectOnePasswordTargets(
     if (target.success) {
       const normalizedTarget: OnePasswordTarget = {
         vault_item_id: target.data.vault_item_id,
-        vault_field: target.data.vault_field,
       };
+      if (target.data.vault_field !== undefined) {
+        normalizedTarget.vault_field = target.data.vault_field;
+      }
       if (target.data.vault_json_path !== undefined) {
         normalizedTarget.vault_json_path = target.data.vault_json_path;
       }

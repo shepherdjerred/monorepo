@@ -37,26 +37,46 @@
         "openai_service_accounts": {
           "$ref": "#/$defs/openAiServiceAccountMap"
         },
-        "openai_organization_users": { "$ref": "#/$defs/resourceMap" },
-        "openai_project_users": { "$ref": "#/$defs/resourceMap" },
-        "openai_project_spend_alerts": { "$ref": "#/$defs/resourceMap" },
-        "openai_groups": { "$ref": "#/$defs/resourceMap" },
-        "openai_group_users": { "$ref": "#/$defs/resourceMap" },
-        "openai_group_roles": { "$ref": "#/$defs/resourceMap" },
-        "openai_user_roles": { "$ref": "#/$defs/resourceMap" },
-        "openai_roles": { "$ref": "#/$defs/resourceMap" },
-        "openai_certificates": { "$ref": "#/$defs/resourceMap" },
-        "openai_organization_spend_alerts": { "$ref": "#/$defs/resourceMap" },
-        "openai_organization_spend_limits": { "$ref": "#/$defs/resourceMap" },
-        "openai_project_groups": { "$ref": "#/$defs/resourceMap" },
-        "openai_project_group_roles": { "$ref": "#/$defs/resourceMap" },
-        "openai_project_data_retention": { "$ref": "#/$defs/resourceMap" },
-        "openai_project_model_permissions": { "$ref": "#/$defs/resourceMap" },
-        "openai_project_hosted_tool_permissions": {
-          "$ref": "#/$defs/resourceMap"
+        "openai_organization_users": {
+          "$ref": "#/$defs/openAiOrganizationUserMap"
         },
-        "openai_project_spend_limits": { "$ref": "#/$defs/resourceMap" },
-        "openai_project_rate_limits": { "$ref": "#/$defs/resourceMap" }
+        "openai_project_users": { "$ref": "#/$defs/openAiProjectUserMap" },
+        "openai_project_spend_alerts": {
+          "$ref": "#/$defs/spendAlertMap"
+        },
+        "openai_groups": { "$ref": "#/$defs/openAiGroupMap" },
+        "openai_group_users": { "$ref": "#/$defs/openAiGroupUserMap" },
+        "openai_group_roles": { "$ref": "#/$defs/openAiGroupRoleMap" },
+        "openai_user_roles": { "$ref": "#/$defs/openAiUserRoleMap" },
+        "openai_roles": { "$ref": "#/$defs/openAiRoleMap" },
+        "openai_certificates": { "$ref": "#/$defs/openAiCertificateMap" },
+        "openai_organization_spend_alerts": {
+          "$ref": "#/$defs/spendAlertMap"
+        },
+        "openai_organization_spend_limits": {
+          "$ref": "#/$defs/spendLimitMap"
+        },
+        "openai_project_groups": {
+          "$ref": "#/$defs/openAiProjectGroupMap"
+        },
+        "openai_project_group_roles": {
+          "$ref": "#/$defs/openAiProjectGroupRoleMap"
+        },
+        "openai_project_data_retention": {
+          "$ref": "#/$defs/openAiProjectDataRetentionMap"
+        },
+        "openai_project_model_permissions": {
+          "$ref": "#/$defs/openAiProjectModelPermissionsMap"
+        },
+        "openai_project_hosted_tool_permissions": {
+          "$ref": "#/$defs/openAiProjectHostedToolPermissionsMap"
+        },
+        "openai_project_spend_limits": {
+          "$ref": "#/$defs/openAiProjectSpendLimitMap"
+        },
+        "openai_project_rate_limits": {
+          "$ref": "#/$defs/openAiProjectRateLimitMap"
+        }
       }
     },
     {
@@ -176,6 +196,279 @@
             "minItems": 1,
             "items": { "$ref": "#/$defs/onePasswordTarget" }
           }
+        }
+      }
+    },
+    "openAiOrganizationUserMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["user_id"],
+        "properties": {
+          "user_id": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 },
+          "developer_persona": { "type": "string", "minLength": 1 },
+          "technical_level": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectUserMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "user_id", "role_id"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "user_id": { "type": "string", "minLength": 1 },
+          "role_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "spendAlertMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "threshold_amount",
+          "currency",
+          "interval",
+          "notification_channel_type",
+          "notification_channel_recipients"
+        ],
+        "properties": {
+          "threshold_amount": { "type": "number" },
+          "currency": { "type": "string", "minLength": 1 },
+          "interval": { "type": "string", "minLength": 1 },
+          "notification_channel_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "notification_channel_recipients": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "notification_channel_subject_prefix": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "openAiGroupMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["group_id", "name"],
+        "properties": {
+          "group_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiGroupUserMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["group_key", "user_id"],
+        "properties": {
+          "group_key": { "type": "string", "minLength": 1 },
+          "user_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiGroupRoleMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["group_key", "role_id"],
+        "properties": {
+          "group_key": { "type": "string", "minLength": 1 },
+          "role_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiUserRoleMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["user_id", "role_id"],
+        "properties": {
+          "user_id": { "type": "string", "minLength": 1 },
+          "role_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiRoleMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role_name", "permissions"],
+        "properties": {
+          "role_name": { "type": "string", "minLength": 1 },
+          "permissions": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiCertificateMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["certificate_id"],
+        "properties": {
+          "certificate_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "spendLimitMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["threshold_amount", "currency", "interval"],
+        "properties": {
+          "threshold_amount": { "type": "number" },
+          "currency": { "type": "string", "minLength": 1 },
+          "interval": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectGroupMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "group_key", "role"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "group_key": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectGroupRoleMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "group_key", "role_id"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "group_key": { "type": "string", "minLength": 1 },
+          "role_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectDataRetentionMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "type"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectModelPermissionsMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "mode", "model_ids"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "mode": { "type": "string", "minLength": 1 },
+          "model_ids": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "openAiProjectHostedToolPermissionsMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "project_key",
+          "file_search_enabled",
+          "web_search_enabled",
+          "image_generation_enabled",
+          "mcp_enabled",
+          "code_interpreter_enabled"
+        ],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "file_search_enabled": { "type": "boolean" },
+          "web_search_enabled": { "type": "boolean" },
+          "image_generation_enabled": { "type": "boolean" },
+          "mcp_enabled": { "type": "boolean" },
+          "code_interpreter_enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "openAiProjectSpendLimitMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "threshold_amount", "currency", "interval"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "threshold_amount": { "type": "number" },
+          "currency": { "type": "string", "minLength": 1 },
+          "interval": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectRateLimitMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "rate_limit_id"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "rate_limit_id": { "type": "string", "minLength": 1 },
+          "batch_1_day_max_input_tokens": { "type": "number" },
+          "max_audio_megabytes_per_1_minute": { "type": "number" },
+          "max_images_per_1_minute": { "type": "number" },
+          "max_requests_per_1_day": { "type": "number" },
+          "max_requests_per_1_minute": { "type": "number" },
+          "max_tokens_per_1_minute": { "type": "number" }
         }
       }
     },
