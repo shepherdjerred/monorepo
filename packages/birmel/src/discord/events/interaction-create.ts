@@ -27,7 +27,13 @@ import { SessionState } from "@shepherdjerred/birmel/editor/types.ts";
 import {
   hasValidAuth,
   getAuthorizationUrl,
+  getAuth,
 } from "@shepherdjerred/birmel/editor/github-oauth.ts";
+import { getRepoConfig } from "@shepherdjerred/birmel/editor/config.ts";
+import {
+  cleanupClone,
+  cloneRepo,
+} from "@shepherdjerred/birmel/editor/repo-clone.ts";
 import {
   createPullRequest,
   generatePRTitle,
@@ -183,8 +189,29 @@ async function handleApprove(
     return;
   }
 
-  // Update state to approved
-  await updateSessionState(sessionId, SessionState.APPROVED);
+  const repoConfig = getRepoConfig(session.repoName);
+  if (repoConfig == null) {
+    await interaction.editReply({
+      content: `Repository '${session.repoName}' configuration not found.`,
+    });
+    return;
+  }
+  const auth = await getAuth(interaction.user.id);
+  if (auth == null) {
+    await interaction.editReply({
+      content: "GitHub authentication required to create a PR.",
+    });
+    return;
+  }
+
+  // Approve from a fresh clone so agent-controlled Git metadata cannot run
+  // during the trusted commit and push operations.
+  const approvalRepoPath = await cloneRepo({
+    repo: repoConfig.repo,
+    branch: pendingChanges.baseBranch,
+    token: auth.accessToken,
+    sessionId: `${session.id}-approval-${String(Date.now())}`,
+  });
 
   // Create PR
   const title = generatePRTitle(session.summary ?? "Changes from Discord");
@@ -194,15 +221,22 @@ async function handleApprove(
     interaction.user.username,
   );
 
-  const result = await createPullRequest({
-    userId: interaction.user.id,
-    repoPath: session.clonedRepoPath,
-    branchName: pendingChanges.branchName,
-    baseBranch: pendingChanges.baseBranch,
-    title,
-    body,
-    changes: pendingChanges.changes,
-  });
+  let result: Awaited<ReturnType<typeof createPullRequest>>;
+  try {
+    // Update state to approved only while the isolated checkout is held.
+    await updateSessionState(sessionId, SessionState.APPROVED);
+    result = await createPullRequest({
+      userId: interaction.user.id,
+      repoPath: approvalRepoPath,
+      branchName: pendingChanges.branchName,
+      baseBranch: pendingChanges.baseBranch,
+      title,
+      body,
+      changes: pendingChanges.changes,
+    });
+  } finally {
+    await cleanupClone(approvalRepoPath);
+  }
 
   if (!result.success) {
     // Revert state
