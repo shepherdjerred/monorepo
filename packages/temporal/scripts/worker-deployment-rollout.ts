@@ -60,6 +60,7 @@ function actionFrom(args: string[]): WorkerDeploymentRolloutOptions["action"] {
     );
   }
   if (
+    action !== "inspect" &&
     action !== "status" &&
     action !== "start" &&
     action !== "advance" &&
