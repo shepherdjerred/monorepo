@@ -156,6 +156,28 @@ type EventBridgeSupervisorState = {
   currentHandle: EventBridgeHandle | undefined;
 };
 
+function workerConcurrency(definition: QueueWorkerDefinition): {
+  maxConcurrentActivityTaskExecutions?: number;
+  maxConcurrentWorkflowTaskExecutions?: number;
+} {
+  if (definition.kind === "activity") {
+    if (definition.maxConcurrentActivityTaskExecutions === undefined) {
+      return {};
+    }
+    return {
+      maxConcurrentActivityTaskExecutions:
+        definition.maxConcurrentActivityTaskExecutions,
+    };
+  }
+  if (definition.maxConcurrentWorkflowTaskExecutions === undefined) {
+    return {};
+  }
+  return {
+    maxConcurrentWorkflowTaskExecutions:
+      definition.maxConcurrentWorkflowTaskExecutions,
+  };
+}
+
 function isEventBridgeSupervisorClosed(
   state: EventBridgeSupervisorState,
 ): boolean {
@@ -237,6 +259,44 @@ function startEventBridgeSupervisor(client: Client): EventBridgeHandle {
   };
 }
 
+async function createDefinitionWorker(input: {
+  connection: NativeConnection;
+  definition: QueueWorkerDefinition;
+  workflowsPath: string;
+  namespace: TemporalNamespace | LegacyTemporalNamespace;
+  legacyDrain: boolean;
+}): Promise<Worker> {
+  if (input.definition.kind === "workflow") {
+    return await Worker.create({
+      connection: input.connection,
+      workflowsPath: input.workflowsPath,
+      workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
+      namespace: input.namespace,
+      taskQueue: input.definition.taskQueue,
+      ...(!input.legacyDrain &&
+      input.definition.maxConcurrentWorkflowTaskExecutions === undefined
+        ? {}
+        : {
+            maxConcurrentWorkflowTaskExecutions:
+              input.definition.maxConcurrentWorkflowTaskExecutions ?? 1,
+          }),
+    });
+  }
+  return await Worker.create({
+    connection: input.connection,
+    namespace: input.namespace,
+    activities: input.definition.activities,
+    taskQueue: input.definition.taskQueue,
+    ...(!input.legacyDrain &&
+    input.definition.maxConcurrentActivityTaskExecutions === undefined
+      ? {}
+      : {
+          maxConcurrentActivityTaskExecutions:
+            input.definition.maxConcurrentActivityTaskExecutions ?? 1,
+        }),
+  });
+}
+
 async function createRoleWorkers(input: {
   connection: NativeConnection;
   definitions: readonly QueueWorkerDefinition[];
@@ -253,27 +313,12 @@ async function createRoleWorkers(input: {
     });
     for (const namespace of namespaces) {
       const legacyDrain = namespace === input.legacyNamespace;
-      const worker = await Worker.create({
+      const worker = await createDefinitionWorker({
         connection: input.connection,
+        definition,
         workflowsPath,
-        workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
         namespace,
-        activities: definition.activities,
-        taskQueue: definition.taskQueue,
-        ...(!legacyDrain &&
-        definition.maxConcurrentActivityTaskExecutions === undefined
-          ? {}
-          : {
-              maxConcurrentActivityTaskExecutions:
-                definition.maxConcurrentActivityTaskExecutions ?? 1,
-            }),
-        ...(!legacyDrain &&
-        definition.maxConcurrentWorkflowTaskExecutions === undefined
-          ? {}
-          : {
-              maxConcurrentWorkflowTaskExecutions:
-                definition.maxConcurrentWorkflowTaskExecutions ?? 1,
-            }),
+        legacyDrain,
       });
       workers.push(worker);
       jsonLog("info", "Worker created", {
@@ -281,10 +326,7 @@ async function createRoleWorkers(input: {
         legacyDrain,
         queueRole: definition.role,
         taskQueue: definition.taskQueue,
-        maxConcurrentActivityTaskExecutions:
-          definition.maxConcurrentActivityTaskExecutions,
-        maxConcurrentWorkflowTaskExecutions:
-          definition.maxConcurrentWorkflowTaskExecutions,
+        ...workerConcurrency(definition),
       });
     }
   }
