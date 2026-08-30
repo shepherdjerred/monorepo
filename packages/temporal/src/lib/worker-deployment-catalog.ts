@@ -30,6 +30,8 @@ const PinStateSchema = z
   })
   .strict();
 
+type PinStateEntry = z.infer<typeof PinStateSchema>["pins"][string];
+
 export type StablePinPromotion = {
   candidateImage: string;
   contents: string;
@@ -58,6 +60,18 @@ function parseCatalog(raw: string): z.infer<typeof CatalogSchema> {
   } catch (error: unknown) {
     throw new Error("Temporal version catalog is invalid", { cause: error });
   }
+}
+
+function pinStateEntriesEqual(
+  left: PinStateEntry | undefined,
+  right: PinStateEntry,
+): boolean {
+  if (left === undefined) return false;
+  return (
+    left.buildNumber === right.buildNumber &&
+    left.version === right.version &&
+    left.digest === right.digest
+  );
 }
 
 export async function prepareStablePinPromotion(
@@ -181,13 +195,11 @@ export async function prepareStablePinStatePromotion(
     return { contents: `${JSON.stringify(state, null, 2)}\n`, changed: false };
   }
   const stable = state.pins[stablePinName];
-  if (
-    Object.hasOwn(state.pins, stablePinName) &&
-    stable.buildNumber === candidate.buildNumber &&
-    stable.version === candidate.version &&
-    stable.digest === candidate.digest
-  ) {
-    return { contents: `${JSON.stringify(state, null, 2)}\n`, changed: false };
+  if (pinStateEntriesEqual(stable, candidate)) {
+    return {
+      contents: `${JSON.stringify(state, null, 2)}\n`,
+      changed: false,
+    };
   }
   const pins = Object.fromEntries(
     Object.entries({ ...state.pins, [stablePinName]: candidate }).sort(
