@@ -65,6 +65,6 @@ The complete reference is [AGENTS.md](AGENTS.md):
 | [Workflow failure alerts](AGENTS.md#temporal-workflow-failure--alerts-occurrences)                       | Per-failure Alertmanager occurrences                             |
 | [Generic agent tasks](AGENTS.md#generic-agent-tasks)                                                     | `agentTaskWorkflow`, `/agent-tasks` API, canary, schema dialects |
 | [Scheduled PR-creating workflows](AGENTS.md#scheduled-pr-creating-workflows)                             | Deterministic refresh jobs, bot-clone helpers, rehearsal check   |
-| [Review threads (CI gate)](AGENTS.md#review-threads-ci-gate)                                             | Provider-neutral review gate and the review-signal collector     |
+| [Review threads (CI gate)](AGENTS.md#review-threads-ci-gate)                                             | Provider-neutral CI review gate                                  |
 | [GitHub webhook](AGENTS.md#github-webhook-merge-conflict-check--pr-closed-build-cancel)                  | Merge-conflict status and PR-closed Buildkite build cancellation |
 | [HA presence](AGENTS.md#ha-presence-welcomehome--leavinghome--reconcilelock--debounce-model)             | Presence debounce model and the front-door lock reconciler       |

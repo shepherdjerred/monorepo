@@ -1,5 +1,5 @@
 /**
- * GitHub I/O for the review gate and the observability collector. Everything
+ * GitHub I/O for the review gate and its observability signals. Everything
  * here is provider-parameterised: fetching review threads, resolving whether a
  * provider has reviewed the head commit (check-run vs review-at-head + 👍
  * reaction), and detecting a deliberate skip. Pure decisions stay in
@@ -454,8 +454,8 @@ export async function resolveReviewState(input: {
     });
     // A skip is `reviewed` (nothing to review) but is NOT a check-run
     // completion — no check-run ran for this head. Reporting `check-run` here
-    // would inflate the check-run completion metric and archive a false
-    // completion mechanism for every skip, corrupting provider comparisons. The
+    // would mislabel the completion mechanism for every skip, corrupting
+    // provider comparisons. The
     // completion signal stays `none`; `skipReason` carries the real reason.
     return {
       state: skipReason === null ? "reviewing" : "reviewed",

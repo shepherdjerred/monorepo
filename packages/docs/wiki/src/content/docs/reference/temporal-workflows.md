@@ -128,11 +128,10 @@ Parameters for the sleep and morning routines are in
 
 ## GitHub PRs
 
-| Workflow               | Trigger             | Brain         | Output              |
-| ---------------------- | ------------------- | ------------- | ------------------- |
-| merge-conflict check   | PR push / main push | deterministic | required status     |
-| buildkite-cancel       | PR close            | deterministic | cancelled builds    |
-| observe-review-signals | every 6h            | deterministic | metrics + S3 NDJSON |
+| Workflow             | Trigger             | Brain         | Output           |
+| -------------------- | ------------------- | ------------- | ---------------- |
+| merge-conflict check | PR push / main push | deterministic | required status  |
+| buildkite-cancel     | PR close            | deterministic | cancelled builds |
 
 ## Agent tasks
 

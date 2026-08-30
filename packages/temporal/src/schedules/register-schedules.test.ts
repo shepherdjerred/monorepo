@@ -10,6 +10,7 @@ import {
   DELETED_SCHEDULE_IDS,
   buildSchedulePolicies,
   routeDynamicAgentTaskSchedule,
+  terminateRetiredWorkflowExecutions,
 } from "./register-schedules.ts";
 import { SCHEDULES } from "./schedule-definitions.ts";
 import {
@@ -386,10 +387,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
   "syncGolinks",
-  // Awaits a single runObserveReviewSignals activity (list PRs + per-PR
-  // GitHub reads + one S3 NDJSON write). No workflow-level sleeps; the
-  // activity carries its own startToCloseTimeout + retry budget.
-  "observeReviewSignalsWorkflow",
   "runGlitterCorpusDaily",
   "runGlitterContextRefresh",
   // Awaits a single pollWorkflowFailures activity (visibility list + per-
@@ -535,6 +532,37 @@ describe("DELETED_SCHEDULE_IDS", () => {
       expect(activeIds).not.toContain(deletedId);
     }
   });
+});
+
+test("terminates running executions of retired workflow types", async () => {
+  const queries: string[] = [];
+  const terminated: string[] = [];
+  const client = {
+    workflow: {
+      list({ query }: { query: string }) {
+        queries.push(query);
+        return (async function* () {
+          yield { workflowId: "retired-workflow", runId: "retired-run" };
+        })();
+      },
+      getHandle(workflowId: string, runId: string) {
+        return {
+          terminate: async (reason?: string) => {
+            terminated.push(`${workflowId}/${runId}: ${reason ?? ""}`);
+          },
+        };
+      },
+    },
+  };
+
+  await terminateRetiredWorkflowExecutions(client);
+
+  expect(queries).toEqual([
+    'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+  ]);
+  expect(terminated).toEqual([
+    "retired-workflow/retired-run: Workflow type retired; terminating during deployment",
+  ]);
 });
 
 describe("Glitter corpus schedule", () => {
@@ -716,6 +744,13 @@ describe("catchup window policy", () => {
 describe("orphan schedule detection", () => {
   const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
   const deletedIds = new Set<string>(DELETED_SCHEDULE_IDS);
+
+  test("review-signal collector schedule is queued for deletion", () => {
+    expect(DELETED_SCHEDULE_IDS).toContain("review-signals-collect");
+    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
+      "review-signals-collect",
+    );
+  });
 
   test("both pokeemerald wasm schedules are queued for deletion", () => {
     // The pokeemerald.wasm download workflow is gone — the wasm was built

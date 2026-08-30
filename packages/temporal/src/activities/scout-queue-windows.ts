@@ -83,10 +83,7 @@ function warningStateStore(
 } {
   return {
     client: new S3Client({ endpoint, region, forcePathStyle: true }),
-    bucket:
-      Bun.env["REPORT_RECEIPT_BUCKET"] ??
-      Bun.env["REVIEW_SIGNAL_ARCHIVE_BUCKET"] ??
-      "llm-archive",
+    bucket: Bun.env["REPORT_RECEIPT_BUCKET"] ?? "llm-archive",
   };
 }
 

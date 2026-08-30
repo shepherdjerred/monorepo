@@ -5,7 +5,7 @@ import { register } from "./metrics.ts";
 // Glitter Discord corpus
 // ---------------------------------------------------------------------------
 // Split out of metrics.ts (which sits at the repo's max-lines cap), the same
-// sibling-file pattern as ./pr-review-metrics.ts. Import from
+// sibling-file pattern as the other split metrics modules. Import from
 // #observability/metrics-glitter.ts directly, not from metrics.ts.
 
 export const glitterCorpusDiscordRequestsTotal = new Counter({

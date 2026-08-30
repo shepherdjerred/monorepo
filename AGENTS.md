@@ -881,10 +881,8 @@ for machine-readable output, `--pr N,M` for specific pull requests.
 
 This is deliberately a live query rather than another archive: reviews, review
 comments and their timestamps are retained by GitHub indefinitely, so every
-figure here is reconstructible after the fact. The 6-hourly
-`review-signals-collect` archive stays as it is, but note it snapshots only the
-_current_ head and so cannot answer a per-push question. Severity is parsed with
-the checkout's own provider rules, so run it from the checkout whose numbers you
+figure here is reconstructible after the fact. Severity is parsed with the
+checkout's own provider rules, so run it from the checkout whose numbers you
 mean to compare.
 
 ## PR Fleet Controller

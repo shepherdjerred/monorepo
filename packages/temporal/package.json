@@ -56,7 +56,6 @@
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@sentry/bun": "^10.70.0",
-    "@shepherdjerred/code-review": "workspace:*",
     "@shepherdjerred/glitter-context": "workspace:*",
     "@shepherdjerred/home-assistant": "workspace:*",
     "@shepherdjerred/llm-models": "workspace:*",

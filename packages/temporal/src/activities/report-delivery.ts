@@ -141,10 +141,7 @@ function reportReceiptStore(): ReportReceiptStore {
       forcePathStyle: (Bun.env["S3_FORCE_PATH_STYLE"] ?? "true") === "true",
       credentials,
     }),
-    bucket:
-      Bun.env["REPORT_RECEIPT_BUCKET"] ??
-      Bun.env["REVIEW_SIGNAL_ARCHIVE_BUCKET"] ??
-      "llm-archive",
+    bucket: Bun.env["REPORT_RECEIPT_BUCKET"] ?? "llm-archive",
     prefix: Bun.env["REPORT_RECEIPT_PREFIX"] ?? "reports/receipts",
   };
 }

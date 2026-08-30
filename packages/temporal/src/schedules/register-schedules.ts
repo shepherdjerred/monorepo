@@ -4,6 +4,7 @@ import type {
   ScheduleUpdateOptions,
 } from "@temporalio/client";
 import { ScheduleNotFoundError } from "@temporalio/client";
+import { WorkflowNotFoundError } from "@temporalio/common";
 import {
   detectOrphanSchedules,
   isReconcilableDynamicAgentTaskSchedule,
@@ -63,10 +64,53 @@ export const DELETED_SCHEDULE_IDS = [
   // down with them.
   "pr-review-eval-nightly",
   "pr-review-ab-weekly-report",
+  // The review-signal collector was removed; delete its live schedule during
+  // reconciliation so it cannot continue starting a missing workflow.
+  "review-signals-collect",
   // Replaced by per-execution temporal-failure-watch alerts and worker-task
   // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",
 ] as const;
+
+// Schedule deletion prevents future starts but does not stop an execution that
+// was already started. The retired workflow types stay on this migration list
+// for one reconciliation so the gateway can terminate those executions before
+// the queue-owning workers receive a bundle without their handlers.
+const RETIRED_WORKFLOW_TYPES = ["observeReviewSignalsWorkflow"] as const;
+
+export async function terminateRetiredWorkflowExecutions(client: {
+  workflow: {
+    list: (options: { query: string }) => AsyncIterable<{
+      workflowId: string;
+      runId: string;
+    }>;
+    getHandle: (
+      workflowId: string,
+      runId: string,
+    ) => { terminate: (reason?: string) => Promise<unknown> };
+  };
+}): Promise<void> {
+  for (const workflowType of RETIRED_WORKFLOW_TYPES) {
+    const query = `WorkflowType = "${workflowType}" AND ExecutionStatus = "Running"`;
+    for await (const execution of client.workflow.list({ query })) {
+      try {
+        await client.workflow
+          .getHandle(execution.workflowId, execution.runId)
+          .terminate("Workflow type retired; terminating during deployment");
+        console.warn(
+          `Terminated retired workflow: ${workflowType} ${execution.workflowId}/${execution.runId}`,
+        );
+      } catch (error: unknown) {
+        // Visibility is eventually consistent; a run can finish between the
+        // list and terminate calls. A missing execution is already in the
+        // desired terminal state, while all other errors must fail startup.
+        if (!(error instanceof WorkflowNotFoundError)) {
+          throw error;
+        }
+      }
+    }
+  }
+}
 
 export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   overlap: ScheduleOverlapPolicy;
@@ -175,6 +219,7 @@ export async function registerSchedules(
   // set and into SCHEDULES is skipped despite its immutable creation-time memo
   // marker — see isReconcilableDynamicAgentTaskSchedule.
   await reconcileDynamicAgentTaskSchedules(scheduleClient, declaredIds);
+  await terminateRetiredWorkflowExecutions(client);
 
   for (const schedule of SCHEDULES) {
     const handle = scheduleClient.getHandle(schedule.id);

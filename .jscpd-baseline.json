@@ -1800,17 +1800,13 @@
       "clones": 1,
       "tokens": 95
     },
-    "packages/temporal/src/activities/observe-review-signals.ts|scripts/probe-review-signal.ts": {
-      "clones": 1,
-      "tokens": 128
-    },
     "packages/temporal/src/activities/report-delivery.test.ts|packages/temporal/src/activities/report-delivery.test.ts": {
       "clones": 1,
       "tokens": 70
     },
     "packages/temporal/src/activities/report-freshness.ts|packages/temporal/src/activities/tasknotes-canary.ts": {
       "clones": 1,
-      "tokens": 112
+      "tokens": 105
     },
     "packages/temporal/src/activities/scout-generated-preflight.test.ts|packages/temporal/src/activities/scout-generated-preflight.test.ts": {
       "clones": 2,

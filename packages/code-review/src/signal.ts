@@ -1,8 +1,7 @@
 /**
  * The shared observability event describing "what the review provider did on
- * this PR, and when". The CI gate emits these as structured logs per poll +
- * terminal decision; the durable temporal collector emits the same shape into
- * metrics + S3. One schema everywhere → comparable data.
+ * this PR, and when". The CI gate emits these as structured logs per poll and
+ * terminal decision. One schema everywhere keeps observations comparable.
  */
 
 import { z } from "zod";
@@ -59,7 +58,7 @@ export const ReviewSignalEventSchema = z.object({
   findings: FindingCountsSchema,
   blocking_count: z.number().int().nonnegative(),
   unresolved_count: z.number().int().nonnegative(),
-  /** Total seconds the gate waited (gate only; null for the collector). */
+  /** Total seconds the gate waited, when measured. */
   gate_wait_s: z.number().nullable(),
   timed_out: z.boolean(),
   /**
@@ -120,8 +119,7 @@ export function tallyFindings(
 
 /**
  * Render a signal event as a single structured log line with a stable
- * `component`, ready for Loki. `component` defaults to the CI gate; the
- * collector passes its own.
+ * `component`, ready for Loki. `component` defaults to the CI gate.
  */
 export function formatSignalEvent(
   event: ReviewSignalEvent,

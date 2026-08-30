@@ -375,28 +375,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology.",
   },
   {
-    id: "review-signals-collect",
-    workflowType: "observeReviewSignalsWorkflow",
-    args: [],
-    // Every 6 hours — frequent enough to catch same-day review latency
-    // patterns without hammering the GitHub API on every recent PR.
-    timing: {
-      kind: "cron",
-      expression: "0 */6 * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // Must fit the activity's FULL retry budget, not one attempt: the
-    // `runObserveReviewSignals` proxy allows 3 attempts at a 5m
-    // startToCloseTimeout each (observe-review-signals workflow) plus ~30s of
-    // 10s/20s backoff = ~15m30s. A 10m cap terminated the workflow mid-2nd
-    // attempt and made attempt 3 unreachable; 18m covers 3×5m + backoff + slack.
-    // SKIP overlap + the 6-hourly cadence make the wider ceiling harmless.
-    workflowExecutionTimeout: "18 minutes",
-    memo: "Durable review-signal collector — scans recent PRs, computes each PR's code-review signal via @shepherdjerred/code-review, records Prometheus metrics, and appends NDJSON to S3 (what the review bot did and when)",
-  },
-  {
     id: "golink-sync",
     workflowType: "syncGolinks",
     args: [],
