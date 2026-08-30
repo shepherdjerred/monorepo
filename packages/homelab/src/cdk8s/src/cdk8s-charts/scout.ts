@@ -51,9 +51,7 @@ export function createScoutChart(
   // rendered even when its pin equals stable so promotion does not leave
   // unmanaged candidate resources behind when pruning is disabled.
   const candidateWorkflowWorker =
-    stage === "beta" &&
-    stableWorkflowWorker !== undefined &&
-    candidateImage !== undefined
+    stage === "beta" && stableWorkflowWorker !== undefined
       ? createScoutWorkflowWorker(chart, stage, "candidate", candidateImage)
       : undefined;
   const workflowWorkerCreated =

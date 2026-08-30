@@ -128,8 +128,10 @@ describe("Temporal workflow outcome rules", () => {
     expect(workflowPollerExpressions).toContain(
       'absent(temporal_worker_num_pollers{namespace="buildkite",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) or max(temporal_worker_num_pollers{namespace="buildkite",exported_namespace="default",task_queue="maintenance",poller_type="workflow_task"}) < 1',
     );
-    const scoutBetaExpression = workflowPollerExpressions.find((expression) =>
-      expression.includes('task_queue="scout-beta"'),
+    const scoutBetaExpression = workflowPollerExpressions.find(
+      (expression) =>
+        typeof expression === "string" &&
+        expression.includes('task_queue="scout-beta"'),
     );
     if (scoutBetaExpression !== undefined) {
       expect(scoutBetaExpression).toBe(
