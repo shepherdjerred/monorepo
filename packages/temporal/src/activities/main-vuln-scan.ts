@@ -12,7 +12,7 @@ import {
  * The warm Trivy database PVC mounted into the maintenance worker — kept fresh
  * every six hours by `buildkite-trivy-db-refresh`, which is why the scan runs
  * with `--skip-db-update` on the maintenance queue instead of downloading a
- * database per run on the default queue.
+ * database per run on an unscoped worker.
  */
 const TRIVY_CACHE_DIR = "/buildkite/trivy-db";
 const EXCERPT_LIMIT = 2000;

@@ -122,8 +122,8 @@ const LYCHEE_SCAN_COMMAND = [
 /**
  * Shallow-clones current `main` (public repo — no credentials) and runs lychee
  * over the tracked markdown per the root lychee.toml. Runs on
- * TASK_QUEUES.DEFAULT: unlike the Trivy scan there is no warm cache to reuse,
- * and the core worker image carries the pinned lychee binary.
+ * TASK_QUEUES.MAINTENANCE: unlike the Trivy scan there is no warm cache to
+ * reuse, and the maintenance worker image carries the pinned lychee binary.
  */
 async function scanMainForLinkRot(
   hooks: MaintenanceCommandHooks = maintenanceActivityHooks(),

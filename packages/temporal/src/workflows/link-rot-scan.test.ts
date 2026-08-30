@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { Worker } from "@temporalio/worker";
+import type { PatchActivationCallback } from "@temporalio/worker";
 import type { DeadLink, LinkRotScanResult } from "#activities/link-rot-scan.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runLinkRotScanWorkflow } from "./link-rot-scan.ts";
@@ -6,8 +8,8 @@ import * as scannerTest from "./scanner-workflow-test-support.ts";
 
 // The workflow deliberately splits queues: the git/lychee scan runs on the
 // serial MAINTENANCE queue while delivery and the Alertmanager publish stay on
-// the credentialed core queue. The test mirrors that with one worker per queue,
-// which also proves the routing — a single-queue harness would hang.
+// the credentialed REPORTS queue. The test mirrors that with one worker per
+// queue, which also proves the routing — a single-queue harness would hang.
 const REPO_SHA = "d9ea9584e0123456789abcdef0123456789abcde";
 
 const getTestEnv = scannerTest.setupScannerWorkflowTestEnvironment();
@@ -41,15 +43,25 @@ async function runWorkflow(
     publish?: () => Promise<void>;
   },
   deadLinks: DeadLink[] = [],
+  options: {
+    workflowId?: string;
+    reportTaskQueue?: typeof TASK_QUEUES.DEFAULT | typeof TASK_QUEUES.REPORTS;
+    patchActivationCallback?: PatchActivationCallback;
+  } = {},
 ): Promise<{ harness: scannerTest.ScannerWorkflowHarness; failure: unknown }> {
   const harness = scannerTest.createScannerWorkflowHarness();
+  const workflowId =
+    options.workflowId ?? `test-link-rot-scan-${crypto.randomUUID()}`;
   const failure = await scannerTest.runScannerWorkflow(getTestEnv(), {
     workflow: runLinkRotScanWorkflow,
-    workflowId: `test-link-rot-scan-${crypto.randomUUID()}`,
+    workflowId,
     taskQueue: TASK_QUEUES.MAINTENANCE,
+    ...(options.patchActivationCallback === undefined
+      ? {}
+      : { patchActivationCallback: options.patchActivationCallback }),
     workers: [
       {
-        taskQueue: TASK_QUEUES.REPORTS,
+        taskQueue: options.reportTaskQueue ?? TASK_QUEUES.REPORTS,
         activities: {
           deliverActivityReport: scannerTest.deliverScannerReport(harness),
           publishLinkRotScanAlerts: scannerTest.publishScannerAlert(
@@ -110,4 +122,26 @@ describe("runLinkRotScanWorkflow", () => {
     expect(failure).toBeInstanceOf(Error);
     scannerTest.expectNoContradictoryFailureReport(harness, "attention");
   }, 120_000);
+
+  it("replays a pre-migration history that used the default report queue", async () => {
+    const workflowId = `test-link-rot-scan-legacy-${crypto.randomUUID()}`;
+    const { harness, failure } = await runWorkflow({}, [], {
+      workflowId,
+      reportTaskQueue: TASK_QUEUES.DEFAULT,
+      patchActivationCallback: () => false,
+    });
+    expect(failure).toBeUndefined();
+    scannerTest.expectCompleteScannerReport(harness, "clear", 0, REPO_SHA);
+
+    const history = await getTestEnv()
+      .client.workflow.getHandle(workflowId)
+      .fetchHistory();
+    await expect(
+      Worker.runReplayHistory(
+        { workflowsPath: new URL("index.ts", import.meta.url).pathname },
+        history,
+        workflowId,
+      ),
+    ).resolves.toBeUndefined();
+  }, 60_000);
 });
