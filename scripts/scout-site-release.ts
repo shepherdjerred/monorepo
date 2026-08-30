@@ -37,10 +37,6 @@ const DIST_DIR = "packages/scout-for-lol/packages/frontend/dist";
 const IMAGE_REPO = "ghcr.io/shepherdjerred/scout-for-lol";
 const PLACEHOLDER_DIGEST =
   "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-const BETA_PIXEL_PLACEHOLDERS: Readonly<Record<string, string>> = {
-  PUBLIC_PINTEREST_TAG_ID: "beta-placeholder-pinterest-tag-id",
-  PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
-};
 const ANALYTICS_REGISTRY_PATH = "config/analytics-sites.json";
 const RELEASE_INPUT_PATHS = [
   "bun.lock",
@@ -206,8 +202,6 @@ async function buildSite(
     const marketing = await marketingIdentifiers();
     env["PUBLIC_PINTEREST_TAG_ID"] = marketing.pinterestTagId;
     env["PUBLIC_REDDIT_PIXEL_ID"] = marketing.redditPixelId;
-  } else {
-    Object.assign(env, BETA_PIXEL_PLACEHOLDERS);
   }
   if (dryRun) {
     console.log(`DRYRUN: would build ${flavor} site as ${identity}`);

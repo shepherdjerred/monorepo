@@ -7,7 +7,7 @@ describe("Scout static sites", () => {
     "scout-for-lol.com",
     "beta.scout-for-lol.com",
   ] as const) {
-    test(`${hostname} permits only the PostHog US endpoints`, () => {
+    test(`${hostname} permits Scout's required browser endpoints`, () => {
       const site = staticSites.find(
         (candidate) => candidate.hostname === hostname,
       );
@@ -16,9 +16,15 @@ describe("Scout static sites", () => {
       }
       const csp = site.responseHeaders?.["Content-Security-Policy"];
       expect(csp).toContain(
-        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com",
+        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com https://s.pinimg.com https://www.redditstatic.com",
       );
-      expect(csp).toContain("connect-src 'self' https://us.i.posthog.com");
+      expect(csp).toContain(
+        "img-src 'self' https://cdn.discordapp.com https://ddragon.leagueoflegends.com https://ct.pinterest.com data: blob:",
+      );
+      expect(csp).toContain(
+        "connect-src 'self' https://us.i.posthog.com https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com",
+      );
+      expect(csp).toContain("frame-src https://ct.pinterest.com");
     });
   }
 });

@@ -1,0 +1,19 @@
+diff --git a/s3proxy.go b/s3proxy.go
+index 7407b42..81a638c 100644
+--- a/s3proxy.go
++++ b/s3proxy.go
+@@ -340,5 +340,9 @@
+-	if obj.ContentRange != nil && *obj.ContentRange != "" {
+-		w.WriteHeader(http.StatusPartialContent)
+-	}
+-
+-	var err error
++	if obj.ContentRange != nil && *obj.ContentRange != "" {
++		w.WriteHeader(http.StatusPartialContent)
++	} else {
++		// io.Copy may use ResponseWriter.ReadFrom, which bypasses Caddy's
++		// deferred response-header flush unless the status is written first.
++		w.WriteHeader(http.StatusOK)
++	}
++
++	var err error

@@ -247,6 +247,14 @@ test("Scout release analytics map both hosts to the shared PostHog project", () 
   });
 });
 
+test("beta release does not manufacture ad-pixel identifiers", async () => {
+  const source = await Bun.file(
+    new URL("scout-site-release.ts", import.meta.url),
+  ).text();
+  expect(source).not.toContain("beta-placeholder-pinterest-tag-id");
+  expect(source).not.toContain("beta-placeholder-reddit-pixel-id");
+});
+
 test("release state output creates its parent directory", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "scout-release-state-"));
   try {
