@@ -184,6 +184,12 @@ describe("rendered Alerts receiver", () => {
     expect(renderedApps).toContain(
       "secrets:\n              - alert-dashboard-secrets",
     );
+    expect(renderedApps).toContain("- alertmanager-postal-smtp");
+    expect(renderedApps).toContain("smtp_auth_username: alertmanager");
+    expect(renderedApps).toContain(
+      "smtp_auth_password_file: /etc/alertmanager/secrets/alertmanager-postal-smtp/SMTP_PASSWORD",
+    );
+    expect(renderedApps).not.toMatch(/smtp_auth_password:\s+[^_]/u);
   });
 
   it("keeps an independent Postal fallback for dashboard health alerts", () => {

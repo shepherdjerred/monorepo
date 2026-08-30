@@ -63,6 +63,24 @@ process in production (`bun run start`).
 | `bun run migrate:deploy`     | Apply Prisma migrations (`prisma migrate deploy`)                   |
 | `bun run docker:build`       | Build the production image locally (`alert-dashboard:dev`)          |
 
+### Cancel incident email safely
+
+`email:cancel-incident` is dry-run by default. It selects only unsent,
+uncanceled outbox messages created in the explicit window where every linked
+occurrence is `TemporalWorkflowFailed`. Confirmed cancellations atomically
+record their time, operator, and reason; they do not delete ledger evidence.
+
+```bash
+bun run email:cancel-incident -- \
+  --database file:/data/alert-dashboard.db \
+  --from 2026-08-29T22:47:35Z \
+  --to 2026-08-30T19:39:00Z \
+  --operator <operator> \
+  --reason "Scout retry amplification incident"
+
+# Repeat the reviewed command with --confirm to apply it.
+```
+
 ## Architecture
 
 The source tree is layered hexagonally and the layering is enforced by

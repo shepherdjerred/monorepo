@@ -57,8 +57,23 @@ const ALERTMANAGER_GLOBAL = {
   resolve_timeout: "5m",
   smtp_from: "alerts@sjer.red",
   smtp_smarthost: "postal-postal-smtp-service.postal.svc.cluster.local:25",
+  smtp_auth_username: "alertmanager",
+  smtp_auth_password_file:
+    "/etc/alertmanager/secrets/alertmanager-postal-smtp/SMTP_PASSWORD",
   smtp_require_tls: false,
 };
+
+function createAlertmanagerPostalSmtpSecret(chart: Chart): OnePasswordItem {
+  return new OnePasswordItem(chart, "alertmanager-postal-smtp-onepassword", {
+    spec: {
+      itemPath: vaultItemPath("cb2p2ogrqzdzz4it43jq3wyrei"),
+    },
+    metadata: {
+      name: "alertmanager-postal-smtp",
+      namespace: "prometheus",
+    },
+  });
+}
 
 export async function createPrometheusApp(chart: Chart) {
   // Temporal workflow-failure alerts (from the temporal-failure-watch schedule
@@ -101,6 +116,8 @@ export async function createPrometheusApp(chart: Chart) {
       },
     },
   );
+
+  const alertmanagerPostalSmtp = createAlertmanagerPostalSmtpSecret(chart);
 
   const prometheusSecrets = new OnePasswordItem(
     chart,
@@ -250,7 +267,7 @@ export async function createPrometheusApp(chart: Chart) {
             },
           },
         },
-        secrets: [alertDashboardSecrets.name],
+        secrets: [alertDashboardSecrets.name, alertmanagerPostalSmtp.name],
         logLevel: "debug",
       },
       config: {

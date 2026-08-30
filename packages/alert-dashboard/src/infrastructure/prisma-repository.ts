@@ -26,6 +26,11 @@ import { replaceOccurrenceLabels } from "#infrastructure/prisma-labels";
 import { findObservedOccurrence } from "#infrastructure/prisma-occurrence";
 import { ingestWebhookAlert } from "#infrastructure/prisma-webhook-ingest";
 import {
+  cancelPendingEmails,
+  type CancelPendingEmailsInput,
+  type CancelPendingEmailsResult,
+} from "#infrastructure/prisma-email-cancellation";
+import {
   DeliveryIdSchema,
   OutboxIdSchema,
   SnapshotRunIdSchema,
@@ -389,7 +394,11 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     limit: number,
   ): Promise<readonly PendingEmail[]> {
     return this.#prisma.emailOutbox.findMany({
-      where: { sentAtNs: null, nextAttemptAtNs: { lte: nowNs } },
+      where: {
+        sentAtNs: null,
+        canceledAtNs: null,
+        nextAttemptAtNs: { lte: nowNs },
+      },
       orderBy: { nextAttemptAtNs: "asc" },
       take: limit,
       select: {
@@ -400,6 +409,16 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
         attemptCount: true,
       },
     });
+  }
+
+  async cancelPendingEmails(
+    input: CancelPendingEmailsInput,
+  ): Promise<CancelPendingEmailsResult> {
+    return this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        cancelPendingEmails(transaction, input),
+      ),
+    );
   }
 
   async markEmailSent(id: string, sentAtNs: bigint): Promise<void> {

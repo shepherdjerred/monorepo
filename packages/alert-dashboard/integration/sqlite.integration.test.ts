@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { AlertmanagerSnapshotAlertSchema } from "#shared/schema";
+import {
+  AlertmanagerSnapshotAlertSchema,
+  AlertmanagerWebhookSchema,
+} from "#shared/schema";
 import { epochNanosecondsToInstantText, InstantTextSchema } from "#shared/time";
 import {
   disconnectDatabase,
@@ -41,6 +44,64 @@ async function expectNormalizedIndexes(): Promise<void> {
 beforeAll(waitForDatabase);
 beforeEach(resetDatabase);
 afterAll(disconnectDatabase);
+
+describe("SQLite email cancellation", () => {
+  it("dry-runs and audits cancellation of only pending incident email", async () => {
+    const base = webhook("fingerprint-temporal", "firing");
+    const incident = AlertmanagerWebhookSchema.parse({
+      ...base,
+      groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
+      groupLabels: { alertname: "TemporalWorkflowFailed" },
+      commonLabels: {
+        alertname: "TemporalWorkflowFailed",
+        severity: "warning",
+      },
+      alerts: base.alerts.map((alert) => ({
+        ...alert,
+        labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
+      })),
+    });
+    await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
+    await repository.ingestWebhook(
+      input(webhook("fingerprint-unrelated", "firing"), "2026-08-08T18:00:02Z"),
+    );
+    const cancellation = {
+      alertname: "TemporalWorkflowFailed",
+      fromNs: nanoseconds("2026-08-08T18:00:00Z"),
+      toNs: nanoseconds("2026-08-08T18:01:00Z"),
+      canceledAtNs: nanoseconds("2026-08-08T18:02:00Z"),
+      canceledBy: "incident-operator",
+      reason: "Scout retry amplification incident",
+    };
+
+    expect(
+      await repository.cancelPendingEmails({
+        ...cancellation,
+        confirm: false,
+      }),
+    ).toMatchObject({ matched: 1, canceled: 0 });
+    expect(
+      await repository.pendingEmails(nanoseconds("2026-08-08T18:03:00Z"), 10),
+    ).toHaveLength(2);
+
+    expect(
+      await repository.cancelPendingEmails({
+        ...cancellation,
+        confirm: true,
+      }),
+    ).toMatchObject({ matched: 1, canceled: 1 });
+    expect(
+      await repository.pendingEmails(nanoseconds("2026-08-08T18:03:00Z"), 10),
+    ).toHaveLength(1);
+    const canceled = await prisma.emailOutbox.findFirstOrThrow({
+      where: { canceledAtNs: { not: null } },
+    });
+    expect(canceled.canceledBy).toBe("incident-operator");
+    expect(canceled.cancellationReason).toBe(
+      "Scout retry amplification incident",
+    );
+  });
+});
 
 describe("SQLite alert ledger", () => {
   it("serializes concurrent webhook retries into one lifecycle and one email", async () => {
