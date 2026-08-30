@@ -147,7 +147,9 @@ This usually means that Prometheus is not successfully scraping metrics from the
     createStatPanel({
       title: "Backup Success Rate",
       description: "Percentage of successful backups per schedule",
-      expr: `(sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[7d])) / sum by (schedule) (increase(velero_backup_attempt_total{${buildScheduleFilter()}}[7d]))) * 100`,
+      // The `> 0` guard drops schedules with zero attempts in the window so
+      // the stat renders nothing for them instead of a 0/0 = NaN tile.
+      expr: `(sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[7d])) / (sum by (schedule) (increase(velero_backup_attempt_total{${buildScheduleFilter()}}[7d])) > 0)) * 100`,
       legend: "{{schedule}}",
       gridPos: { x: 0, y: 9, w: 6, h: 4 },
       unit: "percent",
@@ -300,7 +302,7 @@ This usually means that Prometheus is not successfully scraping metrics from the
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `(sum by (schedule) (rate(velero_backup_success_total{${buildScheduleFilter()}}[5m])) / sum by (schedule) (rate(velero_backup_attempt_total{${buildScheduleFilter()}}[5m]))) * 100`,
+            `(sum by (schedule) (rate(velero_backup_success_total{${buildScheduleFilter()}}[5m])) / (sum by (schedule) (rate(velero_backup_attempt_total{${buildScheduleFilter()}}[5m])) > 0)) * 100`,
           )
           .legendFormat("{{schedule}}"),
       )

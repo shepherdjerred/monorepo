@@ -72,6 +72,16 @@ Patches are applied to the base Talos machine configuration to customize the clu
 
 See the original investigation for the full investigation and why hung-task-panic sysctls were considered and rejected in favor of this.
 
+### etcd-metrics.yaml
+
+**Purpose**: Serve etcd's Prometheus metrics so the kube-prometheus-stack `kubeEtcd` scrape works. Talos runs etcd as a host service (not a kube-system pod), and by default its metrics are only reachable on the authenticated client port — so the chart's etcd dashboard and alert rules (including the repo's own `EtcdHighFragmentation`) had no data and could never fire.
+
+**Current settings**:
+
+- `cluster.etcd.extraArgs.listen-metrics-urls: http://0.0.0.0:2381` - Dedicated plaintext metrics listener (`/metrics` and `/health` only — no client API is exposed on this port). Port 2381 is the kube-prometheus-stack default; the chart values pin the scrape target to torvalds via `kubeEtcd.endpoints` (`PROD_NODE_INTERNAL_IP` in `src/cdk8s/src/misc/nodes.ts`).
+
+**Applied**: NOT yet applied — after this lands, regenerate the full controlplane config with this patch and apply per "Applying Patches" below (`talosctl apply-config --mode=no-reboot`; etcd picks up the new listener when the etcd service restarts — verify with `talosctl -n torvalds service etcd` and `curl http://100.102.88.88:2381/metrics | head`). Then confirm `up{job="kube-etcd"} == 1` in Prometheus and that the "etcd" Grafana dashboard populates. Update this line with the date once live.
+
 ### Other Patches
 
 - `interface.yaml` - Network interface configuration

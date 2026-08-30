@@ -496,14 +496,6 @@
       "clones": 1,
       "tokens": 95
     },
-    "packages/homelab/src/cdk8s/grafana/ha-workflow-dashboard.ts|packages/homelab/src/cdk8s/grafana/smartctl-panels.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
-    "packages/homelab/src/cdk8s/grafana/ha-workflow-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
-      "clones": 4,
-      "tokens": 290
-    },
     "packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts": {
       "clones": 2,
       "tokens": 163
@@ -516,10 +508,6 @@
       "clones": 1,
       "tokens": 88
     },
-    "packages/homelab/src/cdk8s/grafana/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts": {
-      "clones": 1,
-      "tokens": 82
-    },
     "packages/homelab/src/cdk8s/grafana/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
       "clones": 1,
       "tokens": 141
@@ -528,9 +516,9 @@
       "clones": 3,
       "tokens": 264
     },
-    "packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/smartctl-panels.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
       "clones": 1,
-      "tokens": 78
+      "tokens": 73
     },
     "packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts|packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts": {
       "clones": 1,
@@ -547,10 +535,6 @@
     "packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts": {
       "clones": 3,
       "tokens": 211
-    },
-    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts": {
-      "clones": 1,
-      "tokens": 70
     },
     "packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts": {
       "clones": 1,
@@ -1933,5 +1917,5 @@
       "tokens": 238
     }
   },
-  "updated": "2026-08-29T21:34:46.948Z"
+  "updated": "2026-08-30T00:17:09.532Z"
 }

@@ -136,7 +136,7 @@ export async function createAppsChart(app: App) {
   createVeleroApp(chart);
   createPostgresOperatorApp(chart);
   createSeaweedfsApp(chart);
-  // Create all Grafana dashboards (gitckup, ha-workflow, scout, smartctl, velero, zfs)
+  // Create all Grafana dashboards (gitckup, scout, smartctl, velero, zfs, …)
   createAllGrafanaDashboards(chart);
 
   // Per-service ArgoCD apps

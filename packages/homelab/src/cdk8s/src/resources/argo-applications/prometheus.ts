@@ -4,7 +4,10 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
-import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import {
+  CI_NODE_TOLERATION,
+  PROD_NODE_INTERNAL_IP,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
@@ -165,6 +168,14 @@ export async function createPrometheusApp(chart: Chart) {
       // https://github.com/prometheus-operator/kube-prometheus/issues/718
       enabled: false,
     },
+    kubeEtcd: {
+      // Talos runs etcd as a host service, not a kube-system pod, so the
+      // chart's selector-based Service can never find it and the etcd
+      // dashboard/alerts had no data. Scrape torvalds directly; the Talos
+      // patch src/talos/torvalds/patches/etcd-metrics.yaml makes etcd serve
+      // metrics on http://0.0.0.0:2381 (the chart's default port/scheme).
+      endpoints: [PROD_NODE_INTERNAL_IP],
+    },
     // cAdvisor owns the unique 10-second pod-parent counters. The normal
     // kube-state-metrics scrape adds Buildkite identity/link metadata; missing
     // joins remain explicit in the rules and CI I/O reporter rather than
@@ -262,11 +273,6 @@ export async function createPrometheusApp(chart: Chart) {
           },
           {
             target_matchers: ["alertname = InfoInhibitor"],
-          },
-          {
-            source_matchers: ['alertname = "HaWorkflowHighFailureRate"'],
-            target_matchers: ['alertname = "HaWorkflowFailed"'],
-            equal: ["workflow"],
           },
         ],
         templates: ["/etc/alertmanager/config/*.tmpl"],

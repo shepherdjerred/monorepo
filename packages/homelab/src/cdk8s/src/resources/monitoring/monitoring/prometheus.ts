@@ -7,7 +7,6 @@ import { getResourceMonitoringRuleGroups } from "./rules/resource-monitoring.ts"
 import { getZfsMonitoringRuleGroups } from "./rules/zfs.ts";
 import { getSmartctlRuleGroups } from "./rules/smartctl.ts";
 import { getNvmeRuleGroups } from "./rules/nvme.ts";
-import { getHaWorkflowRuleGroups } from "./rules/ha-workflows.ts";
 import { getGitckupRuleGroups } from "./rules/gitckup.ts";
 import { getQBitTorrentRuleGroups } from "./rules/qbittorrent.ts";
 import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
@@ -131,18 +130,6 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getNvmeRuleGroups(),
-    },
-  });
-
-  // Create HA Workflow rules
-  new PrometheusRule(chart, "prometheus-ha-workflow-rules", {
-    metadata: {
-      name: "prometheus-ha-workflow-rules",
-      namespace: "home",
-      labels: { release: "prometheus" },
-    },
-    spec: {
-      groups: getHaWorkflowRuleGroups(),
     },
   });
 

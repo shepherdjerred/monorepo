@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createAiProviderDashboard } from "./ai-provider-dashboard.ts";
+import { createAlertDashboardGrafanaDashboard } from "./alert-dashboard.ts";
 import { createBuildkiteDashboard } from "./buildkite-dashboard.ts";
 import { createBuildkitdDashboard } from "./buildkitd-dashboard.ts";
 import { createDiscordPlaysDashboard } from "./discord-plays-dashboard.ts";
@@ -13,6 +14,10 @@ import { createZfsDashboard } from "./zfs-dashboard.ts";
 
 const dashboardJson = [
   createAiProviderDashboard(),
+  // Unlike the other create*Dashboard functions here, this one deliberately
+  // returns the raw builder (exportAlertDashboardJson calls .build() itself);
+  // build it explicitly so this array holds Dashboard objects consistently.
+  createAlertDashboardGrafanaDashboard().build(),
   createBuildkiteDashboard(),
   createBuildkitdDashboard(),
   createDiscordPlaysDashboard(),
