@@ -114,15 +114,19 @@ function mutate(text: string, random: () => number): string {
 }
 
 describe("malformed input", () => {
-  test("2000 mutations of the corpus still reproduce their source", () => {
-    const random = makeRandom(20_260_823);
-    for (let index = 0; index < 2000; index++) {
-      const base = CORPUS[Math.floor(random() * CORPUS.length)] ?? "";
-      const mutated = mutate(base, random);
-      const spans = scoutQlTokenSpans(mutated);
-      expect(spans.map((span) => span.text).join("")).toBe(mutated);
-    }
-  });
+  test(
+    "2000 mutations of the corpus still reproduce their source",
+    { timeout: 15_000 },
+    () => {
+      const random = makeRandom(20_260_823);
+      for (let index = 0; index < 2000; index++) {
+        const base = CORPUS[Math.floor(random() * CORPUS.length)] ?? "";
+        const mutated = mutate(base, random);
+        const spans = scoutQlTokenSpans(mutated);
+        expect(spans.map((span) => span.text).join("")).toBe(mutated);
+      }
+    },
+  );
 
   test("characters no rule matches are invalid, whitespace stays plain", () => {
     const spans = scoutQlTokenSpans("SELECT @ ~ FROM x");

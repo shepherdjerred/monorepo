@@ -138,10 +138,11 @@ test("attachCodexTrace records standard native SDK metrics", async () => {
   expect(metrics).toContain('outcome="success"');
   expect(metrics).toContain('type="reasoning"');
 
-  // Codex bills against a ChatGPT-managed subscription, so it must contribute
-  // tokens but never cost. A catalog estimate here would be a price we do not
-  // pay per call, summed into the same series as real OpenRouter charges.
-  expect(metrics).not.toMatch(/^llm_cost_usd_total\{/m);
+  // Luna runs through OpenRouter, so the catalog estimate is recorded alongside
+  // the native SDK usage metrics.
+  expect(metrics).toContain(
+    'llm_cost_usd_total{service="temporal",workload="agent-task",provider="codex_sdk",model="gpt-5.6-luna",type="catalog"} 0.0006522',
+  );
 });
 
 test("attachCodexTrace runs SDK work beneath its repository-owned span", () => {
