@@ -25,6 +25,9 @@ type Fixture = {
   historicalAlerts?: number;
   historicalAlertSamples?: number;
   historicalPollerSamples?: number;
+  historicalEvaluationProgress?: number;
+  evaluationAgeSeconds?: number;
+  ruleEvaluationFailures?: number;
   omitWorkflowQueue?: boolean;
   staleCandidate?: boolean;
   checkoutBuildId?: string;
@@ -90,6 +93,22 @@ function deploymentDescription(fixture: Fixture): unknown {
 }
 
 function metricValue(expression: string, fixture: Fixture): number {
+  if (
+    expression.includes("increase(prometheus_rule_evaluation_failures_total")
+  ) {
+    return fixture.ruleEvaluationFailures ?? 0;
+  }
+  if (expression.includes("time() - max by")) {
+    return fixture.evaluationAgeSeconds ?? 1;
+  }
+  if (
+    expression.includes(
+      "prometheus_rule_group_last_evaluation_timestamp_seconds",
+    ) &&
+    expression.includes("min_over_time")
+  ) {
+    return fixture.historicalEvaluationProgress ?? 1;
+  }
   if (expression.includes("count_over_time")) {
     return expression.includes("prometheus_rule_group")
       ? (fixture.historicalAlertSamples ?? 10_000)
@@ -602,5 +621,58 @@ describe("Worker Deployment rollback and rejection", () => {
         failingCommandRunner,
       ),
     ).rejects.toThrow("unavailable");
+  });
+});
+
+describe("Worker Deployment rule health proofs", () => {
+  test("rejects a ramp when Temporal rule evaluations stop advancing", async () => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("advance", new Date("2026-08-29T00:31:00Z")),
+        fixtureRunner(
+          {
+            rampingBuildId: CANDIDATE,
+            rampPercentage: 10,
+            rampChangedTime: "2026-08-29T00:00:00Z",
+            historicalEvaluationProgress: 0,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow("did not advance");
+  });
+
+  test("rejects a ramp when Temporal rule evaluations are stale", async () => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("advance", new Date("2026-08-29T00:31:00Z")),
+        fixtureRunner(
+          {
+            rampingBuildId: CANDIDATE,
+            rampPercentage: 10,
+            rampChangedTime: "2026-08-29T00:00:00Z",
+            evaluationAgeSeconds: 301,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow("seconds old");
+  });
+
+  test("rejects a ramp when Temporal rule evaluations fail", async () => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("advance", new Date("2026-08-29T00:31:00Z")),
+        fixtureRunner(
+          {
+            rampingBuildId: CANDIDATE,
+            rampPercentage: 10,
+            rampChangedTime: "2026-08-29T00:00:00Z",
+            ruleEvaluationFailures: 1,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow("evaluation failures");
   });
 });

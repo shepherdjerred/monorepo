@@ -141,6 +141,42 @@ export function rolloutAdvanceTransition(rampPercentage: number): {
   throw new Error("Advance requires a 10% or 50% ramp");
 }
 
+async function requireHealthyRuleEvaluations(
+  duration: "30m" | "2h" | "24h",
+  run: RolloutCommandRunner,
+): Promise<void> {
+  const evaluationProgress = await queryRolloutMetric(
+    `min(min by (rule_group) (max_over_time(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[${duration}]) - min_over_time(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[${duration}])))`,
+    `${duration} Temporal rule evaluation progression query`,
+    run,
+  );
+  if (evaluationProgress <= 0) {
+    throw new Error(
+      `Temporal rule evaluations did not advance during the required ${duration} clean window`,
+    );
+  }
+  const evaluationAgeSeconds = await queryRolloutMetric(
+    `max(time() - max by (rule_group) (prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}))`,
+    `${duration} Temporal rule evaluation freshness query`,
+    run,
+  );
+  if (evaluationAgeSeconds > 300) {
+    throw new Error(
+      `Temporal rule evaluations are ${String(evaluationAgeSeconds)} seconds old`,
+    );
+  }
+  const evaluationFailures = await queryRolloutMetric(
+    `sum(increase(prometheus_rule_evaluation_failures_total{rule_group=~".*;temporal-.*"}[${duration}])) or vector(0)`,
+    `${duration} Temporal rule evaluation failure query`,
+    run,
+  );
+  if (evaluationFailures !== 0) {
+    throw new Error(
+      `Temporal Prometheus rules recorded ${String(evaluationFailures)} evaluation failures during the required ${duration} clean window`,
+    );
+  }
+}
+
 export async function requireCleanAlertWindow(
   duration: "30m" | "2h" | "24h",
   run: RolloutCommandRunner,
@@ -163,6 +199,7 @@ export async function requireCleanAlertWindow(
       `Temporal Prometheus history covered only ${String(historySamples)} samples during the required ${duration} clean window`,
     );
   }
+  await requireHealthyRuleEvaluations(duration, run);
   const alertSamples = await queryRolloutMetric(
     `sum(max_over_time(ALERTS{alertstate="firing",alertname=~"Temporal.*"}[${duration}])) or vector(0)`,
     `${duration} Temporal alert history query`,
