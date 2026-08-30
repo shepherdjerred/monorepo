@@ -95,6 +95,9 @@ test("blocks admission when live main has a divergent Temporal candidate", async
   await expect(assertTemporalCandidatePinsConverged(executor)).rejects.toThrow(
     TransientError,
   );
+  await expect(assertNoPendingVersionBump(executor, false)).resolves.toBe(
+    catalog,
+  );
 });
 test("allows the one-time central stable bootstrap transition", async () => {
   const legacy = `2.0.0-12197@sha256:${"a".repeat(64)}`;
@@ -324,7 +327,6 @@ async function credentialErrorInspectExecutor(): Promise<BuildxCommandResult> {
     "error getting credentials: docker-credential-desktop: executable file not found in $PATH",
   );
 }
-
 async function unclassifiedInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "unauthorized: authentication required");
 }

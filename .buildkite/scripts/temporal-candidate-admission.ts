@@ -102,6 +102,7 @@ export async function assertTemporalCandidatePinsConverged(
 
 export async function assertNoPendingVersionBump(
   executor: CandidateAdmissionExecutor,
+  enforceTemporalCandidateAdmission = true,
 ): Promise<string> {
   const result = await executor([
     "git",
@@ -119,5 +120,9 @@ export async function assertNoPendingVersionBump(
       `${VERSION_BUMP_BRANCH} is still pending; retry after its catalog update merges`,
     );
   }
-  return assertTemporalCandidatePinsConverged(executor);
+  if (enforceTemporalCandidateAdmission) {
+    return assertTemporalCandidatePinsConverged(executor);
+  }
+  const catalog = await readLiveVersionCatalog(executor);
+  return catalog.source;
 }

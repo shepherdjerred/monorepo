@@ -438,14 +438,17 @@ async function main(): Promise<void> {
     rm(pushOutcomes, { force: true }),
   ]);
 
-  // Refresh before selecting targets so the no-target path publishes the same
-  // live catalog that Helm synthesis will consume. A queued release can reach
-  // this path after a newer catalog commit has merged.
-  const liveVersionCatalog = options.push
-    ? await assertNoPendingVersionBump(execute)
-    : undefined;
   const selection = await selectedTargets(options, commit);
   const bakeTargets = expandTargets(selection.targets);
+  // Refresh after selecting targets so convergence admission only blocks a
+  // release that would publish a Temporal Workflow candidate. Every push still
+  // uses the live catalog for Helm and the no-target metadata path.
+  const liveVersionCatalog = options.push
+    ? await assertNoPendingVersionBump(
+        execute,
+        bakeTargets.includes("temporal-worker"),
+      )
+    : undefined;
   if (bakeTargets.length === 0) {
     console.log("no image-owning packages affected — nothing to build");
     await annotate(["--report", selectionReport]);
