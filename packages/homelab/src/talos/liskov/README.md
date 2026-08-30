@@ -15,7 +15,7 @@ own taints. The K8s side of the contract lives in `src/cdk8s/src/misc/nodes.ts`.
 | File                    | What                                                 | Delta vs torvalds                                                                  |
 | ----------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `patches/image.yaml`    | install pin, disk serial, hostname, ZFS params       | AMD schematic; no RAPL caps (105W eco in BIOS is the AMD equivalent)               |
-| `patches/kubelet.yaml`  | reservations, eviction, pids cap, cgroup enforcement | systemReserved 24Gi (vs 40Gi), kubeReserved 4Gi (no etcd)                          |
+| `patches/kubelet.yaml`  | reservations, eviction, pids cap, cgroup enforcement | systemReserved 24Gi (same as torvalds), kubeReserved 4Gi (no etcd)                 |
 | `patches/sysctls.yaml`  | kptr_restrict, panic_on_rcu_stall                    | identical                                                                          |
 | `patches/watchdog.yaml` | hardware watchdog                                    | `sp5100_tco` (AMD) instead of `iTCO_wdt` — **live-verify before arming, see file** |
 | `patches/certsans.yaml` | Talos API certificate SANs                           | adds Liskov's canonical Tailscale FQDN                                             |
@@ -38,6 +38,8 @@ committed).
 
    ```bash
    talosctl gen config --with-secrets secrets.yaml \
+     --talos-version v1.13.9 \
+     --kubernetes-version 1.36.4 \
      --output-types worker -o liskov-worker.yaml \
      torvalds https://192.168.1.81:6443 \
      --config-patch @patches/image.yaml \
@@ -128,12 +130,20 @@ committed).
 
 ## After the soak
 
-Prometheus slab/ARC data supports the 24Gi `systemReserved` value. Buildkite
-currently reports approximately 83.5Gi of Kubernetes allocatable memory and
+Prometheus slab/ARC data supports the 24Gi `systemReserved` value. Kubernetes
+currently reports approximately 91.5Gi of allocatable memory on liskov, and Buildkite
 has a resource-aware Kueue budget of 80Gi memory / 24 CPU / 24 pods, so
 `BUILDKITE_MAX_IN_FLIGHT` remains the count cap while Kueue handles weighted
 admission. Keep watching liskov's available-memory and eviction signals before
 raising either limit.
+
+**Applied**: reconciled live on 2026-08-29 with an exact Talos 1.13.9 client via
+`apply-config --mode=try`, followed by `--mode=no-reboot` confirmation. Effective
+kubelet configuration reported `systemReserved.memory: 24Gi`,
+`imageMaximumGCAge: 720h0m0s`, and image-GC thresholds `70/60`;
+`/sys/fs/cgroup/system/memory.max` was exactly 24 GiB, allocatable memory rose
+from `87546876Ki` to `95935484Ki` (+8 GiB), all Talos services remained running,
+and the node stayed Ready with no pressure condition.
 
 Direct Talos API access to liskov TCP/50000 may be unavailable from a client
 even while Kubernetes and Prometheus remain healthy. When management-path

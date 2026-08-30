@@ -40,9 +40,12 @@ machine:
     # Tune L2ARC (if you have an SSD cache device)
     # Write boost on empty L2ARC (faster warmup)
     module.zfs.parameters.l2arc_noprefetch: "0"
-  network:
-    hostname: torvalds
   kernel:
     modules:
       - name: i915
       - name: zfs
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: torvalds
+auto: off
