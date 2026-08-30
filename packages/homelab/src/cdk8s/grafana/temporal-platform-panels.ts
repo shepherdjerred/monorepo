@@ -90,7 +90,18 @@ function createTemporalLogPanel() {
     targets: [
       {
         refId: "A",
-        expr: '{service_name=~"temporal-.*|scout-backend"} | deployment_environment_name =~ "$environment" | temporal_domain =~ "$domain"',
+        // `| json` parses each line's stdout JSON body so
+        // deployment_environment_name/temporal_domain resolve for logs that
+        // only ever reach Loki via Promtail's stdout scrape (most Activity
+        // and Workflow call sites still use the package's plain JSON
+        // stdout loggers). It's a harmless extra stage for logs ingested
+        // through Loki's OTLP endpoint instead (worker.ts's own SDK/boot
+        // logs, via observability/log.ts): those two fields already exist
+        // as queryable structured metadata from the shared tracing Resource,
+        // and LogQL folds json-extracted and structured-metadata fields into
+        // the same filterable set, so the filter below matches either
+        // source without a second query path.
+        expr: '{service_name=~"temporal-.*|scout-backend"} | json | deployment_environment_name =~ "$environment" | temporal_domain =~ "$domain"',
         maxLines: 200,
       },
     ],

@@ -18,7 +18,16 @@ import {
   startMetricsServer,
   stopMetricsServer,
 } from "./observability/metrics.ts";
-import { createStructuredLogger } from "./observability/logging.ts";
+// log() writes the same stdout JSON line the old createStructuredLogger()
+// jsonLog always has, then also emits an OTLP LogRecord through the
+// LoggerProvider initializeTracing() installs below. That's what lets the
+// platform dashboard's log panel filter SDK/worker-boot logs by
+// deployment_environment_name/temporal_domain (Resource attributes shared
+// with tracing) instead of only ever seeing them on stdout. Before tracing
+// initializes (or when TELEMETRY_ENABLED=false), the OTel logs API's default
+// no-op provider makes the emit() call a harmless no-op, same as the trace
+// API before NodeSDK.start().
+import { log as jsonLog } from "./observability/log.ts";
 import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
 import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
@@ -52,8 +61,6 @@ import {
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
-
-const jsonLog = createStructuredLogger();
 
 function installRuntime(role: WorkerRole, bootstrap: TemporalBootstrap): void {
   const metricsAddress =
