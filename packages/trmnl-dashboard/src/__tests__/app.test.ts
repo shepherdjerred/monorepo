@@ -110,12 +110,16 @@ describe("createHandler", () => {
   it("serves Prometheus pet metrics without public API authentication", async () => {
     const handler = createHandler(config, {
       getPetMetrics: async () => "trmnl_petcare_source_up 1\n",
+      getFeatureFlagMetrics: async () =>
+        "feature_flag_snapshot_age_seconds 12\n",
     });
     const response = await handler(new Request("http://localhost/metrics"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/plain");
-    expect(await response.text()).toBe("trmnl_petcare_source_up 1\n");
+    expect(await response.text()).toBe(
+      "feature_flag_snapshot_age_seconds 12\ntrmnl_petcare_source_up 1\n",
+    );
   });
 
   it("rejects protected routes without an API key", async () => {

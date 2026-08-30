@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  PetCareHomeAssistantClient,
   parseLitterRobotDiagnostics,
   WhiskerDiagnosticsSchema,
 } from "../clients/pet-care.ts";
@@ -8,6 +9,10 @@ import type { PetCareCollection } from "../collectors/pets.ts";
 import type { PetCarePayload } from "../types.ts";
 
 const NOW = new Date("2026-08-30T08:30:00Z");
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 function readyRobot() {
   return {
@@ -50,6 +55,36 @@ function parseRobot(robot: unknown) {
 }
 
 describe("LR5 Pro diagnostics", () => {
+  it("requests full history records for litter activity", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json([
+        [
+          {
+            entity_id: "sensor.storage_scoops_saved",
+            state: "37",
+            attributes: {},
+          },
+        ],
+      ]),
+    );
+    const client = new PetCareHomeAssistantClient("http://ha.local", "token");
+
+    await client.getHistory("sensor.storage_scoops_saved", NOW);
+
+    const input = fetch.mock.calls[0]?.[0];
+    if (input === undefined) {
+      throw new Error("Expected Home Assistant history request");
+    }
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    expect(url).toContain("significant_changes_only=true");
+    expect(url).not.toContain("minimal_response");
+  });
+
   it("parses the healthy Ready payload and preserves the raw hopper indicator", () => {
     const robot = parseRobot(readyRobot());
 

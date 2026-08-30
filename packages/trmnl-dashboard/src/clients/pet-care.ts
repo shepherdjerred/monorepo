@@ -106,7 +106,6 @@ export class PetCareHomeAssistantClient {
   public getHistory(entityId: string, start: Date): Promise<EntityState[][]> {
     return this.rest.getHistory([entityId], {
       start,
-      minimalResponse: true,
       significantChangesOnly: true,
     });
   }

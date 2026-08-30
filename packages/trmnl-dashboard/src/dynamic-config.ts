@@ -6,6 +6,7 @@ import {
   shutdownFeatureFlags,
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
+import { featureFlagMetrics } from "./feature-flag-metrics.ts";
 
 const DEFINITION = {
   petDashboardEnabled: {
@@ -46,6 +47,7 @@ export async function initializeDynamicConfig(
       ? {}
       : { environment: options.environment }),
     ...(options.provider === undefined ? {} : { provider: options.provider }),
+    metrics: featureFlagMetrics.recorder,
     onInitializationFailure: (message) => {
       console.warn(`[Config] ${message}`);
     },
