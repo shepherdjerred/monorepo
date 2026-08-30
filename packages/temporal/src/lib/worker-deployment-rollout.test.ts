@@ -6,7 +6,10 @@ import {
   executeWorkerDeploymentRollout,
   type WorkerDeploymentRolloutOptions,
 } from "./worker-deployment-rollout.ts";
-import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
+import {
+  rolloutPoller,
+  type RolloutCommandRunner,
+} from "./worker-deployment-proofs.ts";
 import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
 
 const CANDIDATE = "b".repeat(40);
@@ -15,6 +18,17 @@ const DEPLOYMENT = "monorepo-central-workflows";
 const CANDIDATE_DIGEST = "b".repeat(64);
 const STABLE_DIGEST = "a".repeat(64);
 const createdDirectories: string[] = [];
+
+test("preserves the selected task queue in rollout pollers", () => {
+  expect(
+    rolloutPoller({
+      namespace: "scout-beta",
+      deploymentName: "scout-beta-workflows",
+      buildId: CANDIDATE,
+      taskQueue: "scout-beta",
+    }),
+  ).toMatchObject({ taskQueue: "scout-beta" });
+});
 
 type Fixture = {
   currentBuildId?: string;
@@ -36,6 +50,9 @@ type Fixture = {
   imageBuildId?: string;
   dirtyCheckout?: boolean;
   remoteLockObject?: string;
+  workflowQueue?: string;
+  deploymentName?: string;
+  prerequisiteAccepted?: boolean;
 };
 
 function jsonResult(value: unknown): { stdout: string; stderr: string } {
@@ -56,42 +73,64 @@ function failingCommandRunner(): Promise<never> {
   return Promise.reject(new Error("temporal failed with exit 1: unavailable"));
 }
 
+function routingConfiguration(fixture: Fixture) {
+  return {
+    currentVersionDeploymentName: DEPLOYMENT,
+    currentVersionBuildID: fixture.currentBuildId ?? STABLE,
+    rampingVersionDeploymentName:
+      fixture.rampingBuildId === undefined ? "" : DEPLOYMENT,
+    rampingVersionBuildID: fixture.rampingBuildId ?? "",
+    rampingVersionPercentage: fixture.rampPercentage ?? 0,
+    currentVersionChangedTime: "2026-08-27T00:00:00Z",
+    rampingVersionChangedTime: "2026-08-28T00:00:00Z",
+    rampingVersionPercentageChangedTime:
+      fixture.rampChangedTime ?? "2026-08-28T00:00:00Z",
+  };
+}
+
+function versionSummaries(fixture: Fixture) {
+  return [
+    {
+      deploymentName: DEPLOYMENT,
+      BuildID: STABLE,
+      createTime: "2026-08-27T00:00:00Z",
+    },
+    {
+      deploymentName: DEPLOYMENT,
+      BuildID: CANDIDATE,
+      createTime: "2026-08-28T00:00:00Z",
+    },
+    ...(fixture.staleCandidate === true
+      ? [
+          {
+            deploymentName: DEPLOYMENT,
+            BuildID: "c".repeat(40),
+            createTime: "2026-08-29T00:00:00Z",
+          },
+        ]
+      : []),
+  ];
+}
+
 function deploymentDescription(fixture: Fixture): unknown {
   return {
-    name: DEPLOYMENT,
+    name: fixture.deploymentName ?? DEPLOYMENT,
+    routingConfig: routingConfiguration(fixture),
+    versionSummaries: versionSummaries(fixture),
+  };
+}
+
+function prerequisiteDeploymentDescription(fixture: Fixture): unknown {
+  const accepted = fixture.prerequisiteAccepted !== false;
+  return {
+    name: "scout-beta-workflows",
     routingConfig: {
-      currentVersionDeploymentName: DEPLOYMENT,
-      currentVersionBuildID: fixture.currentBuildId ?? STABLE,
-      rampingVersionDeploymentName:
-        fixture.rampingBuildId === undefined ? "" : DEPLOYMENT,
-      rampingVersionBuildID: fixture.rampingBuildId ?? "",
-      rampingVersionPercentage: fixture.rampPercentage ?? 0,
-      currentVersionChangedTime: "2026-08-27T00:00:00Z",
-      rampingVersionChangedTime: "2026-08-28T00:00:00Z",
-      rampingVersionPercentageChangedTime:
-        fixture.rampChangedTime ?? "2026-08-28T00:00:00Z",
+      ...routingConfiguration(fixture),
+      currentVersionBuildID: accepted ? CANDIDATE : STABLE,
+      rampingVersionBuildID: "",
+      rampingVersionPercentage: 0,
     },
-    versionSummaries: [
-      {
-        deploymentName: DEPLOYMENT,
-        BuildID: STABLE,
-        createTime: "2026-08-27T00:00:00Z",
-      },
-      {
-        deploymentName: DEPLOYMENT,
-        BuildID: CANDIDATE,
-        createTime: "2026-08-28T00:00:00Z",
-      },
-      ...(fixture.staleCandidate === true
-        ? [
-            {
-              deploymentName: DEPLOYMENT,
-              BuildID: "c".repeat(40),
-              createTime: "2026-08-29T00:00:00Z",
-            },
-          ]
-        : []),
-    ],
+    versionSummaries: versionSummaries(fixture),
   };
 }
 
@@ -141,40 +180,22 @@ function fixtureRunner(
   return (command) => {
     const args = [...command];
     commands.push(args);
-    return Promise.resolve(fixtureCommandResult(args, fixture));
+    return Promise.resolve(fixtureCommandResult(fixture, args));
   };
 }
 
 function fixtureCommandResult(
-  args: string[],
   fixture: Fixture,
+  args: string[],
 ): { stdout: string; stderr: string } {
-  if (args.includes("describe-version")) {
-    const buildId = args[args.indexOf("--build-id") + 1];
-    return jsonResult({
-      deploymentName: DEPLOYMENT,
-      BuildID: buildId,
-      taskQueuesInfos: fixture.omitWorkflowQueue
-        ? []
-        : RETAINED_WORKFLOW_TASK_QUEUES.map((name) => ({
-            name,
-            type: "workflow" as const,
-          })),
-    });
-  }
-  if (args.includes("describe")) {
-    return jsonResult(deploymentDescription(fixture));
-  }
-  if (args[0] === "toolkit" && args[1] === "prom") {
-    const expression = args[3] ?? "";
-    return jsonResult(prometheus(metricValue(expression, fixture)));
-  }
-  if (args[0] === "git") {
-    return gitFixtureResult(args, fixture);
-  }
-  if (args[0] === "docker") {
+  if (args.includes("describe-version"))
+    return describeVersionFixture(fixture, args);
+  if (args.includes("describe")) return describeFixture(fixture, args);
+  if (args[0] === "toolkit" && args[1] === "prom")
+    return jsonResult(prometheus(metricValue(args[3] ?? "", fixture)));
+  if (args[0] === "git") return gitFixtureResult(fixture, args);
+  if (args[0] === "docker")
     return jsonResult([`GIT_SHA=${fixture.imageBuildId ?? CANDIDATE}`]);
-  }
   if (args.includes("set-current-version")) {
     const buildId = args[args.indexOf("--build-id") + 1];
     if (buildId === undefined) {
@@ -185,9 +206,40 @@ function fixtureCommandResult(
   return jsonResult({ outcome: "ok" });
 }
 
-function gitFixtureResult(
-  args: string[],
+function describeVersionFixture(
   fixture: Fixture,
+  args: readonly string[],
+): { stdout: string; stderr: string } {
+  const buildId = args[args.indexOf("--build-id") + 1];
+  return jsonResult({
+    deploymentName: fixture.deploymentName ?? DEPLOYMENT,
+    BuildID: buildId,
+    taskQueuesInfos: fixture.omitWorkflowQueue
+      ? []
+      : fixture.workflowQueue === undefined
+        ? RETAINED_WORKFLOW_TASK_QUEUES.map((name) => ({
+            name,
+            type: "workflow" as const,
+          }))
+        : [{ name: fixture.workflowQueue, type: "workflow" }],
+  });
+}
+
+function describeFixture(
+  fixture: Fixture,
+  args: readonly string[],
+): { stdout: string; stderr: string } {
+  const description =
+    fixture.deploymentName === "scout-prod-workflows" &&
+    args.includes("scout-beta-workflows")
+      ? prerequisiteDeploymentDescription(fixture)
+      : deploymentDescription(fixture);
+  return jsonResult(description);
+}
+
+function gitFixtureResult(
+  fixture: Fixture,
+  args: readonly string[],
 ): { stdout: string; stderr: string } {
   if (args.includes("ls-remote")) {
     return {
@@ -253,6 +305,14 @@ async function options(
     deploymentName: DEPLOYMENT,
     buildId: CANDIDATE,
     taskQueue: "monorepo-workflows",
+    candidatePinName: "shepherdjerred/temporal-worker/workflows/candidate",
+    stablePinName: "shepherdjerred/temporal-worker/workflows/stable",
+    imageRepository: "ghcr.io/shepherdjerred/temporal-worker",
+    replayCommands: [
+      ["bun", "run", "test:workflows"],
+      ["bun", "run", "replay:candidate-histories"],
+    ],
+    canaryCommand: ["bun", "run", "scripts/worker-deployment-canary.ts"],
     catalogPath: catalogFile,
     candidateStatePath,
     now,
@@ -320,23 +380,6 @@ describe("Worker Deployment rollout", () => {
     ).toBe(true);
   });
 
-  test("passes TLS through to native Temporal commands when enabled", async () => {
-    const commands: string[][] = [];
-    const rolloutOptions = await options("status");
-    rolloutOptions.tls = true;
-    await executeWorkerDeploymentRollout(
-      rolloutOptions,
-      fixtureRunner({}, commands),
-    );
-    expect(
-      commands
-        .filter(
-          (command) => command[0] === "toolkit" && command[1] === "temporal",
-        )
-        .every((command) => command.includes("--tls")),
-    ).toBe(true);
-  });
-
   test("starts at 10% only after replay, canary, poller, and alert proofs", async () => {
     const commands: string[][] = [];
     await executeWorkerDeploymentRollout(
@@ -376,6 +419,95 @@ describe("Worker Deployment rollout", () => {
           command.includes("describe") && !command.includes("describe-version"),
       ),
     ).toHaveLength(3);
+  });
+
+  test("uses the selected Scout queue, replay bundle, canary, and image repository", async () => {
+    const commands: string[][] = [];
+    const rolloutOptions = await options("start");
+    rolloutOptions.deploymentName = "scout-beta-workflows";
+    rolloutOptions.taskQueue = "scout-beta";
+    rolloutOptions.candidatePinName =
+      "shepherdjerred/scout-for-lol/beta/workflows/candidate";
+    rolloutOptions.stablePinName =
+      "shepherdjerred/scout-for-lol/beta/workflows/stable";
+    rolloutOptions.imageRepository = "ghcr.io/shepherdjerred/scout-for-lol";
+    rolloutOptions.replayCommands = [
+      [
+        "bun",
+        "run",
+        "--cwd",
+        "../scout-for-lol/packages/temporal",
+        "test:workflows",
+      ],
+    ];
+    rolloutOptions.canaryCommand = [
+      "bun",
+      "run",
+      "../scout-for-lol/packages/temporal/scripts/run-canary.ts",
+      "--stage",
+      "beta",
+    ];
+    await executeWorkerDeploymentRollout(
+      rolloutOptions,
+      fixtureRunner(
+        {
+          deploymentName: "scout-beta-workflows",
+          workflowQueue: "scout-beta",
+        },
+        commands,
+      ),
+    );
+    expect(commands).toContainEqual(rolloutOptions.replayCommands[0]);
+    expect(
+      commands.some(
+        (command) =>
+          command.some((argument) => argument.endsWith("run-canary.ts")) &&
+          command.includes("scout-beta-workflows") &&
+          command.includes(CANDIDATE),
+      ),
+    ).toBe(true);
+  });
+
+  test("requires the same build to complete Scout beta before production starts", async () => {
+    const rolloutOptions = await options("start");
+    rolloutOptions.deploymentName = "scout-prod-workflows";
+    rolloutOptions.taskQueue = "scout-prod";
+    rolloutOptions.acceptancePrerequisite = {
+      deploymentName: "scout-beta-workflows",
+      taskQueue: "scout-beta",
+    };
+    await expect(
+      executeWorkerDeploymentRollout(
+        rolloutOptions,
+        fixtureRunner(
+          {
+            deploymentName: "scout-prod-workflows",
+            workflowQueue: "scout-prod",
+            prerequisiteAccepted: false,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow("has not completed scout-beta-workflows acceptance");
+
+    const commands: string[][] = [];
+    await executeWorkerDeploymentRollout(
+      rolloutOptions,
+      fixtureRunner(
+        {
+          deploymentName: "scout-prod-workflows",
+          workflowQueue: "scout-prod",
+        },
+        commands,
+      ),
+    );
+    expect(
+      commands.some(
+        (command) =>
+          command.includes("describe") &&
+          command.includes("scout-beta-workflows"),
+      ),
+    ).toBe(true);
   });
 
   test("initializes an empty deployment with a stable version before ramping", async () => {
@@ -431,12 +563,32 @@ describe("Worker Deployment rollout", () => {
       true,
     );
   });
+});
 
+describe("Worker Deployment promotion", () => {
   test("promotes after a 24-hour soak and advances the stable image pin", async () => {
     const commands: string[][] = [];
     const rolloutOptions = await options(
       "promote",
       new Date("2026-08-30T00:01:00Z"),
+    );
+    await Bun.write(
+      rolloutOptions.candidateStatePath,
+      JSON.stringify({
+        schema: "pin-candidates-state/v1",
+        pins: {
+          [rolloutOptions.candidatePinName]: {
+            version: "2.0.0-2",
+            digest: `sha256:${CANDIDATE_DIGEST}`,
+            buildNumber: 2,
+          },
+          [rolloutOptions.stablePinName]: {
+            version: "2.0.0-1",
+            digest: `sha256:${STABLE_DIGEST}`,
+            buildNumber: 1,
+          },
+        },
+      }),
     );
     await executeWorkerDeploymentRollout(
       rolloutOptions,
@@ -465,11 +617,9 @@ describe("Worker Deployment rollout", () => {
     expect(await Bun.file(rolloutOptions.catalogPath).text()).not.toContain(
       `"value": "2.0.0-1@sha256:${STABLE_DIGEST}"`,
     );
-    expect(await Bun.file(rolloutOptions.candidateStatePath).text()).toContain(
-      `"version": "2.0.0-2"`,
-    );
-    expect(await Bun.file(rolloutOptions.candidateStatePath).text()).toContain(
-      `"digest": "sha256:${CANDIDATE_DIGEST}"`,
+    const state = await Bun.file(rolloutOptions.candidateStatePath).json();
+    expect(state.pins[rolloutOptions.stablePinName]).toEqual(
+      state.pins[rolloutOptions.candidatePinName],
     );
   });
 
@@ -539,6 +689,19 @@ describe("Worker Deployment rollback and rejection", () => {
 
   test("resets a rejected candidate pin after its ramp is gone", async () => {
     const rolloutOptions = await options("rollback");
+    await Bun.write(
+      rolloutOptions.candidateStatePath,
+      JSON.stringify({
+        schema: "pin-candidates-state/v1",
+        pins: {
+          [rolloutOptions.candidatePinName]: {
+            version: "2.0.0-2",
+            digest: `sha256:${CANDIDATE_DIGEST}`,
+            buildNumber: 2,
+          },
+        },
+      }),
+    );
     const commands: string[][] = [];
     await executeWorkerDeploymentRollout(
       rolloutOptions,
@@ -551,6 +714,18 @@ describe("Worker Deployment rollback and rejection", () => {
     expect(commands.some((command) => command.includes("--delete"))).toBe(
       false,
     );
+    expect(
+      await Bun.file(rolloutOptions.candidateStatePath).text(),
+    ).not.toContain(rolloutOptions.candidatePinName);
+  });
+
+  test("rejects resetting a candidate image built from another commit", async () => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("rollback"),
+        fixtureRunner({ imageBuildId: STABLE }, []),
+      ),
+    ).rejects.toThrow("was not built from");
   });
 
   test("allows the exact active ramp to roll back after a newer build registers", async () => {

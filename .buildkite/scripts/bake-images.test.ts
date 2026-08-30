@@ -224,32 +224,31 @@ test("retains a central Workflow candidate until its pin converges with stable",
     },
   });
 });
-test("does not publish nonexistent Scout Workflow catalog pins", () => {
+test("leaves the legacy Scout beta stable pin untouched", () => {
   const digest = `sha256:${"b".repeat(64)}`;
+  const workflowPin = `2.0.0-42@sha256:${"c".repeat(64)}`;
   expect(
     pinCandidatesForDigests(
       { "shepherdjerred/scout-for-lol/beta": digest },
       "43",
-      versionCatalogSource([]),
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+          value: workflowPin,
+        },
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+          value: workflowPin,
+        },
+      ]),
     ),
   ).toEqual({
     "shepherdjerred/scout-for-lol/beta": {
       version: "2.0.0-43",
       digest,
     },
-  });
-});
-test("does not synthesize a Scout Workflow candidate while its pins are absent", () => {
-  const digest = `sha256:${"b".repeat(64)}`;
-  expect(
-    pinCandidatesForDigests(
-      { "shepherdjerred/scout-for-lol/beta": digest },
-      "44",
-      versionCatalogSource([]),
-    ),
-  ).toEqual({
-    "shepherdjerred/scout-for-lol/beta": {
-      version: "2.0.0-44",
+    "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
+      version: "2.0.0-43",
       digest,
     },
   });
@@ -318,6 +317,7 @@ async function httpNotFoundInspectExecutor(): Promise<BuildxCommandResult> {
 async function rateLimitedInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "429 Too Many Requests");
 }
+
 async function credentialErrorInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -737,7 +737,6 @@ test("validates external JSON arrays", () => {
     "contain a commit",
   );
 });
-
 test("fails open when image selection output is malformed", () => {
   for (const output of ["not-json", "{}", '["birmel", 42]']) {
     const result = parseImageSelection(output);
@@ -745,13 +744,11 @@ test("fails open when image selection output is malformed", () => {
     expect(result.fallbackReason).toContain("malformed output");
   }
 });
-
 test("fails open when image selection names an unknown target", () => {
   const result = parseImageSelection('["unknown-image"]');
   expect(result.targets).toEqual(knownImageTargets);
   expect(result.fallbackReason).toBe("image selector returned invalid targets");
 });
-
 test("executes commands and preserves stdout, stderr, and exit status", async () => {
   const result = await execute([
     "bun",
@@ -764,16 +761,13 @@ test("executes commands and preserves stdout, stderr, and exit status", async ()
     stderr: "command-error\n",
   });
 });
-
 test("annotates with the expected report arguments", async () => {
   const commands: string[][] = [];
   const executor: CommandExecutor = async (command) => {
     commands.push([...command]);
     return commandResult();
   };
-
   await annotate(["--report", "selection.json"], executor);
-
   expect(commands).toEqual([
     [
       "bun",
@@ -784,7 +778,6 @@ test("annotates with the expected report arguments", async () => {
     ],
   ]);
 });
-
 test("resolves the newest main commit whose image release jobs passed", async () => {
   const fetcher = Object.assign(
     async () =>
@@ -1177,7 +1170,6 @@ test("runs smoke targets with contract and Caddyfile inputs", async () => {
     PUSH_CACHE: "false",
   });
 });
-
 test("runs application smoke against the exact candidate digest", async () => {
   const commands: string[][] = [];
   const executor: CommandExecutor = async (command) => {

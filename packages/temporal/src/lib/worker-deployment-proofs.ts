@@ -20,6 +20,14 @@ const REQUIRED_PROMETHEUS_HISTORY_SAMPLES = {
   "24h": 2880,
 } as const;
 const MAX_RULE_EVALUATION_AGE_SECONDS = 300;
+const AcceptedDeploymentSchema = z.object({
+  name: z.string().min(1),
+  routingConfig: z.object({
+    currentVersionBuildID: z.string(),
+    rampingVersionBuildID: z.string(),
+    rampingVersionPercentage: z.number().min(0).max(100),
+  }),
+});
 
 export type RolloutCommandResult = { stdout: string; stderr: string };
 export type RolloutCommandRunner = (
@@ -122,30 +130,6 @@ export async function requireReplayCheckout(
   }
 }
 
-export async function runWorkerDeploymentPreflightProofs(
-  options: {
-    namespace: string;
-    deploymentName: string;
-    buildId: string;
-  },
-  run: RolloutCommandRunner,
-): Promise<void> {
-  await requireReplayCheckout(options.buildId, run);
-  await run(["bun", "run", "test:workflows"]);
-  await run(["bun", "run", "replay:candidate-histories"]);
-  await run([
-    "bun",
-    "run",
-    "scripts/worker-deployment-canary.ts",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    options.buildId,
-    "--namespace",
-    options.namespace,
-  ]);
-}
-
 export function rolloutPoller(
   options: {
     namespace: string;
@@ -174,20 +158,104 @@ export function rolloutPoller(
   };
 }
 
-export function rolloutAdvanceTransition(rampPercentage: number): {
-  minimumMilliseconds: number;
-  targetPercentage: number;
-} {
-  if (rampPercentage === 10) {
-    return { minimumMilliseconds: 30 * 60 * 1000, targetPercentage: 50 };
+export async function runWorkerDeploymentPreflight(
+  options: {
+    buildId: string;
+    deploymentName: string;
+    namespace: string;
+    replayCommands: readonly (readonly string[])[];
+    canaryCommand: readonly string[];
+  },
+  run: RolloutCommandRunner,
+): Promise<void> {
+  await requireReplayCheckout(options.buildId, run);
+  for (const command of options.replayCommands) await run(command);
+  await run([
+    ...options.canaryCommand,
+    "--deployment-name",
+    options.deploymentName,
+    "--build-id",
+    options.buildId,
+    "--namespace",
+    options.namespace,
+  ]);
+}
+
+export async function requireAcceptedWorkerDeployment(
+  options: {
+    address: string;
+    namespace: string;
+    tls?: boolean;
+    buildId: string;
+    deploymentName: string;
+    taskQueue: string;
+  },
+  run: RolloutCommandRunner,
+): Promise<void> {
+  const result = await run([
+    "toolkit",
+    "temporal",
+    "--address",
+    options.address,
+    "--namespace",
+    options.namespace,
+    ...(options.tls === true ? ["--tls"] : []),
+    "worker",
+    "deployment",
+    "describe",
+    "--name",
+    options.deploymentName,
+    "--output",
+    "json",
+  ]);
+  const deployment = AcceptedDeploymentSchema.parse(
+    parseJson(result.stdout, "acceptance prerequisite deployment describe"),
+  );
+  if (
+    deployment.name !== options.deploymentName ||
+    deployment.routingConfig.currentVersionBuildID !== options.buildId ||
+    deployment.routingConfig.rampingVersionBuildID !== "" ||
+    deployment.routingConfig.rampingVersionPercentage !== 0
+  ) {
+    throw new Error(
+      `Build ${options.buildId} has not completed ${options.deploymentName} acceptance`,
+    );
   }
-  if (rampPercentage === 50) {
-    return {
-      minimumMilliseconds: 2 * 60 * 60 * 1000,
-      targetPercentage: 100,
+  const pollers = await queryRolloutMetric(
+    `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(options.namespace)},worker_deployment_name=${JSON.stringify(options.deploymentName)},worker_build_id=${JSON.stringify(options.buildId)},task_queue=${JSON.stringify(options.taskQueue)},poller_type="workflow_task"}) or vector(0)`,
+    "acceptance prerequisite workflow poller query",
+    run,
+  );
+  if (pollers < 1) {
+    throw new Error(
+      `${options.deploymentName} acceptance has no healthy Workflow pollers`,
+    );
+  }
+}
+export async function requireAcceptancePrerequisite(
+  options: {
+    address: string;
+    namespace: string;
+    tls?: boolean;
+    buildId: string;
+    acceptancePrerequisite?: {
+      deploymentName: string;
+      taskQueue: string;
     };
-  }
-  throw new Error("Advance requires a 10% or 50% ramp");
+  },
+  run: RolloutCommandRunner,
+): Promise<void> {
+  if (options.acceptancePrerequisite === undefined) return;
+  await requireAcceptedWorkerDeployment(
+    {
+      address: options.address,
+      namespace: options.namespace,
+      ...(options.tls === undefined ? {} : { tls: options.tls }),
+      buildId: options.buildId,
+      ...options.acceptancePrerequisite,
+    },
+    run,
+  );
 }
 
 async function requireHealthyRuleEvaluations(
@@ -327,6 +395,22 @@ export async function requireCleanAlertWindow(
       }
     }
   }
+}
+
+export function rolloutAdvanceTransition(rampPercentage: number): {
+  minimumMilliseconds: number;
+  targetPercentage: number;
+} {
+  if (rampPercentage === 10) {
+    return { minimumMilliseconds: 30 * 60 * 1000, targetPercentage: 50 };
+  }
+  if (rampPercentage === 50) {
+    return {
+      minimumMilliseconds: 2 * 60 * 60 * 1000,
+      targetPercentage: 100,
+    };
+  }
+  throw new Error("Advance requires a 10% or 50% ramp");
 }
 
 export async function verifyCandidateImageBuildId(

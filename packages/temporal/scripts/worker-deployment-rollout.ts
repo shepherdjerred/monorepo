@@ -4,11 +4,11 @@ import {
   type WorkerDeploymentRolloutOptions,
 } from "#lib/worker-deployment-rollout.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
-import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { resolveWorkerDeploymentRolloutTarget } from "#lib/worker-deployment-target.ts";
 import {
-  optionalArgument,
-  requiredArgument,
+  parseFlagArguments,
   requiredEnvironment,
+  requiredParsedArgument,
 } from "./cli-arguments.ts";
 
 const ACTIONS = new Set([
@@ -19,7 +19,18 @@ const ACTIONS = new Set([
   "promote",
   "rollback",
 ]);
+const ALLOWED_FLAGS = new Set(["--build-id", "--stable-build-id", "--target"]);
 const TemporalTlsSchema = z.enum(["true", "false"]).optional();
+
+function rolloutTarget(
+  args: ReadonlyMap<string, string>,
+  address: string,
+): ReturnType<typeof resolveWorkerDeploymentRolloutTarget> {
+  return resolveWorkerDeploymentRolloutTarget(
+    args.get("--target") ?? "central",
+    address,
+  );
+}
 
 const runCommand: RolloutCommandRunner = async (command) => {
   const child = Bun.spawn([...command], {
@@ -63,23 +74,21 @@ function actionFrom(args: string[]): WorkerDeploymentRolloutOptions["action"] {
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
+  const action = actionFrom(args);
+  const flags = parseFlagArguments(args.slice(1), ALLOWED_FLAGS);
+  const address = requiredEnvironment(Bun.env, "TEMPORAL_ADDRESS");
   const tls = TemporalTlsSchema.parse(Bun.env["TEMPORAL_TLS"]) === "true";
+  const target = rolloutTarget(flags, address);
+  const stableBuildId = flags.get("--stable-build-id");
   const status = await executeWorkerDeploymentRollout(
     {
-      action: actionFrom(args),
-      address: requiredEnvironment(Bun.env, "TEMPORAL_ADDRESS"),
+      action,
+      address,
       tls,
       namespace: Bun.env["TEMPORAL_NAMESPACE"] ?? "default",
-      deploymentName:
-        Bun.env["TEMPORAL_WORKER_DEPLOYMENT_NAME"] ??
-        "monorepo-central-workflows",
-      buildId: requiredArgument(args, "--build-id"),
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      ...(optionalArgument(args, "--stable-build-id") === undefined
-        ? {}
-        : {
-            stableBuildId: requiredArgument(args, "--stable-build-id"),
-          }),
+      ...target,
+      buildId: requiredParsedArgument(flags, "--build-id"),
+      ...(stableBuildId === undefined ? {} : { stableBuildId }),
       catalogPath: new URL(
         "../../version-catalog/src/catalog.json",
         import.meta.url,

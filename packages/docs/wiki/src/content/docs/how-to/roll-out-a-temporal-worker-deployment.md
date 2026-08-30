@@ -1,12 +1,22 @@
 ---
 title: Roll out a Temporal Worker Deployment
-description: Canary, ramp, promote, or roll back the central Workflow bundle while stable and candidate pollers remain available.
+description: Canary, ramp, promote, or roll back central or Scout Workflow bundles while stable and candidate pollers remain available.
 sidebar:
   order: 7
 ---
 
 Run this procedure from `packages/temporal`. The commands change live Temporal
 routing. They do not deploy images or commit the promoted pin.
+
+Choose a target and keep it on every command. Omit `--target` only for central:
+
+| Target     | Flag                       | Deployment                   |
+| ---------- | -------------------------- | ---------------------------- |
+| central    | none or `--target central` | `monorepo-central-workflows` |
+| Scout beta | `--target scout-beta`      | `scout-beta-workflows`       |
+| Scout prod | `--target scout-prod`      | `scout-prod-workflows`       |
+
+Complete Scout beta acceptance before starting Scout production.
 
 ## Before starting
 
@@ -24,17 +34,19 @@ passthrough and never falls back to Kubernetes-only service DNS.
 Inspect the candidate without changing routing:
 
 ```bash
-bun run worker-deployment status --build-id <candidate-image-git-sha>
+bun run worker-deployment status [--target <target>] --build-id <candidate-image-git-sha>
 ```
 
 The command fails when the Build ID is stale, the candidate has not registered
-the `monorepo-workflows` poller, the version-specific poller metric is zero, or
-a native diagnostic returns invalid data.
+the target-selected Workflow queue (`monorepo-workflows` for central,
+`scout-beta` for Scout beta, or `scout-prod` for Scout prod), the
+version-specific poller metric is zero, or a native diagnostic returns invalid
+data.
 
 ## Start the ramp
 
 ```bash
-bun run worker-deployment start --build-id <candidate-image-git-sha>
+bun run worker-deployment start [--target <target>] --build-id <candidate-image-git-sha>
 ```
 
 `start` refuses an existing ramp or firing `Temporal.*` alert. It verifies that
@@ -59,7 +71,7 @@ ramp. Later releases need only `--build-id`.
 After at least 30 clean minutes at 10%:
 
 ```bash
-bun run worker-deployment advance --build-id <candidate-image-git-sha>
+bun run worker-deployment advance [--target <target>] --build-id <candidate-image-git-sha>
 ```
 
 After at least two clean hours at 50%, run the same command again. It advances
@@ -73,7 +85,7 @@ repeated, or out-of-order command fails without changing routing.
 After at least 24 clean hours at 100%:
 
 ```bash
-bun run worker-deployment promote --build-id <candidate-image-git-sha>
+bun run worker-deployment promote [--target <target>] --build-id <candidate-image-git-sha>
 ```
 
 Promotion verifies that the candidate catalog image contains the requested
@@ -88,7 +100,7 @@ poller tracks are healthy.
 ## Roll back a ramp
 
 ```bash
-bun run worker-deployment rollback --build-id <candidate-image-git-sha>
+bun run worker-deployment rollback [--target <target>] --build-id <candidate-image-git-sha>
 ```
 
 Rollback removes only an active ramp for that exact candidate, including when a
