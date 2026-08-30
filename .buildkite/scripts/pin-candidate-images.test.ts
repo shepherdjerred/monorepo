@@ -46,6 +46,28 @@ test("publishes a central Workflow candidate without changing stable", () => {
   });
 });
 
+test("does not publish a Workflow pin while stable and candidate diverge", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  expect(
+    pinCandidatesForDigests(
+      { "shepherdjerred/temporal-worker": digest },
+      "44",
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/temporal-worker/workflows/stable",
+          value: `2.0.0-12300@sha256:${"b".repeat(64)}`,
+        },
+        {
+          name: "shepherdjerred/temporal-worker/workflows/candidate",
+          value: `2.0.0-12301@sha256:${"c".repeat(64)}`,
+        },
+      ]),
+    ),
+  ).toEqual({
+    "shepherdjerred/temporal-worker": { version: "2.0.0-44", digest },
+  });
+});
+
 test("bootstraps stable and candidate before the first central Workflow rollout", () => {
   const digest = `sha256:${"a".repeat(64)}`;
   const legacy = `2.0.0-12197@sha256:${"b".repeat(64)}`;
