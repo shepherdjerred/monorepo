@@ -734,6 +734,15 @@ describe("Worker Deployment rollback and rejection", () => {
     ).not.toContain(rolloutOptions.candidatePinName);
   });
 
+  test("rejects resetting a candidate image built from another commit", async () => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("rollback"),
+        fixtureRunner({ imageBuildId: STABLE }, []),
+      ),
+    ).rejects.toThrow("was not built from");
+  });
+
   test("allows the exact active ramp to roll back after a newer build registers", async () => {
     const commands: string[][] = [];
     await executeWorkerDeploymentRollout(

@@ -19,14 +19,22 @@ Node worker threads, and concurrent environments exhaust the bounded CI agent.
 Production uses the same Bun image in twelve single-replica Kubernetes
 Deployments selected by `TEMPORAL_WORKER_ROLE`. `control` owns schedule
 reconciliation and public HTTP/event surfaces without a task queue. The
-credentialless `workflows` role runs deterministic Workflow code on
-`monorepo-workflows` and keeps temporary pollers on every remaining legacy
-central queue. Domain roles are Activity-only and own their registries in the
-typed contract in `src/worker-config.ts`. The default `all` role preserves the
-single-process local development behavior. Keep new queue ownership and
-capabilities in that contract so a provider subprocess, heavy Glitter failure,
-or maintenance subprocess cannot take down another domain or inherit its
-Kubernetes permissions.
+credentialless `workflows` role runs as stable and candidate Deployments on
+`monorepo-workflows` and keeps temporary pollers on every legacy central queue.
+Both use the Temporal Worker Deployment `monorepo-central-workflows`, exact
+image Git SHA Build IDs, and default `AUTO_UPGRADE` behavior. The stable and
+candidate catalog pins must remain distinct: CI advances candidate only while
+the two pins are equal, retaining the deployed candidate throughout a rollout.
+The package-local rollout command advances stable only after the 24-hour soak.
+After rollback and candidate-history drain, rerun `rollback` with no active ramp
+to copy stable back to candidate before the next CI image release may advance
+it; review and commit both the catalog and pin-state changes through the normal
+PR flow.
+Domain roles are Activity-only and own their registries in the typed contract
+in `src/worker-config.ts`. The default `all` role preserves the single-process local development
+behavior. Keep new queue ownership and capabilities in that contract so a
+provider subprocess, heavy Glitter failure, or maintenance subprocess cannot
+take down another domain or inherit its Kubernetes permissions.
 
 Every new central start, schedule, and child must target
 `TASK_QUEUES.WORKFLOWS`. Every Activity proxy must name the domain queue that

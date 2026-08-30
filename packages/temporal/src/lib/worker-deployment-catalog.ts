@@ -43,6 +43,7 @@ export type StablePinPromotion = {
 export type CandidatePinReset = {
   contents: string;
   changed: boolean;
+  candidateValue: string;
 };
 
 export type CandidatePinStateReset = {
@@ -143,6 +144,7 @@ export async function prepareCandidatePinReset(
   return {
     contents: `${JSON.stringify(catalog, null, 2)}\n`,
     changed,
+    candidateValue: candidate.value,
   };
 }
 
