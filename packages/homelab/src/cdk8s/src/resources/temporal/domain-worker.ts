@@ -76,7 +76,9 @@ export function createTemporalDomainWorker(
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     metadata: {
-      annotations: { "argocd.argoproj.io/sync-wave": "2" },
+      annotations: {
+        "argocd.argoproj.io/sync-wave": String(props.syncWave ?? 2),
+      },
     },
     serviceAccount,
     automountServiceAccountToken: props.automountServiceAccountToken ?? false,
@@ -88,14 +90,6 @@ export function createTemporalDomainWorker(
         ...props.podLabels,
       },
     },
-    metadata:
-      props.syncWave === undefined
-        ? undefined
-        : {
-            annotations: {
-              "argocd.argoproj.io/sync-wave": String(props.syncWave),
-            },
-          },
   });
   setRevisionHistoryLimit(deployment, 5);
 
