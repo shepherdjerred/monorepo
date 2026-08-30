@@ -23,7 +23,7 @@ function metricsIngress(ports: readonly number[]) {
   ];
 }
 
-function dnsEgress() {
+export function createDnsEgressRule() {
   return {
     to: [
       {
@@ -53,7 +53,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       policyTypes: ["Ingress", "Egress"],
       ingress: metricsIngress([9464, 9465]),
       egress: [
-        dnsEgress(),
+        createDnsEgressRule(),
         temporalServerEgress(),
         {
           to: [
@@ -86,7 +86,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         policyTypes: ["Ingress", "Egress"],
         ingress: metricsIngress([9464, 9465]),
         egress: [
-          dnsEgress(),
+          createDnsEgressRule(),
           temporalServerEgress(),
           { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
           { ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }] },

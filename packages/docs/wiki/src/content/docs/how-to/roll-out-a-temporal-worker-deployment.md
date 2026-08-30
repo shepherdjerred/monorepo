@@ -18,6 +18,14 @@ Choose a target and keep it on every command. Omit `--target` only for central:
 
 Complete Scout beta acceptance before starting Scout production.
 
+Scout's initial extraction requires two workflow-capable image releases. The
+checked-in pre-entrypoint pin creates no pod. After the prerequisite code lands,
+copy the first capable candidate pin to stable through a reviewed pin PR; this
+creates only the stable pod. Let the next image release advance candidate to a
+distinct Build ID; that creates the ramp target. The embedded backend poller
+drains old histories but is not the versioned stable fallback. Repeat the same
+sequence for production only after beta acceptance.
+
 ## Before starting
 
 Confirm that the candidate image pin is deployed and copy the exact 40-character
@@ -30,6 +38,10 @@ checks the candidate poller before changing routing.
 Set `TEMPORAL_ADDRESS` (and `TEMPORAL_TLS=true` for the private TLS endpoint) in
 the operator shell. The package command uses the existing `toolkit temporal`
 passthrough and never falls back to Kubernetes-only service DNS.
+
+During Scout bootstrap, verify that stable and candidate are both capable,
+distinct images and both exact versions have registered pollers. Pass the
+stable image SHA with `--stable-build-id` on the first `start` command.
 
 Inspect the candidate without changing routing:
 

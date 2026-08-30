@@ -31,6 +31,22 @@ function scoutCompetitionActivityIngress(): NetworkPolicyIngressRule {
   };
 }
 
+function scoutWorkflowWorkerIngress(): NetworkPolicyIngressRule {
+  return {
+    from: ["scout-beta", "scout-prod"].map((namespace) => ({
+      namespaceSelector: {
+        matchLabels: { "kubernetes.io/metadata.name": namespace },
+      },
+      podSelector: {
+        matchLabels: {
+          "worker-family": `${namespace}-workflows`,
+        },
+      },
+    })),
+    ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+  };
+}
+
 export function createTemporalChart(app: App) {
   const chart = new Chart(app, "temporal", {
     namespace: "temporal",
@@ -180,6 +196,7 @@ export function createTemporalChart(app: App) {
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
         scoutCompetitionActivityIngress(),
+        scoutWorkflowWorkerIngress(),
         {
           // Scout embeds its Workflow and Activity Workers in the sole
           // stage backend pod so activities can use the live Discord gateway,

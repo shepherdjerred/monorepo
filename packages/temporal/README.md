@@ -73,6 +73,12 @@ checks or alert windows are failing.
 The target defaults to `central`; `--target scout-beta` and `--target
 scout-prod` select the stage-local Scout deployment, queue, replay bundle,
 pinned canary, image repository, and catalog pins.
+Scout extraction uses two capable image releases. The pre-entrypoint pin creates
+no pod. Copy the first capable candidate pin to stable; that creates only the
+credentialless stable poller. A later distinct candidate pin creates the ramp
+target, and `start --stable-build-id` establishes stable before sending 10% to
+candidate. The embedded poller remains only to drain old unversioned histories.
+Production remains embedded until beta acceptance completes.
 
 ## Documentation
 

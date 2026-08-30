@@ -224,9 +224,9 @@ test("retains a central Workflow candidate until its pin converges with stable",
     },
   });
 });
-test("leaves the legacy Scout beta stable pin untouched", () => {
+test("bootstraps the legacy Scout beta stable and candidate pins", () => {
   const digest = `sha256:${"b".repeat(64)}`;
-  const workflowPin = `2.0.0-42@sha256:${"c".repeat(64)}`;
+  const legacy = `2.0.0-12197@sha256:${"c".repeat(64)}`;
   expect(
     pinCandidatesForDigests(
       { "shepherdjerred/scout-for-lol/beta": digest },
@@ -234,16 +234,20 @@ test("leaves the legacy Scout beta stable pin untouched", () => {
       versionCatalogSource([
         {
           name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
-          value: workflowPin,
+          value: legacy,
         },
         {
           name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
-          value: workflowPin,
+          value: legacy,
         },
       ]),
     ),
   ).toEqual({
     "shepherdjerred/scout-for-lol/beta": {
+      version: "2.0.0-43",
+      digest,
+    },
+    "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       version: "2.0.0-43",
       digest,
     },

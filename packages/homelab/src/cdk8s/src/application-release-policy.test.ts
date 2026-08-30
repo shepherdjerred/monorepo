@@ -93,6 +93,7 @@ describe("applyApplicationReleasePolicy", () => {
       ["1password", "-20"],
       ["argocd", "-18"],
       ["tailscale", "-18"],
+      ["temporal", "-17"],
       ["kueue", "1"],
       ["buildkite", "3"],
       ["worker", "4"],
