@@ -252,12 +252,18 @@ export class PrismaReadRepository {
         where: { status: "success" },
         orderBy: { completedAtNs: "desc" },
       }),
-      this.#prisma.emailOutbox.count({ where: { sentAtNs: null } }),
       this.#prisma.emailOutbox.count({
-        where: { sentAtNs: null, lastError: { not: null } },
+        where: { sentAtNs: null, canceledAtNs: null },
+      }),
+      this.#prisma.emailOutbox.count({
+        where: {
+          sentAtNs: null,
+          canceledAtNs: null,
+          lastError: { not: null },
+        },
       }),
       this.#prisma.emailOutbox.findFirst({
-        where: { sentAtNs: null },
+        where: { sentAtNs: null, canceledAtNs: null },
         orderBy: { createdAtNs: "asc" },
         select: { createdAtNs: true },
       }),
