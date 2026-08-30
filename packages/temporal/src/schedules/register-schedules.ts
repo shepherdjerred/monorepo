@@ -111,6 +111,9 @@ export async function terminateRetiredWorkflowExecutions(client: {
         }
       }
     }
+  }
+}
+
 async function pauseLegacyClaudeSchedules(client: Client): Promise<void> {
   for await (const schedule of client.schedule.list()) {
     if (!isDynamicAgentTaskSchedule(schedule.scheduleId, schedule.memo)) {
