@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { BucksCountdown } from "#src/components/bucks-countdown.tsx";
 import { BucksLedgerList } from "#src/components/bucks-ledger-list.tsx";
 import { BucksMarketCard } from "#src/components/bucks-market-card.tsx";
+import { BucksNotificationPreferencesForm } from "#src/components/bucks-notification-preferences-form.tsx";
 import { BucksParlayCard } from "#src/components/bucks-parlay-card.tsx";
 import { BucksPendingPositions } from "#src/components/bucks-pending-positions.tsx";
 import { BucksWalletCard } from "#src/components/bucks-wallet-card.tsx";
@@ -177,11 +178,45 @@ describe("BucksPendingPositions", () => {
             poolState: "closed",
             cancellationFee: null,
           },
+          {
+            // The deadline has passed but the sweep hasn't flipped poolState
+            // yet — cancelBet would refuse with window_closed, so no fee is
+            // quoted and Cancel must not appear despite poolState still open.
+            marketType: "outcome",
+            matchId: "NA1_3",
+            gameAlias: "jerred",
+            sideLabel: "WIN",
+            offeredStake: 8,
+            matchedStake: null,
+            poolState: "open",
+            cancellationFee: null,
+          },
         ]}
         onCancelOutcome={noop}
       />,
     );
     expect(html.split("Cancel").length - 1).toBe(1);
+  });
+});
+
+describe("BucksNotificationPreferencesForm", () => {
+  test("renders both toggles as a real form with named checkboxes", () => {
+    const html = renderToStaticMarkup(
+      <BucksNotificationPreferencesForm
+        preferences={{
+          ownBetSettlementDms: true,
+          betsOnPlayerSettlementDms: false,
+        }}
+        pending={false}
+        error={null}
+        onSubmit={noop}
+      />,
+    );
+    expect(html).toContain("<form");
+    expect(html).toContain('name="ownBetSettlementDms"');
+    expect(html).toContain('name="betsOnPlayerSettlementDms"');
+    expect(html).toContain("DM me when my own bets settle");
+    expect(html).toContain("DM me when bets on my games settle");
   });
 });
 

@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   FormPendingStatus,
   ServerFormError,
   handleFormSubmit,
+  submitThenChangeValidation,
+  useScoutForm,
 } from "#src/components/semantic-form.tsx";
 
 export type BucksNotificationPreferencesView = {
@@ -12,8 +14,8 @@ export type BucksNotificationPreferencesView = {
 };
 
 /**
- * The two settlement-DM toggles, as a small semantic form with native
- * checkboxes. Hydrated from the server values whenever they change.
+ * The two settlement-DM toggles, through the required TanStack Form toolkit.
+ * Hydrated from the server values via `form.reset` whenever they change.
  */
 export function BucksNotificationPreferencesForm(props: {
   preferences: BucksNotificationPreferencesView;
@@ -22,52 +24,57 @@ export function BucksNotificationPreferencesForm(props: {
   onSubmit: (preferences: BucksNotificationPreferencesView) => void;
 }) {
   const formElement = useRef<HTMLFormElement>(null);
-  const [values, setValues] = useState(props.preferences);
+  const form = useScoutForm({
+    defaultValues: props.preferences,
+    validationLogic: submitThenChangeValidation,
+    onSubmit: ({ value }) => {
+      props.onSubmit(value);
+    },
+  });
   const { ownBetSettlementDms, betsOnPlayerSettlementDms } = props.preferences;
   useEffect(() => {
-    setValues({ ownBetSettlementDms, betsOnPlayerSettlementDms });
-  }, [ownBetSettlementDms, betsOnPlayerSettlementDms]);
+    form.reset({ ownBetSettlementDms, betsOnPlayerSettlementDms });
+  }, [form, ownBetSettlementDms, betsOnPlayerSettlementDms]);
 
   return (
     <form
       ref={formElement}
       onSubmit={(event) => {
-        handleFormSubmit(event, () => {
-          props.onSubmit(values);
-          return Promise.resolve();
-        });
+        handleFormSubmit(event, () => form.handleSubmit());
       }}
     >
       <fieldset disabled={props.pending} className="space-y-3">
         <legend className="mb-2 font-medium">Settlement notifications</legend>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="ownBetSettlementDms"
-            checked={values.ownBetSettlementDms}
-            onChange={(event) => {
-              setValues((current) => ({
-                ...current,
-                ownBetSettlementDms: event.target.checked,
-              }));
-            }}
-          />
-          DM me when my own bets settle
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="betsOnPlayerSettlementDms"
-            checked={values.betsOnPlayerSettlementDms}
-            onChange={(event) => {
-              setValues((current) => ({
-                ...current,
-                betsOnPlayerSettlementDms: event.target.checked,
-              }));
-            }}
-          />
-          DM me when bets on my games settle
-        </label>
+        <form.Field name="ownBetSettlementDms">
+          {(field) => (
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name={field.name}
+                checked={field.state.value}
+                onChange={(event) => {
+                  field.handleChange(event.target.checked);
+                }}
+              />
+              DM me when my own bets settle
+            </label>
+          )}
+        </form.Field>
+        <form.Field name="betsOnPlayerSettlementDms">
+          {(field) => (
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name={field.name}
+                checked={field.state.value}
+                onChange={(event) => {
+                  field.handleChange(event.target.checked);
+                }}
+              />
+              DM me when bets on my games settle
+            </label>
+          )}
+        </form.Field>
         <Button type="submit" size="sm">
           Save preferences
         </Button>

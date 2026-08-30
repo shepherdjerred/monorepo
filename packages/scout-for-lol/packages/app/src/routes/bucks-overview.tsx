@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatInteger } from "@scout-for-lol/data";
+import {
+  ErrorState,
+  LoadingState,
+} from "@scout-for-lol/design-system/domain/states";
 import { BucksCancelDialog } from "#src/components/bucks-cancel-dialog.tsx";
 import {
   BucksMarketSections,
@@ -83,6 +87,52 @@ type BetPlacementSink = {
   ) => void;
   fail: (key: string, error: unknown) => void;
 };
+
+/**
+ * Wallet + pending positions, gated on their own query state. A failed or
+ * still-loading wallet must not be read as "not eligible" — that misleads an
+ * eligible member and hides every bet form with no way to retry.
+ */
+export function WalletPanel(props: {
+  isPending: boolean;
+  isError: boolean;
+  onRetry: () => void;
+  wallet:
+    | {
+        balance: number;
+        totalAtRisk: number;
+        pendingPositionCount: number;
+      }
+    | null
+    | undefined;
+  eligible: boolean;
+  pendingPositions: Parameters<typeof BucksPendingPositions>[0]["positions"];
+  onCancelOutcome: (matchId: string) => void;
+}) {
+  if (props.isPending) {
+    return <LoadingState label="Loading your wallet…" />;
+  }
+  if (props.isError) {
+    return (
+      <ErrorState
+        message="Scout couldn't load your Bryan Bucks wallet."
+        onRetry={props.onRetry}
+      />
+    );
+  }
+  return (
+    <>
+      <BucksWalletCard
+        wallet={props.wallet ?? null}
+        eligible={props.eligible}
+      />
+      <BucksPendingPositions
+        positions={props.pendingPositions}
+        onCancelOutcome={props.onCancelOutcome}
+      />
+    </>
+  );
+}
 
 function usePositionNames(
   markets:
@@ -263,12 +313,15 @@ export function BucksOverview() {
 
   return (
     <div className="space-y-4">
-      <BucksWalletCard
-        wallet={walletQuery.data?.wallet ?? null}
+      <WalletPanel
+        isPending={walletQuery.isPending}
+        isError={walletQuery.isError}
+        onRetry={() => {
+          void walletQuery.refetch();
+        }}
+        wallet={walletQuery.data?.wallet}
         eligible={walletQuery.data?.eligible === true}
-      />
-      <BucksPendingPositions
-        positions={walletQuery.data?.wallet?.pendingPositions ?? []}
+        pendingPositions={walletQuery.data?.wallet?.pendingPositions ?? []}
         onCancelOutcome={requestCancel}
       />
       <MarketsStatusBanner

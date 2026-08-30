@@ -43,6 +43,40 @@ export function bucksSectionItems(): {
   ];
 }
 
+export type BucksGuildSelection = {
+  /**
+   * True only while a real choice is pending: more than one guild is
+   * available and the member hasn't picked one yet. Distinct from "no guild"
+   * (forbidden/error/unavailable), which is a settled answer — an analytics
+   * gate keyed only on `guildId === undefined` would mark the route ready
+   * before a guild exists, and picking one later would never retrigger the
+   * entry pageview.
+   */
+  awaitingGuildChoice: boolean;
+  guildId: string | undefined;
+};
+
+/** Pure guild-selection resolution, shared by the analytics gate and the render path. */
+export function resolveBucksGuildSelection(input: {
+  availableGuilds: { id: string }[] | undefined;
+  selectedGuildId: string | null;
+}): BucksGuildSelection {
+  const { availableGuilds, selectedGuildId } = input;
+  if (availableGuilds === undefined) {
+    return { awaitingGuildChoice: false, guildId: undefined };
+  }
+  if (availableGuilds.length === 1) {
+    return { awaitingGuildChoice: false, guildId: availableGuilds[0]?.id };
+  }
+  const selected = availableGuilds.find(
+    (candidate) => candidate.id === selectedGuildId,
+  );
+  return {
+    awaitingGuildChoice: selected === undefined,
+    guildId: selected?.id,
+  };
+}
+
 function SectionNav() {
   return (
     <nav className="mb-4 flex gap-1">
@@ -88,30 +122,35 @@ export function BucksWorkspace() {
     statusQuery.data?.state === "available"
       ? statusQuery.data.guilds
       : undefined;
-  const resolvedGuildId =
-    availableGuilds === undefined
-      ? undefined
-      : (availableGuilds.length === 1
-          ? availableGuilds[0]
-          : availableGuilds.find(
-              (candidate) => candidate.id === selectedGuildId,
-            )
-        )?.id;
+  const { awaitingGuildChoice, guildId: resolvedGuildId } =
+    resolveBucksGuildSelection({ availableGuilds, selectedGuildId });
 
   // This is the only component mounted for every `/bucks*` route, so — like
   // `GuildWorkspace` for `/g/:guildId` — it owns the guild super property for
   // every Bucks pageview and mutation event. "Settled" means the status probe
-  // has answered at all: a forbidden/error result or an unresolved multi-guild
-  // picker are themselves settled "no guild attached" answers, not pending
-  // ones, so the root layout's entry-pageview gate does not wait on them.
+  // has answered AND, if multiple guilds are available, one has been picked —
+  // a forbidden/error result is a settled "no guild attached" answer, but an
+  // unresolved multi-guild picker is not: it stays unresolved until a guild is
+  // chosen, so the root layout's entry-pageview gate waits for that pick.
   const contextRoute = analyticsContextRoute(location.pathname);
   useEffect(() => {
-    if (contextRoute === undefined || statusQuery.isPending) return;
+    if (
+      awaitingGuildChoice ||
+      contextRoute === undefined ||
+      statusQuery.isPending
+    ) {
+      return;
+    }
     resolveGuildContext(contextRoute, resolvedGuildId);
     return () => {
       clearGuildContext();
     };
-  }, [contextRoute, statusQuery.isPending, resolvedGuildId]);
+  }, [
+    contextRoute,
+    statusQuery.isPending,
+    awaitingGuildChoice,
+    resolvedGuildId,
+  ]);
 
   if (statusQuery.isPending) {
     return <LoadingState label="Checking Bryan Bucks availability…" />;

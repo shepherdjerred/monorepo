@@ -62,7 +62,8 @@ export function BucksPendingPositions(props: {
                       : `, ${formatInteger(position.matchedStake)} BB matched`}
                   </span>
                   <Badge variant="outline">{position.poolState}</Badge>
-                  {position.poolState === "open" ? (
+                  {position.poolState === "open" &&
+                  position.cancellationFee !== null ? (
                     <Button
                       type="button"
                       variant="outline"
