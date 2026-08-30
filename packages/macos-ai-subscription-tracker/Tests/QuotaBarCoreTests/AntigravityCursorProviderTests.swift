@@ -103,6 +103,24 @@ final class AntigravityCursorProviderTests: XCTestCase {
     )
   }
 
+  func testFoundationCommandRunnerTerminatesCancelledProcess() async throws {
+    let task = Task {
+      try await FoundationCommandRunner().run(
+        executableURL: URL(fileURLWithPath: "/bin/sh"),
+        arguments: ["-c", "sleep 5"]
+      )
+    }
+    try await Task.sleep(for: .milliseconds(100))
+    task.cancel()
+
+    do {
+      _ = try await task.value
+      XCTFail("Expected cancellation")
+    } catch is CancellationError {
+      // Expected: cancellation terminates the child process.
+    }
+  }
+
   func testCursorParsesBothMonthlyPoolsAndBillingReset() throws {
     let now = date("2026-08-30T20:00:00Z")
     let snapshot = try CursorProvider.parse(data: fixture("cursor-success"), now: now)

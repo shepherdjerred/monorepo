@@ -18,23 +18,53 @@ public struct FoundationCommandRunner: CommandRunning, Sendable {
   public init() {}
 
   public func run(executableURL: URL, arguments: [String]) async throws -> CommandResult {
-    try await Task.detached {
-      let process = Process()
-      let output = Pipe()
-      process.executableURL = executableURL
-      process.arguments = arguments
-      process.standardOutput = output
-      process.standardError = FileHandle.nullDevice
-      do {
-        try process.run()
-        process.waitUntilExit()
-      } catch {
-        throw QuotaError.commandFailed("agy")
-      }
-      return CommandResult(
-        stdout: output.fileHandleForReading.readDataToEndOfFile(),
-        terminationStatus: process.terminationStatus
-      )
-    }.value
+    let control = ProcessControl()
+    control.process.executableURL = executableURL
+    control.process.arguments = arguments
+    control.process.standardOutput = control.output
+    control.process.standardError = FileHandle.nullDevice
+
+    return try await withTaskCancellationHandler {
+      try await Task.detached {
+        guard !control.isCancelled else { throw CancellationError() }
+        do {
+          try control.process.run()
+          if control.isCancelled { control.process.terminate() }
+          control.process.waitUntilExit()
+        } catch is CancellationError {
+          throw CancellationError()
+        } catch {
+          throw QuotaError.commandFailed("agy")
+        }
+        if control.isCancelled { throw CancellationError() }
+        return CommandResult(
+          stdout: control.output.fileHandleForReading.readDataToEndOfFile(),
+          terminationStatus: control.process.terminationStatus
+        )
+      }.value
+    } onCancel: {
+      control.cancel()
+    }
+  }
+}
+
+private final class ProcessControl: @unchecked Sendable {
+  let process = Process()
+  let output = Pipe()
+  private let lock = NSLock()
+  private var cancelled = false
+
+  var isCancelled: Bool {
+    lock.lock()
+    defer { lock.unlock() }
+    return cancelled
+  }
+
+  func cancel() {
+    lock.lock()
+    cancelled = true
+    let running = process.isRunning
+    lock.unlock()
+    if running { process.terminate() }
   }
 }
