@@ -9,6 +9,10 @@
 // hardcoded `pokemon.*` values.
 
 import { context, trace, type Span, type Tracer } from "@opentelemetry/api";
+import {
+  costForTextUsage,
+  costForTextUsageByTurn,
+} from "@shepherdjerred/llm-models";
 import type { Registry } from "prom-client";
 import { z } from "zod";
 import { getLlmTracer } from "./span-helpers.ts";
@@ -240,18 +244,26 @@ export function attachCodexTrace(
         tool.span.end();
       }
       openTools.clear();
-      recordCodexMetrics(options, parser.total(), startedAtMs, outcome);
+      recordCodexMetrics({
+        options,
+        usage: parser.total(),
+        turns: parser.turns(),
+        startedAtMs,
+        outcome,
+      });
       rootSpan.end();
     },
   };
 }
 
-function recordCodexMetrics(
-  options: CodexTraceOptions,
-  usage: ReturnType<CodexJsonlParser["total"]>,
-  startedAtMs: number,
-  outcome: CodexTraceOutcome,
-): void {
+function recordCodexMetrics(input: {
+  options: CodexTraceOptions;
+  usage: ReturnType<CodexJsonlParser["total"]>;
+  turns: ReturnType<CodexJsonlParser["turns"]>;
+  startedAtMs: number;
+  outcome: CodexTraceOutcome;
+}): void {
+  const { options, usage, turns, startedAtMs, outcome } = input;
   if (options.metricsRegister === undefined) return;
   const metrics = commonLlmMetrics(options.metricsRegister);
   const labels = {
@@ -267,17 +279,34 @@ function recordCodexMetrics(
     { ...labels, type: "cached_input" },
     usage.cachedInputTokens,
   );
+  metrics.tokens.inc(
+    { ...labels, type: "cache_write_input" },
+    usage.cacheWriteInputTokens,
+  );
   metrics.tokens.inc({ ...labels, type: "output" }, usage.outputTokens);
   metrics.tokens.inc(
     { ...labels, type: "reasoning" },
     usage.reasoningOutputTokens,
   );
-  // Deliberately no `metrics.cost.inc` here. Codex runs against a
-  // ChatGPT-managed subscription bundle, so a catalog estimate is a price we do
-  // not pay per call. It was also the only cost this transport reported -- there
-  // was never an `actual` figure to compare it against -- so publishing it made
-  // `llm_cost_usd_total` look complete while being a guess. Tokens above remain
-  // the usage signal.
+  const cost =
+    turns.length > 0
+      ? costForTextUsageByTurn(
+          options.model,
+          turns.map((turn) => ({
+            inputTokens: turn.inputTokens,
+            cachedInputTokens: turn.cachedInputTokens,
+            cacheWriteTokens: turn.cacheWriteInputTokens,
+            outputTokens: turn.outputTokens + turn.reasoningOutputTokens,
+          })),
+        )
+      : costForTextUsage(options.model, {
+          inputTokens: usage.inputTokens,
+          cachedInputTokens: usage.cachedInputTokens,
+          outputTokens: usage.outputTokens + usage.reasoningOutputTokens,
+        });
+  if (cost !== undefined) {
+    metrics.cost.inc({ ...labels, type: "catalog" }, cost);
+  }
 }
 
 type ToolHandlerArgs = {

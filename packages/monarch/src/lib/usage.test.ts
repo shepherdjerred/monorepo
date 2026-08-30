@@ -57,4 +57,11 @@ describe("createUsageTracker", () => {
     // Uses sonnet pricing as default
     expect(summary.estimatedCost).toBeCloseTo(4.5, 2);
   });
+
+  test("applies long-context pricing per request", () => {
+    const tracker = createUsageTracker("gpt-5.6-luna");
+    tracker.record(200_000, 0);
+    tracker.record(200_000, 0);
+    expect(tracker.getSummary().estimatedCost).toBeCloseTo(0.08, 6);
+  });
 });

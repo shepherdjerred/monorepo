@@ -21,6 +21,23 @@ import {
 } from "./benchmark-provider-failure.ts";
 import { computeCost } from "./pricing.ts";
 
+export function benchmarkTelemetryCost(
+  model: string,
+  raw: CodexBenchmarkTelemetry,
+): number | null {
+  return computeCost(
+    model,
+    {
+      inputTokens: raw.inputTokens,
+      cachedInputTokens: raw.cachedInputTokens,
+      cacheWriteInputTokens: raw.cacheWriteInputTokens,
+      outputTokens: raw.outputTokens,
+      reasoningOutputTokens: raw.reasoningOutputTokens,
+    },
+    raw.turnUsages,
+  );
+}
+
 export function telemetryForArtifact(input: {
   raw: CodexBenchmarkTelemetry;
   durationMs: number;
@@ -51,7 +68,7 @@ export function telemetryForArtifact(input: {
     cachedInputTokens: input.raw.cachedInputTokens,
     outputTokens: input.raw.outputTokens,
     reasoningOutputTokens: input.raw.reasoningOutputTokens,
-    estimatedCostUsd: computeCost(input.model, input.raw),
+    estimatedCostUsd: benchmarkTelemetryCost(input.model, input.raw),
     traceId: input.goalId,
     saveSha256: input.finalSaveSha256,
     wasmSha256: input.wasmSha256,

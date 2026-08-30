@@ -55,7 +55,7 @@ function modelSettings(requirements: ModelRequirements) {
     usage: { include: true },
     structuredOutputs: { strict: true },
     provider: {
-      allow_fallbacks: true,
+      allow_fallbacks: false,
       data_collection: "deny" as const,
       require_parameters:
         requirements.capabilities?.some(

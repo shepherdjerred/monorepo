@@ -4,6 +4,7 @@ import {
   allModelIds,
   assertModelId,
   costForTextUsage,
+  costForTextUsageByTurn,
   getModel,
   getOpenRouterRoute,
   getPerTokenPricing,
@@ -141,6 +142,65 @@ describe("pricing accessors", () => {
         outputTokens: 0,
       }),
     ).toBeCloseTo(0.02, 6);
+  });
+
+  test("Luna pricing includes cache writes and the published long-context tier", () => {
+    expect(getPricing("gpt-5.6-luna")).toEqual({
+      modality: "text",
+      input: 0.2,
+      cachedInput: 0.02,
+      cacheWrite: 0.25,
+      output: 1.2,
+      longContextSurcharge: {
+        thresholdInputTokens: 272_000,
+        inputMultiplier: 2,
+        outputMultiplier: 1.5,
+      },
+    });
+    expect(
+      costForTextUsage("gpt-5.6-luna", {
+        inputTokens: 272_000,
+        outputTokens: 100_000,
+      }),
+    ).toBeCloseTo((272_000 * 0.2 + 100_000 * 1.2) / 1_000_000, 9);
+    expect(
+      costForTextUsage("gpt-5.6-luna", {
+        inputTokens: 272_001,
+        outputTokens: 100_000,
+      }),
+    ).toBeCloseTo((272_001 * 0.2 * 2 + 100_000 * 1.2 * 1.5) / 1_000_000, 9);
+    expect(
+      costForTextUsage("gpt-5.6-luna", {
+        inputTokens: 270_000,
+        cacheWriteTokens: 2001,
+        outputTokens: 0,
+      }),
+    ).toBeCloseTo(((270_000 * 0.2 + 2001 * 0.25) * 2) / 1_000_000, 9);
+  });
+
+  test("Luna cache reads stay on cached-input pricing with cache writes", () => {
+    expect(
+      costForTextUsage("gpt-5.6-luna", {
+        inputTokens: 200_000,
+        cachedInputTokens: 100_000,
+        cacheWriteTokens: 1000,
+        outputTokens: 0,
+      }),
+    ).toBeCloseTo(
+      (100_000 * 0.2 + 100_000 * 0.02 + 1000 * 0.25) / 1_000_000,
+      9,
+    );
+  });
+
+  test("long-context surcharge applies independently to each turn", () => {
+    const turns = [
+      { inputTokens: 200_000, outputTokens: 100_000 },
+      { inputTokens: 200_000, outputTokens: 100_000 },
+    ];
+    expect(costForTextUsageByTurn("gpt-5.6-luna", turns)).toBeCloseTo(
+      (400_000 * 0.2 + 200_000 * 1.2) / 1_000_000,
+      9,
+    );
   });
 
   test("Anthropic cache read/write bill separately from input (temporal parity)", () => {

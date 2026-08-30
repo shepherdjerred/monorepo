@@ -29,6 +29,11 @@ import {
 } from "./types.ts";
 import { generateValidatedObject as innerGenerateValidatedObject } from "./validated-object.ts";
 import { openRouterWebSearchTool as innerOpenRouterWebSearchTool } from "./openrouter-tools.ts";
+import {
+  createOpenRouterCodexConfig as innerCreateOpenRouterCodexConfig,
+  OPENROUTER_API_BASE_URL as INNER_OPENROUTER_API_BASE_URL,
+  type OpenRouterCodexConfig as InnerOpenRouterCodexConfig,
+} from "./codex.ts";
 
 type Identity<T> = { [KEY in keyof T]: T[KEY] };
 const passthrough = <T>(value: T): T => value;
@@ -91,6 +96,16 @@ export type OpenRouterRuntimeLogger = (
 export type OpenRouterTokenBreakdown = Identity<InnerOpenRouterTokenBreakdown>;
 export type RuntimeTraceContext = Identity<InnerRuntimeTraceContext>;
 export type StructuredOutputAttempt = Identity<InnerStructuredOutputAttempt>;
+export type OpenRouterCodexConfig = Identity<InnerOpenRouterCodexConfig>;
+export const OPENROUTER_API_BASE_URL: string = passthrough(
+  INNER_OPENROUTER_API_BASE_URL,
+);
+
+export function createOpenRouterCodexConfig(
+  ...args: Parameters<typeof innerCreateOpenRouterCodexConfig>
+): OpenRouterCodexConfig {
+  return innerCreateOpenRouterCodexConfig(...args);
+}
 
 export function addTokenBreakdown(
   ...args: Parameters<typeof innerAddTokenBreakdown>

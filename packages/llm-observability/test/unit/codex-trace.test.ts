@@ -29,9 +29,19 @@ test("parser accumulates usage totals from the real fixture", () => {
   expect(parser.total()).toEqual({
     inputTokens: 22_623,
     cachedInputTokens: 22_400,
+    cacheWriteInputTokens: 0,
     outputTokens: 70,
     reasoningOutputTokens: 63,
   });
+  expect(parser.turns()).toEqual([
+    {
+      inputTokens: 22_623,
+      cachedInputTokens: 22_400,
+      cacheWriteInputTokens: 0,
+      outputTokens: 70,
+      reasoningOutputTokens: 63,
+    },
+  ]);
 });
 
 test("parser handles chunked pushes across line boundaries", () => {
@@ -43,6 +53,32 @@ test("parser handles chunked pushes across line boundaries", () => {
   parser.push(codexFixture.slice(mid));
   parser.finish();
   expect(events.filter((e) => e.kind === "turn.completed").length).toBe(1);
+});
+
+test("parser preserves cache-write usage for per-turn pricing", () => {
+  const parser = createCodexJsonlParser();
+  parser.push(
+    `${JSON.stringify({
+      type: "turn.completed",
+      usage: {
+        input_tokens: 100,
+        cached_input_tokens: 25,
+        cache_write_input_tokens: 10,
+        output_tokens: 5,
+        reasoning_output_tokens: 2,
+      },
+    })}\n`,
+  );
+  parser.finish();
+  expect(parser.turns()).toEqual([
+    {
+      inputTokens: 100,
+      cachedInputTokens: 25,
+      cacheWriteInputTokens: 10,
+      outputTokens: 5,
+      reasoningOutputTokens: 2,
+    },
+  ]);
 });
 
 test("attachCodexTrace emits run + turn spans with gen_ai attributes", () => {
@@ -102,10 +138,11 @@ test("attachCodexTrace records standard native SDK metrics", async () => {
   expect(metrics).toContain('outcome="success"');
   expect(metrics).toContain('type="reasoning"');
 
-  // Codex bills against a ChatGPT-managed subscription, so it must contribute
-  // tokens but never cost. A catalog estimate here would be a price we do not
-  // pay per call, summed into the same series as real OpenRouter charges.
-  expect(metrics).not.toMatch(/^llm_cost_usd_total\{/m);
+  // Luna runs through OpenRouter, so the catalog estimate is recorded alongside
+  // the native SDK usage metrics.
+  expect(metrics).toContain(
+    'llm_cost_usd_total{service="temporal",workload="agent-task",provider="codex_sdk",model="gpt-5.6-luna",type="catalog"} 0.0006522',
+  );
 });
 
 test("attachCodexTrace runs SDK work beneath its repository-owned span", () => {

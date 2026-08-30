@@ -24,6 +24,13 @@ from pydantic import AwareDatetime, BaseModel, Field, TypeAdapter, model_validat
 CATALOG_PATH = Path(__file__).resolve().parent.parent / "src" / "catalog.json"
 
 
+class LongContextSurcharge(BaseModel):
+    model_config = {"extra": "forbid"}
+    thresholdInputTokens: int = Field(ge=0)
+    inputMultiplier: float = Field(gt=0)
+    outputMultiplier: float = Field(gt=0)
+
+
 class TextPricing(BaseModel):
     model_config = {"extra": "forbid"}
     modality: Literal["text"]
@@ -32,6 +39,7 @@ class TextPricing(BaseModel):
     cachedInput: float | None = Field(default=None, ge=0)
     cacheRead: float | None = Field(default=None, ge=0)
     cacheWrite: float | None = Field(default=None, ge=0)
+    longContextSurcharge: LongContextSurcharge | None = None
 
 
 class ImagePricing(BaseModel):
