@@ -6,7 +6,10 @@ import {
   executeWorkerDeploymentRollout,
   type WorkerDeploymentRolloutOptions,
 } from "./worker-deployment-rollout.ts";
-import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
+import {
+  rolloutPoller,
+  type RolloutCommandRunner,
+} from "./worker-deployment-proofs.ts";
 import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
 
 const CANDIDATE = "b".repeat(40);
@@ -15,6 +18,17 @@ const DEPLOYMENT = "monorepo-central-workflows";
 const CANDIDATE_DIGEST = "b".repeat(64);
 const STABLE_DIGEST = "a".repeat(64);
 const createdDirectories: string[] = [];
+
+test("preserves the selected task queue in rollout pollers", () => {
+  expect(
+    rolloutPoller({
+      namespace: "scout-beta",
+      deploymentName: "scout-beta-workflows",
+      buildId: CANDIDATE,
+      taskQueue: "scout-beta",
+    }),
+  ).toMatchObject({ taskQueue: "scout-beta" });
+});
 
 type Fixture = {
   currentBuildId?: string;
@@ -573,6 +587,24 @@ describe("Worker Deployment promotion", () => {
       "promote",
       new Date("2026-08-30T00:01:00Z"),
     );
+    await Bun.write(
+      rolloutOptions.candidateStatePath,
+      JSON.stringify({
+        schema: "pin-candidates-state/v1",
+        pins: {
+          [rolloutOptions.candidatePinName]: {
+            version: "2.0.0-2",
+            digest: `sha256:${CANDIDATE_DIGEST}`,
+            buildNumber: 2,
+          },
+          [rolloutOptions.stablePinName]: {
+            version: "2.0.0-1",
+            digest: `sha256:${STABLE_DIGEST}`,
+            buildNumber: 1,
+          },
+        },
+      }),
+    );
     await executeWorkerDeploymentRollout(
       rolloutOptions,
       fixtureRunner(
@@ -600,11 +632,9 @@ describe("Worker Deployment promotion", () => {
     expect(await Bun.file(rolloutOptions.catalogPath).text()).not.toContain(
       `"value": "2.0.0-1@sha256:${STABLE_DIGEST}"`,
     );
-    expect(await Bun.file(rolloutOptions.candidateStatePath).text()).toContain(
-      `"version": "2.0.0-2"`,
-    );
-    expect(await Bun.file(rolloutOptions.candidateStatePath).text()).toContain(
-      `"digest": "sha256:${CANDIDATE_DIGEST}"`,
+    const state = await Bun.file(rolloutOptions.candidateStatePath).json();
+    expect(state.pins[rolloutOptions.stablePinName]).toEqual(
+      state.pins[rolloutOptions.candidatePinName],
     );
   });
 

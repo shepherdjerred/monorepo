@@ -47,6 +47,11 @@ export type CandidatePinStateReset = {
   changed: boolean;
 };
 
+export type StablePinStatePromotion = {
+  contents: string;
+  changed: boolean;
+};
+
 function parseCatalog(raw: string): z.infer<typeof CatalogSchema> {
   try {
     return CatalogSchema.parse(JSON.parse(raw));
@@ -151,6 +156,43 @@ export async function prepareCandidatePinStateReset(
     Object.entries(state.pins)
       .filter(([name]) => name !== candidatePinName)
       .sort(([left], [right]) => left.localeCompare(right)),
+  );
+  return {
+    contents: `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`,
+    changed: true,
+  };
+}
+
+export async function prepareStablePinStatePromotion(
+  statePath: string,
+  candidatePinName: string,
+  stablePinName: string,
+): Promise<StablePinStatePromotion> {
+  let state: z.infer<typeof PinStateSchema>;
+  try {
+    state = PinStateSchema.parse(JSON.parse(await Bun.file(statePath).text()));
+  } catch (error: unknown) {
+    throw new Error("Temporal pin candidate state is invalid", {
+      cause: error,
+    });
+  }
+  const candidate = state.pins[candidatePinName];
+  if (candidate === undefined) {
+    return { contents: `${JSON.stringify(state, null, 2)}\n`, changed: false };
+  }
+  const stable = state.pins[stablePinName];
+  if (
+    Object.hasOwn(state.pins, stablePinName) &&
+    stable.buildNumber === candidate.buildNumber &&
+    stable.version === candidate.version &&
+    stable.digest === candidate.digest
+  ) {
+    return { contents: `${JSON.stringify(state, null, 2)}\n`, changed: false };
+  }
+  const pins = Object.fromEntries(
+    Object.entries({ ...state.pins, [stablePinName]: candidate }).sort(
+      ([left], [right]) => left.localeCompare(right),
+    ),
   );
   return {
     contents: `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`,
