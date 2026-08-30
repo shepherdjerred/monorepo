@@ -1,5 +1,13 @@
 import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
 
+export function parseTemporalJson(raw: string, label: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    throw new Error(`${label} returned invalid JSON`, { cause: error });
+  }
+}
+
 export function temporalPrefix(options: {
   address: string;
   namespace: string;

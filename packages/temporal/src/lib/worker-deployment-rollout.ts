@@ -34,6 +34,7 @@ import {
 } from "./worker-deployment-inspect.ts";
 import {
   setCurrentVersion,
+  parseTemporalJson,
   setRampingVersion,
   temporalPrefix,
 } from "./worker-deployment-commands.ts";
@@ -71,13 +72,6 @@ export type WorkerDeploymentRolloutStatus = {
   activeTemporalAlerts: number | undefined;
   lastRampChange: string;
 };
-function parseJson(raw: string, label: string): unknown {
-  try {
-    return JSON.parse(raw);
-  } catch (error) {
-    throw new Error(`${label} returned invalid JSON`, { cause: error });
-  }
-}
 async function describeDeployment(
   options: WorkerDeploymentRolloutOptions,
   run: RolloutCommandRunner,
@@ -93,7 +87,7 @@ async function describeDeployment(
     "json",
   ]);
   return DeploymentDescriptionSchema.parse(
-    parseJson(result.stdout, "worker deployment describe"),
+    parseTemporalJson(result.stdout, "worker deployment describe"),
   );
 }
 async function describeVersion(
@@ -115,7 +109,7 @@ async function describeVersion(
     "json",
   ]);
   return VersionDescriptionSchema.parse(
-    parseJson(result.stdout, "worker deployment describe-version"),
+    parseTemporalJson(result.stdout, "worker deployment describe-version"),
   );
 }
 function optionalNonEmpty(value: string): string | undefined {
