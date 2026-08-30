@@ -6,6 +6,7 @@ import type {
 import { ScheduleNotFoundError } from "@temporalio/client";
 import {
   detectOrphanSchedules,
+  isDynamicAgentTaskSchedule,
   isReconcilableDynamicAgentTaskSchedule,
 } from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
