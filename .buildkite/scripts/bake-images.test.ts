@@ -134,9 +134,13 @@ test("blocks admission when live main has a divergent Temporal candidate", async
 });
 
 test("allows image admission while a workflow candidate is soaking", async () => {
-  await expect(
-    assertNoPendingVersionBump(async () => commandResult()),
-  ).resolves.toBeUndefined();
+  const catalog = JSON.stringify({ entries: [] });
+  const executor: CommandExecutor = async (command) => {
+    if (command[1] === "ls-remote") return commandResult();
+    if (command[1] === "fetch") return commandResult();
+    return commandResult(0, catalog);
+  };
+  await expect(assertNoPendingVersionBump(executor)).resolves.toBe(catalog);
 });
 
 test("allows admission when all live Temporal candidates match stable", async () => {
@@ -162,9 +166,9 @@ test("allows admission when all live Temporal candidates match stable", async ()
   });
   const executor: CommandExecutor = async (command) =>
     command[1] === "fetch" ? commandResult() : commandResult(0, catalog);
-  await expect(
-    assertTemporalCandidatePinsConverged(executor),
-  ).resolves.toBeUndefined();
+  await expect(assertTemporalCandidatePinsConverged(executor)).resolves.toBe(
+    catalog,
+  );
 });
 
 test("fails transiently when origin main cannot be refreshed", async () => {
@@ -1209,6 +1213,28 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     digests: Readonly<Record<string, string>>;
     buildNumber: string;
   }[] = [];
+  const catalog = versionCatalogSource([
+    {
+      name: "shepherdjerred/birmel",
+      value: `2.0.0-1@${pinned}`,
+    },
+    {
+      name: "shepherdjerred/scout-for-lol/beta",
+      value: `2.0.0-2@${pinned}`,
+    },
+    {
+      name: "shepherdjerred/scout-for-lol/prod",
+      value: `2.0.0-1@${pinned}`,
+    },
+    {
+      name: "shepherdjerred/starlight-karma-bot/beta",
+      value: `2.0.0-2@${pinned}`,
+    },
+    {
+      name: "shepherdjerred/starlight-karma-bot/prod",
+      value: `2.0.0-1@${pinned}`,
+    },
+  ]);
   const writes: { path: string; contents: string }[] = [];
   const executor: CommandExecutor = async (command) => {
     commands.push([...command]);
@@ -1225,29 +1251,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     {
       executor,
       environment: {},
-      readVersionCatalog: async () =>
-        versionCatalogSource([
-          {
-            name: "shepherdjerred/birmel",
-            value: `2.0.0-1@${pinned}`,
-          },
-          {
-            name: "shepherdjerred/scout-for-lol/beta",
-            value: `2.0.0-2@${pinned}`,
-          },
-          {
-            name: "shepherdjerred/scout-for-lol/prod",
-            value: `2.0.0-1@${pinned}`,
-          },
-          {
-            name: "shepherdjerred/starlight-karma-bot/beta",
-            value: `2.0.0-2@${pinned}`,
-          },
-          {
-            name: "shepherdjerred/starlight-karma-bot/prod",
-            value: `2.0.0-1@${pinned}`,
-          },
-        ]),
+      readVersionCatalog: async () => catalog,
       getManifestDigest: async (image) => {
         manifestReferences.push(image);
         events.push(`resolve:${image}`);

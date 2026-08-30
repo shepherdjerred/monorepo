@@ -15,15 +15,18 @@ export const TEMPORAL_WORKFLOW_PIN_PAIRS = [
   ],
 ] as const;
 type TemporalWorkflowPinPair = (typeof TEMPORAL_WORKFLOW_PIN_PAIRS)[number];
+type LiveVersionCatalog = {
+  readonly source: string;
+  readonly values: ReadonlyMap<string, string>;
+};
 
 export type CandidateAdmissionExecutor = (
   command: readonly string[],
 ) => Promise<BuildxCommandResult>;
 
-export async function assertTemporalCandidatePinsConverged(
+async function readLiveVersionCatalog(
   executor: CandidateAdmissionExecutor,
-  pinPairs: readonly TemporalWorkflowPinPair[] = TEMPORAL_WORKFLOW_PIN_PAIRS,
-): Promise<void> {
+): Promise<LiveVersionCatalog> {
   const fetched = await executor(["git", "fetch", "origin", "main"]);
   if (fetched.exitCode !== 0) {
     throw new TransientError(
@@ -56,9 +59,17 @@ export async function assertTemporalCandidatePinsConverged(
     }
     values.set(entry["name"], entry["value"]);
   }
+  return { source: catalog.stdout, values };
+}
+
+export async function assertTemporalCandidatePinsConverged(
+  executor: CandidateAdmissionExecutor,
+  pinPairs: readonly TemporalWorkflowPinPair[] = TEMPORAL_WORKFLOW_PIN_PAIRS,
+): Promise<string> {
+  const catalog = await readLiveVersionCatalog(executor);
   for (const [stable, candidate] of pinPairs) {
-    const stableValue = values.get(stable);
-    const candidateValue = values.get(candidate);
+    const stableValue = catalog.values.get(stable);
+    const candidateValue = catalog.values.get(candidate);
     if (stableValue === undefined || candidateValue === undefined) {
       throw new Error(
         `Version catalog is missing Temporal workflow pins for ${stable}`,
@@ -70,11 +81,12 @@ export async function assertTemporalCandidatePinsConverged(
       );
     }
   }
+  return catalog.source;
 }
 
 export async function assertNoPendingVersionBump(
   executor: CandidateAdmissionExecutor,
-): Promise<void> {
+): Promise<string> {
   const result = await executor([
     "git",
     "ls-remote",
@@ -91,4 +103,6 @@ export async function assertNoPendingVersionBump(
       `${VERSION_BUMP_BRANCH} is still pending; retry after its catalog update merges`,
     );
   }
+  const catalog = await readLiveVersionCatalog(executor);
+  return catalog.source;
 }

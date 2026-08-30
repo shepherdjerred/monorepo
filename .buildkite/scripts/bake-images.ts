@@ -202,16 +202,18 @@ async function setDigestMetadata(
 async function setPinCandidatesMetadata(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
+  versionCatalogSource?: string,
 ): Promise<void> {
   const parsedBuildNumber = Number(buildNumber);
   if (!Number.isSafeInteger(parsedBuildNumber) || parsedBuildNumber <= 0) {
     throw new Error("Build number must be a positive safe integer");
   }
-  const versionCatalogSource = await Bun.file(VERSION_CATALOG_URL).text();
+  const catalogSource =
+    versionCatalogSource ?? (await Bun.file(VERSION_CATALOG_URL).text());
   const candidates = pinCandidatesForDigests(
     digests,
     buildNumber,
-    versionCatalogSource,
+    catalogSource,
   );
   await writeJsonHandoff("pin-candidates", "pin-candidates.json", {
     schema: "pin-candidates/v1",
@@ -302,6 +304,7 @@ export async function pushImages(
     readonly writeCandidates?: (
       digests: Readonly<Record<string, string>>,
       buildNumber: string,
+      versionCatalogSource: string,
     ) => Promise<void>;
     readonly writeText?: TextWriter;
   } = {},
@@ -407,7 +410,7 @@ export async function pushImages(
     digests[managedPin.key] = digest;
   }
   await writeMetadata(digests);
-  await writeCandidates(digests, buildNumber);
+  await writeCandidates(digests, buildNumber, versionCatalog);
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
 }
 
@@ -436,13 +439,12 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (
+  const liveVersionCatalog =
     options.push &&
     (bakeTargets.includes("temporal-worker") ||
       bakeTargets.includes("scout-for-lol"))
-  ) {
-    await assertNoPendingVersionBump(execute);
-  }
+      ? await assertNoPendingVersionBump(execute)
+      : undefined;
 
   await ensureBuilder();
   const contractHashResult = await execute([
@@ -455,12 +457,19 @@ async function main(): Promise<void> {
   const contractHash = contractHashResult.stdout.trim();
   await runSmoke(bakeTargets, contractHash);
   if (options.push) {
-    await pushImages({
-      targets: bakeTargets,
-      commit,
-      buildNumber,
-      contractHash,
-    });
+    await pushImages(
+      {
+        targets: bakeTargets,
+        commit,
+        buildNumber,
+        contractHash,
+      },
+      {
+        ...(liveVersionCatalog === undefined
+          ? {}
+          : { readVersionCatalog: () => Promise.resolve(liveVersionCatalog) }),
+      },
+    );
   }
 
   if (!(await Bun.file(selectionReport).exists())) {
