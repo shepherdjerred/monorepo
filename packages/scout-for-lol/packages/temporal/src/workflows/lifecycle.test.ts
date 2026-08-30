@@ -399,31 +399,20 @@ test(
         workflowId: "interactive-stop",
         args: [{ stage: "dev", kind: "explore", databaseRunId: "run_123" }],
       },
-    },
-    maxConcurrentActivityTaskExecutions: 2,
-  });
-  await startWorker(workflow);
-  await startWorker(activities);
-  const handle = await environment.client.workflow.start(
-    scoutInteractiveRunWorkflow,
-    {
-      taskQueue: "scout-dev",
-      workflowId: "interactive-stop",
-      args: [{ stage: "dev", kind: "explore", databaseRunId: "run_123" }],
-    },
-  );
-  await started.promise;
-  await handle.signal(requestStopSignal);
-  await expect(handle.result()).resolves.toEqual({
-    status: "cancelled",
-    partialOutputAvailable: true,
-  });
-  expect(outcomes).toEqual([
-    {
-      stage: "dev",
-      kind: "explore",
-      databaseRunId: "run_123",
-      outcome: { status: "cancelled", partialOutputAvailable: false },
-    },
-  ]);
-}, 15_000);
+    );
+    await started.promise;
+    await handle.signal(requestStopSignal);
+    await expect(handle.result()).resolves.toEqual({
+      status: "cancelled",
+      partialOutputAvailable: true,
+    });
+    expect(outcomes).toEqual([
+      {
+        stage: "dev",
+        kind: "explore",
+        databaseRunId: "run_123",
+        outcome: { status: "cancelled", partialOutputAvailable: false },
+      },
+    ]);
+  },
+);
