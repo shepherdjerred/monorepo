@@ -297,14 +297,6 @@ async function editWeeklyParlayMessage(
       where: { id: marketId },
       data: { messageRefs: JSON.stringify(updatedRefs) },
     });
-    await prismaClient.bucksWeeklyParlayDelivery.updateMany({
-      where: {
-        marketId,
-        kind: "open",
-        deliveryState: "delivered",
-      },
-      data: { messageRefs: JSON.stringify(updatedRefs) },
-    });
   });
 }
 
