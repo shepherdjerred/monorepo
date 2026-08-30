@@ -341,11 +341,11 @@ Flag: non-zero failure rate, scrape target down.
 
 ### Default-queue retirement acceptance
 
-Before applying the cleanup revision, verify that the 30-day retention gate has
-passed since the latest default-queue execution. Then confirm there are no
-running default-queue workflows, no pending default-queue activity or workflow
-tasks, no schedules or event-start surfaces targeting `default`, and no retained
-default histories. After ArgoCD reconciliation, verify that the legacy
+Before applying the cleanup revision, confirm there are no running
+default-queue workflows, no pending default-queue activity or workflow tasks,
+and no schedules or event-start surfaces targeting `default`. Historical
+default-bound executions are intentionally unsupported by this cleanup. After
+ArgoCD reconciliation, verify that the legacy
 Deployment, Services, ServiceMonitors, NetworkPolicies, and ServiceAccount
 bindings are absent and that each canonical worker has a healthy metrics target.
 

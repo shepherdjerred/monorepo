@@ -800,6 +800,10 @@
       "clones": 1,
       "tokens": 79
     },
+    "packages/homelab/src/cdk8s/src/resources/temporal/agent-worker-network-policy.ts|packages/homelab/src/cdk8s/src/resources/temporal/worker-network-policies.ts": {
+      "clones": 1,
+      "tokens": 156
+    },
     "packages/homelab/src/cdk8s/src/resources/temporal/ingress-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/operations-workers.ts": {
       "clones": 1,
       "tokens": 100

@@ -22,10 +22,11 @@ reconciliation and public HTTP/event surfaces without a task queue. The
 credentialless `workflows` role runs deterministic Workflow code on
 `monorepo-workflows` and keeps temporary pollers on every remaining legacy
 central queue. Domain roles are Activity-only and own their registries in the
-typed contract in `src/worker-config.ts`. The default `all` role preserves the single-process local development
-behavior. Keep new queue ownership and capabilities in that contract so a
-provider subprocess, heavy Glitter failure, or maintenance subprocess cannot
-take down another domain or inherit its Kubernetes permissions.
+typed contract in `src/worker-config.ts`. The default `all` role preserves the
+single-process local development behavior. Keep new queue ownership and
+capabilities in that contract so a provider subprocess, heavy Glitter failure,
+or maintenance subprocess cannot take down another domain or inherit its
+Kubernetes permissions.
 
 Every new central start, schedule, and child must target
 `TASK_QUEUES.WORKFLOWS`. Every Activity proxy must name the domain queue that

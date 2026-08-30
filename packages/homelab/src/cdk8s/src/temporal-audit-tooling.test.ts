@@ -212,14 +212,15 @@ describe("temporal homelab audit tooling worker topology", () => {
     expect(
       deployments.some(
         (deployment) =>
-          deployment.spec.template.metadata.labels.component ===
+          deployment.spec.template.metadata.labels["component"] ===
           "legacy-worker",
       ),
     ).toBe(false);
     expect(
       deployments.some(
         (deployment) =>
-          deployment.spec.template.metadata.labels.component === "core-worker",
+          deployment.spec.template.metadata.labels["component"] ===
+          "core-worker",
       ),
     ).toBe(false);
   });
