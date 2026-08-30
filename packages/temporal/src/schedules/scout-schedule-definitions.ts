@@ -105,6 +105,17 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       args: [{ stage, trigger: "schedule" }],
       every: "1 minute",
     }),
+    ...(stage === "beta"
+      ? [
+          intervalSchedule(stage, {
+            name: "custom-nights-expiry",
+            workflowType: "scoutBackgroundJobWorkflow",
+            args: [{ stage, kind: "custom-nights-expiry" }],
+            every: "1 minute",
+            catchupWindow: CATCHUP_TIGHT,
+          }),
+        ]
+      : []),
     intervalSchedule(stage, {
       name: "competition-refresh",
       workflowType: "scoutBackgroundJobWorkflow",

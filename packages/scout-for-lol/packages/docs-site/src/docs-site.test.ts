@@ -300,6 +300,7 @@ describe("cross-package facts the prose depends on", () => {
       ...guildNavigationSource.matchAll(/label:\s*"([^"]+)"/g),
     ].map((match) => match[1] ?? "");
     expect(labels).toEqual([
+      "Customs",
       "Subscriptions",
       "Players",
       "Competitions",

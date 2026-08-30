@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { RegionSchema } from "#src/model/league-account.ts";
+import { AccountIdSchema } from "#src/model/competition.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "#src/model/discord.ts";
 
 export const CustomNightStateSchema = z.enum([
   "RECRUITING",
@@ -190,6 +195,7 @@ export const CustomNightSnapshotSchema = z.strictObject({
   cohostDiscordIds: z.array(z.string().min(1)),
   state: CustomNightStateSchema,
   revision: z.number().int().nonnegative(),
+  viewerRole: CustomRoleSchema,
   participants: z.array(CustomNightParticipantSchema),
   currentGame: CustomGameSnapshotSchema.nullable(),
   recruitmentCounts: CustomRecruitmentCountsSchema,
@@ -215,44 +221,44 @@ export const CustomRevisionInputSchema = z.strictObject({
   nightId: z.uuid(),
   expectedRevision: z.number().int().nonnegative(),
 });
+export const CUSTOMS_DISCLOSURE_VERSION = "2026-08-29";
 export const CustomGuildInputSchema = z.strictObject({
-  guildId: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
 });
-export const CustomCreateNightInputSchema = z.strictObject({
-  guildId: z.string().min(1),
-  guildName: z.string().min(1),
-  launchChannelId: z.string().min(1),
-  voiceLobbyChannelId: z.string().min(1),
-  disclosureVersion: z.string().min(1),
-});
-export const CustomJoinNightInputSchema = CustomRevisionInputSchema.extend({
-  displayName: z.string().trim().min(1).max(80),
-  avatarUrl: z.url().nullable(),
-  disclosureVersion: z.string().min(1),
-});
+export const CustomCreateNightInputSchema = z.strictObject({});
+export const CustomJoinNightInputSchema = CustomRevisionInputSchema;
 export const CustomSetAvailabilityInputSchema =
   CustomRevisionInputSchema.extend({ availability: CustomAvailabilitySchema });
 export const CustomSetAwayInputSchema = CustomRevisionInputSchema.extend({
   awayUntil: z.iso.datetime().nullable(),
 });
 export const CustomTargetParticipantInputSchema =
-  CustomRevisionInputSchema.extend({ discordId: z.string().min(1) });
+  CustomRevisionInputSchema.extend({ discordId: DiscordAccountIdSchema });
+export const CustomAddParticipantInputSchema =
+  CustomTargetParticipantInputSchema;
 export const CustomSetHeldInputSchema =
   CustomTargetParticipantInputSchema.extend({ held: z.boolean() });
 export const CustomSelectAccountInputSchema = CustomRevisionInputSchema.extend({
-  accountId: z.number().int().positive(),
-  targetDiscordId: z.string().min(1).optional(),
+  accountId: AccountIdSchema,
+  targetDiscordId: DiscordAccountIdSchema.optional(),
 });
 export const CustomPrepareGameInputSchema = CustomRevisionInputSchema.extend({
   rosterMode: CustomRosterModeSchema,
-  selectedDiscordIds: z.array(z.string().min(1)).max(10),
+  selectedDiscordIds: z.array(DiscordAccountIdSchema).max(10),
   map: CustomMapSchema,
   pickMode: CustomPickModeSchema,
 });
+export const CustomSelectCaptainsInputSchema = z.union([
+  CustomRevisionInputSchema,
+  CustomRevisionInputSchema.extend({
+    captainADiscordId: DiscordAccountIdSchema,
+    captainBDiscordId: DiscordAccountIdSchema,
+  }),
+]);
 export const CustomPickPlayerInputSchema = CustomTargetParticipantInputSchema;
 export const CustomSubstituteInputSchema = CustomRevisionInputSchema.extend({
-  outgoingDiscordId: z.string().min(1),
-  incomingDiscordId: z.string().min(1),
+  outgoingDiscordId: DiscordAccountIdSchema,
+  incomingDiscordId: DiscordAccountIdSchema,
 });
 export const CustomAssignTeamInputSchema =
   CustomTargetParticipantInputSchema.extend({ team: CustomTeamSchema });
@@ -264,6 +270,9 @@ export const CustomVoiceOverrideInputSchema = CustomRevisionInputSchema.extend({
 export const CustomIntermissionInputSchema = CustomRevisionInputSchema.extend({
   choice: CustomIntermissionChoiceSchema,
 });
+export const CustomVoidGameInputSchema = CustomRevisionInputSchema.extend({
+  reason: z.string().trim().min(1).max(500),
+});
 
 export const CustomAuditEventSchema = z.strictObject({
   id: z.uuid(),
@@ -273,7 +282,7 @@ export const CustomAuditEventSchema = z.strictObject({
   actorId: z.string().min(1),
   action: z.string().min(1),
   payload: z.unknown(),
-  source: z.enum(["ACTIVITY", "DISCORD", "RIOT", "OPERATOR"]),
+  source: z.enum(["ACTIVITY", "DISCORD", "RIOT", "OPERATOR", "TEMPORAL"]),
   createdAt: z.iso.datetime(),
 });
 export type CustomAuditEvent = z.infer<typeof CustomAuditEventSchema>;
@@ -283,6 +292,7 @@ export const CustomHistorySchema = z.strictObject({
   audit: z.array(CustomAuditEventSchema),
 });
 export type CustomHistory = z.infer<typeof CustomHistorySchema>;
+export const CustomHistoryListSchema = z.array(CustomNightSnapshotSchema);
 
 export const CustomActivityClaimsSchema = z.strictObject({
   sub: z.string().min(1),

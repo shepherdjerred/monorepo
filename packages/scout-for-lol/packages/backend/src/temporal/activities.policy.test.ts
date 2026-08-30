@@ -7,6 +7,7 @@ import {
 describe("Scout Temporal production policy", () => {
   test.each([
     ["tournament-lobbies", "tournament_lobbies_enabled"],
+    ["custom-nights-expiry", "custom_nights_enabled"],
     ["bucks-reconciliation", "betting_enabled"],
     ["weekly-bucks-leaderboard", "betting_enabled"],
     ["competition-refresh", null],

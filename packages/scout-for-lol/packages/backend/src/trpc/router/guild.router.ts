@@ -35,6 +35,7 @@ import {
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 
 const logger = createLogger("guild-router");
 
@@ -66,6 +67,19 @@ export const guildRouter = router({
       list.push(permission);
       grantsByGuild.set(row.serverId, list);
     }
+    const customsByGuild = new Map(
+      await Promise.all(
+        present.map(
+          async (guild) =>
+            [
+              DiscordGuildIdSchema.parse(guild.id),
+              await isPolicyEnabled("custom_nights_enabled", {
+                server: DiscordGuildIdSchema.parse(guild.id),
+              }),
+            ] as const,
+        ),
+      ),
+    );
 
     const manageable = present.flatMap((g) => {
       const isDiscordAdmin = g.owner || hasAdministrator(g.permissions);
@@ -80,6 +94,8 @@ export const guildRouter = router({
           icon: g.icon,
           isOwner: g.owner,
           isDiscordAdmin,
+          customNightsEnabled:
+            customsByGuild.get(DiscordGuildIdSchema.parse(g.id)) ?? false,
           permissions,
         },
       ];

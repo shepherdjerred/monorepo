@@ -1,0 +1,294 @@
+@import "tailwindcss";
+@import "@scout-for-lol/design-system/styles.css";
+
+@theme inline {
+  --font-heading: var(--scout-font-display);
+  --font-sans: var(--scout-font-body);
+  --color-scout-canvas: var(--scout-color-canvas);
+  --color-scout-surface: var(--scout-color-surface);
+  --color-scout-raised: var(--scout-color-surface-raised);
+  --color-scout-hover: var(--scout-color-interactive-hover);
+  --color-scout-ink: var(--scout-color-text);
+  --color-scout-subtle: var(--scout-color-text-muted);
+  --color-scout-brand: var(--scout-color-primary);
+  --color-scout-brand-ink: var(--scout-color-primary-text);
+  --color-scout-accent: var(--scout-color-accent);
+  --color-scout-accent-ink: var(--scout-color-accent-text);
+  --color-scout-danger: var(--scout-color-danger);
+  --color-scout-danger-ink: var(--scout-color-danger-text);
+  --color-scout-success: var(--scout-color-success);
+  --color-scout-border: var(--scout-color-border);
+  --color-scout-focus: var(--scout-color-focus);
+  --color-scout-team-blue: var(--scout-color-team-blue);
+  --color-scout-team-red: var(--scout-color-team-red);
+  --radius-sm: var(--scout-radius-small);
+  --radius-md: var(--scout-radius-medium);
+  --radius-lg: var(--scout-radius-large);
+  --radius-xl: var(--scout-radius-large);
+}
+
+:root {
+  --activity-safe-top: env(safe-area-inset-top, 0px);
+  --activity-safe-right: env(safe-area-inset-right, 0px);
+  --activity-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --activity-safe-left: env(safe-area-inset-left, 0px);
+}
+
+@layer base {
+  * {
+    @apply border-scout-border outline-scout-focus/50;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    @apply m-0 bg-scout-canvas font-sans text-scout-ink antialiased;
+    min-width: 320px;
+  }
+
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+#root {
+  padding: var(--activity-safe-top) var(--activity-safe-right)
+    var(--activity-safe-bottom) var(--activity-safe-left);
+}
+
+#activity-overlay-root {
+  position: fixed;
+  inset: var(--activity-safe-top) var(--activity-safe-right)
+    var(--activity-safe-bottom) var(--activity-safe-left);
+  z-index: 100;
+  pointer-events: none;
+  overflow: clip;
+  transform: translateZ(0);
+}
+
+#activity-overlay-root > * {
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html[data-discord-layout="pip"] .activity-layout-header-actions,
+html[data-discord-layout="pip"] .activity-layout-secondary,
+html[data-discord-layout="pip"] .activity-layout-theme {
+  display: none;
+}
+
+html[data-discord-layout="pip"] main {
+  padding: max(0.5rem, var(--activity-safe-top))
+    max(0.5rem, var(--activity-safe-right))
+    max(0.5rem, var(--activity-safe-bottom))
+    max(0.5rem, var(--activity-safe-left));
+}
+
+.centered {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+.activity-shell {
+  width: min(72rem, 100%);
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem);
+  display: grid;
+  gap: 1rem;
+}
+
+.hero,
+.section-heading,
+.footer-actions,
+.button-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.hero h1,
+.welcome h1,
+.panel h2,
+.panel h3 {
+  margin: 0;
+  font-family: var(--scout-font-display);
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  color: var(--scout-color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.panel {
+  border: 1px solid var(--scout-color-border);
+  border-radius: var(--scout-radius-large);
+  background: var(--scout-color-surface);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  box-shadow: var(--scout-shadow-small);
+}
+
+.welcome {
+  width: min(32rem, 100%);
+  display: grid;
+  gap: 1rem;
+  text-align: center;
+}
+
+.state-pill {
+  border: 1px solid var(--scout-color-border);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  color: var(--scout-color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.button {
+  appearance: none;
+  border: 1px solid var(--scout-color-border);
+  border-radius: var(--scout-radius-medium);
+  padding: 0.65rem 0.9rem;
+  background: var(--scout-color-surface-raised);
+  color: var(--scout-color-text);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--scout-color-interactive-hover);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.button.primary {
+  border-color: transparent;
+  background: var(--scout-color-primary);
+  color: var(--scout-color-primary-text);
+}
+
+.button.danger {
+  border-color: var(--scout-color-danger);
+  color: var(--scout-color-danger);
+}
+
+.button.subtle {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.text-input {
+  min-height: 2.5rem;
+  border: 1px solid var(--scout-color-border);
+  border-radius: var(--scout-radius-medium);
+  background: var(--scout-color-surface-raised);
+  color: var(--scout-color-text);
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+}
+
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.player-card {
+  border: 1px solid var(--scout-color-border);
+  border-radius: var(--scout-radius-medium);
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.player-card p,
+.waiting {
+  margin: 0.25rem 0 0;
+  color: var(--scout-color-text-muted);
+  font-size: 0.85rem;
+}
+
+.teams {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.teams > div {
+  border-left: 3px solid var(--scout-color-team-blue);
+  padding-left: 0.75rem;
+}
+
+.teams > div + div {
+  border-color: var(--scout-color-team-red);
+}
+
+.teams p {
+  margin: 0.4rem 0;
+}
+
+.code-card,
+.error-banner {
+  margin-top: 1rem;
+  border-radius: var(--scout-radius-medium);
+  padding: 0.9rem;
+}
+
+.code-card {
+  display: grid;
+  gap: 0.35rem;
+  background: var(--scout-color-surface-raised);
+}
+
+.code-card code {
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+
+.error-banner {
+  border: 1px solid var(--scout-color-danger);
+  color: var(--scout-color-danger);
+}
+
+.draft-row {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+@media (max-width: 42rem) {
+  .teams {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-shell {
+    padding: 0.75rem;
+  }
+}

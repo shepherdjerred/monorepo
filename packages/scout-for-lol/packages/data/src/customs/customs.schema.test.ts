@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest";
 import {
   CustomAuthExchangeInputSchema,
+  CustomAuditEventSchema,
+  CustomCreateNightInputSchema,
   CustomGameStateSchema,
   CustomNightSnapshotSchema,
+  CustomJoinNightInputSchema,
   CustomRevisionInputSchema,
 } from "#src/customs/customs.schema.ts";
 
@@ -11,10 +14,41 @@ describe("Customs contracts", () => {
     expect(CustomGameStateSchema.safeParse("MANUAL").success).toBe(false);
   });
 
+  test("scheduled expiry is an explicit audit source", () => {
+    expect(
+      CustomAuditEventSchema.parse({
+        id: "018f173a-6f4a-7d19-b731-963d62a2e1bd",
+        nightId: "118f173a-6f4a-7d19-b731-963d62a2e1bd",
+        gameId: null,
+        revision: 1,
+        actorId: "temporal:custom-nights-expiry",
+        action: "NIGHT_EXPIRED",
+        payload: {},
+        source: "TEMPORAL",
+        createdAt: "2026-08-30T01:00:00.000Z",
+      }).source,
+    ).toBe("TEMPORAL");
+  });
+
   test("mutations always carry an expected revision", () => {
     expect(
       CustomRevisionInputSchema.safeParse({
         nightId: "018f173a-6f4a-7d19-b731-963d62a2e1bd",
+      }).success,
+    ).toBe(false);
+  });
+
+  test("clients cannot select the Customs disclosure version", () => {
+    expect(
+      CustomCreateNightInputSchema.safeParse({
+        disclosureVersion: "obsolete",
+      }).success,
+    ).toBe(false);
+    expect(
+      CustomJoinNightInputSchema.safeParse({
+        nightId: "018f173a-6f4a-7d19-b731-963d62a2e1bd",
+        expectedRevision: 1,
+        disclosureVersion: "obsolete",
       }).success,
     ).toBe(false);
   });
@@ -42,6 +76,7 @@ describe("Customs contracts", () => {
       cohostDiscordIds: [],
       state: "RECRUITING",
       revision: 0,
+      viewerRole: "HOST",
       participants: [],
       currentGame: null,
       recruitmentCounts: {

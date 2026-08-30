@@ -5,6 +5,7 @@ import { ManageServers } from "#src/routes/manage-servers.tsx";
 import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
 import { GuildAudit } from "#src/routes/guild-audit.tsx";
 import { GuildAccess } from "#src/routes/guild-access.tsx";
+import { CustomsHistory } from "#src/routes/customs-history.tsx";
 import {
   GuildPermissionsGate,
   GuildSectionIndex,
@@ -160,6 +161,11 @@ const guildChildren: RouteObject[] = [
         <ReportForm />
       </GuildPermissionsGate>
     ),
+    errorElement: <RouteErrorPanel />,
+  },
+  {
+    path: "customs",
+    element: <CustomsHistory />,
     errorElement: <RouteErrorPanel />,
   },
   {

@@ -25,6 +25,13 @@ import {
 } from "#src/http/route-label.ts";
 import { httpRequestDuration, httpRequestsTotal } from "#src/metrics/web.ts";
 import { handleWeeklyParlayControl } from "#src/http/weekly-parlay-control.ts";
+import { handleCustomAuthRoutes } from "#src/customs/activity-auth-http.ts";
+import {
+  CUSTOMS_SOCKET_PATH,
+  customSocketHandlers,
+  upgradeCustomSocket,
+  type CustomSocketData,
+} from "#src/customs/socket.ts";
 
 const logger = createLogger("http-server");
 
@@ -206,7 +213,7 @@ async function withHttpMetrics(
 /**
  * HTTP server for health checks, metrics, and tRPC API using Bun's native server
  */
-const server = Bun.serve({
+const server = Bun.serve<CustomSocketData>({
   port: configuration.port,
   // Bind to loopback whenever dev login is enabled so the unauthenticated
   // /api/dev/login route (which mints a session for any Discord ID) is only
@@ -216,6 +223,9 @@ const server = Bun.serve({
   hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
   async fetch(request, bunServer) {
     const url = new URL(request.url);
+    if (url.pathname === CUSTOMS_SOCKET_PATH) {
+      return await upgradeCustomSocket(request, bunServer);
+    }
     const response = await withHttpMetrics(request, url, () =>
       dispatch(request, url),
     );
@@ -232,6 +242,7 @@ const server = Bun.serve({
     }
     return response;
   },
+  websocket: customSocketHandlers,
   error(error) {
     logger.error("❌ HTTP server error:", error);
     Sentry.captureException(error, { tags: { source: "http-server" } });
@@ -249,6 +260,9 @@ const server = Bun.serve({
  * {@link withHttpMetrics}, including the 404 fallback and error paths.
  */
 async function dispatch(request: Request, url: URL): Promise<Response> {
+  const customsAuthResponse = await handleCustomAuthRoutes(request, url);
+  if (customsAuthResponse !== null) return customsAuthResponse;
+
   // Handle CORS preflight requests
   if (request.method === "OPTIONS") {
     return new Response(null, {

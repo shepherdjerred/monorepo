@@ -23,6 +23,8 @@ import { riotRouter } from "#src/trpc/router/riot.router.ts";
 import { rolesRouter } from "#src/trpc/router/roles.router.ts";
 import { consumerPlayerRouter } from "#src/trpc/router/consumer-player.router.ts";
 import { bucksRouter } from "#src/trpc/router/bucks.router.ts";
+import { customsRouter } from "#src/trpc/router/customs.router.ts";
+import { customsHistoryRouter } from "#src/trpc/router/customs-history.router.ts";
 
 export const appRouter = router({
   auth: authRouter,
@@ -43,6 +45,8 @@ export const appRouter = router({
   roles: rolesRouter,
   consumerPlayer: consumerPlayerRouter,
   bucks: bucksRouter,
+  customs: customsRouter,
+  customsHistory: customsHistoryRouter,
 });
 
 export type AppRouter = typeof appRouter;

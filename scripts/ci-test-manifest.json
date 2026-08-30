@@ -375,6 +375,16 @@
       ]
     },
     {
+      "package": "@scout-for-lol/activity",
+      "directory": "packages/scout-for-lol/packages/activity",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
+    },
+    {
       "package": "@scout-for-lol/app",
       "directory": "packages/scout-for-lol/packages/app",
       "steps": [

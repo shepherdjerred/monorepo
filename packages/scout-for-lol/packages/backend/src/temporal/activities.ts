@@ -69,6 +69,8 @@ export function hardDisabledFeatureForTemporalWork(
   switch (kind) {
     case "tournament-lobbies":
       return "tournament_lobbies_enabled";
+    case "custom-nights-expiry":
+      return "custom_nights_enabled";
     case "bucks-reconciliation":
     case "weekly-bucks-leaderboard":
       return "betting_enabled";
@@ -309,6 +311,13 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await backfillFromExisting();
             break;
           }
+          case "custom-nights-expiry": {
+            const { expireCustomNights } =
+              await import("#src/customs/expiry.ts");
+            await expireCustomNights();
+            break;
+          }
+          case "prediction-ingest":
           case "legacy-backfill":
             unavailable(input.kind);
         }

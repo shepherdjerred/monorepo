@@ -58,6 +58,8 @@ if (process.cwd() === import.meta.dir) {
 // once at module load. This is a throwaway test key, never a real secret.
 Bun.env["JWT_SIGNING_SECRET"] =
   Bun.env["JWT_SIGNING_SECRET"] ?? "test-jwt-signing-secret-0123456789abcdef";
+Bun.env["DISCORD_CLIENT_SECRET"] =
+  Bun.env["DISCORD_CLIENT_SECRET"] ?? "test-discord-client-secret";
 
 // Temporal execution metadata's ReleaseCommit search attribute requires an
 // exact 40-character lowercase hex Git SHA (execution-metadata.ts). In test

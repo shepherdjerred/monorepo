@@ -16,6 +16,8 @@ import {
   type CustomGameSnapshot,
   type CustomNightParticipant,
   type CustomNightSnapshot,
+  CustomHistorySchema,
+  type CustomHistory,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { TournamentLobbyStateSchema } from "#src/league/tournament/lifecycle.ts";
@@ -165,8 +167,16 @@ export async function buildCustomNightSnapshot(
   client: ExtendedPrismaClient,
   nightId: string,
   viewerDiscordId: string,
-  now: Date = new Date(),
+  options:
+    | Date
+    | {
+        readonly now?: Date;
+        readonly viewerAdministrator?: boolean;
+      } = new Date(),
 ): Promise<CustomNightSnapshot | undefined> {
+  const now = options instanceof Date ? options : (options.now ?? new Date());
+  const viewerAdministrator =
+    options instanceof Date ? false : (options.viewerAdministrator ?? false);
   const night = await loadNight(client, nightId);
   if (night === null) return undefined;
 
@@ -181,8 +191,18 @@ export async function buildCustomNightSnapshot(
     participantSnapshot(participant, accountMap(accounts), now),
   );
   const canRevealCode =
+    viewerAdministrator ||
     viewerDiscordId === night.hostDiscordId ||
     night.cohosts.some((cohost) => cohost.discordId === viewerDiscordId);
+  const viewerRole = viewerAdministrator
+    ? "ADMIN"
+    : viewerDiscordId === night.hostDiscordId
+      ? "HOST"
+      : night.cohosts.some((cohost) => cohost.discordId === viewerDiscordId)
+        ? "COHOST"
+        : (participants.find(
+            (participant) => participant.discordId === viewerDiscordId,
+          )?.role ?? "MEMBER");
   const currentGame = night.games.at(-1);
 
   return CustomNightSnapshotSchema.parse({
@@ -195,6 +215,7 @@ export async function buildCustomNightSnapshot(
     cohostDiscordIds: night.cohosts.map((cohost) => cohost.discordId),
     state: CustomNightStateSchema.parse(night.state),
     revision: night.revision,
+    viewerRole: CustomRoleSchema.parse(viewerRole),
     participants,
     currentGame:
       currentGame === undefined
@@ -207,5 +228,44 @@ export async function buildCustomNightSnapshot(
     lastActivityAt: night.lastActivityAt.toISOString(),
     expiresAt: night.expiresAt.toISOString(),
     endedAt: night.endedAt?.toISOString() ?? null,
+  });
+}
+
+export async function buildCustomNightHistory(
+  client: ExtendedPrismaClient,
+  nightId: string,
+  viewerDiscordId: string,
+  now: Date = new Date(),
+): Promise<CustomHistory | undefined> {
+  const night = await loadNight(client, nightId);
+  if (night === null) return undefined;
+  const snapshot = await buildCustomNightSnapshot(
+    client,
+    nightId,
+    viewerDiscordId,
+    now,
+  );
+  if (snapshot === undefined) return undefined;
+  const revealCode =
+    viewerDiscordId === night.hostDiscordId ||
+    night.cohosts.some((cohost) => cohost.discordId === viewerDiscordId);
+  const audit = await client.customAuditEvent.findMany({
+    where: { nightId },
+    orderBy: [{ revision: "asc" }, { createdAt: "asc" }],
+  });
+  return CustomHistorySchema.parse({
+    night: snapshot,
+    games: night.games.map((game) => gameSnapshot(game, revealCode)),
+    audit: audit.map((event) => ({
+      id: event.id,
+      nightId: event.nightId,
+      gameId: event.gameId,
+      revision: event.revision,
+      actorId: event.actorId,
+      action: event.action,
+      payload: JSON.parse(event.payload),
+      source: event.source,
+      createdAt: event.createdAt.toISOString(),
+    })),
   });
 }

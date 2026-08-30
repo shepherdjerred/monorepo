@@ -19,6 +19,7 @@ const SNAPSHOT: CustomNightSnapshot = {
   cohostDiscordIds: ["cohost"],
   state: "RECRUITING",
   revision: 0,
+  viewerRole: "HOST",
   participants: [],
   currentGame: null,
   recruitmentCounts: { ready: 0, maybe: 0, away: 0, held: 0, remaining: 10 },

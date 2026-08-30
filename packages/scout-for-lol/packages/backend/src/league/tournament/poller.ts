@@ -43,6 +43,11 @@ import {
   tournamentMatchLinkTotal,
   tournamentUnknownLobbyEventsTotal,
 } from "#src/metrics/tournament.ts";
+import {
+  projectTournamentLobbyToCustoms,
+  resolvedCustomLobbyProjectionCandidates,
+} from "#src/customs/lobby-projection.ts";
+import { publishCustomNightSnapshot } from "#src/customs/socket.ts";
 
 const logger = createLogger("tournament-poller");
 
@@ -242,6 +247,7 @@ async function pollLobby(
     tournamentLobbiesTotal.inc({ action: state });
   }
 
+  const now = new Date();
   await updateLobby(prisma, lobby.id, {
     state,
     joinedPuuids: [...result.joinedPuuids],
@@ -252,6 +258,15 @@ async function pollLobby(
     ...(messageIds === undefined ? {} : { prematchMessageIds: messageIds }),
     markPolled: true,
   });
+  const customNightId = await projectTournamentLobbyToCustoms(
+    prisma,
+    lobby.id,
+    state,
+    now,
+  );
+  if (customNightId !== undefined) {
+    await publishCustomNightSnapshot(customNightId);
+  }
 }
 
 /**
@@ -274,6 +289,27 @@ export async function checkTournamentLobbies(): Promise<void> {
   try {
     const mode = tournamentApiMode();
     tournamentApiModeGauge.set(mode === "live" ? 1 : 0);
+
+    const unresolvedCustomProjections =
+      await resolvedCustomLobbyProjectionCandidates(prisma);
+    for (const lobbyId of unresolvedCustomProjections) {
+      try {
+        const customNightId = await projectTournamentLobbyToCustoms(
+          prisma,
+          lobbyId,
+          "resolved",
+          new Date(),
+        );
+        if (customNightId !== undefined) {
+          await publishCustomNightSnapshot(customNightId);
+        }
+      } catch (error) {
+        logger.error(
+          `Failed to recover Customs projection for lobby ${lobbyId.toString()}`,
+          error,
+        );
+      }
+    }
 
     const expiredResolved = await expireResolvedLobbies(prisma, new Date());
     if (expiredResolved > 0) {
