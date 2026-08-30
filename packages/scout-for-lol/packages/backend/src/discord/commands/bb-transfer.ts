@@ -1,5 +1,6 @@
 import {
   DiscordAccountIdSchema,
+  formatInteger,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -9,7 +10,6 @@ import {
 } from "#src/betting/transfer.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
-import { formatInteger } from "#src/betting/display-format.ts";
 
 export type BbTransferCommandDependencies = {
   runTransfer?: typeof transferBucks;
