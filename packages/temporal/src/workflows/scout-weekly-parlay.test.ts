@@ -139,12 +139,13 @@ describe("runScoutWeeklyParlayWorkflow", () => {
   test("runs a frozen catch-up timeline and rejects a duplicate workflow ID", async () => {
     const actions: ScoutWeeklyParlayAction[] = [];
     let timelineAnchor: string | undefined;
+    const catchupFinalizesAt = new Date(Date.now() + 60_000).toISOString();
     const catchupTimeline: ScoutWeeklyParlayTimeline = {
       periodKey: "2026-08-24",
       openAt: "2026-08-29T23:00:00.000Z",
       startsAt: "2026-08-30T07:00:00.000Z",
       updatesAt: [],
-      finalizesAt: "2026-08-30T18:00:00.000Z",
+      finalizesAt: catchupFinalizesAt,
     };
     const workers = await weeklyParlayWorkers({
       resolveScoutWeeklyParlayCatchupTimeline: (workflowStartAt: string) => {
