@@ -111,6 +111,25 @@ function deliveryInput(serverSuffix: string, bets: SettlementBet[]) {
   };
 }
 
+/** Every field a delivery test needs, with the common no-op defaults every
+ * scenario in this file otherwise repeated on its own. */
+function baseDeliveryDependencies(
+  overrides: Partial<SettlementDmDeliveryDependencies> = {},
+): SettlementDmDeliveryDependencies {
+  return {
+    client: mockClient(),
+    isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+    getNotificationPreferencesForUsers: async () => new Map(),
+    markNotificationHintShown: async () => {
+      await Promise.resolve();
+    },
+    countRecentSettlementDms: async () => 0,
+    observeBucksDelivery: async (_input, run) => run(),
+    sendDm: async () => "sent",
+    ...overrides,
+  };
+}
+
 describe("Bryan Bucks settlement DMs", () => {
   test("sends a bettor who did not play one personal receipt", () => {
     const messages = build({
@@ -273,14 +292,7 @@ describe("Bryan Bucks settlement DMs", () => {
   test("observes settlement DMs and translates non-sent statuses into failures", async () => {
     let observed = 0;
     let rejected = 0;
-    const dependencies: SettlementDmDeliveryDependencies = {
-      client: mockClient(),
-      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
-      getNotificationPreferencesForUsers: async () => new Map(),
-      markNotificationHintShown: async () => {
-        await Promise.resolve();
-      },
-      countRecentSettlementDms: async () => 0,
+    const dependencies = baseDeliveryDependencies({
       observeBucksDelivery: async (_input, run) => {
         observed++;
         try {
@@ -291,7 +303,7 @@ describe("Bryan Bucks settlement DMs", () => {
         }
       },
       sendDm: async () => "dm_disabled",
-    };
+    });
 
     await deliverSettlementDms(
       deliveryInput("5", [
@@ -359,15 +371,7 @@ describe("Bryan Bucks settlement DM embeds", () => {
 describe("Bryan Bucks settlement DM delivery failures", () => {
   test("continues after one DM delivery fails", async () => {
     let sends = 0;
-    const dependencies: SettlementDmDeliveryDependencies = {
-      client: mockClient(),
-      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
-      getNotificationPreferencesForUsers: async () => new Map(),
-      markNotificationHintShown: async () => {
-        await Promise.resolve();
-      },
-      countRecentSettlementDms: async () => 0,
-      observeBucksDelivery: async (_input, run) => run(),
+    const dependencies = baseDeliveryDependencies({
       sendDm: async () => {
         sends++;
         if (sends === 1) {
@@ -375,7 +379,7 @@ describe("Bryan Bucks settlement DM delivery failures", () => {
         }
         return "sent";
       },
-    };
+    });
 
     await deliverSettlementDms(
       deliveryInput("4", [
@@ -394,9 +398,7 @@ describe("Bryan Bucks settlement DM notification hint", () => {
     let hintShownAt: Date | null = null;
     let markCount = 0;
     const sentMessages: string[] = [];
-    const dependencies: SettlementDmDeliveryDependencies = {
-      client: mockClient(),
-      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+    const dependencies = baseDeliveryDependencies({
       getNotificationPreferencesForUsers: async () =>
         new Map([
           [
@@ -412,13 +414,11 @@ describe("Bryan Bucks settlement DM notification hint", () => {
         markCount++;
         hintShownAt = new Date();
       },
-      countRecentSettlementDms: async () => 0,
-      observeBucksDelivery: async (_input, run) => run(),
       sendDm: async ({ message }) => {
         sentMessages.push(message);
         return "sent";
       },
-    };
+    });
 
     await deliverSettlementDms(
       deliveryInput("6", [
@@ -445,9 +445,7 @@ describe("Bryan Bucks settlement DM notification hint", () => {
 
   test("does not record the hint when DM delivery fails", async () => {
     let markCount = 0;
-    const dependencies: SettlementDmDeliveryDependencies = {
-      client: mockClient(),
-      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
+    const dependencies = baseDeliveryDependencies({
       getNotificationPreferencesForUsers: async () =>
         new Map([
           [
@@ -462,10 +460,8 @@ describe("Bryan Bucks settlement DM notification hint", () => {
       markNotificationHintShown: async () => {
         markCount++;
       },
-      countRecentSettlementDms: async () => 0,
-      observeBucksDelivery: async (_input, run) => run(),
       sendDm: async () => "dm_disabled",
-    };
+    });
 
     await deliverSettlementDms(
       deliveryInput("7", [
@@ -485,27 +481,21 @@ describe("Bryan Bucks settlement DM notification hint", () => {
   test("repeats the hint on exactly the SETTLEMENT_DM_HINT_EVERY-th delivery", async () => {
     const dependenciesAt = (
       priorDeliveries: number,
-    ): SettlementDmDeliveryDependencies => ({
-      client: mockClient(),
-      isPolicyEnabled: async (name) => name === "betting_settlement_dm_enabled",
-      getNotificationPreferencesForUsers: async () =>
-        new Map([
-          [
-            blueBettor,
-            {
-              ownBetSettlementDms: true,
-              betsOnPlayerSettlementDms: true,
-              settlementDmHintShownAt: new Date(0),
-            },
-          ],
-        ]),
-      markNotificationHintShown: async () => {
-        await Promise.resolve();
-      },
-      countRecentSettlementDms: async () => priorDeliveries,
-      observeBucksDelivery: async (_input, run) => run(),
-      sendDm: async () => "sent",
-    });
+    ): SettlementDmDeliveryDependencies =>
+      baseDeliveryDependencies({
+        getNotificationPreferencesForUsers: async () =>
+          new Map([
+            [
+              blueBettor,
+              {
+                ownBetSettlementDms: true,
+                betsOnPlayerSettlementDms: true,
+                settlementDmHintShownAt: new Date(0),
+              },
+            ],
+          ]),
+        countRecentSettlementDms: async () => priorDeliveries,
+      });
 
     // One short of the boundary: 5 prior deliveries since the last hint.
     const notYetDue: string[] = [];
