@@ -26,7 +26,7 @@ import {
   loadPlatformDesiredState,
   type OnePasswordTarget,
   type PlatformStack,
-} from "homelab/scripts/platform-desired-state.ts";
+} from "@shepherdjerred/homelab/scripts/platform-desired-state.ts";
 import {
   hash,
   SnapshotSchema,

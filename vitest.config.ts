@@ -148,6 +148,10 @@ export default {
       workspace === "packages/homelab/src/cdk8s"
         ? {
             "@shepherdjerred/homelab/cdk8s": workspaceRoot,
+            "@shepherdjerred/homelab/scripts": path.join(
+              repositoryRoot,
+              "packages/homelab/scripts",
+            ),
             "@shepherdjerred/monorepo/config": path.join(
               repositoryRoot,
               "config",
