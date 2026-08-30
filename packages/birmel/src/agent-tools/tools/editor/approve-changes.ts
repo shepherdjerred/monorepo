@@ -9,14 +9,22 @@ import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { isEditorEnabled } from "@shepherdjerred/birmel/editor/config.ts";
+import { getRepoConfig } from "@shepherdjerred/birmel/editor/config.ts";
 import {
   getSession,
   getPendingChanges,
   updateSessionState,
   updatePrUrl,
 } from "@shepherdjerred/birmel/editor/session-manager.ts";
+import {
+  cleanupClone,
+  cloneRepo,
+} from "@shepherdjerred/birmel/editor/repo-clone.ts";
 import { SessionState } from "@shepherdjerred/birmel/editor/types.ts";
-import { hasValidAuth } from "@shepherdjerred/birmel/editor/github-oauth.ts";
+import {
+  getAuth,
+  hasValidAuth,
+} from "@shepherdjerred/birmel/editor/github-oauth.ts";
 import {
   createPullRequest,
   generatePRTitle,
@@ -121,14 +129,35 @@ export const approveChangesTool = createTool({
           };
         }
 
+        const repoConfig = getRepoConfig(session.repoName);
+        if (repoConfig == null) {
+          return {
+            success: false,
+            message: `Repository '${session.repoName}' configuration not found.`,
+          };
+        }
+        const auth = await getAuth(reqCtx.userId);
+        if (auth == null) {
+          return {
+            success: false,
+            message: "GitHub authentication required to create a PR.",
+          };
+        }
+
+        // Never approve in the Codex-modified checkout. A fresh clone keeps
+        // Git metadata (including hooks) outside the agent's control.
+        const approvalRepoPath = await cloneRepo({
+          repo: repoConfig.repo,
+          branch: pendingChanges.baseBranch,
+          token: auth.accessToken,
+          sessionId: `${session.id}-approval-${String(Date.now())}`,
+        });
+
         logger.info("Approving changes", {
           sessionId: session.id,
           userId: reqCtx.userId,
           changeCount: pendingChanges.changes.length,
         });
-
-        // Update state to approved
-        await updateSessionState(session.id, SessionState.APPROVED);
 
         // Create PR
         const title = generatePRTitle(
@@ -140,15 +169,22 @@ export const approveChangesTool = createTool({
           reqCtx.userId,
         );
 
-        const result = await createPullRequest({
-          userId: reqCtx.userId,
-          repoPath: session.clonedRepoPath,
-          branchName: pendingChanges.branchName,
-          baseBranch: pendingChanges.baseBranch,
-          title,
-          body,
-          changes: pendingChanges.changes,
-        });
+        let result: Awaited<ReturnType<typeof createPullRequest>>;
+        try {
+          // Update state to approved only while the isolated checkout is held.
+          await updateSessionState(session.id, SessionState.APPROVED);
+          result = await createPullRequest({
+            userId: reqCtx.userId,
+            repoPath: approvalRepoPath,
+            branchName: pendingChanges.branchName,
+            baseBranch: pendingChanges.baseBranch,
+            title,
+            body,
+            changes: pendingChanges.changes,
+          });
+        } finally {
+          await cleanupClone(approvalRepoPath);
+        }
 
         if (!result.success) {
           // Revert state
