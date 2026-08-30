@@ -65,7 +65,11 @@ function agentTaskTitle(title: string): string {
 
 function agentTaskSubject(report: ReportEnvelopeV1): string {
   const title = agentTaskTitle(report.title);
-  if (report.execution !== "complete" || report.verdict === "inconclusive") {
+  if (
+    report.execution !== "complete" ||
+    report.verdict === "inconclusive" ||
+    report.verdict === "pending"
+  ) {
     return `${title} could not finish`;
   }
   if (report.verdict === "attention") return `Action needed: ${title}`;
@@ -210,7 +214,10 @@ export function reportSubject(report: ReportEnvelopeV1): string {
     : genericSubject(report);
 }
 
-function presentationTone(report: ReportEnvelopeV1): ReportPresentationTone {
+function presentationTone(
+  report: ReportEnvelopeV1,
+  actionCount: number,
+): ReportPresentationTone {
   if (
     report.execution !== "complete" ||
     report.verdict === "inconclusive" ||
@@ -219,7 +226,7 @@ function presentationTone(report: ReportEnvelopeV1): ReportPresentationTone {
   ) {
     return "incomplete";
   }
-  if (report.verdict === "attention" || report.actions.length > 0) {
+  if (report.verdict === "attention" || actionCount > 0) {
     return "review";
   }
   return "ok";
@@ -247,13 +254,13 @@ const FINDING_RANK = {
 export function presentReport(
   report: ReportEnvelopeV1,
 ): ReportEmailPresentation {
-  const tone = presentationTone(report);
   const actions = [
     ...report.actions,
     ...(report.retirementRecommendation === undefined
       ? []
       : [report.retirementRecommendation]),
   ];
+  const tone = presentationTone(report, actions.length);
   const humanActions =
     tone === "incomplete" && actions.length === 0
       ? ["Open the workflow run and review the reported problem."]

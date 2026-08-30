@@ -93,6 +93,13 @@ const SUBJECT_CASES = [
     expected: "Inspect production: report ready",
   },
   {
+    reportType: "agent-task",
+    title: "Agent Task: Inspect production",
+    execution: "complete",
+    verdict: "pending",
+    expected: "Inspect production could not finish",
+  },
+  {
     reportType: "ci-io-impact",
     title: "CI I/O optimization impact",
     execution: "complete",
@@ -376,6 +383,19 @@ describe("ReportEnvelopeV1", () => {
         verdict: "attention",
       }).statusLabel,
     ).toBe("Review needed");
+  });
+
+  test("includes retirement recommendations when selecting review tone", () => {
+    const presentation = presentReport({
+      ...validReport(),
+      reportType: "ci-io-impact",
+      retirementRecommendation: "Retire the temporary CI I/O comparison.",
+    });
+
+    expect(presentation.statusLabel).toBe("Review needed");
+    expect(presentation.actions).toEqual([
+      "Retire the temporary CI I/O comparison.",
+    ]);
   });
 
   test("rejects a clean claim without complete required evidence", () => {
