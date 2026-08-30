@@ -7,7 +7,10 @@ import {
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
 import { buildFailureAlertForExecution } from "./workflow-failure-watch-detail.ts";
-import { buildWorkflowFailureOverflowAlert } from "./workflow-failure-watch-overflow.ts";
+import {
+  buildWorkflowFailureOverflowAlert,
+  MAX_DETAILED_FAILURE_ALERTS,
+} from "./workflow-failure-watch-overflow.ts";
 import { scanWorkflowFailureVisibility } from "./workflow-failure-watch-scan.ts";
 import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 
@@ -399,40 +402,45 @@ export async function pollWorkflowFailuresOnce(
     alerted += result.alerted;
     errored += result.errored;
   };
-
-  const scan = await scanWorkflowFailureVisibility(client, {
-    query,
-    checkpoint,
-    detailedAlertsConsumed: checkpoint?.detailedAlertsConsumed ?? 0,
-    onDetailBatch: postDetails,
-  });
-  if (scan.pendingDetails.length > 0) await postDetails(scan.pendingDetails);
-
-  if (scan.listingError !== undefined) throw scan.listingError;
-
-  const overflowed = scan.omitted.length > 0;
-  if (overflowed) {
+  const postOverflowBatch = async (
+    executions: readonly FailedWorkflowExecution[],
+  ): Promise<void> => {
     await poster([
       buildWorkflowFailureOverflowAlert(
-        scan.omitted,
+        executions,
         since,
         options.now,
         options.ttlMs,
       ),
     ]);
     temporalFailureWatcherAlertsTotal.inc({ workflowType: "overflow" });
-    advanceRecoveryCheckpoint({
+    const checkpointProgress = advanceRecoveryCheckpoint({
       result: { alerted: 0, errored: 0 },
-      executions: scan.omitted,
+      executions,
       checkpointBlocked,
       checkpoint: recoveryCheckpoint,
       onCheckpoint: options.onCheckpoint,
       lookbackSince: since,
       detailedAlertsConsumed:
         recoveryCheckpoint?.detailedAlertsConsumed ??
-        scan.detailedAlertsSelected,
+        MAX_DETAILED_FAILURE_ALERTS,
     });
-  }
+    checkpointBlocked = checkpointProgress.checkpointBlocked;
+    recoveryCheckpoint = checkpointProgress.checkpoint;
+  };
+
+  const scan = await scanWorkflowFailureVisibility(client, {
+    query,
+    checkpoint,
+    detailedAlertsConsumed: checkpoint?.detailedAlertsConsumed ?? 0,
+    onDetailBatch: postDetails,
+    onOverflowBatch: postOverflowBatch,
+  });
+  if (scan.pendingDetails.length > 0) await postDetails(scan.pendingDetails);
+
+  if (scan.listingError !== undefined) throw scan.listingError;
+
+  const overflowed = scan.overflowed;
 
   // Isolated per-execution detail-extraction failures are tolerated, but if
   // EVERY execution in a non-empty batch failed, the cause is systematic

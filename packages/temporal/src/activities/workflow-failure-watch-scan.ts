@@ -18,11 +18,14 @@ type ScanWorkflowFailureVisibilityOptions = {
   onDetailBatch: (
     executions: readonly FailedWorkflowExecution[],
   ) => Promise<void>;
+  onOverflowBatch: (
+    executions: readonly FailedWorkflowExecution[],
+  ) => Promise<void>;
 };
 
 export type WorkflowFailureVisibilityScan = {
   pendingDetails: FailedWorkflowExecution[];
-  omitted: FailedWorkflowExecution[];
+  overflowed: boolean;
   scanned: number;
   detailedAlertsSelected: number;
   listingError: Error | undefined;
@@ -55,11 +58,12 @@ export async function scanWorkflowFailureVisibility(
   options: ScanWorkflowFailureVisibilityOptions,
 ): Promise<WorkflowFailureVisibilityScan> {
   const pendingDetails: FailedWorkflowExecution[] = [];
-  const omitted: FailedWorkflowExecution[] = [];
+  const overflowBatch: FailedWorkflowExecution[] = [];
   let scanned = 0;
   let detailedAlertsSelected = options.detailedAlertsConsumed;
   let listingError: Error | undefined;
   let processingBatch = false;
+  let overflowed = false;
   try {
     for await (const info of client.workflow.list({
       query: options.query,
@@ -84,7 +88,14 @@ export async function scanWorkflowFailureVisibility(
       }
       scanned += 1;
       if (detailedAlertsSelected >= MAX_DETAILED_FAILURE_ALERTS) {
-        omitted.push(execution);
+        overflowBatch.push(execution);
+        if (overflowBatch.length === ALERT_BATCH_SIZE) {
+          processingBatch = true;
+          await options.onOverflowBatch(overflowBatch);
+          processingBatch = false;
+          overflowed = true;
+          overflowBatch.length = 0;
+        }
         continue;
       }
       pendingDetails.push(execution);
@@ -96,13 +107,19 @@ export async function scanWorkflowFailureVisibility(
         pendingDetails.length = 0;
       }
     }
+    if (overflowBatch.length > 0) {
+      processingBatch = true;
+      await options.onOverflowBatch(overflowBatch);
+      processingBatch = false;
+      overflowed = true;
+    }
   } catch (error) {
     if (processingBatch) throw error;
     listingError = error instanceof Error ? error : new Error(String(error));
   }
   return {
     pendingDetails,
-    omitted,
+    overflowed,
     scanned,
     detailedAlertsSelected,
     listingError,
