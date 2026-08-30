@@ -565,6 +565,22 @@ describe("Human report email rendering", () => {
     );
   });
 
+  test("gives incomplete reports a review path when actions are absent", () => {
+    const report = validReport();
+    report.execution = "partial";
+    report.verdict = "attention";
+    report.actions = [];
+
+    const presentation = presentReport(report);
+    const text = renderReportText(report);
+
+    expect(presentation.actions).toEqual([
+      "Open the workflow run and review the reported problem.",
+    ]);
+    expect(text).toContain("What you need to do");
+    expect(text).not.toContain("No action is needed.");
+  });
+
   test("orders findings from critical to informational", () => {
     const report = validReport();
     report.verdict = "attention";

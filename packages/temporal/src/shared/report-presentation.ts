@@ -254,6 +254,10 @@ export function presentReport(
       ? []
       : [report.retirementRecommendation]),
   ];
+  const humanActions =
+    tone === "incomplete" && actions.length === 0
+      ? ["Open the workflow run and review the reported problem."]
+      : actions;
   return {
     subject: reportSubject(report),
     heading: reportSubject(report),
@@ -265,7 +269,7 @@ export function presentReport(
           : "Check incomplete",
     tone,
     summary: report.headline,
-    actions,
+    actions: humanActions,
     findings: [...report.findings].sort(
       (left, right) =>
         FINDING_RANK[left.severity] - FINDING_RANK[right.severity],
