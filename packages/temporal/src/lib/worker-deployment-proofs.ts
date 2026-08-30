@@ -114,7 +114,7 @@ export function rolloutPoller(
 } {
   return {
     ...options,
-    currentBuildId,
+    ...(currentBuildId === undefined ? {} : { currentBuildId }),
     taskQueue: "monorepo-workflows",
   };
 }
