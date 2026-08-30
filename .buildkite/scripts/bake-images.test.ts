@@ -40,7 +40,6 @@ import {
   parseStringArray,
 } from "./migration-core.ts";
 import { findManagedImagePin } from "../../scripts/lib/image-pin-catalog.ts";
-
 function commandResult(
   exitCode = 0,
   stdout = "",
@@ -48,7 +47,6 @@ function commandResult(
 ): BuildxCommandResult {
   return { exitCode, stdout, stderr };
 }
-
 test("publishes a central Workflow candidate without changing stable", () => {
   const digest = `sha256:${"a".repeat(64)}`;
   const workflowPin = `2.0.0-41@sha256:${"c".repeat(64)}`;
@@ -82,7 +80,6 @@ test("publishes a central Workflow candidate without changing stable", () => {
     "shepherdjerred/other": { version: "2.0.0-42", digest },
   });
 });
-
 test("blocks candidate admission while the durable version branch exists", async () => {
   await expect(
     assertNoPendingVersionBump(async () =>
@@ -90,13 +87,11 @@ test("blocks candidate admission while the durable version branch exists", async
     ),
   ).rejects.toThrow(TransientError);
 });
-
 test("fails transiently when the durable version branch cannot be checked", async () => {
   await expect(
     assertNoPendingVersionBump(async () => commandResult(1, "", "network")),
   ).rejects.toThrow(TransientError);
 });
-
 test("blocks admission when live main has a divergent Temporal candidate", async () => {
   const catalog = JSON.stringify({
     entries: [
@@ -134,7 +129,6 @@ test("blocks admission when live main has a divergent Temporal candidate", async
     TransientError,
   );
 });
-
 test("allows admission when all live Temporal candidates match stable", async () => {
   const catalog = JSON.stringify({
     entries: [
@@ -165,7 +159,6 @@ test("allows admission when all live Temporal candidates match stable", async ()
   );
   await expect(assertNoPendingVersionBump(executor)).resolves.toBe(catalog);
 });
-
 test("rejects admission when a live Temporal workflow pin is missing", async () => {
   const catalog = JSON.stringify({
     entries: [
@@ -183,13 +176,11 @@ test("rejects admission when a live Temporal workflow pin is missing", async () 
     "missing Temporal workflow pins",
   );
 });
-
 test("fails transiently when origin main cannot be refreshed", async () => {
   await expect(
     assertTemporalCandidatePinsConverged(async () => commandResult(1)),
   ).rejects.toThrow(TransientError);
 });
-
 test("fails transiently when the live version catalog cannot be read", async () => {
   await expect(
     assertTemporalCandidatePinsConverged(async (command) =>
@@ -197,7 +188,6 @@ test("fails transiently when the live version catalog cannot be read", async () 
     ),
   ).rejects.toThrow(TransientError);
 });
-
 test("rejects malformed live version catalogs", async () => {
   const malformedCatalogs = [
     JSON.stringify({ entries: "invalid" }),
@@ -211,7 +201,6 @@ test("rejects malformed live version catalogs", async () => {
     ).rejects.toThrow(Error);
   }
 });
-
 test("retains a central Workflow candidate until its pin converges with stable", () => {
   const digest = `sha256:${"b".repeat(64)}`;
   expect(
@@ -236,7 +225,6 @@ test("retains a central Workflow candidate until its pin converges with stable",
     },
   });
 });
-
 test("does not publish nonexistent Scout Workflow catalog pins", () => {
   const digest = `sha256:${"b".repeat(64)}`;
   expect(
@@ -252,7 +240,6 @@ test("does not publish nonexistent Scout Workflow catalog pins", () => {
     },
   });
 });
-
 test("does not synthesize a Scout Workflow candidate while its pins are absent", () => {
   const digest = `sha256:${"b".repeat(64)}`;
   expect(
@@ -283,7 +270,6 @@ function versionCatalogSource(
     })),
   });
 }
-
 async function targetSelectionFailureExecutor(
   command: readonly string[],
 ): Promise<BuildxCommandResult> {
@@ -291,27 +277,21 @@ async function targetSelectionFailureExecutor(
     ? commandResult(0, "base\n")
     : commandResult(1);
 }
-
 async function scopedPushExecutor(): Promise<BuildxCommandResult> {
   return commandResult(0, '["scout-for-lol"]');
 }
-
 async function greenCommit(): Promise<string> {
   return "green";
 }
-
 async function currentGreenCommit(): Promise<string> {
   return "current";
 }
-
 async function invalidManifestExecutor(): Promise<BuildxCommandResult> {
   return commandResult(0, JSON.stringify({ digest: "latest" }));
 }
-
 async function failingExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1);
 }
-
 async function transientInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -319,7 +299,6 @@ async function transientInspectExecutor(): Promise<BuildxCommandResult> {
     "error: failed to do request: connection reset by peer",
   );
 }
-
 async function notFoundInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -327,11 +306,9 @@ async function notFoundInspectExecutor(): Promise<BuildxCommandResult> {
     `ghcr.io/example@sha256:${"a".repeat(64)}: not found`,
   );
 }
-
 async function manifestUnknownInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "MANIFEST_UNKNOWN: manifest unknown");
 }
-
 async function httpNotFoundInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -339,11 +316,9 @@ async function httpNotFoundInspectExecutor(): Promise<BuildxCommandResult> {
     "unexpected status from HEAD request: 404 Not Found",
   );
 }
-
 async function rateLimitedInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "429 Too Many Requests");
 }
-
 async function credentialErrorInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -701,12 +676,12 @@ test("runs the default application candidate smoke check", async () => {
       },
       environment: {},
       getManifestDigest: async () => digest,
-      verifyAnonymousPull: async () => {},
-      verifySourceLabel: async () => {},
+      verifyAnonymousPull: () => Promise.resolve(),
+      verifySourceLabel: () => Promise.resolve(),
       getRuntimeFingerprint: async () => "new",
-      writeMetadata: async () => {},
-      writeCandidates: async () => {},
-      writeText: async () => {},
+      writeMetadata: () => Promise.resolve(),
+      writeCandidates: () => Promise.resolve(),
+      writeText: () => Promise.resolve(),
     },
   );
   expect(commands.some((command) => command.includes("--file"))).toBe(true);
