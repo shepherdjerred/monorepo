@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Link,
   NavLink,
@@ -79,7 +79,7 @@ export function resolveBucksGuildSelection(input: {
 
 function SectionNav() {
   return (
-    <nav className="mb-4 flex gap-1">
+    <nav className="flex gap-1">
       {bucksSectionItems().map((item) => (
         <NavLink
           key={item.to}
@@ -98,6 +98,14 @@ function SectionNav() {
         </NavLink>
       ))}
     </nav>
+  );
+}
+
+function BucksPage(props: { children: ReactNode }) {
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
+      {props.children}
+    </div>
   );
 }
 
@@ -153,29 +161,37 @@ export function BucksWorkspace() {
   ]);
 
   if (statusQuery.isPending) {
-    return <LoadingState label="Checking Bryan Bucks availability…" />;
+    return (
+      <BucksPage>
+        <LoadingState label="Checking Bryan Bucks availability…" />
+      </BucksPage>
+    );
   }
   if (statusQuery.isError) {
     return (
-      <ErrorState
-        title="Bryan Bucks couldn't load"
-        message="Scout couldn't check Bryan Bucks availability."
-        onRetry={() => {
-          void statusQuery.refetch();
-        }}
-      />
+      <BucksPage>
+        <ErrorState
+          title="Bryan Bucks couldn't load"
+          message="Scout couldn't check Bryan Bucks availability."
+          onRetry={() => {
+            void statusQuery.refetch();
+          }}
+        />
+      </BucksPage>
     );
   }
   const status = statusQuery.data;
   if (status.state !== "available") {
     return (
-      <EmptyState>
-        <h2>Bryan Bucks isn&apos;t available here</h2>
-        <p>Bryan Bucks isn&apos;t running in any of your servers.</p>
-        <Button asChild>
-          <Link to="/">Back to Scout</Link>
-        </Button>
-      </EmptyState>
+      <BucksPage>
+        <EmptyState>
+          <h2>Bryan Bucks isn&apos;t available here</h2>
+          <p>Bryan Bucks isn&apos;t running in any of your servers.</p>
+          <Button asChild>
+            <Link to="/">Back to Scout</Link>
+          </Button>
+        </EmptyState>
+      </BucksPage>
     );
   }
 
@@ -184,24 +200,26 @@ export function BucksWorkspace() {
   );
   if (guild === undefined) {
     return (
-      <EmptyState>
-        <h2>Pick a server</h2>
-        <p>Bryan Bucks is running in more than one of your servers.</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          {status.guilds.map((candidate) => (
-            <Button
-              key={candidate.id}
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setSelectedGuildId(candidate.id);
-              }}
-            >
-              {candidate.name}
-            </Button>
-          ))}
-        </div>
-      </EmptyState>
+      <BucksPage>
+        <EmptyState>
+          <h2>Pick a server</h2>
+          <p>Bryan Bucks is running in more than one of your servers.</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {status.guilds.map((candidate) => (
+              <Button
+                key={candidate.id}
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSelectedGuildId(candidate.id);
+                }}
+              >
+                {candidate.name}
+              </Button>
+            ))}
+          </div>
+        </EmptyState>
+      </BucksPage>
     );
   }
 
@@ -210,9 +228,9 @@ export function BucksWorkspace() {
     guildName: guild.name,
   };
   return (
-    <div>
+    <BucksPage>
       <SectionNav />
       <Outlet context={context} />
-    </div>
+    </BucksPage>
   );
 }

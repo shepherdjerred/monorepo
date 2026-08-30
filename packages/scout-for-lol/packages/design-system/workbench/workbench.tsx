@@ -63,8 +63,8 @@ import { ChartFrame } from "#src/domain/visualization.tsx";
 import {
   Container,
   GlobalFooter,
-  GlobalNavbar,
   Grid,
+  MarketingHeader,
   Section,
   Stack,
 } from "#src/layout/index.tsx";
@@ -82,7 +82,7 @@ function colorTokenVariable(name: string): string {
 export function Workbench() {
   return (
     <div className="scout-page-frame">
-      <GlobalNavbar currentPath="/" />
+      <MarketingHeader currentPath="/" />
       <main className="workbench-main">
         <Container>
           <Stack>

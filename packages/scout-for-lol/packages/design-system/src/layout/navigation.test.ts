@@ -2,15 +2,14 @@ import { describe, expect, test } from "vitest";
 import {
   globalNavbarCta,
   isNavLinkActive,
+  MARKETING_NAV_LINKS,
   parseNavbarSessionState,
-  SCOUT_NAV_LINKS,
 } from "#src/layout/index.tsx";
 
 describe("global navigation", () => {
   test("uses the exact public navigation order", () => {
-    expect(SCOUT_NAV_LINKS.map((link) => link.label)).toEqual([
-      "Home",
-      "Documentation",
+    expect(MARKETING_NAV_LINKS.map((link) => link.label)).toEqual([
+      "Docs",
       "What’s New",
       "Support",
     ]);

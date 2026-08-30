@@ -26,10 +26,9 @@ export function surfaceHref(
   return joinSurfaceHref(origin, pathname);
 }
 
-export const SCOUT_NAV_LINKS = [
-  { label: "Home", href: "/", surface: "marketing", match: "exact" },
+export const MARKETING_NAV_LINKS = [
   {
-    label: "Documentation",
+    label: "Docs",
     href: "/docs/",
     surface: "docs",
     match: "prefix",
@@ -159,13 +158,13 @@ export function EmptyState({
   );
 }
 
-function NavLinks(props: {
+function MarketingNavLinks(props: {
   currentPath?: string | undefined;
   origins?: ScoutSurfaceOrigins | undefined;
 }) {
   return (
     <>
-      {SCOUT_NAV_LINKS.map((link) => (
+      {MARKETING_NAV_LINKS.map((link) => (
         <a
           key={link.href}
           href={surfaceHref(props.origins?.[link.surface], link.href)}
@@ -183,22 +182,75 @@ function NavLinks(props: {
   );
 }
 
-export function GlobalNavbar(props: {
+function SessionCta(props: {
+  signedIn?: boolean | undefined;
+  getStartedTrackingEvent?: string | undefined;
+  getStartedLocation?: string | undefined;
+  origins?: ScoutSurfaceOrigins | undefined;
+}) {
+  const cta = globalNavbarCta(props.signedIn);
+  return (
+    <Button asChild size="sm">
+      <a
+        href={surfaceHref(props.origins?.app, cta.href)}
+        data-scout-conversion={
+          props.signedIn === true ? undefined : props.getStartedTrackingEvent
+        }
+        data-scout-cta-location={
+          props.signedIn === true ? undefined : props.getStartedLocation
+        }
+      >
+        {cta.label}
+      </a>
+    </Button>
+  );
+}
+
+function MobileNavigation(props: {
+  children: ReactNode;
+  label: string;
+  title?: ReactNode | undefined;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="scout-mobile-nav">
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label={props.label}>
+            <Menu size={20} aria-hidden="true" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          className="scout-navigation-sheet"
+          onClick={(event) => {
+            const target = event.target;
+            if (target instanceof Element && target.closest("a") !== null) {
+              setOpen(false);
+            }
+          }}
+          onChange={(event) => {
+            if (event.target instanceof HTMLSelectElement) setOpen(false);
+          }}
+        >
+          <SheetTitle>{props.title ?? <ScoutMark />}</SheetTitle>
+          {props.children}
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
+export function MarketingHeader(props: {
   landmark?: "header" | "div";
   signedIn?: boolean | undefined;
   currentPath?: string | undefined;
-  utility?: ReactNode | undefined;
-  mobileNavigation?: ReactNode | undefined;
-  accountMenu?: ReactNode | undefined;
-  guildAccess?: ReactNode | undefined;
   getStartedTrackingEvent?: string | undefined;
   getStartedLocation?: string | undefined;
   origins?: ScoutSurfaceOrigins | undefined;
 }) {
   const Landmark = props.landmark ?? "header";
-  const cta = globalNavbarCta(props.signedIn);
   return (
-    <Landmark className="scout-navbar">
+    <Landmark className="scout-navbar scout-marketing-header">
       <Container className="scout-navbar__inner">
         <a
           href={surfaceHref(props.origins?.marketing, "/")}
@@ -207,64 +259,99 @@ export function GlobalNavbar(props: {
           <ScoutMark />
         </a>
         <nav className="scout-navbar__links" aria-label="Global">
-          <NavLinks currentPath={props.currentPath} origins={props.origins} />
+          <MarketingNavLinks
+            currentPath={props.currentPath}
+            origins={props.origins}
+          />
         </nav>
         <div className="scout-navbar__utility">
-          {props.utility}
-          {props.guildAccess}
           <ThemeMenu />
-          {props.signedIn === true ? props.accountMenu : null}
-          <Button asChild size="sm">
-            <a
-              href={surfaceHref(props.origins?.app, cta.href)}
-              data-scout-conversion={
-                props.signedIn === true
-                  ? undefined
-                  : props.getStartedTrackingEvent
-              }
-              data-scout-cta-location={
-                props.signedIn === true ? undefined : props.getStartedLocation
-              }
-            >
-              {cta.label}
-            </a>
-          </Button>
-          <div className="scout-mobile-nav">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Open navigation"
-                >
-                  <Menu size={20} aria-hidden="true" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetTitle>
-                  <ScoutMark />
-                </SheetTitle>
-                <nav className="scout-stack" aria-label="Mobile">
-                  <NavLinks
-                    currentPath={props.currentPath}
-                    origins={props.origins}
-                  />
-                  {props.mobileNavigation}
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
+          <SessionCta
+            signedIn={props.signedIn}
+            getStartedTrackingEvent={props.getStartedTrackingEvent}
+            getStartedLocation={props.getStartedLocation}
+            origins={props.origins}
+          />
+          <MobileNavigation label="Open navigation">
+            <nav className="scout-stack" aria-label="Mobile">
+              <MarketingNavLinks
+                currentPath={props.currentPath}
+                origins={props.origins}
+              />
+            </nav>
+          </MobileNavigation>
         </div>
       </Container>
     </Landmark>
   );
 }
 
-export function ProductSubnavigation(props: { children: ReactNode }) {
+export function DocsHeader(props: {
+  landmark?: "header" | "div";
+  signedIn?: boolean | undefined;
+  search?: ReactNode | undefined;
+  origins?: ScoutSurfaceOrigins | undefined;
+}) {
+  const Landmark = props.landmark ?? "header";
   return (
-    <nav className="scout-product-nav" aria-label="Product">
-      <Container className="scout-cluster">{props.children}</Container>
-    </nav>
+    <Landmark className="scout-navbar scout-docs-header">
+      <Container className="scout-navbar__inner">
+        <div className="scout-docs-header__brand">
+          <a
+            href={surfaceHref(props.origins?.marketing, "/")}
+            aria-label="Scout home"
+          >
+            <ScoutMark />
+          </a>
+          <span className="scout-docs-header__divider" aria-hidden="true" />
+          <a
+            href={surfaceHref(props.origins?.docs, "/docs/")}
+            className="scout-docs-header__label"
+          >
+            Docs
+          </a>
+        </div>
+        <div className="scout-docs-header__search">{props.search}</div>
+        <div className="scout-navbar__utility">
+          <ThemeMenu />
+          <SessionCta signedIn={props.signedIn} origins={props.origins} />
+        </div>
+      </Container>
+    </Landmark>
+  );
+}
+
+export function AppHeader(props: {
+  accountMenu?: ReactNode | undefined;
+  mobileNavigation?: ReactNode | undefined;
+  origins?: ScoutSurfaceOrigins | undefined;
+}) {
+  return (
+    <header className="scout-navbar scout-app-header">
+      <Container className="scout-navbar__inner">
+        <a
+          href={surfaceHref(props.origins?.app, "/app/")}
+          aria-label="Scout dashboard"
+        >
+          <ScoutMark />
+        </a>
+        <div className="scout-navbar__utility">
+          <a
+            href={surfaceHref(props.origins?.docs, "/docs/")}
+            className="scout-navbar__link scout-app-header__docs"
+          >
+            Docs
+          </a>
+          <ThemeMenu />
+          {props.accountMenu}
+          {props.mobileNavigation === undefined ? null : (
+            <MobileNavigation label="Open app navigation" title={<ScoutMark />}>
+              {props.mobileNavigation}
+            </MobileNavigation>
+          )}
+        </div>
+      </Container>
+    </header>
   );
 }
 
@@ -306,96 +393,36 @@ export function GlobalFooter(props: {
   );
 }
 
-export function ResponsivePageFrame(props: {
-  navbar: ReactNode;
-  subnav?: ReactNode | undefined;
+export function AppWorkspaceFrame(props: {
+  header: ReactNode;
+  notice?: ReactNode | undefined;
+  sidebar?: ReactNode | undefined;
   children: ReactNode;
-  footer?: ReactNode | undefined;
+  footer: ReactNode;
 }) {
   return (
     <div className="scout-page-frame">
-      <div>
-        {props.navbar}
-        {props.subnav}
+      {props.header}
+      <div className="scout-app-stage">
+        {props.notice}
+        <div
+          className={cn(
+            "scout-app-layout",
+            props.sidebar === undefined && "scout-app-layout--focused",
+          )}
+        >
+          {props.sidebar === undefined ? null : (
+            <aside
+              className="scout-app-sidebar"
+              aria-label="Workspace navigation"
+            >
+              {props.sidebar}
+            </aside>
+          )}
+          <main className="scout-app-content">{props.children}</main>
+        </div>
       </div>
-      <main>{props.children}</main>
       {props.footer}
     </div>
-  );
-}
-
-export function PublicShell(props: {
-  children: ReactNode;
-  currentPath?: string | undefined;
-  utility?: ReactNode | undefined;
-  release?: string | undefined;
-  commit?: string | undefined;
-  origins?: ScoutSurfaceOrigins | undefined;
-}) {
-  return (
-    <ResponsivePageFrame
-      navbar={
-        <GlobalNavbar
-          currentPath={props.currentPath}
-          utility={props.utility}
-          origins={props.origins}
-        />
-      }
-      footer={
-        <GlobalFooter
-          release={props.release}
-          commit={props.commit}
-          origins={props.origins}
-        />
-      }
-    >
-      {props.children}
-    </ResponsivePageFrame>
-  );
-}
-
-export function AppShell(props: {
-  children: ReactNode;
-  currentPath?: string | undefined;
-  signedIn: boolean;
-  accountMenu?: ReactNode | undefined;
-  guildAccess?: ReactNode | undefined;
-  productSubnav?: ReactNode | undefined;
-  origins?: ScoutSurfaceOrigins | undefined;
-}) {
-  return (
-    <ResponsivePageFrame
-      navbar={
-        <GlobalNavbar
-          currentPath={props.currentPath}
-          signedIn={props.signedIn}
-          accountMenu={props.accountMenu}
-          guildAccess={props.guildAccess}
-          origins={props.origins}
-        />
-      }
-      subnav={props.productSubnav}
-    >
-      {props.children}
-    </ResponsivePageFrame>
-  );
-}
-
-export function DocsAdapter(props: {
-  search?: ReactNode | undefined;
-  mobileSidebar?: ReactNode | undefined;
-  origins?: ScoutSurfaceOrigins | undefined;
-}) {
-  return (
-    <GlobalNavbar
-      currentPath="/docs/"
-      origins={props.origins}
-      utility={
-        <>
-          {props.search}
-          {props.mobileSidebar}
-        </>
-      }
-    />
   );
 }

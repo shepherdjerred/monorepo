@@ -1,5 +1,5 @@
 import {
-  GlobalNavbar,
+  MarketingHeader,
   useNavbarSessionState,
 } from "@scout-for-lol/design-system/layout";
 import {
@@ -23,7 +23,7 @@ export function SharedNavbar(props: { currentPath?: string | undefined }) {
 
   return (
     <ScoutThemeProvider surface="marketing" onThemeChanged={captureThemeChange}>
-      <GlobalNavbar
+      <MarketingHeader
         signedIn={signedIn}
         currentPath={props.currentPath}
         getStartedTrackingEvent={GET_STARTED_CLICK_EVENT}

@@ -285,15 +285,20 @@ describe("cross-package facts the prose depends on", () => {
 
   test("documented dashboard sections still match the app's nav", async () => {
     // The dashboard reference and every dashboard screenshot assume this exact
-    // set of tabs. A rename here (the old marketing shots said "Admin") should
+    // set of sections. A rename here (the old marketing shots said "Admin") should
     // fail loudly rather than leave the docs quietly wrong.
     const source = await Bun.file(
-      new URL("../../app/src/routes/guild-workspace.tsx", import.meta.url)
-        .pathname,
+      new URL("../../app/src/lib/app-navigation.ts", import.meta.url).pathname,
     ).text();
-    const labels = [...source.matchAll(/label:\s*"([^"]+)"/g)].map(
-      (match) => match[1] ?? "",
-    );
+    const guildNavigationSource = source
+      .split("export const GUILD_NAVIGATION_ITEMS")[1]
+      ?.split("];", 1)[0];
+    if (guildNavigationSource === undefined) {
+      throw new Error("GUILD_NAVIGATION_ITEMS was not found");
+    }
+    const labels = [
+      ...guildNavigationSource.matchAll(/label:\s*"([^"]+)"/g),
+    ].map((match) => match[1] ?? "");
     expect(labels).toEqual([
       "Subscriptions",
       "Players",
