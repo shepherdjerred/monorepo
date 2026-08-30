@@ -54,6 +54,8 @@ export function resolveWorkerDeploymentRolloutTarget(
         "--cwd",
         scoutTemporalDirectory,
         "replay:candidate-histories",
+        "--stage",
+        stage,
       ],
     ],
     canaryCommand: [
