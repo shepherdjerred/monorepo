@@ -92,9 +92,13 @@
       "properties": {
         "$schema": { "$ref": "#/$defs/schemaReference" },
         "platform": { "const": "anthropic" },
-        "anthropic_workspaces": { "$ref": "#/$defs/resourceMap" },
+        "anthropic_workspaces": {
+          "$ref": "#/$defs/anthropicWorkspaceMap"
+        },
         "anthropic_api_keys": { "$ref": "#/$defs/anthropicApiKeyMap" },
-        "anthropic_workspace_members": { "$ref": "#/$defs/resourceMap" }
+        "anthropic_workspace_members": {
+          "$ref": "#/$defs/anthropicWorkspaceMemberMap"
+        }
       }
     },
     {
@@ -492,6 +496,33 @@
           "vault_item_id": { "type": "string", "minLength": 1 },
           "vault_field": { "type": "string", "minLength": 1 },
           "vault_json_path": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "anthropicWorkspaceMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "workspace_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "anthropicWorkspaceMemberMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["workspace_key", "user_id", "workspace_role"],
+        "properties": {
+          "workspace_key": { "type": "string", "minLength": 1 },
+          "user_id": { "type": "string", "minLength": 1 },
+          "workspace_role": { "type": "string", "minLength": 1 }
         }
       }
     },

@@ -54,13 +54,22 @@ To validate without state or platform access, run
 
 ## Usage
 
+The platform stacks must be run through the wrapper so their committed
+desired-state registries and allowlisted credentials are injected:
+
+```bash
+bun packages/homelab/scripts/tofu-stack.ts openai plan
+bun packages/homelab/scripts/tofu-stack.ts openai apply
+```
+
+For the established infrastructure stacks, direct OpenTofu commands remain
+supported when their variables and backend credentials are supplied manually:
+
 ```bash
 tofu -chdir=cloudflare init
 tofu -chdir=cloudflare plan
 tofu -chdir=cloudflare apply
 ```
-
-Same pattern for every stack.
 
 ## CI/CD
 

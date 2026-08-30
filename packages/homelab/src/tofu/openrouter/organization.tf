@@ -27,7 +27,7 @@ resource "openrouter_guardrail" "managed" {
   for_each = var.openrouter_guardrails
 
   name              = each.value.name
-  workspace_id      = try(openrouter_workspace.managed[each.value.workspace_key].id, null)
+  workspace_id      = each.value.workspace_key == null ? null : openrouter_workspace.managed[each.value.workspace_key].id
   description       = try(each.value.description, null)
   limit_usd         = try(each.value.limit_usd, null)
   reset_interval    = try(each.value.reset_interval, null)
@@ -55,7 +55,7 @@ resource "openrouter_api_key" "managed" {
   for_each = var.openrouter_api_keys
 
   name                  = each.value.name
-  workspace_id          = try(openrouter_workspace.managed[each.value.workspace_key].id, null)
+  workspace_id          = each.value.workspace_key == null ? null : openrouter_workspace.managed[each.value.workspace_key].id
   limit                 = try(each.value.limit, null)
   limit_reset           = try(each.value.limit_reset, null)
   include_byok_in_limit = try(each.value.include_byok_in_limit, null)
@@ -82,7 +82,7 @@ resource "openrouter_byok_key" "managed" {
   provider_slug          = each.value.provider_slug
   key                    = var.openrouter_byok_keys[each.key]
   name                   = try(each.value.name, null)
-  workspace_id           = try(openrouter_workspace.managed[each.value.workspace_key].id, null)
+  workspace_id           = each.value.workspace_key == null ? null : openrouter_workspace.managed[each.value.workspace_key].id
   allowed_models         = try(each.value.allowed_models, null)
   allowed_user_ids       = try(each.value.allowed_user_ids, null)
   allowed_api_key_hashes = try(each.value.allowed_api_key_hashes, null)
