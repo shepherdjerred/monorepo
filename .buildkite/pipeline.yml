@@ -1105,6 +1105,7 @@ steps:
         - "packages/scout-for-lol/packages/data/**"
         - "packages/scout-for-lol/packages/report/**"
         - "packages/scout-for-lol/packages/app/**"
+        - "packages/scout-for-lol/packages/activity/**"
         - "packages/scout-for-lol/packages/backend/**"
         - "packages/scout-for-lol/packages/frontend/**"
         - "packages/scout-for-lol/packages/docs-site/**"
@@ -1121,9 +1122,9 @@ steps:
     cancel_on_build_failing: true
     command: |
       MISE_TOOLCHAIN_SCOPE=postgres . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
-      bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/activity' --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/activity' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
+      bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/activity' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
       bun --no-install run --cwd packages/scout-for-lol/packages/design-audit check:tokens
       echo "Browser E2E scope: sites, Scout catalog/design-system, and eval suites. The Scout design audit runs nightly in monorepo-test-reporting."
       bun --no-install scripts/namespace-playwright-reports.ts
@@ -1185,9 +1186,9 @@ steps:
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
       MISE_TOOLCHAIN_SCOPE=postgres . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
-      bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/activity' --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/activity' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
+      bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/activity' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
       bun --no-install run --cwd packages/scout-for-lol/packages/design-audit check:tokens
       echo "Browser E2E scope: sites, Scout catalog/design-system, and eval suites. The Scout design audit runs nightly in monorepo-test-reporting."
       if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
@@ -3288,6 +3289,7 @@ steps:
         --filter '@shepherdjerred/root-scripts' \
         --filter '@scout-for-lol/frontend' \
         --filter '@scout-for-lol/app' \
+        --filter '@scout-for-lol/activity' \
         --filter '@scout-for-lol/docs-site' \
         --filter '@scout-for-lol/design-system' \
         --filter scout-for-lol \

@@ -86,6 +86,7 @@ test("site-scout excludes global CI inputs and uses exact release libraries", ()
   expect(paths?.filter((path) => path.startsWith("scripts/lib/"))).toEqual([
     "scripts/lib/pin-candidates.ts",
     "scripts/lib/run.ts",
+    "scripts/lib/scout-customs-artifact.ts",
     "scripts/lib/s3-static-site.ts",
     "scripts/lib/scout-release-state.ts",
     "scripts/lib/scout-site-storage.ts",

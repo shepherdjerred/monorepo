@@ -1,10 +1,14 @@
-import { expect, test } from "vitest";
+import { afterEach, expect, test } from "vitest";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
 import {
   immutablePutCommand,
   isMissingS3ObjectError,
   isS3PreconditionFailure,
 } from "./scout-site-storage.ts";
+import { archiveEntrypoints } from "./scout-release-entrypoints.ts";
 import {
   archiveRecord,
   assertArchiveRecordMatchesState,
@@ -15,6 +19,15 @@ import {
 
 const DIGEST =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const temporaryDirectories: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories
+      .splice(0)
+      .map((directory) => rm(directory, { recursive: true, force: true })),
+  );
+});
 
 function releaseState() {
   return parseScoutReleaseState(
@@ -125,6 +138,25 @@ test("beta deployment checks served entrypoints before an exact-marker no-op", a
   expect(beta.indexOf("await assertS3ObjectsMatchSource")).toBeGreaterThan(0);
   expect(beta.indexOf("await writeMarker")).toBeGreaterThan(
     beta.indexOf("await assertS3ObjectsMatchSource"),
+  );
+});
+
+test("archive capability discovery verifies Customs only when present", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "scout-entrypoints-"));
+  temporaryDirectories.push(directory);
+  await mkdir(path.join(directory, "app"));
+  await mkdir(path.join(directory, "docs"));
+  await Bun.write(path.join(directory, "index.html"), "root");
+  await Bun.write(path.join(directory, "app/index.html"), "app");
+  await Bun.write(path.join(directory, "docs/index.html"), "docs");
+
+  await expect(archiveEntrypoints(directory)).resolves.not.toContain(
+    "customs/index.html",
+  );
+  await mkdir(path.join(directory, "customs"));
+  await Bun.write(path.join(directory, "customs/index.html"), "customs");
+  await expect(archiveEntrypoints(directory)).resolves.toContain(
+    "customs/index.html",
   );
 });
 

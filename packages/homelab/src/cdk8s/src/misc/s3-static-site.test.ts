@@ -243,6 +243,38 @@ describe("generateCaddyfile", () => {
       expect(fallthroughIdx).toBeGreaterThan(-1);
       expect(spaIdx).toBeLessThan(fallthroughIdx);
     });
+
+    it("applies route-specific headers without restoring deleted defaults", () => {
+      const caddyfile = generateCaddyfile({
+        sites: [
+          {
+            hostname: "spa.test",
+            bucket: "spa",
+            spaFallbacks: [
+              {
+                pathPrefix: "/activity/*",
+                fallbackPath: "/activity/index.html",
+                responseHeaders: {
+                  "Content-Security-Policy":
+                    "frame-ancestors https://discord.com",
+                  "X-Frame-Options": null,
+                },
+              },
+            ],
+          },
+        ],
+        s3Endpoint: "https://s3.example.test",
+      });
+      const activity = caddyfile.slice(
+        caddyfile.indexOf("handle /activity/*"),
+        caddyfile.indexOf("\n\t}", caddyfile.indexOf("handle /activity/*")),
+      );
+      expect(activity).toContain("-X-Frame-Options");
+      expect(activity).toContain(
+        `Content-Security-Policy "frame-ancestors https://discord.com"`,
+      );
+      expect(activity).not.toContain(`X-Frame-Options "DENY"`);
+    });
   });
 });
 

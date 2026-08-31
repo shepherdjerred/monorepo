@@ -1,4 +1,4 @@
-import { optionalEnv, requireEnv, run, runAllowExit, tmpBase } from "./run.ts";
+import { run, runAllowExit, tmpBase } from "./run.ts";
 import { z } from "zod";
 import {
   assertS3ObjectsMatchSource,
@@ -15,6 +15,10 @@ import {
   SCOUT_VERSION_PATTERN,
 } from "./scout-release-state.ts";
 import { SCOUT_RELEASES_BUCKET } from "./scout-site-storage.ts";
+import {
+  requireScoutStorageCredentials as requireCreds,
+  scoutStorageRoot as root,
+} from "./scout-storage-runtime.ts";
 
 const PROD_BUCKET = "scout-frontend";
 const MARKER_KEY = ".release-version";
@@ -23,24 +27,6 @@ const RELEASE_ENTRYPOINTS = ["index.html", "app/index.html"] as const;
 const ImageManifestSchema = z.looseObject({
   digest: z.string().regex(CANONICAL_DIGEST_PATTERN),
 });
-
-function root(): string {
-  return new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
-}
-
-function haveCreds(): boolean {
-  return (
-    optionalEnv("AWS_ACCESS_KEY_ID") !== null &&
-    optionalEnv("AWS_SECRET_ACCESS_KEY") !== null
-  );
-}
-
-function requireCreds(dryRun: boolean): void {
-  if (!dryRun && !haveCreds()) {
-    requireEnv("AWS_ACCESS_KEY_ID");
-    requireEnv("AWS_SECRET_ACCESS_KEY");
-  }
-}
 
 async function readOptionalObject(
   bucket: string,

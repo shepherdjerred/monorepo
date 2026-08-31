@@ -1124,6 +1124,7 @@
         "@scout-for-lol/backend": "workspace:*",
         "@scout-for-lol/data": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/root-scripts": "workspace:*",
         "@shepherdjerred/toolkit": "workspace:*",
         "@total-typescript/ts-reset": "^0.6.1",
         "@types/bun": "1.4.0",
