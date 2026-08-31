@@ -1,5 +1,5 @@
 import { Context } from "@temporalio/activity";
-import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
+import type { ScoutTemporalActivityGroups } from "./connected-runtime.ts";
 import { MY_SERVER } from "#src/configuration/flags.ts";
 import { heartbeatWhile } from "./activity-runtime.ts";
 
