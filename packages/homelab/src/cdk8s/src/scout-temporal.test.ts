@@ -93,12 +93,10 @@ describe("Scout competition Temporal boundary", () => {
         "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
       );
       expect(env.get("TEMPORAL_NAMESPACE")).toBe(stage);
-      // The `default` drain is retired for Scout. The two assertions belong
-      // together: an absent legacy namespace makes `auto` resolve to enabled,
-      // so reconciliation has to be pinned off explicitly until the schedules
-      // are cut over.
+      // The `default` drain is retired for Scout, and with no legacy namespace
+      // configured `auto` resolves to enabled — the settled post-cutover state.
       expect(env.has("TEMPORAL_LEGACY_NAMESPACE")).toBe(false);
-      expect(env.get("TEMPORAL_SCHEDULE_RECONCILIATION")).toBe("disabled");
+      expect(env.get("TEMPORAL_SCHEDULE_RECONCILIATION")).toBe("auto");
 
       const egressPolicy = synthesized.find(
         (resource) =>
