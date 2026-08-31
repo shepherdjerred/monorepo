@@ -209,6 +209,7 @@ describe("SQLite alert ledger", () => {
     const detail = await repository.getAlert({ id, limit: 1 });
     expect(detail?.events.map((event) => event.type)).toEqual(["opened"]);
     expect(detail?.deliveries).toHaveLength(1);
+    expect(detail?.deliveries[0]?.truncatedAlerts).toBe(0);
     expect(detail?.deliveriesNextCursor).not.toBeNull();
     if (detail === null) throw new Error("expected alert detail");
     if (detail.deliveriesNextCursor === null)
@@ -224,6 +225,23 @@ describe("SQLite alert ledger", () => {
     expect(
       await repository.pendingEmails(nanoseconds("2026-08-08T18:01:00Z"), 10),
     ).toHaveLength(1);
+  });
+
+  it("persists Alertmanager truncation evidence on webhook deliveries", async () => {
+    const payload = AlertmanagerWebhookSchema.parse({
+      ...webhook("fingerprint-truncated", "firing"),
+      truncatedAlerts: 37,
+    });
+    await repository.ingestWebhook(
+      input(payload, "2026-08-08T18:00:01Z", false),
+    );
+    const alerts = await repository.listAlerts({ limit: 10 });
+    const id = alerts.items[0]?.id;
+    if (id === undefined) throw new Error("expected a truncated occurrence");
+
+    const detail = await repository.getAlert({ id, limit: 10 });
+
+    expect(detail?.deliveries[0]?.truncatedAlerts).toBe(37);
   });
 
   it("serializes concurrent snapshot and webhook discovery", async () => {

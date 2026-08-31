@@ -113,6 +113,7 @@ export const WebhookDeliveryViewSchema = z.object({
   groupKey: z.string(),
   status: z.enum(["firing", "resolved"]),
   receiver: z.string(),
+  truncatedAlerts: z.number().int().nonnegative(),
   notificationReason: z.string().nullable(),
   payloadHash: z.string().regex(/^[0-9a-f]{64}$/u),
   rawPayloadRetained: z.boolean(),

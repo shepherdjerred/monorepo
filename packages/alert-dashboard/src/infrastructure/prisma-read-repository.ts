@@ -135,6 +135,7 @@ export class PrismaReadRepository {
         groupKey: delivery.groupKey,
         status: delivery.status,
         receiver: delivery.receiver,
+        truncatedAlerts: delivery.truncatedAlerts,
         notificationReason: delivery.notificationReason,
         payloadHash: delivery.payloadHash,
         rawPayloadRetained: delivery.rawPayload !== null,
