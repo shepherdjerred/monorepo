@@ -4,7 +4,6 @@ import {
   ScoutScheduleOwnershipMemoSchema,
   scoutReportScheduleId,
 } from "@scout-for-lol/temporal";
-import { z } from "zod";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
 import { SCHEDULES } from "./schedule-definitions.ts";
 import type {
@@ -24,17 +23,10 @@ import {
   type MigrationState,
 } from "./namespace-migration-state.ts";
 import { auditNamespaceMigration as auditNamespaceMigrationImpl } from "./namespace-migration-audit.ts";
-const SearchAttributesSchema = z
-  .record(
-    z.string(),
-    z.union([
-      z.array(z.string()),
-      z.array(z.number()),
-      z.array(z.boolean()),
-      z.array(z.date()),
-    ]),
-  )
-  .optional();
+import {
+  comparableSchedule,
+  readSearchAttributes,
+} from "./schedule-comparison.ts";
 export function isRootWorkflowExecution(execution: {
   runId: string;
   rootExecution?: { runId: string | null } | null;
@@ -77,21 +69,6 @@ export function classifyScheduleNamespace(
   }
 
   throw new Error(`Unknown schedule ownership for ${scheduleId}`);
-}
-function comparableSchedule(description: ScheduleDescription): string {
-  return JSON.stringify({
-    spec: description.spec,
-    action: description.action,
-    policies: description.policies,
-    memo: description.memo,
-    searchAttributes: readSearchAttributes(description),
-    typedSearchAttributes: description.typedSearchAttributes,
-  });
-}
-function readSearchAttributes(description: ScheduleDescription) {
-  return SearchAttributesSchema.parse(
-    Reflect.get(description, "searchAttributes"),
-  );
 }
 export async function inventoryMigrationSchedules(
   sourceClient: Client,
