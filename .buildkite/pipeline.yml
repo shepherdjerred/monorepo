@@ -655,8 +655,22 @@ common:
         # (5xx, network, GitHub GraphQL 500), so only retryable failures retry.
         - exit_status: 255
           limit: 2
+        # 34 gets a larger budget than the others because it is the most
+        # precisely classified: transient.ts only emits it for a known
+        # transient signature, so a retry here cannot mask a logical failure.
+        #
+        # 2 was tuned for an occasional blip. It is far too small when a
+        # dependency's network path degrades: the PostHog control-plane stack
+        # reads 79 resources in one plan, and with the homelab's path to
+        # us.posthog.com dropping 8-45% of connections (measured from both
+        # cluster nodes; PostHog itself answers in 48ms whenever a connection
+        # lands) a single read failing aborts the whole plan. Five consecutive
+        # main builds failed that way, each exhausting all three attempts.
+        #
+        # This does not weaken the gate -- the step must still succeed. Revisit
+        # when the egress path is fixed rather than leaving it high forever.
         - exit_status: 34
-          limit: 2
+          limit: 6
         - exit_status: -1
           limit: 2
 
