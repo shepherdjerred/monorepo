@@ -3,6 +3,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@shepherdjerred/root-scripts": "workspace:*",
     "yaml": "^2.8.3",
     "zod": "^4.4.3"
   },
@@ -23,9 +24,9 @@
   },
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
-    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts/argocd-apply-safety.test.ts scripts/argocd-ignored-differences.test.ts scripts/argocd-auto-sync-policy.test.ts scripts/argocd-manifest-overrides.test.ts scripts/helm-set-version.test.ts scripts/helm-release-core.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts scripts/migration-smoke.test.ts",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts/argocd-apply-safety.test.ts scripts/argocd-ignored-differences.test.ts scripts/argocd-auto-sync-policy.test.ts scripts/argocd-manifest-overrides.test.ts scripts/helm-set-version.test.ts scripts/helm-release-core.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts scripts/migration-smoke.test.ts scripts/tofu-stack.test.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../vitest.config.ts run --coverage.reporter=text --coverage.reporter=lcovonly --coverage.reportsDirectory=coverage --coverage scripts/helm-set-version.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.statements=90",
-    "lint": "eslint scripts/argocd-apply-safety.ts scripts/argocd-apply-safety.test.ts scripts/argocd-ignored-differences.ts scripts/argocd-ignored-differences.test.ts scripts/argocd-auto-sync-policy.ts scripts/argocd-auto-sync-policy.test.ts scripts/argocd-manifest-overrides.ts scripts/argocd-manifest-overrides.test.ts scripts/canonical-json.ts scripts/helm-set-version.ts scripts/helm-set-version.test.ts scripts/helm-release-core.ts scripts/helm-release-core.test.ts scripts/helm-push.ts scripts/lint-helm.ts scripts/lint-helm.test.ts scripts/velero-backups.ts scripts/velero-backups.test.ts scripts/migration-core.ts scripts/migration-smoke.test.ts scripts/lint-tofu.ts scripts/check-kubeconform.ts",
+    "lint": "eslint scripts/argocd-apply-safety.ts scripts/argocd-apply-safety.test.ts scripts/argocd-ignored-differences.ts scripts/argocd-ignored-differences.test.ts scripts/argocd-auto-sync-policy.ts scripts/argocd-auto-sync-policy.test.ts scripts/argocd-manifest-overrides.ts scripts/argocd-manifest-overrides.test.ts scripts/canonical-json.ts scripts/helm-set-version.ts scripts/helm-set-version.test.ts scripts/helm-release-core.ts scripts/helm-release-core.test.ts scripts/helm-push.ts scripts/lint-helm.ts scripts/lint-helm.test.ts scripts/velero-backups.ts scripts/velero-backups.test.ts scripts/migration-core.ts scripts/migration-smoke.test.ts scripts/lint-tofu.ts scripts/check-kubeconform.ts scripts/platform-desired-state.ts scripts/tofu-stack-manifest.ts scripts/tofu-stack.ts scripts/tofu-stack.test.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
     "check:talos": "bun src/talos/update-image-id.ts --check",
     "lint:helm": "bun scripts/lint-helm.ts",

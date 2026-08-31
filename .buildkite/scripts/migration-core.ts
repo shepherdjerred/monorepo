@@ -1,29 +1,26 @@
 import { asRecord } from "../../scripts/lib/json.ts";
 import { ALL_IMAGE_TARGETS } from "./image-targets.ts";
 import { nativeLanePaths } from "./macos-native-selection.ts";
-
+import { legacyTofuPaths, platformTofuPaths } from "./tofu-lane-paths.ts";
 const infrastructureTargets = [
   "caddy-s3proxy",
   "obsidian-headless",
   "redlib",
 ] as const;
-
 // Keep full-image and fallback builds on the same target universe as the
 // closure selector. A second hand-maintained list previously omitted
 // OpenRouter, so fixed-corpus recovery could never publish its first image.
 export const knownImageTargets = [...ALL_IMAGE_TARGETS];
-
 const FIXED_CORPUS_LANES: ReadonlySet<string> = new Set([
   "docker-e2e",
   "images",
   "playwright",
   "resume",
   "tofu",
+  "tofu-platforms",
   "tofu-posthog",
 ]);
-
 export class FixedCorpusConfigurationError extends Error {}
-
 export function fixedCorpusMode(
   environment: Readonly<Record<string, string | undefined>>,
 ): boolean {
@@ -50,14 +47,12 @@ export function fixedCorpusMode(
   }
   return true;
 }
-
 export function fixedCorpusForcesLane(
   lane: string,
   environment: Readonly<Record<string, string | undefined>>,
 ): boolean {
   return fixedCorpusMode(environment) && FIXED_CORPUS_LANES.has(lane);
 }
-
 export function fixedCorpusLaneMetadata(
   lane: string,
 ): Readonly<Record<string, string>> {
@@ -66,7 +61,6 @@ export function fixedCorpusLaneMetadata(
     [`ci-lane-decision-${lane}`]: "ran — fixed CI I/O corpus requested",
   };
 }
-
 export function parseBakeArguments(rawArguments: readonly string[]): {
   readonly affected: boolean;
   readonly push: boolean;
@@ -79,13 +73,11 @@ export function parseBakeArguments(rawArguments: readonly string[]): {
   }
   return { affected: flags.has("--affected"), push: flags.has("--push") };
 }
-
 export function expandTargets(selected: readonly string[]): string[] {
   const targets = [...selected].filter((target) => target !== "infra");
   if (selected.includes("infra")) targets.push(...infrastructureTargets);
   return targets;
 }
-
 export function parseStringArray(
   value: unknown,
   description: string,
@@ -101,7 +93,6 @@ export function parseStringArray(
   }
   return strings;
 }
-
 export function parseImageSelection(output: string): {
   readonly targets: string[];
   readonly fallbackReason: string;
@@ -126,7 +117,6 @@ export function parseImageSelection(output: string): {
     };
   }
 }
-
 export function parseBuildkiteCommits(value: unknown): string[] {
   if (!Array.isArray(value)) {
     throw new TypeError("Buildkite response must be an array");
@@ -192,6 +182,11 @@ export const summarySteps = [
   "tofu-apply-arr",
   "tofu-apply-github",
   "tofu-posthog",
+  "tofu-platform-openai",
+  "tofu-platform-anthropic",
+  "tofu-platform-discord",
+  "tofu-platform-openrouter",
+  "tofu-platform-cloudflare-tokens",
   "argocd-sync",
   "scout-beta-release",
   "publish",
@@ -227,6 +222,7 @@ export const summaryLanes = [
   "argocd",
   "helm-types",
   "tofu-posthog",
+  "tofu-platforms",
   "npm",
   "cooklang",
   "scout-reconcile",
@@ -379,7 +375,14 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ],
   tofu: [
     ...workspacePaths,
-    "packages/homelab/src/tofu",
+    ...legacyTofuPaths,
+    "packages/homelab/scripts/tofu-stack.ts",
+    "scripts/lib/run.ts",
+    "scripts/lib/transient.ts",
+  ],
+  "tofu-platforms": [
+    ...workspacePaths,
+    ...platformTofuPaths,
     "packages/homelab/scripts/tofu-stack.ts",
     "scripts/lib/run.ts",
     "scripts/lib/transient.ts",

@@ -117,6 +117,25 @@ describe("run stderr capture", () => {
     expect(result.stdout).toBe("unset");
   });
 
+  test("constructs an isolated child environment when inheritance is disabled", async () => {
+    Bun.env[testEnvironmentName] = "must-not-reach-child";
+    const result = await runAllowExit(
+      [
+        process.execPath,
+        "-e",
+        `process.stdout.write(JSON.stringify({ ambient: process.env[${JSON.stringify(testEnvironmentName)}], allowed: process.env.RUN_TEST_ALLOWED }))`,
+      ],
+      {
+        capture: true,
+        secret: true,
+        env: { RUN_TEST_ALLOWED: "present" },
+        inheritEnv: false,
+      },
+    );
+
+    expect(JSON.parse(result.stdout)).toEqual({ allowed: "present" });
+  });
+
   test("large stderr is drained concurrently (no pipe-buffer deadlock) and the tail is bounded", async () => {
     // Emit far more than the OS pipe buffer (~64KiB) to prove the concurrent
     // drain in teeStderr keeps the child from blocking. The retained tail must

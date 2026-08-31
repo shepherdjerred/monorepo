@@ -15,6 +15,7 @@ type PipelineDocument = {
 };
 
 export type SelectionDependencies = {
+  readonly requestedPlatformStep?: string;
   readonly prepareBase: () => Promise<string>;
   readonly writeChangedFiles: (base: string) => Promise<string>;
   readonly selectLanes: (base: string) => Promise<Map<string, boolean>>;
@@ -43,7 +44,11 @@ export async function runSelection(
     const base = await dependencies.prepareBase();
     changedFilesPath = await dependencies.writeChangedFiles(base);
     const decisions = await dependencies.selectLanes(base);
-    const selected = selectedKeys(steps, decisions);
+    const selected = selectedKeys(
+      steps,
+      decisions,
+      dependencies.requestedPlatformStep,
+    );
     const rendered = renderSteps(steps, selected);
     validateRenderedSteps(rendered);
     await dependencies.recordSelectedSteps(selected);

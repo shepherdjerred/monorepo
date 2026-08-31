@@ -96,7 +96,10 @@ depends_on: verify
 bun --no-install .buildkite/scripts/homelab-release-admission.ts admit
 `;
   const mutatingStep = `
+label: OpenTofu plan / opt-in apply
 depends_on: [homelab-release-admission]
+concurrency_group: monorepo/tofu-platform-credentials
+requested_platform=$\${TOFU_PLATFORM_APPLY:-}
 release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
 if [ "$$release_admission" = "superseded" ]; then exit 0; fi
 if [ "$$release_admission" != "admitted" ]; then exit 1; fi
@@ -112,6 +115,11 @@ if [ "$$release_admission" != "admitted" ]; then exit 1; fi
       ["tofu-apply-arr", mutatingStep],
       ["tofu-apply-github", mutatingStep],
       ["tofu-posthog", mutatingStep],
+      ["tofu-platform-openai", mutatingStep],
+      ["tofu-platform-anthropic", mutatingStep],
+      ["tofu-platform-discord", mutatingStep],
+      ["tofu-platform-openrouter", mutatingStep],
+      ["tofu-platform-cloudflare-tokens", mutatingStep],
       [
         "argocd-sync",
         `${mutatingStep}\nbuildkite-agent artifact upload "homelab-release-result.json"`,
@@ -129,6 +137,14 @@ if [ "$$release_admission" != "admitted" ]; then exit 1; fi
     steps.set("tofu-apply-cloudflare", "depends_on: argocd-sync");
     expect(() => validateHomelabReleaseAdmission(steps)).toThrow(
       "tofu-apply-cloudflare is missing homelab release admission invariant",
+    );
+  });
+
+  test("rejects automatic retries for platform credential mutations", () => {
+    const steps = releaseSteps();
+    steps.set("tofu-platform-openrouter", `${mutatingStep}\nretry: *retry`);
+    expect(() => validateHomelabReleaseAdmission(steps)).toThrow(
+      "tofu-platform-openrouter must not retry credential mutations automatically",
     );
   });
 });

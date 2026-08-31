@@ -171,7 +171,6 @@ describe("runScoutWeeklyParlayWorkflow", () => {
     if (sleepMs > 0) {
       await testEnvironment.sleep(sleepMs);
     }
-
     const workers = await weeklyParlayWorkers({
       resolveScoutWeeklyParlayCatchupTimeline: (workflowStartAtArg: string) => {
         timelineAnchor = workflowStartAtArg;

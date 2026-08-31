@@ -99,6 +99,13 @@ const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
   "packages/homelab/src/cdk8s/src/resources/pokemon.ts",
 ]);
 
+// These homelab files describe provider-specific OpenTofu resources and their
+// credential handoffs. They are infrastructure metadata, not inference paths.
+const HOMELAB_PLATFORM_METADATA_PATHS = new Set([
+  "packages/homelab/scripts/platform-desired-state.ts",
+  "packages/homelab/scripts/tofu-stack-manifest.ts",
+]);
+
 const WHISPER_TRANSCRIPTION_ADAPTER =
   "packages/homelab/src/cdk8s/src/resources/torrents/whisperbridge.ts";
 // Streambot's voice assistant runs on OpenAI's native agent SDK (@openai/agents Realtime) with a
@@ -140,13 +147,17 @@ function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
       isTestOrFixture(filePath) ||
       CREDENTIAL_SANITIZER_PATHS.has(filePath) ||
       POKEMON_CODEX_SUBSCRIPTION_PATHS.has(filePath) ||
+      HOMELAB_PLATFORM_METADATA_PATHS.has(filePath) ||
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
       STREAMBOT_VOICE_REALTIME_PATHS.has(filePath)
     );
   }
 
   if (rule.id === "direct-provider-sdk") {
-    return STREAMBOT_VOICE_TTS_PATHS.has(filePath);
+    return (
+      STREAMBOT_VOICE_TTS_PATHS.has(filePath) ||
+      filePath === "packages/homelab/scripts/platform-desired-state.ts"
+    );
   }
 
   if (rule.id === "legacy-agent-sdk") {

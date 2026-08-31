@@ -5,6 +5,7 @@ import {
   lanePaths,
   selectorPathsForLane,
 } from "./migration-core.ts";
+import { requestedPlatformTofuApply } from "./tofu-lane-paths.ts";
 
 test("all expected deployment lanes are modeled", () => {
   expect(Object.keys(lanePaths)).toContain("sites");
@@ -51,6 +52,28 @@ test("forces every runtime-selected fixed-corpus lane", () => {
   for (const lane of ["argocd", "helm", "sites"]) {
     expect(fixedCorpusForcesLane(lane, environment)).toBe(false);
   }
+});
+
+test("accepts only one exact main-only platform apply request", () => {
+  expect(
+    requestedPlatformTofuApply({
+      TOFU_PLATFORM_APPLY: "openrouter",
+      BUILDKITE_BRANCH: "main",
+    }),
+  ).toBe("openrouter");
+  expect(requestedPlatformTofuApply({})).toBeUndefined();
+  expect(() =>
+    requestedPlatformTofuApply({
+      TOFU_PLATFORM_APPLY: "all",
+      BUILDKITE_BRANCH: "main",
+    }),
+  ).toThrow("TOFU_PLATFORM_APPLY must be one of");
+  expect(() =>
+    requestedPlatformTofuApply({
+      TOFU_PLATFORM_APPLY: "openai",
+      BUILDKITE_BRANCH: "feature/platforms",
+    }),
+  ).toThrow("TOFU_PLATFORM_APPLY is main-only");
 });
 
 test("site-scout excludes global CI inputs and uses exact release libraries", () => {

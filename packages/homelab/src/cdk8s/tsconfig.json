@@ -5,6 +5,7 @@
     // Note: verbatimModuleSyntax disabled because of cdk8s generation
     "paths": {
       "@shepherdjerred/homelab/cdk8s/*": ["./*"],
+      "@shepherdjerred/homelab/*": ["../../*"],
       "@shepherdjerred/helm-types/*": ["../helm-types/*"],
       "@shepherdjerred/monorepo/config/*": ["../../../../config/*"]
     }

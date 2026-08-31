@@ -2,6 +2,12 @@
 
 import { fixedCorpusMode } from "./migration-core.ts";
 import {
+  pipelineUploadArguments,
+  processEnv,
+  runCommand,
+} from "./select-main-pipeline-io.ts";
+import { requestedPlatformTofuApply } from "./tofu-lane-paths.ts";
+import {
   runSelection as runSelectionForMain,
   type SelectionDependencies,
 } from "./select-main-pipeline-selection.ts";
@@ -18,9 +24,15 @@ export async function runSelection(
   document: PipelineDocument,
   dependencies?: SelectionDependencies,
 ): Promise<number> {
+  const requestedPlatformApply = requestedPlatformTofuApply(Bun.env);
   return runSelectionForMain(
     document,
     dependencies ?? {
+      ...(requestedPlatformApply === undefined
+        ? {}
+        : {
+            requestedPlatformStep: `tofu-platform-${requestedPlatformApply}`,
+          }),
       prepareBase,
       writeChangedFiles: writeSelectorChangedFiles,
       selectLanes,
@@ -63,6 +75,11 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "tofu-apply-arr": ["tofu"],
   "tofu-apply-github": ["tofu"],
   "tofu-posthog": ["tofu-posthog"],
+  "tofu-platform-openai": ["tofu-platforms"],
+  "tofu-platform-anthropic": ["tofu-platforms"],
+  "tofu-platform-discord": ["tofu-platforms"],
+  "tofu-platform-openrouter": ["tofu-platforms"],
+  "tofu-platform-cloudflare-tokens": ["tofu-platforms"],
   "argocd-sync": ["helm", "argocd", "images"],
   "tofu-apply-cloudflare": ["tofu", "argocd"],
   "scout-beta-release": ["site-scout", "images"],
@@ -179,33 +196,6 @@ export function assertSelectionContract(
   }
 }
 
-export async function runCommand(
-  command: readonly string[],
-  environment: Readonly<Record<string, string>> = {},
-): Promise<number> {
-  const child = Bun.spawn([...command], {
-    env: { ...processEnv(), ...environment },
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  if (stdout.length > 0) await Bun.stdout.write(stdout);
-  if (stderr.length > 0) await Bun.stderr.write(stderr);
-  return exitCode;
-}
-
-function processEnv(): Record<string, string> {
-  const environment: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
-    if (value !== undefined) environment[key] = value;
-  }
-  return environment;
-}
-
 export function pipelinePayload(
   document: PipelineDocument,
   steps: readonly PipelineStep[],
@@ -224,17 +214,6 @@ export function pipelinePayload(
     payload = payload.replaceAll(encodedPlaceholder, JSON.stringify(reference));
   }
   return payload;
-}
-
-/** Upload the selected graph with `--replace`, making selector retries safe. */
-export function pipelineUploadArguments(
-  changedFilesPath: string | undefined,
-): string[] {
-  const argumentsList = ["buildkite-agent", "pipeline", "upload", "--replace"];
-  if (changedFilesPath !== undefined) {
-    argumentsList.push("--changed-files-path", changedFilesPath);
-  }
-  return argumentsList;
 }
 
 type BaseMetadataReader = () => Promise<{
@@ -321,9 +300,18 @@ export async function selectLanes(
 export function selectedKeys(
   steps: ReadonlyMap<string, PipelineStep>,
   decisions: ReadonlyMap<string, boolean>,
+  requestedPlatformStep?: string,
 ): Set<string> {
   const selected = new Set<string>(ALWAYS_SELECTED);
   for (const [key, lanes] of Object.entries(STEP_LANE_REQUIREMENTS)) {
+    if (
+      key !== requestedPlatformStep &&
+      requestedPlatformStep !== undefined &&
+      key.startsWith("tofu-platform-") &&
+      lanes.includes("tofu-platforms")
+    ) {
+      continue;
+    }
     if (lanes.some((lane) => decisions.get(lane) === true)) selected.add(key);
   }
 

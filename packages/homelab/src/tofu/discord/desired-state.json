@@ -1,0 +1,48 @@
+{
+  "$schema": "../platform-desired-state.schema.json",
+  "platform": "discord",
+  "discord_bots": {
+    "birmel": {
+      "application_name": "Birmel",
+      "expected_application_id": "1452172134498701455",
+      "vault_item_id": "w5c27dzybxor3j6dzl7lub2soe",
+      "description": "the invisibility booster must be faulty",
+      "tags": []
+    },
+    "starlight-beta": {
+      "application_name": "Starlight Beta",
+      "expected_application_id": "1092616671388254248",
+      "vault_item_id": "tdxe6cq7ozhv7cesfvnlkl5gh4",
+      "description": "",
+      "tags": []
+    },
+    "starlight-prod": {
+      "application_name": "Starlight",
+      "expected_application_id": "716834761418735638",
+      "vault_item_id": "cmp6si6n5syhr4smxew3qfcmfi",
+      "description": "",
+      "tags": []
+    },
+    "scout-beta": {
+      "application_name": "Scout for League of Legends Beta",
+      "expected_application_id": "1311755320745394317",
+      "vault_item_id": "rtu44pohnp5ixdp2njuv5f6t2e",
+      "description": "https://scout-for-lol.com/",
+      "tags": ["league-of-legends"]
+    },
+    "scout-prod": {
+      "application_name": "Scout for League of Legends",
+      "expected_application_id": "1182800769188110366",
+      "vault_item_id": "pacrc4wfbtct4y3qazkvazop5a",
+      "description": "https://scout-for-lol.com/",
+      "tags": ["league-of-legends"]
+    },
+    "minecraft": {
+      "application_name": "Server Bridge",
+      "expected_application_id": "1119453338468089868",
+      "vault_item_id": "q37vet77dfggoqbvu4bqle3gje",
+      "description": "",
+      "tags": []
+    }
+  }
+}

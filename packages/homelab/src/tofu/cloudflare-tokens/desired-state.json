@@ -1,0 +1,204 @@
+{
+  "$schema": "../platform-desired-state.schema.json",
+  "platform": "cloudflare-tokens",
+  "cloudflare_api_tokens": {
+    "buildkite": {
+      "supersedes_id": "409e97aba1f4bacff237d260edebbfd1",
+      "name": "monorepo Buildkite Cloudflare 2026-08",
+      "policies": [
+        {
+          "effect": "allow",
+          "permission_groups": [
+            {
+              "id": "bf7481a1826f439697cb59a20b22293e",
+              "name": "Workers R2 Storage Write"
+            }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.48948ed6cd40d73e34d27f0cc10e595f": "*"
+          }
+        },
+        {
+          "effect": "allow",
+          "permission_groups": [
+            { "id": "e6d2666161e84845a636613608cee8d5", "name": "Zone Write" },
+            { "id": "4755a26eedb94da69e1066d98aa820be", "name": "DNS Write" },
+            {
+              "id": "3030687196b94b638145a3953da2b699",
+              "name": "Zone Settings Write"
+            },
+            {
+              "id": "fb6778dc191143babbfaa57993f1d275",
+              "name": "Zone WAF Write"
+            }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.zone.*": "*"
+          }
+        }
+      ],
+      "expires_on": "2027-08-29T23:59:59Z",
+      "status": "active",
+      "vault_item_id": "djl2blalora2unjogqnsadlokq",
+      "vault_field": "CLOUDFLARE_API_TOKEN"
+    },
+    "temporal-audit": {
+      "supersedes_id": "409e97aba1f4bacff237d260edebbfd1",
+      "name": "Temporal Cloudflare audit 2026-08",
+      "policies": [
+        {
+          "effect": "allow",
+          "permission_groups": [
+            {
+              "id": "b4992e1108244f5d8bfbd5744320c2e1",
+              "name": "Workers R2 Storage Read"
+            }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.48948ed6cd40d73e34d27f0cc10e595f": "*"
+          }
+        },
+        {
+          "effect": "allow",
+          "permission_groups": [
+            { "id": "c8fed203ed3043cba015a93ad1616f1f", "name": "Zone Read" },
+            { "id": "82e64a83756745bbbb1c9c2701bf816b", "name": "DNS Read" },
+            {
+              "id": "517b21aee92c4d89936c976ba6e4be55",
+              "name": "Zone Settings Read"
+            },
+            {
+              "id": "dbc512b354774852af2b5a5f4ba3d470",
+              "name": "Zone WAF Read"
+            }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.zone.*": "*"
+          }
+        }
+      ],
+      "expires_on": "2027-08-29T23:59:59Z",
+      "status": "active",
+      "vault_item_id": "mjgnqqh37jxyzseqrddde2jgaq",
+      "vault_field": "CLOUDFLARE_API_TOKEN"
+    },
+    "cf-cli": {
+      "supersedes_id": "6a2be1d4b515e085c81bbe6999445d51",
+      "name": "cf CLI Cloudflare 2026-08",
+      "policies": [
+        {
+          "effect": "allow",
+          "permission_groups": [
+            {
+              "id": "c1fde68c7bcc44588cbb6ddbc16d6480",
+              "name": "Account Settings Read"
+            },
+            {
+              "id": "b89a480218d04ceb98b4fe57ca29dc1f",
+              "name": "Account Analytics Read"
+            },
+            {
+              "id": "b4992e1108244f5d8bfbd5744320c2e1",
+              "name": "Workers R2 Storage Read"
+            }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.48948ed6cd40d73e34d27f0cc10e595f": "*"
+          }
+        },
+        {
+          "effect": "allow",
+          "permission_groups": [
+            { "id": "c8fed203ed3043cba015a93ad1616f1f", "name": "Zone Read" },
+            { "id": "4755a26eedb94da69e1066d98aa820be", "name": "DNS Write" },
+            {
+              "id": "9c88f9c5bce24ce7af9a958ba9c504db",
+              "name": "Analytics Read"
+            }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.zone.*": "*"
+          }
+        }
+      ],
+      "expires_on": "2027-08-29T23:59:59Z",
+      "status": "active",
+      "vault_item_id": "vp4l6tpe2cly6q4w5aremgvnbe",
+      "vault_field": "credential"
+    },
+    "cloudflare-operator": {
+      "supersedes_id": "4d76466089e0e37912b698c584085af3",
+      "name": "Cloudflare Operator 2026-08",
+      "policies": [
+        {
+          "effect": "allow",
+          "permission_groups": [
+            {
+              "id": "c07321b023e944ff818fec44d8203567",
+              "name": "Cloudflare Tunnel Write"
+            }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.48948ed6cd40d73e34d27f0cc10e595f": "*"
+          }
+        },
+        {
+          "effect": "allow",
+          "permission_groups": [
+            { "id": "c8fed203ed3043cba015a93ad1616f1f", "name": "Zone Read" },
+            { "id": "4755a26eedb94da69e1066d98aa820be", "name": "DNS Write" }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.zone.*": "*"
+          }
+        }
+      ],
+      "expires_on": "2027-08-29T23:59:59Z",
+      "status": "active",
+      "vault_item_id": "sc5kj6xthlxmdn7k4mesdr2mju",
+      "vault_field": "CLOUDFLARE_API_TOKEN"
+    },
+    "r2-exporter": {
+      "supersedes_id": "ce9ab72576cbff081c3f774c49afa922",
+      "name": "R2 Exporter 2026-08",
+      "policies": [
+        {
+          "effect": "allow",
+          "permission_groups": [
+            {
+              "id": "b4992e1108244f5d8bfbd5744320c2e1",
+              "name": "Workers R2 Storage Read"
+            }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.48948ed6cd40d73e34d27f0cc10e595f": "*"
+          }
+        }
+      ],
+      "expires_on": "2027-08-29T23:59:59Z",
+      "status": "active",
+      "vault_item_id": "faryqlpsnrqupkirkwrejct3iy",
+      "vault_field": "CLOUDFLARE_API_TOKEN"
+    },
+    "ddns": {
+      "supersedes_id": "86e250662681397b4d12a0ab1e8fd266",
+      "name": "DDNS sjer.red 2026-08",
+      "policies": [
+        {
+          "effect": "allow",
+          "permission_groups": [
+            { "id": "4755a26eedb94da69e1066d98aa820be", "name": "DNS Write" }
+          ],
+          "resources": {
+            "com.cloudflare.api.account.zone.879487f81194d63121d0b8dddd16f08f": "*"
+          }
+        }
+      ],
+      "expires_on": "2027-08-29T23:59:59Z",
+      "status": "active",
+      "vault_item_id": "nhyb6lnjpvjsau2gkmb7n42oeq",
+      "vault_field": "config.json",
+      "vault_json_path": "/cloudflare/0/authentication/api_token"
+    }
+  }
+}

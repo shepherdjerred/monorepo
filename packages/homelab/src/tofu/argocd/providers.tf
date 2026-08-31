@@ -15,8 +15,7 @@ terraform {
 
 provider "argocd" {
   server_addr = "argocd.tailnet-1a49.ts.net:443"
-  username    = "admin"
-  password    = var.argocd_admin_password
+  auth_token  = var.argocd_auth_token
 }
 
 provider "onepassword" {

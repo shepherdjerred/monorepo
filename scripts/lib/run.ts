@@ -10,6 +10,8 @@ export type RunOptions = {
   cwd?: string;
   /** Extra env vars layered on top of the current process env. */
   env?: Record<string, string>;
+  /** When false, construct the child environment from `env` only. */
+  inheritEnv?: boolean;
   /** Env vars removed after layering `env`, for least-privilege subprocesses. */
   unsetEnv?: string[];
   /**
@@ -85,7 +87,11 @@ export async function runAllowExit(
   }
   const capture = opts.capture === true;
   const layeredEnv =
-    opts.env === undefined ? Bun.env : { ...Bun.env, ...opts.env };
+    opts.inheritEnv === false
+      ? (opts.env ?? {})
+      : opts.env === undefined
+        ? Bun.env
+        : { ...Bun.env, ...opts.env };
   const unsetEnv = new Set(opts.unsetEnv);
   const childEnv = Object.fromEntries(
     Object.entries(layeredEnv).filter(([name]) => !unsetEnv.has(name)),

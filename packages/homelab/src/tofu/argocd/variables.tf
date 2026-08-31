@@ -1,5 +1,5 @@
-variable "argocd_admin_password" {
-  description = "ArgoCD admin password from argocd-initial-admin-secret K8s secret"
+variable "argocd_auth_token" {
+  description = "ArgoCD authentication token from the Buildkite 1Password secret"
   type        = string
   sensitive   = true
 }

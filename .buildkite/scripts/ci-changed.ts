@@ -3,6 +3,7 @@ import {
   fixedCorpusForcesLane,
   selectorPathsForLane,
 } from "./migration-core.ts";
+import { requestedPlatformTofuApply } from "./tofu-lane-paths.ts";
 
 async function execute(
   command: readonly string[],
@@ -33,6 +34,17 @@ async function main(): Promise<number> {
   const lane = Bun.argv[2];
   if (lane === undefined || lane.length === 0) {
     console.error("Usage: ci-changed.ts <lane>");
+    return 0;
+  }
+  const requestedPlatformApply = requestedPlatformTofuApply(Bun.env);
+  if (lane === "tofu-platforms" && requestedPlatformApply !== undefined) {
+    await recordDecision(
+      lane,
+      `ran — explicit ${requestedPlatformApply} apply requested`,
+    );
+    console.log(
+      `${lane}: explicit ${requestedPlatformApply} apply requested; running`,
+    );
     return 0;
   }
   if (fixedCorpusForcesLane(lane, Bun.env)) {

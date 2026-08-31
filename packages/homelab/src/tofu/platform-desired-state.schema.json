@@ -1,0 +1,763 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "platform-desired-state.schema.json",
+  "title": "Platform OpenTofu desired state",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "platform",
+        "openai_projects",
+        "openai_service_accounts",
+        "openai_organization_users",
+        "openai_project_users",
+        "openai_project_spend_alerts",
+        "openai_groups",
+        "openai_group_users",
+        "openai_group_roles",
+        "openai_user_roles",
+        "openai_roles",
+        "openai_certificates",
+        "openai_organization_spend_alerts",
+        "openai_organization_spend_limits",
+        "openai_project_groups",
+        "openai_project_group_roles",
+        "openai_project_data_retention",
+        "openai_project_model_permissions",
+        "openai_project_hosted_tool_permissions",
+        "openai_project_spend_limits",
+        "openai_project_rate_limits"
+      ],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "openai" },
+        "openai_projects": { "$ref": "#/$defs/openAiProjectMap" },
+        "openai_service_accounts": {
+          "$ref": "#/$defs/openAiServiceAccountMap"
+        },
+        "openai_organization_users": {
+          "$ref": "#/$defs/openAiOrganizationUserMap"
+        },
+        "openai_project_users": { "$ref": "#/$defs/openAiProjectUserMap" },
+        "openai_project_spend_alerts": {
+          "$ref": "#/$defs/spendAlertMap"
+        },
+        "openai_groups": { "$ref": "#/$defs/openAiGroupMap" },
+        "openai_group_users": { "$ref": "#/$defs/openAiGroupUserMap" },
+        "openai_group_roles": { "$ref": "#/$defs/openAiGroupRoleMap" },
+        "openai_user_roles": { "$ref": "#/$defs/openAiUserRoleMap" },
+        "openai_roles": { "$ref": "#/$defs/openAiRoleMap" },
+        "openai_certificates": { "$ref": "#/$defs/openAiCertificateMap" },
+        "openai_organization_spend_alerts": {
+          "$ref": "#/$defs/spendAlertMap"
+        },
+        "openai_organization_spend_limits": {
+          "$ref": "#/$defs/spendLimitMap"
+        },
+        "openai_project_groups": {
+          "$ref": "#/$defs/openAiProjectGroupMap"
+        },
+        "openai_project_group_roles": {
+          "$ref": "#/$defs/openAiProjectGroupRoleMap"
+        },
+        "openai_project_data_retention": {
+          "$ref": "#/$defs/openAiProjectDataRetentionMap"
+        },
+        "openai_project_model_permissions": {
+          "$ref": "#/$defs/openAiProjectModelPermissionsMap"
+        },
+        "openai_project_hosted_tool_permissions": {
+          "$ref": "#/$defs/openAiProjectHostedToolPermissionsMap"
+        },
+        "openai_project_spend_limits": {
+          "$ref": "#/$defs/openAiProjectSpendLimitMap"
+        },
+        "openai_project_rate_limits": {
+          "$ref": "#/$defs/openAiProjectRateLimitMap"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "platform",
+        "anthropic_workspaces",
+        "anthropic_api_keys",
+        "anthropic_workspace_members"
+      ],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "anthropic" },
+        "anthropic_workspaces": {
+          "$ref": "#/$defs/anthropicWorkspaceMap"
+        },
+        "anthropic_api_keys": { "$ref": "#/$defs/anthropicApiKeyMap" },
+        "anthropic_workspace_members": {
+          "$ref": "#/$defs/anthropicWorkspaceMemberMap"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "platform", "discord_bots"],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "discord" },
+        "discord_bots": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/discordBot" }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "platform",
+        "openrouter_workspaces",
+        "openrouter_guardrails",
+        "openrouter_api_keys",
+        "openrouter_byok_credentials"
+      ],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "openrouter" },
+        "openrouter_workspaces": {
+          "$ref": "#/$defs/openRouterWorkspaceMap"
+        },
+        "openrouter_guardrails": {
+          "$ref": "#/$defs/openRouterGuardrailMap"
+        },
+        "openrouter_api_keys": { "$ref": "#/$defs/openRouterApiKeyMap" },
+        "openrouter_byok_credentials": {
+          "$ref": "#/$defs/openRouterByokMap"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "platform", "cloudflare_api_tokens"],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/schemaReference" },
+        "platform": { "const": "cloudflare-tokens" },
+        "cloudflare_api_tokens": { "$ref": "#/$defs/cloudflareTokenMap" }
+      }
+    }
+  ],
+  "$defs": {
+    "schemaReference": {
+      "const": "../platform-desired-state.schema.json"
+    },
+    "resourceMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "type": "object" }
+    },
+    "onePasswordTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vault_item_id", "vault_field"],
+      "properties": {
+        "vault_item_id": { "type": "string", "minLength": 1 },
+        "vault_field": { "type": "string", "minLength": 1 },
+        "vault_json_path": { "type": "string", "minLength": 1 }
+      }
+    },
+    "openAiProjectMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "project_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "geography": { "type": "string", "minLength": 1 },
+          "external_key_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiServiceAccountMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "name", "onepassword_targets"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "onepassword_targets": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/onePasswordTarget" }
+          }
+        }
+      }
+    },
+    "openAiOrganizationUserMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["user_id"],
+        "properties": {
+          "user_id": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 },
+          "developer_persona": { "type": "string", "minLength": 1 },
+          "technical_level": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectUserMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "user_id", "role_id"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "user_id": { "type": "string", "minLength": 1 },
+          "role_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "spendAlertMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "threshold_amount",
+          "currency",
+          "interval",
+          "notification_channel_type",
+          "notification_channel_recipients"
+        ],
+        "properties": {
+          "threshold_amount": { "type": "number" },
+          "currency": { "type": "string", "minLength": 1 },
+          "interval": { "type": "string", "minLength": 1 },
+          "notification_channel_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "notification_channel_recipients": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "notification_channel_subject_prefix": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "openAiGroupMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["group_id", "name"],
+        "properties": {
+          "group_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiGroupUserMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["group_key", "user_id"],
+        "properties": {
+          "group_key": { "type": "string", "minLength": 1 },
+          "user_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiGroupRoleMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["group_key", "role_id"],
+        "properties": {
+          "group_key": { "type": "string", "minLength": 1 },
+          "role_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiUserRoleMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["user_id", "role_id"],
+        "properties": {
+          "user_id": { "type": "string", "minLength": 1 },
+          "role_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiRoleMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role_name", "permissions"],
+        "properties": {
+          "role_name": { "type": "string", "minLength": 1 },
+          "permissions": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiCertificateMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["certificate_id"],
+        "properties": {
+          "certificate_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "spendLimitMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["threshold_amount", "currency", "interval"],
+        "properties": {
+          "threshold_amount": { "type": "number" },
+          "currency": { "type": "string", "minLength": 1 },
+          "interval": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectGroupMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "group_key", "role"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "group_key": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectGroupRoleMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "group_key", "role_id"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "group_key": { "type": "string", "minLength": 1 },
+          "role_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectDataRetentionMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "type"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectModelPermissionsMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "mode", "model_ids"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "mode": { "type": "string", "minLength": 1 },
+          "model_ids": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "openAiProjectHostedToolPermissionsMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "project_key",
+          "file_search_enabled",
+          "web_search_enabled",
+          "image_generation_enabled",
+          "mcp_enabled",
+          "code_interpreter_enabled"
+        ],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "file_search_enabled": { "type": "boolean" },
+          "web_search_enabled": { "type": "boolean" },
+          "image_generation_enabled": { "type": "boolean" },
+          "mcp_enabled": { "type": "boolean" },
+          "code_interpreter_enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "openAiProjectSpendLimitMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "threshold_amount", "currency", "interval"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "threshold_amount": { "type": "number" },
+          "currency": { "type": "string", "minLength": 1 },
+          "interval": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectRateLimitMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project_key", "rate_limit_id"],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "rate_limit_id": { "type": "string", "minLength": 1 },
+          "batch_1_day_max_input_tokens": { "type": "number" },
+          "max_audio_megabytes_per_1_minute": { "type": "number" },
+          "max_images_per_1_minute": { "type": "number" },
+          "max_requests_per_1_day": { "type": "number" },
+          "max_requests_per_1_minute": { "type": "number" },
+          "max_tokens_per_1_minute": { "type": "number" }
+        }
+      }
+    },
+    "anthropicApiKeyMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "api_key_id",
+          "name",
+          "status",
+          "vault_item_id",
+          "vault_field"
+        ],
+        "properties": {
+          "api_key_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "vault_item_id": { "type": "string", "minLength": 1 },
+          "vault_field": { "type": "string", "minLength": 1 },
+          "vault_json_path": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "anthropicWorkspaceMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "workspace_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "anthropicWorkspaceMemberMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["workspace_key", "user_id", "workspace_role"],
+        "properties": {
+          "workspace_key": { "type": "string", "minLength": 1 },
+          "user_id": { "type": "string", "minLength": 1 },
+          "workspace_role": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openRouterWorkspaceMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "slug"],
+        "properties": {
+          "workspace_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "slug": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "default_text_model": { "type": "string", "minLength": 1 },
+          "default_image_model": { "type": "string", "minLength": 1 },
+          "default_provider_sort": { "type": "string", "minLength": 1 },
+          "io_logging_api_key_ids": {
+            "type": "array",
+            "items": { "type": "number" }
+          },
+          "io_logging_sampling_rate": { "type": "number" },
+          "is_data_discount_logging_enabled": { "type": "boolean" },
+          "is_observability_broadcast_enabled": { "type": "boolean" },
+          "is_observability_io_logging_enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "openRouterGuardrailMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "guardrail_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "workspace_key": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "limit_usd": { "type": "number" },
+          "reset_interval": { "type": "string", "minLength": 1 },
+          "allowed_models": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "allowed_providers": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "ignored_models": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "ignored_providers": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "enforce_zdr_anthropic": { "type": "boolean" },
+          "enforce_zdr_google": { "type": "boolean" },
+          "enforce_zdr_openai": { "type": "boolean" },
+          "enforce_zdr_other": { "type": "boolean" }
+        }
+      }
+    },
+    "openRouterApiKeyMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "allOf": [
+          {
+            "if": { "not": { "required": ["import_id"] } },
+            "then": {
+              "required": ["onepassword_targets"],
+              "properties": {
+                "onepassword_targets": { "minItems": 1 }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "import_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "workspace_key": { "type": "string", "minLength": 1 },
+          "limit": { "type": "number" },
+          "limit_reset": { "type": "string", "minLength": 1 },
+          "include_byok_in_limit": { "type": "boolean" },
+          "disabled": { "type": "boolean" },
+          "expires_at": { "type": "string", "minLength": 1 },
+          "onepassword_targets": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/onePasswordTarget" }
+          }
+        }
+      }
+    },
+    "openRouterByokMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["provider_slug"],
+        "properties": {
+          "byok_key_id": { "type": "string", "minLength": 1 },
+          "provider_slug": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "workspace_key": { "type": "string", "minLength": 1 },
+          "allowed_models": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "allowed_user_ids": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "disabled": { "type": "boolean" },
+          "is_fallback": { "type": "boolean" },
+          "allowed_api_key_hashes": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "cloudflareTokenMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "supersedes_id",
+          "name",
+          "policies",
+          "vault_item_id",
+          "vault_field"
+        ],
+        "properties": {
+          "supersedes_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "policies": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["effect", "permission_groups", "resources"],
+              "properties": {
+                "effect": { "type": "string", "minLength": 1 },
+                "permission_groups": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["id", "name"],
+                    "properties": {
+                      "id": { "type": "string", "minLength": 1 },
+                      "name": { "type": "string", "minLength": 1 }
+                    }
+                  }
+                },
+                "resources": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "propertyNames": { "minLength": 1 },
+                  "additionalProperties": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          },
+          "condition": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "request_ip": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "in": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1 }
+                  },
+                  "not_in": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1 }
+                  }
+                }
+              }
+            }
+          },
+          "expires_on": { "type": "string", "minLength": 1 },
+          "not_before": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "vault_item_id": { "type": "string", "minLength": 1 },
+          "vault_field": { "type": "string", "minLength": 1 },
+          "vault_json_path": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "discordBot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_name",
+        "expected_application_id",
+        "vault_item_id"
+      ],
+      "properties": {
+        "application_name": { "type": "string", "minLength": 1 },
+        "expected_application_id": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "vault_item_id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "custom_install_url": { "type": "string", "format": "uri" },
+        "interactions_endpoint_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "role_connections_verification_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

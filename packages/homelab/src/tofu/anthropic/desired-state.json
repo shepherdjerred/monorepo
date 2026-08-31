@@ -1,0 +1,23 @@
+{
+  "$schema": "../platform-desired-state.schema.json",
+  "platform": "anthropic",
+  "anthropic_workspaces": {},
+  "anthropic_api_keys": {
+    "openrouter": {
+      "api_key_id": "apikey_01VLCWhsRj3vKYjpJ7EEXJUp",
+      "name": "OpenRouter",
+      "status": "active",
+      "vault_item_id": "msklmk7gk2r3rq4kyeywpuafny",
+      "vault_field": "OPENROUTER_BYOK_KEYS_JSON",
+      "vault_json_path": "/anthropic"
+    },
+    "macbook": {
+      "api_key_id": "apikey_01Km97w7NfrpW9skzN9dvo5V",
+      "name": "MacBook 1Password",
+      "status": "active",
+      "vault_item_id": "mjgnqqh37jxyzseqrddde2jgaq",
+      "vault_field": "ANTHROPIC_API_KEY"
+    }
+  },
+  "anthropic_workspace_members": {}
+}

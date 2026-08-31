@@ -5,19 +5,21 @@ import {
   mainSteps,
   parsePipeline,
   pipelinePayload,
-  pipelineUploadArguments,
   prepareBase,
   recordSelectedSteps,
   renderFallbackSteps,
   renderSteps,
   runSelection,
-  runCommand,
   selectLanes,
   selectedKeys,
   validateRenderedSteps,
   uploadPipeline,
   writeSelectorChangedFiles,
 } from "./select-main-pipeline.ts";
+import {
+  pipelineUploadArguments,
+  runCommand,
+} from "./select-main-pipeline-io.ts";
 
 const repoRoot = new URL("../..", import.meta.url).pathname;
 const pipeline = await Bun.file(`${repoRoot}/.buildkite/pipeline.yml`).text();
@@ -248,6 +250,20 @@ test("keeps infrastructure and publish lanes in the main graph", () => {
   expect(selected.has("tofu-apply-arr")).toBe(true);
   expect(selected.has("tofu-apply-github")).toBe(true);
   expect(selected.has("publish")).toBe(true);
+});
+
+test("selects only the explicitly requested platform apply job", () => {
+  const selected = selectedKeys(
+    steps,
+    new Map([["tofu-platforms", true]]),
+    "tofu-platform-openrouter",
+  );
+  expect(selected.has("tofu-platform-openrouter")).toBe(true);
+  expect(selected.has("tofu-platform-openai")).toBe(false);
+  expect(selected.has("tofu-platform-anthropic")).toBe(false);
+  expect(selected.has("tofu-platform-discord")).toBe(false);
+  expect(selected.has("tofu-platform-cloudflare-tokens")).toBe(false);
+  expect(selected.has("homelab-release-admission")).toBe(true);
 });
 
 test("preserves Scout beta, tag, and production ordering", () => {
