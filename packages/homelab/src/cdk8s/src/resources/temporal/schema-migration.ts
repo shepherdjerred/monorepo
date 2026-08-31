@@ -21,48 +21,48 @@ const POSTGRES_TLS_CA_FILE_PATH = `${POSTGRES_TLS_DIRECTORY}/${TEMPORAL_POSTGRES
 const SCHEMA_MIGRATION_SCRIPT = String.raw`
 set -eu -o pipefail
 
-temporal-sql-tool \\
-  --plugin postgres12 \\
-  --ep ${TEMPORAL_POSTGRES_TLS_SERVER_NAME} \\
-  -p 5432 \\
-  -u "$POSTGRES_USER" \\
-  --db temporal \\
-  --tls=true \\
-  --tls-ca-file "$POSTGRES_TLS_CA_FILE" \\
-  --tls-server-name "$POSTGRES_TLS_SERVER_NAME" \\
+temporal-sql-tool \
+  --plugin postgres12 \
+  --ep ${TEMPORAL_POSTGRES_TLS_SERVER_NAME} \
+  -p 5432 \
+  -u "$POSTGRES_USER" \
+  --db temporal \
+  --tls=true \
+  --tls-ca-file "$POSTGRES_TLS_CA_FILE" \
+  --tls-server-name "$POSTGRES_TLS_SERVER_NAME" \
   setup-schema -v 0.0
 
-temporal-sql-tool \\
-  --plugin postgres12 \\
-  --ep ${TEMPORAL_POSTGRES_TLS_SERVER_NAME} \\
-  -p 5432 \\
-  -u "$POSTGRES_USER" \\
-  --db temporal \\
-  --tls=true \\
-  --tls-ca-file "$POSTGRES_TLS_CA_FILE" \\
-  --tls-server-name "$POSTGRES_TLS_SERVER_NAME" \\
+temporal-sql-tool \
+  --plugin postgres12 \
+  --ep ${TEMPORAL_POSTGRES_TLS_SERVER_NAME} \
+  -p 5432 \
+  -u "$POSTGRES_USER" \
+  --db temporal \
+  --tls=true \
+  --tls-ca-file "$POSTGRES_TLS_CA_FILE" \
+  --tls-server-name "$POSTGRES_TLS_SERVER_NAME" \
   update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned
 
-temporal-sql-tool \\
-  --plugin postgres12 \\
-  --ep ${TEMPORAL_POSTGRES_TLS_SERVER_NAME} \\
-  -p 5432 \\
-  -u "$POSTGRES_USER" \\
-  --db temporal_visibility \\
-  --tls=true \\
-  --tls-ca-file "$POSTGRES_TLS_CA_FILE" \\
-  --tls-server-name "$POSTGRES_TLS_SERVER_NAME" \\
+temporal-sql-tool \
+  --plugin postgres12 \
+  --ep ${TEMPORAL_POSTGRES_TLS_SERVER_NAME} \
+  -p 5432 \
+  -u "$POSTGRES_USER" \
+  --db temporal_visibility \
+  --tls=true \
+  --tls-ca-file "$POSTGRES_TLS_CA_FILE" \
+  --tls-server-name "$POSTGRES_TLS_SERVER_NAME" \
   setup-schema -v 0.0
 
-temporal-sql-tool \\
-  --plugin postgres12 \\
-  --ep ${TEMPORAL_POSTGRES_TLS_SERVER_NAME} \\
-  -p 5432 \\
-  -u "$POSTGRES_USER" \\
-  --db temporal_visibility \\
-  --tls=true \\
-  --tls-ca-file "$POSTGRES_TLS_CA_FILE" \\
-  --tls-server-name "$POSTGRES_TLS_SERVER_NAME" \\
+temporal-sql-tool \
+  --plugin postgres12 \
+  --ep ${TEMPORAL_POSTGRES_TLS_SERVER_NAME} \
+  -p 5432 \
+  -u "$POSTGRES_USER" \
+  --db temporal_visibility \
+  --tls=true \
+  --tls-ca-file "$POSTGRES_TLS_CA_FILE" \
+  --tls-server-name "$POSTGRES_TLS_SERVER_NAME" \
   update-schema -d /etc/temporal/schema/postgresql/v12/visibility/versioned
 `.trim();
 
