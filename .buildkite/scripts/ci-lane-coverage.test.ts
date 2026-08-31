@@ -9,10 +9,10 @@
 // subset property over every lane, parsed from the real YAML.
 
 import { describe, expect, test } from "vitest";
+import { summaryLanes } from "./build-summary-tables.ts";
 import {
   lanePaths as selectorLanePaths,
   selectorPathsForLane,
-  summaryLanes,
 } from "./migration-core.ts";
 
 const REPO_ROOT = new URL("../..", import.meta.url).pathname;

@@ -1,5 +1,9 @@
 import { $ } from "bun";
-import { outcomeIcon, summaryLanes, summarySteps } from "./migration-core.ts";
+import {
+  outcomeIcon,
+  summaryLanes,
+  summarySteps,
+} from "./build-summary-tables.ts";
 
 /**
  * Steps the main selector uploaded. `buildkite-agent step get` exits nonzero

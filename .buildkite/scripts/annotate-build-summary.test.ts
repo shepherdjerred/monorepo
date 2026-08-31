@@ -1,5 +1,9 @@
 import { expect, test } from "vitest";
-import { outcomeIcon, summaryLanes, summarySteps } from "./migration-core.ts";
+import {
+  outcomeIcon,
+  summaryLanes,
+  summarySteps,
+} from "./build-summary-tables.ts";
 
 test("summary has unique step and lane keys", () => {
   expect(new Set(summarySteps).size).toBe(summarySteps.length);

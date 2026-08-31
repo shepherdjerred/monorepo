@@ -35,7 +35,8 @@ import { validatePipelineResourceContracts } from "./validate-pipeline-resources
 import { validateTrmnlPipeline } from "./validate-pipeline-trmnl.ts";
 import { validatePipelineClarity } from "./validate-pipeline-clarity.ts";
 import { validateReportingPipeline } from "./validate-reporting-pipeline.ts";
-import { fixedCorpusMode, lanePaths, summarySteps } from "./migration-core.ts";
+import { summarySteps } from "./build-summary-tables.ts";
+import { fixedCorpusMode, lanePaths } from "./migration-core.ts";
 
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
 const GLOBAL_IF_CHANGED = [

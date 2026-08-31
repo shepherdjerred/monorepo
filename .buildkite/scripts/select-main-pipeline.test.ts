@@ -211,7 +211,6 @@ test("keeps native macOS lanes independently selectable", () => {
   expect(hkctlOnly.has("hkctl-native-main")).toBe(true);
   expect(hkctlOnly.has("quotabar-macos-main")).toBe(false);
   expect(hkctlOnly.has("tasknotes-native-main")).toBe(false);
-
 });
 
 test("keeps TRMNL publication independently selectable", () => {
