@@ -87,6 +87,30 @@ export function webhook(
   });
 }
 
+/**
+ * A `TemporalWorkflowFailed` webhook — the alert family the incident-email
+ * cancellation path keys on. Re-labels the generic {@link webhook} fixture so
+ * the cancellation tests share one definition of that alert.
+ */
+export function temporalFailureWebhook(
+  fingerprint: string,
+): ReturnType<typeof webhook> {
+  const base = webhook(fingerprint, "firing");
+  return AlertmanagerWebhookSchema.parse({
+    ...base,
+    groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
+    groupLabels: { alertname: "TemporalWorkflowFailed" },
+    commonLabels: {
+      alertname: "TemporalWorkflowFailed",
+      severity: "warning",
+    },
+    alerts: base.alerts.map((alert) => ({
+      ...alert,
+      labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
+    })),
+  });
+}
+
 export function input(
   payload: ReturnType<typeof webhook>,
   receivedAt: string,

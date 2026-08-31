@@ -172,8 +172,7 @@ export async function executeScoutTemporalWork(
   } catch (error) {
     const terminalFailure =
       attempt >= DETACHED_WORK_MAX_ATTEMPTS ||
-      (input.kind === "parlay-generation" &&
-        classifyLlmProviderIssue(error) === "quota");
+      classifyLlmProviderIssue(error) === "quota";
     await prisma.scoutTemporalWork.update({
       where: { id: input.workId },
       data: {

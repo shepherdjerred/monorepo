@@ -18,13 +18,9 @@ type DetachedWorkInput = Parameters<
 >[0];
 
 export function providerQuotaApplicationFailure(
-  input: DetachedWorkInput,
   error: unknown,
 ): ApplicationFailure | null {
-  if (
-    input.kind !== "parlay-generation" ||
-    classifyLlmProviderIssue(error) !== "quota"
-  ) {
+  if (classifyLlmProviderIssue(error) !== "quota") {
     return null;
   }
   return ApplicationFailure.nonRetryable(
@@ -44,7 +40,7 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
       },
     );
   } catch (error) {
-    const quotaFailure = providerQuotaApplicationFailure(input, error);
+    const quotaFailure = providerQuotaApplicationFailure(error);
     if (quotaFailure !== null) {
       recordProviderIssue({
         app: "scout-for-lol",

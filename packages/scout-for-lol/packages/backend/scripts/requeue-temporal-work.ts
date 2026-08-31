@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { parseArgs } from "node:util";
 import { z } from "zod";
 
 import { prisma } from "#src/database/index.ts";
@@ -13,30 +14,24 @@ const ArgsSchema = z.object({
   confirm: z.boolean(),
 });
 
-function parseArgs(argv: readonly string[]): z.infer<typeof ArgsSchema> {
-  const raw: Record<string, unknown> = { confirm: false };
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index];
-    if (arg === "--confirm") {
-      raw["confirm"] = true;
-      continue;
-    }
-    if (arg?.startsWith("--") !== true) {
-      throw new Error(`Unknown argument: ${String(arg)}`);
-    }
-    const key = arg === "--work-id" ? "workId" : arg.slice(2);
-    if (key !== "workId" && key !== "reason") {
-      throw new Error(`Unknown argument: ${arg}`);
-    }
-    const value = argv[index + 1];
-    if (value === undefined) throw new Error(`Missing value for ${arg}`);
-    raw[key] = value;
-    index += 1;
-  }
-  return ArgsSchema.parse(raw);
+function parseCliArgs(): z.infer<typeof ArgsSchema> {
+  const { values } = parseArgs({
+    args: Bun.argv.slice(2),
+    options: {
+      "work-id": { type: "string" },
+      reason: { type: "string" },
+      confirm: { type: "boolean", default: false },
+    },
+    strict: true,
+  });
+  return ArgsSchema.parse({
+    workId: values["work-id"],
+    reason: values.reason,
+    confirm: values.confirm,
+  });
 }
 
-const args = parseArgs(Bun.argv.slice(2));
+const args = parseCliArgs();
 try {
   const work = await prisma.scoutTemporalWork.findUniqueOrThrow({
     where: { id: args.workId },
