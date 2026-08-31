@@ -74,13 +74,6 @@ function firstContainer(resourceSpec: unknown, description: string) {
   return container;
 }
 
-function initContainers(resourceSpec: unknown) {
-  const spec = z
-    .object({ template: z.object({ spec: PodSpecSchema }) })
-    .parse(resourceSpec);
-  return spec.template.spec.initContainers ?? [];
-}
-
 describe("Temporal server lifecycle", () => {
   test("requires a fresh successful volume backup before migration", () => {
     const job = findResource("Job", "temporal-backup-preflight");
@@ -250,18 +243,9 @@ describe("Temporal server lifecycle", () => {
   test("starts the server without schema setup and verifies PostgreSQL identity", () => {
     const deployment = findResource("Deployment", "temporal-temporal-server");
     const container = firstContainer(deployment.spec, "Temporal server");
-    const env = new Map(
-      (container.env ?? []).map((entry) => [entry.name, entry.value]),
-    );
 
     expect(container.image).toContain("temporalio/server:1.30.6@sha256:");
     expect(container.args?.join(" ") ?? "").not.toContain("autosetup");
-    expect(env.get("POSTGRES_TLS_SERVER_NAME")).toBe(
-      "temporal-postgresql.temporal.svc.cluster.local",
-    );
-    expect(env.get("SQL_HOST_VERIFICATION")).toBe("true");
-    expect(env.has("POSTGRES_TLS_DISABLE_HOST_VERIFICATION")).toBe(false);
-    expect(env.has("SQL_TLS_DISABLE_HOST_VERIFICATION")).toBe(false);
     expect(container.securityContext.readOnlyRootFilesystem).toBe(true);
     expect(container.volumeMounts).toEqual(
       expect.arrayContaining([
@@ -270,31 +254,27 @@ describe("Temporal server lifecycle", () => {
       ]),
     );
 
-    // Must trust the stable CA (ca.crt), not the rotating leaf's own
-    // certificate (tls.crt) — see the schema-migration equivalent above.
-    expect(env.get("POSTGRES_TLS_CA_FILE")).toBe(
-      "/etc/temporal/postgres-tls/ca.crt",
+    // The DB_*/POSTGRES_*/SQL_* variables that used to carry this
+    // configuration were dockerize template inputs read by the auto-setup
+    // image. temporalio/server renders no template and expands no
+    // environment variables, so leaving them here would look like
+    // configuration while configuring nothing. The credential in particular
+    // must not be in this container: only the init container renders it.
+    const env = new Map(
+      (container.env ?? []).map((entry) => [entry.name, entry.value]),
     );
-    expect(env.get("SQL_CA")).toBe("/etc/temporal/postgres-tls/ca.crt");
-
-    // The image's entrypoint renders docker.yaml from config_template.yaml,
-    // which is baked into the image at /etc/temporal/config — mounting an
-    // empty volume straight over that path would hide the template and
-    // crash-loop every pod. An init container using the same image must
-    // copy the template into the shared volume first.
-    const [configInit] = initContainers(deployment.spec);
-    if (configInit === undefined) {
-      throw new Error(
-        "Temporal server has no init container to seed config_template.yaml",
-      );
+    for (const inert of [
+      "DB",
+      "POSTGRES_SEEDS",
+      "POSTGRES_PWD",
+      "SQL_TLS_ENABLED",
+      "SQL_CA",
+      "SQL_HOST_VERIFICATION",
+      "NUM_HISTORY_SHARDS",
+      "SERVICES",
+    ]) {
+      expect(env.has(inert)).toBe(false);
     }
-    expect(configInit.image).toBe(container.image);
-    expect(configInit.args?.join(" ") ?? "").toContain("config_template.yaml");
-    expect(configInit.volumeMounts).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ mountPath: "/new-config" }),
-      ]),
-    );
   });
 
   test("limits the schema hook to DNS and PostgreSQL egress", () => {
