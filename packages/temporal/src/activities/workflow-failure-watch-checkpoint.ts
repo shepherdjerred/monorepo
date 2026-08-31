@@ -143,47 +143,38 @@ export function serializedCheckpoint(
   checkpoint:
     WorkflowFailureWatchCheckpoint | WorkflowFailureWatchCursor | undefined,
 ): Record<string, unknown> | null {
-  if (checkpoint !== undefined && "closeTime" in checkpoint) {
-    return serializeCursor(checkpoint);
-  }
-  return checkpoint === undefined
-    ? null
-    : {
-        detailedAlertsConsumed: checkpoint.detailedAlertsConsumed,
-        ...(checkpoint.overflow === undefined
-          ? {}
-          : {
-              overflow: {
-                ...checkpoint.overflow,
-                newestOmittedCloseTime:
-                  checkpoint.overflow.newestOmittedCloseTime.toISOString(),
-              },
-            }),
-        ...(checkpoint.cursor === undefined
-          ? {}
-          : {
-              cursor: {
-                closeTime: checkpoint.cursor.closeTime.toISOString(),
-                ...(checkpoint.cursor.startTime === undefined
-                  ? {}
-                  : { startTime: checkpoint.cursor.startTime.toISOString() }),
-                ...(checkpoint.cursor.lookbackSince === undefined
-                  ? {}
-                  : {
-                      lookbackSince:
-                        checkpoint.cursor.lookbackSince.toISOString(),
-                    }),
-                workflowId: checkpoint.cursor.workflowId,
-                runId: checkpoint.cursor.runId,
-                ...(checkpoint.cursor.processedExecutionKeys === undefined
-                  ? {}
-                  : {
-                      processedExecutionKeys:
-                        checkpoint.cursor.processedExecutionKeys,
-                    }),
-              },
-            }),
-      };
+  if (checkpoint === undefined) return null;
+  if ("closeTime" in checkpoint) return serializeCursor(checkpoint);
+  return serializeDetailedCheckpoint(checkpoint);
+}
+
+function serializeDetailedCheckpoint(
+  checkpoint: WorkflowFailureWatchCheckpoint,
+): Record<string, unknown> {
+  return {
+    detailedAlertsConsumed: checkpoint.detailedAlertsConsumed,
+    ...serializeOverflow(checkpoint.overflow),
+    ...serializeCursorField(checkpoint.cursor),
+  };
+}
+
+function serializeOverflow(
+  overflow: WorkflowFailureOverflowSummary | undefined,
+): Record<string, unknown> {
+  if (overflow === undefined) return {};
+  return {
+    overflow: {
+      ...overflow,
+      newestOmittedCloseTime: overflow.newestOmittedCloseTime.toISOString(),
+    },
+  };
+}
+
+function serializeCursorField(
+  cursor: WorkflowFailureWatchCursor | undefined,
+): Record<string, unknown> {
+  if (cursor === undefined) return {};
+  return { cursor: serializeCursor(cursor) };
 }
 
 function serializeCursor(
