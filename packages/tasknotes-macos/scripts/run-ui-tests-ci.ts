@@ -1,3 +1,5 @@
+import { runUiTests } from "./ui-test-harness.ts";
+
 const identity = Bun.env["TASKNOTES_UITEST_IDENTITY"];
 if (identity === undefined || !/^[0-9A-F]{40}$/u.test(identity)) {
   throw new Error(
@@ -5,30 +7,13 @@ if (identity === undefined || !/^[0-9A-F]{40}$/u.test(identity)) {
   );
 }
 
-const command = [
-  "xcodebuild",
-  "test",
-  "-project",
-  "TaskNotes.xcodeproj",
-  "-scheme",
-  "TaskNotes",
-  "-configuration",
-  "Debug",
-  "-derivedDataPath",
-  ".build/xcode",
-  "-destination",
-  "platform=macOS",
-  "-only-testing:TaskNotesUITests",
-  `TASKNOTES_UITEST_IDENTITY=${identity}`,
-];
-
-const child = Bun.spawn(command, {
-  cwd: new URL("..", import.meta.url).pathname,
-  stdin: "inherit",
-  stdout: "inherit",
-  stderr: "inherit",
+// The bootstrap is shared with the local runner deliberately. CI previously
+// shelled straight into xcodebuild with no server, vault or fixture, so
+// InspectorEditingUITests could never pass here — it failed on a missing
+// .build/ui-test-fixture.json, which its compile error had been masking.
+const exitCode = await runUiTests({
+  extraArguments: [`TASKNOTES_UITEST_IDENTITY=${identity}`],
 });
-const exitCode = await child.exited;
 if (exitCode !== 0) {
   throw new Error(`TaskNotes UI tests exited ${exitCode.toString()}`);
 }
