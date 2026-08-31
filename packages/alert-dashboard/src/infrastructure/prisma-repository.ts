@@ -17,6 +17,7 @@ import {
   normalizeGeneratorUrl,
   occurrenceId,
   openingEmail,
+  truncationEmail,
   severityFromLabels,
   snapshotStartNs,
   summaryFromMetadata,
@@ -120,11 +121,15 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
         });
 
         let emailQueued = false;
-        if (input.emailEnabled && newlyNotified.length > 0) {
-          const message = openingEmail(
-            newlyNotified,
-            input.payload.truncatedAlerts,
-          );
+        const truncationOnly =
+          newlyNotified.length === 0 && input.payload.truncatedAlerts > 0;
+        if (
+          input.emailEnabled &&
+          (truncationOnly || newlyNotified.length > 0)
+        ) {
+          const message = truncationOnly
+            ? truncationEmail(input.payload.truncatedAlerts)
+            : openingEmail(newlyNotified, input.payload.truncatedAlerts);
           await transaction.emailOutbox.create({
             data: {
               id: OutboxIdSchema.parse(crypto.randomUUID()),

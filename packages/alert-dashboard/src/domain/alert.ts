@@ -155,6 +155,16 @@ export function openingEmail(
   };
 }
 
+export function truncationEmail(truncatedAlerts: number): {
+  subject: string;
+  htmlBody: string;
+} {
+  return {
+    subject: "[Alerts] Alertmanager delivery truncated",
+    htmlBody: `<h1>Alertmanager delivery truncated</h1><p>Alertmanager omitted ${truncatedAlerts.toString()} additional alert${truncatedAlerts === 1 ? "" : "s"} from this webhook delivery.</p><p><a href="https://alerts.tailnet-1a49.ts.net/">Open Alerts</a></p>`,
+  };
+}
+
 function escapeHtml(value: string): string {
   return sanitizeHtml(value, {
     allowedAttributes: {},

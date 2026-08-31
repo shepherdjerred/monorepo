@@ -4,7 +4,7 @@ import type { Prisma } from "#generated/prisma/client/index.js";
 import { AlertOccurrenceIdSchema } from "#shared/schema";
 import { EMAIL_SEND_CLAIM_LEASE_NS } from "#infrastructure/prisma-email-claim";
 
-const OccurrenceIdsSchema = z.array(AlertOccurrenceIdSchema).min(1);
+const OccurrenceIdsSchema = z.array(AlertOccurrenceIdSchema);
 
 export type CancelPendingEmailsInput = {
   alertname: string;
@@ -40,10 +40,12 @@ export async function cancelPendingEmails(
     select: { id: true, occurrenceIds: true },
     orderBy: { createdAtNs: "asc" },
   });
-  const occurrenceIdsByOutbox = pending.map((message) => ({
-    id: message.id,
-    occurrenceIds: OccurrenceIdsSchema.parse(message.occurrenceIds),
-  }));
+  const occurrenceIdsByOutbox = pending
+    .map((message) => ({
+      id: message.id,
+      occurrenceIds: OccurrenceIdsSchema.parse(message.occurrenceIds),
+    }))
+    .filter((message) => message.occurrenceIds.length > 0);
   const occurrenceIds = [
     ...new Set(
       occurrenceIdsByOutbox.flatMap((message) => message.occurrenceIds),
