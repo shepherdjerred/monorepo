@@ -15,7 +15,7 @@ A local dry run is not equivalent and does not satisfy the production check.
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
   bun run canary:agent-task
 ```
 
@@ -31,7 +31,7 @@ a workflow that completes without the email is not a pass.
 Then run the full report-path canary:
 
 ```bash
-TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
   bun run canary:report-reliability
 ```
 

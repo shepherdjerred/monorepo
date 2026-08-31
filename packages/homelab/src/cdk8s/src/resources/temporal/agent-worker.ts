@@ -54,6 +54,9 @@ export function createTemporalAgentWorker(
   const deployment = new Deployment(chart, "temporal-agent-worker", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    metadata: {
+      annotations: { "argocd.argoproj.io/sync-wave": "3" },
+    },
     serviceAccount: props.serviceAccount,
     automountServiceAccountToken: true,
     securityContext: {

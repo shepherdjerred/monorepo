@@ -4,15 +4,15 @@
  * the prompt is dialed in via Layer 2.
  *
  * Usage (local dev — temporal server start-dev):
- *   temporal server start-dev --ui-port 8233 &
- *   op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 \
+ *   temporal server start-dev --namespace dev --ui-port 8233 &
+ *   op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
  *     bun run start &
- *   op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 \
+ *   op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
  *     bun run scripts/trigger-homelab-audit.ts
  *
  * Usage (production — kubectl port-forward):
  *   kubectl -n temporal port-forward svc/temporal-server 7233:7233 &
- *   TEMPORAL_ADDRESS=localhost:7233 bun run scripts/trigger-homelab-audit.ts
+ *   TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=prod bun run scripts/trigger-homelab-audit.ts
  *
  * Flags:
  *   --date=YYYY-MM-DD   override the audit date (default: today UTC)
@@ -20,6 +20,7 @@
  */
 import { Client, Connection } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";
@@ -45,8 +46,9 @@ function parseArgs(argv: readonly string[]): Args {
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_TEMPORAL_ADDRESS;
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
   const connection = await Connection.connect({ address });
-  const client = new Client({ connection });
+  const client = new Client({ connection, namespace });
   const workflowId = `homelab-audit-trigger-${args.date}-${crypto.randomUUID().slice(0, 8)}`;
 
   console.warn(
@@ -56,6 +58,7 @@ async function main(): Promise<void> {
       workflowId,
       date: args.date,
       address,
+      namespace,
     }),
   );
 
@@ -72,6 +75,7 @@ async function main(): Promise<void> {
       msg: "Workflow started",
       workflowId: handle.workflowId,
       runId: handle.firstExecutionRunId,
+      namespace,
     }),
   );
 

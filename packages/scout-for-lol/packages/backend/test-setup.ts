@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 
 // Set test environment variables
 Bun.env.NODE_ENV = "test";
+Bun.env["TEMPORAL_NAMESPACE"] = "dev";
 
 // Set S3_BUCKET_NAME for tests that require it
 // This must be set before the configuration module is imported

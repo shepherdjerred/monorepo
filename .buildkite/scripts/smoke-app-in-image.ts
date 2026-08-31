@@ -295,6 +295,8 @@ const commands: Record<
     ].join("\n"),
     env: {
       TEMPORAL_ADDRESS: "127.0.0.1:7233",
+      TEMPORAL_NAMESPACE: "prod",
+      TEMPORAL_WORKER_ROLE: "control",
       // BuildKit may reuse the smoke network namespace while another image
       // target is probing its worker. Ephemeral ports still exercise both
       // exporters without making the image smoke depend on host port state;
@@ -369,6 +371,7 @@ const commands: Record<
       DISCORD_TOKEN: "smoke-test-dummy",
       APPLICATION_ID: "000000000000000000",
       RIOT_API_KEY: "smoke-test-dummy",
+      TEMPORAL_NAMESPACE: "dev",
       FEATURE_FLAGS_MODE: "disabled",
       DATABASE_URL: "postgres://postgres@localhost/postgres?host=/tmp",
       LEGACY_SQLITE_PATH: "/tmp/no-legacy-sqlite.db",

@@ -1,12 +1,7 @@
 import { Client, Connection } from "@temporalio/client";
-import { VersioningBehavior } from "@temporalio/common";
 import * as Sentry from "@sentry/bun";
-import {
-  DefaultLogger,
-  NativeConnection,
-  Runtime,
-  Worker,
-} from "@temporalio/worker";
+import { DefaultLogger, NativeConnection, Runtime } from "@temporalio/worker";
+import type { Worker } from "@temporalio/worker";
 import { registerSchedules } from "./schedules/register-schedules.ts";
 import {
   startHttpServers,
@@ -18,27 +13,15 @@ import {
   startMetricsServer,
   stopMetricsServer,
 } from "./observability/metrics.ts";
-// log() writes the same stdout JSON line the old createStructuredLogger()
-// jsonLog always has, then also emits an OTLP LogRecord through the
-// LoggerProvider initializeTracing() installs below. That's what lets the
-// platform dashboard's log panel filter SDK/worker-boot logs by
-// deployment_environment_name/temporal_domain (Resource attributes shared
-// with tracing) instead of only ever seeing them on stdout. Before tracing
-// initializes (or when TELEMETRY_ENABLED=false), the OTel logs API's default
-// no-op provider makes the emit() call a harmless no-op, same as the trace
-// API before NodeSDK.start().
+// Emit worker boot logs to stdout and the tracing provider when enabled.
 import { log as jsonLog } from "./observability/log.ts";
-import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
 import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
 import {
   parseTemporalBootstrap,
   requireWorkerDeployment,
   type TemporalBootstrap,
 } from "./shared/temporal-bootstrap.ts";
-import {
-  getWorkerRoleContract,
-  type QueueWorkerDefinition,
-} from "./worker-config.ts";
+import { getWorkerRoleContract } from "./worker-config.ts";
 import {
   executionDomainForTaskQueue,
   parseTemporalBootstrapMetadata,
@@ -55,9 +38,23 @@ import {
   shutdownCallGraphTracing,
 } from "./config/call-graph-tracing.ts";
 import {
-  restoreGlitterCorpusMetricsAfterWorkerStart,
-  restoreSeaweedFsMetricsAfterWorkerStart,
-} from "./observability/restore-startup-metrics.ts";
+  parseLegacyTemporalNamespace,
+  parseTemporalNamespace,
+  type LegacyTemporalNamespace,
+  type TemporalNamespace,
+} from "./shared/temporal-namespace.ts";
+import {
+  assertCentralWorkerNamespace,
+  workerNamespaces,
+} from "./shared/worker-namespaces.ts";
+import {
+  parseScheduleReconciliationMode,
+  isScheduleNamespaceDrained,
+  type ScheduleReconciliationMode,
+} from "./shared/schedule-reconciliation.ts";
+import { createQueueWorker } from "./worker-factory.ts";
+import { restoreGlitterCorpusMetricsAfterWorkerStart } from "./worker-glitter.ts";
+import { restoreSeaweedFsMetricsAfterWorkerStart } from "./observability/restore-startup-metrics.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -138,85 +135,6 @@ function initSentry(): void {
   jsonLog("info", "Sentry initialized");
 }
 
-type TemporalWorkerTracing = ReturnType<typeof createTemporalWorkerTracing>;
-
-type CreateQueueWorkerOptions = {
-  readonly connection: NativeConnection;
-  readonly workflowsPath: string;
-  readonly workflowUiInterceptorPath: string;
-  readonly domainTaggingInterceptorPath: string;
-  readonly bootstrap: TemporalBootstrap;
-  readonly temporalTracing: TemporalWorkerTracing | undefined;
-};
-
-async function createQueueWorker(
-  definition: QueueWorkerDefinition,
-  options: CreateQueueWorkerOptions,
-): Promise<Worker> {
-  const {
-    connection,
-    workflowsPath,
-    workflowUiInterceptorPath,
-    domainTaggingInterceptorPath,
-    bootstrap,
-    temporalTracing,
-  } = options;
-  if (definition.kind === "workflow") {
-    const workerDeployment = bootstrap.workerDeployment;
-    return await Worker.create({
-      connection,
-      namespace: bootstrap.namespace,
-      workflowsPath,
-      interceptors: {
-        // domainTaggingInterceptorPath must stay after every tracing module:
-        // it tags the RunWorkflow span the official OpenTelemetry interceptor
-        // just opened (see workflow-domain-interceptor.ts), so it needs that
-        // span to already be active in context when its execute() runs.
-        workflowModules: [
-          workflowUiInterceptorPath,
-          ...(temporalTracing?.workflowModules ?? []),
-          domainTaggingInterceptorPath,
-        ],
-      },
-      ...(temporalTracing === undefined
-        ? {}
-        : { sinks: temporalTracing.sinks }),
-      workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
-      taskQueue: definition.taskQueue,
-      ...(workerDeployment === undefined
-        ? {}
-        : {
-            workerDeploymentOptions: {
-              version: workerDeployment,
-              useWorkerVersioning: true,
-              defaultVersioningBehavior: VersioningBehavior.AUTO_UPGRADE,
-            },
-          }),
-      ...(definition.maxConcurrentWorkflowTaskExecutions === undefined
-        ? {}
-        : {
-            maxConcurrentWorkflowTaskExecutions:
-              definition.maxConcurrentWorkflowTaskExecutions,
-          }),
-    });
-  }
-  return await Worker.create({
-    connection,
-    namespace: bootstrap.namespace,
-    activities: definition.activities,
-    taskQueue: definition.taskQueue,
-    ...(temporalTracing === undefined
-      ? {}
-      : { interceptors: { activity: temporalTracing.activity } }),
-    ...(definition.maxConcurrentActivityTaskExecutions === undefined
-      ? {}
-      : {
-          maxConcurrentActivityTaskExecutions:
-            definition.maxConcurrentActivityTaskExecutions,
-        }),
-  });
-}
-
 async function initializeTemporalTracing(
   role: WorkerRole,
   roleContract: ReturnType<typeof getWorkerRoleContract>,
@@ -259,13 +177,73 @@ async function initializeTemporalTracing(
   return { callGraphTracing, temporalTracing };
 }
 
-async function startRoleServices(options: {
+type StartRoleServicesOptions = {
   readonly address: string;
   readonly bootstrapMetadata: ReturnType<typeof parseTemporalBootstrapMetadata>;
   readonly callGraphTracing: boolean;
-  readonly namespace: string;
+  readonly namespace: TemporalNamespace;
+  readonly scheduleReconciliation: ScheduleReconciliationMode;
+  readonly legacyNamespace: LegacyTemporalNamespace | undefined;
   readonly roleContract: ReturnType<typeof getWorkerRoleContract>;
-}): Promise<{
+};
+
+async function shouldReconcileSchedules(
+  options: StartRoleServicesOptions,
+  connection: Connection,
+): Promise<boolean> {
+  if (options.scheduleReconciliation !== "auto") {
+    return options.scheduleReconciliation === "enabled";
+  }
+  const shouldReconcile =
+    options.legacyNamespace === undefined ||
+    (await isScheduleNamespaceDrained(
+      new Client({
+        connection,
+        namespace: options.legacyNamespace,
+      }),
+    ));
+  jsonLog(
+    "info",
+    shouldReconcile
+      ? "Legacy schedule namespace drained"
+      : "Legacy schedule namespace still active",
+    { namespace: options.legacyNamespace ?? "none" },
+  );
+  return shouldReconcile;
+}
+
+async function registerGatewaySchedules(
+  options: StartRoleServicesOptions,
+  connection: Connection,
+): Promise<void> {
+  const scheduleNamespaces: readonly TemporalNamespace[] =
+    options.namespace === "prod" ? ["prod", "beta"] : [options.namespace];
+  for (const scheduleNamespace of scheduleNamespaces) {
+    const scheduleClient = new Client({
+      connection,
+      namespace: scheduleNamespace,
+      interceptors: {
+        workflow: [
+          new ExecutionMetadataClientInterceptor(options.bootstrapMetadata),
+          ...(options.callGraphTracing
+            ? [createTemporalClientTracingInterceptor()]
+            : []),
+        ],
+      },
+    });
+    await registerSchedules(scheduleClient, {
+      bootstrap: options.bootstrapMetadata,
+      namespace: scheduleNamespace,
+      validateLocalEnvironment:
+        options.roleContract.validatesScheduleEnvironmentLocally,
+    });
+    jsonLog("info", "Schedules registered", {
+      namespace: scheduleNamespace,
+    });
+  }
+}
+
+async function startRoleServices(options: StartRoleServicesOptions): Promise<{
   readonly eventBridge?: EventBridgeHandle;
   readonly httpServers?: EventBridgeHandle;
 }> {
@@ -290,14 +268,18 @@ async function startRoleServices(options: {
       ],
     },
   });
+  const shouldReconcile = await shouldReconcileSchedules(
+    options,
+    clientConnection,
+  );
   let httpServers: EventBridgeHandle | undefined;
-  if (options.roleContract.runsGateway) {
-    await registerSchedules(client, {
-      bootstrap: options.bootstrapMetadata,
-      validateLocalEnvironment:
-        options.roleContract.validatesScheduleEnvironmentLocally,
+  if (shouldReconcile && options.roleContract.runsGateway) {
+    await registerGatewaySchedules(options, clientConnection);
+    httpServers = startHttpServers(client);
+  } else if (options.roleContract.runsGateway) {
+    jsonLog("info", "Schedule reconciliation disabled", {
+      namespace: options.namespace,
     });
-    jsonLog("info", "Schedules registered");
     httpServers = startHttpServers(client);
   }
   return {
@@ -330,6 +312,8 @@ async function main(): Promise<void> {
   const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
   const bootstrap = parseTemporalBootstrap(Bun.env);
   const roleContract = getWorkerRoleContract(role);
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  assertCentralWorkerNamespace(role, namespace);
   if (role === "workflows") {
     requireWorkerDeployment(bootstrap);
   }
@@ -342,7 +326,7 @@ async function main(): Promise<void> {
   const { callGraphTracing, temporalTracing } = await initializeTemporalTracing(
     role,
     roleContract,
-    bootstrap.namespace,
+    namespace,
     bootstrapMetadata,
   );
   // Boot-time-only, resolved once here rather than re-queried per call:
@@ -353,7 +337,18 @@ async function main(): Promise<void> {
   Bun.env["TEMPORAL_CALL_GRAPH_TRACING"] = callGraphTracing ? "true" : "false";
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
-  jsonLog("info", "Connecting to Temporal server", { address, role });
+  const scheduleReconciliation = parseScheduleReconciliationMode(
+    Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"],
+  );
+  const legacyNamespace = parseLegacyTemporalNamespace(
+    Bun.env["TEMPORAL_LEGACY_NAMESPACE"],
+  );
+  jsonLog("info", "Connecting to Temporal server", {
+    address,
+    role,
+    namespace,
+    legacyNamespace,
+  });
 
   const connection = await NativeConnection.connect({ address });
 
@@ -367,36 +362,54 @@ async function main(): Promise<void> {
   ).pathname;
   const workers: Worker[] = [];
   for (const definition of roleContract.workers) {
-    const worker = await createQueueWorker(definition, {
-      connection,
-      workflowsPath,
-      workflowUiInterceptorPath,
-      domainTaggingInterceptorPath,
-      bootstrap,
-      temporalTracing,
-    });
-    workers.push(worker);
-    jsonLog("info", "Worker created", {
-      workerKind: definition.kind,
+    const namespaces = workerNamespaces({
       queueRole: definition.role,
       taskQueue: definition.taskQueue,
-      ...(definition.kind === "activity"
-        ? {
-            maxConcurrentActivityTaskExecutions:
-              definition.maxConcurrentActivityTaskExecutions,
-          }
-        : {
-            maxConcurrentWorkflowTaskExecutions:
-              definition.maxConcurrentWorkflowTaskExecutions,
-          }),
+      activeNamespace: namespace,
+      legacyNamespace,
     });
+    for (const workerNamespace of namespaces) {
+      const legacyDrain = workerNamespace === legacyNamespace;
+      const worker = await createQueueWorker(
+        definition,
+        {
+          connection,
+          workflowsPath,
+          workflowUiInterceptorPath,
+          domainTaggingInterceptorPath,
+          bootstrap,
+          temporalTracing,
+        },
+        workerNamespace,
+        legacyDrain,
+      );
+      workers.push(worker);
+      jsonLog("info", "Worker created", {
+        namespace: workerNamespace,
+        legacyDrain,
+        workerKind: definition.kind,
+        queueRole: definition.role,
+        taskQueue: definition.taskQueue,
+        ...(definition.kind === "activity"
+          ? {
+              maxConcurrentActivityTaskExecutions:
+                definition.maxConcurrentActivityTaskExecutions,
+            }
+          : {
+              maxConcurrentWorkflowTaskExecutions:
+                definition.maxConcurrentWorkflowTaskExecutions,
+            }),
+      });
+    }
   }
 
   const { httpServers, eventBridge } = await startRoleServices({
     address,
     bootstrapMetadata,
     callGraphTracing,
-    namespace: bootstrap.namespace,
+    namespace,
+    scheduleReconciliation,
+    legacyNamespace,
     roleContract,
   });
 

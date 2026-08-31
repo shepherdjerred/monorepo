@@ -12,6 +12,7 @@ type TemporalDomainQueueDefinition = {
   candidateDeploymentPattern?: string;
   candidateServicePattern?: string;
   activityPoller: boolean;
+  servedNamespaces: readonly string[];
 };
 
 // Do not install these rules until both tracks can render. A capable
@@ -38,6 +39,7 @@ function scoutWorkflowQueue(
       candidateDeploymentPattern: `${queue}-scout-workflow-worker-candidate`,
       candidateServicePattern: ".*scout-workflow-worker-candidate.*metrics.*",
       activityPoller: false,
+      servedNamespaces: [stage],
     },
   ];
 }
@@ -65,6 +67,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       candidateDeploymentPattern: "temporal-temporal-workflows-candidate",
       candidateServicePattern: ".*temporal-workflows-candidate.*metrics.*",
       activityPoller: false,
+      servedNamespaces: ["prod", "beta", "default"],
     },
     ...scoutWorkflowQueues,
     {
@@ -73,6 +76,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-home-worker",
       servicePattern: ".*temporal-home-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "default"],
     },
     {
       queue: "reports",
@@ -80,6 +84,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-reports-worker",
       servicePattern: ".*temporal-reports-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "default"],
     },
     {
       queue: "infra",
@@ -87,6 +92,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-infra-worker",
       servicePattern: ".*temporal-infra-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "default"],
     },
     {
       queue: "repo-automation",
@@ -94,6 +100,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-repo-worker",
       servicePattern: ".*temporal-repo-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "default"],
     },
     {
       queue: "scout",
@@ -101,6 +108,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-scout-worker",
       servicePattern: ".*temporal-scout-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "beta", "default"],
     },
     {
       queue: "agent-task",
@@ -108,6 +116,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-agent-worker",
       servicePattern: ".*temporal-agent-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "default"],
     },
     {
       queue: "glitter-corpus",
@@ -115,6 +124,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-glitter-corpus-worker",
       servicePattern: ".*temporal-glitter-corpus-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "default"],
     },
     {
       queue: "glitter-context",
@@ -122,6 +132,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-glitter-context-worker",
       servicePattern: ".*temporal-glitter-context-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "default"],
     },
     {
       queue: "backup",
@@ -136,13 +147,15 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-maintenance-worker",
       servicePattern: ".*temporal-maintenance-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "default"],
     },
   ];
 
 export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
   return TEMPORAL_DOMAIN_QUEUES.flatMap((definition) => {
-    const workflowSelector = `namespace="${definition.metricsNamespace}",exported_namespace="default",task_queue="${definition.queue}"`;
-    const activitySelector = `namespace="${definition.metricsNamespace}",exported_namespace="default",task_queue="${definition.queue}"`;
+    const servedNamespaces = definition.servedNamespaces.join("|");
+    const workflowSelector = `namespace="temporal",exported_namespace=~"${servedNamespaces}",task_queue="${definition.queue}"`;
+    const activitySelector = `namespace="${definition.metricsNamespace}",exported_namespace=~"${servedNamespaces}",task_queue="${definition.queue}"`;
     const labels = { severity: "warning", task_queue: definition.queue };
     const candidateDeploymentPattern = definition.candidateDeploymentPattern;
     const candidateServicePattern = definition.candidateServicePattern;
@@ -156,7 +169,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
                 "The domain queue has had no activity-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
             },
             expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-              `absent(temporal_worker_num_pollers{${activitySelector},poller_type="activity_task"}) or max(temporal_worker_num_pollers{${activitySelector},poller_type="activity_task"}) < 1`,
+              `count(sum by (exported_namespace) (temporal_worker_num_pollers{${activitySelector},poller_type="activity_task"})) < ${String(definition.servedNamespaces.length)}`,
             ),
             for: "5m",
             labels,
@@ -175,7 +188,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
             "The domain queue has had no workflow-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `absent(temporal_worker_num_pollers{${workflowSelector},poller_type="workflow_task"}) or max(temporal_worker_num_pollers{${workflowSelector},poller_type="workflow_task"}) < 1`,
+          `count(sum by (exported_namespace) (temporal_worker_num_pollers{${workflowSelector},poller_type="workflow_task"})) < ${String(definition.servedNamespaces.length)}`,
         ),
         for: "5m",
         labels,

@@ -303,6 +303,8 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         TEMPORAL_ADDRESS: EnvValue.fromValue(
           "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
         ),
+        TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
+        TEMPORAL_LEGACY_NAMESPACE: EnvValue.fromValue("default"),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("maintenance"),
         ENVIRONMENT: EnvValue.fromValue("production"),

@@ -13,6 +13,7 @@ import {
   AgentTaskInputV2Schema,
   type AgentTaskStartResult,
 } from "#shared/agent-task.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
@@ -44,6 +45,10 @@ function workflowResultOrThrow(result: AgentTaskStartResult): {
 async function main(): Promise<void> {
   requireProductionInvocation();
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_TEMPORAL_ADDRESS;
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  if (namespace !== "prod") {
+    throw new Error("The structured-output canary requires prod namespace");
+  }
   const input = AgentTaskInputV2Schema.parse({
     contractVersion: 2,
     title: "Agent-task structured-output canary",
@@ -82,7 +87,7 @@ async function main(): Promise<void> {
       defaultAddress: address,
     }),
   );
-  const client = new Client({ connection });
+  const client = new Client({ connection, namespace });
   const started = workflowResultOrThrow(
     await startOrScheduleAgentTask(client, input),
   );
@@ -91,6 +96,7 @@ async function main(): Promise<void> {
       level: "info",
       msg: "Agent-task structured-output canary started",
       taskQueue: TASK_QUEUES.WORKFLOWS,
+      namespace,
       workflowId: started.workflowId,
       runId: started.runId,
       emailSubjectPrefix: input.emailSubjectPrefix,

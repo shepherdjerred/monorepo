@@ -13,6 +13,7 @@ function makeExecution(
   overrides: Partial<FailedWorkflowExecution> = {},
 ): FailedWorkflowExecution {
   return {
+    temporalNamespace: "prod",
     workflowId: "golink-sync-2026-07-30",
     runId: "run-abc-123",
     workflowType: "syncGolinks",
@@ -50,6 +51,7 @@ describe("buildWorkflowFailureAlert", () => {
       severity: "warning",
       workflowType: "syncGolinks",
       taskQueue: "default",
+      temporalNamespace: "prod",
       workflowId: "golink-sync-2026-07-30",
       runId: "run-abc-123",
     });
@@ -61,6 +63,9 @@ describe("buildWorkflowFailureAlert", () => {
     );
     expect(alert.annotations["description"]).toContain("runId run-abc-123");
     expect(alert.annotations["description"]).toContain("taskQueue default");
+    expect(alert.annotations["description"]).toContain(
+      "temporalNamespace prod",
+    );
     expect(alert.annotations["description"]).toContain("status FAILED");
     expect(alert.annotations["description"]).toContain(
       "closeTime 2026-07-30T17:55:00.000Z",
@@ -73,7 +78,7 @@ describe("buildWorkflowFailureAlert", () => {
     // .message first, falling back to .description.
     expect(alert.annotations["message"]).toBe(alert.annotations["description"]);
     expect(alert.generatorURL).toBe(
-      "https://temporal-ui.tailnet-1a49.ts.net/namespaces/default/workflows/golink-sync-2026-07-30/run-abc-123/history",
+      "https://temporal-ui.tailnet-1a49.ts.net/namespaces/prod/workflows/golink-sync-2026-07-30/run-abc-123/history",
     );
     expect(alert.startsAt).toBe("2026-07-30T18:00:00.000Z");
     expect(alert.endsAt).toBe("2026-07-30T23:55:00.000Z");
@@ -144,8 +149,8 @@ describe("buildWorkflowFailureAlert", () => {
 
 describe("temporalUiExecutionUrl", () => {
   it("URL-encodes workflow and run ids", () => {
-    expect(temporalUiExecutionUrl("wf id/with spaces", "run/id")).toBe(
-      "https://temporal-ui.tailnet-1a49.ts.net/namespaces/default/workflows/wf%20id%2Fwith%20spaces/run%2Fid/history",
+    expect(temporalUiExecutionUrl("beta", "wf id/with spaces", "run/id")).toBe(
+      "https://temporal-ui.tailnet-1a49.ts.net/namespaces/beta/workflows/wf%20id%2Fwith%20spaces/run%2Fid/history",
     );
   });
 });

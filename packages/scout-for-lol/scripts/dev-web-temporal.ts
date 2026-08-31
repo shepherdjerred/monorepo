@@ -52,6 +52,8 @@ export async function startTemporalDevServer(
       "temporal",
       "server",
       "start-dev",
+      "--namespace",
+      "dev",
       "--ip",
       "127.0.0.1",
       "--port",

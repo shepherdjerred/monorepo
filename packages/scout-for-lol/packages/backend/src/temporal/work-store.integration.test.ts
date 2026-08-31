@@ -21,8 +21,8 @@ afterAll(async () => {
 describe("Scout Temporal work ownership", () => {
   test("reports only the first durable insertion as newly created", async () => {
     const work = {
-      id: "prediction:NA1_1",
-      kind: "prediction-ingest" as const,
+      id: "parlay:NA1_1",
+      kind: "parlay-generation" as const,
       payload: "{}",
     };
 

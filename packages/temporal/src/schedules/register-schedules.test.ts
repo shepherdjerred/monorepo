@@ -46,19 +46,32 @@ test("Scout report schedules require an exact id and ownership memo match", () =
     isOwnedScoutReportSchedule(
       "scout-beta-report-report_123",
       OWNED_SCOUT_REPORT_MEMO,
+      "beta",
     ),
   ).toBe(true);
   expect(
     isOwnedScoutReportSchedule(
       "scout-prod-report-report_123",
       OWNED_SCOUT_REPORT_MEMO,
+      "beta",
     ),
   ).toBe(false);
   expect(
-    isOwnedScoutReportSchedule("scout-beta-report-report_123", {
-      ...OWNED_SCOUT_REPORT_MEMO,
-      owner: "unknown",
-    }),
+    isOwnedScoutReportSchedule(
+      "scout-beta-report-report_123",
+      OWNED_SCOUT_REPORT_MEMO,
+      "prod",
+    ),
+  ).toBe(false);
+  expect(
+    isOwnedScoutReportSchedule(
+      "scout-beta-report-report_123",
+      {
+        ...OWNED_SCOUT_REPORT_MEMO,
+        owner: "unknown",
+      },
+      "beta",
+    ),
   ).toBe(false);
 });
 
@@ -232,12 +245,13 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
   // declared-vs-dynamic the same way.
   test("declared precedence matches orphan detection", () => {
     expect(
-      isOrphanSchedule(
-        "ci-io-post-merge-impact",
-        DYNAMIC_AGENT_TASK_MEMO,
+      isOrphanSchedule({
+        scheduleId: "ci-io-post-merge-impact",
+        memo: DYNAMIC_AGENT_TASK_MEMO,
+        namespace: "prod",
         declaredIds,
-        new Set(DELETED_SCHEDULE_IDS),
-      ),
+        deletedIds: new Set(DELETED_SCHEDULE_IDS),
+      }),
     ).toBe(false);
   });
 });
@@ -694,6 +708,20 @@ describe("Glitter context refresh schedule", () => {
       }),
     ).toEqual({ paused: false });
   });
+
+  test("preserves migration metadata on an active schedule", () => {
+    const schedule = findScheduleById("glitter-context-refresh-weekly");
+    const configured = configuredEnvironment(schedule);
+    expect(
+      buildScheduleState(schedule, configured, {
+        paused: false,
+        note: "temporal-namespace-migration:v1:encoded-state",
+      }),
+    ).toEqual({
+      paused: false,
+      note: "temporal-namespace-migration:v1:encoded-state",
+    });
+  });
 });
 
 describe("homelab daily audit schedule config", () => {
@@ -790,16 +818,28 @@ describe("orphan schedule detection", () => {
   test("declared schedules are never flagged as orphans", () => {
     for (const schedule of SCHEDULES) {
       expect(
-        isOrphanSchedule(schedule.id, undefined, declaredIds, deletedIds),
+        isOrphanSchedule({
+          scheduleId: schedule.id,
+          memo: undefined,
+          namespace: schedule.namespace,
+          declaredIds,
+          deletedIds,
+        }),
       ).toBe(false);
     }
   });
 
   test("ids on the delete allow-list are never flagged as orphans", () => {
     for (const id of DELETED_SCHEDULE_IDS) {
-      expect(isOrphanSchedule(id, undefined, declaredIds, deletedIds)).toBe(
-        false,
-      );
+      expect(
+        isOrphanSchedule({
+          scheduleId: id,
+          memo: undefined,
+          namespace: "prod",
+          declaredIds,
+          deletedIds,
+        }),
+      ).toBe(false);
     }
   });
 
@@ -807,22 +847,45 @@ describe("orphan schedule detection", () => {
     // Auto-generated id prefix (agentTaskScheduleId) — exempt even without memo,
     // covering schedules created before the dynamic memo marker existed.
     expect(
-      isOrphanSchedule(
-        "agent-task-foo-abc123",
-        undefined,
+      isOrphanSchedule({
+        scheduleId: "agent-task-foo-abc123",
+        memo: undefined,
+        namespace: "prod",
         declaredIds,
         deletedIds,
-      ),
+      }),
     ).toBe(false);
     // A custom scheduleId passed via the /agent-tasks API has no `agent-task-`
     // prefix, so it relies on the dynamic memo marker stamped at creation.
     expect(
-      isOrphanSchedule(
-        "recheck-birmel-metrics",
-        DYNAMIC_AGENT_TASK_MEMO,
+      isOrphanSchedule({
+        scheduleId: "recheck-birmel-metrics",
+        memo: DYNAMIC_AGENT_TASK_MEMO,
+        namespace: "prod",
         declaredIds,
         deletedIds,
-      ),
+      }),
+    ).toBe(false);
+  });
+
+  test("dynamic agent-task schedules outside prod are namespace drift", () => {
+    expect(
+      isOrphanSchedule({
+        scheduleId: "agent-task-foo-abc123",
+        memo: DYNAMIC_AGENT_TASK_MEMO,
+        namespace: "beta",
+        declaredIds,
+        deletedIds,
+      }),
+    ).toBe(true);
+    expect(
+      isOrphanSchedule({
+        scheduleId: "agent-task-foo-abc123",
+        memo: DYNAMIC_AGENT_TASK_MEMO,
+        namespace: "dev",
+        declaredIds,
+        deletedIds,
+      }),
     ).toBe(false);
   });
 
@@ -833,12 +896,13 @@ describe("orphan schedule detection", () => {
     // DELETED_SCHEDULE_IDS — and it has neither the generated prefix nor the
     // dynamic memo marker — the orphan gauge must catch it.
     expect(
-      isOrphanSchedule(
-        "declared-report-investigation",
-        undefined,
-        new Set<string>(),
-        new Set<string>(),
-      ),
+      isOrphanSchedule({
+        scheduleId: "declared-report-investigation",
+        memo: undefined,
+        namespace: "prod",
+        declaredIds: new Set<string>(),
+        deletedIds: new Set<string>(),
+      }),
     ).toBe(true);
   });
 
@@ -847,23 +911,25 @@ describe("orphan schedule detection", () => {
     // schedule that predates (or is missing) the marker surfaces as an orphan so
     // the gap that hid declared agent-task schedules can't reopen.
     expect(
-      isOrphanSchedule(
-        "recheck-birmel-metrics",
-        undefined,
+      isOrphanSchedule({
+        scheduleId: "recheck-birmel-metrics",
+        memo: undefined,
+        namespace: "prod",
         declaredIds,
         deletedIds,
-      ),
+      }),
     ).toBe(true);
   });
 
   test("a live schedule absent from source and the delete list is an orphan", () => {
     expect(
-      isOrphanSchedule(
-        "some-removed-schedule",
-        undefined,
+      isOrphanSchedule({
+        scheduleId: "some-removed-schedule",
+        memo: undefined,
+        namespace: "prod",
         declaredIds,
         deletedIds,
-      ),
+      }),
     ).toBe(true);
   });
 });

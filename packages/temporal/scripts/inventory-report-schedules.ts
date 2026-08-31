@@ -4,6 +4,7 @@ import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { SCHEDULES } from "#schedules/schedule-definitions.ts";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
 import { REPORT_SCHEDULE_REGISTRY } from "#shared/report-registry.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";
@@ -24,9 +25,13 @@ async function main(): Promise<void> {
       defaultAddress: DEFAULT_TEMPORAL_ADDRESS,
     }),
   );
-  const client = new Client({ connection });
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  const client = new Client({ connection, namespace });
+  const sourceSchedules = SCHEDULES.filter(
+    (schedule) => namespace === "dev" || schedule.namespace === namespace,
+  );
   const sourceById = new Map(
-    SCHEDULES.map((schedule) => [schedule.id, schedule]),
+    sourceSchedules.map((schedule) => [schedule.id, schedule]),
   );
   const reportIds = new Set(
     REPORT_SCHEDULE_REGISTRY.map((registration) => registration.scheduleId),
@@ -46,18 +51,24 @@ async function main(): Promise<void> {
 
   live.sort((left, right) => left.scheduleId.localeCompare(right.scheduleId));
   const liveIds = new Set(live.map((schedule) => schedule.scheduleId));
-  const sourceOnly = SCHEDULES.filter(
-    (schedule) => !liveIds.has(schedule.id),
-  ).map((schedule) => ({
-    scheduleId: schedule.id,
-    workflowType: schedule.workflowType,
-    reportRegistered: reportIds.has(schedule.id),
-  }));
+  const sourceOnly = sourceSchedules
+    .filter((schedule) => !liveIds.has(schedule.id))
+    .map((schedule) => ({
+      scheduleId: schedule.id,
+      workflowType: schedule.workflowType,
+      reportRegistered: reportIds.has(schedule.id),
+    }));
   const liveOnly = live.filter((schedule) => !schedule.sourceDefined);
 
   console.warn(
     JSON.stringify(
-      { observedAt: new Date().toISOString(), live, liveOnly, sourceOnly },
+      {
+        observedAt: new Date().toISOString(),
+        namespace,
+        live,
+        liveOnly,
+        sourceOnly,
+      },
       undefined,
       2,
     ),

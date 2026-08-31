@@ -90,6 +90,67 @@ function rejectWithApplicationFailure(message: string): () => Promise<unknown> {
     );
 }
 
+/**
+ * `count` closed executions spaced one second apart, newest first — the shape
+ * the visibility scan pages through in the batching and checkpoint tests.
+ */
+function closedExecutions(
+  count: number,
+  options: {
+    workflowIdPrefix?: string;
+    runIdPrefix?: string;
+    type?: (index: number) => string;
+    statusName?: string;
+  } = {},
+): ExecutionInfo[] {
+  const {
+    workflowIdPrefix = "wf",
+    runIdPrefix = "run",
+    type = () => "syncGolinks",
+    statusName = "FAILED",
+  } = options;
+  return Array.from({ length: count }, (_, index) => ({
+    workflowId: `${workflowIdPrefix}-${String(index)}`,
+    runId: `${runIdPrefix}-${String(index)}`,
+    type: type(index),
+    taskQueue: "default",
+    closeTime: new Date(NOW.getTime() - index * 1000),
+    status: { name: statusName },
+  }));
+}
+
+/** A visibility client that resolves every execution through `resolverFor`. */
+function clientForExecutions(
+  executions: ExecutionInfo[],
+  resolverFor: (index: number) => () => Promise<unknown>,
+): WorkflowVisibilityClient {
+  return fakeClient(
+    executions,
+    Object.fromEntries(
+      executions.map((execution, index) => [
+        `${execution.workflowId}/${execution.runId}`,
+        resolverFor(index),
+      ]),
+    ),
+  );
+}
+
+/** Makes the visibility scan throw once the current page is exhausted. */
+function failListAfterCurrentPage(
+  client: WorkflowVisibilityClient,
+  message: string,
+): void {
+  const originalList = client.workflow.list;
+  client.workflow.list = (options) => ({
+    async *[Symbol.asyncIterator]() {
+      for await (const execution of originalList(options)) {
+        yield execution;
+      }
+      throw new Error(message);
+    },
+  });
+}
+
 function rejectWithActivityWrappedFailure(
   innerType: string,
   innerMessage: string,
@@ -199,23 +260,13 @@ describe("workflow timeout history classification", () => {
         },
       },
     );
-    const { poster, calls } = capturingPoster();
+    const description = await captureFirstFailureDescription(client);
 
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
-      "timeoutClassification workflow-task",
-    );
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+    expect(description).toContain("timeoutClassification workflow-task");
+    expect(description).toContain(
       "diagnosis worker/task-queue availability failure",
     );
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
-      "no activity reached execution",
-    );
+    expect(description).toContain("no activity reached execution");
   });
 
   it("classifies an SDK History instance without a parser error", async () => {
@@ -455,20 +506,12 @@ describe("workflow timeout queue diagnostics", () => {
         },
       },
     );
-    const { poster, calls } = capturingPoster();
+    const description = await captureFirstFailureDescription(client);
 
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+    expect(description).toContain(
       "diagnosis worker/task-queue availability failure",
     );
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
-      "a scheduled activity has not started",
-    );
+    expect(description).toContain("a scheduled activity has not started");
   });
 
   it("diagnoses an execution timeout with an undispatched later workflow task", async () => {
@@ -509,20 +552,12 @@ describe("workflow timeout queue diagnostics", () => {
         },
       },
     );
-    const { poster, calls } = capturingPoster();
+    const description = await captureFirstFailureDescription(client);
 
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+    expect(description).toContain(
       "diagnosis worker/task-queue availability failure",
     );
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
-      "a scheduled workflow task has not started",
-    );
+    expect(description).toContain("a scheduled workflow task has not started");
   });
 });
 
@@ -553,18 +588,10 @@ describe("initial workflow timeout diagnosis", () => {
         },
       },
     );
-    const { poster, calls } = capturingPoster();
+    const description = await captureFirstFailureDescription(client);
 
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
-      "timeoutClassification execution",
-    );
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+    expect(description).toContain("timeoutClassification execution");
+    expect(description).toContain(
       "diagnosis worker/task-queue availability failure",
     );
   });
@@ -592,15 +619,7 @@ describe("initial workflow timeout diagnosis", () => {
         },
       },
     );
-    const { poster, calls } = capturingPoster();
-
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    const description = calls[0]?.alerts[0]?.annotations["description"];
+    const description = await captureFirstFailureDescription(client);
     expect(description).toContain("timeoutClassification execution");
     expect(description).toContain(
       "diagnosis worker/task-queue availability failure",
@@ -631,15 +650,7 @@ describe("failed execution timeout diagnostics", () => {
         },
       },
     );
-    const { poster, calls } = capturingPoster();
-
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    const description = calls[0]?.alerts[0]?.annotations["description"];
+    const description = await captureFirstFailureDescription(client);
     expect(description).not.toContain("timeoutClassification");
     expect(description).not.toContain("worker/task-queue availability");
   });
@@ -665,17 +676,9 @@ describe("failed execution timeout diagnostics", () => {
         },
       },
     );
-    const { poster, calls } = capturingPoster();
+    const description = await captureFirstFailureDescription(client);
 
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
-      "timeoutClassification activity",
-    );
+    expect(description).toContain("timeoutClassification activity");
   });
 
   it("diagnoses a causal schedule-to-start activity timeout as worker unavailability", async () => {
@@ -715,15 +718,7 @@ describe("failed execution timeout diagnostics", () => {
         },
       },
     );
-    const { poster, calls } = capturingPoster();
-
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    const description = calls[0]?.alerts[0]?.annotations["description"];
+    const description = await captureFirstFailureDescription(client);
     expect(description).toContain("timeoutClassification activity");
     expect(description).toContain(
       "diagnosis worker/task-queue availability failure",
@@ -781,15 +776,7 @@ describe("failed execution timeout diagnostics", () => {
         },
       },
     );
-    const { poster, calls } = capturingPoster();
-
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    const description = calls[0]?.alerts[0]?.annotations["description"];
+    const description = await captureFirstFailureDescription(client);
     expect(description).toContain("timeoutClassification execution");
     expect(description).not.toContain(
       "diagnosis worker/task-queue availability failure",
@@ -841,14 +828,8 @@ describe("workflow failure watch checkpoints", () => {
     ];
     let query: string | undefined;
     let pageSize: number | undefined;
-    const client = fakeClient(
-      executions,
-      Object.fromEntries(
-        executions.map((execution) => [
-          `${execution.workflowId}/${execution.runId}`,
-          rejectWithApplicationFailure("recovery failure"),
-        ]),
-      ),
+    const client = clientForExecutions(executions, () =>
+      rejectWithApplicationFailure("recovery failure"),
     );
     const originalList = client.workflow.list;
     client.workflow.list = (options) => {
@@ -920,14 +901,8 @@ describe("workflow failure watch checkpoints", () => {
           ),
       },
     };
-    const client = fakeClient(
-      executions,
-      Object.fromEntries(
-        executions.map((execution) => [
-          `${execution.workflowId}/${execution.runId}`,
-          rejectWithApplicationFailure("recovery failure"),
-        ]),
-      ),
+    const client = clientForExecutions(executions, () =>
+      rejectWithApplicationFailure("recovery failure"),
     );
     const { poster, calls } = capturingPoster();
 
@@ -1184,22 +1159,14 @@ describe("pollWorkflowFailuresOnce failure handling", () => {
 
 describe("workflow failure overflow", () => {
   it("emits 100 details and one aggregate without fetching omitted histories", async () => {
-    const executions = Array.from({ length: 101 }, (_, index) => ({
-      workflowId: `wf-overflow-${index.toString()}`,
-      runId: `run-overflow-${index.toString()}`,
-      type: index % 2 === 0 ? "syncGolinks" : "agentTaskWorkflow",
-      taskQueue: "default",
-      closeTime: new Date(NOW.getTime() - index * 1000),
-      status: { name: "TIMED_OUT" },
-    }));
-    const client = fakeClient(
-      executions,
-      Object.fromEntries(
-        executions.map((execution) => [
-          `${execution.workflowId}/${execution.runId}`,
-          rejectWithApplicationFailure("timed out"),
-        ]),
-      ),
+    const executions = closedExecutions(101, {
+      workflowIdPrefix: "wf-overflow",
+      runIdPrefix: "run-overflow",
+      type: (index) => (index % 2 === 0 ? "syncGolinks" : "agentTaskWorkflow"),
+      statusName: "TIMED_OUT",
+    });
+    const client = clientForExecutions(executions, () =>
+      rejectWithApplicationFailure("timed out"),
     );
     const originalGetHandle = client.workflow.getHandle;
     let historyFetches = 0;
@@ -1269,22 +1236,12 @@ describe("workflow failure overflow", () => {
   });
 
   it("does not reset the detail budget on an activity retry", async () => {
-    const executions = Array.from({ length: 10 }, (_, index) => ({
-      workflowId: `wf-retry-${index.toString()}`,
-      runId: `run-retry-${index.toString()}`,
-      type: "syncGolinks",
-      taskQueue: "default",
-      closeTime: new Date(NOW.getTime() - index * 1000),
-      status: { name: "FAILED" },
-    }));
-    const client = fakeClient(
-      executions,
-      Object.fromEntries(
-        executions.map((execution) => [
-          `${execution.workflowId}/${execution.runId}`,
-          rejectWithApplicationFailure("retry failure"),
-        ]),
-      ),
+    const executions = closedExecutions(10, {
+      workflowIdPrefix: "wf-retry",
+      runIdPrefix: "run-retry",
+    });
+    const client = clientForExecutions(executions, () =>
+      rejectWithApplicationFailure("retry failure"),
     );
     const { poster, calls } = capturingPoster();
 
@@ -1318,32 +1275,11 @@ describe("workflow failure overflow", () => {
 
 describe("bounded workflow failure recovery", () => {
   it("posts a bounded batch before requesting the rest of the visibility scan", async () => {
-    const executions = Array.from({ length: 25 }, (_, index) => ({
-      workflowId: `wf-${String(index)}`,
-      runId: `run-${String(index)}`,
-      type: "syncGolinks",
-      taskQueue: "default",
-      closeTime: new Date(NOW.getTime() - index * 1000),
-      status: { name: "FAILED" },
-    }));
-    const client = fakeClient(
-      executions,
-      Object.fromEntries(
-        executions.map((execution) => [
-          `${execution.workflowId}/${execution.runId}`,
-          rejectWithApplicationFailure("recovery failure"),
-        ]),
-      ),
+    const executions = closedExecutions(25);
+    const client = clientForExecutions(executions, () =>
+      rejectWithApplicationFailure("recovery failure"),
     );
-    const originalList = client.workflow.list;
-    client.workflow.list = (options) => ({
-      async *[Symbol.asyncIterator]() {
-        for await (const execution of originalList(options)) {
-          yield execution;
-        }
-        throw new Error("next visibility page timed out");
-      },
-    });
+    failListAfterCurrentPage(client, "next visibility page timed out");
     const { poster, calls } = capturingPoster();
 
     await expect(
@@ -1358,32 +1294,11 @@ describe("bounded workflow failure recovery", () => {
   });
 
   it("posts a partial batch before propagating a visibility scan error", async () => {
-    const executions = Array.from({ length: 3 }, (_, index) => ({
-      workflowId: `wf-${String(index)}`,
-      runId: `run-${String(index)}`,
-      type: "syncGolinks",
-      taskQueue: "default",
-      closeTime: new Date(NOW.getTime() - index * 1000),
-      status: { name: "FAILED" },
-    }));
-    const client = fakeClient(
-      executions,
-      Object.fromEntries(
-        executions.map((execution) => [
-          `${execution.workflowId}/${execution.runId}`,
-          rejectWithApplicationFailure("recovery failure"),
-        ]),
-      ),
+    const executions = closedExecutions(3);
+    const client = clientForExecutions(executions, () =>
+      rejectWithApplicationFailure("recovery failure"),
     );
-    const originalList = client.workflow.list;
-    client.workflow.list = (options) => ({
-      async *[Symbol.asyncIterator]() {
-        for await (const execution of originalList(options)) {
-          yield execution;
-        }
-        throw new Error("next visibility page timed out");
-      },
-    });
+    failListAfterCurrentPage(client, "next visibility page timed out");
     const { poster, calls } = capturingPoster();
 
     await expect(
@@ -1399,24 +1314,11 @@ describe("bounded workflow failure recovery", () => {
   });
 
   it("does not checkpoint past an unresolved detail extraction", async () => {
-    const executions = Array.from({ length: 26 }, (_, index) => ({
-      workflowId: `wf-${String(index)}`,
-      runId: `run-${String(index)}`,
-      type: "syncGolinks",
-      taskQueue: "default",
-      closeTime: new Date(NOW.getTime() - index * 1000),
-      status: { name: "FAILED" },
-    }));
-    const client = fakeClient(
-      executions,
-      Object.fromEntries(
-        executions.map((execution, index) => [
-          `${execution.workflowId}/${execution.runId}`,
-          index === 0
-            ? () => Promise.reject(new Error("detail extraction failed"))
-            : rejectWithApplicationFailure("recovery failure"),
-        ]),
-      ),
+    const executions = closedExecutions(26);
+    const client = clientForExecutions(executions, (index) =>
+      index === 0
+        ? () => Promise.reject(new Error("detail extraction failed"))
+        : rejectWithApplicationFailure("recovery failure"),
     );
     const { poster, calls } = capturingPoster();
     const checkpoints: WorkflowFailureWatchCheckpoint[] = [];
@@ -1439,24 +1341,14 @@ describe("bounded workflow failure recovery", () => {
   });
 
   it("checkpoints each posted detail chunk before continuing the scan", async () => {
-    const executions = Array.from({ length: 25 }, (_, index) => ({
-      workflowId: `wf-chunk-${String(index)}`,
-      runId: `run-chunk-${String(index)}`,
-      type: "syncGolinks",
-      taskQueue: "default",
-      closeTime: new Date(NOW.getTime() - index * 1000),
-      status: { name: "FAILED" },
-    }));
-    const client = fakeClient(
-      executions,
-      Object.fromEntries(
-        executions.map((execution, index) => [
-          `${execution.workflowId}/${execution.runId}`,
-          index === 20
-            ? () => Promise.reject(new Error("detail extraction failed"))
-            : rejectWithApplicationFailure("recovery failure"),
-        ]),
-      ),
+    const executions = closedExecutions(25, {
+      workflowIdPrefix: "wf-chunk",
+      runIdPrefix: "run-chunk",
+    });
+    const client = clientForExecutions(executions, (index) =>
+      index === 20
+        ? () => Promise.reject(new Error("detail extraction failed"))
+        : rejectWithApplicationFailure("recovery failure"),
     );
     const { poster, calls } = capturingPoster();
     const checkpoints: WorkflowFailureWatchCheckpoint[] = [];

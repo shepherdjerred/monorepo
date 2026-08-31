@@ -316,10 +316,10 @@ Start one run with a stable period/slot ID and reject every reuse:
 
 ```bash
 TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
-  toolkit temporal workflow start \
+  toolkit temporal --namespace beta workflow start \
     --workflow-id scout-weekly-parlay-catchup-2026-08-24-0 \
     --type runScoutWeeklyParlayCatchupWorkflow \
-    --task-queue default \
+    --task-queue monorepo-workflows \
     --input '{"periodKey":"2026-08-24","slot":0}' \
     --id-conflict-policy Fail \
     --id-reuse-policy RejectDuplicate
@@ -455,7 +455,7 @@ source-defined registry. The command never pauses, deletes, or updates a
 schedule:
 
 ```bash
-TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
   bun run inventory:report-schedules
 ```
 

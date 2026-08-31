@@ -5,7 +5,10 @@ import {
   Runtime,
   Worker,
 } from "@temporalio/worker";
-import type { ScoutStage } from "@scout-for-lol/temporal";
+import type {
+  ScoutStage,
+  TemporalLegacyNamespace,
+} from "@scout-for-lol/temporal";
 import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
 import { createLogger } from "#src/logger.ts";
@@ -97,7 +100,8 @@ export type ScoutTemporalActivityGroups = {
 
 export type ScoutTemporalSupervisorOptions = {
   readonly address: string | undefined;
-  readonly namespace: string;
+  readonly namespace: ScoutStage;
+  readonly legacyNamespace: TemporalLegacyNamespace | undefined;
   readonly stage: ScoutStage;
   readonly activities: ScoutTemporalActivityGroups;
   readonly callGraphTracing: boolean;
@@ -110,6 +114,8 @@ type ConnectedRuntime = {
   readonly client: Client;
 };
 
+type ScoutTemporalTracing = ReturnType<typeof createTemporalWorkerTracing>;
+
 function workflowsPath(): string {
   return new URL(import.meta.resolve("@scout-for-lol/temporal/workflows"))
     .pathname;
@@ -119,6 +125,25 @@ function workflowUiInterceptorPath(): string {
   return new URL(
     import.meta.resolve("@scout-for-lol/temporal/workflow-ui-interceptor"),
   ).pathname;
+}
+
+function createScoutTemporalTracing(
+  callGraphTracing: boolean,
+): ScoutTemporalTracing | undefined {
+  const tracingRuntime = getTracingRuntime();
+  if (tracingRuntime === undefined && callGraphTracing) {
+    throw new Error(
+      "temporal-call-graph-tracing requires TELEMETRY_ENABLED=true",
+    );
+  }
+  return tracingRuntime !== undefined && callGraphTracing
+    ? createTemporalWorkerTracing({
+        exporter: createValidatedWorkflowSpanSink(
+          tracingRuntime.processor,
+          tracingRuntime.resource,
+        ),
+      })
+    : undefined;
 }
 
 async function createConnectedRuntime(
@@ -137,21 +162,7 @@ async function createConnectedRuntime(
         ? await Connection.connect()
         : await Connection.connect({ address: options.address });
     const queues = scoutTaskQueues(options.stage);
-    const tracingRuntime = getTracingRuntime();
-    if (tracingRuntime === undefined && options.callGraphTracing) {
-      throw new Error(
-        "temporal-call-graph-tracing requires TELEMETRY_ENABLED=true",
-      );
-    }
-    const tracing =
-      tracingRuntime !== undefined && options.callGraphTracing
-        ? createTemporalWorkerTracing({
-            exporter: createValidatedWorkflowSpanSink(
-              tracingRuntime.processor,
-              tracingRuntime.resource,
-            ),
-          })
-        : undefined;
+    const tracing = createScoutTemporalTracing(options.callGraphTracing);
     const commonOptions = {
       connection: nativeConnection,
       namespace: options.namespace,
@@ -201,6 +212,48 @@ async function createConnectedRuntime(
           maxConcurrentActivityTaskExecutions: 1,
         }),
       );
+    }
+    if (options.legacyNamespace !== undefined) {
+      const legacyOptions = {
+        ...commonOptions,
+        namespace: options.legacyNamespace,
+      };
+      workers.push(
+        await Worker.create({
+          ...legacyOptions,
+          taskQueue: queues.workflow,
+          workflowsPath: workflowsPath(),
+          maxConcurrentWorkflowTaskExecutions: 1,
+        }),
+        await Worker.create({
+          ...legacyOptions,
+          taskQueue: queues.interactive,
+          activities: options.activities.interactive,
+          maxConcurrentActivityTaskExecutions: 1,
+        }),
+        await Worker.create({
+          ...legacyOptions,
+          taskQueue: queues.lake,
+          activities: options.activities.lake,
+          maxConcurrentActivityTaskExecutions: 1,
+        }),
+      );
+      if (discordWorkersEnabled) {
+        workers.push(
+          await Worker.create({
+            ...legacyOptions,
+            taskQueue: queues.realtime,
+            activities: options.activities.realtime,
+            maxConcurrentActivityTaskExecutions: 1,
+          }),
+          await Worker.create({
+            ...legacyOptions,
+            taskQueue: queues.background,
+            activities: options.activities.background,
+            maxConcurrentActivityTaskExecutions: 1,
+          }),
+        );
+      }
     }
     return {
       workers,
@@ -369,6 +422,8 @@ export class ScoutTemporalSupervisor {
     });
     logger.info("Temporal workers connected", {
       address: this.#options.address,
+      namespace: this.#options.namespace,
+      legacyNamespace: this.#options.legacyNamespace,
       stage: this.#options.stage,
       workerCount: runtime.workers.length,
       discordWorkersEnabled: this.#discordWorkersEnabled,

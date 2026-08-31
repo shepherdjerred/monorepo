@@ -1,5 +1,11 @@
 import { z } from "zod/v4";
-import { createTemporalClient } from "#client";
+import { createTemporalReadClient } from "#client";
+import {
+  parseLegacyTemporalNamespace,
+  parseTemporalNamespace,
+  temporalNamespacesForMonitoring,
+  type AnyTemporalNamespace,
+} from "#shared/temporal-namespace.ts";
 import type {
   ReportCheckV1,
   ReportEvidenceReceiptV1,
@@ -249,6 +255,71 @@ export function temporalHealthQueries(now: Date): {
   };
 }
 
+type TemporalExecutionSummary = {
+  namespace: AnyTemporalNamespace;
+  workflowId: string;
+  runId: string;
+  startedAt: string;
+};
+
+type TemporalNamespaceHealth = {
+  namespace: AnyTemporalNamespace;
+  failed: TemporalExecutionSummary[];
+  stalled: TemporalExecutionSummary[];
+  scheduleCount: number;
+};
+
+async function collectTemporalNamespace(
+  namespace: AnyTemporalNamespace,
+  queries: ReturnType<typeof temporalHealthQueries>,
+): Promise<TemporalNamespaceHealth> {
+  const client = await createTemporalReadClient(namespace);
+  const failed: TemporalExecutionSummary[] = [];
+  const stalled: TemporalExecutionSummary[] = [];
+  const collectExecutions = async (
+    query: string,
+    destination: TemporalExecutionSummary[],
+  ): Promise<void> => {
+    for await (const workflow of client.workflow.list({ query })) {
+      destination.push({
+        namespace,
+        workflowId: workflow.workflowId,
+        runId: workflow.runId,
+        startedAt: workflow.startTime.toISOString(),
+      });
+    }
+  };
+  let scheduleCount = 0;
+  await Promise.all([
+    collectExecutions(queries.failed, failed),
+    collectExecutions(queries.stalled, stalled),
+    (async () => {
+      for await (const _schedule of client.schedule.list()) scheduleCount += 1;
+    })(),
+  ]);
+  return { namespace, failed, stalled, scheduleCount };
+}
+
+function temporalFindings(
+  namespaceHealth: readonly TemporalNamespaceHealth[],
+  evidenceId: string,
+): Finding[] {
+  return namespaceHealth.flatMap((health) => [
+    ...health.failed.map((workflow) => ({
+      severity: "warning" as const,
+      summary: `Temporal ${workflow.namespace} failure: ${workflow.workflowId}`,
+      detail: `namespace=${workflow.namespace}; run=${workflow.runId}; started=${workflow.startedAt}`,
+      evidenceReceiptIds: [evidenceId],
+    })),
+    ...health.stalled.map((workflow) => ({
+      severity: "warning" as const,
+      summary: `Temporal ${workflow.namespace} workflow running over six hours: ${workflow.workflowId}`,
+      detail: `namespace=${workflow.namespace}; run=${workflow.runId}; started=${workflow.startedAt}`,
+      evidenceReceiptIds: [evidenceId],
+    })),
+  ]);
+}
+
 async function collectTemporal(): Promise<CollectorResult> {
   const queries = temporalHealthQueries(new Date());
   const failedQuery = queries.failed;
@@ -256,50 +327,24 @@ async function collectTemporal(): Promise<CollectorResult> {
   const observedAt = new Date().toISOString();
   const evidenceId = "temporal-health-evidence";
   try {
-    const client = await createTemporalClient();
-    const failed: { workflowId: string; runId: string; startedAt: string }[] =
-      [];
-    const stalled: { workflowId: string; runId: string; startedAt: string }[] =
-      [];
-    let scheduleCount = 0;
-    const collectExecutions = async (
-      query: string,
-      destination: { workflowId: string; runId: string; startedAt: string }[],
-    ): Promise<void> => {
-      for await (const workflow of client.workflow.list({ query })) {
-        destination.push({
-          workflowId: workflow.workflowId,
-          runId: workflow.runId,
-          startedAt: workflow.startTime.toISOString(),
-        });
-      }
-    };
-    await Promise.all([
-      collectExecutions(failedQuery, failed),
-      collectExecutions(stalledQuery, stalled),
-      (async () => {
-        for await (const _schedule of client.schedule.list())
-          scheduleCount += 1;
-      })(),
-    ]);
-    const findings: Finding[] = [
-      ...failed.map((workflow) => ({
-        severity: "warning" as const,
-        summary: `Temporal failure: ${workflow.workflowId}`,
-        detail: `run=${workflow.runId}; started=${workflow.startedAt}`,
-        evidenceReceiptIds: [evidenceId],
-      })),
-      ...stalled.map((workflow) => ({
-        severity: "warning" as const,
-        summary: `Temporal workflow running over six hours: ${workflow.workflowId}`,
-        detail: `run=${workflow.runId}; started=${workflow.startedAt}`,
-        evidenceReceiptIds: [evidenceId],
-      })),
-    ];
+    const namespaces = temporalNamespacesForMonitoring(
+      parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]),
+      parseLegacyTemporalNamespace(Bun.env["TEMPORAL_LEGACY_NAMESPACE"]),
+    );
+    const namespaceHealth = await Promise.all(
+      namespaces.map(
+        async (namespace) => await collectTemporalNamespace(namespace, queries),
+      ),
+    );
+    const failed = namespaceHealth.flatMap((health) => health.failed);
+    const stalled = namespaceHealth.flatMap((health) => health.stalled);
+    const scheduleCount = namespaceHealth.reduce(
+      (count, health) => count + health.scheduleCount,
+      0,
+    );
+    const findings = temporalFindings(namespaceHealth, evidenceId);
     const combined = JSON.stringify({
-      failed,
-      stalled,
-      scheduleCount,
+      namespaces: namespaceHealth,
       queries: { failed: failedQuery, stalled: stalledQuery },
     });
     return {
@@ -308,7 +353,7 @@ async function collectTemporal(): Promise<CollectorResult> {
         label: "Temporal failures and stalls",
         required: true,
         status: "passed",
-        summary: `${failed.length.toString()} failures in 24h; ${stalled.length.toString()} workflows over 6h; ${scheduleCount.toString()} schedules`,
+        summary: `${failed.length.toString()} failures in 24h; ${stalled.length.toString()} workflows over 6h; ${scheduleCount.toString()} schedules across ${namespaces.join(", ")}`,
         evidenceReceiptIds: [evidenceId],
       },
       evidence: {
@@ -316,7 +361,7 @@ async function collectTemporal(): Promise<CollectorResult> {
         source: "Temporal visibility and schedule APIs",
         observedAt,
         status: "success",
-        command: `Temporal SDK visibility queries: ${failedQuery}; ${stalledQuery}; schedule list`,
+        command: `Temporal SDK namespace queries (${namespaces.join(", ")}): ${failedQuery}; ${stalledQuery}; schedule list`,
         excerpt: combined.slice(0, 2000),
         contentSha256: await sha256(combined),
       },

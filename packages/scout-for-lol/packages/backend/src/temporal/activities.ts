@@ -1,6 +1,8 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
+import { Client, Connection } from "@temporalio/client";
 import { client } from "#src/discord/client.ts";
+import configuration from "#src/configuration.ts";
 import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import {
@@ -17,14 +19,42 @@ type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
 >[0];
 
+async function scheduleReconciliationEnabled(): Promise<boolean> {
+  const activityNamespace = Context.current().info.namespace;
+  if (activityNamespace === "default") return false;
+
+  const mode = configuration.temporalScheduleReconciliation;
+  if (mode === "enabled") return true;
+  if (mode === "disabled") return false;
+
+  const legacyNamespace = configuration.temporalLegacyNamespace;
+  if (legacyNamespace === undefined) return true;
+
+  const connection =
+    configuration.temporalAddress === undefined
+      ? await Connection.connect()
+      : await Connection.connect({ address: configuration.temporalAddress });
+  try {
+    const legacyClient = new Client({
+      connection,
+      namespace: legacyNamespace,
+    });
+    for await (const schedule of legacyClient.schedule.list()) {
+      const description = await legacyClient.schedule
+        .getHandle(schedule.scheduleId)
+        .describe();
+      if (!description.state.paused) return false;
+    }
+    return true;
+  } finally {
+    await connection.close();
+  }
+}
+
 export function providerQuotaApplicationFailure(
-  input: DetachedWorkInput,
   error: unknown,
 ): ApplicationFailure | null {
-  if (
-    input.kind !== "parlay-generation" ||
-    classifyLlmProviderIssue(error) !== "quota"
-  ) {
+  if (classifyLlmProviderIssue(error) !== "quota") {
     return null;
   }
   return ApplicationFailure.nonRetryable(
@@ -44,7 +74,7 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
       },
     );
   } catch (error) {
-    const quotaFailure = providerQuotaApplicationFailure(input, error);
+    const quotaFailure = providerQuotaApplicationFailure(error);
     if (quotaFailure !== null) {
       recordProviderIssue({
         app: "scout-for-lol",
@@ -345,6 +375,17 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
       };
     },
     drainReportScheduleOutbox: async (input) => {
+      const activityNamespace = Context.current().info.namespace;
+      if (!(await scheduleReconciliationEnabled())) {
+        Context.current().heartbeat({
+          phase: "skipped",
+          reason:
+            activityNamespace === "default"
+              ? "legacy-namespace-drain"
+              : "schedule-reconciliation-disabled",
+        });
+        return { processed: 0, remaining: 0 };
+      }
       const result = await heartbeatWhile(
         { phase: "reconciling-report-schedules" },
         async () => {

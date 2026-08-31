@@ -1,4 +1,8 @@
 import type { AlertmanagerAlert } from "#lib/alertmanager.ts";
+import type {
+  LegacyTemporalNamespace,
+  TemporalNamespace,
+} from "#shared/temporal-namespace.ts";
 
 // Kept in sync manually with the Temporal Web UI Tailscale hostname
 // documented in this package's CLAUDE.md (schedule pause instructions).
@@ -8,6 +12,7 @@ const MAX_SUMMARY_MESSAGE_CHARS = 200;
 const MAX_STACK_EXCERPT_CHARS = 800;
 
 export type FailedWorkflowExecution = {
+  temporalNamespace: TemporalNamespace | LegacyTemporalNamespace;
   workflowId: string;
   runId: string;
   workflowType: string;
@@ -46,10 +51,11 @@ function truncate(value: string, maxChars: number): string {
 
 /** Direct link to the failed run's history in the Temporal UI — not just "check the UI". */
 export function temporalUiExecutionUrl(
+  namespace: TemporalNamespace | LegacyTemporalNamespace,
   workflowId: string,
   runId: string,
 ): string {
-  return `${TEMPORAL_UI_BASE_URL}/namespaces/default/workflows/${encodeURIComponent(workflowId)}/${encodeURIComponent(runId)}/history`;
+  return `${TEMPORAL_UI_BASE_URL}/namespaces/${namespace}/workflows/${encodeURIComponent(workflowId)}/${encodeURIComponent(runId)}/history`;
 }
 
 /**
@@ -72,6 +78,7 @@ export function buildWorkflowFailureAlert(
     taskQueue: execution.taskQueue,
     workflowId: execution.workflowId,
     runId: execution.runId,
+    temporalNamespace: execution.temporalNamespace,
   };
 
   const summary = `Temporal workflow ${execution.workflowType} failed: ${failure.failureType}: ${truncate(failure.message, MAX_SUMMARY_MESSAGE_CHARS)}`;
@@ -80,6 +87,7 @@ export function buildWorkflowFailureAlert(
     `workflowId ${execution.workflowId}`,
     `runId ${execution.runId}`,
     `taskQueue ${execution.taskQueue}`,
+    `temporalNamespace ${execution.temporalNamespace}`,
     `status ${execution.status}`,
     `closeTime ${execution.closeTime.toISOString()}`,
     `failureType ${failure.failureType}`,
@@ -126,6 +134,10 @@ export function buildWorkflowFailureAlert(
     annotations: { summary, description, message: description },
     startsAt,
     endsAt,
-    generatorURL: temporalUiExecutionUrl(execution.workflowId, execution.runId),
+    generatorURL: temporalUiExecutionUrl(
+      execution.temporalNamespace,
+      execution.workflowId,
+      execution.runId,
+    ),
   };
 }

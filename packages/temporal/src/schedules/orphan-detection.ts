@@ -5,6 +5,7 @@ import {
   ScoutScheduleOwnershipMemoSchema,
   scoutReportScheduleId,
 } from "@scout-for-lol/temporal";
+import type { TemporalNamespace } from "#shared/temporal-namespace.ts";
 
 // Gauge value written when `scheduleClient.list()` itself fails. Distinct from
 // 0 ("detection ran cleanly, found no orphans") so a monitoring rule can tell a
@@ -36,12 +37,14 @@ export function isDynamicAgentTaskSchedule(
 export function isOwnedScoutReportSchedule(
   scheduleId: string,
   memo: Record<string, unknown> | undefined,
+  namespace: TemporalNamespace,
 ): boolean {
   const parsed = ScoutScheduleOwnershipMemoSchema.safeParse(memo);
   if (!parsed.success) return false;
   return (
+    namespace === parsed.data.stage &&
     scheduleId ===
-    scoutReportScheduleId(parsed.data.stage, parsed.data.reportId)
+      scoutReportScheduleId(parsed.data.stage, parsed.data.reportId)
   );
 }
 
@@ -71,16 +74,26 @@ export function isReconcilableDynamicAgentTaskSchedule(
 // a renamed/removed schedule that was never added to the delete list and keeps
 // firing. The declared/deleted id sets are passed in (rather than imported from
 // register-schedules) to keep this module free of a circular import.
-export function isOrphanSchedule(
-  scheduleId: string,
-  memo: Record<string, unknown> | undefined,
-  declaredIds: ReadonlySet<string>,
-  deletedIds: ReadonlySet<string>,
-): boolean {
-  if (declaredIds.has(scheduleId)) return false;
-  if (deletedIds.has(scheduleId)) return false;
-  if (isDynamicAgentTaskSchedule(scheduleId, memo)) return false;
-  if (isOwnedScoutReportSchedule(scheduleId, memo)) return false;
+export function isOrphanSchedule(input: {
+  scheduleId: string;
+  memo: Record<string, unknown> | undefined;
+  namespace: TemporalNamespace;
+  declaredIds: ReadonlySet<string>;
+  deletedIds: ReadonlySet<string>;
+}): boolean {
+  if (input.declaredIds.has(input.scheduleId)) return false;
+  if (input.deletedIds.has(input.scheduleId)) return false;
+  if (
+    (input.namespace === "prod" || input.namespace === "dev") &&
+    isDynamicAgentTaskSchedule(input.scheduleId, input.memo)
+  ) {
+    return false;
+  }
+  if (
+    isOwnedScoutReportSchedule(input.scheduleId, input.memo, input.namespace)
+  ) {
+    return false;
+  }
   return true;
 }
 
@@ -93,6 +106,7 @@ export function isOrphanSchedule(
 // orphans", and startup continues.
 export async function detectOrphanSchedules(
   scheduleClient: Client["schedule"],
+  namespace: TemporalNamespace,
   declaredIds: ReadonlySet<string>,
   deletedIds: ReadonlySet<string>,
 ): Promise<void> {
@@ -100,24 +114,28 @@ export async function detectOrphanSchedules(
     const orphans: string[] = [];
     for await (const summary of scheduleClient.list()) {
       if (
-        isOrphanSchedule(
-          summary.scheduleId,
-          summary.memo,
+        isOrphanSchedule({
+          scheduleId: summary.scheduleId,
+          memo: summary.memo,
+          namespace,
           declaredIds,
           deletedIds,
-        )
+        })
       ) {
         orphans.push(summary.scheduleId);
       }
     }
-    scheduleOrphans.set(orphans.length);
+    scheduleOrphans.set({ temporal_namespace: namespace }, orphans.length);
     if (orphans.length > 0) {
       console.warn(
         `Orphan schedules (live but not declared in SCHEDULES or DELETED_SCHEDULE_IDS): ${orphans.join(", ")}. Add each to DELETED_SCHEDULE_IDS (if removed) or back to SCHEDULES (if still wanted).`,
       );
     }
   } catch (error: unknown) {
-    scheduleOrphans.set(ORPHAN_DETECTION_FAILED);
+    scheduleOrphans.set(
+      { temporal_namespace: namespace },
+      ORPHAN_DETECTION_FAILED,
+    );
     console.error("Orphan schedule detection failed", error);
   }
 }

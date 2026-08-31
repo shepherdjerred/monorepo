@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { parseArgs } from "node:util";
 import { z } from "zod";
 
 import { createPrismaRepository } from "#infrastructure/prisma-repository";
@@ -17,32 +18,23 @@ const ArgsSchema = z.object({
   confirm: z.boolean(),
 });
 
-function parseArgs(argv: readonly string[]): z.infer<typeof ArgsSchema> {
-  const raw: Record<string, unknown> = {
-    confirm: false,
-  };
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index];
-    if (arg === "--confirm") {
-      raw["confirm"] = true;
-      continue;
-    }
-    if (arg?.startsWith("--") !== true) {
-      throw new Error(`Unknown argument: ${String(arg)}`);
-    }
-    const key = arg.slice(2);
-    if (!["database", "from", "to", "operator", "reason"].includes(key)) {
-      throw new Error(`Unknown argument: ${arg}`);
-    }
-    const value = argv[index + 1];
-    if (value === undefined) throw new Error(`Missing value for --${key}`);
-    raw[key] = value;
-    index += 1;
-  }
-  return ArgsSchema.parse(raw);
+function parseCliArgs(): z.infer<typeof ArgsSchema> {
+  const { values } = parseArgs({
+    args: Bun.argv.slice(2),
+    options: {
+      database: { type: "string" },
+      from: { type: "string" },
+      to: { type: "string" },
+      operator: { type: "string" },
+      reason: { type: "string" },
+      confirm: { type: "boolean", default: false },
+    },
+    strict: true,
+  });
+  return ArgsSchema.parse(values);
 }
 
-const args = parseArgs(Bun.argv.slice(2));
+const args = parseCliArgs();
 const repository = await createPrismaRepository(args.database);
 try {
   const result = await repository.cancelPendingEmails({

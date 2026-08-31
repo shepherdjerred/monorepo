@@ -148,6 +148,8 @@ export function createTemporalWorkerDeployment(
     envVariables: {
       ...temporalFeatureFlagEnvironment(),
       TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+      TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
+      TEMPORAL_LEGACY_NAMESPACE: EnvValue.fromValue("default"),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("agent"),
       AGENT_PROVIDER_UID: EnvValue.fromValue("1001"),
@@ -188,6 +190,8 @@ export function createTemporalWorkerDeployment(
   const glitterCommonEnv = {
     ...temporalFeatureFlagEnvironment(),
     TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+    TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
+    TEMPORAL_LEGACY_NAMESPACE: EnvValue.fromValue("default"),
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
     ENVIRONMENT: EnvValue.fromValue("production"),
     TELEMETRY_ENABLED: EnvValue.fromValue("true"),

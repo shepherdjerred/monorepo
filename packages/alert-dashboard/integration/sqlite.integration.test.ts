@@ -13,6 +13,7 @@ import {
   prisma,
   repository,
   resetDatabase,
+  temporalFailureWebhook,
   waitForDatabase,
   webhook,
 } from "./sqlite-fixture.ts";
@@ -47,20 +48,7 @@ afterAll(disconnectDatabase);
 
 describe("SQLite email cancellation", () => {
   it("dry-runs and audits cancellation of only pending incident email", async () => {
-    const base = webhook("fingerprint-temporal", "firing");
-    const incident = AlertmanagerWebhookSchema.parse({
-      ...base,
-      groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
-      groupLabels: { alertname: "TemporalWorkflowFailed" },
-      commonLabels: {
-        alertname: "TemporalWorkflowFailed",
-        severity: "warning",
-      },
-      alerts: base.alerts.map((alert) => ({
-        ...alert,
-        labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
-      })),
-    });
+    const incident = temporalFailureWebhook("fingerprint-temporal");
     await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
     await repository.ingestWebhook(
       input(webhook("fingerprint-unrelated", "firing"), "2026-08-08T18:00:02Z"),
@@ -103,20 +91,7 @@ describe("SQLite email cancellation", () => {
   });
 
   it("does not cancel an email after the sender claims it", async () => {
-    const base = webhook("fingerprint-claimed", "firing");
-    const incident = AlertmanagerWebhookSchema.parse({
-      ...base,
-      groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
-      groupLabels: { alertname: "TemporalWorkflowFailed" },
-      commonLabels: {
-        alertname: "TemporalWorkflowFailed",
-        severity: "warning",
-      },
-      alerts: base.alerts.map((alert) => ({
-        ...alert,
-        labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
-      })),
-    });
+    const incident = temporalFailureWebhook("fingerprint-claimed");
     await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
     const claimed = await repository.claimPendingEmails(
       nanoseconds("2026-08-08T18:01:00Z"),
@@ -139,20 +114,7 @@ describe("SQLite email cancellation", () => {
   });
 
   it("reclaims expired claims and rejects the stale sender", async () => {
-    const base = webhook("fingerprint-reclaim", "firing");
-    const incident = AlertmanagerWebhookSchema.parse({
-      ...base,
-      groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
-      groupLabels: { alertname: "TemporalWorkflowFailed" },
-      commonLabels: {
-        alertname: "TemporalWorkflowFailed",
-        severity: "warning",
-      },
-      alerts: base.alerts.map((alert) => ({
-        ...alert,
-        labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
-      })),
-    });
+    const incident = temporalFailureWebhook("fingerprint-reclaim");
     await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
     const first = await repository.claimPendingEmails(
       nanoseconds("2026-08-08T18:01:00Z"),

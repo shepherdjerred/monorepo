@@ -22,6 +22,8 @@ export {
   ScoutReportScheduleReconcilerInputSchema,
   ScoutScheduleOwnershipMemoSchema,
   ScoutStageSchema,
+  TemporalLegacyNamespaceSchema,
+  TemporalNamespaceSchema,
   ScoutWorkflowStatusSchema,
 } from "./contracts.ts";
 export type {
@@ -47,6 +49,8 @@ export type {
   ScoutReportScheduleReconcilerInput,
   ScoutScheduleOwnershipMemo,
   ScoutStage,
+  TemporalLegacyNamespace,
+  TemporalNamespace,
   ScoutWorkflowStatus,
 } from "./contracts.ts";
 export {

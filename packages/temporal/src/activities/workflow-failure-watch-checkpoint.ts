@@ -1,5 +1,9 @@
 import { z } from "zod/v4";
 import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts";
+import {
+  AnyTemporalNamespaceSchema,
+  type AnyTemporalNamespace,
+} from "#shared/temporal-namespace.ts";
 import type { WorkflowFailureOverflowSummary } from "./workflow-failure-watch-overflow.ts";
 
 const WorkflowFailureWatchCursorSchema = z.object({
@@ -44,6 +48,12 @@ export type WorkflowFailureWatchCheckpoint = {
   cursor?: WorkflowFailureWatchCursor;
   overflow?: WorkflowFailureOverflowSummary;
 };
+export type WorkflowFailureWatchCheckpoints = Partial<
+  Record<
+    AnyTemporalNamespace,
+    WorkflowFailureWatchCheckpoint | WorkflowFailureWatchCursor
+  >
+>;
 
 export function workflowExecutionKey(
   workflowId: string,
@@ -130,46 +140,115 @@ export function parseWorkflowFailureWatchLookbackSince(
 }
 
 export function serializedCheckpoint(
-  checkpoint: WorkflowFailureWatchCheckpoint | undefined,
+  checkpoint:
+    WorkflowFailureWatchCheckpoint | WorkflowFailureWatchCursor | undefined,
 ): Record<string, unknown> | null {
-  return checkpoint === undefined
-    ? null
-    : {
-        detailedAlertsConsumed: checkpoint.detailedAlertsConsumed,
-        ...(checkpoint.overflow === undefined
-          ? {}
-          : {
-              overflow: {
-                ...checkpoint.overflow,
-                newestOmittedCloseTime:
-                  checkpoint.overflow.newestOmittedCloseTime.toISOString(),
-              },
-            }),
-        ...(checkpoint.cursor === undefined
-          ? {}
-          : {
-              cursor: {
-                closeTime: checkpoint.cursor.closeTime.toISOString(),
-                ...(checkpoint.cursor.startTime === undefined
-                  ? {}
-                  : { startTime: checkpoint.cursor.startTime.toISOString() }),
-                ...(checkpoint.cursor.lookbackSince === undefined
-                  ? {}
-                  : {
-                      lookbackSince:
-                        checkpoint.cursor.lookbackSince.toISOString(),
-                    }),
-                workflowId: checkpoint.cursor.workflowId,
-                runId: checkpoint.cursor.runId,
-                ...(checkpoint.cursor.processedExecutionKeys === undefined
-                  ? {}
-                  : {
-                      processedExecutionKeys:
-                        checkpoint.cursor.processedExecutionKeys,
-                    }),
-              },
-            }),
-      };
+  if (checkpoint === undefined) return null;
+  if ("closeTime" in checkpoint) return serializeCursor(checkpoint);
+  return serializeDetailedCheckpoint(checkpoint);
+}
+
+function serializeDetailedCheckpoint(
+  checkpoint: WorkflowFailureWatchCheckpoint,
+): Record<string, unknown> {
+  return {
+    detailedAlertsConsumed: checkpoint.detailedAlertsConsumed,
+    ...serializeOverflow(checkpoint.overflow),
+    ...serializeCursorField(checkpoint.cursor),
+  };
+}
+
+function serializeOverflow(
+  overflow: WorkflowFailureOverflowSummary | undefined,
+): Record<string, unknown> {
+  if (overflow === undefined) return {};
+  return {
+    overflow: {
+      ...overflow,
+      newestOmittedCloseTime: overflow.newestOmittedCloseTime.toISOString(),
+    },
+  };
+}
+
+function serializeCursorField(
+  cursor: WorkflowFailureWatchCursor | undefined,
+): Record<string, unknown> {
+  if (cursor === undefined) return {};
+  return { cursor: serializeCursor(cursor) };
+}
+
+function serializeCursor(
+  cursor: WorkflowFailureWatchCursor,
+): Record<string, unknown> {
+  return {
+    closeTime: cursor.closeTime.toISOString(),
+    ...(cursor.startTime === undefined
+      ? {}
+      : { startTime: cursor.startTime.toISOString() }),
+    ...(cursor.lookbackSince === undefined
+      ? {}
+      : { lookbackSince: cursor.lookbackSince.toISOString() }),
+    workflowId: cursor.workflowId,
+    runId: cursor.runId,
+    ...(cursor.processedExecutionKeys === undefined
+      ? {}
+      : { processedExecutionKeys: cursor.processedExecutionKeys }),
+  };
+}
+
+export function parseWorkflowFailureWatchCheckpoints(
+  details: unknown,
+): WorkflowFailureWatchCheckpoints {
+  if (details === undefined) return {};
+  const detailsRecord = z.record(z.string(), z.unknown()).parse(details);
+  const rawCheckpoints = detailsRecord["checkpoints"];
+  if (rawCheckpoints === undefined || rawCheckpoints === null) return {};
+  const checkpointsRecord = z
+    .record(z.string(), z.unknown())
+    .parse(rawCheckpoints);
+  return Object.fromEntries(
+    Object.entries(checkpointsRecord).map(([namespace, checkpoint]) => [
+      AnyTemporalNamespaceSchema.parse(namespace),
+      parseCheckpointValue(checkpoint),
+    ]),
+  );
+}
+
+function parseCheckpointValue(
+  value: unknown,
+): WorkflowFailureWatchCheckpoint | WorkflowFailureWatchCursor {
+  const parsedCheckpoint =
+    WorkflowFailureWatchCheckpointSchema.safeParse(value);
+  if (parsedCheckpoint.success) {
+    return {
+      detailedAlertsConsumed: parsedCheckpoint.data.detailedAlertsConsumed,
+      ...(parsedCheckpoint.data.overflow === undefined
+        ? {}
+        : {
+            overflow: {
+              ...parsedCheckpoint.data.overflow,
+              newestOmittedCloseTime: new Date(
+                parsedCheckpoint.data.overflow.newestOmittedCloseTime,
+              ),
+            },
+          }),
+      ...(parsedCheckpoint.data.cursor === undefined
+        ? {}
+        : { cursor: parsedCursor(parsedCheckpoint.data.cursor) }),
+    };
+  }
+  return parsedCursor(WorkflowFailureWatchCursorSchema.parse(value));
+}
+
+export function serializedCheckpoints(
+  checkpoints: WorkflowFailureWatchCheckpoints,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(checkpoints).map(([namespace, checkpoint]) => [
+      namespace,
+      serializedCheckpoint(checkpoint),
+    ]),
+  );
 }
 
 export function checkpointForExecution(

@@ -19,10 +19,10 @@ describe("Scout Temporal production policy", () => {
 
 describe("Scout detached-work provider failures", () => {
   test("turns OpenRouter weekly quota failures into non-retryable activity failures", () => {
-    const failure = providerQuotaApplicationFailure(
-      { stage: "beta", kind: "parlay-generation", workId: "parlay:NA1_1" },
-      { status: 403, message: "Weekly key limit exceeded" },
-    );
+    const failure = providerQuotaApplicationFailure({
+      status: 403,
+      message: "Weekly key limit exceeded",
+    });
     expect(failure).toMatchObject({
       type: "ProviderQuotaExhausted",
       nonRetryable: true,
@@ -31,10 +31,7 @@ describe("Scout detached-work provider failures", () => {
 
   test("leaves transient provider failures retryable", () => {
     expect(
-      providerQuotaApplicationFailure(
-        { stage: "beta", kind: "parlay-generation", workId: "parlay:NA1_1" },
-        new Error("connection reset"),
-      ),
+      providerQuotaApplicationFailure(new Error("connection reset")),
     ).toBeNull();
   });
 });

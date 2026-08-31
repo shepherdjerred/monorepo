@@ -2,7 +2,7 @@
  * Schedule one or more one-off or recurring generic agent tasks.
  *
  * Examples:
- *   TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task.md
+ *   TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task.md
  *   // --from-doc validates every temporal-agent-task block, then schedules them in document order.
  *   bun run scripts/schedule-agent-task.ts --json '{"title":"Check thing",...}'
  */
@@ -14,6 +14,7 @@ import {
 } from "#shared/agent-task.ts";
 import { parseAgentTaskInputsFromMarkdown } from "#lib/agent-task-markdown.ts";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";
@@ -76,7 +77,8 @@ async function main(): Promise<void> {
       defaultAddress: DEFAULT_TEMPORAL_ADDRESS,
     }),
   );
-  const client = new Client({ connection });
+  const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+  const client = new Client({ connection, namespace });
   const results = [];
   for (const input of inputs) {
     results.push(

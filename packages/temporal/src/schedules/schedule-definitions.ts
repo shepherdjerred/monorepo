@@ -5,7 +5,10 @@ import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 import { EARLY_SCHEDULES } from "./schedule-definitions-early.ts";
 import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
 import { SECURITY_SCHEDULES } from "./security-schedule-definitions.ts";
-import type { ScheduleDefinition } from "./schedule-types.ts";
+import {
+  schedulesInNamespace,
+  type ScheduleDefinition,
+} from "./schedule-types.ts";
 import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
 import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
 
@@ -48,7 +51,7 @@ export const WEEKLY_PARLAY_CRON_EXPRESSION = `0 ${WEEKLY_PARLAY_LIFECYCLE.openHo
 // the optional schedule field in buildSchedulePolicies can never yield an
 // error-typed value. Both literals are valid Temporal `Duration`s at the policies
 // call site.
-export const SCHEDULES: ScheduleDefinition[] = [
+export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   ...EARLY_SCHEDULES,
   ...SCOUT_SCHEDULES,
   ...BACKUP_SCHEDULES,
@@ -169,6 +172,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
   },
   {
     id: "scout-weekly-parlay",
+    namespace: "beta",
     workflowType: "runScoutWeeklyParlayWorkflow",
     args: [{}],
     // Sunday 12:00 PT. The workflow remains open through the following Sunday
@@ -191,6 +195,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
   },
   {
     id: "scout-bryan-bucks-analytics",
+    namespace: "beta",
     workflowType: "runScoutBryanBucksAnalyticsWorkflow",
     args: [],
     timing: {
@@ -559,4 +564,4 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowExecutionTimeout: "8 minutes",
     memo: "Notifies Alerts (via Alertmanager) with the specific error for every Temporal workflow execution that failed or timed out.",
   },
-];
+]);

@@ -50,7 +50,7 @@ const { values } = parseArgs({
   options: {
     stage: { type: "string" },
     address: { type: "string", default: "127.0.0.1:7233" },
-    namespace: { type: "string", default: "default" },
+    namespace: { type: "string" },
     "canary-id": { type: "string" },
     "deployment-name": { type: "string" },
     "build-id": { type: "string" },
@@ -62,7 +62,7 @@ const options = z
   .strictObject({
     stage: ScoutStageSchema,
     address: z.string().min(1),
-    namespace: z.string().min(1),
+    namespace: ScoutStageSchema.optional(),
     "canary-id": z.string().min(1).optional(),
     "deployment-name": z.string().min(1).optional(),
     "build-id": z
@@ -71,6 +71,12 @@ const options = z
       .optional(),
   })
   .parse(values);
+const namespace = options.namespace ?? options.stage;
+if (namespace !== options.stage) {
+  throw new Error(
+    `Scout canary namespace ${namespace} must match stage ${options.stage}`,
+  );
+}
 const canaryId = options["canary-id"] ?? globalThis.crypto.randomUUID();
 const deploymentName = options["deployment-name"];
 const buildId = options["build-id"];
@@ -83,7 +89,7 @@ const connection = await Connection.connect({
   ...(temporalTls === "true" ? { tls: true } : {}),
 });
 try {
-  const client = new Client({ connection, namespace: options.namespace });
+  const client = new Client({ connection, namespace });
   const handle = await client.workflow.start(SCOUT_WORKFLOW_NAMES.queueCanary, {
     workflowId: scoutQueueCanaryWorkflowId(options.stage, canaryId),
     workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
@@ -116,6 +122,7 @@ try {
       {
         workflowId: handle.workflowId,
         runId: handle.firstExecutionRunId,
+        namespace,
         results,
       },
       null,
