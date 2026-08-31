@@ -223,8 +223,16 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
     FLIPT_ENVIRONMENT: EnvValue.fromValue(stage),
     TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
-    TEMPORAL_LEGACY_NAMESPACE: EnvValue.fromValue("default"),
-    TEMPORAL_SCHEDULE_RECONCILIATION: EnvValue.fromValue("auto"),
+    // No TEMPORAL_LEGACY_NAMESPACE: the `default` drain is retired for Scout.
+    // The legacy namespace holds no Scout execution this backend can finish,
+    // and building its workers is what put the beta supervisor into a
+    // reconnect loop. Reconciliation stays pinned off rather than `auto`
+    // because `scheduleReconciliationEnabled()` treats an absent legacy
+    // namespace as "drained" — under `auto` this would switch on while the
+    // `default` schedules are still live and double-fire every report
+    // schedule. Restore `auto` once `migrate:namespaces cutover` has moved
+    // them into `prod`/`beta`.
+    TEMPORAL_SCHEDULE_RECONCILIATION: EnvValue.fromValue("disabled"),
     FLIPT_URL: EnvValue.fromValue(
       "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
     ),
