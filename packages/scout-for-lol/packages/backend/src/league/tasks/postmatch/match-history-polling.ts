@@ -65,7 +65,7 @@ import {
   completeScoutEffect,
   recordScoutEffectFailure,
 } from "#src/temporal/effect-claims.ts";
-import { finalizeTournamentResult } from "#src/customs/riot-results.ts";
+import { finalizeAndPublishTournamentResult } from "#src/customs/riot-result-publication.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -319,7 +319,7 @@ export async function processMatchAndUpdatePlayers(
   // past the match. Tournament lobbies — and linked Customs games — finalize
   // here, after authoritative S3 ingest and post-match side effects. A failure
   // therefore leaves the cursors in place and retries the same match.
-  await finalizeTournamentResult(prisma, matchData);
+  await finalizeAndPublishTournamentResult(prisma, matchData);
 
   // Mark as processed
   processedMatchIds.add(matchId);

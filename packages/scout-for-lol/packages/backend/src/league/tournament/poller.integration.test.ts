@@ -6,9 +6,12 @@ import {
 } from "#src/testing/test-database.ts";
 import {
   DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data/index.ts";
+import { createCustomNight } from "#src/customs/repository.ts";
+import { clearCustomsTestData } from "#src/customs/test-database.ts";
 import { openLobbySettings } from "#src/league/tournament/open-lobby-fixture.ts";
 
 const { prisma: testPrisma } = createTestDatabase("tournament-poller");
@@ -148,7 +151,7 @@ async function seedLobby() {
 }
 
 beforeEach(async () => {
-  await deleteIfExists(() => testPrisma.tournamentLobby.deleteMany());
+  await clearCustomsTestData(testPrisma);
   await deleteIfExists(() => testPrisma.account.deleteMany());
   await deleteIfExists(() => testPrisma.player.deleteMany());
   lobbyEvents = [];
@@ -298,6 +301,48 @@ describe("checkTournamentLobbies", () => {
     expect(lobbyEventCalls).toBe(0);
     const waiting = await findLobbyByCode(testPrisma, "TEST-CODE");
     expect(waiting?.state).toBe("resolved");
+  });
+
+  test("a resolved lobby retries only its unfinished Customs projection", async () => {
+    const lobby = await seedLobby();
+    const night = await createCustomNight(testPrisma, {
+      guildId: DiscordGuildIdSchema.parse("1337623164146155593"),
+      guildName: "Beta Guild",
+      launchChannelId: DiscordChannelIdSchema.parse("1337623164146155594"),
+      voiceLobbyChannelId: DiscordChannelIdSchema.parse("1337623164146155594"),
+      hostDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
+      hostDisplayName: "Host",
+      hostAvatarUrl: undefined,
+      disclosureVersion: "2026-08-29",
+      now: new Date(),
+    });
+    const game = await testPrisma.customGame.create({
+      data: {
+        nightId: night.id,
+        sequence: 1,
+        state: "LOBBY_READY",
+        rosterMode: "FIRST_TEN",
+        map: "SUMMONERS_RIFT",
+        pickMode: "TOURNAMENT_DRAFT",
+        tournamentLobbyId: lobby.id,
+      },
+    });
+    await testPrisma.tournamentLobby.update({
+      where: { id: lobby.id },
+      data: { state: "resolved", matchId: "NA1_5421167767" },
+    });
+
+    await checkTournamentLobbies();
+
+    expect(lobbyEventCalls).toBe(0);
+    await expect(
+      testPrisma.customGame.findUniqueOrThrow({ where: { id: game.id } }),
+    ).resolves.toMatchObject({ state: "RESULT_PENDING" });
+    await expect(
+      testPrisma.customAuditEvent.findFirstOrThrow({
+        where: { nightId: night.id, action: "RIOT_RESULT_PENDING" },
+      }),
+    ).resolves.toMatchObject({ source: "RIOT" });
   });
 
   test("an expired resolved lobby is swept without a Tournament call", async () => {

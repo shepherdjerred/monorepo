@@ -12,6 +12,7 @@ import {
 import type { Context } from "#src/trpc/context.ts";
 import configuration from "#src/configuration.ts";
 import { trpcCallDuration, trpcCallsTotal } from "#src/metrics/web.ts";
+import { assertCustomActivityPolicy } from "#src/customs/activity-auth.ts";
 
 /**
  * Find the missing `{ resource, action }` a FORBIDDEN carries. The
@@ -133,6 +134,27 @@ export const protectedProcedure = instrumentedProcedure.use(isAuthenticated);
  * Desktop client procedure - requires API token authentication
  */
 export const desktopClientProcedure = instrumentedProcedure.use(hasApiToken);
+
+const hasActivitySession = middleware(async ({ ctx, next }) => {
+  if (ctx.activitySession === null) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Valid Scout Customs Activity session required",
+    });
+  }
+  try {
+    await assertCustomActivityPolicy(ctx.activitySession);
+  } catch (error) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: error instanceof Error ? error.message : "Activity denied",
+      cause: error,
+    });
+  }
+  return next({ ctx: { ...ctx, activitySession: ctx.activitySession } });
+});
+
+export const activityProcedure = instrumentedProcedure.use(hasActivitySession);
 
 /**
  * Web read middleware - requires a valid scout_session cookie.

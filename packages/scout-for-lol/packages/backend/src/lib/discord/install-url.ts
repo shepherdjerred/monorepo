@@ -1,12 +1,16 @@
 import configuration from "#src/configuration.ts";
 
 /** Permissions required for notifications and generated match reports. */
-const BOT_INSTALL_PERMISSIONS = (
-  (1n << 10n) |
-  (1n << 11n) |
-  (1n << 14n) |
-  (1n << 15n)
-).toString();
+const BASE_BOT_INSTALL_PERMISSIONS =
+  (1n << 10n) | (1n << 11n) | (1n << 14n) | (1n << 15n);
+const CUSTOMS_BETA_PERMISSIONS = (1n << 4n) | (1n << 20n) | (1n << 24n);
+
+export function botInstallPermissions(environment: "dev" | "beta" | "prod") {
+  return (
+    BASE_BOT_INSTALL_PERMISSIONS |
+    (environment === "beta" ? CUSTOMS_BETA_PERMISSIONS : 0n)
+  ).toString();
+}
 
 /**
  * `state` is the single-use install-attribution token minted by
@@ -27,7 +31,7 @@ export function buildDiscordInstallUrl(state?: string): string {
     // The small `identify` scope opts into the authorization-code flow so
     // Discord returns to Scout after the bot is installed.
     scope: "bot applications.commands identify",
-    permissions: BOT_INSTALL_PERMISSIONS,
+    permissions: botInstallPermissions(configuration.environment),
     redirect_uri: `${origin}/api/auth/discord/callback`,
     response_type: "code",
   });

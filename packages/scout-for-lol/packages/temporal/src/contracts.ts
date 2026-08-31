@@ -104,6 +104,8 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "outreach",
     "conversion-check",
     "summoner-index-backfill",
+    "custom-nights-expiry",
+    "prediction-ingest",
     "legacy-backfill",
   ]),
 });

@@ -35,8 +35,9 @@ export function AppNavigation() {
     bucksAvailable: bucksQuery.data?.state === "available",
   });
   const selectedGuild = guildsQuery.data?.find((guild) => guild.id === guildId);
-  const guildItems = visibleGuildNavigationItems((permission) =>
-    perms.can(permission.resource, permission.action),
+  const guildItems = visibleGuildNavigationItems(
+    (permission) => perms.can(permission.resource, permission.action),
+    selectedGuild?.customNightsEnabled === true,
   );
 
   return (

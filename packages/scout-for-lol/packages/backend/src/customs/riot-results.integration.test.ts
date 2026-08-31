@@ -15,6 +15,7 @@ import {
 } from "#src/league/tournament/lobby-store.ts";
 import { finalizeTournamentResult } from "#src/customs/riot-results.ts";
 import { clearCustomsTestData } from "#src/customs/test-database.ts";
+import { projectTournamentLobbyToCustoms } from "#src/customs/lobby-projection.ts";
 
 const { prisma: testPrisma } = createTestDatabase("customs-riot-results");
 const fixture = RawMatchSchema.parse(
@@ -153,6 +154,34 @@ async function expectReportedAndVerified(seeded: {
 }
 
 describe("Riot-only Customs results", () => {
+  test("projects Tournament-V5 progress before Match-V5 verification", async () => {
+    const seeded = await seedPendingResult();
+    await testPrisma.customGame.update({
+      where: { id: seeded.gameId },
+      data: { state: "LOBBY_READY" },
+    });
+    await testPrisma.customNight.update({
+      where: { id: seeded.nightId },
+      data: { state: "LOBBY_READY" },
+    });
+
+    await projectTournamentLobbyToCustoms(
+      testPrisma,
+      seeded.lobbyId,
+      "resolved",
+      new Date(fixture.info.gameEndTimestamp),
+    );
+
+    await expect(
+      testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
+    ).resolves.toMatchObject({ state: "RESULT_PENDING" });
+    await expect(
+      testPrisma.customNight.findUniqueOrThrow({
+        where: { id: seeded.nightId },
+      }),
+    ).resolves.toMatchObject({ state: "PLAYING", revision: 1 });
+  });
+
   test("projects Match-V5 and opens intermission in one transaction", async () => {
     const seeded = await seedPendingResult();
 

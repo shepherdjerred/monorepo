@@ -125,6 +125,7 @@
     "packages/release-tools",
     "packages/resume",
     "packages/scout-for-lol",
+    "packages/scout-for-lol/packages/activity",
     "packages/scout-for-lol/packages/app",
     "packages/scout-for-lol/packages/backend",
     "packages/scout-for-lol/packages/data",
