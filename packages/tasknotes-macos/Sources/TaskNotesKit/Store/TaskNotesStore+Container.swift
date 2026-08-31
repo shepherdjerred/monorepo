@@ -14,11 +14,12 @@ extension TaskNotesStore {
     /// turn "Application Support is unwritable" into a launch crash with no
     /// explanation; a `Result` lets the shell say what went wrong.
     public static func containerDefault(
+        folder: String = "TaskNotes",
         clock: any CoreClock & ViewerCalendarSource = SystemClock(),
         randomness: any Randomness = SystemRandomness()
     ) -> Result<TaskNotesStore, CoreError> {
         do {
-            let storage = try FileHostStorage.containerDefault()
+            let storage = try FileHostStorage.containerDefault(folder: folder)
             return .success(TaskNotesStore(storage: storage, clock: clock, randomness: randomness))
         } catch {
             return .failure(error)

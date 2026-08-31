@@ -49,6 +49,7 @@ enum TestApp {
     ///   - serverAddress: where to point it. Defaults to ``unreachableServer``;
     ///     pass a spawned test server's URL for a flow that genuinely needs
     ///     one. ⚠️ Never pass a real address.
+    ///   - storageFolder: an isolated Application Support folder for this launch.
     ///   - file: the caller, so a launch failure blames the flow.
     ///   - line: the caller's line, for the same reason.
     ///   - teardown: receives a closure that terminates the app; pass
@@ -56,6 +57,7 @@ enum TestApp {
     /// - Returns: the launched application, already in the foreground.
     static func launch(
         serverAddress: String = unreachableServer,
+        storageFolder: String = "TaskNotes-UITests-\(UUID().uuidString)",
         file: StaticString = #filePath,
         line: UInt = #line,
         teardown: (@escaping @Sendable () async -> Void) -> Void
@@ -65,6 +67,7 @@ enum TestApp {
             // The argument domain. `UserDefaults.string(forKey:)` reads this in
             // preference to the persisted value, and nothing writes it back.
             "-\(UITesting.serverAddressDefaultsKey)", serverAddress,
+            "-\(UITesting.storageFolderDefaultsKey)", storageFolder,
             UITesting.flagArgument,
         ]
         app.launch()

@@ -102,6 +102,39 @@ struct TaskFieldEditTests {
         #expect(payload.priority == .high)
         #expect(changedFields(of: payload) == ["priority"])
     }
+
+    @Test("a recurrence configuration touches only its rule, anchor, and required start")
+    func recurrenceConfigurationIsScoped() throws {
+        let draft = CommonRecurrenceDraft(
+            interval: 2,
+            pattern: .weekly(weekdays: [.monday, .wednesday]),
+            ending: .afterOccurrences(8)
+        )
+        let edit = try TaskRecurrenceEdit.build(
+            draft: draft,
+            start: "2026-08-31",
+            anchor: .completion,
+            writesScheduled: true
+        ).get()
+
+        #expect(edit.rule == "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE;COUNT=8")
+        #expect(changedFields(of: edit.payload) == ["scheduled", "recurrence", "recurrenceAnchor"])
+        #expect(edit.payload.scheduled == .set(value: "2026-08-31"))
+        #expect(edit.payload.recurrenceAnchor == .set(value: .completion))
+    }
+
+    @Test("editing recurrence preserves an existing raw Scheduled value unless changed")
+    func recurrencePreservesStoredSchedule() throws {
+        let edit = try TaskRecurrenceEdit.build(
+            draft: CommonRecurrenceDraft(interval: 1, pattern: .daily, ending: .never),
+            start: "2026-08-31",
+            anchor: .scheduled,
+            writesScheduled: false
+        ).get()
+
+        #expect(changedFields(of: edit.payload) == ["recurrence", "recurrenceAnchor"])
+        #expect(edit.payload.scheduled == .unchanged)
+    }
 }
 
 /// One edit and the single field it is allowed to touch.

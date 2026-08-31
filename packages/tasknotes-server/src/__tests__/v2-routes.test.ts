@@ -74,6 +74,10 @@ describe("v2 task routes", () => {
     expect(body.success).toBe(true);
     const page = await unwrap(await app.request("/api/tasks"));
     expect(Array.isArray(page["tasks"])).toBe(true);
+    const tasks = z
+      .array(z.record(z.string(), z.unknown()))
+      .parse(page["tasks"]);
+    expect(tasks[0]?.["details"]).toBe("Seed body.");
     expect(obj(page["pagination"])["limit"]).toBe(50);
     expect(obj(page["vault"])["path"]).toBe(vault);
   });
@@ -97,6 +101,23 @@ describe("v2 task routes", () => {
     expect(got.status).toBe(200);
     const fetched = await unwrap(got);
     expect(fetched["details"]).toBe("Seed body.");
+  });
+
+  test("updated details survive the collection refresh that follows a save", async () => {
+    const updated = await unwrap(
+      await app.request(`/api/tasks/${SEEDED_ID}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ details: "Saved from Facet." }),
+      }),
+    );
+    expect(updated["details"]).toBe("Saved from Facet.");
+
+    const page = await unwrap(await app.request("/api/tasks"));
+    const tasks = z
+      .array(z.record(z.string(), z.unknown()))
+      .parse(page["tasks"]);
+    expect(tasks[0]?.["details"]).toBe("Saved from Facet.");
   });
 
   test("create without title → 400 with error envelope", async () => {

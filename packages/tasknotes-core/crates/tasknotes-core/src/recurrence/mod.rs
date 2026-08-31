@@ -57,6 +57,7 @@
 //! The corpus excludes the two hanging rules through its own guard, so there is
 //! no reference answer to diverge from.
 
+mod common;
 mod describe;
 mod expand;
 mod instant;
@@ -73,6 +74,10 @@ use self::instant::{MS_PER_DAY, MS_PER_DAY_END};
 use self::options::Options;
 use self::text::{EasterOffset, Unparsable};
 
+pub use self::common::{
+    CommonRecurrenceDraft, CommonRecurrenceEnd, CommonRecurrencePattern, CommonWeekday,
+    MonthlyOrdinal, build_common_recurrence, parse_common_recurrence,
+};
 pub use self::text::Frequency;
 
 /// `getFiniteRecurringInstanceCount`'s own ceiling: past this many instances it
@@ -224,6 +229,17 @@ impl Recurrence {
             dtstart: Some(dtstart),
             behaviour,
         }
+    }
+
+    /// The effective Gregorian start date used by the recurrence engine.
+    ///
+    /// This exposes the same embedded-`DTSTART`, `scheduled`, and
+    /// `dateCreated` resolution used for expansion so native editors can seed
+    /// implicit weekly, monthly, and yearly selectors without changing a
+    /// stored series when it is reopened.
+    #[must_use]
+    pub fn resolved_start(&self) -> Option<NaiveDate> {
+        self.dtstart.and_then(date_of)
     }
 
     /// Whether the task has an occurrence on `date`.

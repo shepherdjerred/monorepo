@@ -107,6 +107,7 @@ struct InspectorDateRow: View {
                     onChoose: choose,
                     onPick: { date in
                         isPresented = false
+                        guard date != badge?.date else { return }
                         onPick(date)
                     }
                 )
@@ -122,47 +123,34 @@ struct InspectorDateRow: View {
     private func choose(_ choice: ScheduleChoice) {
         isPresented = false
         switch choice.resolving(on: calendar) {
-        case .success(let date): onPick(date)
+        case .success(let date):
+            guard date != badge?.date else { return }
+            onPick(date)
         case .failure(let error): onFail(error)
         }
     }
 }
 
-/// The recurrence row.
+/// The recurrence row and its common-pattern editing sheet.
 ///
-/// ## Read-only, and every word on it is the core's
-///
-/// The rule reads as a sentence — "Every 2 weeks on Mon, Wed" — straight from
-/// `recurrenceSummary`, and falls back to the raw `RRULE` when the core
-/// declines to write one. Nothing here parses RFC 5545; see
-/// ``RecurrenceSummary`` for why a sentence assembled in Swift from `Frequency`
-/// would print "Weekly" over a rule that fires every *other* Tuesday.
-///
-/// It is still not **editable**, which is a separate question: reading a rule
-/// needs a summary, writing one needs a builder, and there is no core export
-/// that constructs an `RRULE` from parts. Two things are editable because
-/// neither constructs anything: **stopping** the repetition (a `clear`, which
-/// deletes the key) and the **anchor** (a closed two-case enum the core
-/// exports).
+/// Every description, parse decision and built rule comes from the shared
+/// core. Swift owns only the controls and the explicit consent required before
+/// replacing a stored rule that the common editor cannot preserve.
 struct InspectorRecurrenceRow: View {
     let summary: RecurrenceSummary?
+    let task: CoreTask
+    let calendar: ViewerCalendar
     let apply: (TaskFieldEdit) -> Void
+    let applyRecurrence: (TaskRecurrenceEdit) -> Void
+
+    @State private var isPresented = false
 
     var body: some View {
-        if let summary {
-            // A full-width row rather than a `LabeledContent`, for the same
-            // reason the token fields are: an `RRULE` does not fit in the
-            // trailing hundred points of a labelled row, and the wrapped
-            // remainder came out right-aligned against a left-aligned first
-            // line, which reads as a layout accident.
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
+            if let summary {
                 Text("Repeats")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                // Monospaced only for the raw rule. A sentence set in a code
-                // face reads as something the reader is meant to edit, and this
-                // row is not editable; the fallback genuinely is a code string
-                // and should look like one.
                 Text(summary.description ?? summary.rule)
                     .font(
                         summary.description == nil
@@ -170,6 +158,13 @@ struct InspectorRecurrenceRow: View {
                     )
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                if summary.editableDraft == nil, summary.description != nil {
+                    Text(summary.rule)
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 if let caption = caption(summary) {
                     Text(caption)
                         .font(.caption)
@@ -177,40 +172,40 @@ struct InspectorRecurrenceRow: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if !summary.isExpandable {
-                    // The engine fails open — an unreadable rule is treated as
-                    // firing, so the task keeps appearing rather than
-                    // vanishing. Without this line that looks like the rule
-                    // working.
                     Label("This rule cannot be read", systemImage: "exclamationmark.triangle")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                // Deliberately **not** `role: .destructive`. Two reasons: the
-                // borderless destructive style renders dim grey here, which
-                // reads as disabled rather than as dangerous — and red in this
-                // app means exactly one thing, *late*, so spending it on a
-                // button would break the one colour convention every screen
-                // shares. A bordered button is the honest affordance: this is
-                // reversible, it is not a deletion, and it should look
-                // clickable.
-                Button("Stop Repeating") {
-                    apply(RecurrenceSummary.stopRepeating)
+                HStack {
+                    Button(summary.editableDraft == nil ? "Replace Rule…" : "Edit Repeat…") {
+                        isPresented = true
+                    }
+                    .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceEdit)
+                    Button("Stop Repeating") {
+                        apply(RecurrenceSummary.stopRepeating)
+                    }
+                    .accessibilityIdentifier(AccessibilityIdentifier.Inspector.stopRepeating)
                 }
-                .accessibilityIdentifier(AccessibilityIdentifier.Inspector.stopRepeating)
+            } else {
+                LabeledContent("Repeats") {
+                    Button("Never") { isPresented = true }
+                        .buttonStyle(.borderless)
+                        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceEdit)
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrence)
-            .help("A recurrence rule is edited in the vault; this panel can only stop it.")
-
-            Picker("Measured From", selection: anchorBinding(summary)) {
-                Text("Scheduled Date").tag(RecurrenceAnchor.scheduled)
-                Text("Completion Date").tag(RecurrenceAnchor.completion)
-            }
-            .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceAnchor)
-        } else {
-            LabeledContent("Repeats", value: "Never")
-                .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrence)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrence)
+        .sheet(isPresented: $isPresented) {
+            RecurrenceEditorSheet(
+                existingRule: summary?.rule,
+                editableDraft: summary?.editableDraft,
+                storedScheduled: task.scheduled,
+                start: start,
+                anchor: summary?.anchor ?? task.recurrenceAnchor ?? .scheduled,
+                onApply: applyRecurrence
+            )
         }
     }
 
@@ -245,8 +240,10 @@ struct InspectorRecurrenceRow: View {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
-    private func anchorBinding(_ summary: RecurrenceSummary) -> Binding<RecurrenceAnchor> {
-        Binding(get: { summary.anchor }, set: { apply(.recurrenceAnchor($0)) })
+    private var start: String {
+        summary?.effectiveStart
+            ?? task.scheduled.map { String($0.prefix(10)) }
+            ?? calendar.today
     }
 }
 

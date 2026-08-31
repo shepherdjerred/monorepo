@@ -75,6 +75,18 @@ public struct RecurrenceSummary: Sendable, Equatable {
     /// reading rather than the user's choice.
     public let anchorIsImplied: Bool
 
+    /// The effective Gregorian start date used by the core, when resolvable.
+    ///
+    /// This is separate from the stored Scheduled field because recurring tasks
+    /// may derive their start from an embedded DTSTART or dateCreated.
+    public let effectiveStart: String?
+
+    /// The common-pattern draft when the editor can preserve this rule exactly.
+    ///
+    /// `nil` keeps the stored rule authoritative. The presentation must require
+    /// an explicit replacement before it constructs a different one.
+    public let editableDraft: CommonRecurrenceDraft?
+
     /// Derive the summary for a task, or `nil` when it does not repeat.
     ///
     /// An **empty** `recurrence` is not a rule: the core reads it as the no-rule
@@ -107,6 +119,9 @@ public struct RecurrenceSummary: Sendable, Equatable {
             )
         }
 
+        let resolvedStart = recurrenceResolvedStart(
+            text: stored, scheduled: task.scheduled, dateCreated: task.dateCreated)
+
         return RecurrenceSummary(
             rule: stored,
             description: recurrenceSummary(
@@ -118,7 +133,11 @@ public struct RecurrenceSummary: Sendable, Equatable {
                 try DateBadge.of(occurrence: date, calendar: calendar, text: text)
             },
             anchor: measuredFrom,
-            anchorIsImplied: task.recurrenceAnchor == nil
+            anchorIsImplied: task.recurrenceAnchor == nil,
+            effectiveStart: resolvedStart,
+            editableDraft: resolvedStart.flatMap {
+                recurrenceParseCommon(text: stored, start: $0)
+            }
         )
     }
 

@@ -121,8 +121,20 @@ struct MarkdownSourceEditor: NSViewRepresentable {
         // into the middle of a paragraph would jump the caret to the end after
         // each character.
         if textView.string != text {
+            context.coordinator.undoManager.removeAllActions()
             textView.string = text
         }
+    }
+
+    static func dismantleNSView(_ scrollView: NSScrollView, coordinator: Coordinator) {
+        guard let textView = scrollView.documentView as? NSTextView else { return }
+        // Detach every callback target before the coordinator-owned TextKit
+        // stack is released. Undo registrations can otherwise retain selectors
+        // against text objects that no longer exist after the inspector closes.
+        textView.delegate = nil
+        textView.allowsUndo = false
+        coordinator.undoManager.removeAllActions()
+        scrollView.documentView = nil
     }
 
     func makeCoordinator() -> Coordinator {
@@ -160,6 +172,9 @@ struct MarkdownSourceEditor: NSViewRepresentable {
         let container = NSTextContainer(
             size: NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude))
 
+        /// Undo history belongs to this editor instance and no other.
+        let undoManager = UndoManager()
+
         /// What the text was when editing began, for Escape to restore.
         private var original: String?
 
@@ -176,6 +191,11 @@ struct MarkdownSourceEditor: NSViewRepresentable {
         func textDidBeginEditing(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             original = textView.string
+        }
+
+        /// AppKit's supported hook for scoping undo to this text view.
+        func undoManager(for view: NSTextView) -> UndoManager? {
+            undoManager
         }
 
         func textDidChange(_ notification: Notification) {

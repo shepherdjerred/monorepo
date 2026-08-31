@@ -4590,6 +4590,85 @@ public func FfiConverterTypeCalendarWeek_lower(_ value: CalendarWeek) -> RustBuf
 
 
 /**
+ * See [`tasknotes_core::recurrence::CommonRecurrenceDraft`].
+ */
+public struct CommonRecurrenceDraft: Equatable, Hashable {
+    /**
+     * A strictly positive interval.
+     */
+    public var interval: UInt32
+    /**
+     * The calendar pattern.
+     */
+    public var pattern: CommonRecurrencePattern
+    /**
+     * The stopping condition.
+     */
+    public var ending: CommonRecurrenceEnd
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * A strictly positive interval.
+         */interval: UInt32, 
+        /**
+         * The calendar pattern.
+         */pattern: CommonRecurrencePattern, 
+        /**
+         * The stopping condition.
+         */ending: CommonRecurrenceEnd) {
+        self.interval = interval
+        self.pattern = pattern
+        self.ending = ending
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension CommonRecurrenceDraft: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCommonRecurrenceDraft: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CommonRecurrenceDraft {
+        return
+            try CommonRecurrenceDraft(
+                interval: FfiConverterUInt32.read(from: &buf), 
+                pattern: FfiConverterTypeCommonRecurrencePattern.read(from: &buf), 
+                ending: FfiConverterTypeCommonRecurrenceEnd.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: CommonRecurrenceDraft, into buf: inout [UInt8]) {
+        FfiConverterUInt32.write(value.interval, into: &buf)
+        FfiConverterTypeCommonRecurrencePattern.write(value.pattern, into: &buf)
+        FfiConverterTypeCommonRecurrenceEnd.write(value.ending, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCommonRecurrenceDraft_lift(_ buf: RustBuffer) throws -> CommonRecurrenceDraft {
+    return try FfiConverterTypeCommonRecurrenceDraft.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCommonRecurrenceDraft_lower(_ value: CommonRecurrenceDraft) -> RustBuffer {
+    return FfiConverterTypeCommonRecurrenceDraft.lower(value)
+}
+
+
+/**
  * See [`tasknotes_core::domain::CreateTaskRequest`].
  *
  * A create has nothing to clear, so every field is a plain optional rather
@@ -8238,6 +8317,341 @@ public func FfiConverterTypeCommandInput_lower(_ value: CommandInput) -> RustBuf
 
 
 /**
+ * See [`tasknotes_core::recurrence::CommonRecurrenceEnd`].
+ */
+
+public enum CommonRecurrenceEnd: Equatable, Hashable {
+    
+    /**
+     * It has no declared end.
+     */
+    case never
+    /**
+     * It ends on an inclusive ISO date.
+     */
+    case onDate(String
+    )
+    /**
+     * It ends after a number of total occurrences.
+     */
+    case afterOccurrences(UInt32
+    )
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension CommonRecurrenceEnd: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCommonRecurrenceEnd: FfiConverterRustBuffer {
+    typealias SwiftType = CommonRecurrenceEnd
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CommonRecurrenceEnd {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .never
+        
+        case 2: return .onDate(try FfiConverterString.read(from: &buf)
+        )
+        
+        case 3: return .afterOccurrences(try FfiConverterUInt32.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: CommonRecurrenceEnd, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .never:
+            writeInt(&buf, Int32(1))
+        
+        
+        case let .onDate(v1):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(v1, into: &buf)
+            
+        
+        case let .afterOccurrences(v1):
+            writeInt(&buf, Int32(3))
+            FfiConverterUInt32.write(v1, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCommonRecurrenceEnd_lift(_ buf: RustBuffer) throws -> CommonRecurrenceEnd {
+    return try FfiConverterTypeCommonRecurrenceEnd.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCommonRecurrenceEnd_lower(_ value: CommonRecurrenceEnd) -> RustBuffer {
+    return FfiConverterTypeCommonRecurrenceEnd.lower(value)
+}
+
+
+
+/**
+ * See [`tasknotes_core::recurrence::CommonRecurrencePattern`].
+ */
+
+public enum CommonRecurrencePattern: Equatable, Hashable {
+    
+    /**
+     * Every N days.
+     */
+    case daily
+    /**
+     * Every N weeks on selected weekdays.
+     */
+    case weekly(weekdays: [CommonWeekday]
+    )
+    /**
+     * Every N months on a numbered day.
+     */
+    case monthlyDayOfMonth(day: UInt8
+    )
+    /**
+     * Every N months on an ordinal weekday.
+     */
+    case monthlyOrdinalWeekday(ordinal: MonthlyOrdinal, weekday: CommonWeekday
+    )
+    /**
+     * Every N years on a month and day.
+     */
+    case yearlyMonthDay(month: UInt8, day: UInt8
+    )
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension CommonRecurrencePattern: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCommonRecurrencePattern: FfiConverterRustBuffer {
+    typealias SwiftType = CommonRecurrencePattern
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CommonRecurrencePattern {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .daily
+        
+        case 2: return .weekly(weekdays: try FfiConverterSequenceTypeCommonWeekday.read(from: &buf)
+        )
+        
+        case 3: return .monthlyDayOfMonth(day: try FfiConverterUInt8.read(from: &buf)
+        )
+        
+        case 4: return .monthlyOrdinalWeekday(ordinal: try FfiConverterTypeMonthlyOrdinal.read(from: &buf), weekday: try FfiConverterTypeCommonWeekday.read(from: &buf)
+        )
+        
+        case 5: return .yearlyMonthDay(month: try FfiConverterUInt8.read(from: &buf), day: try FfiConverterUInt8.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: CommonRecurrencePattern, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .daily:
+            writeInt(&buf, Int32(1))
+        
+        
+        case let .weekly(weekdays):
+            writeInt(&buf, Int32(2))
+            FfiConverterSequenceTypeCommonWeekday.write(weekdays, into: &buf)
+            
+        
+        case let .monthlyDayOfMonth(day):
+            writeInt(&buf, Int32(3))
+            FfiConverterUInt8.write(day, into: &buf)
+            
+        
+        case let .monthlyOrdinalWeekday(ordinal,weekday):
+            writeInt(&buf, Int32(4))
+            FfiConverterTypeMonthlyOrdinal.write(ordinal, into: &buf)
+            FfiConverterTypeCommonWeekday.write(weekday, into: &buf)
+            
+        
+        case let .yearlyMonthDay(month,day):
+            writeInt(&buf, Int32(5))
+            FfiConverterUInt8.write(month, into: &buf)
+            FfiConverterUInt8.write(day, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCommonRecurrencePattern_lift(_ buf: RustBuffer) throws -> CommonRecurrencePattern {
+    return try FfiConverterTypeCommonRecurrencePattern.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCommonRecurrencePattern_lower(_ value: CommonRecurrencePattern) -> RustBuffer {
+    return FfiConverterTypeCommonRecurrencePattern.lower(value)
+}
+
+
+
+/**
+ * See [`tasknotes_core::recurrence::CommonWeekday`].
+ */
+
+public enum CommonWeekday: Equatable, Hashable {
+    
+    /**
+     * Monday.
+     */
+    case monday
+    /**
+     * Tuesday.
+     */
+    case tuesday
+    /**
+     * Wednesday.
+     */
+    case wednesday
+    /**
+     * Thursday.
+     */
+    case thursday
+    /**
+     * Friday.
+     */
+    case friday
+    /**
+     * Saturday.
+     */
+    case saturday
+    /**
+     * Sunday.
+     */
+    case sunday
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension CommonWeekday: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCommonWeekday: FfiConverterRustBuffer {
+    typealias SwiftType = CommonWeekday
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CommonWeekday {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .monday
+        
+        case 2: return .tuesday
+        
+        case 3: return .wednesday
+        
+        case 4: return .thursday
+        
+        case 5: return .friday
+        
+        case 6: return .saturday
+        
+        case 7: return .sunday
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: CommonWeekday, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .monday:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .tuesday:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .wednesday:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .thursday:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .friday:
+            writeInt(&buf, Int32(5))
+        
+        
+        case .saturday:
+            writeInt(&buf, Int32(6))
+        
+        
+        case .sunday:
+            writeInt(&buf, Int32(7))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCommonWeekday_lift(_ buf: RustBuffer) throws -> CommonWeekday {
+    return try FfiConverterTypeCommonWeekday.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCommonWeekday_lower(_ value: CommonWeekday) -> RustBuffer {
+    return FfiConverterTypeCommonWeekday.lower(value)
+}
+
+
+
+/**
  * Everything the core can fail with, as the host sees it.
  *
  * The variant order is the FFI discriminant — see the crate docs. Adding,
@@ -8906,6 +9320,121 @@ public func FfiConverterTypeMinutesUpdate_lift(_ buf: RustBuffer) throws -> Minu
 #endif
 public func FfiConverterTypeMinutesUpdate_lower(_ value: MinutesUpdate) -> RustBuffer {
     return FfiConverterTypeMinutesUpdate.lower(value)
+}
+
+
+
+/**
+ * See [`tasknotes_core::recurrence::MonthlyOrdinal`].
+ */
+
+public enum MonthlyOrdinal: Equatable, Hashable {
+    
+    /**
+     * The first occurrence.
+     */
+    case first
+    /**
+     * The second occurrence.
+     */
+    case second
+    /**
+     * The third occurrence.
+     */
+    case third
+    /**
+     * The fourth occurrence.
+     */
+    case fourth
+    /**
+     * The fifth occurrence.
+     */
+    case fifth
+    /**
+     * The final occurrence.
+     */
+    case last
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension MonthlyOrdinal: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeMonthlyOrdinal: FfiConverterRustBuffer {
+    typealias SwiftType = MonthlyOrdinal
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MonthlyOrdinal {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .first
+        
+        case 2: return .second
+        
+        case 3: return .third
+        
+        case 4: return .fourth
+        
+        case 5: return .fifth
+        
+        case 6: return .last
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: MonthlyOrdinal, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .first:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .second:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .third:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .fourth:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .fifth:
+            writeInt(&buf, Int32(5))
+        
+        
+        case .last:
+            writeInt(&buf, Int32(6))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMonthlyOrdinal_lift(_ buf: RustBuffer) throws -> MonthlyOrdinal {
+    return try FfiConverterTypeMonthlyOrdinal.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMonthlyOrdinal_lower(_ value: MonthlyOrdinal) -> RustBuffer {
+    return FfiConverterTypeMonthlyOrdinal.lower(value)
 }
 
 
@@ -10372,6 +10901,30 @@ fileprivate struct FfiConverterOptionTypeTaskNotesApi: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeCommonRecurrenceDraft: FfiConverterRustBuffer {
+    typealias SwiftType = CommonRecurrenceDraft?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeCommonRecurrenceDraft.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeCommonRecurrenceDraft.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeInstanceRestore: FfiConverterRustBuffer {
     typealias SwiftType = InstanceRestore?
 
@@ -11096,6 +11649,31 @@ fileprivate struct FfiConverterSequenceTypeWeekdayHeader: FfiConverterRustBuffer
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeWeekdayHeader.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeCommonWeekday: FfiConverterRustBuffer {
+    typealias SwiftType = [CommonWeekday]
+
+    public static func write(_ value: [CommonWeekday], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeCommonWeekday.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [CommonWeekday] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [CommonWeekday]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeCommonWeekday.read(from: &buf))
         }
         return seq
     }
@@ -12587,6 +13165,23 @@ public func parseTaskInput(input: String, today: String)throws  -> NlpParseResul
 })
 }
 /**
+ * Validate and canonically serialize the common-pattern editor model.
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Validation`] when any date or numeric constraint is
+ * invalid.
+ */
+public func recurrenceBuildCommon(draft: CommonRecurrenceDraft, start: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_recurrence_build_common(
+        FfiConverterTypeCommonRecurrenceDraft_lower(draft),
+        FfiConverterString.lower(start),uniffiCallStatus
+    )
+})
+}
+/**
  * The occurrence date a completion gesture on a **recurring** task targets.
  *
  * The single most consequential thing a task list can get wrong: a recurring
@@ -12781,6 +13376,38 @@ public func recurrenceOccursOn(text: String, scheduled: String?, dateCreated: St
         FfiConverterOptionString.lower(scheduled),
         FfiConverterOptionString.lower(dateCreated),
         FfiConverterString.lower(date),uniffiCallStatus
+    )
+})
+}
+/**
+ * Parse a rule into the closed common-pattern editor model.
+ *
+ * `None` means the rule cannot be represented losslessly. The host must keep
+ * the raw rule authoritative until the user explicitly replaces it.
+ */
+public func recurrenceParseCommon(text: String, start: String) -> CommonRecurrenceDraft?  {
+    return try!  FfiConverterOptionTypeCommonRecurrenceDraft.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_recurrence_parse_common(
+        FfiConverterString.lower(text),
+        FfiConverterString.lower(start),uniffiCallStatus
+    )
+})
+}
+/**
+ * Return the effective Gregorian start date used to interpret a task rule.
+ *
+ * Native editors use this for implicit calendar selectors. It follows the
+ * same embedded `DTSTART`, `scheduled`, and `dateCreated` precedence as every
+ * other recurrence operation in the core.
+ */
+public func recurrenceResolvedStart(text: String, scheduled: String?, dateCreated: String?) -> String?  {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_recurrence_resolved_start(
+        FfiConverterString.lower(text),
+        FfiConverterOptionString.lower(scheduled),
+        FfiConverterOptionString.lower(dateCreated),uniffiCallStatus
     )
 })
 }
@@ -13032,6 +13659,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_parse_task_input() != 63614) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_build_common() != 53313) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date() != 846) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -13051,6 +13681,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on() != 64285) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_parse_common() != 4270) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_resolved_start() != 30042) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary() != 42582) {
