@@ -1,16 +1,8 @@
 {
   "pairs": {
-    "packages/alert-dashboard/integration/sqlite.integration.test.ts|packages/alert-dashboard/integration/sqlite.integration.test.ts": {
-      "clones": 2,
-      "tokens": 181
-    },
     "packages/alert-dashboard/integration/sqlite.integration.test.ts|packages/alert-dashboard/integration/webhook-authority-cases.ts": {
       "clones": 1,
       "tokens": 134
-    },
-    "packages/alert-dashboard/scripts/cancel-pending-incident-email.ts|packages/scout-for-lol/packages/backend/scripts/requeue-temporal-work.ts": {
-      "clones": 1,
-      "tokens": 74
     },
     "packages/alert-dashboard/src/client/dashboard-page.tsx|packages/alert-dashboard/src/client/history-page.tsx": {
       "clones": 1,
@@ -1801,8 +1793,8 @@
       "tokens": 100
     },
     "packages/temporal/src/activities/workflow-failure-watch.test.ts|packages/temporal/src/activities/workflow-failure-watch.test.ts": {
-      "clones": 9,
-      "tokens": 865
+      "clones": 3,
+      "tokens": 253
     },
     "packages/temporal/src/event-bridge/agent-task-api.ts|packages/temporal/src/event-bridge/sleep-webhook.ts": {
       "clones": 1,

@@ -11,6 +11,7 @@ import {
 } from "./glitter-context-refresh-budget.ts";
 import {
   readOrCreateGenerationArtifact,
+  type GenerationArtifactResult,
   type GenerationArtifactStore,
 } from "./glitter-context-refresh-cache.ts";
 import {
@@ -20,6 +21,7 @@ import {
 import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
 import {
   generateGlitterObject,
+  type GlitterObjectArtifact,
   readGlitterObjectArtifact,
   useGlitterObjectArtifact,
 } from "./glitter-context-refresh-llm.ts";
@@ -37,7 +39,9 @@ import {
   type SummarizedChunk,
 } from "./glitter-context-refresh-style-generation-cost.ts";
 import {
-  sanitizeChunkSummary,
+  nextParseFailureRepair,
+  selectBestChunkSummary,
+  toSummarizedChunk,
   validateChunkSummary,
 } from "./glitter-context-refresh-style-validation.ts";
 import { finalizeStyleSynthesis } from "./glitter-context-refresh-style-finalize.ts";
@@ -63,46 +67,28 @@ const extractionTruncationError = (chunkKey: string): string =>
 // truncates, it is retried once at the ceiling below.
 const SYNTHESIS_TRUNCATION_ERROR =
   "GPT-5.6 Luna synthesis reached the completion-token limit";
-const EMPTY_CHUNK_SUMMARY: StyleChunkSummary = {
-  observations: [],
-  representativeMessages: [],
-};
-
-function nextParseFailureRepair(
-  prior: ChunkExtractionRepair | null,
-  error: string,
-  rawContent: string | null,
-): ChunkExtractionRepair {
-  if (prior === null || prior.previous === EMPTY_CHUNK_SUMMARY) {
-    return {
-      previous: EMPTY_CHUNK_SUMMARY,
-      error,
-      rawContent,
-    };
-  }
-  return {
-    previous: prior.previous,
-    error: prior.error,
-    rawContent: null,
-  };
-}
-// Completions are cached before validation, so repairs use distinct seeds
-// (`DETERMINISTIC_SEED + attempt`) and cache keys. Attempt 0 is the initial call;
-// attempts 1..N are repairs, and a rerun reuses the first passing attempt.
-//
-// Sanitization is the convergence guarantee when a model repeatedly cites an ID
-// found inside content but not in the top-level chunk: unverifiable evidence is
-// dropped at the boundary instead of failing the run.
-async function runChunkExtraction(input: {
-  candidate: StyleRefreshCandidate;
-  chunk: StyleEvidenceChunk;
-  artifactStore: GenerationArtifactStore;
+/**
+ * Runs one cached Glitter generation call. Chunk extraction and card synthesis
+ * differ only in their response schema, schema name, and failure messages —
+ * everything around that (artifact reuse, the uncached-call budget
+ * authorization, and the token/seed/reasoning wiring) is identical, so it lives
+ * here once.
+ */
+async function generateFromRequest<Value>(input: {
+  generationRequest: Omit<
+    | ReturnType<typeof buildStyleChunkGenerationRequest>
+    | ReturnType<typeof buildStyleSynthesisGenerationRequest>,
+    "responseSchema"
+  > & { responseSchema: z.ZodType<GlitterObjectArtifact<Value>> };
   budget: GenerationBudget;
-  attempt: number;
-  repair: ChunkExtractionRepair | null;
-}) {
-  const generationRequest = buildStyleChunkGenerationRequest(input);
-  const artifact = await readOrCreateGenerationArtifact({
+  artifactStore: GenerationArtifactStore;
+  schema: z.ZodType<Value>;
+  schemaName: string;
+  truncationError: string;
+  exhaustionError: string;
+}): Promise<GenerationArtifactResult<GlitterObjectArtifact<Value>>> {
+  const { generationRequest } = input;
+  return await readOrCreateGenerationArtifact({
     store: input.artifactStore,
     model: generationRequest.model,
     callSite: generationRequest.callSite,
@@ -122,8 +108,8 @@ async function runChunkExtraction(input: {
       );
       return await generateGlitterObject({
         model: generationRequest.model,
-        schema: StyleChunkSummarySchema,
-        schemaName: "style_chunk_summary",
+        schema: input.schema,
+        schemaName: input.schemaName,
         ...generationRequest.messages,
         workload: generationRequest.callSite,
         maxOutputTokens: generationRequest.maxOutputTokens,
@@ -131,31 +117,41 @@ async function runChunkExtraction(input: {
           generationRequest.semanticRetryMaxOutputTokens,
         reasoningEffort: generationRequest.reasoningEffort,
         seed: generationRequest.seed,
-        truncationError: extractionTruncationError(input.chunk.key),
-        exhaustionError: `GPT-5.6 Luna did not return a parsed summary for ${input.chunk.key}`,
+        truncationError: input.truncationError,
+        exhaustionError: input.exhaustionError,
       });
     },
+  });
+}
+
+// Completions are cached before validation, so repairs use distinct seeds
+// (`DETERMINISTIC_SEED + attempt`) and cache keys. Attempt 0 is the initial call;
+// attempts 1..N are repairs, and a rerun reuses the first passing attempt.
+//
+// Sanitization is the convergence guarantee when a model repeatedly cites an ID
+// found inside content but not in the top-level chunk: unverifiable evidence is
+// dropped at the boundary instead of failing the run.
+async function runChunkExtraction(input: {
+  candidate: StyleRefreshCandidate;
+  chunk: StyleEvidenceChunk;
+  artifactStore: GenerationArtifactStore;
+  budget: GenerationBudget;
+  attempt: number;
+  repair: ChunkExtractionRepair | null;
+}) {
+  const artifact = await generateFromRequest({
+    generationRequest: buildStyleChunkGenerationRequest(input),
+    budget: input.budget,
+    artifactStore: input.artifactStore,
+    schema: StyleChunkSummarySchema,
+    schemaName: "style_chunk_summary",
+    truncationError: extractionTruncationError(input.chunk.key),
+    exhaustionError: `GPT-5.6 Luna did not return a parsed summary for ${input.chunk.key}`,
   });
   return readGlitterObjectArtifact({
     artifact,
     budget: input.budget,
   });
-}
-
-function verifiableContent(summary: StyleChunkSummary): number {
-  return summary.observations.length + summary.representativeMessages.length;
-}
-
-/**
- * A chunk contributes its messages to the card's coverage only when it yielded
- * usable evidence. A chunk that yielded none influenced nothing, so counting it
- * would make the card advertise a month it silently omits.
- */
-function summarizedMessageCount(
-  chunk: StyleEvidenceChunk,
-  summary: StyleChunkSummary,
-): number {
-  return verifiableContent(summary) === 0 ? 0 : chunk.messages.length;
 }
 
 async function summarizeChunk(input: {
@@ -198,32 +194,7 @@ async function summarizeChunk(input: {
   if (lastError === undefined) {
     throw new Error(`chunk ${input.chunk.key} produced no extraction attempts`);
   }
-  // Every attempt failed to parse — the model never returned a schema-valid
-  // summary for this chunk, so there is nothing to sanitize. Observed live:
-  // GPT-5.6 Luna degenerates into a repetition loop on a particular chunk and
-  // burns every semantic attempt, and the resulting failure artifact is cached,
-  // so each later run replays it without spending a token. Throwing here
-  // stranded the whole refresh — for every person — on one unlucky chunk,
-  // permanently. Degrade to an empty summary instead; `summarizedMessageCount`
-  // keeps that month out of the card's coverage rather than laundering the gap,
-  // and `generateStyleCard` still refuses a card with no evidence at all.
-  if (attempts.length === 0) {
-    return EMPTY_CHUNK_SUMMARY;
-  }
-  // The model could not produce a fully valid summary for this chunk even after
-  // repairs (it deterministically cites an unverifiable in-content ID). Sanitize
-  // every attempt and keep the one that retains the most verifiable evidence, so
-  // an earlier attempt's valid observations are not lost to a worse final repair.
-  const best = attempts
-    .map((attempt) => sanitizeChunkSummary(input.chunk, attempt))
-    .reduce((strongest, candidate) =>
-      verifiableContent(candidate) > verifiableContent(strongest)
-        ? candidate
-        : strongest,
-    );
-  // Validate the sanitized result to prove it now satisfies the contract.
-  validateChunkSummary(input.chunk, best);
-  return best;
+  return selectBestChunkSummary(input.chunk, attempts);
 }
 
 async function runSynthesis(input: {
@@ -243,39 +214,14 @@ async function runSynthesis(input: {
   directRecentMessages: readonly CurrentMessage[];
 }> {
   const generationRequest = buildStyleSynthesisGenerationRequest(input);
-  const artifact = await readOrCreateGenerationArtifact({
-    store: input.artifactStore,
-    model: generationRequest.model,
-    callSite: generationRequest.callSite,
-    request: generationRequest.request,
-    responseSchema: generationRequest.responseSchema,
-    generate: async () => {
-      input.budget.authorizeUncachedCall(
-        worstCaseGenerationCostUsd({
-          model: generationRequest.model,
-          inputTokenUpperBound: inputTokenUpperBound(
-            JSON.stringify(generationRequest.messages),
-          ),
-          outputTokenUpperBound: generationRequest.maxOutputTokens,
-          semanticRetryOutputTokenUpperBound:
-            generationRequest.semanticRetryMaxOutputTokens,
-        }),
-      );
-      return await generateGlitterObject({
-        model: generationRequest.model,
-        schema: StyleSynthesisSchema,
-        schemaName: "style_card_synthesis",
-        ...generationRequest.messages,
-        workload: generationRequest.callSite,
-        maxOutputTokens: generationRequest.maxOutputTokens,
-        semanticRetryMaxOutputTokens:
-          generationRequest.semanticRetryMaxOutputTokens,
-        reasoningEffort: generationRequest.reasoningEffort,
-        seed: generationRequest.seed,
-        truncationError: SYNTHESIS_TRUNCATION_ERROR,
-        exhaustionError: `GPT-5.6 Luna did not return a parsed synthesis for ${input.candidate.person.id}`,
-      });
-    },
+  const artifact = await generateFromRequest({
+    generationRequest,
+    budget: input.budget,
+    artifactStore: input.artifactStore,
+    schema: StyleSynthesisSchema,
+    schemaName: "style_card_synthesis",
+    truncationError: SYNTHESIS_TRUNCATION_ERROR,
+    exhaustionError: `GPT-5.6 Luna did not return a parsed synthesis for ${input.candidate.person.id}`,
   });
   return {
     synthesis: useGlitterObjectArtifact({ artifact, budget: input.budget }),
@@ -310,19 +256,7 @@ export async function generateStyleCard(input: {
       artifactStore: input.artifactStore,
       budget: input.budget,
     });
-    const firstMessage = chunk.messages[0];
-    const lastMessage = chunk.messages.at(-1);
-    if (firstMessage === undefined || lastMessage === undefined) {
-      throw new Error(`style evidence chunk ${chunk.key} is empty`);
-    }
-    summarizedChunks.push({
-      key: chunk.key,
-      month: chunk.month,
-      startTimestamp: firstMessage.timestamp,
-      endTimestamp: lastMessage.timestamp,
-      summary,
-      summarizedMessageCount: summarizedMessageCount(chunk, summary),
-    });
+    summarizedChunks.push(toSummarizedChunk(chunk, summary));
   }
   const summarizedMessages = summarizedChunks.reduce(
     (total, chunk) => total + chunk.summarizedMessageCount,

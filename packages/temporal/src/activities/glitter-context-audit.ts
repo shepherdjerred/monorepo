@@ -48,7 +48,9 @@ import {
 } from "./glitter-context-refresh-style-generation-cost.ts";
 import { finalizeStyleSynthesis } from "./glitter-context-refresh-style-finalize.ts";
 import {
-  sanitizeChunkSummary,
+  nextParseFailureRepair,
+  selectBestChunkSummary,
+  toSummarizedChunk,
   validateChunkSummary,
 } from "./glitter-context-refresh-style-validation.ts";
 import type {
@@ -67,11 +69,6 @@ import {
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const MAIN_BRANCH = "main";
 const PACKAGE_PATH = "packages/glitter-context";
-const EMPTY_CHUNK_SUMMARY: StyleChunkSummary = {
-  observations: [],
-  representativeMessages: [],
-};
-
 type AuditState = {
   cacheHits: number;
   cacheMisses: number;
@@ -99,28 +96,6 @@ function recordProbe<Response>(
   } else {
     state.cacheMisses += 1;
   }
-}
-
-function verifiableContent(summary: StyleChunkSummary): number {
-  return summary.observations.length + summary.representativeMessages.length;
-}
-
-function summarizedMessageCount(
-  chunk: StyleEvidenceChunk,
-  summary: StyleChunkSummary,
-): number {
-  return verifiableContent(summary) === 0 ? 0 : chunk.messages.length;
-}
-
-function nextParseFailureRepair(
-  prior: ChunkExtractionRepair | null,
-  error: string,
-  rawContent: string | null,
-): ChunkExtractionRepair {
-  if (prior === null || prior.previous === EMPTY_CHUNK_SUMMARY) {
-    return { previous: EMPTY_CHUNK_SUMMARY, error, rawContent };
-  }
-  return { previous: prior.previous, error: prior.error, rawContent: null };
 }
 
 async function auditChunk(input: {
@@ -169,18 +144,7 @@ async function auditChunk(input: {
       };
     }
   }
-  if (attempts.length === 0) {
-    return EMPTY_CHUNK_SUMMARY;
-  }
-  const best = attempts
-    .map((attempt) => sanitizeChunkSummary(input.chunk, attempt))
-    .reduce((strongest, candidate) =>
-      verifiableContent(candidate) > verifiableContent(strongest)
-        ? candidate
-        : strongest,
-    );
-  validateChunkSummary(input.chunk, best);
-  return best;
+  return selectBestChunkSummary(input.chunk, attempts);
 }
 
 async function auditSynthesis(input: {
@@ -289,19 +253,7 @@ async function auditCandidate(input: {
       missingChunkKeys.push(chunk.key);
       continue;
     }
-    const firstMessage = chunk.messages[0];
-    const lastMessage = chunk.messages.at(-1);
-    if (firstMessage === undefined || lastMessage === undefined) {
-      throw new Error(`style evidence chunk ${chunk.key} is empty`);
-    }
-    summarizedChunks.push({
-      key: chunk.key,
-      month: chunk.month,
-      startTimestamp: firstMessage.timestamp,
-      endTimestamp: lastMessage.timestamp,
-      summary,
-      summarizedMessageCount: summarizedMessageCount(chunk, summary),
-    });
+    summarizedChunks.push(toSummarizedChunk(chunk, summary));
   }
   if (missingChunkKeys.length > 0) {
     input.state.blockedStages.push({

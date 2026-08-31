@@ -8,6 +8,18 @@ const isCI = process.env.CI === "true";
 const includeBrandedBrowsers =
   process.env.PLAYWRIGHT_BRANDED_BROWSERS === "true";
 
+const PORT = 4321;
+// Probe and browse the address the server actually binds. `astro preview
+// --host 127.0.0.1` listens on IPv4 only, so a `localhost` URL can resolve to
+// ::1 in the browser-E2E pod and never answer — which is exactly how this
+// suite intermittently burned its full 120s webServer budget on main. Every
+// other suite in that pod already probes the address it binds.
+const baseURL = `http://127.0.0.1:${PORT.toString()}`;
+// Astro 7 detects agent environments and daemonizes preview automatically.
+// Disable that behavior so Playwright owns the server process, observes
+// startup failures, and tears it down with the test run.
+const previewCommand = `ASTRO_PREVIEW_BACKGROUND=0 bun run preview --host 127.0.0.1 --port ${PORT.toString()}`;
+
 const brandedBrowserProjects = [
   {
     name: "Microsoft Edge",
@@ -56,7 +68,7 @@ export default defineConfig({
       ]
     : "list",
   use: {
-    baseURL: "http://localhost:4321",
+    baseURL,
     trace: "on-first-retry",
   },
   expect: {
@@ -111,13 +123,11 @@ export default defineConfig({
     ...(includeBrandedBrowsers ? brandedBrowserDarkProjects : []),
   ],
   webServer: {
-    // Astro 7 detects agent environments and daemonizes preview automatically.
-    // Disable that behavior so Playwright owns the server process and can
-    // observe startup failures and tear it down with the test run.
-    command: isCI
-      ? "ASTRO_PREVIEW_BACKGROUND=0 bun run preview --host 127.0.0.1 --port 4321"
-      : "bun run preview",
-    url: "http://localhost:4321",
+    command: previewCommand,
+    url: baseURL,
+    // Playwright defaults to 60s, which the browser-E2E pod exceeds under load:
+    // it runs several suites at --concurrency=2, so a server can be starved
+    // well past a minute. 120s matches docs-wiki, alert-dashboard, and evals.
     timeout: 120 * 1000,
     reuseExistingServer: !isCI,
   },

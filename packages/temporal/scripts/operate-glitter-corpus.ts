@@ -41,6 +41,62 @@ function flags(argv: readonly string[]): Record<string, string> {
   return parsed;
 }
 
+/**
+ * Flags shared by both Glitter context commands: an optional evaluation clock
+ * and an optional corpus-snapshot pin, plus whether to await the result. Kept
+ * as one fragment so the two command schemas cannot drift apart.
+ */
+const CONTEXT_COMMAND_FLAGS = {
+  now: z.iso.datetime({ offset: true }).optional(),
+  "snapshot-id": z.uuid().optional(),
+  "snapshot-sha256": z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .optional(),
+  wait: z.enum(["true", "false"]).default("false"),
+} as const;
+
+type ContextCommandFlags = {
+  now?: string | undefined;
+  "snapshot-id"?: string | undefined;
+  "snapshot-sha256"?: string | undefined;
+};
+
+/**
+ * Starts one of the two Glitter context workflows. They differ only in
+ * workflow type, workflow-id prefix, and any command-specific arguments; the
+ * clock and snapshot pin are carried identically by both.
+ */
+async function startContextWorkflow(input: {
+  client: Client;
+  workflowType: string;
+  workflowIdPrefix: string;
+  parsed: ContextCommandFlags;
+  extraArgs?: Record<string, unknown>;
+}) {
+  const { parsed } = input;
+  const snapshot =
+    parsed["snapshot-id"] === undefined &&
+    parsed["snapshot-sha256"] === undefined
+      ? undefined
+      : GlitterCorpusSnapshotPinSchema.parse({
+          snapshotId: parsed["snapshot-id"],
+          snapshotSha256: parsed["snapshot-sha256"],
+        });
+  return await startWorkflow({
+    client: input.client,
+    workflowType: input.workflowType,
+    workflowId: `${input.workflowIdPrefix}-${crypto.randomUUID()}`,
+    args: [
+      {
+        ...input.extraArgs,
+        ...(parsed.now === undefined ? {} : { now: parsed.now }),
+        ...(snapshot === undefined ? {} : { snapshot }),
+      },
+    ],
+  });
+}
+
 async function startWorkflow(input: {
   client: Client;
   workflowType: string;
@@ -209,36 +265,19 @@ async function runContextRefresh(
     .object({
       "dry-run": z.enum(["true", "false"]),
       "max-estimated-cost-usd": z.coerce.number().positive(),
-      now: z.iso.datetime({ offset: true }).optional(),
-      "snapshot-id": z.uuid().optional(),
-      "snapshot-sha256": z
-        .string()
-        .regex(/^[0-9a-f]{64}$/)
-        .optional(),
-      wait: z.enum(["true", "false"]).default("false"),
+      ...CONTEXT_COMMAND_FLAGS,
     })
     .strict()
     .parse(flags(argv));
-  const snapshot =
-    parsed["snapshot-id"] === undefined &&
-    parsed["snapshot-sha256"] === undefined
-      ? undefined
-      : GlitterCorpusSnapshotPinSchema.parse({
-          snapshotId: parsed["snapshot-id"],
-          snapshotSha256: parsed["snapshot-sha256"],
-        });
-  const handle = await startWorkflow({
+  const handle = await startContextWorkflow({
     client,
     workflowType: "runGlitterContextRefresh",
-    workflowId: `glitter-context-refresh-manual-${crypto.randomUUID()}`,
-    args: [
-      {
-        dryRun: parsed["dry-run"] === "true",
-        maxEstimatedCostUsd: parsed["max-estimated-cost-usd"],
-        ...(parsed.now === undefined ? {} : { now: parsed.now }),
-        ...(snapshot === undefined ? {} : { snapshot }),
-      },
-    ],
+    workflowIdPrefix: "glitter-context-refresh-manual",
+    parsed,
+    extraArgs: {
+      dryRun: parsed["dry-run"] === "true",
+      maxEstimatedCostUsd: parsed["max-estimated-cost-usd"],
+    },
   });
   if (parsed.wait === "true") {
     const result = z
@@ -285,36 +324,12 @@ async function runContextAudit(
   client: Client,
   argv: readonly string[],
 ): Promise<void> {
-  const parsed = z
-    .object({
-      now: z.iso.datetime({ offset: true }).optional(),
-      "snapshot-id": z.uuid().optional(),
-      "snapshot-sha256": z
-        .string()
-        .regex(/^[0-9a-f]{64}$/)
-        .optional(),
-      wait: z.enum(["true", "false"]).default("false"),
-    })
-    .strict()
-    .parse(flags(argv));
-  const snapshot =
-    parsed["snapshot-id"] === undefined &&
-    parsed["snapshot-sha256"] === undefined
-      ? undefined
-      : GlitterCorpusSnapshotPinSchema.parse({
-          snapshotId: parsed["snapshot-id"],
-          snapshotSha256: parsed["snapshot-sha256"],
-        });
-  const handle = await startWorkflow({
+  const parsed = z.object(CONTEXT_COMMAND_FLAGS).strict().parse(flags(argv));
+  const handle = await startContextWorkflow({
     client,
     workflowType: "runGlitterContextAudit",
-    workflowId: `glitter-context-audit-${crypto.randomUUID()}`,
-    args: [
-      {
-        ...(parsed.now === undefined ? {} : { now: parsed.now }),
-        ...(snapshot === undefined ? {} : { snapshot }),
-      },
-    ],
+    workflowIdPrefix: "glitter-context-audit",
+    parsed,
   });
   if (parsed.wait === "true") {
     console.warn(
